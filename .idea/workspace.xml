@@ -1,0 +1,1119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="ee186f8c-9ee6-4044-afa5-8a5346215c7b" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/LICENSE" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/README.html" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/README.txt" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/doc/~$e_Plugin.docx" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/README.html" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/README.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/exemple/MasPlug_malpasset.psql" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/exemple/Terrain50.dtm_20ft.tif" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/pb_tool.cfg" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/plugin_upload.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/pylintrc" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/scripts/compile-strings.sh" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/scripts/run-env-linux.sh" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/scripts/update-strings.sh" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/MasPlug_malpasset - Copie.psql" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/MasPlug_malpasset.psql" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/MasPlug_test99.psql" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/MasPlug_test99d.psql" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/cas/fort.22" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/cas/mascaret0.cas" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/cas/mascaret0.geo" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/cas/mascaret0.lig" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/cas/mascaret0_0.loi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/cas/mascaret0_1.loi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/masc/test1.masc" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/xml/Abaques.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/xml/Controle.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/xml/FichierCas.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/xml/fort.22" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/xml/mascaret0.geo" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/xml/mascaret0.lig" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/xml/mascaret0.lis" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/xml/mascaret0.xcas" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/xml/mascaret0_0.loi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/xml/mascaret0_1.loi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/xml/mascaret0_ecr.opt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_EXPLICITE/xml/mascaret0_ecr.rep" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_IMPLICITE/cas/mascaret0.cas" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_IMPLICITE/cas/mascaret0.geo" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_IMPLICITE/cas/mascaret0.lig" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_IMPLICITE/cas/mascaret0_0.loi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_IMPLICITE/cas/mascaret0_1.loi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_IMPLICITE/masc/test1.masc" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_IMPLICITE/xml/mascaret0.geo" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_IMPLICITE/xml/mascaret0.lig" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_IMPLICITE/xml/mascaret0.xcas" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_IMPLICITE/xml/mascaret0_0.loi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/MASCARET_IMPLICITE/xml/mascaret0_1.loi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/SARAP/cas/mascaret0.cas" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/SARAP/cas/mascaret0.geo" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/SARAP/cas/mascaret0_0.loi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/SARAP/cas/mascaret0_1.loi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/SARAP/masc/test1.masc" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/SARAP/xml/mascaret0.geo" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/SARAP/xml/mascaret0.xcas" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/SARAP/xml/mascaret0_0.loi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/data/SARAP/xml/mascaret0_1.loi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/doc/1.log" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/doc/Figure1.eps" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/doc/Figure1.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/doc/Figure2.eps" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/doc/Figure2.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/doc/Test1.aux" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/doc/Test1.dvi" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/doc/Test1.log" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/Test1/doc/Test1.pdf" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/exemple/exemple.backup" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/exemple/exemple_obs/M0250610.csv" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/exemple/exemple_obs/M0421510.csv" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/exemple/exemple_obs/M0500620.csv" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/exemple/exemple_obs/observations.csv" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/exemple/exemple_obs/observations.xlsx" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/exemple/observations_ori.csv" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/exemple/test3.psql" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/mascaret.geo" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/observations_Test.csv" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/observations_Test2.csv" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/parametres_fr.csv" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/test.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/test.xcas" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/test_grphic_viewCanva.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/test_traduction/new/test.pro" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/test_traduction/new/test.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/test_traduction/new/test.ui" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/test_traduction/new/test_dialog.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/test_traduction/new/test_fr_FR.qm" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/test_traduction/new/test_fr_FR.ts" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/toto.bat" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/variables_fr.dat" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/variables_fr_en.dat.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/old/test/variables_fr_entraitementvar.dat.txt" afterPath="" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/old/Makefile" afterPath="$PROJECT_DIR$/Makefile" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Class_Mascaret.py" afterPath="$PROJECT_DIR$/Class_Mascaret.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/MascPlug_dialog.py" afterPath="$PROJECT_DIR$/MascPlug_dialog.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/metadata.txt" afterPath="$PROJECT_DIR$/metadata.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/settings.json" afterPath="$PROJECT_DIR$/settings.json" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
+  <component name="FavoritesManager">
+    <favorites_list name="MascPlug" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="MascPlug_dialog_base.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ui/MascPlug_dialog_base.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="323">
+              <caret line="28" column="22" lean-forward="false" selection-start-line="28" selection-start-column="22" selection-end-line="28" selection-end-column="22" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="graphProfil_Dialog.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/graphProfil_Dialog.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="17">
+              <caret line="30" column="25" lean-forward="false" selection-start-line="30" selection-start-column="25" selection-end-line="30" selection-end-column="25" />
+              <folding>
+                <element signature="e#2649#5207#0" expanded="false" />
+                <element signature="e#2822#5192#0" expanded="false" />
+                <element signature="e#6178#7762#0" expanded="false" />
+                <element signature="e#12023#12376#0" expanded="false" />
+                <element signature="e#12430#12680#0" expanded="false" />
+                <element signature="e#12729#12887#0" expanded="false" />
+                <element signature="e#12924#13599#0" expanded="false" />
+                <element signature="e#13635#13957#0" expanded="false" />
+                <element signature="e#13997#14882#0" expanded="false" />
+                <element signature="e#14920#15923#0" expanded="false" />
+                <element signature="e#15966#16331#0" expanded="false" />
+                <element signature="e#16387#16790#0" expanded="false" />
+                <element signature="e#16828#17133#0" expanded="false" />
+                <element signature="e#17172#17475#0" expanded="false" />
+                <element signature="e#17513#17879#0" expanded="false" />
+                <element signature="e#17914#19316#0" expanded="false" />
+                <element signature="e#19355#19599#0" expanded="false" />
+                <element signature="e#19632#20137#0" expanded="false" />
+                <element signature="e#20173#20625#0" expanded="false" />
+                <element signature="e#20697#22338#0" expanded="false" />
+                <element signature="e#22375#23196#0" expanded="false" />
+                <element signature="e#23239#24307#0" expanded="false" />
+                <element signature="e#24346#26851#0" expanded="false" />
+                <element signature="e#26903#27800#0" expanded="false" />
+                <element signature="e#27850#28683#0" expanded="false" />
+                <element signature="e#28725#28798#0" expanded="false" />
+                <element signature="e#28839#30743#0" expanded="false" />
+                <element signature="e#30783#31307#0" expanded="false" />
+                <element signature="e#31341#32869#0" expanded="false" />
+                <element signature="e#32905#33446#0" expanded="false" />
+                <element signature="e#33482#33974#0" expanded="false" />
+                <element signature="e#34011#34820#0" expanded="false" />
+                <element signature="e#34867#36147#0" expanded="false" />
+                <element signature="e#35973#36147#0" expanded="false" />
+                <element signature="e#36180#37964#0" expanded="false" />
+                <element signature="e#38005#38339#0" expanded="false" />
+                <element signature="e#38382#39113#0" expanded="false" />
+                <element signature="e#40813#42455#0" expanded="false" />
+                <element signature="e#43566#46722#0" expanded="false" />
+                <element signature="e#46757#47226#0" expanded="false" />
+                <element signature="e#47269#47496#0" expanded="false" />
+                <element signature="e#47553#47855#0" expanded="false" />
+                <element signature="e#47893#48198#0" expanded="false" />
+                <element signature="e#48232#50644#0" expanded="false" />
+                <element signature="e#50680#51221#0" expanded="false" />
+                <element signature="e#51260#51696#0" expanded="false" />
+                <element signature="e#51735#51993#0" expanded="false" />
+                <element signature="e#52041#52579#0" expanded="false" />
+                <element signature="e#52627#52721#0" expanded="false" />
+                <element signature="e#52753#53099#0" expanded="false" />
+                <element signature="e#53136#53579#0" expanded="false" />
+                <element signature="e#53615#54129#0" expanded="false" />
+                <element signature="e#54168#54441#0" expanded="false" />
+                <element signature="e#63976#66678#0" expanded="false" />
+                <element signature="e#66713#67720#0" expanded="false" />
+                <element signature="e#67760#67879#0" expanded="false" />
+                <element signature="e#67920#68087#0" expanded="false" />
+                <element signature="e#68156#68231#0" expanded="false" />
+                <element signature="e#68270#68809#0" expanded="false" />
+                <element signature="e#71720#72671#0" expanded="false" />
+                <element signature="e#72714#72942#0" expanded="false" />
+                <element signature="e#74983#75499#0" expanded="false" />
+                <element signature="e#75535#77476#0" expanded="false" />
+                <element signature="e#77512#78637#0" expanded="false" />
+                <element signature="e#78673#81047#0" expanded="false" />
+                <element signature="e#81096#81364#0" expanded="false" />
+                <element signature="e#81411#82053#0" expanded="false" />
+                <element signature="e#82101#82279#0" expanded="false" />
+                <element signature="e#82328#82931#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="MascPlug.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/MascPlug.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="34">
+              <caret line="40" column="28" lean-forward="false" selection-start-line="40" selection-start-column="28" selection-end-line="40" selection-end-column="28" />
+              <folding>
+                <element signature="e#1005#1031#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="MascPlug_dialog.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/MascPlug_dialog.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="206">
+              <caret line="148" column="51" lean-forward="false" selection-start-line="148" selection-start-column="51" selection-end-line="148" selection-end-column="51" />
+              <folding>
+                <element signature="e#1004#1030#0" expanded="true" />
+                <element signature="e#6515#6544#0" expanded="false" />
+                <element signature="e#6586#6775#0" expanded="false" />
+                <element signature="e#6811#7129#0" expanded="false" />
+                <element signature="e#7179#7817#0" expanded="false" />
+                <element signature="e#7863#8631#0" expanded="false" />
+                <element signature="e#8673#8961#0" expanded="false" />
+                <element signature="e#9019#9195#0" expanded="false" />
+                <element signature="e#9252#9427#0" expanded="false" />
+                <element signature="e#9468#9575#0" expanded="false" />
+                <element signature="e#9614#9970#0" expanded="false" />
+                <element signature="e#10025#11885#0" expanded="false" />
+                <element signature="e#11924#12293#0" expanded="false" />
+                <element signature="e#12332#12745#0" expanded="false" />
+                <element signature="e#12793#13558#0" expanded="false" />
+                <element signature="e#13698#15117#0" expanded="false" />
+                <element signature="e#15157#15706#0" expanded="false" />
+                <element signature="e#15746#16613#0" expanded="false" />
+                <element signature="e#16652#17069#0" expanded="false" />
+                <element signature="e#17102#17582#0" expanded="false" />
+                <element signature="e#17615#18044#0" expanded="false" />
+                <element signature="e#18080#18336#0" expanded="false" />
+                <element signature="e#18377#18488#0" expanded="false" />
+                <element signature="e#18542#19320#0" expanded="false" />
+                <element signature="e#19359#20292#0" expanded="false" />
+                <element signature="e#20346#20372#0" expanded="false" />
+                <element signature="e#20409#20936#0" expanded="false" />
+                <element signature="e#20973#21430#0" expanded="false" />
+                <element signature="e#21465#22659#0" expanded="false" />
+                <element signature="e#22720#22874#0" expanded="false" />
+                <marker date="1507808538439" expanded="true" signature="1549:3405" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Class_Mascaret.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Class_Mascaret.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="255">
+              <caret line="151" column="44" lean-forward="false" selection-start-line="151" selection-start-column="34" selection-end-line="151" selection-end-column="44" />
+              <folding>
+                <element signature="e#1406#1416#0" expanded="true" />
+                <element signature="e#1810#2359#0" expanded="false" />
+                <element signature="e#2393#4054#0" expanded="false" />
+                <element signature="e#4089#4123#0" expanded="false" />
+                <element signature="e#4169#4674#0" expanded="false" />
+                <element signature="e#27010#27615#0" expanded="false" />
+                <element signature="e#27664#31023#0" expanded="false" />
+                <element signature="e#31087#34796#0" expanded="false" />
+                <element signature="e#34840#43125#0" expanded="false" />
+                <element signature="e#43175#43649#0" expanded="false" />
+                <element signature="e#43716#46160#0" expanded="false" />
+                <element signature="e#46218#48374#0" expanded="false" />
+                <element signature="e#46528#46593#0" expanded="false" />
+                <element signature="e#48414#49317#0" expanded="false" />
+                <element signature="e#49350#49731#0" expanded="false" />
+                <element signature="e#49766#50205#0" expanded="false" />
+                <element signature="e#50240#50776#0" expanded="false" />
+                <element signature="e#50817#51164#0" expanded="false" />
+                <element signature="e#51219#51508#0" expanded="false" />
+                <element signature="e#51560#52713#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>disconnect_pg</find>
+      <find>MNT</find>
+      <find>Worker</find>
+      <find>mgis.addInfo</find>
+      <find>create_FirstModel</find>
+      <find>'{}'</find>
+      <find>self.mdb</find>
+      <find>self.con</find>
+      <find>connChanged</find>
+      <find>conn</find>
+      <find>self.con = None</find>
+      <find>con</find>
+      <find>loadGis_layer</find>
+      <find>self.conn</find>
+      <find>comboRunChanged</find>
+      <find>Class_Mascaret</find>
+      <find>self.mdb.con</find>
+      <find>last_conn</find>
+      <find>coooo</find>
+      <find>cla</find>
+      <find>disconnec</find>
+      <find>rrr</find>
+      <find>can</find>
+      <find>zoom_fun</find>
+      <find>self.mgis.a</find>
+      <find>web</find>
+      <find>qdev</find>
+      <find>icon</find>
+      <find>attr</find>
+      <find>if not balise</find>
+    </findStrings>
+    <replaceStrings>
+      <replace>masplugPath</replace>
+      <replace>Settings</replace>
+      <replace>debugModeChbox</replace>
+      <replace>mgis</replace>
+      <replace>schema</replace>
+      <replace>SCHEMA</replace>
+      <replace />
+      <replace>masplug</replace>
+      <replace>open_lastChbox</replace>
+      <replace>mdb</replace>
+      <replace>Steady</replace>
+      <replace>Unsteady</replace>
+      <replace>self.fmt</replace>
+      <replace>self.dossierFileMasc</replace>
+      <replace>Transcritical</replace>
+      <replace>add</replace>
+      <replace>self.comboVar1</replace>
+      <replace>Var1</replace>
+      <replace>var1</replace>
+      <replace>self.var1</replace>
+      <replace>self.comboTimePK</replace>
+      <replace>comboTimePK</replace>
+      <replace>label_hmax</replace>
+      <replace>settings</replace>
+      <replace>&quot;param_diag&quot;</replace>
+      <replace>settings.</replace>
+      <replace>leftminbed</replace>
+      <replace>rightminbed</replace>
+      <replace>leftstock</replace>
+      <replace>rightstock</replace>
+    </replaceStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/default_settings.json" />
+        <option value="$PROJECT_DIR$/IdentifyFeatureTool.py" />
+        <option value="$PROJECT_DIR$/Mas_graph.py" />
+        <option value="$PROJECT_DIR$/ui/graphProfil_Dialog.py" />
+        <option value="$PROJECT_DIR$/ui/test_grphic_viewCanva.py" />
+        <option value="$PROJECT_DIR$/mas_graph.py" />
+        <option value="$PROJECT_DIR$/ui/ajout_graph.py" />
+        <option value="$PROJECT_DIR$/ui/graphProfil1.py" />
+        <option value="$PROJECT_DIR$/db/other_class.py" />
+        <option value="$PROJECT_DIR$/ui/ui_settings_Simple.ui" />
+        <option value="$PROJECT_DIR$/settings.json" />
+        <option value="$PROJECT_DIR$/Run_Mascaret.py" />
+        <option value="$PROJECT_DIR$/ui/MascPlug_dialog_base.ui" />
+        <option value="$PROJECT_DIR$/mascaret/test.py" />
+        <option value="$PROJECT_DIR$/ui/graphProfil2.py" />
+        <option value="$PROJECT_DIR$/ui/graphProfilRes2.py" />
+        <option value="$PROJECT_DIR$/ui/graphProfilRes.ui" />
+        <option value="$PROJECT_DIR$/ui/graphHydro2.py" />
+        <option value="$PROJECT_DIR$/ui/graphProfilRes.py" />
+        <option value="$PROJECT_DIR$/test.py" />
+        <option value="$PROJECT_DIR$/test/test_traduction/test_translations.py" />
+        <option value="$PROJECT_DIR$/test_translations.py" />
+        <option value="$PROJECT_DIR$/test/test_traduction/test01_en_FR.ts" />
+        <option value="$PROJECT_DIR$/test/test_traduction/test.py" />
+        <option value="$PROJECT_DIR$/ui/graphHydro.ui" />
+        <option value="$PROJECT_DIR$/ui/graphHydro.py" />
+        <option value="$PROJECT_DIR$/ui/ui_settings_Simple.py" />
+        <option value="$PROJECT_DIR$/test/test.py" />
+        <option value="$PROJECT_DIR$/resources.qrc" />
+        <option value="$PROJECT_DIR$/db/observation.py" />
+        <option value="$PROJECT_DIR$/ui/graphProfil.py" />
+        <option value="$PROJECT_DIR$/test/test_traduction/new/test.py" />
+        <option value="$PROJECT_DIR$/test/test_traduction/new/test_dialog.py" />
+        <option value="$PROJECT_DIR$/parametres.py" />
+        <option value="$PROJECT_DIR$/ui/warningBox.py" />
+        <option value="$PROJECT_DIR$/ui/warningbox.py" />
+        <option value="$PROJECT_DIR$/settings_dialog.py" />
+        <option value="$PROJECT_DIR$/ui/ui_parameter.py" />
+        <option value="$PROJECT_DIR$/parameter_dialog.py" />
+        <option value="$PROJECT_DIR$/__init__.py" />
+        <option value="$PROJECT_DIR$/MNT_class.py" />
+        <option value="$PROJECT_DIR$/pb_tool.cfg" />
+        <option value="$PROJECT_DIR$/Class_observation.py" />
+        <option value="$PROJECT_DIR$/function.py" />
+        <option value="$PROJECT_DIR$/MascPlug.py" />
+        <option value="$PROJECT_DIR$/db/mas_database.py" />
+        <option value="$PROJECT_DIR$/db/MasObject.py" />
+        <option value="$PROJECT_DIR$/graphProfil_Dialog.py" />
+        <option value="$PROJECT_DIR$/ui/MascPlug_dialog_base.py" />
+        <option value="$PROJECT_DIR$/MascPlug_dialog.py" />
+        <option value="$PROJECT_DIR$/Class_Mascaret.py" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds">
+    <option name="x" value="146" />
+    <option name="y" value="76" />
+    <option name="width" value="1294" />
+    <option name="height" value="893" />
+  </component>
+  <component name="ProjectInspectionProfilesVisibleTreeState">
+    <entry key="Project Default">
+      <profile-state>
+        <expanded-state>
+          <State>
+            <id />
+          </State>
+        </expanded-state>
+        <selected-state>
+          <State>
+            <id>Python</id>
+          </State>
+        </selected-state>
+      </profile-state>
+    </entry>
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectView">
+    <navigator currentView="ProjectPane" proportions="" version="1">
+      <flattenPackages />
+      <showMembers />
+      <showModules />
+      <showLibraryContents />
+      <hideEmptyPackages />
+      <abbreviatePackageNames />
+      <autoscrollToSource />
+      <autoscrollFromSource />
+      <sortByType />
+      <manualOrder />
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="Scratches" />
+      <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="MascPlug" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="MascPlug" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="MascPlug" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="MascPlug" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="db" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="settings.editor.selected.configurable" value="vcs.Git" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Program Files\QGIS 2.18\apps\qgis\python\plugins\MascPlug" />
+      <recent name="C:\Program Files\QGIS 2.18\apps\qgis\python\plugins\MascPlug\mascaret" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Program Files\QGIS 2.18\apps\qgis\python\plugins\MascPlug" />
+      <recent name="C:\Program Files\QGIS 2.18\apps\qgis\python\plugins\MascPlug\db" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Python.MasObject">
+    <configuration default="false" name="MasObject" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\DONNEES\Python27\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/db" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/db/MasObject.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <method />
+    </configuration>
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="MascPlug" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <method />
+    </configuration>
+    <configuration default="true" type="Tox" factoryName="Tox">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="MascPlug" />
+      <method />
+    </configuration>
+    <configuration default="true" type="tests" factoryName="Doctests">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="MascPlug" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_SCRIPT" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <method />
+    </configuration>
+    <configuration default="true" type="tests" factoryName="Unittests">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="MascPlug" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;.&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method />
+    </configuration>
+    <list size="1">
+      <item index="0" class="java.lang.String" itemvalue="Python.MasObject" />
+    </list>
+    <recent_temporary>
+      <list size="1">
+        <item index="0" class="java.lang.String" itemvalue="Python.MasObject" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="ShelveChangesManager" show_recycled="false">
+    <option name="remove_strategy" value="false" />
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ee186f8c-9ee6-4044-afa5-8a5346215c7b" name="Default" comment="" />
+      <created>1500389963812</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1500389963812</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TestHistory">
+    <history-entry file="Unittests_in_test_py - 2017.08.23 at 11h 40m 44s.xml">
+      <configuration name="Unittests in test.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_test_py - 2017.09.07 at 11h 03m 37s.xml">
+      <configuration name="Unittests in test.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_test_py - 2017.09.07 at 11h 04m 46s.xml">
+      <configuration name="Unittests in test.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_test_py - 2017.09.07 at 14h 57m 08s.xml">
+      <configuration name="Unittests in test.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_test_py_(1) - 2017.09.21 at 11h 03m 42s.xml">
+      <configuration name="Unittests in test.py (1)" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_test_py_(1) - 2017.09.21 at 11h 04m 26s.xml">
+      <configuration name="Unittests in test.py (1)" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_test_py_(1) - 2017.09.21 at 11h 05m 45s.xml">
+      <configuration name="Unittests in test.py (1)" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_test_py_(1) - 2017.09.21 at 11h 07m 00s.xml">
+      <configuration name="Unittests in test.py (1)" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_test_py_(1) - 2017.09.21 at 11h 08m 36s.xml">
+      <configuration name="Unittests in test.py (1)" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_test_py_(1) - 2017.09.21 at 11h 09m 16s.xml">
+      <configuration name="Unittests in test.py (1)" configurationId="tests" />
+    </history-entry>
+  </component>
+  <component name="TodoView">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="146" y="76" width="1294" height="893" extended-state="0" />
+    <layout>
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.23581848" sideWeight="0.49519232" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1482684" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19264069" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15637319" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32900432" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39948454" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.12452212" sideWeight="0.5048077" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32716927" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+    </layout>
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file:C:/../..//C:/Program Files/QGIS 2.18/apps/qgis/python/plugins/MascPlug/parametres.py</url>
+          <line>1</line>
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file:C:/../..//C:/Program Files/QGIS 2.18/apps/qgis/python/plugins/MascPlug/db/mas_database.py</url>
+          <line>19</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file:C:/../..//C:/Program Files/QGIS 2.18/apps/qgis/python/plugins/MascPlug/ui/MascPlug_dialog_base.py</url>
+          <line>91</line>
+          <option name="timeStamp" value="12" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/settings_dialog.py</url>
+          <line>48</line>
+          <option name="timeStamp" value="50" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/parameter_dialog.py</url>
+          <line>282</line>
+          <option name="timeStamp" value="58" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/graphProfil_Dialog.py</url>
+          <line>510</line>
+          <option name="timeStamp" value="75" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/MascPlug_dialog.py</url>
+          <line>399</line>
+          <option name="timeStamp" value="81" />
+        </line-breakpoint>
+      </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+      <option name="time" value="85" />
+    </breakpoint-manager>
+    <watches-manager />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/ui/MascPlug_dialog_base.ui">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="367">
+          <caret line="233" column="32" lean-forward="true" selection-start-line="233" selection-start-column="32" selection-end-line="233" selection-end-column="32" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fort.22" />
+    <entry file="file://$USER_HOME$/Desktop/test2/toto.py" />
+    <entry file="file://$PROJECT_DIR$/ui/graphProfil2.py" />
+    <entry file="file://$PROJECT_DIR$/ui/graphProfilRes2.py" />
+    <entry file="file://$PROJECT_DIR$/ui/graphProfilRes.ui">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="272">
+          <caret line="305" column="51" lean-forward="false" selection-start-line="305" selection-start-column="51" selection-end-line="305" selection-end-column="51" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test.py" />
+    <entry file="file://$PROJECT_DIR$/test_translations.py" />
+    <entry file="file://C:/DONNEES/Python27/Lib/unittest/loader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2507">
+          <caret line="266" column="0" lean-forward="false" selection-start-line="266" selection-start-column="0" selection-end-line="266" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/test_traduction/test_translations.py" />
+    <entry file="file://$PROJECT_DIR$/test/test_traduction/test01_en_FR.ts" />
+    <entry file="file://$PROJECT_DIR$/test/test_traduction/test.py" />
+    <entry file="file://$PROJECT_DIR$/test/test_grphic_viewCanva.py" />
+    <entry file="file://$PROJECT_DIR$/ui/graphHydro2.py" />
+    <entry file="file://$PROJECT_DIR$/ui/graphHydro.ui">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="265">
+          <caret line="316" column="19" lean-forward="false" selection-start-line="316" selection-start-column="19" selection-end-line="316" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/graphHydro_old.py" />
+    <entry file="file://$PROJECT_DIR$/mas_graph.py" />
+    <entry file="file://$PROJECT_DIR$/test/test.py" />
+    <entry file="file://$PROJECT_DIR$/resources.qrc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="459">
+          <caret line="27" column="15" lean-forward="true" selection-start-line="27" selection-start-column="15" selection-end-line="27" selection-end-column="15" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/db/observation.py" />
+    <entry file="file://$PROJECT_DIR$/test/test_traduction/new/test_dialog.py" />
+    <entry file="file://$PROJECT_DIR$/test/test_traduction/new/test.py" />
+    <entry file="file://$USER_HOME$/.PyCharmCE2017.1/system/python_stubs/-1268710769/PyQt4/QtCore/QObject.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="334">
+          <caret line="206" column="23" lean-forward="true" selection-start-line="206" selection-start-column="23" selection-end-line="206" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/parametres.py" />
+    <entry file="file://$USER_HOME$/.PyCharmCE2017.1/system/python_stubs/-1268710769/__builtin__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="244">
+          <caret line="3359" column="8" lean-forward="false" selection-start-line="3359" selection-start-column="8" selection-end-line="3359" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/old_fr/Class_Mascaret.py" />
+    <entry file="file://$PROJECT_DIR$/resources.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/settings_dialog.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-465">
+          <caret line="31" column="28" lean-forward="true" selection-start-line="31" selection-start-column="28" selection-end-line="31" selection-end-column="28" />
+          <folding>
+            <element signature="e#944#970#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/parameter_dialog.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="301">
+          <caret line="60" column="69" lean-forward="true" selection-start-line="60" selection-start-column="69" selection-end-line="60" selection-end-column="69" />
+          <folding>
+            <element signature="e#10955#11912#0" expanded="false" />
+            <element signature="e#11946#13471#0" expanded="false" />
+            <element signature="e#13509#14040#0" expanded="false" />
+            <element signature="e#14075#14970#0" expanded="false" />
+            <element signature="e#15003#15449#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="18" selection-end-column="3" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MNT_class.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="19" column="0" lean-forward="true" selection-start-line="19" selection-start-column="0" selection-end-line="19" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/function.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="19" column="9" lean-forward="true" selection-start-line="19" selection-start-column="9" selection-end-line="19" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Class_observation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="17" column="77" lean-forward="false" selection-start-line="17" selection-start-column="77" selection-end-line="17" selection-end-column="77" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pb_tool.cfg" />
+    <entry file="file://$PROJECT_DIR$/plugin_upload.py" />
+    <entry file="file://$PROJECT_DIR$/ui/graphProfilRes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="6" column="1" lean-forward="true" selection-start-line="6" selection-start-column="1" selection-end-line="6" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/ui_parameter.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="301" column="8" lean-forward="false" selection-start-line="301" selection-start-column="8" selection-end-line="301" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/ui_settings_Simple.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="425">
+          <caret line="25" column="26" lean-forward="true" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/warningbox.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="4" column="6" lean-forward="false" selection-start-line="4" selection-start-column="6" selection-end-line="4" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/ajout_graph.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/graphHydro.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="578">
+          <caret line="34" column="34" lean-forward="true" selection-start-line="34" selection-start-column="34" selection-end-line="34" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/graphProfil.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="33">
+          <caret line="334" column="85" lean-forward="false" selection-start-line="334" selection-start-column="85" selection-end-line="334" selection-end-column="85" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/db/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/db/MasObject.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="7" column="22" lean-forward="false" selection-start-line="7" selection-start-column="22" selection-end-line="7" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/db/mas_database.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="7" column="22" lean-forward="false" selection-start-line="7" selection-start-column="22" selection-end-line="7" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/MascPlug_dialog_base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="28" column="22" lean-forward="false" selection-start-line="28" selection-start-column="22" selection-end-line="28" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/graphProfil_Dialog.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="30" column="25" lean-forward="false" selection-start-line="30" selection-start-column="25" selection-end-line="30" selection-end-column="25" />
+          <folding>
+            <element signature="e#2649#5207#0" expanded="false" />
+            <element signature="e#2822#5192#0" expanded="false" />
+            <element signature="e#6178#7762#0" expanded="false" />
+            <element signature="e#12023#12376#0" expanded="false" />
+            <element signature="e#12430#12680#0" expanded="false" />
+            <element signature="e#12729#12887#0" expanded="false" />
+            <element signature="e#12924#13599#0" expanded="false" />
+            <element signature="e#13635#13957#0" expanded="false" />
+            <element signature="e#13997#14882#0" expanded="false" />
+            <element signature="e#14920#15923#0" expanded="false" />
+            <element signature="e#15966#16331#0" expanded="false" />
+            <element signature="e#16387#16790#0" expanded="false" />
+            <element signature="e#16828#17133#0" expanded="false" />
+            <element signature="e#17172#17475#0" expanded="false" />
+            <element signature="e#17513#17879#0" expanded="false" />
+            <element signature="e#17914#19316#0" expanded="false" />
+            <element signature="e#19355#19599#0" expanded="false" />
+            <element signature="e#19632#20137#0" expanded="false" />
+            <element signature="e#20173#20625#0" expanded="false" />
+            <element signature="e#20697#22338#0" expanded="false" />
+            <element signature="e#22375#23196#0" expanded="false" />
+            <element signature="e#23239#24307#0" expanded="false" />
+            <element signature="e#24346#26851#0" expanded="false" />
+            <element signature="e#26903#27800#0" expanded="false" />
+            <element signature="e#27850#28683#0" expanded="false" />
+            <element signature="e#28725#28798#0" expanded="false" />
+            <element signature="e#28839#30743#0" expanded="false" />
+            <element signature="e#30783#31307#0" expanded="false" />
+            <element signature="e#31341#32869#0" expanded="false" />
+            <element signature="e#32905#33446#0" expanded="false" />
+            <element signature="e#33482#33974#0" expanded="false" />
+            <element signature="e#34011#34820#0" expanded="false" />
+            <element signature="e#34867#36147#0" expanded="false" />
+            <element signature="e#35973#36147#0" expanded="false" />
+            <element signature="e#36180#37964#0" expanded="false" />
+            <element signature="e#38005#38339#0" expanded="false" />
+            <element signature="e#38382#39113#0" expanded="false" />
+            <element signature="e#40813#42455#0" expanded="false" />
+            <element signature="e#43566#46722#0" expanded="false" />
+            <element signature="e#46757#47226#0" expanded="false" />
+            <element signature="e#47269#47496#0" expanded="false" />
+            <element signature="e#47553#47855#0" expanded="false" />
+            <element signature="e#47893#48198#0" expanded="false" />
+            <element signature="e#48232#50644#0" expanded="false" />
+            <element signature="e#50680#51221#0" expanded="false" />
+            <element signature="e#51260#51696#0" expanded="false" />
+            <element signature="e#51735#51993#0" expanded="false" />
+            <element signature="e#52041#52579#0" expanded="false" />
+            <element signature="e#52627#52721#0" expanded="false" />
+            <element signature="e#52753#53099#0" expanded="false" />
+            <element signature="e#53136#53579#0" expanded="false" />
+            <element signature="e#53615#54129#0" expanded="false" />
+            <element signature="e#54168#54441#0" expanded="false" />
+            <element signature="e#63976#66678#0" expanded="false" />
+            <element signature="e#66713#67720#0" expanded="false" />
+            <element signature="e#67760#67879#0" expanded="false" />
+            <element signature="e#67920#68087#0" expanded="false" />
+            <element signature="e#68156#68231#0" expanded="false" />
+            <element signature="e#68270#68809#0" expanded="false" />
+            <element signature="e#71720#72671#0" expanded="false" />
+            <element signature="e#72714#72942#0" expanded="false" />
+            <element signature="e#74983#75499#0" expanded="false" />
+            <element signature="e#75535#77476#0" expanded="false" />
+            <element signature="e#77512#78637#0" expanded="false" />
+            <element signature="e#78673#81047#0" expanded="false" />
+            <element signature="e#81096#81364#0" expanded="false" />
+            <element signature="e#81411#82053#0" expanded="false" />
+            <element signature="e#82101#82279#0" expanded="false" />
+            <element signature="e#82328#82931#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MascPlug.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="40" column="28" lean-forward="false" selection-start-line="40" selection-start-column="28" selection-end-line="40" selection-end-column="28" />
+          <folding>
+            <element signature="e#1005#1031#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MascPlug_dialog.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="206">
+          <caret line="148" column="51" lean-forward="false" selection-start-line="148" selection-start-column="51" selection-end-line="148" selection-end-column="51" />
+          <folding>
+            <element signature="e#1004#1030#0" expanded="true" />
+            <element signature="e#6515#6544#0" expanded="false" />
+            <element signature="e#6586#6775#0" expanded="false" />
+            <element signature="e#6811#7129#0" expanded="false" />
+            <element signature="e#7179#7817#0" expanded="false" />
+            <element signature="e#7863#8631#0" expanded="false" />
+            <element signature="e#8673#8961#0" expanded="false" />
+            <element signature="e#9019#9195#0" expanded="false" />
+            <element signature="e#9252#9427#0" expanded="false" />
+            <element signature="e#9468#9575#0" expanded="false" />
+            <element signature="e#9614#9970#0" expanded="false" />
+            <element signature="e#10025#11885#0" expanded="false" />
+            <element signature="e#11924#12293#0" expanded="false" />
+            <element signature="e#12332#12745#0" expanded="false" />
+            <element signature="e#12793#13558#0" expanded="false" />
+            <element signature="e#13698#15117#0" expanded="false" />
+            <element signature="e#15157#15706#0" expanded="false" />
+            <element signature="e#15746#16613#0" expanded="false" />
+            <element signature="e#16652#17069#0" expanded="false" />
+            <element signature="e#17102#17582#0" expanded="false" />
+            <element signature="e#17615#18044#0" expanded="false" />
+            <element signature="e#18080#18336#0" expanded="false" />
+            <element signature="e#18377#18488#0" expanded="false" />
+            <element signature="e#18542#19320#0" expanded="false" />
+            <element signature="e#19359#20292#0" expanded="false" />
+            <element signature="e#20346#20372#0" expanded="false" />
+            <element signature="e#20409#20936#0" expanded="false" />
+            <element signature="e#20973#21430#0" expanded="false" />
+            <element signature="e#21465#22659#0" expanded="false" />
+            <element signature="e#22720#22874#0" expanded="false" />
+            <marker date="1507808538439" expanded="true" signature="1549:3405" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Class_Mascaret.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="151" column="44" lean-forward="false" selection-start-line="151" selection-start-column="34" selection-end-line="151" selection-end-column="44" />
+          <folding>
+            <element signature="e#1406#1416#0" expanded="true" />
+            <element signature="e#1810#2359#0" expanded="false" />
+            <element signature="e#2393#4054#0" expanded="false" />
+            <element signature="e#4089#4123#0" expanded="false" />
+            <element signature="e#4169#4674#0" expanded="false" />
+            <element signature="e#27010#27615#0" expanded="false" />
+            <element signature="e#27664#31023#0" expanded="false" />
+            <element signature="e#31087#34796#0" expanded="false" />
+            <element signature="e#34840#43125#0" expanded="false" />
+            <element signature="e#43175#43649#0" expanded="false" />
+            <element signature="e#43716#46160#0" expanded="false" />
+            <element signature="e#46218#48374#0" expanded="false" />
+            <element signature="e#46528#46593#0" expanded="false" />
+            <element signature="e#48414#49317#0" expanded="false" />
+            <element signature="e#49350#49731#0" expanded="false" />
+            <element signature="e#49766#50205#0" expanded="false" />
+            <element signature="e#50240#50776#0" expanded="false" />
+            <element signature="e#50817#51164#0" expanded="false" />
+            <element signature="e#51219#51508#0" expanded="false" />
+            <element signature="e#51560#52713#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

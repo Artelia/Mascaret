@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MascPlug</class>
+ <widget class="QMainWindow" name="MascPlug">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>699</width>
+    <height>628</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MascPlug</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../resources.qrc">
+    <normaloff>:/plugins/MascPlug/icones/icon_base.png</normaloff>:/plugins/MascPlug/icones/icon_base.png</iconset>
+  </property>
+  <property name="iconSize">
+   <size>
+    <width>24</width>
+    <height>24</height>
+   </size>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="1" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Projection</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
+        <property name="minimumSize">
+         <size>
+          <width>300</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>400</width>
+          <height>16777215</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="0" column="0">
+     <widget class="QTextEdit" name="textEdit">
+      <property name="mouseTracking">
+       <bool>false</bool>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="1">
+       <widget class="QComboBox" name="connsCbo">
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>0</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelCurDatabase">
+        <property name="text">
+         <string>DB Connection:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>699</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <widget class="QMenu" name="menuSetting">
+     <property name="title">
+      <string>Setting</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../resources.qrc">
+       <normaloff>:/plugins/MascPlug/icones/options.png</normaloff>:/plugins/MascPlug/icones/options.png</iconset>
+     </property>
+     <addaction name="actionOptions"/>
+     <addaction name="actionRestore_Default_Options"/>
+    </widget>
+    <addaction name="menuSetting"/>
+    <addaction name="actionWebsite"/>
+    <addaction name="actionAbout"/>
+   </widget>
+   <widget class="QMenu" name="menu_Tools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionCross_section"/>
+    <addaction name="action_Extract_MNTfor_profile"/>
+   </widget>
+   <widget class="QMenu" name="menuDB">
+    <property name="title">
+     <string>Database</string>
+    </property>
+    <addaction name="actionRefresh_Database"/>
+    <addaction name="separator"/>
+    <addaction name="actionCreate_New_Model"/>
+    <addaction name="actionLoad_Model"/>
+    <addaction name="actionDeleteModel"/>
+    <addaction name="separator"/>
+    <addaction name="actionExport_Model"/>
+    <addaction name="actionImport_Model"/>
+   </widget>
+   <widget class="QMenu" name="menuRun">
+    <property name="title">
+     <string>Run</string>
+    </property>
+    <addaction name="actionParameters"/>
+    <addaction name="separator"/>
+    <addaction name="actionCreate_Geometry"/>
+    <addaction name="actionCreate_xcas"/>
+    <addaction name="separator"/>
+    <addaction name="actionRun"/>
+    <addaction name="separator"/>
+    <addaction name="actionExport_Run"/>
+    <addaction name="actionDelete_Run"/>
+   </widget>
+   <widget class="QMenu" name="menuPost_Treatment">
+    <property name="title">
+     <string>Post-Treatment</string>
+    </property>
+    <addaction name="actionHydrogramme"/>
+    <addaction name="actionCross_section_results"/>
+   </widget>
+   <addaction name="menuDB"/>
+   <addaction name="menu_Tools"/>
+   <addaction name="menuRun"/>
+   <addaction name="menuPost_Treatment"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QToolBar" name="dbToolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionRefresh_Database"/>
+   <addaction name="actionCreate_New_Model"/>
+   <addaction name="actionLoad_Model"/>
+   <addaction name="actionDeleteModel"/>
+   <addaction name="actionExport_Model"/>
+   <addaction name="actionImport_Model"/>
+  </widget>
+  <widget class="QToolBar" name="ToolsToolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionCross_section"/>
+   <addaction name="action_Extract_MNTfor_profile"/>
+   <addaction name="separator"/>
+  </widget>
+  <widget class="QToolBar" name="RunToolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionParameters"/>
+   <addaction name="separator"/>
+   <addaction name="actionCreate_Geometry"/>
+   <addaction name="actionCreate_xcas"/>
+   <addaction name="separator"/>
+   <addaction name="actionRun"/>
+   <addaction name="separator"/>
+   <addaction name="actionExport_Run"/>
+   <addaction name="actionDelete_Run"/>
+  </widget>
+  <widget class="QToolBar" name="PostTreatmentToolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionHydrogramme"/>
+   <addaction name="actionCross_section_results"/>
+  </widget>
+  <action name="actionWebsite">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/webSite.png</normaloff>:/plugins/MascPlug/icones/webSite.png</iconset>
+   </property>
+   <property name="text">
+    <string>Web site</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/icon_base.png</normaloff>:/plugins/MascPlug/icones/icon_base.png</iconset>
+   </property>
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionDeleteModel">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/dbDeleteModel.png</normaloff>:/plugins/MascPlug/icones/dbDeleteModel.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete Model</string>
+   </property>
+  </action>
+  <action name="actionRefresh_Database">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/refreshConnections.png</normaloff>:/plugins/MascPlug/icones/refreshConnections.png</iconset>
+   </property>
+   <property name="text">
+    <string>Refresh Connections List</string>
+   </property>
+  </action>
+  <action name="actionExport_Model">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/dbExtractModel.png</normaloff>:/plugins/MascPlug/icones/dbExtractModel.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export Model</string>
+   </property>
+  </action>
+  <action name="action_Extract_MNTfor_profile">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/mntExtract.png</normaloff>:/plugins/MascPlug/icones/mntExtract.png</iconset>
+   </property>
+   <property name="text">
+    <string> Extract MNT for profile</string>
+   </property>
+  </action>
+  <action name="actionSteady">
+   <property name="text">
+    <string>Steady</string>
+   </property>
+  </action>
+  <action name="actionUnsteady">
+   <property name="text">
+    <string>Unsteady</string>
+   </property>
+  </action>
+  <action name="actionTranscritical">
+   <property name="text">
+    <string>Transcritical</string>
+   </property>
+  </action>
+  <action name="actionCreate_Geometry">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/geo.png</normaloff>:/plugins/MascPlug/icones/geo.png</iconset>
+   </property>
+   <property name="text">
+    <string>Create Geometry</string>
+   </property>
+  </action>
+  <action name="actionCreate_xcas">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/xcas.png</normaloff>:/plugins/MascPlug/icones/xcas.png</iconset>
+   </property>
+   <property name="text">
+    <string>Create xcas</string>
+   </property>
+  </action>
+  <action name="actionSteadyRun">
+   <property name="text">
+    <string>Steady</string>
+   </property>
+  </action>
+  <action name="actionUnsteadyRun">
+   <property name="text">
+    <string>Unsteady</string>
+   </property>
+  </action>
+  <action name="actionTranscriticalRun">
+   <property name="text">
+    <string>Transcritical</string>
+   </property>
+  </action>
+  <action name="actionObservation_Load">
+   <property name="text">
+    <string>Observation Load</string>
+   </property>
+  </action>
+  <action name="actionCreate_New_Model">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/dbCreateModel.png</normaloff>:/plugins/MascPlug/icones/dbCreateModel.png</iconset>
+   </property>
+   <property name="text">
+    <string>Create New Model</string>
+   </property>
+  </action>
+  <action name="actionLoad_Model">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/dbLoadModel.png</normaloff>:/plugins/MascPlug/icones/dbLoadModel.png</iconset>
+   </property>
+   <property name="text">
+    <string>Load Model</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>Options</string>
+   </property>
+  </action>
+  <action name="actionRestore_Default_Options">
+   <property name="text">
+    <string>Restore Default Options</string>
+   </property>
+  </action>
+  <action name="actionExample">
+   <property name="text">
+    <string>Create example</string>
+   </property>
+  </action>
+  <action name="actionHydrogramme">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/hydrogramme.png</normaloff>:/plugins/MascPlug/icones/hydrogramme.png</iconset>
+   </property>
+   <property name="text">
+    <string>Hydrogramme</string>
+   </property>
+  </action>
+  <action name="actionCross_section">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/profil.png</normaloff>:/plugins/MascPlug/icones/profil.png</iconset>
+   </property>
+   <property name="text">
+    <string>Cross section</string>
+   </property>
+  </action>
+  <action name="actionCross_section_results">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/profilResult.png</normaloff>:/plugins/MascPlug/icones/profilResult.png</iconset>
+   </property>
+   <property name="text">
+    <string>Cross section results</string>
+   </property>
+  </action>
+  <action name="actionParameters">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/parameter.png</normaloff>:/plugins/MascPlug/icones/parameter.png</iconset>
+   </property>
+   <property name="text">
+    <string>Parameters</string>
+   </property>
+  </action>
+  <action name="actionRun">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/play.png</normaloff>:/plugins/MascPlug/icones/play.png</iconset>
+   </property>
+   <property name="text">
+    <string>Run</string>
+   </property>
+  </action>
+  <action name="actionDelete_Run">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/croix.png</normaloff>:/plugins/MascPlug/icones/croix.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete Run</string>
+   </property>
+  </action>
+  <action name="actionExport_Run">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/repSav.png</normaloff>:/plugins/MascPlug/icones/repSav.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export last run case</string>
+   </property>
+  </action>
+  <action name="actionImport_Model">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/MascPlug/icones/dbImportModel.png</normaloff>:/plugins/MascPlug/icones/dbImportModel.png</iconset>
+   </property>
+   <property name="text">
+    <string>Import Model</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsProjectionSelectionWidget</class>
+   <extends>QWidget</extends>
+   <header>qgis.gui</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>textEdit</tabstop>
+ </tabstops>
+ <resources>
+  <include location="../resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -1,0 +1,16 @@
+{"mgis": {
+  "DEBUG": false,
+  "dtm_chunksize": 0,
+  "always_on_top": false,
+  "open_last_conn": false,
+  "open_last_schema": false,
+   "postgres_path": "."
+  },
+
+  "mdb": {
+    "LOAD_ALL": true,
+    "OVERWRITE": true,
+    "last_conn": "toto",
+    "last_schema": "start"   
+  }
+}
