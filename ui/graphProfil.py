@@ -357,11 +357,3 @@ class Ui_ProfilGraph(object):
         self.actionBt_r_stok.setText(_translate("ProfilGraph", "bt_r_stok", None))
         self.actionBt_l_stok.setText(_translate("ProfilGraph", "bt_l_stok", None))
         self.actionBt_topo_del.setText(_translate("ProfilGraph", "bt_topo_del", None))
-
-# **************************************
-class NavigationToolbar(NavigationToolbar):
-    # only display the buttons we need
-    toolitems = [t for t in NavigationToolbar.toolitems if
-                 t[0] in ('Home', 'Back', 'Forward', 'Pan', 'Zoom', 'Save')]
-
-    # *****************************************

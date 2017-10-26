@@ -26,6 +26,8 @@ Comment:
         GraphProfilRes
         GraphHydro
 """
+import matplotlib
+matplotlib.use('Agg')
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -44,7 +46,7 @@ try:
 except:
     from matplotlib.backends.backend_qt4agg \
         import FigureCanvasQT as FigureCanvas
-
+        
 try:
     _encoding = QApplication.UnicodeUTF8
     def _translate(context, text, disambig):
@@ -52,7 +54,6 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig)
-
 
 import matplotlib.dates as mdates
 from matplotlib.widgets import RectangleSelector, SpanSelector, Cursor
@@ -62,6 +63,7 @@ import matplotlib.colors as colors
 import matplotlib.lines as mlines
 import matplotlib.ticker as mtick
 from matplotlib import gridspec, patches
+
 
 from datetime import datetime
 

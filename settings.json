@@ -1,0 +1,1 @@
+{"mdb": {"LOAD_ALL": true, "last_schema": "test2", "last_conn": "Mascaret", "OVERWRITE": true}, "mgis": {"postgres_path": "C:\\DONNEES\\Qgis\\PostgreSQL\\9.6\\bin", "open_last_schema": true, "dtm_chunksize": 0, "always_on_top": false, "DEBUG": false, "open_last_conn": true}}

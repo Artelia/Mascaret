@@ -431,7 +431,7 @@ class MascPlugDialog(QMainWindow):
                                                        "{0}.xcas".format(os.path.join(self.masplugPath,clam.baseName)),
                                                         filter="XCAS (*.xcas)")
             if fileNamePath:
-                self.clam.copyFileModel(fileNamePath, case='xcas')
+                clam.copyFileModel(fileNamePath, case='xcas')
 
     def fct_createGeo(self):
         """ create Xcas"""

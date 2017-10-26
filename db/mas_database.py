@@ -362,7 +362,7 @@ class MasDatabase(object):
         try :
             if self.check_firstModel():
                 self.mgis.addInfo(" Shema est {}".format(self.SCHEMA))
-                self.create_FirstModel(dossier)
+                self.create_FirstModel()
             else:
                 pass
             chaine = """CREATE SCHEMA {0} AUTHORIZATION postgres;"""
@@ -402,12 +402,10 @@ class MasDatabase(object):
             self.mgis.addInfo(u"Echec of creation model")
             # self.mgis.addInfo(e)
 
-    def create_FirstModel(self, dossier):
+    def create_FirstModel(self):
         """ 
         To add variable in db for the first model creation
         and to add exemple
-        :param m
-        :param dossier: 
         :return: 
         """
         try:
@@ -794,7 +792,12 @@ $BODY$
 
     def importSchema(self,Listfile):
         # """import schema"""
-        # try:
+        try:
+            if self.check_firstModel():
+                self.mgis.addInfo(" Shema est {}".format(self.SCHEMA))
+                self.create_FirstModel()
+            else:
+                pass
             exe=os.path.join(self.mgis.postgres_path, 'psql')
             if os.path.isfile(exe) or  os.path.isfile(exe + '.exe'):
                 # d = dict(os.environ)
@@ -818,6 +821,6 @@ $BODY$
                 self.mgis.addInfo('Executable file not found. '
                                   'Please, insert path in "path postgres" in Help / Setting / Options')
                 return False
-        # except:
-        #     return False
+        except:
+            return False
 

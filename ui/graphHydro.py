@@ -217,7 +217,3 @@ class Ui_GraphHydro(object):
         self.actionTableWidget_RES.setText(_translate("GraphHydro", "tableWidget_RES", None))
         self.actionComboBox_time.setText(_translate("GraphHydro", "comboBox_time", None))
 
-class NavigationToolbar(NavigationToolbar):
-    # only display the buttons we need
-    toolitems = [t for t in NavigationToolbar.toolitems if
-                 t[0] in ('Home', 'Back', 'Forward', 'Pan', 'Zoom', 'Save')]

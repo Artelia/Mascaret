@@ -250,7 +250,3 @@ class Ui_ProfilGraphRes(object):
         self.actionComboBox_Scenar.setText(_translate("ProfilGraphRes", "comboBox_Scenar", None))
         self.actionTableWidget_RES.setText(_translate("ProfilGraphRes", "tableWidget_RES", None))
 
-class NavigationToolbar(NavigationToolbar):
-    # only display the buttons we need
-    toolitems = [t for t in NavigationToolbar.toolitems if
-                 t[0] in ('Home', 'Back', 'Forward', 'Pan', 'Zoom', 'Save')]

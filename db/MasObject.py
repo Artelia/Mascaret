@@ -119,9 +119,9 @@ class lateral_inflows(MasObject):
         self.attrs = [ ('gid', ' serial NOT NULL'),
                        ('name', ' character varying(30)'),
                        ('branchnum', ' integer'),
-                       ('abscissa', ' numeric(10,1)'),
-                       ('length', ' numeric(10,1)'),
-                       ('firstvalue', ' numeric(10,2)'),
+                       ('abscissa', ' float'),
+                       ('length', ' float'),
+                       ('firstvalue', ' float'),
                        ('method', ' text'),
                        ('active', ' boolean'),
                        ('CONSTRAINT lateral_inflows_pkey', ' PRIMARY KEY (gid)')]
@@ -143,10 +143,10 @@ class lateral_weirs(MasObject):
                         ('name character', 'varying(30)'),
                         ('type', 'integer'),
                         ('branchnum', 'integer'),
-                        ('abscissa', 'numeric(10,1)'),
-                        ('length', 'numeric(10,2)'),
-                        ('z_crest', 'numeric(10,2)'),
-                        ('flowratecoef', 'numeric(10,2)'),
+                        ('abscissa', 'float'),
+                        ('length', 'float'),
+                        ('z_crest', 'float'),
+                        ('flowratecoef', 'float'),
                         ('active', 'boolean'),
                         ('CONSTRAINT lateral_weir_pkey', 'PRIMARY KEY (gid)')]
     def pg_create_table(self):
@@ -166,7 +166,7 @@ class extremities(MasObject):
                         ('name character', 'varying(30)'),
                         ('type', 'integer'),
                         ('method', 'text'),
-                        ('firstvalue', 'numeric(10,2)'),
+                        ('firstvalue', 'float'),
                         ('abscissa', 'text'),
                         ('ordinates', 'text'),
                         ('angles', 'text'),
@@ -186,11 +186,11 @@ class flood_marks(MasObject):
             ('event', 'character varying(30)'),
             ('branchnum', 'integer'),
             ('date', 'date'),
-            ('abscissa', 'numeric(10,1)'),
-            ('z', 'numeric(10,2)'),
+            ('abscissa', 'float'),
+            ('z', 'float'),
             ('validate', 'integer'),
             ('comment', 'text'),
-            ('weir', 'numeric(10,2)'),
+            ('weir', 'float'),
             ('adress', 'text'),
             ('township', 'character varying(30)'),
             ('CONSTRAINT flood_marks_pkey', 'PRIMARY KEY(gid)')]
@@ -211,8 +211,8 @@ class hydraulic_head(MasObject):
         self.attrs = [  ('gid', 'serial NOT NULL'),
                         ('name', 'character varying(30)'),
                         ('branchnum', 'integer'),
-                        ('abscissa', 'numeric(10,1)'),
-                        ('coeff', 'numeric(10,2)'),
+                        ('abscissa', 'float'),
+                        ('coeff', 'float'),
                         ('active', 'boolean'),
                         ('CONSTRAINT hydraulic_head_pkey', 'PRIMARY KEY (gid)')]
     def pg_create_table(self):
@@ -231,9 +231,9 @@ class outputs(MasObject):
         self.attrs = [ ('gid', 'serial NOT NULL'),
                        ('name', 'character varying(30)'),
                        ('code', 'character varying(30)'),
-                       ('zero', 'numeric(10,2)'),
+                       ('zero', 'float'),
                        ('branchnum', 'integer'),
-                       ('abscissa', 'numeric(10,1)'),
+                       ('abscissa', 'float'),
                        ('CONSTRAINT outputs_pkey', 'PRIMARY KEY (gid)')]
 
     def pg_create_table(self):
@@ -254,13 +254,13 @@ class weirs(MasObject):
             ('name', ' character varying(30)'),
             ('type', ' integer'),
             ('branchnum', ' integer'),
-            ('abscissa', ' numeric(10, 1)'),
-            ('z_crest', ' numeric(10, 2)'),
-            ('z_average_crest', ' numeric(10, 2)'),
-            ('z_break', ' numeric(10, 2) DEFAULT 10000'),
-            ('flowratecoeff', ' numeric(10, 2)'),
+            ('abscissa', ' float'),
+            ('z_crest', ' float'),
+            ('z_average_crest', ' float'),
+            ('z_break', ' float DEFAULT 10000'),
+            ('flowratecoeff', ' float'),
             ('thickness', ' integer'),
-            ('wide_floodgate', ' numeric(10, 2)'),
+            ('wide_floodgate', ' float'),
             ('lawfile', ' text'),
             ('active', ' boolean'),
             ('CONSTRAINT weirs_pkey', ' PRIMARY KEY(gid)') ]
@@ -280,13 +280,13 @@ class profiles(MasObject):
         self.attrs = [  ('gid', 'serial NOT NULL'),
                         ('name', 'character varying(30)'),
                         ('branchnum', 'integer'),
-                        ('abscissa', 'numeric(10,1)'),
+                        ('abscissa', 'float'),
                         ('x', 'text'),
                         ('z', 'text'),
-                        ('leftminbed', 'numeric(10,2)'),
-                        ('rightminbed', 'numeric(10,2)'),
-                        ('leftstock', 'numeric(10,2)'),
-                        ('rightstock', 'numeric(10,2)'),
+                        ('leftminbed', 'float'),
+                        ('rightminbed', 'float'),
+                        ('leftstock', 'float'),
+                        ('rightstock', 'float'),
                         ('xmnt', 'text'),
                         ('zmnt', 'text'),
                         ('active', 'boolean'),
@@ -316,8 +316,8 @@ class topo(MasObject):
                         ('name','character varying(30)'),
                         ('profile','character varying(30)'),
                         ('order_','integer'),
-                        ('x','numeric(10,2)'),
-                        ('z','numeric(10,2)'),
+                        ('x','float'),
+                        ('z','float'),
                         ('CONSTRAINT topo_pkey','PRIMARY KEY (gid)')]
     def pg_create_table(self):
         qry= super(self.__class__,self).pg_create_table()
@@ -342,12 +342,12 @@ class branchs(MasObject):
                         ('startb','character varying(30)'),
                         ('endb','character varying(30)'),
                         ('zonenum','integer'),
-                        ('zoneabsstart','numeric(10,1)'),
-                        ('zoneabsend','numeric(10,1)'),
-                        ('minbedcoef','numeric(10,1)'),
-                        ('majbedcoef','numeric(10,1)'),
-                        ('mesh','numeric(10,2)'),
-                        ('planim','numeric(10,2)'),
+                        ('zoneabsstart','float'),
+                        ('zoneabsend','float'),
+                        ('minbedcoef','float'),
+                        ('majbedcoef','float'),
+                        ('mesh','float'),
+                        ('planim','float'),
                         ('active','boolean'),
                         ('CONSTRAINT branchs_pkey','PRIMARY KEY (gid)'),
                         ('CONSTRAINT cle_debut','FOREIGN KEY (startb)\n'
@@ -379,21 +379,21 @@ class resultats(MasObject):
                        ('run',' character varying(30)'),
                        ('scenario',' character varying(30)'),
                        ('date',' timestamp without time zone'),
-                       ('t',' numeric(10,0)'),
+                       ('t',' float'),
                        ('branche',' integer'),
                        ('section',' integer'),
-                       ('pk',' numeric(10,1)'),
-                       ('zref',' numeric(10,2)'),
-                       ('z',' numeric(10,2)'),
-                       ('qmin',' numeric(10,2)'),
-                       ('qmaj',' numeric(10,2)'),
-                       ('kmin',' numeric(10,1)'),
-                       ('kmaj',' numeric(10,1)'),
-                       ('fr',' numeric(10,2)'),
-                       ('y',' numeric(10,2)'),
-                       ('zmax',' numeric(10,2)'),
-                       ('qmax',' numeric(10,2)'),
-                       ('q',' numeric(10,2)'),
+                       ('pk',' float'),
+                       ('zref',' float'),
+                       ('z',' float'),
+                       ('qmin',' float'),
+                       ('qmaj',' float'),
+                       ('kmin',' float'),
+                       ('kmaj',' float'),
+                       ('fr',' float'),
+                       ('y',' float'),
+                       ('zmax',' float'),
+                       ('qmax',' float'),
+                       ('q',' float'),
                        ('CONSTRAINT projet_pkey',' PRIMARY KEY (id)')]
 # *****************************************
 class runs(MasObject):
@@ -417,7 +417,7 @@ class observations(MasObject):
         self.attrs = [('id','serial NOT NULL'),
                       ('code','character(10)'),
                       ('type','character(1)'),
-                      ('valeur','numeric(10,2)'),
+                      ('valeur','float'),
                       ('date','timestamp without time zone'),
                       ('CONSTRAINT cle_obs ','PRIMARY KEY (id)')]
 #*****************************************
@@ -446,8 +446,8 @@ class calcul_abscisse(MasObject):
   RETURNS trigger AS  
  $BODY$ 
 DECLARE  
-	long1	numeric(10,2); 
-	long2	numeric(10,2); 
+	long1	float; 
+	long2	float; 
 	g	geometry; 
 	b	integer; 
 	z	integer; 
@@ -495,8 +495,8 @@ ALTER FUNCTION {0}()
   RETURNS trigger AS
 $BODY$
 DECLARE
-	long1	numeric(10,1); 
-	long2	numeric(10,1); 
+	long1	float; 
+	long2	float; 
     BEGIN 
  
 	EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING NEW.branch,NEW.zonenum INTO long1; 

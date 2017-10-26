@@ -259,8 +259,9 @@ class Class_Mascaret():
                     zones['num1erProf'][i] = j + 1
 
                 zones['numDerProfPlanim'][i] = j + 1
+                
+                nbPas = max(int(diff/ float(zones['planim'][i])) + 1, nbPas)
 
-                nbPas = max(int(diff / zones['planim'][i]) + 1, nbPas)
 
                 index = numero.index(n)
                 zones["zoneabsstart"][i] = max(zones["zoneabsstart"][i],
