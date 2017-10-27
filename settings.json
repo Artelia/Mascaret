@@ -1,0 +1,1 @@
+{"mdb": {"LOAD_ALL": true, "last_schema": "maplasset", "last_conn": "Mascaret", "OVERWRITE": true}, "mgis": {"postgres_path": ".", "open_last_schema": false, "dtm_chunksize": 0, "always_on_top": false, "DEBUG": false, "open_last_conn": false}}

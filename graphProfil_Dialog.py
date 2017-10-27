@@ -26,8 +26,6 @@ Comment:
         GraphProfilRes
         GraphHydro
 """
-import matplotlib
-matplotlib.use('Agg')
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -58,7 +56,11 @@ except AttributeError:
 import matplotlib.dates as mdates
 from matplotlib.widgets import RectangleSelector, SpanSelector, Cursor
 from matplotlib.ticker import FormatStrFormatter
-import matplotlib.pyplot as plt
+# MOD!
+#import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+import matplotlib.image as mpimg
+# MOD!
 import matplotlib.colors as colors
 import matplotlib.lines as mlines
 import matplotlib.ticker as mtick
@@ -148,7 +150,7 @@ class GraphCommon(QDialog):
         self.mdb = self.mgis.mdb
         self.dossierPlugin = self.mgis.masplugPath
         self.dossierProjet = self.mgis.repProject
-        self.fig = plt.Figure()
+        self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
 
 
@@ -605,7 +607,7 @@ class GraphProfil(GraphCommon):
             l = float(fich.readline())
             h = float(fich.readline())
 
-        img = plt.imread(fichier)
+        img = mpimg.imread(fichier)
         self.image = self.axes.imshow(img,
                                       extent=[x0, x0 + l, z0 - h, z0],
                                       zorder=1,
