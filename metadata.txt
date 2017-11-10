@@ -9,7 +9,7 @@
 [general]
 name=Mascaret
 about= Pre and Post-processing for Mascaret. Requires PostgreSQL and PostGIS.
-qgisMinimumVersion=2.18
+qgisMinimumVersion=2.14.18
 qgisMaximumVersion=2.99
 description=Pre and Post-processing for Mascaret.
 version=0.0.01

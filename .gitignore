@@ -1,3 +1,4 @@
 doc/*
 test/*
 *.pyc
+.idea/workspace.xml
