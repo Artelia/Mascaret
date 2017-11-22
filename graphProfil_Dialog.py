@@ -1582,7 +1582,7 @@ class GraphHydro(GraphCommon):
 
 
         self.comboRun.clear()
-        self.comboRun.addItems(self.listeRuns.keys())
+        self.comboRun.addItems(sorted(self.listeRuns.keys()))
         le = len(self.listeRuns.keys())
         self.comboRun.setCurrentIndex(le - 1)
 

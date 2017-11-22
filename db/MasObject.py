@@ -72,13 +72,6 @@ class MasObject(object):
 
 
 
-    #"lois", "scenarios", "apports", "deversoirs", "extremites",
-    #              "laisses", "pertescharges", "sorties", "seuils", "profils",
-    #              "topo", "branches"
-
-    # "resultats", "runs"
-    #"observations", "parametres"
-
 #*****************************************
 class laws(MasObject):
     def __init__(self):

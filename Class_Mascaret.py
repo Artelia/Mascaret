@@ -958,8 +958,7 @@ class Class_Mascaret():
 
             self.litOPT( run, scen, dateDebut,self.baseName)
         self.iface.messageBar().clearWidgets()
-        if self.mgis.DEBUG:
-            self.mgis.addInfo("Simulation finished")
+        self.mgis.addInfo("Simulation finished")
         return
 
     def lanceMascaret(self,fichierCAS):
@@ -1027,25 +1026,45 @@ class Class_Mascaret():
             col.append("run")
             col.append("scenario")
 
-            with open(tempFichier, "wb") as fich:
-                writer = csv.DictWriter(fich, fieldnames=col)
-                for ligne in data:
-                    if dateDebut:
-                        d = dateDebut + datetime.timedelta(
-                            seconds=float(ligne["t"]))
-                        ligne["date"] = d
-                        t.add("{:%Y-%m-%d %H:%M}".format(d))
-                    else:
-                        t.add(ligne["t"])
+            var=[]
 
-                    pk.add(ligne["pk"])
-                    ligne["run"] = run
-                    ligne["scenario"] = scen
+            # with open(tempFichier, "wb") as fich:
+            #     writer = csv.DictWriter(fich, fieldnames=col)
+            # for ligne in data:
+            #     if dateDebut:
+            #         d = dateDebut + datetime.timedelta(
+            #             seconds=float(ligne["t"]))
+            #         ligne["date"] = d
+            #         t.add("{:%Y-%m-%d %H:%M}".format(d))
+            #     else:
+            #         t.add(ligne["t"])
+            #
+            #     pk.add(ligne["pk"])
+            #     ligne["run"] = run
+            #     ligne["scenario"] = scen
+            #
+            #     ligne["section"] = ligne["section"].replace('"', '')
+            #     ligne["branche"] = ligne["branche"].replace('"', '')
 
-                    ligne["section"] = ligne["section"].replace('"', '')
-                    ligne["branche"] = ligne["branche"].replace('"', '')
-
-                    writer.writerow(ligne)
+                # writer.writerow(ligne)
+            var={}
+            for ligne in data:
+                self.mgis.addInfo("{}".format(ligne))
+                # if dateDebut:
+                #     d = dateDebut + datetime.timedelta(
+                #         seconds=float(ligne["t"]))
+                #     ligne["date"] = d
+                #     t.add("{:%Y-%m-%d %H:%M}".format(d))
+                # else:
+                #     t.add(ligne["t"])
+                #
+                # pk.add(ligne["pk"])
+                # ligne["run"] = run
+                # ligne["scenario"] = scen
+                #
+                # ligne["section"] = ligne["section"].replace('"', '')
+                # ligne["branche"] = ligne["branche"].replace('"', '')
+                var.append(ligne)
 
             maintenant = datetime.datetime.utcnow()
 
@@ -1063,7 +1082,10 @@ class Class_Mascaret():
             for c in col:
                 if c.lower() not in listeCol:
                     self.mdb.addColumns("resultats", c.lower())
-            self.mdb.copy("resultats", col, tempFichier)
+            #self.mdb.copy("resultats", col, tempFichier)
+
+            self.mdb.insertRes("resultats", var,col)
+
 
         return True
 

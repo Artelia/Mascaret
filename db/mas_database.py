@@ -697,6 +697,7 @@ $BODY$
 
         valeurs = valeurs[:-1]
 
+
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
                                                             table,
                                                             var,
@@ -718,7 +719,6 @@ $BODY$
             valeurs = valeurs[:-1] + "),"
 
         valeurs = valeurs[:-1]
-
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
                                                             table,
                                                             var,
@@ -726,6 +726,33 @@ $BODY$
         self.run_query(sql)
         # if self.mgis.DEBUG:
         #     self.mgis.addInfo('function insert2 end')
+
+    def insertRes(self, table, listdic, colonnes, delim= " "):
+        """ insert table in tableSQl"""
+        var = ",".join(colonnes)
+        valeurs=""
+        for tab in listdic:
+            valeurs += "("
+            for k in colonnes:
+                for id in tab.keys():
+                    if id==k:
+                        if isinstance(tab[id], basestring):
+                            valeurs += "'" + tab[id] + "',"
+                        elif isinstance(tab[id], list):
+                            valeurs += "'" + delim.join(tab[id]) + "',"
+                        else :
+                            valeurs += str(tab[id]) + ","
+            valeurs = valeurs[:-1] + "),"
+        valeurs = valeurs[:-1] + ";"
+
+
+        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
+                                                            table,
+                                                            var,
+                                                            valeurs)
+
+        self.mgis.addInfo(sql)
+        self.run_query(sql)
 
     def update(self, table, tab, var="nom"):
         """update info"""
