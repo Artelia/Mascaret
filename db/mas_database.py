@@ -745,30 +745,6 @@ $BODY$
         # if self.mgis.DEBUG:
         #     self.mgis.addInfo('function insert2 end')
 
-    # def insertRes(self, table, listdic, colonnes, delim= " "):
-        """ insert table in tableSQl"""
-
-        # var = ",".join(colonnes)
-        # valeurs=""
-        #
-        # for tab in listdic:
-        #     valeurs += "("
-        #     for k in colonnes:
-        #         if isinstance(tab[k], basestring):
-        #             valeurs += "'" + tab[k] + "',"
-        #         elif isinstance(tab[k], list):
-        #             valeurs += "'" + delim.join(tab[k]) + "',"
-        #         else :
-        #             valeurs += str(tab[k]) + ","
-        #     valeurs = valeurs[:-1] + "),"
-        # valeurs = valeurs[:-1] + ";"
-        # sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
-        #                                                     table,
-        #                                                     var,
-        #                                                     valeurs)
-        #
-        # self.mgis.addInfo(sql)
-        # self.run_query(sql)
     def insertRes(self, table, liste_value, colonnes):
         var = ",".join(colonnes)
         valeurs = "("
@@ -822,7 +798,7 @@ $BODY$
 
     def addColumns(self, table, colonne):
         """ add columns"""
-        sql = """ALTER TABLE {0}.{1} ADD COLUMN {2} numeric(10,2);"""
+        sql = """ALTER TABLE {0}.{1} ADD COLUMN {2} double precision;"""
         self.run_query(sql.format(self.SCHEMA, table, colonne))
 
     def exportSchema(self,file):

@@ -1903,6 +1903,8 @@ class GraphHydro(GraphCommon):
             self.date = True
             if self.type == 't':
                 self.type = 'date'
+        else:
+            self.type='t'
 
         self.liste['date']['abs'] = temp["date"]
 
@@ -1931,7 +1933,6 @@ class GraphHydro(GraphCommon):
 
         else:
             self.inv = 'pk'
-
             for x in list(S['abs']):
                 if x not in self.liste[self.inv]['abs']:
                     i = S['abs'].index(x)
@@ -1960,6 +1961,7 @@ class GraphHydro(GraphCommon):
         #
         self.comboTimePK.currentIndexChanged['QString'].disconnect()
         self.comboTimePK.clear()
+
         for x in self.liste[self.inv]['abs']:
             if isinstance(self.position, float):
                 self.comboTimePK.addItem(str(x))
