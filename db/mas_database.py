@@ -108,7 +108,7 @@ class MasDatabase(object):
         cur.execute(sql)
         self.con.commit()
 
-    def run_query(self, qry, fetch=False, arraysize=-1, be_quiet=False, namvar=False):
+    def run_query(self, qry, fetch=False, arraysize=-1, be_quiet=False, namvar=False, many=False,listMany=[]):
         """
         Running PostgreSQL queries
 
@@ -128,7 +128,10 @@ class MasDatabase(object):
         try:
             if self.con:
                 cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-                cur.execute(qry)
+                if many:
+                    cur.executemany(qry, listMany)
+                else:
+                    cur.execute(qry)
                 if fetch is True and arraysize <= 0:
                     result = cur.fetchall()
                     descr = cur.description
@@ -386,12 +389,27 @@ class MasDatabase(object):
                         self.mgis.addInfo('  {0} OK'.format(obj.name))
                 except:
                     self.mgis.addInfo('failure!<br>{0}'.format(obj))
-
             # ajout variable fichier parameter
             # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV HEADER;"""
-            req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV;"""
+            # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV;"""
             fichparam = os.path.join(dossier, "parametres.csv")
-            self.run_query(req.format(self.SCHEMA, fichparam))
+            # self.run_query(req.format(self.SCHEMA, fichparam))
+            liste_value = []
+            with open(fichparam, 'r') as file:
+                for ligne in file:
+                    liste_value.append(ligne.split(','))
+            listeCol = self.listColumns('parametres')
+            var = ",".join(listeCol)
+            valeurs = "("
+            for k in listeCol:
+                valeurs += '%s,'
+            valeurs = valeurs[:-1] + ")"
+
+            sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
+                                                                'parametres',
+                                                                var,
+                                                                valeurs)
+            self.run_query(sql, many=True, listMany=liste_value)
 
             #visualization
             self.loadGis_layer()
@@ -727,32 +745,43 @@ $BODY$
         # if self.mgis.DEBUG:
         #     self.mgis.addInfo('function insert2 end')
 
-    def insertRes(self, table, listdic, colonnes, delim= " "):
+    # def insertRes(self, table, listdic, colonnes, delim= " "):
         """ insert table in tableSQl"""
+
+        # var = ",".join(colonnes)
+        # valeurs=""
+        #
+        # for tab in listdic:
+        #     valeurs += "("
+        #     for k in colonnes:
+        #         if isinstance(tab[k], basestring):
+        #             valeurs += "'" + tab[k] + "',"
+        #         elif isinstance(tab[k], list):
+        #             valeurs += "'" + delim.join(tab[k]) + "',"
+        #         else :
+        #             valeurs += str(tab[k]) + ","
+        #     valeurs = valeurs[:-1] + "),"
+        # valeurs = valeurs[:-1] + ";"
+        # sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
+        #                                                     table,
+        #                                                     var,
+        #                                                     valeurs)
+        #
+        # self.mgis.addInfo(sql)
+        # self.run_query(sql)
+    def insertRes(self, table, liste_value, colonnes):
         var = ",".join(colonnes)
-        valeurs=""
-        for tab in listdic:
-            valeurs += "("
-            for k in colonnes:
-                for id in tab.keys():
-                    if id==k:
-                        if isinstance(tab[id], basestring):
-                            valeurs += "'" + tab[id] + "',"
-                        elif isinstance(tab[id], list):
-                            valeurs += "'" + delim.join(tab[id]) + "',"
-                        else :
-                            valeurs += str(tab[id]) + ","
-            valeurs = valeurs[:-1] + "),"
-        valeurs = valeurs[:-1] + ";"
+        valeurs = "("
+        for k in colonnes:
+            valeurs+='%s,'
+        valeurs = valeurs[:-1] + ")"
 
 
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
                                                             table,
                                                             var,
                                                             valeurs)
-
-        self.mgis.addInfo(sql)
-        self.run_query(sql)
+        self.run_query(sql, many=True, listMany=liste_value)
 
     def update(self, table, tab, var="nom"):
         """update info"""

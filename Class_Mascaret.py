@@ -1026,7 +1026,7 @@ class Class_Mascaret():
             col.append("run")
             col.append("scenario")
 
-            var=[]
+
 
             # with open(tempFichier, "wb") as fich:
             #     writer = csv.DictWriter(fich, fieldnames=col)
@@ -1047,24 +1047,74 @@ class Class_Mascaret():
             #     ligne["branche"] = ligne["branche"].replace('"', '')
 
                 # writer.writerow(ligne)
-            var={}
+            # ***********************************
+            # var={}
+            # first=True
+            # # self.mgis.addInfo("{}".format(data))
+            # for ligne in data:
+            #     ligne["section"] = ligne["section"].replace('"', '')
+            #     ligne["branche"] = ligne["branche"].replace('"', '')
+            #     for id in ligne.keys():
+            #         if first:
+            #             var[id]=[]
+            #             var["run"]=[]
+            #             var["scenario"]=[]
+            #
+            #         var[id].append(ligne[id])
+            #         if dateDebut:
+            #             if first:
+            #                 var["date"]=[]
+            #             d = dateDebut + datetime.timedelta(
+            #                 seconds=float(ligne["t"]))
+            #             var["date"].append(d)
+            #             t.add("{:%Y-%m-%d %H:%M}".format(d))
+            #         else:
+            #             t.add(ligne["t"])
+            #         pk.add(ligne["pk"])
+            #         var["run"].append(run)
+            #         var["scenario"].append(scen)
+            #
+            #     first=False
+            # self.mgis.addInfo("{}".format(var))
+            #***********************************
+            # var=[]
+            # for ligne in data:
+            #     if dateDebut:
+            #         d = dateDebut + datetime.timedelta(
+            #             seconds=float(ligne["t"]))
+            #         ligne["date"] = d
+            #         t.add("{:%Y-%m-%d %H:%M}".format(d))
+            #     else:
+            #         t.add(ligne["t"])
+            #
+            #     pk.add(ligne["pk"])
+            #     ligne["run"] = run
+            #     ligne["scenario"] = scen
+            #
+            #     ligne["section"] = ligne["section"].replace('"', '')
+            #     ligne["branche"] = ligne["branche"].replace('"', '')
+            #     var.append(ligne)
+            # ***********************************
+            value=[]
             for ligne in data:
-                self.mgis.addInfo("{}".format(ligne))
-                # if dateDebut:
-                #     d = dateDebut + datetime.timedelta(
-                #         seconds=float(ligne["t"]))
-                #     ligne["date"] = d
-                #     t.add("{:%Y-%m-%d %H:%M}".format(d))
-                # else:
-                #     t.add(ligne["t"])
-                #
-                # pk.add(ligne["pk"])
-                # ligne["run"] = run
-                # ligne["scenario"] = scen
-                #
-                # ligne["section"] = ligne["section"].replace('"', '')
-                # ligne["branche"] = ligne["branche"].replace('"', '')
-                var.append(ligne)
+                if dateDebut:
+                    d = dateDebut + datetime.timedelta(
+                                seconds=float(ligne["t"]))
+                    ligne["date"] = d
+                    t.add("{:%Y-%m-%d %H:%M}".format(d))
+                else:
+                    t.add(ligne["t"])
+
+                pk.add(ligne["pk"])
+                ligne["run"] = run
+                ligne["scenario"] = scen
+                ligne["section"] = ligne["section"].replace('"', '')
+                ligne["branche"] = ligne["branche"].replace('"', '')
+
+                ligne_list=[]
+                for k in col:
+                    ligne_list.append(ligne[k])
+                value.append(ligne_list)
 
             maintenant = datetime.datetime.utcnow()
 
@@ -1084,7 +1134,7 @@ class Class_Mascaret():
                     self.mdb.addColumns("resultats", c.lower())
             #self.mdb.copy("resultats", col, tempFichier)
 
-            self.mdb.insertRes("resultats", var,col)
+            self.mdb.insertRes("resultats", value,col)
 
 
         return True

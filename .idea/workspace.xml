@@ -2,12 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ee186f8c-9ee6-4044-afa5-8a5346215c7b" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Class_Mascaret.py" afterPath="$PROJECT_DIR$/Class_Mascaret.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/db/MasObject.py" afterPath="$PROJECT_DIR$/db/MasObject.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/db/mas_database.py" afterPath="$PROJECT_DIR$/db/mas_database.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/graphProfil_Dialog.py" afterPath="$PROJECT_DIR$/graphProfil_Dialog.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -21,19 +17,9 @@
     <favorites_list name="MascPlug" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5">
+    <splitter split-orientation="horizontal" split-proportion="0.47863248">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="MascPlug_dialog_base.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/ui/MascPlug_dialog_base.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="476">
-                  <caret line="28" column="22" lean-forward="false" selection-start-line="28" selection-start-column="22" selection-end-line="28" selection-end-column="22" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
           <file leaf-file-name="graphProfil_Dialog.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/graphProfil_Dialog.py">
               <provider selected="true" editor-type-id="text-editor">
@@ -56,36 +42,72 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="Class_Mascaret.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="Class_Mascaret.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/Class_Mascaret.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="212">
-                  <caret line="1051" column="51" lean-forward="false" selection-start-line="1051" selection-start-column="51" selection-end-line="1051" selection-end-column="51" />
+                <state relative-caret-position="229">
+                  <caret line="1129" column="12" lean-forward="false" selection-start-line="1129" selection-start-column="12" selection-end-line="1129" selection-end-column="56" />
                   <folding>
                     <element signature="e#43377#44395#0" expanded="false" />
-                    <element signature="e#47782#49938#0" expanded="false" />
-                    <element signature="e#49978#50881#0" expanded="false" />
-                    <element signature="e#50914#51295#0" expanded="false" />
-                    <element signature="e#51330#51766#0" expanded="false" />
-                    <element signature="e#51801#52337#0" expanded="false" />
-                    <element signature="e#52378#52722#0" expanded="false" />
-                    <element signature="e#52777#53060#0" expanded="false" />
-                    <element signature="e#53112#54265#0" expanded="false" />
+                    <element signature="e#49795#51951#0" expanded="false" />
+                    <element signature="e#51991#52894#0" expanded="false" />
+                    <element signature="e#52927#53308#0" expanded="false" />
+                    <element signature="e#53343#53779#0" expanded="false" />
+                    <element signature="e#53814#54350#0" expanded="false" />
+                    <element signature="e#54391#54735#0" expanded="false" />
+                    <element signature="e#54790#55073#0" expanded="false" />
+                    <element signature="e#55125#56278#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="mas_database.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="MascPlug.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/MascPlug.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="34">
+                  <caret line="38" column="23" lean-forward="true" selection-start-line="38" selection-start-column="23" selection-end-line="38" selection-end-column="23" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="MascPlug_dialog.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/MascPlug_dialog.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="131">
+                  <caret line="367" column="21" lean-forward="true" selection-start-line="367" selection-start-column="21" selection-end-line="367" selection-end-column="21" />
+                  <folding>
+                    <element signature="e#1004#1030#0" expanded="true" />
+                    <element signature="e#6515#6544#0" expanded="false" />
+                    <element signature="e#6586#6775#0" expanded="false" />
+                    <element signature="e#6811#7129#0" expanded="false" />
+                    <element signature="e#7179#7817#0" expanded="false" />
+                    <element signature="e#7863#8631#0" expanded="false" />
+                    <element signature="e#8673#8961#0" expanded="false" />
+                    <element signature="e#9019#9195#0" expanded="false" />
+                    <element signature="e#9252#9427#0" expanded="false" />
+                    <element signature="e#9468#9575#0" expanded="false" />
+                    <element signature="e#9614#9970#0" expanded="false" />
+                    <element signature="e#10025#11885#0" expanded="false" />
+                    <element signature="e#11924#12293#0" expanded="false" />
+                    <element signature="e#12332#12745#0" expanded="false" />
+                    <element signature="e#12793#13558#0" expanded="false" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="mas_database.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/db/mas_database.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="229">
-                  <caret line="743" column="57" lean-forward="false" selection-start-line="743" selection-start-column="57" selection-end-line="743" selection-end-column="57" />
+                <state relative-caret-position="323">
+                  <caret line="780" column="35" lean-forward="true" selection-start-line="780" selection-start-column="35" selection-end-line="780" selection-end-column="35" />
                   <folding>
-                    <element signature="e#28310#28601#0" expanded="false" />
-                    <element signature="e#28653#28805#0" expanded="false" />
-                    <element signature="e#28848#29737#0" expanded="false" />
-                    <element signature="e#29784#31457#0" expanded="false" />
+                    <element signature="e#29667#29958#0" expanded="false" />
+                    <element signature="e#30010#30162#0" expanded="false" />
+                    <element signature="e#30205#31094#0" expanded="false" />
+                    <element signature="e#31141#32814#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -118,13 +140,13 @@
           <file leaf-file-name="mas_database.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/db/mas_database.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="331">
-                  <caret line="741" column="49" lean-forward="true" selection-start-line="741" selection-start-column="49" selection-end-line="741" selection-end-column="49" />
+                <state relative-caret-position="153">
+                  <caret line="397" column="46" lean-forward="true" selection-start-line="397" selection-start-column="46" selection-end-line="397" selection-end-column="46" />
                   <folding>
-                    <element signature="e#28310#28601#0" expanded="false" />
-                    <element signature="e#28653#28805#0" expanded="false" />
-                    <element signature="e#28848#29737#0" expanded="false" />
-                    <element signature="e#29784#31457#0" expanded="false" />
+                    <element signature="e#29667#29958#0" expanded="false" />
+                    <element signature="e#30010#30162#0" expanded="false" />
+                    <element signature="e#30205#31094#0" expanded="false" />
+                    <element signature="e#31141#32814#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -165,8 +187,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>mgis.addInfo</find>
-      <find>create_FirstModel</find>
       <find>'{}'</find>
       <find>self.mdb</find>
       <find>self.con</find>
@@ -195,6 +215,8 @@
       <find>self.courbeObs.</find>
       <find>self.courbeObs</find>
       <find>xlabel</find>
+      <find>para</find>
+      <find>run_query</find>
     </findStrings>
     <replaceStrings>
       <replace>masplugPath</replace>
@@ -284,15 +306,15 @@
         <option value="$PROJECT_DIR$/ui/graphProfilRes.py" />
         <option value="$PROJECT_DIR$/ui/graphProfil.py" />
         <option value="$PROJECT_DIR$/graphProfil_Dialog.py" />
-        <option value="$PROJECT_DIR$/db/mas_database.py" />
         <option value="$PROJECT_DIR$/Class_Mascaret.py" />
+        <option value="$PROJECT_DIR$/db/mas_database.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="240" />
-    <option name="y" value="65" />
-    <option name="width" value="1742" />
+    <option name="x" value="148" />
+    <option name="y" value="103" />
+    <option name="width" value="1940" />
     <option name="height" value="857" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
@@ -534,10 +556,10 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="240" y="65" width="1742" height="857" extended-state="0" />
+    <frame x="148" y="103" width="1940" height="857" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.08204518" sideWeight="0.49519232" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1287234" sideWeight="0.49519232" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1482684" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -788,14 +810,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ui/MascPlug_dialog_base.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="476">
-          <caret line="28" column="22" lean-forward="false" selection-start-line="28" selection-start-column="22" selection-end-line="28" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/ui/graphProfilRes.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4284">
@@ -820,46 +834,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/MascPlug_dialog.py">
+    <entry file="file://$PROJECT_DIR$/ui/MascPlug_dialog_base.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
-          <caret line="148" column="51" lean-forward="false" selection-start-line="148" selection-start-column="51" selection-end-line="148" selection-end-column="51" />
-          <folding>
-            <element signature="e#1004#1030#0" expanded="true" />
-            <element signature="e#6515#6544#0" expanded="false" />
-            <element signature="e#6586#6775#0" expanded="false" />
-            <element signature="e#6811#7129#0" expanded="false" />
-            <element signature="e#7179#7817#0" expanded="false" />
-            <element signature="e#7863#8631#0" expanded="false" />
-            <element signature="e#8673#8961#0" expanded="false" />
-            <element signature="e#9019#9195#0" expanded="false" />
-            <element signature="e#9252#9427#0" expanded="false" />
-            <element signature="e#9468#9575#0" expanded="false" />
-            <element signature="e#9614#9970#0" expanded="false" />
-            <element signature="e#10025#11885#0" expanded="false" />
-            <element signature="e#11924#12293#0" expanded="false" />
-            <element signature="e#12332#12745#0" expanded="false" />
-            <element signature="e#12793#13558#0" expanded="false" />
-            <element signature="e#13698#15117#0" expanded="false" />
-            <element signature="e#15157#15706#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MascPlug.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="40" column="28" lean-forward="false" selection-start-line="40" selection-start-column="28" selection-end-line="40" selection-end-column="28" />
-          <folding>
-            <element signature="e#1005#1031#0" expanded="false" />
-          </folding>
+          <caret line="28" column="22" lean-forward="false" selection-start-line="28" selection-start-column="22" selection-end-line="28" selection-end-column="22" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/graphProfil_Dialog.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="554">
-          <caret line="1961" column="32" lean-forward="true" selection-start-line="1961" selection-start-column="32" selection-end-line="1961" selection-end-column="32" />
+        <state relative-caret-position="1523">
+          <caret line="1588" column="0" lean-forward="true" selection-start-line="1588" selection-start-column="0" selection-end-line="1588" selection-end-column="0" />
           <folding>
             <element signature="e#2480#5300#0" expanded="false" />
             <element signature="e#5334#6150#0" expanded="false" />
@@ -876,33 +862,65 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/MascPlug.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="38" column="23" lean-forward="true" selection-start-line="38" selection-start-column="23" selection-end-line="38" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MascPlug_dialog.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="131">
+          <caret line="367" column="21" lean-forward="true" selection-start-line="367" selection-start-column="21" selection-end-line="367" selection-end-column="21" />
+          <folding>
+            <element signature="e#1004#1030#0" expanded="true" />
+            <element signature="e#6515#6544#0" expanded="false" />
+            <element signature="e#6586#6775#0" expanded="false" />
+            <element signature="e#6811#7129#0" expanded="false" />
+            <element signature="e#7179#7817#0" expanded="false" />
+            <element signature="e#7863#8631#0" expanded="false" />
+            <element signature="e#8673#8961#0" expanded="false" />
+            <element signature="e#9019#9195#0" expanded="false" />
+            <element signature="e#9252#9427#0" expanded="false" />
+            <element signature="e#9468#9575#0" expanded="false" />
+            <element signature="e#9614#9970#0" expanded="false" />
+            <element signature="e#10025#11885#0" expanded="false" />
+            <element signature="e#11924#12293#0" expanded="false" />
+            <element signature="e#12332#12745#0" expanded="false" />
+            <element signature="e#12793#13558#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Class_Mascaret.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="212">
-          <caret line="1051" column="51" lean-forward="false" selection-start-line="1051" selection-start-column="51" selection-end-line="1051" selection-end-column="51" />
+        <state relative-caret-position="229">
+          <caret line="1129" column="12" lean-forward="false" selection-start-line="1129" selection-start-column="12" selection-end-line="1129" selection-end-column="56" />
           <folding>
             <element signature="e#43377#44395#0" expanded="false" />
-            <element signature="e#47782#49938#0" expanded="false" />
-            <element signature="e#49978#50881#0" expanded="false" />
-            <element signature="e#50914#51295#0" expanded="false" />
-            <element signature="e#51330#51766#0" expanded="false" />
-            <element signature="e#51801#52337#0" expanded="false" />
-            <element signature="e#52378#52722#0" expanded="false" />
-            <element signature="e#52777#53060#0" expanded="false" />
-            <element signature="e#53112#54265#0" expanded="false" />
+            <element signature="e#49795#51951#0" expanded="false" />
+            <element signature="e#51991#52894#0" expanded="false" />
+            <element signature="e#52927#53308#0" expanded="false" />
+            <element signature="e#53343#53779#0" expanded="false" />
+            <element signature="e#53814#54350#0" expanded="false" />
+            <element signature="e#54391#54735#0" expanded="false" />
+            <element signature="e#54790#55073#0" expanded="false" />
+            <element signature="e#55125#56278#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/db/mas_database.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="331">
-          <caret line="741" column="49" lean-forward="true" selection-start-line="741" selection-start-column="49" selection-end-line="741" selection-end-column="49" />
+        <state relative-caret-position="323">
+          <caret line="780" column="35" lean-forward="true" selection-start-line="780" selection-start-column="35" selection-end-line="780" selection-end-column="35" />
           <folding>
-            <element signature="e#28310#28601#0" expanded="false" />
-            <element signature="e#28653#28805#0" expanded="false" />
-            <element signature="e#28848#29737#0" expanded="false" />
-            <element signature="e#29784#31457#0" expanded="false" />
+            <element signature="e#29667#29958#0" expanded="false" />
+            <element signature="e#30010#30162#0" expanded="false" />
+            <element signature="e#30205#31094#0" expanded="false" />
+            <element signature="e#31141#32814#0" expanded="false" />
           </folding>
         </state>
       </provider>
