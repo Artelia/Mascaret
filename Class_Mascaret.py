@@ -37,7 +37,7 @@ comment:
 
 import csv
 import datetime
-import os
+import os,sys
 import re
 import shutil
 from xml.etree.ElementTree import ElementTree, Element, SubElement
@@ -59,6 +59,8 @@ class Class_Mascaret():
         self.mdb=self.mgis.mdb
         self.iface=self.mgis.iface
         self.dossierFileMasc= os.path.join(self.mgis.masplugPath, "mascaret")
+        if not os.path.isdir(self.dossierFileMasc):
+            os.mkdir(self.dossierFileMasc)
         self.dossierFileMascOri = os.path.join(self.mgis.masplugPath, "mascaret_ori")
         self.baseName = "mascaret"
         self.nomfichGEO=self.baseName+".geo"
@@ -949,7 +951,10 @@ class Class_Mascaret():
             if self.mgis.DEBUG:
                 self.mgis.addInfo("Run case")
 
-            self.lanceMascaret(self.baseName + '.xcas')
+            finish=self.lanceMascaret(self.baseName + '.xcas')
+            if not finish :
+                self.mgis.addInfo("Simulation error")
+                return
 
             self.litOPT( run, scen, dateDebut,self.baseName)
         self.iface.messageBar().clearWidgets()
@@ -967,11 +972,29 @@ class Class_Mascaret():
 
         with open('FichierCas.txt', 'w') as fichier:
             fichier.write("'" + fichierCAS + "'\n")
-        soft="mascaret.exe"
+        test=sys.platform
+
+        if test =='linux2' or test =='cygwin':
+            soft = "./mascaret_linux"
+        elif test =='win32' :
+            soft = "mascaret.exe"
+        else:
+            self.mgis.addInfo("{0} platform  doesn't allow to run simulation.".format(test))
+            return False
+
+        # Linux(2.x and 3.x) ='linux2'
+        # Windows = 'win32'
+        # Windows / Cygwin = 'cygwin'
+        # MacOSX = 'darwin'
+        # OS / 2 = 'os2'
+        # OS / 2  EMX ='os2emx'
+        # RiscOS ='riscos'
+        # AtheOS= 'atheos
         p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                              ,stdin=subprocess.PIPE)
         p.wait()
         self.mgis.addInfo("{0}".format(p.communicate()[0]))
+        return True
 
     def litOPT(self, run, scen, dateDebut,baseNamefile):
         nomFich = os.path.join(self.dossierFileMasc, baseNamefile + '.opt')
@@ -1141,7 +1164,7 @@ class Class_Mascaret():
             os.remove(os.path.join(self.dossierFileMasc,files[i]))
         files = os.listdir(self.dossierFileMascOri)
         for i in range(0, len(files)):
-            shutil.copyfile(os.path.join(self.dossierFileMascOri,files[i]), os.path.join(self.dossierFileMasc,files[i]))
+            shutil.copy2(os.path.join(self.dossierFileMascOri,files[i]), os.path.join(self.dossierFileMasc,files[i]))
 
     def clean_res(self):
         """ Clean the run folder and copy the essential files to run mascaret"""
@@ -1160,7 +1183,7 @@ class Class_Mascaret():
         try:
             files = os.listdir(self.dossierFileMasc)
             for i in range(0, len(files)):
-                shutil.copyfile(os.path.join(self.dossierFileMasc, files[i]),
+                shutil.copy2(os.path.join(self.dossierFileMasc, files[i]),
                                 os.path.join(rep, files[i]))
             return True
         except :
@@ -1168,10 +1191,10 @@ class Class_Mascaret():
 
     def copyFileModel(self, rep, case=None):
         if case=='xcas':
-            shutil.copyfile(os.path.join(self.dossierFileMasc,self.baseName+".xcas"),rep)
+            shutil.copy2(os.path.join(self.dossierFileMasc,self.baseName+".xcas"),rep)
 
         elif case=='geo':
-            shutil.copyfile(os.path.join(self.dossierFileMasc, self.baseName+".geo"), rep)
+            shutil.copy2(os.path.join(self.dossierFileMasc, self.baseName+".geo"), rep)
         else:
             self.mgis.addInfo('No file to export')
 

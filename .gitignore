@@ -1,4 +1,5 @@
 doc/*
 test/*
+mascaret/*
 *.pyc
 .idea/workspace.xml
