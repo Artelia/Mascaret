@@ -14,11 +14,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MascPlug</string>
+   <string>Mascaret</string>
   </property>
   <property name="windowIcon">
    <iconset resource="../resources.qrc">
-    <normaloff>:/plugins/MascPlug/icones/icon_base.png</normaloff>:/plugins/MascPlug/icones/icon_base.png</iconset>
+    <normaloff>:/plugins/Mascaret/icones/icon_base.png</normaloff>:/plugins/Mascaret/icones/icon_base.png</iconset>
   </property>
   <property name="iconSize">
    <size>
@@ -136,7 +136,7 @@
      </property>
      <property name="icon">
       <iconset resource="../resources.qrc">
-       <normaloff>:/plugins/MascPlug/icones/options.png</normaloff>:/plugins/MascPlug/icones/options.png</iconset>
+       <normaloff>:/plugins/Mascaret/icones/options.png</normaloff>:/plugins/Mascaret/icones/options.png</iconset>
      </property>
      <addaction name="actionOptions"/>
      <addaction name="actionRestore_Default_Options"/>
@@ -259,7 +259,7 @@
   <action name="actionWebsite">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/webSite.png</normaloff>:/plugins/MascPlug/icones/webSite.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/webSite.png</normaloff>:/plugins/Mascaret/icones/webSite.png</iconset>
    </property>
    <property name="text">
     <string>Web site</string>
@@ -268,7 +268,7 @@
   <action name="actionAbout">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/icon_base.png</normaloff>:/plugins/MascPlug/icones/icon_base.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/icon_base.png</normaloff>:/plugins/Mascaret/icones/icon_base.png</iconset>
    </property>
    <property name="text">
     <string>About</string>
@@ -277,7 +277,7 @@
   <action name="actionDeleteModel">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/dbDeleteModel.png</normaloff>:/plugins/MascPlug/icones/dbDeleteModel.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/dbDeleteModel.png</normaloff>:/plugins/Mascaret/icones/dbDeleteModel.png</iconset>
    </property>
    <property name="text">
     <string>Delete Model</string>
@@ -286,7 +286,7 @@
   <action name="actionRefresh_Database">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/refreshConnections.png</normaloff>:/plugins/MascPlug/icones/refreshConnections.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/refreshConnections.png</normaloff>:/plugins/Mascaret/icones/refreshConnections.png</iconset>
    </property>
    <property name="text">
     <string>Refresh Connections List</string>
@@ -295,7 +295,7 @@
   <action name="actionExport_Model">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/dbExtractModel.png</normaloff>:/plugins/MascPlug/icones/dbExtractModel.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/dbExtractModel.png</normaloff>:/plugins/Mascaret/icones/dbExtractModel.png</iconset>
    </property>
    <property name="text">
     <string>Export Model</string>
@@ -304,7 +304,7 @@
   <action name="action_Extract_MNTfor_profile">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/mntExtract.png</normaloff>:/plugins/MascPlug/icones/mntExtract.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/mntExtract.png</normaloff>:/plugins/Mascaret/icones/mntExtract.png</iconset>
    </property>
    <property name="text">
     <string> Extract MNT for profile</string>
@@ -328,7 +328,7 @@
   <action name="actionCreate_Geometry">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/geo.png</normaloff>:/plugins/MascPlug/icones/geo.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/geo.png</normaloff>:/plugins/Mascaret/icones/geo.png</iconset>
    </property>
    <property name="text">
     <string>Create Geometry</string>
@@ -337,7 +337,7 @@
   <action name="actionCreate_xcas">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/xcas.png</normaloff>:/plugins/MascPlug/icones/xcas.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/xcas.png</normaloff>:/plugins/Mascaret/icones/xcas.png</iconset>
    </property>
    <property name="text">
     <string>Create xcas</string>
@@ -366,7 +366,7 @@
   <action name="actionCreate_New_Model">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/dbCreateModel.png</normaloff>:/plugins/MascPlug/icones/dbCreateModel.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/dbCreateModel.png</normaloff>:/plugins/Mascaret/icones/dbCreateModel.png</iconset>
    </property>
    <property name="text">
     <string>Create New Model</string>
@@ -375,7 +375,7 @@
   <action name="actionLoad_Model">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/dbLoadModel.png</normaloff>:/plugins/MascPlug/icones/dbLoadModel.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/dbLoadModel.png</normaloff>:/plugins/Mascaret/icones/dbLoadModel.png</iconset>
    </property>
    <property name="text">
     <string>Load Model</string>
@@ -402,7 +402,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/hydrogramme.png</normaloff>:/plugins/MascPlug/icones/hydrogramme.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/hydrogramme.png</normaloff>:/plugins/Mascaret/icones/hydrogramme.png</iconset>
    </property>
    <property name="text">
     <string>Hydrogramme</string>
@@ -414,7 +414,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/profil.png</normaloff>:/plugins/MascPlug/icones/profil.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/profil.png</normaloff>:/plugins/Mascaret/icones/profil.png</iconset>
    </property>
    <property name="text">
     <string>Cross section</string>
@@ -426,7 +426,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/profilResult.png</normaloff>:/plugins/MascPlug/icones/profilResult.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/profilResult.png</normaloff>:/plugins/Mascaret/icones/profilResult.png</iconset>
    </property>
    <property name="text">
     <string>Cross section results</string>
@@ -435,7 +435,7 @@
   <action name="actionParameters">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/parameter.png</normaloff>:/plugins/MascPlug/icones/parameter.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/parameter.png</normaloff>:/plugins/Mascaret/icones/parameter.png</iconset>
    </property>
    <property name="text">
     <string>Parameters</string>
@@ -444,7 +444,7 @@
   <action name="actionRun">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/play.png</normaloff>:/plugins/MascPlug/icones/play.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/play.png</normaloff>:/plugins/Mascaret/icones/play.png</iconset>
    </property>
    <property name="text">
     <string>Run</string>
@@ -453,7 +453,7 @@
   <action name="actionDelete_Run">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/croix.png</normaloff>:/plugins/MascPlug/icones/croix.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/croix.png</normaloff>:/plugins/Mascaret/icones/croix.png</iconset>
    </property>
    <property name="text">
     <string>Delete Run</string>
@@ -462,7 +462,7 @@
   <action name="actionExport_Run">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/repSav.png</normaloff>:/plugins/MascPlug/icones/repSav.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/repSav.png</normaloff>:/plugins/Mascaret/icones/repSav.png</iconset>
    </property>
    <property name="text">
     <string>Export last run case</string>
@@ -471,7 +471,7 @@
   <action name="actionImport_Model">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/MascPlug/icones/dbImportModel.png</normaloff>:/plugins/MascPlug/icones/dbImportModel.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/dbImportModel.png</normaloff>:/plugins/Mascaret/icones/dbImportModel.png</iconset>
    </property>
    <property name="text">
     <string>Import Model</string>

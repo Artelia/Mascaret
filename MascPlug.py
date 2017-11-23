@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
-Name                 : MascPlug
+Name                 : Mascaret
 Description          : Pre and Postprocessing for Mascaret for QGIS
 Date                 : June,2017
 copyright            : (C) 2017 by Artelia
@@ -12,7 +12,7 @@ email                :
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
@@ -37,8 +37,8 @@ class MascPlug:
     def __init__(self, iface):
         self.iface = iface
         self.dlg = None
-        self.icon_path = ":/plugins/MascPlug/icones/icon_base.png"
-        self.namePlug='MascPlug'
+        self.icon_path = ":/plugins/Mascaret/icones/icon_base.png"
+        self.namePlug='Mascaret'
 
     def initGui(self):
         self.action = QAction(QIcon(self.icon_path), QApplication.translate(self.namePlug, self.namePlug),

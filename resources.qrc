@@ -1,6 +1,6 @@
 <!DOCTYPE RCC>
 <RCC>
-  <qresource prefix="/plugins/MascPlug" > 
+  <qresource prefix="/plugins/Mascaret" > 
     <file>icones/icon.png</file> 
     <file>icones/icon_base.png</file> 
     <file>icones/dbLoadModel.png</file> 
