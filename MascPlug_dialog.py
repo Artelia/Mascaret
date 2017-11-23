@@ -95,8 +95,6 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionDeleteModel.triggered.connect(self.dbDeleteModel)
         # #mascaret
         self.ui.actionLoad_Model.triggered.connect(self.dbLoad)
-        # # TODO
-        # self.ui.actionExport_Model.triggered.connect(self.exportModel)
 
         # combos
         self.ui.crsWidget.crsChanged.connect(self.updateDefaultCrs)
@@ -111,8 +109,8 @@ class MascPlugDialog(QMainWindow):
 
         # restore the window state
         # s = QSettings()
-        # self.restoreGeometry(s.value("/MasPlug/mainWindow/geometry", QByteArray(), type=QByteArray))
-        # self.restoreState(s.value("/MasPlug/mainWindow/windowState", QByteArray(), type=QByteArray))
+        # self.restoreGeometry(s.value("/Mascaret/mainWindow/geometry", QByteArray(), type=QByteArray))
+        # self.restoreState(s.value("/Mascaret/mainWindow/windowState", QByteArray(), type=QByteArray))
 
 
         # # check if we should connect to previuosly used RDB
@@ -347,14 +345,16 @@ class MascPlugDialog(QMainWindow):
             self.mdb.SCHEMA = model
             self.mdb.loadModel()
             self.mdb.last_schema = self.mdb.SCHEMA
+            self.enableAllActions()
 
         else:
             self.addInfo('Droping Model cancelled.')
-        self.enableAllActions()
+
 
 ###**************************************
 ## Menus Functions
 ###**************************************
+
     def MntToProfil(self):
         """
         Extraction of the profiles from Raster

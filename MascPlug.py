@@ -30,8 +30,6 @@ except ImportError:
 from MascPlug_dialog import MascPlugDialog
 
 
-
-
 class MascPlug:
     """QGIS Plugin Implementation."""
     def __init__(self, iface):
