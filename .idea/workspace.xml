@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="ee186f8c-9ee6-4044-afa5-8a5346215c7b" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Class_Mascaret.py" afterPath="$PROJECT_DIR$/Class_Mascaret.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/db/mas_database.py" afterPath="$PROJECT_DIR$/db/mas_database.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/graphProfil_Dialog.py" afterPath="$PROJECT_DIR$/graphProfil_Dialog.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -25,8 +23,8 @@
           <file leaf-file-name="graphProfil_Dialog.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/graphProfil_Dialog.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="482">
-                  <caret line="1997" column="12" lean-forward="false" selection-start-line="1997" selection-start-column="12" selection-end-line="1997" selection-end-column="12" />
+                <state relative-caret-position="-197">
+                  <caret line="1908" column="29" lean-forward="true" selection-start-line="1908" selection-start-column="29" selection-end-line="1908" selection-end-column="29" />
                   <folding>
                     <element signature="e#2480#5300#0" expanded="false" />
                     <element signature="e#5334#6150#0" expanded="false" />
@@ -34,21 +32,22 @@
                     <element signature="e#40904#42546#0" expanded="false" />
                     <element signature="e#42587#54532#0" expanded="false" />
                     <element signature="e#56011#64028#0" expanded="false" />
-                    <element signature="e#64075#66777#0" expanded="false" />
                     <element signature="e#66812#67819#0" expanded="false" />
                     <element signature="e#67859#67978#0" expanded="false" />
                     <element signature="e#68019#68186#0" expanded="false" />
                     <element signature="e#68255#68330#0" expanded="false" />
                     <element signature="e#68369#68908#0" expanded="false" />
-                    <element signature="e#73115#75084#0" expanded="false" />
-                    <element signature="e#75122#75638#0" expanded="false" />
-                    <element signature="e#75674#77615#0" expanded="false" />
-                    <element signature="e#77651#78776#0" expanded="false" />
-                    <element signature="e#78812#81186#0" expanded="false" />
-                    <element signature="e#81235#81503#0" expanded="false" />
-                    <element signature="e#82240#82418#0" expanded="false" />
-                    <element signature="e#82467#83070#0" expanded="false" />
-                    <element signature="e#83107#84331#0" expanded="false" />
+                    <element signature="e#72040#72991#0" expanded="false" />
+                    <element signature="e#73034#73262#0" expanded="false" />
+                    <element signature="e#73296#75265#0" expanded="false" />
+                    <element signature="e#75303#75819#0" expanded="false" />
+                    <element signature="e#75855#77796#0" expanded="false" />
+                    <element signature="e#78993#81367#0" expanded="false" />
+                    <element signature="e#81416#81684#0" expanded="false" />
+                    <element signature="e#81731#82373#0" expanded="false" />
+                    <element signature="e#82421#82599#0" expanded="false" />
+                    <element signature="e#82648#83251#0" expanded="false" />
+                    <element signature="e#83288#84512#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -67,8 +66,8 @@
           <file leaf-file-name="MascPlug_dialog.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/MascPlug_dialog.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="290">
-                  <caret line="378" column="48" lean-forward="true" selection-start-line="378" selection-start-column="48" selection-end-line="378" selection-end-column="48" />
+                <state relative-caret-position="3587">
+                  <caret line="378" column="48" lean-forward="false" selection-start-line="378" selection-start-column="48" selection-end-line="378" selection-end-column="48" />
                   <folding>
                     <element signature="e#1004#1030#0" expanded="true" />
                     <element signature="e#6515#6544#0" expanded="false" />
@@ -93,7 +92,7 @@
           <file leaf-file-name="graphProfil.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/ui/graphProfil.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="778">
+                <state relative-caret-position="6103">
                   <caret line="359" column="0" lean-forward="false" selection-start-line="359" selection-start-column="0" selection-end-line="359" selection-end-column="0" />
                   <folding />
                 </state>
@@ -121,20 +120,30 @@
           <file leaf-file-name="graphProfil_Dialog.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/graphProfil_Dialog.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="469">
-                  <caret line="1957" column="50" lean-forward="false" selection-start-line="1957" selection-start-column="50" selection-end-line="1957" selection-end-column="50" />
+                <state relative-caret-position="3281">
+                  <caret line="1963" column="50" lean-forward="false" selection-start-line="1963" selection-start-column="50" selection-end-line="1963" selection-end-column="50" />
                   <folding>
                     <element signature="e#2480#5300#0" expanded="false" />
                     <element signature="e#5334#6150#0" expanded="false" />
                     <element signature="e#6188#40858#0" expanded="false" />
                     <element signature="e#40904#42546#0" expanded="false" />
                     <element signature="e#42587#54532#0" expanded="false" />
+                    <element signature="e#56011#64028#0" expanded="false" />
                     <element signature="e#64075#66777#0" expanded="false" />
                     <element signature="e#66812#67819#0" expanded="false" />
                     <element signature="e#67859#67978#0" expanded="false" />
                     <element signature="e#68019#68186#0" expanded="false" />
                     <element signature="e#68255#68330#0" expanded="false" />
                     <element signature="e#68369#68908#0" expanded="false" />
+                    <element signature="e#73296#75265#0" expanded="false" />
+                    <element signature="e#75303#75819#0" expanded="false" />
+                    <element signature="e#75855#77796#0" expanded="false" />
+                    <element signature="e#77832#78957#0" expanded="false" />
+                    <element signature="e#78993#81367#0" expanded="false" />
+                    <element signature="e#81416#81684#0" expanded="false" />
+                    <element signature="e#82421#82599#0" expanded="false" />
+                    <element signature="e#82648#83251#0" expanded="false" />
+                    <element signature="e#83288#84512#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -315,6 +324,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -343,7 +353,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
       <pane id="Scope" />
     </panes>
   </component>
@@ -525,7 +534,7 @@
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.059168443" sideWeight="0.49519232" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.05970149" sideWeight="0.49519232" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1482684" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19264069" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -585,6 +594,11 @@
           <line>399</line>
           <option name="timeStamp" value="81" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/graphProfil_Dialog.py</url>
+          <line>1767</line>
+          <option name="timeStamp" value="87" />
+        </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
@@ -593,7 +607,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="86" />
+      <option name="time" value="88" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -780,7 +794,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="586">
           <caret line="219" column="0" lean-forward="false" selection-start-line="219" selection-start-column="0" selection-end-line="219" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -804,13 +817,12 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="778">
           <caret line="252" column="0" lean-forward="false" selection-start-line="252" selection-start-column="0" selection-end-line="252" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ui/graphProfil.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="778">
+        <state relative-caret-position="6103">
           <caret line="359" column="0" lean-forward="false" selection-start-line="359" selection-start-column="0" selection-end-line="359" selection-end-column="0" />
           <folding />
         </state>
@@ -820,17 +832,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="577">
           <caret line="1064" column="29" lean-forward="false" selection-start-line="1064" selection-start-column="29" selection-end-line="1064" selection-end-column="39" />
-          <folding>
-            <element signature="e#43377#44395#0" expanded="false" />
-            <element signature="e#46934#49090#0" expanded="false" />
-            <element signature="e#49130#50033#0" expanded="false" />
-            <element signature="e#50066#50447#0" expanded="false" />
-            <element signature="e#50482#50918#0" expanded="false" />
-            <element signature="e#50953#51489#0" expanded="false" />
-            <element signature="e#51530#51874#0" expanded="false" />
-            <element signature="e#51929#52212#0" expanded="false" />
-            <element signature="e#52264#53417#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -848,8 +849,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/MascPlug_dialog.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="290">
-          <caret line="378" column="48" lean-forward="true" selection-start-line="378" selection-start-column="48" selection-end-line="378" selection-end-column="48" />
+        <state relative-caret-position="3587">
+          <caret line="378" column="48" lean-forward="false" selection-start-line="378" selection-start-column="48" selection-end-line="378" selection-end-column="48" />
           <folding>
             <element signature="e#1004#1030#0" expanded="true" />
             <element signature="e#6515#6544#0" expanded="false" />
@@ -872,8 +873,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/graphProfil_Dialog.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="482">
-          <caret line="1997" column="12" lean-forward="false" selection-start-line="1997" selection-start-column="12" selection-end-line="1997" selection-end-column="12" />
+        <state relative-caret-position="-197">
+          <caret line="1908" column="29" lean-forward="true" selection-start-line="1908" selection-start-column="29" selection-end-line="1908" selection-end-column="29" />
           <folding>
             <element signature="e#2480#5300#0" expanded="false" />
             <element signature="e#5334#6150#0" expanded="false" />
@@ -881,21 +882,22 @@
             <element signature="e#40904#42546#0" expanded="false" />
             <element signature="e#42587#54532#0" expanded="false" />
             <element signature="e#56011#64028#0" expanded="false" />
-            <element signature="e#64075#66777#0" expanded="false" />
             <element signature="e#66812#67819#0" expanded="false" />
             <element signature="e#67859#67978#0" expanded="false" />
             <element signature="e#68019#68186#0" expanded="false" />
             <element signature="e#68255#68330#0" expanded="false" />
             <element signature="e#68369#68908#0" expanded="false" />
-            <element signature="e#73115#75084#0" expanded="false" />
-            <element signature="e#75122#75638#0" expanded="false" />
-            <element signature="e#75674#77615#0" expanded="false" />
-            <element signature="e#77651#78776#0" expanded="false" />
-            <element signature="e#78812#81186#0" expanded="false" />
-            <element signature="e#81235#81503#0" expanded="false" />
-            <element signature="e#82240#82418#0" expanded="false" />
-            <element signature="e#82467#83070#0" expanded="false" />
-            <element signature="e#83107#84331#0" expanded="false" />
+            <element signature="e#72040#72991#0" expanded="false" />
+            <element signature="e#73034#73262#0" expanded="false" />
+            <element signature="e#73296#75265#0" expanded="false" />
+            <element signature="e#75303#75819#0" expanded="false" />
+            <element signature="e#75855#77796#0" expanded="false" />
+            <element signature="e#78993#81367#0" expanded="false" />
+            <element signature="e#81416#81684#0" expanded="false" />
+            <element signature="e#81731#82373#0" expanded="false" />
+            <element signature="e#82421#82599#0" expanded="false" />
+            <element signature="e#82648#83251#0" expanded="false" />
+            <element signature="e#83288#84512#0" expanded="false" />
           </folding>
         </state>
       </provider>

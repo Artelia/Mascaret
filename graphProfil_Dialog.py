@@ -1898,13 +1898,18 @@ class GraphHydro(GraphCommon):
         condition = "run='{0}' AND scenario='{1}'".format(self.run,
                                                           self.scenario)
         temp = self.mdb.selectDistinct("date", "resultats", condition)
+        self.mgis.addInfo('dddd1 {}\n {}'.format( self.type, temp["date"][0]))
 
         if temp["date"][0]:
             self.date = True
             if self.type == 't':
                 self.type = 'date'
         else:
-            self.type='t'
+            if self.type == 'date':
+                self.type='t'
+
+
+        self.mgis.addInfo('dddd2 {}  '.format( self.type))
 
         self.liste['date']['abs'] = temp["date"]
 
@@ -1933,6 +1938,7 @@ class GraphHydro(GraphCommon):
 
         else:
             self.inv = 'pk'
+
             for x in list(S['abs']):
                 if x not in self.liste[self.inv]['abs']:
                     i = S['abs'].index(x)
