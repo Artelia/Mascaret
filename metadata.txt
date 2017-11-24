@@ -12,7 +12,7 @@ about= Pre and Post-processing for Mascaret. Requires PostgreSQL and PostGIS.
 qgisMinimumVersion=2.14.18
 qgisMaximumVersion=2.99
 description=Pre and Post-processing for Mascaret.
-version=0.0.01
+version=0.0.03
 author=Artelia Eau et Environnement
 email=mehdi-pierre.daou@arteliagroup.com
 
@@ -23,6 +23,9 @@ email=mehdi-pierre.daou@arteliagroup.com
 # Uncomment the following line and add your changelog:
 changelog=
     0.0.01 : first beta release
+    0.0.02 : Correction of Matplotlib 2.x bug
+    0.0.03 : Correction of rights problems with .qgis2 directory
+             Addition of Linux version of Mascaret executable
 
 # Tags are comma separated with spaces allowed
 tags=
@@ -30,7 +33,7 @@ tags=
 homepage=https://github.com/ArteliaTelemac/Mascaret/wiki
 tracker=https://github.com/ArteliaTelemac/Mascaret/issues
 repository=https://github.com/ArteliaTelemac/Mascaret
-category=Plugins
+category=Database
 icon=icones/icon_base.png
 # experimental flag
 experimental=True
