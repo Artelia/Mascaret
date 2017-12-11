@@ -8,11 +8,13 @@
 
 [general]
 name=Mascaret
-about= Pre and Post-processing for Mascaret. Requires PostgreSQL and PostGIS.
+description=Pre and Post-processing for Mascaret.
+about= Plugin dedicated to the building and exploitation of Mascaret models.
+       Requires PostgreSQL and PostGIS.
+       Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
 qgisMinimumVersion=2.14.18
 qgisMaximumVersion=2.99
-description=Pre and Post-processing for Mascaret.
-version=0.0.03
+version=0.0.4
 author=Artelia Eau et Environnement
 email=mehdi-pierre.daou@arteliagroup.com
 
@@ -22,10 +24,11 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    0.0.01 : first beta release
-    0.0.02 : Correction of Matplotlib 2.x bug
-    0.0.03 : Correction of rights problems with .qgis2 directory
-             Addition of Linux version of Mascaret executable
+    0.0.1 : first beta release
+    0.0.2 : Correction of Matplotlib 2.x bug
+    0.0.3 : Correction of rights problems with .qgis2 directory
+            Addition of Linux version of Mascaret executable
+    0.0.4 : Correction of version numbering bug
 
 # Tags are comma separated with spaces allowed
 tags=
