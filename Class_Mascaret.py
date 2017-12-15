@@ -782,6 +782,7 @@ class Class_Mascaret():
         else:
             self.clean_res()
 
+
         if par["evenement"] and noyau != "steady":
             dictScen_tmp = self.mdb.select('scenarios', 'run', 'starttime')
             listexclu=[]
@@ -919,9 +920,10 @@ class Class_Mascaret():
 
 
             elif par["LigEauInit"] and noyau != "steady":
-                condition = "run LIKE 'Steady'"
-                dico_run = self.mdb.selectDistinct("scenario",
-                                                   "runs", condition)
+                # condition = "run LIKE 'Steady'"
+                # dico_run = self.mdb.selectDistinct("scenario",
+                #                                    "runs", condition)
+                dico_run = self.mdb.select("runs")
 
                 if not dico_run and self.mgis.DEBUG:
                     self.mgis.addInfo("There aren't scenarii for the Steady case.")
@@ -940,7 +942,8 @@ class Class_Mascaret():
                     if scen2=='".lig" File':
                         self.copyLIG()
                     else:
-                        self.OPTtoLIG("Steady", scen2, self.baseName)
+                        # self.OPTtoLIG("Steady", scen2, self.baseName)
+                        self.OPTtoLIG(dico_run["run"][liste2.index(scen2)], scen2, self.baseName)
                 else:
                     if self.mgis.DEBUG:
                         self.mgis.addInfo("Cancel run")

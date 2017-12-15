@@ -51,9 +51,6 @@ class parameter_dialog(QtGui.QDialog):
         self.ui.setupUi(self)
 
         self.initUI()
-        # nonfunctional
-
-        self.ui.repriseCalcul.setEnabled(False)
 
         self.ui.actionB_delete_law.triggered.connect(self.delObserv)
         self.ui.actionB_load_law.triggered.connect(self.importObserv)
@@ -73,7 +70,6 @@ class parameter_dialog(QtGui.QDialog):
         self.ui.actionbox_coef.triggered.connect(fct)
         fct = lambda: self.selectbox(self.ui.box_WaterLevel)
         self.ui.actionbox_WaterLevel.triggered.connect(fct)
-
 
     def initUI(self):
         self.obs=Class_observation(self.mgis)
@@ -213,7 +209,8 @@ class parameter_dialog(QtGui.QDialog):
                                        'repriseCalcul'],
                           'transcritical': ['presenceCasiers',
                                             'attenuationConvection',
-                                            'compositionLits']
+                                            'compositionLits',
+                                            'repriseCalcul']
 
                           }
         self.create_dico_para()
@@ -338,8 +335,6 @@ class parameter_dialog(QtGui.QDialog):
         for checkbox in box.findChildren(QtGui.QCheckBox):
             checkbox.setChecked(box.isChecked())
             # checkbox.setEnabled(True)
-
-
 
     def acceptDialog(self):
         """Modification of the parameters in sql table"""
