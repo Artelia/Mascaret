@@ -4,3 +4,4 @@ mascaret/*
 *.pyc
 .idea/workspace.xml
 settings.json
+.idea/*
