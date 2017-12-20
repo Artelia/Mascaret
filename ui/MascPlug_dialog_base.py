@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MascPlug_dialog_base.ui'
 #
-# Created: Thu Nov 23 16:48:57 2017
+# Created: Wed Dec 20 16:41:34 2017
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_MascPlug(object):
     def setupUi(self, MascPlug):
         MascPlug.setObjectName(_fromUtf8("MascPlug"))
         MascPlug.setEnabled(True)
-        MascPlug.resize(699, 628)
+        MascPlug.resize(859, 738)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/plugins/Mascaret/icones/icon_base.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MascPlug.setWindowIcon(icon)
@@ -69,7 +69,7 @@ class Ui_MascPlug(object):
         self.gridLayout_2.addLayout(self.gridLayout, 2, 0, 1, 1)
         MascPlug.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MascPlug)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 699, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 859, 21))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp.setObjectName(_fromUtf8("menuHelp"))
@@ -86,6 +86,8 @@ class Ui_MascPlug(object):
         self.menuRun.setObjectName(_fromUtf8("menuRun"))
         self.menuPost_Treatment = QtGui.QMenu(self.menubar)
         self.menuPost_Treatment.setObjectName(_fromUtf8("menuPost_Treatment"))
+        self.menuWater_Quality = QtGui.QMenu(self.menubar)
+        self.menuWater_Quality.setObjectName(_fromUtf8("menuWater_Quality"))
         MascPlug.setMenuBar(self.menubar)
         self.dbToolBar = QtGui.QToolBar(MascPlug)
         self.dbToolBar.setObjectName(_fromUtf8("dbToolBar"))
@@ -99,6 +101,9 @@ class Ui_MascPlug(object):
         self.PostTreatmentToolBar = QtGui.QToolBar(MascPlug)
         self.PostTreatmentToolBar.setObjectName(_fromUtf8("PostTreatmentToolBar"))
         MascPlug.addToolBar(QtCore.Qt.TopToolBarArea, self.PostTreatmentToolBar)
+        self.WaterQualityToolBar = QtGui.QToolBar(MascPlug)
+        self.WaterQualityToolBar.setObjectName(_fromUtf8("WaterQualityToolBar"))
+        MascPlug.addToolBar(QtCore.Qt.TopToolBarArea, self.WaterQualityToolBar)
         self.actionWebsite = QtGui.QAction(MascPlug)
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(_fromUtf8(":/plugins/Mascaret/icones/webSite.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -210,6 +215,17 @@ class Ui_MascPlug(object):
         icon18.addPixmap(QtGui.QPixmap(_fromUtf8(":/plugins/Mascaret/icones/dbImportModel.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionImport_Model.setIcon(icon18)
         self.actionImport_Model.setObjectName(_fromUtf8("actionImport_Model"))
+        self.actionParameters_Water_Quality = QtGui.QAction(MascPlug)
+        self.actionParameters_Water_Quality.setEnabled(True)
+        icon19 = QtGui.QIcon()
+        icon19.addPixmap(QtGui.QPixmap(_fromUtf8(":/plugins/Mascaret/icones/parameterWQ.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionParameters_Water_Quality.setIcon(icon19)
+        self.actionParameters_Water_Quality.setObjectName(_fromUtf8("actionParameters_Water_Quality"))
+        self.actionTracer_Laws = QtGui.QAction(MascPlug)
+        icon20 = QtGui.QIcon()
+        icon20.addPixmap(QtGui.QPixmap(_fromUtf8(":/plugins/Mascaret/icones/lawWQ.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionTracer_Laws.setIcon(icon20)
+        self.actionTracer_Laws.setObjectName(_fromUtf8("actionTracer_Laws"))
         self.menuSetting.addAction(self.actionOptions)
         self.menuSetting.addAction(self.actionRestore_Default_Options)
         self.menuHelp.addAction(self.menuSetting.menuAction())
@@ -236,10 +252,13 @@ class Ui_MascPlug(object):
         self.menuRun.addAction(self.actionDelete_Run)
         self.menuPost_Treatment.addAction(self.actionHydrogramme)
         self.menuPost_Treatment.addAction(self.actionCross_section_results)
+        self.menuWater_Quality.addAction(self.actionParameters_Water_Quality)
+        self.menuWater_Quality.addAction(self.actionTracer_Laws)
         self.menubar.addAction(self.menuDB.menuAction())
         self.menubar.addAction(self.menu_Tools.menuAction())
         self.menubar.addAction(self.menuRun.menuAction())
         self.menubar.addAction(self.menuPost_Treatment.menuAction())
+        self.menubar.addAction(self.menuWater_Quality.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
         self.dbToolBar.addAction(self.actionRefresh_Database)
         self.dbToolBar.addAction(self.actionCreate_New_Model)
@@ -261,6 +280,8 @@ class Ui_MascPlug(object):
         self.RunToolBar.addAction(self.actionDelete_Run)
         self.PostTreatmentToolBar.addAction(self.actionHydrogramme)
         self.PostTreatmentToolBar.addAction(self.actionCross_section_results)
+        self.WaterQualityToolBar.addAction(self.actionParameters_Water_Quality)
+        self.WaterQualityToolBar.addAction(self.actionTracer_Laws)
 
         self.retranslateUi(MascPlug)
         QtCore.QMetaObject.connectSlotsByName(MascPlug)
@@ -275,10 +296,12 @@ class Ui_MascPlug(object):
         self.menuDB.setTitle(_translate("MascPlug", "Database", None))
         self.menuRun.setTitle(_translate("MascPlug", "Run", None))
         self.menuPost_Treatment.setTitle(_translate("MascPlug", "Post-Treatment", None))
+        self.menuWater_Quality.setTitle(_translate("MascPlug", "Water Quality", None))
         self.dbToolBar.setWindowTitle(_translate("MascPlug", "toolBar", None))
         self.ToolsToolBar.setWindowTitle(_translate("MascPlug", "toolBar", None))
         self.RunToolBar.setWindowTitle(_translate("MascPlug", "toolBar", None))
         self.PostTreatmentToolBar.setWindowTitle(_translate("MascPlug", "toolBar", None))
+        self.WaterQualityToolBar.setWindowTitle(_translate("MascPlug", "toolBar", None))
         self.actionWebsite.setText(_translate("MascPlug", "Web site", None))
         self.actionAbout.setText(_translate("MascPlug", "About", None))
         self.actionDeleteModel.setText(_translate("MascPlug", "Delete Model", None))
@@ -307,5 +330,8 @@ class Ui_MascPlug(object):
         self.actionDelete_Run.setText(_translate("MascPlug", "Delete Run", None))
         self.actionExport_Run.setText(_translate("MascPlug", "Export last run case", None))
         self.actionImport_Model.setText(_translate("MascPlug", "Import Model", None))
+        self.actionParameters_Water_Quality.setText(_translate("MascPlug", "Parameters WQ", None))
+        self.actionTracer_Laws.setText(_translate("MascPlug", "Tracer Laws", None))
 
 from qgis.gui import QgsProjectionSelectionWidget
+

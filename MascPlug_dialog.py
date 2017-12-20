@@ -33,6 +33,9 @@ from db.mas_database import MasDatabase
 from MNT_class import Worker
 from Class_Mascaret import Class_Mascaret
 from parameter_dialog import parameter_dialog
+from WaterQuality.TracerLaws_dialog import TracerLaws_dialog
+from WaterQuality.water_quality_dialog import Water_quality_dialog
+
 
 import math
 
@@ -149,11 +152,16 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionExport_Run.triggered.connect(self.export_run)
         self.ui.actionExport_Model.triggered.connect(self.exportModel)
         self.ui.actionImport_Model.triggered.connect(self.importModel)
-        #TODO
+        # TODO
+        self.ui.actionParameters_Water_Quality.triggered.connect(self.fct_parametersWQ)
+        self.ui.actionTracer_Laws.triggered.connect(self.fct_tracer_laws)
         self.ui.actionAbout.triggered.connect(self.about)
         self.ui.actionWebsite.triggered.connect(self.website)
         self.ui.actionWebsite.setEnabled(False)
         self.ui.actionAbout.setEnabled(False)
+
+
+
 
     def addInfo(self, text):
         self.ui.textEdit.append(text)
@@ -597,3 +605,13 @@ class MascPlugDialog(QMainWindow):
         pass
         #TODO
 
+    ### *******************************
+    #    Water Quality
+    ##*******************************
+    def fct_tracer_laws(self):
+        dlg = TracerLaws_dialog(self)
+        dlg.exec_()
+
+    def fct_parametersWQ(self):
+        dlg = Water_quality_dialog(self)
+        dlg.exec_()
