@@ -1511,7 +1511,14 @@ class GraphProfilRes(GraphCommon):
 
     def comboTimeChanged(self, text):
         self.mgis.addInfo(" test    Time")
-        pass
+        # if isinstance(self.position, float):
+        #     self.position = float(text)
+        # else:
+        #     self.position = datetime.strptime(text, '%d/%m/%Y %H:%M')
+        # self.majTab()
+        # self.majGraph()
+        # if self.type != "pk":
+        #     self.majLimites()
 
 
     def majVal(self):
