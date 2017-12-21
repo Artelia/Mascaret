@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'graphProfilRes.ui'
 #
-# Created: Wed Sep 06 16:06:24 2017
+# Created: Thu Dec 21 09:39:15 2017
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -22,15 +22,7 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
-#***************************
-try:
-    from matplotlib.backends.backend_qt4agg\
-        import NavigationToolbar2QTAgg as NavigationToolbar
 
-except:
-    from matplotlib.backends.backend_qt4agg \
-        import NavigationToolbar2QT as NavigationToolbar
-# **************************************************
 class Ui_ProfilGraphRes(object):
     def setupUi(self, ProfilGraphRes):
         ProfilGraphRes.setObjectName(_fromUtf8("ProfilGraphRes"))
@@ -136,19 +128,21 @@ class Ui_ProfilGraphRes(object):
         self.horizontalLayout_5.addItem(spacerItem3)
         spacerItem4 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem4)
+        self.comboBox_Time = QtGui.QComboBox(ProfilGraphRes)
+        self.comboBox_Time.setObjectName(_fromUtf8("comboBox_Time"))
+        self.comboBox_Time.addItem(_fromUtf8(""))
+        self.horizontalLayout_5.addWidget(self.comboBox_Time)
         spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem5)
         self.verticalLayout.addLayout(self.horizontalLayout_5)
-
-        # **************************************
-
-        self.verticalLayout_99 = QtGui.QVBoxLayout()
-        self.verticalLayout_99.setObjectName(_fromUtf8("verticalLayout_99"))
-        self.toolbar = NavigationToolbar(ProfilGraphRes.canvas, ProfilGraphRes)
-        self.verticalLayout_99.addWidget(ProfilGraphRes.canvas)
-        self.verticalLayout_99.addWidget(self.toolbar)
-        self.verticalLayout.addLayout(self.verticalLayout_99)
-        # **************************************
+        self.declarativeView = QtDeclarative.QDeclarativeView(ProfilGraphRes)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.declarativeView.sizePolicy().hasHeightForWidth())
+        self.declarativeView.setSizePolicy(sizePolicy)
+        self.declarativeView.setObjectName(_fromUtf8("declarativeView"))
+        self.verticalLayout.addWidget(self.declarativeView)
         self.horizontalLayout_6.addLayout(self.verticalLayout)
         self.verticalLayout_2 = QtGui.QVBoxLayout()
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
@@ -211,6 +205,8 @@ class Ui_ProfilGraphRes(object):
         self.actionComboBox_Scenar.setObjectName(_fromUtf8("actionComboBox_Scenar"))
         self.actionTableWidget_RES = QtGui.QAction(ProfilGraphRes)
         self.actionTableWidget_RES.setObjectName(_fromUtf8("actionTableWidget_RES"))
+        self.actionComboBox_Time = QtGui.QAction(ProfilGraphRes)
+        self.actionComboBox_Time.setObjectName(_fromUtf8("actionComboBox_Time"))
 
         self.retranslateUi(ProfilGraphRes)
         QtCore.QObject.connect(self.bt_recul, QtCore.SIGNAL(_fromUtf8("clicked()")), self.actionBt_recul.trigger)
@@ -220,6 +216,7 @@ class Ui_ProfilGraphRes(object):
         QtCore.QObject.connect(self.bt_exportCSV, QtCore.SIGNAL(_fromUtf8("clicked()")), self.actionBt_exportCSV.trigger)
         QtCore.QObject.connect(self.comboBox_State, QtCore.SIGNAL(_fromUtf8("currentIndexChanged(QString)")), self.actionComboBox_State.trigger)
         QtCore.QObject.connect(self.comboBox_Scenar, QtCore.SIGNAL(_fromUtf8("currentIndexChanged(QString)")), self.actionComboBox_Scenar.trigger)
+        QtCore.QObject.connect(self.comboBox_Time, QtCore.SIGNAL(_fromUtf8("currentIndexChanged(QString)")), self.actionComboBox_Time.trigger)
         QtCore.QMetaObject.connectSlotsByName(ProfilGraphRes)
 
     def retranslateUi(self, ProfilGraphRes):
@@ -234,6 +231,7 @@ class Ui_ProfilGraphRes(object):
         self.comboBox_State.setItemText(1, _translate("ProfilGraphRes", "Steady", None))
         self.comboBox_State.setItemText(2, _translate("ProfilGraphRes", "Unsteady", None))
         self.comboBox_Scenar.setItemText(0, _translate("ProfilGraphRes", "Scenar", None))
+        self.comboBox_Time.setItemText(0, _translate("ProfilGraphRes", "Hmax", None))
         self.label_2.setText(_translate("ProfilGraphRes", "Hmax :", None))
         self.label_hmax.setText(_translate("ProfilGraphRes", "Hmax", None))
         item = self.tableWidget_RES.horizontalHeaderItem(0)
@@ -249,4 +247,7 @@ class Ui_ProfilGraphRes(object):
         self.actionComboBox_State.setText(_translate("ProfilGraphRes", "comboBox_State", None))
         self.actionComboBox_Scenar.setText(_translate("ProfilGraphRes", "comboBox_Scenar", None))
         self.actionTableWidget_RES.setText(_translate("ProfilGraphRes", "tableWidget_RES", None))
+        self.actionComboBox_Time.setText(_translate("ProfilGraphRes", "comboBox_Time", None))
 
+from PyQt4 import QtDeclarative
+import resources_rc

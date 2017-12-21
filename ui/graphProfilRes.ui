@@ -238,6 +238,15 @@
             </spacer>
            </item>
            <item>
+            <widget class="QComboBox" name="comboBox_Time">
+             <item>
+              <property name="text">
+               <string>Hmax</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
             <spacer name="horizontalSpacer_4">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
@@ -392,6 +401,11 @@
     <string>tableWidget_RES</string>
    </property>
   </action>
+  <action name="actionComboBox_Time">
+   <property name="text">
+    <string>comboBox_Time</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -508,6 +522,22 @@
    <hints>
     <hint type="sourcelabel">
      <x>168</x>
+     <y>85</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBox_Time</sender>
+   <signal>currentIndexChanged(QString)</signal>
+   <receiver>actionComboBox_Time</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>412</x>
      <y>85</y>
     </hint>
     <hint type="destinationlabel">

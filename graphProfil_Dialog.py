@@ -1191,6 +1191,7 @@ class GraphProfilRes(GraphCommon):
             self.comboRun.currentIndexChanged['QString'].connect(self.comboRunChanged)
             # self.ui.comboBox_State.currentIndexChanged.connect(self.comboRunChanged)
             self.comboScen.currentIndexChanged['QString'].connect(self.comboScenChanged)
+            self.comboTime.currentIndexChanged['QString'].connect(self.comboTimeChanged)
 
     def initUI(self):
 
@@ -1205,7 +1206,7 @@ class GraphProfilRes(GraphCommon):
              if not dico_run:
                  self.mgis.addInfo("No simulation to show")
                  return False
-
+             print self.dico_run
              self.listeRuns = {}
              for run, scen in zip(dico_run["run"], dico_run["scenario"]):
                  if not run in self.listeRuns.keys():
@@ -1227,6 +1228,7 @@ class GraphProfilRes(GraphCommon):
              le=len(self.listeRuns[self.run])
              self.comboScen.setCurrentIndex(le-1)
 
+             self.comboTime=self.ui.comboBox_Time
 
              # tableau
              self.tableau = self.ui.tableWidget_RES
@@ -1445,6 +1447,10 @@ class GraphProfilRes(GraphCommon):
         # self.majListe()
         # self.majTab()
         self.majGraph()
+
+    def comboTimeChanged(self, text):
+        self.mgis.addInfo(" test    Time)")
+        pass
 
     def majVal(self):
         abscisse = self.feature['abscissa']
