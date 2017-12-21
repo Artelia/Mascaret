@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'graphProfilRes.ui'
 #
-# Created: Thu Dec 21 09:39:15 2017
+# Created: Wed Sep 06 16:06:24 2017
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -138,11 +138,11 @@ class Ui_ProfilGraphRes(object):
         self.horizontalLayout_5.addItem(spacerItem4)
         self.comboBox_Time = QtGui.QComboBox(ProfilGraphRes)
         self.comboBox_Time.setObjectName(_fromUtf8("comboBox_Time"))
-        self.comboBox_Time.addItem(_fromUtf8(""))
-        self.horizontalLayout_5.addWidget(self.comboBox_Time)
+        self.horizontalLayout_5.addWidget(self.comboBox_Time)                                                        
         spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem5)
         self.verticalLayout.addLayout(self.horizontalLayout_5)
+
         # **************************************
 
         self.verticalLayout_99 = QtGui.QVBoxLayout()
@@ -215,7 +215,7 @@ class Ui_ProfilGraphRes(object):
         self.actionTableWidget_RES = QtGui.QAction(ProfilGraphRes)
         self.actionTableWidget_RES.setObjectName(_fromUtf8("actionTableWidget_RES"))
         self.actionComboBox_Time = QtGui.QAction(ProfilGraphRes)
-        self.actionComboBox_Time.setObjectName(_fromUtf8("actionComboBox_Time"))
+        self.actionComboBox_Time.setObjectName(_fromUtf8("actionComboBox_Time"))                                                                
 
         self.retranslateUi(ProfilGraphRes)
         QtCore.QObject.connect(self.bt_recul, QtCore.SIGNAL(_fromUtf8("clicked()")), self.actionBt_recul.trigger)
@@ -240,7 +240,6 @@ class Ui_ProfilGraphRes(object):
         self.comboBox_State.setItemText(1, _translate("ProfilGraphRes", "Steady", None))
         self.comboBox_State.setItemText(2, _translate("ProfilGraphRes", "Unsteady", None))
         self.comboBox_Scenar.setItemText(0, _translate("ProfilGraphRes", "Scenar", None))
-        self.comboBox_Time.setItemText(0, _translate("ProfilGraphRes", "Hmax", None))
         self.label_2.setText(_translate("ProfilGraphRes", "Hmax :", None))
         self.label_hmax.setText(_translate("ProfilGraphRes", "Hmax", None))
         item = self.tableWidget_RES.horizontalHeaderItem(0)

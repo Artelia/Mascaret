@@ -238,13 +238,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QComboBox" name="comboBox_Time">
-             <item>
-              <property name="text">
-               <string>Hmax</string>
-              </property>
-             </item>
-            </widget>
+            <widget class="QComboBox" name="comboBox_Time"/>
            </item>
            <item>
             <spacer name="horizontalSpacer_4">
