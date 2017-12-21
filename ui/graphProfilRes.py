@@ -22,7 +22,15 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
+#***************************
+try:
+    from matplotlib.backends.backend_qt4agg\
+        import NavigationToolbar2QTAgg as NavigationToolbar
 
+except:
+    from matplotlib.backends.backend_qt4agg \
+        import NavigationToolbar2QT as NavigationToolbar
+# **************************************************
 class Ui_ProfilGraphRes(object):
     def setupUi(self, ProfilGraphRes):
         ProfilGraphRes.setObjectName(_fromUtf8("ProfilGraphRes"))
@@ -135,14 +143,15 @@ class Ui_ProfilGraphRes(object):
         spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem5)
         self.verticalLayout.addLayout(self.horizontalLayout_5)
-        self.declarativeView = QtDeclarative.QDeclarativeView(ProfilGraphRes)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.declarativeView.sizePolicy().hasHeightForWidth())
-        self.declarativeView.setSizePolicy(sizePolicy)
-        self.declarativeView.setObjectName(_fromUtf8("declarativeView"))
-        self.verticalLayout.addWidget(self.declarativeView)
+        # **************************************
+
+        self.verticalLayout_99 = QtGui.QVBoxLayout()
+        self.verticalLayout_99.setObjectName(_fromUtf8("verticalLayout_99"))
+        self.toolbar = NavigationToolbar(ProfilGraphRes.canvas, ProfilGraphRes)
+        self.verticalLayout_99.addWidget(ProfilGraphRes.canvas)
+        self.verticalLayout_99.addWidget(self.toolbar)
+        self.verticalLayout.addLayout(self.verticalLayout_99)
+        # **************************************
         self.horizontalLayout_6.addLayout(self.verticalLayout)
         self.verticalLayout_2 = QtGui.QVBoxLayout()
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
@@ -249,5 +258,3 @@ class Ui_ProfilGraphRes(object):
         self.actionTableWidget_RES.setText(_translate("ProfilGraphRes", "tableWidget_RES", None))
         self.actionComboBox_Time.setText(_translate("ProfilGraphRes", "comboBox_Time", None))
 
-from PyQt4 import QtDeclarative
-import resources_rc

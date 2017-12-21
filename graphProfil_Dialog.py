@@ -1195,26 +1195,37 @@ class GraphProfilRes(GraphCommon):
 
     def initUI(self):
 
-         try:
+         # try:
              self.tab = {}
              # condition = "NOT scenario LIKE '%init%'"
              # dico = self.mdb.selectDistinct("date, run, scenario",
              #                                      "runs",
              #                                      condition)
-             dico_run = self.mdb.selectDistinct("date, run, scenario",
+             dico_run = self.mdb.selectDistinct("date, run, scenario,t",
                                                   "runs")
+             # print dico_run
              if not dico_run:
                  self.mgis.addInfo("No simulation to show")
                  return False
-             print self.dico_run
+
              self.listeRuns = {}
-             for run, scen in zip(dico_run["run"], dico_run["scenario"]):
+             for run, scen,t in zip(dico_run["run"], dico_run["scenario"],dico_run["t"]):
                  if not run in self.listeRuns.keys():
-                     self.listeRuns[run] = []
-                 self.listeRuns[run].append(scen)
+                     self.listeRuns[run] = {}
+                 # print t
+                 # print type(t)
+                 if isinstance(t, tuple):
+                    self.listeRuns[run][scen]=list(t)
+                 else:
+                     t2=[]
+                     print t.split(',')
+                     for text in t.split(','):
+                        t2.append(datetime.strptime(text, '%d/%m/%Y %H:%M'))
+                     self.listeRuns[run][scen] = t2
+             print self.listeRuns
 
              self.run = self.listeRuns.keys()[-1]
-             self.scenario = self.listeRuns[self.run][-1]
+             self.scenario = self.listeRuns[self.run].keys()[-1]
 
              #listing
              self.comboRun = self.ui.comboBox_State
@@ -1224,11 +1235,24 @@ class GraphProfilRes(GraphCommon):
              self.comboRun.setCurrentIndex(le-1)
              self.comboScen = self.ui.comboBox_Scenar
              self.comboScen.clear()
-             self.comboScen.addItems(self.listeRuns[self.run])
-             le=len(self.listeRuns[self.run])
+             self.comboScen.addItems(self.listeRuns[self.run].keys())
+             le=len(self.listeRuns[self.run].keys())
              self.comboScen.setCurrentIndex(le-1)
 
+
              self.comboTime=self.ui.comboBox_Time
+             self.comboTime.clear()
+
+             self.comboTime.addItem('Hmax')
+             # print sorted(self.listeRuns[self.run][self.scenario])
+             for x in sorted(self.listeRuns[self.run][self.scenario]):
+                 # print x
+                 if isinstance(x, float):
+                     self.comboTime.addItem(str(x))
+                 else:
+                     self.comboTime.addItem('{0:%d/%m/%Y %H:%M}'.format(x))
+             self.comboTime.setCurrentIndex(0)
+
 
              # tableau
              self.tableau = self.ui.tableWidget_RES
@@ -1270,9 +1294,9 @@ class GraphProfilRes(GraphCommon):
              self.fig.canvas.mpl_connect('pick_event', self.onpick)
              # # self.fig.tight_layout()
              return True
-         except:
-             self.mgis.addInfo("No simulation to show")
-             return False
+         # except:
+         #     self.mgis.addInfo("No simulation to show")
+         #     return False
 
     def exportCSV(self):
         """Export Table to .CSV file"""
@@ -1431,11 +1455,11 @@ class GraphProfilRes(GraphCommon):
         self.mgis.addInfo("scenario")
         self.mgis.addInfo(self.scenario)
 
-        if not self.scenario in self.listeRuns[self.run]:
-            self.scenario = self.listeRuns[self.run][-1]
+        if not self.scenario in self.listeRuns[self.run].keys():
+            self.scenario = self.listeRuns[self.run].keys()[-1]
         self.comboScen.currentIndexChanged['QString'].disconnect()
         self.comboScen.clear()
-        self.comboScen.addItems(self.listeRuns[self.run])
+        self.comboScen.addItems(self.listeRuns[self.run].keys())
         self.comboScen.currentIndexChanged['QString'].connect(
             self.comboScenChanged)
         # self.majListe()
@@ -1449,7 +1473,7 @@ class GraphProfilRes(GraphCommon):
         self.majGraph()
 
     def comboTimeChanged(self, text):
-        self.mgis.addInfo(" test    Time)")
+        self.mgis.addInfo(" test    Time")
         pass
 
     def majVal(self):
