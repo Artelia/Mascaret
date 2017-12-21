@@ -45,6 +45,23 @@ except:
     from matplotlib.backends.backend_qt4agg \
         import FigureCanvasQT as FigureCanvas
 
+
+#***************************
+try:
+    from matplotlib.backends.backend_qt4agg\
+        import NavigationToolbar2QTAgg as NavigationToolbar
+
+except:
+    from matplotlib.backends.backend_qt4agg \
+        import NavigationToolbar2QT as NavigationToolbar
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
+# **************************************************
+
+
 try:
     _encoding = QApplication.UnicodeUTF8
 
@@ -153,6 +170,7 @@ class GraphCommon(QDialog):
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
 
+
     def initUI_common_P(self, gid):
         """variables in common for profile graphics"""
         self.gid = gid
@@ -168,6 +186,16 @@ class GraphCommon(QDialog):
 
         self.courbes = []
 
+    def GUI_graph(self,ui):
+        self.verticalLayout_99 = QVBoxLayout(ui.widget_figure)
+        self.verticalLayout_99.setObjectName(_fromUtf8("verticalLayout_99"))
+        self.verticalLayout_99.addWidget(self.canvas)
+
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        self.verticalLayout_98 = QVBoxLayout(ui.widget_toolsbar)
+        self.verticalLayout_98.setObjectName(_fromUtf8("verticalLayout_98"))
+        self.verticalLayout_98.addWidget(self.toolbar)
+
 
 class GraphProfil(GraphCommon):
     """class Dialog graphProfil"""
@@ -178,6 +206,7 @@ class GraphProfil(GraphCommon):
         self.ui = Ui_ProfilGraph()
         self.ui.setupUi(self)
         self.initUI_common_P(gid)
+        self.GUI_graph(self.ui)
         self.initUI()
 
         # self.plot()
@@ -206,6 +235,7 @@ class GraphProfil(GraphCommon):
         self.ui.actionBt_l_stok.triggered.connect(lambda: self.selectStock("leftstock"))
 
     def initUI(self):
+
         # variables
         self.tab = {'x': [], 'z': []}
         self.selected = {}
@@ -214,7 +244,6 @@ class GraphProfil(GraphCommon):
         self.flag = False
         self.image = None
         self.topoSelect = None
-        self.toolbar = self.ui.toolbar
         self.bt_transla = self.ui.btTools_profil_translation
         self.bt_select = self.ui.btTools_point_selection
         self.bt_select_z = self.ui.btTools_zone_selection
@@ -1117,7 +1146,6 @@ class GraphProfil(GraphCommon):
             #     except:
             #         pass
 
-
 class CopySelectedCellsAction(QAction):
     def __init__(self, table_widget):
         if not isinstance(table_widget, QTableWidget):
@@ -1170,6 +1198,7 @@ class GraphProfilRes(GraphCommon):
         self.ui.setupUi(self)
 
         self.initUI_common_P(gid)
+        self.GUI_graph(self.ui)
         qres = self.initUI()
 
         if qres:
@@ -1554,6 +1583,8 @@ class GraphHydro(GraphCommon):
         self.comboScen = self.ui.comboBox_Scenar
         self.comboTimePK = self.ui.comboBox_time
         self.comboVar1 = self.ui.comboBox_var1
+        # insert graphic and toolsbars of graphic
+        self.GUI_graph(self.ui)
 
         self.initUI()
 
@@ -1588,7 +1619,7 @@ class GraphHydro(GraphCommon):
         # 'observations.csv')
         self.temps = 'max'
         self.variables = self.mgis.variables
-        self.toolbar = self.ui.toolbar
+
         # 'Cote'#''None'
         self.var1 = 'Z'
         self.coteVar = ['ZREF', 'Z', 'ZMAX', 'ZMIN']

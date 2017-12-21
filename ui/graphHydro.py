@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'graphHydro.ui'
 #
-# Created: Tue Sep 12 11:17:11 2017
+# Created: Thu Dec 21 18:11:44 2017
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -22,15 +22,7 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
-#***************************
-try:
-    from matplotlib.backends.backend_qt4agg\
-        import NavigationToolbar2QTAgg as NavigationToolbar
 
-except:
-    from matplotlib.backends.backend_qt4agg \
-        import NavigationToolbar2QT as NavigationToolbar
-# **************************************************
 class Ui_GraphHydro(object):
     def setupUi(self, GraphHydro):
         GraphHydro.setObjectName(_fromUtf8("GraphHydro"))
@@ -81,14 +73,14 @@ class Ui_GraphHydro(object):
         spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem2)
         self.verticalLayout.addLayout(self.horizontalLayout_5)
-        # ****************************************
+        self.widget_figure = QtGui.QWidget(GraphHydro)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(GraphHydro.canvas.sizePolicy().hasHeightForWidth())
-        GraphHydro.canvas.setSizePolicy(sizePolicy)   
-        self.verticalLayout.addWidget(GraphHydro.canvas)
-        # ********************************************
+        sizePolicy.setHeightForWidth(self.widget_figure.sizePolicy().hasHeightForWidth())
+        self.widget_figure.setSizePolicy(sizePolicy)
+        self.widget_figure.setObjectName(_fromUtf8("widget_figure"))
+        self.verticalLayout.addWidget(self.widget_figure)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         self.bt_reculTot = QtGui.QPushButton(GraphHydro)
@@ -134,10 +126,10 @@ class Ui_GraphHydro(object):
         self.bt_avTot.setObjectName(_fromUtf8("bt_avTot"))
         self.horizontalLayout_2.addWidget(self.bt_avTot)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
-        # ******************************
-        self.toolbar = NavigationToolbar(GraphHydro.canvas, GraphHydro)
-        self.verticalLayout.addWidget(self.toolbar)
-        # ******************************************
+        self.widget_toolsbar = QtGui.QWidget(GraphHydro)
+        self.widget_toolsbar.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.widget_toolsbar.setObjectName(_fromUtf8("widget_toolsbar"))
+        self.verticalLayout.addWidget(self.widget_toolsbar)
         self.horizontalLayout_3.addLayout(self.verticalLayout)
         self.verticalLayout_2 = QtGui.QVBoxLayout()
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
@@ -216,4 +208,5 @@ class Ui_GraphHydro(object):
         self.actionComboBox_var2.setText(_translate("GraphHydro", "comboBox_var2", None))
         self.actionTableWidget_RES.setText(_translate("GraphHydro", "tableWidget_RES", None))
         self.actionComboBox_time.setText(_translate("GraphHydro", "comboBox_time", None))
+
 

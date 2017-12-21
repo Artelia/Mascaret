@@ -256,7 +256,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QDeclarativeView" name="declarativeView">
+          <widget class="QWidget" name="widget_figure" native="true">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
@@ -264,6 +264,9 @@
             </sizepolicy>
            </property>
           </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_toolsbar" native="true"/>
          </item>
         </layout>
        </item>
@@ -401,13 +404,6 @@
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QDeclarativeView</class>
-   <extends>QGraphicsView</extends>
-   <header>QtDeclarative/QDeclarativeView</header>
-  </customwidget>
- </customwidgets>
  <resources>
   <include location="../resources.qrc"/>
  </resources>
