@@ -1480,8 +1480,6 @@ class GraphProfilRes(GraphCommon):
         self.majGraph()
 
 
-
-
     def comboTimeChanged(self, text):
         self.mgis.addInfo(" test    Time")
         pass
