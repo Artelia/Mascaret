@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_ProfilGraphRes(object):
     def setupUi(self, ProfilGraphRes):
         ProfilGraphRes.setObjectName(_fromUtf8("ProfilGraphRes"))
-        ProfilGraphRes.resize(814, 681)
+        ProfilGraphRes.resize(814, 700)
         self.gridLayout = QtGui.QGridLayout(ProfilGraphRes)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.verticalLayout_4 = QtGui.QVBoxLayout()

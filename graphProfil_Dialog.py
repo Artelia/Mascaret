@@ -38,6 +38,7 @@ from ui.graphProfilRes import Ui_ProfilGraphRes
 from ui.graphHydro import Ui_GraphHydro
 import function as fct
 
+
 try:
     from matplotlib.backends.backend_qt4agg \
         import FigureCanvasQTAgg as FigureCanvas
@@ -1214,6 +1215,7 @@ class GraphProfilRes(GraphCommon):
             self.comboRun.currentIndexChanged['QString'].connect(self.comboRunChanged)
             # self.ui.comboBox_State.currentIndexChanged.connect(self.comboRunChanged)
             self.comboScen.currentIndexChanged['QString'].connect(self.comboScenChanged)
+            self.comboTime.currentIndexChanged['QString'].connect(self.comboTimeChanged)
 
     def initUI(self):
 
@@ -1274,13 +1276,13 @@ class GraphProfilRes(GraphCommon):
         self.listeTime['t']= temp['t']
         self.comboTime.addItem('Hmax')
         for x in self.listeTime[self.type]:
-            if isinstance(self.position, float):
+            if isinstance(x, float):
                 self.comboTime.addItem(str(x))
             else:
-                self.comboTime.addItem('{0:%d/%m/%Y %H:%M}'.format(x))
+                self.comboTime.addItem('{0:%d/%m/%Y %H:%M:%S}'.format(x))
 
         self.comboTime.setCurrentIndex(0)
-
+        self.posit ='Hmax'
 
         self.tableau = self.ui.tableWidget_RES
         self.tableau.addAction(CopySelectedCellsAction(self.tableau))
@@ -1375,13 +1377,11 @@ class GraphProfilRes(GraphCommon):
                 self.axes.patches.remove(patch)
 
         self.title.setText(self.nom)
-        # self.titleFig.set_text(self.nom)
-        self.titleFig.set_text('Max of water level ')
 
+        # profile
         self.extraitProfil()
 
         T = self.tab[self.nom]
-
         self.courbeProfil.set_data(T['x'], T['z'])
 
         self.remplirTab([T['x'], T['z']])
@@ -1413,12 +1413,19 @@ class GraphProfilRes(GraphCommon):
         else:
             self.stockdroit.set_visible(False)
 
+        #value H
         self.majVal()
 
-        if self.zmax:
+        if self.zH:
             self.label_hmax.setText('{0}'.format(self.zmax))
             temp1 = np.array(T['z'])
-            temp2 = np.array([self.zmax] * len(T['z']))
+
+            if self.posit=='Hmax':
+                temp2 = np.array([self.zmax] * len(T['z']))
+            else:
+                h=self.zH['zref'][0] + self.zH['y'][0]
+                temp2 = np.array([h] * len(T['z']))
+
 
             aire = self.axes.fill_between(T['x'], temp1, temp2,
                                           where=temp2 >= temp1,
@@ -1435,6 +1442,13 @@ class GraphProfilRes(GraphCommon):
                         break
 
             self.axes.collections.remove(aire)
+            # Figure title
+            if self.posit=='Hmax':
+                self.titleFig.set_text('Max of water level, {0} m '.format(self.zmax))
+            elif isinstance(self.posit, float):
+                self.titleFig.set_text('Water level, {0} m - {1} s'.format(h,self.posit))
+            else:
+                self.titleFig.set_text('Water level, {0} m - {1:%d/%m/%Y %H:%M}'.format(h,self.posit))
 
         self.canvas.draw()
 
@@ -1508,20 +1522,21 @@ class GraphProfilRes(GraphCommon):
         # self.majTab()
         self.majGraph()
 
-
     def comboTimeChanged(self, text):
-        self.mgis.addInfo(" test    Time")
-        # if isinstance(self.position, float):
-        #     self.position = float(text)
-        # else:
-        #     self.position = datetime.strptime(text, '%d/%m/%Y %H:%M')
-        # self.majTab()
-        # self.majGraph()
-        # if self.type != "pk":
-        #     self.majLimites()
+        #change the Figure in function of Time
+
+        if text=='Hmax':
+            self.posit =text
+        elif fct.isfloat(text):
+            self.posit = float(text)
+        else:
+            self.posit = datetime.strptime(text, '%d/%m/%Y %H:%M:%S')
+        self.majGraph()
+
 
 
     def majVal(self):
+        # get value for graphic
         abscisse = self.feature['abscissa']
 
         condition = "run='{0}' AND scenario='{1}' AND pk={2}".format(self.run,
@@ -1529,8 +1544,20 @@ class GraphProfilRes(GraphCommon):
                                                                      abscisse)
         self.zmax = self.mdb.selectMax("z", "resultats", condition)
 
+        if self.posit=='Hmax':
+            self.zH= self.zmax
+        elif isinstance(self.posit, datetime):
+            condition += """AND date='{:%Y-%m-%d %H:%M:%S}'""".format(
+                self.posit)
+            self.zH = self.mdb.select("resultats", condition, "t")
+        else:
+            condition += "AND t={0}".format(self.posit)
+            self.zH = self.mdb.select("resultats", condition, "t")
+
+
 
     def avance(self, val):
+
         pos = self.position
         pos += val
         if pos >= len(self.liste["gid"]):
