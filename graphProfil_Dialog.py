@@ -1233,6 +1233,7 @@ class GraphProfilRes(GraphCommon):
             return False
 
 
+
         self.listeRuns = {}
         for run, scen in zip(dico_run["run"], dico_run["scenario"]):
             if not run in self.listeRuns.keys():
@@ -1254,35 +1255,10 @@ class GraphProfilRes(GraphCommon):
         le = len(self.listeRuns[self.run])
         self.comboScen.setCurrentIndex(le - 1)
 
+        #time list
         self.comboTime = self.ui.comboBox_Time
-        self.comboTime.clear()
-        #recupe Temps en faire une fct ?
-        self.date = False
-        self.type = 't'
-        self.listeTime={'t':[],'date':[]}
-        condition = "run='{0}' AND scenario='{1}'".format(self.run,
-                                                          self.scenario)
-        temp = self.mdb.selectDistinct("date", "resultats", condition)
-        if temp["date"][0]:
-            self.date = True
-            if self.type == 't':
-                self.type = 'date'
-        else:
-            if self.type == 'date':
-                self.type = 't'
-
-        self.listeTime['date'] = temp['date']
-        temp = self.mdb.selectDistinct("t", "resultats", condition)
-        self.listeTime['t']= temp['t']
-        self.comboTime.addItem('Hmax')
-        for x in self.listeTime[self.type]:
-            if isinstance(x, float):
-                self.comboTime.addItem(str(x))
-            else:
-                self.comboTime.addItem('{0:%d/%m/%Y %H:%M:%S}'.format(x))
-
-        self.comboTime.setCurrentIndex(0)
-        self.posit ='Hmax'
+        self.posit='Hmax'
+        self.listcomboTime()
 
         self.tableau = self.ui.tableWidget_RES
         self.tableau.addAction(CopySelectedCellsAction(self.tableau))
@@ -1328,6 +1304,38 @@ class GraphProfilRes(GraphCommon):
 # except:
 #     self.mgis.addInfo("No simulation to show")
 #     return False
+
+    def listcomboTime(self):
+        """creation of the Time list"""
+        self.comboTime.currentIndexChanged['QString'].disconnect()
+        self.comboTime.clear()
+        self.date = False
+        self.type = 't'
+        self.listeTime={'t':[],'date':[]}
+        condition = "run='{0}' AND scenario='{1}'".format(self.run,
+                                                          self.scenario)
+        temp = self.mdb.selectDistinct("date", "resultats", condition)
+        if temp["date"][0]:
+            self.date = True
+            if self.type == 't':
+                self.type = 'date'
+        else:
+            if self.type == 'date':
+                self.type = 't'
+
+        self.listeTime['date'] = temp['date']
+        temp = self.mdb.selectDistinct("t", "resultats", condition)
+        self.listeTime['t']= temp['t']
+        self.comboTime.addItem('Hmax')
+        for x in self.listeTime[self.type]:
+            if isinstance(x, float):
+                self.comboTime.addItem(str(x))
+            else:
+                self.comboTime.addItem('{0:%d/%m/%Y %H:%M:%S}'.format(x))
+        self.posit = 'Hmax'
+        self.comboTime.setCurrentIndex(0)
+        self.comboTime.currentIndexChanged['QString'].connect(self.comboTimeChanged)
+
 
     def exportCSV(self):
         """Export Table to .CSV file"""
@@ -1500,9 +1508,10 @@ class GraphProfilRes(GraphCommon):
 
 
     def comboRunChanged(self, text):
+        """function for change ComboBox and update the figure"""
         self.run = text
-        self.mgis.addInfo("scenario")
-        self.mgis.addInfo(self.scenario)
+        # self.mgis.addInfo("scenario")
+        # self.mgis.addInfo(self.scenario)
 
         if not self.scenario in self.listeRuns[self.run]:
             self.scenario = self.listeRuns[self.run][-1]
@@ -1511,6 +1520,9 @@ class GraphProfilRes(GraphCommon):
         self.comboScen.addItems(self.listeRuns[self.run])
         self.comboScen.currentIndexChanged['QString'].connect(
             self.comboScenChanged)
+
+        self.listcomboTime()
+
         # self.majListe()
         # self.majTab()
         self.majGraph()
@@ -1518,13 +1530,13 @@ class GraphProfilRes(GraphCommon):
 
     def comboScenChanged(self, text):
         self.scenario = text
+        self.listcomboTime()
         # self.majListe()
         # self.majTab()
         self.majGraph()
 
     def comboTimeChanged(self, text):
         #change the Figure in function of Time
-
         if text=='Hmax':
             self.posit =text
         elif fct.isfloat(text):
@@ -1532,7 +1544,6 @@ class GraphProfilRes(GraphCommon):
         else:
             self.posit = datetime.strptime(text, '%d/%m/%Y %H:%M:%S')
         self.majGraph()
-
 
 
     def majVal(self):

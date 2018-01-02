@@ -238,7 +238,14 @@
             </spacer>
            </item>
            <item>
-            <widget class="QComboBox" name="comboBox_Time"/>
+            <widget class="QComboBox" name="comboBox_Time">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
            </item>
            <item>
             <spacer name="horizontalSpacer_4">

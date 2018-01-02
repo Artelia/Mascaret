@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'graphProfilRes.ui'
 #
-# Created: Thu Dec 21 18:11:34 2017
+# Created: Tue Jan 02 14:42:27 2018
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -129,6 +129,11 @@ class Ui_ProfilGraphRes(object):
         spacerItem4 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem4)
         self.comboBox_Time = QtGui.QComboBox(ProfilGraphRes)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.comboBox_Time.sizePolicy().hasHeightForWidth())
+        self.comboBox_Time.setSizePolicy(sizePolicy)
         self.comboBox_Time.setObjectName(_fromUtf8("comboBox_Time"))
         self.horizontalLayout_5.addWidget(self.comboBox_Time)
         spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -249,4 +254,5 @@ class Ui_ProfilGraphRes(object):
         self.actionComboBox_Scenar.setText(_translate("ProfilGraphRes", "comboBox_Scenar", None))
         self.actionTableWidget_RES.setText(_translate("ProfilGraphRes", "tableWidget_RES", None))
         self.actionComboBox_Time.setText(_translate("ProfilGraphRes", "comboBox_Time", None))
+
 
