@@ -1,24 +1,11 @@
 # -*- coding: utf-8 -*-
 
-"""
-/***************************************************************************
-Name                 :  MasPlug
-Description          : Graph class
-Date                 : Aout 2017
-
-email                :
-***************************************************************************/
-
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
-"""
-
+# Form implementation generated from reading ui file 'graphProfil.ui'
+#
+# Created: Thu Dec 21 18:11:54 2017
+#      by: PyQt4 UI code generator 4.11.3
+#
+# WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
 
@@ -35,17 +22,11 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
-try:
-    from matplotlib.backends.backend_qt4agg\
-        import NavigationToolbar2QTAgg as NavigationToolbar
 
-except:
-    from matplotlib.backends.backend_qt4agg \
-        import NavigationToolbar2QT as NavigationToolbar
 class Ui_ProfilGraph(object):
     def setupUi(self, ProfilGraph):
         ProfilGraph.setObjectName(_fromUtf8("ProfilGraph"))
-        ProfilGraph.resize(1079, 850)
+        ProfilGraph.resize(984, 707)
         self.gridLayout_2 = QtGui.QGridLayout(ProfilGraph)
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
         self.verticalLayout_4 = QtGui.QVBoxLayout()
@@ -213,17 +194,26 @@ class Ui_ProfilGraph(object):
         self.verticalLayout_4.addLayout(self.horizontalLayout_5)
         self.horizontalLayout_3 = QtGui.QHBoxLayout()
         self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
-        # **************************************
-
-
-        self.verticalLayout_99 = QtGui.QVBoxLayout()
-        self.verticalLayout_99.setObjectName(_fromUtf8("verticalLayout_99"))
-        self.toolbar = NavigationToolbar(ProfilGraph.canvas, ProfilGraph)
-        self.verticalLayout_99.addWidget(ProfilGraph.canvas)
-        self.verticalLayout_99.addWidget(self.toolbar)
-        self.horizontalLayout_3.addLayout(self.verticalLayout_99)
-        # **************************************
-
+        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.widget_figure = QtGui.QWidget(ProfilGraph)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.widget_figure.sizePolicy().hasHeightForWidth())
+        self.widget_figure.setSizePolicy(sizePolicy)
+        self.widget_figure.setObjectName(_fromUtf8("widget_figure"))
+        self.verticalLayout.addWidget(self.widget_figure)
+        self.widget_toolsbar = QtGui.QWidget(ProfilGraph)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(10)
+        sizePolicy.setHeightForWidth(self.widget_toolsbar.sizePolicy().hasHeightForWidth())
+        self.widget_toolsbar.setSizePolicy(sizePolicy)
+        self.widget_toolsbar.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.widget_toolsbar.setObjectName(_fromUtf8("widget_toolsbar"))
+        self.verticalLayout.addWidget(self.widget_toolsbar)
+        self.horizontalLayout_3.addLayout(self.verticalLayout)
         self.verticalLayout_2 = QtGui.QVBoxLayout()
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.tableWidget = QtGui.QTableWidget(ProfilGraph)
@@ -357,3 +347,4 @@ class Ui_ProfilGraph(object):
         self.actionBt_r_stok.setText(_translate("ProfilGraph", "bt_r_stok", None))
         self.actionBt_l_stok.setText(_translate("ProfilGraph", "bt_l_stok", None))
         self.actionBt_topo_del.setText(_translate("ProfilGraph", "bt_topo_del", None))
+

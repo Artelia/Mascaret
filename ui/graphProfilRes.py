@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'graphProfilRes.ui'
 #
-# Created: Wed Sep 06 16:06:24 2017
+# Created: Thu Dec 21 18:11:34 2017
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -22,19 +22,11 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
-#***************************
-try:
-    from matplotlib.backends.backend_qt4agg\
-        import NavigationToolbar2QTAgg as NavigationToolbar
 
-except:
-    from matplotlib.backends.backend_qt4agg \
-        import NavigationToolbar2QT as NavigationToolbar
-# **************************************************
 class Ui_ProfilGraphRes(object):
     def setupUi(self, ProfilGraphRes):
         ProfilGraphRes.setObjectName(_fromUtf8("ProfilGraphRes"))
-        ProfilGraphRes.resize(814, 681)
+        ProfilGraphRes.resize(814, 700)
         self.gridLayout = QtGui.QGridLayout(ProfilGraphRes)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.verticalLayout_4 = QtGui.QVBoxLayout()
@@ -136,19 +128,23 @@ class Ui_ProfilGraphRes(object):
         self.horizontalLayout_5.addItem(spacerItem3)
         spacerItem4 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem4)
+        self.comboBox_Time = QtGui.QComboBox(ProfilGraphRes)
+        self.comboBox_Time.setObjectName(_fromUtf8("comboBox_Time"))
+        self.horizontalLayout_5.addWidget(self.comboBox_Time)
         spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem5)
         self.verticalLayout.addLayout(self.horizontalLayout_5)
-
-        # **************************************
-
-        self.verticalLayout_99 = QtGui.QVBoxLayout()
-        self.verticalLayout_99.setObjectName(_fromUtf8("verticalLayout_99"))
-        self.toolbar = NavigationToolbar(ProfilGraphRes.canvas, ProfilGraphRes)
-        self.verticalLayout_99.addWidget(ProfilGraphRes.canvas)
-        self.verticalLayout_99.addWidget(self.toolbar)
-        self.verticalLayout.addLayout(self.verticalLayout_99)
-        # **************************************
+        self.widget_figure = QtGui.QWidget(ProfilGraphRes)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.widget_figure.sizePolicy().hasHeightForWidth())
+        self.widget_figure.setSizePolicy(sizePolicy)
+        self.widget_figure.setObjectName(_fromUtf8("widget_figure"))
+        self.verticalLayout.addWidget(self.widget_figure)
+        self.widget_toolsbar = QtGui.QWidget(ProfilGraphRes)
+        self.widget_toolsbar.setObjectName(_fromUtf8("widget_toolsbar"))
+        self.verticalLayout.addWidget(self.widget_toolsbar)
         self.horizontalLayout_6.addLayout(self.verticalLayout)
         self.verticalLayout_2 = QtGui.QVBoxLayout()
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
@@ -211,6 +207,8 @@ class Ui_ProfilGraphRes(object):
         self.actionComboBox_Scenar.setObjectName(_fromUtf8("actionComboBox_Scenar"))
         self.actionTableWidget_RES = QtGui.QAction(ProfilGraphRes)
         self.actionTableWidget_RES.setObjectName(_fromUtf8("actionTableWidget_RES"))
+        self.actionComboBox_Time = QtGui.QAction(ProfilGraphRes)
+        self.actionComboBox_Time.setObjectName(_fromUtf8("actionComboBox_Time"))
 
         self.retranslateUi(ProfilGraphRes)
         QtCore.QObject.connect(self.bt_recul, QtCore.SIGNAL(_fromUtf8("clicked()")), self.actionBt_recul.trigger)
@@ -220,6 +218,7 @@ class Ui_ProfilGraphRes(object):
         QtCore.QObject.connect(self.bt_exportCSV, QtCore.SIGNAL(_fromUtf8("clicked()")), self.actionBt_exportCSV.trigger)
         QtCore.QObject.connect(self.comboBox_State, QtCore.SIGNAL(_fromUtf8("currentIndexChanged(QString)")), self.actionComboBox_State.trigger)
         QtCore.QObject.connect(self.comboBox_Scenar, QtCore.SIGNAL(_fromUtf8("currentIndexChanged(QString)")), self.actionComboBox_Scenar.trigger)
+        QtCore.QObject.connect(self.comboBox_Time, QtCore.SIGNAL(_fromUtf8("currentIndexChanged(QString)")), self.actionComboBox_Time.trigger)
         QtCore.QMetaObject.connectSlotsByName(ProfilGraphRes)
 
     def retranslateUi(self, ProfilGraphRes):
@@ -249,4 +248,5 @@ class Ui_ProfilGraphRes(object):
         self.actionComboBox_State.setText(_translate("ProfilGraphRes", "comboBox_State", None))
         self.actionComboBox_Scenar.setText(_translate("ProfilGraphRes", "comboBox_Scenar", None))
         self.actionTableWidget_RES.setText(_translate("ProfilGraphRes", "tableWidget_RES", None))
+        self.actionComboBox_Time.setText(_translate("ProfilGraphRes", "comboBox_Time", None))
 

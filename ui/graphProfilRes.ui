@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>814</width>
-    <height>681</height>
+    <height>700</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -238,6 +238,9 @@
             </spacer>
            </item>
            <item>
+            <widget class="QComboBox" name="comboBox_Time"/>
+           </item>
+           <item>
             <spacer name="horizontalSpacer_4">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
@@ -253,7 +256,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QDeclarativeView" name="declarativeView">
+          <widget class="QWidget" name="widget_figure" native="true">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
@@ -261,6 +264,9 @@
             </sizepolicy>
            </property>
           </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_toolsbar" native="true"/>
          </item>
         </layout>
        </item>
@@ -392,14 +398,12 @@
     <string>tableWidget_RES</string>
    </property>
   </action>
+  <action name="actionComboBox_Time">
+   <property name="text">
+    <string>comboBox_Time</string>
+   </property>
+  </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QDeclarativeView</class>
-   <extends>QGraphicsView</extends>
-   <header>QtDeclarative/QDeclarativeView</header>
-  </customwidget>
- </customwidgets>
  <resources>
   <include location="../resources.qrc"/>
  </resources>
@@ -508,6 +512,22 @@
    <hints>
     <hint type="sourcelabel">
      <x>168</x>
+     <y>85</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBox_Time</sender>
+   <signal>currentIndexChanged(QString)</signal>
+   <receiver>actionComboBox_Time</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>412</x>
      <y>85</y>
     </hint>
     <hint type="destinationlabel">
