@@ -436,7 +436,7 @@ class MascPlugDialog(QMainWindow):
     def fct_createGeo(self):
         """ create Xcas"""
         clam = Class_Mascaret(self)
-        clam.creerGEO()
+        clam.creerGEORef()
         fileNamePath = QFileDialog.getSaveFileName(self, "saveFile",
                                                    "{0}.geo".format(os.path.join(self.masplugPath,clam.baseName)),
                                                    filter="GEO (*.geo)")
