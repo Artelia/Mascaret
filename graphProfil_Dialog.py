@@ -1219,91 +1219,91 @@ class GraphProfilRes(GraphCommon):
 
     def initUI(self):
 
-        # try:
-        self.tab = {}
-        # condition = "NOT scenario LIKE '%init%'"
-        # dico = self.mdb.selectDistinct("date, run, scenario",
-        #                                      "runs",
-        #                                      condition)
-        dico_run = self.mdb.selectDistinct("date, run, scenario,t",
-                                           "runs")
-        # print dico_run
-        if not dico_run:
+        try:
+            self.tab = {}
+            # condition = "NOT scenario LIKE '%init%'"
+            # dico = self.mdb.selectDistinct("date, run, scenario",
+            #                                      "runs",
+            #                                      condition)
+            dico_run = self.mdb.selectDistinct("date, run, scenario,t",
+                                               "runs")
+            # print dico_run
+            if not dico_run:
+                self.mgis.addInfo("No simulation to show")
+                return False
+
+
+
+            self.listeRuns = {}
+            for run, scen in zip(dico_run["run"], dico_run["scenario"]):
+                if not run in self.listeRuns.keys():
+                    self.listeRuns[run] = []
+                self.listeRuns[run].append(scen)
+
+            self.run = self.listeRuns.keys()[-1]
+            self.scenario = self.listeRuns[self.run][-1]
+
+            # listing
+            self.comboRun = self.ui.comboBox_State
+            self.comboRun.clear()
+            self.comboRun.addItems(self.listeRuns.keys())
+            le = len(self.listeRuns.keys())
+            self.comboRun.setCurrentIndex(le - 1)
+            self.comboScen = self.ui.comboBox_Scenar
+            self.comboScen.clear()
+            self.comboScen.addItems(self.listeRuns[self.run])
+            le = len(self.listeRuns[self.run])
+            self.comboScen.setCurrentIndex(le - 1)
+
+            #time list
+            self.comboTime = self.ui.comboBox_Time
+            self.posit='Hmax'
+            self.listcomboTime()
+
+            self.tableau = self.ui.tableWidget_RES
+            self.tableau.addAction(CopySelectedCellsAction(self.tableau))
+
+            # figure
+            self.axes = self.fig.add_subplot(111)
+            self.axes.grid(True)
+            self.courbeProfil, = self.axes.plot([], [], zorder=100, label='Profile')
+            # self.aireMouillee, = self.axes.plot([], [], zorder=90, label='aire')
+
+            self.courbes = [self.courbeProfil]
+
+            rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='pink',
+                                     alpha=0.5, lw=1, zorder=80)
+            self.litMineur = self.axes.add_patch(rect)
+
+            rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green',
+                                     alpha=0.3, lw=1, zorder=80)
+            self.stockgauche = self.axes.add_patch(rect)
+
+            rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green',
+                                     alpha=0.3, lw=1, zorder=80)
+            self.stockdroit = self.axes.add_patch(rect)
+
+            self.aire = []
+            self.title = self.ui.label_Title
+
+            self.label_hmax = self.ui.label_hmax
+
+            self.titleFig = self.fig.suptitle("")
+
+            self.majGraph()
+            self.majLegende()
+            self.majLimites()
+
+            self.fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
+            self.fig.patch.set_facecolor((0.94, 0.94, 0.94))
+            self.fig.canvas.mpl_connect('pick_event', self.onpick)
+            # # self.fig.tight_layout()
+            return True
+
+
+        except:
             self.mgis.addInfo("No simulation to show")
             return False
-
-
-
-        self.listeRuns = {}
-        for run, scen in zip(dico_run["run"], dico_run["scenario"]):
-            if not run in self.listeRuns.keys():
-                self.listeRuns[run] = []
-            self.listeRuns[run].append(scen)
-
-        self.run = self.listeRuns.keys()[-1]
-        self.scenario = self.listeRuns[self.run][-1]
-
-        # listing
-        self.comboRun = self.ui.comboBox_State
-        self.comboRun.clear()
-        self.comboRun.addItems(self.listeRuns.keys())
-        le = len(self.listeRuns.keys())
-        self.comboRun.setCurrentIndex(le - 1)
-        self.comboScen = self.ui.comboBox_Scenar
-        self.comboScen.clear()
-        self.comboScen.addItems(self.listeRuns[self.run])
-        le = len(self.listeRuns[self.run])
-        self.comboScen.setCurrentIndex(le - 1)
-
-        #time list
-        self.comboTime = self.ui.comboBox_Time
-        self.posit='Hmax'
-        self.listcomboTime()
-
-        self.tableau = self.ui.tableWidget_RES
-        self.tableau.addAction(CopySelectedCellsAction(self.tableau))
-
-        # figure
-        self.axes = self.fig.add_subplot(111)
-        self.axes.grid(True)
-        self.courbeProfil, = self.axes.plot([], [], zorder=100, label='Profile')
-        # self.aireMouillee, = self.axes.plot([], [], zorder=90, label='aire')
-
-        self.courbes = [self.courbeProfil]
-
-        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='pink',
-                                 alpha=0.5, lw=1, zorder=80)
-        self.litMineur = self.axes.add_patch(rect)
-
-        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green',
-                                 alpha=0.3, lw=1, zorder=80)
-        self.stockgauche = self.axes.add_patch(rect)
-
-        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green',
-                                 alpha=0.3, lw=1, zorder=80)
-        self.stockdroit = self.axes.add_patch(rect)
-
-        self.aire = []
-        self.title = self.ui.label_Title
-
-        self.label_hmax = self.ui.label_hmax
-
-        self.titleFig = self.fig.suptitle("")
-
-        self.majGraph()
-        self.majLegende()
-        self.majLimites()
-
-        self.fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
-        self.fig.patch.set_facecolor((0.94, 0.94, 0.94))
-        self.fig.canvas.mpl_connect('pick_event', self.onpick)
-        # # self.fig.tight_layout()
-        return True
-
-
-# except:
-#     self.mgis.addInfo("No simulation to show")
-#     return False
 
     def listcomboTime(self):
         """creation of the Time list"""

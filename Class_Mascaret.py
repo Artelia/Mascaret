@@ -50,7 +50,6 @@ from qgis.utils import *
 import subprocess
 from ui.warningbox import Class_warningBox
 
-
 class Class_Mascaret():
 
 
@@ -96,7 +95,6 @@ class Class_Mascaret():
 
                         fich.write('PROFIL Bief_{0} {1} {2}\n'.format(branche,
                                                                       nom, abs))
-
                         for x, z in zip(tabX, tabZ):
                             if x >= litMinG and x <= litMinD:
                                 type = "B"
@@ -104,6 +102,70 @@ class Class_Mascaret():
                                 type = "T"
 
                             fich.write('{0:.2f} {1:.2f} {2}\n'.format(x, z, type))
+            self.mgis.addInfo("Creation the geometry is done")
+        except Exception as e:
+            self.mgis.addInfo("Error: save the geometry")
+            self.mgis.addInfo(str(e))
+
+    def creerGEORef(self):
+        """creation of gemoetry file"""
+        try:
+            nomfich = os.path.join(self.dossierFileMasc, self.baseName+'.geo')
+
+            if os.path.isfile(nomfich):
+                sauv = nomfich.replace(".geo", "_old.geo")
+                shutil.move(nomfich, sauv)
+            requete = self.mdb.select("profiles", "active", "abscissa")
+
+            # To get projection and Line coordinated.
+            vlayer=self.mdb.make_vlayer(self.mdb.register['profiles'])
+            vlayer_dp = vlayer.dataProvider()
+            vlayer_crs = vlayer_dp.crs()
+            vlayer_crs_str = vlayer_crs.authid()
+
+
+            # Write the File
+            with open(nomfich, 'w') as fich:
+
+                fich.write('#  DATE : {0:%d/%m/%Y %H:%M:%S}\n'
+                           '#  PROJ. : {1}\n'.format(datetime.date.today(),vlayer_crs_str))
+
+                iter = vlayer.getFeatures()
+                for i,feature in enumerate(iter):
+                    nom = feature['name']
+                    # fetch geometry
+                    geom = feature.geometry()
+
+                # for i, nom in enumerate(requete["name"]):
+                    branche = requete["branchnum"][i]
+                    abs = requete["abscissa"][i]
+                    tempX = requete["x"][i]
+                    tempZ = requete["z"][i]
+                    litMinG = requete["leftminbed"][i]
+                    litMinD = requete["rightminbed"][i]
+
+                    if branche and abs and tempX and tempZ and litMinG and litMinD:
+                        tabX = map(lambda x: round(float(x), 2), tempX.split())
+                        tabZ = map(lambda x: round(float(x), 2), tempZ.split())
+
+                        points=geom.asMultiPolyline()[0]
+                        (cood1X,cood1Y)=points[0]
+                        (cood2X, cood2Y) = points[1]
+                        coodAxeX= cood1X+(cood2X-cood1X)/2.
+                        coodAxeY= cood1Y+(cood2Y-cood1Y)/2.
+
+                        fich.write('PROFIL Bief_{0} {1} {2} {3} {4} {5} {6} AXE {7} {8}\n'.format(branche,nom, abs,
+                                                                cood1X,cood1Y, cood2X,  cood2Y, coodAxeX, coodAxeY ))
+
+                        for x, z in zip(tabX, tabZ):
+                            if x >= litMinG and x <= litMinD:
+                                type = "B"
+                            else:
+                                type = "T"
+                            #interpolate the distance on profile
+                            dpoint = geom.interpolate(x).asPoint()
+                            fich.write('{0:.2f} {1:.2f} {2} {3} {4}\n'.format(x, z, type, dpoint[0], dpoint[1] ))
+
             self.mgis.addInfo("Creation the geometry is done")
         except Exception as e:
             self.mgis.addInfo("Error: save the geometry")
@@ -775,7 +837,7 @@ class Class_Mascaret():
                 par[param] = valeur
         if not par['repriseCalcul'] :
             self.clean_rep()
-            self.creerGEO()
+            self.creerGEORef()
             if self.mgis.DEBUG:
                 self.mgis.addInfo("Geometric file is created.")
                 self.mgis.addInfo("noyau {}".format(noyau))
@@ -1200,6 +1262,8 @@ class Class_Mascaret():
 
         elif case=='geo':
             shutil.copy2(os.path.join(self.dossierFileMasc, self.baseName+".geo"), rep)
+        elif case=='georef':
+            shutil.copy2(os.path.join(self.dossierFileMasc, self.baseName+".georef"), rep)
         else:
             self.mgis.addInfo('No file to export')
 

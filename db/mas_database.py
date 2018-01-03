@@ -573,7 +573,6 @@ $BODY$
         #
         self.loadGis_layer()
 
-
     def removeGroup_Layer(self, name):
         root = QgsProject.instance().layerTreeRoot()
         group1 = root.findGroup(name)
