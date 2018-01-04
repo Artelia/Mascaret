@@ -73,7 +73,7 @@
 73,optionCalculDiffusion,1,1,1,Diffusion method,parametresTraceur,parametresConvectionDiffusion,True
 74,coeffDiffusion1,0,0,0,,parametresTraceur,parametresConvectionDiffusion,True
 75,coeffDiffusion2,0,0,0,,parametresTraceur,parametresConvectionDiffusion,True
-76,modeleQualiteEau,1,1,1,,parametresTraceur,parametresNumeriquesQualiteEau,True
+76,modeleQualiteEau,1,1,1,Water quality module,parametresTraceur,parametresNumeriquesQualiteEau,True
 77,fichParamPhysiqueTracer,mascaret.phy,mascaret.phy,mascaret.phy,,parametresTraceur,parametresNumeriquesQualiteEau,False
 78,frequenceCouplHydroTracer,1,1,1,Frequency for coupling ,parametresTraceur,parametresNumeriquesQualiteEau,True
 79,fichListTracer,mascaret.tra_lis,mascaret.tra_lis,mascaret.tra_lis,,parametresTraceur,parametresImpressionTraceur,False
@@ -84,6 +84,4 @@
 84,fichResultTracer,mascaret.tra_opt,mascaret.tra_opt,mascaret.tra_opt,,parametresTraceur,parametresImpressionTraceur,False
 85,formatFichResultat,2,2,2,,parametresTraceur,parametresImpressionTraceur,False
 86,presenceConcInit,FALSE,FALSE,FALSE,,parametresTraceur,parametresConcentrationsInitialesTraceur,True
-87,modeEntree,1,1,1,,parametresTraceur,parametresConcentrationsInitialesTraceur,False
 88,fichConcInit,mascaret.conc,mascaret.conc,mascaret.conc,,parametresTraceur,parametresConcentrationsInitialesTraceur,False
-89,nbSources,0,0,0,,parametresTraceur,parametresSourcesTraceur,False

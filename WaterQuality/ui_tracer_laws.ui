@@ -26,7 +26,7 @@
       <bool>false</bool>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="page">
       <layout class="QGridLayout" name="gridLayout_3">
@@ -43,7 +43,7 @@
        <item row="0" column="1">
         <layout class="QGridLayout" name="gridLayout">
          <item row="0" column="1">
-          <widget class="QComboBox" name="comboBox_Name_law"/>
+          <widget class="QComboBox" name="comboBox_law_wq"/>
          </item>
          <item row="5" column="0">
           <spacer name="verticalSpacer">
@@ -193,7 +193,7 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
-            <widget class="QLabel" name="label_2">
+            <widget class="QLabel" name="label_LawWQ">
              <property name="text">
               <string>Law Names :</string>
              </property>
@@ -203,7 +203,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="Name_edit"/>
+            <widget class="QLineEdit" name="LawWQ"/>
            </item>
            <item>
             <spacer name="horizontalSpacer_2">
@@ -222,6 +222,9 @@
          </item>
          <item>
           <widget class="QTableWidget" name="Table_laws">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
            <column>
             <property name="text">
              <string>Time</string>

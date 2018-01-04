@@ -6,22 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>628</width>
-    <height>417</height>
+    <width>740</width>
+    <height>608</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Parameters Water Quality</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
-   <item row="2" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
+   <item row="0" column="0">
     <widget class="QTabWidget" name="WaterQ">
      <property name="layoutDirection">
       <enum>Qt::LeftToRight</enum>
@@ -34,10 +27,10 @@
        <string>Choice of the water quality module</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="0" column="0">
+       <item row="0" column="1">
         <layout class="QGridLayout" name="gridLayout">
          <item row="1" column="1">
-          <widget class="QComboBox" name="comboBox">
+          <widget class="QComboBox" name="modeleQualiteEau">
            <item>
             <property name="text">
              <string>TRANSPORT_PUR</string>
@@ -84,7 +77,7 @@
           </spacer>
          </item>
          <item row="1" column="0">
-          <widget class="QLabel" name="label">
+          <widget class="QLabel" name="label_modeleQualiteEau">
            <property name="layoutDirection">
             <enum>Qt::LeftToRight</enum>
            </property>
@@ -97,7 +90,7 @@
           </widget>
          </item>
          <item row="0" column="0">
-          <widget class="QCheckBox" name="checkBox">
+          <widget class="QCheckBox" name="presenceTraceurs">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
@@ -107,7 +100,7 @@
           </widget>
          </item>
          <item row="2" column="0">
-          <widget class="QLabel" name="label_2">
+          <widget class="QLabel" name="label_nbTraceur">
            <property name="text">
             <string>Number of constituents : </string>
            </property>
@@ -143,7 +136,7 @@
           </spacer>
          </item>
          <item row="2" column="1">
-          <widget class="QSpinBox" name="spinBox">
+          <widget class="QSpinBox" name="nbTraceur">
            <property name="minimum">
             <number>1</number>
            </property>
@@ -154,7 +147,7 @@
          </item>
         </layout>
        </item>
-       <item row="1" column="0">
+       <item row="1" column="1">
         <widget class="QTableWidget" name="tableWidget">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -204,6 +197,59 @@
          </column>
         </widget>
        </item>
+       <item row="1" column="0">
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <spacer name="verticalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="b_add_lineTabTracer">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Add Line</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="b_delete_lineTabTracer">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Delete Line</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_8">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Maximum</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>23</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tab_2">
@@ -212,7 +258,7 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="0" column="1">
-        <widget class="QTableWidget" name="tableWidget_2">
+        <widget class="QTableWidget" name="table_InitC">
          <column>
           <property name="text">
            <string>N° Bief</string>
@@ -273,7 +319,7 @@
          <item>
           <layout class="QGridLayout" name="gridLayout_5">
            <item row="8" column="1">
-            <widget class="QRadioButton" name="radioButton_6">
+            <widget class="QRadioButton" name="optionCalculDiffusion_seo">
              <property name="layoutDirection">
               <enum>Qt::RightToLeft</enum>
              </property>
@@ -283,7 +329,7 @@
             </widget>
            </item>
            <item row="4" column="2">
-            <widget class="QRadioButton" name="radioButton_7">
+            <widget class="QRadioButton" name="optionCalculDiffusion_Fisher">
              <property name="layoutDirection">
               <enum>Qt::RightToLeft</enum>
              </property>
@@ -293,7 +339,7 @@
             </widget>
            </item>
            <item row="2" column="1">
-            <widget class="QComboBox" name="comboBox_4">
+            <widget class="QComboBox" name="LimitPente">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -310,7 +356,7 @@
             </widget>
            </item>
            <item row="5" column="2">
-            <widget class="QRadioButton" name="radioButton_8">
+            <widget class="QRadioButton" name="optionCalculDiffusion_isawa">
              <property name="layoutDirection">
               <enum>Qt::RightToLeft</enum>
              </property>
@@ -320,21 +366,21 @@
             </widget>
            </item>
            <item row="0" column="0">
-            <widget class="QLabel" name="label_3">
+            <widget class="QLabel" name="label_frequenceCouplHydroTracer">
              <property name="text">
               <string>Frequency for coupling :</string>
              </property>
             </widget>
            </item>
            <item row="1" column="2">
-            <widget class="QLabel" name="label_5">
+            <widget class="QLabel" name="label_ordreSchemaConvec">
              <property name="text">
               <string>Scheme order :</string>
              </property>
             </widget>
            </item>
            <item row="1" column="3">
-            <widget class="QComboBox" name="comboBox_3">
+            <widget class="QComboBox" name="ordreSchemaConvec">
              <item>
               <property name="text">
                <string>1</string>
@@ -348,14 +394,14 @@
             </widget>
            </item>
            <item row="3" column="0">
-            <widget class="QLabel" name="label_8">
+            <widget class="QLabel" name="label_optionCalculDiffusion">
              <property name="text">
               <string>Diffusion method :</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QSpinBox" name="spinBox_2">
+            <widget class="QSpinBox" name="frequenceCouplHydroTracer">
              <property name="minimum">
               <number>1</number>
              </property>
@@ -368,14 +414,14 @@
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QLabel" name="label_4">
+            <widget class="QLabel" name="label_optionConvection">
              <property name="text">
               <string>Convection method :</string>
              </property>
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QComboBox" name="comboBox_2">
+            <widget class="QComboBox" name="optionConvection">
              <item>
               <property name="text">
                <string>HYP1FA fnc</string>
@@ -394,14 +440,14 @@
             </widget>
            </item>
            <item row="3" column="1">
-            <widget class="QRadioButton" name="radioButton">
+            <widget class="QRadioButton" name="optionCalculDiffusion_default">
              <property name="text">
               <string>Constant diffussion coef. :</string>
              </property>
             </widget>
            </item>
            <item row="5" column="1">
-            <widget class="QRadioButton" name="radioButton_3">
+            <widget class="QRadioButton" name="optionCalculDiffusion_liu">
              <property name="layoutDirection">
               <enum>Qt::RightToLeft</enum>
              </property>
@@ -411,7 +457,7 @@
             </widget>
            </item>
            <item row="8" column="2">
-            <widget class="QRadioButton" name="radioButton_11">
+            <widget class="QRadioButton" name="optionCalculDiffusion_deng">
              <property name="layoutDirection">
               <enum>Qt::RightToLeft</enum>
              </property>
@@ -421,7 +467,7 @@
             </widget>
            </item>
            <item row="6" column="1">
-            <widget class="QRadioButton" name="radioButton_4">
+            <widget class="QRadioButton" name="optionCalculDiffusion_keefer">
              <property name="layoutDirection">
               <enum>Qt::RightToLeft</enum>
              </property>
@@ -431,7 +477,7 @@
             </widget>
            </item>
            <item row="2" column="0">
-            <widget class="QLabel" name="label_6">
+            <widget class="QLabel" name="label_LimitPente">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -441,7 +487,7 @@
             </widget>
            </item>
            <item row="7" column="2">
-            <widget class="QRadioButton" name="radioButton_10">
+            <widget class="QRadioButton" name="optionCalculDiffusion_Mirasol">
              <property name="layoutDirection">
               <enum>Qt::RightToLeft</enum>
              </property>
@@ -451,7 +497,7 @@
             </widget>
            </item>
            <item row="4" column="1">
-            <widget class="QRadioButton" name="radioButton_2">
+            <widget class="QRadioButton" name="optionCalculDiffusion_elder">
              <property name="layoutDirection">
               <enum>Qt::RightToLeft</enum>
              </property>
@@ -461,7 +507,7 @@
             </widget>
            </item>
            <item row="7" column="1">
-            <widget class="QRadioButton" name="radioButton_5">
+            <widget class="QRadioButton" name="optionCalculDiffusion_magazine">
              <property name="layoutDirection">
               <enum>Qt::RightToLeft</enum>
              </property>
@@ -471,7 +517,7 @@
             </widget>
            </item>
            <item row="2" column="3">
-            <widget class="QDoubleSpinBox" name="doubleSpinBox">
+            <widget class="QDoubleSpinBox" name="paramW">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -490,7 +536,7 @@
             </widget>
            </item>
            <item row="2" column="2">
-            <widget class="QLabel" name="label_7">
+            <widget class="QLabel" name="label_paramW">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -500,7 +546,7 @@
             </widget>
            </item>
            <item row="6" column="2">
-            <widget class="QRadioButton" name="radioButton_9">
+            <widget class="QRadioButton" name="optionCalculDiffusion_falconer">
              <property name="layoutDirection">
               <enum>Qt::RightToLeft</enum>
              </property>
@@ -510,7 +556,7 @@
             </widget>
            </item>
            <item row="3" column="2">
-            <widget class="QDoubleSpinBox" name="doubleSpinBox_2">
+            <widget class="QDoubleSpinBox" name="coeffDiffusion_default">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -525,7 +571,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QTableWidget" name="tableWidget_3">
+          <widget class="QTableWidget" name="table_conv_diff">
            <attribute name="horizontalHeaderStretchLastSection">
             <bool>true</bool>
            </attribute>
@@ -562,7 +608,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QPushButton" name="pushButton">
+            <widget class="QPushButton" name="b_phy_param">
              <property name="text">
               <string>Physical parameters</string>
              </property>
@@ -582,7 +628,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QPushButton" name="pushButton_2">
+            <widget class="QPushButton" name="b_meteo_param">
              <property name="text">
               <string>Meteo parameters</string>
              </property>
@@ -628,7 +674,7 @@
        <item row="1" column="1">
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
-          <widget class="QCheckBox" name="impressionGeometrie">
+          <widget class="QCheckBox" name="concentInit">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
@@ -654,7 +700,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QCheckBox" name="impressionPlanimetrage">
+          <widget class="QCheckBox" name="loiTracer">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
@@ -680,7 +726,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QCheckBox" name="impressionReseau">
+          <widget class="QCheckBox" name="concentrations">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
@@ -706,7 +752,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QCheckBox" name="impressionLoiHydraulique">
+          <widget class="QCheckBox" name="bilanTracer">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
@@ -766,7 +812,44 @@
      </widget>
     </widget>
    </item>
+   <item row="1" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
   </layout>
+  <action name="actionB_add_line">
+   <property name="text">
+    <string>b_add_line</string>
+   </property>
+  </action>
+  <action name="actionB_delete_line">
+   <property name="text">
+    <string>b_delete_line</string>
+   </property>
+  </action>
+  <action name="actionB_delete_lineTabTracer">
+   <property name="text">
+    <string>b_delete_lineTabTracer</string>
+   </property>
+  </action>
+  <action name="actionB_add_lineTabTracer">
+   <property name="text">
+    <string>b_add_lineTabTracer</string>
+   </property>
+  </action>
+  <action name="actionB_phy_param">
+   <property name="text">
+    <string>b_phy_param</string>
+   </property>
+  </action>
+  <action name="actionB_meteo_param">
+   <property name="text">
+    <string>b_meteo_param</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

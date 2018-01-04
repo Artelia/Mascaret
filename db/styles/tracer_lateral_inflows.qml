@@ -1,68 +1,44 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis version="2.18" minimumScale="0" maximumScale="200000" simplifyDrawingHints="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" simplifyMaxScale="1" hasScaleBasedVisibilityFlag="1" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+<qgis version="2.18" minimumScale="-4.65661e-10" maximumScale="200000" simplifyDrawingHints="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" simplifyMaxScale="1" hasScaleBasedVisibilityFlag="1" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
   <edittypes>
     <edittype widgetv2type="TextEdit" name="gid">
       <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
     </edittype>
-    <edittype widgetv2type="TextEdit" name="nom">
+    <edittype widgetv2type="TextEdit" name="name">
       <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
     </edittype>
-    <edittype widgetv2type="TextEdit" name="method">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="firstvalue">
+    <edittype widgetv2type="TextEdit" name="branchnum">
       <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
     </edittype>
     <edittype widgetv2type="TextEdit" name="abscissa">
       <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
     </edittype>
-    <edittype widgetv2type="TextEdit" name="ordinates">
+    <edittype widgetv2type="TextEdit" name="length">
       <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
     </edittype>
-    <edittype widgetv2type="TextEdit" name="angles">
+    <edittype widgetv2type="TextEdit" name="LawWQ">
+      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+    </edittype>
+    <edittype widgetv2type="TextEdit" name="typeSources">
       <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
     </edittype>
     <edittype widgetv2type="CheckBox" name="active">
       <widgetv2config fieldEditable="1" UncheckedState="f" CheckedState="t" labelOnTop="0"/>
     </edittype>
-        <edittype widgetv2type="ValueMap" name="type">
-      <widgetv2config fieldEditable="1" labelOnTop="0">
-        <value key="Junction" value="10"/>
-        <value key="Free evacuation" value="6"/>
-        <value key="Normal Height" value="7"/>
-        <value key="Hydrograph" value="1"/>
-        <value key="Limnigraph" value="2"/>
-        <value key="Limnihydro water level and flow rate" value="8"/>
-        <value key="Regulation law" value="5"/>
-        <value key="Dam/Weir Zam=f(Q,Zav)" value="0"/>
-        <value key="Taring curve Q=f(Z)" value="4"/>
-        <value key="Taring curve Z=f(Q)" value="3"/>
-      </widgetv2config>
-    </edittype>
-    <edittype widgetv2type="ValueMap" name="tracer_boundary_condition_type">
-      <widgetv2config fieldEditable="1" labelOnTop="0">
-        <value key="Neuman" value="1"/>
-        <value key="Dirichlet" value="2"/>
-      </widgetv2config>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="law_wq">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    
   </edittypes>
   <renderer-v2 attr="active" symbollevels="0" type="categorizedSymbol">
     <categories>
-      <category render="true" symbol="0" value="t" label="active"/>
-      <category render="true" symbol="1" value="f" label="inactive"/>
+      <category render="true" symbol="0" value="f" label="Inactive"/>
+      <category render="true" symbol="1" value="t" label="Active"/>
     </categories>
     <symbols>
       <symbol alpha="1" type="marker" name="0">
         <layer pass="0" class="SimpleMarker" locked="0">
-          <prop k="angle" v="0"/>
-          <prop k="color" v="227,26,28,255"/>
+          <prop k="angle" v="90"/>
+          <prop k="color" v="0,0,0,255"/>
           <prop k="horizontal_anchor_point" v="1"/>
-          <prop k="name" v="circle"/>
-          <prop k="offset" v="0,0"/>
+          <prop k="name" v="arrow"/>
+          <prop k="offset" v="0,2.5"/>
           <prop k="offset_map_unit_scale" v="0,0"/>
           <prop k="offset_unit" v="MM"/>
           <prop k="outline_color" v="0,0,0,255"/>
@@ -71,7 +47,7 @@
           <prop k="outline_width_map_unit_scale" v="0,0"/>
           <prop k="outline_width_unit" v="MM"/>
           <prop k="scale_method" v="area"/>
-          <prop k="size" v="3"/>
+          <prop k="size" v="5"/>
           <prop k="size_map_unit_scale" v="0,0"/>
           <prop k="size_unit" v="MM"/>
           <prop k="vertical_anchor_point" v="1"/>
@@ -79,11 +55,11 @@
       </symbol>
       <symbol alpha="1" type="marker" name="1">
         <layer pass="0" class="SimpleMarker" locked="0">
-          <prop k="angle" v="0"/>
-          <prop k="color" v="0,0,0,255"/>
+          <prop k="angle" v="90"/>
+          <prop k="color" v="44,171,255,255"/>
           <prop k="horizontal_anchor_point" v="1"/>
-          <prop k="name" v="circle"/>
-          <prop k="offset" v="0,0"/>
+          <prop k="name" v="arrow"/>
+          <prop k="offset" v="0,2.5"/>
           <prop k="offset_map_unit_scale" v="0,0"/>
           <prop k="offset_unit" v="MM"/>
           <prop k="outline_color" v="0,0,0,255"/>
@@ -92,7 +68,7 @@
           <prop k="outline_width_map_unit_scale" v="0,0"/>
           <prop k="outline_width_unit" v="MM"/>
           <prop k="scale_method" v="area"/>
-          <prop k="size" v="3"/>
+          <prop k="size" v="5"/>
           <prop k="size_map_unit_scale" v="0,0"/>
           <prop k="size_unit" v="MM"/>
           <prop k="vertical_anchor_point" v="1"/>
@@ -102,11 +78,11 @@
     <source-symbol>
       <symbol alpha="1" type="marker" name="0">
         <layer pass="0" class="SimpleMarker" locked="0">
-          <prop k="angle" v="0"/>
-          <prop k="color" v="227,26,28,255"/>
+          <prop k="angle" v="90"/>
+          <prop k="color" v="44,171,255,255"/>
           <prop k="horizontal_anchor_point" v="1"/>
-          <prop k="name" v="circle"/>
-          <prop k="offset" v="0,0"/>
+          <prop k="name" v="arrow"/>
+          <prop k="offset" v="0,2.5"/>
           <prop k="offset_map_unit_scale" v="0,0"/>
           <prop k="offset_unit" v="MM"/>
           <prop k="outline_color" v="0,0,0,255"/>
@@ -115,7 +91,7 @@
           <prop k="outline_width_map_unit_scale" v="0,0"/>
           <prop k="outline_width_unit" v="MM"/>
           <prop k="scale_method" v="diameter"/>
-          <prop k="size" v="3"/>
+          <prop k="size" v="5"/>
           <prop k="size_map_unit_scale" v="0,0"/>
           <prop k="size_unit" v="MM"/>
           <prop k="vertical_anchor_point" v="1"/>
@@ -278,7 +254,7 @@
   <blendMode>0</blendMode>
   <featureBlendMode>0</featureBlendMode>
   <layerTransparency>0</layerTransparency>
-  <displayfield>branch</displayfield>
+  <displayfield>name</displayfield>
   <label>0</label>
   <labelattributes>
     <label fieldname="" text="Label"/>
@@ -310,21 +286,10 @@
   <attributeEditorForm>
     <attributeEditorContainer name="infos">
       <attributeEditorField index="1" name="name"/>
-      <attributeEditorField index="2" name="type"/>
-      <attributeEditorField index="8" name="active"/>
-    </attributeEditorContainer>
-    <attributeEditorContainer name="junctions">
-      <attributeEditorField index="5" name="abscissa"/>
-      <attributeEditorField index="6" name="ordinates"/>
-      <attributeEditorField index="7" name="angles"/>
-    </attributeEditorContainer>
-    <attributeEditorContainer name="autres">
-      <attributeEditorField index="3" name="method"/>
-      <attributeEditorField index="4" name="firstvalue"/>
-    </attributeEditorContainer>
-    <attributeEditorContainer name="Water Quality">
-      <attributeEditorField index="9" name="tracer_boundary_condition_type"/>
-      <attributeEditorField index="10" name="law_wq"/>
+      <attributeEditorField index="4" name="length"/>
+      <attributeEditorField index="5" name="LawWQ"/>
+      <attributeEditorField index="6" name="typeSources"/>
+      <attributeEditorField index="7" name="active"/>
     </attributeEditorContainer>
   </attributeEditorForm>
   <attributeactions/>
