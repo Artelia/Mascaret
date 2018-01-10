@@ -46,3 +46,9 @@ def interpole(a, l1, l2):
     else:
         return (None)
 
+def str2bool(s):
+    """string to bool"""
+    if s=="True" or s=="TRUE":
+        return True
+    else:
+        return False

@@ -613,5 +613,14 @@ class MascPlugDialog(QMainWindow):
         dlg.exec_()
 
     def fct_parametersWQ(self):
-        dlg = Water_quality_dialog(self)
-        dlg.exec_()
+
+        case, ok = QInputDialog.getItem(None,
+                                          'Study case',
+                                          'Kernel',
+                                        self.listeState,0, False)
+        #kernel list
+        if ok:
+            if self.DEBUG:
+                self.addInfo("Kernel {}".format(self.Klist[self.listeState.index(case)]))
+            dlg = Water_quality_dialog(self,self.Klist[self.listeState.index(case)])
+            dlg.exec_()

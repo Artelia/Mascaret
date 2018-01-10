@@ -64,24 +64,3 @@
 64,variablesStockees,false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false,false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false,false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false,Write the results,parametresVariablesStockees,,False
 65,initialisationAuto,FALSE,TRUE,TRUE,Initialisation with a steady run,,,True
 66,evenement,TRUE,TRUE,TRUE,Mode,,,True
-67,presenceTraceurs,FALSE,FALSE,FALSE,Activation of the water quality module,parametresTraceur,,True
-68,nbTraceur,0,0,0,Number of constituents,parametresTraceur,parametresConvectionDiffusion,True
-69,optionConvection,2,2,2,Convection method,parametresTraceur,parametresConvectionDiffusion,True
-70,ordreSchemaConvec,0,0,0,Scheme order,parametresTraceur,parametresConvectionDiffusion,True
-71,paramW,0,0,0,Parameter W,parametresTraceur,parametresConvectionDiffusion,True
-72,LimitPente,FALSE,FALSE,FALSE,Slope limiter,parametresTraceur,parametresConvectionDiffusion,True
-73,optionCalculDiffusion,1,1,1,Diffusion method,parametresTraceur,parametresConvectionDiffusion,True
-74,coeffDiffusion1,0,0,0,,parametresTraceur,parametresConvectionDiffusion,True
-75,coeffDiffusion2,0,0,0,,parametresTraceur,parametresConvectionDiffusion,True
-76,modeleQualiteEau,1,1,1,Water quality module,parametresTraceur,parametresNumeriquesQualiteEau,True
-77,fichParamPhysiqueTracer,mascaret.phy,mascaret.phy,mascaret.phy,,parametresTraceur,parametresNumeriquesQualiteEau,False
-78,frequenceCouplHydroTracer,1,1,1,Frequency for coupling ,parametresTraceur,parametresNumeriquesQualiteEau,True
-79,fichListTracer,mascaret.tra_lis,mascaret.tra_lis,mascaret.tra_lis,,parametresTraceur,parametresImpressionTraceur,False
-80,concentInit,FALSE,FALSE,FALSE,Initial Concentration,parametresTraceur,parametresImpressionTraceur,True
-81,loiTracer,FALSE,FALSE,FALSE,Tracer law used,parametresTraceur,parametresImpressionTraceur,True
-82,concentrations,TRUE,TRUE,TRUE,Concentrations,parametresTraceur,parametresImpressionTraceur,True
-83,bilanTracer,TRUE,TRUE,TRUE,Constituants balance,parametresTraceur,parametresImpressionTraceur,True
-84,fichResultTracer,mascaret.tra_opt,mascaret.tra_opt,mascaret.tra_opt,,parametresTraceur,parametresImpressionTraceur,False
-85,formatFichResultat,2,2,2,,parametresTraceur,parametresImpressionTraceur,False
-86,presenceConcInit,FALSE,FALSE,FALSE,,parametresTraceur,parametresConcentrationsInitialesTraceur,True
-88,fichConcInit,mascaret.conc,mascaret.conc,mascaret.conc,,parametresTraceur,parametresConcentrationsInitialesTraceur,False

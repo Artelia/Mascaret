@@ -38,6 +38,7 @@ from qgis.gui import *
 
 from ui.ui_parameter import Ui_Parameters
 from Class_observation import Class_observation
+import function as fct_
 
 class parameter_dialog(QtGui.QDialog):
     def __init__(self,mgis, kernel):
@@ -238,7 +239,7 @@ class parameter_dialog(QtGui.QDialog):
                     self.par[param]["val"] = valeur
 
                 self.par[param]["libelle"] = libelle
-                self.par[param]["gui"] = self.str2bool(gui)
+                self.par[param]["gui"] = fct_.str2bool(gui)
 
     def init_GUI(self):
         # pass
@@ -322,12 +323,6 @@ class parameter_dialog(QtGui.QDialog):
 
         self.par['evenement']["val"] =event
 
-    def str2bool(self,s):
-        """string to bool"""
-        if s=="True" or s=="TRUE":
-            return True
-        else:
-            return False
 
     def selectbox(self,box):
         """ function allow to select  or not for checkBox"""

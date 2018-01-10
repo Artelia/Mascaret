@@ -17,7 +17,6 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-
 class MasObject(object):
     """
     Class for Mascaret geometry objects processing.
@@ -537,7 +536,7 @@ ALTER FUNCTION calcul_abscisse_branche()
   OWNER TO postgres;
 '''
         return qry
-
+#*****************************************
 class laws_wq(MasObject):
     def __init__(self):
         super(laws_wq, self).__init__()
@@ -554,6 +553,7 @@ class laws_wq(MasObject):
             ('time', 'text'),
             ('C', 'text'),
             ('CONSTRAINT cle_laws_wq', 'PRIMARY KEY (id)')]
+# *****************************************
 if __name__ == '__main__':
     var= topo()
     var.schema = 'toto'
