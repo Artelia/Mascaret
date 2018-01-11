@@ -257,26 +257,7 @@
        <string>Initial Concentrations</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="1">
-        <widget class="QTableWidget" name="table_InitC">
-         <column>
-          <property name="text">
-           <string>N° Bief</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Abscisca</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>C°TRA1</string>
-          </property>
-         </column>
-        </widget>
-       </item>
-       <item row="0" column="0">
+       <item row="1" column="0">
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
           <spacer name="verticalSpacer_6">
@@ -307,6 +288,38 @@
          </item>
         </layout>
        </item>
+       <item row="1" column="1">
+        <widget class="QTableWidget" name="table_InitC">
+         <column>
+          <property name="text">
+           <string>N° Bief</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Abscisca</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>C°TRA1</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="presenceConcInit">
+         <property name="layoutDirection">
+          <enum>Qt::RightToLeft</enum>
+         </property>
+         <property name="text">
+          <string>Presence of initial conditions :</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tab_3">
@@ -318,86 +331,63 @@
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
           <layout class="QGridLayout" name="gridLayout_5">
-           <item row="8" column="1">
-            <widget class="QRadioButton" name="optionCalculDiffusion_seo">
-             <property name="layoutDirection">
-              <enum>Qt::RightToLeft</enum>
-             </property>
-             <property name="text">
-              <string>Seo &amp; Cheong (1998)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="2">
-            <widget class="QRadioButton" name="optionCalculDiffusion_Fisher">
-             <property name="layoutDirection">
-              <enum>Qt::RightToLeft</enum>
-             </property>
-             <property name="text">
-              <string>Fisher (1975)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QComboBox" name="LimitPente">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
+           <item row="4" column="1">
+            <widget class="QComboBox" name="optionCalculDiffusion">
              <item>
               <property name="text">
-               <string>Yes</string>
+               <string>Constant diffusion coef</string>
               </property>
              </item>
              <item>
               <property name="text">
-               <string>No</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="5" column="2">
-            <widget class="QRadioButton" name="optionCalculDiffusion_isawa">
-             <property name="layoutDirection">
-              <enum>Qt::RightToLeft</enum>
-             </property>
-             <property name="text">
-              <string>Isawa &amp; Aga (1991)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_frequenceCouplHydroTracer">
-             <property name="text">
-              <string>Frequency for coupling :</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QLabel" name="label_ordreSchemaConvec">
-             <property name="text">
-              <string>Scheme order :</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QComboBox" name="ordreSchemaConvec">
-             <item>
-              <property name="text">
-               <string>1</string>
+               <string>Elder (1959)</string>
               </property>
              </item>
              <item>
               <property name="text">
-               <string>2</string>
+               <string>Fisher (1975)</string>
               </property>
              </item>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_optionCalculDiffusion">
-             <property name="text">
-              <string>Diffusion method :</string>
-             </property>
+             <item>
+              <property name="text">
+               <string>Liu (1977)</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Isawa Aga (1991)</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>McQuivey Keefer (1974)</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Kashefipur Falconer (2002)</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Magazine al. (1988)</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Koussis Fodriguez-Mirasol (1998)</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Seo cheong (1998)</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Deng al. (2001)</string>
+              </property>
+             </item>
             </widget>
            </item>
            <item row="0" column="1">
@@ -413,10 +403,10 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_optionConvection">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_frequenceCouplHydroTracer">
              <property name="text">
-              <string>Convection method :</string>
+              <string>Frequency for coupling :</string>
              </property>
             </widget>
            </item>
@@ -439,41 +429,18 @@
              </item>
             </widget>
            </item>
-           <item row="3" column="1">
-            <widget class="QRadioButton" name="optionCalculDiffusion_default">
-             <property name="text">
-              <string>Constant diffussion coef. :</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="1">
-            <widget class="QRadioButton" name="optionCalculDiffusion_liu">
-             <property name="layoutDirection">
-              <enum>Qt::RightToLeft</enum>
-             </property>
-             <property name="text">
-              <string>Liu (1977)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="8" column="2">
-            <widget class="QRadioButton" name="optionCalculDiffusion_deng">
-             <property name="layoutDirection">
-              <enum>Qt::RightToLeft</enum>
-             </property>
-             <property name="text">
-              <string>Deng &amp; al. (2001)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="1">
-            <widget class="QRadioButton" name="optionCalculDiffusion_keefer">
-             <property name="layoutDirection">
-              <enum>Qt::RightToLeft</enum>
-             </property>
-             <property name="text">
-              <string>McQuivey &amp; Keefer</string>
-             </property>
+           <item row="1" column="3">
+            <widget class="QComboBox" name="ordreSchemaConvec">
+             <item>
+              <property name="text">
+               <string>1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>2</string>
+              </property>
+             </item>
             </widget>
            </item>
            <item row="2" column="0">
@@ -483,36 +450,6 @@
              </property>
              <property name="text">
               <string>Slope limiter</string>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="2">
-            <widget class="QRadioButton" name="optionCalculDiffusion_Mirasol">
-             <property name="layoutDirection">
-              <enum>Qt::RightToLeft</enum>
-             </property>
-             <property name="text">
-              <string>Koussis &amp; Rodriguez-Mirasol (1998)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QRadioButton" name="optionCalculDiffusion_elder">
-             <property name="layoutDirection">
-              <enum>Qt::RightToLeft</enum>
-             </property>
-             <property name="text">
-              <string>Elder (1959)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="1">
-            <widget class="QRadioButton" name="optionCalculDiffusion_magazine">
-             <property name="layoutDirection">
-              <enum>Qt::RightToLeft</enum>
-             </property>
-             <property name="text">
-              <string>Magazine &amp; al. (1988)</string>
              </property>
             </widget>
            </item>
@@ -545,20 +482,10 @@
              </property>
             </widget>
            </item>
-           <item row="6" column="2">
-            <widget class="QRadioButton" name="optionCalculDiffusion_falconer">
-             <property name="layoutDirection">
-              <enum>Qt::RightToLeft</enum>
-             </property>
-             <property name="text">
-              <string>Kashefipur &amp; Falconer (2002)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QDoubleSpinBox" name="coeffDiffusion_default">
+           <item row="4" column="2">
+            <widget class="QDoubleSpinBox" name="coeffDiffusion2">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="minimum">
               <double>-1000000000.000000000000000</double>
@@ -566,6 +493,44 @@
              <property name="maximum">
               <double>1000000000.000000000000000</double>
              </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_optionConvection">
+             <property name="text">
+              <string>Convection method :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_ordreSchemaConvec">
+             <property name="text">
+              <string>Scheme order :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_optionCalculDiffusion">
+             <property name="text">
+              <string>Diffusion method :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QComboBox" name="LimitPente">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <item>
+              <property name="text">
+               <string>Yes</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>No</string>
+              </property>
+             </item>
             </widget>
            </item>
           </layout>

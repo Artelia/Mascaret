@@ -37,6 +37,9 @@ class Water_quality_dialog(QDialog):
         self.ui = Ui_Parameter_water_q()
         self.ui.setupUi(self)
 
+        self.ui.buttonBox.accepted.connect(self.acceptDialog)
+        self.ui.buttonBox.rejected.connect(self.reject)
+
         self.ui.actionB_add_line.triggered.connect(self.add_line)
         self.ui.actionB_delete_line.triggered.connect(self.delete_line)
 
@@ -53,18 +56,13 @@ class Water_quality_dialog(QDialog):
     def create_dico_para(self):
         self.par = {}
         # requete pour recuperer les parametres dans la base
-        sql = "SELECT parametre, {0}, libelle, gui FROM {1}.{2};"
+        sql = "SELECT parametre, {0}, libelle, balise1, gui FROM {1}.{2};"
 
         rows = self.mdb.run_query(sql.format(self.kernel, self.mdb.SCHEMA, "parametres"), fetch=True)
 
-        for param, valeur, libelle, gui in rows:
+        for param, valeur, libelle,  balise1, gui in rows:
 
-            # if param == 'variablesStockees':
-            #     valeurs = map(eval, valeur.title().split())
-            #     for var, val, lib in zip(self.variables, valeurs, self.libel_var):
-            #         self.par[var] = {"val": val, "libelle": lib, "gui": True}
-            #         # self.par[var] = {"val": val, "libelle": lib}
-            # else:
+            if balise1== 'parametresTraceur':
                 self.par[param] = {}
                 try:
                     self.par[param]["val"] = eval(valeur.title())
@@ -80,36 +78,33 @@ class Water_quality_dialog(QDialog):
 
 
         for param, info in self.par.items():
-            # self.mgis.addInfo("param {}  info {}".format(param, info))
-            print param, info
-            # if info['gui']:
-            #     print param,info
-                # obj = getattr(self.ui, param)
-                # if isinstance(obj, QtGui.QCheckBox):
-                #     obj.setChecked(info['val'])
-                # elif isinstance(obj, QtGui.QDoubleSpinBox) or isinstance(obj, QtGui.QSpinBox):
-                #     obj.setValue(info['val'])
-                # elif obj==self.ui.evenement:
-                #     self.ui.evenement.setChecked(info['val'])
-                #     self.chEvent()
-                # elif  isinstance(obj, QtGui.QComboBox):
-                #     if param=='option':
-                #         val=info['val']-1
-                #     elif param=="compositionLits":
-                #         val = info['val']
-                #     elif param=="critereArret":
-                #         val = info['val']-1
-                #     elif param=='postProcesseur':
-                #         val = info['val'] - 1
-                #     obj.setCurrentIndex(val)
-                # else:
-                #     if self.mgis.DEBUG:
-                #         self.mgis.addInfo("param {}  obj {}  val {}".format(param, obj, info['val']))
-                #
+            if info['gui']:
+
+                obj = getattr(self.ui, param)
+                if isinstance(obj, QCheckBox):
+                    obj.setChecked(info['val'])
+                elif isinstance(obj, QDoubleSpinBox) or isinstance(obj, QSpinBox):
+                    obj.setValue(info['val'])
+                elif  isinstance(obj, QComboBox):
+                    if param=='optionConvection':
+                        val=info['val']-1
+                    elif param=="modeleQualiteEau":
+                        val = info['val']-1
+                    elif param == 'optionCalculDiffusion':
+                        val = info['val']-1
+                    elif param=="LimitPente":
+                        val = info['val']-1
+                    elif param=='ordreSchemaConvec':
+                        val = info['val'] - 1
+                    obj.setCurrentIndex(val)
+                else:
+                    if self.mgis.DEBUG:
+                        self.mgis.addInfo("param {}  obj {}  val {}".format(param, obj, info['val']))
+
                 # if param in self.exclusion[self.kernel]:
                 #     obj.hide()
-                #     if isinstance(obj, QtGui.QSpinBox) or isinstance(obj, QtGui.QDoubleSpinBox)\
-                #             or isinstance(obj, QtGui.QComboBox):
+                #     if isinstance(obj, QSpinBox) or isinstance(obj, QDoubleSpinBox)\
+                #             or isinstance(obj, QComboBox):
                 #         getattr(self.ui, 'label_'+param).hide()
 
     def meteoFile(self):
@@ -129,3 +124,44 @@ class Water_quality_dialog(QDialog):
         #delete line
         self.mgis.addInfo('fct delete_line')
         pass
+
+
+    def acceptDialog(self):
+        """Modification of the parameters in sql table"""
+        var=[]
+        for param, info in self.par.items():
+            if info['gui']:
+                obj = getattr(self.ui, param)
+
+                if isinstance(obj, QCheckBox) or isinstance(obj, QRadioButton):
+                    val = obj.isChecked()
+                elif isinstance(obj, QComboBox):
+                    val = obj.currentIndex()
+                    if param == 'optionConvection'or  param == "modeleQualiteEau" \
+                            or param == 'optionCalculDiffusion' or param == "LimitPente"\
+                            or param == 'ordreSchemaConvec':
+                        val = val+1
+                else:
+                    val = obj.value()
+
+
+                sql = """   UPDATE {0}.parametres
+                               SET {1}='{2}'
+                               WHERE parametre='{3}'
+                         """
+                self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.kernel, val, param))
+        #
+        liste = []
+        # for var2 in self.variables:
+        #     for param, obj in var:
+        #         if var2==param:
+        #             liste.append(str(obj.isChecked()).lower())
+        #
+        # sql = """   UPDATE {0}.parametres
+        #                SET {1}='{2}'
+        #                WHERE parametre='variablesStockees'
+        #          """
+        #
+        # self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.kernel, " ".join(liste)))
+
+        self.close()

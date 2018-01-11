@@ -401,6 +401,7 @@ class MasDatabase(object):
             with open(fichparam, 'r') as file:
                 for ligne in file:
                     liste_value.append(ligne.split(','))
+
             listeCol = self.listColumns('parametres')
             var = ",".join(listeCol)
             valeurs = "("

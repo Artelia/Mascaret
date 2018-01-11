@@ -1615,7 +1615,7 @@ class GraphProfilRes(GraphCommon):
 
 class GraphHydro(GraphCommon):
     def __init__(self, feature, mgis, select, position, type):
-        # feature, selection, position, type, main
+        # feature, selection, position, type, mainp
         GraphCommon.__init__(self, mgis)
         self.ui = Ui_GraphHydro()
         self.ui.setupUi(self)

@@ -71,7 +71,7 @@
 71,paramW,0,0,0,Parameter W,parametresTraceur,parametresConvectionDiffusion,True
 72,LimitPente,FALSE,FALSE,FALSE,Slope limiter,parametresTraceur,parametresConvectionDiffusion,True
 73,optionCalculDiffusion,1,1,1,Diffusion method,parametresTraceur,parametresConvectionDiffusion,True
-74,coeffDiffusion1,0,0,0,,parametresTraceur,parametresConvectionDiffusion,True
+74,coeffDiffusion1,0,0,0,,parametresTraceur,parametresConvectionDiffusion,False
 75,coeffDiffusion2,0,0,0,,parametresTraceur,parametresConvectionDiffusion,True
 76,modeleQualiteEau,1,1,1,Water quality module,parametresTraceur,parametresNumeriquesQualiteEau,True
 77,fichParamPhysiqueTracer,mascaret.phy,mascaret.phy,mascaret.phy,,parametresTraceur,parametresNumeriquesQualiteEau,False
@@ -83,5 +83,5 @@
 83,bilanTracer,TRUE,TRUE,TRUE,Constituants balance,parametresTraceur,parametresImpressionTraceur,True
 84,fichResultTracer,mascaret.tra_opt,mascaret.tra_opt,mascaret.tra_opt,,parametresTraceur,parametresImpressionTraceur,False
 85,formatFichResultat,2,2,2,,parametresTraceur,parametresImpressionTraceur,False
-86,presenceConcInit,FALSE,FALSE,FALSE,,parametresTraceur,parametresConcentrationsInitialesTraceur,True
+86,presenceConcInit,FALSE,FALSE,FALSE,Presence of initial conditions,parametresTraceur,parametresConcentrationsInitialesTraceur,True
 88,fichConcInit,mascaret.conc,mascaret.conc,mascaret.conc,,parametresTraceur,parametresConcentrationsInitialesTraceur,False

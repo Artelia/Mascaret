@@ -26,6 +26,7 @@ from decimal import Decimal
 
 
 def isfloat(value):
+
     try:
         float(value)
         return True
@@ -48,7 +49,7 @@ def interpole(a, l1, l2):
 
 def str2bool(s):
     """string to bool"""
-    if s=="True" or s=="TRUE":
+    if "True" in s or "TRUE" in s:
         return True
     else:
         return False
