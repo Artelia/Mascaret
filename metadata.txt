@@ -12,9 +12,10 @@ description=Pre and Post-processing for Mascaret.
 about= Plugin dedicated to the building and exploitation of Mascaret models.
        Requires PostgreSQL and PostGIS.
        Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
+       Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek (Many thanks for the work they've done on RiverGis)
 qgisMinimumVersion=2.14.18
 qgisMaximumVersion=2.99
-version=0.0.5
+version=0.0.6
 author=Artelia Eau et Environnement
 email=mehdi-pierre.daou@arteliagroup.com
 
@@ -30,6 +31,7 @@ changelog=
             Addition of Linux version of Mascaret executable
     0.0.4 : Correction of version numbering bug
     0.0.5 : Change of address for homepage, tracker and repo
+    0.0.6 : Small change of metadata.txt
 
 # Tags are comma separated with spaces allowed
 tags=
