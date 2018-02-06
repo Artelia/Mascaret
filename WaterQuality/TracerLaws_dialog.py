@@ -18,14 +18,15 @@ email                :
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
 
+from PyQt4.QtGui import *
+from PyQt4.uic import *
+import os
 from qgis.core import *
 from qgis.utils import *
 from qgis.gui import *
 
-from ui_tracer_laws import Ui_TracerLaws
+
 
 
 class TracerLaws_dialog(QDialog):
@@ -33,8 +34,7 @@ class TracerLaws_dialog(QDialog):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-        self.ui = Ui_TracerLaws()
-        self.ui.setupUi(self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_tracer_laws.ui'), self)
 
         self.initUI()
 

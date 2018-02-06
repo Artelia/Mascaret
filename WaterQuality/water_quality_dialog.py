@@ -18,14 +18,16 @@ email                :
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import *
+
 from PyQt4.QtGui import *
+from PyQt4.uic import *
+import os
 
 from qgis.core import *
 from qgis.utils import *
 from qgis.gui import *
 
-from ui_water_quality import Ui_Parameter_water_q
+
 from .. import function as fct
 
 class Water_quality_dialog(QDialog):
@@ -34,8 +36,7 @@ class Water_quality_dialog(QDialog):
         self.kernel=kernel
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-        self.ui = Ui_Parameter_water_q()
-        self.ui.setupUi(self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_water_quality.ui'), self)
 
         self.ui.buttonBox.accepted.connect(self.acceptDialog)
         self.ui.buttonBox.rejected.connect(self.reject)

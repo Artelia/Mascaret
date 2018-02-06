@@ -34,9 +34,6 @@ from PyQt4.uic import *
 from qgis.core import *
 from qgis.gui import *
 
-from ui.graphProfil import Ui_ProfilGraph
-from ui.graphProfilRes import Ui_ProfilGraphRes
-from ui.graphHydro import Ui_GraphHydro
 import function as fct
 
 
@@ -77,14 +74,13 @@ except AttributeError:
 import matplotlib.dates as mdates
 from matplotlib.widgets import RectangleSelector, SpanSelector, Cursor
 from matplotlib.ticker import FormatStrFormatter
-# MOD!
-# import matplotlib.pyplot as plt
+
 from matplotlib.figure import Figure
 import matplotlib.image as mpimg
-# MOD!
-import matplotlib.colors as colors
+
+
 import matplotlib.lines as mlines
-import matplotlib.ticker as mtick
+
 from matplotlib import gridspec, patches
 
 from datetime import datetime
@@ -92,7 +88,7 @@ from datetime import datetime
 import numpy as np
 
 import sys, os
-import random
+
 
 
 class IdentifyFeatureTool(QgsMapToolIdentify):

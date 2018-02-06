@@ -25,7 +25,7 @@ from PyQt4.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
-from ui.ui_settings_Simple import *
+
 import os
 
 class Settings(QDialog):
