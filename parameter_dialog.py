@@ -28,7 +28,7 @@ import os
 from qgis.core import *
 from qgis.gui import *
 
-from ui.ui_parameter import Ui_Parameters
+
 from Class_observation import Class_observation
 
 class parameter_dialog(QDialog):

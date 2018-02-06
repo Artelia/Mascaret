@@ -27,7 +27,7 @@ from qgis.core import *
 from qgis.utils import *
 from qgis.gui import *
 
-from ui.MascPlug_dialog_base import Ui_MascPlug
+
 from graphProfil_Dialog import IdentifyFeatureTool
 from db.mas_database import MasDatabase
 from MNT_class import Worker
