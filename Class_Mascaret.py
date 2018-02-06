@@ -720,7 +720,7 @@ class Class_Mascaret():
                 #     self.mgis.addInfo("{0} :\n \t Upstream Water Level{1}\n \t  Downstream Water Level :{2}"
                 #                       .format(nom, tab["cote_amont"], tab["cote_aval"]))
             elif type == 7:
-                fich.write(u'# Temps (s) Cote inférieur Cote supérieur\n')
+                fich.write('# Temps (s) Cote inférieur Cote supérieur\n')
                 fich.write(' S\n')
                 chaine = ' {time:.3f} {z_lower:.3f} {z_up:.3f}\n'
                 # if self.mgis.DEBUG:
@@ -863,8 +863,8 @@ class Class_Mascaret():
                 dictScen=dictScen_tmp
 
         else:
-            scen, ok = QInputDialog.getText(QWidget(), u'Scenario name',
-                                            u'Please input a scenario name :')
+            scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
+                                            'Please input a scenario name :')
             if not ok or not self.checkScenar(scen, noyau):
                 if self.mgis.DEBUG:
                     self.mgis.addInfo("Canceled Simulation because of {0} already exists.".format(scen))
@@ -1219,7 +1219,7 @@ class Class_Mascaret():
     def copyLIG(self):
         """ Load .lig file in run model"""
         fichiers = QFileDialog.getOpenFileNames(None,
-                                                r'File Selection',
+                                                'File Selection',
                                                 self.dossierFileMasc,
                                                 "File (*.lig)")
         shutil.copy(fichiers[0],os.path.join(self.dossierFileMasc, self.baseName + '.lig'))

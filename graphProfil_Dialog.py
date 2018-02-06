@@ -29,6 +29,7 @@ Comment:
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from PyQt4.uic import *
 
 from qgis.core import *
 from qgis.gui import *
@@ -188,6 +189,7 @@ class GraphCommon(QDialog):
         self.courbes = []
 
     def GUI_graph(self,ui):
+
         self.verticalLayout_99 = QVBoxLayout(ui.widget_figure)
         self.verticalLayout_99.setObjectName(_fromUtf8("verticalLayout_99"))
         self.verticalLayout_99.addWidget(self.canvas)
@@ -204,8 +206,7 @@ class GraphProfil(GraphCommon):
     def __init__(self, gid, mgis=None):
         GraphCommon.__init__(self, mgis)
 
-        self.ui = Ui_ProfilGraph()
-        self.ui.setupUi(self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/graphProfil.ui'), self)
         self.initUI_common_P(gid)
         self.GUI_graph(self.ui)
         self.initUI()
@@ -277,7 +278,7 @@ class GraphProfil(GraphCommon):
         self.courbeTopo = []
         for i in range(5):
             temp, = self.axes.plot([], [], color='green', marker='+', mew=2,
-                                   zorder=95, label=u'Topo', picker=5)
+                                   zorder=95, label='Topo', picker=5)
             self.courbeTopo.append(temp)
 
         self.etiquetteTopo = []
@@ -566,7 +567,7 @@ class GraphProfil(GraphCommon):
 
     def importTopo(self):
         fichiers = QFileDialog.getOpenFileNames(None,
-                                                r'File Selection',
+                                                'File Selection',
                                                 self.dossierProjet,
                                                 "File (*.txt *.csv)")
 
@@ -621,7 +622,7 @@ class GraphProfil(GraphCommon):
 
     def importImage(self):
         fichier = QFileDialog.getOpenFileName(None,
-                                              r'Sélection des fichiers',
+                                              'Sélection des fichiers',
                                               self.dossierProjet,
                                               "Fichier (*.png *.jpg)")
 
@@ -1195,9 +1196,7 @@ class GraphProfilRes(GraphCommon):
     def __init__(self, gid, mgis=None):
         GraphCommon.__init__(self, mgis)
 
-        self.ui = Ui_ProfilGraphRes()
-        self.ui.setupUi(self)
-
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/graphProfilRes.ui'), self)
         self.initUI_common_P(gid)
         self.GUI_graph(self.ui)
         qres = self.initUI()
@@ -1227,7 +1226,7 @@ class GraphProfilRes(GraphCommon):
             #                                      condition)
             dico_run = self.mdb.selectDistinct("date, run, scenario,t",
                                                "runs")
-            # print dico_run
+
             if not dico_run:
                 self.mgis.addInfo("No simulation to show")
                 return False
@@ -1617,8 +1616,7 @@ class GraphHydro(GraphCommon):
     def __init__(self, feature, mgis, select, position, type):
         # feature, selection, position, type, mainp
         GraphCommon.__init__(self, mgis)
-        self.ui = Ui_GraphHydro()
-        self.ui.setupUi(self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/graphHydro.ui'), self)
 
         self.feature = feature
         self.position = position
