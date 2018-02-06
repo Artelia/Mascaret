@@ -58,10 +58,10 @@ class Class_observation():
 
                 self.mdb.insert2('observations', obs)
                 if self.mgis.DEBUG:
-                     self.mgis.addInfo(u"File {0} loads".format(file))
+                     self.mgis.addInfo("File {0} loads".format(file))
             return True
         except Exception, e:
-            self.mgis.addInfo(u"Loading to observations is an echec.")
+            self.mgis.addInfo("Loading to observations is an echec.")
             if self.mgis.DEBUG:
                 self.mgis.addInfo(repr(e))
             return False

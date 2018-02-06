@@ -20,7 +20,7 @@ email                :
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-
+from PyQt4.uic import *
 import os
 import json
 from qgis.core import *
@@ -46,15 +46,17 @@ class MascPlugDialog(QMainWindow):
         if QApplication.overrideCursor():
             QApplication.restoreOverrideCursor()
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.ui = Ui_MascPlug()
-        self.ui.setupUi(self)
+
+        self.masplugPath = os.path.dirname(__file__)
+        self.ui = loadUi(os.path.join(self.masplugPath,'ui/MascPlug_dialog_base.ui'), self)
+
         #variables
         self.DEBUG = 1
         self.curConnName= None
         self.passwd = None
         self.mdb = None
         self.iface = iface
-        self.masplugPath = os.path.dirname(__file__)
+
         # self.pathPostgres = self.masplugPath
         # emplacement objet sql
         self.dossierSQL = os.path.join(os.path.join(self.masplugPath,"db"), "sql")
@@ -309,7 +311,7 @@ class MascPlugDialog(QMainWindow):
             self.enableAllActions()
         else:
 
-            self.addInfo(u'Creating new model cancelled.')
+            self.addInfo('Creating new model cancelled.')
 
     def dbDeleteModel(self):
         """ Model delete"""
@@ -372,18 +374,18 @@ class MascPlugDialog(QMainWindow):
         #Choix unité
         if not raster:
             QMessageBox.warning(None, 'Message',
-                                u'Please, selection the DTM raster')
+                                'Please, selection the DTM raster')
             return
         self.addInfo(" info  : {0}".format(len(profil.selectedFeatures())))
         if len(profil.selectedFeatures())==0:
             QMessageBox.warning(None, 'Message',
-                                u'Please, selection the profiles')
+                                'Please, selection the profiles')
             return
 
-        liste = [u"m", u"dm", u"cm", u"mm"]
+        liste = ["m", "dm", "cm", "mm"]
 
-        valeur, ok = QInputDialog.getItem(None, u"Selection of the DTM unit",
-                                          u'Unit', liste,0, False)
+        valeur, ok = QInputDialog.getItem(None, "Selection of the DTM unit",
+                                          'Unit', liste,0, False)
 
         if not ok:
             return
@@ -528,7 +530,7 @@ class MascPlugDialog(QMainWindow):
 ##*******************************
 
     def do_something(self, layer, feature):
-        print feature.attributes()
+        print (feature.attributes())
 
     def exportModel(self):
         #choix du fichier d'exportatoin
@@ -543,7 +545,7 @@ class MascPlugDialog(QMainWindow):
 
     def importModel(self):
         fileNamePath =QFileDialog.getOpenFileNames(None,
-                                                r'File Selection',
+                                                'File Selection',
                                                    self.masplugPath,
                                                 filter="PSQL (*.psql);;File (*)")
         # choix du fichier d'exportatoin
