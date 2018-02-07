@@ -43,12 +43,12 @@ import shutil
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as ETparse
 
-from PyQt4.QtGui import *
+from PyQt5.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 import subprocess
-from ui.warningbox import Class_warningBox
+from .ui.warningbox import Class_warningBox
 
 class Class_Mascaret():
 
@@ -1257,9 +1257,9 @@ class Class_Mascaret():
             return False
 
     def copyFileModel(self, rep, case=None):
+        # self.mgis.addInfo('{}'.format(rep))
         if case=='xcas':
             shutil.copy2(os.path.join(self.dossierFileMasc,self.baseName+".xcas"),rep)
-
         elif case=='geo':
             shutil.copy2(os.path.join(self.dossierFileMasc, self.baseName+".geo"), rep)
         elif case=='georef':

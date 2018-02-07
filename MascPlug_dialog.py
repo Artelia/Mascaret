@@ -18,9 +18,10 @@ email                :
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.uic import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.uic import *
+
 import os
 import json
 from qgis.core import *
@@ -28,14 +29,14 @@ from qgis.utils import *
 from qgis.gui import *
 
 
-from graphProfil_Dialog import IdentifyFeatureTool
-from db.mas_database import MasDatabase
-from MNT_class import Worker
-from Class_Mascaret import Class_Mascaret
-from parameter_dialog import parameter_dialog
+from .graphProfil_Dialog import IdentifyFeatureTool
+from .db.mas_database import MasDatabase
+from .MNT_class import Worker
+from .Class_Mascaret import Class_Mascaret
+from .parameter_dialog import parameter_dialog
 
 import math
-
+import os
 
 class MascPlugDialog(QMainWindow):
 
@@ -49,7 +50,6 @@ class MascPlugDialog(QMainWindow):
 
         self.masplugPath = os.path.dirname(__file__)
         self.ui = loadUi(os.path.join(self.masplugPath,'ui/MascPlug_dialog_base.ui'), self)
-
         #variables
         self.DEBUG = 1
         self.curConnName= None
@@ -81,7 +81,7 @@ class MascPlugDialog(QMainWindow):
         self.actions2Disable = []
         self.menus = self.ui.menubar.findChildren(QMenu)
         self.toolbars = self.findChildren(QToolBar)
-        self.mapRegistry = QgsMapLayerRegistry.instance()
+        # self.mapRegistry = QgsProject.instance()
 
         #setting
         self.readSettings()
@@ -419,10 +419,11 @@ class MascPlugDialog(QMainWindow):
     def fct_createXcas(self):
         """ create Xcas"""
 
-        case, ok = QInputDialog.getItem(None,
+        case, ok = QInputDialog.getItem(self,
                                         'Study case',
                                         'Kernel',
                                         self.listeState, 0, False)
+
         # kernel list
         if ok:
             if self.DEBUG:
@@ -432,6 +433,7 @@ class MascPlugDialog(QMainWindow):
             fileNamePath = QFileDialog.getSaveFileName(self, "saveFile",
                                                        "{0}.xcas".format(os.path.join(self.masplugPath,clam.baseName)),
                                                         filter="XCAS (*.xcas)")
+            fileNamePath=fileNamePath[0]
             if fileNamePath:
                 clam.copyFileModel(fileNamePath, case='xcas')
 
@@ -442,6 +444,7 @@ class MascPlugDialog(QMainWindow):
         fileNamePath = QFileDialog.getSaveFileName(self, "saveFile",
                                                    "{0}.geo".format(os.path.join(self.masplugPath,clam.baseName)),
                                                    filter="GEO (*.geo)")
+        fileNamePath = fileNamePath[0]
         if fileNamePath:
             clam.copyFileModel(fileNamePath, case='geo')
 
@@ -485,7 +488,7 @@ class MascPlugDialog(QMainWindow):
 
     def options(self, widget):
         """ GUI option"""
-        from settings_dialog import Settings
+        from .settings_dialog import Settings
         dlg = Settings(self)
         dlg.exec_()
 
@@ -496,8 +499,8 @@ class MascPlugDialog(QMainWindow):
             sFile = os.path.join(self.masplugPath, 'default_settings.json')
         with open(sFile, 'r') as f:
             self.opts = json.load(f)
-        for group, options in self.opts.iteritems():
-            for name, defaultValue in options.iteritems():
+        for group, options in self.opts.items():
+            for name, defaultValue in options.items():
                 if group == 'mgis' and name in self.opts['mgis'].keys():
                     setattr(self, name, self.opts['mgis'][name])
                 elif group == 'mdb' and name in self.opts['mdb'].keys():
@@ -507,8 +510,8 @@ class MascPlugDialog(QMainWindow):
 
     def writeSettings(self):
         """write Option"""
-        for group, options in self.opts.iteritems():
-            for name, defaultValue in options.iteritems():
+        for group, options in self.opts.items():
+            for name, defaultValue in options.items():
                 if group == 'mgis':
                     try:
                         self.opts['mgis'][name] = getattr(self, name)
@@ -538,6 +541,8 @@ class MascPlugDialog(QMainWindow):
                                                    "{0}.psql".format(
                                                     os.path.join(self.masplugPath, self.mdb.dbname+"_"+self.mdb.SCHEMA)),
                                                    filter="PSQL (*.psql);;File (*)")
+        fileNamePath = fileNamePath[0]
+        self.addInfo('{}'.format(fileNamePath))
         if self.mdb.exportSchema(fileNamePath) :
             self.addInfo('Export is done.')
         else:
@@ -550,6 +555,7 @@ class MascPlugDialog(QMainWindow):
                                                 filter="PSQL (*.psql);;File (*)")
         # choix du fichier d'exportatoin
 
+        fileNamePath=fileNamePath[0]
         if self.mdb.importSchema(fileNamePath):
             self.addInfo('Import is done.')
         else:
@@ -581,8 +587,9 @@ class MascPlugDialog(QMainWindow):
 
         self.prev_tool = canvas.mapTool()
         self.map_tool = IdentifyFeatureTool(self)
-        QObject.connect(self.map_tool, SIGNAL('geomIdentified'),
-                        self.do_something)
+        # QObject.connect(self.map_tool, SIGNAL('geomIdentified'),
+        #                 self.do_something)
+        self.map_tool.pyqtSignal('geomIdentified').connect(self.do_something)
         canvas.setMapTool(self.map_tool)
 
     def windinfo(self, txt, title='Informations'):

@@ -19,9 +19,9 @@ email                :
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.uic import *
+
+from PyQt5.QtWidgets import *
+from PyQt5.uic import *
 import os
 
 
@@ -29,7 +29,7 @@ from qgis.core import *
 from qgis.gui import *
 
 
-from Class_observation import Class_observation
+from .Class_observation import Class_observation
 
 class parameter_dialog(QDialog):
     def __init__(self,mgis, kernel):
@@ -270,6 +270,7 @@ class parameter_dialog(QDialog):
                                                     'File Selection',
                                                     self.mgis.masplugPath,
                                                     filter="CSV (*.csv);;File (*)")
+        fileNamePath=fileNamePath[0]
         if self.obs.evtTOobs(fileNamePath):
             self.mgis.addInfo('Import is done.')
         else:

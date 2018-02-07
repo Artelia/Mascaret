@@ -27,15 +27,15 @@ Comment:
         GraphHydro
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.uic import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.uic import *
 
 from qgis.core import *
 from qgis.gui import *
 
 
-import function as fct
+from . import function as fct
 
 
 try:

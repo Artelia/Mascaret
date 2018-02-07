@@ -18,8 +18,8 @@ email                :
  ***************************************************************************/
 """
 
-import __future__
-from PyQt4.QtCore import *
+
+from PyQt5.QtCore import *
 from qgis.core import *
 from qgis.gui import *
 from shapely.wkb import loads

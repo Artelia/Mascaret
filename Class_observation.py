@@ -60,7 +60,7 @@ class Class_observation():
                 if self.mgis.DEBUG:
                      self.mgis.addInfo("File {0} loads".format(file))
             return True
-        except Exception, e:
+        except Exception as e:
             self.mgis.addInfo("Loading to observations is an echec.")
             if self.mgis.DEBUG:
                 self.mgis.addInfo(repr(e))
