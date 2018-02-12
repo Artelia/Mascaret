@@ -134,7 +134,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 selection = {'abs': [], 'nom': []}
 
                 field_names = [field.name() for field
-                               in results[0].mLayer.pendingFields()]
+                               in results[0].mLayer.fields()]
 
                 if 'code' in field_names:
                     selection['code'] = []
@@ -1821,6 +1821,7 @@ class GraphHydro(GraphCommon):
         self.etiquetteLaisses = []
 
         self.majListe()
+
         self.majTab()
         self.majLaisses()
         self.majLegende()
@@ -2090,10 +2091,16 @@ class GraphHydro(GraphCommon):
                 self.comboTimePK.addItem(str(x))
             else:
                 self.comboTimePK.addItem('{0:%d/%m/%Y %H:%M}'.format(x))
+        try:
+            index = self.liste[self.inv]['abs'].index(self.position)
+        except ValueError as e :
+            self.mgis.addInfo('No results for this profile. \n Error : {}'.format(e))
 
-        index = self.liste[self.inv]['abs'].index(self.position)
+
+
         self.comboTimePK.setCurrentIndex(index)
         self.comboTimePK.currentIndexChanged['QString'].connect(self.comboTimePKChange)
+
 
     def majTab(self):
         condition = """run='{0}' AND scenario='{1}' """.format(self.run,
