@@ -90,8 +90,8 @@ class Class_Mascaret():
                     litMinD = requete["rightminbed"][i]
 
                     if branche and abs and tempX and tempZ and litMinG and litMinD:
-                        tabX = map(lambda x: round(float(x), 2), tempX.split())
-                        tabZ = map(lambda x: round(float(x), 2), tempZ.split())
+                        tabX = list(map(lambda x: round(float(x), 2), tempX.split()))
+                        tabZ = list(map(lambda x: round(float(x), 2), tempZ.split()))
 
                         fich.write('PROFIL Bief_{0} {1} {2}\n'.format(branche,
                                                                       nom, abs))
@@ -145,8 +145,8 @@ class Class_Mascaret():
                     litMinD = requete["rightminbed"][i]
 
                     if branche and abs and tempX and tempZ and litMinG and litMinD:
-                        tabX = map(lambda x: round(float(x), 2), tempX.split())
-                        tabZ = map(lambda x: round(float(x), 2), tempZ.split())
+                        tabX = list(map(lambda x: round(float(x), 2), tempX.split()))
+                        tabZ = list(map(lambda x: round(float(x), 2), tempZ.split()))
 
                         points=geom.asMultiPolyline()[0]
                         (cood1X,cood1Y)=points[0]
@@ -172,7 +172,7 @@ class Class_Mascaret():
             self.mgis.addInfo(str(e))
 
     def fmt(self,liste):
-        return (" ".join(map(str, liste)))
+        return (" ".join(list(map(str, liste))))
 
     def indent(self,elem, level=0):
         """indentation auto"""
@@ -311,8 +311,8 @@ class Class_Mascaret():
             for j, (abs, x, z, sg, sd, n) in enumerate(tab):
 
                 try:
-                    xx = map(float, x.split())
-                    zz = map(float, z.split())
+                    xx = list(map(float, x.split()))
+                    zz = list(map(float, z.split()))
                     diff = max(zz) - min(zz)
                 except:
                     self.mgis.addInfo("Check the {} proile if it's ok ".format(profils["name"][j]))
@@ -805,8 +805,8 @@ class Class_Mascaret():
                         """.format(nom, loi['type'], dateDebut, dateFin)
 
             temp = self.mdb.selectOne('laws', condition)
-            cote = map(float, temp['z'].split())
-            debit = map(float, temp['flowrate'].split())
+            cote = list(map(float, temp['z'].split()))
+            debit = list(map(float, temp['flowrate'].split()))
 
             self.creerLOI(nom, {'z': cote, 'flowrate': debit}, 5)
 
@@ -936,7 +936,7 @@ class Class_Mascaret():
                     liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
                              "z_lower", "z_up"]
 
-                    tab = {k: map(float, v.split())
+                    tab = {k: list(map(float, v.split()))
                        for k, v in temp.items() if v and k in liste}
 
                     self.creerLOI(nom, tab, l["type"])

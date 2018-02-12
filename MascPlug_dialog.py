@@ -357,16 +357,20 @@ class MascPlugDialog(QMainWindow):
 ## Menus Functions
 ###**************************************
 
+
+
     def MntToProfil(self):
         """
         Extraction of the profiles from Raster
         :return:
         """
         #recupe selection
-        for couche in self.iface.legendInterface().layers():
+        profil=None
+        for couche in self.iface.legendInterface().selectedLayers():
+            self.addInfo('zz {}'.format(couche.attributes()))
             if couche.name() == "profiles":
                 profil = couche
-
+        #
         raster = None
         for couche in self.iface.legendInterface().selectedLayers():
             if isinstance(couche, QgsRasterLayer):
@@ -534,6 +538,7 @@ class MascPlugDialog(QMainWindow):
 
     def do_something(self, layer, feature):
         print (feature.attributes())
+        self.addInfo('{}'.format(feature.attributes()))
 
     def exportModel(self):
         #choix du fichier d'exportatoin
@@ -589,7 +594,7 @@ class MascPlugDialog(QMainWindow):
         self.map_tool = IdentifyFeatureTool(self)
         # QObject.connect(self.map_tool, SIGNAL('geomIdentified'),
         #                 self.do_something)
-        self.map_tool.pyqtSignal('geomIdentified').connect(self.do_something)
+        self.map_tool.changedRasterResults.connect(self.do_something)
         canvas.setMapTool(self.map_tool)
 
     def windinfo(self, txt, title='Informations'):
