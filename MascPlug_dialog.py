@@ -77,7 +77,7 @@ class MascPlugDialog(QMainWindow):
         self.listeState = ['Steady', 'Unsteady', 'Transcritical unsteady']
         #kernel list
         self.Klist = ["steady", "unsteady", "transcritical"]
-
+        self.profilesForExtract = []
         self.actions2Disable = []
         self.menus = self.ui.menubar.findChildren(QMenu)
         self.toolbars = self.findChildren(QToolBar)
@@ -142,6 +142,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionCross_section_results.triggered.connect(self.mainGraph)
 
         # creatoin model
+        self.ui.actionSelect_Profiles.triggered.connect(self.SelectProfil)
         self.ui.action_Extract_MNTfor_profile.triggered.connect(self.MntToProfil)
         self.ui.actionCreate_Geometry.triggered.connect(self.fct_createGeo)
         self.ui.actionCreate_xcas.triggered.connect(self.fct_createXcas)
@@ -357,6 +358,27 @@ class MascPlugDialog(QMainWindow):
 ## Menus Functions
 ###**************************************
 
+    def SelectProfil(self):
+        """
+        Select profiles for extraction from Raster
+        :return:
+        """
+
+        self.profilesForExtract=[]
+        profile=self.iface.activeLayer()
+        #check if the selected layer is well profiles
+        if profile.name()=="profiles":
+            for couche in profile.selectedFeatures():
+                self.profilesForExtract.append(couche)
+        if len(self.profilesForExtract)==0:
+            self.addInfo("Not selected profiles\n")
+            self.addInfo("****************************")
+            self.addInfo('Help : Select the "profiles" layer.\n'
+                         'Then select the profiles with selection tools of QGIS.\n')
+            self.addInfo("****************************")
+        if self.DEBUG:
+            for couche in  self.profilesForExtract:
+                self.addInfo("Profile name  : {0}".format(couche['name']))
 
 
     def MntToProfil(self):
@@ -364,27 +386,19 @@ class MascPlugDialog(QMainWindow):
         Extraction of the profiles from Raster
         :return:
         """
-        #recupe selection
-        profil=None
-        for couche in self.iface.legendInterface().selectedLayers():
-            self.addInfo('zz {}'.format(couche.attributes()))
-            if couche.name() == "profiles":
-                profil = couche
-        #
-        raster = None
-        for couche in self.iface.legendInterface().selectedLayers():
-            if isinstance(couche, QgsRasterLayer):
-                raster = couche
-        #Choix unité
-        if not raster:
-            QMessageBox.warning(None, 'Message',
-                                'Please, selection the DTM raster')
-            return
-        self.addInfo(" info  : {0}".format(len(profil.selectedFeatures())))
-        if len(profil.selectedFeatures())==0:
+        #check if selected profiles are existing
+        if len(self.profilesForExtract)==0:
             QMessageBox.warning(None, 'Message',
                                 'Please, selection the profiles')
             return
+
+        self.addInfo("Info, number profiles : {0}".format(len(self.profilesForExtract)))
+        raster=self.iface.activeLayer()
+        if not isinstance(raster, QgsRasterLayer):
+            QMessageBox.warning(None, 'Message',
+                                'Please, selection the DTM raster')
+            return
+
 
         liste = ["m", "dm", "cm", "mm"]
 
@@ -398,7 +412,7 @@ class MascPlugDialog(QMainWindow):
         if self.DEBUG:
             self.addInfo("Raster and Profile Selection, and Unit are Ok")
         # create a new worker instance
-        worker = Worker(self,profil, raster, facteur)
+        worker = Worker(self,self.profilesForExtract, raster, facteur)
         worker.run()
         if self.DEBUG:
             self.addInfo("Extraction is done")

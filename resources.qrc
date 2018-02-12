@@ -25,6 +25,7 @@
     <file>icones/croix.png</file>
     <file>icones/repSav.png</file>
     <file>icones/dbImportModel.png</file>
+    <file>icones/selectProfiles.png</file>
   </qresource> 
 </RCC>
 
