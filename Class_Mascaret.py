@@ -728,7 +728,8 @@ class Class_Mascaret():
                 #     self.mgis.addInfo("{0} :\n \t Time : {1}\n \t Upstream Water Level{2}\n \t  "
                 #                       "Downstream Water Level :{3}"
                 #                       .format(nom,tab["temps"], tab["cote_amont"], tab["cote_aval"]))
-            n = len(tab.values()[0])
+            n = len(list(tab.values())[0])
+
             for i in range(n):
                 dico = {k: v[i] for k, v in tab.items()}
                 fich.write(chaine.format(**dico))
@@ -1057,7 +1058,7 @@ class Class_Mascaret():
         p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                              ,stdin=subprocess.PIPE)
         p.wait()
-        self.mgis.addInfo("{0}".format(p.communicate()[0]))
+        self.mgis.addInfo("{0}".format(p.communicate()[0].decode("utf-8")))
         return True
 
     def litOPT(self, run, scen, dateDebut,baseNamefile):

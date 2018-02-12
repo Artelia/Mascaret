@@ -362,31 +362,23 @@ class MascPlugDialog(QMainWindow):
         Extraction of the profiles from Raster
         :return:
         """
-
-
         raster=None
         if isinstance(self.iface.activeLayer(), QgsRasterLayer):
             raster = self.iface.activeLayer()
 
-
-        #Choix unité
         if not raster:
             QMessageBox.warning(None, 'Message',
                                 'Please, selection the DTM raster')
             return
 
-        raster=self.iface.activeLayer()
-        if not isinstance(raster, QgsRasterLayer):
-
-            QMessageBox.warning(None, 'Message',
-                                'Please, selection the profiles')
-            return
-
-
         for couche in QgsProject.instance().mapLayers().values():
             if couche.name()=="profiles":
                 profil=couche
-            self.addInfo('{}'.format(couche.name()))
+
+        if len(profil.selectedFeatures())==0:
+                QMessageBox.warning(None, 'Message',
+                                    'Please, selection the profiles')
+                return
 
         liste = ["m", "dm", "cm", "mm"]
 
@@ -397,6 +389,7 @@ class MascPlugDialog(QMainWindow):
             return
 
         facteur = math.pow(10, liste.index(valeur))
+
         if self.DEBUG:
             self.addInfo("Raster and Profile Selection, and Unit are Ok")
         # create a new worker instance

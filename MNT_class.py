@@ -49,7 +49,6 @@ class Worker(QObject):
             geomcoupe = feature.geometry()
             longueur = geomcoupe.length()
             if longueur < self.res:
-
                 self.mgis.addInfo("Problem {0} between lenght profile : {1} and Raster accurancy : {2}."
                                   .format(feature["name"],longueur,self.res))
                 self.mgis.addInfo("This problem could come from the projection units.")
