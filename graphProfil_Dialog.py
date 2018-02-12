@@ -34,21 +34,25 @@ from PyQt5.uic import *
 from qgis.core import *
 from qgis.gui import *
 
+
 from . import function as fct
 
+
 try:
-    from matplotlib.backends.backend_qt5agg \
+    from matplotlib.backends.backend_qt4agg \
         import FigureCanvasQTAgg as FigureCanvas
 except:
-    from matplotlib.backends.backend_qt5agg \
+    from matplotlib.backends.backend_qt4agg \
         import FigureCanvasQT as FigureCanvas
+
+
 #***************************
 try:
-    from matplotlib.backends.backend_qt5agg\
+    from matplotlib.backends.backend_qt4agg\
         import NavigationToolbar2QTAgg as NavigationToolbar
 
 except:
-    from matplotlib.backends.backend_qt5agg \
+    from matplotlib.backends.backend_qt4agg \
         import NavigationToolbar2QT as NavigationToolbar
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -56,8 +60,12 @@ except AttributeError:
     def _fromUtf8(s):
         return s
 # **************************************************
+
+
 try:
     _encoding = QApplication.UnicodeUTF8
+
+
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
@@ -74,10 +82,15 @@ import matplotlib.image as mpimg
 # MOD!
 import matplotlib.colors as colors
 import matplotlib.lines as mlines
+
 from matplotlib import gridspec, patches
+
 from datetime import datetime
+
 import numpy as np
+
 import sys, os
+
 
 
 class IdentifyFeatureTool(QgsMapToolIdentify):
@@ -92,7 +105,6 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
         results = self.identify(mouseEvent.x(), mouseEvent.y(),
                                 self.TopDownStopAtFirst, self.VectorLayer)
-
 
         if len(results) > 0:
             couche = results[0].mLayer.name()
@@ -147,6 +159,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 graphHyd.exec_()
         return
 
+
 class GraphCommon(QDialog):
     def __init__(self, mgis=None):
         QDialog.__init__(self)
@@ -171,7 +184,6 @@ class GraphCommon(QDialog):
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
         self.nom = self.feature['name']
 
-
         self.courbes = []
 
     def GUI_graph(self,ui):
@@ -184,6 +196,7 @@ class GraphCommon(QDialog):
         self.verticalLayout_98 = QVBoxLayout(ui.widget_toolsbar)
         self.verticalLayout_98.setObjectName(_fromUtf8("verticalLayout_98"))
         self.verticalLayout_98.addWidget(self.toolbar)
+
 
 class GraphProfil(GraphCommon):
     """class Dialog graphProfil"""
@@ -379,8 +392,8 @@ class GraphProfil(GraphCommon):
         condition = "idprofil={0}".format(self.gid)
         requete = self.mdb.select("mnt", condition)
         if "x" in requete.keys() and "z" in requete.keys():
-            self.mnt['x'] = list(map(float, requete["x"][0].split()))
-            self.mnt['z'] = list(map(float, requete["z"][0].split()))
+            self.mnt['x'] = map(float, requete["x"][0].split())
+            self.mnt['z'] = map(float, requete["z"][0].split())
 
     def extraitProfil(self):
 
@@ -392,8 +405,8 @@ class GraphProfil(GraphCommon):
         self.mnt = {'x': [], 'z': []}
 
         if self.feature["x"] and self.feature["z"]:
-            self.tab['x'] = list(map(float, self.feature["x"].split()))
-            self.tab['z'] = list(map(float, self.feature["z"].split()))
+            self.tab['x'] = map(float, self.feature["x"].split())
+            self.tab['z'] = map(float, self.feature["z"].split())
             mini = min(self.tab['x'])
             maxi = max(self.tab['x'])
             for l in liste:
@@ -402,8 +415,8 @@ class GraphProfil(GraphCommon):
                     self.tab[l] = val
 
         if self.feature["xmnt"] and self.feature["zmnt"]:
-            self.mnt['x'] = list(map(float, self.feature["xmnt"].split()))
-            self.mnt['z'] = list(map(float, self.feature["zmnt"].split()))
+            self.mnt['x'] = map(float, self.feature["xmnt"].split())
+            self.mnt['z'] = map(float, self.feature["zmnt"].split())
 
     def extraitTopo(self):
 
@@ -483,7 +496,7 @@ class GraphProfil(GraphCommon):
 
         for k, v in self.tab.items():
             if isinstance(v, list):
-                self.liste[k][self.position] = " ".join(list(map(str, v)))
+                self.liste[k][self.position] = " ".join(map(str, v))
             else:
                 self.liste[k][self.position] = v
 
@@ -555,17 +568,14 @@ class GraphProfil(GraphCommon):
                                                 'File Selection',
                                                 self.dossierProjet,
                                                 "File (*.txt *.csv)")
-        fichiers=fichiers[0]
-        if fichiers:
-            self.chargerBathy(fichiers, self.coucheProfils,
-                              self.nom)
 
-            self.extraitTopo()
-            self.majGraph()
-            self.majLimites()
-            self.majLegende()
-        else:
-            self.mgis.addInfo('File "{}" cannot open.'.format(fichiers))
+        self.chargerBathy(fichiers, self.coucheProfils,
+                          self.nom)
+
+        self.extraitTopo()
+        self.majGraph()
+        self.majLimites()
+        self.majLegende()
 
     def chargerBathy(self, liste, coucheProfil, profil=None):
         """charge la bathymetrie"""
@@ -590,7 +600,7 @@ class GraphProfil(GraphCommon):
 
                         ordre = 0
                         for ligne in fich:
-                            x, z = list(map(float, ligne.split(sep)))
+                            x, z = map(float, ligne.split(sep))
                             ordre += 1
 
                             P = f.geometry().interpolate(x).asPoint()
@@ -614,28 +624,20 @@ class GraphProfil(GraphCommon):
                                               self.dossierProjet,
                                               "Fichier (*.png *.jpg)")
 
+        # with open(fichier + "w", "r") as fich:
+        with open(fichier + "w", "r") as fich:
+            x0 = float(fich.readline())
+            z0 = float(fich.readline())
+            l = float(fich.readline())
+            h = float(fich.readline())
 
-        try:
-            fich=open(fichier + "w", "r")
-        except OSError:
-            self.mgis.addInfo('File "{}" cannot open.'.format(fichier + "w"))
-        else:
-                x0 = float(fich.readline())
-                z0 = float(fich.readline())
-                l = float(fich.readline())
-                h = float(fich.readline())
-                fich.close()
-        try:
-            img = mpimg.imread(fichier)
-        except:
-            self.mgis.addInfo('File "{}" cannot open.'.format(fichier))
-        else:
-            self.image = self.axes.imshow(img,
-                                          extent=[x0, x0 + l, z0 - h, z0],
-                                          zorder=1,
-                                          aspect='auto')
-            # self.axes.imshow(fichier)
-            self.canvas.draw()
+        img = mpimg.imread(fichier)
+        self.image = self.axes.imshow(img,
+                                      extent=[x0, x0 + l, z0 - h, z0],
+                                      zorder=1,
+                                      aspect='auto')
+        # self.axes.imshow(fichier)
+        self.canvas.draw()
 
     def closeEvent(self, event):
         # reply = QMessageBox.question(self, 'Message',
@@ -851,7 +853,7 @@ class GraphProfil(GraphCommon):
             f = self.courbeSelected.get_label()
             try:
                 tabX = self.topo[f]['x']
-                tabX = list(map(lambda x: x + round(event.xdata, 2) - self.x0, tabX))
+                tabX = map(lambda x: x + round(event.xdata, 2) - self.x0, tabX)
                 self.topo[f]['x'] = tabX
                 self.courbeSelected.set_xdata(tabX)
                 self.x0 = round(event.xdata, 2)
@@ -942,7 +944,7 @@ class GraphProfil(GraphCommon):
     def ajoutPoints(self):
         if self.selected:
             self.courbeSelection.set_visible(False)
-            self.selected['x'] = list(map(lambda x: round(x, 2), self.selected['x']))
+            self.selected['x'] = map(lambda x: round(x, 2), self.selected['x'])
             miniX = min(self.selected['x'])
             maxiX = max(self.selected['x'])
 
@@ -1185,6 +1187,7 @@ class CopySelectedCellsAction(QAction):
             sys_clip = QApplication.clipboard()
             sys_clip.setText(clipboard)
 
+
 class GraphProfilRes(GraphCommon):
     """class Dialog graphProfilRes"""
 
@@ -1234,7 +1237,7 @@ class GraphProfilRes(GraphCommon):
                     self.listeRuns[run] = []
                 self.listeRuns[run].append(scen)
 
-            self.run = list(self.listeRuns.keys())[-1]
+            self.run = self.listeRuns.keys()[-1]
             self.scenario = self.listeRuns[self.run][-1]
 
             # listing
@@ -1293,6 +1296,8 @@ class GraphProfilRes(GraphCommon):
             self.fig.canvas.mpl_connect('pick_event', self.onpick)
             # # self.fig.tight_layout()
             return True
+
+
         except:
             self.mgis.addInfo("No simulation to show")
             return False
@@ -1328,20 +1333,20 @@ class GraphProfilRes(GraphCommon):
         self.comboTime.setCurrentIndex(0)
         self.comboTime.currentIndexChanged['QString'].connect(self.comboTimeChanged)
 
+
     def exportCSV(self):
         """Export Table to .CSV file"""
         # recupe tab export CSV
         fileNamePath = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom), filter="CSV (*.csv *.)")
-        fileNamePath = fileNamePath[0]
-        if fileNamePath:
-            file = open(fileNamePath, 'w')
-            file.write("# {0} \n".format(self.nom))
-            file.write("# X ; Z \n")
+        file = open(fileNamePath, 'w')
+        file.write("# {0} \n".format(self.nom))
+        file.write("# X ; Z \n")
 
-            for i, x in enumerate(self.tab[self.nom]['x']):
-                z = self.tab[self.nom]['z'][i]
-                file.write("{0} ; {1} \n".format(x, z))
-            file.close()
+        for i, x in enumerate(self.tab[self.nom]['x']):
+            z = self.tab[self.nom]['z'][i]
+            file.write("{0} ; {1} \n".format(x, z))
+        file.close()
+
 
     def remplirTab(self, liste):
         """ Fill items in the table"""
@@ -1350,6 +1355,7 @@ class GraphProfilRes(GraphCommon):
             for i, v in enumerate(val):
                 self.tableau.setItem(i, j, QTableWidgetItem(str(v)))
 
+
     def colorieTab(self, liste, dictCouleur):
         for i, type in enumerate(liste):
             for j in range(self.tableau.columnCount()):
@@ -1357,6 +1363,7 @@ class GraphProfilRes(GraphCommon):
                     self.tableau.item(i, j).setBackground(dictCouleur[type])
                 else:
                     self.tableau.item(i, j).setBackground(Qt.white)
+
 
     def selectionTab(self):
         miniX = 99999999
@@ -1367,6 +1374,7 @@ class GraphProfilRes(GraphCommon):
                 miniX = min(miniX, temp)
                 maxiX = max(maxiX, temp)
         return ((miniX, maxiX))
+
 
     def majGraph(self):
         for patch in self.aire:
@@ -1449,6 +1457,7 @@ class GraphProfilRes(GraphCommon):
 
         self.canvas.draw()
 
+
     def majLimites(self):
         miniX = 99999999
         maxiX = -99999999
@@ -1468,6 +1477,7 @@ class GraphProfilRes(GraphCommon):
             self.axes.set_ylim(miniZ, maxiZ)
             self.canvas.draw()
 
+
     def extraitProfil(self):
         if self.nom not in self.tab.keys():
             self.tab[self.nom] = {'x': [], 'z': []}
@@ -1477,8 +1487,9 @@ class GraphProfilRes(GraphCommon):
         if self.feature['x'] and self.feature['z']:
             condition = "name='{0}'".format(self.nom)
             requete = self.mdb.select("profiles", condition)
-            self.tab[self.nom]['x'] = list(map(float, requete["x"][0].split()))
-            self.tab[self.nom]['z'] = list(map(float, requete["z"][0].split()))
+            self.tab[self.nom]['x'] = map(float, requete["x"][0].split())
+            self.tab[self.nom]['z'] = map(float, requete["z"][0].split())
+
 
     def onpick(self, event):
         legline = event.artist
@@ -1491,6 +1502,7 @@ class GraphProfilRes(GraphCommon):
         else:
             legline.set_alpha(0.2)
         self.canvas.draw()
+
 
     def comboRunChanged(self, text):
         """function for change ComboBox and update the figure"""
@@ -1512,6 +1524,7 @@ class GraphProfilRes(GraphCommon):
         # self.majTab()
         self.majGraph()
 
+
     def comboScenChanged(self, text):
         self.scenario = text
         self.listcomboTime()
@@ -1528,6 +1541,7 @@ class GraphProfilRes(GraphCommon):
         else:
             self.posit = datetime.strptime(text, '%d/%m/%Y %H:%M:%S')
         self.majGraph()
+
 
     def majVal(self):
         # get value for graphic
@@ -1548,6 +1562,8 @@ class GraphProfilRes(GraphCommon):
             condition += "AND t={0}".format(self.posit)
             self.zH = self.mdb.select("resultats", condition, "t")
 
+
+
     def avance(self, val):
 
         pos = self.position
@@ -1567,6 +1583,7 @@ class GraphProfilRes(GraphCommon):
         self.majLimites()
         self.majLegende()
 
+
     def majLegende(self):
         listeNoms = [c.get_label() for c in self.courbes]
         self.leg = self.axes.legend(self.courbes, listeNoms, loc='upper right',
@@ -1582,6 +1599,7 @@ class GraphProfilRes(GraphCommon):
 
         self.canvas.draw()
 
+
     def selectChanged(self):
         miniX, maxiX = self.tableau.selection()
 
@@ -1590,6 +1608,7 @@ class GraphProfilRes(GraphCommon):
             self.rectSelection.set_width(maxiX - miniX)
             self.rectSelection.set_visible(True)
             self.canvas.draw()
+
 
 class GraphHydro(GraphCommon):
     def __init__(self, feature, mgis, select, position, type):
@@ -1678,6 +1697,7 @@ class GraphHydro(GraphCommon):
         self.comboRun.setCurrentIndex(le - 1)
 
         self.comboScen.clear()
+        # self.mgis.addInfo('{}'.format(self.listeRuns[self.run]))
         self.comboScen.addItems(self.listeRuns[self.run])
         le = len(self.listeRuns[self.run])
         self.comboScen.setCurrentIndex(le - 1)
@@ -1712,7 +1732,7 @@ class GraphHydro(GraphCommon):
 
         # for ligne in fichier:
         # temp = ligne.strip().split(';')
-        # valeurs = list(map(float, temp[1:]))
+        # valeurs = map(float, temp[1:])
         # self.obs['date'].append(fct.fmtDate(temp[0]))
 
         # for i, val in enumerate(valeurs):
@@ -1915,10 +1935,8 @@ class GraphHydro(GraphCommon):
     def exportCSV(self):
         """Export Table to .CSV file"""
         # recupe tab export CSV
-
         fileNamePath = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
                                                    filter="CSV (*.csv *.)")
-        fileNamePath = fileNamePath[0]
         if fileNamePath:
             file = open(fileNamePath, 'w')
             ligne = '# {0} - {1} \n'.format(self.titre, self.nom)
@@ -2138,8 +2156,8 @@ class GraphHydro(GraphCommon):
 
             if self.obs["valeur"]:
                 if self.var1 in self.coteVar:
-                    self.obs['valeur'] = list(map(lambda x: x + zero,
-                                             self.obs['valeur']))
+                    self.obs['valeur'] = map(lambda x: x + zero,
+                                             self.obs['valeur'])
 
                 self.courbeObs.set_data(self.obs['date'], self.obs['valeur'])
                 self.courbeObs.set_visible(True)

@@ -358,46 +358,33 @@ class MascPlugDialog(QMainWindow):
 ## Menus Functions
 ###**************************************
 
-    def SelectProfil(self):
-        """
-        Select profiles for extraction from Raster
-        :return:
-        """
-
-        self.profilesForExtract=[]
-        profile=self.iface.activeLayer()
-        #check if the selected layer is well profiles
-        if profile.name()=="profiles":
-            for couche in profile.selectedFeatures():
-                self.profilesForExtract.append(couche)
-        if len(self.profilesForExtract)==0:
-            self.addInfo("Not selected profiles\n")
-            self.addInfo("****************************")
-            self.addInfo('Help : Select the "profiles" layer.\n'
-                         'Then select the profiles with selection tools of QGIS.\n')
-            self.addInfo("****************************")
-        if self.DEBUG:
-            for couche in  self.profilesForExtract:
-                self.addInfo("Profile name  : {0}".format(couche['name']))
-
 
     def MntToProfil(self):
         """
         Extraction of the profiles from Raster
         :return:
         """
-        #check if selected profiles are existing
-        if len(self.profilesForExtract)==0:
+
+
+
+        raster=None
+        if isinstance(self.iface.activeLayer(), QgsRasterLayer):
+            raster = self.iface.activeLayer()
+        #Choix unité
+        if not raster:
             QMessageBox.warning(None, 'Message',
                                 'Please, selection the profiles')
             return
 
-        self.addInfo("Info, number profiles : {0}".format(len(self.profilesForExtract)))
         raster=self.iface.activeLayer()
         if not isinstance(raster, QgsRasterLayer):
             QMessageBox.warning(None, 'Message',
                                 'Please, selection the DTM raster')
             return
+
+
+        profil =self.iface.setActiveLayer('profiles')
+        self.addInfo('{}'.format(profil))
 
 
         liste = ["m", "dm", "cm", "mm"]
@@ -412,7 +399,7 @@ class MascPlugDialog(QMainWindow):
         if self.DEBUG:
             self.addInfo("Raster and Profile Selection, and Unit are Ok")
         # create a new worker instance
-        worker = Worker(self,self.profilesForExtract, raster, facteur)
+        worker = Worker(self,self.profil, raster, facteur)
         worker.run()
         if self.DEBUG:
             self.addInfo("Extraction is done")
@@ -552,7 +539,6 @@ class MascPlugDialog(QMainWindow):
 
     def do_something(self, layer, feature):
         print (feature.attributes())
-        self.addInfo('{}'.format(feature.attributes()))
 
     def exportModel(self):
         #choix du fichier d'exportatoin
@@ -608,7 +594,7 @@ class MascPlugDialog(QMainWindow):
         self.map_tool = IdentifyFeatureTool(self)
         # QObject.connect(self.map_tool, SIGNAL('geomIdentified'),
         #                 self.do_something)
-        self.map_tool.changedRasterResults.connect(self.do_something)
+        self.map_tool.pyqtSignal('geomIdentified').connect(self.do_something)
         canvas.setMapTool(self.map_tool)
 
     def windinfo(self, txt, title='Informations'):

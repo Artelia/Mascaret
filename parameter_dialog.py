@@ -217,7 +217,7 @@ class parameter_dialog(QDialog):
         for param, valeur, libelle, gui in rows:
 
             if param == 'variablesStockees':
-                valeurs = list(map(eval, valeur.title().split()))
+                valeurs = map(eval, valeur.title().split())
                 for var, val, lib in zip(self.variables, valeurs,self.libel_var):
                     self.par[var] = {"val": val, "libelle": lib,"gui": True}
                     # self.par[var] = {"val": val, "libelle": lib}
