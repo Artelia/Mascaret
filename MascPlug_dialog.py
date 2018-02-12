@@ -142,7 +142,6 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionCross_section_results.triggered.connect(self.mainGraph)
 
         # creatoin model
-        self.ui.actionSelect_Profiles.triggered.connect(self.SelectProfil)
         self.ui.action_Extract_MNTfor_profile.triggered.connect(self.MntToProfil)
         self.ui.actionCreate_Geometry.triggered.connect(self.fct_createGeo)
         self.ui.actionCreate_xcas.triggered.connect(self.fct_createXcas)
@@ -365,8 +364,6 @@ class MascPlugDialog(QMainWindow):
         :return:
         """
 
-
-
         raster=None
         if isinstance(self.iface.activeLayer(), QgsRasterLayer):
             raster = self.iface.activeLayer()
@@ -382,9 +379,12 @@ class MascPlugDialog(QMainWindow):
                                 'Please, selection the DTM raster')
             return
 
-
-        profil =self.iface.setActiveLayer('profiles')
-        self.addInfo('{}'.format(profil))
+        for couche in QgsProject.instance().mapLayers().values():
+            if couche.name()=="profiles":
+                profil=couche
+            self.addInfo('{}'.format(couche.name()))
+        # profil =self.iface.setActiveLayer('profiles')
+        # self.addInfo('{}'.format(profil))
 
 
         liste = ["m", "dm", "cm", "mm"]
@@ -399,7 +399,7 @@ class MascPlugDialog(QMainWindow):
         if self.DEBUG:
             self.addInfo("Raster and Profile Selection, and Unit are Ok")
         # create a new worker instance
-        worker = Worker(self,self.profil, raster, facteur)
+        worker = Worker(self,profil, raster, facteur)
         worker.run()
         if self.DEBUG:
             self.addInfo("Extraction is done")

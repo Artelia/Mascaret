@@ -286,7 +286,7 @@ class MasDatabase(object):
 #
     def refresh_uris(self):
         """
-        Setting layers uris list from QgsMapLayerRegistry.
+        Setting layers uris list from QgsProject.
         """
         self.uris = [vl.source() for vl in QgsProject.instance().mapLayers().values()]
         if self.mgis.DEBUG:

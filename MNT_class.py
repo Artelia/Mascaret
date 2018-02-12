@@ -42,8 +42,7 @@ class Worker(QObject):
         ret = None
         # try:
         total_area = 0.0
-        # features = self.profil.selectedFeatures()
-        features = self.profil
+        features = self.profil.selectedFeatures()
         self.profil.startEditing()
 
         for feature in features:

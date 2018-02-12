@@ -205,7 +205,6 @@
     </property>
     <addaction name="actionCross_section"/>
     <addaction name="separator"/>
-    <addaction name="actionSelect_Profiles"/>
     <addaction name="action_Extract_MNTfor_profile"/>
    </widget>
    <widget class="QMenu" name="menuDB">
@@ -277,7 +276,6 @@
    </attribute>
    <addaction name="actionCross_section"/>
    <addaction name="separator"/>
-   <addaction name="actionSelect_Profiles"/>
    <addaction name="action_Extract_MNTfor_profile"/>
   </widget>
   <widget class="QToolBar" name="RunToolBar">
@@ -532,15 +530,6 @@
    </property>
    <property name="text">
     <string>Import Model</string>
-   </property>
-  </action>
-  <action name="actionSelect_Profiles">
-   <property name="icon">
-    <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/Mascaret/icones/selectProfiles.png</normaloff>:/plugins/Mascaret/icones/selectProfiles.png</iconset>
-   </property>
-   <property name="text">
-    <string>Select Profiles</string>
    </property>
   </action>
  </widget>
