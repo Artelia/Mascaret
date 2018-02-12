@@ -77,7 +77,7 @@ class MascPlugDialog(QMainWindow):
         self.listeState = ['Steady', 'Unsteady', 'Transcritical unsteady']
         #kernel list
         self.Klist = ["steady", "unsteady", "transcritical"]
-        self.profilesForExtract = []
+
         self.actions2Disable = []
         self.menus = self.ui.menubar.findChildren(QMenu)
         self.toolbars = self.findChildren(QToolBar)
@@ -357,35 +357,36 @@ class MascPlugDialog(QMainWindow):
 ## Menus Functions
 ###**************************************
 
-
     def MntToProfil(self):
         """
         Extraction of the profiles from Raster
         :return:
         """
 
+
         raster=None
         if isinstance(self.iface.activeLayer(), QgsRasterLayer):
             raster = self.iface.activeLayer()
+
+
         #Choix unité
         if not raster:
             QMessageBox.warning(None, 'Message',
-                                'Please, selection the profiles')
+                                'Please, selection the DTM raster')
             return
 
         raster=self.iface.activeLayer()
         if not isinstance(raster, QgsRasterLayer):
+
             QMessageBox.warning(None, 'Message',
-                                'Please, selection the DTM raster')
+                                'Please, selection the profiles')
             return
+
 
         for couche in QgsProject.instance().mapLayers().values():
             if couche.name()=="profiles":
                 profil=couche
             self.addInfo('{}'.format(couche.name()))
-        # profil =self.iface.setActiveLayer('profiles')
-        # self.addInfo('{}'.format(profil))
-
 
         liste = ["m", "dm", "cm", "mm"]
 
@@ -594,7 +595,8 @@ class MascPlugDialog(QMainWindow):
         self.map_tool = IdentifyFeatureTool(self)
         # QObject.connect(self.map_tool, SIGNAL('geomIdentified'),
         #                 self.do_something)
-        self.map_tool.pyqtSignal('geomIdentified').connect(self.do_something)
+        self.map_tool.changedRasterResults.connect(self.do_something)
+
         canvas.setMapTool(self.map_tool)
 
     def windinfo(self, txt, title='Informations'):
