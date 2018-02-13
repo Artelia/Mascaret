@@ -43,12 +43,12 @@ import shutil
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as ETparse
 
-from PyQt4.QtGui import *
+from PyQt5.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 import subprocess
-from ui.warningbox import Class_warningBox
+from .ui.warningbox import Class_warningBox
 
 class Class_Mascaret():
 
@@ -90,8 +90,8 @@ class Class_Mascaret():
                     litMinD = requete["rightminbed"][i]
 
                     if branche and abs and tempX and tempZ and litMinG and litMinD:
-                        tabX = map(lambda x: round(float(x), 2), tempX.split())
-                        tabZ = map(lambda x: round(float(x), 2), tempZ.split())
+                        tabX = list(map(lambda x: round(float(x), 2), tempX.split()))
+                        tabZ = list(map(lambda x: round(float(x), 2), tempZ.split()))
 
                         fich.write('PROFIL Bief_{0} {1} {2}\n'.format(branche,
                                                                       nom, abs))
@@ -145,8 +145,8 @@ class Class_Mascaret():
                     litMinD = requete["rightminbed"][i]
 
                     if branche and abs and tempX and tempZ and litMinG and litMinD:
-                        tabX = map(lambda x: round(float(x), 2), tempX.split())
-                        tabZ = map(lambda x: round(float(x), 2), tempZ.split())
+                        tabX = list(map(lambda x: round(float(x), 2), tempX.split()))
+                        tabZ = list(map(lambda x: round(float(x), 2), tempZ.split()))
 
                         points=geom.asMultiPolyline()[0]
                         (cood1X,cood1Y)=points[0]
@@ -172,7 +172,7 @@ class Class_Mascaret():
             self.mgis.addInfo(str(e))
 
     def fmt(self,liste):
-        return (" ".join(map(str, liste)))
+        return (" ".join(list(map(str, liste))))
 
     def indent(self,elem, level=0):
         """indentation auto"""
@@ -311,8 +311,8 @@ class Class_Mascaret():
             for j, (abs, x, z, sg, sd, n) in enumerate(tab):
 
                 try:
-                    xx = map(float, x.split())
-                    zz = map(float, z.split())
+                    xx = list(map(float, x.split()))
+                    zz = list(map(float, z.split()))
                     diff = max(zz) - min(zz)
                 except:
                     self.mgis.addInfo("Check the {} proile if it's ok ".format(profils["name"][j]))
@@ -728,7 +728,8 @@ class Class_Mascaret():
                 #     self.mgis.addInfo("{0} :\n \t Time : {1}\n \t Upstream Water Level{2}\n \t  "
                 #                       "Downstream Water Level :{3}"
                 #                       .format(nom,tab["temps"], tab["cote_amont"], tab["cote_aval"]))
-            n = len(tab.values()[0])
+            n = len(list(tab.values())[0])
+
             for i in range(n):
                 dico = {k: v[i] for k, v in tab.items()}
                 fich.write(chaine.format(**dico))
@@ -805,8 +806,8 @@ class Class_Mascaret():
                         """.format(nom, loi['type'], dateDebut, dateFin)
 
             temp = self.mdb.selectOne('laws', condition)
-            cote = map(float, temp['z'].split())
-            debit = map(float, temp['flowrate'].split())
+            cote = list(map(float, temp['z'].split()))
+            debit = list(map(float, temp['flowrate'].split()))
 
             self.creerLOI(nom, {'z': cote, 'flowrate': debit}, 5)
 
@@ -936,7 +937,7 @@ class Class_Mascaret():
                     liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
                              "z_lower", "z_up"]
 
-                    tab = {k: map(float, v.split())
+                    tab = {k: list(map(float, v.split()))
                        for k, v in temp.items() if v and k in liste}
 
                     self.creerLOI(nom, tab, l["type"])
@@ -1057,7 +1058,7 @@ class Class_Mascaret():
         p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                              ,stdin=subprocess.PIPE)
         p.wait()
-        self.mgis.addInfo("{0}".format(p.communicate()[0]))
+        self.mgis.addInfo("{0}".format(p.communicate()[0].decode("utf-8")))
         return True
 
     def litOPT(self, run, scen, dateDebut,baseNamefile):
@@ -1257,9 +1258,9 @@ class Class_Mascaret():
             return False
 
     def copyFileModel(self, rep, case=None):
+        # self.mgis.addInfo('{}'.format(rep))
         if case=='xcas':
             shutil.copy2(os.path.join(self.dossierFileMasc,self.baseName+".xcas"),rep)
-
         elif case=='geo':
             shutil.copy2(os.path.join(self.dossierFileMasc, self.baseName+".geo"), rep)
         elif case=='georef':

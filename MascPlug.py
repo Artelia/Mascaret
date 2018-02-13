@@ -19,15 +19,16 @@ email                :
 """
 
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QIcon
+from .MascPlug_dialog import MascPlugDialog
 try:
-    import resources
+    from . import resources
 except ImportError:
-    pass
+     pass
 # Import the code for the dialog
-from MascPlug_dialog import MascPlugDialog
+
 
 
 class MascPlug:
@@ -38,11 +39,14 @@ class MascPlug:
         self.icon_path = ":/plugins/Mascaret/icones/icon_base.png"
         self.namePlug='Mascaret'
 
+
     def initGui(self):
         self.action = QAction(QIcon(self.icon_path), QApplication.translate(self.namePlug, self.namePlug),
                               self.iface.mainWindow())
         self.action.setObjectName(self.namePlug)
-        QObject.connect(self.action, SIGNAL('triggered()'), self.run)
+
+        # QObject.connect(self.action, SIGNAL('triggered()'), self.run)
+        self.action.triggered.connect(self.run)
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.action)
         self.iface.addPluginToMenu(QApplication.translate(self.namePlug, self.namePlug), self.action)
@@ -59,7 +63,8 @@ class MascPlug:
         # keep opened only one instance
         if self.dlg is None:
             self.dlg = MascPlugDialog(self.iface)
-            QObject.connect(self.dlg, SIGNAL('destroyed(QObject *)'), self.onDestroyed)
+            self.dlg.destroyed .connect(self.onDestroyed)
+            # QObject.connect(self.dlg, SIGNAL('destroyed(QObject *)'), self.onDestroyed)
         self.dlg.show()
         self.dlg.raise_()
         self.dlg.setWindowState(self.dlg.windowState() & ~Qt.WindowMinimized)
