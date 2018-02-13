@@ -19,8 +19,9 @@ email                :
 """
 
 
-from PyQt4.QtGui import *
-from PyQt4.uic import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.uic import *
 import os
 from qgis.core import *
 from qgis.utils import *
