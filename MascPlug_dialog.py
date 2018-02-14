@@ -18,11 +18,21 @@ email                :
  ***************************************************************************/
 """
 
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.uic import *
+# from PyQt5.QtCore import *
+# from PyQt5.QtWidgets import *
+# from PyQt5.uic import *
 
-import os
+from qgis.PyQt.uic import *
+from qgis.PyQt.QtCore import *
+try:        #qt5
+    from qgis.PyQt.QtWidgets import *
+except:     #qt4
+    from qgis.PyQt.QtGui import *
+
+
+
+
+
 import json
 from qgis.core import *
 from qgis.utils import *

@@ -20,8 +20,16 @@ email                :
 """
 
 
-from PyQt5.QtWidgets import *
-from PyQt5.uic import *
+# from PyQt5.QtWidgets import *
+# from PyQt5.uic import *
+
+from qgis.PyQt.uic import *
+from qgis.PyQt.QtCore import *
+try:        #qt5
+    from qgis.PyQt.QtWidgets import *
+except:     #qt4
+    from qgis.PyQt.QtGui import *
+
 import os
 
 
@@ -217,7 +225,11 @@ class parameter_dialog(QDialog):
         for param, valeur, libelle, gui in rows:
 
             if param == 'variablesStockees':
-                valeurs = list(map(eval, valeur.title().split()))
+                # valeurs = list(map(eval, valeur.title().split()))
+                valeurs = []
+                for var1 in valeur.title().split():
+                    valeurs.append(eval(var1))
+
                 for var, val, lib in zip(self.variables, valeurs,self.libel_var):
                     self.par[var] = {"val": val, "libelle": lib,"gui": True}
                     # self.par[var] = {"val": val, "libelle": lib}

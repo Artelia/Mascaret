@@ -19,9 +19,19 @@ email                :
 """
 
 
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon
+# from PyQt5.QtCore import *
+# from PyQt5.QtWidgets import *
+# from PyQt5.QtGui import QIcon
+
+from  qgis.PyQt.uic import *
+from qgis.PyQt.QtCore import *
+try:        #qt5
+    from qgis.PyQt.QtWidgets import *
+    from qgis.PyQt.QtGui import QIcon
+except:     #qt4
+    from qgis.PyQt.QtGui import *
+
+
 from .MascPlug_dialog import MascPlugDialog
 try:
     from . import resources

@@ -1,7 +1,10 @@
 
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-
+# from PyQt5.QtGui import *
+# from PyQt5.QtWidgets import *
+try:        #qt4
+    from qgis.PyQt.QtGui import QMessageBox
+except:     #qt5
+    from qgis.PyQt.QtWidgets import QMessageBox
 
 class Class_warningBox():
     """TODO add all select box """
