@@ -12,7 +12,7 @@ description=Pre and Post-processing for Mascaret.
 about= Plugin dedicated to the building and exploitation of Mascaret models.
        Requires PostgreSQL and PostGIS.
        Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
-qgisMinimumVersion=2.99
+qgisMinimumVersion=2.14.18
 qgisMaximumVersion=3.99
 version=0.0.4
 author=Artelia Eau et Environnement

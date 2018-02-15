@@ -19,10 +19,10 @@ email                :
 """
 
 
-from PyQt5.QtCore import *
+from qgis.PyQt.QtCore import *
 from qgis.core import *
 from qgis.gui import *
-from shapely.wkb import loads
+#from shapely.wkb import loads
 
 
 
@@ -79,7 +79,10 @@ class Worker(QObject):
                     self.mgis.addInfo("This problem could come from the different projection"
                                       " between the raster and the profile")
 
-
+        try:#qgis2
+            self.profil.saveEdits()
+        except: # qgis 3
+            pass
 
 
 

@@ -18,15 +18,17 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-
-
-from PyQt5.QtWidgets import *
-from PyQt5.uic import *
-import os
-
-
 from qgis.core import *
 from qgis.gui import *
+
+from qgis.PyQt.uic import *
+from qgis.PyQt.QtCore import *
+
+if int(qVersion()[0])<5:  #qt4
+    from qgis.PyQt.QtGui import *
+else: #qt5
+    from qgis.PyQt.QtWidgets import *
+import os
 
 from . import function as fct_
 from .Class_observation import Class_observation
@@ -217,7 +219,11 @@ class parameter_dialog(QDialog):
         for param, valeur, libelle, gui in rows:
 
             if param == 'variablesStockees':
-                valeurs = list(map(eval, valeur.title().split()))
+                # valeurs = list(map(eval, valeur.title().split()))
+                valeurs = []
+                for var1 in valeur.title().split():
+                    valeurs.append(eval(var1))
+
                 for var, val, lib in zip(self.variables, valeurs,self.libel_var):
                     self.par[var] = {"val": val, "libelle": lib,"gui": True}
                     # self.par[var] = {"val": val, "libelle": lib}
@@ -266,11 +272,17 @@ class parameter_dialog(QDialog):
 
     def importObserv(self):
         """load observation"""
-        fileNamePath = QFileDialog.getOpenFileNames(None,
+        if int(qVersion()[0]) < 5: #qt4
+            fileNamePath = QFileDialog.getOpenFileNames(None,
                                                     'File Selection',
                                                     self.mgis.masplugPath,
                                                     filter="CSV (*.csv);;File (*)")
-        fileNamePath=fileNamePath[0]
+        else:#qt5
+            fileNamePath, _ = QFileDialog.getOpenFileNames(None,
+                                                           'File Selection',
+                                                           self.mgis.masplugPath,
+                                                           filter="CSV (*.csv);;File (*)")
+
         if self.obs.evtTOobs(fileNamePath):
             self.mgis.addInfo('Import is done.')
         else:

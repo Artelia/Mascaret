@@ -19,14 +19,29 @@ email                :
 """
 
 
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon
+
+
+from qgis.PyQt.uic import *
+from qgis.PyQt.QtCore import *
+
+if int(qVersion()[0])<5:
+    from qgis.PyQt.QtGui import QApplication,QAction,QIcon
+    try:
+        from . import resources
+    except ImportError:
+        pass
+else:    #qt5
+    from qgis.PyQt.QtWidgets import QApplication,QAction
+    from qgis.PyQt.QtGui import QIcon
+    try:
+        from . import resourcesQT5
+    except ImportError:
+        pass
+
+
+
 from .MascPlug_dialog import MascPlugDialog
-try:
-    from . import resources
-except ImportError:
-     pass
+
 # Import the code for the dialog
 
 
@@ -63,7 +78,7 @@ class MascPlug:
         # keep opened only one instance
         if self.dlg is None:
             self.dlg = MascPlugDialog(self.iface)
-            self.dlg.destroyed .connect(self.onDestroyed)
+            self.dlg.destroyed.connect(self.onDestroyed)
             # QObject.connect(self.dlg, SIGNAL('destroyed(QObject *)'), self.onDestroyed)
         self.dlg.show()
         self.dlg.raise_()

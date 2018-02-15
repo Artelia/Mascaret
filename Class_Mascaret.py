@@ -43,7 +43,12 @@ import shutil
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as ETparse
 
-from PyQt5.QtWidgets import *
+from qgis.PyQt.QtCore import qVersion
+if int(qVersion()[0])<5:  #qt4
+    from qgis.PyQt.QtGui import *
+else: #qt5
+    from qgis.PyQt.QtWidgets import *
+
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
@@ -51,7 +56,6 @@ import subprocess
 from .ui.warningbox import Class_warningBox
 
 class Class_Mascaret():
-
 
     def __init__(self,main):
         self.mgis=main
@@ -81,7 +85,6 @@ class Class_Mascaret():
 
             with open(nomfich, 'w') as fich:
                 for i, nom in enumerate(requete["name"]):
-
                     branche = requete["branchnum"][i]
                     abs = requete["abscissa"][i]
                     tempX = requete["x"][i]
@@ -90,8 +93,14 @@ class Class_Mascaret():
                     litMinD = requete["rightminbed"][i]
 
                     if branche and abs and tempX and tempZ and litMinG and litMinD:
-                        tabX = list(map(lambda x: round(float(x), 2), tempX.split()))
-                        tabZ = list(map(lambda x: round(float(x), 2), tempZ.split()))
+                        # tabX = list(map(lambda x: round(float(x), 2), tempX.split()))
+                        # tabZ = list(map(lambda x: round(float(x), 2), tempZ.split()))
+                        tabZ = []
+                        tabX = []
+                        fct1=lambda x: round(float(x), 2)
+                        for var1, var2 in zip(tempX.split(), tempZ.split()):
+                            tabX.append(fct1(var1))
+                            tabZ.append(fct1(var2))
 
                         fich.write('PROFIL Bief_{0} {1} {2}\n'.format(branche,
                                                                       nom, abs))
@@ -108,8 +117,8 @@ class Class_Mascaret():
             self.mgis.addInfo(str(e))
 
     def creerGEORef(self):
-        """creation of gemoetry file"""
-        try:
+        # """creation of gemoetry file"""
+        # try:
             nomfich = os.path.join(self.dossierFileMasc, self.baseName+'.geo')
 
             if os.path.isfile(nomfich):
@@ -136,43 +145,50 @@ class Class_Mascaret():
                     # fetch geometry
                     geom = feature.geometry()
 
-                # for i, nom in enumerate(requete["name"]):
-                    branche = requete["branchnum"][i]
-                    abs = requete["abscissa"][i]
-                    tempX = requete["x"][i]
-                    tempZ = requete["z"][i]
-                    litMinG = requete["leftminbed"][i]
-                    litMinD = requete["rightminbed"][i]
+                    if nom in requete["name"]:
+                        branche = requete["branchnum"][i]
+                        abs = requete["abscissa"][i]
+                        tempX = requete["x"][i]
+                        tempZ = requete["z"][i]
+                        litMinG = requete["leftminbed"][i]
+                        litMinD = requete["rightminbed"][i]
 
-                    if branche and abs and tempX and tempZ and litMinG and litMinD:
-                        tabX = list(map(lambda x: round(float(x), 2), tempX.split()))
-                        tabZ = list(map(lambda x: round(float(x), 2), tempZ.split()))
+                        if branche and abs and tempX and tempZ and litMinG and litMinD:
+                            tabZ = []
+                            tabX = []
+                            fct1 = lambda x: round(float(x), 2)
+                            for var1, var2 in zip(tempX.split(), tempZ.split()):
+                                tabX.append(fct1(var1))
+                                tabZ.append(fct1(var2))
+                            # tabX = list(map(lambda x: round(float(x), 2), tempX.split()))
+                            # tabZ = list(map(lambda x: round(float(x), 2), tempZ.split()))
 
-                        points=geom.asMultiPolyline()[0]
-                        (cood1X,cood1Y)=points[0]
-                        (cood2X, cood2Y) = points[1]
-                        coodAxeX= cood1X+(cood2X-cood1X)/2.
-                        coodAxeY= cood1Y+(cood2Y-cood1Y)/2.
+                            points=geom.asMultiPolyline()[0]
+                            (cood1X,cood1Y)=points[0]
+                            (cood2X, cood2Y) = points[1]
+                            coodAxeX= cood1X+(cood2X-cood1X)/2.
+                            coodAxeY= cood1Y+(cood2Y-cood1Y)/2.
 
-                        fich.write('PROFIL Bief_{0} {1} {2} {3} {4} {5} {6} AXE {7} {8}\n'.format(branche,nom, abs,
-                                                                cood1X,cood1Y, cood2X,  cood2Y, coodAxeX, coodAxeY ))
+                            fich.write('PROFIL Bief_{0} {1} {2} {3} {4} {5} {6} AXE {7} {8}\n'.format(branche,nom, abs,
+                                                                    cood1X,cood1Y, cood2X,  cood2Y, coodAxeX, coodAxeY ))
 
-                        for x, z in zip(tabX, tabZ):
-                            if x >= litMinG and x <= litMinD:
-                                type = "B"
-                            else:
-                                type = "T"
-                            #interpolate the distance on profile
-                            dpoint = geom.interpolate(x).asPoint()
-                            fich.write('{0:.2f} {1:.2f} {2} {3} {4}\n'.format(x, z, type, dpoint[0], dpoint[1] ))
+                            for x, z in zip(tabX, tabZ):
+                                if x >= litMinG and x <= litMinD:
+                                    type = "B"
+                                else:
+                                    type = "T"
+                                #interpolate the distance on profile
+                                dpoint = geom.interpolate(x).asPoint()
+                                fich.write('{0:.2f} {1:.2f} {2} {3} {4}\n'.format(x, z, type, dpoint[0], dpoint[1] ))
 
             self.mgis.addInfo("Creation the geometry is done")
-        except Exception as e:
-            self.mgis.addInfo("Error: save the geometry")
-            self.mgis.addInfo(str(e))
+        # except Exception as e:
+        #     self.mgis.addInfo("Error: save the geometry")
+        #     self.mgis.addInfo(str(e))
 
     def fmt(self,liste):
-        return (" ".join(list(map(str, liste))))
+        #list(map(str, liste))
+        return (" ".join([str(var) for var in liste]))
 
     def indent(self,elem, level=0):
         """indentation auto"""
@@ -311,8 +327,8 @@ class Class_Mascaret():
             for j, (abs, x, z, sg, sd, n) in enumerate(tab):
 
                 try:
-                    xx = list(map(float, x.split()))
-                    zz = list(map(float, z.split()))
+                    xx = [float(var) for var in x.split()]
+                    zz = [float(var) for var in z.split()]
                     diff = max(zz) - min(zz)
                 except:
                     self.mgis.addInfo("Check the {} proile if it's ok ".format(profils["name"][j]))
@@ -806,8 +822,10 @@ class Class_Mascaret():
                         """.format(nom, loi['type'], dateDebut, dateFin)
 
             temp = self.mdb.selectOne('laws', condition)
-            cote = list(map(float, temp['z'].split()))
-            debit = list(map(float, temp['flowrate'].split()))
+            # cote = list(map(float, temp['z'].split()))
+            # debit = list(map(float, temp['flowrate'].split()))
+            cote = [float(var) for var in temp['z'].split()]
+            debit =[float(var) for var in temp['flowrate'].split()]
 
             self.creerLOI(nom, {'z': cote, 'flowrate': debit}, 5)
 
@@ -937,7 +955,8 @@ class Class_Mascaret():
                     liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
                              "z_lower", "z_up"]
 
-                    tab = {k: list(map(float, v.split()))
+                    tempo=[float(var) for var in  v.split()]
+                    tab = {k: tempo
                        for k, v in temp.items() if v and k in liste}
 
                     self.creerLOI(nom, tab, l["type"])
@@ -1219,11 +1238,17 @@ class Class_Mascaret():
 
     def copyLIG(self):
         """ Load .lig file in run model"""
-        fichiers = QFileDialog.getOpenFileNames(None,
+        if int(qVersion()[0]) < 5: #qt4
+            fichiers = QFileDialog.getOpenFileNames(None,
+                                                    'File Selection',
+                                                    self.dossierFileMasc,
+                                                    "File (*.lig)")
+        else: #qt5
+            fichiers,_ = QFileDialog.getOpenFileNames(None,
                                                 'File Selection',
                                                 self.dossierFileMasc,
                                                 "File (*.lig)")
-        shutil.copy(fichiers[0],os.path.join(self.dossierFileMasc, self.baseName + '.lig'))
+        shutil.copy(fichiers,os.path.join(self.dossierFileMasc, self.baseName + '.lig'))
 
     def clean_rep(self):
         """ Clean the run folder and copy the essential files to run mascaret"""

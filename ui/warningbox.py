@@ -1,6 +1,10 @@
 
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+
+from qgis.PyQt.QtCore import qVersion
+if int(qVersion()[0])<5:
+    from qgis.PyQt.QtGui import QMessageBox
+else:     #qt5
+    from qgis.PyQt.QtWidgets import QMessageBox
 
 
 class Class_warningBox():
