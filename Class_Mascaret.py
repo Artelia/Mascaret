@@ -146,8 +146,6 @@ class Class_Mascaret():
                     geom = feature.geometry()
 
                     if nom in requete["name"]:
-                        print(requete["branchnum"])
-                        print i
                         branche = requete["branchnum"][i]
                         abs = requete["abscissa"][i]
                         tempX = requete["x"][i]

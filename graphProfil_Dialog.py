@@ -409,7 +409,6 @@ class GraphProfil(GraphCommon):
             self.mnt['x']=[float(var) for var in requete["x"][0].split()]
             self.mnt['z']=[float(var) for var in requete["z"][0].split()]
 
-
     def extraitProfil(self):
 
         self.tab = {'x': [], 'z': []}
