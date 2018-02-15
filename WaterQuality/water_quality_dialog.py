@@ -19,9 +19,9 @@ email                :
 """
 
 
-from gis.PyQt.QtCore import *
-from gis.PyQt.QtWidgets import *
-from gis.PyQt.uic import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.uic import *
 if int(qVersion()[0])<5:  #qt4
     from qgis.PyQt.QtGui import *
 else: #qt5
