@@ -19,14 +19,12 @@ email                :
  ***************************************************************************/
 """
 
-# from PyQt5.QtCore import *
-# from PyQt5.QtWidgets import *
-# from PyQt5.uic import *
+
 from qgis.PyQt.uic import *
 from qgis.PyQt.QtCore import *
-try:        #qt5
+if int(qVersion()[0])<5:        #qt4
     from qgis.PyQt.QtWidgets import *
-except:     #qt4
+else:     #qt5
     from qgis.PyQt.QtGui import *
 
 from qgis.core import *

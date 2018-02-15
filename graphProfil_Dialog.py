@@ -27,48 +27,53 @@ Comment:
         GraphHydro
 """
 
-# from PyQt5.QtCore import *
-# from PyQt5.QtWidgets import *
-# from PyQt5.uic import *
-
-from qgis.PyQt.uic import *
-from qgis.PyQt.QtCore import *
-try:        #qt5
-    from qgis.PyQt.QtWidgets import *
-except:     #qt4
-    from qgis.PyQt.QtGui import *
-
 from qgis.core import *
 from qgis.gui import *
+from qgis.PyQt.uic import *
+from qgis.PyQt.QtCore import *
+
+if int(qVersion()[0])<5:   #qt4
+
+    from qgis.PyQt.QtGui import *
+    try:
+        from matplotlib.backends.backend_qt4agg \
+            import FigureCanvasQTAgg as FigureCanvas
+    except:
+        from matplotlib.backends.backend_qt4agg \
+            import FigureCanvasQT as FigureCanvas
+    # ***************************
+    try:
+        from matplotlib.backends.backend_qt4agg \
+            import NavigationToolbar2QTAgg as NavigationToolbar
+    except:
+        from matplotlib.backends.backend_qt4agg \
+            import NavigationToolbar2QT as NavigationToolbar
+else: #qt4
+    from qgis.PyQt.QtWidgets import *
+
+    try:
+        from matplotlib.backends.backend_qt5agg \
+            import FigureCanvasQTAgg as FigureCanvas
+    except:
+        from matplotlib.backends.backend_qt5agg \
+            import FigureCanvasQT as FigureCanvas
+    # ***************************
+    try:
+        from matplotlib.backends.backend_qt5agg \
+            import NavigationToolbar2QTAgg as NavigationToolbar
+    except:
+        from matplotlib.backends.backend_qt5agg \
+            import NavigationToolbar2QT as NavigationToolbar
 
 
 from . import function as fct
 
-
-try:
-    from matplotlib.backends.backend_qt5agg \
-        import FigureCanvasQTAgg as FigureCanvas
-except:
-    from matplotlib.backends.backend_qt5agg \
-        import FigureCanvasQT as FigureCanvas
-
-
-#***************************
-try:
-    from matplotlib.backends.backend_qt5agg\
-        import NavigationToolbar2QTAgg as NavigationToolbar
-
-except:
-    from matplotlib.backends.backend_qt5agg \
-        import NavigationToolbar2QT as NavigationToolbar
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
     def _fromUtf8(s):
         return s
 # **************************************************
-
-
 try:
     _encoding = QApplication.UnicodeUTF8
 
@@ -579,11 +584,17 @@ class GraphProfil(GraphCommon):
         self.majLegende()
 
     def importTopo(self):
-        fichiers = QFileDialog.getOpenFileNames(None,
-                                                'File Selection',
-                                                self.dossierProjet,
-                                                "File (*.txt *.csv)")
-        fichiers=fichiers[0]
+        if int(qVersion()[0]) < 5: #qt4
+            fichiers = QFileDialog.getOpenFileNames(None,
+                                                    'File Selection',
+                                                    self.dossierProjet,
+                                                    "File (*.txt *.csv)")
+        else: #qt5
+            fichiers,_ = QFileDialog.getOpenFileNames(None,
+                                                    'File Selection',
+                                                    self.dossierProjet,
+                                                    "File (*.txt *.csv)")
+
         if fichiers:
 
             self.chargerBathy(fichiers, self.coucheProfils,
@@ -639,12 +650,18 @@ class GraphProfil(GraphCommon):
                     self.mdb.insert2("topo", tab)
 
     def importImage(self):
-        fichier = QFileDialog.getOpenFileName(None,
-                                              'Sélection des fichiers',
-                                              self.dossierProjet,
-                                              "Fichier (*.png *.jpg)")
+        if int(qVersion()[0]) < 5:  # qt4
+            fichier = QFileDialog.getOpenFileName(None,
+                                                  'Sélection des fichiers',
+                                                  self.dossierProjet,
+                                                  "Fichier (*.png *.jpg)")
+        else: #qt5
+            fichier,_ = QFileDialog.getOpenFileName(None,
+                                                  'Sélection des fichiers',
+                                                  self.dossierProjet,
+                                                  "Fichier (*.png *.jpg)")
 
-        fichier=fichier[0]
+
         try:
             fich = open(fichier + "w", "r")
         except OSError:
@@ -1377,8 +1394,14 @@ class GraphProfilRes(GraphCommon):
     def exportCSV(self):
         """Export Table to .CSV file"""
         # recupe tab export CSV
-        fileNamePath = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom), filter="CSV (*.csv *.)")
-        fileNamePath = fileNamePath[0]
+
+        if int(qVersion()[0]) < 5: #qt4
+            fileNamePath = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
+                                                       filter="CSV (*.csv *.)")
+        else: # qt5
+            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
+                                                   filter="CSV (*.csv *.)")
+
         if fileNamePath:
             file = open(fileNamePath, 'w')
             file.write("# {0} \n".format(self.nom))
@@ -1981,9 +2004,12 @@ class GraphHydro(GraphCommon):
     def exportCSV(self):
         """Export Table to .CSV file"""
         # recupe tab export CSV
-        fileNamePath = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
+        if int(qVersion()[0]) < 5: #qt4
+            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
+                                                       filter="CSV (*.csv *.)")
+        else: #qt5
+            fileNamePath = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
                                                    filter="CSV (*.csv *.)")
-        fileNamePath=fileNamePath[0]
         if fileNamePath:
             file = open(fileNamePath, 'w')
             ligne = '# {0} - {1} \n'.format(self.titre, self.nom)

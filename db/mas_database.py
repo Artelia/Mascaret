@@ -20,7 +20,12 @@ email                :
 import psycopg2
 import psycopg2.extras
 
-from qgis.core import QgsVectorLayer, QgsDataSourceUri, NULL,QgsProject
+from qgis.core import QgsVectorLayer, NULL,QgsProject
+try :   #qgis2
+    from qgis.core import QgsMapLayerRegistry,QgsDataSourceURI
+except :#qgis3
+    from qgis.core import QgsDataSourceUri
+
 from qgis.gui import QgsMessageBar
 
 import os
@@ -288,7 +293,11 @@ class MasDatabase(object):
         """
         Setting layers uris list from QgsProject.
         """
-        self.uris = [vl.source() for vl in QgsProject.instance().mapLayers().values()]
+        try :    # qgis2
+            self.uris = [vl.source() for vl in QgsMapLayerRegistry.instance().mapLayers().values()]
+
+        except:  # qgis3
+            self.uris = [vl.source() for vl in QgsProject.instance().mapLayers().values()]
         if self.mgis.DEBUG:
             self.mgis.addInfo('Layers sources:\n    {0}'.format('\n    '.join(self.uris)))
 #*****************************************************************************
@@ -304,7 +313,11 @@ class MasDatabase(object):
             QgsVectorLayer: QGIS Vector Layer object.
         """
         vl_schema, vl_name = obj.schema, obj.name
-        uri = QgsDataSourceUri()
+        try:     # qgis2
+            uri = QgsDataSourceURI()
+        except:  # qgis3
+            uri = QgsDataSourceUri()
+
         uri.setConnection(self.host, self.port, self.dbname, self.user, self.password)
         if obj.geom_type is not None:
             uri.setDataSource(vl_schema, vl_name, 'geom')
@@ -323,10 +336,16 @@ class MasDatabase(object):
         try:
             style_file = os.path.join(self.mgis.masplugPath,'db', 'styles', '{0}.qml'.format(vlayer.name()))
             if self.group:
-                QgsProject.instance().addMapLayer(vlayer, False)
+                try:     # qgis2
+                    QgsMapLayerRegistry.instance().addMapLayer(vlayer, False)
+                except:  # qgis3
+                    QgsProject.instance().addMapLayer(vlayer, False)
                 self.group.addLayer(vlayer)
             else:
-                QgsProject.instance().addMapLayer(vlayer)
+                try:     # qgis2
+                    QgsMapLayerRegistry.instance().addMapLayer(vlayer)
+                except:  # qgis3
+                    QgsProject.instance().addMapLayer(vlayer)
             #self.mgis.addInfo('path : {}'.format(style_file))
             # a mettre apres deplacement group pour etre pris en compte
             vlayer.loadNamedStyle(style_file)
@@ -502,6 +521,7 @@ class MasDatabase(object):
     def loadGis_layer(self):
         """ layer visualization in qgis"""
         # visualisation
+
         root = QgsProject.instance().layerTreeRoot()
 
         self.group = root.findGroup("Mas_{}".format(self.SCHEMA))
@@ -580,7 +600,10 @@ $BODY$
             for child in group1.children():
                 dump = child.dump()
                 id = dump.split("=")[-1].strip()
-                QgsProject.instance().removeMapLayer(id)
+                try :    # qgis2
+                    QgsMapLayerRegistry.instance().removeMapLayer(id)
+                except:  # qgis3
+                    QgsProject.instance().removeMapLayer(id)
             root.removeChildNode(group1)
 
     def projection(self, gid, nom):

@@ -19,10 +19,10 @@ email                :
 """
 
 
-from PyQt5.QtCore import *
+from qgis.PyQt.QtCore import *
 from qgis.core import *
 from qgis.gui import *
-from shapely.wkb import loads
+#from shapely.wkb import loads
 
 
 

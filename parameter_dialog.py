@@ -18,23 +18,18 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-
-
-# from PyQt5.QtWidgets import *
-# from PyQt5.uic import *
+from qgis.core import *
+from qgis.gui import *
 
 from qgis.PyQt.uic import *
 from qgis.PyQt.QtCore import *
-try:        #qt5
-    from qgis.PyQt.QtWidgets import *
-except:     #qt4
-    from qgis.PyQt.QtGui import *
 
+if int(qVersion()[0])<5:  #qt4
+    from qgis.PyQt.QtGui import *
+else: #qt5
+    from qgis.PyQt.QtWidgets import *
 import os
 
-
-from qgis.core import *
-from qgis.gui import *
 
 
 from .Class_observation import Class_observation
@@ -278,11 +273,17 @@ class parameter_dialog(QDialog):
 
     def importObserv(self):
         """load observation"""
-        fileNamePath = QFileDialog.getOpenFileNames(None,
+        if int(qVersion()[0]) < 5: #qt4
+            fileNamePath = QFileDialog.getOpenFileNames(None,
                                                     'File Selection',
                                                     self.mgis.masplugPath,
                                                     filter="CSV (*.csv);;File (*)")
-        fileNamePath=fileNamePath[0]
+        else:#qt5
+            fileNamePath, _ = QFileDialog.getOpenFileNames(None,
+                                                           'File Selection',
+                                                           self.mgis.masplugPath,
+                                                           filter="CSV (*.csv);;File (*)")
+
         if self.obs.evtTOobs(fileNamePath):
             self.mgis.addInfo('Import is done.')
         else:
