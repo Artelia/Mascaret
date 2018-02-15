@@ -79,7 +79,10 @@ class Worker(QObject):
                     self.mgis.addInfo("This problem could come from the different projection"
                                       " between the raster and the profile")
 
-
+        try:#qgis2
+            self.profil.saveEdits()
+        except: # qgis 3
+            pass
 
 
 

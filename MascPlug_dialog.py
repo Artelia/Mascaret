@@ -372,9 +372,10 @@ class MascPlugDialog(QMainWindow):
                                 'Please, selection the DTM raster')
             return
         try :    # qgis2
-            tempo = Qgsinstance().mapLayers().values()
+            tempo = QgsMapLayerRegistry.instance().mapLayers().values()
+
         except : # qgis 3
-            tempo=QgsMapLayerRegistry.instance().mapLayers().values()
+            tempo = QgsProject.instance().mapLayers().values()
         for couche in tempo:
             if couche.name()=="profiles":
                 profil=couche
@@ -575,10 +576,10 @@ class MascPlugDialog(QMainWindow):
                                                    self.masplugPath,
                                                 filter="PSQL (*.psql);;File (*)")
         else: #qt5
-            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile",
-                                                   "{0}.psql".format(
-                                                    os.path.join(self.masplugPath, self.mdb.dbname+"_"+self.mdb.SCHEMA)),
-                                                   filter="PSQL (*.psql);;File (*)")
+            fileNamePath,_ = QFileDialog.getOpenFileNames(None,
+                                                        'File Selection',
+                                                        self.masplugPath,
+                                                        filter="PSQL (*.psql);;File (*)")
 
         if self.mdb.importSchema(fileNamePath):
             self.addInfo('Import is done.')

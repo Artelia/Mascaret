@@ -343,7 +343,7 @@ class GraphProfil(GraphCommon):
         self.fig.canvas.mpl_connect('motion_notify_event', self.onpress)
         # zoom_fun = zoom mollette
         # self.fig.canvas.mpl_connect('scroll_event', self.zoom_fun)
-        # self.fig.canvas.mpl_connect('key_press_event', self.onKey)
+
 
     def selectorToggled(self):
         """Point selection function"""
@@ -849,8 +849,8 @@ class GraphProfil(GraphCommon):
         if self.flag and event.button == 3:
             if self.ordre == -9999:
                 item, ok = QInputDialog.getItem(self,
-                                                "Courbe",
-                                                "Choix de la courbe",
+                                                "Curve",
+                                                "Choice of Curve",
                                                 self.topo.keys(),
                                                 0)
 
@@ -858,8 +858,8 @@ class GraphProfil(GraphCommon):
                     return
 
                 num, ok = QInputDialog.getInt(self,
-                                              "Ordre",
-                                              "Entrez l'ordre initial",
+                                              "Order",
+                                              "Input the initial order",
                                               0)
                 if not ok:
                     return
@@ -899,14 +899,15 @@ class GraphProfil(GraphCommon):
                 tabX = self.topo[f]['x']
                 # tabX = list(map(lambda x: x + round(event.xdata, 2) - self.x0, tabX))
                 tempo = []
-                fct1 = lambda x: x + round(event.xdata, 2)
+                fct1 = lambda x: x + round(float(event.xdata), 2) - self.x0
                 for var1 in tabX:
                     tempo.append(fct1(var1))
                 tabX=tempo
 
                 self.topo[f]['x'] = tabX
                 self.courbeSelected.set_xdata(tabX)
-                self.x0 = round(event.xdata, 2)
+
+                self.x0 = round(float(event.xdata), 2)
             except:
                 if self.mgis.DEBUG:
                     self.mgis.addInfo("Warning:Out of graph")
@@ -2369,6 +2370,7 @@ class GraphHydro(GraphCommon):
 
         condition = "event = '{}'".format(self.scenario)
         self.laisses = self.mdb.select("flood_marks", condition, "abscissa")
+
         self.laisses['pk'] = self.laisses['abscissa']
         L = self.laisses
         if not self.type in L.keys():
