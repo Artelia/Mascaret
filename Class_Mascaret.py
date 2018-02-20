@@ -264,9 +264,10 @@ class Class_Mascaret():
             numero = branches["branch"]
             branches["abscdebut"] = []
             branches["abscfin"] = []
-            liste = zip(profils["abscissa"], profils["branchnum"])
+
             for i, num in enumerate(numero):
-                temp = [a for a, n in liste if n == num]
+                temp = [a for a, n in zip(profils["abscissa"], profils["branchnum"]) if n == num]
+                self.mgis.addInfo('hhhh {} '.format(temp))
                 branches["abscdebut"].append(min(temp))
                 branches["abscfin"].append(max(temp))
             dictNoeuds = {}
@@ -331,7 +332,7 @@ class Class_Mascaret():
                     zz = [float(var) for var in z.split()]
                     diff = max(zz) - min(zz)
                 except:
-                    self.mgis.addInfo("Check the {} proile if it's ok ".format(profils["name"][j]))
+                    self.mgis.addInfo("Check the {} profile if it's ok ".format(profils["name"][j]))
                     return (dictLois)
 
                 if abs > zones['zoneabsend'][i]:
@@ -954,11 +955,11 @@ class Class_Mascaret():
                     #          "cote_inf", "cote_sup"]
                     liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
                              "z_lower", "z_up"]
-
-                    tempo=[float(var) for var in  v.split()]
-                    tab = {k: tempo
-                       for k, v in temp.items() if v and k in liste}
-
+                    tab ={}
+                    for k, v in temp.items() :
+                        if v and k in liste:
+                            tab[k]= [float(var) for var in  v.split()]
+                 
                     self.creerLOI(nom, tab, l["type"])
                     if self.mgis.DEBUG:
                         self.mgis.addInfo("Laws file is created.")
