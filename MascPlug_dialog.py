@@ -303,7 +303,7 @@ class MascPlugDialog(QMainWindow):
         modelName, ok = QInputDialog.getText(self, 'New Model', 'New Model name:')
 
         if ok:
-            self.mdb.SCHEMA=modelName
+            self.mdb.SCHEMA=modelName.lower()
             self.mdb.create_model(self.dossierSQL)
             self.mdb.last_schema = self.mdb.SCHEMA
             self.enableAllActions()
