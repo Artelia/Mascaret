@@ -85,3 +85,5 @@
 85,formatFichResultat,2,2,2,,parametresTraceur,parametresImpressionTraceur,False
 86,presenceConcInit,FALSE,FALSE,FALSE,Presence of initial conditions,parametresTraceur,parametresConcentrationsInitialesTraceur,True
 88,fichConcInit,mascaret.conc,mascaret.conc,mascaret.conc,,parametresTraceur,parametresConcentrationsInitialesTraceur,False
+89,fichmeteo,FALSE,FALSE,FALSE,,parametresTraceur,,False
+
