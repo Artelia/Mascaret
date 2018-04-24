@@ -414,10 +414,10 @@ class MasDatabase(object):
             #visualization
             self.loadGis_layer()
 
-            self.mgis.addInfo(u'Model "{0}" completed'.format(self.SCHEMA))
+            self.mgis.addInfo('Model "{0}" completed'.format(self.SCHEMA))
 
         except Exception, e:
-            self.mgis.addInfo(u"Echec of creation model")
+            self.mgis.addInfo("Echec of creation model")
             # self.mgis.addInfo(e)
 
     def create_FirstModel(self):
@@ -449,7 +449,7 @@ class MasDatabase(object):
 
         except Exception, e:
             self.disconnect_pg()
-            self.mgis.addInfo(u"Echec of creation First Model")
+            self.mgis.addInfo("Echec of creation First Model")
 
     def check_firstModel(self):
         """
@@ -572,7 +572,6 @@ $BODY$
                 self.mgis.addInfo('Mascaret database is empty.<br>Create or import your river network data.')
         #
         self.loadGis_layer()
-
 
     def removeGroup_Layer(self, name):
         root = QgsProject.instance().layerTreeRoot()

@@ -18,37 +18,28 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4 import QtCore, QtGui
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
 
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+from PyQt4.uic import *
+import os
+
 
 from qgis.core import *
 from qgis.gui import *
 
-from ui.ui_parameter import Ui_Parameters
+
 from Class_observation import Class_observation
 
-class parameter_dialog(QtGui.QDialog):
+class parameter_dialog(QDialog):
     def __init__(self,mgis, kernel):
-        QtGui.QDialog.__init__(self)
+        QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
 
         self.kernel=kernel
 
-        self.ui = Ui_Parameters()
-        self.ui.setupUi(self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_parameter.ui'), self)
 
         self.initUI()
 
@@ -88,48 +79,48 @@ class parameter_dialog(QtGui.QDialog):
                                           3: 'Cote maximale de controle'},
                          }
 
-        self.libel_var=[_translate("param_diag", "Bottom elevation", None),
-                          _translate("param_diag", "Left bank water level", None),
-                          _translate("param_diag", "Right bank water level", None),
-                          _translate("param_diag", "Minor friction coefficient", None),
-                          _translate("param_diag", "Major friction coefficient", None),
-                          _translate("param_diag", "Water level", None),
-                          _translate("param_diag", "Flow rate in minor river bed", None),
-                          _translate("param_diag", "Flow rate in major river bed", None),
-                          _translate("param_diag", "Wetted area of minor river bed", None),
-                          _translate("param_diag", "Wetted area of major river bed", None),
-                          _translate("param_diag", "Froude number", None),
-                          _translate("param_diag", "Coefficient beta of Debord's formula", None),
-                          _translate("param_diag", "Surface width of minor river bed", None),
-                          _translate("param_diag", "Surface width of major river bed", None),
-                          _translate("param_diag", "Surface width of storage area", None),
-                          _translate("param_diag", "Wetted perimeter of minor river bed", None),
-                          _translate("param_diag", "Wetted perimeter of major river bed", None),
-                          _translate("param_diag", "Hydaulic radius of minor river bed", None),
-                          _translate("param_diag", "Hydaulic radius of major river bed", None),
-                          _translate("param_diag", "Velocity of minor river bed", None),
-                          _translate("param_diag", "Velocity of major river bed", None),
-                          _translate("param_diag", "Bottom shear stress", None),
-                          _translate("param_diag", "Water depth", None),
-                          _translate("param_diag", "Average water depth", None),
-                          _translate("param_diag", "Flow rate in left major river bed", None),
-                          _translate("param_diag", "Flow rate in right major river bed", None),
-                          _translate("param_diag", "Wetted area of storage area", None),
-                          _translate("param_diag", "Cumulative volume of the active river bed", None),
-                          _translate("param_diag", "Cumulative volume of the storage area", None),
-                          _translate("param_diag", "Hydraulic head", None),
-                          _translate("param_diag", "Maximal water level", None),
-                          _translate("param_diag", "Date of maximal water level", None),
-                          _translate("param_diag", "Velocity for the maximal water level", None),
-                          _translate("param_diag", "Minimal water level", None),
-                          _translate("param_diag", "Date of minimal water level", None),
-                          _translate("param_diag", "Minimum minor river bed velocity", None),
-                          _translate("param_diag", "Maximum minor river bed velocity", None),
-                          _translate("param_diag", "Maximum surface width", None),
-                          _translate("param_diag", "Arrival time of the floodwave", None),
-                          _translate("param_diag", "Maximum flow rate", None),
-                          _translate("param_diag", "Date of maximum flow rate", None),
-                          _translate("param_diag", "Maximum energy", None)
+        self.libel_var=["Bottom elevation",
+                          "Left bank water level",
+                          "Right bank water level",
+                          "Minor friction coefficient",
+                          "Major friction coefficient",
+                          "Water level",
+                          "Flow rate in minor river bed",
+                          "Flow rate in major river bed",
+                          "Wetted area of minor river bed",
+                          "Wetted area of major river bed",
+                          "Froude number",
+                          "Coefficient beta of Debord's formula",
+                          "Surface width of minor river bed",
+                          "Surface width of major river bed",
+                          "Surface width of storage area",
+                          "Wetted perimeter of minor river bed",
+                          "Wetted perimeter of major river bed",
+                          "Hydaulic radius of minor river bed",
+                          "Hydaulic radius of major river bed",
+                          "Velocity of minor river bed",
+                          "Velocity of major river bed",
+                          "Bottom shear stress",
+                          "Water depth",
+                          "Average water depth",
+                          "Flow rate in left major river bed",
+                          "Flow rate in right major river bed",
+                          "Wetted area of storage area",
+                          "Cumulative volume of the active river bed",
+                          "Cumulative volume of the storage area",
+                          "Hydraulic head",
+                          "Maximal water level",
+                          "Date of maximal water level",
+                          "Velocity for the maximal water level",
+                          "Minimal water level",
+                          "Date of minimal water level",
+                          "Minimum minor river bed velocity",
+                          "Maximum minor river bed velocity",
+                          "Maximum surface width",
+                          "Arrival time of the floodwave",
+                          "Maximum flow rate",
+                          "Date of maximum flow rate",
+                          "Maximum energy"
                           ]
 
 
@@ -246,14 +237,14 @@ class parameter_dialog(QtGui.QDialog):
             # self.mgis.addInfo("param {}  info {}".format(param, info))
             if info['gui']:
                 obj = getattr(self.ui, param)
-                if isinstance(obj, QtGui.QCheckBox):
+                if isinstance(obj, QCheckBox):
                     obj.setChecked(info['val'])
-                elif isinstance(obj, QtGui.QDoubleSpinBox) or isinstance(obj, QtGui.QSpinBox):
+                elif isinstance(obj, QDoubleSpinBox) or isinstance(obj, QSpinBox):
                     obj.setValue(info['val'])
                 elif obj==self.ui.evenement:
                     self.ui.evenement.setChecked(info['val'])
                     self.chEvent()
-                elif  isinstance(obj, QtGui.QComboBox):
+                elif  isinstance(obj, QComboBox):
                     if param=='option':
                         val=info['val']-1
                     elif param=="compositionLits":
@@ -269,20 +260,20 @@ class parameter_dialog(QtGui.QDialog):
 
                 if param in self.exclusion[self.kernel]:
                     obj.hide()
-                    if isinstance(obj, QtGui.QSpinBox) or isinstance(obj, QtGui.QDoubleSpinBox)\
-                            or isinstance(obj, QtGui.QComboBox):
+                    if isinstance(obj, QSpinBox) or isinstance(obj, QDoubleSpinBox)\
+                            or isinstance(obj, QComboBox):
                         getattr(self.ui, 'label_'+param).hide()
 
     def importObserv(self):
         """load observation"""
-        fileNamePath = QtGui.QFileDialog.getOpenFileNames(None,
-                                                    r'File Selection',
+        fileNamePath = QFileDialog.getOpenFileNames(None,
+                                                    'File Selection',
                                                     self.mgis.masplugPath,
                                                     filter="CSV (*.csv);;File (*)")
         if self.obs.evtTOobs(fileNamePath):
-            self.mgis.addInfo(_translate("param_diag",'Import is done.',None))
+            self.mgis.addInfo('Import is done.')
         else:
-            self.mgis.addInfo(_translate("param_diag",'Import failed.',None))
+            self.mgis.addInfo('Import failed.')
 
     def delObserv(self):
         """delete observation """
@@ -291,7 +282,7 @@ class parameter_dialog(QtGui.QDialog):
         ok=False
         if dico_code:
             # self.mgis.addInfo("{}".format(dico_code))
-            event, ok = QtGui.QInputDialog.getItem(None,
+            event, ok = QInputDialog.getItem(None,
                                               'Event choice',
                                               'Event',
                                              dico_code['code'],0, False)
@@ -301,9 +292,9 @@ class parameter_dialog(QtGui.QDialog):
             where="code = '{0}'".format(event)
             self.mdb.delete("observations",where)
             if self.mgis.DEBUG:
-                self.mgis.addInfo(_translate("param_diag",'{} is deleted.'.format(event),None))
+                self.mgis.addInfo('{} is deleted.'.format(event))
         else:
-            txt = _translate("param_diag", "There aren't deleted observations .", None)
+            txt = "There aren't deleted observations ."
             self.mgis.windinfo(txt)
             self.mgis.addInfo( txt)
 
@@ -332,7 +323,7 @@ class parameter_dialog(QtGui.QDialog):
     def selectbox(self,box):
         """ function allow to select  or not for checkBox"""
 
-        for checkbox in box.findChildren(QtGui.QCheckBox):
+        for checkbox in box.findChildren(QCheckBox):
             checkbox.setChecked(box.isChecked())
             # checkbox.setEnabled(True)
 
@@ -346,9 +337,9 @@ class parameter_dialog(QtGui.QDialog):
                     var.append((param, obj))
                     continue
                 else:
-                    if isinstance(obj, QtGui.QCheckBox) or isinstance(obj, QtGui.QRadioButton):
+                    if isinstance(obj, QCheckBox) or isinstance(obj, QRadioButton):
                         val = obj.isChecked()
-                    elif isinstance(obj, QtGui.QComboBox):
+                    elif isinstance(obj, QComboBox):
                         val = obj.currentIndex()
                         if param == 'option' or param == "critereArret" or param == 'postProcesseur':
                             val = val+1

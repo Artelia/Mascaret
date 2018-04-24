@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1079</width>
-    <height>850</height>
+    <width>984</width>
+    <height>707</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -243,7 +243,7 @@
           <string>Point Selection</string>
          </property>
          <property name="icon">
-          <iconset resource="../resources.qrc">
+          <iconset>
            <normaloff>:/plugins/MascPlug/icones/select.png</normaloff>:/plugins/MascPlug/icones/select.png</iconset>
          </property>
          <property name="iconSize">
@@ -263,7 +263,7 @@
           <string>Zone Selection</string>
          </property>
          <property name="icon">
-          <iconset resource="../resources.qrc">
+          <iconset>
            <normaloff>:/plugins/MascPlug/icones/select_zone.png</normaloff>:/plugins/MascPlug/icones/select_zone.png</iconset>
          </property>
          <property name="iconSize">
@@ -283,7 +283,7 @@
           <string>Profil Translation</string>
          </property>
          <property name="icon">
-          <iconset resource="../resources.qrc">
+          <iconset>
            <normaloff>:/plugins/MascPlug/icones/deplace_profil.png</normaloff>:/plugins/MascPlug/icones/deplace_profil.png</iconset>
          </property>
          <property name="iconSize">
@@ -352,14 +352,34 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
-        <widget class="QDeclarativeView" name="declarativeView">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-        </widget>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QWidget" name="widget_figure" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_toolsbar" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>10</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>50</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -516,13 +536,6 @@
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QDeclarativeView</class>
-   <extends>QGraphicsView</extends>
-   <header>QtDeclarative/QDeclarativeView</header>
-  </customwidget>
- </customwidgets>
  <resources>
   <include location="../resources.qrc"/>
  </resources>

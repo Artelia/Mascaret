@@ -1,5 +1,6 @@
 
-from PyQt4 import QtCore, QtGui
+from PyQt4.QtGui import *
+
 
 
 class Class_warningBox():
@@ -9,15 +10,15 @@ class Class_warningBox():
         self.mdb = self.mgis.mdb
 
     def yes_no_q(self, msg, title=''):
-        d = QtGui.QMessageBox()
+        d = QMessageBox()
         d.setWindowTitle(title)
-        d.addButton(QtGui.QMessageBox.Yes)
-        d.addButton(QtGui.QMessageBox.No)
-        d.setDefaultButton(QtGui.QMessageBox.No)
+        d.addButton(QMessageBox.Yes)
+        d.addButton(QMessageBox.No)
+        d.setDefaultButton(QMessageBox.No)
         d.setText(msg)
         ret =d.exec_()
 
-        if ret == QtGui.QMessageBox.Yes:
+        if ret == QMessageBox.Yes:
             return True
         else:
             return False

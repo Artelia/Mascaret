@@ -22,7 +22,15 @@ comment:
         interpole
 """
 import math
+from decimal import Decimal
 
+
+def isfloat(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
 
 def distance(a, b):
     return math.sqrt(math.pow(a.x() - b.x(), 2) + math.pow(a.y() - b.y(), 2))
