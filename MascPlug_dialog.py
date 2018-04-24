@@ -296,7 +296,7 @@ class MascPlugDialog(QMainWindow):
         msg=self.mdb.connect_pg()
         self.addInfo('Created connection to mascaret database: {0}@{1}'.format(self.mdb.dbname, self.mdb.host))
         self.mdb.last_conn = connName
-        if 'Error:' in msg:
+        if 'Error:' in msg or'None:' in msg :
             self.disableActionsConnection()
         else:
             self.disableActionsModel()

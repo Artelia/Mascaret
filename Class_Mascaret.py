@@ -206,6 +206,86 @@ class Class_Mascaret():
         elif level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
+    def planim_select(self):
+        sql = """SELECT MIN(t1.planim) AS pas, MIN(t2.nombre),MAX(t2.nombre) 
+                 FROM (SELECT branch, planim, ST_UNION(geom) AS geom
+                       FROM  (SELECT branch, 
+                                     planim, 
+                                     geom,
+                                     row_number() 
+                                        OVER (PARTITION BY branch, planim 
+                                              ORDER BY zonenum)
+                                        - zonenum AS grp
+                              FROM   {0}.branchs
+                              WHERE active) x
+                       GROUP  BY branch, planim, grp) AS t1,
+                      (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom 
+                       FROM {0}.profiles 
+                       WHERE active ) AS t2 
+                 WHERE ST_INTERSECTS(t1.geom,t2.geom) 
+                 GROUP BY t1.geom
+                 ORDER BY min;"""
+
+        (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True,namvar=True)
+
+        dico = {}
+        colonnes = [col[0] for col in namCol]
+        for col in colonnes:
+            dico[col] = []
+
+        for row in results:
+            for i, val in enumerate(row):
+
+                try:
+                    dico[colonnes[i]].append(val.strip())
+                except:
+                    dico[colonnes[i]].append(val)
+
+        return dico
+
+    def maillage_select(self):
+        sql = """SELECT MIN(t1.mesh) AS pas, 
+                                    MIN(t2.nombre),
+                                    MAX(t2.nombre)+MIN(diff)+1 AS max
+                             FROM (SELECT branch, mesh, 
+                                          ST_UNION(geom) AS geom, 
+                                          MIN(diff) AS diff 
+                                   FROM  (SELECT branch, 
+                                                 mesh, 
+                                                 geom,
+                                                 row_number() 
+                                                    OVER (PARTITION BY branch,  mesh 
+                                                          ORDER BY zonenum)
+                                                    - zonenum AS grp,
+                                                 branch-lead(branch,1,branch+1) 
+                                                    OVER (ORDER BY zonenum) AS diff
+                                          FROM   {0}.branchs
+                                          WHERE active) x
+                                   GROUP  BY branch, mesh, grp) AS t1,
+                                  (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom 
+                                   FROM {0}.profiles 
+                                   WHERE active ) AS t2 
+                             WHERE ST_INTERSECTS(t1.geom,t2.geom) 
+                             GROUP BY t1.geom
+                             ORDER BY min;"""
+
+        (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True,namvar=True)
+
+        dico = {}
+        colonnes = [col[0] for col in namCol]
+        for col in colonnes:
+            dico[col] = []
+
+        for row in results:
+            for i, val in enumerate(row):
+
+                try:
+                    dico[colonnes[i]].append(val.strip())
+                except:
+                    dico[colonnes[i]].append(val)
+
+        return dico
+
     def creerXCAS(self, noyau):
         """To create xcas file"""
         dictLois = {}
@@ -260,14 +340,17 @@ class Class_Mascaret():
             profSeuil = self.mdb.select("profiles", "NOT active", "abscissa")
             seuils = self.mdb.select("weirs", "active", "abscissa")
             sorties = self.mdb.select("outputs", "", "abscissa")
+            planim =self.planim_select()
+            maillage =self.maillage_select()
+
             # Extrémités
             numero = branches["branch"]
             branches["abscdebut"] = []
             branches["abscfin"] = []
 
+            liste = zip(profils["abscissa"], profils["branchnum"])
             for i, num in enumerate(numero):
-                temp = [a for a, n in zip(profils["abscissa"], profils["branchnum"]) if n == num]
-                self.mgis.addInfo('hhhh {} '.format(temp))
+                temp = [a for a, n in liste if n == num]
                 branches["abscdebut"].append(min(temp))
                 branches["abscfin"].append(max(temp))
             dictNoeuds = {}
@@ -311,9 +394,9 @@ class Class_Mascaret():
             # Zones
             nbPas = 0
             i = 0
-            zones['num1erProf'] = [1] * len(zones["zoneabsstart"])
-            zones['numDerProfPlanim'] = [1] * len(zones["zoneabsstart"])
-            zones['numDerProfMaill'] = [1] * len(zones["zoneabsstart"])
+          #  zones['num1erProf'] = [1] * len(zones["zoneabsstart"])
+          #  zones['numDerProfPlanim'] = [1] * len(zones["zoneabsstart"])
+          #  zones['numDerProfMaill'] = [1] * len(zones["zoneabsstart"])
             listeStock = {"numProfil": [],
                           'limGauchLitMaj': [],
                           'limDroitLitMaj': []}
@@ -337,9 +420,9 @@ class Class_Mascaret():
 
                 if abs > zones['zoneabsend'][i]:
                     i = i + 1
-                    zones['num1erProf'][i] = j + 1
+                 #   zones['num1erProf'][i] = j + 1
 
-                zones['numDerProfPlanim'][i] = j + 1
+                # zones['numDerProfPlanim'][i] = j + 1
                 
                 nbPas = max(int(diff/ float(zones['planim'][i])) + 1, nbPas)
 
@@ -349,10 +432,10 @@ class Class_Mascaret():
                                              branches["abscdebut"][index])
                 zones["zoneabsend"][i] = min(zones["zoneabsend"][i],
                                              branches["abscfin"][index])
-                if zones["zoneabsend"][i] == branches["abscfin"][index]:
-                    zones['numDerProfMaill'][i] = zones['numDerProfPlanim'][i]
-                else:
-                    zones['numDerProfMaill'][i] = zones['numDerProfPlanim'][i] + 1
+              #  if zones["zoneabsend"][i] == branches["abscfin"][index]:
+              #      zones['numDerProfMaill'][i] = zones['numDerProfPlanim'][i]
+              #  else:
+              #      zones['numDerProfMaill'][i] = zones['numDerProfPlanim'][i] + 1
 
                 if sg or sd:
                     if sg:
@@ -444,24 +527,22 @@ class Class_Mascaret():
             planimaill = SubElement(cas, "parametresPlanimetrageMaillage")
             SubElement(planimaill, "methodeMaillage").text = '5'
 
-            planim = SubElement(planimaill, "planim")
-            SubElement(planim, 'nbPas').text = str(nbPas)
-            SubElement(planim, 'nbZones').text = str(len(zones["zoneabsstart"]))
-            SubElement(planim, 'valeursPas').text = self.fmt(zones['planim'])
-            SubElement(planim, 'num1erProf').text = self.fmt(zones['num1erProf'])
-            SubElement(planim, 'numDerProf').text = self.fmt(zones['numDerProfPlanim'])
+            planimE = SubElement(planimaill, "planim")
+            SubElement(planimE, 'nbPas').text = str(nbPas)
+            SubElement(planimE, 'nbZones').text = str(len(planim["pas"]))
+            SubElement(planimE, 'valeursPas').text = self.fmt(planim['pas'])
+            SubElement(planimE, 'num1erProf').text = self.fmt(planim['min'])
+            SubElement(planimE, 'numDerProf').text = self.fmt(planim['max'])
 
-            maillage = SubElement(planimaill, "maillage")
-            SubElement(maillage, 'modeSaisie').text = '2'
-            SubElement(maillage, 'sauvMaillage').text = 'false'
-            maillageC = SubElement(maillage, 'maillageClavier')
+            maillageE = SubElement(planimaill, "maillage")
+            SubElement(maillageE, 'modeSaisie').text = '2'
+            SubElement(maillageE, 'sauvMaillage').text = 'false'
+            maillageC = SubElement(maillageE, 'maillageClavier')
             SubElement(maillageC, 'nbSections').text = '0'
-            SubElement(maillageC, 'nbPlages').text = str(len(zones["zoneabsstart"]))
-            SubElement(maillageC, 'num1erProfPlage').text = self.fmt(zones['num1erProf'])
-            # temp = [n+1 for n in zones['numDerProf'][:-1]] + [zones['numDerProf'][-1]]
-            temp = zones['numDerProfMaill']
-            SubElement(maillageC, 'numDerProfPlage').text = self.fmt(temp)
-            SubElement(maillageC, 'pasEspacePlage').text = self.fmt(zones['mesh'])
+            SubElement(maillageC, 'nbPlages').text = str(len(maillage["pas"]))
+            SubElement(maillageC, 'num1erProfPlage').text = self.fmt(maillage['min'])
+            SubElement(maillageC, 'numDerProfPlage').text = self.fmt(maillage['max'])
+            SubElement(maillageC, 'pasEspacePlage').text = self.fmt(maillage['pas'])
             SubElement(maillageC, 'nbZones').text = '0'
 
             ### Singularités
@@ -496,7 +577,7 @@ class Class_Mascaret():
                     SubElement(struct, "nbPtLoiSeuil").text = '-0'
                 else:
                     try:
-                        i = profSeuil["nom"].index(nom)
+                        i = profSeuil["name"].index(nom)
                         long = len(profSeuil['x'][i].split())
                         SubElement(struct, "nbPtLoiSeuil").text = str(long)
                         SubElement(struct, "abscTravCrete").text = profSeuil['x'][i]
@@ -745,7 +826,7 @@ class Class_Mascaret():
                 #     self.mgis.addInfo("{0} :\n \t Time : {1}\n \t Upstream Water Level{2}\n \t  "
                 #                       "Downstream Water Level :{3}"
                 #                       .format(nom,tab["temps"], tab["cote_amont"], tab["cote_aval"]))
-            n = len(list(tab.values())[0])
+            n = len(tab.values()[0])
 
             for i in range(n):
                 dico = {k: v[i] for k, v in tab.items()}
@@ -758,31 +839,49 @@ class Class_Mascaret():
         obs = {}
         duree = int((dateFin - dateDebut).total_seconds() / 3600)
 
-        liste_date = [dateDebut + datetime.timedelta(hours=x)
-                      for x in range(duree)]
+        # liste_date = [dateDebut + datetime.timedelta(hours=x)
+                      # for x in range(duree)]
 
         for nom, loi in dictLois.items():
-            if loi['type'] != 1:
+            if loi['type'] == 1:
+                type = 'Q'
+            elif loi['type'] == 2 :
+                type = 'H'
+            else :
                 continue
 
             liste_stations = pattern.findall(loi['formule'])
+            
+            liste_date = None
             for cd_hydro, delta in liste_stations:
+                if not delta:
+                    delta = '0'
+                dt = datetime.timedelta(hours=int(delta))
                 condition = """code ='{0}'
-                            AND type = 'Q'
-                            AND date >= '{1:%Y-%m-%d %H:%M}' 
-                            AND date <= '{2:%Y-%m-%d %H:%M}'
-                            """.format(cd_hydro, dateDebut, dateFin)
+                            AND type = '{1}'
+                            AND date >= '{2:%Y-%m-%d %H:%M}' 
+                            AND date <= '{3:%Y-%m-%d %H:%M}'
+                            """.format(cd_hydro, 
+                                       type, 
+                                       dateDebut+dt, 
+                                       dateFin+dt)
 
                 obs[cd_hydro] = self.mdb.select('observations',
                                                  condition,
                                                  'code, date')
+                                                 
+                if not liste_date :
+                    liste_date = map(lambda x : x - dt, obs[cd_hydro]['date'])
 
             fichierLoi = os.path.join(self.dossierFileMasc, nom + '.loi')
             valeurInit = None
 
             with open(fichierLoi, 'w') as fich_sortie:
                 fich_sortie.write('# {0}\n'.format(nom))
-                fich_sortie.write('# Temps (H) Debit\n')
+                if type == "Q" :
+                    fich_sortie.write('# Temps (H) Debit\n')
+                else :
+                    fich_sortie.write('# Temps (H) Hauteur\n')
                 fich_sortie.write(' H \n')
                 for t in liste_date:
                     calc = loi['formule']
@@ -802,16 +901,21 @@ class Class_Mascaret():
                     except:
                         resultat = None
 
-                    if resultat:
-                        if not valeurInit:
+                    if resultat is not None:
+                        if valeurInit is None :
                             valeurInit = resultat
                             somme += resultat
                         tps = (t - dateDebut).total_seconds() / 3600
                         chaine = '  {0:4.3f}   {1:3.3f}\n'
                         fich_sortie.write(chaine.format(tps, resultat))
-            if valeurInit:
-                tab = {'time': [0, 3600], 'flowrate': [valeurInit, valeurInit]}
-                self.creerLOI(nom + '_init', tab, 1)
+                        
+            if valeurInit is not None :
+                if type == "Q" :
+                    tab = {'time': [0, 3600], 'flowrate': [valeurInit, valeurInit]}
+                    self.creerLOI(nom + '_init', tab, 1)
+                else :
+                    tab = {'time': [0, 3600], 'z': [valeurInit, valeurInit]}
+                    self.creerLOI(nom + '_init', tab, 2)
 
         for nom, loi in dictLois.items():
             if loi['type'] != 5:
@@ -839,7 +943,7 @@ class Class_Mascaret():
                     break
                 else:
                     cotePrec, debitPrec = c, d
-            if valeurInit:
+            if valeurInit is not None:
                 tab = {'time': [0, 3600], 'z': [valeurInit, valeurInit]}
                 self.creerLOI(nom + '_init', tab, 2)
 
@@ -1196,10 +1300,18 @@ class Class_Mascaret():
                 'RESULTATS CALCUL,DATE :  {0:%d/%m/%y %H:%M}\n'.format(date))
             fich.write('FICHIER RESULTAT MASCARET{0}\n'.format(' ' * 47))
             fich.write('{0} \n'.format('-' * 71))
-            fich.write(' IMAX  =  {0} NBBIEF=    {1}\n'.format(str(IMAX),
+            fich.write(' IMAX  = {0:4} NBBIEF= {1:3}\n'.format(str(IMAX),
                                                                str(nbBief))
                        )
-            fich.write(' I1,I2 =    {0}\n'.format('  '.join(i1i2)))
+            
+            chaine = [""]
+            for k in range(0,len(i1i2),10) :
+                chaine.append('I1,I2 =')
+                for i in range(k,k+10) :
+                    if i<len(i1i2) :
+                        chaine.append('{0:4}'.format(i1i2[i]))
+                chaine.append("\n")
+            fich.write(" ".join(chaine))
 
             for k in ['X', 'Z', 'Q']:
                 fich.write(' ' + k + '\n')
