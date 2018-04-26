@@ -59,8 +59,6 @@ class MascPlugDialog(QMainWindow):
         self.mdb = None
         self.iface = iface
 
-        self.map_tool=None
-
         # self.pathPostgres = self.masplugPath
         # emplacement objet sql
         self.dossierSQL = os.path.join(os.path.join(self.masplugPath,"db"), "sql")
@@ -605,7 +603,6 @@ class MascPlugDialog(QMainWindow):
         if self.profil:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section_results.setEnabled(False)
-
         elif self.hydrogramme :
             self.ui.actionCross_section_results.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)

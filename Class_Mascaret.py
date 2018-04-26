@@ -118,7 +118,7 @@ class Class_Mascaret():
 
     def creerGEORef(self):
         # """creation of gemoetry file"""
-        try:
+        # try:
             nomfich = os.path.join(self.dossierFileMasc, self.baseName+'.geo')
 
             if os.path.isfile(nomfich):
@@ -144,6 +144,7 @@ class Class_Mascaret():
                     nom = feature['name']
                     # fetch geometry
                     geom = feature.geometry()
+
                     if nom in requete["name"]:
                         branche = requete["branchnum"][i]
                         abs = requete["abscissa"][i]
@@ -151,6 +152,7 @@ class Class_Mascaret():
                         tempZ = requete["z"][i]
                         litMinG = requete["leftminbed"][i]
                         litMinD = requete["rightminbed"][i]
+
                         if branche and abs and tempX and tempZ and litMinG and litMinD:
                             tabZ = []
                             tabX = []
@@ -180,9 +182,9 @@ class Class_Mascaret():
                                 fich.write('{0:.2f} {1:.2f} {2} {3} {4}\n'.format(x, z, type, dpoint[0], dpoint[1] ))
 
             self.mgis.addInfo("Creation the geometry is done")
-        except Exception as e:
-            self.mgis.addInfo("Error: save the geometry")
-            self.mgis.addInfo(str(e))
+        # except Exception as e:
+        #     self.mgis.addInfo("Error: save the geometry")
+        #     self.mgis.addInfo(str(e))
 
     def fmt(self,liste):
         #list(map(str, liste))
@@ -289,7 +291,7 @@ class Class_Mascaret():
         dictLois = {}
         try:
             fichierSortie = os.path.join(self.dossierFileMasc, self.baseName+".xcas")
-            extrToloi = {0: 6, 1: 1, 2: 2, 3: 4, 4: 5, 5: 4, 8: 3,6:6,7:7}
+            extrToloi = {0: 6, 1: 1, 2: 2, 3: 4, 4: 5, 5: 4, 8: 3}
             abaqueToloi = {1: 3, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
             # création du fichier xml
             fichierCas = Element("fichierCas")
@@ -332,7 +334,7 @@ class Class_Mascaret():
             zones = self.mdb.select("branchs", "active", "branch, zoneabsstart")
             deversoirs = self.mdb.select("lateral_weirs", "active", "abscissa")
             noeuds = self.mdb.select("extremities", "type=10", "active")
-            libres = self.mdb.select("extremities", "type!=10 ", "active")
+            libres = self.mdb.select("extremities", "type!=10", "active")
             pertescharg = self.mdb.select("hydraulic_head", "active", "abscissa")
             profils = self.mdb.select("profiles", "active", "abscissa")
             profSeuil = self.mdb.select("profiles", "NOT active", "abscissa")
@@ -340,7 +342,6 @@ class Class_Mascaret():
             sorties = self.mdb.select("outputs", "", "abscissa")
             planim =self.planim_select()
             maillage =self.maillage_select()
-
 
             # Extrémités
             numero = branches["branch"]
@@ -386,7 +387,8 @@ class Class_Mascaret():
                     dictLibres["typeCond"].append(type)
                     dictLibres["num"].append(len(dictLibres["nom"]))
                     dictLibres["extrem"].append(n * 2)
-                    dictLois[f] = { 'type': extrToloi[type],
+
+                    dictLois[f] = {'type': extrToloi[type],
                                    'formule': formule,
                                    'valeurperm': libres["firstvalue"][i]}
             # Zones
@@ -418,7 +420,9 @@ class Class_Mascaret():
 
                 if abs > zones['zoneabsend'][i]:
                     i = i + 1
+                 #   zones['num1erProf'][i] = j + 1
 
+                # zones['numDerProfPlanim'][i] = j + 1
                 
                 nbPas = max(int(diff/ float(zones['planim'][i])) + 1, nbPas)
 
@@ -428,6 +432,10 @@ class Class_Mascaret():
                                              branches["abscdebut"][index])
                 zones["zoneabsend"][i] = min(zones["zoneabsend"][i],
                                              branches["abscfin"][index])
+              #  if zones["zoneabsend"][i] == branches["abscfin"][index]:
+              #      zones['numDerProfMaill'][i] = zones['numDerProfPlanim'][i]
+              #  else:
+              #      zones['numDerProfMaill'][i] = zones['numDerProfPlanim'][i] + 1
 
                 if sg or sd:
                     if sg:
@@ -450,7 +458,7 @@ class Class_Mascaret():
 
             for i, nom in enumerate(apports["name"]):
                 if nom not in dictLois.keys():
-                    dictLois[nom] = { 'type': 1,
+                    dictLois[nom] = {'type': 1,
                                      'formule': apports['method'][i],
                                      'valeurperm': apports["firstvalue"][i]}
 
@@ -494,12 +502,6 @@ class Class_Mascaret():
                 SubElement(noms, "string").text = nom
 
             SubElement(extrLibres, "typeCond").text = self.fmt(dictLibres["typeCond"])
-            # temp=[]
-            # for nom in liste:
-            #     if nom in libres["name"] and (dictLois[nom]['type'] == 6 or dictLois[nom]['type'] == 7):
-            #             temp.append(1)
-            #     else:
-            #             temp.append(sorted(dictLois.keys()).index(nom) + 1)
 
             temp = [sorted(dictLois.keys()).index(nom) + 1 for nom in liste]
             SubElement(extrLibres, "numLoi").text = self.fmt(temp)
@@ -655,17 +657,9 @@ class Class_Mascaret():
 
             ### Lois hydrauliques
             hydrauliques = SubElement(cas, "parametresLoisHydrauliques")
-
-            for nom in dictLois.keys():
-                if nom in libres["name"] and (dictLois[nom]['type']==6 or dictLois[nom]['type']==7):
-                    # les types sont ceux de
-                    if dictLois[nom]['type']==6:
-                        dictLois[nom]['type']=1
-                    else:
-                        dictLois[nom]['type'] = 2
-            nb = len(dictLois.keys())
-            SubElement(hydrauliques, "nb").text = str(nb)
+            SubElement(hydrauliques, "nb").text = str(len(dictLois.keys()))
             lois = SubElement(hydrauliques, "lois")
+
 
             for nom in sorted(dictLois.keys()):
                 struct = SubElement(lois, "structureParametresLoi")
@@ -720,7 +714,7 @@ class Class_Mascaret():
             parametresTemporels.find('nbPasTemps').text = '2'
             geomReseau = paramCas.find('parametresGeometrieReseau')
             typeCond = geomReseau.find('extrLibres').find('typeCond')
-            typeCond.text = typeCond.text.replace('4', '2').replace('6', '1').replace('7', '2')
+            typeCond.text = typeCond.text.replace('4', '2')
             loisHydrauliques = paramCas.find('parametresLoisHydrauliques')
             lois = loisHydrauliques.find('lois')
             for child in lois:
@@ -749,7 +743,8 @@ class Class_Mascaret():
             self.mgis.addInfo("Save the Xcas file is done")
         except Exception as e:
             self.mgis.addInfo("Error: save Xcas file")
-            self.mgis.addInfo('error: {}'.format(e))
+            self.mgis.addInfo(str(e))
+
         return (dictLois)
 
     def modifXCAS(self,parametres,xcasfile,fichSortie=None):
@@ -1109,6 +1104,8 @@ class Class_Mascaret():
                        }
                 self.modifXCAS(tab, self.baseName+'.xcas')
 
+
+
             elif par["LigEauInit"] and noyau != "steady":
                 # condition = "run LIKE 'Steady'"
                 # dico_run = self.mdb.selectDistinct("scenario",
@@ -1437,4 +1434,3 @@ class Class_Mascaret():
                 return True
         else:
             return True
-

@@ -329,7 +329,7 @@ class parameter_dialog(QDialog):
 
     def str2bool(self,s):
         """string to bool"""
-        if "True" in s or "TRUE" in s:
+        if s=="True" or s=="TRUE":
             return True
         else:
             return False
