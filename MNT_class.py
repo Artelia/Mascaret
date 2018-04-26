@@ -18,11 +18,11 @@ email                :
  ***************************************************************************/
 """
 
-import __future__
-from PyQt4.QtCore import *
+
+from qgis.PyQt.QtCore import *
 from qgis.core import *
 from qgis.gui import *
-from shapely.wkb import loads
+#from shapely.wkb import loads
 
 
 
@@ -49,7 +49,6 @@ class Worker(QObject):
             geomcoupe = feature.geometry()
             longueur = geomcoupe.length()
             if longueur < self.res:
-
                 self.mgis.addInfo("Problem {0} between lenght profile : {1} and Raster accurancy : {2}."
                                   .format(feature["name"],longueur,self.res))
                 self.mgis.addInfo("This problem could come from the projection units.")
@@ -80,7 +79,10 @@ class Worker(QObject):
                     self.mgis.addInfo("This problem could come from the different projection"
                                       " between the raster and the profile")
 
-
+        try:#qgis2
+            self.profil.saveEdits()
+        except: # qgis 3
+            pass
 
 
 

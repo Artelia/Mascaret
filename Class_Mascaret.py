@@ -43,15 +43,19 @@ import shutil
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as ETparse
 
-from PyQt4.QtGui import *
+from qgis.PyQt.QtCore import qVersion
+if int(qVersion()[0])<5:  #qt4
+    from qgis.PyQt.QtGui import *
+else: #qt5
+    from qgis.PyQt.QtWidgets import *
+
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 import subprocess
-from ui.warningbox import Class_warningBox
+from .ui.warningbox import Class_warningBox
 
 class Class_Mascaret():
-
 
     def __init__(self,main):
         self.mgis=main
@@ -81,7 +85,6 @@ class Class_Mascaret():
 
             with open(nomfich, 'w') as fich:
                 for i, nom in enumerate(requete["name"]):
-
                     branche = requete["branchnum"][i]
                     abs = requete["abscissa"][i]
                     tempX = requete["x"][i]
@@ -90,8 +93,14 @@ class Class_Mascaret():
                     litMinD = requete["rightminbed"][i]
 
                     if branche and abs and tempX and tempZ and litMinG and litMinD:
-                        tabX = map(lambda x: round(float(x), 2), tempX.split())
-                        tabZ = map(lambda x: round(float(x), 2), tempZ.split())
+                        # tabX = list(map(lambda x: round(float(x), 2), tempX.split()))
+                        # tabZ = list(map(lambda x: round(float(x), 2), tempZ.split()))
+                        tabZ = []
+                        tabX = []
+                        fct1=lambda x: round(float(x), 2)
+                        for var1, var2 in zip(tempX.split(), tempZ.split()):
+                            tabX.append(fct1(var1))
+                            tabZ.append(fct1(var2))
 
                         fich.write('PROFIL Bief_{0} {1} {2}\n'.format(branche,
                                                                       nom, abs))
@@ -108,7 +117,7 @@ class Class_Mascaret():
             self.mgis.addInfo(str(e))
 
     def creerGEORef(self):
-        """creation of gemoetry file"""
+        # """creation of gemoetry file"""
         try:
             nomfich = os.path.join(self.dossierFileMasc, self.baseName+'.geo')
 
@@ -135,36 +144,40 @@ class Class_Mascaret():
                     nom = feature['name']
                     # fetch geometry
                     geom = feature.geometry()
+                    if nom in requete["name"]:
+                        branche = requete["branchnum"][i]
+                        abs = requete["abscissa"][i]
+                        tempX = requete["x"][i]
+                        tempZ = requete["z"][i]
+                        litMinG = requete["leftminbed"][i]
+                        litMinD = requete["rightminbed"][i]
+                        if branche and abs and tempX and tempZ and litMinG and litMinD:
+                            tabZ = []
+                            tabX = []
+                            fct1 = lambda x: round(float(x), 2)
+                            for var1, var2 in zip(tempX.split(), tempZ.split()):
+                                tabX.append(fct1(var1))
+                                tabZ.append(fct1(var2))
+                            # tabX = list(map(lambda x: round(float(x), 2), tempX.split()))
+                            # tabZ = list(map(lambda x: round(float(x), 2), tempZ.split()))
 
-                # for i, nom in enumerate(requete["name"]):
-                    branche = requete["branchnum"][i]
-                    abs = requete["abscissa"][i]
-                    tempX = requete["x"][i]
-                    tempZ = requete["z"][i]
-                    litMinG = requete["leftminbed"][i]
-                    litMinD = requete["rightminbed"][i]
+                            points=geom.asMultiPolyline()[0]
+                            (cood1X,cood1Y)=points[0]
+                            (cood2X, cood2Y) = points[1]
+                            coodAxeX= cood1X+(cood2X-cood1X)/2.
+                            coodAxeY= cood1Y+(cood2Y-cood1Y)/2.
 
-                    if branche and abs and tempX and tempZ and litMinG and litMinD:
-                        tabX = map(lambda x: round(float(x), 2), tempX.split())
-                        tabZ = map(lambda x: round(float(x), 2), tempZ.split())
+                            fich.write('PROFIL Bief_{0} {1} {2} {3} {4} {5} {6} AXE {7} {8}\n'.format(branche,nom, abs,
+                                                                    cood1X,cood1Y, cood2X,  cood2Y, coodAxeX, coodAxeY ))
 
-                        points=geom.asMultiPolyline()[0]
-                        (cood1X,cood1Y)=points[0]
-                        (cood2X, cood2Y) = points[1]
-                        coodAxeX= cood1X+(cood2X-cood1X)/2.
-                        coodAxeY= cood1Y+(cood2Y-cood1Y)/2.
-
-                        fich.write('PROFIL Bief_{0} {1} {2} {3} {4} {5} {6} AXE {7} {8}\n'.format(branche,nom, abs,
-                                                                cood1X,cood1Y, cood2X,  cood2Y, coodAxeX, coodAxeY ))
-
-                        for x, z in zip(tabX, tabZ):
-                            if x >= litMinG and x <= litMinD:
-                                type = "B"
-                            else:
-                                type = "T"
-                            #interpolate the distance on profile
-                            dpoint = geom.interpolate(x).asPoint()
-                            fich.write('{0:.2f} {1:.2f} {2} {3} {4}\n'.format(x, z, type, dpoint[0], dpoint[1] ))
+                            for x, z in zip(tabX, tabZ):
+                                if x >= litMinG and x <= litMinD:
+                                    type = "B"
+                                else:
+                                    type = "T"
+                                #interpolate the distance on profile
+                                dpoint = geom.interpolate(x).asPoint()
+                                fich.write('{0:.2f} {1:.2f} {2} {3} {4}\n'.format(x, z, type, dpoint[0], dpoint[1] ))
 
             self.mgis.addInfo("Creation the geometry is done")
         except Exception as e:
@@ -172,7 +185,8 @@ class Class_Mascaret():
             self.mgis.addInfo(str(e))
 
     def fmt(self,liste):
-        return (" ".join(map(str, liste)))
+        #list(map(str, liste))
+        return (" ".join([str(var) for var in liste]))
 
     def indent(self,elem, level=0):
         """indentation auto"""
@@ -190,12 +204,92 @@ class Class_Mascaret():
         elif level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
+    def planim_select(self):
+        sql = """SELECT MIN(t1.planim) AS pas, MIN(t2.nombre),MAX(t2.nombre) 
+                 FROM (SELECT branch, planim, ST_UNION(geom) AS geom
+                       FROM  (SELECT branch, 
+                                     planim, 
+                                     geom,
+                                     row_number() 
+                                        OVER (PARTITION BY branch, planim 
+                                              ORDER BY zonenum)
+                                        - zonenum AS grp
+                              FROM   {0}.branchs
+                              WHERE active) x
+                       GROUP  BY branch, planim, grp) AS t1,
+                      (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom 
+                       FROM {0}.profiles 
+                       WHERE active ) AS t2 
+                 WHERE ST_INTERSECTS(t1.geom,t2.geom) 
+                 GROUP BY t1.geom
+                 ORDER BY min;"""
+
+        (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True,namvar=True)
+
+        dico = {}
+        colonnes = [col[0] for col in namCol]
+        for col in colonnes:
+            dico[col] = []
+
+        for row in results:
+            for i, val in enumerate(row):
+
+                try:
+                    dico[colonnes[i]].append(val.strip())
+                except:
+                    dico[colonnes[i]].append(val)
+
+        return dico
+
+    def maillage_select(self):
+        sql = """SELECT MIN(t1.mesh) AS pas, 
+                                    MIN(t2.nombre),
+                                    MAX(t2.nombre)+MIN(diff)+1 AS max
+                             FROM (SELECT branch, mesh, 
+                                          ST_UNION(geom) AS geom, 
+                                          MIN(diff) AS diff 
+                                   FROM  (SELECT branch, 
+                                                 mesh, 
+                                                 geom,
+                                                 row_number() 
+                                                    OVER (PARTITION BY branch,  mesh 
+                                                          ORDER BY zonenum)
+                                                    - zonenum AS grp,
+                                                 branch-lead(branch,1,branch+1) 
+                                                    OVER (ORDER BY zonenum) AS diff
+                                          FROM   {0}.branchs
+                                          WHERE active) x
+                                   GROUP  BY branch, mesh, grp) AS t1,
+                                  (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom 
+                                   FROM {0}.profiles 
+                                   WHERE active ) AS t2 
+                             WHERE ST_INTERSECTS(t1.geom,t2.geom) 
+                             GROUP BY t1.geom
+                             ORDER BY min;"""
+
+        (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True,namvar=True)
+
+        dico = {}
+        colonnes = [col[0] for col in namCol]
+        for col in colonnes:
+            dico[col] = []
+
+        for row in results:
+            for i, val in enumerate(row):
+
+                try:
+                    dico[colonnes[i]].append(val.strip())
+                except:
+                    dico[colonnes[i]].append(val)
+
+        return dico
+
     def creerXCAS(self, noyau):
         """To create xcas file"""
         dictLois = {}
         try:
             fichierSortie = os.path.join(self.dossierFileMasc, self.baseName+".xcas")
-            extrToloi = {0: 6, 1: 1, 2: 2, 3: 4, 4: 5, 5: 4, 8: 3}
+            extrToloi = {0: 6, 1: 1, 2: 2, 3: 4, 4: 5, 5: 4, 8: 3,6:6,7:7}
             abaqueToloi = {1: 3, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
             # création du fichier xml
             fichierCas = Element("fichierCas")
@@ -238,16 +332,21 @@ class Class_Mascaret():
             zones = self.mdb.select("branchs", "active", "branch, zoneabsstart")
             deversoirs = self.mdb.select("lateral_weirs", "active", "abscissa")
             noeuds = self.mdb.select("extremities", "type=10", "active")
-            libres = self.mdb.select("extremities", "type!=10", "active")
+            libres = self.mdb.select("extremities", "type!=10 ", "active")
             pertescharg = self.mdb.select("hydraulic_head", "active", "abscissa")
             profils = self.mdb.select("profiles", "active", "abscissa")
             profSeuil = self.mdb.select("profiles", "NOT active", "abscissa")
             seuils = self.mdb.select("weirs", "active", "abscissa")
             sorties = self.mdb.select("outputs", "", "abscissa")
+            planim =self.planim_select()
+            maillage =self.maillage_select()
+
+
             # Extrémités
             numero = branches["branch"]
             branches["abscdebut"] = []
             branches["abscfin"] = []
+
             liste = zip(profils["abscissa"], profils["branchnum"])
             for i, num in enumerate(numero):
                 temp = [a for a, n in liste if n == num]
@@ -287,16 +386,15 @@ class Class_Mascaret():
                     dictLibres["typeCond"].append(type)
                     dictLibres["num"].append(len(dictLibres["nom"]))
                     dictLibres["extrem"].append(n * 2)
-
-                    dictLois[f] = {'type': extrToloi[type],
+                    dictLois[f] = { 'type': extrToloi[type],
                                    'formule': formule,
                                    'valeurperm': libres["firstvalue"][i]}
             # Zones
             nbPas = 0
             i = 0
-            zones['num1erProf'] = [1] * len(zones["zoneabsstart"])
-            zones['numDerProfPlanim'] = [1] * len(zones["zoneabsstart"])
-            zones['numDerProfMaill'] = [1] * len(zones["zoneabsstart"])
+          #  zones['num1erProf'] = [1] * len(zones["zoneabsstart"])
+          #  zones['numDerProfPlanim'] = [1] * len(zones["zoneabsstart"])
+          #  zones['numDerProfMaill'] = [1] * len(zones["zoneabsstart"])
             listeStock = {"numProfil": [],
                           'limGauchLitMaj': [],
                           'limDroitLitMaj': []}
@@ -311,18 +409,16 @@ class Class_Mascaret():
             for j, (abs, x, z, sg, sd, n) in enumerate(tab):
 
                 try:
-                    xx = map(float, x.split())
-                    zz = map(float, z.split())
+                    xx = [float(var) for var in x.split()]
+                    zz = [float(var) for var in z.split()]
                     diff = max(zz) - min(zz)
                 except:
-                    self.mgis.addInfo("Check the {} proile if it's ok ".format(profils["name"][j]))
+                    self.mgis.addInfo("Check the {} profile if it's ok ".format(profils["name"][j]))
                     return (dictLois)
 
                 if abs > zones['zoneabsend'][i]:
                     i = i + 1
-                    zones['num1erProf'][i] = j + 1
 
-                zones['numDerProfPlanim'][i] = j + 1
                 
                 nbPas = max(int(diff/ float(zones['planim'][i])) + 1, nbPas)
 
@@ -332,10 +428,6 @@ class Class_Mascaret():
                                              branches["abscdebut"][index])
                 zones["zoneabsend"][i] = min(zones["zoneabsend"][i],
                                              branches["abscfin"][index])
-                if zones["zoneabsend"][i] == branches["abscfin"][index]:
-                    zones['numDerProfMaill'][i] = zones['numDerProfPlanim'][i]
-                else:
-                    zones['numDerProfMaill'][i] = zones['numDerProfPlanim'][i] + 1
 
                 if sg or sd:
                     if sg:
@@ -358,7 +450,7 @@ class Class_Mascaret():
 
             for i, nom in enumerate(apports["name"]):
                 if nom not in dictLois.keys():
-                    dictLois[nom] = {'type': 1,
+                    dictLois[nom] = { 'type': 1,
                                      'formule': apports['method'][i],
                                      'valeurperm': apports["firstvalue"][i]}
 
@@ -402,6 +494,12 @@ class Class_Mascaret():
                 SubElement(noms, "string").text = nom
 
             SubElement(extrLibres, "typeCond").text = self.fmt(dictLibres["typeCond"])
+            # temp=[]
+            # for nom in liste:
+            #     if nom in libres["name"] and (dictLois[nom]['type'] == 6 or dictLois[nom]['type'] == 7):
+            #             temp.append(1)
+            #     else:
+            #             temp.append(sorted(dictLois.keys()).index(nom) + 1)
 
             temp = [sorted(dictLois.keys()).index(nom) + 1 for nom in liste]
             SubElement(extrLibres, "numLoi").text = self.fmt(temp)
@@ -427,24 +525,22 @@ class Class_Mascaret():
             planimaill = SubElement(cas, "parametresPlanimetrageMaillage")
             SubElement(planimaill, "methodeMaillage").text = '5'
 
-            planim = SubElement(planimaill, "planim")
-            SubElement(planim, 'nbPas').text = str(nbPas)
-            SubElement(planim, 'nbZones').text = str(len(zones["zoneabsstart"]))
-            SubElement(planim, 'valeursPas').text = self.fmt(zones['planim'])
-            SubElement(planim, 'num1erProf').text = self.fmt(zones['num1erProf'])
-            SubElement(planim, 'numDerProf').text = self.fmt(zones['numDerProfPlanim'])
+            planimE = SubElement(planimaill, "planim")
+            SubElement(planimE, 'nbPas').text = str(nbPas)
+            SubElement(planimE, 'nbZones').text = str(len(planim["pas"]))
+            SubElement(planimE, 'valeursPas').text = self.fmt(planim['pas'])
+            SubElement(planimE, 'num1erProf').text = self.fmt(planim['min'])
+            SubElement(planimE, 'numDerProf').text = self.fmt(planim['max'])
 
-            maillage = SubElement(planimaill, "maillage")
-            SubElement(maillage, 'modeSaisie').text = '2'
-            SubElement(maillage, 'sauvMaillage').text = 'false'
-            maillageC = SubElement(maillage, 'maillageClavier')
+            maillageE = SubElement(planimaill, "maillage")
+            SubElement(maillageE, 'modeSaisie').text = '2'
+            SubElement(maillageE, 'sauvMaillage').text = 'false'
+            maillageC = SubElement(maillageE, 'maillageClavier')
             SubElement(maillageC, 'nbSections').text = '0'
-            SubElement(maillageC, 'nbPlages').text = str(len(zones["zoneabsstart"]))
-            SubElement(maillageC, 'num1erProfPlage').text = self.fmt(zones['num1erProf'])
-            # temp = [n+1 for n in zones['numDerProf'][:-1]] + [zones['numDerProf'][-1]]
-            temp = zones['numDerProfMaill']
-            SubElement(maillageC, 'numDerProfPlage').text = self.fmt(temp)
-            SubElement(maillageC, 'pasEspacePlage').text = self.fmt(zones['mesh'])
+            SubElement(maillageC, 'nbPlages').text = str(len(maillage["pas"]))
+            SubElement(maillageC, 'num1erProfPlage').text = self.fmt(maillage['min'])
+            SubElement(maillageC, 'numDerProfPlage').text = self.fmt(maillage['max'])
+            SubElement(maillageC, 'pasEspacePlage').text = self.fmt(maillage['pas'])
             SubElement(maillageC, 'nbZones').text = '0'
 
             ### Singularités
@@ -479,7 +575,7 @@ class Class_Mascaret():
                     SubElement(struct, "nbPtLoiSeuil").text = '-0'
                 else:
                     try:
-                        i = profSeuil["nom"].index(nom)
+                        i = profSeuil["name"].index(nom)
                         long = len(profSeuil['x'][i].split())
                         SubElement(struct, "nbPtLoiSeuil").text = str(long)
                         SubElement(struct, "abscTravCrete").text = profSeuil['x'][i]
@@ -559,9 +655,17 @@ class Class_Mascaret():
 
             ### Lois hydrauliques
             hydrauliques = SubElement(cas, "parametresLoisHydrauliques")
-            SubElement(hydrauliques, "nb").text = str(len(dictLois.keys()))
-            lois = SubElement(hydrauliques, "lois")
 
+            for nom in dictLois.keys():
+                if nom in libres["name"] and (dictLois[nom]['type']==6 or dictLois[nom]['type']==7):
+                    # les types sont ceux de
+                    if dictLois[nom]['type']==6:
+                        dictLois[nom]['type']=1
+                    else:
+                        dictLois[nom]['type'] = 2
+            nb = len(dictLois.keys())
+            SubElement(hydrauliques, "nb").text = str(nb)
+            lois = SubElement(hydrauliques, "lois")
 
             for nom in sorted(dictLois.keys()):
                 struct = SubElement(lois, "structureParametresLoi")
@@ -616,7 +720,7 @@ class Class_Mascaret():
             parametresTemporels.find('nbPasTemps').text = '2'
             geomReseau = paramCas.find('parametresGeometrieReseau')
             typeCond = geomReseau.find('extrLibres').find('typeCond')
-            typeCond.text = typeCond.text.replace('4', '2')
+            typeCond.text = typeCond.text.replace('4', '2').replace('6', '1').replace('7', '2')
             loisHydrauliques = paramCas.find('parametresLoisHydrauliques')
             lois = loisHydrauliques.find('lois')
             for child in lois:
@@ -645,8 +749,7 @@ class Class_Mascaret():
             self.mgis.addInfo("Save the Xcas file is done")
         except Exception as e:
             self.mgis.addInfo("Error: save Xcas file")
-            self.mgis.addInfo(str(e))
-
+            self.mgis.addInfo('error: {}'.format(e))
         return (dictLois)
 
     def modifXCAS(self,parametres,xcasfile,fichSortie=None):
@@ -729,6 +832,7 @@ class Class_Mascaret():
                 #                       "Downstream Water Level :{3}"
                 #                       .format(nom,tab["temps"], tab["cote_amont"], tab["cote_aval"]))
             n = len(tab.values()[0])
+
             for i in range(n):
                 dico = {k: v[i] for k, v in tab.items()}
                 fich.write(chaine.format(**dico))
@@ -740,31 +844,49 @@ class Class_Mascaret():
         obs = {}
         duree = int((dateFin - dateDebut).total_seconds() / 3600)
 
-        liste_date = [dateDebut + datetime.timedelta(hours=x)
-                      for x in range(duree)]
+        # liste_date = [dateDebut + datetime.timedelta(hours=x)
+                      # for x in range(duree)]
 
         for nom, loi in dictLois.items():
-            if loi['type'] != 1:
+            if loi['type'] == 1:
+                type = 'Q'
+            elif loi['type'] == 2 :
+                type = 'H'
+            else :
                 continue
 
             liste_stations = pattern.findall(loi['formule'])
+            
+            liste_date = None
             for cd_hydro, delta in liste_stations:
+                if not delta:
+                    delta = '0'
+                dt = datetime.timedelta(hours=int(delta))
                 condition = """code ='{0}'
-                            AND type = 'Q'
-                            AND date >= '{1:%Y-%m-%d %H:%M}' 
-                            AND date <= '{2:%Y-%m-%d %H:%M}'
-                            """.format(cd_hydro, dateDebut, dateFin)
+                            AND type = '{1}'
+                            AND date >= '{2:%Y-%m-%d %H:%M}' 
+                            AND date <= '{3:%Y-%m-%d %H:%M}'
+                            """.format(cd_hydro, 
+                                       type, 
+                                       dateDebut+dt, 
+                                       dateFin+dt)
 
                 obs[cd_hydro] = self.mdb.select('observations',
                                                  condition,
                                                  'code, date')
+                                                 
+                if not liste_date :
+                    liste_date = map(lambda x : x - dt, obs[cd_hydro]['date'])
 
             fichierLoi = os.path.join(self.dossierFileMasc, nom + '.loi')
             valeurInit = None
 
             with open(fichierLoi, 'w') as fich_sortie:
                 fich_sortie.write('# {0}\n'.format(nom))
-                fich_sortie.write('# Temps (H) Debit\n')
+                if type == "Q" :
+                    fich_sortie.write('# Temps (H) Debit\n')
+                else :
+                    fich_sortie.write('# Temps (H) Hauteur\n')
                 fich_sortie.write(' H \n')
                 for t in liste_date:
                     calc = loi['formule']
@@ -784,16 +906,21 @@ class Class_Mascaret():
                     except:
                         resultat = None
 
-                    if resultat:
-                        if not valeurInit:
+                    if resultat is not None:
+                        if valeurInit is None :
                             valeurInit = resultat
                             somme += resultat
                         tps = (t - dateDebut).total_seconds() / 3600
                         chaine = '  {0:4.3f}   {1:3.3f}\n'
                         fich_sortie.write(chaine.format(tps, resultat))
-            if valeurInit:
-                tab = {'time': [0, 3600], 'flowrate': [valeurInit, valeurInit]}
-                self.creerLOI(nom + '_init', tab, 1)
+                        
+            if valeurInit is not None :
+                if type == "Q" :
+                    tab = {'time': [0, 3600], 'flowrate': [valeurInit, valeurInit]}
+                    self.creerLOI(nom + '_init', tab, 1)
+                else :
+                    tab = {'time': [0, 3600], 'z': [valeurInit, valeurInit]}
+                    self.creerLOI(nom + '_init', tab, 2)
 
         for nom, loi in dictLois.items():
             if loi['type'] != 5:
@@ -805,8 +932,10 @@ class Class_Mascaret():
                         """.format(nom, loi['type'], dateDebut, dateFin)
 
             temp = self.mdb.selectOne('laws', condition)
-            cote = map(float, temp['z'].split())
-            debit = map(float, temp['flowrate'].split())
+            # cote = list(map(float, temp['z'].split()))
+            # debit = list(map(float, temp['flowrate'].split()))
+            cote = [float(var) for var in temp['z'].split()]
+            debit =[float(var) for var in temp['flowrate'].split()]
 
             self.creerLOI(nom, {'z': cote, 'flowrate': debit}, 5)
 
@@ -819,7 +948,7 @@ class Class_Mascaret():
                     break
                 else:
                     cotePrec, debitPrec = c, d
-            if valeurInit:
+            if valeurInit is not None:
                 tab = {'time': [0, 3600], 'z': [valeurInit, valeurInit]}
                 self.creerLOI(nom + '_init', tab, 2)
 
@@ -935,10 +1064,11 @@ class Class_Mascaret():
                     #          "cote_inf", "cote_sup"]
                     liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
                              "z_lower", "z_up"]
-
-                    tab = {k: map(float, v.split())
-                       for k, v in temp.items() if v and k in liste}
-
+                    tab ={}
+                    for k, v in temp.items() :
+                        if v and k in liste:
+                            tab[k]= [float(var) for var in  v.split()]
+                 
                     self.creerLOI(nom, tab, l["type"])
                     if self.mgis.DEBUG:
                         self.mgis.addInfo("Laws file is created.")
@@ -978,8 +1108,6 @@ class Class_Mascaret():
                                       'balise2': 'ligneEau'}
                        }
                 self.modifXCAS(tab, self.baseName+'.xcas')
-
-
 
             elif par["LigEauInit"] and noyau != "steady":
                 # condition = "run LIKE 'Steady'"
@@ -1057,7 +1185,7 @@ class Class_Mascaret():
         p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                              ,stdin=subprocess.PIPE)
         p.wait()
-        self.mgis.addInfo("{0}".format(p.communicate()[0]))
+        self.mgis.addInfo("{0}".format(p.communicate()[0].decode("utf-8")))
         return True
 
     def litOPT(self, run, scen, dateDebut,baseNamefile):
@@ -1175,10 +1303,18 @@ class Class_Mascaret():
                 'RESULTATS CALCUL,DATE :  {0:%d/%m/%y %H:%M}\n'.format(date))
             fich.write('FICHIER RESULTAT MASCARET{0}\n'.format(' ' * 47))
             fich.write('{0} \n'.format('-' * 71))
-            fich.write(' IMAX  =  {0} NBBIEF=    {1}\n'.format(str(IMAX),
+            fich.write(' IMAX  = {0:4} NBBIEF= {1:3}\n'.format(str(IMAX),
                                                                str(nbBief))
                        )
-            fich.write(' I1,I2 =    {0}\n'.format('  '.join(i1i2)))
+            
+            chaine = [""]
+            for k in range(0,len(i1i2),10) :
+                chaine.append('I1,I2 =')
+                for i in range(k,k+10) :
+                    if i<len(i1i2) :
+                        chaine.append('{0:4}'.format(i1i2[i]))
+                chaine.append("\n")
+            fich.write(" ".join(chaine))
 
             for k in ['X', 'Z', 'Q']:
                 fich.write(' ' + k + '\n')
@@ -1218,11 +1354,17 @@ class Class_Mascaret():
 
     def copyLIG(self):
         """ Load .lig file in run model"""
-        fichiers = QFileDialog.getOpenFileNames(None,
+        if int(qVersion()[0]) < 5: #qt4
+            fichiers = QFileDialog.getOpenFileNames(None,
+                                                    'File Selection',
+                                                    self.dossierFileMasc,
+                                                    "File (*.lig)")
+        else: #qt5
+            fichiers,_ = QFileDialog.getOpenFileNames(None,
                                                 'File Selection',
                                                 self.dossierFileMasc,
                                                 "File (*.lig)")
-        shutil.copy(fichiers[0],os.path.join(self.dossierFileMasc, self.baseName + '.lig'))
+        shutil.copy(fichiers,os.path.join(self.dossierFileMasc, self.baseName + '.lig'))
 
     def clean_rep(self):
         """ Clean the run folder and copy the essential files to run mascaret"""
@@ -1257,9 +1399,9 @@ class Class_Mascaret():
             return False
 
     def copyFileModel(self, rep, case=None):
+        # self.mgis.addInfo('{}'.format(rep))
         if case=='xcas':
             shutil.copy2(os.path.join(self.dossierFileMasc,self.baseName+".xcas"),rep)
-
         elif case=='geo':
             shutil.copy2(os.path.join(self.dossierFileMasc, self.baseName+".geo"), rep)
         elif case=='georef':
@@ -1295,3 +1437,4 @@ class Class_Mascaret():
                 return True
         else:
             return True
+

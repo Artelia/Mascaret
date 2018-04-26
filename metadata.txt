@@ -14,8 +14,10 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
        Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
        Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek (Many thanks for the work they've done on RiverGis)
 qgisMinimumVersion=2.14.18
-qgisMaximumVersion=2.99
-version=0.0.6
+
+qgisMaximumVersion=3.99
+version=0.1.0
+
 author=Artelia Eau et Environnement
 email=mehdi-pierre.daou@arteliagroup.com
 
@@ -32,6 +34,16 @@ changelog=
     0.0.4 : Correction of version numbering bug
     0.0.5 : Change of address for homepage, tracker and repo
     0.0.6 : Small change of metadata.txt
+    0.1.0 : Compatibility with qgis3
+            Correction of lig file format  bug
+            Correction of creation  bugs  of xcas file
+            Correction of creation bug of observation laws
+            Correction of abscissa compute bug
+            Correction of bug to save compute parameters
+	    Correction of  Mascaret executable bug for Linux version
+	    The result viewers no longer lock qgis
+	    Addition of legend displacement in the result viewers
+
 
 # Tags are comma separated with spaces allowed
 tags=

@@ -18,24 +18,27 @@ email                :
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.uic import *
-import os
+from qgis.PyQt.uic import *
+from qgis.PyQt.QtCore import *
+if int(qVersion()[0])<5:   #qt4
+    from qgis.PyQt.QtGui import *
+else:     #qt5
+    from qgis.PyQt.QtWidgets import *
+
 import json
 from qgis.core import *
 from qgis.utils import *
 from qgis.gui import *
 
 
-from graphProfil_Dialog import IdentifyFeatureTool
-from db.mas_database import MasDatabase
-from MNT_class import Worker
-from Class_Mascaret import Class_Mascaret
-from parameter_dialog import parameter_dialog
+from .graphProfil_Dialog import IdentifyFeatureTool
+from .db.mas_database import MasDatabase
+from .MNT_class import Worker
+from .Class_Mascaret import Class_Mascaret
+from .parameter_dialog import parameter_dialog
 
 import math
-
+import os
 
 class MascPlugDialog(QMainWindow):
 
@@ -49,13 +52,14 @@ class MascPlugDialog(QMainWindow):
 
         self.masplugPath = os.path.dirname(__file__)
         self.ui = loadUi(os.path.join(self.masplugPath,'ui/MascPlug_dialog_base.ui'), self)
-
         #variables
         self.DEBUG = 1
         self.curConnName= None
         self.passwd = None
         self.mdb = None
         self.iface = iface
+
+        self.map_tool=None
 
         # self.pathPostgres = self.masplugPath
         # emplacement objet sql
@@ -81,7 +85,6 @@ class MascPlugDialog(QMainWindow):
         self.actions2Disable = []
         self.menus = self.ui.menubar.findChildren(QMenu)
         self.toolbars = self.findChildren(QToolBar)
-        self.mapRegistry = QgsMapLayerRegistry.instance()
 
         #setting
         self.readSettings()
@@ -295,7 +298,7 @@ class MascPlugDialog(QMainWindow):
         msg=self.mdb.connect_pg()
         self.addInfo('Created connection to mascaret database: {0}@{1}'.format(self.mdb.dbname, self.mdb.host))
         self.mdb.last_conn = connName
-        if 'Error:' in msg:
+        if 'Error:' in msg or'None:' in msg :
             self.disableActionsConnection()
         else:
             self.disableActionsModel()
@@ -362,25 +365,27 @@ class MascPlugDialog(QMainWindow):
         Extraction of the profiles from Raster
         :return:
         """
-        #recupe selection
-        for couche in self.iface.legendInterface().layers():
-            if couche.name() == "profiles":
-                profil = couche
+        raster=None
+        if isinstance(self.iface.activeLayer(), QgsRasterLayer):
+            raster = self.iface.activeLayer()
 
-        raster = None
-        for couche in self.iface.legendInterface().selectedLayers():
-            if isinstance(couche, QgsRasterLayer):
-                raster = couche
-        #Choix unité
         if not raster:
             QMessageBox.warning(None, 'Message',
                                 'Please, selection the DTM raster')
             return
-        self.addInfo(" info  : {0}".format(len(profil.selectedFeatures())))
+        try :    # qgis2
+            tempo = QgsMapLayerRegistry.instance().mapLayers().values()
+
+        except : # qgis 3
+            tempo = QgsProject.instance().mapLayers().values()
+        for couche in tempo:
+            if couche.name()=="profiles":
+                profil=couche
+
         if len(profil.selectedFeatures())==0:
-            QMessageBox.warning(None, 'Message',
-                                'Please, selection the profiles')
-            return
+                QMessageBox.warning(None, 'Message',
+                                    'Please, selection the profiles')
+                return
 
         liste = ["m", "dm", "cm", "mm"]
 
@@ -391,6 +396,7 @@ class MascPlugDialog(QMainWindow):
             return
 
         facteur = math.pow(10, liste.index(valeur))
+
         if self.DEBUG:
             self.addInfo("Raster and Profile Selection, and Unit are Ok")
         # create a new worker instance
@@ -419,19 +425,26 @@ class MascPlugDialog(QMainWindow):
     def fct_createXcas(self):
         """ create Xcas"""
 
-        case, ok = QInputDialog.getItem(None,
+        case, ok = QInputDialog.getItem(self,
                                         'Study case',
                                         'Kernel',
                                         self.listeState, 0, False)
+
         # kernel list
         if ok:
             if self.DEBUG:
                 self.addInfo("Kernel {}".format(self.Klist[self.listeState.index(case)]))
             clam = Class_Mascaret(self)
             clam.creerXCAS(self.Klist[self.listeState.index(case)])
-            fileNamePath = QFileDialog.getSaveFileName(self, "saveFile",
-                                                       "{0}.xcas".format(os.path.join(self.masplugPath,clam.baseName)),
-                                                        filter="XCAS (*.xcas)")
+            if int(qVersion()[0]) < 5:  # qt4
+                fileNamePath = QFileDialog.getSaveFileName(self, "saveFile",
+                                                           "{0}.xcas".format(os.path.join(self.masplugPath,clam.baseName)),
+                                                            filter="XCAS (*.xcas)")
+            else: #qt5
+                fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile",
+                                                           "{0}.xcas".format(
+                                                               os.path.join(self.masplugPath, clam.baseName)),
+                                                           filter="XCAS (*.xcas)")
             if fileNamePath:
                 clam.copyFileModel(fileNamePath, case='xcas')
 
@@ -439,9 +452,17 @@ class MascPlugDialog(QMainWindow):
         """ create Xcas"""
         clam = Class_Mascaret(self)
         clam.creerGEORef()
-        fileNamePath = QFileDialog.getSaveFileName(self, "saveFile",
-                                                   "{0}.geo".format(os.path.join(self.masplugPath,clam.baseName)),
-                                                   filter="GEO (*.geo)")
+        # clam.creerGEO()
+        if int(qVersion()[0]) < 5:  # qt4
+            fileNamePath= QFileDialog.getSaveFileName(self, "saveFile",
+                                                          "{0}.geo".format(
+                                                              os.path.join(self.masplugPath, clam.baseName)),
+                                                          filter="GEO (*.geo)")
+        else: #qt5
+            fileNamePath,_= QFileDialog.getSaveFileName(self, "saveFile",
+                                                       "{0}.geo".format(os.path.join(self.masplugPath,clam.baseName)),
+                                                      filter="GEO (*.geo)")
+
         if fileNamePath:
             clam.copyFileModel(fileNamePath, case='geo')
 
@@ -485,7 +506,7 @@ class MascPlugDialog(QMainWindow):
 
     def options(self, widget):
         """ GUI option"""
-        from settings_dialog import Settings
+        from .settings_dialog import Settings
         dlg = Settings(self)
         dlg.exec_()
 
@@ -496,8 +517,8 @@ class MascPlugDialog(QMainWindow):
             sFile = os.path.join(self.masplugPath, 'default_settings.json')
         with open(sFile, 'r') as f:
             self.opts = json.load(f)
-        for group, options in self.opts.iteritems():
-            for name, defaultValue in options.iteritems():
+        for group, options in self.opts.items():
+            for name, defaultValue in options.items():
                 if group == 'mgis' and name in self.opts['mgis'].keys():
                     setattr(self, name, self.opts['mgis'][name])
                 elif group == 'mdb' and name in self.opts['mdb'].keys():
@@ -507,8 +528,8 @@ class MascPlugDialog(QMainWindow):
 
     def writeSettings(self):
         """write Option"""
-        for group, options in self.opts.iteritems():
-            for name, defaultValue in options.iteritems():
+        for group, options in self.opts.items():
+            for name, defaultValue in options.items():
                 if group == 'mgis':
                     try:
                         self.opts['mgis'][name] = getattr(self, name)
@@ -534,21 +555,33 @@ class MascPlugDialog(QMainWindow):
 
     def exportModel(self):
         #choix du fichier d'exportatoin
-        fileNamePath = QFileDialog.getSaveFileName(self, "saveFile",
+        if int(qVersion()[0]) < 5: #qt4
+            fileNamePath = QFileDialog.getSaveFileName(self, "saveFile",
                                                    "{0}.psql".format(
                                                     os.path.join(self.masplugPath, self.mdb.dbname+"_"+self.mdb.SCHEMA)),
                                                    filter="PSQL (*.psql);;File (*)")
+        else: #qt5
+            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile",
+                                                   "{0}.psql".format(
+                                                    os.path.join(self.masplugPath, self.mdb.dbname+"_"+self.mdb.SCHEMA)),
+                                                   filter="PSQL (*.psql);;File (*)")
+
         if self.mdb.exportSchema(fileNamePath) :
             self.addInfo('Export is done.')
         else:
             self.addInfo('Export failed.')
 
     def importModel(self):
-        fileNamePath =QFileDialog.getOpenFileNames(None,
+        if int(qVersion()[0]) < 5:  # qt4
+            fileNamePath =QFileDialog.getOpenFileNames(None,
                                                 'File Selection',
                                                    self.masplugPath,
                                                 filter="PSQL (*.psql);;File (*)")
-        # choix du fichier d'exportatoin
+        else: #qt5
+            fileNamePath,_ = QFileDialog.getOpenFileNames(None,
+                                                        'File Selection',
+                                                        self.masplugPath,
+                                                        filter="PSQL (*.psql);;File (*)")
 
         if self.mdb.importSchema(fileNamePath):
             self.addInfo('Import is done.')
@@ -572,6 +605,7 @@ class MascPlugDialog(QMainWindow):
         if self.profil:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section_results.setEnabled(False)
+
         elif self.hydrogramme :
             self.ui.actionCross_section_results.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)
@@ -581,8 +615,12 @@ class MascPlugDialog(QMainWindow):
 
         self.prev_tool = canvas.mapTool()
         self.map_tool = IdentifyFeatureTool(self)
-        QObject.connect(self.map_tool, SIGNAL('geomIdentified'),
+        try: #qgis2
+            QObject.connect(self.map_tool, SIGNAL('geomIdentified'),
                         self.do_something)
+        except: #qgis3
+            self.map_tool.changedRasterResults.connect(self.do_something)
+
         canvas.setMapTool(self.map_tool)
 
     def windinfo(self, txt, title='Informations'):
