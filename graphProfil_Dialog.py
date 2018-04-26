@@ -104,7 +104,6 @@ import numpy as np
 import sys, os
 
 
-
 class IdentifyFeatureTool(QgsMapToolIdentify):
     def __init__(self, main):
         self.mgis = main
@@ -138,7 +137,8 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 self.mgis.coucheProfils = results[0].mLayer
                 gid = results[0].mFeature["gid"]
                 graphRes = GraphProfilRes(gid, self.mgis)
-                graphRes.exec_()
+                #graphRes.exec_()
+                graphRes.show()
 
             # #
             if flagHydro and couche in ('profiles', 'outputs'):
@@ -162,15 +162,16 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                             selection['zero'].append(f['zero'])
                 # self.mgis.addInfo('graph {0}'.format(couche))
                 graphHyd = GraphHydro(feature, self.mgis, selection, feature['abscissa'], 't')
-                graphHyd.exec_()
+                #graphHyd.exec_()
+                graphHyd.show()
 
             if flagHydro and couche == 'branchs':
                 feature = results[0].mFeature
                 # chaine='Branche ' + str(feature['branche'])
-                graphHyd = GraphHydro(feature, self.mgis, {}, '', 'pk')
-                graphHyd.exec_()
+                graphHyd_pk = GraphHydro(feature, self.mgis, {}, '', 'pk')
+                # graphHyd.exec_()
+                graphHyd_pk.show()
         return
-
 
 class GraphCommon(QDialog):
     def __init__(self, mgis=None):
@@ -208,7 +209,6 @@ class GraphCommon(QDialog):
         self.verticalLayout_98 = QVBoxLayout(ui.widget_toolsbar)
         self.verticalLayout_98.setObjectName(_fromUtf8("verticalLayout_98"))
         self.verticalLayout_98.addWidget(self.toolbar)
-
 
 class GraphProfil(GraphCommon):
     """class Dialog graphProfil"""
@@ -987,7 +987,7 @@ class GraphProfil(GraphCommon):
         self.lined = dict()
 
         for legline, courbe in zip(self.leg.get_lines(), self.courbes):
-            legline.set_picker(10)
+            legline.set_picker(5)
             legline.set_linewidth(3)
             self.lined[legline.get_label()] = courbe
         self.canvas.draw()
@@ -1066,6 +1066,7 @@ class GraphProfil(GraphCommon):
             self.courbeSelection.set_data([], [])
             self.courbeSelection.set_visible(False)
             self.fig.canvas.draw()
+
 
     def filtre(self):
 
@@ -1243,7 +1244,6 @@ class CopySelectedCellsAction(QAction):
 
             sys_clip = QApplication.clipboard()
             sys_clip.setText(clipboard)
-
 
 class GraphProfilRes(GraphCommon):
     """class Dialog graphProfilRes"""
@@ -1561,15 +1561,15 @@ class GraphProfilRes(GraphCommon):
 
     def onpick(self, event):
         legline = event.artist
-
-        courbe = self.lined[legline]
-        vis = not courbe.get_visible()
-        courbe.set_visible(vis)
-        if vis:
-            legline.set_alpha(1.0)
-        else:
-            legline.set_alpha(0.2)
-        self.canvas.draw()
+        if legline in self.lined.keys():
+            courbe = self.lined[legline]
+            vis = not courbe.get_visible()
+            courbe.set_visible(vis)
+            if vis:
+                legline.set_alpha(1.0)
+            else:
+                legline.set_alpha(0.2)
+            self.canvas.draw()
 
 
     def comboRunChanged(self, text):
@@ -1658,10 +1658,11 @@ class GraphProfilRes(GraphCommon):
                                     fancybox=False, shadow=False)
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
+        self.leg.draggable(True)
         self.lined = dict()
 
         for legline, courbe in zip(self.leg.get_lines(), self.courbes):
-            legline.set_picker(10)
+            legline.set_picker(5)
             legline.set_linewidth(3)
             self.lined[legline] = courbe
 
@@ -1886,6 +1887,7 @@ class GraphHydro(GraphCommon):
         self.fig.patch.set_facecolor((0.94, 0.94, 0.94))
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
 
+
         self.annotation = []
         # arrow = dict(arrowstyle="-",facecolor='black')
         box = dict(boxstyle='round,pad=0.5', fc='white', alpha=0.7)
@@ -1914,6 +1916,8 @@ class GraphHydro(GraphCommon):
                                                           color='white',
                                                           alpha=0.8))
 
+
+
         self.clic = self.fig.canvas.mpl_connect('button_press_event',
                                                 self.onclick)
         self.declic = self.fig.canvas.mpl_connect('button_release_event',
@@ -1923,7 +1927,7 @@ class GraphHydro(GraphCommon):
         # self.motion = self.fig.canvas.mpl_connect('motion_notify_event',
         # self.affiche_cadre)
         # print("cool")
-
+        #
         return True
 
     def affiche_cadre(self, event):
@@ -2046,31 +2050,31 @@ class GraphHydro(GraphCommon):
             a.set_visible(False)
         self.ligne.set_visible(False)
         self.flag = False
-
-    #         self.canvas.draw()
+        self.canvas.draw()
 
     def onpress(self, event):
+
         if event.button == 1 and self.flag:
             self.affiche_cadre(event)
-            #
 
     def onpick(self, event):
         legline = event.artist
-        courbe = self.lined[legline]
-        vis = not courbe.get_visible()
-        courbe.set_visible(vis)
-        if vis:
-            legline.set_alpha(1.0)
-            if courbe.get_label() == "Flood marks":
-                for e in self.etiquetteLaisses:
-                    e.set_visible(True)
-        else:
-            legline.set_alpha(0.2)
-            if courbe.get_label() == "Flood marks":
-                for e in self.etiquetteLaisses:
-                    e.set_visible(False)
+        if legline in self.lined.keys():
+            courbe = self.lined[legline]
+            vis = not courbe.get_visible()
+            courbe.set_visible(vis)
+            if vis:
+                legline.set_alpha(1.0)
+                if courbe.get_label() == "Flood marks":
+                    for e in self.etiquetteLaisses:
+                        e.set_visible(True)
+            else:
+                legline.set_alpha(0.2)
+                if courbe.get_label() == "Flood marks":
+                    for e in self.etiquetteLaisses:
+                        e.set_visible(False)
 
-        self.canvas.draw()
+            self.canvas.draw()
 
     def majListe(self):
         self.date = False
@@ -2130,7 +2134,7 @@ class GraphHydro(GraphCommon):
 
             # self.exclutColonnes = ['rdc', 'rdg', 'zref', 'zmin', 'zmax', 'q2d',
             #                        'q2g', 'qmax']
-            self.exclutColonnes = ['rdc', 'rdg', 'zmin', 'zmax', 'q2d',
+            self.exclutColonnes = ['rdc', 'rdg', 'zref','zmin', 'zmax', 'q2d',
                                    'q2g', 'qmax']
             self.positionLegende = 'upper left'
 
@@ -2151,13 +2155,12 @@ class GraphHydro(GraphCommon):
         try:
             index = self.liste[self.inv]['abs'].index(self.position)
         except ValueError as e :
-            self.mgis.addInfo('No results for this profile. \n Error : {}'.format(e))
+            self.mgis.addInfo('No results for this profile. \n Error : {}'.format(str(e)))
 
 
 
         self.comboTimePK.setCurrentIndex(index)
         self.comboTimePK.currentIndexChanged['QString'].connect(self.comboTimePKChange)
-
 
     def majTab(self):
         condition = """run='{0}' AND scenario='{1}' """.format(self.run,
@@ -2304,7 +2307,8 @@ class GraphHydro(GraphCommon):
         # print(self.leg.get_patches())
         self.lined = dict()
         for legline, courbe in zip(self.leg.get_lines(), self.courbes):
-            legline.set_picker(10)
+            #size selection zone
+            legline.set_picker(5)
             legline.set_linewidth(3)
             legline.set_alpha(1.0)
             legline.set_visible(True)
@@ -2317,9 +2321,8 @@ class GraphHydro(GraphCommon):
                     legline.set_alpha(0.2)
                     legline.set_visible(True)
                     courbe.set_visible(False)
-
-
-                    # self.canvas.draw()
+        # rend deplacable la legende mais fonctionne mal avec le choix des ligne dans la légende
+        self.leg.draggable(True)
 
     def majLimites(self):
         miniX = min(self.tab[self.type])
