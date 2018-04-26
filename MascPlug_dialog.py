@@ -61,6 +61,8 @@ class MascPlugDialog(QMainWindow):
         self.mdb = None
         self.iface = iface
 
+        self.map_tool=None
+
         # self.pathPostgres = self.masplugPath
         # emplacement objet sql
         self.dossierSQL = os.path.join(os.path.join(self.masplugPath,"db"), "sql")
@@ -303,7 +305,7 @@ class MascPlugDialog(QMainWindow):
         msg=self.mdb.connect_pg()
         self.addInfo('Created connection to mascaret database: {0}@{1}'.format(self.mdb.dbname, self.mdb.host))
         self.mdb.last_conn = connName
-        if 'Error:' in msg:
+        if 'Error:' in msg or'None:' in msg :
             self.disableActionsConnection()
         else:
             self.disableActionsModel()
@@ -313,7 +315,7 @@ class MascPlugDialog(QMainWindow):
         modelName, ok = QInputDialog.getText(self, 'New Model', 'New Model name:')
 
         if ok:
-            self.mdb.SCHEMA=modelName
+            self.mdb.SCHEMA=modelName.lower()
             self.mdb.create_model(self.dossierSQL)
             self.mdb.last_schema = self.mdb.SCHEMA
             self.enableAllActions()
@@ -610,6 +612,7 @@ class MascPlugDialog(QMainWindow):
         if self.profil:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section_results.setEnabled(False)
+
         elif self.hydrogramme :
             self.ui.actionCross_section_results.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)

@@ -235,7 +235,7 @@ class parameter_dialog(QDialog):
                     self.par[param]["val"] = valeur
 
                 self.par[param]["libelle"] = libelle
-                self.par[param]["gui"] = fct_.str2bool(gui)
+                self.par[param]["gui"] = self.str2bool(gui)
 
     def init_GUI(self):
         # pass
@@ -325,6 +325,14 @@ class parameter_dialog(QDialog):
             self.ui.b_load_law.setDisabled(True)
 
         self.par['evenement']["val"] =event
+
+
+    def str2bool(self,s):
+        """string to bool"""
+        if "True" in s or "TRUE" in s:
+            return True
+        else:
+            return False
 
 
     def selectbox(self,box):

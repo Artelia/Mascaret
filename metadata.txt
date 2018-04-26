@@ -29,6 +29,15 @@ changelog=
     0.0.3 : Correction of rights problems with .qgis2 directory
             Addition of Linux version of Mascaret executable
     0.0.4 : Correction of version numbering bug
+    0.1.4 : Compatibility with qgis3
+            Correction of lig file format  bug
+            Correction of creation  bugs  of xcas file
+            Correction of creation bug of observation laws
+            Correction of abscissa compute bug
+            Correction of bug to save compute parameters
+	    Correction of  Mascaret executable bug for Linux version
+	    The result viewers no longer lock qgis
+	    Addition of legend displacement in the result viewers
 
 # Tags are comma separated with spaces allowed
 tags=

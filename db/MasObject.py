@@ -66,7 +66,7 @@ class MasObject(object):
     def pg_create_calcul_abscisse(self):
         qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
         '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
-        qry+='   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse();\n'
+        qry+='   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_point();\n'
         return qry
 #*****************************************
 class laws(MasObject):
@@ -458,82 +458,131 @@ class calcul_abscisse(MasObject):
     def __init__(self):
         super(calcul_abscisse, self).__init__()
         self.order = 17
-    def pg_templat1 (self):
-        qry='''CREATE OR REPLACE FUNCTION {0}()  
-  RETURNS trigger AS  
- $BODY$ 
-DECLARE  
-	long1	float; 
-	long2	float; 
-	g	geometry; 
-	b	integer; 
-	z	integer; 
-	d	double precision; 
-    BEGIN 
-         
-	EXECUTE 'SELECT branch, zonenum, geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 4 LIMIT 1' USING NEW.geom INTO b,z,g,d  ; 
- 
-	IF NEW.branchnum IS NULL THEN 
-	NEW.branchnum= b ; 
-	END IF; 
- 
- 
-IF NEW.abscissa IS NULL THEN 
-		EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA ||'.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING b,z INTO long1;
-		long2 = (SELECT (ST_Length(g)*ST_LineLocatePoint(ST_LineMerge(g),{1})));  
- 
-		IF long1 IS NULL THEN 
-			long1 = 0; 
-		END IF; 
- 
-		NEW.abscissa = long1+long2; 
- 
-	END IF; 
- 
-        RETURN NEW; 
-    END; 
- 
-$BODY$ 
-  LANGUAGE plpgsql IMMUTABLE 
-  COST 100; 
-ALTER FUNCTION {0}() 
-  OWNER TO postgres;'''
-        return qry
 
     def pg_create_calcul_abscisse (self):
-        qry=self.pg_templat1()
-        return qry.format('calcul_abscisse','NEW.geom')
+        qry="""CREATE OR REPLACE FUNCTION {0}()  
+            RETURNS trigger AS  
+            $BODY$ 
+            DECLARE  
+                long1	double precision; 
+                long2	double precision;  
+                g	geometry; 
+                b	integer; 
+                z	integer; 
+                d	double precision; 
+                f	double precision;
+                val	boolean;           
+             
+                BEGIN 
+                IF NEW.geom IS NULL AND NEW.abscissa IS NOT NULL AND NEW.branchnum IS NOT NULL THEN
+                    EXECUTE '(SELECT ST_UNION(geom) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch=$1))' USING NEW.branchnum INTO g;
+                    NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
+                ELSE
+                    EXECUTE 'SELECT branch, zonenum, geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 4 LIMIT 1' USING NEW.geom INTO b,z,g,d  ;
+
+                    IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
+                        NEW.branchnum= b ;
+                    END IF;
+
+                        
+                    IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
+                       EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2))' USING b,z INTO long1;
+                       f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
+                       NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
+                       long2 = (SELECT (ST_Length(g)*f));
+                        
+                       IF long1 IS NULL THEN
+                           long1 = 0;
+                       END IF;
+                        
+                       NEW.abscissa = ROUND((long1+long2)::numeric,1);
+
+                    END IF;
+
+                    
+                END IF;                   
+                        
+                RETURN NEW;
+            END; 
+             
+            $BODY$ 
+              LANGUAGE plpgsql IMMUTABLE 
+              COST 100; 
+            ALTER FUNCTION {0}() 
+              OWNER TO postgres;"""
+
+        return qry.format('calcul_abscisse_point')
 
     def pg_create_calcul_abscisse_profil(self):
-        qry=self.pg_templat1()
-        return qry.format('calcul_abscisse_profil','ST_Intersection(NEW.geom, g)' )
+        qry="""CREATE OR REPLACE FUNCTION {0}()
+                  RETURNS trigger AS
+                $BODY$
+                DECLARE
+                    long1	double precision;
+                    long2	double precision;
+                    g	geometry;
+                    p	geometry;
+                    b	integer;
+                    z	integer;
+                    d	double precision;
+                    BEGIN
+                    
+                    EXECUTE 'SELECT branch, zonenum, geom, ST_Distance(geom,$1) FROM ' || TG_TABLE_SCHEMA ||'.branchs ORDER BY 4 LIMIT 1' USING NEW.geom INTO b,z,g,d;
+
+                    IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
+                    NEW.branchnum=b;
+                    END IF;
+
+                    
+                    IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
+                        EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA ||'.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING b,z INTO long1;
+                        p = (SELECT (ST_DUMP(ST_Intersection(NEW.geom, g))).geom LIMIT 1);
+                        long2 = (SELECT (ST_Length(g)*ST_LineLocatePoint(ST_LineMerge(g),p)));
+                        
+                        IF long1 IS NULL THEN
+                            long1 = 0;
+                        END IF;
+                        
+                        NEW.abscissa = ROUND((long1+long2)::numeric,1);
+
+                    END IF;
+                        
+                        RETURN NEW;
+                    END;
+
+                $BODY$
+                  LANGUAGE plpgsql IMMUTABLE
+                  COST 100;
+                ALTER FUNCTION {0}()
+                  OWNER TO postgres;"""
+        return qry.format('calcul_abscisse_profil' )
     def pg_create_calcul_abscisse_branche(self):
         qry ='''CREATE OR REPLACE FUNCTION calcul_abscisse_branche()
-  RETURNS trigger AS
-$BODY$
-DECLARE
-	long1	float; 
-	long2	float; 
-    BEGIN 
- 
-	EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING NEW.branch,NEW.zonenum INTO long1; 
-	long2 = (SELECT ST_Length(NEW.geom)); 
- 
-	IF long1 IS NULL THEN 
-		long1 = 0; 
-	END IF; 
-
-	NEW.zoneabsstart = long1;
-	NEW.zoneabsend = long1+long2;
-
-        RETURN NEW;
-    END;
-
-$BODY$
-  LANGUAGE plpgsql IMMUTABLE
-  COST 100;
-ALTER FUNCTION calcul_abscisse_branche()
-  OWNER TO postgres;
+              RETURNS trigger AS
+            $BODY$
+            DECLARE
+                long1	float; 
+                long2	float; 
+            BEGIN 
+         
+                EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING NEW.branch,NEW.zonenum INTO long1; 
+                long2 = (SELECT ST_Length(NEW.geom)); 
+             
+                IF long1 IS NULL THEN 
+                    long1 = 0; 
+                END IF; 
+            
+                NEW.zoneabsstart = ROUND(long1::numeric,1);
+                NEW.zoneabsend = ROUND((long1+long2)::numeric,1);
+            
+                RETURN NEW;
+            END;
+            
+            $BODY$
+              LANGUAGE plpgsql IMMUTABLE
+              COST 100;
+            ALTER FUNCTION calcul_abscisse_branche()
+              OWNER TO postgres;
 '''
         return qry
 #*****************************************

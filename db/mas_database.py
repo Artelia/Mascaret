@@ -83,12 +83,12 @@ class MasDatabase(object):
         Returns:
             str: String message.
         """
-        msg = None
+        msg = 'None'
         try:
             conn_params = 'dbname={0} host={1} port={2} user={3} password={4}'.format(self.dbname, self.host, self.port, self.user, self.password)
             self.con = psycopg2.connect(conn_params)
             msg = 'Connection established.'
-        except Exception as e:
+        except psycopg2.OperationalError as e:
             self.mgis.iface.messageBar().pushMessage("Error", 'Can\'t connect to PostGIS database. Check connection details!', level=QgsMessageBar.CRITICAL, duration=10)
             msg = 'Error: Can\'t connect to PostGIS database "{}".'.format(self.dbname)
 
@@ -833,8 +833,8 @@ $BODY$
             exe = os.path.join(self.mgis.postgres_path, 'pg_dump')
 
             if os.path.isfile(exe) or  os.path.isfile(exe+'.exe'):
-                commande = '{0} -n {1} -U {2} -f"{3}" {4}'.format(exe, self.SCHEMA, self.user, file,
-                                                                  self.dbname)
+                commande = '{0} -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
+                                                                  self.dbname, self.host)
                 os.putenv("PGPASSWORD","{0}".format(self.password))
                 p = subprocess.Popen(commande, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                                      , stdin=subprocess.PIPE)
@@ -863,8 +863,8 @@ $BODY$
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
 
                 for file in Listfile:
-                    commande = '{0} -U {1} -f "{2}" {3}'.format(exe,  self.user,
-                                                                file,self.dbname)
+                    commande = '{0} -U {1} -f "{2}" -d {3} -h {4}'.format(exe,  self.user,
+                                                                file,self.dbname, self.host)
 
                     # p = subprocess.Popen(commande, env=d, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                     #                      , stdin=subprocess.PIPE)
