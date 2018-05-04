@@ -50,7 +50,7 @@ class Class_observation():
                         for ligne in fichier:
                             temp = ligne.strip().split(';')
                             for i, val in enumerate(temp[1:]):
-                                if val > -99.9:
+                                if float(val) > -99.9:
                                     obs['code'].append("'{}'".format(codes[i]))
                                     obs['date'].append("'{}'".format(self.fmtDate(temp[0])))
                                     obs['type'].append("'{}'".format(types[i]))
@@ -58,10 +58,10 @@ class Class_observation():
 
                 self.mdb.insert2('observations', obs)
                 if self.mgis.DEBUG:
-                     self.mgis.addInfo(u"File {0} loads".format(file))
+                     self.mgis.addInfo("File {0} loads".format(file))
             return True
-        except Exception, e:
-            self.mgis.addInfo(u"Loading to observations is an echec.")
+        except Exception as e:
+            self.mgis.addInfo("Loading to observations is an echec.")
             if self.mgis.DEBUG:
                 self.mgis.addInfo(repr(e))
             return False

@@ -19,23 +19,29 @@ email                :
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+
+from qgis.PyQt.uic import *
+from qgis.PyQt.QtCore import *
+if int(qVersion()[0])<5:        #qt4
+    from qgis.PyQt.QtGui import *
+else:     #qt5
+    from qgis.PyQt.QtWidgets import *
+
+
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
-from ui.ui_settings_Simple import *
+
 import os
 
 class Settings(QDialog):
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
-        self.ui = Ui_Settings()
-        self.ui.setupUi(self)
+
         self.mgis = parent
         self.mdb = parent.mdb
-
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_settings_Simple.ui'), self)
         self.ui.txt_path_postgres.setText(self.mgis.postgres_path)
 
         self.ui.buttonBox.accepted.connect(self.acceptDialog)
@@ -67,7 +73,7 @@ class Settings(QDialog):
 
         # write settings to json
         self.mgis.writeSettings()
-        # print self.mgis.opts
+
 
         QApplication.restoreOverrideCursor()
         QDialog.accept(self)

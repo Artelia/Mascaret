@@ -20,11 +20,16 @@ email                :
 import psycopg2
 import psycopg2.extras
 
-from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsDataSourceURI, NULL, QGis,QgsProject
+from qgis.core import QgsVectorLayer, NULL,QgsProject
+try :   #qgis2
+    from qgis.core import QgsMapLayerRegistry,QgsDataSourceURI
+except :#qgis3
+    from qgis.core import QgsDataSourceUri
+
 from qgis.gui import QgsMessageBar
 
 import os
-import MasObject as maso
+from . import MasObject as maso
 import subprocess
 
 
@@ -78,12 +83,12 @@ class MasDatabase(object):
         Returns:
             str: String message.
         """
-        msg = None
+        msg = 'None'
         try:
             conn_params = 'dbname={0} host={1} port={2} user={3} password={4}'.format(self.dbname, self.host, self.port, self.user, self.password)
             self.con = psycopg2.connect(conn_params)
             msg = 'Connection established.'
-        except Exception, e:
+        except psycopg2.OperationalError as e:
             self.mgis.iface.messageBar().pushMessage("Error", 'Can\'t connect to PostGIS database. Check connection details!', level=QgsMessageBar.CRITICAL, duration=10)
             msg = 'Error: Can\'t connect to PostGIS database "{}".'.format(self.dbname)
 
@@ -144,7 +149,7 @@ class MasDatabase(object):
                 self.con.commit()
             else:
                 self.mgis.addInfo('There is no opened connection! Use "connect_pg" method before running query.')
-        except Exception, e:
+        except Exception as e:
             self.con.rollback()
             if be_quiet is False:
                 self.mgis.addInfo(repr(e))
@@ -286,9 +291,13 @@ class MasDatabase(object):
 #
     def refresh_uris(self):
         """
-        Setting layers uris list from QgsMapLayerRegistry.
+        Setting layers uris list from QgsProject.
         """
-        self.uris = [vl.source() for vl in QgsMapLayerRegistry.instance().mapLayers().values()]
+        try :    # qgis2
+            self.uris = [vl.source() for vl in QgsMapLayerRegistry.instance().mapLayers().values()]
+
+        except:  # qgis3
+            self.uris = [vl.source() for vl in QgsProject.instance().mapLayers().values()]
         if self.mgis.DEBUG:
             self.mgis.addInfo('Layers sources:\n    {0}'.format('\n    '.join(self.uris)))
 #*****************************************************************************
@@ -304,7 +313,11 @@ class MasDatabase(object):
             QgsVectorLayer: QGIS Vector Layer object.
         """
         vl_schema, vl_name = obj.schema, obj.name
-        uri = QgsDataSourceURI()
+        try:     # qgis2
+            uri = QgsDataSourceURI()
+        except:  # qgis3
+            uri = QgsDataSourceUri()
+
         uri.setConnection(self.host, self.port, self.dbname, self.user, self.password)
         if obj.geom_type is not None:
             uri.setDataSource(vl_schema, vl_name, 'geom')
@@ -323,14 +336,20 @@ class MasDatabase(object):
         try:
             style_file = os.path.join(self.mgis.masplugPath,'db', 'styles', '{0}.qml'.format(vlayer.name()))
             if self.group:
-                QgsMapLayerRegistry.instance().addMapLayer(vlayer, False)
+                try:     # qgis2
+                    QgsMapLayerRegistry.instance().addMapLayer(vlayer, False)
+                except:  # qgis3
+                    QgsProject.instance().addMapLayer(vlayer, False)
                 self.group.addLayer(vlayer)
             else:
-                QgsMapLayerRegistry.instance().addMapLayer(vlayer)
+                try:     # qgis2
+                    QgsMapLayerRegistry.instance().addMapLayer(vlayer)
+                except:  # qgis3
+                    QgsProject.instance().addMapLayer(vlayer)
             #self.mgis.addInfo('path : {}'.format(style_file))
             # a mettre apres deplacement group pour etre pris en compte
             vlayer.loadNamedStyle(style_file)
-        except Exception, e:
+        except Exception as e:
             self.mgis.addInfo(repr(e))
 # #
 
@@ -414,10 +433,10 @@ class MasDatabase(object):
             #visualization
             self.loadGis_layer()
 
-            self.mgis.addInfo(u'Model "{0}" completed'.format(self.SCHEMA))
+            self.mgis.addInfo('Model "{0}" completed'.format(self.SCHEMA))
 
-        except Exception, e:
-            self.mgis.addInfo(u"Echec of creation model")
+        except Exception as e:
+            self.mgis.addInfo("Echec of creation model")
             # self.mgis.addInfo(e)
 
     def create_FirstModel(self):
@@ -447,9 +466,9 @@ class MasDatabase(object):
                     else:
                         pass
 
-        except Exception, e:
+        except Exception as e:
             self.disconnect_pg()
-            self.mgis.addInfo(u"Echec of creation First Model")
+            self.mgis.addInfo("Echec of creation First Model")
 
     def check_firstModel(self):
         """
@@ -478,7 +497,7 @@ class MasDatabase(object):
                     if row[0] not in exclusion and row[0][:3] != "pg_":
                         liste.append(row[0])
 
-        except Exception, e:
+        except Exception as e:
             self.mgis.addInfo("Problem : to show model list")
             self.mgis.addInfo(repr(e))
 
@@ -502,6 +521,7 @@ class MasDatabase(object):
     def loadGis_layer(self):
         """ layer visualization in qgis"""
         # visualisation
+
         root = QgsProject.instance().layerTreeRoot()
 
         self.group = root.findGroup("Mas_{}".format(self.SCHEMA))
@@ -573,7 +593,6 @@ $BODY$
         #
         self.loadGis_layer()
 
-
     def removeGroup_Layer(self, name):
         root = QgsProject.instance().layerTreeRoot()
         group1 = root.findGroup(name)
@@ -581,7 +600,10 @@ $BODY$
             for child in group1.children():
                 dump = child.dump()
                 id = dump.split("=")[-1].strip()
-                QgsMapLayerRegistry.instance().removeMapLayer(id)
+                try :    # qgis2
+                    QgsMapLayerRegistry.instance().removeMapLayer(id)
+                except:  # qgis3
+                    QgsProject.instance().removeMapLayer(id)
             root.removeChildNode(group1)
 
     def projection(self, gid, nom):
@@ -807,8 +829,8 @@ $BODY$
             exe = os.path.join(self.mgis.postgres_path, 'pg_dump')
 
             if os.path.isfile(exe) or  os.path.isfile(exe+'.exe'):
-                commande = '{0} -n {1} -U {2} -f"{3}" {4}'.format(exe, self.SCHEMA, self.user, file,
-                                                                  self.dbname)
+                commande = '{0} -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
+                                                                  self.dbname, self.host)
                 os.putenv("PGPASSWORD","{0}".format(self.password))
                 p = subprocess.Popen(commande, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                                      , stdin=subprocess.PIPE)
@@ -837,9 +859,9 @@ $BODY$
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
 
                 for file in Listfile:
-                    commande = '{0} -U {1} -f "{2}" {3}'.format(exe,  self.user,
-                                                                file,self.dbname)
-                    # self.mgis.addInfo(" commande: {0}".format( commande))
+                    commande = '{0} -U {1} -f "{2}" -d {3} -h {4}'.format(exe,  self.user,
+                                                                file,self.dbname, self.host)
+
                     # p = subprocess.Popen(commande, env=d, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                     #                      , stdin=subprocess.PIPE)
                     p = subprocess.Popen(commande, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
