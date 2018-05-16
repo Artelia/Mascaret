@@ -140,11 +140,14 @@ class Class_Mascaret():
                            '#  PROJ. : {1}\n'.format(datetime.date.today(),vlayer_crs_str))
 
                 iter = vlayer.getFeatures()
-                for i,feature in enumerate(iter):
-                    nom = feature['name']
-                    # fetch geometry
-                    geom = feature.geometry()
-                    if nom in requete["name"]:
+                featureList=[v for v in iter]
+                nameFeature=[v['name'] for v in featureList]
+                for i, nom in enumerate(requete["name"]):
+                    print('{} {} {}'.format(i, nom,nameFeature ))
+                    if nom in nameFeature:
+                        id=nameFeature.index(nom)
+                        # fetch geometry
+                        geom = featureList[id].geometry()
                         branche = requete["branchnum"][i]
                         abs = requete["abscissa"][i]
                         tempX = requete["x"][i]
