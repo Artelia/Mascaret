@@ -143,7 +143,6 @@ class Class_Mascaret():
                 featureList=[v for v in iter]
                 nameFeature=[v['name'] for v in featureList]
                 for i, nom in enumerate(requete["name"]):
-                    print('{} {} {}'.format(i, nom,nameFeature ))
                     if nom in nameFeature:
                         id=nameFeature.index(nom)
                         # fetch geometry

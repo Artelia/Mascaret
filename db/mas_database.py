@@ -606,28 +606,28 @@ $BODY$
                     QgsProject.instance().removeMapLayer(id)
             root.removeChildNode(group1)
 
-    def projection(self, gid, nom):
-        # selection variable geom de la table profil et la renome prof puis la meme chose pour la table topo renomer poi
-        # enfin calcul la fonction et renvoi les données
-        if self.mgis.DEBUG:
-            self.mgis.addInfo('function projection begin')
-        sql = """WITH data(prof) AS (
-                SELECT geom AS prof FROM {0}.profiles WHERE name='{1}'
+    def projection(self, nom, listeX, listeG):
+        """ fonction de projection de la bathymétrie le long du profil """
 
-                ),
-                data2(poi) AS (
-                SELECT geom AS poi FROM {0}.topo WHERE gid={2}
-                    )
+        sql = """SELECT t.gid, 
+                       ST_Length(p.geom)*ST_LineLocatePoint(ST_LineMerge(p.geom), t.geom) as x 
+                FROM {0}.profiles as p, {0}.topo as t 
+                WHERE p.name='{1}'
+                AND t.profile ='{1}'
+                AND t.x IS NULL
+                AND t.gid IN ({2})"""
 
-                SELECT ST_Length(prof)*ST_LineLocatePoint(ST_LineMerge(prof), poi)
-                AS projected_poi
+        rows = self.run_query(sql.format(self.SCHEMA,
+                                         nom,
+                                         ",".join(map(str, listeG))),
+                              fetch=True)
 
-                FROM data, data2;"""
+        for gid, x in rows:
+            if gid in listeG:
+                i = listeG.index(gid)
+                listeX[i] = x
 
-        row = self.run_query(sql.format(self.SCHEMA, nom, gid),fetch=True,arraysize=1)
-        if self.mgis.DEBUG:
-            self.mgis.addInfo('function projection end')
-        return (row[0])
+        return (listeX)
 
     # PRBOLEM DESRIPTION
     def select(self, table, where="", order=""):
