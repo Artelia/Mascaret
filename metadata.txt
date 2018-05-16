@@ -43,6 +43,9 @@ changelog=
 	    Correction of  Mascaret executable bug for Linux version
 	    The result viewers no longer lock qgis
 	    Addition of legend displacement in the result viewers
+    0.1.1 :
+          Correction of Georef file bug
+          Improvement of Topo displays
 
 
 # Tags are comma separated with spaces allowed
