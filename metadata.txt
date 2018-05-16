@@ -40,9 +40,18 @@ changelog=
             Correction of creation bug of observation laws
             Correction of abscissa compute bug
             Correction of bug to save compute parameters
+<<<<<<< HEAD
             Correction of  Mascaret executable bug for Linux version
             The result viewers no longer lock qgis
             Addition of legend displacement in the result viewers
+=======
+	    Correction of  Mascaret executable bug for Linux version
+	    The result viewers no longer lock qgis
+	    Addition of legend displacement in the result viewers
+    0.1.1 :
+          Correction of Georef file bug
+          Improvement of Topo displays
+>>>>>>> origin/master
 
 
 # Tags are comma separated with spaces allowed

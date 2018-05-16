@@ -457,9 +457,6 @@ class GraphProfil(GraphCommon):
             nom = nom.strip()
             if not nom in self.topo.keys():
                 self.topo[nom] = {'x': [], 'z': [], 'ordre': [], 'gid': []}
-
-            if not x:
-                x = round(self.mdb.projection(gid, nom), 2)
             if not ordre:
                 ordre = i + 1000
             self.topo[nom]['x'].append(x)
@@ -467,7 +464,9 @@ class GraphProfil(GraphCommon):
             self.topo[nom]['gid'].append(gid)
             self.topo[nom]['ordre'].append(ordre)
 
-            # self.mgis.addInfo('self.topo.keys()  {}'.format(self.topo.keys()))
+        for nom in self.topo.keys():
+            self.topo[nom]['x'] = self.mdb.projection(self.nom, self.topo[nom]['x'], self.topo[nom]['gid'])
+
 
     def remplirTab(self, liste):
         """ Fill items in the table"""
