@@ -977,11 +977,12 @@ class Class_Mascaret():
 
 
         if par["evenement"] and noyau != "steady":
+
             dictScen_tmp = self.mdb.select('scenarios', 'run', 'starttime')
             listexclu=[]
             for i, scen in enumerate(dictScen_tmp['name']):
                 # self.mgis.addInfo("scen******************* {}".format(scen))
-                if not self.checkScenar(scen, noyau):
+                if not self.checkScenar(scen, run):
                     self.mgis.addInfo("Canceled Simulation because of {0} already exists.".format(scen))
                     listexclu.append(i)
             if listexclu:
@@ -996,7 +997,7 @@ class Class_Mascaret():
         else:
             scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
                                             'Please input a scenario name :')
-            if not ok or not self.checkScenar(scen, noyau):
+            if not ok or not self.checkScenar(scen, run):
                 if self.mgis.DEBUG:
                     self.mgis.addInfo("Canceled Simulation because of {0} already exists.".format(scen))
                 return
@@ -1095,16 +1096,17 @@ class Class_Mascaret():
             if par["initialisationAuto"] and noyau != "steady":
                 # add if name of init. exist previously
                 sceninit = scen + '_init'
-                if self.checkScenar(sceninit , "steady"):
-                    self.mgis.addInfo("Run initialization")
+                if self.checkScenar(sceninit , run):
+                    self.mgis.addInfo("========== Run initialization =========")
+                    self.mgis.addInfo("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, sceninit, noyau))
                     self.lanceMascaret(self.baseName + '_init.xcas')
-                    self.litOPT("Steady", sceninit, None,
+                    self.litOPT(run, sceninit, None,
                                 self.baseName + '_init')
                 else:
                     self.mgis.addInfo("No Run initialization.\n"
                                       " The initial boundaries come from {} scenario.".format(sceninit))
 
-                self.OPTtoLIG("Steady", sceninit,self.baseName)
+                self.OPTtoLIG(run, sceninit,self.baseName)
                 tab = {"LigEauInit": {'valeur': 'true',
                                     'balise1': 'parametresConditionsInitiales',
                                       'balise2': 'ligneEau'}
@@ -1115,36 +1117,56 @@ class Class_Mascaret():
                 # condition = "run LIKE 'Steady'"
                 # dico_run = self.mdb.selectDistinct("scenario",
                 #                                    "runs", condition)
-                dico_run = self.mdb.select("runs")
+                # dico_run = self.mdb.select("runs")
+                #
+                # if not dico_run and self.mgis.DEBUG:
+                #     self.mgis.addInfo("There aren't scenarii for the Steady case.")
+                #     if self.mgis.DEBUG:
+                #         self.mgis.addInfo("Cancel run")
+                #     return
 
-                if not dico_run and self.mgis.DEBUG:
-                    self.mgis.addInfo("There aren't scenarii for the Steady case.")
-                    if self.mgis.DEBUG:
-                        self.mgis.addInfo("Cancel run")
-                    return
+                # liste2=list(dico_run["scenario"])
 
-                liste2=list(dico_run["scenario"])
-                liste2.append('".lig" File')
+                dico_run = self.mdb.selectDistinct("run",
+                                                   "runs")
+                liste_run = ['{}'.format(v) for v in dico_run['run']]
+                case, ok = QInputDialog.getItem(None,
+                                                'Run case',
+                                                'Runs',
+                                                liste_run, 0, False)
 
-                scen2, ok = QInputDialog.getItem(None,
-                                                'Initial Scenario',
-                                                'Initial Scenario',
-                                                liste2, 0, False)
                 if ok:
-                    if scen2=='".lig" File':
-                        self.copyLIG()
+
+                    condition = "run LIKE '{0}'".format(case)
+                    dico_scen = self.mdb.selectDistinct("scenario",
+                                                       "runs", condition)
+                    liste_scen = ['{}'.format(v) for v in dico_scen["scenario"]]
+
+                    scen2, ok = QInputDialog.getItem(None,
+                                                    'Initial Scenario',
+                                                    'Initial Scenario',
+                                                   liste_scen, 0, False)
+
+                    if ok:
+                        if scen2=='".lig" File':
+                            self.copyLIG()
+                        else:
+                            # self.OPTtoLIG("Steady", scen2, self.baseName)
+                            # self.OPTtoLIG(dico_run["run"][liste2.index(scen2)], scen2, self.baseName)
+                            self.OPTtoLIG(case, scen2, self.baseName)
                     else:
-                        # self.OPTtoLIG("Steady", scen2, self.baseName)
-                        self.OPTtoLIG(dico_run["run"][liste2.index(scen2)], scen2, self.baseName)
+                        if self.mgis.DEBUG:
+                            self.mgis.addInfo("Cancel run")
+                        return
+
                 else:
                     if self.mgis.DEBUG:
                         self.mgis.addInfo("Cancel run")
                     return
 
 
-
-            if self.mgis.DEBUG:
-                self.mgis.addInfo("Run case")
+            self.mgis.addInfo("========== Run case  =========")
+            self.mgis.addInfo("Run = {} ;  Scenario = {} ; Kernel= {}".format(run,scen,noyau))
 
             finish=self.lanceMascaret(self.baseName + '.xcas')
             if not finish :
@@ -1336,18 +1358,20 @@ class Class_Mascaret():
     def deleteRun(self,case):
         """ Delete in tables the run case"""
         condition = "run LIKE '{0}'".format(case)
-        dico_run = self.mdb.selectDistinct("scenario",
+        dico_scen = self.mdb.selectDistinct("scenario",
                                            "runs",condition)
-        if not dico_run :
+        liste_scen = ['{}'.format(v) for v in dico_scen['scenario']]
+        if not  dico_scen:
             self.mgis.addInfo("There aren't scenarii for the {0} case.".format(case))
             return
 
 
         # self.mgis.addInfo('{0}'.format( dico_run["scenario"]))
+
         scen, ok = QInputDialog.getItem(None,
                                         'Scenarii',
                                         'Scenarii',
-                                dico_run["scenario"], 0, False)
+                                        liste_scen, 0, False)
         if ok :
             condition = "scenario LIKE '{0}' AND run LIKE '{1}'".format(scen,case)
             self.mdb.delete('runs',condition)
@@ -1411,13 +1435,13 @@ class Class_Mascaret():
         else:
             self.mgis.addInfo('No file to export')
 
-    def checkScenar(self,nomScen,kernel):
+    def checkScenar(self,nomScen,run):
         """if true :not exist nomScen and results """
-        state=self.listeState[self.Klist.index(kernel)]
-        condition = "run LIKE '{0}'".format(state)
+        # kernel=self.listeState[self.Klist.index(kernel)]
+        condition = "run LIKE '{0}'".format(run)
         allscen = self.mdb.selectDistinct("scenario", "runs", condition)
         if allscen:
-            if nomScen in allscen['scenario']:
+            if nomScen in allscen['scenario'] or nomScen+"_init" in allscen['scenario']:
                 info=True
             else:
                 info = False
@@ -1426,11 +1450,11 @@ class Class_Mascaret():
                     ok = self.box.yes_no_q('Do you want to remove the {} results for a new simulation? ?'.format(nomScen))
                     if ok:
                         # delete case initalization
-                        condition = "scenario LIKE '{0}' AND run LIKE '{1}'".format(nomScen, state)
+                        condition = "scenario LIKE '{0}' OR AND scenario LIKE '{0}_init' run LIKE '{1}' AND kernel LIKE '{2}'".format(nomScen, run,kernel)
                         self.mdb.delete('runs', condition)
                         self.mdb.delete('resultats', condition)
                         if self.mgis.DEBUG:
-                            self.mgis.addInfo("Deletion of {0} scenario for {1} is done".format(nomScen, state))
+                            self.mgis.addInfo("Deletion of {0} scenario for {1} is done".format(nomScen, run))
                         return True
                     else:
                         return False

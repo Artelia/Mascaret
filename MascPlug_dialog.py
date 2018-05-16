@@ -475,16 +475,22 @@ class MascPlugDialog(QMainWindow):
         if ok:
             if self.DEBUG:
                 self.addInfo("Kernel {}".format(self.Klist[self.listeState.index(case)]))
-            clam = Class_Mascaret(self)
-            clam.mascaret(self.Klist[self.listeState.index(case)],case)
+            run, ok = QInputDialog.getText(QWidget(), 'Run name',
+                                           'Please input a run name :',text=case)
+            if ok:
+                clam = Class_Mascaret(self)
+                clam.mascaret(self.Klist[self.listeState.index(case)],run)
 
     def del_run(self):
         """ Delete run of curent model"""
+        dico_run = self.mdb.selectDistinct("run",
+                                           "runs")
+        liste_run=['{}'.format(v) for v in  dico_run['run']]
 
         case, ok = QInputDialog.getItem(None,
-                                        'Study case',
-                                        'Kernel',
-                                          self.listeState, 0, False)
+                                        'Run case',
+                                        'Runs',
+                                        liste_run, 0, False)
         if ok:
             clam = Class_Mascaret(self)
             clam.deleteRun(case)

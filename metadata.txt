@@ -27,32 +27,24 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    0.0.1 : first beta release
-    0.0.2 : Correction of Matplotlib 2.x bug
-    0.0.3 : Correction of rights problems with .qgis2 directory
-            Addition of Linux version of Mascaret executable
-    0.0.4 : Correction of version numbering bug
-    0.0.5 : Change of address for homepage, tracker and repo
-    0.0.6 : Small change of metadata.txt
+    0.1.1 : Correction of Georef file bug
+            Improvement of Topo displays
     0.1.0 : Compatibility with qgis3
             Correction of lig file format  bug
             Correction of creation  bugs  of xcas file
             Correction of creation bug of observation laws
             Correction of abscissa compute bug
             Correction of bug to save compute parameters
-<<<<<<< HEAD
-            Correction of  Mascaret executable bug for Linux version
-            The result viewers no longer lock qgis
-            Addition of legend displacement in the result viewers
-=======
-	    Correction of  Mascaret executable bug for Linux version
-	    The result viewers no longer lock qgis
-	    Addition of legend displacement in the result viewers
-    0.1.1 :
-          Correction of Georef file bug
-          Improvement of Topo displays
->>>>>>> origin/master
-
+	        Correction of  Mascaret executable bug for Linux version
+	        The result viewers no longer lock qgis
+	        Addition of legend displacement in the result viewers
+    0.0.1 : First beta release
+    0.0.2 : Correction of Matplotlib 2.x bug
+    0.0.3 : Correction of rights problems with .qgis2 directory
+            Addition of Linux version of Mascaret executable
+    0.0.4 : Correction of version numbering bug
+    0.0.5 : Change of address for homepage, tracker and repo
+    0.0.6 : Small change of metadata.txt
 
 # Tags are comma separated with spaces allowed
 tags=
