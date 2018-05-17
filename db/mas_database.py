@@ -495,7 +495,7 @@ class MasDatabase(object):
                              "information_schema"]
                 for row in rows:
                     if row[0] not in exclusion and row[0][:3] != "pg_":
-                        liste.append(row[0])
+                        liste.append('{}'.format(row[0]))
 
         except Exception as e:
             self.mgis.addInfo("Problem : to show model list")
