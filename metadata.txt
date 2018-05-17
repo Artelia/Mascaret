@@ -29,6 +29,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 changelog=
     0.1.2 : Correction of numeric name bug for runs or for scenario
             Modification of treatment of runs and scenario in the "hydrogramme" and "cross section results" graphics
+            Correction of import and export bug
     0.1.1 : Correction of Georef file bug
             Improvement of Topo displays
     0.1.0 : Compatibility with qgis3
