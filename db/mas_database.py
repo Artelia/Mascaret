@@ -831,6 +831,8 @@ $BODY$
             if os.path.isfile(exe) or  os.path.isfile(exe+'.exe'):
                 commande = '"{0}" -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
                                                                   self.dbname, self.host)
+                # commande = '"{0}" --format custom  -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
+                #                                                   self.dbname, self.host)
                 os.putenv("PGPASSWORD","{0}".format(self.password))
                 p = subprocess.Popen(commande, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                                      , stdin=subprocess.PIPE)
@@ -853,11 +855,11 @@ $BODY$
             else:
                 pass
             exe=os.path.join(self.mgis.postgres_path, 'psql')
+            # exe = os.path.join(self.mgis.postgres_path, 'pg_restore')
             if os.path.isfile(exe) or  os.path.isfile(exe + '.exe'):
                 # d = dict(os.environ)
                 # d["PGPASSWORD"] = "{0}".format(self.password)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
-
                 for file in Listfile:
                     commande = '"{0}" -U {1} -f "{2}" -d {3} -h {4}'.format(exe,  self.user,
                                                                 file,self.dbname, self.host)
