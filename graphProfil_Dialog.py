@@ -1394,11 +1394,12 @@ class GraphProfilRes(GraphCommon):
         """Export Table to .CSV file"""
         # recupe tab export CSV
 
+        default_name=self.nom.replace(' ','_').replace(':','-')
         if int(qVersion()[0]) < 5: #qt4
-            fileNamePath = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
+            fileNamePath= QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(default_name),
                                                        filter="CSV (*.csv *.)")
-        else: # qt5
-            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
+        else: #qt5
+            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(default_name),
                                                    filter="CSV (*.csv *.)")
 
         if fileNamePath:
@@ -2007,12 +2008,14 @@ class GraphHydro(GraphCommon):
     def exportCSV(self):
         """Export Table to .CSV file"""
         # recupe tab export CSV
+        default_name=self.nom.replace(' ','_').replace(':','-')
         if int(qVersion()[0]) < 5: #qt4
-            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
+            fileNamePath= QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(default_name),
                                                        filter="CSV (*.csv *.)")
         else: #qt5
-            fileNamePath = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
+            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(default_name),
                                                    filter="CSV (*.csv *.)")
+
         if fileNamePath:
             file = open(fileNamePath, 'w')
             ligne = '# {0} - {1} \n'.format(self.titre, self.nom)
