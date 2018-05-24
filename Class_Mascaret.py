@@ -352,8 +352,11 @@ class Class_Mascaret():
             liste = zip(profils["abscissa"], profils["branchnum"])
             for i, num in enumerate(numero):
                 temp = [a for a, n in liste if n == num]
-                branches["abscdebut"].append(min(temp))
-                branches["abscfin"].append(max(temp))
+                if temp:
+                    branches["abscdebut"].append(min(temp))
+                    branches["abscfin"].append(max(temp))
+                else:
+                    self.mgis.addInfo('Checked if the profiles are activated.')
             dictNoeuds = {}
             dictLibres = {"nom": [], "num": [], "extrem": [], "typeCond": []}
 
@@ -519,7 +522,8 @@ class Class_Mascaret():
                 a_en=["abscissa", "ordinates", "angles"]
                 for kk, a in enumerate(["abscisses", "ordonnees", "angles"]):
                     if noeuds[a_en[kk]][i] is None or l != 3:
-                        SubElement(struct, a).text = "0.0 0.0 0.0"
+
+                        SubElement(struct, a).text = " 0.0" *l
                     else:
                         SubElement(struct, a).text = noeuds[a_en[kk]][i]
 
