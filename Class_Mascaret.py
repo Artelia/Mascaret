@@ -1373,6 +1373,7 @@ class Class_Mascaret():
                                         'Scenarii',
                                         liste_scen, 0, False)
         if ok :
+
             condition = "scenario LIKE '{0}' AND run LIKE '{1}'".format(scen,case)
             self.mdb.delete('runs',condition)
             self.mdb.delete('resultats', condition)

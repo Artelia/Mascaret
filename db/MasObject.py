@@ -471,7 +471,7 @@ class calcul_abscisse(MasObject):
                            long1 = 0;
                        END IF;
                         
-                       NEW.abscissa = ROUND((long1+long2)::numeric,1);
+                       NEW.abscissa = ROUND((long1+long2)::numeric,2);
 
                     END IF;
 
@@ -519,7 +519,7 @@ class calcul_abscisse(MasObject):
                             long1 = 0;
                         END IF;
                         
-                        NEW.abscissa = ROUND((long1+long2)::numeric,1);
+                        NEW.abscissa = ROUND((long1+long2)::numeric,2);
 
                     END IF;
                         

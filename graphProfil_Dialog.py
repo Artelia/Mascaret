@@ -64,10 +64,7 @@ else: #qt4
     except:
         from matplotlib.backends.backend_qt5agg \
             import NavigationToolbar2QT as NavigationToolbar
-
-
 from . import function as fct
-
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
@@ -94,13 +91,9 @@ import matplotlib.image as mpimg
 # MOD!
 import matplotlib.colors as colors
 import matplotlib.lines as mlines
-
 from matplotlib import gridspec, patches
-
 from datetime import datetime
-
 import numpy as np
-
 import sys, os
 
 
@@ -160,7 +153,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                             selection['code'].append(f['code'])
                         if 'zero' in selection.keys():
                             selection['zero'].append(f['zero'])
-                # self.mgis.addInfo('graph {0}'.format(couche))
+                # self.mgis.addInfo('graph {0}'.format(results[0].mFeature))
                 graphHyd = GraphHydro(feature, self.mgis, selection, feature['abscissa'], 't')
                 #graphHyd.exec_()
                 graphHyd.show()
@@ -1678,7 +1671,6 @@ class GraphProfilRes(GraphCommon):
             self.rectSelection.set_visible(True)
             self.canvas.draw()
 
-
 class GraphHydro(GraphCommon):
     def __init__(self, feature, mgis, select, position, type):
         # feature, selection, position, type, main
@@ -2098,7 +2090,8 @@ class GraphHydro(GraphCommon):
         self.liste['t']['abs'] = temp["t"]
 
         temp = self.mdb.selectDistinct('pk', "resultats", condition)
-        self.liste['pk']['abs'] = temp['pk']
+        #TODO delete round in future
+        self.liste['pk']['abs'] = [ round(elem, 1) for elem in temp['pk'] ]
         S = self.liste['selection']
 
         if self.type == 'pk':
