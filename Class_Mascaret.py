@@ -1453,9 +1453,11 @@ class Class_Mascaret():
 
             if info:
                     ok = self.box.yes_no_q('Do you want to remove the {} results for a new simulation? ?'.format(nomScen))
+
                     if ok:
                         # delete case initalization
-                        condition = "scenario LIKE '{0}' OR AND scenario LIKE '{0}_init' run LIKE '{1}' AND kernel LIKE '{2}'".format(nomScen, run,kernel)
+                        #TODO condition = "scenario LIKE '{0}' OR AND scenario LIKE '{0}_init' run LIKE '{1}' AND kernel LIKE '{2}'".format(nomScen, run,kernel)
+                        condition = "scenario LIKE '{0}' OR AND scenario LIKE '{0}_init' run LIKE '{1}' ".format(nomScen, run)
                         self.mdb.delete('runs', condition)
                         self.mdb.delete('resultats', condition)
                         if self.mgis.DEBUG:
