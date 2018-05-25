@@ -16,7 +16,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 
 qgisMinimumVersion=2.14.18
 qgisMaximumVersion=3.99
-version=0.1.0
+version=0.1.4
 
 author=Artelia Eau et Environnement
 email=mehdi-pierre.daou@arteliagroup.com
@@ -27,6 +27,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    0.1.4 : Optimisation of result inserting  in the table
     0.1.3 : Correction of default name bug for .CSV file extraction
             Correction of abscissa accuracy bug
             Correction of abscissa number bug for junction parameters
