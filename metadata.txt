@@ -44,9 +44,9 @@ changelog=
             Correction of creation bug of observation laws
             Correction of abscissa compute bug
             Correction of bug to save compute parameters
-	    Correction of  Mascaret executable bug for Linux version
-	    The result viewers no longer lock qgis
-	    Addition of legend displacement in the result viewers
+            Correction of  Mascaret executable bug for Linux version
+            The result viewers no longer lock qgis
+            Addition of legend displacement in the result viewers
     0.0.6 : Small change of metadata.txt
     0.0.5 : Change of address for homepage, tracker and repo
     0.0.4 : Correction of version numbering bug
