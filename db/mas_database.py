@@ -746,34 +746,31 @@ $BODY$
         # if self.mgis.DEBUG:
         #     self.mgis.addInfo('function insert end')
 
+
     def insert2(self, table, tab):
         """ insert table in tableSQl"""
         colonnes = sorted(tab.keys())
         var = ','.join(colonnes)
 
-        valeurs = ""
+        valeurs = []
         for i in range(len(tab[colonnes[0]])):
-            valeurs += "("
+            temp = []
             for k in colonnes:
-                valeurs += str(tab[k][i]) + ","
-            valeurs = valeurs[:-1] + "),"
+                temp.append(str(tab[k][i]))
+            valeurs.append("({})".format(",".join(temp)))
 
-        valeurs = valeurs[:-1]
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
                                                             table,
                                                             var,
-                                                            valeurs)
+                                                            ",".join(valeurs))
         self.run_query(sql)
-        # if self.mgis.DEBUG:
-        #     self.mgis.addInfo('function insert2 end')
 
     def insertRes(self, table, liste_value, colonnes):
         var = ",".join(colonnes)
-        valeurs = "("
+        temp=[]
         for k in colonnes:
-            valeurs+='%s,'
-        valeurs = valeurs[:-1] + ")"
-
+            temp.append('%s')
+        valeurs="({})".format(",".join(temp))
 
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
                                                             table,

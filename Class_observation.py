@@ -50,7 +50,7 @@ class Class_observation():
                         for ligne in fichier:
                             temp = ligne.strip().split(';')
                             for i, val in enumerate(temp[1:]):
-                                if float(val) > -99.9:
+                                if float(val) != -99.9:
                                     obs['code'].append("'{}'".format(codes[i]))
                                     obs['date'].append("'{}'".format(self.fmtDate(temp[0])))
                                     obs['type'].append("'{}'".format(types[i]))
