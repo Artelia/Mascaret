@@ -1257,7 +1257,9 @@ class Class_Mascaret():
                 else:
                     t.add(ligne["t"])
 
-                pk.add(ligne["pk"])
+                # TODO delete round in future
+                tempo=str(round(float(ligne["pk"]), 1))
+                pk.add(tempo)
                 ligne["run"] = run
                 ligne["scenario"] = scen
                 ligne["section"] = ligne["section"].replace('"', '')
@@ -1265,7 +1267,13 @@ class Class_Mascaret():
 
                 ligne_list=[]
                 for k in col:
-                    ligne_list.append(ligne[k])
+                    if k=='pk':
+                        # TODO delete round in future
+                        tempo = str(round(float(ligne[k]), 1))
+                        ligne_list.append(tempo)
+                    else:
+                        ligne_list.append(ligne[k])
+
                 value.append(ligne_list)
 
             maintenant = datetime.datetime.utcnow()
@@ -1273,7 +1281,8 @@ class Class_Mascaret():
             tab = {run: {"scenario": scen,
                          "date": "{:%Y-%m-%d %H:%M}".format(maintenant),
                          "t": list(t),
-                         "pk": list(pk)}}
+                         "pk":  list(pk)}}
+
 
             self.mdb.insert("runs",
                              tab,
