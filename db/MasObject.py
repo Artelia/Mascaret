@@ -410,6 +410,7 @@ class observations(MasObject):
         self.attrs = [('id','serial NOT NULL'),
                       ('code','character(10)'),
                       ('type','character(1)'),
+                      ('comment', 'character varying(50)'),
                       ('valeur','float'),
                       ('date','timestamp without time zone'),
                       ('CONSTRAINT cle_obs ','PRIMARY KEY (id)')]

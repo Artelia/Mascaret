@@ -758,7 +758,6 @@ $BODY$
             for k in colonnes:
                 temp.append(str(tab[k][i]))
             valeurs.append("({})".format(",".join(temp)))
-
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
                                                             table,
                                                             var,
