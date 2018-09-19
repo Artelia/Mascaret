@@ -32,15 +32,17 @@ from qgis.core import *
 from qgis.utils import *
 from qgis.gui import *
 
-
+from ..graphProfil_Dialog import CopySelectedCellsAction
 from .. import function as fct
-
+from table_WQ import  table_WQ
 class Water_quality_dialog(QDialog):
-    def __init__(self, mgis,kernel):
+    def __init__(self, mgis):
         QDialog.__init__(self)
-        self.kernel=kernel
+        self.kernel="steady"
         self.mgis = mgis
         self.mdb = self.mgis.mdb
+        self.tbwq=table_WQ(self.mgis,self.mdb)
+
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_water_quality.ui'), self)
 
         self.ui.buttonBox.accepted.connect(self.acceptDialog)
@@ -49,9 +51,7 @@ class Water_quality_dialog(QDialog):
         self.ui.actionB_add_line.triggered.connect(self.add_line)
         self.ui.actionB_delete_line.triggered.connect(self.delete_line)
 
-        self.ui.actionB_delete_lineTabTracer.triggered.connect(self.delete_line)
 
-        self.ui.actionB_add_lineTabTracer.triggered.connect(self.add_line)
 
         self.ui.actionB_phy_param.triggered.connect(self.physicFile)
         self.ui.actionB_meteo_param.triggered.connect(self.meteoFile)
@@ -59,16 +59,22 @@ class Water_quality_dialog(QDialog):
         self.create_dico_para()
         self.initUI()
 
+        self.modeleQualiteEau.currentIndexChanged['QString'].connect(self.modeleQualiteEauChanged)
+        fct = lambda: self.delete_line(self.table_Tr,self.ui.nbTraceur)
+        self.ui.actionB_delete_lineTabTracer.triggered.connect(fct)
+        self.ui.actionB_add_lineTabTracer.triggered.connect(self.add_row_tr)
+
     def create_dico_para(self):
         self.par = {}
         # requete pour recuperer les parametres dans la base
-        sql = "SELECT parametre, {0}, libelle, balise1, gui FROM {1}.{2};"
+        sql = "SELECT parametre, {0}, libelle, balise1, gui, gui_type FROM {1}.{2};"
 
-        rows = self.mdb.run_query(sql.format(self.kernel, self.mdb.SCHEMA, "parametres"), fetch=True)
+        rows = self.mdb.run_query(sql.format("steady", self.mdb.SCHEMA, "parametres"), fetch=True)
 
-        for param, valeur, libelle,  balise1, gui in rows:
-
-            if balise1== 'parametresTraceur':
+        for param, valeur, libelle,  balise1, gui, gui_type in rows:
+            print(param, gui_type)
+            if gui_type== 'tracers':
+                print("rentrer  {}".format(param))
                 self.par[param] = {}
                 try:
                     self.par[param]["val"] = eval(valeur.title())
@@ -85,7 +91,6 @@ class Water_quality_dialog(QDialog):
 
         for param, info in self.par.items():
             if info['gui']:
-
                 obj = getattr(self.ui, param)
                 if isinstance(obj, QCheckBox):
                     obj.setChecked(info['val'])
@@ -107,11 +112,56 @@ class Water_quality_dialog(QDialog):
                     if self.mgis.DEBUG:
                         self.mgis.addInfo("param {}  obj {}  val {}".format(param, obj, info['val']))
 
-                # if param in self.exclusion[self.kernel]:
-                #     obj.hide()
-                #     if isinstance(obj, QSpinBox) or isinstance(obj, QDoubleSpinBox)\
-                #             or isinstance(obj, QComboBox):
-                #         getattr(self.ui, 'label_'+param).hide()
+        self.type=self.modeleQualiteEau.itemText(self.modeleQualiteEau.currentIndex())
+        self.table_Tr = self.ui.tableWidget
+        # self.table_Tr.addAction(CopySelectedCellsAction(self.table_Tr))
+        if self.type =='TRANSPORT_PUR':
+            self.table_Tr.setEditTriggers(QAbstractItemView.AllEditTriggers)
+            self.ui.b_add_lineTabTracer.show()
+            self.ui.b_delete_lineTabTracer.show()
+        else:
+            self.table_Tr.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.ui.b_add_lineTabTracer.hide()
+            self.ui.b_delete_lineTabTracer.hide()
+        self.majTab()
+
+    def modeleQualiteEauChanged(self, text):
+        self.type = text
+        if self.type =='TRANSPORT_PUR':
+            self.table_Tr.setEditTriggers(QAbstractItemView.AllEditTriggers)
+            self.ui.b_add_lineTabTracer.show()
+            self.ui.b_delete_lineTabTracer.show()
+        else:
+            self.table_Tr.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.ui.b_add_lineTabTracer.hide()
+            self.ui.b_delete_lineTabTracer.hide()
+        self.majTab()
+
+    def majTab(self):
+        condition = """type='{0}'""".format(self.type)
+        # self.mgis.addInfo(condition)
+        self.tab_tracer_name = self.mdb.select("tracer_name", condition)
+        self.columns=['sigle','text']
+        self.listeTab = []
+        for c in self.columns:
+            if self.tab_tracer_name[c] != [None] * len(self.tab_tracer_name[c]):
+                self.listeTab.append(self.tab_tracer_name[c])
+        # gui
+        self.remplirTab_Tr(self.listeTab)
+        self.ui.nbTraceur.setText('{}'.format( self.table_Tr.rowCount()))
+
+    def remplirTab_Tr(self, liste):
+        """ Fill items in the table """
+        self.table_Tr.setRowCount(len(liste[0]))
+        for j, val in enumerate(liste):
+            for i, v in enumerate(val):
+                self.table_Tr.setItem(i, j, QTableWidgetItem(str(v)))
+
+    def add_row_tr(self):
+        self.table_Tr.setRowCount(self.table_Tr.rowCount() + 1)
+        self.table_Tr.setItem(self.table_Tr.rowCount()-1, 0, QTableWidgetItem('TRA{}'.format(self.table_Tr.rowCount())))
+        self.table_Tr.setItem(self.table_Tr.rowCount()-1, 1, QTableWidgetItem('Tracer {}'.format(self.table_Tr.rowCount())))
+        self.ui.nbTraceur.setText('{}'.format(self.table_Tr.rowCount()))
 
     def meteoFile(self):
         #ouvre et stock information fichier meteo
@@ -126,16 +176,41 @@ class Water_quality_dialog(QDialog):
         #add line au tableau
         self.mgis.addInfo('fct add_line')
         pass
-    def delete_line(self):
+    def delete_line(self,tableView,objnbTrac=None):
         #delete line
         self.mgis.addInfo('fct delete_line')
-        pass
+        if tableView.rowCount()>1:
+            indices = tableView.selectedIndexes()
+            for index in indices:
+                    tableView.removeRow(index.row())
+        if objnbTrac:
+            objnbTrac.setText('{}'.format(tableView.rowCount()))
+
+
+    def stockTable_Tr(self,table):
+        liste_stock=[]
+
+        # delete transport_pur
+
+        # add transport_pur
+        condition = "type='TRANSPORT_PUR'"
+        self.mdb.delete('tracer_name', condition)
+        idmax = self.mdb.selectMax("id", "tracer_name",'')
+        for row in range(table.rowCount()):
+            sql = """INSERT INTO {0}.tracer_name (id,type,sigle,text,convec,diffu ) VALUES
+                                ({6},'{1}','{2}','{3}',{4},{5})""".format(self.mdb.SCHEMA,
+                                                                    self.type,
+                                                                    table.item(row,0).text(),
+                                                                        table.item(row, 1).text(),
+                                                                        'true','true',idmax+1)
+            idmax += 1
+            self.mdb.run_query(sql)
 
 
     def acceptDialog(self):
         """Modification of the parameters in sql table"""
-        var=[]
         for param, info in self.par.items():
+            print(info)
             if info['gui']:
                 obj = getattr(self.ui, param)
 
@@ -147,17 +222,28 @@ class Water_quality_dialog(QDialog):
                             or param == 'optionCalculDiffusion' or param == "LimitPente"\
                             or param == 'ordreSchemaConvec':
                         val = val+1
+                elif isinstance(obj, QLabel):
+                    val=obj.text()
+                    if param=='nbTraceur':
+                        val = int(val)
                 else:
                     val = obj.value()
 
 
                 sql = """   UPDATE {0}.parametres
-                               SET {1}='{2}'
-                               WHERE parametre='{3}'
+                               SET (steady,unsteady,transcritical)=('{1}','{1}','{1}') 
+                               WHERE parametre='{2}'
                          """
-                self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.kernel, val, param))
+                print(sql.format(self.mdb.SCHEMA, val, param))
+                self.mdb.run_query(sql.format(self.mdb.SCHEMA, val, param))
+
+        # stock tracer
+        if self.type == 'TRANSPORT_PUR':
+            self.stockTable_Tr(self.table_Tr)
+
+
         #
-        liste = []
+        # liste = []
         # for var2 in self.variables:
         #     for param, obj in var:
         #         if var2==param:

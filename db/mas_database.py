@@ -30,7 +30,9 @@ from qgis.gui import QgsMessageBar
 
 import os
 from . import MasObject as maso
+from ..WaterQuality import table_WQ
 import subprocess
+
 
 
 
@@ -399,7 +401,7 @@ class MasDatabase(object):
                       maso.weirs, maso.profiles, maso.topo, maso.branchs,
                       maso.observations, maso.parametres, maso.resultats,maso.runs,maso.laws,
                        # qualitee d'eau
-                       maso.tracer_lateral_inflows
+                       maso.tracer_lateral_inflows, maso.tracer_physic,maso.tracer_name
                        ]
 
             tables.sort(key=lambda x: x().order)
@@ -411,16 +413,15 @@ class MasDatabase(object):
                         self.mgis.addInfo('  {0} OK'.format(obj.name))
                 except:
                     self.mgis.addInfo('failure!<br>{0}'.format(obj))
-            # ajout variable fichier parameter
-            # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV HEADER;"""
-            # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV;"""
+                # ajout variable fichier parameter
+                # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV HEADER;"""
+                # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV;"""
             fichparam = os.path.join(dossier, "parametres.csv")
             # self.run_query(req.format(self.SCHEMA, fichparam))
             liste_value = []
             with open(fichparam, 'r') as file:
                 for ligne in file:
-                    liste_value.append(ligne.split(','))
-
+                    liste_value.append(ligne.replace('\n','').split(','))
             listeCol = self.listColumns('parametres')
             var = ",".join(listeCol)
             valeurs = "("
@@ -428,11 +429,16 @@ class MasDatabase(object):
                 valeurs += '%s,'
             valeurs = valeurs[:-1] + ")"
 
+
             sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
                                                                 'parametres',
                                                                 var,
                                                                 valeurs)
+
             self.run_query(sql, many=True, listMany=liste_value)
+            #IF WATER QUALITY
+            tbwq = table_WQ.table_WQ(self.mgis, self)
+            tbwq.default_tab_phy()
 
             #visualization
             self.loadGis_layer()
@@ -441,7 +447,7 @@ class MasDatabase(object):
 
         except Exception as e:
             self.mgis.addInfo("Echec of creation model")
-            # self.mgis.addInfo(e)
+            self.mgis.addInfo(e)
 
     def create_FirstModel(self):
         """ 
@@ -466,6 +472,7 @@ class MasDatabase(object):
                         pass
                 except:
                     if self.mgis.DEBUG:
+                        self.mgis.addInfo('{0}\n'.format(fct))
                         self.mgis.addInfo('failure!<br>{0}'.format(fct))
                     else:
                         pass
@@ -699,11 +706,13 @@ $BODY$
                     dico[cols[i]].append(val)
         return(dico)
     #
-    def selectMax(self, var, table, where):
+    def selectMax(self, var, table, where=None):
         """select the max in the table for the "where" variable"""
-
-        sql = "SELECT MAX({0}) FROM {1}.{2} WHERE {3};"
-        results = self.run_query(sql.format(var, self.SCHEMA, table, where), fetch=True,arraysize=1)
+        if where :
+            sql = "SELECT MAX({0}) FROM {1}.{2} WHERE {3};".format(var, self.SCHEMA, table, where)
+        else:
+            sql = "SELECT MAX({0}) FROM {1}.{2};".format(var, self.SCHEMA, table)
+        results = self.run_query(sql, fetch=True,arraysize=1)
         #results obj: generator
         for row in results:
             var=row[0][0]

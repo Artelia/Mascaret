@@ -452,7 +452,9 @@ class parametres(MasObject):
                         ('balise1','text'),
                         ('balise2','text'),
                         ('gui','text'),
+                        ('gui_type', 'text'),
                         ('CONSTRAINT cle_param','PRIMARY KEY (id)')]
+
 #*****************************************
 class calcul_abscisse(MasObject):
     def __init__(self):
@@ -556,6 +558,7 @@ class calcul_abscisse(MasObject):
                 ALTER FUNCTION {0}()
                   OWNER TO postgres;"""
         return qry.format('calcul_abscisse_profil' )
+
     def pg_create_calcul_abscisse_branche(self):
         qry ='''CREATE OR REPLACE FUNCTION calcul_abscisse_branche()
               RETURNS trigger AS
@@ -602,6 +605,31 @@ class laws_wq(MasObject):
             ('time', 'text'),
             ('C', 'text'),
             ('CONSTRAINT cle_laws_wq', 'PRIMARY KEY (id)')]
+
+class tracer_physic(MasObject):
+    def __init__(self):
+        super(tracer_physic, self).__init__()
+        self.order = 19
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('type', 'text'),
+                      ('sigle', 'text'),
+                      ('value', 'text'),
+                      ('text', 'text'),
+                      ('CONSTRAINT cle_tr_phy', 'PRIMARY KEY (id)')]
+
+class tracer_name(MasObject):
+    def __init__(self):
+        super(tracer_name, self).__init__()
+        self.order = 20
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('type', 'text'),
+                      ('sigle', 'text'),
+                      ('text', 'text'),
+                      ('convec', 'boolean'),
+                      ('diffu', 'boolean'),
+                      ('CONSTRAINT cle_tr_name', 'PRIMARY KEY (id)')]
 # *****************************************
 if __name__ == '__main__':
     var= topo()

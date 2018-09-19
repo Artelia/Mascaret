@@ -212,36 +212,37 @@ class parameter_dialog(QDialog):
     def create_dico_para(self):
         self.par = {}
         # requete pour recuperer les parametres dans la base
-        sql = "SELECT parametre, {0}, libelle, gui FROM {1}.{2};"
+        sql = "SELECT parametre, {0}, libelle, gui, gui_type FROM {1}.{2};"
 
         rows = self.mdb.run_query(sql.format(self.kernel, self.mdb.SCHEMA, "parametres"), fetch=True)
+        print(rows)
+        for param, valeur, libelle, gui,gui_type in rows:
+            if gui_type =='parameters':
+                if param == 'variablesStockees':
+                    # valeurs = list(map(eval, valeur.title().split()))
+                    valeurs = []
+                    for var1 in valeur.title().split():
+                        valeurs.append(eval(var1))
 
-        for param, valeur, libelle, gui in rows:
+                    for var, val, lib in zip(self.variables, valeurs,self.libel_var):
+                        self.par[var] = {"val": val, "libelle": lib,"gui": True}
+                        # self.par[var] = {"val": val, "libelle": lib}
+                else:
+                    self.par[param] = {}
+                    try:
+                        self.par[param]["val"] = eval(valeur.title())
+                    except:
+                        self.par[param]["val"] = valeur
 
-            if param == 'variablesStockees':
-                # valeurs = list(map(eval, valeur.title().split()))
-                valeurs = []
-                for var1 in valeur.title().split():
-                    valeurs.append(eval(var1))
-
-                for var, val, lib in zip(self.variables, valeurs,self.libel_var):
-                    self.par[var] = {"val": val, "libelle": lib,"gui": True}
-                    # self.par[var] = {"val": val, "libelle": lib}
-            else:
-                self.par[param] = {}
-                try:
-                    self.par[param]["val"] = eval(valeur.title())
-                except:
-                    self.par[param]["val"] = valeur
-
-                self.par[param]["libelle"] = libelle
-                self.par[param]["gui"] = self.str2bool(gui)
+                    self.par[param]["libelle"] = libelle
+                    self.par[param]["gui"] = self.str2bool(gui)
 
     def init_GUI(self):
         # pass
+
         for param, info in self.par.items():
-            # self.mgis.addInfo("param {}  info {}".format(param, info))
-            if info['gui']:
+            self.mgis.addInfo("param {}  info {}".format(param, info))
+            if info['gui'] and info['gui_type'] =='parameters':
                 obj = getattr(self.ui, param)
                 if isinstance(obj, QCheckBox):
                     obj.setChecked(info['val'])
