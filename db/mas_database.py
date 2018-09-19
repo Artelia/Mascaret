@@ -506,7 +506,7 @@ class MasDatabase(object):
                              "information_schema"]
                 for row in rows:
                     if row[0] not in exclusion and row[0][:3] != "pg_":
-                        liste.append(row[0])
+                        liste.append('{}'.format(row[0]))
 
         except Exception as e:
             self.mgis.addInfo("Problem : to show model list")
@@ -617,28 +617,28 @@ $BODY$
                     QgsProject.instance().removeMapLayer(id)
             root.removeChildNode(group1)
 
-    def projection(self, gid, nom):
-        # selection variable geom de la table profil et la renome prof puis la meme chose pour la table topo renomer poi
-        # enfin calcul la fonction et renvoi les données
-        if self.mgis.DEBUG:
-            self.mgis.addInfo('function projection begin')
-        sql = """WITH data(prof) AS (
-                SELECT geom AS prof FROM {0}.profiles WHERE name='{1}'
+    def projection(self, nom, listeX, listeG):
+        """ fonction de projection de la bathymétrie le long du profil """
 
-                ),
-                data2(poi) AS (
-                SELECT geom AS poi FROM {0}.topo WHERE gid={2}
-                    )
+        sql = """SELECT t.gid, 
+                       ST_Length(p.geom)*ST_LineLocatePoint(ST_LineMerge(p.geom), t.geom) as x 
+                FROM {0}.profiles as p, {0}.topo as t 
+                WHERE p.name='{1}'
+                AND t.profile ='{1}'
+                AND t.x IS NULL
+                AND t.gid IN ({2})"""
 
-                SELECT ST_Length(prof)*ST_LineLocatePoint(ST_LineMerge(prof), poi)
-                AS projected_poi
+        rows = self.run_query(sql.format(self.SCHEMA,
+                                         nom,
+                                         ",".join(map(str, listeG))),
+                              fetch=True)
 
-                FROM data, data2;"""
+        for gid, x in rows:
+            if gid in listeG:
+                i = listeG.index(gid)
+                listeX[i] = x
 
-        row = self.run_query(sql.format(self.SCHEMA, nom, gid),fetch=True,arraysize=1)
-        if self.mgis.DEBUG:
-            self.mgis.addInfo('function projection end')
-        return (row[0])
+        return (listeX)
 
     # PRBOLEM DESRIPTION
     def select(self, table, where="", order=""):
@@ -759,34 +759,30 @@ $BODY$
         # if self.mgis.DEBUG:
         #     self.mgis.addInfo('function insert end')
 
+
     def insert2(self, table, tab):
         """ insert table in tableSQl"""
         colonnes = sorted(tab.keys())
         var = ','.join(colonnes)
 
-        valeurs = ""
+        valeurs = []
         for i in range(len(tab[colonnes[0]])):
-            valeurs += "("
+            temp = []
             for k in colonnes:
-                valeurs += str(tab[k][i]) + ","
-            valeurs = valeurs[:-1] + "),"
-
-        valeurs = valeurs[:-1]
+                temp.append(str(tab[k][i]))
+            valeurs.append("({})".format(",".join(temp)))
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
                                                             table,
                                                             var,
-                                                            valeurs)
+                                                            ",".join(valeurs))
         self.run_query(sql)
-        # if self.mgis.DEBUG:
-        #     self.mgis.addInfo('function insert2 end')
 
     def insertRes(self, table, liste_value, colonnes):
         var = ",".join(colonnes)
-        valeurs = "("
+        temp=[]
         for k in colonnes:
-            valeurs+='%s,'
-        valeurs = valeurs[:-1] + ")"
-
+            temp.append('%s')
+        valeurs="({})".format(",".join(temp))
 
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
                                                             table,
@@ -842,8 +838,10 @@ $BODY$
             exe = os.path.join(self.mgis.postgres_path, 'pg_dump')
 
             if os.path.isfile(exe) or  os.path.isfile(exe+'.exe'):
-                commande = '{0} -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
+                commande = '"{0}" -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
                                                                   self.dbname, self.host)
+                # commande = '"{0}" --format custom  -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
+                #                                                   self.dbname, self.host)
                 os.putenv("PGPASSWORD","{0}".format(self.password))
                 p = subprocess.Popen(commande, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                                      , stdin=subprocess.PIPE)
@@ -866,13 +864,13 @@ $BODY$
             else:
                 pass
             exe=os.path.join(self.mgis.postgres_path, 'psql')
+            # exe = os.path.join(self.mgis.postgres_path, 'pg_restore')
             if os.path.isfile(exe) or  os.path.isfile(exe + '.exe'):
                 # d = dict(os.environ)
                 # d["PGPASSWORD"] = "{0}".format(self.password)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
-
                 for file in Listfile:
-                    commande = '{0} -U {1} -f "{2}" -d {3} -h {4}'.format(exe,  self.user,
+                    commande = '"{0}" -U {1} -f "{2}" -d {3} -h {4}'.format(exe,  self.user,
                                                                 file,self.dbname, self.host)
 
                     # p = subprocess.Popen(commande, env=d, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE

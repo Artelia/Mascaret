@@ -434,6 +434,7 @@ class observations(MasObject):
         self.attrs = [('id','serial NOT NULL'),
                       ('code','character(10)'),
                       ('type','character(1)'),
+                      ('comment', 'character varying(50)'),
                       ('valeur','float'),
                       ('date','timestamp without time zone'),
                       ('CONSTRAINT cle_obs ','PRIMARY KEY (id)')]
@@ -497,7 +498,7 @@ class calcul_abscisse(MasObject):
                            long1 = 0;
                        END IF;
                         
-                       NEW.abscissa = ROUND((long1+long2)::numeric,1);
+                       NEW.abscissa = ROUND((long1+long2)::numeric,2);
 
                     END IF;
 
@@ -545,7 +546,7 @@ class calcul_abscisse(MasObject):
                             long1 = 0;
                         END IF;
                         
-                        NEW.abscissa = ROUND((long1+long2)::numeric,1);
+                        NEW.abscissa = ROUND((long1+long2)::numeric,2);
 
                     END IF;
                         

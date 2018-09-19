@@ -45,16 +45,18 @@ class Class_observation():
                     with open(file, 'r') as fichier:
                         codes = fichier.readline().strip().split(';')[1:]
                         types = fichier.readline().strip().split(';')[1:]
-                        # nomStat = fichier.readline().strip().split(';')[1:]
-                        obs = {'code': [], 'date': [], 'type': [], 'valeur': []}
+                        nomStat = fichier.readline().strip().split(';')[1:]
+                        obs = {'code': [], 'date': [], 'type': [], 'comment':[], 'valeur': []}
                         for ligne in fichier:
                             temp = ligne.strip().split(';')
                             for i, val in enumerate(temp[1:]):
-                                if float(val) > -99.9:
+                                if float(val) != -99.99:
                                     obs['code'].append("'{}'".format(codes[i]))
                                     obs['date'].append("'{}'".format(self.fmtDate(temp[0])))
                                     obs['type'].append("'{}'".format(types[i]))
+                                    obs['comment'].append("'{}'".format(nomStat[i]))
                                     obs['valeur'].append(val)
+
 
                 self.mdb.insert2('observations', obs)
                 if self.mgis.DEBUG:

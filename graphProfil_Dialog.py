@@ -64,14 +64,6 @@ else: #qt4
     except:
         from matplotlib.backends.backend_qt5agg \
             import NavigationToolbar2QT as NavigationToolbar
-
-from . import function as fct
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
 # **************************************************
 try:
     _encoding = QApplication.UnicodeUTF8
@@ -92,13 +84,9 @@ import matplotlib.image as mpimg
 
 
 import matplotlib.lines as mlines
-
 from matplotlib import gridspec, patches
-
 from datetime import datetime
-
 import numpy as np
-
 import sys, os
 
 
@@ -158,7 +146,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                             selection['code'].append(f['code'])
                         if 'zero' in selection.keys():
                             selection['zero'].append(f['zero'])
-                # self.mgis.addInfo('graph {0}'.format(couche))
+                # self.mgis.addInfo('graph {0}'.format(results[0].mFeature))
                 graphHyd = GraphHydro(feature, self.mgis, selection, feature['abscissa'], 't')
                 #graphHyd.exec_()
                 graphHyd.show()
@@ -455,9 +443,6 @@ class GraphProfil(GraphCommon):
             nom = nom.strip()
             if not nom in self.topo.keys():
                 self.topo[nom] = {'x': [], 'z': [], 'ordre': [], 'gid': []}
-
-            if not x:
-                x = round(self.mdb.projection(gid, nom), 2)
             if not ordre:
                 ordre = i + 1000
             self.topo[nom]['x'].append(x)
@@ -465,7 +450,9 @@ class GraphProfil(GraphCommon):
             self.topo[nom]['gid'].append(gid)
             self.topo[nom]['ordre'].append(ordre)
 
-            # self.mgis.addInfo('self.topo.keys()  {}'.format(self.topo.keys()))
+        for nom in self.topo.keys():
+            self.topo[nom]['x'] = self.mdb.projection(self.nom, self.topo[nom]['x'], self.topo[nom]['gid'])
+
 
     def remplirTab(self, liste):
         """ Fill items in the table"""
@@ -520,6 +507,7 @@ class GraphProfil(GraphCommon):
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
 
         tab = {self.nom: self.tab}
+        print(tab)
         self.mdb.update("profiles", tab, var="name")
 
     def sauveTopo(self):
@@ -933,8 +921,7 @@ class GraphProfil(GraphCommon):
             self.courbeTopo[i].set_data(v['x'], v['z'])
             self.courbeTopo[i].set_label(fichier)
             self.courbes.append(self.courbeTopo[i])
-
-        if T['x'] and T['leftminbed'] and T['rightminbed']:
+        if  T['x']!=None and T['leftminbed']!=None and T['rightminbed']!=None :
             self.litMineur.set_x(T['leftminbed'])
             self.litMineur.set_width(T['rightminbed'] - T['leftminbed'])
             self.litMineur.set_visible(True)
@@ -1134,7 +1121,6 @@ class GraphProfil(GraphCommon):
 
         self.tab["leftminbed"] = xmin
         self.tab["rightminbed"] = xmax
-
         # self.liste[self.position] = (self.feature["abscisse"], self.feature)
         self.majGraph()
 
@@ -1393,11 +1379,12 @@ class GraphProfilRes(GraphCommon):
         """Export Table to .CSV file"""
         # recupe tab export CSV
 
+        default_name=self.nom.replace(' ','_').replace(':','-')
         if int(qVersion()[0]) < 5: #qt4
-            fileNamePath = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
+            fileNamePath= QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(default_name),
                                                        filter="CSV (*.csv *.)")
-        else: # qt5
-            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
+        else: #qt5
+            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(default_name),
                                                    filter="CSV (*.csv *.)")
 
         if fileNamePath:
@@ -1675,7 +1662,6 @@ class GraphProfilRes(GraphCommon):
             self.rectSelection.set_width(maxiX - miniX)
             self.rectSelection.set_visible(True)
             self.canvas.draw()
-
 
 class GraphHydro(GraphCommon):
     def __init__(self, feature, mgis, select, position, type):
@@ -2006,12 +1992,14 @@ class GraphHydro(GraphCommon):
     def exportCSV(self):
         """Export Table to .CSV file"""
         # recupe tab export CSV
+        default_name=self.nom.replace(' ','_').replace(':','-')
         if int(qVersion()[0]) < 5: #qt4
-            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
+            fileNamePath= QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(default_name),
                                                        filter="CSV (*.csv *.)")
         else: #qt5
-            fileNamePath = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(self.nom),
+            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(default_name),
                                                    filter="CSV (*.csv *.)")
+
         if fileNamePath:
             file = open(fileNamePath, 'w')
             ligne = '# {0} - {1} \n'.format(self.titre, self.nom)
@@ -2094,7 +2082,8 @@ class GraphHydro(GraphCommon):
         self.liste['t']['abs'] = temp["t"]
 
         temp = self.mdb.selectDistinct('pk', "resultats", condition)
-        self.liste['pk']['abs'] = temp['pk']
+        #TODO delete round in future
+        self.liste['pk']['abs'] = [ round(elem, 1) for elem in temp['pk'] ]
         S = self.liste['selection']
 
         if self.type == 'pk':
