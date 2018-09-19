@@ -514,6 +514,7 @@ class GraphProfil(GraphCommon):
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
 
         tab = {self.nom: self.tab}
+        print(tab)
         self.mdb.update("profiles", tab, var="name")
 
     def sauveTopo(self):
@@ -927,8 +928,7 @@ class GraphProfil(GraphCommon):
             self.courbeTopo[i].set_data(v['x'], v['z'])
             self.courbeTopo[i].set_label(fichier)
             self.courbes.append(self.courbeTopo[i])
-
-        if T['x'] and T['leftminbed'] and T['rightminbed']:
+        if  T['x']!=None and T['leftminbed']!=None and T['rightminbed']!=None :
             self.litMineur.set_x(T['leftminbed'])
             self.litMineur.set_width(T['rightminbed'] - T['leftminbed'])
             self.litMineur.set_visible(True)
@@ -1128,7 +1128,6 @@ class GraphProfil(GraphCommon):
 
         self.tab["leftminbed"] = xmin
         self.tab["rightminbed"] = xmax
-
         # self.liste[self.position] = (self.feature["abscisse"], self.feature)
         self.majGraph()
 
