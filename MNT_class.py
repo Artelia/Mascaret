@@ -60,8 +60,7 @@ class Worker(QObject):
                 feature["xmnt"] = ""
                 feature["zmnt"] = ""
 
-                #self.res taille du la résolution du raster
-                print("int(longueur)",longueur,"int(self.res)",self.res)
+                #self.res taille du la résolution du raste
 
                 for dist in np.arange(0.0, round(longueur,3), round(self.res,3)):
 

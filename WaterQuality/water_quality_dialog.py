@@ -34,7 +34,7 @@ from qgis.gui import *
 
 from ..graphProfil_Dialog import CopySelectedCellsAction
 from .. import function as fct
-from table_WQ import  table_WQ
+from .table_WQ import  table_WQ
 class Water_quality_dialog(QDialog):
     def __init__(self, mgis):
         QDialog.__init__(self)
@@ -198,11 +198,11 @@ class Water_quality_dialog(QDialog):
         idmax = self.mdb.selectMax("id", "tracer_name",'')
         for row in range(table.rowCount()):
             sql = """INSERT INTO {0}.tracer_name (id,type,sigle,text,convec,diffu ) VALUES
-                                ({6},'{1}','{2}','{3}',{4},{5})""".format(self.mdb.SCHEMA,
+                                ({1},'{2}','{3}','{4}',{5},{6})""".format(self.mdb.SCHEMA,idmax+1,
                                                                     self.type,
                                                                     table.item(row,0).text(),
                                                                         table.item(row, 1).text(),
-                                                                        'true','true',idmax+1)
+                                                                        'true','true')
             idmax += 1
             self.mdb.run_query(sql)
 
