@@ -36,10 +36,6 @@ class Worker(QObject):
         self.profil = profil
         self.rasterProvider = raster.dataProvider()
         self.res = raster.rasterUnitsPerPixelX()
-        print('res',self.res)
-        pixelSizeX = raster.rasterUnitsPerPixelX()
-        pixelSizeY = raster.rasterUnitsPerPixelY()
-        print('pixelSizeX',pixelSizeX,'pixelSizeY',pixelSizeY)
         self.facteur = facteur
         self.mnt = {}
 
