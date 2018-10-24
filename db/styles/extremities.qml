@@ -308,7 +308,7 @@
       <attributeEditorField index="6" name="ordinates"/>
       <attributeEditorField index="7" name="angles"/>
     </attributeEditorContainer>
-    <attributeEditorContainer name="autres">
+    <attributeEditorContainer name="others">
       <attributeEditorField index="3" name="method"/>
       <attributeEditorField index="4" name="firstvalue"/>
     </attributeEditorContainer>

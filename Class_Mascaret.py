@@ -1142,7 +1142,7 @@ class Class_Mascaret():
                     dico_scen = self.mdb.selectDistinct("scenario",
                                                         "runs", condition)
                     liste_scen = ['{}'.format(v) for v in dico_scen["scenario"]]
-
+                    liste_scen.append('".lig" File')
                     scen2, ok = QInputDialog.getItem(None,
                                                      'Initial Scenario',
                                                      'Initial Scenario',
@@ -1295,6 +1295,7 @@ class Class_Mascaret():
         """Creation of .lig file """
         condition = "run='{0}' AND scenario='{1}'".format(run, scen)
         tMax = self.mdb.selectMax("t", "resultats", condition)
+
 
         condition = condition + " AND t=" + str(tMax)
 
@@ -1456,7 +1457,7 @@ class Class_Mascaret():
                 if ok:
                     # delete case initalization
                     # TODO condition = "scenario LIKE '{0}' OR AND scenario LIKE '{0}_init' run LIKE '{1}' AND kernel LIKE '{2}'".format(nomScen, run,kernel)
-                    condition = "scenario LIKE '{0}' OR AND scenario LIKE '{0}_init' run LIKE '{1}' ".format(nomScen,
+                    condition = "(scenario LIKE '{0}' OR  scenario LIKE '{0}_init') AND run LIKE '{1}' ".format(nomScen,
                                                                                                              run)
                     self.mdb.delete('runs', condition)
                     self.mdb.delete('resultats', condition)

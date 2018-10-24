@@ -1478,13 +1478,14 @@ class GraphProfilRes(GraphCommon):
         #value H
         self.majVal()
 
-        if self.zH:
+        if self.zH!= None:
             self.label_hmax.setText('{0}'.format(self.zmax))
             temp1 = np.array(T['z'])
 
             if self.posit=='Hmax':
                 temp2 = np.array([self.zmax] * len(T['z']))
             else:
+
                 h=self.zH['zref'][0] + self.zH['y'][0]
                 temp2 = np.array([h] * len(T['z']))
 
