@@ -23,6 +23,7 @@ from qgis.PyQt.QtCore import *
 from qgis.core import *
 from qgis.gui import *
 #from shapely.wkb import loads
+import numpy as np
 
 
 
@@ -35,6 +36,10 @@ class Worker(QObject):
         self.profil = profil
         self.rasterProvider = raster.dataProvider()
         self.res = raster.rasterUnitsPerPixelX()
+        print('res',self.res)
+        pixelSizeX = raster.rasterUnitsPerPixelX()
+        pixelSizeY = raster.rasterUnitsPerPixelY()
+        print('pixelSizeX',pixelSizeX,'pixelSizeY',pixelSizeY)
         self.facteur = facteur
         self.mnt = {}
 
@@ -60,8 +65,10 @@ class Worker(QObject):
                 feature["zmnt"] = ""
 
                 #self.res taille du la résolution du raster
+                print("int(longueur)",longueur,"int(self.res)",self.res)
 
-                for dist in range(0, int(longueur), int(self.res)):
+                for dist in np.arange(0.0, round(longueur,3), round(self.res,3)):
+
                     point = geomcoupe.interpolate(dist)
                     ident = self.rasterProvider.identify(point.asPoint(),
                                                          QgsRaster.IdentifyFormatValue).results()
