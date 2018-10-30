@@ -677,12 +677,14 @@ $BODY$
 
         return dico
     #
-    def selectDistinct(self, var, table, where=""):
+    def selectDistinct(self, var, table, where="", ordre=None):
         """select the "where" variable which is multiple"""
+        if ordre==None:
+            ordre=var
         if where:
             where = "WHERE " + where
-        sql = "SELECT DISTINCT {0} FROM {1}.{2} {3} ORDER BY {0};"
-        (results, namCol) = self.run_query(sql.format(var, self.SCHEMA, table, where), fetch=True,namvar=True)
+        sql = "SELECT DISTINCT {0} FROM {1}.{2} {3} ORDER BY {4};"
+        (results, namCol) = self.run_query(sql.format(var, self.SCHEMA, table, where,ordre), fetch=True,namvar=True)
         cols = [col[0] for col in namCol]
         dico = {}
         for row in results:

@@ -1026,14 +1026,34 @@ class Class_Mascaret():
                         continue
                     if l["valeurperm"] is None:
                         self.mgis.addInfo("Error : Add the 'valeurprerm' value in extremities.")
+
+                    try:
+                        liste_=['pasTemps', 'critereArret', 'nbPasTemps', 'tempsMax','tempsInit']
+                        temp_dic={}
+                        for info in liste_:
+                            condition = "parametre ='{}'".format(info)
+                            dtemp = self.mdb.selectDistinct('steady','parametres', condition)
+                            temp_dic[info]=dtemp['steady'][0]
+                    except Exception as e:
+                        self.mgis.addInfo(str(e))
+                        return
+                    if temp_dic['critereArret']==1:
+                       tfinal=temp_dic['tempsMax']
+                    elif temp_dic['critereArret']==2:
+                       tfinal=temp_dic['tempsInit']+temp_dic['pasTemps']*temp_dic['nbPasTemps']
+                    elif temp_dic['critereArret'] == 3:
+                        tfinal =365*24*3600
                     if l['type'] == 1:
-                        tab = {"time": [0, 3600], 'flowrate': [l["valeurperm"]] * 2}
+                        tab = {"time": [0, tfinal], 'flowrate': [l["valeurperm"]] * 2}
                     else:
                         # In steady case the other type don't exist
                         l['type'] = 2
-                        tab = {"time": [0, 3600], 'z': [l["valeurperm"]] * 2}
+                        tab = {"time": [0, tfinal], 'z': [l["valeurperm"]] * 2}
 
                     self.creerLOI(nom, tab, l['type'])
+
+
+
 
             elif par["evenement"]:
                 # transcritical unsteady evenement
