@@ -667,12 +667,18 @@ class Class_Mascaret():
             hydrauliques = SubElement(cas, "parametresLoisHydrauliques")
 
             for nom in dictLois.keys():
-                if nom in libres["name"] and (dictLois[nom]['type'] == 6 or dictLois[nom]['type'] == 7):
+                if nom in libres["name"] and (dictLois[nom]['type'] == 6 or dictLois[nom]['type'] == 7) :
                     # les types sont ceux de
-                    if dictLois[nom]['type'] == 6:
+                    print( dictLois[nom]['type'], nom)
+                    if dictLois[nom]['type'] == 6 : #TODO and noyau!='transcritical'
                         dictLois[nom]['type'] = 1
-                    else:
+                        if self.mgis.DEBUG:
+                            self.mgis.addInfo('The  {} law changes type 6 => 1'.format(nom))
+                    elif  dictLois[nom]['type'] == 7:
                         dictLois[nom]['type'] = 2
+                        if self.mgis.DEBUG:
+                            self.mgis.addInfo('The  {} law changes type 7 => 2'.format(nom))
+
             nb = len(dictLois.keys())
             SubElement(hydrauliques, "nb").text = str(nb)
             lois = SubElement(hydrauliques, "lois")
@@ -714,6 +720,8 @@ class Class_Mascaret():
             arbre.write(fichierSortie)
 
             ##### XCAS initialisation #####
+            dt_init=60
+            npPasTemps_init=3600/60
 
             paramCas = fichierCas.find('parametresCas')
             parametresGeneraux = paramCas.find('parametresGeneraux')
@@ -721,9 +729,9 @@ class Class_Mascaret():
             parametresGeneraux.find('fichMotsCles').text = fichXCAS
             parametresGeneraux.find('code').text = '1'
             parametresTemporels = paramCas.find('parametresTemporels')
-            parametresTemporels.find('pasTemps').text = '60'
+            parametresTemporels.find('pasTemps').text = '{}'.format(dt_init)
             parametresTemporels.find('critereArret').text = '2'
-            parametresTemporels.find('nbPasTemps').text = '2'
+            parametresTemporels.find('nbPasTemps').text = '{}'.format(npPasTemps_init)
             geomReseau = paramCas.find('parametresGeometrieReseau')
             typeCond = geomReseau.find('extrLibres').find('typeCond')
             typeCond.text = typeCond.text.replace('4', '2').replace('6', '1').replace('7', '2')
@@ -1094,6 +1102,7 @@ class Class_Mascaret():
                         if v and k in liste:
                             tab[k] = [float(var) for var in v.split()]
 
+
                     self.creerLOI(nom, tab, l["type"])
                     if self.mgis.DEBUG:
                         self.mgis.addInfo("Laws file is created.")
@@ -1150,35 +1159,39 @@ class Class_Mascaret():
 
                 dico_run = self.mdb.selectDistinct("run",
                                                    "runs")
-                liste_run = ['{}'.format(v) for v in dico_run['run']]
+                if dico_run !={}:
+                    liste_run = ['{}'.format(v) for v in dico_run['run']]
+                else:
+                    liste_run=[]
+                liste_run.append('".lig" File')
                 case, ok = QInputDialog.getItem(None,
                                                 'Initial run case ',
                                                 'Runs',
                                                 liste_run, 0, False)
 
                 if ok:
+                    if case== '".lig" File':
+                        self.copyLIG()
+                    else:
+                        condition = "run LIKE '{0}'".format(case)
+                        dico_scen = self.mdb.selectDistinct("scenario",
+                                                            "runs", condition)
+                        liste_scen = ['{}'.format(v) for v in dico_scen["scenario"]]
 
-                    condition = "run LIKE '{0}'".format(case)
-                    dico_scen = self.mdb.selectDistinct("scenario",
-                                                        "runs", condition)
-                    liste_scen = ['{}'.format(v) for v in dico_scen["scenario"]]
-                    liste_scen.append('".lig" File')
-                    scen2, ok = QInputDialog.getItem(None,
-                                                     'Initial Scenario',
-                                                     'Initial Scenario',
-                                                     liste_scen, 0, False)
+                        scen2, ok = QInputDialog.getItem(None,
+                                                         'Initial Scenario',
+                                                         'Initial Scenario',
+                                                         liste_scen, 0, False)
 
-                    if ok:
-                        if scen2 == '".lig" File':
-                            self.copyLIG()
-                        else:
+                        if ok:
+
                             # self.OPTtoLIG("Steady", scen2, self.baseName)
                             # self.OPTtoLIG(dico_run["run"][liste2.index(scen2)], scen2, self.baseName)
                             self.OPTtoLIG(case, scen2, self.baseName)
-                    else:
-                        if self.mgis.DEBUG:
-                            self.mgis.addInfo("Cancel run")
-                        return
+                        else:
+                            if self.mgis.DEBUG:
+                                self.mgis.addInfo("Cancel run")
+                            return
 
                 else:
                     if self.mgis.DEBUG:
