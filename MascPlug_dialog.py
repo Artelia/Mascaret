@@ -485,15 +485,19 @@ class MascPlugDialog(QMainWindow):
         """ Delete run of curent model"""
         dico_run = self.mdb.selectDistinct("run",
                                            "runs")
-        liste_run=['{}'.format(v) for v in  dico_run['run']]
 
-        case, ok = QInputDialog.getItem(None,
-                                        'Run case',
-                                        'Runs',
-                                        liste_run, 0, False)
-        if ok:
-            clam = Class_Mascaret(self)
-            clam.deleteRun(case)
+        if dico_run!={}:
+            liste_run=['{}'.format(v) for v in  dico_run['run']]
+
+            case, ok = QInputDialog.getItem(None,
+                                            'Run case',
+                                            'Runs',
+                                            liste_run, 0, False)
+            if ok:
+                clam = Class_Mascaret(self)
+                clam.deleteRun(case)
+        else:
+            self.addInfo("No results to delete")
 
 
 
