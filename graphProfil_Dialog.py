@@ -2091,7 +2091,7 @@ class GraphHydro(GraphCommon):
 
         temp = self.mdb.selectDistinct('pk', "resultats", condition)
         #TODO delete round in future
-        self.liste['pk']['abs'] = [ round(elem, 1) for elem in temp['pk'] ]
+        self.liste['pk']['abs'] = [ round(elem, 2) for elem in temp['pk'] ]
         S = self.liste['selection']
 
         if self.type == 'pk':
