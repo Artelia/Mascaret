@@ -1272,7 +1272,7 @@ class Class_Mascaret():
                     t.add(ligne["t"])
 
                 # TODO delete round in future
-                tempo = str(round(float(ligne["pk"]), 1))
+                tempo = str(round(float(ligne["pk"]), 2))
                 pk.add(tempo)
                 ligne["run"] = run
                 ligne["scenario"] = scen
@@ -1283,7 +1283,7 @@ class Class_Mascaret():
                 for k in col:
                     if k == 'pk':
                         # TODO delete round in future
-                        tempo = str(round(float(ligne[k]), 1))
+                        tempo = str(round(float(ligne[k]), 2))
                         ligne_list.append(tempo)
                     else:
                         ligne_list.append(ligne[k])
