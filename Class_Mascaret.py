@@ -721,7 +721,7 @@ class Class_Mascaret():
 
             ##### XCAS initialisation #####
             dt_init=60
-            npPasTemps_init=3600/60
+            npPasTemps_init=int(3600/60.)
 
             paramCas = fichierCas.find('parametresCas')
             parametresGeneraux = paramCas.find('parametresGeneraux')
@@ -845,7 +845,7 @@ class Class_Mascaret():
                 #     self.mgis.addInfo("{0} :\n \t Time : {1}\n \t Upstream Water Level{2}\n \t  "
                 #                       "Downstream Water Level :{3}"
                 #                       .format(nom,tab["temps"], tab["cote_amont"], tab["cote_aval"]))
-            n = len(tab.values()[0])
+            n = len(list(tab.values())[0])
 
             for i in range(n):
                 dico = {k: v[i] for k, v in tab.items()}
