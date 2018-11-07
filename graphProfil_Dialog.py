@@ -514,7 +514,6 @@ class GraphProfil(GraphCommon):
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
 
         tab = {self.nom: self.tab}
-        print(tab)
         self.mdb.update("profiles", tab, var="name")
 
     def sauveTopo(self):
