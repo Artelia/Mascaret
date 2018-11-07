@@ -400,6 +400,7 @@ class runs(MasObject):
                       ('date',' timestamp without time zone'),
                       ('t',' text'),
                       ('pk',' text'),
+                      ('comments', 'text'),
                       ('CONSTRAINT cle_runs','PRIMARY KEY (id)')]
 #*****************************************
 class observations(MasObject):

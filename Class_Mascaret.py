@@ -1012,6 +1012,19 @@ class Class_Mascaret():
                 if self.mgis.DEBUG:
                     self.mgis.addInfo("Canceled Simulation because of {0} already exists.".format(scen))
                 return
+            listeCol = self.mdb.listColumns('runs')
+            if 'comments' in listeCol:
+
+                comment, ok = QInputDialog.getText(QWidget(), 'Comments',
+                                                'if you want to input a comment :')
+                if not ok :
+                    if self.mgis.DEBUG:
+                        self.mgis.addInfo("No comments.")
+                        comments=''
+            else:
+                comments = ''
+
+
             dictScen = {'name': [scen]}
 
         # progressMessageBar = self.iface.messageBar().createMessage(
@@ -1130,7 +1143,7 @@ class Class_Mascaret():
                     self.mgis.addInfo("========== Run initialization =========")
                     self.mgis.addInfo("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, sceninit, noyau))
                     self.lanceMascaret(self.baseName + '_init.xcas')
-                    self.litOPT(run, sceninit, None,
+                    self.litOPT(run, sceninit,comments, None,
                                 self.baseName + '_init')
                 else:
                     self.mgis.addInfo("No Run initialization.\n"
@@ -1184,9 +1197,6 @@ class Class_Mascaret():
                                                          liste_scen, 0, False)
 
                         if ok:
-
-                            # self.OPTtoLIG("Steady", scen2, self.baseName)
-                            # self.OPTtoLIG(dico_run["run"][liste2.index(scen2)], scen2, self.baseName)
                             self.OPTtoLIG(case, scen2, self.baseName)
                         else:
                             if self.mgis.DEBUG:
@@ -1206,7 +1216,7 @@ class Class_Mascaret():
                 self.mgis.addInfo("Simulation error")
                 return
 
-            self.litOPT(run, scen, dateDebut, self.baseName)
+            self.litOPT(run, scen,comments, dateDebut, self.baseName)
         self.iface.messageBar().clearWidgets()
         self.mgis.addInfo("Simulation finished")
         return
@@ -1245,7 +1255,7 @@ class Class_Mascaret():
         self.mgis.addInfo("{0}".format(p.communicate()[0].decode("utf-8")))
         return True
 
-    def litOPT(self, run, scen, dateDebut, baseNamefile):
+    def litOPT(self, run, scen, comments,dateDebut, baseNamefile):
         nomFich = os.path.join(self.dossierFileMasc, baseNamefile + '.opt')
 
         tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
@@ -1309,10 +1319,15 @@ class Class_Mascaret():
                          "date": "{:%Y-%m-%d %H:%M}".format(maintenant),
                          "t": list(t),
                          "pk": list(pk)}}
+            listimport=["run", "date", "pk", "scenario", "t"]
+            if comments!='':
+                tab['comments']=comments
+                listimport.append("comments")
+
 
             self.mdb.insert("runs",
                             tab,
-                            ["run", "date", "pk", "scenario", "t"],
+                            listimport,
                             ",")
             listeCol = self.mdb.listColumns("resultats")
 
@@ -1394,27 +1409,27 @@ class Class_Mascaret():
 
             fich.write(' FIN\n')
 
-    def deleteRun(self, case):
-        """ Delete in tables the run case"""
-        condition = "run LIKE '{0}'".format(case)
-        dico_scen = self.mdb.selectDistinct("scenario",
-                                            "runs", condition)
-        liste_scen = ['{}'.format(v) for v in dico_scen['scenario']]
-        if not dico_scen:
-            self.mgis.addInfo("There aren't scenarii for the {0} case.".format(case))
-            return
-
-        # self.mgis.addInfo('{0}'.format( dico_run["scenario"]))
-
-        scen, ok = QInputDialog.getItem(None,
-                                        'Scenarii',
-                                        'Scenarii',
-                                        liste_scen, 0, False)
-        if ok:
-            condition = "scenario LIKE '{0}' AND run LIKE '{1}'".format(scen, case)
-            self.mdb.delete('runs', condition)
-            self.mdb.delete('resultats', condition)
-            self.mgis.addInfo("Deletion of {0} scenario for {1} is done".format(scen, case))
+    # def deleteRun(self, case):
+    #     """ Delete in tables the run case"""
+    #     condition = "run LIKE '{0}'".format(case)
+    #     dico_scen = self.mdb.selectDistinct("scenario",
+    #                                         "runs", condition)
+    #     liste_scen = ['{}'.format(v) for v in dico_scen['scenario']]
+    #     if not dico_scen:
+    #         self.mgis.addInfo("There aren't scenarii for the {0} case.".format(case))
+    #         return
+    #
+    #     # self.mgis.addInfo('{0}'.format( dico_run["scenario"]))
+    #
+    #     scen, ok = QInputDialog.getItem(None,
+    #                                     'Scenarii',
+    #                                     'Scenarii',
+    #                                     liste_scen, 0, False)
+    #     if ok:
+    #         condition = "scenario LIKE '{0}' AND run LIKE '{1}'".format(scen, case)
+    #         self.mdb.delete('runs', condition)
+    #         self.mdb.delete('resultats', condition)
+    #         self.mgis.addInfo("Deletion of {0} scenario for {1} is done".format(scen, case))
 
     def copyLIG(self):
         """ Load .lig file in run model"""

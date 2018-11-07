@@ -483,21 +483,10 @@ class MascPlugDialog(QMainWindow):
 
     def del_run(self):
         """ Delete run of curent model"""
-        dico_run = self.mdb.selectDistinct("run",
-                                           "runs")
+        from .class_deletrun_dialog import class_deletrun_dialog
+        dlg = class_deletrun_dialog(self, self.iface)
+        dlg.exec_()
 
-        if dico_run!={}:
-            liste_run=['{}'.format(v) for v in  dico_run['run']]
-
-            case, ok = QInputDialog.getItem(None,
-                                            'Run case',
-                                            'Runs',
-                                            liste_run, 0, False)
-            if ok:
-                clam = Class_Mascaret(self)
-                clam.deleteRun(case)
-        else:
-            self.addInfo("No results to delete")
 
 
 
