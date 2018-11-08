@@ -23,8 +23,10 @@ import psycopg2.extras
 from qgis.core import QgsVectorLayer, NULL,QgsProject
 try :   #qgis2
     from qgis.core import QgsMapLayerRegistry,QgsDataSourceURI
+    VERSION_QGIS=2
 except :#qgis3
     from qgis.core import QgsDataSourceUri
+    VERSION_QGIS = 3
 
 from qgis.gui import QgsMessageBar
 
@@ -334,7 +336,10 @@ class MasDatabase(object):
             vlayer (QgsVectorLayer): QgsVectorLayer object.
         """
         try:
-            style_file = os.path.join(self.mgis.masplugPath,'db', 'styles', '{0}.qml'.format(vlayer.name()))
+            if VERSION_QGIS==3: # qgis3
+                style_file = os.path.join(self.mgis.masplugPath,'db', 'styles_qgis3', '{0}.qml'.format(vlayer.name()))
+            else:
+                style_file = os.path.join(self.mgis.masplugPath, 'db', 'styles_qgis2', '{0}.qml'.format(vlayer.name()))
             if self.group:
                 try:     # qgis2
                     QgsMapLayerRegistry.instance().addMapLayer(vlayer, False)
