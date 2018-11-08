@@ -316,19 +316,26 @@ class MascPlugDialog(QMainWindow):
 
             self.addInfo('Creating new model cancelled.')
 
+    # def dbDeleteModel(self):
+    #     """ Model delete"""
+    #
+    #     liste = self.mdb.listeModels()
+    #     model, ok = QInputDialog.getItem(None,
+    #                                       'Project choice',
+    #                                       'Project',
+    #                                       liste,0, False)
+    #     if ok:
+    #         self.mdb.drop_model(model, cascade=True)
+    #
+    #     else:
+    #         self.addInfo('Droping Model cancelled.')
+
     def dbDeleteModel(self):
         """ Model delete"""
+        from .class_deletsh_dialog import class_deletsh_dialog
+        dlg = class_deletsh_dialog(self, self.iface)
+        dlg.exec_()
 
-        liste = self.mdb.listeModels()
-        model, ok = QInputDialog.getItem(None,
-                                          'Project choice',
-                                          'Project',
-                                          liste,0, False)
-        if ok:
-            self.mdb.drop_model(model, cascade=True)
-
-        else:
-            self.addInfo('Droping Model cancelled.')
 
     def dbLoad(self,schemaInfo=None):
         """ load model"""

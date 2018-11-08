@@ -55,44 +55,46 @@ class class_deletrun_dialog(QDialog):
                 self.listeScen[run] = []
             self.listeScen[run].append((scen, date))
 
+        if len(self.listeRuns)>0:
+            self.tree = self.ui.treeWidget
 
-        self.tree = self.ui.treeWidget
+            self.parent = {}
+            self.child = {}
 
-        self.parent = {}
-        self.child = {}
+            for run in self.listeRuns:
+                self.parent[run] = QTreeWidgetItem(self.tree)
+                self.parent[run].setText(0, run)
+                self.parent[run].setFlags(self.parent[run].flags() |
+                                          Qt.ItemIsTristate |
+                                          Qt.ItemIsUserCheckable)
+                i = dico['run'].index(run)
+                try :
+                    lbl = QLabel(dico['comments'][i])
+                except KeyError :
+                    lbl = QLabel('')
+                self.tree.setItemWidget(self.parent[run], 2, lbl)
 
-        for run in self.listeRuns:
-            self.parent[run] = QTreeWidgetItem(self.tree)
-            self.parent[run].setText(0, run)
-            self.parent[run].setFlags(self.parent[run].flags() |
-                                      Qt.ItemIsTristate |
-                                      Qt.ItemIsUserCheckable)
-            i = dico['run'].index(run)
-            try :
-                lbl = QLabel(dico['comments'][i])
-            except KeyError :
-                lbl = QLabel('')
-            self.tree.setItemWidget(self.parent[run], 2, lbl)
+                self.child[run] = {}
+                maxi = datetime(1900, 1, 1, 0, 0)
 
-            self.child[run] = {}
-            maxi = datetime(1900, 1, 1, 0, 0)
+                for scen, date in self.listeScen[run]:
+                    self.child[run][scen] = QTreeWidgetItem(self.parent[run])
+                    self.child[run][scen].setFlags(self.child[run][scen].flags() |
+                                                   Qt.ItemIsUserCheckable)
+                    self.child[run][scen].setText(0, scen)
 
-            for scen, date in self.listeScen[run]:
-                self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                self.child[run][scen].setFlags(self.child[run][scen].flags() |
-                                               Qt.ItemIsUserCheckable)
-                self.child[run][scen].setText(0, scen)
+                    self.child[run][scen].setCheckState(0, Qt.Unchecked)
 
-                self.child[run][scen].setCheckState(0, Qt.Unchecked)
+                    lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
+                    self.tree.setItemWidget(self.child[run][scen], 1, lbl)
 
-                lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
-                self.tree.setItemWidget(self.child[run][scen], 1, lbl)
+                    maxi = max(maxi, date)
 
-                maxi = max(maxi, date)
-
-            lbl = QLabel("{:%d/%m/%Y %H:%M}".format(maxi))
-            self.tree.setItemWidget(self.parent[run], 1, lbl)
-
+                lbl = QLabel("{:%d/%m/%Y %H:%M}".format(maxi))
+                print()
+                self.tree.setItemWidget(self.parent[run], 1, lbl)
+        else:
+            self.ui.b_delete.setDisabled(True)
 
         self.ui.b_delete.clicked.connect(self.lancement)
         self.ui.b_cancel.clicked.connect(self.annule)
@@ -136,16 +138,3 @@ class class_deletrun_dialog(QDialog):
     def annule(self):
         self.close()
 
-    def tri_colonne(self, colonne):
-
-        flag = True
-        for run in self.listeRuns:
-            for scen, date in self.listeScen[run]:
-                flag = flag and self.child[run][scen].checkState(0) > 0
-
-        for run in self.listeRuns:
-            for scen, date in self.listeScen[run]:
-                if flag:
-                    self.child[run][scen].setCheckState(0, Qt.Unchecked)
-                else:
-                    self.child[run][scen].setCheckState(0, Qt.Checked)
