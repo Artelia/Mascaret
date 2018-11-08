@@ -57,11 +57,6 @@ class class_deletrun_dialog(QDialog):
 
 
         self.tree = self.ui.treeWidget
-        self.head = QHeaderView(Qt.Horizontal)
-        self.tree.setHeader(self.head)
-        self.head.sectionClicked.connect(self.tri_colonne)
-        self.head.setClickable(True)
-        self.head.resizeSection(0, 350)
 
         self.parent = {}
         self.child = {}

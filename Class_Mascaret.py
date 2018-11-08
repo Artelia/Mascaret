@@ -1274,7 +1274,7 @@ class Class_Mascaret():
 
             ligne = source.readline()
             while '[resultats]' not in ligne:
-                temp = ligne.replace('"', '').split(';')
+                temp = ligne.replace('"', '').replace('NaN',"'NULL'").split(';')
                 col.append(temp[1])
                 ligne = source.readline()
 
@@ -1409,27 +1409,6 @@ class Class_Mascaret():
 
             fich.write(' FIN\n')
 
-    # def deleteRun(self, case):
-    #     """ Delete in tables the run case"""
-    #     condition = "run LIKE '{0}'".format(case)
-    #     dico_scen = self.mdb.selectDistinct("scenario",
-    #                                         "runs", condition)
-    #     liste_scen = ['{}'.format(v) for v in dico_scen['scenario']]
-    #     if not dico_scen:
-    #         self.mgis.addInfo("There aren't scenarii for the {0} case.".format(case))
-    #         return
-    #
-    #     # self.mgis.addInfo('{0}'.format( dico_run["scenario"]))
-    #
-    #     scen, ok = QInputDialog.getItem(None,
-    #                                     'Scenarii',
-    #                                     'Scenarii',
-    #                                     liste_scen, 0, False)
-    #     if ok:
-    #         condition = "scenario LIKE '{0}' AND run LIKE '{1}'".format(scen, case)
-    #         self.mdb.delete('runs', condition)
-    #         self.mdb.delete('resultats', condition)
-    #         self.mgis.addInfo("Deletion of {0} scenario for {1} is done".format(scen, case))
 
     def copyLIG(self):
         """ Load .lig file in run model"""
