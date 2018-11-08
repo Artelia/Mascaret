@@ -51,10 +51,10 @@ class Water_quality_dialog(QDialog):
         self.ui.actionB_add_line.triggered.connect(self.add_line)
         self.ui.actionB_delete_line.triggered.connect(self.delete_line)
 
-
-
         self.ui.actionB_phy_param.triggered.connect(self.physicFile)
         self.ui.actionB_meteo_param.triggered.connect(self.meteoFile)
+
+        self.ui.WaterQ.currentChanged.connect(self.onChangeTab)
 
         self.create_dico_para()
         self.initUI()
@@ -88,7 +88,6 @@ class Water_quality_dialog(QDialog):
         self.modeleQualiteEauBox=self.ui.modeleQualiteEau
         self.presenceTraceursBox= self.ui.presenceTraceurs
 
-
         for param, info in self.par.items():
             if info['gui']:
                 obj = getattr(self.ui, param)
@@ -114,16 +113,9 @@ class Water_quality_dialog(QDialog):
 
         self.type=self.modeleQualiteEau.itemText(self.modeleQualiteEau.currentIndex())
         self.table_Tr = self.ui.tableWidget
+        self.table_Tr.setColumnHidden(0, True)
         # self.table_Tr.addAction(CopySelectedCellsAction(self.table_Tr))
-        if self.type =='TRANSPORT_PUR':
-            self.table_Tr.setEditTriggers(QAbstractItemView.AllEditTriggers)
-            self.ui.b_add_lineTabTracer.show()
-            self.ui.b_delete_lineTabTracer.show()
-        else:
-            self.table_Tr.setEditTriggers(QAbstractItemView.NoEditTriggers)
-            self.ui.b_add_lineTabTracer.hide()
-            self.ui.b_delete_lineTabTracer.hide()
-        self.majTab()
+        self.modeleQualiteEauChanged(self.type)
 
     def modeleQualiteEauChanged(self, text):
         self.type = text
@@ -131,21 +123,34 @@ class Water_quality_dialog(QDialog):
             self.table_Tr.setEditTriggers(QAbstractItemView.AllEditTriggers)
             self.ui.b_add_lineTabTracer.show()
             self.ui.b_delete_lineTabTracer.show()
+            self.b_phy_param.setEnabled(False)
         else:
             self.table_Tr.setEditTriggers(QAbstractItemView.NoEditTriggers)
             self.ui.b_add_lineTabTracer.hide()
             self.ui.b_delete_lineTabTracer.hide()
+            self.b_phy_param.setEnabled(True)
         self.majTab()
 
     def majTab(self):
         condition = """type='{0}'""".format(self.type)
         # self.mgis.addInfo(condition)
         self.tab_tracer_name = self.mdb.select("tracer_name", condition)
-        self.columns=['sigle','text']
+        print(self.tab_tracer_name)
+
+        self.dicoTrac = []
+        for t in range(len(self.tab_tracer_name["id"])):
+            self.dicoTrac.append({"id": self.tab_tracer_name["id"][t],
+                                  "sigle": self.tab_tracer_name["sigle"][t],
+                                  "text": self.tab_tracer_name["text"][t],
+                                  "convec": self.tab_tracer_name["convec"][t],
+                                  "diffu": self.tab_tracer_name["diffu"][t]})
+
+        self.columns = ['id', 'sigle', 'text']
         self.listeTab = []
         for c in self.columns:
             if self.tab_tracer_name[c] != [None] * len(self.tab_tracer_name[c]):
                 self.listeTab.append(self.tab_tracer_name[c])
+
         # gui
         self.remplirTab_Tr(self.listeTab)
         self.ui.nbTraceur.setText('{}'.format( self.table_Tr.rowCount()))
@@ -159,9 +164,13 @@ class Water_quality_dialog(QDialog):
 
     def add_row_tr(self):
         self.table_Tr.setRowCount(self.table_Tr.rowCount() + 1)
-        self.table_Tr.setItem(self.table_Tr.rowCount()-1, 0, QTableWidgetItem('TRA{}'.format(self.table_Tr.rowCount())))
-        self.table_Tr.setItem(self.table_Tr.rowCount()-1, 1, QTableWidgetItem('Tracer {}'.format(self.table_Tr.rowCount())))
+        self.table_Tr.setItem(self.table_Tr.rowCount()-1, 0,QTableWidgetItem(''))
+        self.table_Tr.setItem(self.table_Tr.rowCount()-1, 1, QTableWidgetItem('TRA{}'.format(self.table_Tr.rowCount())))
+        self.table_Tr.setItem(self.table_Tr.rowCount()-1, 2, QTableWidgetItem('Tracer {}'.format(self.table_Tr.rowCount())))
         self.ui.nbTraceur.setText('{}'.format(self.table_Tr.rowCount()))
+        self.dicoTrac.append({"id": '', "sigle": 'TRA{}'.format(self.table_Tr.rowCount()),
+                              "text": 'Tracer{}'.format(self.table_Tr.rowCount()),
+                              "convec": True, "diffu": True})
 
     def meteoFile(self):
         #ouvre et stock information fichier meteo
@@ -172,10 +181,12 @@ class Water_quality_dialog(QDialog):
         # ouvre et stock tableau de physique
         self.mgis.addInfo('fct physicFile')
         pass
+
     def add_line(self):
         #add line au tableau
         self.mgis.addInfo('fct add_line')
         pass
+
     def delete_line(self,tableView,objnbTrac=None):
         #delete line
         self.mgis.addInfo('fct delete_line')
@@ -183,28 +194,107 @@ class Water_quality_dialog(QDialog):
             indices = tableView.selectedIndexes()
             for index in indices:
                     tableView.removeRow(index.row())
+                    del self.dicoTrac[index.row()]
         if objnbTrac:
             objnbTrac.setText('{}'.format(tableView.rowCount()))
 
 
     def stockTable_Tr(self,table):
-        liste_stock=[]
+        if self.ui.WaterQ.currentIndex() == 2:
+            self.onChangeTab(0)
+        id_exist = None
+        liste_id_cur = {}
+        for row in range(table.rowCount()):
+            if table.item(row, 0).text() != "":
+                liste_id_cur[int(table.item(row, 0).text())] = row
 
-        # delete transport_pur
+        # delete transport_pur & laws_wq
+        dico_trac = self.mdb.select('tracer_name', "type='TRANSPORT_PUR'")
+        liste_id_bdd = dico_trac["id"]
+        for id in liste_id_bdd:
+            if id not in liste_id_cur.keys():
+                self.mdb.delete('tracer_name', "id = {}".format(id))
+                self.mdb.delete('laws_wq', "id_trac = {}".format(id))
+            else:
+                if not id_exist:
+                    id_exist = id
+                row = liste_id_cur[id]
+                self.mdb.execute("UPDATE {0}.tracer_name "
+                                 "SET sigle = '{1}', text = '{2}', convec = {3}, diffu = {4} "
+                                 "WHERE id = {5}".format(self.mdb.SCHEMA, table.item(row, 1).text(), table.item(row, 2).text(),
+                                                         self.dicoTrac[row]["convec"], self.dicoTrac[row]["diffu"], table.item(row, 0).text()))
 
-        # add transport_pur
-        condition = "type='TRANSPORT_PUR'"
-        self.mdb.delete('tracer_name', condition)
+        # add transport_pur & laws_wq
         idmax = self.mdb.selectMax("id", "tracer_name",'')
         for row in range(table.rowCount()):
-            sql = """INSERT INTO {0}.tracer_name (id,type,sigle,text,convec,diffu ) VALUES
-                                ({1},'{2}','{3}','{4}',{5},{6})""".format(self.mdb.SCHEMA,idmax+1,
-                                                                    self.type,
-                                                                    table.item(row,0).text(),
-                                                                        table.item(row, 1).text(),
-                                                                        'true','true')
-            idmax += 1
-            self.mdb.run_query(sql)
+            if table.item(row,0).text() == "":
+                sql = """INSERT INTO {0}.tracer_name (id,type,sigle,text,convec,diffu ) VALUES
+                                    ({1},'{2}','{3}','{4}',{5},{6})""".format(self.mdb.SCHEMA,idmax+1,
+                                                                              self.type,
+                                                                              table.item(row,1).text(),
+                                                                              table.item(row, 2).text(),
+                                                                              self.dicoTrac[row]["convec"],
+                                                                              self.dicoTrac[row]["diffu"])
+                self.mdb.run_query(sql)
+
+                if id_exist:
+                    sql = """INSERT INTO {schem}.laws_wq (id_config, id_trac, time, value) 
+                             SELECT id_config, {id_fin}, time, Null FROM {schem}.laws_wq WHERE id_trac = {id_src}""".format(schem=self.mdb.SCHEMA,
+                                                                                                                            id_fin=idmax+1,
+                                                                                                                            id_src=id_exist)
+                    self.mdb.run_query(sql)
+
+                idmax += 1
+
+    def update_conv_diff(self,table):
+        if self.ui.WaterQ.currentIndex() == 2:
+            self.onChangeTab(0)
+
+        liste_id = {}
+        for row in range(table.rowCount()):
+            liste_id[int(table.item(row, 0).text())] = row
+
+        for id in liste_id:
+            row = liste_id[id]
+            self.mdb.execute("UPDATE {0}.tracer_name "
+                             "SET sigle = '{1}', text = '{2}', convec = {3}, diffu = {4} "
+                             "WHERE id = {5}".format(self.mdb.SCHEMA, table.item(row, 1).text(), table.item(row, 2).text(),
+                                                     self.dicoTrac[row]["convec"], self.dicoTrac[row]["diffu"], table.item(row, 0).text()))
+
+    def onChangeTab(self, idx):
+        if idx != 0:
+            self.table_conv_diff.setRowCount(0)
+            for r in range(self.table_Tr.rowCount()):
+                self.dicoTrac[r]["sigle"] = u"{}".format(self.table_Tr.item(r, 1).text())
+                self.dicoTrac[r]["text"] = u"{}".format(self.table_Tr.item(r, 2).text())
+
+                self.table_conv_diff.insertRow(r)
+                self.table_conv_diff.setItem(r, 0, QTableWidgetItem(self.dicoTrac[r]["sigle"]))
+                self.table_conv_diff.item(r, 0).setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                self.table_conv_diff.setItem(r, 1, QTableWidgetItem(self.dicoTrac[r]["text"]))
+                self.table_conv_diff.item(r, 1).setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+
+                for param in [["convec", 2], ["diffu", 3]]:
+                    cb = QCheckBox()
+                    if self.dicoTrac[r][param[0]]:
+                        cb.setCheckState(2)
+                    else:
+                        cb.setCheckState(0)
+                    wdg = QWidget()
+                    lay = QHBoxLayout(wdg)
+                    lay.setSpacing(0)
+                    lay.setContentsMargins(0, 0, 0, 0)
+                    lay.addWidget(cb)
+                    lay.setAlignment(Qt.AlignCenter)
+                    wdg.setLayout(lay)
+                    self.table_conv_diff.setCellWidget(r, param[1], wdg)
+
+        elif idx != 2:
+            for r in range(self.table_conv_diff.rowCount()):
+                for param in [["convec", 2], ["diffu", 3]]:
+                    cb = self.table_conv_diff.cellWidget(r, param[1]).layout().itemAt(0).widget()
+                    self.dicoTrac[r][param[0]] = cb.isChecked()
+
 
 
     def acceptDialog(self):
@@ -240,6 +330,8 @@ class Water_quality_dialog(QDialog):
         # stock tracer
         if self.type == 'TRANSPORT_PUR':
             self.stockTable_Tr(self.table_Tr)
+        else:
+            self.update_conv_diff(self.table_Tr)
 
 
         #

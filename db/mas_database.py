@@ -115,7 +115,7 @@ class MasDatabase(object):
         cur.execute(sql)
         self.con.commit()
 
-    def run_query(self, qry, fetch=False, arraysize=-1, be_quiet=False, namvar=False, many=False,listMany=[]):
+    def run_query(self, qry, fetch=False, arraysize=-1, be_quiet=False, namvar=False, many=False, listMany=[]):
         """
         Running PostgreSQL queries
 
@@ -160,7 +160,7 @@ class MasDatabase(object):
         finally:
             #description pb voir ou utilisé
             if namvar:
-                return result,descr
+                return result, descr
             else:
                 return result
 
@@ -396,13 +396,13 @@ class MasDatabase(object):
                 self.mgis.addInfo('<br>Model "{0}" created.'.format(self.SCHEMA))
 
             #table
-            tables = [ maso.scenarios, maso.lateral_inflows, maso.lateral_weirs, maso.extremities,
+            tables = [maso.scenarios, maso.lateral_inflows, maso.lateral_weirs, maso.extremities,
                       maso.flood_marks, maso.hydraulic_head, maso.outputs,
                       maso.weirs, maso.profiles, maso.topo, maso.branchs,
-                      maso.observations, maso.parametres, maso.resultats,maso.runs,maso.laws,
-                       # qualitee d'eau
-                       maso.tracer_lateral_inflows, maso.tracer_physic,maso.tracer_name
-                       ]
+                      maso.observations, maso.parametres, maso.resultats,maso.runs, maso.laws,
+                      #qualite d'eau
+                      maso.tracer_lateral_inflows, maso.tracer_physic, maso.tracer_name,
+                      maso.tracer_config, maso.laws_wq]
 
             tables.sort(key=lambda x: x().order)
 

@@ -21,8 +21,22 @@ class table_WQ():
     def __init__(self, mgis,mdb):
         self.mgis = mgis
         self.mdb = mdb
+        self.wq_module_default()
         self.tracer_physic_default()
 
+    def wq_module_default(self):
+        self.dico_wq_mod = {1: 'TRANSPORT_PUR',
+                            2: 'O2',
+                            3: 'BIOMASS',
+                            4: 'EUTRO',
+                            5: 'MICROPOLE',
+                            6: 'THERMIC'
+                            }
+
+    def get_cur_wq_mod(self):
+        sql = "SELECT steady FROM {0}.parametres WHERE id = 76".format(self.mdb.SCHEMA)
+        rows = self.mdb.run_query(sql, fetch=True)
+        return int(rows[0][0])
 
     def tracer_physic_default(self):
         self.dico_phy = {

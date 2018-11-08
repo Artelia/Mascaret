@@ -596,16 +596,11 @@ class laws_wq(MasObject):
         self.order = 18
         self.geom_type = None
         self.attrs = [
-            ('id', 'serial NOT NULL'),
-            ('name', 'character varying(30)'),
-            ('starttime', 'timestamp without time zone'),
-            ('endtime', 'timestamp without time zone'),
-            ('z', 'text'),
-            ('type', 'integer'),
-            ('properties', 'integer'),
-            ('time', 'text'),
-            ('C', 'text'),
-            ('CONSTRAINT cle_laws_wq', 'PRIMARY KEY (id)')]
+            ('id_config', 'integer'),
+            ('id_trac', 'integer'),
+            ('time', 'float'),
+            ('value', 'float'),
+            ('CONSTRAINT cle_laws_wq', 'PRIMARY KEY (id_config, id_trac, time)')]
 
 class tracer_physic(MasObject):
     def __init__(self):
@@ -631,6 +626,16 @@ class tracer_name(MasObject):
                       ('convec', 'boolean'),
                       ('diffu', 'boolean'),
                       ('CONSTRAINT cle_tr_name', 'PRIMARY KEY (id)')]
+
+class tracer_config(MasObject):
+    def __init__(self):
+        super(tracer_config, self).__init__()
+        self.order = 21
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('name', 'character varying(30)'),
+                      ('type', 'integer'),
+                      ('CONSTRAINT cle_tr_conf', 'PRIMARY KEY (id)')]
 # *****************************************
 if __name__ == '__main__':
     var= topo()
