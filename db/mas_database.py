@@ -380,6 +380,7 @@ class MasDatabase(object):
         """
         Create empty model inside PostgreSQL database.
         """
+
         self.register.clear()
         if self.last_schema:
             self.removeGroup_Layer("Mas_{}".format(self.last_schema))
@@ -387,7 +388,7 @@ class MasDatabase(object):
 
 
         try :
-            if self.check_firstModel():
+            if self.check_extension():
                 self.mgis.addInfo(" Shema est {}".format(self.SCHEMA))
                 self.create_FirstModel()
             else:
@@ -486,6 +487,17 @@ class MasDatabase(object):
             return False
         else:
             return True
+    def check_extension(self):
+        """check postgis extension """
+        sql="SELECT extname FROM pg_extension"
+        extension = self.run_query(sql, fetch=True)
+        cond = True
+        if extension==None:
+            return cond
+        for  ext in extension :
+            if ext[0]=='postgis':
+                cond=False
+        return cond
 
     def listeModels(self):
         liste = []
@@ -852,7 +864,7 @@ $BODY$
     def importSchema(self,Listfile):
         # """import schema"""
         try:
-            if self.check_firstModel():
+            if  self.check_extension():
                 self.mgis.addInfo(" Shema est {}".format(self.SCHEMA))
                 self.create_FirstModel()
             else:
