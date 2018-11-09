@@ -968,7 +968,7 @@ class Class_Mascaret():
 
     def mascaret(self, noyau, run):
         """creation file and to run mascaret"""
-
+        comments = ''
         sql = "SELECT parametre, {0} FROM {1}.{2};"
         rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
         par = {}
@@ -1143,8 +1143,8 @@ class Class_Mascaret():
                     self.mgis.addInfo("========== Run initialization =========")
                     self.mgis.addInfo("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, sceninit, noyau))
                     self.lanceMascaret(self.baseName + '_init.xcas')
-                    self.litOPT(run, sceninit,comments, None,
-                                self.baseName + '_init')
+                    self.litOPT(run, sceninit, None,
+                                self.baseName + '_init',comments)
                 else:
                     self.mgis.addInfo("No Run initialization.\n"
                                       " The initial boundaries come from {} scenario.".format(sceninit))
@@ -1216,7 +1216,7 @@ class Class_Mascaret():
                 self.mgis.addInfo("Simulation error")
                 return
 
-            self.litOPT(run, scen,comments, dateDebut, self.baseName)
+            self.litOPT(run, scen, dateDebut, self.baseName,comments)
         self.iface.messageBar().clearWidgets()
         self.mgis.addInfo("Simulation finished")
         return
@@ -1255,7 +1255,7 @@ class Class_Mascaret():
         self.mgis.addInfo("{0}".format(p.communicate()[0].decode("utf-8")))
         return True
 
-    def litOPT(self, run, scen, comments,dateDebut, baseNamefile):
+    def litOPT(self, run, scen, dateDebut, baseNamefile,comments=''):
         nomFich = os.path.join(self.dossierFileMasc, baseNamefile + '.opt')
 
         tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
