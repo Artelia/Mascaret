@@ -1014,8 +1014,7 @@ class Class_Mascaret():
                 return
             listeCol = self.mdb.listColumns('runs')
             if 'comments' in listeCol:
-
-                comment, ok = QInputDialog.getText(QWidget(), 'Comments',
+                comments, ok = QInputDialog.getText(QWidget(), 'Comments',
                                                 'if you want to input a comment :')
                 if not ok :
                     if self.mgis.DEBUG:
@@ -1321,9 +1320,8 @@ class Class_Mascaret():
                          "pk": list(pk)}}
             listimport=["run", "date", "pk", "scenario", "t"]
             if comments!='':
-                tab['comments']=comments
-                listimport.append("comments")
-
+                tab[run]["comments"]=comments
+                listimport.insert(1, "comments")
 
             self.mdb.insert("runs",
                             tab,

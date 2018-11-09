@@ -45,15 +45,25 @@ class class_deletrun_dialog(QDialog):
         self.initGUI()
 
     def initGUI(self):
+
+        listeCol = self.mdb.listColumns('runs')
+
         dico = self.mdb.select("runs", "", "date")
 
         self.listeRuns = []
         self.listeScen = {}
-        for run, scen, date in zip(dico["run"], dico["scenario"], dico["date"]):
-            if not run in self.listeRuns:
-                self.listeRuns.append(run)
-                self.listeScen[run] = []
-            self.listeScen[run].append((scen, date))
+        if 'comments' in listeCol:
+            for run, scen, date,comments in zip(dico["run"], dico["scenario"], dico["date"], dico["comments"]):
+                if not run in self.listeRuns:
+                    self.listeRuns.append(run)
+                    self.listeScen[run] = []
+                self.listeScen[run].append((scen, date,comments))
+        else:
+            for run, scen, date in zip(dico["run"], dico["scenario"], dico["date"]):
+                if not run in self.listeRuns:
+                    self.listeRuns.append(run)
+                    self.listeScen[run] = []
+                self.listeScen[run].append((scen, date))
 
         if len(self.listeRuns)>0:
             self.tree = self.ui.treeWidget
@@ -68,30 +78,42 @@ class class_deletrun_dialog(QDialog):
                                           Qt.ItemIsTristate |
                                           Qt.ItemIsUserCheckable)
                 i = dico['run'].index(run)
-                try :
-                    lbl = QLabel(dico['comments'][i])
-                except KeyError :
-                    lbl = QLabel('')
+
+                lbl = QLabel('')
                 self.tree.setItemWidget(self.parent[run], 2, lbl)
 
                 self.child[run] = {}
                 maxi = datetime(1900, 1, 1, 0, 0)
+                if 'comments' in listeCol:
+                    for scen, date,comments in self.listeScen[run]:
+                        self.child[run][scen] = QTreeWidgetItem(self.parent[run])
+                        self.child[run][scen].setFlags(self.child[run][scen].flags() |
+                                                       Qt.ItemIsUserCheckable)
+                        self.child[run][scen].setText(0, scen)
 
-                for scen, date in self.listeScen[run]:
-                    self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                    self.child[run][scen].setFlags(self.child[run][scen].flags() |
-                                                   Qt.ItemIsUserCheckable)
-                    self.child[run][scen].setText(0, scen)
+                        self.child[run][scen].setCheckState(0, Qt.Unchecked)
 
-                    self.child[run][scen].setCheckState(0, Qt.Unchecked)
+                        lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
+                        self.tree.setItemWidget(self.child[run][scen], 1, lbl)
 
-                    lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
-                    self.tree.setItemWidget(self.child[run][scen], 1, lbl)
+                        maxi = max(maxi, date)
+                        lbl = QLabel(comments)
+                        self.tree.setItemWidget(self.child[run][scen], 2, lbl)
+                else:
+                    for scen, date in self.listeScen[run]:
+                        self.child[run][scen] = QTreeWidgetItem(self.parent[run])
+                        self.child[run][scen].setFlags(self.child[run][scen].flags() |
+                                                       Qt.ItemIsUserCheckable)
+                        self.child[run][scen].setText(0, scen)
 
-                    maxi = max(maxi, date)
+                        self.child[run][scen].setCheckState(0, Qt.Unchecked)
+
+                        lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
+                        self.tree.setItemWidget(self.child[run][scen], 1, lbl)
+
+                        maxi = max(maxi, date)
 
                 lbl = QLabel("{:%d/%m/%Y %H:%M}".format(maxi))
-                print()
                 self.tree.setItemWidget(self.parent[run], 1, lbl)
         else:
             self.ui.b_delete.setDisabled(True)
