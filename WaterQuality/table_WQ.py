@@ -18,7 +18,7 @@ email                :
  ***************************************************************************/
 """
 class table_WQ():
-    def __init__(self, mgis,mdb):
+    def __init__(self, mgis, mdb):
         self.mgis = mgis
         self.mdb = mdb
         self.wq_module_default()
@@ -326,12 +326,13 @@ class table_WQ():
                                     item['text']])
                     id += 1
 
-
             for item in self.dico_phy[key]['tracer']:
                 list_var_name.append([id1,key,
                                 item['sigle'],
                                 item['text'],True,True])
                 id1 += 1
+
+
         listeCol = self.mdb.listColumns('tracer_physic')
         var = ",".join(listeCol)
         valeurs = "("
@@ -342,7 +343,6 @@ class table_WQ():
                                                             'tracer_physic',
                                                             var,
                                                             valeurs)
-
         self.mdb.run_query(sql, many=True, listMany=list_var_phy)
 
         listeCol = self.mdb.listColumns('tracer_name')

@@ -34,7 +34,9 @@ from qgis.gui import *
 
 from ..graphProfil_Dialog import CopySelectedCellsAction
 from .. import function as fct
-from .table_WQ import  table_WQ
+from .table_WQ import table_WQ
+from .physical_param_dialog import physical_param_dialog
+
 class Water_quality_dialog(QDialog):
     def __init__(self, mgis):
         QDialog.__init__(self)
@@ -180,7 +182,15 @@ class Water_quality_dialog(QDialog):
     def physicFile(self):
         # ouvre et stock tableau de physique
         self.mgis.addInfo('fct physicFile')
-        pass
+        dlg = physical_param_dialog(self.mgis, self.ui.modeleQualiteEau.currentText())
+        dlg.setWindowModality(2)
+        if dlg.exec_():
+            mdl = dlg.ui.tab_param.model()
+            for row in range(mdl.rowCount()):
+                self.mdb.execute("UPDATE {0}.tracer_physic "
+                                 "SET value = '{1}' "
+                                 "WHERE id = {2}".format(self.mdb.SCHEMA, mdl.item(row, 3).data(0), mdl.item(row, 0).data(0)))
+
 
     def add_line(self):
         #add line au tableau
