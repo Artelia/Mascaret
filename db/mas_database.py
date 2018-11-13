@@ -23,8 +23,10 @@ import psycopg2.extras
 from qgis.core import QgsVectorLayer, NULL,QgsProject
 try :   #qgis2
     from qgis.core import QgsMapLayerRegistry,QgsDataSourceURI
+    VERSION_QGIS=2
 except :#qgis3
     from qgis.core import QgsDataSourceUri
+    VERSION_QGIS = 3
 
 from qgis.gui import QgsMessageBar
 
@@ -336,7 +338,10 @@ class MasDatabase(object):
             vlayer (QgsVectorLayer): QgsVectorLayer object.
         """
         try:
-            style_file = os.path.join(self.mgis.masplugPath,'db', 'styles', '{0}.qml'.format(vlayer.name()))
+            if VERSION_QGIS==3: # qgis3
+                style_file = os.path.join(self.mgis.masplugPath,'db', 'styles_qgis3', '{0}.qml'.format(vlayer.name()))
+            else:
+                style_file = os.path.join(self.mgis.masplugPath, 'db', 'styles_qgis2', '{0}.qml'.format(vlayer.name()))
             if self.group:
                 try:     # qgis2
                     QgsMapLayerRegistry.instance().addMapLayer(vlayer, False)
@@ -377,6 +382,7 @@ class MasDatabase(object):
         """
         Create empty model inside PostgreSQL database.
         """
+
         self.register.clear()
         if self.last_schema:
             self.removeGroup_Layer("Mas_{}".format(self.last_schema))
@@ -384,7 +390,7 @@ class MasDatabase(object):
 
 
         try :
-            if self.check_firstModel():
+            if self.check_extension():
                 self.mgis.addInfo(" Shema est {}".format(self.SCHEMA))
                 self.create_FirstModel()
             else:
@@ -492,6 +498,17 @@ class MasDatabase(object):
             return False
         else:
             return True
+    def check_extension(self):
+        """check postgis extension """
+        sql="SELECT extname FROM pg_extension"
+        extension = self.run_query(sql, fetch=True)
+        cond = True
+        if extension==None:
+            return cond
+        for  ext in extension :
+            if ext[0]=='postgis':
+                cond=False
+        return cond
 
     def listeModels(self):
         liste = []
@@ -688,12 +705,14 @@ $BODY$
 
         return dico
     #
-    def selectDistinct(self, var, table, where=""):
+    def selectDistinct(self, var, table, where="", ordre=None):
         """select the "where" variable which is multiple"""
+        if ordre==None:
+            ordre=var
         if where:
             where = "WHERE " + where
-        sql = "SELECT DISTINCT {0} FROM {1}.{2} {3} ORDER BY {0};"
-        (results, namCol) = self.run_query(sql.format(var, self.SCHEMA, table, where), fetch=True,namvar=True)
+        sql = "SELECT DISTINCT {0} FROM {1}.{2} {3} ORDER BY {4};"
+        (results, namCol) = self.run_query(sql.format(var, self.SCHEMA, table, where,ordre), fetch=True,namvar=True)
         cols = [col[0] for col in namCol]
         dico = {}
         for row in results:
@@ -858,7 +877,7 @@ $BODY$
     def importSchema(self,Listfile):
         # """import schema"""
         try:
-            if self.check_firstModel():
+            if  self.check_extension():
                 self.mgis.addInfo(" Shema est {}".format(self.SCHEMA))
                 self.create_FirstModel()
             else:

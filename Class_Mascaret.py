@@ -667,12 +667,18 @@ class Class_Mascaret():
             hydrauliques = SubElement(cas, "parametresLoisHydrauliques")
 
             for nom in dictLois.keys():
-                if nom in libres["name"] and (dictLois[nom]['type'] == 6 or dictLois[nom]['type'] == 7):
+                if nom in libres["name"] and (dictLois[nom]['type'] == 6 or dictLois[nom]['type'] == 7) :
                     # les types sont ceux de
-                    if dictLois[nom]['type'] == 6:
+                    print( dictLois[nom]['type'], nom)
+                    if dictLois[nom]['type'] == 6 : #TODO and noyau!='transcritical'
                         dictLois[nom]['type'] = 1
-                    else:
+                        if self.mgis.DEBUG:
+                            self.mgis.addInfo('The  {} law changes type 6 => 1'.format(nom))
+                    elif  dictLois[nom]['type'] == 7:
                         dictLois[nom]['type'] = 2
+                        if self.mgis.DEBUG:
+                            self.mgis.addInfo('The  {} law changes type 7 => 2'.format(nom))
+
             nb = len(dictLois.keys())
             SubElement(hydrauliques, "nb").text = str(nb)
             lois = SubElement(hydrauliques, "lois")
@@ -714,6 +720,8 @@ class Class_Mascaret():
             arbre.write(fichierSortie)
 
             ##### XCAS initialisation #####
+            dt_init=60
+            npPasTemps_init=int(3600/60.)
 
             paramCas = fichierCas.find('parametresCas')
             parametresGeneraux = paramCas.find('parametresGeneraux')
@@ -721,9 +729,9 @@ class Class_Mascaret():
             parametresGeneraux.find('fichMotsCles').text = fichXCAS
             parametresGeneraux.find('code').text = '1'
             parametresTemporels = paramCas.find('parametresTemporels')
-            parametresTemporels.find('pasTemps').text = '60'
+            parametresTemporels.find('pasTemps').text = '{}'.format(dt_init)
             parametresTemporels.find('critereArret').text = '2'
-            parametresTemporels.find('nbPasTemps').text = '2'
+            parametresTemporels.find('nbPasTemps').text = '{}'.format(npPasTemps_init)
             geomReseau = paramCas.find('parametresGeometrieReseau')
             typeCond = geomReseau.find('extrLibres').find('typeCond')
             typeCond.text = typeCond.text.replace('4', '2').replace('6', '1').replace('7', '2')
@@ -837,7 +845,7 @@ class Class_Mascaret():
                 #     self.mgis.addInfo("{0} :\n \t Time : {1}\n \t Upstream Water Level{2}\n \t  "
                 #                       "Downstream Water Level :{3}"
                 #                       .format(nom,tab["temps"], tab["cote_amont"], tab["cote_aval"]))
-            n = len(tab.values()[0])
+            n = len(list(tab.values())[0])
 
             for i in range(n):
                 dico = {k: v[i] for k, v in tab.items()}
@@ -960,7 +968,7 @@ class Class_Mascaret():
 
     def mascaret(self, noyau, run):
         """creation file and to run mascaret"""
-
+        comments = ''
         sql = "SELECT parametre, {0} FROM {1}.{2};"
         rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
         par = {}
@@ -1004,6 +1012,18 @@ class Class_Mascaret():
                 if self.mgis.DEBUG:
                     self.mgis.addInfo("Canceled Simulation because of {0} already exists.".format(scen))
                 return
+            listeCol = self.mdb.listColumns('runs')
+            if 'comments' in listeCol:
+                comments, ok = QInputDialog.getText(QWidget(), 'Comments',
+                                                'if you want to input a comment :')
+                if not ok :
+                    if self.mgis.DEBUG:
+                        self.mgis.addInfo("No comments.")
+                        comments=''
+            else:
+                comments = ''
+
+
             dictScen = {'name': [scen]}
 
         # progressMessageBar = self.iface.messageBar().createMessage(
@@ -1026,14 +1046,34 @@ class Class_Mascaret():
                         continue
                     if l["valeurperm"] is None:
                         self.mgis.addInfo("Error : Add the 'valeurprerm' value in extremities.")
+
+                    try:
+                        liste_=['pasTemps', 'critereArret', 'nbPasTemps', 'tempsMax','tempsInit']
+                        temp_dic={}
+                        for info in liste_:
+                            condition = "parametre ='{}'".format(info)
+                            dtemp = self.mdb.selectDistinct('steady','parametres', condition)
+                            temp_dic[info]=dtemp['steady'][0]
+                    except Exception as e:
+                        self.mgis.addInfo(str(e))
+                        return
+                    if temp_dic['critereArret']==1:
+                       tfinal=temp_dic['tempsMax']
+                    elif temp_dic['critereArret']==2:
+                       tfinal=temp_dic['tempsInit']+temp_dic['pasTemps']*temp_dic['nbPasTemps']
+                    elif temp_dic['critereArret'] == 3:
+                        tfinal =365*24*3600
                     if l['type'] == 1:
-                        tab = {"time": [0, 3600], 'flowrate': [l["valeurperm"]] * 2}
+                        tab = {"time": [0, tfinal], 'flowrate': [l["valeurperm"]] * 2}
                     else:
                         # In steady case the other type don't exist
                         l['type'] = 2
-                        tab = {"time": [0, 3600], 'z': [l["valeurperm"]] * 2}
+                        tab = {"time": [0, tfinal], 'z': [l["valeurperm"]] * 2}
 
                     self.creerLOI(nom, tab, l['type'])
+
+
+
 
             elif par["evenement"]:
                 # transcritical unsteady evenement
@@ -1074,6 +1114,7 @@ class Class_Mascaret():
                         if v and k in liste:
                             tab[k] = [float(var) for var in v.split()]
 
+
                     self.creerLOI(nom, tab, l["type"])
                     if self.mgis.DEBUG:
                         self.mgis.addInfo("Laws file is created.")
@@ -1102,7 +1143,7 @@ class Class_Mascaret():
                     self.mgis.addInfo("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, sceninit, noyau))
                     self.lanceMascaret(self.baseName + '_init.xcas')
                     self.litOPT(run, sceninit, None,
-                                self.baseName + '_init')
+                                self.baseName + '_init',comments)
                 else:
                     self.mgis.addInfo("No Run initialization.\n"
                                       " The initial boundaries come from {} scenario.".format(sceninit))
@@ -1130,35 +1171,36 @@ class Class_Mascaret():
 
                 dico_run = self.mdb.selectDistinct("run",
                                                    "runs")
-                liste_run = ['{}'.format(v) for v in dico_run['run']]
+                if dico_run !={}:
+                    liste_run = ['{}'.format(v) for v in dico_run['run']]
+                else:
+                    liste_run=[]
+                liste_run.append('".lig" File')
                 case, ok = QInputDialog.getItem(None,
                                                 'Initial run case ',
                                                 'Runs',
                                                 liste_run, 0, False)
 
                 if ok:
-
-                    condition = "run LIKE '{0}'".format(case)
-                    dico_scen = self.mdb.selectDistinct("scenario",
-                                                        "runs", condition)
-                    liste_scen = ['{}'.format(v) for v in dico_scen["scenario"]]
-                    liste_scen.append('".lig" File')
-                    scen2, ok = QInputDialog.getItem(None,
-                                                     'Initial Scenario',
-                                                     'Initial Scenario',
-                                                     liste_scen, 0, False)
-
-                    if ok:
-                        if scen2 == '".lig" File':
-                            self.copyLIG()
-                        else:
-                            # self.OPTtoLIG("Steady", scen2, self.baseName)
-                            # self.OPTtoLIG(dico_run["run"][liste2.index(scen2)], scen2, self.baseName)
-                            self.OPTtoLIG(case, scen2, self.baseName)
+                    if case== '".lig" File':
+                        self.copyLIG()
                     else:
-                        if self.mgis.DEBUG:
-                            self.mgis.addInfo("Cancel run")
-                        return
+                        condition = "run LIKE '{0}'".format(case)
+                        dico_scen = self.mdb.selectDistinct("scenario",
+                                                            "runs", condition)
+                        liste_scen = ['{}'.format(v) for v in dico_scen["scenario"]]
+
+                        scen2, ok = QInputDialog.getItem(None,
+                                                         'Initial Scenario',
+                                                         'Initial Scenario',
+                                                         liste_scen, 0, False)
+
+                        if ok:
+                            self.OPTtoLIG(case, scen2, self.baseName)
+                        else:
+                            if self.mgis.DEBUG:
+                                self.mgis.addInfo("Cancel run")
+                            return
 
                 else:
                     if self.mgis.DEBUG:
@@ -1173,7 +1215,7 @@ class Class_Mascaret():
                 self.mgis.addInfo("Simulation error")
                 return
 
-            self.litOPT(run, scen, dateDebut, self.baseName)
+            self.litOPT(run, scen, dateDebut, self.baseName,comments)
         self.iface.messageBar().clearWidgets()
         self.mgis.addInfo("Simulation finished")
         return
@@ -1212,7 +1254,7 @@ class Class_Mascaret():
         self.mgis.addInfo("{0}".format(p.communicate()[0].decode("utf-8")))
         return True
 
-    def litOPT(self, run, scen, dateDebut, baseNamefile):
+    def litOPT(self, run, scen, dateDebut, baseNamefile,comments=''):
         nomFich = os.path.join(self.dossierFileMasc, baseNamefile + '.opt')
 
         tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
@@ -1231,7 +1273,7 @@ class Class_Mascaret():
 
             ligne = source.readline()
             while '[resultats]' not in ligne:
-                temp = ligne.replace('"', '').split(';')
+                temp = ligne.replace('"', '').replace('NaN',"'NULL'").split(';')
                 col.append(temp[1])
                 ligne = source.readline()
 
@@ -1252,7 +1294,7 @@ class Class_Mascaret():
                     t.add(ligne["t"])
 
                 # TODO delete round in future
-                tempo = str(round(float(ligne["pk"]), 1))
+                tempo = str(round(float(ligne["pk"]), 2))
                 pk.add(tempo)
                 ligne["run"] = run
                 ligne["scenario"] = scen
@@ -1263,7 +1305,7 @@ class Class_Mascaret():
                 for k in col:
                     if k == 'pk':
                         # TODO delete round in future
-                        tempo = str(round(float(ligne[k]), 1))
+                        tempo = str(round(float(ligne[k]), 2))
                         ligne_list.append(tempo)
                     else:
                         ligne_list.append(ligne[k])
@@ -1276,10 +1318,14 @@ class Class_Mascaret():
                          "date": "{:%Y-%m-%d %H:%M}".format(maintenant),
                          "t": list(t),
                          "pk": list(pk)}}
+            listimport=["run", "date", "pk", "scenario", "t"]
+            if comments!='':
+                tab[run]["comments"]=comments
+                listimport.insert(1, "comments")
 
             self.mdb.insert("runs",
                             tab,
-                            ["run", "date", "pk", "scenario", "t"],
+                            listimport,
                             ",")
             listeCol = self.mdb.listColumns("resultats")
 
@@ -1361,27 +1407,6 @@ class Class_Mascaret():
 
             fich.write(' FIN\n')
 
-    def deleteRun(self, case):
-        """ Delete in tables the run case"""
-        condition = "run LIKE '{0}'".format(case)
-        dico_scen = self.mdb.selectDistinct("scenario",
-                                            "runs", condition)
-        liste_scen = ['{}'.format(v) for v in dico_scen['scenario']]
-        if not dico_scen:
-            self.mgis.addInfo("There aren't scenarii for the {0} case.".format(case))
-            return
-
-        # self.mgis.addInfo('{0}'.format( dico_run["scenario"]))
-
-        scen, ok = QInputDialog.getItem(None,
-                                        'Scenarii',
-                                        'Scenarii',
-                                        liste_scen, 0, False)
-        if ok:
-            condition = "scenario LIKE '{0}' AND run LIKE '{1}'".format(scen, case)
-            self.mdb.delete('runs', condition)
-            self.mdb.delete('resultats', condition)
-            self.mgis.addInfo("Deletion of {0} scenario for {1} is done".format(scen, case))
 
     def copyLIG(self):
         """ Load .lig file in run model"""
@@ -1390,12 +1415,14 @@ class Class_Mascaret():
                                                     'File Selection',
                                                     self.dossierFileMasc,
                                                     "File (*.lig)")
+            fichiers=fichiers[0]
         else:  # qt5
             fichiers, _ = QFileDialog.getOpenFileNames(None,
                                                        'File Selection',
                                                        self.dossierFileMasc,
                                                        "File (*.lig)")
-        shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + '.lig'))
+
+        shutil.copy(fichiers,os.path.join(self.dossierFileMasc, self.baseName + '.lig') )
 
     def clean_rep(self):
         """ Clean the run folder and copy the essential files to run mascaret"""

@@ -507,7 +507,6 @@ class GraphProfil(GraphCommon):
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
 
         tab = {self.nom: self.tab}
-        print(tab)
         self.mdb.update("profiles", tab, var="name")
 
     def sauveTopo(self):
@@ -1478,7 +1477,6 @@ class GraphProfilRes(GraphCommon):
             if self.posit=='Hmax':
                 temp2 = np.array([self.zmax] * len(T['z']))
             else:
-
                 h=self.zH['zref'][0] + self.zH['y'][0]
                 temp2 = np.array([h] * len(T['z']))
 
@@ -1609,12 +1607,13 @@ class GraphProfilRes(GraphCommon):
         if self.posit=='Hmax':
             self.zH= self.zmax
         elif isinstance(self.posit, datetime):
-            condition += """AND date='{:%Y-%m-%d %H:%M:%S}'""".format(
+            condition += """ AND date='{:%Y-%m-%d %H:%M:%S}'""".format(
                 self.posit)
             self.zH = self.mdb.select("resultats", condition, "t")
         else:
-            condition += "AND t={0}".format(self.posit)
+            condition += " AND t={0}".format(self.posit)
             self.zH = self.mdb.select("resultats", condition, "t")
+
 
 
 
@@ -2084,7 +2083,7 @@ class GraphHydro(GraphCommon):
 
         temp = self.mdb.selectDistinct('pk', "resultats", condition)
         #TODO delete round in future
-        self.liste['pk']['abs'] = [ round(elem, 1) for elem in temp['pk'] ]
+        self.liste['pk']['abs'] = [ round(elem, 2) for elem in temp['pk'] ]
         S = self.liste['selection']
 
         if self.type == 'pk':

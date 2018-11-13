@@ -41,7 +41,7 @@ class Settings(QDialog):
 
         self.mgis = parent
         self.mdb = parent.mdb
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_settings_Simple.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_settings.ui'), self)
         self.ui.txt_path_postgres.setText(self.mgis.postgres_path)
 
         self.ui.buttonBox.accepted.connect(self.acceptDialog)

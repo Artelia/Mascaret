@@ -325,17 +325,10 @@ class MascPlugDialog(QMainWindow):
 
     def dbDeleteModel(self):
         """ Model delete"""
+        from .class_deletsh_dialog import class_deletsh_dialog
+        dlg = class_deletsh_dialog(self, self.iface)
+        dlg.exec_()
 
-        liste = self.mdb.listeModels()
-        model, ok = QInputDialog.getItem(None,
-                                          'Project choice',
-                                          'Project',
-                                          liste,0, False)
-        if ok:
-            self.mdb.drop_model(model, cascade=True)
-
-        else:
-            self.addInfo('Droping Model cancelled.')
 
     def dbLoad(self,schemaInfo=None):
         """ load model"""
@@ -490,17 +483,10 @@ class MascPlugDialog(QMainWindow):
 
     def del_run(self):
         """ Delete run of curent model"""
-        dico_run = self.mdb.selectDistinct("run",
-                                           "runs")
-        liste_run=['{}'.format(v) for v in  dico_run['run']]
+        from .class_deletrun_dialog import class_deletrun_dialog
+        dlg = class_deletrun_dialog(self, self.iface)
+        dlg.exec_()
 
-        case, ok = QInputDialog.getItem(None,
-                                        'Run case',
-                                        'Runs',
-                                        liste_run, 0, False)
-        if ok:
-            clam = Class_Mascaret(self)
-            clam.deleteRun(case)
 
 
 
