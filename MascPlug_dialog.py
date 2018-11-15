@@ -30,14 +30,17 @@ from qgis.core import *
 from qgis.utils import *
 from qgis.gui import *
 
+#water quality
 from .WaterQuality.TracerLaws_dialog import TracerLaws_dialog
 from .WaterQuality.water_quality_dialog import Water_quality_dialog
+from .WaterQuality.class_mascWQ import class_mascWQ
 
 from .graphProfil_Dialog import IdentifyFeatureTool
 from .db.mas_database import MasDatabase
 from .MNT_class import Worker
 from .Class_Mascaret import Class_Mascaret
 from .parameter_dialog import parameter_dialog
+
 
 import math
 import os
@@ -53,7 +56,7 @@ class MascPlugDialog(QMainWindow):
         self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.masplugPath = os.path.dirname(__file__)
-        self.ui = loadUi(os.path.join(self.masplugPath,'ui/MascPlug_dialog_base.ui'), self)
+        self.ui = loadUi(os.path.join(self.masplugPath,'ui/MascPlug_dialog_base_test.ui'), self)
         #variables
         self.DEBUG = 1
         self.curConnName= None
@@ -163,6 +166,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionWebsite.triggered.connect(self.website)
         self.ui.actionWebsite.setEnabled(False)
         self.ui.actionAbout.setEnabled(False)
+        self.ui.actiontest_file.triggered.connect(self.fct_test_file)
 
 
 
@@ -647,3 +651,8 @@ class MascPlugDialog(QMainWindow):
 
         dlg = Water_quality_dialog(self)
         dlg.exec_()
+    def fct_test_file(self):
+
+        self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
+        cl=class_mascWQ(self,self.dossierFileMasc)
+        cl.create_filephy()

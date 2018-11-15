@@ -33,6 +33,7 @@ from qgis.utils import *
 from qgis.gui import *
 
 from .table_WQ import table_WQ
+from .. import function as fct_
 
 class physical_param_dialog(QDialog):
     def __init__(self, mgis, mod):
@@ -69,7 +70,7 @@ class physical_param_dialog(QDialog):
                 itm = QStandardItem()
                 itm.setData(val, 0)
                 if c == 3:
-                    itm.setData(data_to_float(val), 0)
+                    itm.setData(fct_.data_to_float(val), 0)
                     itm.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsEditable)
                     itm.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                 else:
@@ -89,14 +90,12 @@ class physical_param_dialog(QDialog):
             mdl = self.ui.tab_param.model()
             mdl.item(r, 3).setData(param['value'], 0)
 
-def data_to_float(txt):
-    try:
-        float(txt)
-        return float(txt)
-    except ValueError:
-        return None
 
-class ItemEditorFactory(QItemEditorFactory):  # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate    It is possible for a custom delegate to provide editors without the use of an editor item factory. In this case, the following virtual functions must be reimplemented:
+
+
+class ItemEditorFactory(QItemEditorFactory):  # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
+    # It is possible for a custom delegate to provide editors without the use of an editor item factory.
+    # In this case, the following virtual functions must be reimplemented:
     def __init__(self):
         QItemEditorFactory.__init__(self)
 

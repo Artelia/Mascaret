@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MascPlug</class>
+ <widget class="QMainWindow" name="MascPlug">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>859</width>
+    <height>738</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Mascaret</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../resources.qrc">
+    <normaloff>:/plugins/Mascaret/icones/icon_base.png</normaloff>:/plugins/Mascaret/icones/icon_base.png</iconset>
+  </property>
+  <property name="iconSize">
+   <size>
+    <width>24</width>
+    <height>24</height>
+   </size>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="1" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Projection</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
+        <property name="minimumSize">
+         <size>
+          <width>300</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>400</width>
+          <height>16777215</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="0" column="0">
+     <widget class="QTextEdit" name="textEdit">
+      <property name="minimumSize">
+       <size>
+        <width>200</width>
+        <height>200</height>
+       </size>
+      </property>
+      <property name="mouseTracking">
+       <bool>false</bool>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="2">
+       <widget class="QComboBox" name="connsCbo">
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>0</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="labelCurDatabase">
+        <property name="text">
+         <string>DB Connection:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Minimum</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>10</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item row="3" column="0">
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>10</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="1" column="1">
+     <spacer name="horizontalSpacer_4">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Minimum</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>5</width>
+        <height>5</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>859</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <widget class="QMenu" name="menuSetting">
+     <property name="title">
+      <string>Setting</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../resources.qrc">
+       <normaloff>:/plugins/Mascaret/icones/options.png</normaloff>:/plugins/Mascaret/icones/options.png</iconset>
+     </property>
+     <addaction name="actionOptions"/>
+     <addaction name="actionRestore_Default_Options"/>
+    </widget>
+    <addaction name="menuSetting"/>
+    <addaction name="actionWebsite"/>
+    <addaction name="actionAbout"/>
+   </widget>
+   <widget class="QMenu" name="menu_Tools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionCross_section"/>
+    <addaction name="separator"/>
+    <addaction name="action_Extract_MNTfor_profile"/>
+   </widget>
+   <widget class="QMenu" name="menuDB">
+    <property name="title">
+     <string>Database</string>
+    </property>
+    <addaction name="actionRefresh_Database"/>
+    <addaction name="separator"/>
+    <addaction name="actionCreate_New_Model"/>
+    <addaction name="actionLoad_Model"/>
+    <addaction name="actionDeleteModel"/>
+    <addaction name="separator"/>
+    <addaction name="actionExport_Model"/>
+    <addaction name="actionImport_Model"/>
+   </widget>
+   <widget class="QMenu" name="menuRun">
+    <property name="title">
+     <string>Run</string>
+    </property>
+    <addaction name="actionParameters"/>
+    <addaction name="separator"/>
+    <addaction name="actionCreate_Geometry"/>
+    <addaction name="actionCreate_xcas"/>
+    <addaction name="separator"/>
+    <addaction name="actionRun"/>
+    <addaction name="separator"/>
+    <addaction name="actionExport_Run"/>
+    <addaction name="actionDelete_Run"/>
+   </widget>
+   <widget class="QMenu" name="menuPost_Treatment">
+    <property name="title">
+     <string>Post-Treatment</string>
+    </property>
+    <addaction name="actionHydrogramme"/>
+    <addaction name="actionCross_section_results"/>
+   </widget>
+   <widget class="QMenu" name="menuWater_Quality">
+    <property name="title">
+     <string>Water Quality</string>
+    </property>
+    <addaction name="actionParameters_Water_Quality"/>
+    <addaction name="actionTracer_Laws"/>
+    <addaction name="actiontest_file"/>
+   </widget>
+   <addaction name="menuDB"/>
+   <addaction name="menu_Tools"/>
+   <addaction name="menuRun"/>
+   <addaction name="menuPost_Treatment"/>
+   <addaction name="menuWater_Quality"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QToolBar" name="dbToolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionRefresh_Database"/>
+   <addaction name="actionCreate_New_Model"/>
+   <addaction name="actionLoad_Model"/>
+   <addaction name="actionDeleteModel"/>
+   <addaction name="actionExport_Model"/>
+   <addaction name="actionImport_Model"/>
+  </widget>
+  <widget class="QToolBar" name="ToolsToolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionCross_section"/>
+   <addaction name="separator"/>
+   <addaction name="action_Extract_MNTfor_profile"/>
+  </widget>
+  <widget class="QToolBar" name="RunToolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionParameters"/>
+   <addaction name="separator"/>
+   <addaction name="actionCreate_Geometry"/>
+   <addaction name="actionCreate_xcas"/>
+   <addaction name="separator"/>
+   <addaction name="actionRun"/>
+   <addaction name="separator"/>
+   <addaction name="actionExport_Run"/>
+   <addaction name="actionDelete_Run"/>
+  </widget>
+  <widget class="QToolBar" name="PostTreatmentToolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionHydrogramme"/>
+   <addaction name="actionCross_section_results"/>
+  </widget>
+  <widget class="QToolBar" name="WaterQualityToolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionParameters_Water_Quality"/>
+   <addaction name="actionTracer_Laws"/>
+  </widget>
+  <action name="actionWebsite">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/webSite.png</normaloff>:/plugins/Mascaret/icones/webSite.png</iconset>
+   </property>
+   <property name="text">
+    <string>Web site</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/icon_base.png</normaloff>:/plugins/Mascaret/icones/icon_base.png</iconset>
+   </property>
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionDeleteModel">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/dbDeleteModel.png</normaloff>:/plugins/Mascaret/icones/dbDeleteModel.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete Model</string>
+   </property>
+  </action>
+  <action name="actionRefresh_Database">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/refreshConnections.png</normaloff>:/plugins/Mascaret/icones/refreshConnections.png</iconset>
+   </property>
+   <property name="text">
+    <string>Refresh Connections List</string>
+   </property>
+  </action>
+  <action name="actionExport_Model">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/dbExtractModel.png</normaloff>:/plugins/Mascaret/icones/dbExtractModel.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export Model</string>
+   </property>
+  </action>
+  <action name="action_Extract_MNTfor_profile">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/mntExtract.png</normaloff>:/plugins/Mascaret/icones/mntExtract.png</iconset>
+   </property>
+   <property name="text">
+    <string> Extract MNT for profile</string>
+   </property>
+  </action>
+  <action name="actionSteady">
+   <property name="text">
+    <string>Steady</string>
+   </property>
+  </action>
+  <action name="actionUnsteady">
+   <property name="text">
+    <string>Unsteady</string>
+   </property>
+  </action>
+  <action name="actionTranscritical">
+   <property name="text">
+    <string>Transcritical</string>
+   </property>
+  </action>
+  <action name="actionCreate_Geometry">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/geo.png</normaloff>:/plugins/Mascaret/icones/geo.png</iconset>
+   </property>
+   <property name="text">
+    <string>Create Geometry</string>
+   </property>
+  </action>
+  <action name="actionCreate_xcas">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/xcas.png</normaloff>:/plugins/Mascaret/icones/xcas.png</iconset>
+   </property>
+   <property name="text">
+    <string>Create xcas</string>
+   </property>
+  </action>
+  <action name="actionSteadyRun">
+   <property name="text">
+    <string>Steady</string>
+   </property>
+  </action>
+  <action name="actionUnsteadyRun">
+   <property name="text">
+    <string>Unsteady</string>
+   </property>
+  </action>
+  <action name="actionTranscriticalRun">
+   <property name="text">
+    <string>Transcritical</string>
+   </property>
+  </action>
+  <action name="actionObservation_Load">
+   <property name="text">
+    <string>Observation Load</string>
+   </property>
+  </action>
+  <action name="actionCreate_New_Model">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/dbCreateModel.png</normaloff>:/plugins/Mascaret/icones/dbCreateModel.png</iconset>
+   </property>
+   <property name="text">
+    <string>Create New Model</string>
+   </property>
+  </action>
+  <action name="actionLoad_Model">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/dbLoadModel.png</normaloff>:/plugins/Mascaret/icones/dbLoadModel.png</iconset>
+   </property>
+   <property name="text">
+    <string>Load Model</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>Options</string>
+   </property>
+  </action>
+  <action name="actionRestore_Default_Options">
+   <property name="text">
+    <string>Restore Default Options</string>
+   </property>
+  </action>
+  <action name="actionExample">
+   <property name="text">
+    <string>Create example</string>
+   </property>
+  </action>
+  <action name="actionHydrogramme">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/hydrogramme.png</normaloff>:/plugins/Mascaret/icones/hydrogramme.png</iconset>
+   </property>
+   <property name="text">
+    <string>Hydrogramme</string>
+   </property>
+  </action>
+  <action name="actionCross_section">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/profil.png</normaloff>:/plugins/Mascaret/icones/profil.png</iconset>
+   </property>
+   <property name="text">
+    <string>Cross section</string>
+   </property>
+  </action>
+  <action name="actionCross_section_results">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/profilResult.png</normaloff>:/plugins/Mascaret/icones/profilResult.png</iconset>
+   </property>
+   <property name="text">
+    <string>Cross section results</string>
+   </property>
+  </action>
+  <action name="actionParameters">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/parameter.png</normaloff>:/plugins/Mascaret/icones/parameter.png</iconset>
+   </property>
+   <property name="text">
+    <string>Parameters</string>
+   </property>
+  </action>
+  <action name="actionRun">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/play.png</normaloff>:/plugins/Mascaret/icones/play.png</iconset>
+   </property>
+   <property name="text">
+    <string>Run</string>
+   </property>
+  </action>
+  <action name="actionDelete_Run">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/croix.png</normaloff>:/plugins/Mascaret/icones/croix.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete Run</string>
+   </property>
+  </action>
+  <action name="actionExport_Run">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/repSav.png</normaloff>:/plugins/Mascaret/icones/repSav.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export last run case</string>
+   </property>
+  </action>
+  <action name="actionImport_Model">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/dbImportModel.png</normaloff>:/plugins/Mascaret/icones/dbImportModel.png</iconset>
+   </property>
+   <property name="text">
+    <string>Import Model</string>
+   </property>
+  </action>
+  <action name="actionParameters_Water_Quality">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/parameterWQ.png</normaloff>:/plugins/Mascaret/icones/parameterWQ.png</iconset>
+   </property>
+   <property name="text">
+    <string>Parameters WQ</string>
+   </property>
+  </action>
+  <action name="actionTracer_Laws">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/lawWQ.png</normaloff>:/plugins/Mascaret/icones/lawWQ.png</iconset>
+   </property>
+   <property name="text">
+    <string>Tracer Laws</string>
+   </property>
+  </action>
+  <action name="actiontest_file">
+   <property name="text">
+    <string>test_file</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsProjectionSelectionWidget</class>
+   <extends>QWidget</extends>
+   <header>qgsprojectionselectionwidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>textEdit</tabstop>
+ </tabstops>
+ <resources>
+  <include location="../resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -613,6 +613,7 @@ class tracer_physic(MasObject):
                       ('sigle', 'text'),
                       ('value', 'text'),
                       ('text', 'text'),
+                      ('textfr', 'text'),
                       ('CONSTRAINT cle_tr_phy', 'PRIMARY KEY (id)')]
 
 class tracer_name(MasObject):
@@ -624,6 +625,7 @@ class tracer_name(MasObject):
                       ('type', 'text'),
                       ('sigle', 'text'),
                       ('text', 'text'),
+                      ('textfr', 'text'),
                       ('convec', 'boolean'),
                       ('diffu', 'boolean'),
                       ('CONSTRAINT cle_tr_name', 'PRIMARY KEY (id)')]

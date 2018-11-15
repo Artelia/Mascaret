@@ -22,8 +22,14 @@ comment:
         interpole
 """
 import math
-from decimal import Decimal
 
+
+def data_to_float(txt):
+    try:
+        float(txt)
+        return float(txt)
+    except ValueError:
+        return None
 
 def isfloat(value):
 
@@ -47,14 +53,13 @@ def interpole(a, l1, l2):
     else:
         return (None)
 
-<<<<<<< HEAD
 def str2bool(s):
     """string to bool"""
     if "True" in s or "TRUE" in s:
         return True
     else:
         return False
-=======
+
 def getCouche(nom,iface) :
     for couche in iface.legendInterface().layers():
         if couche.name() == nom :
@@ -202,4 +207,4 @@ def calculAbscisses(listeCouches, riviere, iface, dossier):
         # for fich in liste :
         # os.remove(fich)
 
->>>>>>> master
+
