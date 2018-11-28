@@ -78,6 +78,35 @@ class class_mascWQ():
                 fich.write('{} : {}\n'.format(result['value'][idx],result['text'][idx]))
 
     def law_tracer(self):
-        pass
+
+        #id_trac id dans la table tracer name
+        #id_config nom loi
+        extrem = self.mdb.select('extremities')
+        list_loi=[]
+        for i,cond in enumerate(extrem['active']):
+            if cond :
+                list_loi.append(extrem['law_wq'][i])
+
+        if list_loi!=[]:
+            where="type = '{}'".format(self.cur_wq_mod)
+            order="id"
+            list_trac = self.mdb.select('tracer_name',where,order)
+
+            print(list_loi)
+
+            # where = "type = '{}'".format(self.cur_wq_mod)
+            # loi_trac = self.mdb.select('tracer_config', where, order)
+            # print(loi_trac)
+
+            #header
+            # for nom in  list_trac :
+            #
+            #     print( nom, list_trac[nom])
+            # entet=u"# loi_1_tracer\n"+
+            #       u"# Temps (s) \n"+
+            #       u"         S\n"
+
+
+
 
 # *****************************************

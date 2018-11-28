@@ -655,4 +655,4 @@ class MascPlugDialog(QMainWindow):
 
         self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
         cl=class_mascWQ(self,self.dossierFileMasc)
-        cl.create_filephy()
+        cl.law_tracer()
