@@ -378,28 +378,31 @@ class TracerLaws_dialog(QDialog):
         #save Info
         # modificaito liste page 1
         #change de page
-        name_law = str(self.ui.LawWQ.text())
-        if self.cur_wq_law == -1:
-            if self.mgis.DEBUG:
-                self.mgis.addInfo("Addition of {} Tracer Laws".format(name_law))
-            self.mdb.execute("INSERT INTO {0}.tracer_config (name, type) VALUES ('{1}', {2})".format(self.mdb.SCHEMA, name_law, self.cur_wq_mod))
-            res = self.mdb.run_query("SELECT Max(id) FROM {0}.tracer_config".format(self.mdb.SCHEMA), fetch=True)
-            self.cur_wq_law = res[0][0]
-        else:
-            if self.mgis.DEBUG:
-                self.mgis.addInfo("Editing of {} Tracer Laws".format(name_law))
-            self.mdb.execute("UPDATE {0}.tracer_config SET name = '{1}' WHERE id = {2}".format(self.mdb.SCHEMA, name_law, self.cur_wq_law))
-            self.mdb.execute("DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, self.cur_wq_law))
+        if self.ui.tab_laws.model().rowCount() > 0 :
+            name_law = str(self.ui.LawWQ.text())
+            if self.cur_wq_law == -1:
+                if self.mgis.DEBUG:
+                    self.mgis.addInfo("Addition of {} Tracer Laws".format(name_law))
+                self.mdb.execute("INSERT INTO {0}.tracer_config (name, type) VALUES ('{1}', {2})".format(self.mdb.SCHEMA, name_law, self.cur_wq_mod))
+                res = self.mdb.run_query("SELECT Max(id) FROM {0}.tracer_config".format(self.mdb.SCHEMA), fetch=True)
+                self.cur_wq_law = res[0][0]
+            else:
+                if self.mgis.DEBUG:
+                    self.mgis.addInfo("Editing of {} Tracer Laws".format(name_law))
+                self.mdb.execute("UPDATE {0}.tracer_config SET name = '{1}' WHERE id = {2}".format(self.mdb.SCHEMA, name_law, self.cur_wq_law))
+                self.mdb.execute("DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, self.cur_wq_law))
 
-        recs = []
-        for r in range(self.ui.tab_laws.model().rowCount()):
-            for c in range(4, self.ui.tab_laws.model().columnCount()):
-                recs.append([self.cur_wq_law, self.list_trac[c-4][0], self.ui.tab_laws.model().item(r, 0).data(0), self.ui.tab_laws.model().item(r, c).data(0)])
-        self.mdb.run_query("INSERT INTO {0}.laws_wq (id_config, id_trac, time, value) VALUES (%s, %s, %s, %s)".format(self.mdb.SCHEMA), many=True, listMany=recs)
+            recs = []
+            for r in range(self.ui.tab_laws.model().rowCount()):
+                for c in range(4, self.ui.tab_laws.model().columnCount()):
+                    recs.append([self.cur_wq_law, self.list_trac[c-4][0], self.ui.tab_laws.model().item(r, 0).data(0), self.ui.tab_laws.model().item(r, c).data(0)])
+            self.mdb.run_query("INSERT INTO {0}.laws_wq (id_config, id_trac, time, value) VALUES (%s, %s, %s, %s)".format(self.mdb.SCHEMA), many=True, listMany=recs)
 
-        self.fill_lst_conf(self.cur_wq_law)
-        self.ui.Law_pages.setCurrentIndex(0)
-        self.graph_edit.initGraph(None, all_vis=True)
+            self.fill_lst_conf(self.cur_wq_law)
+            self.ui.Law_pages.setCurrentIndex(0)
+            self.graph_edit.initGraph(None, all_vis=True)
+        else :
+                self.rejectPage2()
 
 
     def rejectPage2(self):

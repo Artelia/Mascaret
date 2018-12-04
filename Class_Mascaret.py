@@ -54,7 +54,8 @@ from qgis.gui import *
 from qgis.utils import *
 import subprocess
 from .ui.warningbox import Class_warningBox
-
+from .function import str2bool
+from .WaterQuality.class_mascWQ import class_mascWQ
 
 class Class_Mascaret():
     def __init__(self, main):
@@ -294,9 +295,9 @@ class Class_Mascaret():
         return dico
 
     def creerXCAS(self, noyau):
-        """To create xcas file"""
-        dictLois = {}
-        try:
+            """To create xcas file"""
+            dictLois = {}
+        # try:
             fichierSortie = os.path.join(self.dossierFileMasc, self.baseName + ".xcas")
             extrToloi = {0: 6, 1: 1, 2: 2, 3: 4, 4: 5, 5: 4, 8: 3, 6: 6, 7: 7}
             abaqueToloi = {1: 3, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
@@ -305,9 +306,14 @@ class Class_Mascaret():
 
             cas = SubElement(fichierCas, "parametresCas")
 
+            sql = "SELECT {0} FROM {1}.{2} WHERE parametre='presenceTraceurs';"
+            rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
+            if rows != None:
+                tracer=str2bool(rows[0][0])
+            else:
+                tracer=False
             # requête pour récupérer les paramètres
-            sql = "SELECT parametre, {0}, balise1, balise2 FROM {1}.{2} ORDER BY id;"
-
+            sql = "SELECT parametre, {0}, balise1, balise2 FROM {1}.{2} WHERE gui_type = 'paramaters' ORDER BY id;"
             rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
 
             for param, valeur, b1, b2 in rows:
@@ -364,8 +370,8 @@ class Class_Mascaret():
                 else:
                     self.mgis.addInfo('Checked if the profiles are activated.')
             dictNoeuds = {}
-            dictLibres = {"nom": [], "num": [], "extrem": [], "typeCond": []}
-
+            dictLibres = {"nom": [], "num": [], "extrem": [], "typeCond": [], "typeCond_tr": [],"law_wq":[]}
+            # 'law_wq','active','tracer_boundary_condition_type',num
             for n, d, f in zip(numero, branches["startb"], branches["endb"]):
                 if noeuds and d in noeuds["name"]:
                     if not d in dictNoeuds.keys():
@@ -384,6 +390,9 @@ class Class_Mascaret():
                     dictLibres["typeCond"].append(type)
                     dictLibres["num"].append(len(dictLibres["nom"]))
                     dictLibres["extrem"].append(n * 2 - 1)
+                    dictLibres["typeCond_tr"].append(libres["tracer_boundary_condition_type"][i])
+                    dictLibres["law_wq"].append(libres["law_wq"][i])
+                    #TODO add 'formule': formule, 'valeurperm': libres["firstvalue"
 
                     dictLois[d] = {'type': extrToloi[type],
                                    'formule': formule,
@@ -397,6 +406,9 @@ class Class_Mascaret():
                     dictLibres["typeCond"].append(type)
                     dictLibres["num"].append(len(dictLibres["nom"]))
                     dictLibres["extrem"].append(n * 2)
+                    dictLibres["typeCond_tr"].append(libres["tracer_boundary_condition_type"][i])
+                    dictLibres["law_wq"].append(libres["law_wq"][i])
+                    #TODO add 'formule': formule, 'valeurperm': libres["firstvalue"
                     dictLois[f] = {'type': extrToloi[type],
                                    'formule': formule,
                                    'valeurperm': libres["firstvalue"][i]}
@@ -700,6 +712,10 @@ class Class_Mascaret():
             SubElement(stockage, 'nbSite').text = str(len(sorties["name"]))
             SubElement(stockage, 'branche').text = self.fmt(sorties["branchnum"])
             SubElement(stockage, 'abscisse').text = self.fmt(sorties["abscissa"])
+            ##### XCAS tracer #####
+            if tracer:
+                self.add_wq_xcas(fichierCas,noyau,dictLibres)
+
 
             ##### XCAS modiication of type when steady case #####
             if noyau == 'steady':
@@ -713,6 +729,9 @@ class Class_Mascaret():
                 for child in lois:
                     if child.find('type').text == '5':
                         child.find('type').text = '2'
+
+
+
 
             ############################################
             self.indent(fichierCas)
@@ -761,10 +780,128 @@ class Class_Mascaret():
             arbre.write(os.path.join(self.dossierFileMasc, fichXCAS))
 
             self.mgis.addInfo("Save the Xcas file is done")
-        except Exception as e:
-            self.mgis.addInfo("Error: save Xcas file")
-            self.mgis.addInfo('error: {}'.format(e))
-        return (dictLois)
+        # except Exception as e:
+        #     self.mgis.addInfo("Error: save Xcas file")
+        #     self.mgis.addInfo('error: {}'.format(e))
+            return (dictLois)
+
+
+    def add_wq_xcas(self,fichierCas,noyau,dictLibres):
+        #TODO a finir
+        # requête pour récupérer les paramètres
+        cas = fichierCas.find('parametresCas')
+        sql = "SELECT parametre, {0}, balise1, balise2 FROM {1}.{2} WHERE gui_type = 'tracers' ORDER BY id;"
+
+        rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
+
+        for param, valeur, b1, b2 in rows:
+            if param =="fichMeteoTracer":
+                sql = "SELECT {0} FROM {1}.{2} WHERE parametre = 'fichmeteo' ;"
+                rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
+                if str2bool(rows[0][0]) == False:
+                    continue
+            if b1:
+                try:
+                    cas.find(b1).text
+                except:
+                    balise1 = SubElement(cas, b1)
+                if b2:
+                    try:
+                        balise1.find(b2).text
+                    except:
+                        balise2 = SubElement(balise1, b2)
+
+                    par = SubElement(balise2, param)
+
+                    par.text = valeur.lower()
+                else:
+                    par = SubElement(balise1, param)
+                    par.text = valeur.lower()
+
+        # extrem = self.mdb.select('extremities') #'law_wq','active','tracer_boundary_condition_type',num
+        #use dictLibres to have only extremities and not junction
+        # # TODO add 'formule': formule, 'valeurperm': libres["firstvalue"
+        lateral = self.mdb.select('tracer_lateral_inflows', order='abscissa')
+
+        list_loi=list(dictLibres["law_wq"])
+        dico_s={}
+        dico_ex={}
+
+        for i, nom in enumerate(list_loi):
+            dico_ex[i]={'name':nom,'type':dictLibres["typeCond_tr"][i]}
+
+        for i, cond in enumerate(lateral['active']):
+            if cond:
+                dico_s[i]={'name':lateral['law_wq'][i],
+                           'typs': lateral['typesources'][i],
+                'numb':lateral['branchnum'][i],
+                'abs':lateral['abscissa'][i],
+                'leng':lateral['length'][i]
+                }
+                list_loi.append(lateral['law_wq'][i])
+        list_loi=sorted(list_loi)
+
+        ### sources
+        tracer_source = SubElement(cas, "parametresSourcesTraceur")
+        nb = len(list(dico_s.keys()))
+        SubElement(tracer_source, "nbSources").text = str(nb)
+        struct = SubElement(tracer_source, "noms")
+        typ=[]
+        numb=[]
+        abs=[]
+        leng=[]
+        numl=[]
+        if  nb>0:
+            for num in sorted(list(dico_s.keys())):
+
+                typ.append(dico_s[num]['typs'])
+                numb.append(dico_s[num]['numb'])
+                abs.append(dico_s[num]['abs'])
+                leng.append(dico_s[num]['leng'])
+                numl.append(list_loi.index(dico_s[num]['name'])+1)
+        else:
+            typ = ['-0']
+            numb = ['-0']
+            abs = ['-0']
+            leng = ['-0']
+            numl = ['-0']
+        SubElement(tracer_source, "typeSources").text = self.fmt(typ)
+        SubElement(tracer_source, "numBranche").text =  self.fmt(numb)
+        SubElement(tracer_source, "abscisses").text =  self.fmt(abs)
+        SubElement(tracer_source, "longueurs").text =  self.fmt(leng)
+        SubElement(tracer_source, "numLoi").text =   self.fmt(numl)
+
+
+        ### Lois traceur
+        tracer_law = SubElement(cas, "parametresLoisTraceur")
+        nb = len(list_loi)
+        SubElement(tracer_law, "nbLoisTracer").text = str(nb)
+        lois = SubElement(tracer_law, "loisTracer")
+        if nb>0:
+            for name in list_loi:
+                struct = SubElement(lois, "structureSParametresLoiTraceur")
+                SubElement(struct, "nom").text = name
+                SubElement(struct, "modeEntree").text = '1'
+                SubElement(struct, "fichier").text = '{}.loi'.format(name)
+                SubElement(struct, "uniteTps").text = '-0'
+                SubElement(struct, "nbPoints").text = '-0'
+
+        # modif extremite info
+        typ = [0,0]
+        numl=[0,0]
+        list_k=list(dico_ex.keys())
+        if len(list_k):
+            for i,num in enumerate(sorted(list_k)):
+                typ[i]=dico_ex[num]['type']
+                numl[i]=list_loi.index(dico_ex[num]['name'])+1
+        else:
+            typ = ['-0']
+            numl= ['-0']
+        general= fichierCas.find('parametresCas')
+        cas= general.find('parametresTraceur')
+        initiales = cas.find('parametresConditionsLimitesTraceur')
+        initiales.find("typeCondLimTracer").text=self.fmt(typ)
+        initiales.find("numLoiCondLimTracer").text =self.fmt(numl)
 
     def modifXCAS(self, parametres, xcasfile, fichSortie=None):
         fichEntree = os.path.join(self.dossierFileMasc, xcasfile)

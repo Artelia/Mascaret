@@ -427,7 +427,7 @@ class MasDatabase(object):
             liste_value = []
             with open(fichparam, 'r') as file:
                 for ligne in file:
-                    liste_value.append(ligne.replace('\n','').split(','))
+                    liste_value.append(ligne.replace('\n','').split(';'))
             listeCol = self.listColumns('parametres')
             var = ",".join(listeCol)
             valeurs = "("
@@ -668,7 +668,6 @@ $BODY$
         sql = "SELECT * FROM {0}.{1} {2} {3};"
         (results,namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order), fetch=True,namvar=True)
         cols = [col[0] for col in namCol]
-
         dico = {}
         for col in cols:
             dico[col] = []

@@ -74,9 +74,7 @@ class Water_quality_dialog(QDialog):
         rows = self.mdb.run_query(sql.format("steady", self.mdb.SCHEMA, "parametres"), fetch=True)
 
         for param, valeur, libelle,  balise1, gui, gui_type in rows:
-            print(param, gui_type)
             if gui_type== 'tracers':
-                print("rentrer  {}".format(param))
                 self.par[param] = {}
                 try:
                     self.par[param]["val"] = eval(valeur.title())
@@ -137,7 +135,7 @@ class Water_quality_dialog(QDialog):
         condition = """type='{0}'""".format(self.type)
         # self.mgis.addInfo(condition)
         self.tab_tracer_name = self.mdb.select("tracer_name", condition)
-        print(self.tab_tracer_name)
+        # print(self.tab_tracer_name)
 
         self.dicoTrac = []
         for t in range(len(self.tab_tracer_name["id"])):
@@ -220,7 +218,9 @@ class Water_quality_dialog(QDialog):
 
         # delete transport_pur & laws_wq
         dico_trac = self.mdb.select('tracer_name', "type='TRANSPORT_PUR'")
-        liste_id_bdd = dico_trac["id"]
+        liste_id_bdd = sorted(dico_trac["id"])
+        list_conv=[]
+        list_dif=[]
         for id in liste_id_bdd:
             if id not in liste_id_cur.keys():
                 self.mdb.delete('tracer_name', "id = {}".format(id))
@@ -229,6 +229,9 @@ class Water_quality_dialog(QDialog):
                 if not id_exist:
                     id_exist = id
                 row = liste_id_cur[id]
+                list_dif.append(self.dicoTrac[row]["diffu"])
+                list_conv.append(self.dicoTrac[row]["convec"])
+
                 self.mdb.execute("UPDATE {0}.tracer_name "
                                  "SET sigle = '{1}', text = '{2}', convec = {3}, diffu = {4} "
                                  "WHERE id = {5}".format(self.mdb.SCHEMA, table.item(row, 1).text(), table.item(row, 2).text(),
@@ -246,6 +249,8 @@ class Water_quality_dialog(QDialog):
                                                                               self.dicoTrac[row]["convec"],
                                                                               self.dicoTrac[row]["diffu"])
                 self.mdb.run_query(sql)
+                list_dif.append(self.dicoTrac[row]["diffu"])
+                list_conv.append(self.dicoTrac[row]["convec"])
 
                 if id_exist:
                     sql = """INSERT INTO {schem}.laws_wq (id_config, id_trac, time, value) 
@@ -256,20 +261,72 @@ class Water_quality_dialog(QDialog):
 
                 idmax += 1
 
+        # # update parameter table
+        txt_conv = ''
+        txt_dif = ''
+        for conv, dif in zip(list_conv, list_dif):
+            if conv:
+                txt_conv += 'true '
+            else:
+                txt_conv += 'false '
+            if dif:
+                txt_dif += 'true '
+            else:
+                txt_dif += 'false '
+
+        sql = """UPDATE {0}.parametres
+                                SET (steady,unsteady,transcritical)=('{1}','{1}','{1}')
+                                WHERE parametre='{2}'
+                          """.format(self.mdb.SCHEMA, txt_conv, 'convectionTraceurs')
+        self.mdb.execute(sql)
+
+        sql = """UPDATE {0}.parametres
+                                SET (steady,unsteady,transcritical)=('{1}','{1}','{1}')
+                                WHERE parametre='{2}'
+                          """.format(self.mdb.SCHEMA, txt_dif, 'diffusionTraceurs')
+        self.mdb.execute(sql)
     def update_conv_diff(self,table):
-        if self.ui.WaterQ.currentIndex() == 2:
-            self.onChangeTab(0)
+            if self.ui.WaterQ.currentIndex() == 2:
+                self.onChangeTab(0)
 
-        liste_id = {}
-        for row in range(table.rowCount()):
-            liste_id[int(table.item(row, 0).text())] = row
+            liste_id = {}
+            for row in range(table.rowCount()):
+                liste_id[int(table.item(row, 0).text())] = row
 
-        for id in liste_id:
-            row = liste_id[id]
-            self.mdb.execute("UPDATE {0}.tracer_name "
-                             "SET sigle = '{1}', text = '{2}', convec = {3}, diffu = {4} "
-                             "WHERE id = {5}".format(self.mdb.SCHEMA, table.item(row, 1).text(), table.item(row, 2).text(),
-                                                     self.dicoTrac[row]["convec"], self.dicoTrac[row]["diffu"], table.item(row, 0).text()))
+            list_conv=[]
+            list_dif=[]
+            for id in sorted(list(liste_id.keys())):
+                row = liste_id[id]
+                list_conv.append(self.dicoTrac[row]["convec"])
+                list_dif.append(self.dicoTrac[row]["diffu"])
+                self.mdb.execute("UPDATE {0}.tracer_name "
+                                 "SET sigle = '{1}', text = '{2}', convec = {3}, diffu = {4} "
+                                 "WHERE id = {5}".format(self.mdb.SCHEMA, table.item(row, 1).text(), table.item(row, 2).text(),
+                                                         self.dicoTrac[row]["convec"], self.dicoTrac[row]["diffu"], table.item(row, 0).text()))
+
+            txt_conv=''
+            txt_dif = ''
+            for conv,dif in zip(list_conv,list_dif):
+                if conv:
+                    txt_conv +='true '
+                else:
+                    txt_conv += 'false '
+                if dif:
+                    txt_dif += 'true '
+                else:
+                    txt_dif += 'false '
+
+            sql = """   UPDATE {0}.parametres
+                           SET (steady,unsteady,transcritical)=('{1}','{1}','{1}')
+                           WHERE parametre='{2}'
+                     """.format(self.mdb.SCHEMA,txt_conv,'convectionTraceurs')
+            self.mdb.execute(sql)
+
+            sql = """   UPDATE {0}.parametres
+                           SET (steady,unsteady,transcritical)=('{1}','{1}','{1}')
+                           WHERE parametre='{2}'
+                     """.format(self.mdb.SCHEMA, txt_dif, 'diffusionTraceurs')
+            self.mdb.execute(sql)
 
     def onChangeTab(self, idx):
         if idx != 0:
@@ -310,7 +367,7 @@ class Water_quality_dialog(QDialog):
     def acceptDialog(self):
         """Modification of the parameters in sql table"""
         for param, info in self.par.items():
-            print(info)
+            # print(info)
             if info['gui']:
                 obj = getattr(self.ui, param)
 
@@ -334,7 +391,7 @@ class Water_quality_dialog(QDialog):
                                SET (steady,unsteady,transcritical)=('{1}','{1}','{1}') 
                                WHERE parametre='{2}'
                          """
-                print(sql.format(self.mdb.SCHEMA, val, param))
+                # print(sql.format(self.mdb.SCHEMA, val, param))
                 self.mdb.run_query(sql.format(self.mdb.SCHEMA, val, param))
 
         # stock tracer
@@ -357,5 +414,7 @@ class Water_quality_dialog(QDialog):
         #          """
         #
         # self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.kernel, " ".join(liste)))
+
+
 
         self.close()

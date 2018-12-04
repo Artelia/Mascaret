@@ -1,88 +1,95 @@
-1,versionCode,3,3,3,,parametresGeneraux,,False,paramaters
-2,code,1,2,3,,parametresGeneraux,,False,paramaters
-3,fichMotsCles,mascaret.xcas,mascaret.xcas,mascaret.xcas,,parametresGeneraux,,False,paramaters
-4,dictionaire,dico.txt,dico.txt,dico.txt,,parametresGeneraux,,False,paramaters
-5,progPrincipal,princi.f,princi.f,princi.f,,parametresGeneraux,,False,paramaters
-6,sauveModele,FALSE,FALSE,FALSE,,parametresGeneraux,,False,paramaters
-7,fichSauvModele,mascaret.tmp,mascaret.tmp,mascaret.tmp,,parametresGeneraux,,False,paramaters
-8,validationCode,FALSE,FALSE,FALSE,,parametresGeneraux,,False,paramaters
-9,typeValidation,1,1,1,,parametresGeneraux,,False,paramaters
-10,presenceCasiers,FALSE,FALSE,FALSE,Presence of storage area,parametresGeneraux,,False,paramaters
-11,bibliotheque,mascaretV5P1.a damoV3P0.a,mascaretV5P1.a damoV3P0.a,mascaretV5P1.a damoV3P0.a,,parametresGeneraux,bibliotheques,False,paramaters
-12,perteChargeConf,FALSE,FALSE,FALSE,Automatic head losses at junctions,parametresModelePhysique,,True,paramaters
-13,compositionLits,1,1,1,Cross section layout,parametresModelePhysique,,True,paramaters
-14,conservFrotVertical,TRUE,TRUE,TRUE,Conservation of friction on vertical walls,parametresModelePhysique,,True,paramaters
-15,elevCoteArrivFront,0.05,0.05,0.05,Level threshold identifying the wave,parametresModelePhysique,,True,paramaters
-16,interpolLinStrickler,FALSE,FALSE,FALSE,Linear interpolation of friction coefficients,parametresModelePhysique,,True,paramaters
-17,litMajeur,TRUE,TRUE,TRUE,Progressive overflow type  of major river bed,parametresModelePhysique,debordement,True,paramaters
-18,zoneStock,TRUE,TRUE,TRUE,Progressive overflow type  of storage area,parametresModelePhysique,debordement,True,paramaters
-19,calcOndeSubmersion,FALSE,FALSE,FALSE,Computation of a dam break flood wave,parametresNumeriques,,True,paramaters
-20,froudeLimCondLim,1000,1000,1000,Limit Froude number for boundary conditions,parametresNumeriques,,True,paramaters
-21,traitImplicitFrot,FALSE,FALSE,FALSE,Impliciation of friction,parametresNumeriques,,True,paramaters
-22,hauteurEauMini,0.005,0.005,0.005,Minimum water level,parametresNumeriques,,False,paramaters
-23,implicitNoyauTrans,FALSE,FALSE,FALSE,Implicitation of the super-critical kernel,parametresNumeriques,,True,paramaters
-24,optimisNoyauTrans,FALSE,FALSE,FALSE,Optimization of the super-critical kernel,parametresNumeriques,,True,paramaters
-25,perteChargeAutoElargissement,FALSE,FALSE,FALSE,Automatic head loss in case of enlargement,parametresNumeriques,,True,paramaters
-26,termesNonHydrostatiques,FALSE,FALSE,FALSE,Non-hydrostsatic terms for super-critical kernel,parametresNumeriques,,True,paramaters
-27,apportDebit,0,0,0,,parametresNumeriques,,False,paramaters
-28,attenuationConvection,FALSE,FALSE,FALSE,Reduced momentum equation,parametresNumeriques,,True,paramaters
-29,pasTemps,60,60,60,Time step,parametresTemporels,,True,paramaters
-30,tempsInit,0,0,0,Initial time,parametresTemporels,,True,paramaters
-31,critereArret,2,1,1,Criteria for stopping calculations,parametresTemporels,,True,paramaters
-32,nbPasTemps,2,2,2,Max number of time steps,parametresTemporels,,True,paramaters
-33,tempsMax,1897200,1897200,1897200,Max time,parametresTemporels,,True,paramaters
-34,pasTempsVar,FALSE,FALSE,FALSE,Variable time step depending on the Courant number,parametresTemporels,,True,paramaters
-35,nbCourant,0.8,0.8,0.8,Courant number,parametresTemporels,,True,paramaters
-36,coteMax,0,0,0,Max control water level,parametresTemporels,,True,paramaters
-37,abscisseControle,0,0,0,Control point abscissa,parametresTemporels,,True,paramaters
-38,biefControle,1,1,1,Control point  reach,parametresTemporels,,True,paramaters
-39,fichier,mascaret.geo,mascaret.geo,mascaret.geo,,parametresGeometrieReseau,geometrie,False,paramaters
-40,format,2,2,2,,parametresGeometrieReseau,geometrie,False,paramaters
-41,profilsAbscAbsolu,TRUE,TRUE,TRUE,Cross section in absolute abscissa,parametresGeometrieReseau,geometrie,False,paramaters
-42,repriseCalcul,FALSE,FALSE,FALSE,Restart the computation,parametresConditionsInitiales,repriseEtude,True,paramaters
-43,LigEauInit,FALSE,TRUE,TRUE,Presence of an initial water level,parametresConditionsInitiales,ligneEau,True,paramaters
-44,modeEntree,1,1,1,,parametresConditionsInitiales,ligneEau,False,paramaters
-45,fichLigEau,mascaret.lig,mascaret.lig,mascaret.lig,File name of  water level,parametresConditionsInitiales,ligneEau,False,paramaters
-46,formatFichLig,2,2,2,File format of  water level,parametresConditionsInitiales,ligneEau,False,paramaters
-47,titreCalcul,Etude hydraulique1d,Etude hydraulique1d,Etude hydraulique1d,,parametresImpressionResultats,,False,paramaters
-48,impressionGeometrie,FALSE,FALSE,FALSE,Geometry,parametresImpressionResultats,impression,True,paramaters
-49,impressionPlanimetrage,FALSE,FALSE,FALSE,Vertical discretization of the Cross section,parametresImpressionResultats,impression,True,paramaters
-50,impressionReseau,FALSE,FALSE,FALSE,Network,parametresImpressionResultats,impression,True,paramaters
-51,impressionLoiHydraulique,FALSE,FALSE,FALSE,Hydraulic laws used,parametresImpressionResultats,impression,True,paramaters
-52,impressionligneEauInitiale,FALSE,FALSE,FALSE,Initial water level,parametresImpressionResultats,impression,True,paramaters
-53,impressionCalcul,TRUE,TRUE,TRUE,Write the listing along with computation progress,parametresImpressionResultats,impression,True,paramaters
-54,premPasTpsStock,1,1,1,Number of the first time step,parametresImpressionResultats,pasStockage,True,paramaters
-55,pasStock,1,60,60,Write data all N time steps,parametresImpressionResultats,pasStockage,True,paramaters
-56,pasImpression,1,60,60,Write to the listing file all data all N time steps,parametresImpressionResultats,pasStockage,True,paramaters
-57,fichResultat,mascaret.opt,mascaret.opt,mascaret.opt,,parametresImpressionResultats,resultats,False,paramaters
-58,postProcesseur,2,2,2,Postprocesseur,parametresImpressionResultats,resultats,False,paramaters
-59,fichListing,mascaret.lis,mascaret.lis,mascaret.lis,,parametresImpressionResultats,listing,False,paramaters
-60,fichRepriseEcr,mascaret.rep,mascaret.rep,mascaret.rep,,parametresImpressionResultats,fichReprise,False,paramaters
-61,ecartInterBranch,1,1,1,Distance between reaches (m),parametresImpressionResultats,rubens,True,paramaters
-62,option,1,1,1,Recorded Variables,parametresImpressionResultats,stockage,True,paramaters
-63,variablesCalculees,false false false false false false false false false false false false false false false,false false false false false false false false false false false false false false false,false false false false false false false false false false false false false false false,,parametresVariablesCalculees,,False,paramaters
-64,variablesStockees,false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false,false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false,false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false,Write the results,parametresVariablesStockees,,False,paramaters
-65,initialisationAuto,FALSE,TRUE,TRUE,Initialisation with a steady run,,,True,paramaters
-66,evenement,TRUE,TRUE,TRUE,Mode,,,True,paramaters
-67,presenceTraceurs,FALSE,FALSE,FALSE,Activation of the water quality module,parametresTraceur,,True,tracers
-68,nbTraceur,0,0,0,Number of constituents,parametresTraceur,parametresConvectionDiffusion,True,tracers
-69,optionConvection,2,2,2,Convection method,parametresTraceur,parametresConvectionDiffusion,True,tracers
-70,ordreSchemaConvec,0,0,0,Scheme order,parametresTraceur,parametresConvectionDiffusion,True,tracers
-71,paramW,0,0,0,Parameter W,parametresTraceur,parametresConvectionDiffusion,True,tracers
-72,LimitPente,FALSE,FALSE,FALSE,Slope limiter,parametresTraceur,parametresConvectionDiffusion,True,tracers
-73,optionCalculDiffusion,1,1,1,Diffusion method,parametresTraceur,parametresConvectionDiffusion,True,tracers
-74,coeffDiffusion1,0,0,0,,parametresTraceur,parametresConvectionDiffusion,False,tracers
-75,coeffDiffusion2,0,0,0,,parametresTraceur,parametresConvectionDiffusion,True,tracers
-76,modeleQualiteEau,1,1,1,Water quality module,parametresTraceur,parametresNumeriquesQualiteEau,True,tracers
-77,fichParamPhysiqueTracer,mascaret.phy,mascaret.phy,mascaret.phy,,parametresTraceur,parametresNumeriquesQualiteEau,False,tracers
-78,frequenceCouplHydroTracer,1,1,1,Frequency for coupling ,parametresTraceur,parametresNumeriquesQualiteEau,True,tracers
-79,fichListTracer,mascaret.tra_lis,mascaret.tra_lis,mascaret.tra_lis,,parametresTraceur,parametresImpressionTraceur,False,tracers
-80,concentInit,FALSE,FALSE,FALSE,Initial Concentration,parametresTraceur,parametresImpressionTraceur,True,tracers
-81,loiTracer,FALSE,FALSE,FALSE,Tracer law used,parametresTraceur,parametresImpressionTraceur,True,tracers
-82,concentrations,TRUE,TRUE,TRUE,Concentrations,parametresTraceur,parametresImpressionTraceur,True,tracers
-83,bilanTracer,TRUE,TRUE,TRUE,Constituants balance,parametresTraceur,parametresImpressionTraceur,True,tracers
-84,fichResultTracer,mascaret.tra_opt,mascaret.tra_opt,mascaret.tra_opt,,parametresTraceur,parametresImpressionTraceur,False,tracers
-85,formatFichResultat,2,2,2,,parametresTraceur,parametresImpressionTraceur,False,tracers
-86,presenceConcInit,FALSE,FALSE,FALSE,Presence of initial conditions,parametresTraceur,parametresConcentrationsInitialesTraceur,True,tracers
-87,fichConcInit,mascaret.conc,mascaret.conc,mascaret.conc,,parametresTraceur,parametresConcentrationsInitialesTraceur,False,tracers
-88,fichmeteo,FALSE,FALSE,FALSE,,parametresTraceur,,False,tracers
+1;versionCode;3;3;3;;parametresGeneraux;;False;paramaters
+2;code;1;2;3;;parametresGeneraux;;False;paramaters
+3;fichMotsCles;mascaret.xcas;mascaret.xcas;mascaret.xcas;;parametresGeneraux;;False;paramaters
+4;dictionaire;dico.txt;dico.txt;dico.txt;;parametresGeneraux;;False;paramaters
+5;progPrincipal;princi.f;princi.f;princi.f;;parametresGeneraux;;False;paramaters
+6;sauveModele;FALSE;FALSE;FALSE;;parametresGeneraux;;False;paramaters
+7;fichSauvModele;mascaret.tmp;mascaret.tmp;mascaret.tmp;;parametresGeneraux;;False;paramaters
+8;validationCode;FALSE;FALSE;FALSE;;parametresGeneraux;;False;paramaters
+9;typeValidation;1;1;1;;parametresGeneraux;;False;paramaters
+10;presenceCasiers;FALSE;FALSE;FALSE;Presence of storage area;parametresGeneraux;;False;paramaters
+11;bibliotheque;mascaretV5P1.a damoV3P0.a;mascaretV5P1.a damoV3P0.a;mascaretV5P1.a damoV3P0.a;;parametresGeneraux;bibliotheques;False;paramaters
+12;perteChargeConf;FALSE;FALSE;FALSE;Automatic head losses at junctions;parametresModelePhysique;;True;paramaters
+13;compositionLits;1;1;1;Cross section layout;parametresModelePhysique;;True;paramaters
+14;conservFrotVertical;TRUE;TRUE;TRUE;Conservation of friction on vertical walls;parametresModelePhysique;;True;paramaters
+15;elevCoteArrivFront;0.05;0.05;0.05;Level threshold identifying the wave;parametresModelePhysique;;True;paramaters
+16;interpolLinStrickler;FALSE;FALSE;FALSE;Linear interpolation of friction coefficients;parametresModelePhysique;;True;paramaters
+17;litMajeur;TRUE;TRUE;TRUE;Progressive overflow type  of major river bed;parametresModelePhysique;debordement;True;paramaters
+18;zoneStock;TRUE;TRUE;TRUE;Progressive overflow type  of storage area;parametresModelePhysique;debordement;True;paramaters
+19;calcOndeSubmersion;FALSE;FALSE;FALSE;Computation of a dam break flood wave;parametresNumeriques;;True;paramaters
+20;froudeLimCondLim;1000;1000;1000;Limit Froude number for boundary conditions;parametresNumeriques;;True;paramaters
+21;traitImplicitFrot;FALSE;FALSE;FALSE;Impliciation of friction;parametresNumeriques;;True;paramaters
+22;hauteurEauMini;0.005;0.005;0.005;Minimum water level;parametresNumeriques;;False;paramaters
+23;implicitNoyauTrans;FALSE;FALSE;FALSE;Implicitation of the super-critical kernel;parametresNumeriques;;True;paramaters
+24;optimisNoyauTrans;FALSE;FALSE;FALSE;Optimization of the super-critical kernel;parametresNumeriques;;True;paramaters
+25;perteChargeAutoElargissement;FALSE;FALSE;FALSE;Automatic head loss in case of enlargement;parametresNumeriques;;True;paramaters
+26;termesNonHydrostatiques;FALSE;FALSE;FALSE;Non-hydrostsatic terms for super-critical kernel;parametresNumeriques;;True;paramaters
+27;apportDebit;0;0;0;;parametresNumeriques;;False;paramaters
+28;attenuationConvection;FALSE;FALSE;FALSE;Reduced momentum equation;parametresNumeriques;;True;paramaters
+29;pasTemps;60;60;60;Time step;parametresTemporels;;True;paramaters
+30;tempsInit;0;0;0;Initial time;parametresTemporels;;True;paramaters
+31;critereArret;2;1;1;Criteria for stopping calculations;parametresTemporels;;True;paramaters
+32;nbPasTemps;2;2;2;Max number of time steps;parametresTemporels;;True;paramaters
+33;tempsMax;1897200;1897200;1897200;Max time;parametresTemporels;;True;paramaters
+34;pasTempsVar;FALSE;FALSE;FALSE;Variable time step depending on the Courant number;parametresTemporels;;True;paramaters
+35;nbCourant;0.8;0.8;0.8;Courant number;parametresTemporels;;True;paramaters
+36;coteMax;0;0;0;Max control water level;parametresTemporels;;True;paramaters
+37;abscisseControle;0;0;0;Control point abscissa;parametresTemporels;;True;paramaters
+38;biefControle;1;1;1;Control point  reach;parametresTemporels;;True;paramaters
+39;fichier;mascaret.geo;mascaret.geo;mascaret.geo;;parametresGeometrieReseau;geometrie;False;paramaters
+40;format;2;2;2;;parametresGeometrieReseau;geometrie;False;paramaters
+41;profilsAbscAbsolu;TRUE;TRUE;TRUE;Cross section in absolute abscissa;parametresGeometrieReseau;geometrie;False;paramaters
+42;repriseCalcul;FALSE;FALSE;FALSE;Restart the computation;parametresConditionsInitiales;repriseEtude;True;paramaters
+43;LigEauInit;FALSE;TRUE;TRUE;Presence of an initial water level;parametresConditionsInitiales;ligneEau;True;paramaters
+44;modeEntree;1;1;1;;parametresConditionsInitiales;ligneEau;False;paramaters
+45;fichLigEau;mascaret.lig;mascaret.lig;mascaret.lig;File name of  water level;parametresConditionsInitiales;ligneEau;False;paramaters
+46;formatFichLig;2;2;2;File format of  water level;parametresConditionsInitiales;ligneEau;False;paramaters
+47;titreCalcul;Etude hydraulique1d;Etude hydraulique1d;Etude hydraulique1d;;parametresImpressionResultats;;False;paramaters
+48;impressionGeometrie;FALSE;FALSE;FALSE;Geometry;parametresImpressionResultats;impression;True;paramaters
+49;impressionPlanimetrage;FALSE;FALSE;FALSE;Vertical discretization of the Cross section;parametresImpressionResultats;impression;True;paramaters
+50;impressionReseau;FALSE;FALSE;FALSE;Network;parametresImpressionResultats;impression;True;paramaters
+51;impressionLoiHydraulique;FALSE;FALSE;FALSE;Hydraulic laws used;parametresImpressionResultats;impression;True;paramaters
+52;impressionligneEauInitiale;FALSE;FALSE;FALSE;Initial water level;parametresImpressionResultats;impression;True;paramaters
+53;impressionCalcul;TRUE;TRUE;TRUE;Write the listing along with computation progress;parametresImpressionResultats;impression;True;paramaters
+54;premPasTpsStock;1;1;1;Number of the first time step;parametresImpressionResultats;pasStockage;True;paramaters
+55;pasStock;1;60;60;Write data all N time steps;parametresImpressionResultats;pasStockage;True;paramaters
+56;pasImpression;1;60;60;Write to the listing file all data all N time steps;parametresImpressionResultats;pasStockage;True;paramaters
+57;fichResultat;mascaret.opt;mascaret.opt;mascaret.opt;;parametresImpressionResultats;resultats;False;paramaters
+58;postProcesseur;2;2;2;Postprocesseur;parametresImpressionResultats;resultats;False;paramaters
+59;fichListing;mascaret.lis;mascaret.lis;mascaret.lis;;parametresImpressionResultats;listing;False;paramaters
+60;fichRepriseEcr;mascaret.rep;mascaret.rep;mascaret.rep;;parametresImpressionResultats;fichReprise;False;paramaters
+61;ecartInterBranch;1;1;1;Distance between reaches (m);parametresImpressionResultats;rubens;True;paramaters
+62;option;1;1;1;Recorded Variables;parametresImpressionResultats;stockage;True;paramaters
+63;variablesCalculees;false false false false false false false false false false false false false false false;false false false false false false false false false false false false false false false;false false false false false false false false false false false false false false false;;parametresVariablesCalculees;;False;paramaters
+64;variablesStockees;false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false;false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false;false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false;Write the results;parametresVariablesStockees;;False;paramaters
+65;initialisationAuto;FALSE;TRUE;TRUE;Initialisation with a steady run;;;True;paramaters
+66;evenement;TRUE;TRUE;TRUE;Mode;;;True;paramaters
+67;presenceTraceurs;FALSE;FALSE;FALSE;Activation of the water quality module;parametresTraceur;;True;tracers
+68;nbTraceur;1;1;1;Number of constituents;parametresTraceur;;True;tracers
+69;convectionTraceurs;true ;true ;true ;;parametresTraceur;parametresConvectionDiffusion;False;tracers
+70;optionConvection;2;2;2;Convection method;parametresTraceur;parametresConvectionDiffusion;True;tracers
+71;ordreSchemaConvec;0;0;0;Scheme order;parametresTraceur;parametresConvectionDiffusion;True;tracers
+72;paramW;0;0;0;Parameter W;parametresTraceur;parametresConvectionDiffusion;True;tracers
+73;LimitPente;FALSE;FALSE;FALSE;Slope limiter;parametresTraceur;parametresConvectionDiffusion;True;tracers
+74;diffusionTraceurs;false;false;false;;parametresTraceur;parametresConvectionDiffusion;False;tracers
+75;optionCalculDiffusion;1;1;1;Diffusion method;parametresTraceur;parametresConvectionDiffusion;True;tracers
+76;coeffDiffusion1;0;0;0;;parametresTraceur;parametresConvectionDiffusion;False;tracers
+77;coeffDiffusion2;0;0;0;;parametresTraceur;parametresConvectionDiffusion;True;tracers
+78;modeleQualiteEau;1;1;1;Water quality module;parametresTraceur;parametresNumeriquesQualiteEau;True;tracers
+79;fichParamPhysiqueTracer;mascaret.phy;mascaret.phy;mascaret.phy;;parametresTraceur;parametresNumeriquesQualiteEau;False;tracers
+80;fichMeteoTracer;mascaret.met;mascaret.met;mascaret.met;;parametresTraceur;parametresNumeriquesQualiteEau;False;tracers
+81;frequenceCouplHydroTracer;1;1;1;Frequency for coupling ;parametresTraceur;parametresNumeriquesQualiteEau;True;tracers
+82;fichListTracer;mascaret.tra_lis;mascaret.tra_lis;mascaret.tra_lis;;parametresTraceur;parametresImpressionTraceur;False;tracers
+83;concentInit;FALSE;FALSE;FALSE;Initial Concentration;parametresTraceur;parametresImpressionTraceur;True;tracers
+84;loiTracer;FALSE;FALSE;FALSE;Tracer law used;parametresTraceur;parametresImpressionTraceur;True;tracers
+85;concentrations;TRUE;TRUE;TRUE;Concentrations;parametresTraceur;parametresImpressionTraceur;True;tracers
+86;bilanTracer;TRUE;TRUE;TRUE;Constituants balance;parametresTraceur;parametresImpressionTraceur;True;tracers
+87;fichResultTracer;mascaret.tra_opt;mascaret.tra_opt;mascaret.tra_opt;;parametresTraceur;parametresImpressionTraceur;False;tracers
+88;formatFichResultat;2;2;2;;parametresTraceur;parametresImpressionTraceur;False;tracers
+89;typeCondLimTracer;1 2;1 2;1 2;;parametresTraceur;parametresConditionsLimitesTraceur;False;tracers
+90;numLoiCondLimTracer;1 1;1 1;1 1;;parametresTraceur;parametresConditionsLimitesTraceur;False;tracers
+91;presenceConcInit;FALSE;FALSE;FALSE;Presence of initial conditions;parametresTraceur;parametresConcentrationsInitialesTraceur;True;tracers
+92;modeEntree;1;1;1;;parametresTraceur;parametresConcentrationsInitialesTraceur;False;tracers
+93;fichConcInit;mascaret.conc;mascaret.conc;mascaret.conc;;parametresTraceur;parametresConcentrationsInitialesTraceur;False;tracers
+94;nbPts;0;0;0;;parametresTraceur;parametresConcentrationsInitialesTraceur;False;tracers
+95;fichmeteo;FALSE;FALSE;FALSE;;;;False;tracers
