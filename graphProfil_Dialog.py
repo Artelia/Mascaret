@@ -2377,8 +2377,9 @@ class GraphHydro(GraphCommon):
             return
 
         Z = [v for i, v in enumerate(L['z']) if L[self.type][i]]
-
-        if self.tab["zmax"] and not isinstance(X[0], date):
+        if isinstance(X[0], date):
+           return
+        if self.tab["zmax"] :
             couleurs = []
             taille = []
             for x, z in zip(X, Z):
@@ -2403,24 +2404,24 @@ class GraphHydro(GraphCommon):
         else:
             couleurs = ["black"] * len(X)
             taille = [1] * len(X)
-        if not isinstance(X[0], date):
-            self.courbeLaisses = self.axes.scatter(X, Z,
-                                                   color=couleurs,
-                                                   marker='+',
-                                                   label="Flood marks",
-                                                   s=80,
-                                                   linewidth=taille)
 
-            self.courbeLaisses.set_visible(True)
-            # self.courbeLaisses.set_color(couleurs)
-            for x, z, c in zip(X, Z, couleurs):
-                temp = self.axes.annotate(str(z), xy=(x, z), xytext=(3, 3),
-                                          ha='left', va='bottom',
-                                          fontsize='x-small',
-                                          color=c,
-                                          textcoords='offset points')
+        self.courbeLaisses = self.axes.scatter(X, Z,
+                                               color=couleurs,
+                                               marker='+',
+                                               label="Flood marks",
+                                               s=80,
+                                               linewidth=taille)
 
-                self.etiquetteLaisses.append(temp)
+        self.courbeLaisses.set_visible(True)
+        # self.courbeLaisses.set_color(couleurs)
+        for x, z, c in zip(X, Z, couleurs):
+            temp = self.axes.annotate(str(z), xy=(x, z), xytext=(3, 3),
+                                      ha='left', va='bottom',
+                                      fontsize='x-small',
+                                      color=c,
+                                      textcoords='offset points')
+
+            self.etiquetteLaisses.append(temp)
 
             # except :
             # return
