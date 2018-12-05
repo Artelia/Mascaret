@@ -92,7 +92,7 @@ import matplotlib.image as mpimg
 import matplotlib.colors as colors
 import matplotlib.lines as mlines
 from matplotlib import gridspec, patches
-from datetime import datetime
+from datetime import datetime,date
 import numpy as np
 import sys, os
 
@@ -2378,7 +2378,7 @@ class GraphHydro(GraphCommon):
 
         Z = [v for i, v in enumerate(L['z']) if L[self.type][i]]
 
-        if self.tab["zmax"]:
+        if self.tab["zmax"] and not isinstance(X[0], date):
             couleurs = []
             taille = []
             for x, z in zip(X, Z):
