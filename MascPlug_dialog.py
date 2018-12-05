@@ -158,7 +158,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionAbout.triggered.connect(self.about)
         self.ui.actionWebsite.triggered.connect(self.website)
         self.ui.actionWebsite.setEnabled(False)
-        self.ui.actionAbout.setEnabled(False)
+        # self.ui.actionAbout.setEnabled(False)
 
     def addInfo(self, text):
         self.ui.textEdit.append(text)
@@ -618,12 +618,33 @@ class MascPlugDialog(QMainWindow):
     def windinfo(self, txt, title='Informations'):
         msg = QMessageBox()
         msg.setWindowTitle(title)
+        msg.setWindowIcon(QIcon(os.path.join(os.path.join(self.masplugPath,'icones'),'icon_base.png')))
         msg.setText(txt)
         msg.setStandardButtons(QMessageBox.Ok)
         retval = msg.exec_()
 
     def about(self):
-        pass
+        file=open(os.path.join(self.masplugPath,'metadata.txt'),'r')
+        for ligne in file:
+            if ligne.find("version=")>-1:
+                ligne=ligne.split('=')
+                val=ligne[1]
+                break
+        # TODO get "about" info of file
+        txt=u"""
+Plugin dedicated to the building and exploitation of Mascaret models.
+
+Requires PostgreSQL and PostGIS.
+
+Developed by Mehdi-Pierre DAOU, Christophe COULET, Aurélien PERRIN (Artelia),
+Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
+Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek (Many thanks for the work they've done on RiverGis).
+
+
+Version : {}
+           """.format(val)
+        self.windinfo(txt, title='About')
+
 
     def website(self):
         pass
