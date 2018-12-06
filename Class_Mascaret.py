@@ -751,6 +751,7 @@ class Class_Mascaret():
             parametresTemporels.find('pasTemps').text = '{}'.format(dt_init)
             parametresTemporels.find('critereArret').text = '2'
             parametresTemporels.find('nbPasTemps').text = '{}'.format(npPasTemps_init)
+            parametresTemporels.find('pasTempsVar').text = 'false'
             geomReseau = paramCas.find('parametresGeometrieReseau')
             typeCond = geomReseau.find('extrLibres').find('typeCond')
             typeCond.text = typeCond.text.replace('4', '2').replace('6', '1').replace('7', '2')

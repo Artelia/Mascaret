@@ -52,7 +52,9 @@ class class_deletrun_dialog(QDialog):
 
         self.listeRuns = []
         self.listeScen = {}
-        if 'comments' in listeCol:
+        self.cond_com=('comments' in listeCol)
+
+        if self.cond_com:
             for run, scen, date,comments in zip(dico["run"], dico["scenario"], dico["date"], dico["comments"]):
                 if not run in self.listeRuns:
                     self.listeRuns.append(run)
@@ -84,7 +86,7 @@ class class_deletrun_dialog(QDialog):
 
                 self.child[run] = {}
                 maxi = datetime(1900, 1, 1, 0, 0)
-                if 'comments' in listeCol:
+                if self.cond_com :
                     for scen, date,comments in self.listeScen[run]:
                         self.child[run][scen] = QTreeWidgetItem(self.parent[run])
                         self.child[run][scen].setFlags(self.child[run][scen].flags() |
@@ -128,9 +130,14 @@ class class_deletrun_dialog(QDialog):
         for run in self.listeRuns:
             if self.parent[run].checkState(0) > 0:
                 selection[run] = []
-                for scen, date in self.listeScen[run]:
-                    if self.child[run][scen].checkState(0) > 1:
-                        selection[run].append("'{}'".format(scen))
+                if self.cond_com:
+                    for scen, date,comments in self.listeScen[run]:
+                        if self.child[run][scen].checkState(0) > 1:
+                            selection[run].append("'{}'".format(scen))
+                else:
+                    for scen, date in self.listeScen[run]:
+                        if self.child[run][scen].checkState(0) > 1:
+                            selection[run].append("'{}'".format(scen))
 
         self.close()
 

@@ -43,6 +43,7 @@ class Class_observation():
             for file in dataFile:
                 if os.path.isfile(file):
                     with open(file, 'r') as fichier:
+
                         codes = fichier.readline().strip().split(';')[1:]
                         types = fichier.readline().strip().split(';')[1:]
                         nomStat = fichier.readline().strip().split(';')[1:]
@@ -56,7 +57,6 @@ class Class_observation():
                                     obs['type'].append("'{}'".format(types[i]))
                                     obs['comment'].append("'{}'".format(nomStat[i]))
                                     obs['valeur'].append(val)
-
 
                 self.mdb.insert2('observations', obs)
                 if self.mgis.DEBUG:
