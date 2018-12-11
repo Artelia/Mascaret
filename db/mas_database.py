@@ -856,8 +856,8 @@ $BODY$
             exe = os.path.join(self.mgis.postgres_path, 'pg_dump')
 
             if os.path.isfile(exe) or  os.path.isfile(exe+'.exe'):
-                commande = '"{0}" -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
-                                                                  self.dbname, self.host)
+                commande = '"{0}" -p {6} -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
+                                                                  self.dbname, self.host,self.port)
                 # commande = '"{0}" --format custom  -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
                 #                                                   self.dbname, self.host)
                 os.putenv("PGPASSWORD","{0}".format(self.password))
@@ -888,7 +888,7 @@ $BODY$
                 # d["PGPASSWORD"] = "{0}".format(self.password)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
                 for file in Listfile:
-                    commande = '"{0}" -U {1} -f "{2}" -d {3} -h {4}'.format(exe,  self.user,
+                    commande = '"{0}" -U {1} -p {2} -f "{3}" -d {4} -h {5}'.format(exe,  self.user,self.port,
                                                                 file,self.dbname, self.host)
 
                     # p = subprocess.Popen(commande, env=d, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
