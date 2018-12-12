@@ -67,6 +67,43 @@ class Water_quality_dialog(QDialog):
         self.ui.actionB_delete_lineTabTracer.triggered.connect(fct)
         self.ui.actionB_add_lineTabTracer.triggered.connect(self.add_row_tr)
 
+
+        self.optionConvectionChanged(self.ui.optionConvection.currentText())
+        self.CalculDiffusionChanged( self.ui.optionCalculDiffusion.currentIndex())
+
+        self.ui.optionConvection.currentIndexChanged['QString'].connect(self.optionConvectionChanged)
+        self.ui.ordreSchemaConvec.currentIndexChanged['QString'].connect(self.ordreSchemaConvecChanged)
+        self.ui.optionCalculDiffusion.currentIndexChanged.connect(self.CalculDiffusionChanged)
+
+    def optionConvectionChanged(self, text):
+            if  text == 'FV':
+                self.ui.ordreSchemaConvec.setEnabled(True)
+                self.ordreSchemaConvecChanged(self.ui.ordreSchemaConvec.currentText())
+
+            else:
+                self.ui.ordreSchemaConvec.setEnabled(False)
+                if self.ui.ordreSchemaConvec.isEnabled:
+                    self.ordreSchemaConvecChanged(None)
+
+
+    def ordreSchemaConvecChanged(self,text ):
+        if  text == '2':
+            self.ui.LimitPente.setEnabled(True)
+            self.ui.paramW.setEnabled(True)
+            self.ui.label_LimitPente.setEnabled(True)
+            self.ui.label_paramW.setEnabled(True)
+        else:
+            self.ui.LimitPente.setEnabled(False)
+            self.ui.paramW.setEnabled(False)
+            self.ui.label_LimitPente.setEnabled(False)
+            self.ui.label_paramW.setEnabled(False)
+
+    def CalculDiffusionChanged(self, text):
+        if text == 0:
+            self.ui.coeffDiffusion2.setEnabled(True)
+        else:
+            self.ui.coeffDiffusion2.setEnabled(False)
+
     def create_dico_para(self):
         self.par = {}
         # requete pour recuperer les parametres dans la base
