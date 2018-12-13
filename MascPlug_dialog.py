@@ -40,6 +40,7 @@ from .db.mas_database import MasDatabase
 from .MNT_class import Worker
 from .Class_Mascaret import Class_Mascaret
 from .parameter_dialog import parameter_dialog
+from .ui.warningbox import Class_warningBox
 
 
 import math
@@ -72,6 +73,8 @@ class MascPlugDialog(QMainWindow):
         #style des couches
         self.dossierStyle = os.path.join(os.path.join(self.masplugPath,"db"), "style")
         self.repProject = None
+
+        self.box = Class_warningBox(self)
         #variables liste of results
         self.variables = {}
         with open(os.path.join(self.masplugPath, 'variables.dat'), 'r') as fichier:
@@ -165,8 +168,9 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionAbout.triggered.connect(self.about)
         self.ui.actionWebsite.triggered.connect(self.website)
         self.ui.actionWebsite.setEnabled(False)
-
+        #test
         self.ui.actiontest_file.triggered.connect(self.fct_test_file)
+        self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
         # self.ui.actionAbout.setEnabled(False)
 
     def addInfo(self, text):
@@ -675,3 +679,8 @@ Version : {}
         self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
         cl=class_mascWQ(self,self.dossierFileMasc)
         cl.law_tracer()
+    def fct_add_wq_tables(self):
+
+        ok = self.box.yes_no_q('Do you want add tracer tables ?')
+        if ok:
+            self.mdb.add_tableWQ(self.dossierSQL)

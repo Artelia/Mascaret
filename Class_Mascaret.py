@@ -313,7 +313,7 @@ class Class_Mascaret():
             else:
                 tracer=False
             # requête pour récupérer les paramètres
-            sql = "SELECT parametre, {0}, balise1, balise2 FROM {1}.{2} WHERE gui_type = 'paramaters' ORDER BY id;"
+            sql = "SELECT parametre, {0}, balise1, balise2 FROM {1}.{2} WHERE gui_type = 'parameters' ORDER BY id;"
             rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
 
             for param, valeur, b1, b2 in rows:
@@ -481,7 +481,6 @@ class Class_Mascaret():
 
             # Géométrie du réseau
             reseau = cas.find("parametresGeometrieReseau")
-
             # liste des Branches
             listeBranch = SubElement(reseau, "listeBranches")
             SubElement(listeBranch, "nb").text = str(len(numero))
@@ -718,7 +717,8 @@ class Class_Mascaret():
 
 
             ##### XCAS modiication of type when steady case #####
-            if noyau == 'steady':
+            if noyau == 'steady' :
+
                 paramCas = fichierCas.find('parametresCas')
                 parametresGeneraux = paramCas.find('parametresGeneraux')
                 geomReseau = paramCas.find('parametresGeometrieReseau')
@@ -775,6 +775,12 @@ class Class_Mascaret():
             resultats.find('pasStockage').find('pasStock').text = '1'
             resultats.find('pasStockage').find('pasImpression').text = '1'
             resultats.find('stockage').find('option').text = '1'
+            #tracers
+            if tracer:
+                parametresTracer = paramCas.find('parametresTraceur')
+                print(parametresTracer)
+                print(parametresTracer.find('presenceTraceurs').text)
+                parametresTracer = parametresTracer.find('presenceTraceurs').text='false'
 
             self.indent(fichierCas)
             arbre = ElementTree(fichierCas)
@@ -840,6 +846,10 @@ class Class_Mascaret():
                 'leng':lateral['length'][i]
                 }
                 list_loi.append(lateral['law_wq'][i])
+        if not len(list_loi)>0:
+            self.mgis.addInfo("Please enter water quality laws")
+            return False
+        print(list_loi)
         list_loi=sorted(list_loi)
 
         ### sources
@@ -854,7 +864,6 @@ class Class_Mascaret():
         numl=[]
         if  nb>0:
             for num in sorted(list(dico_s.keys())):
-
                 typ.append(dico_s[num]['typs'])
                 numb.append(dico_s[num]['numb'])
                 abs.append(dico_s[num]['abs'])
@@ -903,6 +912,7 @@ class Class_Mascaret():
         initiales = cas.find('parametresConditionsLimitesTraceur')
         initiales.find("typeCondLimTracer").text=self.fmt(typ)
         initiales.find("numLoiCondLimTracer").text =self.fmt(numl)
+        return True
 
     def modifXCAS(self, parametres, xcasfile, fichSortie=None):
         fichEntree = os.path.join(self.dossierFileMasc, xcasfile)

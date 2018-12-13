@@ -85,7 +85,6 @@ class Water_quality_dialog(QDialog):
                 if self.ui.ordreSchemaConvec.isEnabled:
                     self.ordreSchemaConvecChanged(None)
 
-
     def ordreSchemaConvecChanged(self,text ):
         if  text == '2':
             self.ui.LimitPente.setEnabled(True)
@@ -219,7 +218,6 @@ class Water_quality_dialog(QDialog):
         dlg.setWindowModality(2)
         dlg.exec_()
 
-
     def physicFile(self):
         # ouvre et stock tableau de physique
         dlg = physical_param_dialog(self.mgis, self.ui.modeleQualiteEau.currentText())
@@ -230,7 +228,6 @@ class Water_quality_dialog(QDialog):
                 self.mdb.execute("UPDATE {0}.tracer_physic "
                                  "SET value = '{1}' "
                                  "WHERE id = {2}".format(self.mdb.SCHEMA, mdl.item(row, 3).data(0), mdl.item(row, 0).data(0)))
-
 
     def add_line(self):
         #add line au tableau
@@ -247,7 +244,6 @@ class Water_quality_dialog(QDialog):
                     del self.dicoTrac[index.row()]
         if objnbTrac:
             objnbTrac.setText('{}'.format(tableView.rowCount()))
-
 
     def stockTable_Tr(self,table):
         if self.ui.WaterQ.currentIndex() == 2:
@@ -327,6 +323,7 @@ class Water_quality_dialog(QDialog):
                                 WHERE parametre='{2}'
                           """.format(self.mdb.SCHEMA, txt_dif, 'diffusionTraceurs')
         self.mdb.execute(sql)
+
     def update_conv_diff(self,table):
             if self.ui.WaterQ.currentIndex() == 2:
                 self.onChangeTab(0)
@@ -403,8 +400,6 @@ class Water_quality_dialog(QDialog):
                 for param in [["convec", 2], ["diffu", 3]]:
                     cb = self.table_conv_diff.cellWidget(r, param[1]).layout().itemAt(0).widget()
                     self.dicoTrac[r][param[0]] = cb.isChecked()
-
-
 
     def acceptDialog(self):
         """Modification of the parameters in sql table"""

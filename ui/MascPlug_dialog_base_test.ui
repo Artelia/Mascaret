@@ -216,6 +216,7 @@
     <addaction name="actionCreate_New_Model"/>
     <addaction name="actionLoad_Model"/>
     <addaction name="actionDeleteModel"/>
+    <addaction name="actionAdd_WQ_tables"/>
     <addaction name="separator"/>
     <addaction name="actionExport_Model"/>
     <addaction name="actionImport_Model"/>
@@ -578,6 +579,11 @@
   <action name="actiontest_file">
    <property name="text">
     <string>test_file</string>
+   </property>
+  </action>
+  <action name="actionAdd_WQ_tables">
+   <property name="text">
+    <string>Add WQ tables</string>
    </property>
   </action>
  </widget>

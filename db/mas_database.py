@@ -455,6 +455,58 @@ class MasDatabase(object):
             self.mgis.addInfo("Echec of creation model")
             self.mgis.addInfo(e)
 
+    def add_tableWQ(self,dossier):
+        """
+        Add table  for water Quality model
+        """
+
+        tables= [maso.tracer_lateral_inflows, maso.tracer_physic, maso.tracer_name,
+                      maso.tracer_config, maso.laws_wq]
+        tables.sort(key=lambda x: x().order)
+
+        for masobj_class in tables:
+            try:
+                obj = self.process_masobject(masobj_class, 'pg_create_table')
+                if self.mgis.DEBUG:
+                    self.mgis.addInfo('  {0} OK'.format(obj.name))
+            except:
+                self.mgis.addInfo('failure!<br>{0}'.format(obj))
+
+        sql = """ALTER TABLE exo_seuil.extremities ADD COLUMN tracer_boundary_condition_type integer NULL ;"""
+        self.run_query(sql.format(self.SCHEMA))
+        sql ="""ALTER TABLE exo_seuil.extremities ADD COLUMN law_wq text;"""
+        self.run_query(sql.format(self.SCHEMA))
+        #add parameters
+        sql ="""ALTER TABLE exo_seuil.parametres ADD COLUMN gui_type text DEFAULT 'parameters';"""
+        self.run_query(sql.format(self.SCHEMA))
+        fichparam = os.path.join(dossier, "parametres.csv")
+        # self.run_query(req.format(self.SCHEMA, fichparam))
+        liste_value = []
+        with open(fichparam, 'r') as file:
+            for ligne in file:
+                list_val=ligne.replace('\n', '').split(';')
+                if list_val[-1]== 'tracers' :
+                    liste_value.append(list_val)
+
+        listeCol = self.listColumns('parametres')
+        var = ",".join(listeCol)
+        valeurs = "("
+        for k in listeCol:
+            valeurs += '%s,'
+        valeurs = valeurs[:-1] + ")"
+
+        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
+                                                            'parametres',
+                                                            var,
+                                                            valeurs)
+
+        self.run_query(sql, many=True, listMany=liste_value)
+
+        # phy parameters
+        tbwq = table_WQ.table_WQ(self.mgis, self)
+        tbwq.default_tab_phy()
+
+
     def create_FirstModel(self):
         """ 
         To add variable in db for the first model creation
