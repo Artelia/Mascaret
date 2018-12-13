@@ -73,7 +73,6 @@ class TracerLaws_dialog(QDialog):
 
         self.initUI()
 
-
     def displayGraphHome(self):
         if self.ui.lst_laws.selectedIndexes():
             l = self.ui.lst_laws.selectedIndexes()[0].row()
@@ -87,7 +86,6 @@ class TracerLaws_dialog(QDialog):
         self.graph_home = GraphWaterQ(self.mgis, self.ui.lay_graph_home, self.tbwq.dico_wq_mod[self.cur_wq_mod])
         self.graph_edit = GraphWaterQ(self.mgis, self.ui.lay_graph_edit, self.tbwq.dico_wq_mod[self.cur_wq_mod])
         self.fill_lst_conf()
-
 
     def fill_lst_conf(self, id=None):
         model = QStandardItemModel()
@@ -103,6 +101,8 @@ class TracerLaws_dialog(QDialog):
             for j, field in enumerate(row):
                 new_itm = QStandardItem(str(row[j]))
                 new_itm.setEditable(False)
+                # new_itm.setCheckable(True)
+                # new_itm.setCheckState(0)
                 self.ui.lst_laws.model().setItem(i, j, new_itm)
 
         if id:
@@ -432,7 +432,6 @@ class ItemEditorFactory(QItemEditorFactory):  # http://doc.qt.io/qt-5/qstyledite
             return doubleSpinBox
         else:
             return ItemEditorFactory.createEditor(userType, parent)
-
 
 class MySpinBox(QDoubleSpinBox):
     def __init__(self, parent=None):
