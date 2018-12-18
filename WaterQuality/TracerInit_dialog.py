@@ -17,7 +17,7 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-
+#TODO Graph
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
@@ -32,11 +32,13 @@ from qgis.core import *
 from qgis.utils import *
 from qgis.gui import *
 
+
 # from .graph_WQ import GraphWaterQ
 from .table_WQ import table_WQ
 
 class TracerInit_dialog():
     def __init__(self, obj):
+        self.paramTr=obj
         self.mgis = obj.mgis
         self.ui=obj.ui
         self.mdb = self.mgis.mdb
@@ -68,13 +70,13 @@ class TracerInit_dialog():
         self.ui.b_OK_page2.accepted.connect(self.acceptPage2)
         self.ui.b_OK_page2.rejected.connect(self.rejectPage2)
         # self.ui.b_OK_page1.accepted.connect(self.reject)
-        self.ui.comboBox_conc_init.Hide()
+        self.ui.comboBox_conc_init.hide()
         self.initUI()
 
-    def displayGraphHome(self):
-        if self.ui.lst_laws.selectedIndexes():
-            l = self.ui.lst_laws.selectedIndexes()[0].row()
-            config = int(self.ui.lst_laws.model().item(l, 0).text())
+    # def displayGraphHome(self):
+    #     if self.ui.lst_laws.selectedIndexes():
+    #         l = self.ui.lst_laws.selectedIndexes()[0].row()
+    #         config = int(self.ui.lst_laws.model().item(l, 0).text())
             # self.graph_home.initGraph(config)
         # else:
         #     self.graph_home.initGraph(None)
@@ -86,32 +88,55 @@ class TracerInit_dialog():
         self.fill_lst_conf()
 
     def fill_lst_conf(self, id=None):
+        """ fill list configuration"""
         model = QStandardItemModel()
         model.setColumnCount(2)
         self.ui.lst_laws.setModel(model)
         self.ui.lst_laws.setModelColumn(1)
-        self.ui.lst_laws.selectionModel().selectionChanged.connect(self.displayGraphHome)
+        # self.ui.lst_laws.selectionModel().selectionChanged.connect(self.displayGraphHome)
         sql = "SELECT * FROM {0}.init_conc_config WHERE type = {1} ORDER BY name".format(self.mdb.SCHEMA, self.cur_wq_mod)
         rows = self.mdb.run_query(sql, fetch=True)
 
         for i, row in enumerate(rows):
             for j, field in enumerate(row):
-                new_itm = QStandardItem(str(row[j]))
-                new_itm.setEditable(False)
-                new_itm.setCheckable(True)
-                new_itm.setCheckState(0)
-                self.ui.lst_laws.model().setItem(i, j, new_itm)
+                if j != 3:
+                    new_itm = QStandardItem(str(row[j]))
+                    new_itm.setEditable(False)
+                    if j == 1:
+                        new_itm.setCheckable(True)
+                        if row[3] == False:
+                            new_itm.setCheckState(0)
+                        elif row[3] == True:
+                            new_itm.setCheckState(2)
+                    self.ui.lst_laws.model().setItem(i, j, new_itm)
+
+        self.ui.lst_laws.model().itemChanged.connect(self.sel_config_def)
 
         if id:
             for r in range(self.ui.lst_laws.model().rowCount()):
                 if str(self.ui.lst_laws.model().item(r, 0).text()) == str(id):
                     self.ui.lst_laws.setCurrentIndex(self.ui.lst_laws.model().item(r, 1).index())
                     break
-        else:
-            self.displayGraphHome()
+        # else:
+            # self.displayGraphHome()
+        # self.ui.lst_laws
+    def sel_config_def(self, itm):
+        self.ui.lst_laws.model().blockSignals(True)
+        for r in range(self.ui.lst_laws.model().rowCount()):
+            if r != itm.row():
+                self.ui.lst_laws.model().item(r, 1).setCheckState(0)
+        self.ui.lst_laws.model().blockSignals(False)
+
+        sql = "UPDATE {0}.init_conc_config SET active = 'f'".format(self.mdb.SCHEMA)
+        self.mdb.run_query(sql)
+        if itm.checkState() == 2:
+            id = str(self.ui.lst_laws.model().item(itm.row(), 0).text())
+            sql = "UPDATE {0}.init_conc_config SET active = 't' WHERE id = {1}".format(self.mdb.SCHEMA, id)
+            self.mdb.run_query(sql)
 
 
     def create_tab_model(self):
+        """ Create table of initial concentrations"""
         self.list_trac = []
         model = QStandardItemModel()
         model.insertColumns(0, 2)
@@ -142,6 +167,7 @@ class TracerInit_dialog():
 
 
     def fill_tab_laws(self):
+        """ fill table """
         self.filling_tab = True
         self.ui.tab_laws.setModel(self.create_tab_model())
         model = self.ui.tab_laws.model()
@@ -177,7 +203,10 @@ class TracerInit_dialog():
 
 
     def import_csv(self):
-        nb_col = len(self.list_trac) + 1
+        """ import CSV """
+        #TODO not good format
+        # +2 (bief , abscissa)
+        nb_col = len(self.list_trac) + 2
         f = QFileDialog.getOpenFileName(None, 'File Selection', self.mgis.repProject, "File (*.txt *.csv)")
         if f[0] != '':
             error = False
@@ -193,10 +222,8 @@ class TracerInit_dialog():
                             for c, val in enumerate(liste):
                                 itm = QStandardItem()
                                 itm.setData(data_to_float(val), 0)
-                                if c == 0:
-                                    model.setItem(r, c, itm)
-                                else:
-                                    model.setItem(r, c + 3, itm)
+                                model.setItem(r, c, itm)
+
                             r += 1
                         else:
                             error = True
@@ -209,90 +236,90 @@ class TracerInit_dialog():
                 # self.update_courbe("all")
             else:
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Import failed ({})".format(f[0]))
+                    self.mgis.addInfo("Import failed ({}) because the colone number of file isn't agree.".format(f[0]))
 
-    def onTabDataChange(self, itm):
-        if itm.column() < 4:
-            model = itm.model()
-            # model = self.ui.tab_laws.model()
-            if itm.data(0) or itm.data(0) == .0:
-                if itm.column() == 0:
-                    model.blockSignals(True)
-                    if not model.item(itm.row(), 1):
-                        model.setItem(itm.row(), 1, QStandardItem())
-                    model.item(itm.row(), 1).setData(itm.data(0) / 60., 0)
-                    if not model.item(itm.row(), 2):
-                        model.setItem(itm.row(), 2, QStandardItem())
-                    model.item(itm.row(), 2).setData(itm.data(0) / 3600., 0)
-                    if not model.item(itm.row(), 3):
-                        model.setItem(itm.row(), 3, QStandardItem())
-                    model.item(itm.row(), 3).setData(itm.data(0) / 86400., 0)
-                    model.blockSignals(False)
-                elif itm.column() == 1:
-                    model.blockSignals(True)
-                    if not model.item(itm.row(), 0):
-                        model.setItem(itm.row(), 0, QStandardItem())
-                    model.item(itm.row(), 0).setData(itm.data(0) * 60., 0)
-                    if not model.item(itm.row(), 2):
-                        model.setItem(itm.row(), 2, QStandardItem())
-                    model.item(itm.row(), 2).setData(itm.data(0) / 60., 0)
-                    if not model.item(itm.row(), 3):
-                        model.setItem(itm.row(), 3, QStandardItem())
-                    model.item(itm.row(), 3).setData(itm.data(0) / 1440., 0)
-                    model.blockSignals(False)
-                elif itm.column() == 2:
-                    model.blockSignals(True)
-                    if not model.item(itm.row(), 0):
-                        model.setItem(itm.row(), 0, QStandardItem())
-                    model.item(itm.row(), 0).setData(itm.data(0) * 3600., 0)
-                    if not model.item(itm.row(), 1):
-                        model.setItem(itm.row(), 1, QStandardItem())
-                    model.item(itm.row(), 1).setData(itm.data(0) * 60., 0)
-                    if not model.item(itm.row(), 3):
-                        model.setItem(itm.row(), 3, QStandardItem())
-                    model.item(itm.row(), 3).setData(itm.data(0) / 24., 0)
-                    model.blockSignals(False)
-                elif itm.column() == 3:
-                    model.blockSignals(True)
-                    if not model.item(itm.row(), 0):
-                        model.setItem(itm.row(), 0, QStandardItem())
-                    model.item(itm.row(), 0).setData(itm.data(0) * 86400., 0)
-                    if not model.item(itm.row(), 1):
-                        model.setItem(itm.row(), 1, QStandardItem())
-                    model.item(itm.row(), 1).setData(itm.data(0) * 1440., 0)
-                    if not model.item(itm.row(), 2):
-                        model.setItem(itm.row(), 2, QStandardItem())
-                    model.item(itm.row(), 2).setData(itm.data(0) * 24., 0)
-                    model.blockSignals(False)
-
-            if not self.filling_tab:
-                model.sort(0)
-                idx = itm.index()
-                self.ui.tab_laws.scrollTo(idx, 0)
-                # self.update_courbe("all")
-        else:
-            if not self.filling_tab:
-                idx = itm.index()
-                # self.update_courbe([idx.column() - 4])
-
-
-    # def update_courbe(self, courbes):
-    #     data = {}
-    #     if courbes == "all":
-    #         courbes = range(self.ui.tab_laws.model().columnCount() - 2)
-
-        # col_x = self.bg_time.checkedId()
-        # lx = []
-        # for r in range(self.ui.tab_laws.model().rowCount()):
-        #     lx.append(self.ui.tab_laws.model().item(r, col_x).data(0))
-        #
-        # for crb in courbes:
-        #     ly = []
-        #     for r in range(self.ui.tab_laws.model().rowCount()):
-        #         ly.append(self.ui.tab_laws.model().item(r, crb + 4).data(0))
-        #     data[crb] = {"x":lx, "y":ly}
-
-        # self.graph_edit.majCourbes(data)
+    # def onTabDataChange(self, itm):
+    #     if itm.column() < 4:
+    #         model = itm.model()
+    #         # model = self.ui.tab_laws.model()
+    #         if itm.data(0) or itm.data(0) == .0:
+    #             if itm.column() == 0:
+    #                 model.blockSignals(True)
+    #                 if not model.item(itm.row(), 1):
+    #                     model.setItem(itm.row(), 1, QStandardItem())
+    #                 model.item(itm.row(), 1).setData(itm.data(0) / 60., 0)
+    #                 if not model.item(itm.row(), 2):
+    #                     model.setItem(itm.row(), 2, QStandardItem())
+    #                 model.item(itm.row(), 2).setData(itm.data(0) / 3600., 0)
+    #                 if not model.item(itm.row(), 3):
+    #                     model.setItem(itm.row(), 3, QStandardItem())
+    #                 model.item(itm.row(), 3).setData(itm.data(0) / 86400., 0)
+    #                 model.blockSignals(False)
+    #             elif itm.column() == 1:
+    #                 model.blockSignals(True)
+    #                 if not model.item(itm.row(), 0):
+    #                     model.setItem(itm.row(), 0, QStandardItem())
+    #                 model.item(itm.row(), 0).setData(itm.data(0) * 60., 0)
+    #                 if not model.item(itm.row(), 2):
+    #                     model.setItem(itm.row(), 2, QStandardItem())
+    #                 model.item(itm.row(), 2).setData(itm.data(0) / 60., 0)
+    #                 if not model.item(itm.row(), 3):
+    #                     model.setItem(itm.row(), 3, QStandardItem())
+    #                 model.item(itm.row(), 3).setData(itm.data(0) / 1440., 0)
+    #                 model.blockSignals(False)
+    #             elif itm.column() == 2:
+    #                 model.blockSignals(True)
+    #                 if not model.item(itm.row(), 0):
+    #                     model.setItem(itm.row(), 0, QStandardItem())
+    #                 model.item(itm.row(), 0).setData(itm.data(0) * 3600., 0)
+    #                 if not model.item(itm.row(), 1):
+    #                     model.setItem(itm.row(), 1, QStandardItem())
+    #                 model.item(itm.row(), 1).setData(itm.data(0) * 60., 0)
+    #                 if not model.item(itm.row(), 3):
+    #                     model.setItem(itm.row(), 3, QStandardItem())
+    #                 model.item(itm.row(), 3).setData(itm.data(0) / 24., 0)
+    #                 model.blockSignals(False)
+    #             elif itm.column() == 3:
+    #                 model.blockSignals(True)
+    #                 if not model.item(itm.row(), 0):
+    #                     model.setItem(itm.row(), 0, QStandardItem())
+    #                 model.item(itm.row(), 0).setData(itm.data(0) * 86400., 0)
+    #                 if not model.item(itm.row(), 1):
+    #                     model.setItem(itm.row(), 1, QStandardItem())
+    #                 model.item(itm.row(), 1).setData(itm.data(0) * 1440., 0)
+    #                 if not model.item(itm.row(), 2):
+    #                     model.setItem(itm.row(), 2, QStandardItem())
+    #                 model.item(itm.row(), 2).setData(itm.data(0) * 24., 0)
+    #                 model.blockSignals(False)
+    #
+    #         if not self.filling_tab:
+    #             model.sort(0)
+    #             idx = itm.index()
+    #             self.ui.tab_laws.scrollTo(idx, 0)
+    #             # self.update_courbe("all")
+    #     else:
+    #         if not self.filling_tab:
+    #             idx = itm.index()
+    #             # self.update_courbe([idx.column() - 4])
+    #
+    #
+    # # def update_courbe(self, courbes):
+    # #     data = {}
+    # #     if courbes == "all":
+    # #         courbes = range(self.ui.tab_laws.model().columnCount() - 2)
+    #
+    #     # col_x = self.bg_time.checkedId()
+    #     # lx = []
+    #     # for r in range(self.ui.tab_laws.model().rowCount()):
+    #     #     lx.append(self.ui.tab_laws.model().item(r, col_x).data(0))
+    #     #
+    #     # for crb in courbes:
+    #     #     ly = []
+    #     #     for r in range(self.ui.tab_laws.model().rowCount()):
+    #     #         ly.append(self.ui.tab_laws.model().item(r, crb + 4).data(0))
+    #     #     data[crb] = {"x":lx, "y":ly}
+    #
+    #     # self.graph_edit.majCourbes(data)
 
     def new_law(self):
         #changer de page
@@ -320,7 +347,8 @@ class TracerInit_dialog():
             l = self.ui.lst_laws.selectedIndexes()[0].row()
             id_law = self.ui.lst_laws.model().item(l, 0).text()
             name_law = self.ui.lst_laws.model().item(l, 1).text()
-            if (QMessageBox.question(self, "Tracer Initial Concentration", "Delete {} ?".format(name_law), QMessageBox.Cancel|QMessageBox.Ok)) == QMessageBox.Ok:
+            if (QMessageBox.question(self.paramTr, "Tracer Initial Concentration", "Delete {} ?".format(name_law),
+                                     QMessageBox.Cancel|QMessageBox.Ok)) == QMessageBox.Ok:
                 if self.mgis.DEBUG:
                     self.mgis.addInfo("Deletion of {} Tracer Laws".format(name_law))
                 self.mdb.execute("DELETE FROM {0}.init_conc_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, id_law))

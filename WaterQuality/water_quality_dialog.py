@@ -86,12 +86,16 @@ class Water_quality_dialog(QDialog):
             self.ui.b_edit.setEnabled(True)
             self.ui.b_new.setEnabled(True)
             self.ui.b_delete.setEnabled(True)
+            self.ui.b_add_line.setEnabled(True)
+            self.ui.b_delete_line.setEnabled(True)
             self.ui.b_import.setEnabled(True)
         else:
             self.ui.b_edit.setEnabled(False)
             self.ui.b_new.setEnabled(False)
             self.ui.b_delete.setEnabled(False)
             self.ui.b_import.setEnabled(False)
+            self.ui.b_add_line.setEnabled(False)
+            self.ui.b_delete_line.setEnabled(False)
 
     def optionConvectionChanged(self, text):
             if  text == 'FV':

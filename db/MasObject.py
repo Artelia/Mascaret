@@ -118,6 +118,13 @@ class extremities(MasObject):
                       ('law_wq', 'text'),
                       ('CONSTRAINT cle_extremities', ' PRIMARY KEY (gid)'),
                       ('CONSTRAINT extremities_nom_key', ' UNIQUE (name)')]
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        qry += '\n'
+        qry += self.pg_create_calcul_abscisse()
+        return qry
 # *****************************************
 class branchs(MasObject):
     def __init__(self):
@@ -649,6 +656,7 @@ class init_conc_config(MasObject):
         self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
                       ('type', 'integer'),
+                      ('active', ' boolean'),
                       ('CONSTRAINT cle_init_conc_conf', 'PRIMARY KEY (id)')]
 
 class init_conc_wq(MasObject):
