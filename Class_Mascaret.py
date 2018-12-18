@@ -73,6 +73,7 @@ class Class_Mascaret():
         self.listeState = ['Steady', 'Unsteady', 'Transcritical unsteady']
         # kernel list
         self.Klist = ["steady", "unsteady", "transcritical"]
+        self.wq=class_mascWQ(self.mgis,self.dossierFileMasc)
 
     def creerGEO(self):
         """creation of gemoetry file"""
@@ -1181,9 +1182,15 @@ class Class_Mascaret():
         dateDebut = None
 
         dictLois = self.creerXCAS(noyau)
-        # self.mgis.addInfo('{}'.format(dictLois))
         if self.mgis.DEBUG:
             self.mgis.addInfo("Xcas file is created.")
+        if par['presenceTraceurs']:
+            self.wq.create_filephy()
+            self.wq.law_tracer()
+            self.wq.init_conc_tracer()
+        if self.mgis.DEBUG:
+            self.mgis.addInfo("Tracer files are created.")
+
         for i, scen in enumerate(dictScen['name']):
             if self.mgis.DEBUG:
                 self.mgis.addInfo("The current scenario is {}".format(scen))
@@ -1354,6 +1361,7 @@ class Class_Mascaret():
                     if self.mgis.DEBUG:
                         self.mgis.addInfo("Cancel run")
                     return
+
 
             self.mgis.addInfo("========== Run case  =========")
             self.mgis.addInfo("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen, noyau))
