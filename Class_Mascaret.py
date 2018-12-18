@@ -780,7 +780,7 @@ class Class_Mascaret():
                 parametresTracer = paramCas.find('parametresTraceur')
                 print(parametresTracer)
                 print(parametresTracer.find('presenceTraceurs').text)
-                parametresTracer = parametresTracer.find('presenceTraceurs').text='false'
+                parametresTracer.find('presenceTraceurs').text='false'
 
             self.indent(fichierCas)
             arbre = ElementTree(fichierCas)

@@ -679,7 +679,7 @@ Version : {}
 
         self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
         cl=class_mascWQ(self,self.dossierFileMasc)
-        cl.law_tracer()
+        cl.init_conc_tracer()
     def fct_add_wq_tables(self):
 
         ok = self.box.yes_no_q('Do you want add tracer tables ?')

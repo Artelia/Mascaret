@@ -366,10 +366,19 @@ class TracerInit_dialog():
             val = 1
         else:
             val = model.item(r - 1).data(0)
-        #
-
         itm.setData(val, 0)
         model.setItem(r, 0, itm)
+
+        itm = QStandardItem()
+        if r == 0:
+            valabs=0.0
+        elif r == 1:
+            valabs = model.item(r - 1,1).data(0)+2
+        else:
+            valabs = 2 * model.item(r - 1,1).data(0) - model.item(r - 2,1).data(0)
+        itm.setData(valabs,0)
+        model.setItem(r, 1, itm)
+
         for c in range(2, model.columnCount()):
             model.setItem(r, c, QStandardItem())
         self.ui.tab_laws.scrollToBottom()

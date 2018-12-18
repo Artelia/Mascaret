@@ -72,7 +72,8 @@ class class_mascWQ():
         result = self.mdb.select('tracer_physic',where,order)
         entetfr=u": NOMBRE DE PARAMETRES PHYSIQUES"
         entet = u": NUMBER OF PHYSICAL PARAMETERS"
-        with open(os.path.join(self.dossierFileMasc, self.cur_wq_mod.lower() + '.phy'), 'w') as fich:
+        # with open(os.path.join(self.dossierFileMasc, self.cur_wq_mod.lower() + '.phy'), 'w') as fich:
+        with open(os.path.join(self.dossierFileMasc, 'mascaret.phy'), 'w') as fich:
             fich.write('{} {}\n'.format(len(self.dico_phy[ self.cur_wq_mod]['physic']),entet))
             for i,phy in enumerate(self.dico_phy[ self.cur_wq_mod]['physic']):
                 idx=result['sigle'].index(phy['sigle'])
@@ -138,94 +139,44 @@ class class_mascWQ():
         return dict_loi_tr
 
 
+    def init_conc_tracer(self):
 
+        order = "id"
+        where = "type = '{}' AND active=true".format(self.cur_wq_mod_int)
+        init_trac = self.mdb.select('init_conc_config', where, order)
+        if init_trac['id'] == []:
+            self.mgis.addInfo("Warning: Please select the initial conditions for tracers")
+            return
+        order = 'ORDER BY bief,abscissa,id_trac'
+        where = "WHERE id_config= '{}' ".format(init_trac['id'][0])
+        sql = """SELECT DISTINCT id_trac,bief,abscissa,value FROM {0}.{1} {2} {3}"""
 
+        init_val, col = self.mdb.run_query(sql.format(self.mdb.SCHEMA, 'init_conc_wq', where, order),
+                                          fetch=True, namvar=True)
+        if init_val==[] or init_val ==None:
+            self.mgis.addInfo("Warning: Please fill the initial conditions for tracers")
+            return
+        # fich = open(os.path.join(self.dossierFileMasc, self.cur_wq_mod.lower() + '.conc'), 'w')
+        fich = open(os.path.join(self.dossierFileMasc, 'mascaret.conc'), 'w')
 
+        fich.write('[variables]\n')
+        for i,var in enumerate(self.dico_phy[self.cur_wq_mod]['tracer']):
+            fich.write('"{}";"C{}";"";11\n'.format(var['text'],i))
 
-
- # <parametresTraceur>
- #      <presenceTraceurs>true</presenceTraceurs>
- #      <nbTraceur>5</nbTraceur>
- #      <parametresConvectionDiffusion>
- #        <convectionTraceurs>true false true true false</convectionTraceurs>
- #        <optionConvection>4</optionConvection>
- #        <ordreSchemaConvec>1</ordreSchemaConvec>
- #        <paramW>-0</paramW>
- #        <LimitPente>false</LimitPente>
- #        <diffusionTraceurs>true true true true true</diffusionTraceurs>
- #        <optionCalculDiffusion>8</optionCalculDiffusion>
- #        <coeffDiffusion1>0.0</coeffDiffusion1>
- #        <coeffDiffusion2>100.0</coeffDiffusion2>
- #      </parametresConvectionDiffusion>
- #      <parametresNumeriquesQualiteEau>
- #        <modeleQualiteEau>5</modeleQualiteEau>
- #        <fichParamPhysiqueTracer>test.phy</fichParamPhysiqueTracer>
- #
- #                    if fichmeteo== False:
- #                        supression: fichMeteoTracer
- #        <frequenceCouplHydroTracer>1</frequenceCouplHydroTracer>
- #      </parametresNumeriquesQualiteEau>
- #      <parametresImpressionTraceur>
- #        <fichListTracer>test.tra_lis</fichListTracer>
- #        <concentInit>false</concentInit>
- #        <loiTracer>false</loiTracer>
- #        <concentrations>true</concentrations>
- #        <bilanTracer>true</bilanTracer>
- #        <fichResultTracer>test.tra_opt</fichResultTracer>
- #        <formatFichResultat>2</formatFichResultat>
- #      </parametresImpressionTraceur>
- #      <parametresConditionsLimitesTraceur>
- #        <typeCondLimTracer>1 2</typeCondLimTracer>
- #        <numLoiCondLimTracer>1 4</numLoiCondLimTracer>
- #      </parametresConditionsLimitesTraceur>
- #      <parametresConcentrationsInitialesTraceur>
- #        <presenceConcInit>true</presenceConcInit>
- #        <modeEntree>1</modeEntree>
- #        <fichConcInit>test.conc</fichConcInit>
- #        <nbPts>0</nbPts>
- #      </parametresConcentrationsInitialesTraceur>
- #      <parametresSourcesTraceur>
- #        <nbSources>1</nbSources>
- #        <noms>
- #          <string>Source-Singularite n2</string>
- #        </noms>
- #        <typeSources>3</typeSources>
- #        <numBranche>1</numBranche>
- #        <abscisses>4060.0</abscisses>
- #        <longueurs>0.0</longueurs>
- #        <numLoi>2</numLoi>
- #      </parametresSourcesTraceur>
- #      <parametresLoisTraceur>
- #        <nbLoisTracer>4</nbLoisTracer>
- #        <loisTracer>
- #          <structureSParametresLoiTraceur>
- #            <nom>loi_1_tracer</nom>
- #            <modeEntree>1</modeEntree>
- #            <fichier>test_tracer0.loi</fichier>
- #            <uniteTps>-0</uniteTps>
- #            <nbPoints>-0</nbPoints>
- #          </structureSParametresLoiTraceur>
- #          <structureSParametresLoiTraceur>
- #            <nom>loi_2_tracer_kwe_ouest</nom>
- #            <modeEntree>1</modeEntree>
- #            <fichier>test_tracer1.loi</fichier>
- #            <uniteTps>-0</uniteTps>
- #            <nbPoints>-0</nbPoints>
- #          </structureSParametresLoiTraceur>
- #          <structureSParametresLoiTraceur>
- #            <nom>loi_3_tracer_ocean</nom>
- #            <modeEntree>1</modeEntree>
- #            <fichier>test_tracer2.loi</fichier>
- #            <uniteTps>-0</uniteTps>
- #            <nbPoints>-0</nbPoints>
- #          </structureSParametresLoiTraceur>
- #          <structureSParametresLoiTraceur>
- #            <nom>loi_2_tracer_ocean</nom>
- #            <modeEntree>1</modeEntree>
- #            <fichier>test_tracer3.loi</fichier>
- #            <uniteTps>-0</uniteTps>
- #            <nbPoints>-0</nbPoints>
- #          </structureSParametresLoiTraceur>
- #        </loisTracer>
- #      </parametresLoisTraceur>
- #    </parametresTraceur>
+        fich.write('[resultats]')
+        id_pre=init_val[0][1]
+        abs_pre =init_val[0][2]
+        ligne = ''
+        first=True
+        for i, val in enumerate(init_val):
+            if val[3]==None:
+                val[3]=0
+            if id_pre != val[1] or abs_pre!=val[2] or first:
+                first = False
+                fich.write(ligne + '\n')
+                id_pre = val[1]
+                ligne = '        0.0;"  {}";"   {}";  {};  {};'.format(val[1], i+1, val[2],val[3])
+            else:
+                ligne += '  {};'.format(val[3])
+        fich.write(ligne)
+        fich.close()

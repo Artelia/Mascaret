@@ -338,7 +338,7 @@
                <item row="0" column="1">
                 <widget class="QLabel" name="label">
                  <property name="text">
-                  <string>Existing initial concentration</string>
+                  <string>Selection of initial concentration</string>
                  </property>
                 </widget>
                </item>
