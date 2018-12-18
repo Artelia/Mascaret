@@ -146,6 +146,7 @@ class MascPlugDialog(QMainWindow):
         if not self.mdb:
             self.disableActionsConnection()
 
+
     # Menu action
         # visu Mascaret plugin
         self.ui.actionCross_section.triggered.connect(self.mainGraph)

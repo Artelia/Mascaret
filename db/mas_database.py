@@ -156,7 +156,8 @@ class MasDatabase(object):
         except Exception as e:
             self.con.rollback()
             if be_quiet is False:
-                self.mgis.addInfo(repr(e))
+                txt=u'{}'.format(repr(e))
+                self.mgis.addInfo(txt)
             else:
                 pass
         finally:
@@ -408,7 +409,8 @@ class MasDatabase(object):
                       maso.observations, maso.parametres, maso.resultats,maso.runs, maso.laws,
                       #qualite d'eau
                       maso.tracer_lateral_inflows, maso.tracer_physic, maso.tracer_name,
-                      maso.tracer_config, maso.laws_wq]
+                      maso.tracer_config, maso.laws_wq, maso.init_conc_config,
+                      maso.init_conc_wq]
 
             tables.sort(key=lambda x: x().order)
 
@@ -461,7 +463,8 @@ class MasDatabase(object):
         """
 
         tables= [maso.tracer_lateral_inflows, maso.tracer_physic, maso.tracer_name,
-                      maso.tracer_config, maso.laws_wq]
+                      maso.tracer_config, maso.laws_wq, maso.init_conc_config,
+                 maso.init_conc_wq]
         tables.sort(key=lambda x: x().order)
 
         for masobj_class in tables:
@@ -472,12 +475,12 @@ class MasDatabase(object):
             except:
                 self.mgis.addInfo('failure!<br>{0}'.format(obj))
 
-        sql = """ALTER TABLE exo_seuil.extremities ADD COLUMN tracer_boundary_condition_type integer NULL ;"""
+        sql = """ALTER TABLE {}.extremities ADD COLUMN tracer_boundary_condition_type integer NULL ;"""
         self.run_query(sql.format(self.SCHEMA))
-        sql ="""ALTER TABLE exo_seuil.extremities ADD COLUMN law_wq text;"""
+        sql ="""ALTER TABLE {}.extremities ADD COLUMN law_wq text;"""
         self.run_query(sql.format(self.SCHEMA))
         #add parameters
-        sql ="""ALTER TABLE exo_seuil.parametres ADD COLUMN gui_type text DEFAULT 'parameters';"""
+        sql ="""ALTER TABLE {}.parametres ADD COLUMN gui_type text DEFAULT 'parameters';"""
         self.run_query(sql.format(self.SCHEMA))
         fichparam = os.path.join(dossier, "parametres.csv")
         # self.run_query(req.format(self.SCHEMA, fichparam))

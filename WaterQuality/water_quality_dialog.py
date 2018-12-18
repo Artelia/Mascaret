@@ -37,6 +37,7 @@ from .. import function as fct
 from .table_WQ import table_WQ
 from .physical_param_dialog import physical_param_dialog
 from .meteo_dialog import meteo_dialog
+from .TracerInit_dialog import  TracerInit_dialog
 
 class Water_quality_dialog(QDialog):
     def __init__(self, mgis):
@@ -51,9 +52,6 @@ class Water_quality_dialog(QDialog):
         self.ui.buttonBox.accepted.connect(self.acceptDialog)
         self.ui.buttonBox.rejected.connect(self.reject)
 
-        self.ui.actionB_add_line.triggered.connect(self.add_line)
-        self.ui.actionB_delete_line.triggered.connect(self.delete_line)
-
         self.ui.actionB_phy_param.triggered.connect(self.physicFile)
         self.ui.actionB_meteo_param.triggered.connect(self.meteoFile)
 
@@ -61,6 +59,8 @@ class Water_quality_dialog(QDialog):
 
         self.create_dico_para()
         self.initUI()
+        self.initUI_concent_init()
+
 
         self.modeleQualiteEau.currentIndexChanged['QString'].connect(self.modeleQualiteEauChanged)
         fct = lambda: self.delete_line(self.table_Tr,self.ui.nbTraceur)
@@ -70,10 +70,28 @@ class Water_quality_dialog(QDialog):
 
         self.optionConvectionChanged(self.ui.optionConvection.currentText())
         self.CalculDiffusionChanged( self.ui.optionCalculDiffusion.currentIndex())
+        self.presenceTraceursChanged()
 
         self.ui.optionConvection.currentIndexChanged['QString'].connect(self.optionConvectionChanged)
         self.ui.ordreSchemaConvec.currentIndexChanged['QString'].connect(self.ordreSchemaConvecChanged)
         self.ui.optionCalculDiffusion.currentIndexChanged.connect(self.CalculDiffusionChanged)
+        self.ui.presenceConcInit.stateChanged.connect(self.presenceTraceursChanged)
+
+    def initUI_concent_init(self):
+        """initialisation of GUI of initial concentration"""
+        self.initc=TracerInit_dialog(self)
+
+    def presenceTraceursChanged(self):
+        if self.ui.presenceConcInit.isChecked() ==True:
+            self.ui.b_edit.setEnabled(True)
+            self.ui.b_new.setEnabled(True)
+            self.ui.b_delete.setEnabled(True)
+            self.ui.b_import.setEnabled(True)
+        else:
+            self.ui.b_edit.setEnabled(False)
+            self.ui.b_new.setEnabled(False)
+            self.ui.b_delete.setEnabled(False)
+            self.ui.b_import.setEnabled(False)
 
     def optionConvectionChanged(self, text):
             if  text == 'FV':
@@ -161,11 +179,13 @@ class Water_quality_dialog(QDialog):
             self.ui.b_add_lineTabTracer.show()
             self.ui.b_delete_lineTabTracer.show()
             self.b_phy_param.setEnabled(False)
+
         else:
             self.table_Tr.setEditTriggers(QAbstractItemView.NoEditTriggers)
             self.ui.b_add_lineTabTracer.hide()
             self.ui.b_delete_lineTabTracer.hide()
             self.b_phy_param.setEnabled(True)
+        self.initc = TracerInit_dialog(self)
         self.majTab()
 
     def majTab(self):

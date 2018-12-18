@@ -639,6 +639,30 @@ class tracer_config(MasObject):
                       ('name', 'character varying(30)'),
                       ('type', 'integer'),
                       ('CONSTRAINT cle_tr_conf', 'PRIMARY KEY (id)')]
+
+
+class init_conc_config(MasObject):
+    def __init__(self):
+        super(init_conc_config, self).__init__()
+        self.order = 22
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('name', 'character varying(30)'),
+                      ('type', 'integer'),
+                      ('CONSTRAINT cle_init_conc_conf', 'PRIMARY KEY (id)')]
+
+class init_conc_wq(MasObject):
+    def __init__(self):
+        super(init_conc_wq, self).__init__()
+        self.order = 23
+        self.geom_type = None
+        self.attrs = [
+            ('id_config', 'integer'),
+            ('id_trac', 'integer'),
+            ('bief', ' integer'),
+            ('abscissa', ' float'),
+            ('value', 'float'),
+            ('CONSTRAINT cle_init_conc_wq', 'PRIMARY KEY (id_config, id_trac, bief,abscissa)')]
 # *****************************************
 if __name__ == '__main__':
     var= topo()
