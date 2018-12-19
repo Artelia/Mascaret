@@ -216,6 +216,7 @@
     <addaction name="actionCreate_New_Model"/>
     <addaction name="actionLoad_Model"/>
     <addaction name="actionDeleteModel"/>
+    <addaction name="actionAdd_WQ_tables"/>
     <addaction name="separator"/>
     <addaction name="actionExport_Model"/>
     <addaction name="actionImport_Model"/>
@@ -580,12 +581,17 @@
     <string>test_file</string>
    </property>
   </action>
+  <action name="actionAdd_WQ_tables">
+   <property name="text">
+    <string>Add WQ tables</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
    <class>QgsProjectionSelectionWidget</class>
    <extends>QWidget</extends>
-   <header>qgsprojectionselectionwidget.h</header>
+   <header>qgis.gui</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

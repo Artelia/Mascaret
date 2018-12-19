@@ -32,6 +32,13 @@ class table_WQ():
                             5: 'MICROPOLE',
                             6: 'THERMIC'
                             }
+        self.dico_mod_wq = {'TRANSPORT_PUR': 1,
+                             'O2' : 2,
+                             'BIOMASS' : 3,
+                             'EUTRO': 4,
+                             'MICROPOLE':5,
+                             'THERMIC':6
+                            }
 
         self.dico_meteo = [{"id": 1, "name": 'Air temperatures'},
                            {"id": 2, "name": 'Saturation vapor pressure'},
@@ -41,7 +48,8 @@ class table_WQ():
                            {"id": 6, "name": 'Atmospheric pressure'}]
 
     def get_cur_wq_mod(self):
-        sql = "SELECT steady FROM {0}.parametres WHERE id = 76".format(self.mdb.SCHEMA)
+        #modeleQualiteEau
+        sql = "SELECT steady FROM {0}.parametres WHERE id = 78".format(self.mdb.SCHEMA)
         rows = self.mdb.run_query(sql, fetch=True)
         return int(rows[0][0])
 

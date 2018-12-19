@@ -156,7 +156,8 @@ class MasDatabase(object):
         except Exception as e:
             self.con.rollback()
             if be_quiet is False:
-                self.mgis.addInfo(repr(e))
+                txt=u'{}'.format(repr(e))
+                self.mgis.addInfo(txt)
             else:
                 pass
         finally:
@@ -409,9 +410,9 @@ class MasDatabase(object):
                       #qualite d'eau
                       maso.tracer_lateral_inflows, maso.tracer_physic, maso.tracer_name,
                       maso.tracer_config, maso.laws_wq,
+                      maso.init_conc_config, maso.init_conc_wq,
                       #meteo
                       maso.meteo_config, maso.laws_meteo]
-
             tables.sort(key=lambda x: x().order)
 
             for masobj_class in tables:
@@ -429,7 +430,7 @@ class MasDatabase(object):
             liste_value = []
             with open(fichparam, 'r') as file:
                 for ligne in file:
-                    liste_value.append(ligne.replace('\n','').split(','))
+                    liste_value.append(ligne.replace('\n','').split(';'))
             listeCol = self.listColumns('parametres')
             var = ",".join(listeCol)
             valeurs = "("
@@ -456,6 +457,59 @@ class MasDatabase(object):
         except Exception as e:
             self.mgis.addInfo("Echec of creation model")
             self.mgis.addInfo(e)
+
+    def add_tableWQ(self,dossier):
+        """
+        Add table  for water Quality model
+        """
+
+        tables= [maso.tracer_lateral_inflows, maso.tracer_physic, maso.tracer_name,
+                 maso.tracer_config, maso.laws_wq, maso.init_conc_config,
+                 maso.init_conc_wq, maso.meteo_config, maso.laws_meteo]
+        tables.sort(key=lambda x: x().order)
+
+        for masobj_class in tables:
+            try:
+                obj = self.process_masobject(masobj_class, 'pg_create_table')
+                if self.mgis.DEBUG:
+                    self.mgis.addInfo('  {0} OK'.format(obj.name))
+            except:
+                self.mgis.addInfo('failure!<br>{0}'.format(obj))
+
+        sql = """ALTER TABLE {}.extremities ADD COLUMN tracer_boundary_condition_type integer NULL ;"""
+        self.run_query(sql.format(self.SCHEMA))
+        sql ="""ALTER TABLE {}.extremities ADD COLUMN law_wq text;"""
+        self.run_query(sql.format(self.SCHEMA))
+        #add parameters
+        sql ="""ALTER TABLE {}.parametres ADD COLUMN gui_type text DEFAULT 'parameters';"""
+        self.run_query(sql.format(self.SCHEMA))
+        fichparam = os.path.join(dossier, "parametres.csv")
+        # self.run_query(req.format(self.SCHEMA, fichparam))
+        liste_value = []
+        with open(fichparam, 'r') as file:
+            for ligne in file:
+                list_val=ligne.replace('\n', '').split(';')
+                if list_val[-1]== 'tracers' :
+                    liste_value.append(list_val)
+
+        listeCol = self.listColumns('parametres')
+        var = ",".join(listeCol)
+        valeurs = "("
+        for k in listeCol:
+            valeurs += '%s,'
+        valeurs = valeurs[:-1] + ")"
+
+        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
+                                                            'parametres',
+                                                            var,
+                                                            valeurs)
+
+        self.run_query(sql, many=True, listMany=liste_value)
+
+        # phy parameters
+        tbwq = table_WQ.table_WQ(self.mgis, self)
+        tbwq.default_tab_phy()
+
 
     def create_FirstModel(self):
         """ 
@@ -670,7 +724,6 @@ $BODY$
         sql = "SELECT * FROM {0}.{1} {2} {3};"
         (results,namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order), fetch=True,namvar=True)
         cols = [col[0] for col in namCol]
-
         dico = {}
         for col in cols:
             dico[col] = []
@@ -859,8 +912,8 @@ $BODY$
             exe = os.path.join(self.mgis.postgres_path, 'pg_dump')
 
             if os.path.isfile(exe) or  os.path.isfile(exe+'.exe'):
-                commande = '"{0}" -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
-                                                                  self.dbname, self.host)
+                commande = '"{0}" -p {6} -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
+                                                                  self.dbname, self.host,self.port)
                 # commande = '"{0}" --format custom  -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
                 #                                                   self.dbname, self.host)
                 os.putenv("PGPASSWORD","{0}".format(self.password))
@@ -891,7 +944,7 @@ $BODY$
                 # d["PGPASSWORD"] = "{0}".format(self.password)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
                 for file in Listfile:
-                    commande = '"{0}" -U {1} -f "{2}" -d {3} -h {4}'.format(exe,  self.user,
+                    commande = '"{0}" -U {1} -p {2} -f "{3}" -d {4} -h {5}'.format(exe,  self.user,self.port,
                                                                 file,self.dbname, self.host)
 
                     # p = subprocess.Popen(commande, env=d, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE

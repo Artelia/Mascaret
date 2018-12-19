@@ -18,7 +18,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=2.14.18
 qgisMaximumVersion=3.99
 
-version=0.1.10
+version=0.1.12
 
 author=Artelia Eau et Environnement
 email=mehdi-pierre.daou@arteliagroup.com
@@ -29,6 +29,10 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    0.1.12 : Addition of the "port" option for import and export model command with postgres
+    0.1.11 : Correction of hydrogramme bug for the profils with "output" display
+             Correction of delete run bug
+             Correction of variable time step bug at initialisation for a transcritical case
     0.1.10 : Correction of style bug for qgis 3
              Addition of schema delete GUI and  run delete GUI
              Addition of the comments for the runs

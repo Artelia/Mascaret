@@ -40,6 +40,7 @@ from .db.mas_database import MasDatabase
 from .MNT_class import Worker
 from .Class_Mascaret import Class_Mascaret
 from .parameter_dialog import parameter_dialog
+from .ui.warningbox import Class_warningBox
 
 
 import math
@@ -72,6 +73,8 @@ class MascPlugDialog(QMainWindow):
         #style des couches
         self.dossierStyle = os.path.join(os.path.join(self.masplugPath,"db"), "style")
         self.repProject = None
+
+        self.box = Class_warningBox(self)
         #variables liste of results
         self.variables = {}
         with open(os.path.join(self.masplugPath, 'variables.dat'), 'r') as fichier:
@@ -143,6 +146,7 @@ class MascPlugDialog(QMainWindow):
         if not self.mdb:
             self.disableActionsConnection()
 
+
     # Menu action
         # visu Mascaret plugin
         self.ui.actionCross_section.triggered.connect(self.mainGraph)
@@ -165,11 +169,10 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionAbout.triggered.connect(self.about)
         self.ui.actionWebsite.triggered.connect(self.website)
         self.ui.actionWebsite.setEnabled(False)
-        self.ui.actionAbout.setEnabled(False)
+        #test
         self.ui.actiontest_file.triggered.connect(self.fct_test_file)
-
-
-
+        self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
+        # self.ui.actionAbout.setEnabled(False)
 
     def addInfo(self, text):
         self.ui.textEdit.append(text)
@@ -629,12 +632,33 @@ class MascPlugDialog(QMainWindow):
     def windinfo(self, txt, title='Informations'):
         msg = QMessageBox()
         msg.setWindowTitle(title)
+        msg.setWindowIcon(QIcon(os.path.join(os.path.join(self.masplugPath,'icones'),'icon_base.png')))
         msg.setText(txt)
         msg.setStandardButtons(QMessageBox.Ok)
         retval = msg.exec_()
 
     def about(self):
-        pass
+        file=open(os.path.join(self.masplugPath,'metadata.txt'),'r')
+        for ligne in file:
+            if ligne.find("version=")>-1:
+                ligne=ligne.split('=')
+                val=ligne[1]
+                break
+        # TODO get "about" info of file
+        txt=u"""
+Plugin dedicated to the building and exploitation of Mascaret models.
+
+Requires PostgreSQL and PostGIS.
+
+Developed by Mehdi-Pierre DAOU, Christophe COULET, Aurélien PERRIN (Artelia),
+Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
+Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek (Many thanks for the work they've done on RiverGis).
+
+
+Version : {}
+           """.format(val)
+        self.windinfo(txt, title='About')
+
 
     def website(self):
         pass
@@ -655,4 +679,9 @@ class MascPlugDialog(QMainWindow):
 
         self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
         cl=class_mascWQ(self,self.dossierFileMasc)
-        cl.law_tracer()
+        cl.init_conc_tracer()
+    def fct_add_wq_tables(self):
+
+        ok = self.box.yes_no_q('Do you want add tracer tables ?')
+        if ok:
+            self.mdb.add_tableWQ(self.dossierSQL)
