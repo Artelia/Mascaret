@@ -376,6 +376,7 @@ class TracerInit_dialog():
             valabs = model.item(r - 1,1).data(0)+2
         else:
             valabs = 2 * model.item(r - 1,1).data(0) - model.item(r - 2,1).data(0)
+
         itm.setData(valabs,0)
         model.setItem(r, 1, itm)
 

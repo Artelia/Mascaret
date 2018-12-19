@@ -67,8 +67,6 @@ else: #qt4
 # **************************************************
 try:
     _encoding = QApplication.UnicodeUTF8
-
-
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
@@ -188,12 +186,12 @@ class GraphCommon(QDialog):
     def GUI_graph(self,ui):
 
         self.verticalLayout_99 = QVBoxLayout(ui.widget_figure)
-        self.verticalLayout_99.setObjectName(_fromUtf8("verticalLayout_99"))
+        self.verticalLayout_99.setObjectName("verticalLayout_99")
         self.verticalLayout_99.addWidget(self.canvas)
 
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.verticalLayout_98 = QVBoxLayout(ui.widget_toolsbar)
-        self.verticalLayout_98.setObjectName(_fromUtf8("verticalLayout_98"))
+        self.verticalLayout_98.setObjectName("verticalLayout_98")
         self.verticalLayout_98.addWidget(self.toolbar)
 
 class GraphProfil(GraphCommon):
