@@ -33,6 +33,13 @@ class table_WQ():
                             6: 'THERMIC'
                             }
 
+        self.dico_meteo = [{"id": 1, "name": 'Air temperatures'},
+                           {"id": 2, "name": 'Saturation vapor pressure'},
+                           {"id": 3, "name": 'Wind velocities'},
+                           {"id": 4, "name": 'Nebulosity'},
+                           {"id": 5, "name": 'Solar radiation'},
+                           {"id": 6, "name": 'Atmospheric pressure'}]
+
     def get_cur_wq_mod(self):
         sql = "SELECT steady FROM {0}.parametres WHERE id = 76".format(self.mdb.SCHEMA)
         rows = self.mdb.run_query(sql, fetch=True)

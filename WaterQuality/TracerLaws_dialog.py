@@ -148,7 +148,6 @@ class TracerLaws_dialog(QDialog):
         self.filling_tab = True
         self.ui.tab_laws.setModel(self.create_tab_model())
         model = self.ui.tab_laws.model()
-        self.rb_sec.click()
 
         if self.cur_wq_law != -1:
             c = 0
@@ -173,6 +172,7 @@ class TracerLaws_dialog(QDialog):
                 c += 1
 
         self.filling_tab = False
+        self.rb_sec.click()
 
 
     def import_csv(self):
@@ -365,12 +365,14 @@ class TracerLaws_dialog(QDialog):
 
 
     def chg_time(self, v):
+        unit = ['s', 'min', 'h', 'day']
         for i in range(4):
             if i == v:
                 self.ui.tab_laws.setColumnHidden(i, False)
             else:
                 self.ui.tab_laws.setColumnHidden(i, True)
         if not self.filling_tab:
+            self.graph_edit.majUnitX(unit[v])
             self.update_courbe("all")
 
 

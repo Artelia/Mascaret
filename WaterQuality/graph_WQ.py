@@ -69,6 +69,7 @@ from matplotlib.ticker import FormatStrFormatter
 from matplotlib import gridspec, patches
 from matplotlib.figure import Figure
 import matplotlib.dates as mdates
+import matplotlib.ticker as ticker
 import matplotlib.image as mpimg
 import matplotlib.lines as mlines
 
@@ -94,35 +95,6 @@ class GraphCommon(QDialog):
         lay.addWidget(self.canvas)
         lay.addWidget(self.toolbar)
 
-
-class GraphWaterQ(GraphCommon):
-    """class Dialog GraphWaterQ"""
-    def __init__(self, mgis=None, lay=None, mod=None):
-        GraphCommon.__init__(self, mgis)
-        self.mdb = self.mgis.mdb
-        self.initUI_common_P()
-        self.GUI_graph(lay)
-        self.initUI(mod)
-
-
-    def initUI(self, mod):
-        self.axes = self.fig.add_subplot(111)
-        self.axes.grid(True)
-        self.axes.set_xlabel("time (s)")
-
-        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(self.mdb.SCHEMA, mod)
-        rows = self.mdb.run_query(sql, fetch=True)
-
-        self.list_trac = []
-        for row in rows:
-            self.list_trac.append({"id":row[0], "name": row[1]})
-            self.courbeTrac, = self.axes.plot([], [], zorder=100-row[0], label=row[1])
-            self.courbes.append(self.courbeTrac)
-
-        self.fig.canvas.mpl_connect('pick_event', self.onpick)
-        self.initLegende()
-
-
     def onpick(self, event):
         legline = event.artist
         btn = event.mouseevent.button
@@ -136,11 +108,10 @@ class GraphWaterQ(GraphCommon):
                 legline.set_alpha(0.2)
             self.majLimites()
 
-
     def initLegende(self):
         listeNoms = [c.get_label() for c in self.courbes]
         self.leg = self.axes.legend(self.courbes, listeNoms, loc='upper right',
-                                    fancybox=False, shadow=False)
+                                    fancybox=False, shadow=False, fontsize=7.)
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
         self.leg.draggable(True)
@@ -151,33 +122,19 @@ class GraphWaterQ(GraphCommon):
             legline.set_linewidth(3)
             self.lined[legline] = courbe
 
-
-    def initGraph(self, config, all_vis=False):
-        leglines = self.leg.get_lines()
-        for t, trac in enumerate(self.list_trac):
-            if config is not None:
-                sql = "SELECT time, value FROM {0}.laws_wq WHERE id_config = {1} and id_trac = {2} ORDER BY time".format(self.mdb.SCHEMA,
-                                                                                                                         config,
-                                                                                                                         trac["id"])
-                rows = self.mdb.run_query(sql, fetch=True)
-                lst = list(zip(*rows))
-            else:
-                lst = [[], []]
-
-            self.courbes[t].set_data(lst[0], lst[1])
-
-            if all_vis:
-                self.courbes[t].set_visible(True)
-                leglines[t].set_alpha(1.0)
-
-        self.majLimites()
-
+    def majUnitX(self, unit):
+        self.unit = unit
+        self.axes.set_xlabel("time ({})".format(unit))
+        if self.unit != 'date':
+            self.axes.xaxis.set_major_formatter(ticker.ScalarFormatter())
+        else:
+            self.axes.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
 
     def majCourbes(self, courbes):
         for c in courbes.keys():
             self.courbes[c].set_data(courbes[c]["x"], courbes[c]["y"])
-        self.majLimites()
 
+        self.majLimites()
 
     def majLimites(self):
         no_data = True
@@ -205,6 +162,101 @@ class GraphWaterQ(GraphCommon):
             self.axes.set_xlim(miniX, maxiX)
             self.axes.set_ylim(miniZ, maxiZ)
 
+        self.fig.autofmt_xdate()
         self.canvas.draw()
+
+
+class GraphWaterQ(GraphCommon):
+    """class Dialog GraphWaterQ"""
+    def __init__(self, mgis=None, lay=None, mod=None):
+        GraphCommon.__init__(self, mgis)
+        self.mdb = self.mgis.mdb
+        self.initUI_common_P()
+        self.GUI_graph(lay)
+        self.initUI(mod)
+
+    def initUI(self, mod):
+        self.axes = self.fig.add_subplot(111)
+        self.axes.tick_params(axis='both', labelsize=7.)
+        self.axes.grid(True)
+
+        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(self.mdb.SCHEMA, mod)
+        rows = self.mdb.run_query(sql, fetch=True)
+
+        self.list_trac = []
+        for row in rows:
+            self.list_trac.append({"id":row[0], "name": row[1]})
+            self.courbeTrac, = self.axes.plot([], [], zorder=100-row[0], label=row[1])
+            self.courbes.append(self.courbeTrac)
+
+        self.fig.canvas.mpl_connect('pick_event', self.onpick)
+        self.initLegende()
+
+    def initGraph(self, config, all_vis=False):
+        self.majUnitX("s")
+        leglines = self.leg.get_lines()
+        for t, trac in enumerate(self.list_trac):
+            lst = [[], []]
+            if config is not None:
+                sql = "SELECT time, value FROM {0}.laws_wq WHERE id_config = {1} and id_trac = {2} ORDER BY time".format(self.mdb.SCHEMA,
+                                                                                                                         config,
+                                                                                                                         trac["id"])
+                rows = self.mdb.run_query(sql, fetch=True)
+                if len(rows) > 0:
+                    lst = list(zip(*rows))
+
+            self.courbes[t].set_data(lst[0], lst[1])
+
+            if all_vis:
+                self.courbes[t].set_visible(True)
+                leglines[t].set_alpha(1.0)
+
+        self.majLimites()
+
+
+class GraphMeteo(GraphCommon):
+    """class Dialog GraphWaterQ"""
+    def __init__(self, mgis=None, lay=None, lst_var=None):
+        GraphCommon.__init__(self, mgis)
+        self.mdb = self.mgis.mdb
+        self.lst_var = lst_var
+        self.initUI_common_P()
+        self.GUI_graph(lay)
+        self.initUI()
+
+    def initUI(self):
+        self.axes = self.fig.add_subplot(111)
+        self.axes.tick_params(axis='both', labelsize=7.)
+        self.axes.grid(True)
+
+        for var in self.lst_var:
+            self.courbeTrac, = self.axes.plot([], [], zorder=100-var["id"], label=var["name"])
+            self.courbes.append(self.courbeTrac)
+
+        self.fig.canvas.mpl_connect('pick_event', self.onpick)
+        self.initLegende()
+
+    def initGraph(self, config, all_vis=False):
+        self.majUnitX("s")
+        leglines = self.leg.get_lines()
+        for v, var in enumerate(self.lst_var):
+            lst = [[], []]
+            if config is not None:
+                sql = "SELECT time, value FROM {0}.laws_meteo WHERE id_config = {1} and id_var = {2} ORDER BY time".format(self.mdb.SCHEMA,
+                                                                                                                           config,
+                                                                                                                           var["id"])
+                rows = self.mdb.run_query(sql, fetch=True)
+                if len(rows) > 0:
+                    lst = list(zip(*rows))
+
+            self.courbes[v].set_data(lst[0], lst[1])
+
+            if all_vis:
+                self.courbes[v].set_visible(True)
+                leglines[v].set_alpha(1.0)
+
+        self.majLimites()
+
+
 
 

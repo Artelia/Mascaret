@@ -639,6 +639,30 @@ class tracer_config(MasObject):
                       ('name', 'character varying(30)'),
                       ('type', 'integer'),
                       ('CONSTRAINT cle_tr_conf', 'PRIMARY KEY (id)')]
+
+class meteo_config(MasObject):
+    def __init__(self):
+        super(meteo_config, self).__init__()
+        self.order = 22
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('name', 'character varying(30)'),
+                      ('starttime', 'timestamp without time zone'),
+                      ('active', 'boolean'),
+                      ('CONSTRAINT cle_met_conf', 'PRIMARY KEY (id)')]
+
+class laws_meteo(MasObject):
+    def __init__(self):
+        super(laws_meteo, self).__init__()
+        self.order = 23
+        self.geom_type = None
+        self.attrs = [
+            ('id_config', 'integer'),
+            ('id_var', 'integer'),
+            ('time', 'float'),
+            ('value', 'float'),
+            ('CONSTRAINT cle_laws_met', 'PRIMARY KEY (id_config, id_var, time)')]
+
 # *****************************************
 if __name__ == '__main__':
     var= topo()

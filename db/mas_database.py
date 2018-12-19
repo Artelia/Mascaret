@@ -408,7 +408,9 @@ class MasDatabase(object):
                       maso.observations, maso.parametres, maso.resultats,maso.runs, maso.laws,
                       #qualite d'eau
                       maso.tracer_lateral_inflows, maso.tracer_physic, maso.tracer_name,
-                      maso.tracer_config, maso.laws_wq]
+                      maso.tracer_config, maso.laws_wq,
+                      #meteo
+                      maso.meteo_config, maso.laws_meteo]
 
             tables.sort(key=lambda x: x().order)
 

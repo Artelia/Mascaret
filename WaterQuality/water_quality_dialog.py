@@ -36,6 +36,7 @@ from ..graphProfil_Dialog import CopySelectedCellsAction
 from .. import function as fct
 from .table_WQ import table_WQ
 from .physical_param_dialog import physical_param_dialog
+from .meteo_dialog import meteo_dialog
 
 class Water_quality_dialog(QDialog):
     def __init__(self, mgis):
@@ -174,10 +175,14 @@ class Water_quality_dialog(QDialog):
                               "text": 'Tracer{}'.format(self.table_Tr.rowCount()),
                               "convec": True, "diffu": True})
 
+
     def meteoFile(self):
         #ouvre et stock information fichier meteo
         self.mgis.addInfo('fct meteoFile')
-        pass
+        dlg = meteo_dialog(self.mgis)
+        dlg.setWindowModality(2)
+        dlg.exec_()
+
 
     def physicFile(self):
         # ouvre et stock tableau de physique
