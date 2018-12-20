@@ -174,4 +174,3 @@ class TracerInit_dialog():
                 self.mdb.execute("DELETE FROM {0}.init_conc_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, id_law))
                 self.mdb.execute("DELETE FROM {0}.init_conc_config WHERE id = {1}".format(self.mdb.SCHEMA, id_law))
                 self.fill_lst_conf()
-

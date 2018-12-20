@@ -225,7 +225,7 @@ class parameter_dialog(QDialog):
                         valeurs.append(eval(var1))
 
                     for var, val, lib in zip(self.variables, valeurs,self.libel_var):
-                        self.par[var] = {"val": val, "libelle": lib,"gui": True}
+                        self.par[var] = {"val": val, "libelle": lib,"gui": True,"gui_type":'parameters' }
                         # self.par[var] = {"val": val, "libelle": lib}
                 else:
                     self.par[param] = {}
@@ -236,6 +236,7 @@ class parameter_dialog(QDialog):
 
                     self.par[param]["libelle"] = libelle
                     self.par[param]["gui"] = self.str2bool(gui)
+                    self.par[param]["gui_type"] = gui_type
 
     def init_GUI(self):
         # pass

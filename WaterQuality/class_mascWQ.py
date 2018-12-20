@@ -161,7 +161,7 @@ class class_mascWQ():
 
         fich.write('[variables]\n')
         for i,var in enumerate(self.dico_phy[self.cur_wq_mod]['tracer']):
-            fich.write('"{}";"C{}";"";11\n'.format(var['text'],i))
+            fich.write('"{}";"C{}";"";11\n'.format(var['text'],i+1))
 
         fich.write('[resultats]')
         id_pre=init_val[0][1]
