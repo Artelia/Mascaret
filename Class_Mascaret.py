@@ -1279,16 +1279,19 @@ class Class_Mascaret():
 
                     nom = nom + "_init"
                     # 3600 To change TODO
-
-                    if l['type'] == 1:
-                        tab = {"time": [0, 3600], 'flowrate': [l["valeurperm"]] * 2}
-                        self.creerLOI(nom, tab, 1)
-                    elif l['type'] in [2, 4, 5]:
-                        tab = {"time": [0, 3600], 'z': [l["valeurperm"]] * 2}
-                        self.creerLOI(nom, tab, 2)
+                    if l["valeurperm"]!=None:
+                        if l['type'] == 1:
+                            tab = {"time": [0, 3600], 'flowrate': [l["valeurperm"]] * 2}
+                            self.creerLOI(nom, tab, 1)
+                        elif l['type'] in [2, 4, 5]:
+                            tab = {"time": [0, 3600], 'z': [l["valeurperm"]] * 2}
+                            self.creerLOI(nom, tab, 2)
+                        else:
+                            par["initialisationAuto"] = False
+                            self.mgis.addInfo("No initialisation")
                     else:
                         par["initialisationAuto"] = False
-                        self.mgis.addInfo("No initialisation")
+                        self.mgis.addInfo("No initialisation because of no valeurperm for {} condition".format(nom))
 
             if par["initialisationAuto"] and noyau != "steady":
                 # add if name of init. exist previously
