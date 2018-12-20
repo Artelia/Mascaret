@@ -37,7 +37,7 @@ from .. import function as fct
 from .table_WQ import table_WQ
 from .physical_param_dialog import physical_param_dialog
 from .meteo_dialog import meteo_dialog
-from .TracerInit_dialog import  TracerInit_dialog
+from .TracerInit_dialog import TracerInit_dialog
 
 class Water_quality_dialog(QDialog):
     def __init__(self, mgis):
@@ -59,7 +59,7 @@ class Water_quality_dialog(QDialog):
 
         self.create_dico_para()
         self.initUI()
-        self.initUI_concent_init()
+        # self.initUI_concent_init()
 
 
         self.modeleQualiteEau.currentIndexChanged['QString'].connect(self.modeleQualiteEauChanged)
@@ -77,9 +77,9 @@ class Water_quality_dialog(QDialog):
         self.ui.optionCalculDiffusion.currentIndexChanged.connect(self.CalculDiffusionChanged)
         self.ui.presenceConcInit.stateChanged.connect(self.presenceTraceursChanged)
 
-    def initUI_concent_init(self):
-        """initialisation of GUI of initial concentration"""
-        self.initc=TracerInit_dialog(self)
+    # def initUI_concent_init(self):
+    #     """initialisation of GUI of initial concentration"""
+    #     self.initc=TracerInit_dialog(self)
 
     def presenceTraceursChanged(self):
         if self.ui.presenceConcInit.isChecked() ==True:
@@ -174,6 +174,7 @@ class Water_quality_dialog(QDialog):
         self.table_Tr = self.ui.tableWidget
         self.table_Tr.setColumnHidden(0, True)
         # self.table_Tr.addAction(CopySelectedCellsAction(self.table_Tr))
+        self.initc = TracerInit_dialog(self)
         self.modeleQualiteEauChanged(self.type)
 
     def modeleQualiteEauChanged(self, text):
@@ -183,13 +184,12 @@ class Water_quality_dialog(QDialog):
             self.ui.b_add_lineTabTracer.show()
             self.ui.b_delete_lineTabTracer.show()
             self.b_phy_param.setEnabled(False)
-
         else:
             self.table_Tr.setEditTriggers(QAbstractItemView.NoEditTriggers)
             self.ui.b_add_lineTabTracer.hide()
             self.ui.b_delete_lineTabTracer.hide()
             self.b_phy_param.setEnabled(True)
-        self.initc = TracerInit_dialog(self)
+        self.initc.change_module(self.type)
         self.majTab()
 
     def majTab(self):

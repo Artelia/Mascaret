@@ -189,12 +189,13 @@ class meteo_dialog(QDialog):
 
     def shortCut_row_del(self):
         if self.ui.tab_sets.hasFocus():
+            cols = []
             model = self.ui.tab_sets.model()
             selection = self.ui.tab_sets.selectedIndexes()
             for idx in selection:
                 if idx.column() > 4:
                     model.item(idx.row(), idx.column()).setData(None, 0)
-            cols = [idx.column() - 5 for idx in selection]
+                    cols.append(idx.column() - 5)
             cols = list(set(cols))
             self.update_courbe(cols)
 

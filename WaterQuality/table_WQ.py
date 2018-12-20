@@ -49,7 +49,7 @@ class table_WQ():
 
     def get_cur_wq_mod(self):
         #modeleQualiteEau
-        sql = "SELECT steady FROM {0}.parametres WHERE id = 78".format(self.mdb.SCHEMA)
+        sql = "SELECT steady FROM {0}.parametres WHERE parametre = 'modeleQualiteEau'".format(self.mdb.SCHEMA)
         rows = self.mdb.run_query(sql, fetch=True)
         return int(rows[0][0])
 

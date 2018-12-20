@@ -134,12 +134,13 @@ class TracerLaws_dialog(QDialog):
 
     def shortCut_row_del(self):
         if self.ui.tab_laws.hasFocus():
+            cols = []
             model = self.ui.tab_laws.model()
             selection = self.ui.tab_laws.selectedIndexes()
             for idx in selection:
                 if idx.column() > 3:
                     model.item(idx.row(), idx.column()).setData(None, 0)
-            cols = [idx.column()-4 for idx in selection]
+                    cols.append(idx.column() - 4)
             cols = list(set(cols))
             self.update_courbe(cols)
 
