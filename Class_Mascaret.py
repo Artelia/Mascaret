@@ -1419,13 +1419,13 @@ class Class_Mascaret():
                                                     'File Selection',
                                                     self.dossierFileMasc,
                                                     "File (*.lig)")
-            fichiers=fichiers[0]
+
         else:  # qt5
             fichiers, _ = QFileDialog.getOpenFileNames(None,
                                                        'File Selection',
                                                        self.dossierFileMasc,
                                                        "File (*.lig)")
-
+        fichiers=fichiers[0]
         shutil.copy(fichiers,os.path.join(self.dossierFileMasc, self.baseName + '.lig') )
 
     def clean_rep(self):

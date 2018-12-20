@@ -31,6 +31,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 changelog=
     0.1.12 : Addition of the "port" option for import and export model command with postgres
              Correction of bug related to the initial value equal "None" when ".lig" file is used
+             Correction of ".lig" file copy bug for QGIS3
     0.1.11 : Correction of hydrogramme bug for the profils with "output" display
              Correction of delete run bug
              Correction of variable time step bug at initialisation for a transcritical case
