@@ -1,6 +1,7 @@
 <!DOCTYPE RCC>
 <RCC>
   <qresource prefix="/plugins/Mascaret" > 
+    <file>icones/basinResult.png</file>
     <file>icones/icon.png</file> 
     <file>icones/icon_base.png</file> 
     <file>icones/dbLoadModel.png</file> 
@@ -22,6 +23,7 @@
     <file>icones/xcas.png</file>
     <file>icones/parameter.png</file>
     <file>icones/play.png</file>
+    <file>icones/basin.png</file>
     <file>icones/croix.png</file>
     <file>icones/repSav.png</file>
     <file>icones/dbImportModel.png</file>

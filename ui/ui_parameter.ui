@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>699</width>
-    <height>549</height>
+    <height>561</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabConfig">
       <attribute name="title">
@@ -212,7 +212,7 @@
            </item>
           </widget>
          </item>
-         <item row="9" column="0">
+         <item row="10" column="0">
           <spacer name="verticalSpacer_7">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
@@ -299,6 +299,16 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item row="9" column="0">
+          <widget class="QCheckBox" name="presenceCasiers">
+           <property name="layoutDirection">
+            <enum>Qt::RightToLeft</enum>
+           </property>
+           <property name="text">
+            <string>Presence of river basins</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

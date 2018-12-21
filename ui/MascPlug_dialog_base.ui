@@ -228,6 +228,7 @@
     <addaction name="separator"/>
     <addaction name="actionCreate_Geometry"/>
     <addaction name="actionCreate_xcas"/>
+    <addaction name="actionCreate_Basin"/>
     <addaction name="separator"/>
     <addaction name="actionRun"/>
     <addaction name="separator"/>
@@ -240,6 +241,7 @@
     </property>
     <addaction name="actionHydrogramme"/>
     <addaction name="actionCross_section_results"/>
+    <addaction name="actionBasin"/>
    </widget>
    <addaction name="menuDB"/>
    <addaction name="menu_Tools"/>
@@ -292,6 +294,7 @@
    <addaction name="separator"/>
    <addaction name="actionCreate_Geometry"/>
    <addaction name="actionCreate_xcas"/>
+   <addaction name="actionCreate_Basin"/>
    <addaction name="separator"/>
    <addaction name="actionRun"/>
    <addaction name="separator"/>
@@ -310,6 +313,7 @@
    </attribute>
    <addaction name="actionHydrogramme"/>
    <addaction name="actionCross_section_results"/>
+   <addaction name="actionBasin"/>
   </widget>
   <action name="actionWebsite">
    <property name="icon">
@@ -530,6 +534,33 @@
    </property>
    <property name="text">
     <string>Import Model</string>
+   </property>
+  </action>
+  <action name="actionCreate_Basin">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/basin.png</normaloff>:/plugins/Mascaret/icones/basin.png</iconset>
+   </property>
+   <property name="text">
+    <string>Create Basin</string>
+   </property>
+   <property name="toolTip">
+    <string>Create Basin</string>
+   </property>
+  </action>
+  <action name="actionBasin">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/basinResult.png</normaloff>:/plugins/Mascaret/icones/basinResult.png</iconset>
+   </property>
+   <property name="text">
+    <string>Basin results</string>
+   </property>
+   <property name="toolTip">
+    <string>Basin results</string>
    </property>
   </action>
  </widget>
