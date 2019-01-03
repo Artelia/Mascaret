@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>699</width>
-    <height>549</height>
+    <width>700</width>
+    <height>561</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -834,7 +834,7 @@
          <item row="7" column="0">
           <widget class="QLabel" name="label_pasStock">
            <property name="text">
-            <string>Number of the first time step</string>
+            <string>Write data all N time steps</string>
            </property>
           </widget>
          </item>
@@ -894,7 +894,7 @@
          <item row="8" column="0">
           <widget class="QLabel" name="label_pasImpression">
            <property name="text">
-            <string>Write data all N time steps</string>
+            <string>Write to the listing file all data all N time steps</string>
            </property>
           </widget>
          </item>

@@ -18,7 +18,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=2.14.18
 qgisMaximumVersion=3.99
 
-version=0.1.12
+version=0.1.13
 
 author=Artelia Eau et Environnement
 email=mehdi-pierre.daou@arteliagroup.com
@@ -29,6 +29,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    0.1.13 : Correction of parameters GUI bug
     0.1.12 : Addition of the "port" option for import and export model command with postgres
              Correction of bug related to the initial value equal "None" when ".lig" file is used
              Correction of ".lig" file copy bug for QGIS3
