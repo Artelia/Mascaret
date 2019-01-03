@@ -18,28 +18,27 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 
-from qgis.PyQt.uic import *
-from qgis.PyQt.QtCore import *
-
-if int(qVersion()[0])<5:  #qt4
+if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
-else: #qt5
+else:  # qt5
     from qgis.PyQt.QtWidgets import *
 import os
 
-from . import function as fct_
 from .Class_observation import Class_observation
 
+
 class parameter_dialog(QDialog):
-    def __init__(self,mgis, kernel):
+    def __init__(self, mgis, kernel):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
 
-        self.kernel=kernel
+        self.kernel = kernel
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_parameter.ui'), self)
 
@@ -65,23 +64,23 @@ class parameter_dialog(QDialog):
         self.ui.actionbox_WaterLevel.triggered.connect(fct)
 
     def initUI(self):
-        self.obs=Class_observation(self.mgis)
-        self.combo =    {'code': {1: 'Steady',
-                                  2: 'Unsteady',
-                                  3: 'Transcritical'},
-                         'compositionLits': {0: 'Aucun',
-                                             1: 'Debord',
-                                             2: 'fond/berge'},
-                         'option': {1: 'Sections de calcul',
-                                    2: 'couche Points de sortie'},
-                         'postProcesseur': {1: 'Rubens',
-                                            2: 'Opthyca'},
-                         'critereArret': {1: 'Temps maximum',
-                                          2: 'Nombre de pas de temps max',
-                                          3: 'Cote maximale de controle'},
-                         }
+        self.obs = Class_observation(self.mgis)
+        self.combo = {'code': {1: 'Steady',
+                               2: 'Unsteady',
+                               3: 'Transcritical'},
+                      'compositionLits': {0: 'Aucun',
+                                          1: 'Debord',
+                                          2: 'fond/berge'},
+                      'option': {1: 'Sections de calcul',
+                                 2: 'couche Points de sortie'},
+                      'postProcesseur': {1: 'Rubens',
+                                         2: 'Opthyca'},
+                      'critereArret': {1: 'Temps maximum',
+                                       2: 'Nombre de pas de temps max',
+                                       3: 'Cote maximale de controle'},
+                      }
 
-        self.libel_var=["Bottom elevation",
+        self.libel_var = ["Bottom elevation",
                           "Left bank water level",
                           "Right bank water level",
                           "Minor friction coefficient",
@@ -122,54 +121,55 @@ class parameter_dialog(QDialog):
                           "Arrival time of the floodwave",
                           "Maximum flow rate",
                           "Date of maximum flow rate",
-                          "Maximum energy"
+                          "Maximum energy",
+                          "Total wetted area"
                           ]
 
-
-        self.variables=['ZREF',
-                        'RGC',
-                        'RDC',
-                        'KMIN',
-                        'KMAJ',
-                        'Z',
-                        'QMIN',
-                        'QMAJ',
-                        'S1',
-                        'S2',
-                        'FR',
-                        'BETA',
-                        'B1',
-                        'B2',
-                        'BS',
-                        'P1',
-                        'P2',
-                        'RH1',
-                        'RH2',
-                        'VMIN',
-                        'VMAJ',
-                        'TAUF',
-                        'Y',
-                        'HMOY',
-                        'Q2G',
-                        'Q2D',
-                        'SS',
-                        'VOL',
-                        'VOLS',
-                        'CHAR',
-                        'ZMAX',
-                        'TZMA',
-                        'VZMX',
-                        'ZMIN',
-                        'TZMI',
-                        'VINF',
-                        'VSUP',
-                        'BMAX',
-                        'TOND',
-                        'QMAX',
-                        'TQMA',
-                        'EMAX'
-                        ]
-        #Q
+        self.variables = ['ZREF',
+                          'RGC',
+                          'RDC',
+                          'KMIN',
+                          'KMAJ',
+                          'Z',
+                          'QMIN',
+                          'QMAJ',
+                          'S1',
+                          'S2',
+                          'FR',
+                          'BETA',
+                          'B1',
+                          'B2',
+                          'BS',
+                          'P1',
+                          'P2',
+                          'RH1',
+                          'RH2',
+                          'VMIN',
+                          'VMAJ',
+                          'TAUF',
+                          'Y',
+                          'HMOY',
+                          'Q2G',
+                          'Q2D',
+                          'SS',
+                          'VOL',
+                          'VOLS',
+                          'CHAR',
+                          'ZMAX',
+                          'TZMA',
+                          'VZMX',
+                          'ZMIN',
+                          'TZMI',
+                          'VINF',
+                          'VSUP',
+                          'BMAX',
+                          'TOND',
+                          'QMAX',
+                          'TQMA',
+                          'EMAX',
+                          'ATOT'
+                          ]
+        # Q
 
         self.exclusion = {'steady': ['presenceCasiers',
                                      'elevCoteArrivFront',
@@ -215,17 +215,16 @@ class parameter_dialog(QDialog):
         sql = "SELECT parametre, {0}, libelle, gui, gui_type FROM {1}.{2};"
 
         rows = self.mdb.run_query(sql.format(self.kernel, self.mdb.SCHEMA, "parametres"), fetch=True)
-        print(rows)
-        for param, valeur, libelle, gui,gui_type in rows:
-            if gui_type =='parameters':
+        for param, valeur, libelle, gui, gui_type in rows:
+            if gui_type == 'parameters':
                 if param == 'variablesStockees':
                     # valeurs = list(map(eval, valeur.title().split()))
                     valeurs = []
                     for var1 in valeur.title().split():
                         valeurs.append(eval(var1))
 
-                    for var, val, lib in zip(self.variables, valeurs,self.libel_var):
-                        self.par[var] = {"val": val, "libelle": lib,"gui": True,"gui_type":'parameters' }
+                    for var, val, lib in zip(self.variables, valeurs, self.libel_var):
+                        self.par[var] = {"val": val, "libelle": lib, "gui": True, "gui_type": 'parameters'}
                         # self.par[var] = {"val": val, "libelle": lib}
                 else:
                     self.par[param] = {}
@@ -242,24 +241,24 @@ class parameter_dialog(QDialog):
         # pass
 
         for param, info in self.par.items():
-            self.mgis.addInfo("param {}  info {}".format(param, info))
-            if info['gui'] and info['gui_type'] =='parameters':
+            # self.mgis.addInfo("param {}  info {}".format(param, info))
+            if info['gui'] and info['gui_type'] == 'parameters':
                 obj = getattr(self.ui, param)
                 if isinstance(obj, QCheckBox):
                     obj.setChecked(info['val'])
                 elif isinstance(obj, QDoubleSpinBox) or isinstance(obj, QSpinBox):
                     obj.setValue(info['val'])
-                elif obj==self.ui.evenement:
+                elif obj == self.ui.evenement:
                     self.ui.evenement.setChecked(info['val'])
                     self.chEvent()
-                elif  isinstance(obj, QComboBox):
-                    if param=='option':
-                        val=info['val']-1
-                    elif param=="compositionLits":
+                elif isinstance(obj, QComboBox):
+                    if param == 'option':
+                        val = info['val'] - 1
+                    elif param == "compositionLits":
                         val = info['val']
-                    elif param=="critereArret":
-                        val = info['val']-1
-                    elif param=='postProcesseur':
+                    elif param == "critereArret":
+                        val = info['val'] - 1
+                    elif param == 'postProcesseur':
                         val = info['val'] - 1
                     obj.setCurrentIndex(val)
                 else:
@@ -268,18 +267,18 @@ class parameter_dialog(QDialog):
 
                 if param in self.exclusion[self.kernel]:
                     obj.hide()
-                    if isinstance(obj, QSpinBox) or isinstance(obj, QDoubleSpinBox)\
+                    if isinstance(obj, QSpinBox) or isinstance(obj, QDoubleSpinBox) \
                             or isinstance(obj, QComboBox):
-                        getattr(self.ui, 'label_'+param).hide()
+                        getattr(self.ui, 'label_' + param).hide()
 
     def importObserv(self):
         """load observation"""
-        if int(qVersion()[0]) < 5: #qt4
+        if int(qVersion()[0]) < 5:  # qt4
             fileNamePath = QFileDialog.getOpenFileNames(None,
-                                                    'File Selection',
-                                                    self.mgis.masplugPath,
-                                                    filter="CSV (*.csv);;File (*)")
-        else:#qt5
+                                                        'File Selection',
+                                                        self.mgis.masplugPath,
+                                                        filter="CSV (*.csv);;File (*)")
+        else:  # qt5
             fileNamePath, _ = QFileDialog.getOpenFileNames(None,
                                                            'File Selection',
                                                            self.mgis.masplugPath,
@@ -293,29 +292,28 @@ class parameter_dialog(QDialog):
     def delObserv(self):
         """delete observation """
         dico_code = self.mdb.selectDistinct("code",
-                                           "Observations")
-        ok=False
+                                            "Observations")
+        ok = False
         if dico_code:
             # self.mgis.addInfo("{}".format(dico_code))
             event, ok = QInputDialog.getItem(None,
-                                              'Event choice',
-                                              'Event',
-                                             dico_code['code'],0, False)
+                                             'Event choice',
+                                             'Event',
+                                             dico_code['code'], 0, False)
 
-
-        if ok :
-            where="code = '{0}'".format(event)
-            self.mdb.delete("observations",where)
+        if ok:
+            where = "code = '{0}'".format(event)
+            self.mdb.delete("observations", where)
             if self.mgis.DEBUG:
                 self.mgis.addInfo('{} is deleted.'.format(event))
         else:
             txt = "There aren't deleted observations ."
             self.mgis.windinfo(txt)
-            self.mgis.addInfo( txt)
+            self.mgis.addInfo(txt)
 
     def chEvent(self):
         "event change between law and evenment"
-        event=self.ui.evenement.isChecked()
+        event = self.ui.evenement.isChecked()
 
         if event:
             self.ui.label.setEnabled(True)
@@ -326,18 +324,16 @@ class parameter_dialog(QDialog):
             self.ui.b_delete_law.setDisabled(True)
             self.ui.b_load_law.setDisabled(True)
 
-        self.par['evenement']["val"] =event
+        self.par['evenement']["val"] = event
 
-
-    def str2bool(self,s):
+    def str2bool(self, s):
         """string to bool"""
         if "True" in s or "TRUE" in s:
             return True
         else:
             return False
 
-
-    def selectbox(self,box):
+    def selectbox(self, box):
         """ function allow to select  or not for checkBox"""
 
         for checkbox in box.findChildren(QCheckBox):
@@ -346,7 +342,7 @@ class parameter_dialog(QDialog):
 
     def acceptDialog(self):
         """Modification of the parameters in sql table"""
-        var=[]
+        var = []
         for param, info in self.par.items():
             if info['gui']:
                 obj = getattr(self.ui, param)
@@ -359,23 +355,22 @@ class parameter_dialog(QDialog):
                     elif isinstance(obj, QComboBox):
                         val = obj.currentIndex()
                         if param == 'option' or param == "critereArret" or param == 'postProcesseur':
-                            val = val+1
+                            val = val + 1
                         elif param == "compositionLits":
                             val = val
                     else:
                         val = obj.value()
-
 
                     sql = """   UPDATE {0}.parametres
                                    SET {1}='{2}'
                                    WHERE parametre='{3}'
                              """
                     self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.kernel, val, param))
-    #
+                    #
         liste = []
         for var2 in self.variables:
             for param, obj in var:
-                if var2==param:
+                if var2 == param:
                     liste.append(str(obj.isChecked()).lower())
 
         sql = """   UPDATE {0}.parametres
@@ -386,6 +381,3 @@ class parameter_dialog(QDialog):
         self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.kernel, " ".join(liste)))
 
         self.close()
-
-
-

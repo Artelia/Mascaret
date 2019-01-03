@@ -27,10 +27,10 @@ Comment:
         GraphHydro
 """
 
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
-from qgis.PyQt.uic import *
-from qgis.PyQt.QtCore import *
 
 if int(qVersion()[0])<5:   #qt4
 
@@ -82,10 +82,11 @@ import matplotlib.image as mpimg
 
 
 import matplotlib.lines as mlines
-from matplotlib import gridspec, patches
+from matplotlib import patches,colors
 from datetime import datetime,date
 import numpy as np
-import sys, os
+import os
+from .WaterQuality.table_WQ import table_WQ
 
 
 class IdentifyFeatureTool(QgsMapToolIdentify):
@@ -162,6 +163,8 @@ class GraphCommon(QDialog):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
+        self.tbwq = table_WQ(self.mgis, self.mdb)
+
         self.dossierPlugin = self.mgis.masplugPath
         self.dossierProjet = self.mgis.repProject
         self.fig = Figure()
@@ -515,7 +518,7 @@ class GraphProfil(GraphCommon):
                     if f["name"] == self.nom:
                         P = f.geometry().interpolate(x).asPoint()
                         geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(P.x(), P.y(), self.mdb.SRID)
-                # print(x, ordre)
+
                 if gid:
                     sql = """UPDATE {0}.topo SET x={1}, geom={2}, order_={3}
                           WHERE gid={4}""".format(self.mdb.SCHEMA,
@@ -726,7 +729,7 @@ class GraphProfil(GraphCommon):
             z = round(event.mouseevent.ydata, 2)
             xs = np.array(self.topo[lbl]['x'])
             zs = np.array(self.topo[lbl]['z'])
-            # print(event.ind,x, z)
+
 
             distances = np.hypot(x - xs[event.ind], z - zs[event.ind])
             indmin = distances.argmin()
@@ -872,7 +875,7 @@ class GraphProfil(GraphCommon):
             self.topo[self.topoSelect]['x'].insert(i, round(event.xdata, 2))
             self.topo[self.topoSelect]['z'].insert(i, round(event.ydata, 2))
             self.topo[self.topoSelect]['gid'].insert(i, None)
-            # print(event.xdata, event.ydata)
+
             self.majGraph()
 
     def onpress(self, event):
@@ -998,10 +1001,9 @@ class GraphProfil(GraphCommon):
                 if x > maxiX:
                     iMax = min(i, iMax)
 
-            # print(T['x'][:iMin],self.selected['x'],T['x'][iMax:])
+
             T['x'] = T['x'][:iMin] + self.selected['x'] + T['x'][iMax:]
             T['z'] = T['z'][:iMin] + self.selected['z'] + T['z'][iMax:]
-            # print(T['x'], T['z'])
             self.selected = {}
 
             self.majGraph()
@@ -1075,7 +1077,7 @@ class GraphProfil(GraphCommon):
             pente, ord = np.polyfit(xx, zz, 1)
             zz.sort()
             mediane = zz[nb]
-            # print(abs((pente - dernierePente)/dernierePente))
+
             if abs((pente - dernierePente) / dernierePente) > seuil:
 
                 X.append(self.tab['x'][i])
@@ -1712,6 +1714,7 @@ class GraphHydro(GraphCommon):
         self.temps = 'max'
         self.variables = self.mgis.variables
 
+
         # 'Cote'#''None'
         self.var1 = 'Z'
         self.coteVar = ['ZREF', 'Z', 'ZMAX', 'ZMIN']
@@ -1761,47 +1764,43 @@ class GraphHydro(GraphCommon):
 
         self.comboTimePK.clear()
 
-        # selection = self.liste['selection']
-        # info observation
-        # if 'code' in selection.keys() and os.path.isfile(self.fichierObs):
-        # with open(self.fichierObs, 'r') as fichier:
-        # ligne = fichier.readline().strip()
-        # codes = ligne.split(';')[1:]
-
-        # ligne = fichier.readline().strip()
-        # ligne = ligne.replace('H', 'Cote').replace('Q', 'Debit')
-        # types = ligne.split(';')[1:]
-
-        # ligne = fichier.readline().strip()
-        # nomStat = ligne.split(';')[1:]
-
-        # self.obs['date'] = []
-        # for code, type in zip(codes, types):
-        # if code not in self.obs.keys():
-        # self.obs[code] = {}
-        # self.obs[code][type] = []
-
-        # for ligne in fichier:
-        # temp = ligne.strip().split(';')
-        # valeurs = list(map(float, temp[1:]))
-        # self.obs['date'].append(fct.fmtDate(temp[0]))
-
-        # for i, val in enumerate(valeurs):
-        # if types[i] == 'Cote' and 'zero' in selection.keys():
-        # index=selection['code'].index(codes[i])
-        # val += selection['zero'][index]
-        # self.obs[codes[i]][types[i]].append(val)
-
-
         self.columns = self.mdb.listColumns("resultats")[8:]
         # self.mgis.addInfo(' ListG {}'.format(self.columns))
+
+
         self.colVal = []
         self.unite = ""
-        for col in self.columns:
-            if self.variables[col]['code'] == self.var1:
-                self.unite = self.variables[col]['unite']
-                self.var1Name = self.variables[col]['nom']
-                self.colVal.append(col)
+        self.columns_tra=[]
+        lind=[]
+        for i,col in enumerate(self.columns):
+            try:
+                if self.variables[col]['code'] == self.var1:
+                    self.unite = self.variables[col]['unite']
+                    self.var1Name = self.variables[col]['nom']
+                    self.colVal.append(col)
+            except:
+                self.columns_tra.append(col)
+                lind.append(i)
+
+        typ_trac=self.tbwq.get_cur_wq_mod()
+        name_tra=self.tbwq.dico_wq_mod[typ_trac]
+        colorNames = list(colors.cnames.keys())
+
+        length_color=len(colorNames)
+        cpt=0
+        for i,col in enumerate(self.columns_tra):
+            if cpt < length_color:
+                color=colorNames[cpt]
+                cpt+=1
+            else:
+                color = colorNames[0]
+                cpt=1
+            self.variables[col.lower()] = {'nom': self.tbwq.dico_phy[ name_tra]['tracer'][i]['text'],
+                                          'code': self.tbwq.dico_phy[ name_tra]['tracer'][i]['sigle'],
+                                          'unite': 'unit',
+                                          'couleur': color }
+
+
         listeNom = [self.type]
         # default value
         listeG = []
@@ -1813,6 +1812,8 @@ class GraphHydro(GraphCommon):
                 var = 'Levels'
             elif codd in self.debVar:
                 var = 'Flow rates'
+            elif codd in self.columns_tra:
+                var = 'Tracers'
             else:
                 var = self.variables[col]['nom']
             if not var in listeG:
@@ -1908,7 +1909,6 @@ class GraphHydro(GraphCommon):
                                                   self.onpress)
         # self.motion = self.fig.canvas.mpl_connect('motion_notify_event',
         # self.affiche_cadre)
-        # print("cool")
         #
         return True
 
@@ -2289,7 +2289,6 @@ class GraphHydro(GraphCommon):
                                     fontsize="small")
         self.leg.get_frame().set_alpha(0.4)
 
-        # print(self.leg.get_patches())
         self.lined = dict()
         for legline, courbe in zip(self.leg.get_lines(), self.courbes):
             #size selection zone
@@ -2329,7 +2328,7 @@ class GraphHydro(GraphCommon):
             if self.courbeHydro[col].get_visible():
                 colVisibles.append(col)
 
-        temp = [min(self.tab[c]) for c in colVisibles if self.tab[c]]
+        temp = [min(self.tab[c]) for c in colVisibles if self.tab[c] ]
 
         if temp:
             miniY = min(temp)

@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -216,6 +216,7 @@
     <addaction name="actionCreate_New_Model"/>
     <addaction name="actionLoad_Model"/>
     <addaction name="actionDeleteModel"/>
+    <addaction name="actionAdd_WQ_tables"/>
     <addaction name="separator"/>
     <addaction name="actionExport_Model"/>
     <addaction name="actionImport_Model"/>
@@ -247,6 +248,7 @@
     </property>
     <addaction name="actionParameters_Water_Quality"/>
     <addaction name="actionTracer_Laws"/>
+    <addaction name="actionexport_tracer_files"/>
    </widget>
    <addaction name="menuDB"/>
    <addaction name="menu_Tools"/>
@@ -574,12 +576,22 @@
     <string>Tracer Laws</string>
    </property>
   </action>
+  <action name="actionexport_tracer_files">
+   <property name="text">
+    <string>Export Tracer Files</string>
+   </property>
+  </action>
+  <action name="actionAdd_WQ_tables">
+   <property name="text">
+    <string>Add WQ tables</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
    <class>QgsProjectionSelectionWidget</class>
    <extends>QWidget</extends>
-   <header>qgis.gui</header>
+   <header>qgsprojectionselectionwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

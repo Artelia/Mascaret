@@ -21,10 +21,11 @@ email                :
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
-if int(qVersion()[0])<5:  #qt4
+
+if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
-else: #qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
+else:  # qt5
+    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
     from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.utils import *
@@ -34,11 +35,12 @@ from .init_conc import init_conc_dialog
 from .graph_WQ import GraphInitConc
 from .table_WQ import table_WQ
 
+
 class TracerInit_dialog():
     def __init__(self, obj):
-        self.paramTr=obj
+        self.paramTr = obj
         self.mgis = obj.mgis
-        self.ui=obj.ui
+        self.ui = obj.ui
         self.mdb = self.mgis.mdb
         self.tbwq = table_WQ(self.mgis, self.mdb)
         self.cur_wq_mod = self.tbwq.dico_mod_wq[obj.type]
@@ -55,13 +57,11 @@ class TracerInit_dialog():
         self.ui.Law_pages.setCurrentIndex(0)
         self.graph_home = GraphInitConc(self.mgis, self.ui.lay_graph_home)
 
-
     def change_module(self, mdl):
         self.cur_wq_mod = self.tbwq.dico_mod_wq[mdl]
         self.cur_wq_law = None
         self.graph_home.initMdl(self.tbwq.dico_wq_mod[self.cur_wq_mod])
         self.fill_lst_conf()
-
 
     def fill_lst_conf(self, id=None):
         """ fill list configuration"""
@@ -70,7 +70,8 @@ class TracerInit_dialog():
         self.ui.lst_laws.setModel(model)
         self.ui.lst_laws.setModelColumn(1)
         self.ui.lst_laws.selectionModel().selectionChanged.connect(self.change_cur_law)
-        sql = "SELECT * FROM {0}.init_conc_config WHERE type = {1} ORDER BY name".format(self.mdb.SCHEMA, self.cur_wq_mod)
+        sql = "SELECT * FROM {0}.init_conc_config WHERE type = {1} ORDER BY name".format(self.mdb.SCHEMA,
+                                                                                         self.cur_wq_mod)
         rows = self.mdb.run_query(sql, fetch=True)
 
         for i, row in enumerate(rows):
@@ -97,14 +98,14 @@ class TracerInit_dialog():
             self.displayGraphHome()
             self.ui.cb_bief_home.clear()
 
-
     def change_cur_law(self):
         self.ui.cb_bief_home.clear()
         if self.ui.lst_laws.selectedIndexes():
             l = self.ui.lst_laws.selectedIndexes()[0].row()
             config = int(self.ui.lst_laws.model().item(l, 0).text())
-            sql = "SELECT distinct bief FROM {0}.init_conc_wq WHERE id_config = {1} ORDER BY bief".format(self.mdb.SCHEMA,
-                                                                                                          config)
+            sql = "SELECT distinct bief FROM {0}.init_conc_wq WHERE id_config = {1} ORDER BY bief".format(
+                self.mdb.SCHEMA,
+                config)
             lst_bief = self.mdb.run_query(sql, fetch=True)
             if len(lst_bief) > 0:
                 for bief in lst_bief:
@@ -112,10 +113,8 @@ class TracerInit_dialog():
             else:
                 self.displayGraphHome()
 
-
     def change_bief_home(self):
         self.displayGraphHome()
-
 
     def displayGraphHome(self):
         if self.ui.lst_laws.selectedIndexes() and self.ui.cb_bief_home.currentIndex() != -1:
@@ -125,7 +124,6 @@ class TracerInit_dialog():
             self.graph_home.initGraph(config, bief)
         else:
             self.graph_home.initGraph(None, None)
-
 
     def sel_config_def(self, itm):
         self.ui.lst_laws.model().blockSignals(True)
@@ -141,14 +139,12 @@ class TracerInit_dialog():
             sql = "UPDATE {0}.init_conc_config SET active = 't' WHERE id = {1}".format(self.mdb.SCHEMA, id)
             self.mdb.run_query(sql)
 
-
     def new_law(self):
         self.cur_wq_law = -1
         dlg = init_conc_dialog(self.paramTr, self.cur_wq_law, '')
         dlg.setWindowModality(2)
         if dlg.exec_():
             self.fill_lst_conf(dlg.cur_wq_law)
-
 
     def edit_law(self):
         if self.ui.lst_laws.selectedIndexes():
@@ -159,16 +155,15 @@ class TracerInit_dialog():
             if dlg.exec_():
                 self.fill_lst_conf(dlg.cur_wq_law)
 
-
     def delete_law(self):
-        #charger les informations
-        #changer de page
+        # charger les informations
+        # changer de page
         if self.ui.lst_laws.selectedIndexes():
             l = self.ui.lst_laws.selectedIndexes()[0].row()
             id_law = self.ui.lst_laws.model().item(l, 0).text()
             name_law = self.ui.lst_laws.model().item(l, 1).text()
             if (QMessageBox.question(self.paramTr, "Tracer Initial Concentration", "Delete {} ?".format(name_law),
-                                     QMessageBox.Cancel|QMessageBox.Ok)) == QMessageBox.Ok:
+                                     QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 if self.mgis.DEBUG:
                     self.mgis.addInfo("Deletion of {} Tracer Laws".format(name_law))
                 self.mdb.execute("DELETE FROM {0}.init_conc_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, id_law))

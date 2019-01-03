@@ -36,13 +36,13 @@ comment:
 
 import csv
 import datetime
-import os, sys
+import os
 import re
 import shutil
+import sys
+from qgis.PyQt.QtCore import qVersion
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as ETparse
-
-from qgis.PyQt.QtCore import qVersion
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -198,6 +198,16 @@ class Class_Mascaret():
     def fmt(self, liste):
         # list(map(str, liste))
         return (" ".join([str(var) for var in liste]))
+
+    # def fmt(self, liste):
+    #     txt = ''
+    #     for var in liste:
+    #         if str(var) == 'None':
+    #             txt += '0'
+    #         else:
+    #             txt += str(var)
+    #         txt += " "
+    #     return txt
 
     def indent(self, elem, level=0):
         """indentation auto"""
@@ -443,7 +453,10 @@ class Class_Mascaret():
                 if abs > zones['zoneabsend'][i]:
                     i = i + 1
 
-                nbPas = max(int(diff / float(zones['planim'][i])) + 1, nbPas)
+                try:
+                    nbPas = max(int(diff / float(zones['planim'][i])) + 1, nbPas)
+                except:
+                    self.mgis.addInfo("Check the {} profile if it's ok ".format(profils["name"][j]))
 
                 index = numero.index(n)
                 zones["zoneabsstart"][i] = max(zones["zoneabsstart"][i],
@@ -629,7 +642,11 @@ class Class_Mascaret():
                 SubElement(noms, "string").text = nom
 
             SubElement(ETapports, "numBranche").text = self.fmt(apports["branchnum"])
+            if self.checkNone(apports["abscissa"]):
+                self.mgis.addInfo('Warning : Geometric object for lateral inflows is not found')
             SubElement(ETapports, "abscisses").text = self.fmt(apports["abscissa"])
+            if self.checkNone(apports["length"]):
+                self.mgis.addInfo('Warning : Lenght for lateral inflows is not found')
             SubElement(ETapports, "longueurs").text = self.fmt(apports["length"])
             temp = [sorted(dictLois.keys()).index(nom) + 1 for nom in apports["name"]]
             SubElement(ETapports, "numLoi").text = self.fmt(temp)
@@ -681,7 +698,7 @@ class Class_Mascaret():
             for nom in dictLois.keys():
                 if nom in libres["name"] and (dictLois[nom]['type'] == 6 or dictLois[nom]['type'] == 7) :
                     # les types sont ceux de
-                    print( dictLois[nom]['type'], nom)
+                    # print( dictLois[nom]['type'], nom)
                     if dictLois[nom]['type'] == 6 : #TODO and noyau!='transcritical'
                         dictLois[nom]['type'] = 1
                         if self.mgis.DEBUG:
@@ -779,8 +796,6 @@ class Class_Mascaret():
             #tracers
             if tracer:
                 parametresTracer = paramCas.find('parametresTraceur')
-                print(parametresTracer)
-                print(parametresTracer.find('presenceTraceurs').text)
                 parametresTracer.find('presenceTraceurs').text='false'
 
             self.indent(fichierCas)
@@ -793,6 +808,12 @@ class Class_Mascaret():
         #     self.mgis.addInfo('error: {}'.format(e))
             return (dictLois)
 
+    def checkNone(self,liste):
+        """ Check if None is list"""
+        for val in liste:
+            if  str(val)=='None':
+                return True
+        return False
 
     def add_wq_xcas(self,fichierCas,noyau,dictLibres):
         #TODO a finir
@@ -829,6 +850,7 @@ class Class_Mascaret():
         # extrem = self.mdb.select('extremities') #'law_wq','active','tracer_boundary_condition_type',num
         #use dictLibres to have only extremities and not junction
         # # TODO add 'formule': formule, 'valeurperm': libres["firstvalue"
+        cas = cas.find('parametresTraceur')
         lateral = self.mdb.select('tracer_lateral_inflows', order='abscissa')
 
         list_loi=list(dictLibres["law_wq"])
@@ -850,7 +872,6 @@ class Class_Mascaret():
         if not len(list_loi)>0:
             self.mgis.addInfo("Please enter water quality laws")
             return False
-        print(list_loi)
         list_loi=sorted(list_loi)
 
         ### sources
@@ -865,6 +886,7 @@ class Class_Mascaret():
         numl=[]
         if  nb>0:
             for num in sorted(list(dico_s.keys())):
+                SubElement(struct, "string").text = dico_s[num]["name"]
                 typ.append(dico_s[num]['typs'])
                 numb.append(dico_s[num]['numb'])
                 abs.append(dico_s[num]['abs'])
@@ -878,10 +900,13 @@ class Class_Mascaret():
             numl = ['-0']
         SubElement(tracer_source, "typeSources").text = self.fmt(typ)
         SubElement(tracer_source, "numBranche").text =  self.fmt(numb)
+        if self.checkNone(abs):
+            self.mgis.addInfo('Warning : Geometric object for tracer lateral inflows is not found')
         SubElement(tracer_source, "abscisses").text =  self.fmt(abs)
+        if self.checkNone(leng):
+            self.mgis.addInfo('Warning : Lenght for tracer lateral inflows is not found')
         SubElement(tracer_source, "longueurs").text =  self.fmt(leng)
         SubElement(tracer_source, "numLoi").text =   self.fmt(numl)
-
 
         ### Lois traceur
         tracer_law = SubElement(cas, "parametresLoisTraceur")
@@ -1140,6 +1165,8 @@ class Class_Mascaret():
 
             dictScen_tmp = self.mdb.select('scenarios', 'run', 'starttime')
             listexclu = []
+            if len(dictScen_tmp['name'])==0:
+                self.mgis.addInfo("Warning: scenario not found")
             for i, scen in enumerate(dictScen_tmp['name']):
                 # self.mgis.addInfo("scen******************* {}".format(scen))
                 if not self.checkScenar(scen, run):
@@ -1153,6 +1180,7 @@ class Class_Mascaret():
                     dictScen[key] = value
             else:
                 dictScen = dictScen_tmp
+
 
         else:
             scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
@@ -1172,7 +1200,6 @@ class Class_Mascaret():
             else:
                 comments = ''
 
-
             dictScen = {'name': [scen]}
 
         # progressMessageBar = self.iface.messageBar().createMessage(
@@ -1188,6 +1215,7 @@ class Class_Mascaret():
             self.wq.create_filephy()
             self.wq.law_tracer()
             self.wq.init_conc_tracer()
+
         if self.mgis.DEBUG:
             self.mgis.addInfo("Tracer files are created.")
 
@@ -1227,9 +1255,6 @@ class Class_Mascaret():
 
                     self.creerLOI(nom, tab, l['type'])
 
-
-
-
             elif par["evenement"]:
                 # transcritical unsteady evenement
                 dateDebut = dictScen['starttime'][i]
@@ -1244,7 +1269,6 @@ class Class_Mascaret():
                 self.modifXCAS(tab, self.baseName + '.xcas')
 
                 self.obsTOloi(dictLois, dateDebut, dateFin)
-
 
             else:
                 # transcritical unsteady hors evenement
@@ -1301,7 +1325,7 @@ class Class_Mascaret():
                     self.mgis.addInfo("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, sceninit, noyau))
                     self.lanceMascaret(self.baseName + '_init.xcas')
                     self.litOPT(run, sceninit, None,
-                                self.baseName + '_init',comments)
+                                self.baseName + '_init',comments,par['presenceTraceurs'])
                 else:
                     self.mgis.addInfo("No Run initialization.\n"
                                       " The initial boundaries come from {} scenario.".format(sceninit))
@@ -1373,8 +1397,8 @@ class Class_Mascaret():
             if not finish:
                 self.mgis.addInfo("Simulation error")
                 return
+            self.litOPT(run, scen, dateDebut, self.baseName,comments,par['presenceTraceurs'])
 
-            self.litOPT(run, scen, dateDebut, self.baseName,comments)
         self.iface.messageBar().clearWidgets()
         self.mgis.addInfo("Simulation finished")
         return
@@ -1413,86 +1437,62 @@ class Class_Mascaret():
         self.mgis.addInfo("{0}".format(p.communicate()[0].decode("utf-8")))
         return True
 
-    def litOPT(self, run, scen, dateDebut, baseNamefile,comments=''):
+    def litOPT(self, run, scen, dateDebut, baseNamefile,comments='',tracer=False):
         nomFich = os.path.join(self.dossierFileMasc, baseNamefile + '.opt')
 
-        tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
-        t = set([])
-        pk = set([])
-
+        # tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
         if self.mgis.DEBUG:
             self.mgis.addInfo("Load data ....")
         if not os.path.isfile(nomFich):
             self.mgis.addInfo("Simulation Error: there aren't results")
             return False
 
-        with open(nomFich, 'r') as source:
-            var = source.readline()
-            col = ['t', 'branche', 'section', 'pk']
+        t,pk,col,value=self.read_OPT(nomFich,dateDebut,scen,run)
+        if tracer:
+            nomFich_tra = os.path.join(self.dossierFileMasc, baseNamefile + '.tra_opt')
 
-            ligne = source.readline()
-            while '[resultats]' not in ligne:
-                temp = ligne.replace('"', '').replace('NaN',"'NULL'").split(';')
-                col.append(temp[1])
-                ligne = source.readline()
+            if not os.path.isfile(nomFich_tra):
+                self.mgis.addInfo("Simulation Error: there aren't results")
+                return False
+            t_tra, pk_tra, col_tra, value_tra = self.read_OPT(nomFich_tra, dateDebut, scen, run)
+            lind=[]
+            for i, c in enumerate(col_tra):
+                if not c in col:
+                    col.append(c)
+                    lind.append(i)
+            for j,lignval in enumerate(value):
+                for i in lind:
+                    lignval.append(value_tra[j][i])
 
-            data = csv.DictReader(source, delimiter=';', fieldnames=col)
-            if dateDebut:
-                col.append("date")
-            col.append("run")
-            col.append("scenario")
+        maintenant = datetime.datetime.utcnow()
 
-            value = []
-            for ligne in data:
-                if dateDebut:
-                    d = dateDebut + datetime.timedelta(
-                        seconds=float(ligne["t"]))
-                    ligne["date"] = d
-                    t.add("{:%Y-%m-%d %H:%M}".format(d))
-                else:
-                    t.add(ligne["t"])
+        tab = {run: {"scenario": scen,
+                     "date": "{:%Y-%m-%d %H:%M}".format(maintenant),
+                     "t": list(t),
+                     "pk": list(pk)}}
 
-                # TODO delete round in future
-                tempo = str(round(float(ligne["pk"]), 2))
-                pk.add(tempo)
-                ligne["run"] = run
-                ligne["scenario"] = scen
-                ligne["section"] = ligne["section"].replace('"', '')
-                ligne["branche"] = ligne["branche"].replace('"', '')
 
-                ligne_list = []
-                for k in col:
-                    if k == 'pk':
-                        # TODO delete round in future
-                        tempo = str(round(float(ligne[k]), 2))
-                        ligne_list.append(tempo)
-                    else:
-                        ligne_list.append(ligne[k])
+        listimport=["run", "date", "pk", "scenario", "t"]
+        if comments!='':
+            tab[run]["comments"]=comments
+            listimport.insert(1, "comments")
+        if tracer :
+            tab[run]['wq']=self.wq.cur_wq_mod
+            listimport.append("wq")
+        self.mdb.insert("runs",
+                        tab,
+                        listimport,
+                        ",")
+        listeCol = self.mdb.listColumns("resultats")
 
-                value.append(ligne_list)
+        for c in col:
+            if c.lower() not in listeCol:
+                self.mdb.addColumns("resultats", c.lower())
 
-            maintenant = datetime.datetime.utcnow()
 
-            tab = {run: {"scenario": scen,
-                         "date": "{:%Y-%m-%d %H:%M}".format(maintenant),
-                         "t": list(t),
-                         "pk": list(pk)}}
-            listimport=["run", "date", "pk", "scenario", "t"]
-            if comments!='':
-                tab[run]["comments"]=comments
-                listimport.insert(1, "comments")
 
-            self.mdb.insert("runs",
-                            tab,
-                            listimport,
-                            ",")
-            listeCol = self.mdb.listColumns("resultats")
+        self.mdb.insertRes("resultats", value, col)
 
-            for c in col:
-                if c.lower() not in listeCol:
-                    self.mdb.addColumns("resultats", c.lower())
-
-            self.mdb.insertRes("resultats", value, col)
 
         return True
 
@@ -1657,3 +1657,61 @@ class Class_Mascaret():
                 return True
         else:
             return True
+
+    def read_OPT(self, nomFich,dateDebut,scen,run):
+        t = set([])
+        pk = set([])
+        with open(nomFich, 'r') as source:
+            var = source.readline()
+            col = ['t', 'branche', 'section', 'pk']
+            ligne = source.readline()
+            while '[resultats]' not in ligne:
+                temp = ligne.replace('"', '').replace('NaN', "'NULL'").split(';')
+                col.append(temp[1].lower())
+                ligne = source.readline()
+
+            data = csv.DictReader(source, delimiter=';', fieldnames=col)
+            if dateDebut:
+                col.append("date")
+            col.append("run")
+            col.append("scenario")
+
+            value = []
+            for ligne in data:
+                if dateDebut:
+                    d = dateDebut + datetime.timedelta(
+                        seconds=float(ligne["t"]))
+                    ligne["date"] = d
+                    t.add("{:%Y-%m-%d %H:%M}".format(d))
+                else:
+                    t.add(ligne["t"])
+
+                # TODO delete round in future
+                tempo = str(round(float(ligne["pk"]), 2))
+                pk.add(tempo)
+                ligne["run"] = run
+                ligne["scenario"] = scen
+                ligne["section"] = ligne["section"].replace('"', '')
+                ligne["branche"] = ligne["branche"].replace('"', '')
+
+                ligne_list = []
+                delcond=False
+                for k in col:
+                    if k=='qtot':
+                        delcond=True
+                    elif k == 'pk':
+                        # TODO delete round in future
+                        tempo = str(round(float(ligne[k]), 2))
+                        ligne_list.append(tempo)
+                    else:
+                        ligne_list.append(ligne[k])
+
+                value.append(ligne_list)
+        #delete 'qtot' because of the same that 'q'
+        if delcond:
+            col.remove("qtot")
+        return t,pk,col,value
+
+    def read_LIG(self):
+        #TODO
+        pass

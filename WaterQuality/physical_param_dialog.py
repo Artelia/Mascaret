@@ -18,14 +18,14 @@ email                :
  ***************************************************************************/
 """
 
-
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
-if int(qVersion()[0])<5:  #qt4
+
+if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
-else: #qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
+else:  # qt5
+    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
     from qgis.PyQt.QtWidgets import *
 import os
 from qgis.core import *
@@ -34,6 +34,7 @@ from qgis.gui import *
 
 from .table_WQ import table_WQ
 from .. import function as fct_
+
 
 class physical_param_dialog(QDialog):
     def __init__(self, mgis, mod):
@@ -53,7 +54,6 @@ class physical_param_dialog(QDialog):
 
         self.initUI()
 
-
     def initUI(self):
         model = QStandardItemModel()
         model.insertColumns(0, 4)
@@ -62,7 +62,8 @@ class physical_param_dialog(QDialog):
         model.setHeaderData(2, 1, 'Parameter', 0)
         model.setHeaderData(3, 1, 'Value', 0)
 
-        sql = "SELECT id, sigle, text, value FROM {0}.tracer_physic WHERE type = '{1}' ORDER BY id".format(self.mdb.SCHEMA, self.cur_wq_mod)
+        sql = "SELECT id, sigle, text, value FROM {0}.tracer_physic WHERE type = '{1}' ORDER BY id".format(
+            self.mdb.SCHEMA, self.cur_wq_mod)
         rows = self.mdb.run_query(sql, fetch=True)
         model.insertRows(0, len(rows))
         for r, row in enumerate(rows):
@@ -91,9 +92,8 @@ class physical_param_dialog(QDialog):
             mdl.item(r, 3).setData(param['value'], 0)
 
 
-
-
-class ItemEditorFactory(QItemEditorFactory):  # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
+class ItemEditorFactory(
+    QItemEditorFactory):  # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
     # It is possible for a custom delegate to provide editors without the use of an editor item factory.
     # In this case, the following virtual functions must be reimplemented:
     def __init__(self):

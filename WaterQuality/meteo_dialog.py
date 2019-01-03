@@ -160,7 +160,6 @@ class meteo_dialog(QDialog):
         date, time = self.ui.de_date.date().toString('dd-MM-yyyy'), self.ui.de_date.time().toString('HH:mm:ss')
         date_str = "'{} {}'".format(date, time)
         self.date_ref = data_to_date(date_str)
-        print ("date ref : {}".format(self.date_ref))
         model = self.ui.tab_sets.model()
         if model:
             for r in range(model.rowCount()):
@@ -258,7 +257,7 @@ class meteo_dialog(QDialog):
                                         date_ref_str = datetime.strftime(date_ref, '%Y-%m-%d %H:%M:%S')
                                         self.ui.de_date.setDateTime(QDateTime().fromString(date_ref_str, 'yyyy-MM-dd HH:mm:ss'))
                                     else:
-                                        print ('e1')
+                                        # print ('e1')
                                         error = True
                                         break
                                 first_ligne = False
@@ -276,7 +275,7 @@ class meteo_dialog(QDialog):
                                     model.setItem(r, c + 4, itm)
                             r += 1
                         else:
-                            print('e2')
+                            # print('e2')
                             error = True
                             break
 

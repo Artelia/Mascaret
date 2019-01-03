@@ -17,6 +17,8 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+
+
 class MasObject(object):
     """
     Class for Mascaret geometry objects processing.
@@ -39,7 +41,7 @@ class MasObject(object):
 
     def pg_create_table(self):
         schema_name = '{0}.{1}'.format(self.schema, self.name)
-        attrs=self.pg_geom_attri()
+        attrs = self.pg_geom_attri()
         attrs += [' '.join(field) for field in self.attrs]
         if self.overwrite is True:
             qry = 'DROP TABLE IF EXISTS {0};\nCREATE TABLE {0}(\n\t{1});\n'.format(schema_name, ',\n\t'.join(attrs))
@@ -52,6 +54,7 @@ class MasObject(object):
 
         qry += 'ALTER TABLE {0}.{1}\n\tOWNER TO postgres;\n'.format(self.schema, self.name)
         return qry
+
     def pg_geom_attri(self):
         if self.geom_type is not None:
             attrs = ['geom geometry({0}, {1})'.format(self.geom_type, self.srid)]
@@ -60,15 +63,17 @@ class MasObject(object):
         return attrs
 
     def pg_create_index(self):
-        qry='CREATE INDEX {1}_geom_idx\n  ON {0}.{1} \n  USING gist \n  (geom);\n'.format(self.schema, self.name)
+        qry = 'CREATE INDEX {1}_geom_idx\n  ON {0}.{1} \n  USING gist \n  (geom);\n'.format(self.schema, self.name)
         return qry
 
     def pg_create_calcul_abscisse(self):
         qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
-        '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
-        qry+='   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_point();\n'
+              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_point();\n'
         return qry
-#*****************************************
+
+
+# *****************************************
 class laws(MasObject):
     def __init__(self):
         super(laws, self).__init__()
@@ -88,17 +93,21 @@ class laws(MasObject):
             ('z_lower', 'text'),
             ('z_up', 'text'),
             ('CONSTRAINT cle_laws', 'PRIMARY KEY (id)')]
-#*****************************************
+
+
+# *****************************************
 class scenarios(MasObject):
     def __init__(self):
         super(scenarios, self).__init__()
         self.order = 1
         self.geom_type = None
-        self.attrs = [ ('name', 'character varying(30) NOT NULL'),
-                       ('starttime', 'timestamp without time zone'),
-                       ('endtime', 'timestamp without time zone'),
-                       ('run', 'boolean'),
-                       ('CONSTRAINT cle_scenarios', 'PRIMARY KEY (name)')]
+        self.attrs = [('name', 'character varying(30) NOT NULL'),
+                      ('starttime', 'timestamp without time zone'),
+                      ('endtime', 'timestamp without time zone'),
+                      ('run', 'boolean'),
+                      ('CONSTRAINT cle_scenarios', 'PRIMARY KEY (name)')]
+
+
 # *****************************************
 class extremities(MasObject):
     def __init__(self):
@@ -118,14 +127,16 @@ class extremities(MasObject):
                       ('law_wq', 'text'),
                       ('CONSTRAINT cle_extremities', ' PRIMARY KEY (gid)'),
                       ('CONSTRAINT extremities_nom_key', ' UNIQUE (name)')]
-    # TODO plante
-    # def pg_create_table(self):
-    #     qry = super(self.__class__, self).pg_create_table()
-    #     qry += '\n'
-    #     qry += self.pg_create_index()
-    #     qry += '\n'
-    #     qry += self.pg_create_calcul_abscisse()
-    #     return qry
+        # TODO plante
+        # def pg_create_table(self):
+        #     qry = super(self.__class__, self).pg_create_table()
+        #     qry += '\n'
+        #     qry += self.pg_create_index()
+        #     qry += '\n'
+        #     qry += self.pg_create_calcul_abscisse()
+        #     return qry
+
+
 # *****************************************
 class branchs(MasObject):
     def __init__(self):
@@ -165,6 +176,8 @@ class branchs(MasObject):
         qry += '\n'
         qry += self.pg_create_calcul_abscisse()
         return qry
+
+
 # *****************************************
 class profiles(MasObject):
     def __init__(self):
@@ -200,6 +213,8 @@ class profiles(MasObject):
         qry += '\n'
         qry += self.pg_create_calcul_abscisse()
         return qry
+
+
 # *****************************************
 class topo(MasObject):
     def __init__(self):
@@ -226,6 +241,8 @@ class topo(MasObject):
         #     else:
         #         attrs = []
         #     return attrs
+
+
 # *****************************************
 class flood_marks(MasObject):
     def __init__(self):
@@ -254,6 +271,8 @@ class flood_marks(MasObject):
         qry += '\n'
         qry += self.pg_create_calcul_abscisse()
         return qry
+
+
 # *****************************************
 class weirs(MasObject):
     def __init__(self):
@@ -283,47 +302,54 @@ class weirs(MasObject):
         qry += '\n'
         qry += self.pg_create_calcul_abscisse()
         return qry
-#*****************************************
+
+
+# *****************************************
 class hydraulic_head(MasObject):
     def __init__(self):
         super(hydraulic_head, self).__init__()
         self.order = 8
         self.geom_type = 'Point'
-        self.attrs = [  ('gid', 'serial NOT NULL'),
-                        ('name', 'character varying(30)'),
-                        ('branchnum', 'integer'),
-                        ('abscissa', 'float'),
-                        ('coeff', 'float'),
-                        ('active', 'boolean'),
-                        ('CONSTRAINT hydraulic_head_pkey', 'PRIMARY KEY (gid)')]
+        self.attrs = [('gid', 'serial NOT NULL'),
+                      ('name', 'character varying(30)'),
+                      ('branchnum', 'integer'),
+                      ('abscissa', 'float'),
+                      ('coeff', 'float'),
+                      ('active', 'boolean'),
+                      ('CONSTRAINT hydraulic_head_pkey', 'PRIMARY KEY (gid)')]
+
     def pg_create_table(self):
-        qry= super(self.__class__,self).pg_create_table()
-        qry +='\n'
-        qry +=self.pg_create_index()
+        qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
-        qry +=self.pg_create_calcul_abscisse()
+        qry += self.pg_create_index()
+        qry += '\n'
+        qry += self.pg_create_calcul_abscisse()
         return qry
-#*****************************************
+
+
+# *****************************************
 class outputs(MasObject):
     def __init__(self):
         super(outputs, self).__init__()
         self.order = 9
         self.geom_type = 'Point'
-        self.attrs = [ ('gid', 'serial NOT NULL'),
-                       ('name', 'character varying(30)'),
-                       ('code', 'character varying(30)'),
-                       ('zero', 'float'),
-                       ('branchnum', 'integer'),
-                       ('abscissa', 'float'),
-                       ('CONSTRAINT outputs_pkey', 'PRIMARY KEY (gid)')]
+        self.attrs = [('gid', 'serial NOT NULL'),
+                      ('name', 'character varying(30)'),
+                      ('code', 'character varying(30)'),
+                      ('zero', 'float'),
+                      ('branchnum', 'integer'),
+                      ('abscissa', 'float'),
+                      ('CONSTRAINT outputs_pkey', 'PRIMARY KEY (gid)')]
 
     def pg_create_table(self):
-        qry= super(self.__class__,self).pg_create_table()
-        qry +='\n'
-        qry +=self.pg_create_index()
+        qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
-        qry +=self.pg_create_calcul_abscisse()
+        qry += self.pg_create_index()
+        qry += '\n'
+        qry += self.pg_create_calcul_abscisse()
         return qry
+
+
 # *****************************************
 class lateral_inflows(MasObject):
     def __init__(self):
@@ -347,6 +373,8 @@ class lateral_inflows(MasObject):
         qry += '\n'
         qry += self.pg_create_calcul_abscisse()
         return qry
+
+
 # *****************************************
 class lateral_weirs(MasObject):
     def __init__(self):
@@ -371,6 +399,8 @@ class lateral_weirs(MasObject):
         qry += '\n'
         qry += self.pg_create_calcul_abscisse()
         return qry
+
+
 # *********** Water quality ***************
 class tracer_lateral_inflows(MasObject):
     def __init__(self):
@@ -394,85 +424,112 @@ class tracer_lateral_inflows(MasObject):
         qry += '\n'
         qry += self.pg_create_calcul_abscisse()
         return qry
-#******************************************
+
+
+# ******************************************
 class resultats(MasObject):
     def __init__(self):
         super(resultats, self).__init__()
         self.order = 13
         self.geom_type = None
-        self.attrs = [ ('id',' serial NOT NULL'),
-                       ('run',' character varying(30)'),
-                       ('scenario',' character varying(30)'),
-                       ('date',' timestamp without time zone'),
-                       ('t',' float'),
-                       ('branche',' integer'),
-                       ('section',' integer'),
-                       ('pk',' float'),
-                       ('zref',' float'),
-                       ('z',' float'),
-                       ('qmin',' float'),
-                       ('qmaj',' float'),
-                       ('kmin',' float'),
-                       ('kmaj',' float'),
-                       ('fr',' float'),
-                       ('y',' float'),
-                       ('zmax',' float'),
-                       ('qmax',' float'),
-                       ('q',' float'),
-                       ('CONSTRAINT projet_pkey',' PRIMARY KEY (id)')]
+        self.attrs = [('id', ' serial NOT NULL'),
+                      ('run', ' character varying(30)'),
+                      ('scenario', ' character varying(30)'),
+                      ('date', ' timestamp without time zone'),
+                      ('t', ' float'),
+                      ('branche', ' integer'),
+                      ('section', ' integer'),
+                      ('pk', ' float'),
+                      ('zref', ' float'),
+                      ('z', ' float'),
+                      ('qmin', ' float'),
+                      ('qmaj', ' float'),
+                      ('kmin', ' float'),
+                      ('kmaj', ' float'),
+                      ('fr', ' float'),
+                      ('y', ' float'),
+                      ('zmax', ' float'),
+                      ('qmax', ' float'),
+                      ('q', ' float'),
+                      ('CONSTRAINT projet_pkey', ' PRIMARY KEY (id)')]
+
+
+# TODO: Modifier la table de vette facon
+# class results(MasObject):
+#     def __init__(self):
+#         super(results, self).__init__()
+#         self.order = 14
+#         self.geom_type = None
+#         self.attrs = [('id', ' serial NOT NULL'),
+#                       ('run', ' character varying(30)'),
+#                       ('scenario', ' character varying(30)'),
+#                       ('date', ' timestamp without time zone'),
+#                       ('t', ' float'),
+#                       ('branche', ' integer'),
+#                       ('section', ' integer'),
+#                       ('pk', ' float'),
+#                       ('var', ' text'),
+#                       ('val', ' float'),
+#                       ('CONSTRAINT results_pkey', ' PRIMARY KEY (id)')]
 # *****************************************
 class runs(MasObject):
     def __init__(self):
         super(runs, self).__init__()
         self.order = 14
         self.geom_type = None
-        self.attrs = [('id serial','NOT NULL'),
-                      ('run','character varying(30)'),
-                      ('scenario','character varying(30)'),
-                      ('date',' timestamp without time zone'),
-                      ('t',' text'),
-                      ('pk',' text'),
+        self.attrs = [('id serial', 'NOT NULL'),
+                      ('run', 'character varying(30)'),
+                      ('scenario', 'character varying(30)'),
+                      ('date', ' timestamp without time zone'),
+                      ('t', ' text'),
+                      ('pk', ' text'),
                       ('comments', 'text'),
-                      ('CONSTRAINT cle_runs','PRIMARY KEY (id)')]
-#*****************************************
+                      ('wq', 'text'),
+                      ('CONSTRAINT cle_runs', 'PRIMARY KEY (id)')]
+
+
+# *****************************************
 class observations(MasObject):
     def __init__(self):
         super(observations, self).__init__()
         self.order = 15
         self.geom_type = None
-        self.attrs = [('id','serial NOT NULL'),
-                      ('code','character(10)'),
-                      ('type','character(1)'),
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('code', 'character(10)'),
+                      ('type', 'character(1)'),
                       ('comment', 'character varying(50)'),
-                      ('valeur','float'),
-                      ('date','timestamp without time zone'),
-                      ('CONSTRAINT cle_obs ','PRIMARY KEY (id)')]
-#*****************************************
+                      ('valeur', 'float'),
+                      ('date', 'timestamp without time zone'),
+                      ('CONSTRAINT cle_obs ', 'PRIMARY KEY (id)')]
+
+
+# *****************************************
 class parametres(MasObject):
     def __init__(self):
         super(parametres, self).__init__()
         self.order = 16
         self.geom_type = None
-        self.attrs = [  ('id','serial NOT NULL'),
-                        ('parametre','text'),
-                        ('steady','text'),
-                        ('unsteady','text'),
-                        ('transcritical','text'),
-                        ('libelle','text'),
-                        ('balise1','text'),
-                        ('balise2','text'),
-                        ('gui','text'),
-                        ('gui_type', 'text'),
-                        ('CONSTRAINT cle_param','PRIMARY KEY (id)')]
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('parametre', 'text'),
+                      ('steady', 'text'),
+                      ('unsteady', 'text'),
+                      ('transcritical', 'text'),
+                      ('libelle', 'text'),
+                      ('balise1', 'text'),
+                      ('balise2', 'text'),
+                      ('gui', 'text'),
+                      ('gui_type', 'text'),
+                      ('CONSTRAINT cle_param', 'PRIMARY KEY (id)')]
 
-#*****************************************
+
+# *****************************************
 class calcul_abscisse(MasObject):
     def __init__(self):
         super(calcul_abscisse, self).__init__()
         self.order = 17
 
-    def pg_create_calcul_abscisse (self):
-        qry="""CREATE OR REPLACE FUNCTION {0}()  
+    def pg_create_calcul_abscisse(self):
+        qry = """CREATE OR REPLACE FUNCTION {0}()  
             RETURNS trigger AS  
             $BODY$ 
             DECLARE  
@@ -526,7 +583,7 @@ class calcul_abscisse(MasObject):
         return qry.format('calcul_abscisse_point')
 
     def pg_create_calcul_abscisse_profil(self):
-        qry="""CREATE OR REPLACE FUNCTION {0}()
+        qry = """CREATE OR REPLACE FUNCTION {0}()
                   RETURNS trigger AS
                 $BODY$
                 DECLARE
@@ -567,10 +624,10 @@ class calcul_abscisse(MasObject):
                   COST 100;
                 ALTER FUNCTION {0}()
                   OWNER TO postgres;"""
-        return qry.format('calcul_abscisse_profil' )
+        return qry.format('calcul_abscisse_profil')
 
     def pg_create_calcul_abscisse_branche(self):
-        qry ='''CREATE OR REPLACE FUNCTION calcul_abscisse_branche()
+        qry = '''CREATE OR REPLACE FUNCTION calcul_abscisse_branche()
               RETURNS trigger AS
             $BODY$
             DECLARE
@@ -598,7 +655,9 @@ class calcul_abscisse(MasObject):
               OWNER TO postgres;
 '''
         return qry
-#*****************************************
+
+
+# *****************************************
 class laws_wq(MasObject):
     def __init__(self):
         super(laws_wq, self).__init__()
@@ -610,6 +669,7 @@ class laws_wq(MasObject):
             ('time', 'float'),
             ('value', 'float'),
             ('CONSTRAINT cle_laws_wq', 'PRIMARY KEY (id_config, id_trac, time)')]
+
 
 class tracer_physic(MasObject):
     def __init__(self):
@@ -623,6 +683,7 @@ class tracer_physic(MasObject):
                       ('text', 'text'),
                       ('textfr', 'text'),
                       ('CONSTRAINT cle_tr_phy', 'PRIMARY KEY (id)')]
+
 
 class tracer_name(MasObject):
     def __init__(self):
@@ -638,6 +699,7 @@ class tracer_name(MasObject):
                       ('diffu', 'boolean'),
                       ('CONSTRAINT cle_tr_name', 'PRIMARY KEY (id)')]
 
+
 class tracer_config(MasObject):
     def __init__(self):
         super(tracer_config, self).__init__()
@@ -647,6 +709,7 @@ class tracer_config(MasObject):
                       ('name', 'character varying(30)'),
                       ('type', 'integer'),
                       ('CONSTRAINT cle_tr_conf', 'PRIMARY KEY (id)')]
+
 
 class meteo_config(MasObject):
     def __init__(self):
@@ -658,6 +721,7 @@ class meteo_config(MasObject):
                       ('starttime', 'timestamp without time zone'),
                       ('active', 'boolean'),
                       ('CONSTRAINT cle_met_conf', 'PRIMARY KEY (id)')]
+
 
 class laws_meteo(MasObject):
     def __init__(self):
@@ -671,6 +735,7 @@ class laws_meteo(MasObject):
             ('value', 'float'),
             ('CONSTRAINT cle_laws_met', 'PRIMARY KEY (id_config, id_var, time)')]
 
+
 class init_conc_config(MasObject):
     def __init__(self):
         super(init_conc_config, self).__init__()
@@ -681,6 +746,7 @@ class init_conc_config(MasObject):
                       ('type', 'integer'),
                       ('active', ' boolean'),
                       ('CONSTRAINT cle_init_conc_conf', 'PRIMARY KEY (id)')]
+
 
 class init_conc_wq(MasObject):
     def __init__(self):
@@ -696,10 +762,3 @@ class init_conc_wq(MasObject):
             ('CONSTRAINT cle_init_conc_wq', 'PRIMARY KEY (id_config, id_trac, bief,abscissa)')]
 
 # *****************************************
-if __name__ == '__main__':
-    var= topo()
-    var.schema = 'toto'
-    var.srid= 9999
-    # print(var.pg_create_calcul_abscisse_profil())
-    with open("toto.sql",'w') as f:
-        f.write(var.pg_create_table())

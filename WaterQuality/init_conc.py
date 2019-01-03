@@ -18,13 +18,13 @@ email                :
  ***************************************************************************/
 """
 
-
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
-if int(qVersion()[0])<5:  #qt4
+
+if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
-else: #qt5
+else:  # qt5
     from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
     from qgis.PyQt.QtWidgets import *
 import os
@@ -35,12 +35,13 @@ from qgis.gui import *
 from .graph_WQ import GraphInitConc
 from .table_WQ import table_WQ
 
+
 class init_conc_dialog(QDialog):
     def __init__(self, obj, id, name):
         QDialog.__init__(self)
-        self.paramTr=obj
+        self.paramTr = obj
         self.mgis = obj.mgis
-        self.ui=obj.ui
+        self.ui = obj.ui
         self.mdb = self.mgis.mdb
         self.tbwq = table_WQ(self.mgis, self.mdb)
         self.cur_wq_mod = self.tbwq.dico_mod_wq[obj.type]
@@ -72,7 +73,6 @@ class init_conc_dialog(QDialog):
         self.graph_edit.initMdl(self.tbwq.dico_wq_mod[self.cur_wq_mod])
         self.fill_tab_laws()
 
-
     def create_tab_model(self):
         """ Create table of initial concentrations"""
         self.list_trac = []
@@ -81,7 +81,9 @@ class init_conc_dialog(QDialog):
         model.setHeaderData(0, 1, 'Bief', 0)
         model.setHeaderData(1, 1, 'Abscissa', 0)
 
-        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(self.mdb.SCHEMA, self.tbwq.dico_wq_mod[self.cur_wq_mod])
+        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(self.mdb.SCHEMA,
+                                                                                            self.tbwq.dico_wq_mod[
+                                                                                                self.cur_wq_mod])
         rows = self.mdb.run_query(sql, fetch=True)
         model.insertColumns(2, len(rows))
         for r, row in enumerate(rows):
@@ -90,7 +92,6 @@ class init_conc_dialog(QDialog):
 
         model.itemChanged.connect(self.onTabDataChange)
         return model
-
 
     def shortCut_row_del(self):
         if self.ui.tab_laws.hasFocus():
@@ -104,7 +105,6 @@ class init_conc_dialog(QDialog):
             cols = list(set(cols))
             self.update_courbe(cols)
 
-
     def fill_tab_laws(self):
         """ fill table """
         self.ui.tab_laws.setModel(self.create_tab_model())
@@ -113,8 +113,9 @@ class init_conc_dialog(QDialog):
             model = self.ui.tab_laws.model()
 
             if self.cur_wq_law != -1:
-                sql = "SELECT distinct bief FROM {0}.init_conc_wq WHERE id_config = {1} ORDER BY bief".format(self.mdb.SCHEMA,
-                                                                                                              self.cur_wq_law)
+                sql = "SELECT distinct bief FROM {0}.init_conc_wq WHERE id_config = {1} ORDER BY bief".format(
+                    self.mdb.SCHEMA,
+                    self.cur_wq_law)
                 lst_bief = self.mdb.run_query(sql, fetch=True)
                 if len(lst_bief) > 0:
                     self.ui.cb_bief.blockSignals(True)
@@ -151,10 +152,9 @@ class init_conc_dialog(QDialog):
         else:
             self.graph_edit.initGraph(None, None)
 
-
     def import_csv(self):
         """ import CSV """
-        #TODO not good format
+        # TODO not good format
         # +2 (bief , abscissa)
         nb_col = len(self.list_trac) + 2
         f = QFileDialog.getOpenFileName(None, 'File Selection', self.mgis.repProject, "File (*.txt *.csv)")
@@ -192,13 +192,11 @@ class init_conc_dialog(QDialog):
                 if self.mgis.DEBUG:
                     self.mgis.addInfo("Import failed ({}) because the colone number of file isn't agree.".format(f[0]))
 
-
     def current_bief(self):
         if self.ui.cb_bief.currentIndex() == -1:
             return None
         else:
             return self.ui.cb_bief.itemData(self.ui.cb_bief.currentIndex())
-
 
     def update_cb_bief(self):
         cur_bief = self.current_bief()
@@ -217,10 +215,8 @@ class init_conc_dialog(QDialog):
             self.ui.cb_bief.findData(cur_bief)
         self.ui.cb_bief.blockSignals(False)
 
-
     def change_bief(self):
         self.update_courbe("all")
-
 
     def onTabDataChange(self, itm):
         if not self.filling_tab:
@@ -239,7 +235,6 @@ class init_conc_dialog(QDialog):
                 idx = itm.index()
                 self.update_courbe([idx.column() - 2])
 
-
     def update_courbe(self, courbes):
         data = {}
         if courbes == "all":
@@ -255,10 +250,9 @@ class init_conc_dialog(QDialog):
             for r in range(self.ui.tab_laws.model().rowCount()):
                 if self.ui.tab_laws.model().item(r, 0).data(0) == self.current_bief():
                     ly.append(self.ui.tab_laws.model().item(r, crb + 2).data(0))
-            data[crb] = {"x":lx, "y":ly}
+            data[crb] = {"x": lx, "y": ly}
 
         self.graph_edit.majCourbes(data)
-
 
     def new_val(self):
         self.filling_tab = True
@@ -285,7 +279,7 @@ class init_conc_dialog(QDialog):
                     valabs = model.item(r - 1, 1).data(0) + 1.
                 else:
                     valabs = 2 * model.item(r - 1, 1).data(0) - model.item(r - 2, 1).data(0)
-        itm.setData(valabs,0)
+        itm.setData(valabs, 0)
         model.setItem(r, 1, itm)
 
         for c in range(2, model.columnCount()):
@@ -295,7 +289,6 @@ class init_conc_dialog(QDialog):
 
         self.update_cb_bief()
         self.update_courbe("all")
-
 
     def delete_val(self):
         if self.ui.tab_laws.selectedIndexes():
@@ -308,34 +301,42 @@ class init_conc_dialog(QDialog):
             self.update_cb_bief()
             self.update_courbe("all")
 
-
     def acceptPage2(self):
-        #save Info
+        # save Info
         # modificaito liste page 1
-        #change de page
-        if self.ui.tab_laws.model().rowCount() > 0 :
+        # change de page
+        if self.ui.tab_laws.model().rowCount() > 0:
             name_law = str(self.ui.LawWQ.text())
             if self.cur_wq_law == -1:
                 if self.mgis.DEBUG:
                     self.mgis.addInfo("Addition of {} Tracer initial condition".format(name_law))
-                self.mdb.execute("INSERT INTO {0}.init_conc_config (name, type) VALUES ('{1}', {2})".format(self.mdb.SCHEMA, name_law, self.cur_wq_mod))
+                self.mdb.execute(
+                    "INSERT INTO {0}.init_conc_config (name, type) VALUES ('{1}', {2})".format(self.mdb.SCHEMA,
+                                                                                               name_law,
+                                                                                               self.cur_wq_mod))
                 res = self.mdb.run_query("SELECT Max(id) FROM {0}.init_conc_config".format(self.mdb.SCHEMA), fetch=True)
                 self.cur_wq_law = res[0][0]
             else:
                 if self.mgis.DEBUG:
                     self.mgis.addInfo("Editing of {} Tracer Initial Concentration".format(name_law))
-                self.mdb.execute("UPDATE {0}.init_conc_config SET name = '{1}' WHERE id = {2}".format(self.mdb.SCHEMA, name_law, self.cur_wq_law))
-                self.mdb.execute("DELETE FROM {0}.init_conc_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, self.cur_wq_law))
+                self.mdb.execute(
+                    "UPDATE {0}.init_conc_config SET name = '{1}' WHERE id = {2}".format(self.mdb.SCHEMA, name_law,
+                                                                                         self.cur_wq_law))
+                self.mdb.execute(
+                    "DELETE FROM {0}.init_conc_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, self.cur_wq_law))
 
             recs = []
             for r in range(self.ui.tab_laws.model().rowCount()):
                 for c in range(2, self.ui.tab_laws.model().columnCount()):
-                    recs.append([self.cur_wq_law, self.list_trac[c-2][0], self.ui.tab_laws.model().item(r, 0).data(0),self.ui.tab_laws.model().item(r, 1).data(0), self.ui.tab_laws.model().item(r, c).data(0)])
-            self.mdb.run_query("INSERT INTO {0}.init_conc_wq (id_config, id_trac, bief, abscissa, value) VALUES (%s, %s, %s, %s, %s)".format(self.mdb.SCHEMA), many=True, listMany=recs)
+                    recs.append([self.cur_wq_law, self.list_trac[c - 2][0], self.ui.tab_laws.model().item(r, 0).data(0),
+                                 self.ui.tab_laws.model().item(r, 1).data(0),
+                                 self.ui.tab_laws.model().item(r, c).data(0)])
+            self.mdb.run_query(
+                "INSERT INTO {0}.init_conc_wq (id_config, id_trac, bief, abscissa, value) VALUES (%s, %s, %s, %s, %s)".format(
+                    self.mdb.SCHEMA), many=True, listMany=recs)
         else:
             self.rejectPage2()
         self.accept()
-
 
     def rejectPage2(self):
         if self.mgis.DEBUG:
@@ -350,6 +351,7 @@ def data_to_float(txt):
     except ValueError:
         return None
 
+
 def data_to_int(txt):
     try:
         int(txt)
@@ -357,9 +359,11 @@ def data_to_int(txt):
     except ValueError:
         return None
 
-class ItemEditorFactory(QItemEditorFactory):  # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate    It is possible for a custom delegate to provide editors without the use of an editor item factory. In this case, the following virtual functions must be reimplemented:
+
+class ItemEditorFactory(
+    QItemEditorFactory):  # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate    It is possible for a custom delegate to provide editors without the use of an editor item factory. In this case, the following virtual functions must be reimplemented:
     def __init__(self):
-            QItemEditorFactory.__init__(self)
+        QItemEditorFactory.__init__(self)
 
     def createEditor(self, userType, parent):
         # print (userType)

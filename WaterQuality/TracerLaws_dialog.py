@@ -426,7 +426,7 @@ class ItemEditorFactory(QItemEditorFactory):  # http://doc.qt.io/qt-5/qstyledite
         QItemEditorFactory.__init__(self)
 
     def createEditor(self, userType, parent):
-        # print (userType)
+
         if userType == QVariant.Double or userType == 0:
             doubleSpinBox = QDoubleSpinBox(parent)
             doubleSpinBox.setDecimals(10)

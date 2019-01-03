@@ -758,12 +758,12 @@
            </column>
            <column>
             <property name="text">
-             <string>Diffusion</string>
+             <string>Convection</string>
             </property>
            </column>
            <column>
             <property name="text">
-             <string>Convection</string>
+             <string>Diffusion</string>
             </property>
            </column>
           </widget>

@@ -64,23 +64,28 @@ class class_mascWQ():
         self.cur_wq_mod =self.tbwq.dico_wq_mod[int(result[0][0])]
         self.cur_wq_mod_int = int(result[0][0])
 
-    def create_filephy(self):
+    def create_filephy(self,dossier=None):
         """creation .phy file """
 
+        if dossier is None:
+            dossier = self.dossierFileMasc
         where="type = '{}'".format(self.cur_wq_mod)
         order="id"
         result = self.mdb.select('tracer_physic',where,order)
         entetfr=u": NOMBRE DE PARAMETRES PHYSIQUES"
         entet = u": NUMBER OF PHYSICAL PARAMETERS"
         # with open(os.path.join(self.dossierFileMasc, self.cur_wq_mod.lower() + '.phy'), 'w') as fich:
-        with open(os.path.join(self.dossierFileMasc, 'mascaret.phy'), 'w') as fich:
+        with open(os.path.join(dossier, 'mascaret.phy'), 'w') as fich:
             fich.write('{} {}\n'.format(len(self.dico_phy[ self.cur_wq_mod]['physic']),entet))
             for i,phy in enumerate(self.dico_phy[ self.cur_wq_mod]['physic']):
                 idx=result['sigle'].index(phy['sigle'])
                 fich.write('{} : {}\n'.format(result['value'][idx],result['text'][idx]))
 
-    def law_tracer(self):
+    def law_tracer(self, dossier=None):
         """creation of law file for tracer"""
+        if dossier is None:
+            dossier=self.dossierFileMasc
+
         extrem = self.mdb.select('extremities')
         lateral = self.mdb.select('tracer_lateral_inflows')
         dict_loi_tr={}
@@ -116,7 +121,7 @@ class class_mascWQ():
                     loi_val,col =self.mdb.run_query(sql.format(self.mdb.SCHEMA, 'laws_wq', where, order),
                                                     fetch=True,namvar=True)
                     #write law
-                    fich = open(os.path.join(self.dossierFileMasc, name.lower() + '.loi'), 'w')
+                    fich = open(os.path.join(dossier, name.lower() + '.loi'), 'w')
                     header='# {}\n'.format(name)
                     header+='# Times (s) '
                     for sigle in list_trac['sigle']:
@@ -139,8 +144,10 @@ class class_mascWQ():
         return dict_loi_tr
 
 
-    def init_conc_tracer(self):
-
+    def init_conc_tracer(self, dossier=None):
+        """creation of initial concentration file for tracer"""
+        if dossier is None:
+            dossier=self.dossierFileMasc
         order = "id"
         where = "type = '{}' AND active=true".format(self.cur_wq_mod_int)
         init_trac = self.mdb.select('init_conc_config', where, order)
@@ -157,7 +164,7 @@ class class_mascWQ():
             self.mgis.addInfo("Warning: Please fill the initial conditions for tracers")
             return
         # fich = open(os.path.join(self.dossierFileMasc, self.cur_wq_mod.lower() + '.conc'), 'w')
-        fich = open(os.path.join(self.dossierFileMasc, 'mascaret.conc'), 'w')
+        fich = open(os.path.join(dossier, 'mascaret.conc'), 'w')
 
         fich.write('[variables]\n')
         for i,var in enumerate(self.dico_phy[self.cur_wq_mod]['tracer']):
@@ -175,6 +182,7 @@ class class_mascWQ():
                 first = False
                 fich.write(ligne + '\n')
                 id_pre = val[1]
+                abs_pre= val[2]
                 ligne = '        0.0;"  {}";"   {}";  {};  {};'.format(val[1], i+1, val[2],val[3])
             else:
                 ligne += '  {};'.format(val[3])
