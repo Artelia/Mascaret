@@ -31,7 +31,7 @@ from qgis.core import *
 from qgis.utils import *
 from qgis.gui import *
 
-# water quality
+# # water quality
 from .WaterQuality.TracerLaws_dialog import TracerLaws_dialog
 from .WaterQuality.water_quality_dialog import Water_quality_dialog
 from .WaterQuality.class_mascWQ import class_mascWQ
