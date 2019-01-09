@@ -19,8 +19,12 @@
     <edittype widgetv2type="TextEdit" name="law_wq">
       <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
     </edittype>
-    <edittype widgetv2type="TextEdit" name="typesources">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+    <edittype widgetv2type="ValueMap" name="typesources">
+      <widgetv2config fieldEditable="1" constraint="" labelOnTop="0" constraintDescription="" notNull="0">
+        <value key="Flux per time Unit" value="3"/>
+        <value key="Surface-like" value="2"/>
+        <value key="Volume-like" value="1"/>
+      </widgetv2config>
     </edittype>
     <edittype widgetv2type="CheckBox" name="active">
       <widgetv2config fieldEditable="1" UncheckedState="f" constraint="" CheckedState="t" labelOnTop="0" constraintDescription="" notNull="0"/>
@@ -304,8 +308,9 @@
     <selectedonly on=""/>
   </labelattributes>
   <SingleCategoryDiagramRenderer diagramType="Histogram" sizeLegend="0" attributeLegend="1">
-    <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" sizeScale="0,0,0,0,0,0" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="200000" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="1" enabled="0" height="15" lineSizeScale="0,0,0,0,0,0" sizeType="MM" lineSizeType="MM" minScaleDenominator="0">
+    <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" sizeScale="0,0,0,0,0,0" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="200000" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="1" enabled="0" height="15" lineSizeScale="0,0,0,0,0,0" sizeType="MM" lineSizeType="MM" minScaleDenominator="inf">
       <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
+      <attribute field="" color="#000000" label=""/>
     </DiagramCategory>
     <symbol alpha="1" clip_to_extent="1" type="marker" name="sizeSymbol">
       <layer pass="0" class="SimpleMarker" locked="0">
@@ -345,7 +350,7 @@
   <excludeAttributesWMS/>
   <excludeAttributesWFS/>
   <attributeactions default="-1"/>
-  <attributetableconfig actionWidgetStyle="dropDown" sortExpression="" sortOrder="0">
+  <attributetableconfig actionWidgetStyle="dropDown" sortExpression="&quot;law_wq&quot;" sortOrder="1">
     <columns>
       <column width="-1" hidden="0" type="field" name="gid"/>
       <column width="-1" hidden="0" type="field" name="name"/>
@@ -384,10 +389,10 @@ def my_form_open(dialog, layer, feature):
   <attributeEditorForm>
     <attributeEditorContainer showLabel="1" visibilityExpressionEnabled="0" visibilityExpression="" name="infos" groupBox="0" columnCount="0">
       <attributeEditorField showLabel="1" index="1" name="name"/>
-      <attributeEditorField showLabel="1" index="4" name="length"/>
-      <attributeEditorField showLabel="1" index="-1" name="LawWQ"/>
-      <attributeEditorField showLabel="1" index="6" name="typeSources"/>
       <attributeEditorField showLabel="1" index="7" name="active"/>
+      <attributeEditorField showLabel="1" index="5" name="law_wq"/>
+      <attributeEditorField showLabel="1" index="6" name="typeSources"/>
+      <attributeEditorField showLabel="1" index="4" name="length"/>
     </attributeEditorContainer>
   </attributeEditorForm>
   <widgets/>
@@ -405,6 +410,6 @@ def my_form_open(dialog, layer, feature):
     <default field="typesources" expression=""/>
     <default field="active" expression=""/>
   </defaults>
-  <previewExpression></previewExpression>
+  <previewExpression>COALESCE( "name", '&lt;NULL>' )</previewExpression>
   <layerGeometryType>0</layerGeometryType>
 </qgis>

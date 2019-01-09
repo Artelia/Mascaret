@@ -269,16 +269,20 @@ class init_conc_dialog(QDialog):
         model.setItem(r, 0, itm)
 
         itm = QStandardItem()
+        valabs = 0.0
         if r == 0:
             valabs = 0.0
         else:
             if model.item(r - 1, 0).data(0) != cur_bief:
                 valabs = 0.0
             else:
-                if model.item(r - 2, 0).data(0) != cur_bief:
-                    valabs = model.item(r - 1, 1).data(0) + 1.
-                else:
-                    valabs = 2 * model.item(r - 1, 1).data(0) - model.item(r - 2, 1).data(0)
+                try :
+                    if model.item(r - 2, 0).data(0) != cur_bief:
+                        valabs = model.item(r - 1, 1).data(0) + 1.
+                    else:
+                        valabs = 2 * model.item(r - 1, 1).data(0) - model.item(r - 2, 1).data(0)
+                except AttributeError :
+                    valabs = valabs+1
         itm.setData(valabs, 0)
         model.setItem(r, 1, itm)
 

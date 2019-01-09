@@ -233,52 +233,58 @@ class meteo_dialog(QDialog):
     def import_csv(self):
         nb_col = 7
         first_ligne = True
-        f = QFileDialog.getOpenFileName(None, 'File Selection', self.mgis.repProject, "File (*.txt *.csv)")
-        if f[0] != '':
+        if int(qVersion()[0]) < 5:  # qt4
+            listf = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject, "File (*.txt *.csv *.met)")
+
+        else:  # qt5
+            listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject, "File (*.txt *.csv *.met)")
+
+        if listf != []:
             error = False
             self.filling_tab = True
             model = self.create_tab_model()
             r = 0
-            with open(f[0], "r", encoding="utf-8") as filein:
-                for num_ligne, ligne in enumerate(filein):
-                    if ligne[0] != '#':
-                        liste = ligne.split(";")
-                        if len(liste) == nb_col:
-                            if first_ligne:
-                                val = data_to_float(liste[0])
-                                if val != None:
-                                    typ_time = 'num'
-                                else:
-                                    val = data_to_date(liste[0])
-                                    if val != None:
-                                        typ_time = 'date'
-                                        date_ref = val
-                                        self.ui.cb_date.setCheckState(2)
-                                        date_ref_str = datetime.strftime(date_ref, '%Y-%m-%d %H:%M:%S')
-                                        self.ui.de_date.setDateTime(QDateTime().fromString(date_ref_str, 'yyyy-MM-dd HH:mm:ss'))
-                                    else:
-                                        # print ('e1')
-                                        error = True
-                                        break
-                                first_ligne = False
-                            model.insertRow(r)
-                            for c, val in enumerate(liste):
-                                if c == 0 and typ_time == 'date':
-                                    date_tmp = data_to_date(val)
-                                    delta = date_tmp - date_ref
-                                    val = delta.total_seconds()
-                                itm = QStandardItem()
-                                itm.setData(data_to_float(val), 0)
-                                if c == 0:
-                                    model.setItem(r, c, itm)
-                                else:
-                                    model.setItem(r, c + 4, itm)
-                            r += 1
-                        else:
-                            # print('e2')
-                            error = True
-                            break
 
+            filein =open(listf[0],"r")
+            for num_ligne, ligne in enumerate(filein):
+                if ligne[0] != '#':
+                    liste = ligne.replace('\n','').replace('\t',' ').split(";")
+                    if len(liste) == nb_col:
+                        if first_ligne:
+                            val = data_to_float(liste[0])
+                            if val != None:
+                                typ_time = 'num'
+                            else:
+                                val = data_to_date(liste[0])
+                                if val != None:
+                                    typ_time = 'date'
+                                    date_ref = val
+                                    self.ui.cb_date.setCheckState(2)
+                                    date_ref_str = datetime.strftime(date_ref, '%Y-%m-%d %H:%M:%S')
+                                    self.ui.de_date.setDateTime(QDateTime().fromString(date_ref_str, 'yyyy-MM-dd HH:mm:ss'))
+                                else:
+                                    print ('e1')
+                                    error = True
+                                    break
+                            first_ligne = False
+                        model.insertRow(r)
+                        for c, val in enumerate(liste):
+                            if c == 0 and typ_time == 'date':
+                                date_tmp = data_to_date(val)
+                                delta = date_tmp - date_ref
+                                val = delta.total_seconds()
+                            itm = QStandardItem()
+                            itm.setData(data_to_float(val), 0)
+                            if c == 0:
+                                model.setItem(r, c, itm)
+                            else:
+                                model.setItem(r, c + 4, itm)
+                        r += 1
+                    else:
+                        # print('e2')
+                        error = True
+                        break
+            filein.close()
             self.filling_tab = False
 
             if not error:
@@ -286,7 +292,7 @@ class meteo_dialog(QDialog):
                 self.update_courbe("all")
             else:
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Import failed ({})".format(f[0]))
+                    self.mgis.addInfo("Import failed ({})".format(listf[0]))
 
 
     def onTabDataChange(self, itm):

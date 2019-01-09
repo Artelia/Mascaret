@@ -66,7 +66,6 @@ class class_mascWQ():
 
     def create_filephy(self,dossier=None):
         """creation .phy file """
-
         if dossier is None:
             dossier = self.dossierFileMasc
         where="type = '{}'".format(self.cur_wq_mod)
@@ -79,6 +78,7 @@ class class_mascWQ():
             fich.write('{} {}\n'.format(len(self.dico_phy[ self.cur_wq_mod]['physic']),entet))
             for i,phy in enumerate(self.dico_phy[ self.cur_wq_mod]['physic']):
                 idx=result['sigle'].index(phy['sigle'])
+                # print(result['value'][idx],result['text'][idx])
                 fich.write('{} : {}\n'.format(result['value'][idx],result['text'][idx]))
 
     def law_tracer(self, dossier=None):
@@ -188,3 +188,85 @@ class class_mascWQ():
                 ligne += '  {};'.format(val[3])
         fich.write(ligne)
         fich.close()
+
+    def create_filemet(self, dossier=None,typ_time=None,datefirst=None, dateend=None):
+        """creation .met file """
+        if dossier is None:
+            dossier=self.dossierFileMasc
+        order = "id"
+        where = "active=true"
+        meteo_trac = self.mdb.select('meteo_config', where, order)
+        if meteo_trac['id'] == []:
+            self.mgis.addInfo("Warning: Please select the meteo configuration for tracers")
+            return
+        deb_time=None
+        end_time=None
+        if typ_time=='date' and meteo_trac['starttime'][0] != None:
+            #TODO a tester
+            duree = int((dateend-datefirst).total_seconds())
+            difTime = int((datefirst-meteo_trac['starttime'][0]).total_seconds())
+            if difTime<0:
+                self.mgis.addInfo("Warning: date for meteo law isn't correct.")
+                return
+            deb_time = difTime
+            end_time = difTime+duree
+
+        order = 'ORDER BY time,id_var'
+        where = "WHERE id_config= '{}' ".format(meteo_trac['id'][0])
+        if deb_time !=None and end_time !=None :
+            where ="AND time >= {} AND time < {} ".format(deb_time,end_time)
+        else:
+            deb_time=0
+        sql = """SELECT DISTINCT id_var,time,value FROM {0}.{1} {2} {3}"""
+        #
+        meteo_val, col = self.mdb.run_query(sql.format(self.mdb.SCHEMA, 'laws_meteo', where, order),
+                                          fetch=True, namvar=True)
+
+
+
+        if meteo_val==[] or meteo_val ==None:
+            self.mgis.addInfo("Warning: Please fill the meteo conditions for tracers")
+            return
+
+        fich = open(os.path.join(dossier, 'mascaret.met'), 'w')
+
+        header = '# {}\n'.format(meteo_trac['name'][0])
+        header += '# Times (s) '
+        for info in self.tbwq.dico_meteo:
+            header += '{} '.format(info["name"])
+
+        header += '\n'
+        header += '         S\n'
+        fich.write(header)
+        t_pre = meteo_val[0][1]-deb_time
+        if t_pre<0:
+            #TODO a tester
+            order = 'ORDER BY time'
+            sql = """SELECT DISTINCT time FROM {0}.{1} {2}"""
+            #
+            temps_list = self.mdb.run_query(sql.format(self.mdb.SCHEMA, 'laws_meteo',order),
+                                            fetch=True)
+            for i,time in enumerate(temps_list):
+                if time >=deb_time:
+                    time_inter=temps_list[i-1]
+                    break
+            where=  "WHERE id_config= '{}' AND time= '{}'".format(meteo_trac['id'][0],time_inter)
+            sql = """SELECT DISTINCT value FROM {0}.{1} {2} {3}"""
+            #
+            val= self.mdb.run_query(sql.format(self.mdb.SCHEMA, 'laws_meteo', where),
+                                            fetch=True)
+            val=val[0]
+            valf= (deb_time-time_inter)/(meteo_val[0][1]-time_inter) *(meteo_val[0][2]-val)+ val
+            meteo_val.insert(-1,deb_time,valf)
+        ligne = '{} '.format(t_pre)
+        for id, temps, val in meteo_val:
+            if t_pre != temps-deb_time:
+                fich.write(ligne + '\n')
+                t_pre = temps-deb_time
+                ligne = '{} {} '.format(t_pre-deb_time, val)
+            else:
+                ligne += '{} '.format(val)
+        fich.write(ligne)
+        fich.close()
+
+

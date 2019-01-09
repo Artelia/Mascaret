@@ -32,12 +32,13 @@ from qgis.core import *
 from qgis.utils import *
 from qgis.gui import *
 
-from ..graphProfil_Dialog import CopySelectedCellsAction
+
 from .. import function as fct
 from .table_WQ import table_WQ
 from .physical_param_dialog import physical_param_dialog
 from .meteo_dialog import meteo_dialog
 from .TracerInit_dialog import TracerInit_dialog
+from ..ui.custom_control import ScientificDoubleSpinBox
 
 
 class Water_quality_dialog(QDialog):
@@ -153,7 +154,18 @@ class Water_quality_dialog(QDialog):
                 if isinstance(obj, QCheckBox):
                     obj.setChecked(info['val'])
                 elif isinstance(obj, QDoubleSpinBox) or isinstance(obj, QSpinBox):
-                    obj.setValue(info['val'])
+                    if param == 'coeffDiffusion2':
+                        self.ui.coeffDiffusion2=ScientificDoubleSpinBox(self.ui.tab_3)
+                        self.ui.coeffDiffusion2.setValue(info['val'])
+                        self.ui.gridLayout_5.addWidget(self.coeffDiffusion2, 4, 2, 1, 1)
+                        self.coeffDiffusion2.setSingleStep(0.1)
+                    elif param == 'paramW':
+                        self.ui.paramW=ScientificDoubleSpinBox(self.ui.tab_3)
+                        self.ui.paramW.setValue(info['val'])
+                        self.ui.gridLayout_5.addWidget(self.paramW, 2, 3, 1, 1)
+                        self.paramW.setSingleStep(0.1)
+                    else:
+                        obj.setValue(info['val'])
                 elif isinstance(obj, QComboBox):
                     if param == 'optionConvection':
                         val = info['val'] - 1
@@ -162,7 +174,10 @@ class Water_quality_dialog(QDialog):
                     elif param == 'optionCalculDiffusion':
                         val = info['val'] - 1
                     elif param == "LimitPente":
-                        val = info['val'] - 1
+                        if info['val']:
+                            val =0
+                        else:
+                            val =1
                     elif param == 'ordreSchemaConvec':
                         val = info['val'] - 1
                     obj.setCurrentIndex(val)
@@ -179,16 +194,20 @@ class Water_quality_dialog(QDialog):
 
     def modeleQualiteEauChanged(self, text):
         self.type = text
+        self.b_meteo_param.setEnabled(False)
         if self.type == 'TRANSPORT_PUR':
             self.table_Tr.setEditTriggers(QAbstractItemView.AllEditTriggers)
             self.ui.b_add_lineTabTracer.show()
             self.ui.b_delete_lineTabTracer.show()
             self.b_phy_param.setEnabled(False)
+
         else:
             self.table_Tr.setEditTriggers(QAbstractItemView.NoEditTriggers)
             self.ui.b_add_lineTabTracer.hide()
             self.ui.b_delete_lineTabTracer.hide()
             self.b_phy_param.setEnabled(True)
+        if self.tbwq.dico_phy[self.type]['meteo']:
+            self.b_meteo_param.setEnabled(True)
         self.initc.change_module(self.type)
         self.majTab()
 
@@ -446,13 +465,25 @@ class Water_quality_dialog(QDialog):
                     if param == 'optionConvection' or param == "modeleQualiteEau" \
                             or param == 'optionCalculDiffusion' or param == "LimitPente" \
                             or param == 'ordreSchemaConvec':
-                        val = val + 1
+                        if param == "LimitPente" :
+                            if val==0 and self.ui.LimitPente.isEnabled():
+                                val ='True'
+                            else:
+                                val = 'False'
+                        else:
+                            val = val + 1
                 elif isinstance(obj, QLabel):
                     val = obj.text()
                     if param == 'nbTraceur':
                         val = int(val)
                 else:
-                    val = obj.value()
+                    if param == "paramW":
+                        if not self.ui.paramW.isEnabled():
+                            val =0
+                        else:
+                            val = obj.value()
+                    else:
+                        val = obj.value()
 
                 sql = """   UPDATE {0}.parametres
                                SET (steady,unsteady,transcritical)=('{1}','{1}','{1}') 
@@ -465,5 +496,19 @@ class Water_quality_dialog(QDialog):
             self.stockTable_Tr(self.table_Tr)
         else:
             self.update_conv_diff(self.table_Tr)
+        #meteo
+        if self.tbwq.dico_phy[self.type]['meteo']:
+            order = "id"
+            where = "active=true"
+            meteo_trac = self.mdb.select('meteo_config', where, order)
+            if meteo_trac['id'] == []:
+                val='FALSE'
+            else:
+                val ='TRUE'
+            sql = """   UPDATE {0}.parametres
+                              SET (steady,unsteady,transcritical)=('{1}','{1}','{1}') 
+                              WHERE parametre='{2}'
+                        """
+            self.mdb.run_query(sql.format(self.mdb.SCHEMA, val, "fichmeteo"))
 
         self.close()

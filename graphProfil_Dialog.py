@@ -402,7 +402,10 @@ class GraphProfil(GraphCommon):
         # liste = ["litmingauc", "litmindroi", "stockgauch", 'stockdroit']
         liste = ["leftminbed", "rightminbed", "leftstock", 'rightstock']
         for l in liste:
-            self.tab[l] = None
+            if self.feature[l]!=None :
+                self.tab[l]=self.feature[l]
+            else:
+                self.tab[l] = None
         self.mnt = {'x': [], 'z': []}
 
         if self.feature["x"] and self.feature["z"]:
@@ -423,6 +426,7 @@ class GraphProfil(GraphCommon):
             self.mnt['z']=[float(var) for var in self.feature["zmnt"].split()]
             # self.mnt['x'] = list(map(float, self.feature["xmnt"].split()))
             # self.mnt['z'] = list(map(float, self.feature["zmnt"].split()))
+
 
     def extraitTopo(self):
 

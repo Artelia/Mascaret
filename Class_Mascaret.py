@@ -53,7 +53,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 import subprocess
-from .ui.warningbox import Class_warningBox
+from .ui.custom_control import Class_warningBox
 from .function import str2bool
 from .WaterQuality.class_mascWQ import class_mascWQ
 
@@ -456,7 +456,7 @@ class Class_Mascaret():
                 try:
                     nbPas = max(int(diff / float(zones['planim'][i])) + 1, nbPas)
                 except:
-                    self.mgis.addInfo("Check the {} profile if it's ok ".format(profils["name"][j]))
+                    self.mgis.addInfo("Check planim ")
 
                 index = numero.index(n)
                 zones["zoneabsstart"][i] = max(zones["zoneabsstart"][i],
@@ -826,9 +826,10 @@ class Class_Mascaret():
         for param, valeur, b1, b2 in rows:
             if param =="fichMeteoTracer":
                 sql = "SELECT {0} FROM {1}.{2} WHERE parametre = 'fichmeteo' ;"
-                rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
-                if str2bool(rows[0][0]) == False:
+                wow= self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
+                if str2bool(wow[0][0]) == False:
                     continue
+
             if b1:
                 try:
                     cas.find(b1).text
@@ -873,6 +874,8 @@ class Class_Mascaret():
             self.mgis.addInfo("Please enter water quality laws")
             return False
         list_loi=sorted(list_loi)
+
+
 
         ### sources
         tracer_source = SubElement(cas, "parametresSourcesTraceur")
@@ -938,6 +941,7 @@ class Class_Mascaret():
         initiales = cas.find('parametresConditionsLimitesTraceur')
         initiales.find("typeCondLimTracer").text=self.fmt(typ)
         initiales.find("numLoiCondLimTracer").text =self.fmt(numl)
+
         return True
 
     def modifXCAS(self, parametres, xcasfile, fichSortie=None):
@@ -1212,6 +1216,10 @@ class Class_Mascaret():
         if self.mgis.DEBUG:
             self.mgis.addInfo("Xcas file is created.")
         if par['presenceTraceurs']:
+            if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
+                #TODO reprendre avec date
+                self.wq.create_filemet()
+
             self.wq.create_filephy()
             self.wq.law_tracer()
             self.wq.init_conc_tracer()

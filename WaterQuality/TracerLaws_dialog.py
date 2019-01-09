@@ -178,30 +178,36 @@ class TracerLaws_dialog(QDialog):
 
     def import_csv(self):
         nb_col = len(self.list_trac) + 1
-        f = QFileDialog.getOpenFileName(None, 'File Selection', self.mgis.repProject, "File (*.txt *.csv)")
-        if f[0] != '':
+        if int(qVersion()[0]) < 5:  # qt4
+            listf = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject, "File (*.txt *.csv *.met)")
+
+        else:  # qt5
+            listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject, "File (*.txt *.csv *.met)")
+
+        if listf != []:
+
             error = False
             self.filling_tab = True
             model = self.create_tab_model()
-            r = 0
-            with open(f[0], "r", encoding="utf-8") as filein:
-                for num_ligne, ligne in enumerate(filein):
-                    if ligne[0] != '#':
-                        liste = ligne.split(";")
-                        if len(liste) == nb_col:
-                            model.insertRow(r)
-                            for c, val in enumerate(liste):
-                                itm = QStandardItem()
-                                itm.setData(data_to_float(val), 0)
-                                if c == 0:
-                                    model.setItem(r, c, itm)
-                                else:
-                                    model.setItem(r, c + 3, itm)
-                            r += 1
-                        else:
-                            error = True
-                            break
-
+            filein =open(listf[0],"r")
+            r=0
+            for num_ligne, ligne in enumerate(filein):
+                if ligne[0] != '#':
+                    liste = ligne.split(";")
+                    if len(liste) == nb_col:
+                        model.insertRow(r)
+                        for c, val in enumerate(liste):
+                            itm = QStandardItem()
+                            itm.setData(data_to_float(val), 0)
+                            if c == 0:
+                                model.setItem(r, c, itm)
+                            else:
+                                model.setItem(r, c + 3, itm)
+                        r += 1
+                    else:
+                        error = True
+                        break
+            filein.close()
             self.filling_tab = False
 
             if not error:
@@ -209,7 +215,7 @@ class TracerLaws_dialog(QDialog):
                 self.update_courbe("all")
             else:
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Import failed ({})".format(f[0]))
+                    self.mgis.addInfo("Import failed ({})".format(listf[0]))
 
 
     def onTabDataChange(self, itm):

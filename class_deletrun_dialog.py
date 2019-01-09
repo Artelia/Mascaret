@@ -30,7 +30,7 @@ else: #qt4
 from datetime import datetime
 import os
 
-from .ui.warningbox import Class_warningBox
+from .ui.custom_control import Class_warningBox
 
 
 class class_deletrun_dialog(QDialog):

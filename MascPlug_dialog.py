@@ -41,7 +41,7 @@ from .db.mas_database import MasDatabase
 from .MNT_class import Worker
 from .Class_Mascaret import Class_Mascaret
 from .parameter_dialog import parameter_dialog
-from .ui.warningbox import Class_warningBox
+from .ui.custom_control import Class_warningBox
 
 import math
 import os
@@ -678,13 +678,15 @@ Version : {}
 
         self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
         cl = class_mascWQ(self, self.dossierFileMasc)
-        try:
-            cl.init_conc_tracer(dossier=folderNamePath)
-            cl.create_filephy(dossier=folderNamePath)
-            cl.law_tracer(dossier=folderNamePath)
-            self.addInfo('Export is done.')
-        except:
-            self.addInfo('Export failed.')
+        # try:
+        if cl.dico_phy[cl.cur_wq_mod]['meteo']:
+            cl.create_filemet(dossier=folderNamePath)
+        # cl.init_conc_tracer(dossier=folderNamePath)
+        # cl.create_filephy(dossier=folderNamePath)
+        # cl.law_tracer(dossier=folderNamePath)
+        self.addInfo('Export is done.')
+        # except:
+        #     self.addInfo('Export failed.')
 
     def fct_add_wq_tables(self):
 

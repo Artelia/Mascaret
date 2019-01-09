@@ -29,7 +29,7 @@ else: #qt4
 
 import os
 
-from .ui.warningbox import Class_warningBox
+from .ui.custom_control import Class_warningBox
 
 
 class class_deletsh_dialog(QDialog):
