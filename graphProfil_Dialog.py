@@ -329,7 +329,7 @@ class GraphProfil(GraphCommon):
         self.fig.canvas.mpl_connect('button_release_event', self.onrelease)
         self.fig.canvas.mpl_connect('motion_notify_event', self.onpress)
         # zoom_fun = zoom mollette
-        # self.fig.canvas.mpl_connect('scroll_event', self.zoom_fun)
+        self.fig.canvas.mpl_connect('scroll_event', self.zoom_fun)
 
 
     def selectorToggled(self):
@@ -1157,35 +1157,35 @@ class GraphProfil(GraphCommon):
             self.rectSelection.set_visible(True)
             self.canvas.draw()
 
-            # def zoom_fun(self, event):
-            #     # get the current x and y limits
-            #     try:
-            #         base_scale = 1.5
-            #         cur_xlim = self.axes.get_xlim()
-            #         cur_ylim = self.axes.get_ylim()
-            #         cur_xrange = (cur_xlim[1] - cur_xlim[0]) * .5
-            #         cur_yrange = (cur_ylim[1] - cur_ylim[0]) * .5
-            #         xdata = event.xdata  # get event x location
-            #         ydata = event.ydata  # get event y location
-            #         # print(event.button)
-            #         if event.button == 'up':
-            #             # deal with zoom in
-            #             scale_factor = 1 / base_scale
-            #         elif event.button == 'down':
-            #             # deal with zoom out
-            #             scale_factor = base_scale
-            #         else:
-            #             # deal with something that should never happen
-            #             scale_factor = 1
-            #             # print event.button
-            #         # set new limits
-            #         self.axes.set_xlim([xdata - cur_xrange * scale_factor,
-            #                             xdata + cur_xrange * scale_factor])
-            #         self.axes.set_ylim([ydata - cur_yrange * scale_factor,
-            #                             ydata + cur_yrange * scale_factor])
-            #         self.fig.canvas.draw()  # force re-draw
-            #     except:
-            #         pass
+    def zoom_fun(self, event):
+        # get the current x and y limits
+        try:
+            base_scale = 1.5
+            cur_xlim = self.axes.get_xlim()
+            cur_ylim = self.axes.get_ylim()
+            cur_xrange = (cur_xlim[1] - cur_xlim[0]) * .5
+            cur_yrange = (cur_ylim[1] - cur_ylim[0]) * .5
+            xdata = event.xdata  # get event x location
+            ydata = event.ydata  # get event y location
+            # print(event.button)
+            if event.button == 'up':
+                # deal with zoom in
+                scale_factor = 1 / base_scale
+            elif event.button == 'down':
+                # deal with zoom out
+                scale_factor = base_scale
+            else:
+                # deal with something that should never happen
+                scale_factor = 1
+                # print event.button
+            # set new limits
+            self.axes.set_xlim([xdata - cur_xrange * scale_factor,
+                                xdata + cur_xrange * scale_factor])
+            self.axes.set_ylim([ydata - cur_yrange * scale_factor,
+                                ydata + cur_yrange * scale_factor])
+            self.fig.canvas.draw()  # force re-draw
+        except:
+            pass
 
 class CopySelectedCellsAction(QAction):
     def __init__(self, table_widget):
