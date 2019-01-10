@@ -45,7 +45,7 @@ from .ui.custom_control import Class_warningBox
 
 import math
 import os
-
+import datetime
 
 class MascPlugDialog(QMainWindow):
     OPT_GENERAL, OPT_mdb, OPT_DTM = range(3)
@@ -586,11 +586,68 @@ class MascPlugDialog(QMainWindow):
                                                            'File Selection',
                                                            self.masplugPath,
                                                            filter="PSQL (*.psql);;File (*)")
+        if self.mdb.check_extension():
+            self.addInfo(" Shema est {}".format(self.SCHEMA))
+            self.mdb.create_FirstModel()
 
-        if self.mdb.importSchema(fileNamePath):
-            self.addInfo('Import is done.')
-        else:
-            self.addInfo('Import failed.')
+        for file in fileNamePath:
+            if os.path.isfile(file):
+                namesh=self.mdb.checkschema_import(file)
+                if namesh != None:
+                    liste = self.mdb.list_schema()
+                    if namesh in liste:
+                        # demande change name
+                        ok = self.box.yes_no_q("The {} shema already exists.\n "
+                                               "Do you want change the schema name befor import?".format(namesh))
+                        if ok:
+                            newname, ok = QInputDialog.getText(self, 'New Model', 'New Model name:')
+                            if ok and self.checkNewname(newname,liste):
+
+                                    sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp".format(namesh)
+                                    self.mdb.run_query(sql)
+                                    sql=''
+                                    if self.mdb.importSchema(file):
+                                        self.addInfo('Import is done.')
+                                        sql = "ALTER SCHEMA {0} RENAME TO {1};\n".format(namesh, newname)
+                                    else:
+                                        self.addInfo('Import failed.')
+                                    #
+                                    sql += "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(namesh)
+                                    self.mdb.run_query(sql)
+                            else:
+                                self.addInfo('Import cancel.')
+                                return
+                        else:
+                            self.addInfo('Import cancel.')
+                            return
+                    else:
+                        if self.mdb.importSchema(file):
+                            self.addInfo('Import is done.')
+                        else:
+                            self.addInfo('Import failed.')
+                else:
+                    if self.mdb.importSchema(file):
+                        self.addInfo('Import is done.')
+                    else:
+                        self.addInfo('Import failed.')
+            else:
+                self.addInfo('File not found.')
+        return
+
+    def checkNewname(self,name,liste):
+        """Check the new name validation
+            name : test name
+            liste : exclud list"""
+        if name =='':
+            if self.DEBUG:
+                self.addInfo('Name is not correct.')
+            return False
+        elif name in liste:
+            if self.DEBUG:
+                self.addInfo('<<{}>> schema name already exists'.format(name))
+            return False
+        else :
+            return True
 
     def mainGraph(self):
         """ GUI graphique"""
@@ -679,11 +736,16 @@ Version : {}
         self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
         cl = class_mascWQ(self, self.dossierFileMasc)
         # try:
-        if cl.dico_phy[cl.cur_wq_mod]['meteo']:
-            cl.create_filemet(dossier=folderNamePath)
-        # cl.init_conc_tracer(dossier=folderNamePath)
-        # cl.create_filephy(dossier=folderNamePath)
-        # cl.law_tracer(dossier=folderNamePath)
+        # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:
+        #     #simul date
+        #     # dat1=datetime.datetime(2019, 1, 13, 13, 35, 12)
+        #     # dat2=datetime.datetime(2019, 1, 10, 13, 35, 12)
+        #     # cl.create_filemet(dossier=folderNamePath,typ_time='date',datefirst=dat2, dateend=dat1)
+        #     cl.create_filemet(dossier=folderNamePath)
+        cl.init_conc_tracer(dossier=folderNamePath)
+        cl.create_filephy(dossier=folderNamePath)
+        cl.law_tracer(dossier=folderNamePath)
+
         self.addInfo('Export is done.')
         # except:
         #     self.addInfo('Export failed.')

@@ -39,7 +39,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 from .table_WQ import table_WQ
-from ..function import str2bool
+from ..function import str2bool,interpole
 
 class class_mascWQ():
     def __init__(self, main, file ):
@@ -85,6 +85,7 @@ class class_mascWQ():
         """creation of law file for tracer"""
         if dossier is None:
             dossier=self.dossierFileMasc
+        # init_case=True
 
         extrem = self.mdb.select('extremities')
         lateral = self.mdb.select('tracer_lateral_inflows')
@@ -141,6 +142,29 @@ class class_mascWQ():
                             ligne+='{} '.format(val)
                     fich.write(ligne)
                     fich.close()
+                    # # case Steady
+                    # if init_case:
+                    #     # initial_ law with first value
+                    #
+                    #     fich = open(os.path.join(dossier, name.lower() + '_init.loi'), 'w')
+                    #     header = '# {}\n'.format(name)
+                    #     header += '# Times (s) '
+                    #     for sigle in list_trac['sigle']:
+                    #         header += 'C_{} '.format(sigle)
+                    #
+                    #     header += '\n'
+                    #     header += '         S\n'
+                    #     fich.write(header)
+                    #     t_w=[0, 3600]
+                    #     maxid=len(list_trac['sigle'])
+                    #     vals=loi_val[0:maxid]
+                    #     for time in t_w:
+                    #         ligne = '{} '.format(time)
+                    #         for id, temps, val in vals:
+                    #             ligne += '{} '.format(val)
+                    #         ligne += '\n'
+                    #         fich.write(ligne)
+                    #     fich.close()
         return dict_loi_tr
 
 
@@ -202,11 +226,13 @@ class class_mascWQ():
         deb_time=None
         end_time=None
         if typ_time=='date' and meteo_trac['starttime'][0] != None:
-            #TODO a tester
             duree = int((dateend-datefirst).total_seconds())
+            if duree<0:
+                self.mgis.addInfo("Warning: Scenario date aren't correct.")
+                return
             difTime = int((datefirst-meteo_trac['starttime'][0]).total_seconds())
             if difTime<0:
-                self.mgis.addInfo("Warning: date for meteo law isn't correct.")
+                self.mgis.addInfo("Warning: date for meteo law aren't correct.")
                 return
             deb_time = difTime
             end_time = difTime+duree
@@ -214,15 +240,13 @@ class class_mascWQ():
         order = 'ORDER BY time,id_var'
         where = "WHERE id_config= '{}' ".format(meteo_trac['id'][0])
         if deb_time !=None and end_time !=None :
-            where ="AND time >= {} AND time < {} ".format(deb_time,end_time)
+            where +="AND time >= {} AND time < {} ".format(deb_time,end_time)
         else:
             deb_time=0
         sql = """SELECT DISTINCT id_var,time,value FROM {0}.{1} {2} {3}"""
         #
         meteo_val, col = self.mdb.run_query(sql.format(self.mdb.SCHEMA, 'laws_meteo', where, order),
                                           fetch=True, namvar=True)
-
-
 
         if meteo_val==[] or meteo_val ==None:
             self.mgis.addInfo("Warning: Please fill the meteo conditions for tracers")
@@ -238,32 +262,41 @@ class class_mascWQ():
         header += '\n'
         header += '         S\n'
         fich.write(header)
+
         t_pre = meteo_val[0][1]-deb_time
-        if t_pre<0:
-            #TODO a tester
+        if t_pre>0:
+
             order = 'ORDER BY time'
             sql = """SELECT DISTINCT time FROM {0}.{1} {2}"""
             #
             temps_list = self.mdb.run_query(sql.format(self.mdb.SCHEMA, 'laws_meteo',order),
                                             fetch=True)
+            time_inter=0
             for i,time in enumerate(temps_list):
-                if time >=deb_time:
-                    time_inter=temps_list[i-1]
+                if time[0] >=deb_time:
+                    time_inter=temps_list[i-1][0]
                     break
             where=  "WHERE id_config= '{}' AND time= '{}'".format(meteo_trac['id'][0],time_inter)
-            sql = """SELECT DISTINCT value FROM {0}.{1} {2} {3}"""
-            #
-            val= self.mdb.run_query(sql.format(self.mdb.SCHEMA, 'laws_meteo', where),
+            order = 'ORDER BY id_var'
+            sql = """SELECT DISTINCT  id_var,value FROM {0}.{1} {2} {3}"""
+
+            val= self.mdb.run_query(sql.format(self.mdb.SCHEMA, 'laws_meteo' , where,order),
                                             fetch=True)
-            val=val[0]
-            valf= (deb_time-time_inter)/(meteo_val[0][1]-time_inter) *(meteo_val[0][2]-val)+ val
-            meteo_val.insert(-1,deb_time,valf)
+            list_val=[]
+            for id, valu in val:
+                valf=interpole(deb_time,[time_inter,meteo_val[0][1]],[valu,meteo_val[0][2]])
+            # valf= (deb_time-time_inter)/(meteo_val[0][1]-time_inter) *(meteo_val[0][2]-valu)+ valu
+                list_val.append([id,deb_time,valf])
+            meteo_val=list_val+ meteo_val
+
+        t_pre = meteo_val[0][1] - deb_time
         ligne = '{} '.format(t_pre)
         for id, temps, val in meteo_val:
+            print(temps, t_pre)
             if t_pre != temps-deb_time:
                 fich.write(ligne + '\n')
                 t_pre = temps-deb_time
-                ligne = '{} {} '.format(t_pre-deb_time, val)
+                ligne = '{} {} '.format(t_pre, val)
             else:
                 ligne += '{} '.format(val)
         fich.write(ligne)

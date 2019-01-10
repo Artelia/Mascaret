@@ -33,9 +33,11 @@ except:  # qgis3
 
 from qgis.gui import QgsMessageBar
 
+
 import os
 from . import MasObject as maso
 from ..WaterQuality import table_WQ
+from ..ui.custom_control import Class_warningBox
 import subprocess
 
 
@@ -78,6 +80,7 @@ class MasDatabase(object):
         self.queries = {}
         self.uris = []
         self.refresh_uris()
+        self.box = Class_warningBox(self.mgis)
 
     def connect_pg(self):
         """
@@ -958,32 +961,29 @@ $BODY$
         except:
             return False
 
-    def importSchema(self, Listfile):
+
+    def importSchema(self, file):
         # """import schema"""
         try:
-            if self.check_extension():
-                self.mgis.addInfo(" Shema est {}".format(self.SCHEMA))
-                self.create_FirstModel()
-            else:
-                pass
             exe = os.path.join(self.mgis.postgres_path, 'psql')
             # exe = os.path.join(self.mgis.postgres_path, 'pg_restore')
             if os.path.isfile(exe) or os.path.isfile(exe + '.exe'):
                 # d = dict(os.environ)
                 # d["PGPASSWORD"] = "{0}".format(self.password)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
-                for file in Listfile:
-                    commande = '"{0}" -U {1} -p {2} -f "{3}" -d {4} -h {5}'.format(exe, self.user, self.port,
-                                                                                   file, self.dbname, self.host)
+                # for file in Listfile:
 
-                    # p = subprocess.Popen(commande, env=d, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                    #                      , stdin=subprocess.PIPE)
-                    p = subprocess.Popen(commande, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                                         , stdin=subprocess.PIPE)
-                    p.wait()
-                    if self.mgis.DEBUG:
-                        self.mgis.addInfo("Import File :{0}".format(file))
-                        self.mgis.addInfo("{0}".format(p.communicate()[0]))
+                commande = '"{0}" -U {1} -p {2} -f "{3}" -d {4} -h {5}'.format(exe, self.user, self.port,
+                                                                               file, self.dbname, self.host)
+
+                # p = subprocess.Popen(commande, env=d, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                #                      , stdin=subprocess.PIPE)
+                p = subprocess.Popen(commande, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                                     , stdin=subprocess.PIPE)
+                p.wait()
+                if self.mgis.DEBUG:
+                    self.mgis.addInfo("Import File :{0}".format(file))
+                    self.mgis.addInfo("{0}".format(p.communicate()[0]))
                 return True
             else:
                 self.mgis.addInfo('Executable file not found. '
@@ -991,3 +991,23 @@ $BODY$
                 return False
         except:
             return False
+
+    def list_schema(self):
+        sql="SELECT nspname from pg_catalog.pg_namespace;"
+        info=self.run_query(sql, fetch=True)
+        listf=[]
+        for row in info:
+            listf.append(row[0])
+        return listf
+
+    def checkschema_import(self,file):
+        namesh=None
+        with open(file, 'r') as infile:
+            for line in infile:
+                if line.find('CREATE SCHEMA')>-1:
+                    line=line.replace(';','').replace('\n','')
+                    liste=line.split()
+                    namesh=liste[2]
+                    break
+
+        return namesh

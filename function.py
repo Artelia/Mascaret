@@ -44,6 +44,10 @@ def distance(a, b):
 
 
 def interpole(a, l1, l2):
+    """ Interpolation
+        l1: list 1
+        l2: list 2
+        a interpol value"""
     i, x = min(enumerate(l1), key=lambda x: abs(x[1] - a))
 
     if i < len(l1) - 1 and a >= x:

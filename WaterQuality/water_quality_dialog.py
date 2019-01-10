@@ -168,7 +168,7 @@ class Water_quality_dialog(QDialog):
                         obj.setValue(info['val'])
                 elif isinstance(obj, QComboBox):
                     if param == 'optionConvection':
-                        val = info['val'] - 1
+                        val = info['val'] - 2
                     elif param == "modeleQualiteEau":
                         val = info['val'] - 1
                     elif param == 'optionCalculDiffusion':
@@ -470,6 +470,9 @@ class Water_quality_dialog(QDialog):
                                 val ='True'
                             else:
                                 val = 'False'
+                        elif param == 'optionConvection' :
+                            val=val+2
+
                         else:
                             val = val + 1
                 elif isinstance(obj, QLabel):

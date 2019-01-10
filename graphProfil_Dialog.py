@@ -86,6 +86,7 @@ from matplotlib import patches,colors
 from datetime import datetime,date
 import numpy as np
 import os
+from .function import isfloat,interpole
 from .WaterQuality.table_WQ import table_WQ
 
 
@@ -1592,7 +1593,7 @@ class GraphProfilRes(GraphCommon):
         #change the Figure in function of Time
         if text=='Hmax':
             self.posit =text
-        elif fct.isfloat(text):
+        elif isfloat(text):
             self.posit = float(text)
         else:
             self.posit = datetime.strptime(text, '%d/%m/%Y %H:%M:%S')
@@ -2377,7 +2378,7 @@ class GraphHydro(GraphCommon):
             couleurs = []
             taille = []
             for x, z in zip(X, Z):
-                val = fct.interpole(x, self.tab["pk"], self.tab["zmax"])
+                val = interpole(x, self.tab["pk"], self.tab["zmax"])
                 if val:
                     diff = z - val
                     if diff < 0:

@@ -1,0 +1,1937 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 9.6.3
+-- Dumped by pg_dump version 9.6.3
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: test_wq2; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA test_wq2;
+
+
+ALTER SCHEMA test_wq2 OWNER TO postgres;
+
+SET search_path = test_wq2, pg_catalog;
+
+--
+-- Name: create_spatial_index(text, text); Type: FUNCTION; Schema: test_wq2; Owner: postgres
+--
+
+CREATE FUNCTION create_spatial_index(schema text, t_name text) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    full_index_name text;
+BEGIN
+    full_index_name = schema || '_' || t_name || '_' || 'geom_idx';
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE c.relname = full_index_name AND n.nspname = schema
+        )
+    THEN
+        EXECUTE 'CREATE INDEX "' || full_index_name || '" ON "' || schema || '"."' || t_name || '" USING GIST (geom)';
+    END IF;
+END;
+$$;
+
+
+ALTER FUNCTION test_wq2.create_spatial_index(schema text, t_name text) OWNER TO postgres;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: branchs; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE branchs (
+    geom public.geometry(MultiLineString,4326),
+    gid integer NOT NULL,
+    branch integer,
+    startb character varying(30),
+    endb character varying(30),
+    zonenum integer,
+    zoneabsstart double precision,
+    zoneabsend double precision,
+    minbedcoef double precision,
+    majbedcoef double precision,
+    mesh double precision,
+    planim double precision,
+    active boolean
+);
+
+
+ALTER TABLE branchs OWNER TO postgres;
+
+--
+-- Name: branchs_gid_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE branchs_gid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE branchs_gid_seq OWNER TO postgres;
+
+--
+-- Name: branchs_gid_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE branchs_gid_seq OWNED BY branchs.gid;
+
+
+--
+-- Name: extremities; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE extremities (
+    geom public.geometry(Point,4326),
+    gid integer NOT NULL,
+    name character varying(30),
+    type integer,
+    method text,
+    firstvalue double precision,
+    abscissa text,
+    ordinates text,
+    angles text,
+    active boolean,
+    tracer_boundary_condition_type integer,
+    law_wq text
+);
+
+
+ALTER TABLE extremities OWNER TO postgres;
+
+--
+-- Name: extremities_gid_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE extremities_gid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE extremities_gid_seq OWNER TO postgres;
+
+--
+-- Name: extremities_gid_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE extremities_gid_seq OWNED BY extremities.gid;
+
+
+--
+-- Name: flood_marks; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE flood_marks (
+    geom public.geometry(Point,4326),
+    gid integer NOT NULL,
+    name character varying(30),
+    event character varying(30),
+    branchnum integer,
+    date date,
+    abscissa double precision,
+    z double precision,
+    validate integer,
+    comment text,
+    weir double precision,
+    adress text,
+    township character varying(30)
+);
+
+
+ALTER TABLE flood_marks OWNER TO postgres;
+
+--
+-- Name: flood_marks_gid_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE flood_marks_gid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE flood_marks_gid_seq OWNER TO postgres;
+
+--
+-- Name: flood_marks_gid_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE flood_marks_gid_seq OWNED BY flood_marks.gid;
+
+
+--
+-- Name: hydraulic_head; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE hydraulic_head (
+    geom public.geometry(Point,4326),
+    gid integer NOT NULL,
+    name character varying(30),
+    branchnum integer,
+    abscissa double precision,
+    coeff double precision,
+    active boolean
+);
+
+
+ALTER TABLE hydraulic_head OWNER TO postgres;
+
+--
+-- Name: hydraulic_head_gid_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE hydraulic_head_gid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hydraulic_head_gid_seq OWNER TO postgres;
+
+--
+-- Name: hydraulic_head_gid_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE hydraulic_head_gid_seq OWNED BY hydraulic_head.gid;
+
+
+--
+-- Name: init_conc_config; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE init_conc_config (
+    id integer NOT NULL,
+    name character varying(30),
+    type integer
+);
+
+
+ALTER TABLE init_conc_config OWNER TO postgres;
+
+--
+-- Name: init_conc_config_id_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE init_conc_config_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE init_conc_config_id_seq OWNER TO postgres;
+
+--
+-- Name: init_conc_config_id_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE init_conc_config_id_seq OWNED BY init_conc_config.id;
+
+
+--
+-- Name: init_conc_wq; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE init_conc_wq (
+    id_config integer NOT NULL,
+    id_trac integer NOT NULL,
+    bief integer NOT NULL,
+    abscissa double precision NOT NULL,
+    value double precision
+);
+
+
+ALTER TABLE init_conc_wq OWNER TO postgres;
+
+--
+-- Name: lateral_inflows; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE lateral_inflows (
+    geom public.geometry(Point,4326),
+    gid integer NOT NULL,
+    name character varying(30),
+    branchnum integer,
+    abscissa double precision,
+    length double precision,
+    firstvalue double precision,
+    method text,
+    active boolean
+);
+
+
+ALTER TABLE lateral_inflows OWNER TO postgres;
+
+--
+-- Name: lateral_inflows_gid_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE lateral_inflows_gid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE lateral_inflows_gid_seq OWNER TO postgres;
+
+--
+-- Name: lateral_inflows_gid_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE lateral_inflows_gid_seq OWNED BY lateral_inflows.gid;
+
+
+--
+-- Name: lateral_weirs; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE lateral_weirs (
+    geom public.geometry(Point,4326),
+    gid integer NOT NULL,
+    name character varying(30),
+    type integer,
+    branchnum integer,
+    abscissa double precision,
+    length double precision,
+    z_crest double precision,
+    flowratecoef double precision,
+    active boolean
+);
+
+
+ALTER TABLE lateral_weirs OWNER TO postgres;
+
+--
+-- Name: lateral_weirs_gid_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE lateral_weirs_gid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE lateral_weirs_gid_seq OWNER TO postgres;
+
+--
+-- Name: lateral_weirs_gid_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE lateral_weirs_gid_seq OWNED BY lateral_weirs.gid;
+
+
+--
+-- Name: laws; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE laws (
+    id integer NOT NULL,
+    name character varying(30),
+    starttime timestamp without time zone,
+    endtime timestamp without time zone,
+    z text,
+    type integer,
+    flowrate text,
+    "time" text,
+    z_upstream text,
+    z_downstream text,
+    z_lower text,
+    z_up text
+);
+
+
+ALTER TABLE laws OWNER TO postgres;
+
+--
+-- Name: laws_id_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE laws_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE laws_id_seq OWNER TO postgres;
+
+--
+-- Name: laws_id_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE laws_id_seq OWNED BY laws.id;
+
+
+--
+-- Name: laws_wq; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE laws_wq (
+    id_config integer NOT NULL,
+    id_trac integer NOT NULL,
+    "time" double precision NOT NULL,
+    value double precision
+);
+
+
+ALTER TABLE laws_wq OWNER TO postgres;
+
+--
+-- Name: observations; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE observations (
+    id integer NOT NULL,
+    code character(10),
+    type character(1),
+    comment character varying(50),
+    valeur double precision,
+    date timestamp without time zone
+);
+
+
+ALTER TABLE observations OWNER TO postgres;
+
+--
+-- Name: observations_id_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE observations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE observations_id_seq OWNER TO postgres;
+
+--
+-- Name: observations_id_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE observations_id_seq OWNED BY observations.id;
+
+
+--
+-- Name: outputs; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE outputs (
+    geom public.geometry(Point,4326),
+    gid integer NOT NULL,
+    name character varying(30),
+    code character varying(30),
+    zero double precision,
+    branchnum integer,
+    abscissa double precision
+);
+
+
+ALTER TABLE outputs OWNER TO postgres;
+
+--
+-- Name: outputs_gid_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE outputs_gid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE outputs_gid_seq OWNER TO postgres;
+
+--
+-- Name: outputs_gid_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE outputs_gid_seq OWNED BY outputs.gid;
+
+
+--
+-- Name: parametres; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE parametres (
+    id integer NOT NULL,
+    parametre text,
+    steady text,
+    unsteady text,
+    transcritical text,
+    libelle text,
+    balise1 text,
+    balise2 text,
+    gui text,
+    gui_type text
+);
+
+
+ALTER TABLE parametres OWNER TO postgres;
+
+--
+-- Name: parametres_id_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE parametres_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE parametres_id_seq OWNER TO postgres;
+
+--
+-- Name: parametres_id_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE parametres_id_seq OWNED BY parametres.id;
+
+
+--
+-- Name: profiles; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE profiles (
+    geom public.geometry(MultiLineString,4326),
+    gid integer NOT NULL,
+    name character varying(30),
+    branchnum integer,
+    abscissa double precision,
+    x text,
+    z text,
+    leftminbed double precision,
+    rightminbed double precision,
+    leftstock double precision,
+    rightstock double precision,
+    xmnt text,
+    zmnt text,
+    active boolean
+);
+
+
+ALTER TABLE profiles OWNER TO postgres;
+
+--
+-- Name: profiles_gid_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE profiles_gid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE profiles_gid_seq OWNER TO postgres;
+
+--
+-- Name: profiles_gid_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE profiles_gid_seq OWNED BY profiles.gid;
+
+
+--
+-- Name: resultats; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE resultats (
+    id integer NOT NULL,
+    run character varying(30),
+    scenario character varying(30),
+    date timestamp without time zone,
+    t double precision,
+    branche integer,
+    section integer,
+    pk double precision,
+    zref double precision,
+    z double precision,
+    qmin double precision,
+    qmaj double precision,
+    kmin double precision,
+    kmaj double precision,
+    fr double precision,
+    y double precision,
+    zmax double precision,
+    qmax double precision,
+    q double precision
+);
+
+
+ALTER TABLE resultats OWNER TO postgres;
+
+--
+-- Name: resultats_id_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE resultats_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE resultats_id_seq OWNER TO postgres;
+
+--
+-- Name: resultats_id_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE resultats_id_seq OWNED BY resultats.id;
+
+
+--
+-- Name: runs; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE runs (
+    id integer NOT NULL,
+    run character varying(30),
+    scenario character varying(30),
+    date timestamp without time zone,
+    t text,
+    pk text,
+    comments text
+);
+
+
+ALTER TABLE runs OWNER TO postgres;
+
+--
+-- Name: runs_id_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE runs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE runs_id_seq OWNER TO postgres;
+
+--
+-- Name: runs_id_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE runs_id_seq OWNED BY runs.id;
+
+
+--
+-- Name: scenarios; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE scenarios (
+    name character varying(30) NOT NULL,
+    starttime timestamp without time zone,
+    endtime timestamp without time zone,
+    run boolean
+);
+
+
+ALTER TABLE scenarios OWNER TO postgres;
+
+--
+-- Name: topo; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE topo (
+    geom public.geometry(Point,4326),
+    gid integer NOT NULL,
+    name character varying(30),
+    profile character varying(30),
+    order_ integer,
+    x double precision,
+    z double precision
+);
+
+
+ALTER TABLE topo OWNER TO postgres;
+
+--
+-- Name: topo_gid_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE topo_gid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE topo_gid_seq OWNER TO postgres;
+
+--
+-- Name: topo_gid_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE topo_gid_seq OWNED BY topo.gid;
+
+
+--
+-- Name: tracer_config; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE tracer_config (
+    id integer NOT NULL,
+    name character varying(30),
+    type integer
+);
+
+
+ALTER TABLE tracer_config OWNER TO postgres;
+
+--
+-- Name: tracer_config_id_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE tracer_config_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE tracer_config_id_seq OWNER TO postgres;
+
+--
+-- Name: tracer_config_id_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE tracer_config_id_seq OWNED BY tracer_config.id;
+
+
+--
+-- Name: tracer_lateral_inflows; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE tracer_lateral_inflows (
+    geom public.geometry(Point,2154),
+    gid integer NOT NULL,
+    name character varying(30),
+    branchnum integer,
+    abscissa double precision,
+    length double precision,
+    law_wq text,
+    typesources integer,
+    active boolean
+);
+
+
+ALTER TABLE tracer_lateral_inflows OWNER TO postgres;
+
+--
+-- Name: tracer_lateral_inflows_gid_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE tracer_lateral_inflows_gid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE tracer_lateral_inflows_gid_seq OWNER TO postgres;
+
+--
+-- Name: tracer_lateral_inflows_gid_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE tracer_lateral_inflows_gid_seq OWNED BY tracer_lateral_inflows.gid;
+
+
+--
+-- Name: tracer_name; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE tracer_name (
+    id integer NOT NULL,
+    type text,
+    sigle text,
+    text text,
+    textfr text,
+    convec boolean,
+    diffu boolean
+);
+
+
+ALTER TABLE tracer_name OWNER TO postgres;
+
+--
+-- Name: tracer_name_id_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE tracer_name_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE tracer_name_id_seq OWNER TO postgres;
+
+--
+-- Name: tracer_name_id_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE tracer_name_id_seq OWNED BY tracer_name.id;
+
+
+--
+-- Name: tracer_physic; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE tracer_physic (
+    id integer NOT NULL,
+    type text,
+    sigle text,
+    value text,
+    text text,
+    textfr text
+);
+
+
+ALTER TABLE tracer_physic OWNER TO postgres;
+
+--
+-- Name: tracer_physic_id_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE tracer_physic_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE tracer_physic_id_seq OWNER TO postgres;
+
+--
+-- Name: tracer_physic_id_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE tracer_physic_id_seq OWNED BY tracer_physic.id;
+
+
+--
+-- Name: weirs; Type: TABLE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TABLE weirs (
+    geom public.geometry(Point,4326),
+    gid integer NOT NULL,
+    name character varying(30),
+    type integer,
+    branchnum integer,
+    abscissa double precision,
+    z_crest double precision,
+    z_average_crest double precision,
+    z_break double precision DEFAULT 10000,
+    flowratecoeff double precision,
+    thickness integer,
+    wide_floodgate double precision,
+    lawfile text,
+    active boolean
+);
+
+
+ALTER TABLE weirs OWNER TO postgres;
+
+--
+-- Name: weirs_gid_seq; Type: SEQUENCE; Schema: test_wq2; Owner: postgres
+--
+
+CREATE SEQUENCE weirs_gid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE weirs_gid_seq OWNER TO postgres;
+
+--
+-- Name: weirs_gid_seq; Type: SEQUENCE OWNED BY; Schema: test_wq2; Owner: postgres
+--
+
+ALTER SEQUENCE weirs_gid_seq OWNED BY weirs.gid;
+
+
+--
+-- Name: branchs gid; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY branchs ALTER COLUMN gid SET DEFAULT nextval('branchs_gid_seq'::regclass);
+
+
+--
+-- Name: extremities gid; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY extremities ALTER COLUMN gid SET DEFAULT nextval('extremities_gid_seq'::regclass);
+
+
+--
+-- Name: flood_marks gid; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY flood_marks ALTER COLUMN gid SET DEFAULT nextval('flood_marks_gid_seq'::regclass);
+
+
+--
+-- Name: hydraulic_head gid; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY hydraulic_head ALTER COLUMN gid SET DEFAULT nextval('hydraulic_head_gid_seq'::regclass);
+
+
+--
+-- Name: init_conc_config id; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY init_conc_config ALTER COLUMN id SET DEFAULT nextval('init_conc_config_id_seq'::regclass);
+
+
+--
+-- Name: lateral_inflows gid; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY lateral_inflows ALTER COLUMN gid SET DEFAULT nextval('lateral_inflows_gid_seq'::regclass);
+
+
+--
+-- Name: lateral_weirs gid; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY lateral_weirs ALTER COLUMN gid SET DEFAULT nextval('lateral_weirs_gid_seq'::regclass);
+
+
+--
+-- Name: laws id; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY laws ALTER COLUMN id SET DEFAULT nextval('laws_id_seq'::regclass);
+
+
+--
+-- Name: observations id; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY observations ALTER COLUMN id SET DEFAULT nextval('observations_id_seq'::regclass);
+
+
+--
+-- Name: outputs gid; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY outputs ALTER COLUMN gid SET DEFAULT nextval('outputs_gid_seq'::regclass);
+
+
+--
+-- Name: parametres id; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY parametres ALTER COLUMN id SET DEFAULT nextval('parametres_id_seq'::regclass);
+
+
+--
+-- Name: profiles gid; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY profiles ALTER COLUMN gid SET DEFAULT nextval('profiles_gid_seq'::regclass);
+
+
+--
+-- Name: resultats id; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY resultats ALTER COLUMN id SET DEFAULT nextval('resultats_id_seq'::regclass);
+
+
+--
+-- Name: runs id; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY runs ALTER COLUMN id SET DEFAULT nextval('runs_id_seq'::regclass);
+
+
+--
+-- Name: topo gid; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY topo ALTER COLUMN gid SET DEFAULT nextval('topo_gid_seq'::regclass);
+
+
+--
+-- Name: tracer_config id; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY tracer_config ALTER COLUMN id SET DEFAULT nextval('tracer_config_id_seq'::regclass);
+
+
+--
+-- Name: tracer_lateral_inflows gid; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY tracer_lateral_inflows ALTER COLUMN gid SET DEFAULT nextval('tracer_lateral_inflows_gid_seq'::regclass);
+
+
+--
+-- Name: tracer_name id; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY tracer_name ALTER COLUMN id SET DEFAULT nextval('tracer_name_id_seq'::regclass);
+
+
+--
+-- Name: tracer_physic id; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY tracer_physic ALTER COLUMN id SET DEFAULT nextval('tracer_physic_id_seq'::regclass);
+
+
+--
+-- Name: weirs gid; Type: DEFAULT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY weirs ALTER COLUMN gid SET DEFAULT nextval('weirs_gid_seq'::regclass);
+
+
+--
+-- Data for Name: branchs; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY branchs (geom, gid, branch, startb, endb, zonenum, zoneabsstart, zoneabsend, minbedcoef, majbedcoef, mesh, planim, active) FROM stdin;
+0105000020E6100000010000000102000000020000000B4667C2DB5F2DC0A4E78C89E987F43F2F108FC4DB5F2DC01FD6A780E987F43F	1	1	inlet	oultet	1	0	0	35	35	35	1	t
+\.
+
+
+--
+-- Name: branchs_gid_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('branchs_gid_seq', 1, true);
+
+
+--
+-- Data for Name: extremities; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY extremities (geom, gid, name, type, method, firstvalue, abscissa, ordinates, angles, active, tracer_boundary_condition_type, law_wq) FROM stdin;
+0101000020E610000065446CC2DB5F2DC064FB5089E987F43F	1	inlet	1	\N	\N	\N	\N	\N	t	2	test1
+0101000020E61000005C8F91C4DB5F2DC01FD6A780E987F43F	2	outlet	2	\N	\N	\N	\N	\N	t	1	test
+\.
+
+
+--
+-- Name: extremities_gid_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('extremities_gid_seq', 2, true);
+
+
+--
+-- Data for Name: flood_marks; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY flood_marks (geom, gid, name, event, branchnum, date, abscissa, z, validate, comment, weir, adress, township) FROM stdin;
+\.
+
+
+--
+-- Name: flood_marks_gid_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('flood_marks_gid_seq', 1, false);
+
+
+--
+-- Data for Name: hydraulic_head; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY hydraulic_head (geom, gid, name, branchnum, abscissa, coeff, active) FROM stdin;
+\.
+
+
+--
+-- Name: hydraulic_head_gid_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hydraulic_head_gid_seq', 1, false);
+
+
+--
+-- Data for Name: init_conc_config; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY init_conc_config (id, name, type) FROM stdin;
+1	Test	6
+\.
+
+
+--
+-- Name: init_conc_config_id_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('init_conc_config_id_seq', 1, true);
+
+
+--
+-- Data for Name: init_conc_wq; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY init_conc_wq (id_config, id_trac, bief, abscissa, value) FROM stdin;
+1	17	1	0	10
+1	17	1	2	20
+1	17	1	3	20
+\.
+
+
+--
+-- Data for Name: lateral_inflows; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY lateral_inflows (geom, gid, name, branchnum, abscissa, length, firstvalue, method, active) FROM stdin;
+\.
+
+
+--
+-- Name: lateral_inflows_gid_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('lateral_inflows_gid_seq', 1, false);
+
+
+--
+-- Data for Name: lateral_weirs; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY lateral_weirs (geom, gid, name, type, branchnum, abscissa, length, z_crest, flowratecoef, active) FROM stdin;
+\.
+
+
+--
+-- Name: lateral_weirs_gid_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('lateral_weirs_gid_seq', 1, false);
+
+
+--
+-- Data for Name: laws; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY laws (id, name, starttime, endtime, z, type, flowrate, "time", z_upstream, z_downstream, z_lower, z_up) FROM stdin;
+\.
+
+
+--
+-- Name: laws_id_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('laws_id_seq', 1, false);
+
+
+--
+-- Data for Name: laws_wq; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY laws_wq (id_config, id_trac, "time", value) FROM stdin;
+\.
+
+
+--
+-- Data for Name: observations; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY observations (id, code, type, comment, valeur, date) FROM stdin;
+\.
+
+
+--
+-- Name: observations_id_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('observations_id_seq', 1, false);
+
+
+--
+-- Data for Name: outputs; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY outputs (geom, gid, name, code, zero, branchnum, abscissa) FROM stdin;
+\.
+
+
+--
+-- Name: outputs_gid_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('outputs_gid_seq', 1, false);
+
+
+--
+-- Data for Name: parametres; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY parametres (id, parametre, steady, unsteady, transcritical, libelle, balise1, balise2, gui, gui_type) FROM stdin;
+1	versionCode	3	3	3		parametresGeneraux		False	paramaters
+2	code	1	2	3		parametresGeneraux		False	paramaters
+3	fichMotsCles	mascaret.xcas	mascaret.xcas	mascaret.xcas		parametresGeneraux		False	paramaters
+4	dictionaire	dico.txt	dico.txt	dico.txt		parametresGeneraux		False	paramaters
+5	progPrincipal	princi.f	princi.f	princi.f		parametresGeneraux		False	paramaters
+6	sauveModele	FALSE	FALSE	FALSE		parametresGeneraux		False	paramaters
+7	fichSauvModele	mascaret.tmp	mascaret.tmp	mascaret.tmp		parametresGeneraux		False	paramaters
+8	validationCode	FALSE	FALSE	FALSE		parametresGeneraux		False	paramaters
+9	typeValidation	1	1	1		parametresGeneraux		False	paramaters
+10	presenceCasiers	FALSE	FALSE	FALSE	Presence of storage area	parametresGeneraux		False	paramaters
+11	bibliotheque	mascaretV5P1.a damoV3P0.a	mascaretV5P1.a damoV3P0.a	mascaretV5P1.a damoV3P0.a		parametresGeneraux	bibliotheques	False	paramaters
+12	perteChargeConf	FALSE	FALSE	FALSE	Automatic head losses at junctions	parametresModelePhysique		True	paramaters
+13	compositionLits	1	1	1	Cross section layout	parametresModelePhysique		True	paramaters
+14	conservFrotVertical	TRUE	TRUE	TRUE	Conservation of friction on vertical walls	parametresModelePhysique		True	paramaters
+15	elevCoteArrivFront	0.05	0.05	0.05	Level threshold identifying the wave	parametresModelePhysique		True	paramaters
+16	interpolLinStrickler	FALSE	FALSE	FALSE	Linear interpolation of friction coefficients	parametresModelePhysique		True	paramaters
+17	litMajeur	TRUE	TRUE	TRUE	Progressive overflow type  of major river bed	parametresModelePhysique	debordement	True	paramaters
+18	zoneStock	TRUE	TRUE	TRUE	Progressive overflow type  of storage area	parametresModelePhysique	debordement	True	paramaters
+19	calcOndeSubmersion	FALSE	FALSE	FALSE	Computation of a dam break flood wave	parametresNumeriques		True	paramaters
+20	froudeLimCondLim	1000	1000	1000	Limit Froude number for boundary conditions	parametresNumeriques		True	paramaters
+21	traitImplicitFrot	FALSE	FALSE	FALSE	Impliciation of friction	parametresNumeriques		True	paramaters
+22	hauteurEauMini	0.005	0.005	0.005	Minimum water level	parametresNumeriques		False	paramaters
+23	implicitNoyauTrans	FALSE	FALSE	FALSE	Implicitation of the super-critical kernel	parametresNumeriques		True	paramaters
+24	optimisNoyauTrans	FALSE	FALSE	FALSE	Optimization of the super-critical kernel	parametresNumeriques		True	paramaters
+25	perteChargeAutoElargissement	FALSE	FALSE	FALSE	Automatic head loss in case of enlargement	parametresNumeriques		True	paramaters
+26	termesNonHydrostatiques	FALSE	FALSE	FALSE	Non-hydrostsatic terms for super-critical kernel	parametresNumeriques		True	paramaters
+27	apportDebit	0	0	0		parametresNumeriques		False	paramaters
+28	attenuationConvection	FALSE	FALSE	FALSE	Reduced momentum equation	parametresNumeriques		True	paramaters
+29	pasTemps	60	60	60	Time step	parametresTemporels		True	paramaters
+30	tempsInit	0	0	0	Initial time	parametresTemporels		True	paramaters
+31	critereArret	2	1	1	Criteria for stopping calculations	parametresTemporels		True	paramaters
+32	nbPasTemps	2	2	2	Max number of time steps	parametresTemporels		True	paramaters
+33	tempsMax	1897200	1897200	1897200	Max time	parametresTemporels		True	paramaters
+34	pasTempsVar	FALSE	FALSE	FALSE	Variable time step depending on the Courant number	parametresTemporels		True	paramaters
+35	nbCourant	0.8	0.8	0.8	Courant number	parametresTemporels		True	paramaters
+36	coteMax	0	0	0	Max control water level	parametresTemporels		True	paramaters
+37	abscisseControle	0	0	0	Control point abscissa	parametresTemporels		True	paramaters
+38	biefControle	1	1	1	Control point  reach	parametresTemporels		True	paramaters
+39	fichier	mascaret.geo	mascaret.geo	mascaret.geo		parametresGeometrieReseau	geometrie	False	paramaters
+40	format	2	2	2		parametresGeometrieReseau	geometrie	False	paramaters
+41	profilsAbscAbsolu	TRUE	TRUE	TRUE	Cross section in absolute abscissa	parametresGeometrieReseau	geometrie	False	paramaters
+42	repriseCalcul	FALSE	FALSE	FALSE	Restart the computation	parametresConditionsInitiales	repriseEtude	True	paramaters
+43	LigEauInit	FALSE	TRUE	TRUE	Presence of an initial water level	parametresConditionsInitiales	ligneEau	True	paramaters
+44	modeEntree	1	1	1		parametresConditionsInitiales	ligneEau	False	paramaters
+45	fichLigEau	mascaret.lig	mascaret.lig	mascaret.lig	File name of  water level	parametresConditionsInitiales	ligneEau	False	paramaters
+46	formatFichLig	2	2	2	File format of  water level	parametresConditionsInitiales	ligneEau	False	paramaters
+47	titreCalcul	Etude hydraulique1d	Etude hydraulique1d	Etude hydraulique1d		parametresImpressionResultats		False	paramaters
+48	impressionGeometrie	FALSE	FALSE	FALSE	Geometry	parametresImpressionResultats	impression	True	paramaters
+49	impressionPlanimetrage	FALSE	FALSE	FALSE	Vertical discretization of the Cross section	parametresImpressionResultats	impression	True	paramaters
+50	impressionReseau	FALSE	FALSE	FALSE	Network	parametresImpressionResultats	impression	True	paramaters
+51	impressionLoiHydraulique	FALSE	FALSE	FALSE	Hydraulic laws used	parametresImpressionResultats	impression	True	paramaters
+52	impressionligneEauInitiale	FALSE	FALSE	FALSE	Initial water level	parametresImpressionResultats	impression	True	paramaters
+53	impressionCalcul	TRUE	TRUE	TRUE	Write the listing along with computation progress	parametresImpressionResultats	impression	True	paramaters
+54	premPasTpsStock	1	1	1	Number of the first time step	parametresImpressionResultats	pasStockage	True	paramaters
+55	pasStock	1	60	60	Write data all N time steps	parametresImpressionResultats	pasStockage	True	paramaters
+56	pasImpression	1	60	60	Write to the listing file all data all N time steps	parametresImpressionResultats	pasStockage	True	paramaters
+57	fichResultat	mascaret.opt	mascaret.opt	mascaret.opt		parametresImpressionResultats	resultats	False	paramaters
+58	postProcesseur	2	2	2	Postprocesseur	parametresImpressionResultats	resultats	False	paramaters
+59	fichListing	mascaret.lis	mascaret.lis	mascaret.lis		parametresImpressionResultats	listing	False	paramaters
+60	fichRepriseEcr	mascaret.rep	mascaret.rep	mascaret.rep		parametresImpressionResultats	fichReprise	False	paramaters
+61	ecartInterBranch	1	1	1	Distance between reaches (m)	parametresImpressionResultats	rubens	True	paramaters
+62	option	1	1	1	Recorded Variables	parametresImpressionResultats	stockage	True	paramaters
+63	variablesCalculees	false false false false false false false false false false false false false false false	false false false false false false false false false false false false false false false	false false false false false false false false false false false false false false false		parametresVariablesCalculees		False	paramaters
+64	variablesStockees	false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false	false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false	false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false	Write the results	parametresVariablesStockees		False	paramaters
+65	initialisationAuto	FALSE	TRUE	TRUE	Initialisation with a steady run			True	paramaters
+66	evenement	TRUE	TRUE	TRUE	Mode			True	paramaters
+76	coeffDiffusion1	0	0	0		parametresTraceur	parametresConvectionDiffusion	False	tracers
+79	fichParamPhysiqueTracer	mascaret.phy	mascaret.phy	mascaret.phy		parametresTraceur	parametresNumeriquesQualiteEau	False	tracers
+80	fichMeteoTracer	mascaret.met	mascaret.met	mascaret.met		parametresTraceur	parametresNumeriquesQualiteEau	False	tracers
+82	fichListTracer	mascaret.tra_lis	mascaret.tra_lis	mascaret.tra_lis		parametresTraceur	parametresImpressionTraceur	False	tracers
+87	fichResultTracer	mascaret.tra_opt	mascaret.tra_opt	mascaret.tra_opt		parametresTraceur	parametresImpressionTraceur	False	tracers
+88	formatFichResultat	2	2	2		parametresTraceur	parametresImpressionTraceur	False	tracers
+89	typeCondLimTracer	1 2	1 2	1 2		parametresTraceur	parametresConditionsLimitesTraceur	False	tracers
+90	numLoiCondLimTracer	1 1	1 1	1 1		parametresTraceur	parametresConditionsLimitesTraceur	False	tracers
+92	modeEntree	1	1	1		parametresTraceur	parametresConcentrationsInitialesTraceur	False	tracers
+93	fichConcInit	mascaret.conc	mascaret.conc	mascaret.conc		parametresTraceur	parametresConcentrationsInitialesTraceur	False	tracers
+94	nbPts	0	0	0		parametresTraceur	parametresConcentrationsInitialesTraceur	False	tracers
+95	fichmeteo	FALSE	FALSE	FALSE				False	tracers
+84	loiTracer	True	True	True	Tracer law used	parametresTraceur	parametresImpressionTraceur	True	tracers
+73	LimitPente	2	2	2	Slope limiter	parametresTraceur	parametresConvectionDiffusion	True	tracers
+78	modeleQualiteEau	6	6	6	Water quality module	parametresTraceur	parametresNumeriquesQualiteEau	True	tracers
+81	frequenceCouplHydroTracer	2	2	2	Frequency for coupling 	parametresTraceur	parametresNumeriquesQualiteEau	True	tracers
+67	presenceTraceurs	True	True	True	Activation of the water quality module	parametresTraceur		True	tracers
+85	concentrations	True	True	True	Concentrations	parametresTraceur	parametresImpressionTraceur	True	tracers
+83	concentInit	True	True	True	Initial Concentration	parametresTraceur	parametresImpressionTraceur	True	tracers
+72	paramW	7.0	7.0	7.0	Parameter W	parametresTraceur	parametresConvectionDiffusion	True	tracers
+71	ordreSchemaConvec	2	2	2	Scheme order	parametresTraceur	parametresConvectionDiffusion	True	tracers
+75	optionCalculDiffusion	6	6	6	Diffusion method	parametresTraceur	parametresConvectionDiffusion	True	tracers
+91	presenceConcInit	True	True	True	Presence of initial conditions	parametresTraceur	parametresConcentrationsInitialesTraceur	True	tracers
+86	bilanTracer	True	True	True	Constituants balance	parametresTraceur	parametresImpressionTraceur	True	tracers
+77	coeffDiffusion2	0.0	0.0	0.0		parametresTraceur	parametresConvectionDiffusion	True	tracers
+70	optionConvection	3	3	3	Convection method	parametresTraceur	parametresConvectionDiffusion	True	tracers
+69	convectionTraceurs	true 	true 	true 		parametresTraceur	parametresConvectionDiffusion	False	tracers
+74	diffusionTraceurs	true 	true 	true 		parametresTraceur	parametresConvectionDiffusion	False	tracers
+68	nbTraceur	1	1	1	Number of constituents	parametresTraceur		True	tracers
+\.
+
+
+--
+-- Name: parametres_id_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('parametres_id_seq', 1, false);
+
+
+--
+-- Data for Name: profiles; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY profiles (geom, gid, name, branchnum, abscissa, x, z, leftminbed, rightminbed, leftstock, rightstock, xmnt, zmnt, active) FROM stdin;
+\.
+
+
+--
+-- Name: profiles_gid_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('profiles_gid_seq', 1, false);
+
+
+--
+-- Data for Name: resultats; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY resultats (id, run, scenario, date, t, branche, section, pk, zref, z, qmin, qmaj, kmin, kmaj, fr, y, zmax, qmax, q) FROM stdin;
+\.
+
+
+--
+-- Name: resultats_id_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('resultats_id_seq', 1, false);
+
+
+--
+-- Data for Name: runs; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY runs (id, run, scenario, date, t, pk, comments) FROM stdin;
+\.
+
+
+--
+-- Name: runs_id_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('runs_id_seq', 1, false);
+
+
+--
+-- Data for Name: scenarios; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY scenarios (name, starttime, endtime, run) FROM stdin;
+\.
+
+
+--
+-- Data for Name: topo; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY topo (geom, gid, name, profile, order_, x, z) FROM stdin;
+\.
+
+
+--
+-- Name: topo_gid_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('topo_gid_seq', 1, false);
+
+
+--
+-- Data for Name: tracer_config; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY tracer_config (id, name, type) FROM stdin;
+\.
+
+
+--
+-- Name: tracer_config_id_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('tracer_config_id_seq', 1, false);
+
+
+--
+-- Data for Name: tracer_lateral_inflows; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY tracer_lateral_inflows (geom, gid, name, branchnum, abscissa, length, law_wq, typesources, active) FROM stdin;
+\.
+
+
+--
+-- Name: tracer_lateral_inflows_gid_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('tracer_lateral_inflows_gid_seq', 1, false);
+
+
+--
+-- Data for Name: tracer_name; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY tracer_name (id, type, sigle, text, textfr, convec, diffu) FROM stdin;
+1	O2	O2	Dissolved oxygen	Oxygène dissous	t	t
+2	O2	LOR	Organic load	Charge organique	t	t
+3	O2	NH4	Ammonia load	Charge ammoniacale	t	t
+4	BIOMASS	PHY	Phytoplankton biomass	Biomasse phytoplanctonique	t	t
+5	BIOMASS	PO4	Assimilable mineral phosphorus	Phosphore minéral assimilable	t	t
+6	BIOMASS	POR	Non-assimilable mineral phosphorus	Phosphore minéral non assimilable	t	t
+7	BIOMASS	NO3	Assimilable mineral nitrogen	Azote minéral assimilable	t	t
+8	BIOMASS	NOR	Non-assimilable mineral nitrogen	Azote minéral non assimilable	t	t
+9	EUTRO	PHY	Phytoplankton biomass	Biomasse phytoplanctonique	t	t
+10	EUTRO	PO4	Assimilable mineral phosphorus	Phosphore minéral assimilable	t	t
+11	EUTRO	POR	Non-assimilable mineral phosphorus	Phosphore minéral non assimilable	t	t
+12	EUTRO	NO3	Assimilable mineral nitrogen	Azote minéral assimilable	t	t
+13	EUTRO	NOR	Non-assimilable mineral nitrogen	Azote minéral non assimilable	t	t
+14	EUTRO	NH4	Ammonia load	Charge ammoniacale	t	t
+15	EUTRO	LOR	Organic load	Charge organique	t	t
+16	EUTRO	O2	Dissolved oxygen	Oxygène dissous	t	t
+18	MICROPOLE	MES	Suspended material	Matière en suspension	t	t
+19	MICROPOLE	SED	Sediments	Sédiments	t	t
+20	MICROPOLE	C_EAU	Concentration in water	Concentration dans l'eau	t	t
+21	MICROPOLE	C_MES	Concentration in suspended material	Concentration dans les MES	t	t
+22	MICROPOLE	C_SED	Concentration in sediments	Concentration dans les sédiments	t	t
+23	TRANSPORT_PUR	TRA1	Tracer 1	Traceur 1	t	t
+17	THERMIC	TEAU	Water temperature	Température de l'eau	t	t
+\.
+
+
+--
+-- Name: tracer_name_id_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('tracer_name_id_seq', 1, false);
+
+
+--
+-- Data for Name: tracer_physic; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY tracer_physic (id, type, sigle, value, text, textfr) FROM stdin;
+1	O2	K1	0.25	KINETIC CONST. FOR ORGANIC LOAD DEPLETION  K1 (DAY-1)	CONST. DE CINET. DE DEGRADATION DE LA CHARGE ORGANIQUE K1 (J-1)
+2	O2	K4	0.35	KINETIC CONST. FOR NITRIFICATION K4 (DAY-1)	CONST. DE CINET. DE NITRIFICATION K4 (J-1)
+3	O2	BEN	0.1	BENTHIC OXYGEN DEMAND BEN (GO2/M2/DAY)	DEMANDE BENTHIQUE BEN (GO2/M2/J)
+4	O2	P	1.0	PHOTOSYNTHESIS P (MGO2/DAY/L)	PHOTOSYNTHESE P (MGO2/J/L)
+5	O2	R	0.06	PLANT RESPIRATION R (MGO2/DAY/L)	RESPIRATION VEGETALE R (MGO2/J/L)
+6	O2	K2	0.9	OXYGEN REAERATION COEFF. K2 (DAY-1)	COEFFICIENT DE REAERATION K2 (J-1)
+7	O2	F_K2	0.0	FORMULA FOR THE COEFFICIENT K2	FORMULE DE CALCUL DE K2
+8	O2	Cs	9.0	OXYGEN SATURATION CONCENTRATION IN THE WATER CS (MG/L)	CONCENTRATION DE SATURATION EN OXYGENE DE L'EAU CS (MG/L)
+9	O2	F_Cs	0.0	FORMULA FOR THE CONCENTRATION CS	FORMULE DE CALCUL DE CS
+10	O2	T	7.0	WATER TEMPERATURE T (°C)	TEMPERATURE DE L'EAU T (°C)
+11	O2	R_COEF	0.0	OXYGEN REAERATION COEFF. AT WEIRS R (.)	COEFFICIENT DE REAERATION AUX SEUILS R (.)
+12	O2	F_R	1.0	FORMULA FOR THE REAERATION COEFF. r (.)	FORMULE DE CALCUL DE R
+13	O2	N	0.0	NUMBER OF WEIRS N	NOMBRE DE SEUILS N
+14	O2	A_COEF	1.2	COEFF. A IN THE FORMULA FOR R AT WEIR N°1	COEFFICIENT A DES FORMULES DE CALCUL DE R POUR LE SEUIL N°1
+15	O2	B_COEF	0.7	COEFF. B IN THE FORMULA FOR R IN WEIR N°1	COEFFICIENT B DES FORMULES DE CALCUL DE R POUR LE SEUIL N°1
+16	O2	NUM_W	1.0	N° OF WEIR N°1	N° DU SEUIL N°1
+17	BIOMASS	FPOR	0.0	SETTLING VELOCITY FOR ORGANIC PHOSPHORUS (M/S)	VITESSE DE SEDIMENTATION DU PHOSPHORE ORGANIQUE (M/S)
+18	BIOMASS	FNOR	0.0	 SETTLING VELOCITY FOR NON-ALGAL ORGANIC NITROGEN (M/S)	VITESSE DE SEDIMENTATION DE L'AZOTE ORGANIQUE NON ALGALE (M/S)
+19	BIOMASS	Cmax	2.0	MAX ALGAL GROWTH RATE AT T=20°C	TAUX DE CROISSANCE ALGALE MAXIMUM A 20°C
+20	BIOMASS	PS	0.0	SECCHI DEPTH (M)	PROFONDEUR DE SECCHI (M)
+21	BIOMASS	KE	3.0	EXTINCTION COEFF. FOR SOLAR RADIATION RAY WITHOUT PHYTOPLANKTON (M-1)	COEFFICIENT D'EXTINCTION DU RAY SANS PHYTO (M-1)
+22	BIOMASS	KPE	0.005	TURBIDITY COEFF. DUE TO PLANTS (M2/MICROGCHLA)	COEFFICIENT DE TURBIDITE VEGETALE (M2/MICROGCHLA)
+23	BIOMASS	IK	120.0	CALIBRATION PARAMETER FOR SMITH'S FORMULA (M-1)	PARAMETRE DE CALAGE DE LA FORMULE DE SMITH (M-1)
+24	BIOMASS	KP	0.005	PHOSPHATE HALF-SATURATION CONSTANT (MG/L)	CONSTANTE DE DEMI-SATURATION EN PHOSPHATE (MG/L)
+25	BIOMASS	KN	0.03	NITROGEN HALF-SATURATION CONSTANT (MG/L)	CONSTANTE DE DEMI-SATURATION EN AZOTE (MG/L)
+26	BIOMASS	ALPHA	1.0	WATER TOXICITY COEFF. 1 FOR ALGAE (ALPHA)	COEFFICIENT 1 DE TOXICITE DE L'EAU POUR LES ALGUES (ALPHA)
+27	BIOMASS	ALPHA2	0.0	WATER TOXICITY COEFF. 2 FOR ALGAE (ALPHA2)	COEFFICIENT 2 DE TOXICITE DE L'EAU POUR LES ALGUES (ALPHA2)
+28	BIOMASS	RP	0.05	RESPIRATION RATE FOR ALGAL BIOMASS AT T=20 °C (DAY-1)	TAUX DE RESPIRATION DE LA BIOMASSE ALGALE A 20°C (J-1)
+29	BIOMASS	FP	0.0025	PROPORTION OF PHOSPHORUS IN THE PHYTOPLANKTON CELLS (MGP/MICROGCHLA)	PROP DE PHOSPHORE DANS LES CELLULES DU PHYTO (MGP/MICROGCHLA)
+30	BIOMASS	DTP	0.5	PERCENTAGE OF PHOSPHORUS DIRECTLY ASSIMILATED BY DEAD PHYTOPLANKTON (%)	POURCENT. DE PHOSPHORE DIRECT. ASSIMILABLE DANS LE PHYTO MORT (%)
+31	BIOMASS	K_PO	0.03	RATE OF TRANSFORMATION OF POR TO PO4 (DAY-1)	TAUX DE TRANSFORMATION DU POR EN PO4 (J-1)
+32	BIOMASS	FN	0.0035	PROPORTION OF NITROGEN IN THE PHYTOPLANKTON CELLS (MGN/MICROGCHLA)	PROP D'AZOTE DANS LES CELLULES DU PHYTO (MGN/MICROGCHLA)
+33	BIOMASS	DTN	0.5	PERCENTAGE OF NITROGEN DIRECTLY ASSIMILATED BY DEAD PHYTOPLANKTON (%)	POURCENT. D'AZOTE DIRECT. ASSIMILABLE DANS LE PHYTO MORT (%)
+34	BIOMASS	K_NO	0.35	RATE OF TRASNFORMATION OF NOR TO NO3 (DAY-1)	TAUX DE TRANSFORMATION DU NOR EN NO3 (J-1)
+35	BIOMASS	M1	0.1	COEFF. 1 FOR ALGAE DEATH AT T=20 °C (DAY-1)	COEFFICIENT 1 DE MORTALITE ALGALE A 20°C (J-1)
+36	BIOMASS	M2	0.003	COEFF. 2 FOR ALGAE DEATH AT T= 20 °C (DAY-1)	COEFFICIENT 2 DE MORTALITE ALGALE A 20°C (J-1/MG)
+37	EUTRO	FPOR	0.0	SETTLING VELOCITY FOR ORGANIC PHOSPHORUS (M/S)	VITESSE DE SEDIMENTATION DU PHOSPHORE ORGANIQUE (M/S)
+38	EUTRO	FNOR	0.0	 SETTLING VELOCITY FOR NON-ALGAL ORGANIC NITROGEN (M/S)	VITESSE DE SEDIMENTATION DE L'AZOTE ORGANIQUE NON ALGALE (M/S)
+39	EUTRO	Cmax	2.0	MAX ALGAL GROWTH RATE AT T=20°C	TAUX DE CROISSANCE ALGALE MAXIMUM A 20°C
+40	EUTRO	PS	0.0	SECCHI DEPTH (M)	PROFONDEUR DE SECCHI (M)
+41	EUTRO	KE	3.0	EXTINCTION COEFF. FOR SOLAR RADIATION RAY WITHOUT PHYTOPLANKTON (M-1)	COEFFICIENT D'EXTINCTION DU RAY SANS PHYTO (M-1)
+42	EUTRO	KPE	0.005	TURBIDITY COEFF. DUE TO PLANTS (M2/MICROGCHLA)	COEFFICIENT DE TURBIDITE VEGETALE (M2/MICROGCHLA)
+43	EUTRO	IK	120.0	CALIBRATION PARAMETER FOR SMITH'S FORMULA (M-1)	PARAMETRE DE CALAGE DE LA FORMULE DE SMITH (M-1)
+44	EUTRO	KP	0.005	PHOSPHATE HALF-SATURATION CONSTANT (MG/L)	CONSTANTE DE DEMI-SATURATION EN PHOSPHATE (MG/L)
+45	EUTRO	KN	0.03	NITROGEN HALF-SATURATION CONSTANT (MG/L)	CONSTANTE DE DEMI-SATURATION EN AZOTE (MG/L)
+46	EUTRO	ALPHA	1.0	WATER TOXICITY COEFF. 1 FOR ALGAE (ALPHA)	COEFFICIENT 1 DE TOXICITE DE L'EAU POUR LES ALGUES (ALPHA)
+47	EUTRO	ALPHA2	0.0	WATER TOXICITY COEFF. 2 FOR ALGAE (ALPHA2)	COEFFICIENT 2 DE TOXICITE DE L'EAU POUR LES ALGUES (ALPHA2)
+48	EUTRO	RP	0.05	RESPIRATION RATE FOR ALGAL BIOMASS AT T=20 °C (DAY-1)	TAUX DE RESPIRATION DE LA BIOMASSE ALGALE A 20°C (J-1)
+49	EUTRO	FP	0.0025	PROPORTION OF PHOSPHORUS IN THE PHYTOPLANKTON CELLS (MGP/MICROGCHLA)	PROP DE PHOSPHORE DANS LES CELLULES DU PHYTO (MGP/MICROGCHLA)
+50	EUTRO	DTP	0.5	PERCENTAGE OF PHOSPHORUS DIRECTLY ASSIMILATED BY DEAD PHYTOPLANKTON (%)	POURCENT. DE PHOSPHORE DIRECT. ASSIMILABLE DANS LE PHYTO MORT (%)
+51	EUTRO	K_PO	0.03	RATE OF TRANSFORMATION OF POR TO PO4 (DAY-1)	TAUX DE TRANSFORMATION DU POR EN PO4 (J-1)
+52	EUTRO	FN	0.0035	PROPORTION OF NITROGEN IN THE PHYTOPLANKTON CELLS (MGN/MICROGCHLA)	PROP D'AZOTE DANS LES CELLULES DU PHYTO (MGN/MICROGCHLA)
+53	EUTRO	DTN	0.5	PERCENTAGE OF NITROGEN DIRECTLY ASSIMILATED BY DEAD PHYTOPLANKTON (%)	POURCENT. D'AZOTE DIRECT. ASSIMILABLE DANS LE PHYTO MORT (%)
+54	EUTRO	K_NO	0.35	RATE OF TRASNFORMATION OF NOR TO NO3 (DAY-1)	TAUX DE TRANSFORMATION DU NOR EN NO3 (J-1)
+55	EUTRO	M1	0.1	COEFF. 1 FOR ALGAE DEATH AT T=20 °C (DAY-1)	COEFFICIENT 1 DE MORTALITE ALGALE A 20°C (J-1)
+56	EUTRO	M2	0.003	COEFF. 2 FOR ALGAE DEATH AT T= 20 °C (DAY-1)	COEFFICIENT 2 DE MORTALITE ALGALE A 20°C (J-1/MG)
+57	EUTRO	K120	0.0	SETTLING VELOCIUTY FOR ORGANIC LOAD(M / S)	VITESSE DE SEDIMENTATION DE LA CHARGE ORGANIQUE (M/S)
+58	EUTRO	K1	0.25	KINETIC CONST. FOR ORGANIC LOAD DEPLETION  K1 (DAY-1)	CONST. DE CINET. DE DEGRADATION DE LA CHARGE ORGANIQUE K120 (J-1)
+59	EUTRO	K4	0.35	KINETIC CONST. FOR NITRIFICATION K4 (DAY-1)	CONST. DE CINET. DE NITRIFICATION K520 (J-1)
+60	EUTRO	F	0.15	OXYGEN PRODUCED BY PHOTOSYNTHESIS F(MGO2 / MICROGCHLA)	QTTE D'OXYGENE PRODUITE PAR PHOTOSYNTHESE F (MGO2/MICROGCHLA)
+61	EUTRO	N	5.2	OXYGEN CONSUMED DURING NITRIFICATION N (MGO2/MGNH4)	QTTE D'OXYGENE CONSOMMEE PAR NITRIFICATION N (MGO2/MGNH4)
+62	EUTRO	BEN	0.1	BENTHIC OXYGEN DEMAND BEN (GO2/M2/DAY)	DEMANDE BENTHIQUE BEN (GO2/M2/J)
+63	EUTRO	K2	0.9	OXYGEN REAERATION COEFF. K2 (DAY-1)	COEFFICIENT DE REAERATION K2 (J-1)
+64	EUTRO	F_K2	0.0	FORMULA FOR THE COEFFICIENT K2	FORMULE DE CALCUL DE K2
+65	EUTRO	Cs	9.0	OXYGEN SATURATION CONCENTRATION IN THE WATER CS (MG/L)	CONCENTRATION DE SATURATION EN OXYGENE DE L'EAU CS (MG/L)
+66	EUTRO	F_Cs	0.0	FORMULA FOR THE CONCENTRATION CS	FORMULE DE CALCUL DE CS
+67	EUTRO	R_COEF	0.0	OXYGEN REAERATION COEFF. AT WEIRS R (.)	COEFFICIENT DE REAERATION AUX SEUILS R (.)
+68	EUTRO	F_R	1.0	FORMULA FOR THE REAERATION COEFF. r (.)	FORMULE DE CALCUL DE R
+69	EUTRO	N_W	0.0	NUMBER OF WEIRS N	NOMBRE DE SEUILS N
+70	EUTRO	A_COEF	1.2	COEFF. A IN THE FORMULA FOR R AT WEIR N°1	COEFFICIENT A DES FORMULES DE CALCUL DE R POUR LE SEUIL N°1
+71	EUTRO	B_COEF	0.7	COEFF. B IN THE FORMULA FOR R IN WEIR N°1	COEFFICIENT B DES FORMULES DE CALCUL DE R POUR LE SEUIL N°1
+72	EUTRO	NUM_W	1.0	N° OF WEIR N°1	N° DU SEUIL N°1
+73	THERMIC	RHO	1000.0	WATER DENSITY (KG/M3))	MASSE VOLUMIQUE DE L'EAU RHO (KG/M3)
+74	THERMIC	CPE	4180.0	SPECIFIC HEAT OF WATER CPE (J/KG°C)	CHALEUR SPECIFIQUE DE L'EAU CPE (J/KG°C)
+75	THERMIC	CPA	1002.0	SPECIFIC HEAT OF AIR UNDER CONSTANT PRESSURE (J/KG°C)	CHALEUR SPECIFIQUE DE L'AIR A PRESSION CONSTANTE CPA (J/KG°C)
+76	THERMIC	A_COEF_T	0.002	COEFF. A FOR THE AERATION FORMULA A+B*U	COEFFICIENT A DE LA FORMULE D'AERATION A+B*U
+77	THERMIC	B_COEF_T	0.002	COEFF. B FOR THE AERATION FORMULA A+B*U	COEFFICIENT B DE LA FORMULE D'AERATION A+B*U
+78	THERMIC	K_COEF	0.2	REPRESENTATIVE COEFF. FOR THE COULD COVER K	COEFFICIENT REPRESENTATIF DE LA COUVERTURE NUAGEUSE K
+79	THERMIC	EMA	0.75	CALIBRATION COEFF FOR THE ATMOSPHERIC RADIATION EMA	COEFFICIENT DE CALAGE DU RAYONNEMENT ATMOSPHERIQUE EMA
+80	THERMIC	EME	0.97	CALIBRATION COEFF FOR RADIATION AT WATER SURFACE EME	COEFFICIENT DE CALAGE DU RAYONNEMENT DU PLAN D'EAU EME
+81	MICROPOLE	E	0.0	EROSION RATE (KG/M2/S)	TAUX D'EROSION (KG/M2/S)
+82	MICROPOLE	TAU_SED	5.0	CRITICAL SHEAR STRESS FOR SEDIMENTATION (PA)	CONTRAINTE CRITIQUE DE SEDIMENTATION (PA)
+83	MICROPOLE	TAU_SUSP	1000.0	CRITICAL SHEAR STRESS FOR SUSPENSION (PA)	CONTRAINTE CRITIQUE DE REMISE EN SUSPENSION (PA)
+84	MICROPOLE	W	0.0	SETTLING VELOCITY OF SUSP.MATTER (M/S)	VITESSE DE CHUTE DES M.E.S. (M/S)
+85	MICROPOLE	L	0.0	EXPONENTIAL DISINTEGRATION CONSTANT (S-1)	CONSTANTE DE DESINTEGRATION EXPONENTIELLE (S-1)
+86	MICROPOLE	KD	1775.0	DISTRIBUTION COEFFICIENT (M3/KG)	COEFFICIENT DE DISTRIBUTION (M3/KG)
+87	MICROPOLE	K1_DESO	0.0	DESORPTION KINETIC CONSTANT (S-1)	CONSTANTE CINETIQUE DE DESORPTION (S-1)
+\.
+
+
+--
+-- Name: tracer_physic_id_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('tracer_physic_id_seq', 1, false);
+
+
+--
+-- Data for Name: weirs; Type: TABLE DATA; Schema: test_wq2; Owner: postgres
+--
+
+COPY weirs (geom, gid, name, type, branchnum, abscissa, z_crest, z_average_crest, z_break, flowratecoeff, thickness, wide_floodgate, lawfile, active) FROM stdin;
+\.
+
+
+--
+-- Name: weirs_gid_seq; Type: SEQUENCE SET; Schema: test_wq2; Owner: postgres
+--
+
+SELECT pg_catalog.setval('weirs_gid_seq', 1, false);
+
+
+--
+-- Name: branchs branchs_pkey; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY branchs
+    ADD CONSTRAINT branchs_pkey PRIMARY KEY (gid);
+
+
+--
+-- Name: extremities cle_extremities; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY extremities
+    ADD CONSTRAINT cle_extremities PRIMARY KEY (gid);
+
+
+--
+-- Name: init_conc_config cle_init_conc_conf; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY init_conc_config
+    ADD CONSTRAINT cle_init_conc_conf PRIMARY KEY (id);
+
+
+--
+-- Name: init_conc_wq cle_init_conc_wq; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY init_conc_wq
+    ADD CONSTRAINT cle_init_conc_wq PRIMARY KEY (id_config, id_trac, bief, abscissa);
+
+
+--
+-- Name: laws cle_laws; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY laws
+    ADD CONSTRAINT cle_laws PRIMARY KEY (id);
+
+
+--
+-- Name: laws_wq cle_laws_wq; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY laws_wq
+    ADD CONSTRAINT cle_laws_wq PRIMARY KEY (id_config, id_trac, "time");
+
+
+--
+-- Name: observations cle_obs; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY observations
+    ADD CONSTRAINT cle_obs PRIMARY KEY (id);
+
+
+--
+-- Name: parametres cle_param; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY parametres
+    ADD CONSTRAINT cle_param PRIMARY KEY (id);
+
+
+--
+-- Name: runs cle_runs; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY runs
+    ADD CONSTRAINT cle_runs PRIMARY KEY (id);
+
+
+--
+-- Name: scenarios cle_scenarios; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY scenarios
+    ADD CONSTRAINT cle_scenarios PRIMARY KEY (name);
+
+
+--
+-- Name: tracer_config cle_tr_conf; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY tracer_config
+    ADD CONSTRAINT cle_tr_conf PRIMARY KEY (id);
+
+
+--
+-- Name: tracer_name cle_tr_name; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY tracer_name
+    ADD CONSTRAINT cle_tr_name PRIMARY KEY (id);
+
+
+--
+-- Name: tracer_physic cle_tr_phy; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY tracer_physic
+    ADD CONSTRAINT cle_tr_phy PRIMARY KEY (id);
+
+
+--
+-- Name: extremities extremities_nom_key; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY extremities
+    ADD CONSTRAINT extremities_nom_key UNIQUE (name);
+
+
+--
+-- Name: flood_marks flood_marks_pkey; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY flood_marks
+    ADD CONSTRAINT flood_marks_pkey PRIMARY KEY (gid);
+
+
+--
+-- Name: hydraulic_head hydraulic_head_pkey; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY hydraulic_head
+    ADD CONSTRAINT hydraulic_head_pkey PRIMARY KEY (gid);
+
+
+--
+-- Name: lateral_inflows lateral_inflows_pkey; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY lateral_inflows
+    ADD CONSTRAINT lateral_inflows_pkey PRIMARY KEY (gid);
+
+
+--
+-- Name: lateral_weirs lateral_weir_pkey; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY lateral_weirs
+    ADD CONSTRAINT lateral_weir_pkey PRIMARY KEY (gid);
+
+
+--
+-- Name: outputs outputs_pkey; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY outputs
+    ADD CONSTRAINT outputs_pkey PRIMARY KEY (gid);
+
+
+--
+-- Name: profiles profile_unique; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY profiles
+    ADD CONSTRAINT profile_unique UNIQUE (name);
+
+
+--
+-- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY profiles
+    ADD CONSTRAINT profiles_pkey PRIMARY KEY (gid);
+
+
+--
+-- Name: resultats projet_pkey; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY resultats
+    ADD CONSTRAINT projet_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: topo topo_pkey; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY topo
+    ADD CONSTRAINT topo_pkey PRIMARY KEY (gid);
+
+
+--
+-- Name: tracer_lateral_inflows tracer_lateral_inflows_pkey; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY tracer_lateral_inflows
+    ADD CONSTRAINT tracer_lateral_inflows_pkey PRIMARY KEY (gid);
+
+
+--
+-- Name: weirs weirs_pkey; Type: CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY weirs
+    ADD CONSTRAINT weirs_pkey PRIMARY KEY (gid);
+
+
+--
+-- Name: branchs_geom_idx; Type: INDEX; Schema: test_wq2; Owner: postgres
+--
+
+CREATE INDEX branchs_geom_idx ON branchs USING gist (geom);
+
+
+--
+-- Name: flood_marks_geom_idx; Type: INDEX; Schema: test_wq2; Owner: postgres
+--
+
+CREATE INDEX flood_marks_geom_idx ON flood_marks USING gist (geom);
+
+
+--
+-- Name: hydraulic_head_geom_idx; Type: INDEX; Schema: test_wq2; Owner: postgres
+--
+
+CREATE INDEX hydraulic_head_geom_idx ON hydraulic_head USING gist (geom);
+
+
+--
+-- Name: lateral_inflows_geom_idx; Type: INDEX; Schema: test_wq2; Owner: postgres
+--
+
+CREATE INDEX lateral_inflows_geom_idx ON lateral_inflows USING gist (geom);
+
+
+--
+-- Name: lateral_weirs_geom_idx; Type: INDEX; Schema: test_wq2; Owner: postgres
+--
+
+CREATE INDEX lateral_weirs_geom_idx ON lateral_weirs USING gist (geom);
+
+
+--
+-- Name: outputs_geom_idx; Type: INDEX; Schema: test_wq2; Owner: postgres
+--
+
+CREATE INDEX outputs_geom_idx ON outputs USING gist (geom);
+
+
+--
+-- Name: profiles_geom_idx; Type: INDEX; Schema: test_wq2; Owner: postgres
+--
+
+CREATE INDEX profiles_geom_idx ON profiles USING gist (geom);
+
+
+--
+-- Name: topo_geom_idx; Type: INDEX; Schema: test_wq2; Owner: postgres
+--
+
+CREATE INDEX topo_geom_idx ON topo USING gist (geom);
+
+
+--
+-- Name: tracer_lateral_inflows_geom_idx; Type: INDEX; Schema: test_wq2; Owner: postgres
+--
+
+CREATE INDEX tracer_lateral_inflows_geom_idx ON tracer_lateral_inflows USING gist (geom);
+
+
+--
+-- Name: weirs_geom_idx; Type: INDEX; Schema: test_wq2; Owner: postgres
+--
+
+CREATE INDEX weirs_geom_idx ON weirs USING gist (geom);
+
+
+--
+-- Name: branchs branchs_calcul_abscisse; Type: TRIGGER; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TRIGGER branchs_calcul_abscisse BEFORE INSERT OR UPDATE ON branchs FOR EACH ROW EXECUTE PROCEDURE public.calcul_abscisse_branche();
+
+
+--
+-- Name: flood_marks flood_marks_calcul_abscisse; Type: TRIGGER; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TRIGGER flood_marks_calcul_abscisse BEFORE INSERT OR UPDATE ON flood_marks FOR EACH ROW EXECUTE PROCEDURE public.calcul_abscisse_point();
+
+
+--
+-- Name: hydraulic_head hydraulic_head_calcul_abscisse; Type: TRIGGER; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TRIGGER hydraulic_head_calcul_abscisse BEFORE INSERT OR UPDATE ON hydraulic_head FOR EACH ROW EXECUTE PROCEDURE public.calcul_abscisse_point();
+
+
+--
+-- Name: lateral_inflows lateral_inflows_calcul_abscisse; Type: TRIGGER; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TRIGGER lateral_inflows_calcul_abscisse BEFORE INSERT OR UPDATE ON lateral_inflows FOR EACH ROW EXECUTE PROCEDURE public.calcul_abscisse_point();
+
+
+--
+-- Name: lateral_weirs lateral_weirs_calcul_abscisse; Type: TRIGGER; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TRIGGER lateral_weirs_calcul_abscisse BEFORE INSERT OR UPDATE ON lateral_weirs FOR EACH ROW EXECUTE PROCEDURE public.calcul_abscisse_point();
+
+
+--
+-- Name: outputs outputs_calcul_abscisse; Type: TRIGGER; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TRIGGER outputs_calcul_abscisse BEFORE INSERT OR UPDATE ON outputs FOR EACH ROW EXECUTE PROCEDURE public.calcul_abscisse_point();
+
+
+--
+-- Name: profiles profiles_calcul_abscisse; Type: TRIGGER; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TRIGGER profiles_calcul_abscisse BEFORE INSERT OR UPDATE ON profiles FOR EACH ROW EXECUTE PROCEDURE public.calcul_abscisse_profil();
+
+
+--
+-- Name: tracer_lateral_inflows tracer_lateral_inflows_calcul_abscisse; Type: TRIGGER; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TRIGGER tracer_lateral_inflows_calcul_abscisse BEFORE INSERT OR UPDATE ON tracer_lateral_inflows FOR EACH ROW EXECUTE PROCEDURE public.calcul_abscisse_point();
+
+
+--
+-- Name: weirs weirs_calcul_abscisse; Type: TRIGGER; Schema: test_wq2; Owner: postgres
+--
+
+CREATE TRIGGER weirs_calcul_abscisse BEFORE INSERT OR UPDATE ON weirs FOR EACH ROW EXECUTE PROCEDURE public.calcul_abscisse_point();
+
+
+--
+-- Name: branchs cle_debut; Type: FK CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY branchs
+    ADD CONSTRAINT cle_debut FOREIGN KEY (startb) REFERENCES extremities(name);
+
+
+--
+-- Name: branchs cle_fin; Type: FK CONSTRAINT; Schema: test_wq2; Owner: postgres
+--
+
+ALTER TABLE ONLY branchs
+    ADD CONSTRAINT cle_fin FOREIGN KEY (startb) REFERENCES extremities(name);
+
+
+--
+-- PostgreSQL database dump complete
+--
+

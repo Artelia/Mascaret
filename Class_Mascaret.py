@@ -816,7 +816,6 @@ class Class_Mascaret():
         return False
 
     def add_wq_xcas(self,fichierCas,noyau,dictLibres):
-        #TODO a finir
         # requête pour récupérer les paramètres
         cas = fichierCas.find('parametresCas')
         sql = "SELECT parametre, {0}, balise1, balise2 FROM {1}.{2} WHERE gui_type = 'tracers' ORDER BY id;"
@@ -848,7 +847,6 @@ class Class_Mascaret():
                     par = SubElement(balise1, param)
                     par.text = valeur.lower()
 
-        # extrem = self.mdb.select('extremities') #'law_wq','active','tracer_boundary_condition_type',num
         #use dictLibres to have only extremities and not junction
         # # TODO add 'formule': formule, 'valeurperm': libres["firstvalue"
         cas = cas.find('parametresTraceur')
@@ -863,7 +861,8 @@ class Class_Mascaret():
 
         for i, cond in enumerate(lateral['active']):
             if cond:
-                dico_s[i]={'name':lateral['law_wq'][i],
+                dico_s[i]={'name':lateral['name'][i],
+                            'name_law':lateral['law_wq'][i],
                            'typs': lateral['typesources'][i],
                 'numb':lateral['branchnum'][i],
                 'abs':lateral['abscissa'][i],
@@ -873,6 +872,7 @@ class Class_Mascaret():
         if not len(list_loi)>0:
             self.mgis.addInfo("Please enter water quality laws")
             return False
+        list_loi= list(set(list_loi))
         list_loi=sorted(list_loi)
 
 
@@ -894,7 +894,7 @@ class Class_Mascaret():
                 numb.append(dico_s[num]['numb'])
                 abs.append(dico_s[num]['abs'])
                 leng.append(dico_s[num]['leng'])
-                numl.append(list_loi.index(dico_s[num]['name'])+1)
+                numl.append(list_loi.index(dico_s[num]['name_law'])+1)
         else:
             typ = ['-0']
             numb = ['-0']
@@ -1168,6 +1168,7 @@ class Class_Mascaret():
         if par["evenement"] and noyau != "steady":
 
             dictScen_tmp = self.mdb.select('scenarios', 'run', 'starttime')
+            print(dictScen_tmp)
             listexclu = []
             if len(dictScen_tmp['name'])==0:
                 self.mgis.addInfo("Warning: scenario not found")
@@ -1216,10 +1217,6 @@ class Class_Mascaret():
         if self.mgis.DEBUG:
             self.mgis.addInfo("Xcas file is created.")
         if par['presenceTraceurs']:
-            if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
-                #TODO reprendre avec date
-                self.wq.create_filemet()
-
             self.wq.create_filephy()
             self.wq.law_tracer()
             self.wq.init_conc_tracer()
@@ -1231,6 +1228,9 @@ class Class_Mascaret():
             if self.mgis.DEBUG:
                 self.mgis.addInfo("The current scenario is {}".format(scen))
             if noyau == "steady":
+                if par['presenceTraceurs']:
+                    if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
+                        self.wq.create_filemet()
                 # steady
                 for nom, l in dictLois.items():
                     if not "valeurperm" in l.keys():
@@ -1275,11 +1275,18 @@ class Class_Mascaret():
                                        'balise1': 'parametresImpressionResultats'}
                        }
                 self.modifXCAS(tab, self.baseName + '.xcas')
+                self.mgis.addInfo("Xcas file is created.")
+                if par['presenceTraceurs']:
+                    if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
+                        self.wq.create_filemet(typ_time='date',datefirst=dateDebut, dateend=dateFin)
 
                 self.obsTOloi(dictLois, dateDebut, dateFin)
 
             else:
                 # transcritical unsteady hors evenement
+                if par['presenceTraceurs']:
+                    if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
+                        self.wq.create_filemet()
 
                 for nom, l in dictLois.items():
                     # dictLois.items() extremities liste
