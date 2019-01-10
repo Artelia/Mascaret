@@ -211,12 +211,18 @@
     <property name="title">
      <string>Database</string>
     </property>
+    <widget class="QMenu" name="menuUpate_table">
+     <property name="title">
+      <string>Update Table</string>
+     </property>
+     <addaction name="actionAdd_WQ_tables"/>
+    </widget>
     <addaction name="actionRefresh_Database"/>
     <addaction name="separator"/>
     <addaction name="actionCreate_New_Model"/>
     <addaction name="actionLoad_Model"/>
     <addaction name="actionDeleteModel"/>
-    <addaction name="actionAdd_WQ_tables"/>
+    <addaction name="menuUpate_table"/>
     <addaction name="separator"/>
     <addaction name="actionExport_Model"/>
     <addaction name="actionImport_Model"/>
