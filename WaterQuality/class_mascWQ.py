@@ -292,7 +292,6 @@ class class_mascWQ():
         t_pre = meteo_val[0][1] - deb_time
         ligne = '{} '.format(t_pre)
         for id, temps, val in meteo_val:
-            print(temps, t_pre)
             if t_pre != temps-deb_time:
                 fich.write(ligne + '\n')
                 t_pre = temps-deb_time
