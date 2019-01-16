@@ -888,7 +888,7 @@ class GraphProfil(GraphCommon):
                 tempo = []
                 # fct2 = lambda x: x + round(float(event.xdata), 2) - self.x0
                 for var1 in tab_x:
-                    tempo.append(fct2(var1, event.xdata, self.x0))
+                    tempo.append(self.fct2(var1, event.xdata, self.x0))
                 tab_x = tempo
 
                 self.topo[f]['x'] = tab_x
@@ -1270,8 +1270,7 @@ class GraphProfilRes(GraphCommon):
             # dico = self.mdb.select_distinct("date, run, scenario",
             #                                      "runs",
             #                                      condition)
-            dico_run = self.mdb.select_distinct("date, run, scenario,t",
-                                               "runs")
+            dico_run = self.mdb.select_distinct("date, run, scenario,t","runs")
 
             if not dico_run:
                 self.mgis.add_info("No simulation to show")
