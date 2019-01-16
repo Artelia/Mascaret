@@ -21,6 +21,7 @@ comment:
         distance
         interpole
 """
+import dateutil
 import math
 
 
@@ -31,8 +32,21 @@ def data_to_float(txt):
     except ValueError:
         return None
 
-def isfloat(value):
+def data_to_date(txt):
+    try:
+        dateutil.parser.parse(txt, dayfirst=True)
+        return dateutil.parser.parse(txt, dayfirst=True)
+    except ValueError:
+        return None
 
+def data_to_int(txt):
+    try:
+        int(txt)
+        return int(txt)
+    except ValueError:
+        return None
+
+def isfloat(value):
     try:
         float(value)
         return True
@@ -42,20 +56,19 @@ def isfloat(value):
 def distance(a, b):
     return math.sqrt(math.pow(a.x() - b.x(), 2) + math.pow(a.y() - b.y(), 2))
 
-
 def interpole(a, l1, l2):
     """ Interpolation
         l1: list 1
         l2: list 2
         a interpol value"""
-    i, x = min(enumerate(l1), key=lambda x: abs(x[1] - a))
+    i, x = min(enumerate(l1), key=lambda xx: abs(xx[1] - a))
 
     if i < len(l1) - 1 and a >= x:
-        return ((l2[i + 1] - l2[i]) / (l1[i + 1] - x) * (a - x) + l2[i])
+        return (l2[i + 1] - l2[i]) / (l1[i + 1] - x) * (a - x) + l2[i]
     elif i > 0 and a <= x:
-        return ((l2[i] - l2[i - 1]) / (x - l1[i - 1]) * (a - l1[i - 1]) + l2[i - 1])
+        return (l2[i] - l2[i - 1]) / (x - l1[i - 1]) * (a - l1[i - 1]) + l2[i - 1]
     else:
-        return (None)
+        return None
 
 def str2bool(s):
     """string to bool"""
@@ -64,71 +77,70 @@ def str2bool(s):
     else:
         return False
 
-def getCouche(nom,iface) :
+def get_couche(nom, iface):
     for couche in iface.legendInterface().layers():
-        if couche.name() == nom :
-            return(couche)
+        if couche.name() == nom:
+            return couche
 
-    return(None)
+    return None
 
-
-def calculAbscisses(listeCouches, riviere, iface, dossier):
-    coucheRiv = getCouche(riviere, iface)
+def calcul_abscisses(liste_couches, riviere, iface, dossier):
+    couche_riv = get_couche(riviere, iface)
     # fusion des branches
-    nomFich = os.path.join(dossier, "temp.shp")
-    id = coucheRiv.fieldNameIndex("branche")
-    QgsGeometryAnalyzer().dissolve(coucheRiv, nomFich,
+    nom_fich = os.path.join(dossier, "temp.shp")
+    id = couche_riv.fieldNameIndex("branche")
+    QgsGeometryAnalyzer().dissolve(couche_riv, nom_fich,
                                    onlySelectedFeatures=False,
                                    uniqueIdField=id, p=None)
 
-    coucheDissoute = QgsVectorLayer(nomFich, "temp", "ogr")
+    couche_dissoute = QgsVectorLayer(nom_fich, "temp", "ogr")
 
-    longBranche = {}
+    long_branche = {}
     dico = {}
-    for f in coucheDissoute.getFeatures():
-        longBranche[f["branche"]] = f.geometry().length()
+    for f in couche_dissoute.getFeatures():
+        long_branche[f["branche"]] = f.geometry().length()
         dico[f["branche"]] = f
 
-    longueurZone = {}
-    for f in coucheRiv.getFeatures():
-        if not f["branche"] in longueurZone.keys():
-            longueurZone[f["branche"]] = []
+    longueur_zone = {}
+    for f in couche_riv.getFeatures():
+        if not f["branche"] in longueur_zone.keys():
+            longueur_zone[f["branche"]] = []
 
-        longueurZone[f["branche"]].append((f["numZone"], f.geometry().length()))
+        longueur_zone[f["branche"]].append((f["numZone"], f.geometry().length()))
 
-    for c in listeCouches:
+    for c in liste_couches:
         if c == riviere:
             continue
 
-        couche =getCouche(c, iface)
+        couche = get_couche(c, iface)
         print(c)
         if couche.wkbType() == 5:
-            coucheNoeud = QgsVectorLayer("Point", "temporary_points", "memory")
+            couche_noeud = QgsVectorLayer("Point", "temporary_points", "memory")
 
-            coucheNoeud.dataProvider().addAttributes(
+            couche_noeud.dataProvider().addAttributes(
                 [QgsField("nom", QVariant.String, 'string', 10, 0),
                  QgsField("numBranche", QVariant.Int, 'int', 2, 0),
                  QgsField("abscisse", QVariant.Double, 'double', 10, 1)])
 
-            coucheNoeud.startEditing()
+            couche_noeud.startEditing()
             for f in couche.getFeatures():
-                for r in coucheDissoute.getFeatures():
+                for r in couche_dissoute.getFeatures():
                     if f.geometry().intersects(r.geometry()):
-                        feat = QgsFeature(coucheNoeud.dataProvider().fields())
+                        feat = QgsFeature(couche_noeud.dataProvider().fields())
                         feat.setGeometry(f.geometry().intersection(
                             r.geometry()))
                         feat["nom"] = f["nom"]
                         feat["numBranche"] = r["branche"]
-                        coucheNoeud.dataProvider().addFeatures([feat])
-            coucheNoeud.commitChanges()
+                        couche_noeud.dataProvider().addFeatures([feat])
+            couche_noeud.commitChanges()
 
         else:
-            coucheNoeud = couche
+            couche_noeud = couche
 
-        coucheNoeud.startEditing()
+        couche_noeud.startEditing()
 
         # parcours de la liste de coucheNoeuds
-        for n in coucheNoeud.getFeatures():
+        for n in couche_noeud.getFeatures():
 
             num = n["numBranche"]
             branche = dico[num]
@@ -136,34 +148,34 @@ def calculAbscisses(listeCouches, riviere, iface, dossier):
             mini = 999999999
             i = 0
             # recuperation des coordonnees du point
-            C = n.geometry().asPoint()
+            coord = n.geometry().asPoint()
 
             # on cherche le segment le plus proche du point souhaité
-            d, D, vB = branche.geometry().closestSegmentWithContext(C)
-            vA = vB - 1
+            d, dist, v_b = branche.geometry().closestSegmentWithContext(coord)
+            v_a = v_b - 1
 
             # calcul de la distance depuis le début de la ligne
             somme = 0
-            for i in range(1, vB):
+            for i in range(1, v_b):
                 somme += distance(branche.geometry().vertexAt(i - 1),
                                   branche.geometry().vertexAt(i))
 
-            somme += distance(branche.geometry().vertexAt(vA), D)
+            somme += distance(branche.geometry().vertexAt(v_a), dist)
 
             # calcul de l'abcisse
-            sommeB = sum([longBranche[i] for i in longBranche.keys() if i < num])
-            if somme < longBranche[num]:
-                n["abscisse"] = somme + sommeB
+            somme_b = sum([long_branche[i] for i in long_branche.keys() if i < num])
+            if somme < long_branche[num]:
+                n["abscisse"] = somme + somme_b
             else:
                 n["abscisse"] = None
-            coucheNoeud.updateFeature(n)
+            couche_noeud.updateFeature(n)
 
-        coucheNoeud.commitChanges()
+        couche_noeud.commitChanges()
 
         if couche.wkbType() == 5:
             couche.startEditing()
 
-            for f in coucheNoeud.getFeatures():
+            for f in couche_noeud.getFeatures():
                 for g in couche.getFeatures():
                     if f["nom"] == g["nom"]:
                         g["abscisse"] = f["abscisse"]
@@ -172,43 +184,43 @@ def calculAbscisses(listeCouches, riviere, iface, dossier):
 
             couche.commitChanges()
 
-    if riviere in listeCouches:
-        abscDebut = {}
-        abscFin = {}
+    if riviere in liste_couches:
+        absc_debut = {}
+        absc_fin = {}
 
-        coucheProfil = getCouche("profils", iface)
+        couche_profil = get_couche("profils", iface)
 
-        for p in coucheProfil.getFeatures():
+        for p in couche_profil.getFeatures():
 
             if p["abscisse"] and p["actif"]:
                 num = p["numBranche"]
 
-                if not num in abscDebut.keys(): abscDebut[num] = 99999999
-                if not num in abscFin.keys(): abscFin[num] = -99999999
+                if num not in absc_debut.keys():
+                    absc_debut[num] = 99999999
+                if num not in absc_fin.keys():
+                    absc_fin[num] = -99999999
 
-                abscDebut[num] = min(abscDebut[num], p["abscisse"])
-                abscFin[num] = max(abscFin[num], p["abscisse"])
+                absc_debut[num] = min(absc_debut[num], p["abscisse"])
+                absc_fin[num] = max(absc_fin[num], p["abscisse"])
 
-        coucheRiv.startEditing()
+        couche_riv.startEditing()
 
-        for f in coucheRiv.getFeatures():
+        for f in couche_riv.getFeatures():
             num = f["branche"]
-            f["abscDebut"] = abscDebut[num]
-            f["abscFin"] = abscFin[num]
-            sommeB = sum([longBranche[i] for i in longBranche.keys() if i < num])
+            f["absc_debut"] = absc_debut[num]
+            f["absc_fin"] = absc_fin[num]
+            somme_b = sum([long_branche[i] for i in long_branche.keys() if i < num])
 
-            listDeb = [long for i, long in longueurZone[num] if i < f["numZone"]]
-            f["absDebZone"] = max(sum(listDeb) + sommeB, abscDebut[num])
+            list_deb = [long for i, long in longueur_zone[num] if i < f["numZone"]]
+            f["absDebZone"] = max(sum(list_deb) + somme_b, absc_debut[num])
 
-            listFin = [long for i, long in longueurZone[num] if i <= f["numZone"]]
-            f["absFinZone"] = min(sum(listFin) + sommeB, abscFin[num])
-            coucheRiv.updateFeature(f)
+            list_fin = [long for i, long in longueur_zone[num] if i <= f["numZone"]]
+            f["absFinZone"] = min(sum(list_fin) + somme_b, absc_fin[num])
+            couche_riv.updateFeature(f)
 
-        coucheRiv.commitChanges()
+        couche_riv.commitChanges()
 
-        # del(coucheDissoute)
-        # liste = glob.glob(nomFich[:-4]+".*")
+        # del(couche_dissoute)
+        # liste = glob.glob(nom_fich[:-4]+".*")
         # for fich in liste :
         # os.remove(fich)
-
-

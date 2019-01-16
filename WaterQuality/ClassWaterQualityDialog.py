@@ -17,73 +17,67 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-
+import os
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
+from qgis.core import *
+from qgis.gui import *
+from qgis.utils import *
+
+from .ClassTableWQ import ClassTableWQ
+from .ClassTracerInitDialog import ClassTracerInitDialog
+from .MeteoDialog import ClassMeteoDialog
+from .PhysicalParamDialog import ClassPhysicalParamDialog
+from ..Function import str2bool
+from ..ui.custom_control import ScientificDoubleSpinBox
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
 else:  # qt5
     from qgis.PyQt.QtWidgets import *
-import os
-
-from qgis.core import *
-from qgis.utils import *
-from qgis.gui import *
 
 
-from .. import function as fct
-from .table_WQ import table_WQ
-from .physical_param_dialog import physical_param_dialog
-from .meteo_dialog import meteo_dialog
-from .TracerInit_dialog import TracerInit_dialog
-from ..ui.custom_control import ScientificDoubleSpinBox
-
-
-class Water_quality_dialog(QDialog):
+class ClassWaterQualityDialog(QDialog):
     def __init__(self, mgis):
         QDialog.__init__(self)
         self.kernel = "steady"
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-        self.tbwq = table_WQ(self.mgis, self.mdb)
+        self.tbwq = ClassTableWQ(self.mgis, self.mdb)
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_water_quality.ui'), self)
 
-        self.ui.buttonBox.accepted.connect(self.acceptDialog)
+        self.ui.buttonBox.accepted.connect(self.accept_dialog)
         self.ui.buttonBox.rejected.connect(self.reject)
 
-        self.ui.actionB_phy_param.triggered.connect(self.physicFile)
-        self.ui.actionB_meteo_param.triggered.connect(self.meteoFile)
+        self.ui.actionB_phy_param.triggered.connect(self.physic_file)
+        self.ui.actionB_meteo_param.triggered.connect(self.meteo_file)
 
-        self.ui.WaterQ.currentChanged.connect(self.onChangeTab)
+        self.ui.WaterQ.currentChanged.connect(self.on_change_tab)
 
         self.create_dico_para()
-        self.initUI()
-        # self.initUI_concent_init()
+        self.init_ui()
 
-
-        self.modeleQualiteEau.currentIndexChanged['QString'].connect(self.modeleQualiteEauChanged)
-        fct = lambda: self.delete_line(self.table_Tr, self.ui.nbTraceur)
-        self.ui.actionB_delete_lineTabTracer.triggered.connect(fct)
+        self.modeleQualiteEau.currentIndexChanged['QString'].connect(self.modele_qualite_eau_changed)
+        self.ui.actionB_delete_lineTabTracer.triggered.connect(self.fct)
         self.ui.actionB_add_lineTabTracer.triggered.connect(self.add_row_tr)
 
-        self.optionConvectionChanged(self.ui.optionConvection.currentText())
-        self.CalculDiffusionChanged(self.ui.optionCalculDiffusion.currentIndex())
-        self.presenceTraceursChanged()
+        self.option_convection_changed(self.ui.optionConvection.currentText())
+        self.calcul_diffusion_changed(self.ui.optionCalculDiffusion.currentIndex())
+        self.presence_traceurs_changed()
 
-        self.ui.optionConvection.currentIndexChanged['QString'].connect(self.optionConvectionChanged)
-        self.ui.ordreSchemaConvec.currentIndexChanged['QString'].connect(self.ordreSchemaConvecChanged)
-        self.ui.optionCalculDiffusion.currentIndexChanged.connect(self.CalculDiffusionChanged)
-        self.ui.presenceConcInit.stateChanged.connect(self.presenceTraceursChanged)
+        self.ui.optionConvection.currentIndexChanged['QString'].connect(self.option_convection_changed)
+        self.ui.ordreSchemaConvec.currentIndexChanged['QString'].connect(self.ordre_schema_convec_changed)
+        self.ui.optionCalculDiffusion.currentIndexChanged.connect(self.calcul_diffusion_changed)
+        self.ui.presenceConcInit.stateChanged.connect(self.presence_traceurs_changed)
 
-    # def initUI_concent_init(self):
-    #     """initialisation of GUI of initial concentration"""
-    #     self.initc=TracerInit_dialog(self)
+    def fct(self):
+        return lambda: self.delete_line(self.table_Tr, self.ui.nbTraceur)
 
-    def presenceTraceursChanged(self):
-        if self.ui.presenceConcInit.isChecked() == True:
+    def presence_traceurs_changed(self):
+        """ Enabled/Disenabled in function tracer presence parameter"""
+        if self.ui.presenceConcInit.isChecked():
             self.ui.b_edit.setEnabled(True)
             self.ui.b_new.setEnabled(True)
             self.ui.b_delete.setEnabled(True)
@@ -98,17 +92,19 @@ class Water_quality_dialog(QDialog):
             self.ui.b_add_line.setEnabled(False)
             self.ui.b_delete_line.setEnabled(False)
 
-    def optionConvectionChanged(self, text):
+    def option_convection_changed(self, text):
+        """function when convection option is changed"""
         if text == 'FV':
             self.ui.ordreSchemaConvec.setEnabled(True)
-            self.ordreSchemaConvecChanged(self.ui.ordreSchemaConvec.currentText())
+            self.ordre_schema_convec_changed(self.ui.ordreSchemaConvec.currentText())
 
         else:
             self.ui.ordreSchemaConvec.setEnabled(False)
             if self.ui.ordreSchemaConvec.isEnabled:
-                self.ordreSchemaConvecChanged(None)
+                self.ordre_schema_convec_changed(None)
 
-    def ordreSchemaConvecChanged(self, text):
+    def ordre_schema_convec_changed(self, text):
+        """change convection schema order"""
         if text == '2':
             self.ui.LimitPente.setEnabled(True)
             self.ui.paramW.setEnabled(True)
@@ -120,13 +116,15 @@ class Water_quality_dialog(QDialog):
             self.ui.label_LimitPente.setEnabled(False)
             self.ui.label_paramW.setEnabled(False)
 
-    def CalculDiffusionChanged(self, text):
+    def calcul_diffusion_changed(self, text):
+        """ change state for diffusion"""
         if text == 0:
             self.ui.coeffDiffusion2.setEnabled(True)
         else:
             self.ui.coeffDiffusion2.setEnabled(False)
 
     def create_dico_para(self):
+        """ creation of parameters dico"""
         self.par = {}
         # requete pour recuperer les parametres dans la base
         sql = "SELECT parametre, {0}, libelle, balise1, gui, gui_type FROM {1}.{2};"
@@ -142,9 +140,10 @@ class Water_quality_dialog(QDialog):
                     self.par[param]["val"] = valeur
 
                 self.par[param]["libelle"] = libelle
-                self.par[param]["gui"] = fct.str2bool(gui)
+                self.par[param]["gui"] = str2bool(gui)
 
-    def initUI(self):
+    def init_ui(self):
+        """initialisation GUI"""
         self.modeleQualiteEauBox = self.ui.modeleQualiteEau
         self.presenceTraceursBox = self.ui.presenceTraceurs
 
@@ -155,12 +154,12 @@ class Water_quality_dialog(QDialog):
                     obj.setChecked(info['val'])
                 elif isinstance(obj, QDoubleSpinBox) or isinstance(obj, QSpinBox):
                     if param == 'coeffDiffusion2':
-                        self.ui.coeffDiffusion2=ScientificDoubleSpinBox(self.ui.tab_3)
+                        self.ui.coeffDiffusion2 = ScientificDoubleSpinBox(self.ui.tab_3)
                         self.ui.coeffDiffusion2.setValue(info['val'])
                         self.ui.gridLayout_5.addWidget(self.coeffDiffusion2, 4, 2, 1, 1)
                         self.coeffDiffusion2.setSingleStep(0.1)
                     elif param == 'paramW':
-                        self.ui.paramW=ScientificDoubleSpinBox(self.ui.tab_3)
+                        self.ui.paramW = ScientificDoubleSpinBox(self.ui.tab_3)
                         self.ui.paramW.setValue(info['val'])
                         self.ui.gridLayout_5.addWidget(self.paramW, 2, 3, 1, 1)
                         self.paramW.setSingleStep(0.1)
@@ -175,24 +174,25 @@ class Water_quality_dialog(QDialog):
                         val = info['val'] - 1
                     elif param == "LimitPente":
                         if info['val']:
-                            val =0
+                            val = 0
                         else:
-                            val =1
+                            val = 1
                     elif param == 'ordreSchemaConvec':
                         val = info['val'] - 1
                     obj.setCurrentIndex(val)
                 else:
                     if self.mgis.DEBUG:
-                        self.mgis.addInfo("param {}  obj {}  val {}".format(param, obj, info['val']))
+                        self.mgis.add_info("param {}  obj {}  val {}".format(param, obj, info['val']))
 
         self.type = self.modeleQualiteEau.itemText(self.modeleQualiteEau.currentIndex())
         self.table_Tr = self.ui.tableWidget
         self.table_Tr.setColumnHidden(0, True)
         # self.table_Tr.addAction(CopySelectedCellsAction(self.table_Tr))
-        self.initc = TracerInit_dialog(self)
-        self.modeleQualiteEauChanged(self.type)
+        self.initc = ClassTracerInitDialog(self)
+        self.modele_qualite_eau_changed(self.type)
 
-    def modeleQualiteEauChanged(self, text):
+    def modele_qualite_eau_changed(self, text):
+        """ function to change water quality model"""
         self.type = text
         self.b_meteo_param.setEnabled(False)
         if self.type == 'TRANSPORT_PUR':
@@ -209,11 +209,12 @@ class Water_quality_dialog(QDialog):
         if self.tbwq.dico_phy[self.type]['meteo']:
             self.b_meteo_param.setEnabled(True)
         self.initc.change_module(self.type)
-        self.majTab()
+        self.maj_tab()
 
-    def majTab(self):
+    def maj_tab(self):
+        """updating table"""
         condition = """type='{0}'""".format(self.type)
-        # self.mgis.addInfo(condition)
+        # self.mgis.add_info(condition)
         self.tab_tracer_name = self.mdb.select("tracer_name", condition)
         # print(self.tab_tracer_name)
 
@@ -232,10 +233,10 @@ class Water_quality_dialog(QDialog):
                 self.listeTab.append(self.tab_tracer_name[c])
 
         # gui
-        self.remplirTab_Tr(self.listeTab)
+        self.remplir_tab__tr(self.listeTab)
         self.ui.nbTraceur.setText('{}'.format(self.table_Tr.rowCount()))
 
-    def remplirTab_Tr(self, liste):
+    def remplir_tab__tr(self, liste):
         """ Fill items in the table """
         self.table_Tr.setRowCount(len(liste[0]))
         for j, val in enumerate(liste):
@@ -243,6 +244,7 @@ class Water_quality_dialog(QDialog):
                 self.table_Tr.setItem(i, j, QTableWidgetItem(str(v)))
 
     def add_row_tr(self):
+        """ add row"""
         self.table_Tr.setRowCount(self.table_Tr.rowCount() + 1)
         self.table_Tr.setItem(self.table_Tr.rowCount() - 1, 0, QTableWidgetItem(''))
         self.table_Tr.setItem(self.table_Tr.rowCount() - 1, 1,
@@ -254,18 +256,21 @@ class Water_quality_dialog(QDialog):
                               "text": 'Tracer{}'.format(self.table_Tr.rowCount()),
                               "convec": True, "diffu": True})
 
-    def meteoFile(self):
+    def meteo_file(self):
+        """ Display meteo window"""
         # ouvre et stock information fichier meteo
-        # Temps ; Température de l’air ; Pression de vapeur saturante ; vitesse du vent ; nébulosité ; rayonnement solaire ; Pression atmosphérique
+        # Temps ; Température de l’air ; Pression de vapeur saturante ;
+        # vitesse du vent ; nébulosité ; rayonnement solaire ; Pression atmosphérique
 
-        self.mgis.addInfo('fct meteoFile')
-        dlg = meteo_dialog(self.mgis)
+        # self.mgis.add_info('fct meteo_file')
+        dlg = ClassMeteoDialog(self.mgis)
         dlg.setWindowModality(2)
         dlg.exec_()
 
-    def physicFile(self):
+    def physic_file(self):
+        """ Display physical window"""
         # ouvre et stock tableau de physique
-        dlg = physical_param_dialog(self.mgis, self.ui.modeleQualiteEau.currentText())
+        dlg = ClassPhysicalParamDialog(self.mgis, self.ui.modeleQualiteEau.currentText())
         dlg.setWindowModality(2)
         if dlg.exec_():
             mdl = dlg.ui.tab_param.model()
@@ -275,25 +280,24 @@ class Water_quality_dialog(QDialog):
                                  "WHERE id = {2}".format(self.mdb.SCHEMA, mdl.item(row, 3).data(0),
                                                          mdl.item(row, 0).data(0)))
 
-    def add_line(self):
-        # add line au tableau
-        self.mgis.addInfo('fct add_line')
-        pass
-
-    def delete_line(self, tableView, objnbTrac=None):
+    def delete_line(self, table_view, objnb_trac=None):
+        """ delete line"""
         # delete line
-        self.mgis.addInfo('fct delete_line')
-        if tableView.rowCount() > 1:
-            indices = tableView.selectedIndexes()
+        # self.mgis.add_info('fct delete_line')
+        if table_view.rowCount() > 1:
+            indices = table_view.selectedIndexes()
             for index in indices:
-                tableView.removeRow(index.row())
+                table_view.removeRow(index.row())
                 del self.dicoTrac[index.row()]
-        if objnbTrac:
-            objnbTrac.setText('{}'.format(tableView.rowCount()))
+        if objnb_trac:
+            objnb_trac.setText('{}'.format(table_view.rowCount()))
 
-    def stockTable_Tr(self, table):
+    def stock_table_tr(self, table):
+        """
+        Insert table data in database
+        """
         if self.ui.WaterQ.currentIndex() == 2:
-            self.onChangeTab(0)
+            self.on_change_tab(0)
         id_exist = None
         liste_id_cur = {}
         for row in range(table.rowCount()):
@@ -324,7 +328,7 @@ class Water_quality_dialog(QDialog):
                                                          table.item(row, 0).text()))
 
         # add transport_pur & laws_wq
-        idmax = self.mdb.selectMax("id", "tracer_name", '')
+        idmax = self.mdb.select_max("id", "tracer_name", '')
         for row in range(table.rowCount()):
             if table.item(row, 0).text() == "":
                 sql = """INSERT INTO {0}.tracer_name (id,type,sigle,text,convec,diffu ) VALUES
@@ -340,7 +344,8 @@ class Water_quality_dialog(QDialog):
 
                 if id_exist:
                     sql = """INSERT INTO {schem}.laws_wq (id_config, id_trac, time, value) 
-                             SELECT id_config, {id_fin}, time, Null FROM {schem}.laws_wq WHERE id_trac = {id_src}""".format(
+                             SELECT id_config, {id_fin}, time, Null FROM {schem}.laws_wq 
+                             WHERE id_trac = {id_src}""".format(
                         schem=self.mdb.SCHEMA,
                         id_fin=idmax + 1,
                         id_src=id_exist)
@@ -375,8 +380,9 @@ class Water_quality_dialog(QDialog):
         self.mdb.execute(sql)
 
     def update_conv_diff(self, table):
+        """ updating convection and diffusion parameters in database"""
         if self.ui.WaterQ.currentIndex() == 2:
-            self.onChangeTab(0)
+            self.on_change_tab(0)
 
         liste_id = {}
         for row in range(table.rowCount()):
@@ -418,7 +424,8 @@ class Water_quality_dialog(QDialog):
                      """.format(self.mdb.SCHEMA, txt_dif, 'diffusionTraceurs')
         self.mdb.execute(sql)
 
-    def onChangeTab(self, idx):
+    def on_change_tab(self, idx):
+        """function when table state change """
         if idx != 0:
             self.table_conv_diff.setRowCount(0)
             for r in range(self.table_Tr.rowCount()):
@@ -452,7 +459,7 @@ class Water_quality_dialog(QDialog):
                     cb = self.table_conv_diff.cellWidget(r, param[1]).layout().itemAt(0).widget()
                     self.dicoTrac[r][param[0]] = cb.isChecked()
 
-    def acceptDialog(self):
+    def accept_dialog(self):
         """Modification of the parameters in sql table"""
         for param, info in self.par.items():
             if info['gui']:
@@ -465,13 +472,13 @@ class Water_quality_dialog(QDialog):
                     if param == 'optionConvection' or param == "modeleQualiteEau" \
                             or param == 'optionCalculDiffusion' or param == "LimitPente" \
                             or param == 'ordreSchemaConvec':
-                        if param == "LimitPente" :
-                            if val==0 and self.ui.LimitPente.isEnabled():
-                                val ='True'
+                        if param == "LimitPente":
+                            if val == 0 and self.ui.LimitPente.isEnabled():
+                                val = 'True'
                             else:
                                 val = 'False'
-                        elif param == 'optionConvection' :
-                            val=val+2
+                        elif param == 'optionConvection':
+                            val = val + 2
 
                         else:
                             val = val + 1
@@ -482,7 +489,7 @@ class Water_quality_dialog(QDialog):
                 else:
                     if param == "paramW":
                         if not self.ui.paramW.isEnabled():
-                            val =0
+                            val = 0
                         else:
                             val = obj.value()
                     else:
@@ -496,18 +503,18 @@ class Water_quality_dialog(QDialog):
 
         # stock tracer
         if self.type == 'TRANSPORT_PUR':
-            self.stockTable_Tr(self.table_Tr)
+            self.stock_table_tr(self.table_Tr)
         else:
             self.update_conv_diff(self.table_Tr)
-        #meteo
+        # meteo
         if self.tbwq.dico_phy[self.type]['meteo']:
             order = "id"
             where = "active=true"
             meteo_trac = self.mdb.select('meteo_config', where, order)
-            if meteo_trac['id'] == []:
-                val='FALSE'
+            if not meteo_trac['id']:
+                val = 'FALSE'
             else:
-                val ='TRUE'
+                val = 'TRUE'
             sql = """   UPDATE {0}.parametres
                               SET (steady,unsteady,transcritical)=('{1}','{1}','{1}') 
                               WHERE parametre='{2}'

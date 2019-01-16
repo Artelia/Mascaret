@@ -17,33 +17,32 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-
+import os
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
+from qgis.core import *
+from qgis.gui import *
+from qgis.utils import *
+
+from .ClassTableWQ import ClassTableWQ
+from .Graph_WQ import GraphInitConc
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
 else:  # qt5
     from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
     from qgis.PyQt.QtWidgets import *
-import os
-from qgis.core import *
-from qgis.utils import *
-from qgis.gui import *
-
-from .graph_WQ import GraphInitConc
-from .table_WQ import table_WQ
 
 
-class init_conc_dialog(QDialog):
+class InitConcDialog(QDialog):
     def __init__(self, obj, id, name):
         QDialog.__init__(self)
         self.paramTr = obj
         self.mgis = obj.mgis
         self.ui = obj.ui
         self.mdb = self.mgis.mdb
-        self.tbwq = table_WQ(self.mgis, self.mdb)
+        self.tbwq = ClassTableWQ(self.mgis, self.mdb)
         self.cur_wq_mod = self.tbwq.dico_mod_wq[obj.type]
         self.cur_wq_law = id
         self.cur_wq_law_name = name
@@ -52,25 +51,25 @@ class init_conc_dialog(QDialog):
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_init_conc.ui'), self)
 
         self.ui.tab_laws.sCut_del = QShortcut(QKeySequence("Del"), self)
-        self.ui.tab_laws.sCut_del.activated.connect(self.shortCut_row_del)
+        self.ui.tab_laws.sCut_del.activated.connect(self.short_cut_row_del)
 
-        styledItemDelegate = QStyledItemDelegate()
-        styledItemDelegate.setItemEditorFactory(ItemEditorFactory())
-        self.ui.tab_laws.setItemDelegate(styledItemDelegate)
+        styled_item_delegate = QStyledItemDelegate()
+        styled_item_delegate.setItemEditorFactory(ItemEditorFactory())
+        self.ui.tab_laws.setItemDelegate(styled_item_delegate)
 
         self.ui.actionB_import.triggered.connect(self.import_csv)
         self.ui.actionB_addLine.triggered.connect(self.new_val)
         self.ui.actionB_delLine.triggered.connect(self.delete_val)
-        self.ui.b_OK_page2.accepted.connect(self.acceptPage2)
-        self.ui.b_OK_page2.rejected.connect(self.rejectPage2)
+        self.ui.b_OK_page2.accepted.connect(self.accept_page2)
+        self.ui.b_OK_page2.rejected.connect(self.reject_page2)
         self.ui.cb_bief.currentIndexChanged[int].connect(self.change_bief)
 
-        self.initUI()
+        self.init_ui()
 
-    def initUI(self):
+    def init_ui(self):
         self.ui.LawWQ.setText(self.cur_wq_law_name)
         self.graph_edit = GraphInitConc(self.mgis, self.ui.lay_graph_edit)
-        self.graph_edit.initMdl(self.tbwq.dico_wq_mod[self.cur_wq_mod])
+        self.graph_edit.init_mdl(self.tbwq.dico_wq_mod[self.cur_wq_mod])
         self.fill_tab_laws()
 
     def create_tab_model(self):
@@ -90,10 +89,10 @@ class init_conc_dialog(QDialog):
             model.setHeaderData(r + 2, 1, row[1], 0)
             self.list_trac.append([row[0], row[1]])
 
-        model.itemChanged.connect(self.onTabDataChange)
+        model.itemChanged.connect(self.on_tab_data_change)
         return model
 
-    def shortCut_row_del(self):
+    def short_cut_row_del(self):
         if self.ui.tab_laws.hasFocus():
             cols = []
             model = self.ui.tab_laws.model()
@@ -122,13 +121,14 @@ class init_conc_dialog(QDialog):
                     for bief in lst_bief:
                         self.ui.cb_bief.addItem("Bief {}".format(bief[0]), bief[0])
                     self.ui.cb_bief.blockSignals(False)
-                    self.graph_edit.initGraph(self.cur_wq_law, lst_bief[0][0])
+                    self.graph_edit.init_graph(self.cur_wq_law, lst_bief[0][0])
                 else:
-                    self.graph_edit.initGraph(None, None)
+                    self.graph_edit.init_graph(None, None)
 
                 c = 0
                 for trac in self.list_trac:
-                    sql = "SELECT bief, abscissa, value FROM {0}.init_conc_wq WHERE id_config = {1} AND id_trac = {2} " \
+                    sql = "SELECT bief, abscissa, value FROM {0}.init_conc_wq " \
+                          "WHERE id_config = {1} AND id_trac = {2} " \
                           "ORDER BY  bief, abscissa".format(self.mdb.SCHEMA, self.cur_wq_law, trac[0])
                     rows = self.mdb.run_query(sql, fetch=True)
                     if c == 0:
@@ -150,7 +150,7 @@ class init_conc_dialog(QDialog):
 
             self.filling_tab = False
         else:
-            self.graph_edit.initGraph(None, None)
+            self.graph_edit.init_graph(None, None)
 
     def import_csv(self):
         """ import CSV """
@@ -190,7 +190,7 @@ class init_conc_dialog(QDialog):
                 self.update_courbe("all")
             else:
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Import failed ({}) because the colone number of file isn't agree.".format(f[0]))
+                    self.mgis.add_info("Import failed ({}) because the colone number of file isn't agree.".format(f[0]))
 
     def current_bief(self):
         if self.ui.cb_bief.currentIndex() == -1:
@@ -218,7 +218,7 @@ class init_conc_dialog(QDialog):
     def change_bief(self):
         self.update_courbe("all")
 
-    def onTabDataChange(self, itm):
+    def on_tab_data_change(self, itm):
         if not self.filling_tab:
             if itm.column() < 2:
                 model = itm.model()
@@ -252,7 +252,7 @@ class init_conc_dialog(QDialog):
                     ly.append(self.ui.tab_laws.model().item(r, crb + 2).data(0))
             data[crb] = {"x": lx, "y": ly}
 
-        self.graph_edit.majCourbes(data)
+        self.graph_edit.maj_courbes(data)
 
     def new_val(self):
         self.filling_tab = True
@@ -276,13 +276,13 @@ class init_conc_dialog(QDialog):
             if model.item(r - 1, 0).data(0) != cur_bief:
                 valabs = 0.0
             else:
-                try :
+                try:
                     if model.item(r - 2, 0).data(0) != cur_bief:
                         valabs = model.item(r - 1, 1).data(0) + 1.
                     else:
                         valabs = 2 * model.item(r - 1, 1).data(0) - model.item(r - 2, 1).data(0)
-                except AttributeError :
-                    valabs = valabs+1
+                except AttributeError:
+                    valabs = valabs + 1
         itm.setData(valabs, 0)
         model.setItem(r, 1, itm)
 
@@ -305,7 +305,7 @@ class init_conc_dialog(QDialog):
             self.update_cb_bief()
             self.update_courbe("all")
 
-    def acceptPage2(self):
+    def accept_page2(self):
         # save Info
         # modificaito liste page 1
         # change de page
@@ -313,7 +313,7 @@ class init_conc_dialog(QDialog):
             name_law = str(self.ui.LawWQ.text())
             if self.cur_wq_law == -1:
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Addition of {} Tracer initial condition".format(name_law))
+                    self.mgis.add_info("Addition of {} Tracer initial condition".format(name_law))
                 self.mdb.execute(
                     "INSERT INTO {0}.init_conc_config (name, type) VALUES ('{1}', {2})".format(self.mdb.SCHEMA,
                                                                                                name_law,
@@ -322,7 +322,7 @@ class init_conc_dialog(QDialog):
                 self.cur_wq_law = res[0][0]
             else:
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Editing of {} Tracer Initial Concentration".format(name_law))
+                    self.mgis.add_info("Editing of {} Tracer Initial Concentration".format(name_law))
                 self.mdb.execute(
                     "UPDATE {0}.init_conc_config SET name = '{1}' WHERE id = {2}".format(self.mdb.SCHEMA, name_law,
                                                                                          self.cur_wq_law))
@@ -336,50 +336,37 @@ class init_conc_dialog(QDialog):
                                  self.ui.tab_laws.model().item(r, 1).data(0),
                                  self.ui.tab_laws.model().item(r, c).data(0)])
             self.mdb.run_query(
-                "INSERT INTO {0}.init_conc_wq (id_config, id_trac, bief, abscissa, value) VALUES (%s, %s, %s, %s, %s)".format(
-                    self.mdb.SCHEMA), many=True, listMany=recs)
+                "INSERT INTO {0}.init_conc_wq (id_config, id_trac, bief, abscissa, value)"
+                " VALUES (%s, %s, %s, %s, %s)".format(
+                    self.mdb.SCHEMA), many=True, list_many=recs)
         else:
-            self.rejectPage2()
+            self.reject_page2()
         self.accept()
 
-    def rejectPage2(self):
+    def reject_page2(self):
         if self.mgis.DEBUG:
-            self.mgis.addInfo("Cancel of Tracer Laws")
+            self.mgis.add_info("Cancel of Tracer Laws")
         self.reject()
 
 
-def data_to_float(txt):
-    try:
-        float(txt)
-        return float(txt)
-    except ValueError:
-        return None
-
-
-def data_to_int(txt):
-    try:
-        int(txt)
-        return int(txt)
-    except ValueError:
-        return None
-
-
-class ItemEditorFactory(
-    QItemEditorFactory):  # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate    It is possible for a custom delegate to provide editors without the use of an editor item factory. In this case, the following virtual functions must be reimplemented:
+class ItemEditorFactory(QItemEditorFactory):
+    # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
+    # It is possible for a custom delegate to provide editors without the use of an editor item factory.
+    # In this case, the following virtual functions must be reimplemented:
     def __init__(self):
         QItemEditorFactory.__init__(self)
 
-    def createEditor(self, userType, parent):
-        # print (userType)
-        if userType == QVariant.Double or userType == 0:
-            doubleSpinBox = QDoubleSpinBox(parent)
-            doubleSpinBox.setDecimals(10)
-            doubleSpinBox.setMinimum(-1000000000.)  # The default maximum value is 99.99.
-            doubleSpinBox.setMaximum(1000000000.)  # The default maximum value is 99.99.
-            return doubleSpinBox
+    def createEditor(self, user_type, parent):
+        # print (user_type)
+        if user_type == QVariant.Double or user_type == 0:
+            double_spin_box = QDoubleSpinBox(parent)
+            double_spin_box.setDecimals(10)
+            double_spin_box.setMinimum(-1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMaximum(1000000000.)  # The default maximum value is 99.99.
+            return double_spin_box
         else:
-            integerSpinBox = QSpinBox(parent)
-            integerSpinBox.setMinimum(-1000000000.)  # The default maximum value is 99.99.
-            integerSpinBox.setMaximum(1000000000.)  # The default maximum value is 99.99.
-            return integerSpinBox
-            # return ItemEditorFactory.createEditor(userType, parent)
+            integer_spin_box = QSpinBox(parent)
+            integer_spin_box.setMinimum(-1000000000.)  # The default maximum value is 99.99.
+            integer_spin_box.setMaximum(1000000000.)  # The default maximum value is 99.99.
+            return integer_spin_box
+            # return ItemEditorFactory.createEditor(user_type, parent)

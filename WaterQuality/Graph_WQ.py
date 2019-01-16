@@ -18,13 +18,17 @@ email                :
  ***************************************************************************/
 """
 
+import matplotlib.dates as mdates
+import matplotlib.ticker as ticker
+from matplotlib.figure import Figure
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
-from qgis.PyQt.uic import *
-from qgis.PyQt.QtCore import *
 
-if int(qVersion()[0])<5:   #qt4
+if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
+
     try:
         from matplotlib.backends.backend_qt4agg \
             import FigureCanvasQTAgg as FigureCanvas
@@ -38,8 +42,9 @@ if int(qVersion()[0])<5:   #qt4
     except:
         from matplotlib.backends.backend_qt4agg \
             import NavigationToolbar2QT as NavigationToolbar
-else: #qt4
+else:  # qt4
     from qgis.PyQt.QtWidgets import *
+
     try:
         from matplotlib.backends.backend_qt5agg \
             import FigureCanvasQTAgg as FigureCanvas
@@ -55,27 +60,6 @@ else: #qt4
             import NavigationToolbar2QT as NavigationToolbar
 # **************************************************
 
-try:
-    _encoding = QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QApplication.translate(context, text, disambig)
-
-
-from matplotlib.widgets import RectangleSelector, SpanSelector, Cursor
-from matplotlib.ticker import FormatStrFormatter
-from matplotlib import gridspec, patches
-from matplotlib.figure import Figure
-import matplotlib.dates as mdates
-import matplotlib.ticker as ticker
-import matplotlib.image as mpimg
-import matplotlib.lines as mlines
-
-from datetime import datetime
-import numpy as np
-import sys, os
 
 class GraphCommon(QDialog):
     def __init__(self, mgis=None):
@@ -88,10 +72,10 @@ class GraphCommon(QDialog):
         self.canvas = FigureCanvas(self.fig)
         self.toolbar = NavigationToolbar(self.canvas, self)
 
-    def initUI_common_P(self):
+    def init_ui_common__p(self):
         self.courbes = []
 
-    def GUI_graph(self, lay):
+    def gui_graph(self, lay):
         lay.addWidget(self.canvas)
         lay.addWidget(self.toolbar)
 
@@ -106,11 +90,11 @@ class GraphCommon(QDialog):
                 legline.set_alpha(1.0)
             else:
                 legline.set_alpha(0.2)
-            self.majLimites()
+            self.maj_limites()
 
-    def initLegende(self):
-        listeNoms = [c.get_label() for c in self.courbes]
-        self.leg = self.axes.legend(self.courbes, listeNoms, loc='upper right',
+    def init_legende(self):
+        liste_noms = [c.get_label() for c in self.courbes]
+        self.leg = self.axes.legend(self.courbes, liste_noms, loc='upper right',
                                     fancybox=False, shadow=False, fontsize=7.)
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
@@ -122,7 +106,7 @@ class GraphCommon(QDialog):
             legline.set_linewidth(3)
             self.lined[legline] = courbe
 
-    def majUnitX(self, unit):
+    def maj_unit_x(self, unit):
         self.unit = unit
         self.axes.set_xlabel("time ({})".format(unit))
         if self.unit != 'date':
@@ -130,18 +114,18 @@ class GraphCommon(QDialog):
         else:
             self.axes.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
 
-    def majCourbes(self, courbes):
+    def maj_courbes(self, courbes):
         for c in courbes.keys():
             self.courbes[c].set_data(courbes[c]["x"], courbes[c]["y"])
 
-        self.majLimites()
+        self.maj_limites()
 
-    def majLimites(self):
+    def maj_limites(self):
         no_data = True
-        miniX = 999999.
-        maxiX = -999999.
-        miniZ = 999999.
-        maxiZ = -999999.
+        mini_x = 999999.
+        maxi_x = -999999.
+        mini_z = 999999.
+        maxi_z = -999999.
 
         for courbe in self.courbes:
             if courbe.get_visible():
@@ -150,17 +134,17 @@ class GraphCommon(QDialog):
                 lz = [z for z in lz if z is not None]
                 if lx and lz:
                     no_data = False
-                    miniX = min(miniX, min(lx))
-                    maxiX = max(maxiX, max(lx))
-                    miniZ = min(miniZ, min(lz) - 1)
-                    maxiZ = max(maxiZ, max(lz) + 1)
+                    mini_x = min(mini_x, min(lx))
+                    maxi_x = max(maxi_x, max(lx))
+                    mini_z = min(mini_z, min(lz) - 1)
+                    maxi_z = max(maxi_z, max(lz) + 1)
 
         if no_data:
             self.axes.set_xlim(0., 1.)
             self.axes.set_ylim(0., 1.)
         else:
-            self.axes.set_xlim(miniX, maxiX)
-            self.axes.set_ylim(miniZ, maxiZ)
+            self.axes.set_xlim(mini_x, maxi_x)
+            self.axes.set_ylim(mini_z, maxi_z)
 
         self.fig.autofmt_xdate()
         self.canvas.draw()
@@ -168,14 +152,15 @@ class GraphCommon(QDialog):
 
 class GraphWaterQ(GraphCommon):
     """class Dialog GraphWaterQ"""
+
     def __init__(self, mgis=None, lay=None, mod=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
-        self.initUI_common_P()
-        self.GUI_graph(lay)
-        self.initUI(mod)
+        self.init_ui_common__p()
+        self.gui_graph(lay)
+        self.init_ui(mod)
 
-    def initUI(self, mod):
+    def init_ui(self, mod):
         self.axes = self.fig.add_subplot(111)
         self.axes.tick_params(axis='both', labelsize=7.)
         self.axes.grid(True)
@@ -185,22 +170,22 @@ class GraphWaterQ(GraphCommon):
 
         self.list_trac = []
         for row in rows:
-            self.list_trac.append({"id":row[0], "name": row[1]})
-            self.courbeTrac, = self.axes.plot([], [], zorder=100-row[0], label=row[1])
+            self.list_trac.append({"id": row[0], "name": row[1]})
+            self.courbeTrac, = self.axes.plot([], [], zorder=100 - row[0], label=row[1])
             self.courbes.append(self.courbeTrac)
 
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
-        self.initLegende()
+        self.init_legende()
 
-    def initGraph(self, config, all_vis=False):
-        self.majUnitX("s")
+    def init_graph(self, config, all_vis=False):
+        self.maj_unit_x("s")
         leglines = self.leg.get_lines()
         for t, trac in enumerate(self.list_trac):
             lst = [[], []]
             if config is not None:
-                sql = "SELECT time, value FROM {0}.laws_wq WHERE id_config = {1} and id_trac = {2} ORDER BY time".format(self.mdb.SCHEMA,
-                                                                                                                         config,
-                                                                                                                         trac["id"])
+                sql = "SELECT time, value FROM {0}.laws_wq " \
+                      "WHERE id_config = {1} and id_trac = {2}" \
+                      " ORDER BY time".format(self.mdb.SCHEMA, config, trac["id"])
                 rows = self.mdb.run_query(sql, fetch=True)
                 if len(rows) > 0:
                     lst = list(zip(*rows))
@@ -211,40 +196,41 @@ class GraphWaterQ(GraphCommon):
                 self.courbes[t].set_visible(True)
                 leglines[t].set_alpha(1.0)
 
-        self.majLimites()
+        self.maj_limites()
 
 
 class GraphMeteo(GraphCommon):
     """class Dialog GraphWaterQ"""
+
     def __init__(self, mgis=None, lay=None, lst_var=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
         self.lst_var = lst_var
-        self.initUI_common_P()
-        self.GUI_graph(lay)
-        self.initUI()
+        self.init_ui_common__p()
+        self.gui_graph(lay)
+        self.init_ui()
 
-    def initUI(self):
+    def init_ui(self):
         self.axes = self.fig.add_subplot(111)
         self.axes.tick_params(axis='both', labelsize=7.)
         self.axes.grid(True)
 
         for var in self.lst_var:
-            self.courbeTrac, = self.axes.plot([], [], zorder=100-var["id"], label=var["name"])
+            self.courbeTrac, = self.axes.plot([], [], zorder=100 - var["id"], label=var["name"])
             self.courbes.append(self.courbeTrac)
 
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
-        self.initLegende()
+        self.init_legende()
 
-    def initGraph(self, config, all_vis=False):
-        self.majUnitX("s")
+    def init_graph(self, config, all_vis=False):
+        self.maj_unit_x("s")
         leglines = self.leg.get_lines()
         for v, var in enumerate(self.lst_var):
             lst = [[], []]
             if config is not None:
-                sql = "SELECT time, value FROM {0}.laws_meteo WHERE id_config = {1} and id_var = {2} ORDER BY time".format(self.mdb.SCHEMA,
-                                                                                                                           config,
-                                                                                                                           var["id"])
+                sql = "SELECT time, value FROM {0}.laws_meteo " \
+                      "WHERE id_config = {1} and id_var = {2} " \
+                      "ORDER BY time".format(self.mdb.SCHEMA, config, var["id"])
                 rows = self.mdb.run_query(sql, fetch=True)
                 if len(rows) > 0:
                     lst = list(zip(*rows))
@@ -255,23 +241,24 @@ class GraphMeteo(GraphCommon):
                 self.courbes[v].set_visible(True)
                 leglines[v].set_alpha(1.0)
 
-        self.majLimites()
+        self.maj_limites()
 
 
 class GraphInitConc(GraphCommon):
     """class Dialog GraphWaterQ"""
+
     def __init__(self, mgis=None, lay=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
-        self.initUI_common_P()
-        self.GUI_graph(lay)
-        self.initUI()
+        self.init_ui_common__p()
+        self.gui_graph(lay)
+        self.init_ui()
 
-    def initUI(self):
+    def init_ui(self):
         self.axes = self.fig.add_subplot(111)
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
 
-    def initMdl(self, mod):
+    def init_mdl(self, mod):
         sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(self.mdb.SCHEMA, mod)
         rows = self.mdb.run_query(sql, fetch=True)
 
@@ -282,14 +269,14 @@ class GraphInitConc(GraphCommon):
         self.list_trac = []
         self.courbes = []
         for row in rows:
-            self.list_trac.append({"id":row[0], "name": row[1]})
-            self.courbeTrac, = self.axes.plot([], [], zorder=100-row[0], label=row[1])
+            self.list_trac.append({"id": row[0], "name": row[1]})
+            self.courbeTrac, = self.axes.plot([], [], zorder=100 - row[0], label=row[1])
             self.courbes.append(self.courbeTrac)
 
-        self.initLegende()
+        self.init_legende()
 
-    def initGraph(self, config, bief, all_vis=False):
-        # self.majUnitX("s")
+    def init_graph(self, config, bief, all_vis=False):
+        # self.maj_unit_x("s")
         leglines = self.leg.get_lines()
         for t, trac in enumerate(self.list_trac):
             lst = [[], []]
@@ -309,5 +296,4 @@ class GraphInitConc(GraphCommon):
                 self.courbes[t].set_visible(True)
                 leglines[t].set_alpha(1.0)
 
-        self.majLimites()
-
+        self.maj_limites()

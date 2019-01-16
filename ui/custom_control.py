@@ -20,26 +20,27 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+import numpy as np
+import re
 
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import qVersion
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 
-
-from qgis.PyQt.QtCore import qVersion
-if int(qVersion()[0])<5:
-    from qgis.PyQt.QtGui import QMessageBox,QValidator,QDoubleSpinBox
-else:     #qt5
+if int(qVersion()[0]) < 5:
+    from qgis.PyQt.QtGui import QMessageBox, QValidator, QDoubleSpinBox
+else:  # qt5
     from qgis.PyQt.QtGui import QValidator
-    from qgis.PyQt.QtWidgets import QMessageBox,QDoubleSpinBox
+    from qgis.PyQt.QtWidgets import QMessageBox, QDoubleSpinBox
 
-import numpy as np
-import re
-#*******************************************************************************
+
+# *******************************************************************************
 #   Class  warningBox
-#*******************************************************************************
-class Class_warningBox():
+# *******************************************************************************
+class ClassWarningBox():
     """TODO add all select box """
+
     def __init__(self, mgis):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
@@ -51,16 +52,19 @@ class Class_warningBox():
         d.addButton(QMessageBox.No)
         d.setDefaultButton(QMessageBox.No)
         d.setText(msg)
-        ret =d.exec_()
+        ret = d.exec_()
 
         if ret == QMessageBox.Yes:
             return True
         else:
             return False
-#*******************************************************************************
+
+
+# *******************************************************************************
 #   Class  ScientificDoubleSpinBox
-#*******************************************************************************
+# *******************************************************************************
 _float_re = re.compile(r'(([+-]?\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)')
+
 
 def valid_float_string(string):
     match = _float_re.search(string)
@@ -68,11 +72,10 @@ def valid_float_string(string):
 
 
 class FloatValidator(QValidator):
-
     def validate(self, string, position):
         if valid_float_string(string):
             return QValidator.Acceptable
-        if string == "" or string[position-1] in 'e.-+':
+        if string == "" or string[position - 1] in 'e.-+':
             return QValidator.Intermediate
         return QValidator.Invalid
 
@@ -82,16 +85,15 @@ class FloatValidator(QValidator):
 
 
 class ScientificDoubleSpinBox(QDoubleSpinBox):
-
     def __init__(self, *args, **kwargs):
-        super(ScientificDoubleSpinBox,self).__init__(*args, **kwargs)
+        super(ScientificDoubleSpinBox, self).__init__(*args, **kwargs)
         self.setMinimum(-np.inf)
         self.setMaximum(np.inf)
         self.validator = FloatValidator()
         self.setDecimals(1000)
 
     def validate(self, text, position):
-        return self.validator.validate(text, position), text,position
+        return self.validator.validate(text, position), text, position
 
     def fixup(self, text):
         return self.validator.fixup(text)
@@ -116,4 +118,4 @@ def format_float(value):
     string = "{:g}".format(value).replace("e+", "e")
     string = re.sub("e(-?)0*(\d+)", r"e\1\2", string)
     return string
-#*******************************************************************************
+    # *******************************************************************************

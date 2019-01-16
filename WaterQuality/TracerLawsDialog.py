@@ -17,30 +17,31 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-
-
+import os
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
-if int(qVersion()[0])<5:  #qt4
+from qgis.core import *
+from qgis.gui import *
+from qgis.utils import *
+
+from .ClassTableWQ import ClassTableWQ
+from .Graph_WQ import GraphWaterQ
+from ..Function import data_to_float
+
+if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
-else: #qt5
+else:  # qt5
     from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
     from qgis.PyQt.QtWidgets import *
-import os
-from qgis.core import *
-from qgis.utils import *
-from qgis.gui import *
 
-from .graph_WQ import GraphWaterQ
-from .table_WQ import table_WQ
 
-class TracerLaws_dialog(QDialog):
+class ClassTracerLawsDialog(QDialog):
     def __init__(self, mgis):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-        self.tbwq = table_WQ(self.mgis, self.mdb)
+        self.tbwq = ClassTableWQ(self.mgis, self.mdb)
         self.cur_wq_mod = self.tbwq.get_cur_wq_mod()
         self.cur_wq_law = None
         self.filling_tab = False
@@ -48,7 +49,7 @@ class TracerLaws_dialog(QDialog):
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_tracer_laws.ui'), self)
 
         self.ui.tab_laws.sCut_del = QShortcut(QKeySequence("Del"), self)
-        self.ui.tab_laws.sCut_del.activated.connect(self.shortCut_row_del)
+        self.ui.tab_laws.sCut_del.activated.connect(self.short_cut_row_del)
 
         self.bg_time = QButtonGroup()
         self.bg_time.addButton(self.rb_sec, 0)
@@ -57,9 +58,9 @@ class TracerLaws_dialog(QDialog):
         self.bg_time.addButton(self.rb_day, 3)
         self.bg_time.buttonClicked[int].connect(self.chg_time)
 
-        styledItemDelegate = QStyledItemDelegate()
-        styledItemDelegate.setItemEditorFactory(ItemEditorFactory())
-        self.ui.tab_laws.setItemDelegate(styledItemDelegate)
+        styled_item_delegate = QStyledItemDelegate()
+        styled_item_delegate.setItemEditorFactory(ItemEditorFactory())
+        self.ui.tab_laws.setItemDelegate(styled_item_delegate)
 
         self.ui.actionB_edit.triggered.connect(self.edit_law)
         self.ui.actionB_new.triggered.connect(self.new_law)
@@ -67,21 +68,21 @@ class TracerLaws_dialog(QDialog):
         self.ui.actionB_import.triggered.connect(self.import_csv)
         self.ui.actionB_addLine.triggered.connect(self.new_time)
         self.ui.actionB_delLine.triggered.connect(self.delete_time)
-        self.ui.b_OK_page2.accepted.connect(self.acceptPage2)
-        self.ui.b_OK_page2.rejected.connect(self.rejectPage2)
+        self.ui.b_OK_page2.accepted.connect(self.accept_page2)
+        self.ui.b_OK_page2.rejected.connect(self.reject_page2)
         self.ui.b_OK_page1.accepted.connect(self.reject)
 
-        self.initUI()
+        self.init_ui()
 
-    def displayGraphHome(self):
+    def display_graph_home(self):
         if self.ui.lst_laws.selectedIndexes():
             l = self.ui.lst_laws.selectedIndexes()[0].row()
             config = int(self.ui.lst_laws.model().item(l, 0).text())
-            self.graph_home.initGraph(config)
+            self.graph_home.init_graph(config)
         else:
-            self.graph_home.initGraph(None)
+            self.graph_home.init_graph(None)
 
-    def initUI(self):
+    def init_ui(self):
         self.ui.Law_pages.setCurrentIndex(0)
         self.graph_home = GraphWaterQ(self.mgis, self.ui.lay_graph_home, self.tbwq.dico_wq_mod[self.cur_wq_mod])
         self.graph_edit = GraphWaterQ(self.mgis, self.ui.lay_graph_edit, self.tbwq.dico_wq_mod[self.cur_wq_mod])
@@ -92,7 +93,7 @@ class TracerLaws_dialog(QDialog):
         model.setColumnCount(2)
         self.ui.lst_laws.setModel(model)
         self.ui.lst_laws.setModelColumn(1)
-        self.ui.lst_laws.selectionModel().selectionChanged.connect(self.displayGraphHome)
+        self.ui.lst_laws.selectionModel().selectionChanged.connect(self.display_graph_home)
 
         sql = "SELECT * FROM {0}.tracer_config WHERE type = {1} ORDER BY name".format(self.mdb.SCHEMA, self.cur_wq_mod)
         rows = self.mdb.run_query(sql, fetch=True)
@@ -111,8 +112,7 @@ class TracerLaws_dialog(QDialog):
                     self.ui.lst_laws.setCurrentIndex(self.ui.lst_laws.model().item(r, 1).index())
                     break
         else:
-            self.displayGraphHome()
-
+            self.display_graph_home()
 
     def create_tab_model(self):
         self.list_trac = []
@@ -121,18 +121,19 @@ class TracerLaws_dialog(QDialog):
         for c in range(4):
             model.setHeaderData(c, 1, 'time', 0)
 
-        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(self.mdb.SCHEMA, self.tbwq.dico_wq_mod[self.cur_wq_mod])
+        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(self.mdb.SCHEMA,
+                                                                                            self.tbwq.dico_wq_mod[
+                                                                                                self.cur_wq_mod])
         rows = self.mdb.run_query(sql, fetch=True)
         model.insertColumns(4, len(rows))
         for r, row in enumerate(rows):
             model.setHeaderData(r + 4, 1, row[1], 0)
             self.list_trac.append([row[0], row[1]])
 
-        model.itemChanged.connect(self.onTabDataChange)
+        model.itemChanged.connect(self.on_tab_data_change)
         return model
 
-
-    def shortCut_row_del(self):
+    def short_cut_row_del(self):
         if self.ui.tab_laws.hasFocus():
             cols = []
             model = self.ui.tab_laws.model()
@@ -143,7 +144,6 @@ class TracerLaws_dialog(QDialog):
                     cols.append(idx.column() - 4)
             cols = list(set(cols))
             self.update_courbe(cols)
-
 
     def fill_tab_laws(self):
         self.filling_tab = True
@@ -175,22 +175,24 @@ class TracerLaws_dialog(QDialog):
         self.filling_tab = False
         self.rb_sec.click()
 
-
     def import_csv(self):
+        """ import CSV file"""
         nb_col = len(self.list_trac) + 1
         if int(qVersion()[0]) < 5:  # qt4
-            listf = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject, "File (*.txt *.csv *.met)")
+            listf = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject,
+                                                 "File (*.txt *.csv *.met)")
 
         else:  # qt5
-            listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject, "File (*.txt *.csv *.met)")
+            listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject,
+                                                    "File (*.txt *.csv *.met)")
 
-        if listf != []:
+        if listf:
 
             error = False
             self.filling_tab = True
             model = self.create_tab_model()
-            filein =open(listf[0],"r")
-            r=0
+            filein = open(listf[0], "r")
+            r = 0
             for num_ligne, ligne in enumerate(filein):
                 if ligne[0] != '#':
                     liste = ligne.split(";")
@@ -215,10 +217,9 @@ class TracerLaws_dialog(QDialog):
                 self.update_courbe("all")
             else:
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Import failed ({})".format(listf[0]))
+                    self.mgis.add_info("Import failed ({})".format(listf[0]))
 
-
-    def onTabDataChange(self, itm):
+    def on_tab_data_change(self, itm):
         if itm.column() < 4:
             model = itm.model()
             # model = self.ui.tab_laws.model()
@@ -282,7 +283,6 @@ class TracerLaws_dialog(QDialog):
                 idx = itm.index()
                 self.update_courbe([idx.column() - 4])
 
-
     def update_courbe(self, courbes):
         data = {}
         if courbes == "all":
@@ -297,47 +297,43 @@ class TracerLaws_dialog(QDialog):
             ly = []
             for r in range(self.ui.tab_laws.model().rowCount()):
                 ly.append(self.ui.tab_laws.model().item(r, crb + 4).data(0))
-            data[crb] = {"x":lx, "y":ly}
+            data[crb] = {"x": lx, "y": ly}
 
-        self.graph_edit.majCourbes(data)
-
-
+        self.graph_edit.maj_courbes(data)
 
     def new_law(self):
-        #changer de page
+        # changer de page
         self.cur_wq_law = -1
         self.ui.LawWQ.setText('')
         self.fill_tab_laws()
         self.ui.Law_pages.setCurrentIndex(1)
-        self.graph_edit.initGraph(None)
-
+        self.graph_edit.init_graph(None)
 
     def edit_law(self):
-        #charger les informations
-        #changer de page
+        # charger les informations
+        # changer de page
         if self.ui.lst_laws.selectedIndexes():
             l = self.ui.lst_laws.selectedIndexes()[0].row()
             self.cur_wq_law = int(self.ui.lst_laws.model().item(l, 0).text())
             self.ui.LawWQ.setText(self.ui.lst_laws.model().item(l, 1).text())
             self.fill_tab_laws()
             self.ui.Law_pages.setCurrentIndex(1)
-            self.graph_edit.initGraph(self.cur_wq_law)
-
+            self.graph_edit.init_graph(self.cur_wq_law)
 
     def delete_law(self):
-        #charger les informations
-        #changer de page
+        # charger les informations
+        # changer de page
         if self.ui.lst_laws.selectedIndexes():
             l = self.ui.lst_laws.selectedIndexes()[0].row()
             id_law = self.ui.lst_laws.model().item(l, 0).text()
             name_law = self.ui.lst_laws.model().item(l, 1).text()
-            if (QMessageBox.question(self, "Tracer Laws", "Delete {} ?".format(name_law), QMessageBox.Cancel|QMessageBox.Ok)) == QMessageBox.Ok:
+            if (QMessageBox.question(self, "Tracer Laws", "Delete {} ?".format(name_law),
+                                     QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Deletion of {} Tracer Laws".format(name_law))
+                    self.mgis.add_info("Deletion of {} Tracer Laws".format(name_law))
                 self.mdb.execute("DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, id_law))
                 self.mdb.execute("DELETE FROM {0}.tracer_config WHERE id = {1}".format(self.mdb.SCHEMA, id_law))
                 self.fill_lst_conf()
-
 
     def new_time(self):
         self.filling_tab = True
@@ -359,7 +355,6 @@ class TracerLaws_dialog(QDialog):
         self.filling_tab = False
         self.update_courbe("all")
 
-
     def delete_time(self):
         if self.ui.tab_laws.selectedIndexes():
             rows = [idx.row() for idx in self.ui.tab_laws.selectedIndexes()]
@@ -370,7 +365,6 @@ class TracerLaws_dialog(QDialog):
                 model.removeRow(row)
             self.update_courbe("all")
 
-
     def chg_time(self, v):
         unit = ['s', 'min', 'h', 'day']
         for i in range(4):
@@ -379,86 +373,90 @@ class TracerLaws_dialog(QDialog):
             else:
                 self.ui.tab_laws.setColumnHidden(i, True)
         if not self.filling_tab:
-            self.graph_edit.majUnitX(unit[v])
+            self.graph_edit.maj_unit_x(unit[v])
             self.update_courbe("all")
 
-
-    def acceptPage2(self):
-        #save Info
+    def accept_page2(self):
+        # save Info
         # modificaito liste page 1
-        #change de page
-        if self.ui.tab_laws.model().rowCount() > 0 :
+        # change de page
+        if self.ui.tab_laws.model().rowCount() > 0:
             name_law = str(self.ui.LawWQ.text())
             if self.cur_wq_law == -1:
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Addition of {} Tracer Laws".format(name_law))
-                self.mdb.execute("INSERT INTO {0}.tracer_config (name, type) VALUES ('{1}', {2})".format(self.mdb.SCHEMA, name_law, self.cur_wq_mod))
+                    self.mgis.add_info("Addition of {} Tracer Laws".format(name_law))
+                self.mdb.execute(
+                    "INSERT INTO {0}.tracer_config (name, type) VALUES ('{1}', {2})".format(self.mdb.SCHEMA, name_law,
+                                                                                            self.cur_wq_mod))
                 res = self.mdb.run_query("SELECT Max(id) FROM {0}.tracer_config".format(self.mdb.SCHEMA), fetch=True)
                 self.cur_wq_law = res[0][0]
             else:
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Editing of {} Tracer Laws".format(name_law))
-                self.mdb.execute("UPDATE {0}.tracer_config SET name = '{1}' WHERE id = {2}".format(self.mdb.SCHEMA, name_law, self.cur_wq_law))
-                self.mdb.execute("DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, self.cur_wq_law))
+                    self.mgis.add_info("Editing of {} Tracer Laws".format(name_law))
+                self.mdb.execute(
+                    "UPDATE {0}.tracer_config SET name = '{1}' WHERE id = {2}".format(self.mdb.SCHEMA, name_law,
+                                                                                      self.cur_wq_law))
+                self.mdb.execute(
+                    "DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, self.cur_wq_law))
 
             recs = []
             for r in range(self.ui.tab_laws.model().rowCount()):
                 for c in range(4, self.ui.tab_laws.model().columnCount()):
-                    recs.append([self.cur_wq_law, self.list_trac[c-4][0], self.ui.tab_laws.model().item(r, 0).data(0), self.ui.tab_laws.model().item(r, c).data(0)])
-            self.mdb.run_query("INSERT INTO {0}.laws_wq (id_config, id_trac, time, value) VALUES (%s, %s, %s, %s)".format(self.mdb.SCHEMA), many=True, listMany=recs)
+                    recs.append([self.cur_wq_law, self.list_trac[c - 4][0], self.ui.tab_laws.model().item(r, 0).data(0),
+                                 self.ui.tab_laws.model().item(r, c).data(0)])
+            self.mdb.run_query(
+                "INSERT INTO {0}.laws_wq (id_config, id_trac, time, value) VALUES (%s, %s, %s, %s)".format(
+                    self.mdb.SCHEMA), many=True, list_many=recs)
 
             self.fill_lst_conf(self.cur_wq_law)
             self.ui.Law_pages.setCurrentIndex(0)
-            self.graph_edit.initGraph(None, all_vis=True)
-        else :
-                self.rejectPage2()
+            self.graph_edit.init_graph(None, all_vis=True)
+        else:
+            self.reject_page2()
 
-
-    def rejectPage2(self):
+    def reject_page2(self):
         if self.mgis.DEBUG:
-            self.mgis.addInfo("Cancel of Tracer Laws")
+            self.mgis.add_info("Cancel of Tracer Laws")
         self.ui.Law_pages.setCurrentIndex(0)
-        self.graph_edit.initGraph(None, all_vis=True)
+        self.graph_edit.init_graph(None, all_vis=True)
 
-def data_to_float(txt):
-    try:
-        float(txt)
-        return float(txt)
-    except ValueError:
-        return None
 
-class ItemEditorFactory(QItemEditorFactory):  # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate    It is possible for a custom delegate to provide editors without the use of an editor item factory. In this case, the following virtual functions must be reimplemented:
+class ItemEditorFactory(QItemEditorFactory):
+    # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
+    # It is possible for a custom delegate to provide editors without the use of an editor item factory.
+    # In this case, the following virtual functions must be reimplemented:
     def __init__(self):
         QItemEditorFactory.__init__(self)
 
-    def createEditor(self, userType, parent):
+    def createEditor(self, user_type, parent):
 
-        if userType == QVariant.Double or userType == 0:
-            doubleSpinBox = QDoubleSpinBox(parent)
-            doubleSpinBox.setDecimals(10)
-            doubleSpinBox.setMinimum(-1000000000.)  # The default maximum value is 99.99.
-            doubleSpinBox.setMaximum(1000000000.)  # The default maximum value is 99.99.
-            return doubleSpinBox
+        if user_type == QVariant.Double or user_type == 0:
+            double_spin_box = QDoubleSpinBox(parent)
+            double_spin_box.setDecimals(10)
+            double_spin_box.setMinimum(-1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMaximum(1000000000.)  # The default maximum value is 99.99.
+            return double_spin_box
         else:
-            return ItemEditorFactory.createEditor(userType, parent)
+            return ItemEditorFactory.createEditor(user_type, parent)
+
 
 class MySpinBox(QDoubleSpinBox):
     def __init__(self, parent=None):
         super(MySpinBox, self).__init__(parent)
 
-    # def textFromValue(self, value):
-    #     print ("value : {}".format(value))
-    #     if (value == None):
-    #         return str("")
-    #     else:
-    #         return str(value)
-    #
-    # def valueFromText(self, text):
-    #     print ("txt : {}".format(text))
-    #     if (text.toLower() == str("")):
-    #         return None
-    #     else:
-    #         return text.toFloat()
-    #
-    # def validate(self, text, pos):
-    #     return QValidator.Acceptable
+        # def textFromValue(self, value):
+        #     print ("value : {}".format(value))
+        #     if (value == None):
+        #         return str("")
+        #     else:
+        #         return str(value)
+        #
+        # def valueFromText(self, text):
+        #     print ("txt : {}".format(text))
+        #     if (text.toLower() == str("")):
+        #         return None
+        #     else:
+        #         return text.toFloat()
+        #
+        # def validate(self, text, pos):
+        #     return QValidator.Acceptable

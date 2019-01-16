@@ -17,44 +17,43 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-
+import os
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
+from qgis.core import *
+from qgis.gui import *
+from qgis.utils import *
+
+from .ClassTableWQ import ClassTableWQ
+from ..Function import data_to_float
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
 else:  # qt5
     from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
     from qgis.PyQt.QtWidgets import *
-import os
-from qgis.core import *
-from qgis.utils import *
-from qgis.gui import *
-
-from .table_WQ import table_WQ
-from .. import function as fct_
 
 
-class physical_param_dialog(QDialog):
+class ClassPhysicalParamDialog(QDialog):
     def __init__(self, mgis, mod):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-        self.tbwq = table_WQ(self.mgis, self.mdb)
+        self.tbwq = ClassTableWQ(self.mgis, self.mdb)
         self.dico_phy = self.tbwq.dico_phy
         self.cur_wq_mod = mod
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_physical_param.ui'), self)
         self.ui.btn_val_def.clicked.connect(self.val_def)
 
-        styledItemDelegate = QStyledItemDelegate()
-        styledItemDelegate.setItemEditorFactory(ItemEditorFactory())
-        self.ui.tab_param.setItemDelegate(styledItemDelegate)
+        styled_item_delegate = QStyledItemDelegate()
+        styled_item_delegate.setItemEditorFactory(ItemEditorFactory())
+        self.ui.tab_param.setItemDelegate(styled_item_delegate)
 
-        self.initUI()
+        self.init_ui()
 
-    def initUI(self):
+    def init_ui(self):
         model = QStandardItemModel()
         model.insertColumns(0, 4)
         model.setHeaderData(0, 1, 'ID', 0)
@@ -71,7 +70,7 @@ class physical_param_dialog(QDialog):
                 itm = QStandardItem()
                 itm.setData(val, 0)
                 if c == 3:
-                    itm.setData(fct_.data_to_float(val), 0)
+                    itm.setData(data_to_float(val), 0)
                     itm.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsEditable)
                     itm.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                 else:
@@ -92,22 +91,22 @@ class physical_param_dialog(QDialog):
             mdl.item(r, 3).setData(param['value'], 0)
 
 
-class ItemEditorFactory(
-    QItemEditorFactory):  # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
+class ItemEditorFactory(QItemEditorFactory):
+    # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
     # It is possible for a custom delegate to provide editors without the use of an editor item factory.
     # In this case, the following virtual functions must be reimplemented:
     def __init__(self):
         QItemEditorFactory.__init__(self)
 
-    def createEditor(self, userType, parent):
-        if userType == QVariant.Double or userType == 0:
-            doubleSpinBox = QDoubleSpinBox(parent)
-            doubleSpinBox.setDecimals(10)
-            doubleSpinBox.setMinimum(-1000000000.)  # The default maximum value is 99.99.
-            doubleSpinBox.setMaximum(1000000000.)  # The default maximum value is 99.99.
-            return doubleSpinBox
+    def createEditor(self, user_type, parent):
+        if user_type == QVariant.Double or user_type == 0:
+            double_spin_box = QDoubleSpinBox(parent)
+            double_spin_box.setDecimals(10)
+            double_spin_box.setMinimum(-1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMaximum(1000000000.)  # The default maximum value is 99.99.
+            return double_spin_box
         else:
-            return ItemEditorFactory.createEditor(userType, parent)
+            return ItemEditorFactory.createEditor(user_type, parent)
 
 
 class MySpinBox(QDoubleSpinBox):

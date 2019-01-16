@@ -454,7 +454,7 @@ class resultats(MasObject):
                       ('CONSTRAINT projet_pkey', ' PRIMARY KEY (id)')]
 
 
-# TODO: Modifier la table de vette facon
+# TODO: Modifier la table de cette facon
 # class results(MasObject):
 #     def __init__(self):
 #         super(results, self).__init__()

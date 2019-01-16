@@ -18,21 +18,21 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+import os
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 
+from .ClassObservation import ClassObservation
+
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
 else:  # qt5
     from qgis.PyQt.QtWidgets import *
-import os
-
-from .Class_observation import Class_observation
 
 
-class parameter_dialog(QDialog):
+class ClassParameterDialog(QDialog):
     def __init__(self, mgis, kernel):
         QDialog.__init__(self)
         self.mgis = mgis
@@ -42,29 +42,30 @@ class parameter_dialog(QDialog):
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_parameter.ui'), self)
 
-        self.initUI()
+        self.init_ui()
 
-        self.ui.actionB_delete_law.triggered.connect(self.delObserv)
-        self.ui.actionB_load_law.triggered.connect(self.importObserv)
-        self.ui.actionEvenement.triggered.connect(self.chEvent)
-        self.ui.actionRadioButton_law.triggered.connect(self.chEvent)
-        self.ui.buttonBox_valid.accepted.connect(self.acceptDialog)
+        self.ui.actionB_delete_law.triggered.connect(self.del_observ)
+        self.ui.actionB_load_law.triggered.connect(self.import_observ)
+        self.ui.actionEvenement.triggered.connect(self.ch_event)
+        self.ui.actionRadioButton_law.triggered.connect(self.ch_event)
+        self.ui.buttonBox_valid.accepted.connect(self.accept_dialog)
         self.ui.buttonBox_valid.rejected.connect(self.reject)
-        fct = lambda: self.selectbox(self.ui.box_velocity)
+        fct = self.selb(self.ui.box_velocity)
         self.ui.actionbox_velocity.triggered.connect(fct)
-        fct = lambda: self.selectbox(self.ui.box_stress)
+        fct = self.selb(self.ui.box_stress)
         self.ui.actionbox_stress.triggered.connect(fct)
-        fct = lambda: self.selectbox(self.ui.box_hydro)
+        fct = self.selb(self.ui.box_hydro)
         self.ui.actionbox_hydro.triggered.connect(fct)
-        fct = lambda: self.selectbox(self.ui.box_time)
+        fct = self.selb(self.ui.box_time)
         self.ui.actionbox_time.triggered.connect(fct)
-        fct = lambda: self.selectbox(self.ui.box_coef)
+        fct = self.selb(self.ui.box_coef)
         self.ui.actionbox_coef.triggered.connect(fct)
-        fct = lambda: self.selectbox(self.ui.box_WaterLevel)
+        fct = self.selb(self.ui.box_WaterLevel)
         self.ui.actionbox_WaterLevel.triggered.connect(fct)
 
-    def initUI(self):
-        self.obs = Class_observation(self.mgis)
+    def init_ui(self):
+        """initialisation GUI"""
+        self.obs = ClassObservation(self.mgis)
         self.combo = {'code': {1: 'Steady',
                                2: 'Unsteady',
                                3: 'Transcritical'},
@@ -207,7 +208,7 @@ class parameter_dialog(QDialog):
 
                           }
         self.create_dico_para()
-        self.init_GUI()
+        self.init_gui()
 
     def create_dico_para(self):
         self.par = {}
@@ -237,11 +238,11 @@ class parameter_dialog(QDialog):
                     self.par[param]["gui"] = self.str2bool(gui)
                     self.par[param]["gui_type"] = gui_type
 
-    def init_GUI(self):
+    def init_gui(self):
         # pass
 
         for param, info in self.par.items():
-            # self.mgis.addInfo("param {}  info {}".format(param, info))
+            # self.mgis.add_info("param {}  info {}".format(param, info))
             if info['gui'] and info['gui_type'] == 'parameters':
                 obj = getattr(self.ui, param)
                 if isinstance(obj, QCheckBox):
@@ -250,7 +251,7 @@ class parameter_dialog(QDialog):
                     obj.setValue(info['val'])
                 elif obj == self.ui.evenement:
                     self.ui.evenement.setChecked(info['val'])
-                    self.chEvent()
+                    self.ch_event()
                 elif isinstance(obj, QComboBox):
                     if param == 'option':
                         val = info['val'] - 1
@@ -263,7 +264,7 @@ class parameter_dialog(QDialog):
                     obj.setCurrentIndex(val)
                 else:
                     if self.mgis.DEBUG:
-                        self.mgis.addInfo("param {}  obj {}  val {}".format(param, obj, info['val']))
+                        self.mgis.add_info("param {}  obj {}  val {}".format(param, obj, info['val']))
 
                 if param in self.exclusion[self.kernel]:
                     obj.hide()
@@ -271,31 +272,31 @@ class parameter_dialog(QDialog):
                             or isinstance(obj, QComboBox):
                         getattr(self.ui, 'label_' + param).hide()
 
-    def importObserv(self):
+    def import_observ(self):
         """load observation"""
         if int(qVersion()[0]) < 5:  # qt4
-            fileNamePath = QFileDialog.getOpenFileNames(None,
-                                                        'File Selection',
-                                                        self.mgis.masplugPath,
-                                                        filter="CSV (*.csv);;File (*)")
+            file_name_path = QFileDialog.getOpenFileNames(None,
+                                                          'File Selection',
+                                                          self.mgis.masplugPath,
+                                                          filter="CSV (*.csv);;File (*)")
         else:  # qt5
-            fileNamePath, _ = QFileDialog.getOpenFileNames(None,
-                                                           'File Selection',
-                                                           self.mgis.masplugPath,
-                                                           filter="CSV (*.csv);;File (*)")
+            file_name_path, _ = QFileDialog.getOpenFileNames(None,
+                                                             'File Selection',
+                                                             self.mgis.masplugPath,
+                                                             filter="CSV (*.csv);;File (*)")
 
-        if self.obs.evtTOobs(fileNamePath):
-            self.mgis.addInfo('Import is done.')
+        if self.obs.evt_to_obs(file_name_path):
+            self.mgis.add_info('Import is done.')
         else:
-            self.mgis.addInfo('Import failed.')
+            self.mgis.add_info('Import failed.')
 
-    def delObserv(self):
+    def del_observ(self):
         """delete observation """
-        dico_code = self.mdb.selectDistinct("code",
+        dico_code = self.mdb.select_distinct("code",
                                             "Observations")
         ok = False
         if dico_code:
-            # self.mgis.addInfo("{}".format(dico_code))
+            # self.mgis.add_info("{}".format(dico_code))
             event, ok = QInputDialog.getItem(None,
                                              'Event choice',
                                              'Event',
@@ -305,14 +306,14 @@ class parameter_dialog(QDialog):
             where = "code = '{0}'".format(event)
             self.mdb.delete("observations", where)
             if self.mgis.DEBUG:
-                self.mgis.addInfo('{} is deleted.'.format(event))
+                self.mgis.add_info('{} is deleted.'.format(event))
         else:
             txt = "There aren't deleted observations ."
             self.mgis.windinfo(txt)
-            self.mgis.addInfo(txt)
+            self.mgis.add_info(txt)
 
-    def chEvent(self):
-        "event change between law and evenment"
+    def ch_event(self):
+        """event change between law and evenment"""
         event = self.ui.evenement.isChecked()
 
         if event:
@@ -326,21 +327,28 @@ class parameter_dialog(QDialog):
 
         self.par['evenement']["val"] = event
 
-    def str2bool(self, s):
+    @staticmethod
+    def str2bool(s):
         """string to bool"""
         if "True" in s or "TRUE" in s:
             return True
         else:
             return False
 
-    def selectbox(self, box):
+    @staticmethod
+    def selb(obj):
+        """function selectbox"""
+        return lambda: self.selectbox(obj)
+
+    @staticmethod
+    def selectbox(box):
         """ function allow to select  or not for checkBox"""
 
         for checkbox in box.findChildren(QCheckBox):
             checkbox.setChecked(box.isChecked())
             # checkbox.setEnabled(True)
 
-    def acceptDialog(self):
+    def accept_dialog(self):
         """Modification of the parameters in sql table"""
         var = []
         for param, info in self.par.items():

@@ -17,7 +17,9 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-class table_WQ():
+
+
+class ClassTableWQ:
     def __init__(self, mgis, mdb):
         self.mgis = mgis
         self.mdb = mdb
@@ -33,11 +35,11 @@ class table_WQ():
                             6: 'THERMIC'
                             }
         self.dico_mod_wq = {'TRANSPORT_PUR': 1,
-                             'O2' : 2,
-                             'BIOMASS' : 3,
-                             'EUTRO': 4,
-                             'MICROPOLE':5,
-                             'THERMIC':6
+                            'O2': 2,
+                            'BIOMASS': 3,
+                            'EUTRO': 4,
+                            'MICROPOLE': 5,
+                            'THERMIC': 6
                             }
 
         self.dico_meteo = [{"id": 1, "name": 'Air temperatures'},
@@ -48,7 +50,7 @@ class table_WQ():
                            {"id": 6, "name": 'Atmospheric pressure'}]
 
     def get_cur_wq_mod(self):
-        #modeleQualiteEau
+        # modeleQualiteEau
         sql = "SELECT steady FROM {0}.parametres WHERE parametre = 'modeleQualiteEau'".format(self.mdb.SCHEMA)
         rows = self.mdb.run_query(sql, fetch=True)
         return int(rows[0][0])
@@ -101,16 +103,16 @@ class table_WQ():
                      'textfr': u"FORMULE DE CALCUL DE R",
                      'value': 1.},
                     {'sigle': 'N', 'text': 'NUMBER OF WEIRS N',
-                      'textfr': u"NOMBRE DE SEUILS N",
+                     'textfr': u"NOMBRE DE SEUILS N",
                      'value': 0.},
                     {'sigle': 'A_COEF', 'text': 'COEFF. A IN THE FORMULA FOR R AT WEIR N 1',
-                      'textfr': u"COEFFICIENT A DES FORMULES DE CALCUL DE R POUR LE SEUIL N 1",
+                     'textfr': u"COEFFICIENT A DES FORMULES DE CALCUL DE R POUR LE SEUIL N 1",
                      'value': 1.2},
                     {'sigle': 'B_COEF', 'text': 'COEFF. B IN THE FORMULA FOR R IN WEIR N 1',
-                      'textfr': u"COEFFICIENT B DES FORMULES DE CALCUL DE R POUR LE SEUIL N 1",
+                     'textfr': u"COEFFICIENT B DES FORMULES DE CALCUL DE R POUR LE SEUIL N 1",
                      'value': 0.7},
                     {'sigle': 'NUM_W', 'text': 'N  OF WEIR N 1',
-                      'textfr': u"N  DU SEUIL N 1",
+                     'textfr': u"N  DU SEUIL N 1",
                      'value': 1.}
                 ],
                 'meteo': False
@@ -457,70 +459,61 @@ class table_WQ():
                      'text': u'DESORPTION KINETIC CONSTANT (S-1)',
                      'textfr': u"CONSTANTE CINETIQUE DE DESORPTION (S-1)",
                      'value': 0.}
-                ]                ,
+                ],
                 'meteo': False
             },
             'TRANSPORT_PUR': {
                 'tracer': [
-                    {'sigle': 'TRA1', 'text': u'Tracer 1','textfr': u"Traceur 1"
+                    {'sigle': 'TRA1', 'text': u'Tracer 1', 'textfr': u"Traceur 1"
                      }],
                 'physic': [],
                 'meteo': False
             }
         }
 
-
     def default_tab_phy(self):
 
-        list_var_phy=[]
+        list_var_phy = []
         list_var_name = []
         id = 1
         id1 = 1
         for key in self.dico_phy:
             for item in self.dico_phy[key]['physic']:
                 if item:
-                    list_var_phy.append([id,key,
-                                    item['sigle'],
-                                    item['value'],
-                                    item['text'],
+                    list_var_phy.append([id, key,
+                                         item['sigle'],
+                                         item['value'],
+                                         item['text'],
                                          item['textfr']
                                          ])
                     id += 1
 
             for item in self.dico_phy[key]['tracer']:
-                list_var_name.append([id1,key,
-                                item['sigle'],
-                                item['text'],item['textfr'],True,True])
+                list_var_name.append([id1, key,
+                                      item['sigle'],
+                                      item['text'], item['textfr'], True, True])
                 id1 += 1
 
-
-        listeCol = self.mdb.listColumns('tracer_physic')
-        var = ",".join(listeCol)
+        liste_col = self.mdb.list_columns('tracer_physic')
+        var = ",".join(liste_col)
         valeurs = "("
-        for k in listeCol:
+        for k in liste_col:
             valeurs += '%s,'
         valeurs = valeurs[:-1] + ")"
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
                                                             'tracer_physic',
                                                             var,
                                                             valeurs)
-        self.mdb.run_query(sql, many=True, listMany=list_var_phy)
+        self.mdb.run_query(sql, many=True, list_many=list_var_phy)
 
-        listeCol = self.mdb.listColumns('tracer_name')
-        var = ",".join(listeCol)
+        liste_col = self.mdb.list_columns('tracer_name')
+        var = ",".join(liste_col)
         valeurs = "("
-        for k in listeCol:
+        for k in liste_col:
             valeurs += '%s,'
         valeurs = valeurs[:-1] + ")"
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
                                                             'tracer_name',
                                                             var,
                                                             valeurs)
-        self.mdb.run_query(sql, many=True, listMany=list_var_name)
-
-
-
-
-
-
-
+        self.mdb.run_query(sql, many=True, list_many=list_var_name)
