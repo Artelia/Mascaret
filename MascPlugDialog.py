@@ -155,7 +155,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionExport_Run.triggered.connect(self.export_run)
         self.ui.actionExport_Model.triggered.connect(self.export_model)
         self.ui.actionImport_Model.triggered.connect(self.import_model)
-        # TODO
+
         self.ui.actionParameters_Water_Quality.triggered.connect(self.fct_parameters_wq)
         self.ui.actionTracer_Laws.triggered.connect(self.fct_tracer_laws)
         self.ui.actionAbout.triggered.connect(self.about)
@@ -164,6 +164,7 @@ class MascPlugDialog(QMainWindow):
         # test
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
+        self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -750,3 +751,10 @@ Version : {}
                                'WARNING: if the tables exist then it will be emptied.')
         if ok:
             self.mdb.add_table_wq(self.dossierSQL)
+
+    def fct_add_struct_tables(self):
+
+        ok = self.box.yes_no_q('Do you want add hydraulic structure tables ? \n '
+                               'WARNING: if the tables exist then it will be emptied.')
+        if ok:
+            self.mdb.add_table_struct(self.dossierSQL)

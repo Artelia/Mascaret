@@ -1,14 +1,14 @@
-<!DOCTYPE RCC>
 <RCC>
-  <qresource prefix="/plugins/Mascaret" > 
-    <file>icones/icon.png</file> 
-    <file>icones/icon_base.png</file> 
-    <file>icones/dbLoadModel.png</file> 
-    <file>icones/dbExtractModel.png</file> 
-    <file>icones/refreshConnections.png</file> 
-    <file>icones/dbDeleteModel.png</file> 
-    <file>icones/dbCreateModel.png</file> 
-    <file>icones/webSite.png</file> 
+  <qresource prefix="/plugins/Mascaret">
+    <file>icones/bridge.png</file>
+    <file>icones/icon.png</file>
+    <file>icones/icon_base.png</file>
+    <file>icones/dbLoadModel.png</file>
+    <file>icones/dbExtractModel.png</file>
+    <file>icones/refreshConnections.png</file>
+    <file>icones/dbDeleteModel.png</file>
+    <file>icones/dbCreateModel.png</file>
+    <file>icones/webSite.png</file>
     <file>icones/options.png</file>
     <file>icones/hydrogramme.png</file>
     <file>icones/profilResult.png</file>
@@ -27,6 +27,5 @@
     <file>icones/dbImportModel.png</file>
     <file>icones/parameterWQ.png</file>
     <file>icones/lawWQ.png</file>
-  </qresource> 
+  </qresource>
 </RCC>
-

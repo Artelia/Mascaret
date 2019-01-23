@@ -520,6 +520,23 @@ class ClassMasDatabase(object):
         tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
         tbwq.default_tab_phy()
 
+    def add_table_struct(self, dossier):
+        """
+        Add table  for water Quality model
+        """
+
+        tables = [Maso.struct_config,Maso.profil_struct,Maso.struct_param,Maso.struct_elem_geo]
+        tables.sort(key=lambda x: x().order)
+
+        for masobj_class in tables:
+            try:
+                obj = self.process_masobject(masobj_class, 'pg_create_table')
+                if self.mgis.DEBUG:
+                    self.mgis.add_info('  {0} OK'.format(obj.name))
+            except:
+                self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
+
+
     def create__first_model(self):
         """ 
         To add variable in db for the first model creation
