@@ -419,7 +419,9 @@ class ClassMasDatabase(object):
                       Maso.tracer_config, Maso.laws_wq,
                       Maso.init_conc_config, Maso.init_conc_wq,
                       # meteo
-                      Maso.meteo_config, Maso.laws_meteo]
+                      Maso.meteo_config, Maso.laws_meteo,
+                      # ouvrage
+                      Maso.struct_config,Maso.profil_struct,Maso.struct_param,Maso.struct_elem_geo]
             tables.sort(key=lambda x: x().order)
 
             for masobj_class in tables:

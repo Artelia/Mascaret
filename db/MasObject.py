@@ -769,7 +769,7 @@ class struct_config(MasObject):
         super(struct_config, self).__init__()
         self.order = 26
         self.geom_type = None
-        self.attrs = [('gid', 'serial NOT NULL'),
+        self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
                       ('type', 'text'),
                       ('method', 'integer'),
@@ -785,16 +785,16 @@ class profil_struct(MasObject):
         self.geom_type = None
         self.attrs = [('id_config', 'integer'),
                       ('id_prof_ori', 'integer'),
-                      ('order', 'integer'),
+                      ('order_', 'integer'),
                       ('x', 'float'),
                       ('z', 'float'),
-                      ('CONSTRAINT profil_struct_pkey', 'PRIMARY KEY (order,id_config)')]
+                      ('CONSTRAINT profil_struct_pkey', 'PRIMARY KEY (order_,id_config)')]
 
-    def pg_create_table(self):
-        qry = super(self.__class__, self).pg_create_table()
-        qry += '\n'
-        qry += self.pg_create_index()
-        return qry
+    # def pg_create_table(self):
+    #     qry = super(self.__class__, self).pg_create_table()
+    #     qry += '\n'
+    #     qry += self.pg_create_index()
+    #     return qry
 
 # parameters
 class struct_param(MasObject):
@@ -816,11 +816,31 @@ class struct_elem_param(MasObject):
                       ('var', 'text'),
                       ('value', 'float'),
                       ('CONSTRAINT cle_struct_elem_param', 'PRIMARY KEY (id_config)')]
+class struct_elem(MasObject):
+    def __init__(self):
+        super(struct_elem, self).__init__()
+        self.order = 30
+        self.geom_type = None
+        self.attrs = [('id_config', 'integer'),
+                      ('id_elem', 'integer'),
+                      ('CONSTRAINT cle_struct_elem', 'PRIMARY KEY (id_config)')]
+    # def pg_create_table(self):
+    #     qry = super(self.__class__, self).pg_create_table()
+    #     qry += '\n'
+    #     qry += self.pg_create_index()
 
 class struct_elem_geo(MasObject):
     def __init__(self):
         super(struct_elem_geo, self).__init__()
         self.order = 30
-        self.geom_type = 'Polygone'
+        self.geom_type = None
         self.attrs = [('id_config', 'integer'),
+                      ('id_elem', 'integer'),
+                      ('id_order', 'integer'),
+                      ('x', 'float'),
+                      ('z', 'float'),
                       ('CONSTRAINT cle_struct_elem_geo', 'PRIMARY KEY (id_config)')]
+    # def pg_create_table(self):
+    #     qry = super(self.__class__, self).pg_create_table()
+    #     qry += '\n'
+    #     qry += self.pg_create_index()
