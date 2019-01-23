@@ -347,6 +347,13 @@
          </property>
         </spacer>
        </item>
+       <item>
+        <widget class="QPushButton" name="bt_ouvrage">
+         <property name="text">
+          <string>Hydraulic Structure</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
@@ -533,6 +540,11 @@
   <action name="actionBt_topo_del">
    <property name="text">
     <string>bt_topo_del</string>
+   </property>
+  </action>
+  <action name="actionBt_ouvrage">
+   <property name="text">
+    <string>bt_ouvrage</string>
    </property>
   </action>
  </widget>
@@ -821,6 +833,22 @@
     <hint type="sourcelabel">
      <x>776</x>
      <y>23</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>bt_ouvrage</sender>
+   <signal>clicked()</signal>
+   <receiver>actionBt_ouvrage</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>922</x>
+     <y>88</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>

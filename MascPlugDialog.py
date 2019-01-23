@@ -32,10 +32,10 @@ from .ClassParameterDialog import ClassParameterDialog
 from .GraphProfilDialog import IdentifyFeatureTool
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
-# # water quality
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
 from .db.ClassMasDatabase import ClassMasDatabase
 from .ui.custom_control import ClassWarningBox
+from .Structure.ClassTmp import ClassTmp
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -165,6 +165,8 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
         self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
+        #TODO a supp
+        # self.ui.actionStructures.triggered.connect(self.fct_test)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -730,20 +732,20 @@ Version : {}
 
         self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
         cl = ClassMascWQ(self, self.dossierFileMasc)
-        # try:
+        try:
         # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:
         #     #simul date
         #     # dat1=datetime.datetime(2019, 1, 13, 13, 35, 12)
         #     # dat2=datetime.datetime(2019, 1, 10, 13, 35, 12)
         #     # cl.create_filemet(dossier=folder_name_path,typ_time='date',datefirst=dat2, dateend=dat1)
         #     cl.create_filemet(dossier=folder_name_path)
-        cl.init_conc_tracer(dossier=folder_name_path)
-        cl.create_filephy(dossier=folder_name_path)
-        cl.law_tracer(dossier=folder_name_path)
+            cl.init_conc_tracer(dossier=folder_name_path)
+            cl.create_filephy(dossier=folder_name_path)
+            cl.law_tracer(dossier=folder_name_path)
 
-        self.add_info('Export is done.')
-        # except:
-        #     self.add_info('Export failed.')
+            self.add_info('Export is done.')
+        except:
+            self.add_info('Export failed.')
 
     def fct_add_wq_tables(self):
 
@@ -758,3 +760,12 @@ Version : {}
                                'WARNING: if the tables exist then it will be emptied.')
         if ok:
             self.mdb.add_table_struct(self.dossierSQL)
+
+
+    def fct_test(self):
+
+        cl=ClassTmp(self)
+
+        # cl.copy_profil(28)
+        cl.poly()
+

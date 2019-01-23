@@ -421,7 +421,8 @@ class ClassMasDatabase(object):
                       # meteo
                       Maso.meteo_config, Maso.laws_meteo,
                       # ouvrage
-                      Maso.struct_config,Maso.profil_struct,Maso.struct_param,Maso.struct_elem_geo]
+                      Maso.struct_config,Maso.profil_struct,Maso.struct_param,
+                      Maso.struct_elem_geo, Maso.struct_elem_param]
             tables.sort(key=lambda x: x().order)
 
             for masobj_class in tables:
@@ -478,6 +479,7 @@ class ClassMasDatabase(object):
 
         for masobj_class in tables:
             try:
+                masobj_class.overwrite = True
                 obj = self.process_masobject(masobj_class, 'pg_create_table')
                 if self.mgis.DEBUG:
                     self.mgis.add_info('  {0} OK'.format(obj.name))
@@ -525,11 +527,13 @@ class ClassMasDatabase(object):
         Add table  for water Quality model
         """
 
-        tables = [Maso.struct_config,Maso.profil_struct,Maso.struct_param,Maso.struct_elem_geo]
+        tables = [Maso.struct_config,Maso.profil_struct,Maso.struct_param,
+                  Maso.struct_elem_geo,Maso.struct_elem_param]
         tables.sort(key=lambda x: x().order)
 
         for masobj_class in tables:
             try:
+                masobj_class.overwrite=True
                 obj = self.process_masobject(masobj_class, 'pg_create_table')
                 if self.mgis.DEBUG:
                     self.mgis.add_info('  {0} OK'.format(obj.name))
@@ -743,15 +747,19 @@ $BODY$
         return liste_x
 
     # PRBOLEM DESRIPTION
-    def select(self, table, where="", order=""):
+    def select(self, table, where="", order="", list_var=None):
         """ Select variables of table"""
         if where:
             where = " WHERE " + where + " "
         if order:
             order = " ORDER BY " + order
+        if list_var is not None:
+            lvar = ','.join([str(v) for v in list_var])
+        else:
+            lvar = '*'
 
-        sql = "SELECT * FROM {0}.{1} {2} {3};"
-        (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order), fetch=True, namvar=True)
+        sql = "SELECT {4} FROM {0}.{1} {2} {3};"
+        (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order,lvar), fetch=True, namvar=True)
         cols = [col[0] for col in namCol]
         dico = {}
         for col in cols:
@@ -764,6 +772,7 @@ $BODY$
                 except:
                     dico[cols[i]].append(val)
         return dico
+
 
     #
     def select_one(self, table, where="", order=""):

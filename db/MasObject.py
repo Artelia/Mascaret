@@ -806,7 +806,7 @@ class struct_param(MasObject):
         self.attrs = [('id_config', 'integer'),
                       ('var', 'text'),
                       ('value', 'float'),
-                      ('CONSTRAINT cle_struct_param', 'PRIMARY KEY (id_config)')]
+                      ('CONSTRAINT cle_struct_param', 'PRIMARY KEY (id_config,var)')]
 # objet pile de pont/
 class struct_elem_param(MasObject):
     def __init__(self):
@@ -814,9 +814,10 @@ class struct_elem_param(MasObject):
         self.order = 29
         self.geom_type = None
         self.attrs = [('id_config', 'integer'),
+                      ('id_elem', 'integer'),
                       ('var', 'text'),
                       ('value', 'float'),
-                      ('CONSTRAINT cle_struct_elem_param', 'PRIMARY KEY (id_config)')]
+                      ('CONSTRAINT cle_struct_elem_param', 'PRIMARY KEY (id_config,id_elem,var)')]
 class struct_elem(MasObject):
     def __init__(self):
         super(struct_elem, self).__init__()
@@ -826,10 +827,7 @@ class struct_elem(MasObject):
                       ('id_elem', 'integer'),
                       ('type', 'integer'),
                       ('CONSTRAINT cle_struct_elem', 'PRIMARY KEY (id_config,id_elem,id_order)')]
-    # def pg_create_table(self):
-    #     qry = super(self.__class__, self).pg_create_table()
-    #     qry += '\n'
-    #     qry += self.pg_create_index()
+
 
 class struct_elem_geo(MasObject):
     def __init__(self):
