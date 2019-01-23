@@ -774,6 +774,7 @@ class struct_config(MasObject):
                       ('type', 'text'),
                       ('method', 'integer'),
                       ('active', 'boolean'),
+                      ('comment', 'text'),
                       ('CONSTRAINT cle_struct_conf', 'PRIMARY KEY (id)')]
 
 
@@ -823,7 +824,8 @@ class struct_elem(MasObject):
         self.geom_type = None
         self.attrs = [('id_config', 'integer'),
                       ('id_elem', 'integer'),
-                      ('CONSTRAINT cle_struct_elem', 'PRIMARY KEY (id_config)')]
+                      ('type', 'integer'),
+                      ('CONSTRAINT cle_struct_elem', 'PRIMARY KEY (id_config,id_elem,id_order)')]
     # def pg_create_table(self):
     #     qry = super(self.__class__, self).pg_create_table()
     #     qry += '\n'
@@ -839,7 +841,7 @@ class struct_elem_geo(MasObject):
                       ('id_order', 'integer'),
                       ('x', 'float'),
                       ('z', 'float'),
-                      ('CONSTRAINT cle_struct_elem_geo', 'PRIMARY KEY (id_config)')]
+                      ('CONSTRAINT cle_struct_elem_geo', 'PRIMARY KEY (id_config,id_elem,id_order)')]
     # def pg_create_table(self):
     #     qry = super(self.__class__, self).pg_create_table()
     #     qry += '\n'

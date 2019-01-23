@@ -204,6 +204,7 @@
      <string>Tools</string>
     </property>
     <addaction name="actionCross_section"/>
+    <addaction name="actionStructures"/>
     <addaction name="separator"/>
     <addaction name="action_Extract_MNTfor_profile"/>
    </widget>
@@ -216,6 +217,7 @@
       <string>Update Table</string>
      </property>
      <addaction name="actionAdd_WQ_tables"/>
+     <addaction name="actionAdd_Structure_tables"/>
     </widget>
     <addaction name="actionRefresh_Database"/>
     <addaction name="separator"/>
@@ -291,6 +293,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionCross_section"/>
+   <addaction name="actionStructures"/>
    <addaction name="separator"/>
    <addaction name="action_Extract_MNTfor_profile"/>
   </widget>
@@ -590,6 +593,20 @@
   <action name="actionAdd_WQ_tables">
    <property name="text">
     <string>Add WQ tables</string>
+   </property>
+  </action>
+  <action name="actionAdd_Structure_tables">
+   <property name="text">
+    <string>Add Structure tables</string>
+   </property>
+  </action>
+  <action name="actionStructures">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/bridge.png</normaloff>:/plugins/Mascaret/icones/bridge.png</iconset>
+   </property>
+   <property name="text">
+    <string>Structures</string>
    </property>
   </action>
  </widget>
