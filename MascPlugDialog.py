@@ -37,6 +37,7 @@ from .db.ClassMasDatabase import ClassMasDatabase
 from .ui.custom_control import ClassWarningBox
 from .Structure.ClassTmp import ClassTmp
 
+
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
 else:  # qt5
@@ -765,7 +766,7 @@ Version : {}
     def fct_test(self):
 
         cl=ClassTmp(self)
-
+        cl.show()
         # cl.copy_profil(28)
-        cl.poly()
+        # cl.poly()
 

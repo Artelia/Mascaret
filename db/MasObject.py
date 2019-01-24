@@ -789,13 +789,7 @@ class profil_struct(MasObject):
                       ('order_', 'integer'),
                       ('x', 'float'),
                       ('z', 'float'),
-                      ('CONSTRAINT profil_struct_pkey', 'PRIMARY KEY (order_,id_config)')]
-
-    # def pg_create_table(self):
-    #     qry = super(self.__class__, self).pg_create_table()
-    #     qry += '\n'
-    #     qry += self.pg_create_index()
-    #     return qry
+                      ('CONSTRAINT profil_struct_pkey', 'PRIMARY KEY (order_,id_config,id_prof_ori)')]
 
 # parameters
 class struct_param(MasObject):
