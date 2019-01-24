@@ -820,7 +820,7 @@ class struct_elem(MasObject):
         self.attrs = [('id_config', 'integer'),
                       ('id_elem', 'integer'),
                       ('type', 'integer'),
-                      ('CONSTRAINT cle_struct_elem', 'PRIMARY KEY (id_config,id_elem,id_order)')]
+                      ('CONSTRAINT cle_struct_elem', 'PRIMARY KEY (id_config,id_elem)')]
 
 
 class struct_elem_geo(MasObject):

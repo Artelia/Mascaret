@@ -769,5 +769,5 @@ Version : {}
         # cl.copy_profil(28)
         cl.show()
 
-        # cl.poly()
+        # cl.create_poly_elem()
 

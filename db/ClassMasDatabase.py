@@ -421,7 +421,7 @@ class ClassMasDatabase(object):
                       # meteo
                       Maso.meteo_config, Maso.laws_meteo,
                       # ouvrage
-                      Maso.struct_config,Maso.profil_struct,Maso.struct_param,
+                      Maso.struct_config,Maso.profil_struct,Maso.struct_param,Maso.struct_elem,
                       Maso.struct_elem_geo, Maso.struct_elem_param]
             tables.sort(key=lambda x: x().order)
 
@@ -527,7 +527,7 @@ class ClassMasDatabase(object):
         Add table  for water Quality model
         """
 
-        tables = [Maso.struct_config,Maso.profil_struct,Maso.struct_param,
+        tables = [Maso.struct_config,Maso.profil_struct,Maso.struct_param,Maso.struct_elem,
                   Maso.struct_elem_geo,Maso.struct_elem_param]
         tables.sort(key=lambda x: x().order)
 
