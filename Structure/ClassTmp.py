@@ -64,6 +64,7 @@ else:  # qt4
 
 from shapely.geometry import *
 import shapely.affinity
+from shapely import wkb
 class ClassTmp(QDialog):
 
     def __init__(self, mgis):
@@ -274,10 +275,32 @@ class ClassTmp(QDialog):
 
             if not poly_final.is_empty:
                 self.draw_test(poly_final, decal_ax=10)
-        # # stock element
-        #TODO
+
+                # # stock element
+                where="WHERE id_config = {0}  AND id_elem = {1} ".format(self.id_config,id_elem)
+                sql = """UPDATE {0}.struct_elem SET polygon ='{1}'  {2}""".format(self.mdb.SCHEMA,
+                                                                                poly_final,
+                                                                                where)
+                self.mdb.run_query(sql)
+
+
 
         # return poly_final
+    def select_poly(self, table,where='', var='polygon'):
+        """ select polygon
+        example:
+                where = "id_config = {0} AND id_elem = {1}".format(self.id_config, id_elem)
+                toto=self.select_poly('struct_elem',where)
+                print(toto)
+        """
+
+        poly_l = self.mdb.select(table, where=where, list_var=[var])
+        list_poly=[]
+        for poly in poly_l[var]:
+            list_poly.append(wkb.loads(poly.decode('hex')))
+        poly_l[var]= list_poly
+        return  poly_l
+
 
     def copy_profil(self,gid,feature=None):
         """Profil copy"""

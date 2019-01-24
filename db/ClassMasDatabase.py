@@ -421,8 +421,11 @@ class ClassMasDatabase(object):
                       # meteo
                       Maso.meteo_config, Maso.laws_meteo,
                       # ouvrage
-                      Maso.struct_config,Maso.profil_struct,Maso.struct_param,Maso.struct_elem,
-                      Maso.struct_elem_geo, Maso.struct_elem_param]
+                      Maso.struct_config,Maso.profil_struct,Maso.struct_param,
+                      Maso.struct_elem, Maso.struct_elem_param,
+                      Maso.struct_abacq
+                      #, Maso.struct_elem_geo
+                      ]
             tables.sort(key=lambda x: x().order)
 
             for masobj_class in tables:
@@ -527,8 +530,11 @@ class ClassMasDatabase(object):
         Add table  for water Quality model
         """
 
-        tables = [Maso.struct_config,Maso.profil_struct,Maso.struct_param,Maso.struct_elem,
-                  Maso.struct_elem_geo,Maso.struct_elem_param]
+        tables = [Maso.struct_config,Maso.profil_struct,Maso.struct_param,
+                  Maso.struct_elem, Maso.struct_elem_param,
+                  Maso.struct_abacq
+                  # , Maso.struct_elem_geo
+                  ]
         tables.sort(key=lambda x: x().order)
 
         for masobj_class in tables:
@@ -658,7 +664,6 @@ class ClassMasDatabase(object):
             except:
                 self.mgis.add_info('View failure!<br>{0}'.format(obj))
         self.mgis.iface.mapCanvas().refresh()
-
     #
     def create_spatial_index(self):
         """
@@ -773,7 +778,6 @@ $BODY$
                     dico[cols[i]].append(val)
         return dico
 
-
     #
     def select_one(self, table, where="", order=""):
         """select one variable"""
@@ -819,7 +823,6 @@ $BODY$
                 except:
                     dico[cols[i]].append(val)
         return dico
-
     #
     def select_max(self, var, table, where=None):
         """select the max in the table for the "where" variable"""

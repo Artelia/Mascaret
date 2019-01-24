@@ -820,21 +820,34 @@ class struct_elem(MasObject):
         self.attrs = [('id_config', 'integer'),
                       ('id_elem', 'integer'),
                       ('type', 'integer'),
+                      ('polygon', 'GEOMETRY'),
                       ('CONSTRAINT cle_struct_elem', 'PRIMARY KEY (id_config,id_elem)')]
 
 
-class struct_elem_geo(MasObject):
-    def __init__(self):
-        super(struct_elem_geo, self).__init__()
-        self.order = 30
-        self.geom_type = None
-        self.attrs = [('id_config', 'integer'),
-                      ('id_elem', 'integer'),
-                      ('id_order', 'integer'),
-                      ('x', 'float'),
-                      ('z', 'float'),
-                      ('CONSTRAINT cle_struct_elem_geo', 'PRIMARY KEY (id_config,id_elem,id_order)')]
+# class struct_elem_geo(MasObject):
+#     def __init__(self):
+#         super(struct_elem_geo, self).__init__()
+#         self.order = 30
+#         self.geom_type = None
+#         self.attrs = [('id_config', 'integer'),
+#                       ('id_elem', 'integer'),
+#                       ('id_order', 'integer'),
+#                       ('x', 'float'),
+#                       ('z', 'float'),
+#                       ('CONSTRAINT cle_struct_elem_geo', 'PRIMARY KEY (id_config,id_elem,id_order)')]
     # def pg_create_table(self):
     #     qry = super(self.__class__, self).pg_create_table()
     #     qry += '\n'
     #     qry += self.pg_create_index()
+
+class struct_abacq(MasObject):
+    def __init__(self):
+        super(struct_abacq, self).__init__()
+        self.order = 30
+        self.geom_type = None
+        self.attrs = [('id_method', 'integer'),
+                      ('id_abaque', 'integer'),
+                      ('var', 'text'),
+                      ('id_order', 'integer'),
+                      ('value', 'float'),
+                      ('CONSTRAINT cle_struct_abacq', 'PRIMARY KEY (id_order,id_method,id_abaque,var)')]
