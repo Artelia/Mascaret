@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
 """
 import os
+import math as m
 from matplotlib.patches import Polygon as mpoly
 from matplotlib.figure import Figure
 
@@ -61,19 +62,16 @@ else:  # qt4
             import NavigationToolbar2QT as NavigationToolbar
 
 
-
-
-
-from shapely.geometry import Polygon,LineString,GeometryCollection
-
-
+from shapely.geometry import *
+import shapely.affinity
 class ClassTmp(QDialog):
 
     def __init__(self, mgis):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb =  mgis.mdb
-        self.id_config=0
+        # self.id_config=0 #cadre
+        self.id_config=1 #arc cercl
         #check test
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/test_graph.ui'), self)
         self.figure = Figure()
@@ -91,9 +89,8 @@ class ClassTmp(QDialog):
         self.verticalLayout2.setObjectName("verticalLayout2")
         self.verticalLayout2.addWidget(self.toolbar)
 
-    def get_param_g(self):
+    def get_param_g(self,list_recup):
         """get general parameters"""
-        list_recup=['eptab','cottab','firstw']
         param_g={}
         for info in list_recup:
             where="id_config = {0} AND var = '{1}' ".format(self.id_config ,info)
@@ -103,14 +100,11 @@ class ClassTmp(QDialog):
             else:
                 if self.mgis.DEBUG:
                     self.mgis.add_info('{} not specified in struct_param table'.format(info))
-        # cas pont cadre
-        param_g['cotpc']= param_g['cottab']- param_g['eptab']
 
         return param_g
 
-    def get_param_elem(self,id_elem):
+    def get_param_elem(self,id_elem,list_recup):
         """get element parameters"""
-        list_recup = ['width']
         param_elem = {}
         for info in list_recup:
             where = "id_config = {0} AND id_elem= {1} AND var = '{2}' ".format(self.id_config, id_elem, info)
@@ -131,17 +125,99 @@ class ClassTmp(QDialog):
         profil = self.mdb.select('profil_struct', where=where, order=order, list_var=['x,z'])
         return profil
 
+    def checkprofil(self):
+        where = "id_config = {0}".format(self.id_config)
+        profil = self.mdb.select('profil_struct', where=where,list_var=['id_prof_ori'])
+        if profil['id_prof_ori']:
+            return True
+        else:
+            return False
+
+
     def poly_pont_cadre(self, param_g, param_elem, zmin=-99999,x0=None):
         if x0 is None:
-            x0=param_g['firstw']#point depart
-        x1=x0+param_elem['width']
-        z=param_g['cotpc']#point haut
+            x0 = param_g['firstw']#point depart
+        x1 = x0 + param_elem['width']
+        z = param_g['cotpc']#point haut
         zmin_t = zmin- 10
         if zmin < z:
             poly_t = Polygon([[x0, zmin_t], [x0, z], [x1, z], [x1, zmin_t], [x0, zmin_t]])
         else:
             poly_t = GeometryCollection()
-            print('Pb z de la traver')
+
+            print('Inconsistent Z for the span')
+        return poly_t
+
+    # def poly_arc_cercl(self, param_g, param_elem, zmin=-99999,x0=None):
+    #     if x0 is None:
+    #         x0 = param_g['firstw']#point depart
+    #     x1 = x0 + param_elem['width']
+    #     rayon=param_elem['width']/2.
+    #     x_c= rayon+x0
+    #     z = param_elem['cotarc']#point arc
+    #     z_c=z
+    #     zmin_t = zmin- 10
+    #     if zmin < z:
+    #
+    #         circ = Point((x_c, z_c)).buffer(rayon)
+    #         poly = Polygon([[x0-1, z_c-rayon-1], [x0-1, z], [x1+1, z], [x1+1, z_c-rayon-1], [x0-1, z_c-rayon-1]])
+    #         circ = circ.difference(poly) # demi circle
+    #         poly = Polygon([[x0, zmin_t], [x0, z], [x1, z], [x1, zmin_t], [x0, zmin_t]])
+    #         poly_t=circ.union(poly)
+    #     else:
+    #         poly_t = GeometryCollection()
+    #         msg='Inconsistent Z for the span'
+    #         if self.mgis.DEBUG:
+    #             self.mgis.add_info(msg)
+    #         print(msg)
+    #     return poly_t
+
+    def poly_arch(self, param_g, param_elem, zmin=-99999,type='circle',x0=None):
+        if x0 is None:
+            x0 = param_g['firstw']#point depart
+        x1 = x0 + param_elem['width']
+        x_c= param_elem['width']/2.+x0
+        z = param_elem['cotarc']
+        print(type)
+        if type=='ellipse':
+            zmax = param_elem['cotmax']
+            #hyp. zmax-z=b/2
+            b=2*(zmax-z)
+            z_c=zmax-b
+            frac=m.pow(x0-x_c,2)/(1-m.pow(z-z_c,2)/m.pow(b,2))
+            a=m.sqrt(frac)
+        elif type=='circle':
+            b=param_elem['width']/2.
+            a=b
+            z_c = z
+        else:
+            poly_t = GeometryCollection()
+            msg = 'Unkwnown arch : {}'.format(type)
+            if self.mgis.DEBUG:
+                self.mgis.add_info(msg)
+            print(msg)
+            return poly_t
+
+        zmin_t = zmin- 10
+        if zmin < z:
+            # Let create a circle of radius 1 around center point:
+            circ = Point([x_c,z_c]).buffer(1)
+            # Let create the ellipse along x and y:
+            ell = shapely.affinity.scale(circ, int(a), int(b))
+            # # If one need to rotate it clockwise along an upward pointing x axis:
+            # poly_t = shapely.affinity.rotate(ell, 90 - ellipse[2])
+            # # According to the man, a positive value means a anti-clockwise angle,
+            # # and a negative one a clockwise angle.
+            poly = Polygon([[x_c-a-1,  z-b*2], [x_c-a-1, z], [x_c+a+1, z], [x_c+a+1,  z-b*2], [x_c-a-1, z-b*2]])
+            ell = ell.difference(poly) # demi circle
+            poly = Polygon([[x0, zmin_t], [x0, z], [x1, z], [x1, zmin_t], [x0, zmin_t]])
+            poly_t=ell.union(poly)
+        else:
+            poly_t = GeometryCollection()
+            msg='Inconsistent Z for the span'
+            if self.mgis.DEBUG:
+                self.mgis.add_info(msg)
+            print(msg)
         return poly_t
 
     def poly_profil(self, profil, zmin=-99999):
@@ -158,34 +234,68 @@ class ClassTmp(QDialog):
         poly_p = Polygon(liste_poly)
         return poly_p
 
+
+
     def poly(self):
         # recuperation val général  pont cadre
-        param_g=self.get_param_g()
-        print(param_g)
-        id_elem=0
-        param_elem=self.get_param_elem(id_elem)
-        print(param_elem)
-        profil = self.get_profil()
+        # get profil
+        if self.checkprofil():
+            profil = self.get_profil()
+        else:
+            msg="Profile copy isn't found"
+            self.mgis.add_info(msg)
+            print(msg)
+            return
         zmin=min(profil['z'])
-        print(zmin)
-
         poly_p=self.poly_profil(profil,zmin)
+        if poly_p.is_empty:
+            msg = 'Profile polygon is empty.'
+            if self.mgis.DEBUG:
+                self.mgis.add_info(msg)
+            print(msg)
+            return
 
-        poly_cadre=self.poly_pont_cadre(param_g, param_elem, zmin, x0=param_g['firstw'])
-        #
+        id_elem = 0
+        # # pont Cadre
+        if self.id_config==0: #TODO pour test
+            # parametre general
+            list_recup = ['eptab', 'cottab', 'firstw']
+            param_g = self.get_param_g(list_recup)
+            param_g['cotpc'] = param_g['cottab'] - param_g['eptab']
+            # parametre element
+            list_recup = ['width']
+            param_elem=self.get_param_elem(id_elem,list_recup)
+            #polygon
+            poly_elem=self.poly_pont_cadre(param_g, param_elem, zmin, x0=param_g['firstw'])
+            # if not poly_elem.is_empty:
+            #     self.draw_test(poly_elem,decal_ax=10)
 
-        # print(poly_cadre.exterior.xy)
-        # if not poly_p.is_empty:
-        #     self.draw_test(poly_p, decal_ax=10)
-        #
-        # if not poly_cadre.is_empty:
-        #     self.draw_test(poly_cadre,decal_ax=10)
+        # pont arc
+        if self.id_config==1: #TODO pour test
+            # parametre general
+            list_recup = ['cottab', 'firstw']
+            param_g = self.get_param_g(list_recup)
+            # parametre element
+            list_recup = ['width','cotmax','cotarc']
+            param_elem=self.get_param_elem(id_elem,list_recup)
+            #polygon
+            param_elem=self.get_param_elem(id_elem,list_recup)
+            # poly_elem=self.poly_arc_cercl(param_g, param_elem, zmin, x0=param_g['firstw'])
+            poly_elem = self.poly_arch(param_g, param_elem, zmin,type='ellipse', x0=param_g['firstw'])
 
-        poly_final=poly_cadre.difference(poly_p)
+        #final
+        if not poly_elem.is_empty :
+            poly_final = poly_elem.difference(poly_p)
+        else:
+            msg = 'Element bridge polygon is empty.'
+            if self.mgis.DEBUG:
+                self.mgis.add_info(msg)
+            print(msg)
+
         if not poly_final.is_empty:
             self.draw_test(poly_final, decal_ax=10)
 
-
+        return poly_final
 
     def copy_profil(self,gid,feature=None):
         """Profil copy"""
@@ -210,9 +320,6 @@ class ClassTmp(QDialog):
             values.append([self.id_config,gid,order,x,z])
 
         self.mdb.insert_res('profil_struct', values, colonnes)
-
-
-
 
     def draw_test(self,poly, title=None,decal_ax=1):
 

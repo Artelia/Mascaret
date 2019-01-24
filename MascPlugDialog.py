@@ -167,7 +167,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
         self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
         #TODO a supp
-        # self.ui.actionStructures.triggered.connect(self.fct_test)
+        self.ui.actionStructures.triggered.connect(self.fct_test)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -766,7 +766,8 @@ Version : {}
     def fct_test(self):
 
         cl=ClassTmp(self)
-        cl.show()
         # cl.copy_profil(28)
+        cl.show()
+
         # cl.poly()
 
