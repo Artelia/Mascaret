@@ -244,48 +244,57 @@ class ClassTmp(QDialog):
             list_recup_elem = ['width', 'cotmax', 'cotarc']
 
 
-        where = "id_config = {0} AND type=0".format(self.id_config) # type=0 span, =1 bridge peir
+        where = "id_config = {0}".format(self.id_config) # type=0 span, =1 bridge peir
         order = "id_elem"
-        lid_elem= self.mdb.select('struct_elem', where=where,order=order, list_var=['id_elem'])
-
-        for id_elem in lid_elem["id_elem"]:
-            # # pont Cadre
-            if self.config_type=='cadre':
-                # parametre element
-                param_elem=self.get_param_elem(id_elem,list_recup_elem )
-                #polygon
-                poly_elem=self.poly_pont_cadre(param_g, param_elem, zmin, x0=param_g['firstw'])
-                # if not poly_elem.is_empty:
-                #     self.draw_test(poly_elem,decal_ax=10)
-            # pont arc
-            if self.config_type == 'arch':
-                # parametre element
-                param_elem=self.get_param_elem(id_elem,list_recup_elem )
-                #polygon
-                poly_elem = self.poly_arch(param_g, param_elem, zmin,type='ellipse', x0=param_g['firstw'])
-
-            #final
-            if not poly_elem.is_empty :
-                poly_final = poly_elem.difference(poly_p)
+        lid_elem= self.mdb.select('struct_elem', where=where,order=order, list_var=['id_elem',"type"])
+        first=True
+        width=0
+        width_prec = 0
+        for i,id_elem in enumerate(lid_elem["id_elem"]):
+            # TODO à checker si tou est bon
+            # parametre element
+            param_elem = self.get_param_elem(id_elem, list_recup_elem)
+            if first:
+                width = param_g['firstw']
+                first =False
             else:
-                msg = 'Element bridge polygon is empty.'
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(msg)
-                print(msg)
+                width += width_prec
 
-            if not poly_final.is_empty:
-                self.draw_test(poly_final, decal_ax=10)
+            width_prec= param_elem["width"]
 
-                # # stock element
-                where="WHERE id_config = {0}  AND id_elem = {1} ".format(self.id_config,id_elem)
-                sql = """UPDATE {0}.struct_elem SET polygon ='{1}'  {2}""".format(self.mdb.SCHEMA,
-                                                                                poly_final,
-                                                                                where)
-                self.mdb.run_query(sql)
+            if lid_elem["type"][id_elem] != 1:
+                # # pont Cadre
+                if self.config_type=='cadre':
+                    #polygon
+                    poly_elem=self.poly_pont_cadre(param_g, param_elem, zmin, x0=width)
+                    # if not poly_elem.is_empty:
+                    #     self.draw_test(poly_elem,decal_ax=10)
+                # pont arc
+                if self.config_type == 'arch':
+                    #polygon
+                    poly_elem = self.poly_arch(param_g, param_elem, zmin,type='ellipse', x0=width)
 
+                #final
+                if not poly_elem.is_empty :
+                    poly_final = poly_elem.difference(poly_p)
+                else:
+                    msg = 'Element bridge polygon is empty.'
+                    if self.mgis.DEBUG:
+                        self.mgis.add_info(msg)
+                    print(msg)
 
+                if not poly_final.is_empty:
+
+                    self.draw_test(poly_final, decal_ax=10,xmin=profil['x'][0],xmax=profil['x'][-1])
+                    # # stock element
+                    where="WHERE id_config = {0}  AND id_elem = {1} ".format(self.id_config,id_elem)
+                    sql = """UPDATE {0}.struct_elem SET polygon ='{1}'  {2}""".format(self.mdb.SCHEMA,
+                                                                                    poly_final,
+                                                                                    where)
+                    self.mdb.run_query(sql)
 
         # return poly_final
+
     def select_poly(self, table,where='', var='polygon'):
         """ select polygon
         example:
@@ -300,7 +309,6 @@ class ClassTmp(QDialog):
             list_poly.append(wkb.loads(poly.decode('hex')))
         poly_l[var]= list_poly
         return  poly_l
-
 
     def copy_profil(self,gid,feature=None):
         """Profil copy"""
@@ -326,13 +334,18 @@ class ClassTmp(QDialog):
 
         self.mdb.insert_res('profil_struct', values, colonnes)
 
-    def draw_test(self,poly, title=None,decal_ax=1):
+    def draw_test(self,poly, title=None,decal_ax=1,xmin=None,xmax=None):
 
         ax = self.figure.add_subplot(111)
         # ax.grid(True)
         new_poly = [ coord for coord in poly.exterior.coords]
 
         (minx, miny, maxx, maxy) = poly.bounds
+        if xmin is not None:
+            minx=xmin
+        if xmax is not None:
+            maxx=xmax
+
         poly_d = mpoly(new_poly, facecolor='blue', edgecolor='red',alpha=0.5)
         ax.add_patch(poly_d)
 

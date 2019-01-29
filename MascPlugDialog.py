@@ -766,9 +766,11 @@ Version : {}
 
     def fct_test(self):
 
-        cl=ClassTmp(self)
-        # cl.copy_profil(28)
-        cl.show()
+        # cl=ClassTmp(self)
+        # # cl.copy_profil(28)
+        # cl.show()
 
         # cl.create_poly_elem()
+        dossier=r"C:\Users\mehdi-pierre.daou\.qgis2\python\plugins\Mascaret\Structure\Abacus"
+        self.mdb.insert_abacus_table(dossier)
 

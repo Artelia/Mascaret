@@ -840,14 +840,14 @@ class struct_elem(MasObject):
     #     qry += '\n'
     #     qry += self.pg_create_index()
 
-class struct_abacq(MasObject):
+class struct_abac(MasObject):
     def __init__(self):
-        super(struct_abacq, self).__init__()
+        super(struct_abac, self).__init__()
         self.order = 30
         self.geom_type = None
-        self.attrs = [('id_method', 'integer'),
-                      ('id_abaque', 'integer'),
+        self.attrs = [('nam_method', 'text'),
+                      ('nam_abac', 'text'),
                       ('var', 'text'),
                       ('id_order', 'integer'),
                       ('value', 'float'),
-                      ('CONSTRAINT cle_struct_abacq', 'PRIMARY KEY (id_order,id_method,id_abaque,var)')]
+                      ('CONSTRAINT cle_struct_abac', 'PRIMARY KEY (id_order,nam_method,nam_abac,var)')]
