@@ -44,6 +44,7 @@ from qgis.gui import *
 
 from .Function import isfloat, interpole
 from .WaterQuality.ClassTableWQ import ClassTableWQ
+from .Structure.ClassTmp import ClassTmp
 
 if int(qVersion()[0]) < 5:  # qt4
 
@@ -210,6 +211,7 @@ class GraphProfil(GraphCommon):
         self.init_ui_common_p(gid)
         self.gui_graph(self.ui)
         self.init_ui()
+        self.struct=ClassTmp(self.mgis)
 
         # action
         self.ui.actionBtTools_point_selection.triggered.connect(self.selector_toggled)
@@ -232,6 +234,7 @@ class GraphProfil(GraphCommon):
         self.ui.actionBt_minor_bed.triggered.connect(self.select_lit_mineur)
         self.ui.actionBt_r_stok.triggered.connect(lambda: self.select_stock("rightstock"))
         self.ui.actionBt_l_stok.triggered.connect(lambda: self.select_stock("leftstock"))
+        self.ui.actionBt_ouvrage.triggered.connect(self.create_struct)
 
     def init_ui(self):
 
@@ -357,6 +360,19 @@ class GraphProfil(GraphCommon):
         if self.bt_transla.isChecked():
             self.bt_select.setChecked(False)
             self.bt_select_z.setChecked(False)
+
+    def create_struct(self):
+        """ creation of hydraulic structure"""
+        #TODO
+        #self.struct.GUI()
+        #choix pour la création de la config
+        # return
+        if self.feature["x"] and self.feature["z"]:
+            self.struct.copy_profil(self.gid,self.feature)
+        print("create_struct")
+        pass
+
+
 
     def avance(self, val):
         """next or back profiles """
@@ -2458,7 +2474,6 @@ class GraphHydro(GraphCommon):
         self.maj_limites()
 
     def avance(self, val):
-        # TODO
         if abs(val) == 10:
             var = 'selection'
             val = val / 10

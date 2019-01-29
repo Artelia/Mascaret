@@ -20,6 +20,7 @@ email                :
 import psycopg2
 import psycopg2.extras
 import os
+import numpy as np
 import subprocess
 from qgis.core import QgsVectorLayer, QgsProject
 
@@ -421,7 +422,11 @@ class ClassMasDatabase(object):
                       # meteo
                       Maso.meteo_config, Maso.laws_meteo,
                       # ouvrage
-                      Maso.struct_config,Maso.profil_struct,Maso.struct_param,Maso.struct_elem_geo]
+                      Maso.struct_config,Maso.profil_struct,Maso.struct_param,
+                      Maso.struct_elem, Maso.struct_elem_param,
+                      Maso.struct_abac
+                      #, Maso.struct_elem_geo
+                      ]
             tables.sort(key=lambda x: x().order)
 
             for masobj_class in tables:
@@ -478,6 +483,7 @@ class ClassMasDatabase(object):
 
         for masobj_class in tables:
             try:
+                masobj_class.overwrite = True
                 obj = self.process_masobject(masobj_class, 'pg_create_table')
                 if self.mgis.DEBUG:
                     self.mgis.add_info('  {0} OK'.format(obj.name))
@@ -525,11 +531,17 @@ class ClassMasDatabase(object):
         Add table  for water Quality model
         """
 
-        tables = [Maso.struct_config,Maso.profil_struct,Maso.struct_param,Maso.struct_elem_geo]
+        tables = [
+                  # Maso.struct_config,Maso.profil_struct,Maso.struct_param,
+                  # Maso.struct_elem, Maso.struct_elem_param,
+                  Maso.struct_abac
+                  # , Maso.struct_elem_geo
+                  ]
         tables.sort(key=lambda x: x().order)
 
         for masobj_class in tables:
             try:
+                masobj_class.overwrite=True
                 obj = self.process_masobject(masobj_class, 'pg_create_table')
                 if self.mgis.DEBUG:
                     self.mgis.add_info('  {0} OK'.format(obj.name))
@@ -654,7 +666,6 @@ class ClassMasDatabase(object):
             except:
                 self.mgis.add_info('View failure!<br>{0}'.format(obj))
         self.mgis.iface.mapCanvas().refresh()
-
     #
     def create_spatial_index(self):
         """
@@ -743,15 +754,19 @@ $BODY$
         return liste_x
 
     # PRBOLEM DESRIPTION
-    def select(self, table, where="", order=""):
+    def select(self, table, where="", order="", list_var=None):
         """ Select variables of table"""
         if where:
             where = " WHERE " + where + " "
         if order:
             order = " ORDER BY " + order
+        if list_var is not None:
+            lvar = ','.join([str(v) for v in list_var])
+        else:
+            lvar = '*'
 
-        sql = "SELECT * FROM {0}.{1} {2} {3};"
-        (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order), fetch=True, namvar=True)
+        sql = "SELECT {4} FROM {0}.{1} {2} {3};"
+        (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order,lvar), fetch=True, namvar=True)
         cols = [col[0] for col in namCol]
         dico = {}
         for col in cols:
@@ -810,7 +825,6 @@ $BODY$
                 except:
                     dico[cols[i]].append(val)
         return dico
-
     #
     def select_max(self, var, table, where=None):
         """select the max in the table for the "where" variable"""
@@ -1028,3 +1042,46 @@ $BODY$
                     break
 
         return namesh
+
+    def insert_abacus_table(self,dossier):
+        list_fich = os.listdir(dossier)
+        print(list_fich)
+        for fich in list_fich:
+            fichabac = os.path.join(dossier, fich)
+            liste_value = []
+            with open(fichabac, 'r') as file:
+                for ligne in file:
+                    liste_value.append(ligne.replace('\n', '').split(';'))
+            mehtod = liste_value[0][1]
+            name_abc = liste_value[1][1]
+            list_var = liste_value[2]
+            print(self.checkabac(mehtod,name_abc),mehtod,name_abc)
+            # if checkabac(mehtod,name_abc):
+            # liste_value=np.array(liste_value[3:])
+            # list_insert=[]
+            # for i,var in enumerate(list_var):
+            #     for order,val in enumerate(liste_value[:,i]):
+            #         list_insert.append([mehtod, name_abc, var,order,val])
+            #
+            # liste_col = self.list_columns('struct_abac')
+            #
+            # var = ",".join(liste_col)
+            # valeurs = "("
+            # for k in liste_col:
+            #     valeurs += '%s,'
+            # valeurs = valeurs[:-1] + ")"
+            #
+            # sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
+            #                                                     'struct_abac',
+            #                                                     var,
+            #                                                     valeurs)
+            #
+            # self.run_query(sql, many=True, list_many=list_insert)
+
+    def checkabac(self,method,abc):
+        where='WHERE nam_method={} AND name_abc ={}'.format(method,abc)
+        sql = "SELECT * FROM {0}.{1} {2};"
+        sql.format(self.SCHEMA, 'struct_abac', where)
+        results = self.run_query(sql.format(self.SCHEMA, 'struct_abac', where),
+                                           fetch=True, arraysize=1)
+        print(results)
