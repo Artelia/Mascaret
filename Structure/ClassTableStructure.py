@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
 """
 
+
 class ClassTableStructure:
     def __init__(self, mgis, mdb):
         self.mgis = mgis
@@ -25,35 +26,59 @@ class ClassTableStructure:
         self.structure_default()
 
     def structure_default(self):
-        self.dico_struc_typ = {1: {'name': 'Pont cadre',
-                                   'param': [1, 2, 3, 4, 5],
-                                   'method': {1: {'name': 'Bradley',
-                                                  'input': []
-                                                  }
-                                              }
-                                   },
-                               2: {'name': 'Pont : arche'},
-                               3: {'name': 'Dalot'},
-                               4: {'name': 'Buse'}
+        self.dico_meth_calc = {0: 'Bradley',
+                               1: 'Borda',
+                               2: 'Loi de seuil',
+                               3: 'Loi d''orifice',
+                               4: 'Methode test',
+                               5: 'Bradley 72'}
+
+        self.dico_meth_draw = {0: 'Method 1',
+                               1: 'Method 2',
+                               2: 'Method 3',
+                               3: 'Method 4',
+                               4: 'Method 5'}
+
+        self.dico_struc_typ = {'PC': {'name': 'Pont cadre',
+                                      'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL',
+                                                'ORIENTM', 'PENTTAL', 'METBRAD', 'METTEST', 'NBTRAVE'],
+                                      'meth_calc': [0, 4, 5],
+                                      'meth_draw': [[0], [1, 2], [0]]
+                                      },
+                               'PA': {'name': 'Pont arche',
+                                      'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
+                                      'meth_calc': [1]
+                                      },
+                               'DA': {'name': 'Dalot',
+                                      'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
+                                      'meth_calc': [2, 3]
+                                      },
+                               'BU': {'name': 'Buse',
+                                      'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
+                                      'meth_calc': [1]
+                                      }
                                }
 
-        self.dico_struc_prm = {1: {'name': 'Cote du haut du tablier du pont', 'unit': 'm'},
-                               2: {'name': 'Epaisseur du tablier', 'unit': 'm'},
-                               3: {'name': 'Biais de l''ouvrage', 'unit': '°'},
-                               4: {'name': 'Biais des culées par rapport à l''axe du pont', 'unit': '°'},
-                               5: {'name': 'Forme des culées', 'unit': None}}
+        self.dico_struc_prm = {'ZTOPTAB': {'name': 'Cote du haut du tablier du pont', 'unit': 'm'},
+                               'EPAITAB': {'name': 'Epaisseur du tablier', 'unit': 'm'},
+                               'BIAIOUV': {'name': 'Biais de l''ouvrage', 'unit': '°'},
+                               'BIAICUL': {'name': 'Biais des culées par rapport à l''axe du pont', 'unit': '°'},
+                               'FORMCUL': {'name': 'Forme des culées', 'unit': None},
+                               'ORIENTM': {'name': 'Orientation des murs en aile', 'unit': '°'},
+                               'PENTTAL': {'name': 'Pente de talus des culées', 'unit': None},
+                               'METBRAD': {'name': 'Méthode de création si Bradley', 'unit': None},
+                               'NBTRAVE': {'name': 'Nombre de travées', 'unit': None},
+                               'METTEST': {'name': 'Méthode de création si Test', 'unit': None}}
 
-        self.dico_mod_wq = {'TRANSPORT_PUR': 1,
-                            'O2': 2,
-                            'BIOMASS': 3,
-                            'EUTRO': 4,
-                            'MICROPOLE': 5,
-                            'THERMIC': 6
-                            }
+        self.dico_typ_elem = {0: 'Travée',
+                              1: 'Pile',
+                              2: 'Arche'}
 
-        self.dico_meteo = [{"id": 1, "name": 'Air temperatures'},
-                           {"id": 2, "name": 'Saturation vapor pressure'},
-                           {"id": 3, "name": 'Wind velocities'},
-                           {"id": 4, "name": 'Nebulosity'},
-                           {"id": 5, "name": 'Solar radiation'},
-                           {"id": 6, "name": 'Atmospheric pressure'}]
+        self.dico_elem_prm = {'LARGTRA': {'name': 'Largeur de la travée', 'unit': 'm'},
+                              'FORMPIL': {'name': 'Forme de la pile', 'unit': None},
+                              'LARGPIL': {'name': 'Largeur de la pile', 'unit': 'm'},
+                              'BIAIPIL': {'name': 'Biais de la pile par rapport à l''axe du pont', 'unit': '°'}}
+
+        self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
+
+

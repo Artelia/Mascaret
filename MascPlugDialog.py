@@ -34,6 +34,8 @@ from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 # # water quality
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
+# # structures
+from .Structure.StructureDialog import ClassStructureDialog
 from .db.ClassMasDatabase import ClassMasDatabase
 from .ui.custom_control import ClassWarningBox
 
@@ -161,6 +163,10 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionAbout.triggered.connect(self.about)
         self.ui.actionWebsite.triggered.connect(self.website)
         self.ui.actionWebsite.setEnabled(False)
+
+        # Structures
+        self.ui.actionStructures.triggered.connect(self.fct_structures)
+
         # test
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
@@ -751,6 +757,13 @@ Version : {}
                                'WARNING: if the tables exist then it will be emptied.')
         if ok:
             self.mdb.add_table_wq(self.dossierSQL)
+
+    #  *******************************
+    #    Structures
+    # *******************************
+    def fct_structures(self):
+        dlg = ClassStructureDialog(self)
+        dlg.exec_()
 
     def fct_add_struct_tables(self):
 
