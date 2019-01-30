@@ -41,7 +41,8 @@ class ClassTableStructure:
 
         self.dico_struc_typ = {'PC': {'name': 'Pont cadre',
                                       'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL',
-                                                'ORIENTM', 'PENTTAL', 'METBRAD', 'METTEST', 'NBTRAVE'],
+                                                'ORIENTM', 'PENTTAL', 'METBRAD', 'METTEST', 'NBTRAVE',
+                                                'TOTALW'],
                                       'meth_calc': [0, 4, 5],
                                       'meth_draw': [[0], [1, 2], [0]]
                                       },
@@ -58,7 +59,7 @@ class ClassTableStructure:
                                       'meth_calc': [1]
                                       }
                                }
-
+        #
         self.dico_struc_prm = {'ZTOPTAB': {'name': 'Cote du haut du tablier du pont', 'unit': 'm'},
                                'EPAITAB': {'name': 'Epaisseur du tablier', 'unit': 'm'},
                                'BIAIOUV': {'name': 'Biais de l''ouvrage', 'unit': '°'},
@@ -68,15 +69,17 @@ class ClassTableStructure:
                                'PENTTAL': {'name': 'Pente de talus des culées', 'unit': None},
                                'METBRAD': {'name': 'Méthode de création si Bradley', 'unit': None},
                                'NBTRAVE': {'name': 'Nombre de travées', 'unit': None},
-                               'METTEST': {'name': 'Méthode de création si Test', 'unit': None}}
-
-        self.dico_typ_elem = {0: 'Travée',
+                               'METTEST': {'name': 'Méthode de création si Test', 'unit': None},
+                               'TOTALW': {'name': 'largeur total sous pont', 'unit': None}
+                               }
+        # todo demander pour arch
+        self.dico_typ_elem = {0: 'Travee',
                               1: 'Pile',
                               2: 'Arche'}
-
-        self.dico_elem_prm = {'LARGTRA': {'name': 'Largeur de la travée', 'unit': 'm'},
+        # obliger de separe largeur pil et tra
+        self.dico_elem_prm = {'LARG': {'name': 'Largeur de la travée ou pile', 'unit': 'm'},
                               'FORMPIL': {'name': 'Forme de la pile', 'unit': None},
-                              'LARGPIL': {'name': 'Largeur de la pile', 'unit': 'm'},
+                              # 'LARGPIL': {'name': 'Largeur de la pile', 'unit': 'm'},
                               'BIAIPIL': {'name': 'Biais de la pile par rapport à l''axe du pont', 'unit': '°'}}
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}

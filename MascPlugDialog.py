@@ -38,6 +38,8 @@ from .Structure.StructureDialog import ClassStructureDialog
 from .db.ClassMasDatabase import ClassMasDatabase
 from .ui.custom_control import ClassWarningBox
 from .Structure.ClassTmp import ClassTmp
+from .Structure.ClassBradley import ClassBradley
+
 
 
 if int(qVersion()[0]) < 5:  # qt4
@@ -778,12 +780,22 @@ Version : {}
 
 
     def fct_test(self):
+        cl = ClassTmp(self)
+        cl2 =ClassBradley(cl)
+        cl2.main()
+        cl.show()
 
         # cl=ClassTmp(self)
-        # # cl.copy_profil(28)
         # cl.show()
 
+        # # cl.copy_profil(28)
+        #
+
+
+
         # cl.create_poly_elem()
-        dossier=r"C:\Users\mehdi-pierre.daou\.qgis2\python\plugins\Mascaret\Structure\Abacus"
-        self.mdb.insert_abacus_table(dossier)
+
+        #inssert abacus
+        # dossier=r"C:\Users\mehdi-pierre.daou\.qgis2\python\plugins\Mascaret\Structure\Abacus"
+        # self.mdb.insert_abacus_table(dossier)
 
