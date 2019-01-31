@@ -26,7 +26,7 @@ class ClassTableStructure:
         self.structure_default()
 
     def structure_default(self):
-        self.dico_meth_calc = {0: 'Bradley',
+        self.dico_meth_calc = {0: 'Bradley 78',
                                1: 'Borda',
                                2: 'Loi de seuil',
                                3: 'Loi d''orifice',
@@ -77,6 +77,7 @@ class ClassTableStructure:
                               1: 'Pile',
                               2: 'Arche'}
         # obliger de separe largeur pil et tra
+        # bradley un seul Type de pile
         self.dico_elem_prm = {'LARG': {'name': 'Largeur de la travée ou pile', 'unit': 'm'},
                               'FORMPIL': {'name': 'Forme de la pile', 'unit': None},
                               # 'LARGPIL': {'name': 'Largeur de la pile', 'unit': 'm'},

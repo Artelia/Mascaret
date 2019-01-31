@@ -778,11 +778,12 @@ Version : {}
         if ok:
             self.mdb.add_table_struct(self.dossierSQL)
 
-
     def fct_test(self):
+        dossier=r"C:\Users\mehdi-pierre.daou\.qgis2\python\plugins\Mascaret\Structure\Abacus"
+        self.mdb.insert_abacus_table(dossier)
         cl = ClassTmp(self)
         cl2 =ClassBradley(cl)
-        cl2.main()
+        cl2.bradley()
         cl.show()
 
         # cl=ClassTmp(self)
@@ -796,6 +797,5 @@ Version : {}
         # cl.create_poly_elem()
 
         #inssert abacus
-        # dossier=r"C:\Users\mehdi-pierre.daou\.qgis2\python\plugins\Mascaret\Structure\Abacus"
-        # self.mdb.insert_abacus_table(dossier)
+
 

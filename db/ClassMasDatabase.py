@@ -767,6 +767,7 @@ $BODY$
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order,lvar), fetch=True, namvar=True)
+        print(results,namCol)
         cols = [col[0] for col in namCol]
         dico = {}
         for col in cols:
@@ -1055,6 +1056,7 @@ $BODY$
             mehtod = liste_value[0][1]
             name_abc = liste_value[1][1]
             list_var = liste_value[2]
+            print(mehtod, name_abc)
             if not self.checkabac(mehtod,name_abc):
                 liste_value=np.array(liste_value[3:])
                 list_insert=[]
@@ -1081,7 +1083,6 @@ $BODY$
         """check if abacus doesn't exist"""
         where="WHERE nam_method='{}' AND nam_abac ='{}'".format(method,abc)
         sql = "SELECT * FROM {0}.{1} {2};"
-        print(sql.format(self.SCHEMA, 'struct_abac', where))
 
         results = self.run_query(sql.format(self.SCHEMA, 'struct_abac', where),
                                            fetch=True, arraysize=1)

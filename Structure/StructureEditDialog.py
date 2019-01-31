@@ -52,7 +52,7 @@ class ClassStructureEditDialog(QDialog):
         ## Gestion des ctrl pour le form 0 - Pont cadre - Methode Bradley
         self.cb00_met_crea.currentIndexChanged[int].connect(self.sw00_elem.setCurrentIndex)
         self.sb000_nb_trav.valueChanged.connect(self.change_ntrav_bradley)
-        fill_qcombobox(self.cb00_orient_mur, [[30, '30°'], [45, '45°'], [60, '60°'], [90, '90°']])
+        fill_qcombobox(self.cb00_orient_mur, [[30, '30°'], [45, '45°'], [60, '60°']])
         fill_qcombobox(self.cb00_pente_tal, [[0, '1/1'], [1, '1.5/1'], [2, '2/1']])
         fill_qcombobox(self.cb00_met_crea, [[m, self.tbst.dico_meth_draw[m]]
                                             for m in self.tbst.dico_struc_typ['PC']['meth_draw'][0]])

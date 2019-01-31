@@ -80,7 +80,7 @@ class ClassTmp(QDialog):
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
         self.gui_graph(self.ui)
-        self.create_poly_elem()
+        # self.create_poly_elem()
         self.test()
         # calcul
         self.grav = 9.81
@@ -282,7 +282,6 @@ class ClassTmp(QDialog):
             else:
                 width += width_prec
             width_prec = param_elem['LARG']
-            print(width_prec )
             if lid_elem["type"][id_elem] != 'Pile':
                 # # pont Cadre
                 if self.config_type=='PC':
@@ -295,7 +294,7 @@ class ClassTmp(QDialog):
                     #polygon
                     poly_elem = self.poly_arch(param_g, param_elem, width,zmin,type='ellipse')
             else:
-                print(param_g,param_elem)
+
                 poly_elem=self.poly_pil(param_g, param_elem, width, zmin)
                 self.draw_test(poly_elem, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
 
@@ -399,27 +398,10 @@ class ClassTmp(QDialog):
         poly=self.poly_profil2(profil)
         cote = 170
         # poly = self.calc_polyw(poly, cote)
+
         self.draw_test(poly, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
 
-    def calc_polyw(self, poly, cote):
-        msg=None
-        (minx, miny, maxx, maxy) = poly.bounds
-        delpoly=Polygon([[minx - 1, cote], [maxx + 1, cote],
-                         [maxx + 1, maxy + 1], [minx - 1, maxy + 1],
-                         [minx - 1, cote]])
-        if not delpoly.is_empty:
-            polyw=poly.difference(delpoly)
-            if not polyw.is_valid:
-                polyw = GeometryCollection()
-                msg="Error: Wet polygon creation"
-        else:
-            polyw =GeometryCollection()
-            msg = "Error: delpoly creation in calc_polyw()"
 
-
-        if self.mgis.DEBUG and msg is not None:
-            print(msg)
-        return polyw
 
     def draw_test(self,poly, title=None,decal_ax=1,xmin=None,xmax=None):
 
@@ -440,7 +422,6 @@ class ClassTmp(QDialog):
         ax.set_ylim((miny-decal_ax, maxy+decal_ax))
         if title is not None:
             ax.set_title(title)
-        print('dddd')
         self.canvas.draw()
 
 
