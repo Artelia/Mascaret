@@ -62,7 +62,7 @@ class ClassBradley:
     def bradley(self, method='Bradley 78'):
         pas_h = 0.25
         hmin = 2
-        pas__q = 10
+        pas_q = 10
         born_q = [10, 1000]
 
         # if  self.parent.checkprofil(self.parent.id_config):
@@ -72,7 +72,7 @@ class ClassBradley:
         #     self.mgis.add_info(msg)
         #     print(msg)
         #     return
-        # self.parent.get_param_g(self, list_recup)
+
         self.dico_name_abac = {'Bradley 78':
                                    {'abac': ['bradley', 'bradley78']},
                                'Bradley 72':
@@ -107,16 +107,22 @@ class ClassBradley:
         self.param_g['firstw'] = 4
         self.param_g['TOTALOUV'] = 140.0  # ouverture traver
         self.param_g['TOTALW'] = 144.5
-        self.param_g['ALPHA1'] = 1
-        self.param_g['ALPHA2'] = 1
         self.param_g['FORMCUL'] = 1
         self.param_g['ORIENTM'] = 30  # 30 45 60
         self.param_g['PENTTAL'] = 0
         self.param_g['ZTOPTAB'] = 19.55
         self.param_g['EPAITAB'] = 1.1
+        self.param_g['BIAICUL']
+        list_recup=['BIAIOUV','NBTRAV','TOTALOUV',
+                    'TOTALW','FORMCUL','ORIENTM',
+                    'PENTTAL','ZTOPTAB','EPAITAB','BIAICUL'
+                    #pile de pont
+                    'LARG','LONG','FORMPIL','BIAIPIL']
+        # self.parent.get_param_g(self, list_recup)
         self.param_g['ZPC'] = self.param_g['ZTOPTAB'] - self.param_g['EPAITAB']
 
         # bradley considere une forme de pile
+        self.param_pil['BIAIPIL']=0
         self.param_pil['LARG'] = 1.5
         self.param_pil['LONG'] = 11
         self.param_pil['FORMPIL'] = 5  # ATTENTION 1 seul Type de pil est permit dans la formulation et commence par 1
@@ -127,10 +133,11 @@ class ClassBradley:
         poly_p = self.parent.poly_profil(profil)
         (minx, miny, maxx, maxy) = poly_p.bounds
         list_hn = list(np.arange(miny + hmin, self.param_g['ZPC'], pas_h))
-        list_q = list(np.arange(born_q[0], born_q[1], pas__q))
+        list_q = list(np.arange(born_q[0], born_q[1], pas_q))
 
         self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
         self.param_g['NBPIL'] = self.param_g['NBTRAV'] - 1
+
         list_final = []
         # Test
 
@@ -158,7 +165,14 @@ class ClassBradley:
                 q1 = ssoh * umoy
                 q2 = self.parent.coup_poly_v(poly_wet, self.param_g['firstw'], typ='R').area * umoy
                 q3 = self.parent.coup_poly_v(poly_wet, self.param_g['TOTALW'], typ='L').area * umoy
-                coefm = q1 / (q1 + q2 + q3)
+                qtot = q1 + q2 + q3
+                alpha1 = 1
+                alpha2 = 1
+                if qtot == 0:
+                    coefm = q1 / qtot
+                else:
+                    coefm = 0
+
                 # print('q1,q2,q3',q1,q2,q3)
                 # print('area q1, area q2,area q3', ssoh, self.parent.coup_poly_v(poly_wet,self.param_g['firstw'],typ='R').area,
                 #       self.parent.coup_poly_v(poly_wet,self.param_g['TOTALW'],typ='L' ).area)
@@ -235,11 +249,11 @@ class ClassBradley:
                 dke = np.interp(e_calc, list_e_interp, list_m_interp)
                 # print('dke', dke)
 
-                if self.param_g['BIAIOUV'] == '0':
+                if self.param_g['BIAICUL'] == '0':
                     abac_dks = "dKs_casA_abac"
                 else:
                     abac_dks = "dKs_casB_abac"
-                if self.param_g['BIAIOUV'] == 0:
+                if self.param_pil['BIAIPIL'] == 0:
                     dks = 0
                 else:
                     if self.param_g['BIAIOUV'] > 45:
@@ -265,12 +279,12 @@ class ClassBradley:
                         dks = 0
                 # print("dks",dks)
 
-                term1 = (kb + dkp + dke + dks) * va ** 2 / (2. * self.grav) * self.param_g['ALPHA2']
+                term1 = (kb + dkp + dke + dks) * va ** 2 / (2. * self.grav) * alpha2
                 # print("term1 Remout",term1)
                 hmon = hn + term1
                 poly_wet = self.parent.coup_poly_h(poly_p, hmon)
                 area_amont = poly_wet.area
-                term2 = self.param_g['ALPHA1'] * ((s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (
+                term2 = alpha1 * ((s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (
                 2. * self.grav)
                 # print("term2 Remout", term2)
                 remout = term1 + term2
@@ -294,12 +308,13 @@ class ClassBradley:
     #     ouvrage = self.mdb.select("weirs", "active")
 
     def modif_xcas_str(self, fichier_cas):
-        prof_seuil = self.mdb.select("profiles", "NOT active", "abscissa")
-        seuils = self.mdb.select("weirs", "active", "abscissa")
-        ouvrages = self.mdb.select('struct_config', "active", "abscissa")
-        print(ouvrages)
-        print(seuils)
-        print(prof_seuil)
+        pass
+        # prof_seuil = self.mdb.select("profiles", "NOT active", "abscissa")
+        # seuils = self.mdb.select("weirs", "active", "abscissa")
+        # ouvrages = self.mdb.select('struct_config', "active", "abscissa")
+        # print(ouvrages)
+        # print(seuils)
+        # print(ouvrages)
         # singularite = fichier_cas.find("parametresSingularite")
         # # Seuils
         # SubElement(singularite, "nbSeuils").text = str(len(seuils["name"]))

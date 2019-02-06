@@ -130,15 +130,15 @@ class ClassTmp(QDialog):
     def get_profil(self, id_config):
         """profil coordonnee"""
         where = "id_config = {0}".format(id_config)
-        order = "order_"
+        order = "id_order"
         profil = self.mdb.select('profil_struct', where=where, order=order, list_var=['x,z'])
         return profil
 
     def checkprofil(self, id_config):
         """"check profil if it exists"""
         where = "id_config = {0}".format(id_config)
-        profil = self.mdb.select('profil_struct', where=where, list_var=['id_prof_ori'])
-        if profil['id_prof_ori']:
+        profil = self.mdb.select('profil_struct', where=where, list_var=['id_order'])
+        if profil['id_order']:
             return True
         else:
             return False
@@ -361,14 +361,14 @@ class ClassTmp(QDialog):
         poly_l[var] = list_poly
         return poly_l
 
-    def copy_profil(self, gid, feature=None):
+    def copy_profil(self, id_config,gid, feature=None):
         """Profil copy"""
 
-        colonnes = ['id_config', 'id_prof_ori', 'order_', 'x', 'z']
+        colonnes = ['id_config', 'id_order', 'x', 'z']
         tab = {'x': [], 'z': []}
         if feature is None:
             where = "gid = '{0}' ".format(gid)
-            feature = self.mdb.select('profiles', list_var=['x', 'z', 'abscissa'])
+            feature = self.mdb.select('profiles', list_var=['x', 'z', 'abscissa','branchnum'])
             tab['x'] = [float(var) for var in feature["x"][0].split()]
             tab['z'] = [float(var) for var in feature["z"][0].split()]
         elif feature["x"] and feature["z"]:
@@ -381,11 +381,21 @@ class ClassTmp(QDialog):
         xz = list(zip(tab['x'], tab['z']))
         values = []
         for order, (x, z) in enumerate(xz):
-            values.append([self.id_config, gid, order, x, z])
+            values.append([id_config, gid, order, x, z])
 
         self.mdb.insert_res('profil_struct', values, colonnes)
-        tab = {'abscissa': feature['abscissa']}
-        self.mdb.update('struct_config', tab, var='abscissa')
+
+        tab = {'abscissa': feature['abscissa'],
+               'branchnum':feature['branchnum'],
+               'id_config':id_config}
+        self.mdb.update('struct_config', tab, var='id_config')
+        # sql = """UPDATE {0}.{1} SET abscissa='{2}', branchnum={3}  WHERE id_config='{4}'"""
+        #
+        # self.mdb.run_query(sql.format(self.mdb.SCHEMA,
+        #                               'struct_config',
+        #                               feature['abscissa'],
+        #                               feature['branchnum'],
+        #                           id_config))
 
     def test(self):
         # TODO a delete

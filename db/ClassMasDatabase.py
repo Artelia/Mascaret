@@ -532,10 +532,9 @@ class ClassMasDatabase(object):
         """
 
         tables = [
-                  # Maso.struct_config,Maso.profil_struct,Maso.struct_param,
-                  # Maso.struct_elem, Maso.struct_elem_param,
-                  Maso.struct_abac #,
-            # Maso.struct_laws
+                  Maso.struct_config,Maso.profil_struct,Maso.struct_param,
+                  Maso.struct_elem, Maso.struct_elem_param,
+                  Maso.struct_abac,Maso.struct_laws
                   # , Maso.struct_elem_geo
                   ]
         tables.sort(key=lambda x: x().order)
@@ -943,7 +942,7 @@ $BODY$
                 elif isinstance(v, list):
                     tab_var.append("{0}='{1}'".format(k, " ".join(map(str, v))))
                 else:
-                    tab_var.append("{0}={1}".format(k, v))
+                    tab_var.append("{0}='{1}'".format(k, v))
 
             sql = """UPDATE {0}.{1} SET {2}  WHERE {3}='{4}'"""
 
