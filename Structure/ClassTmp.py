@@ -150,7 +150,7 @@ class ClassTmp(QDialog):
         """ creation polygone for "pont cadre" """
         if x0 is None:
             x0 = param_g['firstw']  # point depart
-        x1 = x0 + param_elem['LARG']
+        x1 = x0 + param_elem['LARGTRA']
         z = param_g['ZPC']  # point haut
         zmin_t = zmin - 10
         if zmin < z:
@@ -165,8 +165,8 @@ class ClassTmp(QDialog):
         """ creation polygone for "pont arch" """
         if x0 is None:
             x0 = param_g['firstw']  # point depart
-        x1 = x0 + param_elem['LARG']
-        x_c = param_elem['LARG'] / 2. + x0
+        x1 = x0 + param_elem['LARGTRA']
+        x_c = param_elem['LARGTRA'] / 2. + x0
         z = param_elem['cotarc']
         if type == 'ellipse':
             zmax = param_elem['cotmax']
@@ -266,7 +266,7 @@ class ClassTmp(QDialog):
             # parametre general
             list_recup = ['ZTOPTAB', 'firstw']
             param_g = self.get_param_g(list_recup, self.id_config)
-            list_recup_elem = ['LARG', 'cotmax', 'cotarc']
+            list_recup_elem = ['LARGTRAV', 'cotmax', 'cotarc']
 
         where = "id_config = {0}".format(self.id_config)  # type=0 span, =1 bridge peir
         order = "id_elem"
@@ -281,6 +281,7 @@ class ClassTmp(QDialog):
         for i, id_elem in enumerate(lid_elem["id_elem"]):
             # parametre element
             param_elem = self.get_param_elem(id_elem, list_recup_elem, self.id_config)
+
 
             if first:
                 width = param_g['firstw']

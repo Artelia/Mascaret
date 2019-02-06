@@ -60,10 +60,8 @@ class ClassBradley:
         return cond
 
     def bradley(self, method='Bradley 78'):
-        pas_h = 0.25
-        hmin = 2
-        pas_q = 10
-        born_q = [10, 1000]
+
+
 
         # if  self.parent.checkprofil(self.parent.id_config):
         #     profil = self.parent.get_profil(self.parent.id_config)
@@ -100,11 +98,17 @@ class ClassBradley:
                          Polygon([[85.5, 6.5], [85.5, 18.45], [87, 18.45], [87, 6.5], [85.5, 6.5]]),
                          Polygon([[127, 14], [127, 18.45], [128.50, 18.45], [128.50, 14], [127, 14]])]
 
-        self.param_pil = {}
         self.param_g = {}
+        self.param_g = {}
+        self.param_g['PASH'] = 0.25
+        self.param_g['MINH'] =  2
+        self.param_g['PASQ'] = 10
+        self.param_g['MAXQ']=1000
+        self.param_g['MINQ']=10
+
         self.param_g['BIAIOUV'] = 5
         self.param_g['NBTRAV'] = 4
-        self.param_g['firstw'] = 4
+        self.param_g['FIRSTWD'] = 4
         self.param_g['TOTALOUV'] = 140.0  # ouverture traver
         self.param_g['TOTALW'] = 144.5
         self.param_g['FORMCUL'] = 1
@@ -112,28 +116,27 @@ class ClassBradley:
         self.param_g['PENTTAL'] = 0
         self.param_g['ZTOPTAB'] = 19.55
         self.param_g['EPAITAB'] = 1.1
-        self.param_g['BIAICUL']
+        self.param_g['BIAICUL']=0
         list_recup=['BIAIOUV','NBTRAV','TOTALOUV',
                     'TOTALW','FORMCUL','ORIENTM',
                     'PENTTAL','ZTOPTAB','EPAITAB','BIAICUL'
                     #pile de pont
-                    'LARG','LONG','FORMPIL','BIAIPIL']
+                    'LARGPIL','LONGPIL','FORMPIL','BIAIPIL']
         # self.parent.get_param_g(self, list_recup)
         self.param_g['ZPC'] = self.param_g['ZTOPTAB'] - self.param_g['EPAITAB']
 
         # bradley considere une forme de pile
-        self.param_pil['BIAIPIL']=0
-        self.param_pil['LARG'] = 1.5
-        self.param_pil['LONG'] = 11
-        self.param_pil['FORMPIL'] = 5  # ATTENTION 1 seul Type de pil est permit dans la formulation et commence par 1
+        self.param_g['BIAIPIL']=0
+        self.param_g['LARGPIL'] = 1.5
+        self.param_g['LONGPIL'] = 11
+        self.param_g['FORMPIL'] = 5  # ATTENTION 1 seul Type de pil est permit dans la formulation et commence par 1
 
-        list_hn = [8.85]
-        list_q = [100]
         # *****************************************
         poly_p = self.parent.poly_profil(profil)
         (minx, miny, maxx, maxy) = poly_p.bounds
-        list_hn = list(np.arange(miny + hmin, self.param_g['ZPC'], pas_h))
-        list_q = list(np.arange(born_q[0], born_q[1], pas_q))
+
+        list_hn = list(np.arange(miny + self.param_g['MINH'], self.param_g['ZPC'], self.param_g['PASH']))
+        list_q = list(np.arange( self.param_g['MINQ'],  self.param_g['MAXQ'], self.param_g['PASQ'] ))
 
         self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
         self.param_g['NBPIL'] = self.param_g['NBTRAV'] - 1
@@ -153,17 +156,17 @@ class ClassBradley:
                     poly_pil = self.parent.coup_poly_h(poly_pil, hn)
                     if self.param_g['BIAIOUV'] != 0:
                         area_pil_proj += poly_pil.area * \
-                                         (self.param_pil['LONG'] * m.sin(self.param_g['BIAIOUV']) +
-                                          self.param_pil['LARG'] * m.cos(self.param_g['BIAIOUV'])) \
-                                         / self.param_pil['LARG']
+                                         (self.param_g['LONG'] * m.sin(self.param_g['BIAIOUV']) +
+                                          self.param_g['LARG'] * m.cos(self.param_g['BIAIOUV'])) \
+                                         / self.param_g['LARG']
                     area_pil += poly_pil.area
                 if area_pil_proj == 0:
                     area_pil_proj = area_pil
 
-                ssoh = self.parent.coup_poly_v(poly_wet, [self.param_g['firstw'], self.param_g['TOTALW']],
+                ssoh = self.parent.coup_poly_v(poly_wet, [self.param_g['FIRSTWD'], self.param_g['TOTALW']],
                                                typ='LR').area
                 q1 = ssoh * umoy
-                q2 = self.parent.coup_poly_v(poly_wet, self.param_g['firstw'], typ='R').area * umoy
+                q2 = self.parent.coup_poly_v(poly_wet, self.param_g['FIRSTWD'], typ='R').area * umoy
                 q3 = self.parent.coup_poly_v(poly_wet, self.param_g['TOTALW'], typ='L').area * umoy
                 qtot = q1 + q2 + q3
                 alpha1 = 1
@@ -174,7 +177,7 @@ class ClassBradley:
                     coefm = 0
 
                 # print('q1,q2,q3',q1,q2,q3)
-                # print('area q1, area q2,area q3', ssoh, self.parent.coup_poly_v(poly_wet,self.param_g['firstw'],typ='R').area,
+                # print('area q1, area q2,area q3', ssoh, self.parent.coup_poly_v(poly_wet,self.param_g['FIRSTWD'],typ='R').area,
                 #       self.parent.coup_poly_v(poly_wet,self.param_g['TOTALW'],typ='L' ).area)
                 self.check_coefm(coefm)
                 # print('coefm',coefm)
@@ -219,10 +222,10 @@ class ClassBradley:
                 # print('j',j)
 
                 dkp = np.interp(j, self.dico_abc['DKp_abac']['J'],
-                                self.dico_abc['DKp_abac'][str(self.param_pil['FORMPIL'])])
+                                self.dico_abc['DKp_abac'][str(self.param_g['FORMPIL'])])
                 # print('Dkp', dkp)
                 coefs = np.interp(coefm, self.dico_abc['s_abac']['M'],
-                                  self.dico_abc['s_abac'][str(self.param_pil['FORMPIL'])])
+                                  self.dico_abc['s_abac'][str(self.param_g['FORMPIL'])])
                 # print('s', coefs)
                 dkp = dkp * coefs
                 # print('sDkp',dkp)
@@ -253,7 +256,7 @@ class ClassBradley:
                     abac_dks = "dKs_casA_abac"
                 else:
                     abac_dks = "dKs_casB_abac"
-                if self.param_pil['BIAIPIL'] == 0:
+                if self.param_g['BIAIPIL'] == 0:
                     dks = 0
                 else:
                     if self.param_g['BIAIOUV'] > 45:

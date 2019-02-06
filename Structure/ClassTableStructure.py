@@ -72,22 +72,20 @@ class ClassTableStructure:
                                'FORMPIL': {'name': 'Forme des piles', 'unit': None},
                                'LARGPIL': {'name': 'Largeur des piles', 'unit': 'm'},
                                'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'},
-                               'ALPHA1': {'name': 'Alpha 1', 'unit': '°'},
-                               'ALPHA2': {'name': 'Alpha 2', 'unit': '°'},
-                               'PASH': {'name': 'Pas H', 'unit': 'm'},
-                               'MINH': {'name': 'Min H', 'unit': 'm'},
-                               'PASQ': {'name': 'Pas Q', 'unit': ''},
-                               'MINQ': {'name': 'Min Q', 'unit': ''},
-                               'MAXQ': {'name': 'Max Q', 'unit': ''},
+                               'PASH': {'name': 'Discrétisation de la hauteur pour le calcul de la loi', 'unit': 'm'},
+                               'MINH': {'name': 'Hauteur d\'eau minimum pour le calcul de la loi', 'unit': 'm'},
+                               'PASQ': {'name': 'Discrétisation du débit pour le calcul de la loi', 'unit': ''},
+                               'MINQ': {'name': 'Débit minimum pour le calcul de la loi', 'unit': ''},
+                               'MAXQ': {'name': 'Débit maximum pour le calcul de la loi', 'unit': ''},
                                'NBTRAVE': {'name': 'Nombre de travées', 'unit': None},
                                'METBR72': {'name': 'Méthode de création pour Bradley 72', 'unit': None},
                                'METBR78': {'name': 'Méthode de création pour Bradley 78', 'unit': None}}
 
-        self.dico_typ_elem = {0: 'Travée',
+        self.dico_typ_elem = {0: 'Travee',
                               1: 'Pile',
                               2: 'Arche'}
 
-        self.dico_elem_prm = {'LARGTRA': {'name': 'Largeur de la travée', 'unit': 'm'}
+        self.dico_elem_prm = {'LARGTRA': {'name': 'Largeur de la travee', 'unit': 'm'}
                               }
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}

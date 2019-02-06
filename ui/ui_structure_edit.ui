@@ -180,7 +180,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="ong_pc_brad">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -701,7 +701,7 @@
          <item row="1" column="1">
           <widget class="QGroupBox" name="groupBox_4">
            <property name="title">
-            <string>Param 2</string>
+            <string>Limitation de la loi créée</string>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_16">
             <property name="leftMargin">
@@ -737,7 +737,7 @@
               <item row="1" column="0">
                <widget class="QLabel" name="label_28">
                 <property name="text">
-                 <string>H minimum</string>
+                 <string>Hauteur d'eau minimum</string>
                 </property>
                </widget>
               </item>
@@ -760,7 +760,7 @@
               <item row="0" column="0">
                <widget class="QLabel" name="label_29">
                 <property name="text">
-                 <string>Pas H</string>
+                 <string>Pas de discrétisation Z</string>
                 </property>
                </widget>
               </item>
@@ -783,14 +783,14 @@
               <item row="2" column="0">
                <widget class="QLabel" name="label_30">
                 <property name="text">
-                 <string>Pas Q</string>
+                 <string>Pas de discrétisation Q </string>
                 </property>
                </widget>
               </item>
               <item row="3" column="0">
                <widget class="QLabel" name="label_31">
                 <property name="text">
-                 <string>Bornes Q</string>
+                 <string>Borne du débit pris en compte </string>
                 </property>
                </widget>
               </item>
@@ -1368,7 +1368,7 @@
          <item row="0" column="1">
           <widget class="QGroupBox" name="groupBox_13">
            <property name="title">
-            <string>Limites et pas de la loi</string>
+            <string>Limitation de la loi créée</string>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_25">
             <property name="leftMargin">
@@ -1404,7 +1404,7 @@
               <item row="1" column="0">
                <widget class="QLabel" name="label_59">
                 <property name="text">
-                 <string>Z minimum</string>
+                 <string>Hauteur d'eau minimum</string>
                 </property>
                </widget>
               </item>
@@ -1427,7 +1427,7 @@
               <item row="0" column="0">
                <widget class="QLabel" name="label_60">
                 <property name="text">
-                 <string>Pas Z</string>
+                 <string>Pas de discrétisation Z</string>
                 </property>
                </widget>
               </item>
@@ -1450,14 +1450,14 @@
               <item row="2" column="0">
                <widget class="QLabel" name="label_61">
                 <property name="text">
-                 <string>Pas Q</string>
+                 <string>Pas de discrétisation Q </string>
                 </property>
                </widget>
               </item>
               <item row="3" column="0">
                <widget class="QLabel" name="label_62">
                 <property name="text">
-                 <string>Bornes Q</string>
+                 <string>Borne du débit pris en compte </string>
                 </property>
                </widget>
               </item>
@@ -1480,6 +1480,9 @@
                   </property>
                   <property name="suffix">
                    <string/>
+                  </property>
+                  <property name="minimum">
+                   <double>0.000000000000000</double>
                   </property>
                   <property name="maximum">
                    <double>10000.000000000000000</double>

@@ -70,8 +70,6 @@ class ClassStructureCreateDialog(QDialog):
 
     def accept_page(self):
         # save Info
-
-
         self.type = self.cb_type.itemData(self.cb_type.currentIndex())
         self.name = self.txt_name.text()
         self.comment = self.txt_comment.text()
