@@ -27,11 +27,12 @@ class ClassTableStructure:
 
     def structure_default(self):
         self.dico_meth_calc = {0: 'Bradley 78',
-                               1: 'Borda',
-                               2: 'Loi de seuil',
-                               3: 'Loi d''orifice',
-                               4: 'Methode test',
-                               5: 'Bradley 72'}
+                               1: 'Bradley 72',
+                               2: 'Borda',
+                               3: 'Loi de seuil',
+                               4: 'Loi d''orifice',
+                               5: 'Methode test'
+                               }
 
         self.dico_meth_draw = {0: 'Method 1',
                                1: 'Method 2',
@@ -85,4 +86,8 @@ class ClassTableStructure:
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
 
-
+        self.dico_law_struct={'Bradley 78':
+                                  {0: 'flowrate', 1:'z_downstream',0:'flowrate',2:'z_upstream'},
+                              'Bradley 72':
+                                  {0: 'flowrate',1: 'z_downstream',  2: 'z_upstream'}
+                              }

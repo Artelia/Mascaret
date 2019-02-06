@@ -65,12 +65,18 @@ else:  # qt4
 from shapely.geometry import *
 import shapely.affinity
 from shapely import wkb
+
+from .ClassTableStructure import ClassTableStructure
 class ClassTmp(QDialog):
 
     def __init__(self, mgis):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb =  mgis.mdb
+        self.grav = 9.81
+        self.epsi=0.0001
+        self.tbst=ClassTableStructure(self.mgis, self.mdb)
+
         self.id_config=2 #cadre
         self.config_type='cadre'
         # self.id_config=3 #arc cercl
@@ -81,9 +87,9 @@ class ClassTmp(QDialog):
         self.canvas = FigureCanvas(self.figure)
         self.gui_graph(self.ui)
         # self.create_poly_elem()
-        self.test()
+        # self.test()
         # calcul
-        self.grav = 9.81
+
 
     def gui_graph(self, ui):
         self.verticalLayout1 = QVBoxLayout(ui.widget_figure)
@@ -162,7 +168,6 @@ class ClassTmp(QDialog):
         x1 = x0 + param_elem['LARG']
         x_c= param_elem['LARG']/2.+x0
         z = param_elem['cotarc']
-        print(type)
         if type=='ellipse':
             zmax = param_elem['cotmax']
             #hyp. zmax-z=b/2
@@ -204,7 +209,7 @@ class ClassTmp(QDialog):
             print(msg)
         return poly_t
 
-    def poly_profil(self, profil, zmin=-99999):
+    def poly_profil_del(self, profil, zmin=-99999):
         """ creation profile polygone """
         zmin_p = zmin - 20
         x0_p= profil['x'][0]-1# -1 est pour évité le cas du 0
@@ -242,7 +247,7 @@ class ClassTmp(QDialog):
             print(msg)
             return
         zmin=min(profil['z'])
-        poly_p=self.poly_profil(profil,zmin)
+        poly_p=self.poly_profil_del(profil, zmin)
         if poly_p.is_empty:
             msg = 'Profile polygon is empty.'
             if self.mgis.DEBUG:
@@ -322,6 +327,27 @@ class ClassTmp(QDialog):
 
         # return poly_final
 
+    def draw_test(self,poly, title=None,decal_ax=1,xmin=None,xmax=None):
+
+        ax = self.figure.add_subplot(111)
+        # ax.grid(True)
+        new_poly = [ coord for coord in poly.exterior.coords]
+
+        (minx, miny, maxx, maxy) = poly.bounds
+        if xmin is not None:
+            minx=xmin
+        if xmax is not None:
+            maxx=xmax
+
+        poly_d = mpoly(new_poly, facecolor='blue', edgecolor='red',alpha=0.5)
+        ax.add_patch(poly_d)
+
+        ax.set_xlim((minx-decal_ax, maxx+decal_ax))
+        ax.set_ylim((miny-decal_ax, maxy+decal_ax))
+        if title is not None:
+            ax.set_title(title)
+        self.canvas.draw()
+
     def select_poly(self, table,where='', var='polygon'):
         """ select polygon
         example:
@@ -344,7 +370,7 @@ class ClassTmp(QDialog):
         tab = {'x': [], 'z': []}
         if feature is None:
             where = "gid = '{0}' ".format(gid)
-            feature=self.mdb.select('profiles',list_var=['x','z'])
+            feature=self.mdb.select('profiles',list_var=['x','z','abscissa'])
             tab['x'] = [float(var) for var in feature["x"][0].split()]
             tab['z'] = [float(var) for var in feature["z"][0].split()]
         elif feature["x"] and feature["z"]:
@@ -360,23 +386,8 @@ class ClassTmp(QDialog):
             values.append([self.id_config,gid,order,x,z])
 
         self.mdb.insert_res('profil_struct', values, colonnes)
-
-    def poly_profil2(self, profil):
-        # TODO a delete
-        """ creation profile polygone """
-        self.epsi=0.001
-        zmax = max(profil['z'])
-        zmax = zmax +self.epsi
-        x0_p= profil['x'][0]
-        z0_p= profil['z'][0]
-        liste_poly=[[x0_p,zmax],[x0_p,z0_p]]
-        for x,z in list(zip(profil['x'],profil['z'])):
-            liste_poly.append([x,z])
-
-        liste_poly.append([profil['x'][-1], zmax])
-        liste_poly.append([x0_p,zmax])
-        poly_p = Polygon(liste_poly)
-        return poly_p
+        tab={'abscissa':feature['abscissa']}
+        self.mdb.update('struct_config', tab, var='abscissa')
 
     def test(self):
         #TODO a delete
@@ -395,35 +406,159 @@ class ClassTmp(QDialog):
                         14,
                         25,
                         ]}
-        poly=self.poly_profil2(profil)
+        poly=self.poly_profil(profil)
         cote = 170
         # poly = self.calc_polyw(poly, cote)
 
         self.draw_test(poly, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
 
-
-
-    def draw_test(self,poly, title=None,decal_ax=1,xmin=None,xmax=None):
-
-        ax = self.figure.add_subplot(111)
-        # ax.grid(True)
-        new_poly = [ coord for coord in poly.exterior.coords]
-
+    def coup_poly_h(self, poly, cote):
+        msg=None
         (minx, miny, maxx, maxy) = poly.bounds
-        if xmin is not None:
-            minx=xmin
-        if xmax is not None:
-            maxx=xmax
+        delpoly=Polygon([[minx - 1, cote], [maxx + 1, cote],
+                         [maxx + 1, maxy + 1], [minx - 1, maxy + 1],
+                         [minx - 1, cote]])
+        if not delpoly.is_empty:
+            polyw=poly.difference(delpoly)
+            if not polyw.is_valid:
+                polyw = GeometryCollection()
+                msg="Error: Wet polygon creation"
+        else:
+            polyw =GeometryCollection()
+            msg = "Error: delpoly creation in calc_polyw()"
 
-        poly_d = mpoly(new_poly, facecolor='blue', edgecolor='red',alpha=0.5)
-        ax.add_patch(poly_d)
 
-        ax.set_xlim((minx-decal_ax, maxx+decal_ax))
-        ax.set_ylim((miny-decal_ax, maxy+decal_ax))
-        if title is not None:
-            ax.set_title(title)
-        self.canvas.draw()
+        if self.mgis.DEBUG and msg is not None:
+            print(msg)
+        return polyw
 
+    def coup_poly_v(self, poly, xo, typ='L'):
+        msg = None
+        if  type(xo)==list:
+            typ='LR'
+        (minx, miny, maxx, maxy) = poly.bounds
+        if typ == 'L':
+            delpoly = Polygon([[minx - 1, maxy + 1], [xo, maxy + 1],
+                               [xo, miny - 1], [minx - 1, miny - 1],
+                               [minx - 1, maxy + 1]])
+        elif typ == 'R':
+            delpoly = Polygon([[xo, maxy + 1], [maxx + 1, maxy + 1],
+                               [maxx + 1, miny - 1], [xo, miny - 1],
+                               [xo, maxy + 1]])
+        elif typ == 'LR':
+            delpoly = Polygon([[minx - 1, maxy + 1], [xo[0], maxy + 1],
+                               [xo[0], miny - 1], [minx - 1, miny - 1],
+                               [minx - 1, maxy + 1]])
+
+            delpolyR =  Polygon([[xo[1], maxy + 1], [maxx + 1, maxy + 1],
+                               [maxx + 1, miny - 1], [xo[1], miny - 1],
+                               [xo[1], maxy + 1]])
+        else:
+            delpoly = GeometryCollection()
+        if not delpoly.is_empty:
+            polyw = poly.difference(delpoly)
+            if not polyw.is_valid:
+                polyw = GeometryCollection()
+                msg = "Error: Wet polygon creation"
+        else:
+            polyw = GeometryCollection()
+            msg = "Error: delpoly creation in calc_polyw()"
+
+        if typ == 'LR' and not polyw.is_empty:
+            polyw = polyw.difference(delpolyR)
+            if not polyw.is_valid:
+                polyw = GeometryCollection()
+                msg = "Error: Wet polygon creation"
+
+        if self.mgis.DEBUG and msg is not None:
+            print(msg)
+        return polyw
+
+    def get_abac(self,list_recup):
+        """get abac"""
+        name_abac=[]
+        dico_abc={}
+        table='struct_abac'
+        for metho in list_recup:
+            where = "nam_method = '{0}' ".format(metho)
+            list_nam=self.mdb.select_distinct("nam_abac", table, where)['nam_abac']
+            name_abac+=list_nam
+            for nam_abc in   list_nam:
+                sql = "SELECT DISTINCT var FROM {}.{} WHERE nam_method='{}' and nam_abac='{}';".format(
+                    self.mdb.SCHEMA, table, metho, nam_abc)
+
+                list_var = self.mdb.run_query(sql, fetch=True, namvar=False)
+                dico_abc[nam_abc]={}
+                for var in list_var:
+                    dico_abc[nam_abc][var[0]]=[]
+
+                sql="SELECT  var,value FROM {}.{} WHERE nam_method='{}' and nam_abac='{}' ORDER by id_order ;".format(self.mdb.SCHEMA,table,metho,nam_abc)
+                rows = self.mdb.run_query(sql, fetch=True, namvar=False)
+                for row in rows:
+                    dico_abc[nam_abc][row[0]].append(row[1])
+
+        return dico_abc
+
+    def poly_profil(self, profil):
+        """ creation profile polygone """
+
+        zmax = max(profil['z'])
+        zmax = zmax +self.epsi
+        x0_p= profil['x'][0]
+        z0_p= profil['z'][0]
+        liste_poly=[[x0_p,zmax],[x0_p,z0_p]]
+        for x,z in list(zip(profil['x'],profil['z'])):
+            liste_poly.append([x,z])
+
+        liste_poly.append([profil['x'][-1], zmax])
+        liste_poly.append([x0_p,zmax])
+        poly_p = Polygon(liste_poly)
+        return poly_p
+
+    def get_struct(self):
+        """get struct dico"""
+        struct_dico = {}
+        list_var = [ 'id','name','type', 'active', 'method']
+        if list_var is not None:
+            lvar = ','.join([str(v) for v in list_var])
+        else:
+            lvar = '*'
+        sql= "SELECT {1} FROM {0}.struct_config ORDER BY id;"
+        rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, lvar), fetch=True)
+        if rows is None:
+            if self.mgis.DEBUG:
+                self.mgis.add_info('struct_config is empty')
+        for row in rows:
+            struct_dico[row[0]]={'name':row[1],
+                                 'type': row[2],
+                                 'active': row[3],
+                                 'idmethod':row[4],
+                                 'method': self.tbst.dico_meth_calc[row[4]]}
+        #
+        return struct_dico
+
+    def save_law_st(self,dico_st,id_config,list_val):
+
+        self.mdb.delete('struct_laws', where="id_config = '{}'".format(id_config))
+        liste_col = self.mdb.list_columns('struct_laws')
+        list_insert=[]
+        list_val=np.array(list_val)
+        for j in self.tbst.dico_law_struct[dico_st['method']].keys():
+            for i,val in enumerate(list_val[:,j]):
+                list_insert.append([id_config,j,i,val])
+        #
+        var = ",".join(liste_col)
+        valeurs = "("
+        for k in liste_col:
+            valeurs += '%s,'
+        valeurs = valeurs[:-1] + ")"
+
+        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
+                                                            'struct_laws',
+                                                            var,
+                                                            valeurs)
+
+        self.mdb.run_query(sql, many=True, list_many=list_insert)
 
 if __name__ == '__main__':
     # a = Polygon([[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]])

@@ -424,7 +424,7 @@ class ClassMasDatabase(object):
                       # ouvrage
                       Maso.struct_config,Maso.profil_struct,Maso.struct_param,
                       Maso.struct_elem, Maso.struct_elem_param,
-                      Maso.struct_abac
+                      Maso.struct_abac, Maso.struct_laws
                       #, Maso.struct_elem_geo
                       ]
             tables.sort(key=lambda x: x().order)
@@ -534,7 +534,8 @@ class ClassMasDatabase(object):
         tables = [
                   # Maso.struct_config,Maso.profil_struct,Maso.struct_param,
                   # Maso.struct_elem, Maso.struct_elem_param,
-                  Maso.struct_abac
+                  Maso.struct_abac #,
+            # Maso.struct_laws
                   # , Maso.struct_elem_geo
                   ]
         tables.sort(key=lambda x: x().order)
@@ -767,7 +768,6 @@ $BODY$
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order,lvar), fetch=True, namvar=True)
-        print(results,namCol)
         cols = [col[0] for col in namCol]
         dico = {}
         for col in cols:
@@ -1046,7 +1046,6 @@ $BODY$
 
     def insert_abacus_table(self,dossier):
         list_fich = os.listdir(dossier)
-        print(list_fich)
         for fich in list_fich:
             fichabac = os.path.join(dossier, fich)
             liste_value = []
@@ -1056,7 +1055,6 @@ $BODY$
             mehtod = liste_value[0][1]
             name_abc = liste_value[1][1]
             list_var = liste_value[2]
-            print(mehtod, name_abc)
             if not self.checkabac(mehtod,name_abc):
                 liste_value=np.array(liste_value[3:])
                 list_insert=[]

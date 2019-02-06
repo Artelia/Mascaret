@@ -761,9 +761,10 @@ class init_conc_wq(MasObject):
             ('value', 'float'),
             ('CONSTRAINT cle_init_conc_wq', 'PRIMARY KEY (id_config, id_trac, bief,abscissa)')]
 
+
 # *****************************************
 # Hydraulic structur
-#******************************************
+# ******************************************
 class struct_config(MasObject):
     def __init__(self):
         super(struct_config, self).__init__()
@@ -774,6 +775,7 @@ class struct_config(MasObject):
                       ('type', 'text'),
                       ('method', 'integer'),
                       ('active', 'boolean'),
+                      ('abscissa', 'float'),
                       ('comment', 'text'),
                       ('CONSTRAINT cle_struct_conf', 'PRIMARY KEY (id)')]
 
@@ -791,6 +793,7 @@ class profil_struct(MasObject):
                       ('z', 'float'),
                       ('CONSTRAINT profil_struct_pkey', 'PRIMARY KEY (order_,id_config,id_prof_ori)')]
 
+
 # parameters
 class struct_param(MasObject):
     def __init__(self):
@@ -801,6 +804,8 @@ class struct_param(MasObject):
                       ('var', 'text'),
                       ('value', 'float'),
                       ('CONSTRAINT cle_struct_param', 'PRIMARY KEY (id_config,var)')]
+
+
 # objet pile de pont/
 class struct_elem_param(MasObject):
     def __init__(self):
@@ -812,6 +817,8 @@ class struct_elem_param(MasObject):
                       ('var', 'text'),
                       ('value', 'float'),
                       ('CONSTRAINT cle_struct_elem_param', 'PRIMARY KEY (id_config,id_elem,var)')]
+
+
 class struct_elem(MasObject):
     def __init__(self):
         super(struct_elem, self).__init__()
@@ -823,22 +830,22 @@ class struct_elem(MasObject):
                       ('polygon', 'GEOMETRY'),
                       ('CONSTRAINT cle_struct_elem', 'PRIMARY KEY (id_config,id_elem)')]
 
-
-# class struct_elem_geo(MasObject):
-#     def __init__(self):
-#         super(struct_elem_geo, self).__init__()
-#         self.order = 30
-#         self.geom_type = None
-#         self.attrs = [('id_config', 'integer'),
-#                       ('id_elem', 'integer'),
-#                       ('id_order', 'integer'),
-#                       ('x', 'float'),
-#                       ('z', 'float'),
-#                       ('CONSTRAINT cle_struct_elem_geo', 'PRIMARY KEY (id_config,id_elem,id_order)')]
+    # class struct_elem_geo(MasObject):
+    #     def __init__(self):
+    #         super(struct_elem_geo, self).__init__()
+    #         self.order = 30
+    #         self.geom_type = None
+    #         self.attrs = [('id_config', 'integer'),
+    #                       ('id_elem', 'integer'),
+    #                       ('id_order', 'integer'),
+    #                       ('x', 'float'),
+    #                       ('z', 'float'),
+    #                       ('CONSTRAINT cle_struct_elem_geo', 'PRIMARY KEY (id_config,id_elem,id_order)')]
     # def pg_create_table(self):
     #     qry = super(self.__class__, self).pg_create_table()
     #     qry += '\n'
     #     qry += self.pg_create_index()
+
 
 class struct_abac(MasObject):
     def __init__(self):
@@ -851,3 +858,15 @@ class struct_abac(MasObject):
                       ('id_order', 'integer'),
                       ('value', 'float'),
                       ('CONSTRAINT cle_struct_abac', 'PRIMARY KEY (id_order,nam_method,nam_abac,var)')]
+
+
+class struct_laws(MasObject):
+    def __init__(self):
+        super(struct_laws, self).__init__()
+        self.order = 32
+        self.geom_type = None
+        self.attrs = [('id_config', 'integer'),
+                      ('id_var', 'integer'),
+                      ('id_order', 'integer'),
+                      ('value', 'float'),
+                      ('CONSTRAINT cle_struct_laws', 'PRIMARY KEY (id_config, id_var, id_order)')]

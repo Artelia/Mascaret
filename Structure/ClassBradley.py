@@ -17,6 +17,7 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+import os
 import math as m
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtCore import *
@@ -34,92 +35,11 @@ class ClassBradley:
         self.parent=parent
         self.mgis=self.parent.mgis
         self.mdb = self.parent.mdb
+        self.tbst=self.parent.tbst
         self.grav=9.81
         self.DEBUG=True
-        self.epsi=0.0001
-        self.nam_abc={}
-
-    def poly_profil(self, profil):
-        """ creation profile polygone """
-
-        zmax = max(profil['z'])
-        zmax = zmax +self.epsi
-        x0_p= profil['x'][0]
-        z0_p= profil['z'][0]
-        liste_poly=[[x0_p,zmax],[x0_p,z0_p]]
-        for x,z in list(zip(profil['x'],profil['z'])):
-            liste_poly.append([x,z])
-
-        liste_poly.append([profil['x'][-1], zmax])
-        liste_poly.append([x0_p,zmax])
-        poly_p = Polygon(liste_poly)
-        return poly_p
-
-    def coup_poly_h(self, poly, cote):
-        msg=None
-        (minx, miny, maxx, maxy) = poly.bounds
-        delpoly=Polygon([[minx - 1, cote], [maxx + 1, cote],
-                         [maxx + 1, maxy + 1], [minx - 1, maxy + 1],
-                         [minx - 1, cote]])
-        if not delpoly.is_empty:
-            polyw=poly.difference(delpoly)
-            if not polyw.is_valid:
-                polyw = GeometryCollection()
-                msg="Error: Wet polygon creation"
-        else:
-            polyw =GeometryCollection()
-            msg = "Error: delpoly creation in calc_polyw()"
-
-
-        if self.mgis.DEBUG and msg is not None:
-            print(msg)
-        return polyw
-
-    def coup_poly_v(self, poly, xo, typ='L'):
-        msg = None
-        print(xo)
-        if  type(xo)==list:
-            typ='LR'
-        (minx, miny, maxx, maxy) = poly.bounds
-        if typ == 'L':
-            delpoly = Polygon([[minx - 1, maxy + 1], [xo, maxy + 1],
-                               [xo, miny - 1], [minx - 1, miny - 1],
-                               [minx - 1, maxy + 1]])
-        elif typ == 'R':
-            delpoly = Polygon([[xo, maxy + 1], [maxx + 1, maxy + 1],
-                               [maxx + 1, miny - 1], [xo, miny - 1],
-                               [xo, maxy + 1]])
-        elif typ == 'LR':
-            delpoly = Polygon([[minx - 1, maxy + 1], [xo[0], maxy + 1],
-                               [xo[0], miny - 1], [minx - 1, miny - 1],
-                               [minx - 1, maxy + 1]])
-
-            delpolyR =  Polygon([[xo[1], maxy + 1], [maxx + 1, maxy + 1],
-                               [maxx + 1, miny - 1], [xo[1], miny - 1],
-                               [xo[1], maxy + 1]])
-        else:
-            delpoly = GeometryCollection()
-        if not delpoly.is_empty:
-            polyw = poly.difference(delpoly)
-            if not polyw.is_valid:
-                polyw = GeometryCollection()
-                msg = "Error: Wet polygon creation"
-        else:
-            polyw = GeometryCollection()
-            msg = "Error: delpoly creation in calc_polyw()"
-
-        if typ == 'LR' and not polyw.is_empty:
-            polyw = polyw.difference(delpolyR)
-            if not polyw.is_valid:
-                polyw = GeometryCollection()
-                msg = "Error: Wet polygon creation"
-
-        if self.mgis.DEBUG and msg is not None:
-            print(msg)
-        return polyw
-
-    def calc_kb(self,coefm,):
-        pass
+        self.dico_abc={}
+        self.dossier_file_masc = os.path.join(self.mgis.masplugPath, "mascaret")
 
     def check_coefm(self,coefm):
         cond = True
@@ -140,34 +60,11 @@ class ClassBradley:
             print(msg)
         return cond
 
-    def get_abac(self,list_recup):
-        """get abac"""
-        name_abac=[]
-        table='struct_abac'
-        for metho in list_recup:
-            where = "nam_method = '{0}' ".format(metho)
-            list_nam=self.mdb.select_distinct("nam_abac", table, where)['nam_abac']
-            name_abac+=list_nam
-            for nam_abc in   list_nam:
-                sql = "SELECT DISTINCT var FROM {}.{} WHERE nam_method='{}' and nam_abac='{}';".format(
-                    self.mdb.SCHEMA, table, metho, nam_abc)
-
-                list_var = self.mdb.run_query(sql, fetch=True, namvar=False)
-                self.nam_abc[nam_abc]={}
-                for var in list_var:
-                    self.nam_abc[nam_abc][var[0]]=[]
-
-                sql="SELECT  var,value FROM {}.{} WHERE nam_method='{}' and nam_abac='{}' ORDER by id_order ;".format(self.mdb.SCHEMA,table,metho,nam_abc)
-                rows = self.mdb.run_query(sql, fetch=True, namvar=False)
-                for row in rows:
-                    self.nam_abc[nam_abc][row[0]].append(row[1])
-
-        # return param_elem
-
-    def bradley(self,        methode = 'Bradley 72'):
-        pas_h = 0.1
-        pas_Q = 10
-        bornQ=[10,1000]
+    def bradley(self, method = 'Bradley 78'):
+        pas_h = 0.25
+        hmin=2
+        pas__q = 10
+        born_q=[10,1000]
 
         # if  self.parent.checkprofil(self.parent.id_config):
         #     profil = self.parent.get_profil(self.parent.id_config)
@@ -182,7 +79,7 @@ class ClassBradley:
                          'Bradley 72':
                              {'abac': ['bradley', 'bradley72']}
                              }
-        self.get_abac(self.dico_name_abac[methode]['abac'])
+        self.dico_abc = self.parent.get_abac(self.dico_name_abac[method]['abac'])
         # for test ***************************
 
 
@@ -216,6 +113,9 @@ class ClassBradley:
         self.param_g['FORMCUL']=1
         self.param_g['ORIENTM'] = 30 #30 45 60
         self.param_g['PENTTAL'] =0
+        self.param_g['ZTOPTAB']=19.55
+        self.param_g['EPAITAB']=1.1
+        self.param_g['ZPC'] = self.param_g['ZTOPTAB'] - self.param_g['EPAITAB']
 
         # bradley considere une forme de pile
         self.param_pil['LARG'] = 1.5
@@ -223,29 +123,29 @@ class ClassBradley:
         self.param_pil['FORMPIL']=5 # ATTENTION 1 seul Type de pil est permit dans la formulation et commence par 1
 
 
-
         list_hn=[8.85]
         list_q= [100]
     #*****************************************
-        poly_p=self.poly_profil(profil)
+        poly_p=self.parent.poly_profil(profil)
         (minx, miny, maxx, maxy) = poly_p.bounds
-        # list_hn = list(np.arange(miny, maxy, pas_h))
-        # list_q = list(np.arange(bornQ[0],bornQ[1], pas_Q))
+        list_hn = list(np.arange(miny+ hmin, self.param_g['ZPC'], pas_h))
+        list_q = list(np.arange(born_q[0],born_q[1], pas__q))
 
         self.param_g['BIAIOUV']= self.param_g['BIAIOUV']/180.*m.pi # rad
         self.param_g['NBPIL']=self.param_g['NBTRAV']-1
         list_final=[]
         # Test
+
         for hn in list_hn:
             for q in list_q:
                 area_pil=0
                 area_pil_proj = 0
-                poly_wet = self.coup_poly_h(poly_p, hn)
+                poly_wet = self.parent.coup_poly_h(poly_p, hn)
                 area_wet = poly_wet.area
-                print('area_wet',area_wet)
+                # print('area_wet',area_wet)
                 umoy=q/area_wet
                 for  poly_pil in list_poly_pil:
-                    poly_pil= self.coup_poly_h(poly_pil, hn)
+                    poly_pil= self.parent.coup_poly_h(poly_pil, hn)
                     if self.param_g['BIAIOUV'] != 0:
                         area_pil_proj += poly_pil.area * \
                                         (self.param_pil['LONG'] * m.sin(self.param_g['BIAIOUV']) +
@@ -255,63 +155,62 @@ class ClassBradley:
                 if area_pil_proj==0:
                     area_pil_proj=area_pil
 
-                ssoh=self.coup_poly_v(poly_wet,[self.param_g['firstw'],self.param_g['TOTALW']],typ='LR').area
+                ssoh=self.parent.coup_poly_v(poly_wet,[self.param_g['firstw'],self.param_g['TOTALW']],typ='LR').area
                 q1 =ssoh *umoy
-                q2 = self.coup_poly_v(poly_wet,self.param_g['firstw'],typ='R').area*umoy
-                q3 = self.coup_poly_v(poly_wet,self.param_g['TOTALW'],typ='L' ).area*umoy
+                q2 = self.parent.coup_poly_v(poly_wet,self.param_g['firstw'],typ='R').area*umoy
+                q3 = self.parent.coup_poly_v(poly_wet,self.param_g['TOTALW'],typ='L' ).area*umoy
                 coefm=q1/(q1+q2+q3)
-                print('q1,q2,q3',q1,q2,q3)
-                print('area q1, area q2,area q3', ssoh, self.coup_poly_v(poly_wet,self.param_g['firstw'],typ='R').area, self.coup_poly_v(poly_wet,self.param_g['TOTALW'],typ='L' ).area)
+                # print('q1,q2,q3',q1,q2,q3)
+                # print('area q1, area q2,area q3', ssoh, self.parent.coup_poly_v(poly_wet,self.param_g['firstw'],typ='R').area,
+                #       self.parent.coup_poly_v(poly_wet,self.param_g['TOTALW'],typ='L' ).area)
                 self.check_coefm(coefm)
-                print('coefm',coefm)
+                # print('coefm',coefm)
                 s1=ssoh-area_pil_proj
-                print('S1',s1)
+                # print('S1',s1)
                 va=q/s1
-                print('Va', va)
+                # print('Va', va)
                 # *************** kb
-                if methode=='Bradley 78':
+                if method=='Bradley 78':
                     if self.param_g['TOTALOUV']>60 and self.param_g['FORMCUL']==1:
-                        list_inter=self.nam_abc["kb_abac"]['Others']
+                        list_inter=self.dico_abc["kb_abac"]['Others']
                     else:
-                        list_inter = self.nam_abc["kb_abac"]['type1<60m']
-                    kb = np.interp(coefm, self.nam_abc["kb_abac"]['M'],list_inter )
-                    print('kb',kb)
-                elif  methode=='Bradley 72':
-                    print(self.nam_abc["kb_abac"])
+                        list_inter = self.dico_abc["kb_abac"]['type1<60m']
+                    kb = np.interp(coefm, self.dico_abc["kb_abac"]['M'], list_inter)
+                    # print('kb',kb)
+                elif  method=='Bradley 72':
                     if self.param_g['FORMCUL']==1:
-                        list_inter = self.nam_abc["kb_abac"]['type1']
+                        list_inter = self.dico_abc["kb_abac"]['type1']
                     elif self.param_g['FORMCUL']==2:
                         if self.param_g['ORIENTM']==30:
-                            list_inter = self.nam_abc["kb_abac"]['type2_30deg']
+                            list_inter = self.dico_abc["kb_abac"]['type2_30deg']
                         else:
-                            list_inter = self.nam_abc["kb_abac"]['type2_45to60deg']
+                            list_inter = self.dico_abc["kb_abac"]['type2_45to60deg']
                     elif self.param_g['FORMCUL'] == 3:
                         if self.param_g['PENTTAL'] == 0:
-                            list_inter = self.nam_abc["kb_abac"]['type3_1:1']
+                            list_inter = self.dico_abc["kb_abac"]['type3_1:1']
                         elif self.param_g['PENTTAL'] == 1:
-                            list_inter = self.nam_abc["kb_abac"]['type3_1.5:1']
+                            list_inter = self.dico_abc["kb_abac"]['type3_1.5:1']
                         else:
-                            list_inter = self.nam_abc["kb_abac"]['type3_2:1']
+                            list_inter = self.dico_abc["kb_abac"]['type3_2:1']
                     else:
                         # defaut 1
-                        list_inter = self.nam_abc["kb_abac"]['type1']
+                        list_inter = self.dico_abc["kb_abac"]['type1']
 
-                    kb = np.interp(coefm, self.nam_abc["kb_abac"]['M'], list_inter)
+                    kb = np.interp(coefm, self.dico_abc["kb_abac"]['M'], list_inter)
                 else:
                     kb=0
 
                 #*************** Dkp
-                print(area_pil_proj,ssoh,area_pil)
+                # print(area_pil_proj,ssoh,area_pil)
                 j=area_pil_proj/ssoh
-                print('j',j)
+                # print('j',j)
 
-
-                dkp = np.interp(j, self.nam_abc['DKp_abac']['J'],self.nam_abc['DKp_abac'][str(self.param_pil['FORMPIL'])])
-                print('Dkp', dkp)
-                coefs = np.interp(coefm, self.nam_abc['s_abac']['M'],self.nam_abc['s_abac'][str(self.param_pil['FORMPIL'])])
-                print('s', coefs)
+                dkp = np.interp(j, self.dico_abc['DKp_abac']['J'], self.dico_abc['DKp_abac'][str(self.param_pil['FORMPIL'])])
+                # print('Dkp', dkp)
+                coefs = np.interp(coefm, self.dico_abc['s_abac']['M'], self.dico_abc['s_abac'][str(self.param_pil['FORMPIL'])])
+                # print('s', coefs)
                 dkp=dkp*coefs
-                print('sDkp',dkp)
+                # print('sDkp',dkp)
 
                 if q3< q2:
                     e_calc = 1 - q3 / q2
@@ -320,7 +219,7 @@ class ClassBradley:
                 else:
                     e_calc = 0
                 list_e=[]
-                for key in self.nam_abc['dKe_abac'].keys():
+                for key in self.dico_abc['dKe_abac'].keys():
                     if key !='M':
                         list_e.append((key,float(key.split('=')[1])))
                 list_e=sorted(list_e)
@@ -328,11 +227,11 @@ class ClassBradley:
                 list_m_interp = []
                 list_e_interp =[]
                 for ee in list_e:
-                    list_m_interp.append(np.interp(coefm, self.nam_abc['dKe_abac']['M'],self.nam_abc['dKe_abac'][ee[0]]))
+                    list_m_interp.append(np.interp(coefm, self.dico_abc['dKe_abac']['M'], self.dico_abc['dKe_abac'][ee[0]]))
                     list_e_interp.append(ee[1])
 
                 dke=np.interp(e_calc,list_e_interp, list_m_interp)
-                print('dke', dke)
+                # print('dke', dke)
 
                 if self.param_g['BIAIOUV']=='0':
                     abac_dks = "dKs_casA_abac"
@@ -342,10 +241,10 @@ class ClassBradley:
                     dks=0
                 else:
                     if self.param_g['BIAIOUV'] > 45:
-                        dkx=np.interp(coefm, self.nam_abc[abac_dks]['M'], self.nam_abc[abac_dks]['phi>45'])
+                        dkx=np.interp(coefm, self.dico_abc[abac_dks]['M'], self.dico_abc[abac_dks]['phi>45'])
                     else:
                         list_ph = []
-                        for key in self.nam_abc[abac_dks].keys():
+                        for key in self.dico_abc[abac_dks].keys():
                             if key != 'M' and key != 'phi>45':
                                 list_ph.append((key, float(key.split('=')[1])))
                         list_ph = sorted(list_ph)
@@ -354,7 +253,7 @@ class ClassBradley:
                         list_ph_interp = []
                         for ph in list_ph:
                             list_m_interp.append(
-                                np.interp(coefm, self.nam_abc[abac_dks]['M'], self.nam_abc[abac_dks][ph[0]]))
+                                np.interp(coefm, self.dico_abc[abac_dks]['M'], self.dico_abc[abac_dks][ph[0]]))
                             list_ph_interp.append(ph[1])
                         dksx = np.interp(self.param_g['BIAIOUV'],list_ph_interp, list_m_interp)
 
@@ -362,15 +261,92 @@ class ClassBradley:
                         dks=dksx
                     else:
                         dks=0
-                print("dks",dks)
+                # print("dks",dks)
 
                 term1=(kb+dkp+dke+dks)*va**2/(2.*self.grav)*self.param_g['ALPHA2']
-                print("term1 Remout",term1)
+                # print("term1 Remout",term1)
                 hmon=hn+term1
-                poly_wet = self.coup_poly_h(poly_p, hmon)
+                poly_wet = self.parent.coup_poly_h(poly_p, hmon)
                 area_amont= poly_wet.area
                 term2 = self.param_g['ALPHA1']*((s1/area_wet)**2 - (s1/area_amont)**2 )*va**2 /(2.*self.grav)
-                print("term2 Remout", term2)
+                # print("term2 Remout", term2)
                 remout=term1+term2
-                print("Remout Total", remout)
-                list_final.append([hn,q,hn+remout])
+                # print("Remout Total", remout)
+                list_final.append([q,hn,hn+remout])
+
+        return list_final
+
+    def law_brad(self,list_final,nom):
+        """creeation of law"""
+
+        with open(os.path.join(self.dossier_file_masc, nom+'.loi'), 'w') as fich:
+            fich.write('# ' + nom + '\n')
+            fich.write('# Debit Cote_Aval Cote_Amont\n')
+            chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
+            for val in list_final:
+                dico={'flowrate':val[0],'z_downstream':val[1],'z_upstream':val[2]}
+                fich.write(chaine.format(**dico))
+
+    # def write_law(self):
+    #     ouvrage = self.mdb.select("weirs", "active")
+
+    def modif_xcas_str(self,fichier_cas):
+        prof_seuil = self.mdb.select("profiles", "NOT active", "abscissa")
+        seuils = self.mdb.select("weirs", "active", "abscissa")
+        ouvrages= self.mdb.select('struct_abac', "active", "abscissa")
+
+
+        singularite = fichier_cas.find("parametresSingularite")
+        # Seuils
+        SubElement(singularite, "nbSeuils").text = str(len(seuils["name"]))
+
+        if len(seuils["name"]) > 0:
+            e_tseuils = SubElement(singularite, "seuils")
+
+        liste = ["type", "numBranche", "abscisse", "coteCrete", "coteCreteMoy",
+                 "coteRupture", "coeffDebit", "largVanne", "epaisseur"]
+        liste_en = ["type", "branchnum", "abscissa", "z_crest", "z_average_crest",
+                    "z_break", "flowratecoeff", "wide_floodgate", "thickness"]
+
+        for i, nom in enumerate(seuils["name"]):
+            struct = SubElement(e_tseuils, "structureParametresSeuil")
+            SubElement(struct, "nom").text = nom
+            for kk, l in enumerate(liste):
+                if seuils[liste_en[kk].lower()][i] is None:
+                    SubElement(struct, l).text = '-0'
+                else:
+                    SubElement(struct, l).text = str(seuils[liste_en[kk].lower()][i])
+
+            if seuils["type"][i] not in (3, 4):
+                SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()))
+            else:
+                SubElement(struct, "numLoi").text = '-0'
+            if seuils["type"][i] != 3:
+                SubElement(struct, "nbPtLoiSeuil").text = '-0'
+            else:
+                try:
+                    i = prof_seuil["name"].index(nom)
+                    long = len(prof_seuil['x'][i].split())
+                    SubElement(struct, "nbPtLoiSeuil").text = str(long)
+                    SubElement(struct, "abscTravCrete").text = prof_seuil['x'][i]
+                    SubElement(struct, "cotesCrete").text = prof_seuil['z'][i]
+
+                except:
+                    msg = 'Profil de crete introuvable pour {}'
+                    QMessageBox.warning(None, 'Message', msg.format(nom))
+                    return
+
+            SubElement(struct, "gradient").text = "-0"
+
+
+    def main(self):
+        struct_dico=self.parent.get_struct()
+        for id_config in struct_dico:
+            dico_st=struct_dico[id_config ]
+            if dico_st["active"]:
+                if dico_st['idmethod'] == 0 or dico_st['idmethod'] == 1 :
+                    listf=self.bradley(method=dico_st['method'])
+                    self.parent.save_law_st(dico_st,id_config,listf)
+                    self.write_law()
+                elif dico_st['idmethod'] == 2:
+                    pass
