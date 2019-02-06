@@ -783,7 +783,8 @@ Version : {}
         # self.mdb.insert_abacus_table(dossier)
         cl = ClassTmp(self)
         cl2 =ClassBradley(cl)
-        cl2.main()
+        # cl2.main()
+        cl2.modif_xcas_str('rrr')
         cl.show()
 
         # cl=ClassTmp(self)
