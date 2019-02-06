@@ -78,10 +78,10 @@ class GraphCommon(QDialog):
         self.canvas = FigureCanvas(self.fig)
         self.toolbar = NavigationToolbar(self.canvas, self)
 
-    def initUI_common_P(self):
+    def initui_common_p(self):
         self.courbes = []
 
-    def GUI_graph(self, lay):
+    def gui_graph(self, lay):
         lay.addWidget(self.canvas)
         lay.addWidget(self.toolbar)
 
@@ -96,9 +96,9 @@ class GraphCommon(QDialog):
                 legline.set_alpha(1.0)
             else:
                 legline.set_alpha(0.2)
-            self.majLimites()
+            self.maj_limites()
 
-    def initLegende(self):
+    def init_legende(self):
         listeNoms = [c.get_label() for c in self.courbes]
         self.leg = self.axes.legend(self.courbes, listeNoms, loc='upper right',
                                     fancybox=False, shadow=False, fontsize=7.)
@@ -112,7 +112,7 @@ class GraphCommon(QDialog):
             legline.set_linewidth(3)
             self.lined[legline] = courbe
 
-    def majUnitX(self, unit):
+    def maj_unit_x(self, unit):
         self.unit = unit
         self.axes.set_xlabel("time ({})".format(unit))
         if self.unit != 'date':
@@ -120,13 +120,13 @@ class GraphCommon(QDialog):
         else:
             self.axes.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
 
-    def majCourbes(self, courbes):
+    def maj_courbes(self, courbes):
         for c in courbes.keys():
             self.courbes[c].set_data(courbes[c]["x"], courbes[c]["y"])
 
-        self.majLimites()
+        self.maj_limites()
 
-    def majLimites(self):
+    def maj_limites(self):
         no_data = True
         miniX = 999999.
         maxiX = -999999.

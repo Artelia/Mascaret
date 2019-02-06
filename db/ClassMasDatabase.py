@@ -532,8 +532,8 @@ class ClassMasDatabase(object):
         """
 
         tables = [
-                  # Maso.struct_config,Maso.profil_struct,Maso.struct_param,
-                  # Maso.struct_elem, Maso.struct_elem_param,
+                  Maso.struct_config,Maso.profil_struct,Maso.struct_param,
+                  Maso.struct_elem, Maso.struct_elem_param,
                   Maso.struct_abac
                   # , Maso.struct_elem_geo
                   ]

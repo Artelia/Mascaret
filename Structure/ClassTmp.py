@@ -80,7 +80,7 @@ class ClassTmp(QDialog):
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
         self.gui_graph(self.ui)
-        self.create_poly_elem()
+        # self.create_poly_elem()
 
     def gui_graph(self, ui):
         self.verticalLayout1 = QVBoxLayout(ui.widget_figure)
@@ -310,28 +310,26 @@ class ClassTmp(QDialog):
         poly_l[var]= list_poly
         return  poly_l
 
-    def copy_profil(self,gid,feature=None):
+    def copy_profil(self, gid, id_struct):
         """Profil copy"""
-
-        colonnes=['id_config','id_prof_ori','order_','x','z']
+        colonnes=['id_struct', 'id_order', 'x', 'z']
         tab = {'x': [], 'z': []}
-        if feature is None:
-            where = "gid = '{0}' ".format(gid)
-            feature=self.mdb.select('profiles',list_var=['x','z'])
-            tab['x'] = [float(var) for var in feature["x"][0].split()]
-            tab['z'] = [float(var) for var in feature["z"][0].split()]
-        elif feature["x"] and feature["z"]:
-            tab['x'] = [float(var) for var in feature["x"].split()]
-            tab['z'] = [float(var) for var in feature["z"].split()]
 
-        else:
+        where = "gid = '{0}' ".format(gid)
+        feature = self.mdb.select('profiles', where=where, list_var=['x', 'z'])
+        tab['x'] = [float(var) for var in feature["x"][0].split()]
+        tab['z'] = [float(var) for var in feature["z"][0].split()]
+
+        if len(tab['x']) == 0 or len(tab['z']) == 0:
             self.mgis.add_info("Check if the profile is saved.")
             return
-        xz = list(zip(tab['x'], tab['z']))
-        values=[]
-        for order,(x,z) in enumerate(xz):
-            values.append([self.id_config,gid,order,x,z])
 
+        xz = list(zip(tab['x'], tab['z']))
+        values = []
+        for order, (x, z) in enumerate(xz):
+            values.append([id_struct, order, x, z])
+
+        print (values)
         self.mdb.insert_res('profil_struct', values, colonnes)
 
     def draw_test(self,poly, title=None,decal_ax=1,xmin=None,xmax=None):

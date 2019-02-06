@@ -28,6 +28,7 @@ from qgis.utils import *
 from .ClassTableStructure import ClassTableStructure
 from .GraphStructure import GraphStructure
 from .StructureEditDialog import ClassStructureEditDialog
+from .StructureCreateDialog import ClassStructureCreateDialog
 # from ..Function import data_to_float
 
 if int(qVersion()[0]) < 5:  # qt4
@@ -61,21 +62,24 @@ class ClassStructureDialog(QDialog):
         self.fill_lst_struct()
 
     def fill_lst_struct(self, id=None):
+        self.tree_struct.clear()
         for id_type, elem in self.tbst.dico_struc_typ.items():
             typ_itm = QTreeWidgetItem()
             typ_itm.setFlags(Qt.ItemIsEnabled)
             typ_itm.setData(0, 32, id_type)
             typ_itm.setText(0, elem['name'])
             self.tree_struct.addTopLevelItem(typ_itm)
-            sql = "SELECT * FROM {0}.struct_config WHERE type = '{1}' ORDER BY name".format(self.mdb.SCHEMA, id_type)
+            sql = "SELECT id, name, method, comment FROM {0}.struct_config " \
+                  "WHERE type = '{1}' ORDER BY name".format(self.mdb.SCHEMA, id_type)
             rows = self.mdb.run_query(sql, fetch=True)
             for row in rows:
                 ouv_itm = QTreeWidgetItem()
                 ouv_itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                 ouv_itm.setData(0, 32, int(row[0]))
                 ouv_itm.setText(0, row[1])
-                ouv_itm.setText(1, self.tbst.dico_meth_calc[row[3]])
-                ouv_itm.setText(2, str(row[2]))
+                if row[2]:
+                    ouv_itm.setText(1, self.tbst.dico_meth_calc[row[2]])
+                ouv_itm.setText(2, str(row[3]))
                 typ_itm.addChild(ouv_itm)
             typ_itm.setExpanded(True)
 
@@ -98,9 +102,9 @@ class ClassStructureDialog(QDialog):
             self.graph_struct.initGraph(None)
 
     def new_struct(self):
-        dlg = ClassStructureEditDialog(self.mgis, None)
-        dlg.exec_()
-        self.update_cur_item()
+        dlg = ClassStructureCreateDialog(self.mgis, None)
+        if dlg.exec_():
+            self.fill_lst_struct()
 
     def edit_struct(self):
         if self.tree_struct.selectedItems():

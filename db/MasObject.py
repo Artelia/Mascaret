@@ -812,6 +812,7 @@ class struct_elem_param(MasObject):
                       ('var', 'text'),
                       ('value', 'float'),
                       ('CONSTRAINT cle_struct_elem_param', 'PRIMARY KEY (id_config,id_elem,var)')]
+
 class struct_elem(MasObject):
     def __init__(self):
         super(struct_elem, self).__init__()
@@ -843,7 +844,7 @@ class struct_elem(MasObject):
 class struct_abac(MasObject):
     def __init__(self):
         super(struct_abac, self).__init__()
-        self.order = 30
+        self.order = 31
         self.geom_type = None
         self.attrs = [('nam_method', 'text'),
                       ('nam_abac', 'text'),

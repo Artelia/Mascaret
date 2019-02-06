@@ -45,6 +45,7 @@ from qgis.gui import *
 from .Function import isfloat, interpole
 from .WaterQuality.ClassTableWQ import ClassTableWQ
 from .Structure.ClassTmp import ClassTmp
+from .Structure.StructureCreateDialog import ClassStructureCreateDialog
 
 if int(qVersion()[0]) < 5:  # qt4
 
@@ -367,12 +368,13 @@ class GraphProfil(GraphCommon):
         #self.struct.GUI()
         #choix pour la création de la config
         # return
-        if self.feature["x"] and self.feature["z"]:
-            self.struct.copy_profil(self.gid,self.feature)
-        print("create_struct")
+        dlg = ClassStructureCreateDialog(self.mgis, self.gid)
+        if dlg.exec_():
+            print("create_struct")
+        # if self.feature["x"] and self.feature["z"]:
+        #     self.struct.copy_profil(self.gid)
+        #     print("create_struct")
         pass
-
-
 
     def avance(self, val):
         """next or back profiles """
