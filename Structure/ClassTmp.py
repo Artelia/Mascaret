@@ -17,10 +17,11 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import math as m
 import os
-from matplotlib.figure import Figure
+import math as m
 from matplotlib.patches import Polygon as mpoly
+from matplotlib.figure import Figure
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -60,6 +61,7 @@ else:  # qt4
         from matplotlib.backends.backend_qt5agg \
             import NavigationToolbar2QT as NavigationToolbar
 
+
 from shapely.geometry import *
 import shapely.affinity
 from shapely import wkb
@@ -68,6 +70,7 @@ from .ClassTableStructure import ClassTableStructure
 
 
 class ClassTmp(QDialog):
+
     def __init__(self, mgis):
         QDialog.__init__(self)
         self.mgis = mgis
@@ -361,33 +364,30 @@ class ClassTmp(QDialog):
         poly_l[var] = list_poly
         return poly_l
 
-    def copy_profil(self, id_config,gid, feature=None):
+    def copy_profil(self, gid, id_struct,feature):
         """Profil copy"""
-
         colonnes = ['id_config', 'id_order', 'x', 'z']
         tab = {'x': [], 'z': []}
-        if feature is None:
-            where = "gid = '{0}' ".format(gid)
-            feature = self.mdb.select('profiles', list_var=['x', 'z', 'abscissa','branchnum'])
-            tab['x'] = [float(var) for var in feature["x"][0].split()]
-            tab['z'] = [float(var) for var in feature["z"][0].split()]
-        elif feature["x"] and feature["z"]:
-            tab['x'] = [float(var) for var in feature["x"].split()]
-            tab['z'] = [float(var) for var in feature["z"].split()]
 
-        else:
-            self.mgis.add_info("Check if the profile is saved.")
-            return
+        where = "gid = '{0}' ".format(gid)
+        feature = self.mdb.select('profiles', where=where, list_var=['x', 'z','abscissa',''])
+        tab['x'] = [float(var) for var in feature["x"][0].split()]
+        tab['z'] = [float(var) for var in feature["z"][0].split()]
+
+        if len(tab['x']) == 0 or len(tab['z']) == 0:
+                self.mgis.add_info("Check if the profile is saved.")
+                return
+
         xz = list(zip(tab['x'], tab['z']))
         values = []
         for order, (x, z) in enumerate(xz):
-            values.append([id_config, gid, order, x, z])
+            values.append([id_struct, order, x, z])
 
         self.mdb.insert_res('profil_struct', values, colonnes)
 
         tab = {'abscissa': feature['abscissa'],
                'branchnum':feature['branchnum'],
-               'id_config':id_config}
+               'id_config':id_struct}
         self.mdb.update('struct_config', tab, var='id_config')
         # sql = """UPDATE {0}.{1} SET abscissa='{2}', branchnum={3}  WHERE id_config='{4}'"""
         #
@@ -572,6 +572,4 @@ class ClassTmp(QDialog):
 if __name__ == '__main__':
     # a = Polygon([[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]])
     # draw_test(a,'toto')
-
-    print('toto')
     pass

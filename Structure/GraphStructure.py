@@ -25,8 +25,8 @@ class GraphStructure(GraphCommon):
     def __init__(self, mgis=None, lay=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
-        self.initUI_common_P()
-        self.GUI_graph(lay)
+        self.initui_common_p()
+        self.gui_graph(lay)
         self.initUI(None)
 
     def initUI(self, struct):
@@ -46,11 +46,11 @@ class GraphStructure(GraphCommon):
             self.courbes.append(self.courbeTrac)
 
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
-        self.initLegende()
+        self.init_legende()
 
     def initGraph(self, config, all_vis=False):
         return
-        self.majUnitX("s")
+        self.maj_unit_x("s")
         leglines = self.leg.get_lines()
         for t, trac in enumerate(self.list_trac):
             lst = [[], []]
@@ -68,4 +68,4 @@ class GraphStructure(GraphCommon):
                 self.courbes[t].set_visible(True)
                 leglines[t].set_alpha(1.0)
 
-        self.majLimites()
+        self.maj_limites()

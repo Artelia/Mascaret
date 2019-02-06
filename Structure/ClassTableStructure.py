@@ -26,13 +26,11 @@ class ClassTableStructure:
         self.structure_default()
 
     def structure_default(self):
-        self.dico_meth_calc = {0: 'Bradley 78',
-                               1: 'Bradley 72',
-                               2: 'Borda',
-                               3: 'Loi de seuil',
-                               4: 'Loi d''orifice',
-                               5: 'Methode test'
-                               }
+        self.dico_meth_calc = {0: 'Bradley 72',
+                               1: 'Borda',
+                               2: 'Loi de seuil',
+                               3: 'Loi d''orifice',
+                               4: 'Bradley 78'}
 
         self.dico_meth_draw = {0: 'Method 1',
                                1: 'Method 2',
@@ -41,11 +39,12 @@ class ClassTableStructure:
                                4: 'Method 5'}
 
         self.dico_struc_typ = {'PC': {'name': 'Pont cadre',
-                                      'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL',
-                                                'ORIENTM', 'PENTTAL', 'METBRAD', 'METTEST', 'NBTRAVE',
-                                                'TOTALW'],
-                                      'meth_calc': [0, 4, 5],
-                                      'meth_draw': [[0], [1, 2], [0]]
+                                      'param': ['FIRSTWD', 'ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'BIAIPIL',
+                                                'FORMCUL', 'ORIENTM', 'PENTTAL', 'FORMPIL', 'METTEST', 'LARGPIL',
+                                                'LONGPIL', 'ALPHA1', 'ALPHA2', 'PASH', 'MINH', 'PASQ',
+                                                'MINQ', 'MAXQ', 'NBTRAVE', 'METBR72', 'METBR78'],
+                                      'meth_calc': [4],
+                                      'meth_draw': [[0]]
                                       },
                                'PA': {'name': 'Pont arche',
                                       'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
@@ -60,34 +59,37 @@ class ClassTableStructure:
                                       'meth_calc': [1]
                                       }
                                }
-        #
-        self.dico_struc_prm = {'ZTOPTAB': {'name': 'Cote du haut du tablier du pont', 'unit': 'm'},
+
+        self.dico_struc_prm = {'FIRSTWD': {'name': 'Abscisse du pied de culée RG', 'unit': 'm'},
+                               'ZTOPTAB': {'name': 'Cote du haut du tablier du pont', 'unit': 'm'},
                                'EPAITAB': {'name': 'Epaisseur du tablier', 'unit': 'm'},
                                'BIAIOUV': {'name': 'Biais de l''ouvrage', 'unit': '°'},
-                               'BIAICUL': {'name': 'Biais des culées par rapport à l''axe du pont', 'unit': '°'},
+                               'BIAICUL': {'name': 'Biais des culées par rapport à l''axe du pont', 'unit': 'Y/N'},
+                               'BIAIPIL': {'name': 'Biais de la pile par rapport à l''axe du pont', 'unit': 'Y/N'},
                                'FORMCUL': {'name': 'Forme des culées', 'unit': None},
                                'ORIENTM': {'name': 'Orientation des murs en aile', 'unit': '°'},
                                'PENTTAL': {'name': 'Pente de talus des culées', 'unit': None},
-                               'METBRAD': {'name': 'Méthode de création si Bradley', 'unit': None},
+                               'FORMPIL': {'name': 'Forme des piles', 'unit': None},
+                               'LARGPIL': {'name': 'Largeur des piles', 'unit': 'm'},
+                               'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'},
+                               'ALPHA1': {'name': 'Alpha 1', 'unit': '°'},
+                               'ALPHA2': {'name': 'Alpha 2', 'unit': '°'},
+                               'PASH': {'name': 'Pas H', 'unit': 'm'},
+                               'MINH': {'name': 'Min H', 'unit': 'm'},
+                               'PASQ': {'name': 'Pas Q', 'unit': ''},
+                               'MINQ': {'name': 'Min Q', 'unit': ''},
+                               'MAXQ': {'name': 'Max Q', 'unit': ''},
                                'NBTRAVE': {'name': 'Nombre de travées', 'unit': None},
-                               'METTEST': {'name': 'Méthode de création si Test', 'unit': None},
-                               'TOTALW': {'name': 'largeur total sous pont', 'unit': None}
-                               }
-        # todo demander pour arch
-        self.dico_typ_elem = {0: 'Travee',
+                               'METBR72': {'name': 'Méthode de création pour Bradley 72', 'unit': None},
+                               'METBR78': {'name': 'Méthode de création pour Bradley 78', 'unit': None}}
+
+        self.dico_typ_elem = {0: 'Travée',
                               1: 'Pile',
                               2: 'Arche'}
-        # obliger de separe largeur pil et tra
-        # bradley un seul Type de pile
-        self.dico_elem_prm = {'LARG': {'name': 'Largeur de la travée ou pile', 'unit': 'm'},
-                              'FORMPIL': {'name': 'Forme de la pile', 'unit': None},
-                              # 'LARGPIL': {'name': 'Largeur de la pile', 'unit': 'm'},
-                              'BIAIPIL': {'name': 'Biais de la pile par rapport à l''axe du pont', 'unit': '°'}}
+
+        self.dico_elem_prm = {'LARGTRA': {'name': 'Largeur de la travée', 'unit': 'm'}
+                              }
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
 
-        self.dico_law_struct={'Bradley 78':
-                                  {0: 'flowrate', 1:'z_downstream',0:'flowrate',2:'z_upstream'},
-                              'Bradley 72':
-                                  {0: 'flowrate',1: 'z_downstream',  2: 'z_upstream'}
-                              }
+

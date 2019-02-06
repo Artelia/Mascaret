@@ -942,7 +942,7 @@ $BODY$
                 elif isinstance(v, list):
                     tab_var.append("{0}='{1}'".format(k, " ".join(map(str, v))))
                 else:
-                    tab_var.append("{0}='{1}'".format(k, v))
+                    tab_var.append("{0}={1}".format(k, v))
 
             sql = """UPDATE {0}.{1} SET {2}  WHERE {3}='{4}'"""
 
@@ -1045,6 +1045,7 @@ $BODY$
 
     def insert_abacus_table(self,dossier):
         list_fich = os.listdir(dossier)
+        print(list_fich)
         for fich in list_fich:
             fichabac = os.path.join(dossier, fich)
             liste_value = []

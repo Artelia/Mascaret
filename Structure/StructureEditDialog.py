@@ -68,9 +68,16 @@ class ClassStructureEditDialog(QDialog):
 
         ## Gestion des ctrl pour le form 1 - Pont cadre - Methode test
         self.cb01_met_crea.currentIndexChanged[int].connect(self.sw01_elem.setCurrentIndex)
-        fill_qcombobox(self.cb01_test, [[0, '1/1'], [1, '1.5/1'], [2, '2/1']])
         fill_qcombobox(self.cb01_met_crea, [[m, self.tbst.dico_meth_draw[m]]
                                             for m in self.tbst.dico_struc_typ['PC']['meth_draw'][1]])
+        self.gb01_form_cul = QButtonGroup()
+        self.gb01_form_cul.buttonClicked[int].connect(self.change_opt_culee)
+        self.gb01_form_cul.addButton(self.rb01_form_cul0, 0)
+        self.rb01_form_cul0.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/type1.png')))
+        self.gb01_form_cul.addButton(self.rb01_form_cul1, 1)
+        self.rb01_form_cul1.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/type2.png')))
+        self.gb01_form_cul.addButton(self.rb01_form_cul2, 2)
+        self.rb01_form_cul2.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/type3.png')))
 
         if id_struct:
             sql = "SELECT name, type, method, active FROM {0}.struct_config " \
@@ -93,18 +100,30 @@ class ClassStructureEditDialog(QDialog):
             self.display_param_struct()
 
     def init_controls(self):
-        self.dico_wdg_calc = {'PC': {0: 0, 4: 1, 5: 0}}
+        self.dico_wdg_calc = {'PC': {0: 0, 4: 1}}
 
-        self.lnk_ctrl_var = {'PC': {'ZTOPTAB': [self.dsb00_cote_tab, self.dsb01_cote_tab],
+        self.lnk_ctrl_var = {'PC': {'FIRSTWD': [self.dsb00_abs_cul_rg, self.dsb01_abs_cul_rg],
+                                    'ZTOPTAB': [self.dsb00_cote_tab, self.dsb01_cote_tab],
                                     'EPAITAB': [self.dsb00_epai_tab, self.dsb01_epai_tab],
-                                    'BIAIOUV': [self.dsb00_biai_ouv],
-                                    'BIAICUL': [self.dsb00_biai_cul],
-                                    'FORMCUL': [self.gb00_form_cul],
+                                    'BIAIOUV': [self.dsb00_biai_ouv, self.dsb01_biai_ouv],
+                                    'BIAICUL': [self.cc00_biai_cul, self.cc01_biai_cul],
+                                    'BIAIPIL': [self.cc00_biai_pil, self.cc01_biai_pil],
+                                    'FORMCUL': [self.gb00_form_cul, self.gb01_form_cul],
                                     'ORIENTM': [self.cb00_orient_mur],
-                                    'PENTTAL': [self.cb00_pente_tal, self.cb01_test],
-                                    'METBRAD': [self.cb00_met_crea],
-                                    'METTEST': [self.cb01_met_crea],
-                                    'NBTRAVE': [self.sb000_nb_trav, self.sb010_nb_trav]}
+                                    'PENTTAL': [self.cb00_pente_tal],
+                                    'FORMPIL': [self.cb00_form_pil, self.cb01_form_pil],
+                                    'LARGPIL': [self.dsb00_larg_pil, self.dsb01_larg_pil],
+                                    'LONGPIL': [self.dsb00_long_pil, self.dsb01_long_pil],
+                                    'ALPHA1': [self.dsb00_alpha1, self.dsb01_alpha1],
+                                    'ALPHA2': [self.dsb00_alpha2, self.dsb01_alpha2],
+                                    'PASH': [self.dsb00_h_pas, self.dsb01_h_pas],
+                                    'MINH': [self.dsb00_h_min, self.dsb01_h_min],
+                                    'PASQ': [self.dsb00_q_pas, self.dsb01_q_pas],
+                                    'MINQ': [self.dsb00_q_min, self.dsb01_q_min],
+                                    'MAXQ': [self.dsb00_q_max, self.dsb01_q_max],
+                                    'NBTRAVE': [self.sb000_nb_trav, self.sb010_nb_trav],
+                                    'METBR72': [self.cb00_met_crea],
+                                    'METBR78': [self.cb01_met_crea]}
                              }
         for ctrls in self.lnk_ctrl_var[self.typ_struct].values():
             for ctrl in ctrls:
@@ -237,7 +256,6 @@ class ClassStructureEditDialog(QDialog):
                     .format(self.mdb.SCHEMA, self.id_struct, var, val)
                 self.mdb.execute(sql)
 
-            id_elem = 0
             for tab, param in self.dico_tab_elem[self.typ_struct].items():
                 type_elem = param['type']
                 for r in range(tab.rowCount()):
@@ -272,7 +290,7 @@ def ctrl_set_value(ctrl, val):
     elif ctrl.metaObject().className() == 'QComboBox':
         ctrl.setCurrentIndex(ctrl.findData(int(val)))
     elif ctrl.metaObject().className() == 'QCheckBox':
-        ctrl.setCheckState(Qt.CheckState(val))
+        ctrl.setCheckState(Qt.CheckState(int(val)))
     elif ctrl.metaObject().className() == 'QButtonGroup':
         ctrl.button(int(val)).click()
 
@@ -287,7 +305,7 @@ def ctrl_get_value(ctrl):
     elif ctrl.metaObject().className() == 'QComboBox':
         val = int(ctrl.itemData(ctrl.currentIndex()))
     elif ctrl.metaObject().className() == 'QCheckBox':
-        val = ctrl.checkState()
+        val = int(ctrl.checkState())
     elif ctrl.metaObject().className() == 'QButtonGroup':
         val = ctrl.checkedId()
     return val

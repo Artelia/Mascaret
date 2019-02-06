@@ -761,10 +761,9 @@ class init_conc_wq(MasObject):
             ('value', 'float'),
             ('CONSTRAINT cle_init_conc_wq', 'PRIMARY KEY (id_config, id_trac, bief,abscissa)')]
 
-
 # *****************************************
 # Hydraulic structur
-# ******************************************
+#******************************************
 class struct_config(MasObject):
     def __init__(self):
         super(struct_config, self).__init__()
@@ -831,21 +830,22 @@ class struct_elem(MasObject):
                       ('polygon', 'GEOMETRY'),
                       ('CONSTRAINT cle_struct_elem', 'PRIMARY KEY (id_config,id_elem)')]
 
-        # class struct_elem_geo(MasObject):
-        #     def __init__(self):
-        #         super(struct_elem_geo, self).__init__()
-        #         self.order = 30
-        #         self.geom_type = None
-        #         self.attrs = [('id_config', 'integer'),
-        #                       ('id_elem', 'integer'),
-        #                       ('id_order', 'integer'),
-        #                       ('x', 'float'),
-        #                       ('z', 'float'),
-        #                       ('CONSTRAINT cle_struct_elem_geo', 'PRIMARY KEY (id_config,id_elem,id_order)')]
-        # def pg_create_table(self):
-        #     qry = super(self.__class__, self).pg_create_table()
-        #     qry += '\n'
-        #     qry += self.pg_create_index()
+
+# class struct_elem_geo(MasObject):
+#     def __init__(self):
+#         super(struct_elem_geo, self).__init__()
+#         self.order = 30
+#         self.geom_type = None
+#         self.attrs = [('id_config', 'integer'),
+#                       ('id_elem', 'integer'),
+#                       ('id_order', 'integer'),
+#                       ('x', 'float'),
+#                       ('z', 'float'),
+#                       ('CONSTRAINT cle_struct_elem_geo', 'PRIMARY KEY (id_config,id_elem,id_order)')]
+    # def pg_create_table(self):
+    #     qry = super(self.__class__, self).pg_create_table()
+    #     qry += '\n'
+    #     qry += self.pg_create_index()
 
 
 class struct_abac(MasObject):
