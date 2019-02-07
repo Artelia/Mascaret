@@ -316,9 +316,10 @@ class ClassBradley:
         for id_config in struct_dico:
             dico_st = struct_dico[id_config]
             if dico_st["active"]:
-                if dico_st['idmethod'] == 0 or dico_st['idmethod'] == 1:
+                if dico_st['idmethod'] == 0 or dico_st['idmethod'] == 4:
                     listf = self.bradley(method=dico_st['method'])
                     self.parent.save_law_st(dico_st, id_config, listf)
                     self.write_law()
                 elif dico_st['idmethod'] == 2:
                     pass
+                else:

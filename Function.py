@@ -224,3 +224,15 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
         # liste = glob.glob(nom_fich[:-4]+".*")
         # for fich in liste :
         # os.remove(fich)
+
+def del_accent(self, ligne):
+    """ supprime les accents du texte source """
+    accents = {'a': ['à', 'ã', 'á', 'â'],
+               'e': ['é', 'è', 'ê', 'ë'],
+               'i': ['î', 'ï'],
+               'u': ['ù', 'ü', 'û'],
+               'o': ['ô', 'ö']}
+    for (char, accented_chars) in accents.iteritems():
+        for accented_char in accented_chars:
+            ligne = ligne.replace(accented_char, char)
+    return ligne

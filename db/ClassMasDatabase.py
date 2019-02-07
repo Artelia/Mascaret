@@ -838,6 +838,18 @@ $BODY$
             var = row[0][0]
         return var
 
+    def select_min(self, var, table, where=None):
+        """select the max in the table for the "where" variable"""
+        if where:
+            sql = "SELECT MIN({0}) FROM {1}.{2} WHERE {3};".format(var, self.SCHEMA, table, where)
+        else:
+            sql = "SELECT MIN({0}) FROM {1}.{2};".format(var, self.SCHEMA, table)
+        results = self.run_query(sql, fetch=True, arraysize=1)
+        # results obj: generator
+        for row in results:
+            var = row[0][0]
+        return var
+
     def delete(self, table, where=None):
         """ Delete table information"""
         if where:
