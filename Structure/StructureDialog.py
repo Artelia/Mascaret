@@ -51,6 +51,7 @@ class ClassStructureDialog(QDialog):
         self.tree_struct.setColumnWidth(0, 200)
         self.tree_struct.setColumnWidth(1, 100)
         self.tree_struct.setColumnWidth(2, 100)
+        self.tree_struct.itemSelectionChanged.connect(self.display_graph)
 
         self.b_new.clicked.connect(self.new_struct)
         self.b_edit.clicked.connect(self.edit_struct)
@@ -106,6 +107,7 @@ class ClassStructureDialog(QDialog):
             itm = self.tree_struct.selectedItems()[0]
             struct = itm.data(0, 32)
             self.graph_struct.initGraph(struct)
+            print ("drawing struct : ", struct)
         else:
             self.graph_struct.initGraph(None)
 

@@ -34,6 +34,8 @@ class GraphStructure(GraphCommon):
         self.axes.tick_params(axis='both', labelsize=7.)
         self.axes.grid(False)
 
+
+
         return
 
         sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(self.mdb.SCHEMA, struct)
