@@ -36,6 +36,7 @@ from xml.etree.ElementTree import parse as et_parse
 from .Function import str2bool
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
+from .ClassTableStructure import ClassTableStructure
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -707,6 +708,9 @@ class ClassMascaret:
         # ******** XCAS tracer ********
         if tracer:
             self.add_wq_xcas(fichier_cas, noyau, dict_libres)
+        test=True
+        if test:
+            dict_lois = self.add_str_xcas(cas,dict_lois)
 
         # ******** XCAS modiication of type when steady case ********
         if noyau == 'steady':
@@ -780,6 +784,7 @@ class ClassMascaret:
         return dict_lois
 
     def add_wq_xcas(self, fichier_cas, noyau, dict_libres):
+        """Modification of xcas for Water Quality"""
         # requête pour récupérer les paramètres
         cas = fichier_cas.find('parametresCas')
         sql = "SELECT parametre, {0}, balise1, balise2 FROM {1}.{2} WHERE gui_type = 'tracers' ORDER BY id;"
@@ -905,6 +910,64 @@ class ClassMascaret:
         initiales.find("numLoiCondLimTracer").text = self.fmt(numl)
 
         return True
+
+    def add_str_xcas(self,  cas,dict_lois):
+        """Modification of xcas for Hydraulic structur"""
+        structur = self.mdb.select('struct_config', "active", "abscissa")
+
+        for meth in structur['method'] :
+            in
+
+
+        # print(structur)
+        # singularite =  cas.find("parametresSingularite")
+        # # # Seuils
+        #
+        # nbseuil = singularite.find("nbSeuils")
+        #
+        #
+        # print(nbseuil.text)
+        # # SubElement(singularite, "nbSeuils").text = str(len(seuils["name"]))
+
+        return dict_lois
+        #SubElement(singularite, "nbSeuils").text = str(len(seuils["name"]))
+        # if len(seuils["name"]) > 0:
+        #     e_tseuils = SubElement(singularite, "seuils")
+        #
+        # liste = ["type", "numBranche", "abscisse", "coteCrete", "coteCreteMoy",
+        #          "coteRupture", "coeffDebit", "largVanne", "epaisseur"]
+        # liste_en = ["type", "branchnum", "abscissa", "z_crest", "z_average_crest",
+        #             "z_break", "flowratecoeff", "wide_floodgate", "thickness"]
+        #
+        # for i, nom in enumerate(seuils["name"]):
+        #     struct = SubElement(e_tseuils, "structureParametresSeuil")
+        #     SubElement(struct, "nom").text = nom
+        #     for kk, l in enumerate(liste):
+        #         if seuils[liste_en[kk].lower()][i] is None:
+        #             SubElement(struct, l).text = '-0'
+        #         else:
+        #             SubElement(struct, l).text = str(seuils[liste_en[kk].lower()][i])
+        #
+        #     if seuils["type"][i] not in (3, 4):
+        #         SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()))
+        #     else:
+        #         SubElement(struct, "numLoi").text = '-0'
+        #     if seuils["type"][i] != 3:
+        #         SubElement(struct, "nbPtLoiSeuil").text = '-0'
+        #     else:
+        #         try:
+        #             i = prof_seuil["name"].index(nom)
+        #             long = len(prof_seuil['x'][i].split())
+        #             SubElement(struct, "nbPtLoiSeuil").text = str(long)
+        #             SubElement(struct, "abscTravCrete").text = prof_seuil['x'][i]
+        #             SubElement(struct, "cotesCrete").text = prof_seuil['z'][i]
+        #
+        #         except:
+        #             msg = 'Profil de crete introuvable pour {}'
+        #             QMessageBox.warning(None, 'Message', msg.format(nom))
+        #             return
+        #
+        #     SubElement(struct, "gradient").text = "-0"
 
     def modif_xcas(self, parametres, xcasfile, fich_sortie=None):
         fich_entree = os.path.join(self.dossier_file_masc, xcasfile)

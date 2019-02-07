@@ -780,12 +780,14 @@ Version : {}
 
     def fct_test(self):
         # dossier=r"C:\Users\mehdi-pierre.daou\.qgis2\python\plugins\Mascaret\Structure\Abacus"
-        # self.mdb.insert_abacus_table(dossier)
-        cl = ClassTmp(self)
-        cl2 =ClassBradley(cl)
+        # # self.mdb.insert_abacus_table(dossier)
+        # cl = ClassTmp(self)
+        # cl2 =ClassBradley(cl)
         # cl2.main()
-        cl2.modif_xcas_str('rrr')
-        cl.show()
+        mas = ClassMascaret(self)
+        mas
+        mas.add_str_xcas()
+        # cl.show()
 
         # cl=ClassTmp(self)
         # cl.show()
