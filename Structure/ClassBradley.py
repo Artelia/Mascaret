@@ -323,3 +323,4 @@ class ClassBradley:
                 elif dico_st['idmethod'] == 2:
                     pass
                 else:
+                    pass

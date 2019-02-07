@@ -344,7 +344,7 @@ class ClassMascaret:
         planim = self.planim_select()
         maillage = self.maillage_select()
         dico_str = self.mdb.select('struct_config', "active", "abscissa")
-        seuils = self.modif_seuil(seuils, dico_str)
+        seuils,loi_struct = self.modif_seuil(seuils, dico_str)
 
         # Extrémités
         numero = branches["branch"]
@@ -460,6 +460,7 @@ class ClassMascaret:
                 liste_stock["limDroitLitMaj"].append(lim_droit_lit_maj)
 
         for i, type in enumerate(seuils["type"]):
+            print(type,seuils["name"][i])
             if type not in (3, 4):
                 dict_lois[seuils["name"][i]] = {'type': abaque_toloi[type],
                                                 'formule': None,
@@ -787,7 +788,7 @@ class ClassMascaret:
         #     self.mgis.add_info('error: {}'.format(e))
         return dict_lois
 
-    def add_wq_xcas(self, fichier_cas, noyau, dict_lois):
+    def add_wq_xcas(self, fichier_cas, noyau, dict_libres):
         """Modification of xcas for Water Quality"""
         # requête pour récupérer les paramètres
         cas = fichier_cas.find('parametresCas')
@@ -919,17 +920,19 @@ class ClassMascaret:
 
         liste = ["type", "branchnum", "abscissa", "z_crest", "z_average_crest",
                 "z_break", "flowratecoeff", "wide_floodgate", "thickness"]
-
+        loi_struct=[]
         if len(seuil["name"]) == 0:
             seuils={'name':[],}
             for ls in liste:
                 seuils[ls]=[]
 
-        for i, name in dico_str['name']:
+        for i, name in enumerate(dico_str['name']):
             seuil['name'].append(del_accent(name))
+            loi_struct.append(del_accent(name))
             for  ls in liste:
                 if ls == "type":
-                    seuil[ls].append(self.typ_struct(dico_str['method']))
+
+                    seuil[ls].append(self.typ_struct(dico_str['method'][i]))
                 elif ls == 'abscissa':
                     seuil[ls].append(dico_str['abscissa'][i])
                 elif ls == "branchnum":
@@ -937,11 +940,14 @@ class ClassMascaret:
                 elif ls == 'z_break':
                     seuil[ls].append(99999)
                 elif ls == 'z_crest':
+                    where = "id_config ='{}'".format(dico_str['id'][i])
+                    zmin=self.mdb.select_min("z", "profil_struct", where)
                     seuil[ls].append(zmin)
                 else:
                     seuil[ls].append(None)
 
-        return seuil
+        return seuil,loi_struct
+
     def typ_struct(self,meth):
         if meth == 0 or meth == 4:
            return 1
@@ -1402,6 +1408,7 @@ class ClassMascaret:
                 self.obs_to_loi(dict_lois, date_debut, date_fin)
 
             else:
+                #TODO ATTENTION CREATION LOI STRUCTUR HYdraulic
                 # transcritical unsteady hors evenement
                 if par['presenceTraceurs']:
                     if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:

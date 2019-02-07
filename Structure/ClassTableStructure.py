@@ -78,11 +78,11 @@ class ClassTableStructure:
                                'BIAICUL': {'name': 'Biais des culées par rapport à l''axe du pont', 'unit': 'Y/N'},
                                'BIAIPIL': {'name': 'Biais de la pile par rapport à l''axe du pont', 'unit': 'Y/N'},
                                'FORMCUL': {'name': 'Forme des culées', 'unit': None},
-                               'ORIENTM': {'name': 'Orientation des murs en aile', 'unit': '°'},
-                               'PENTTAL': {'name': 'Pente de talus des culées', 'unit': None},
                                'FORMPIL': {'name': 'Forme des piles', 'unit': None},
                                'LARGPIL': {'name': 'Largeur des piles', 'unit': 'm'},
                                'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'},
+                               'ORIENTM': {'name': 'Orientation des murs en aile', 'unit': '°'},
+                               'PENTTAL': {'name': 'Pente de talus des culées', 'unit': None},
                                'PASH': {'name': 'Discrétisation de la hauteur pour le calcul de la loi', 'unit': 'm'},
                                'MINH': {'name': 'Hauteur d\'eau minimum pour le calcul de la loi', 'unit': 'm'},
                                'PASQ': {'name': 'Discrétisation du débit pour le calcul de la loi', 'unit': ''},
@@ -94,7 +94,10 @@ class ClassTableStructure:
                               1: 'Pile',
                               2: 'Arche'}
 
-        self.dico_elem_prm = {'LARGTRA': {'name': 'Largeur de la travee', 'unit': 'm'}
+        self.dico_elem_prm = {'LARGTRA': {'name': 'Largeur de la travee', 'unit': 'm'},
+                              'FORMPIL': {'name': 'Forme des piles', 'unit': None},
+                              'LARGPIL': {'name': 'Largeur des piles', 'unit': 'm'},
+                              'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'}
                               }
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}

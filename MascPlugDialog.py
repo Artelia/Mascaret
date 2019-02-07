@@ -769,6 +769,7 @@ Version : {}
     # *******************************
     def fct_structures(self):
         dlg = ClassStructureDialog(self)
+        dlg.setModal(False)
         dlg.exec_()
 
     def fct_add_struct_tables(self):
