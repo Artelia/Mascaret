@@ -70,23 +70,35 @@ class ClassStructureCreateDialog(QDialog):
 
     def accept_page(self):
         # save Info
-        if self.met == 'profil':
-            self.type = self.cb_type.itemData(self.cb_type.currentIndex())
-            self.name = self.txt_name.text()
-            self.comment = self.txt_comment.text()
-            sql = "INSERT INTO {0}.struct_config (name, comment, type, id_prof_ori, active) " \
-                  "VALUES ('{1}', '{2}', '{3}', {4}, FALSE)".format(self.mdb.SCHEMA, self.name, self.comment,
-                                                                    self.type, self.id_profil)
-        elif self.met == 'struct':
-            self.id_profil = self.cb_profil.itemData(self.cb_profil.currentIndex())
-            self.type = self.cb_type.itemData(self.cb_type.currentIndex())
-            sql = "INSERT INTO {0}.struct_config (type, id_prof_ori, active) " \
-                  "VALUES ('{1}', {2}, FALSE)".format(self.mdb.SCHEMA, self.type, self.id_profil)
+        self.type = self.cb_type.itemData(self.cb_type.currentIndex())
+        self.name = self.txt_name.text()
+        self.comment = self.txt_comment.text()
 
+        if self.met == 'struct':
+            self.id_profil = self.cb_profil.itemData(self.cb_profil.currentIndex())
+
+        tab = {'x': [], 'z': []}
+        where = "gid = '{0}' ".format(self.id_profil)
+        feature = self.mdb.select('profiles', where=where, list_var=['x', 'z', 'abscissa', 'branchnum'])
+        tab['x'] = [float(var) for var in feature["x"][0].split()]
+        tab['z'] = [float(var) for var in feature["z"][0].split()]
+
+        if len(tab['x']) == 0 or len(tab['z']) == 0:
+            self.mgis.add_info("Check if the profile is saved.")
+            return
+        sql = "INSERT INTO {0}.struct_config (name, comment, type, id_prof_ori, active, abscissa, branchnum) " \
+              "VALUES ('{1}', '{2}', '{3}', {4}, FALSE,{5} ,{6})".format(self.mdb.SCHEMA, self.name, self.comment,
+                                                                self.type, self.id_profil,feature['abscissa'][0],feature['branchnum'][0])
         self.mdb.run_query(sql)
         id_struct = self.mdb.select_max('id', 'struct_config')
 
-        self.struct.copy_profil(self.id_profil, id_struct)
+        colonnes = ['id_config', 'id_order', 'x', 'z']
+        xz = list(zip(tab['x'], tab['z']))
+        values = []
+        for order, (x, z) in enumerate(xz):
+            values.append([id_struct, order, x, z])
+        self.mdb.insert_res('profil_struct', values, colonnes)
+
         self.accept()
 
     def reject_page(self):

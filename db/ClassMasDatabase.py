@@ -424,7 +424,7 @@ class ClassMasDatabase(object):
                       # ouvrage
                       Maso.struct_config,Maso.profil_struct,Maso.struct_param,
                       Maso.struct_elem, Maso.struct_elem_param,
-                      Maso.struct_abac
+                      Maso.struct_abac, Maso.struct_laws
                       #, Maso.struct_elem_geo
                       ]
             tables.sort(key=lambda x: x().order)
@@ -534,7 +534,7 @@ class ClassMasDatabase(object):
         tables = [
                   Maso.struct_config,Maso.profil_struct,Maso.struct_param,
                   Maso.struct_elem, Maso.struct_elem_param,
-                  Maso.struct_abac
+                  Maso.struct_abac,Maso.struct_laws
                   # , Maso.struct_elem_geo
                   ]
         tables.sort(key=lambda x: x().order)
@@ -1055,33 +1055,37 @@ $BODY$
             mehtod = liste_value[0][1]
             name_abc = liste_value[1][1]
             list_var = liste_value[2]
-            print(self.checkabac(mehtod,name_abc),mehtod,name_abc)
-            # if checkabac(mehtod,name_abc):
-            # liste_value=np.array(liste_value[3:])
-            # list_insert=[]
-            # for i,var in enumerate(list_var):
-            #     for order,val in enumerate(liste_value[:,i]):
-            #         list_insert.append([mehtod, name_abc, var,order,val])
-            #
-            # liste_col = self.list_columns('struct_abac')
-            #
-            # var = ",".join(liste_col)
-            # valeurs = "("
-            # for k in liste_col:
-            #     valeurs += '%s,'
-            # valeurs = valeurs[:-1] + ")"
-            #
-            # sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
-            #                                                     'struct_abac',
-            #                                                     var,
-            #                                                     valeurs)
-            #
-            # self.run_query(sql, many=True, list_many=list_insert)
+            if not self.checkabac(mehtod,name_abc):
+                liste_value=np.array(liste_value[3:])
+                list_insert=[]
+                for i,var in enumerate(list_var):
+                    for order,val in enumerate(liste_value[:,i]):
+                        if val != '':
+                            list_insert.append([mehtod, name_abc, var,order,val])
+                liste_col = self.list_columns('struct_abac')
+
+                var = ",".join(liste_col)
+                valeurs = "("
+                for k in liste_col:
+                    valeurs += '%s,'
+                valeurs = valeurs[:-1] + ")"
+
+                sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
+                                                                    'struct_abac',
+                                                                    var,
+                                                                    valeurs)
+
+                self.run_query(sql, many=True, list_many=list_insert)
 
     def checkabac(self,method,abc):
-        where='WHERE nam_method={} AND name_abc ={}'.format(method,abc)
+        """check if abacus doesn't exist"""
+        where="WHERE nam_method='{}' AND nam_abac ='{}'".format(method,abc)
         sql = "SELECT * FROM {0}.{1} {2};"
-        sql.format(self.SCHEMA, 'struct_abac', where)
+
         results = self.run_query(sql.format(self.SCHEMA, 'struct_abac', where),
                                            fetch=True, arraysize=1)
-        print(results)
+        for row in results:
+            if row[0][0] is not None:
+                return  True
+        return False
+

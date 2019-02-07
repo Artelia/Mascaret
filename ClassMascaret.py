@@ -341,6 +341,7 @@ class ClassMascaret:
         planim = self.planim_select()
         maillage = self.maillage_select()
 
+
         # Extrémités
         numero = branches["branch"]
         branches["abscdebut"] = []
@@ -455,7 +456,7 @@ class ClassMascaret:
 
         for i, type in enumerate(seuils["type"]):
             if type not in (3, 4):
-                dict_lois[seuils["name"]] = {'type': abaque_toloi[type]}
+                dict_lois[seuils["name"][i]] = {'type': abaque_toloi[type]}
 
         for i, nom in enumerate(apports["name"]):
             if nom not in dict_lois.keys():
@@ -576,7 +577,7 @@ class ClassMascaret:
                     SubElement(struct, l).text = str(seuils[liste_en[kk].lower()][i])
 
             if seuils["type"][i] not in (3, 4):
-                SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()))
+                SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()).index(nom)+1)
             else:
                 SubElement(struct, "numLoi").text = '-0'
 

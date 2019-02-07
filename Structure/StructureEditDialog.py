@@ -44,7 +44,7 @@ class ClassStructureEditDialog(QDialog):
         self.lst_meth_calc = []
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_structure_edit.ui'), self)
 
-        
+
 
         ## Gestion des ctrl pour la partie commune
         self.cb_met_calc.currentIndexChanged[int].connect(self.change_met_calc)
