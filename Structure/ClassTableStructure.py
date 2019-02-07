@@ -18,6 +18,17 @@ email                :
  ***************************************************************************/
 """
 
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.uic import *
+from qgis.core import *
+from qgis.gui import *
+from qgis.utils import *
+if int(qVersion()[0]) < 5:  # qt4
+    from qgis.PyQt.QtGui import *
+else:  # qt5
+    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QIcon
+    from qgis.PyQt.QtWidgets import *
 
 class ClassTableStructure:
     def __init__(self, mgis, mdb):
@@ -43,7 +54,7 @@ class ClassTableStructure:
                                                 'FORMCUL', 'ORIENTM', 'PENTTAL', 'FORMPIL', 'METTEST', 'LARGPIL',
                                                 'LONGPIL', 'PASH', 'MINH', 'PASQ',
                                                 'MINQ', 'MAXQ', 'NBTRAVE', 'METBR72', 'METBR78'],
-                                      'meth_calc': [4, 4],
+                                      'meth_calc': [0, 4],
                                       'meth_draw': [[0], [0]]
                                       },
                                'PA': {'name': 'Pont arche',
@@ -77,9 +88,7 @@ class ClassTableStructure:
                                'PASQ': {'name': 'Discrétisation du débit pour le calcul de la loi', 'unit': ''},
                                'MINQ': {'name': 'Débit minimum pour le calcul de la loi', 'unit': ''},
                                'MAXQ': {'name': 'Débit maximum pour le calcul de la loi', 'unit': ''},
-                               'NBTRAVE': {'name': 'Nombre de travées', 'unit': None},
-                               'METBR72': {'name': 'Méthode de création pour Bradley 72', 'unit': None},
-                               'METBR78': {'name': 'Méthode de création pour Bradley 78', 'unit': None}}
+                               'NBTRAVE': {'name': 'Nombre de travées', 'unit': None}}
 
         self.dico_typ_elem = {0: 'Travee',
                               1: 'Pile',
@@ -90,4 +99,46 @@ class ClassTableStructure:
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
 
+def ctrl_set_value(ctrl, val):
+    if ctrl.metaObject().className() in ('QSpinBox', 'QDoubleSpinBox'):
+        ctrl.setValue(val)
+    elif ctrl.metaObject().className() == 'QComboBox':
+        ctrl.setCurrentIndex(ctrl.findData(int(val)))
+    elif ctrl.metaObject().className() == 'QCheckBox':
+        ctrl.setCheckState(Qt.CheckState(int(val)))
+    elif ctrl.metaObject().className() == 'QButtonGroup':
+        ctrl.button(int(val)).click()
 
+def ctrl_get_value(ctrl):
+    val = None
+    if ctrl.metaObject().className() == 'QLineEdit':
+        val = ctrl.text()
+    elif ctrl.metaObject().className() in ('QSpinBox', 'QDoubleSpinBox'):
+        val = ctrl.value()
+    elif ctrl.metaObject().className() == 'QDateTimeEdit':
+        val = ctrl.dateTime().toString('yyyy-MM-dd HH:mm:ss')
+    elif ctrl.metaObject().className() == 'QComboBox':
+        val = int(ctrl.itemData(ctrl.currentIndex()))
+    elif ctrl.metaObject().className() == 'QCheckBox':
+        val = int(ctrl.checkState())
+    elif ctrl.metaObject().className() == 'QButtonGroup':
+        val = ctrl.checkedId()
+    return val
+
+def fill_qcombobox(cb, lst, val_def=None):
+    cb.blockSignals(True)
+    cb.clear()
+
+    if val_def != None:
+        if lst[0][0] == val_def:
+            cb.blockSignals(False)
+    else:
+        cb.blockSignals(False)
+
+    for elem in lst:
+        cb.addItem(elem[1], elem[0])
+
+    if val_def != None:
+        if lst[0][0] != val_def:
+            cb.blockSignals(False)
+            cb.setCurrentIndex(cb.findData(val_def))
