@@ -310,64 +310,17 @@ class ClassBradley:
     # def write_law(self):
     #     ouvrage = self.mdb.select("weirs", "active")
 
-    def modif_xcas_str(self, fichier_cas):
-        pass
-        # prof_seuil = self.mdb.select("profiles", "NOT active", "abscissa")
-        # seuils = self.mdb.select("weirs", "active", "abscissa")
-        # ouvrages = self.mdb.select('struct_config', "active", "abscissa")
-        # print(ouvrages)
-        # print(seuils)
-        # print(ouvrages)
-        # singularite = fichier_cas.find("parametresSingularite")
-        # # Seuils
-        # SubElement(singularite, "nbSeuils").text = str(len(seuils["name"]))
-        #
-        # if len(seuils["name"]) > 0:
-        #     e_tseuils = SubElement(singularite, "seuils")
-        #
-        # liste = ["type", "numBranche", "abscisse", "coteCrete", "coteCreteMoy",
-        #          "coteRupture", "coeffDebit", "largVanne", "epaisseur"]
-        # liste_en = ["type", "branchnum", "abscissa", "z_crest", "z_average_crest",
-        #             "z_break", "flowratecoeff", "wide_floodgate", "thickness"]
-        #
-        # for i, nom in enumerate(seuils["name"]):
-        #     struct = SubElement(e_tseuils, "structureParametresSeuil")
-        #     SubElement(struct, "nom").text = nom
-        #     for kk, l in enumerate(liste):
-        #         if seuils[liste_en[kk].lower()][i] is None:
-        #             SubElement(struct, l).text = '-0'
-        #         else:
-        #             SubElement(struct, l).text = str(seuils[liste_en[kk].lower()][i])
-        #
-        #     if seuils["type"][i] not in (3, 4):
-        #         SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()))
-        #     else:
-        #         SubElement(struct, "numLoi").text = '-0'
-        #     if seuils["type"][i] != 3:
-        #         SubElement(struct, "nbPtLoiSeuil").text = '-0'
-        #     else:
-        #         try:
-        #             i = prof_seuil["name"].index(nom)
-        #             long = len(prof_seuil['x'][i].split())
-        #             SubElement(struct, "nbPtLoiSeuil").text = str(long)
-        #             SubElement(struct, "abscTravCrete").text = prof_seuil['x'][i]
-        #             SubElement(struct, "cotesCrete").text = prof_seuil['z'][i]
-        #
-        #         except:
-        #             msg = 'Profil de crete introuvable pour {}'
-        #             QMessageBox.warning(None, 'Message', msg.format(nom))
-        #             return
-        #
-        #     SubElement(struct, "gradient").text = "-0"
 
     def main(self):
         struct_dico = self.parent.get_struct()
         for id_config in struct_dico:
             dico_st = struct_dico[id_config]
             if dico_st["active"]:
-                if dico_st['idmethod'] == 0 or dico_st['idmethod'] == 1:
+                if dico_st['idmethod'] == 0 or dico_st['idmethod'] == 4:
                     listf = self.bradley(method=dico_st['method'])
                     self.parent.save_law_st(dico_st, id_config, listf)
                     self.write_law()
                 elif dico_st['idmethod'] == 2:
+                    pass
+                else:
                     pass

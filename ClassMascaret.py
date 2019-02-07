@@ -33,9 +33,10 @@ from qgis.utils import *
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
-from .Function import str2bool
+from .Function import str2bool, del_accent
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
+from .Structure.ClassTableStructure import ClassTableStructure
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -62,6 +63,7 @@ class ClassMascaret:
         # kernel list
         self.Klist = ["steady", "unsteady", "transcritical"]
         self.wq = ClassMascWQ(self.mgis, self.dossier_file_masc)
+        self.tbst=ClassTableStructure(self.mgis,self.mdb)
 
     def creer_geo(self):
         """creation of gemoetry file"""
@@ -285,7 +287,8 @@ class ClassMascaret:
         # try:
         fichier_sortie = os.path.join(self.dossier_file_masc, self.baseName + ".xcas")
         extr_toloi = {0: 6, 1: 1, 2: 2, 3: 4, 4: 5, 5: 4, 8: 3, 6: 6, 7: 7}
-        abaque_toloi = {1: 3, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
+        abaque_toloi = {1: 6, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
+
         # création du fichier xml
         fichier_cas = Element("fichier_cas")
 
@@ -340,7 +343,8 @@ class ClassMascaret:
         sorties = self.mdb.select("outputs", "", "abscissa")
         planim = self.planim_select()
         maillage = self.maillage_select()
-
+        dico_str = self.mdb.select('struct_config', "active", "abscissa")
+        seuils,loi_struct = self.modif_seuil(seuils, dico_str)
 
         # Extrémités
         numero = branches["branch"]
@@ -398,6 +402,7 @@ class ClassMascaret:
                 dict_lois[f] = {'type': extr_toloi[type],
                                 'formule': formule,
                                 'valeurperm': libres["firstvalue"][i]}
+
         # Zones
         nb_pas = 0
         i = 0
@@ -455,8 +460,11 @@ class ClassMascaret:
                 liste_stock["limDroitLitMaj"].append(lim_droit_lit_maj)
 
         for i, type in enumerate(seuils["type"]):
+            print(type,seuils["name"][i])
             if type not in (3, 4):
-                dict_lois[seuils["name"][i]] = {'type': abaque_toloi[type]}
+                dict_lois[seuils["name"][i]] = {'type': abaque_toloi[type],
+                                                'formule': None,
+                                                'valeurperm':None}
 
         for i, nom in enumerate(apports["name"]):
             if nom not in dict_lois.keys():
@@ -557,6 +565,7 @@ class ClassMascaret:
         singularite = SubElement(cas, "parametresSingularite")
 
         # Seuils
+
         SubElement(singularite, "nbSeuils").text = str(len(seuils["name"]))
 
         if len(seuils["name"]) > 0:
@@ -780,6 +789,7 @@ class ClassMascaret:
         return dict_lois
 
     def add_wq_xcas(self, fichier_cas, noyau, dict_libres):
+        """Modification of xcas for Water Quality"""
         # requête pour récupérer les paramètres
         cas = fichier_cas.find('parametresCas')
         sql = "SELECT parametre, {0}, balise1, balise2 FROM {1}.{2} WHERE gui_type = 'tracers' ORDER BY id;"
@@ -905,6 +915,152 @@ class ClassMascaret:
         initiales.find("numLoiCondLimTracer").text = self.fmt(numl)
 
         return True
+
+    def modif_seuil(self,seuil, dico_str):
+
+        liste = ["type", "branchnum", "abscissa", "z_crest", "z_average_crest",
+                "z_break", "flowratecoeff", "wide_floodgate", "thickness"]
+        loi_struct=[]
+        if len(seuil["name"]) == 0:
+            seuils={'name':[],}
+            for ls in liste:
+                seuils[ls]=[]
+
+        for i, name in enumerate(dico_str['name']):
+            seuil['name'].append(del_accent(name))
+            loi_struct.append(del_accent(name))
+            for  ls in liste:
+                if ls == "type":
+
+                    seuil[ls].append(self.typ_struct(dico_str['method'][i]))
+                elif ls == 'abscissa':
+                    seuil[ls].append(dico_str['abscissa'][i])
+                elif ls == "branchnum":
+                    seuil[ls].append(dico_str['branchnum'][i])
+                elif ls == 'z_break':
+                    seuil[ls].append(99999)
+                elif ls == 'z_crest':
+                    where = "id_config ='{}'".format(dico_str['id'][i])
+                    zmin=self.mdb.select_min("z", "profil_struct", where)
+                    seuil[ls].append(zmin)
+                else:
+                    seuil[ls].append(None)
+
+        return seuil,loi_struct
+
+    def typ_struct(self,meth):
+        if meth == 0 or meth == 4:
+           return 1
+        else:
+            return None
+
+    # def add_str_xcas(self,  cas):
+    #     """Modification of xcas for Hydraulic dico_str"""
+    #     dico_str = self.mdb.select('struct_config', "active", "abscissa")
+    #
+    #     singularite =  cas.find("parametresSingularite")
+    #     nbseuil = singularite.find("nbSeuils")
+    #     nbs = int(nbseuil.text)
+    #     nbseuil.text = str(nbs+len(dico_str['method'])+1)
+    #
+    #     if len(dico_str['method']) > 0:
+    #         e_tseuils = singularite.find("seuils")
+    #     else:
+    #         return dict_lois
+    #     liste = ["type", "numBranche", "abscisse", "coteCrete", "coteCreteMoy",
+    #              "coteRupture", "coeffDebit", "largVanne", "epaisseur"]
+    #     for i, meth in enumerate(dico_str['method']) :
+    #         where = "id_config ='{}'".format(dico_str['id'][i])
+    #         zmin=self.mdb.select_min("z", "profil_struct", where)
+    #         # bradeley method
+    #         if meth == 0 or meth == 4:
+    #
+    #             type_sing = 1
+    #         else:
+    #             continue
+    #
+    #         struct = SubElement(e_tseuils, "structureParametresSeuil")
+    #         SubElement(struct, "nom").text = dico_str['name'][i]
+    #         for kk, ls in enumerate(liste):
+    #             if  ls=="type":
+    #                 SubElement(struct, ls).text = str(type_sing)
+    #             elif ls == 'abscisse':
+    #                 SubElement(struct, ls).text = str(dico_str['abscissa'][i])
+    #             elif ls == "numBranche":
+    #                 SubElement(struct, ls).text = str(dico_str['branchnum'][i])
+    #             elif ls == 'coteRupture':
+    #                 SubElement(struct, ls).text = str(99999)
+    #             elif ls == 'coteCrete':
+    #                 SubElement(struct, ls).text = str(zmin)
+    #             else:
+    #                 SubElement(struct, ls).text = '-0'
+    #
+    #         if type_sing not in (3, 4):
+    #             SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()).index(nom) + 1)
+    #         else:
+    #             SubElement(struct, "numLoi").text = '-0'
+    #
+    #         if seuils["type"][i] != 3:
+    #             SubElement(struct, "nbPtLoiSeuil").text = '-0'
+
+
+        # # print(self.tbst.dico_meth_calc[meth])
+        # # self.tbst.dico_meth_calc[meth]
+        # lois = SubElement(hydrauliques, "lois")
+        # hydrauliques = SubElement(cas, "parametresLoisHydrauliques")
+        # for nom in sorted(dict_lois.keys()):
+        #     struct = SubElement(lois, "structureParametresLoi")
+        #     SubElement(struct, "nom").text = nom
+        #     SubElement(struct, "type").text = str(dict_lois[nom]['type'])
+        #     donnees = SubElement(struct, "donnees")
+        #     SubElement(donnees, "modeEntree").text = '1'
+        #     SubElement(donnees, "fichier").text = '{}.loi'.format(nom)
+        #     SubElement(donnees, "uniteTps").text = '-0'
+        #     SubElement(donnees, "nbPoints").text = '-0'
+        #     SubElement(donnees, "nbDebitsDifferents").text = '-0'
+
+
+
+
+        # return dict_lois
+        #SubElement(singularite, "nbSeuils").text = str(len(seuils["name"]))
+        # if len(seuils["name"]) > 0:
+        #     e_tseuils = SubElement(singularite, "seuils")
+        #
+        # liste = ["type", "numBranche", "abscisse", "coteCrete", "coteCreteMoy",
+        #          "coteRupture", "coeffDebit", "largVanne", "epaisseur"]
+        # liste_en = ["type", "branchnum", "abscissa", "z_crest", "z_average_crest",
+        #             "z_break", "flowratecoeff", "wide_floodgate", "thickness"]
+        #
+        # for i, nom in enumerate(seuils["name"]):
+        #     struct = SubElement(e_tseuils, "structureParametresSeuil")
+        #     SubElement(struct, "nom").text = nom
+        #     for kk, l in enumerate(liste):
+        #         if seuils[liste_en[kk].lower()][i] is None:
+        #             SubElement(struct, l).text = '-0'
+        #         else:
+        #             SubElement(struct, l).text = str(seuils[liste_en[kk].lower()][i])
+        #
+        #     if seuils["type"][i] not in (3, 4):
+        #         SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()))
+        #     else:
+        #         SubElement(struct, "numLoi").text = '-0'
+        #     if seuils["type"][i] != 3:
+        #         SubElement(struct, "nbPtLoiSeuil").text = '-0'
+        #     else:
+        #         try:
+        #             i = prof_seuil["name"].index(nom)
+        #             long = len(prof_seuil['x'][i].split())
+        #             SubElement(struct, "nbPtLoiSeuil").text = str(long)
+        #             SubElement(struct, "abscTravCrete").text = prof_seuil['x'][i]
+        #             SubElement(struct, "cotesCrete").text = prof_seuil['z'][i]
+        #
+        #         except:
+        #             msg = 'Profil de crete introuvable pour {}'
+        #             QMessageBox.warning(None, 'Message', msg.format(nom))
+        #             return
+        #
+        #     SubElement(struct, "gradient").text = "-0"
 
     def modif_xcas(self, parametres, xcasfile, fich_sortie=None):
         fich_entree = os.path.join(self.dossier_file_masc, xcasfile)
@@ -1231,6 +1387,9 @@ class ClassMascaret:
 
             elif par["evenement"]:
                 # transcritical unsteady evenement
+                if par['presenceTraceurs']:
+                    if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
+                        self.wq.create_filemet()
                 date_debut = dict_scen['starttime'][i]
                 date_fin = dict_scen['endtime'][i]
                 duree = int((date_fin - date_debut).total_seconds()) - 3600
@@ -1249,6 +1408,7 @@ class ClassMascaret:
                 self.obs_to_loi(dict_lois, date_debut, date_fin)
 
             else:
+                #TODO ATTENTION CREATION LOI STRUCTUR HYdraulic
                 # transcritical unsteady hors evenement
                 if par['presenceTraceurs']:
                     if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
@@ -1265,8 +1425,6 @@ class ClassMascaret:
                         self.mgis.add_info(str(e))
                         return
 
-                    # liste = ["cote", "debit", "temps", "cote_amont", "cote_aval",
-                    #          "cote_inf", "cote_sup"]
                     liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
                              "z_lower", "z_up"]
                     tab = {}

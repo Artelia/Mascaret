@@ -27,6 +27,7 @@ from qgis.utils import *
 
 from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
 from .MetBradleyWidget import MetBradleyWidget
+from .ClassTmp import ClassTmp
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -40,6 +41,7 @@ class ClassStructureEditDialog(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure(self.mgis, self.mdb)
+        self.cltmp = ClassTmp(self.mgis)
         self.wgt_met = QWidget()
 
         self.param_meth_calc = {0: {'name': 'Bradley 72',
@@ -98,9 +100,10 @@ class ClassStructureEditDialog(QDialog):
               "WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
         rows = self.mdb.run_query(sql, fetch=True)
         for param, val in rows:
-            ctrls = self.wgt_met.dico_ctrl[param]
-            for ctrl in ctrls:
-                ctrl_set_value(ctrl, val)
+            if param in self.wgt_met.dico_ctrl.keys():
+                ctrls = self.wgt_met.dico_ctrl[param]
+                for ctrl in ctrls:
+                    ctrl_set_value(ctrl, val)
 
         for tab, param in self.wgt_met.dico_tab.items():
             # tab.setRowCount(0)
@@ -179,6 +182,7 @@ class ClassStructureEditDialog(QDialog):
                               "VALUES ({1}, {2}, '{3}', {4})".format(self.mdb.SCHEMA, self.id_struct,
                                                                      id_elem, var, val)
                         self.mdb.execute(sql)
+            self.cltmp.create_poly_elem(self.id_struct,self.typ_struct)
             return True
         else:
             return False

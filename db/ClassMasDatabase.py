@@ -766,6 +766,7 @@ $BODY$
             lvar = '*'
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
+        print(sql.format(self.SCHEMA, table, where, order,lvar))
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order,lvar), fetch=True, namvar=True)
         cols = [col[0] for col in namCol]
         dico = {}
@@ -832,6 +833,18 @@ $BODY$
             sql = "SELECT MAX({0}) FROM {1}.{2} WHERE {3};".format(var, self.SCHEMA, table, where)
         else:
             sql = "SELECT MAX({0}) FROM {1}.{2};".format(var, self.SCHEMA, table)
+        results = self.run_query(sql, fetch=True, arraysize=1)
+        # results obj: generator
+        for row in results:
+            var = row[0][0]
+        return var
+
+    def select_min(self, var, table, where=None):
+        """select the max in the table for the "where" variable"""
+        if where:
+            sql = "SELECT MIN({0}) FROM {1}.{2} WHERE {3};".format(var, self.SCHEMA, table, where)
+        else:
+            sql = "SELECT MIN({0}) FROM {1}.{2};".format(var, self.SCHEMA, table)
         results = self.run_query(sql, fetch=True, arraysize=1)
         # results obj: generator
         for row in results:
@@ -906,6 +919,7 @@ $BODY$
                                                             table,
                                                             var,
                                                             valeurs)
+        print(sql)
         self.run_query(sql, many=True, list_many=liste_value)
 
     def update_res(self, table, liste_value, colonnes):

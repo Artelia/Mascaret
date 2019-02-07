@@ -69,38 +69,36 @@ from shapely import wkb
 from .ClassTableStructure import ClassTableStructure
 
 
-class ClassTmp(QDialog):
-
+# class ClassTmp(QDialog):
+class ClassTmp():
     def __init__(self, mgis):
-        QDialog.__init__(self)
+        # QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = mgis.mdb
         self.grav = 9.81
         self.epsi = 0.0001
         self.tbst = ClassTableStructure(self.mgis, self.mdb)
 
-        self.id_config = 2  # cadre
-        self.config_type = 'cadre'
+        # self.id_config = 2  # cadre
+        # self.config_type = 'cadre'
         # self.id_config=3 #arc cercl
         # self.config_type='arch'
         # check test
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/test_graph.ui'), self)
-        self.figure = Figure()
-        self.canvas = FigureCanvas(self.figure)
-        self.gui_graph(self.ui)
-        # self.create_poly_elem()
-        # self.test()
-        # calcul
+        # self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/test_graph.ui'), self)
+        # self.figure = Figure()
+        # self.canvas = FigureCanvas(self.figure)
+        # self.gui_graph(self.ui)
 
-    def gui_graph(self, ui):
-        self.verticalLayout1 = QVBoxLayout(ui.widget_figure)
-        self.verticalLayout1.setObjectName("verticalLayout1")
-        self.verticalLayout1.addWidget(self.canvas)
 
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        self.verticalLayout2 = QVBoxLayout(ui.widget_toolsbar)
-        self.verticalLayout2.setObjectName("verticalLayout2")
-        self.verticalLayout2.addWidget(self.toolbar)
+    # def gui_graph(self, ui):
+    #     self.verticalLayout1 = QVBoxLayout(ui.widget_figure)
+    #     self.verticalLayout1.setObjectName("verticalLayout1")
+    #     self.verticalLayout1.addWidget(self.canvas)
+    #
+    #     self.toolbar = NavigationToolbar(self.canvas, self)
+    #     self.verticalLayout2 = QVBoxLayout(ui.widget_toolsbar)
+    #     self.verticalLayout2.setObjectName("verticalLayout2")
+    #     self.verticalLayout2.addWidget(self.toolbar)
 
     def get_param_g(self, list_recup, id_config):
         """get general parameters"""
@@ -122,6 +120,7 @@ class ClassTmp(QDialog):
         for info in list_recup:
             where = "id_config = {0} AND id_elem= {1} AND var = '{2}' ".format(id_config, id_elem, info)
             rows = self.mdb.select('struct_elem_param', where=where, list_var=['value'])
+
             if rows['value']:
                 param_elem[info] = rows['value'][0]
             else:
@@ -149,7 +148,7 @@ class ClassTmp(QDialog):
     def poly_pont_cadre(self, param_g, param_elem, x0=None, zmin=-99999):
         """ creation polygone for "pont cadre" """
         if x0 is None:
-            x0 = param_g['firstw']  # point depart
+            x0 = param_g['FIRSTWD']  # point depart
         x1 = x0 + param_elem['LARGTRA']
         z = param_g['ZPC']  # point haut
         zmin_t = zmin - 10
@@ -164,7 +163,7 @@ class ClassTmp(QDialog):
     def poly_arch(self, param_g, param_elem, x0=None, zmin=-99999, type='circle'):
         """ creation polygone for "pont arch" """
         if x0 is None:
-            x0 = param_g['firstw']  # point depart
+            x0 = param_g['FIRSTWD']  # point depart
         x1 = x0 + param_elem['LARGTRA']
         x_c = param_elem['LARGTRA'] / 2. + x0
         z = param_elem['cotarc']
@@ -237,11 +236,11 @@ class ClassTmp(QDialog):
             print('Inconsistent Z for the pier')
         return poly_t
 
-    def create_poly_elem(self):
+    def create_poly_elem(self,id_config,config_type):
         # TODO reactualiser variable
         # get profil
-        if self.checkprofil(self.id_config):
-            profil = self.get_profil(self.id_config)
+        if self.checkprofil(id_config):
+            profil = self.get_profil(id_config)
         else:
             msg = "Profile copy isn't found"
             self.mgis.add_info(msg)
@@ -255,22 +254,23 @@ class ClassTmp(QDialog):
                 self.mgis.add_info(msg)
             print(msg)
             return
-
-        if self.config_type == 'PC':
+        if config_type == 'PC':
             # parametre general
-            list_recup = ['EPAITAB', 'ZTOPTAB', 'firstw']
-            param_g = self.get_param_g(list_recup, self.id_config)
+            list_recup = ['EPAITAB', 'ZTOPTAB', 'FIRSTWD']
+            param_g = self.get_param_g(list_recup, id_config)
             param_g['ZPC'] = param_g['ZTOPTAB'] - param_g['EPAITAB']
-            list_recup_elem = ['LARG']
-        if self.config_type == 'PA':
+            recup_trav= ['LARGTRA']
+            recup_pil = ['FORMPIL','LARGPIL','LONGPIL']
+        if config_type == 'PA':
             # parametre general
-            list_recup = ['ZTOPTAB', 'firstw']
-            param_g = self.get_param_g(list_recup, self.id_config)
-            list_recup_elem = ['LARGTRAV', 'cotmax', 'cotarc']
+            list_recup = ['ZTOPTAB', 'FIRSTWD']
+            param_g = self.get_param_g(list_recup, id_config)
+            recup_trav = ['LARGTRA', 'cotmax', 'cotarc']
 
-        where = "id_config = {0}".format(self.id_config)  # type=0 span, =1 bridge peir
+        where = "id_config = {0}".format(id_config)  # type=0 span, =1 bridge peir
         order = "id_elem"
         lid_elem = self.mdb.select('struct_elem', where=where, order=order, list_var=['id_elem', "type"])
+        print('fffff',lid_elem)
         first = True
         width = 0
         width_prec = 0
@@ -280,31 +280,35 @@ class ClassTmp(QDialog):
             print(msg)
         for i, id_elem in enumerate(lid_elem["id_elem"]):
             # parametre element
-            param_elem = self.get_param_elem(id_elem, list_recup_elem, self.id_config)
 
-
+            if lid_elem["type"][i] == 1:
+                param_elem = self.get_param_elem(id_elem,recup_pil, id_config)
+                param_elem['LARG'] = param_elem['LARGPIL']
+            else:
+                param_elem = self.get_param_elem(id_elem, recup_trav, id_config)
+                param_elem['LARG']=param_elem['LARGTRA']
             if first:
-                width = param_g['firstw']
+                width = param_g['FIRSTWD']
                 first = False
             else:
                 width += width_prec
             width_prec = param_elem['LARG']
-            if lid_elem["type"][id_elem] != 'Pile':
+            if lid_elem["type"][i] != 1:
                 # # pont Cadre
-                if self.config_type == 'PC':
+                if config_type == 'PC':
                     # polygon
                     poly_elem = self.poly_pont_cadre(param_g, param_elem, width, zmin)
                     # if not poly_elem.is_empty:
                     #     self.draw_test(poly_elem,decal_ax=10)
                 # pont arc
-                if self.config_type == 'PA':
+                if config_type == 'PA':
                     # polygon
                     poly_elem = self.poly_arch(param_g, param_elem, width, zmin, type='ellipse')
             else:
 
                 poly_elem = self.poly_pil(param_g, param_elem, width, zmin)
-                self.draw_test(poly_elem, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
-
+                # self.draw_test(poly_elem, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
+            print(poly_elem,lid_elem["type"][i])
             # final
             if not poly_elem.is_empty:
                 poly_final = poly_elem.difference(poly_p)
@@ -317,38 +321,42 @@ class ClassTmp(QDialog):
             if not poly_final.is_empty:
                 # self.draw_test(poly_final, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
                 # # stock element
-                where = "WHERE id_config = {0}  AND id_elem = {1} ".format(self.id_config, id_elem)
+                where = "WHERE id_config = {0}  AND id_elem = {1} ".format(id_config, id_elem)
                 sql = """UPDATE {0}.struct_elem SET polygon ='{1}'  {2}""".format(self.mdb.SCHEMA,
                                                                                   poly_final,
                                                                                   where)
                 self.mdb.run_query(sql)
         width += width_prec
-        liste_value = [self.id_config, 'TOTALW', width]
+
+        liste_value = [id_config, 'TOTALW', width]
         col = ['id_config', 'var', 'value']
-        self.mdb.insert_res('struct_param', liste_value, col)
+        sql="INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALW', {2});".format(self.mdb.SCHEMA,
+                                                                                                 id_config,
+                                                                                                 width)
+        self.mdb.run_query(sql)
 
         # return poly_final
 
-    def draw_test(self, poly, title=None, decal_ax=1, xmin=None, xmax=None):
-
-        ax = self.figure.add_subplot(111)
-        # ax.grid(True)
-        new_poly = [coord for coord in poly.exterior.coords]
-
-        (minx, miny, maxx, maxy) = poly.bounds
-        if xmin is not None:
-            minx = xmin
-        if xmax is not None:
-            maxx = xmax
-
-        poly_d = mpoly(new_poly, facecolor='blue', edgecolor='red', alpha=0.5)
-        ax.add_patch(poly_d)
-
-        ax.set_xlim((minx - decal_ax, maxx + decal_ax))
-        ax.set_ylim((miny - decal_ax, maxy + decal_ax))
-        if title is not None:
-            ax.set_title(title)
-        self.canvas.draw()
+    # def draw_test(self, poly, title=None, decal_ax=1, xmin=None, xmax=None):
+    #
+    #     ax = self.figure.add_subplot(111)
+    #     # ax.grid(True)
+    #     new_poly = [coord for coord in poly.exterior.coords]
+    #
+    #     (minx, miny, maxx, maxy) = poly.bounds
+    #     if xmin is not None:
+    #         minx = xmin
+    #     if xmax is not None:
+    #         maxx = xmax
+    #
+    #     poly_d = mpoly(new_poly, facecolor='blue', edgecolor='red', alpha=0.5)
+    #     ax.add_patch(poly_d)
+    #
+    #     ax.set_xlim((minx - decal_ax, maxx + decal_ax))
+    #     ax.set_ylim((miny - decal_ax, maxy + decal_ax))
+    #     if title is not None:
+    #         ax.set_title(title)
+    #     self.canvas.draw()
 
     def select_poly(self, table, where='', var='polygon'):
         """ select polygon
@@ -398,28 +406,28 @@ class ClassTmp(QDialog):
         #                               feature['branchnum'],
         #                           id_config))
 
-    def test(self):
-        # TODO a delete
-        # profil = self.get_profil(self.id_config)
-        profil = {'x': [0.00,
-                        0.01,
-                        100.00,
-                        100.10,
-                        150.00,
-                        150.01,
-                        ],
-                  'z': [25,
-                        6.5,
-                        6.5,
-                        14,
-                        14,
-                        25,
-                        ]}
-        poly = self.poly_profil(profil)
-        cote = 170
-        # poly = self.calc_polyw(poly, cote)
-
-        self.draw_test(poly, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
+    # def test(self):
+    #     # TODO a delete
+    #     # profil = self.get_profil(self.id_config)
+    #     profil = {'x': [0.00,
+    #                     0.01,
+    #                     100.00,
+    #                     100.10,
+    #                     150.00,
+    #                     150.01,
+    #                     ],
+    #               'z': [25,
+    #                     6.5,
+    #                     6.5,
+    #                     14,
+    #                     14,
+    #                     25,
+    #                     ]}
+    #     poly = self.poly_profil(profil)
+    #     cote = 170
+    #     # poly = self.calc_polyw(poly, cote)
+    #
+    #     self.draw_test(poly, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
 
     def coup_poly_h(self, poly, cote):
         msg = None
