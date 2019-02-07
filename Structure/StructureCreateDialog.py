@@ -86,17 +86,18 @@ class ClassStructureCreateDialog(QDialog):
         if len(tab['x']) == 0 or len(tab['z']) == 0:
             self.mgis.add_info("Check if the profile is saved.")
             return
+
         sql = "INSERT INTO {0}.struct_config (name, comment, type, id_prof_ori, active, abscissa, branchnum) " \
               "VALUES ('{1}', '{2}', '{3}', {4}, FALSE,{5} ,{6})".format(self.mdb.SCHEMA, self.name, self.comment,
                                                                 self.type, self.id_profil,feature['abscissa'][0],feature['branchnum'][0])
         self.mdb.run_query(sql)
-        id_struct = self.mdb.select_max('id', 'struct_config')
+        self.id_struct = self.mdb.select_max('id', 'struct_config')
 
         colonnes = ['id_config', 'id_order', 'x', 'z']
         xz = list(zip(tab['x'], tab['z']))
         values = []
         for order, (x, z) in enumerate(xz):
-            values.append([id_struct, order, x, z])
+            values.append([self.id_struct, order, x, z])
         self.mdb.insert_res('profil_struct', values, colonnes)
 
         self.accept()
