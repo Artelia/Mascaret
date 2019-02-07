@@ -33,18 +33,19 @@ else:  # qt5
     from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QIcon
     from qgis.PyQt.QtWidgets import *
 
-class ClassStructureEditDialog(QDialog):
+class MetBradleyWidget(QWidget):
     def __init__(self, mgis, id_struct):
-        QDialog.__init__(self)
+        QWidget.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure(self.mgis, self.mdb)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_bradley.ui'), self)
+
+        return
 
         self.id_struct = id_struct
         self.lst_meth_calc = []
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_structure_edit.ui'), self)
-
-        
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_bradley.ui'), self)
 
         ## Gestion des ctrl pour la partie commune
         self.cb_met_calc.currentIndexChanged[int].connect(self.change_met_calc)

@@ -41,10 +41,10 @@ class ClassTableStructure:
         self.dico_struc_typ = {'PC': {'name': 'Pont cadre',
                                       'param': ['FIRSTWD', 'ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'BIAIPIL',
                                                 'FORMCUL', 'ORIENTM', 'PENTTAL', 'FORMPIL', 'METTEST', 'LARGPIL',
-                                                'LONGPIL', 'ALPHA1', 'ALPHA2', 'PASH', 'MINH', 'PASQ',
+                                                'LONGPIL', 'PASH', 'MINH', 'PASQ',
                                                 'MINQ', 'MAXQ', 'NBTRAVE', 'METBR72', 'METBR78'],
-                                      'meth_calc': [4],
-                                      'meth_draw': [[0]]
+                                      'meth_calc': [4, 4],
+                                      'meth_draw': [[0], [0]]
                                       },
                                'PA': {'name': 'Pont arche',
                                       'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
@@ -72,8 +72,6 @@ class ClassTableStructure:
                                'FORMPIL': {'name': 'Forme des piles', 'unit': None},
                                'LARGPIL': {'name': 'Largeur des piles', 'unit': 'm'},
                                'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'},
-                               'ALPHA1': {'name': 'Alpha 1', 'unit': '°'},
-                               'ALPHA2': {'name': 'Alpha 2', 'unit': '°'},
                                'PASH': {'name': 'Pas H', 'unit': 'm'},
                                'MINH': {'name': 'Min H', 'unit': 'm'},
                                'PASQ': {'name': 'Pas Q', 'unit': ''},
