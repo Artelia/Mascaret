@@ -78,7 +78,7 @@ class ClassStructureEditDialog(QDialog):
             self.lbl_type.setText(self.tbst.dico_struc_typ[self.typ_struct]['name'])
             self.txt_name.setText(rows[0][0])
             self.cc_active.setChecked(rows[0][3])
-            fill_qcombobox(self.cb_met_calc, self.lst_meth_calc, rows[0][2])
+            fill_qcombobox(self.cb_met_calc, self.lst_meth_calc, val_def=rows[0][2])
             self.is_loading = False
 
     def change_met_calc(self, idx):
@@ -125,7 +125,7 @@ class ClassStructureEditDialog(QDialog):
                         val = col['valdef']
                     if col['cb']:
                         cb = QComboBox()
-                        fill_qcombobox(cb, col['cb'], int(val))
+                        fill_qcombobox(cb, col['cb'], val_def=int(val))
                         tab.setCellWidget(r, c, cb)
                     else:
                         itm = QTableWidgetItem()

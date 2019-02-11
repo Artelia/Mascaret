@@ -46,11 +46,12 @@ class MetBradleyWidget(QWidget):
 
         self.gb_form_cul = QButtonGroup()
         self.gb_form_cul.addButton(self.rb_form_cul0, 0)
-        self.rb_form_cul0.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/type1.png')))
+        self.rb_form_cul0.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/culees/culee1.png')))
         self.gb_form_cul.addButton(self.rb_form_cul1, 1)
-        self.rb_form_cul1.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/type2.png')))
+        self.rb_form_cul1.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/culees/culee2.png')))
         self.gb_form_cul.addButton(self.rb_form_cul2, 2)
-        self.rb_form_cul2.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/type3.png')))
+        self.rb_form_cul2.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/culees/culee3.png')))
+        # self.cb_form_pil.setIconSize(QSize(40, 12))
 
         self.sb_nb_trav.valueChanged.connect(self.change_ntrav)
         self.cb_form_pil.currentIndexChanged.connect(self.update_piles)
@@ -59,7 +60,8 @@ class MetBradleyWidget(QWidget):
         if met == '72':
             self.gb_form_cul.buttonClicked[int].connect(self.change_opt_culee)
 
-        fill_qcombobox(self.cb_form_pil, [[f, 'Forme {}'.format(f)] for f in range(1, 9)])
+        fill_qcombobox(self.cb_form_pil, [[f, 'Forme {}'.format(f)] for f in range(1, 10)],
+                       icn=os.path.join(self.mgis.masplugPath, 'Structure/images/piles/pile{}.png'))
         fill_qcombobox(self.cb_orient_mur, [[30, '30°'], [45, '45°'], [60, '60°']])
         fill_qcombobox(self.cb_pente_tal, [[0, '1/1'], [1, '1.5/1'], [2, '2/1']])
 
@@ -130,7 +132,7 @@ class MetBradleyWidget(QWidget):
                 val = ctrl_get_value(col['valdef'])
             if col['cb']:
                 cb = QComboBox()
-                fill_qcombobox(cb, col['cb'], int(val))
+                fill_qcombobox(cb, col['cb'], val_def=int(val))
                 tab.setCellWidget(row, c, cb)
             else:
                 itm = QTableWidgetItem()

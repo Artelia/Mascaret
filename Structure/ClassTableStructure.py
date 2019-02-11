@@ -128,7 +128,7 @@ def ctrl_get_value(ctrl):
         val = ctrl.checkedId()
     return val
 
-def fill_qcombobox(cb, lst, val_def=None):
+def fill_qcombobox(cb, lst, val_def=None, icn=None):
     cb.blockSignals(True)
     cb.clear()
 
@@ -139,7 +139,11 @@ def fill_qcombobox(cb, lst, val_def=None):
         cb.blockSignals(False)
 
     for elem in lst:
-        cb.addItem(elem[1], elem[0])
+        if icn:
+            print(icn.format(elem[0]))
+            cb.addItem(QIcon(icn.format(elem[0])),elem[1], elem[0])
+        else:
+            cb.addItem(elem[1], elem[0])
 
     if val_def != None:
         if lst[0][0] != val_def:
