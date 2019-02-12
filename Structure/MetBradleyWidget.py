@@ -38,7 +38,7 @@ class MetBradleyWidget(QWidget):
         QWidget.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-        self.tbst = ClassTableStructure(self.mgis, self.mdb)
+        self.tbst = ClassTableStructure()
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_bradley.ui'), self)
 
         self.frm_orient_mur.hide()

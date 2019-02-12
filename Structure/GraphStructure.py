@@ -19,7 +19,7 @@ email                :
 """
 
 from ..GraphCommon import GraphCommon
-from .ClassTmp import ClassTmp
+from .ClassMethod import ClassMethod
 from matplotlib.patches import Polygon as mpoly
 
 class GraphStructure(GraphCommon):
@@ -27,7 +27,7 @@ class GraphStructure(GraphCommon):
     def __init__(self, mgis=None, lay=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
-        self.tmp = ClassTmp(self.mgis)
+        self.tmp = ClassMethod(self.mgis)
         self.gui_graph(lay)
         self.initUI()
 

@@ -17,49 +17,13 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import os
 import math as m
-from matplotlib.patches import Polygon as mpoly
-from matplotlib.figure import Figure
+import numpy as np
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
-
-if int(qVersion()[0]) < 5:  # qt4
-
-    from qgis.PyQt.QtGui import *
-
-    try:
-        from matplotlib.backends.backend_qt4agg \
-            import FigureCanvasQTAgg as FigureCanvas
-    except:
-        from matplotlib.backends.backend_qt4agg \
-            import FigureCanvasQT as FigureCanvas
-    # ***************************
-    try:
-        from matplotlib.backends.backend_qt4agg \
-            import NavigationToolbar2QTAgg as NavigationToolbar
-    except:
-        from matplotlib.backends.backend_qt4agg \
-            import NavigationToolbar2QT as NavigationToolbar
-else:  # qt4
-    from qgis.PyQt.QtWidgets import *
-
-    try:
-        from matplotlib.backends.backend_qt5agg \
-            import FigureCanvasQTAgg as FigureCanvas
-    except:
-        from matplotlib.backends.backend_qt5agg \
-            import FigureCanvasQT as FigureCanvas
-    # ***************************
-    try:
-        from matplotlib.backends.backend_qt5agg \
-            import NavigationToolbar2QTAgg as NavigationToolbar
-    except:
-        from matplotlib.backends.backend_qt5agg \
-            import NavigationToolbar2QT as NavigationToolbar
 
 
 from shapely.geometry import *
@@ -67,38 +31,15 @@ import shapely.affinity
 from shapely import wkb
 
 from .ClassTableStructure import ClassTableStructure
+from .ClassBradley import ClassBradley
 
-
-# class ClassTmp(QDialog):
-class ClassTmp():
+class ClassMethod:
     def __init__(self, mgis):
-        # QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = mgis.mdb
         self.grav = 9.81
         self.epsi = 0.0001
-        self.tbst = ClassTableStructure(self.mgis, self.mdb)
-
-        # self.id_config = 2  # cadre
-        # self.config_type = 'cadre'
-        # self.id_config=3 #arc cercl
-        # self.config_type='arch'
-        # check test
-        # self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/test_graph.ui'), self)
-        # self.figure = Figure()
-        # self.canvas = FigureCanvas(self.figure)
-        # self.gui_graph(self.ui)
-
-
-    # def gui_graph(self, ui):
-    #     self.verticalLayout1 = QVBoxLayout(ui.widget_figure)
-    #     self.verticalLayout1.setObjectName("verticalLayout1")
-    #     self.verticalLayout1.addWidget(self.canvas)
-    #
-    #     self.toolbar = NavigationToolbar(self.canvas, self)
-    #     self.verticalLayout2 = QVBoxLayout(ui.widget_toolsbar)
-    #     self.verticalLayout2.setObjectName("verticalLayout2")
-    #     self.verticalLayout2.addWidget(self.toolbar)
+        self.tbst = ClassTableStructure()
 
     def get_param_g(self, list_recup, id_config):
         """get general parameters"""
@@ -270,10 +211,10 @@ class ClassTmp():
         where = "id_config = {0}".format(id_config)  # type=0 span, =1 bridge peir
         order = "id_elem"
         lid_elem = self.mdb.select('struct_elem', where=where, order=order, list_var=['id_elem', "type"])
-        print('fffff',lid_elem)
         first = True
         width = 0
         width_prec = 0
+        width_trav=0
 
         if not lid_elem["id_elem"]:
             msg = "Not element in table in create_poly_elem function"
@@ -287,6 +228,7 @@ class ClassTmp():
             else:
                 param_elem = self.get_param_elem(id_elem, recup_trav, id_config)
                 param_elem['LARG']=param_elem['LARGTRA']
+                width_trav+=param_elem['LARG']
             if first:
                 width = param_g['FIRSTWD']
                 first = False
@@ -308,7 +250,7 @@ class ClassTmp():
 
                 poly_elem = self.poly_pil(param_g, param_elem, width, zmin)
                 # self.draw_test(poly_elem, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
-            print(poly_elem,lid_elem["type"][i])
+            # print(poly_elem,lid_elem["type"][i])
             # final
             if not poly_elem.is_empty:
                 poly_final = poly_elem.difference(poly_p)
@@ -328,37 +270,18 @@ class ClassTmp():
                 self.mdb.run_query(sql)
         width += width_prec
 
-        liste_value = [id_config, 'TOTALW', width]
-        col = ['id_config', 'var', 'value']
-        sql="INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALW', {2});".format(self.mdb.SCHEMA,
+        sql="INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALW', {2});\n".format(self.mdb.SCHEMA,
                                                                                                  id_config,
-                                                                                                 width)
+                                                                        width)
+        sql+="INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALOUV', {2});".format(self.mdb.SCHEMA,
+                                                                                                 id_config,
+                                                                        width_trav)
         self.mdb.run_query(sql)
+
 
         # return poly_final
 
-    # def draw_test(self, poly, title=None, decal_ax=1, xmin=None, xmax=None):
-    #
-    #     ax = self.figure.add_subplot(111)
-    #     # ax.grid(True)
-    #     new_poly = [coord for coord in poly.exterior.coords]
-    #
-    #     (minx, miny, maxx, maxy) = poly.bounds
-    #     if xmin is not None:
-    #         minx = xmin
-    #     if xmax is not None:
-    #         maxx = xmax
-    #
-    #     poly_d = mpoly(new_poly, facecolor='blue', edgecolor='red', alpha=0.5)
-    #     ax.add_patch(poly_d)
-    #
-    #     ax.set_xlim((minx - decal_ax, maxx + decal_ax))
-    #     ax.set_ylim((miny - decal_ax, maxy + decal_ax))
-    #     if title is not None:
-    #         ax.set_title(title)
-    #     self.canvas.draw()
-
-    def select_poly(self, table, where='', var='polygon'):
+    def select_poly(self, table, where='',order='', var='polygon'):
         """ select polygon
         example:
                 where = "id_config = {0} AND id_elem = {1}".format(self.id_config, id_elem)
@@ -366,10 +289,14 @@ class ClassTmp():
                 print(toto)
         """
 
-        poly_l = self.mdb.select(table, where=where, list_var=[var])
+        poly_l = self.mdb.select(table, where=where,order=order, list_var=[var])
         list_poly = []
         for poly in poly_l[var]:
-            list_poly.append(wkb.loads(poly, hex=True))
+            try: #python2
+                list_poly.append(wkb.loads(poly.decode('hex')))
+            except:#python3
+                list_poly.append(wkb.loads(poly))
+
         poly_l[var] = list_poly
         return poly_l
 
@@ -405,29 +332,6 @@ class ClassTmp():
         #                               feature['abscissa'],
         #                               feature['branchnum'],
         #                           id_config))
-
-    # def test(self):
-    #     # TODO a delete
-    #     # profil = self.get_profil(self.id_config)
-    #     profil = {'x': [0.00,
-    #                     0.01,
-    #                     100.00,
-    #                     100.10,
-    #                     150.00,
-    #                     150.01,
-    #                     ],
-    #               'z': [25,
-    #                     6.5,
-    #                     6.5,
-    #                     14,
-    #                     14,
-    #                     25,
-    #                     ]}
-    #     poly = self.poly_profil(profil)
-    #     cote = 170
-    #     # poly = self.calc_polyw(poly, cote)
-    #
-    #     self.draw_test(poly, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
 
     def coup_poly_h(self, poly, cote):
         msg = None
@@ -554,13 +458,25 @@ class ClassTmp():
         #
         return struct_dico
 
-    def save_law_st(self, dico_st, id_config, list_val):
+    def create_law(self, list_final, nom,type):
+        """creeation of law"""
+
+        with open(os.path.join(self.dossier_file_masc, nom + '.loi'), 'w') as fich:
+            fich.write('# ' + nom + '\n')
+            if type == 6 :
+                fich.write('# Debit Cote_Aval Cote_Amont\n')
+                chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
+                for val in list_final:
+                    dico = {'flowrate': val[0], 'z_downstream': val[1], 'z_upstream': val[2]}
+                    fich.write(chaine.format(**dico))
+
+    def save_law_st(self, method, id_config, list_val):
 
         self.mdb.delete('struct_laws', where="id_config = '{}'".format(id_config))
         liste_col = self.mdb.list_columns('struct_laws')
         list_insert = []
         list_val = np.array(list_val)
-        for j in self.tbst.dico_law_struct[dico_st['method']].keys():
+        for j in self.tbst.dico_law_struct[method].keys():
             for i, val in enumerate(list_val[:, j]):
                 list_insert.append([id_config, j, i, val])
         #
@@ -577,8 +493,34 @@ class ClassTmp():
 
         self.mdb.run_query(sql, many=True, list_many=list_insert)
 
+    def get_law(self,name,id_config):
+        sql = "SELECT {0}.{1}};".format(self.mdb.SCHEMA,
+                                                            'struct_laws',
+                                                            var,
+                                                            valeurs)
+
+    # def main(self):
+    #     self.brad=ClassBradley(self)
+    #     struct_dico = self.get_struct()
+    #     for id_config in struct_dico:
+    #         dico_st = struct_dico[id_config]
+    #         if dico_st["active"]:
+    #             if dico_st['idmethod'] == 0 or dico_st['idmethod'] == 4:
+    #                 listf =  self.brad.bradley(method=dico_st['method'])
+    #                 self.save_law_st(dico_st['method'], id_config, listf)
+    #             elif dico_st['idmethod'] == 2:
+    #                 pass
+    #             else:
+    #                 pass
+
+    def sav_meth(self,id_config,idmethod):
+        self.brad = ClassBradley(self)
+        if idmethod == 0 or idmethod == 4:
+            self.brad.bradley(id_config,self.tbst.dico_meth_calc[idmethod])
+        elif idmethod == 2:
+            pass
+        else:
+            pass
 
 if __name__ == '__main__':
-    # a = Polygon([[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]])
-    # draw_test(a,'toto')
     pass

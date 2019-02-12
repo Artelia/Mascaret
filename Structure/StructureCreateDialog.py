@@ -26,7 +26,8 @@ from qgis.gui import *
 from qgis.utils import *
 
 from .ClassTableStructure import ClassTableStructure
-from .ClassTmp import ClassTmp
+from .ClassMethod import ClassMethod
+from .ClassBradley import ClassBradley
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -39,8 +40,9 @@ class ClassStructureCreateDialog(QDialog):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-        self.tbst = ClassTableStructure(self.mgis, self.mdb)
-        self.struct = ClassTmp(self.mgis)
+        self.tbst = ClassTableStructure()
+        self.struct = ClassMethod(self.mgis)
+        self.brad=ClassBradley()
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_structure_create.ui'), self)
         self.b_ok.accepted.connect(self.accept_page)
@@ -100,6 +102,7 @@ class ClassStructureCreateDialog(QDialog):
             values.append([self.id_struct, order, x, z])
         self.mdb.insert_res('profil_struct', values, colonnes)
 
+        self.brad.main()
         self.accept()
 
     def reject_page(self):

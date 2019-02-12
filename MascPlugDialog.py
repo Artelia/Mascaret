@@ -19,6 +19,8 @@ email                :
 """
 import json
 import math
+import numpy as np
+import collections
 import os
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
@@ -37,7 +39,7 @@ from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
 from .Structure.StructureDialog import ClassStructureDialog
 from .db.ClassMasDatabase import ClassMasDatabase
 from .ui.custom_control import ClassWarningBox
-from .Structure.ClassTmp import ClassTmp
+from .Structure.ClassMethod import ClassMethod
 from .Structure.ClassBradley import ClassBradley
 
 
@@ -785,9 +787,32 @@ Version : {}
         # cl = ClassTmp(self)
         # cl2 =ClassBradley(cl)
         # cl2.main()
-        mas = ClassMascaret(self)
-        mas
-        mas.add_str_xcas()
+        # mas = ClassMascaret(self)
+        # mas
+        # mas.add_str_xcas()
+        # print(self.mdb.select("struct_laws",
+        #                 where="
+        #                 order="id_var, id_oder", list_var=['value']))
+        where="WHERE id_config={}".format(6)
+        order="ORDER BY id_var, id_order "
+        sql = "SELECT {4} FROM {0}.{1} {2} {3};"
+        print(sql.format(self.mdb.SCHEMA, "struct_laws",where, order,'id_var , value'))
+        toto=self.mdb.run_query(sql.format(self.mdb.SCHEMA, "struct_laws",where, order,'id_var , value'),fetch=True)
+        toto=np.array(toto)
+        nbval=np.count_nonzero(toto[:,0] == 0)
+        nbval=collections.Counter(toto[:,0])
+        nb=int(nbval[0])
+        nb_val=int(len(nbval.keys()))
+        liste_f=[]
+        for i in range(nb):
+            list_tmp=[]
+            for j in range(nb_val):
+                list_tmp.append(toto[i,j*nbval+1])
+            liste_f.append(list_tmp)
+        print(liste_f)
+        print(nbval)
+        # print(toto[nbval,0]) #val change
+
         # cl.show()
 
         # cl=ClassTmp(self)

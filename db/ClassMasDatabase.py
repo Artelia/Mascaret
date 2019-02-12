@@ -766,7 +766,7 @@ $BODY$
             lvar = '*'
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        print(sql.format(self.SCHEMA, table, where, order,lvar))
+        # print(sql.format(self.SCHEMA, table, where, order,lvar))
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order,lvar), fetch=True, namvar=True)
         cols = [col[0] for col in namCol]
         dico = {}
