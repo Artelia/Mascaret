@@ -137,6 +137,9 @@
        <property name="suffix">
         <string> m</string>
        </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
        <property name="maximum">
         <double>10000.000000000000000</double>
        </property>
@@ -208,6 +211,9 @@
             <property name="suffix">
              <string> m</string>
             </property>
+            <property name="minimum">
+             <double>0.010000000000000</double>
+            </property>
             <property name="maximum">
              <double>10000.000000000000000</double>
             </property>
@@ -223,6 +229,9 @@
             </property>
             <property name="suffix">
              <string> m</string>
+            </property>
+            <property name="minimum">
+             <double>0.010000000000000</double>
             </property>
             <property name="maximum">
              <double>10000.000000000000000</double>
@@ -448,6 +457,9 @@
           <property name="suffix">
            <string> m</string>
           </property>
+          <property name="minimum">
+           <double>0.010000000000000</double>
+          </property>
           <property name="maximum">
            <double>10000.000000000000000</double>
           </property>
@@ -485,6 +497,9 @@
           <property name="suffix">
            <string> m</string>
           </property>
+          <property name="minimum">
+           <double>0.010000000000000</double>
+          </property>
           <property name="maximum">
            <double>10000.000000000000000</double>
           </property>
@@ -514,6 +529,9 @@
           </property>
           <property name="suffix">
            <string/>
+          </property>
+          <property name="minimum">
+           <double>0.010000000000000</double>
           </property>
           <property name="maximum">
            <double>10000.000000000000000</double>
@@ -569,6 +587,9 @@
             </property>
             <property name="suffix">
              <string/>
+            </property>
+            <property name="minimum">
+             <double>0.010000000000000</double>
             </property>
             <property name="maximum">
              <double>10000.000000000000000</double>
