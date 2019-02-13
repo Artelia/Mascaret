@@ -136,15 +136,16 @@ class ClassStructureEditDialog(QDialog):
         # save Info
         if self.save_struct():
             self.accept()
-        else:
-            self.reject_page()
+        # else:
+        #     self.reject_page()
 
     def save_struct(self):
-        verif = True
+        meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
+        if meth in (0, 4):
+            verif, msg = self.verif_bradley(self.id_struct)
+
         if verif:
             name = str(self.txt_name.text())
-            meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
-            print(meth)
             active = self.cc_active.isChecked()
             sql = "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4} WHERE id = {1}" \
                 .format(self.mdb.SCHEMA, self.id_struct, name, meth, active)
@@ -182,14 +183,51 @@ class ClassStructureEditDialog(QDialog):
                               "VALUES ({1}, {2}, '{3}', {4})".format(self.mdb.SCHEMA, self.id_struct,
                                                                      id_elem, var, val)
                         self.mdb.execute(sql)
-
             self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
             self.clmeth.sav_meth(self.id_struct,meth)
             return True
         else:
+            msg_txt = "Erreurs lor de la construction de la structure :"
+            for m in msg:
+                msg_txt += "\n- {}".format(m)
+            QMessageBox.warning(self, 'Error', msg_txt)
             return False
 
     def reject_page(self):
         if self.mgis.DEBUG:
             self.mgis.add_info("Cancel of Structure")
         self.reject()
+
+    def verif_bradley(self, id_struct):
+        msg = []
+        valid = True
+
+        if ctrl_get_value(self.wgt_met.dico_ctrl['NBTRAVE'][0]) < 1.:
+            valid = False
+            msg.append("Aucune travee de saisie")
+
+        sql = "SELECT x, z FROM {0}.profil_struct WHERE id_config = {1} ORDER BY id_order".format(self.mdb.SCHEMA,
+                                                                                                  id_struct)
+        rows = self.mdb.run_query(sql, fetch=True)
+        x = [r[0] for r in rows]
+        z = [r[1] for r in rows]
+        profil_x_max = max(x)
+        profil_z_min = min(z)
+
+        cote_bas_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0]) - ctrl_get_value(self.wgt_met.dico_ctrl['EPAITAB'][0])
+        # print ('bas tab', cote_bas_tablier, ', ', profil_z_min)
+        if cote_bas_tablier <= profil_z_min:
+            valid = False
+            msg.append("La cote du bas du tablier est inferieure à la cote minimum du profil")
+
+        x_fin = ctrl_get_value(self.wgt_met.dico_ctrl['FIRSTWD'][0])
+        x_fin += (ctrl_get_value(self.wgt_met.dico_ctrl['NBTRAVE'][0]) - 1) * ctrl_get_value(self.wgt_met.dico_ctrl['LARGPIL'][0])
+        for r in range(self.wgt_met.tab_trav.rowCount()):
+            itm = self.wgt_met.tab_trav.item(r, 0)
+            x_fin += itm.data(0)
+        # print('x_fin', x_fin, ', ', profil_x_max)
+        if x_fin > profil_x_max:
+            valid = False
+            msg.append("La largeur totale de la structure est superieure a la largeur du profil")
+
+        return valid, msg

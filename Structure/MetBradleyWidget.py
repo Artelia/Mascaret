@@ -57,6 +57,10 @@ class MetBradleyWidget(QWidget):
         self.cb_form_pil.currentIndexChanged.connect(self.update_piles)
         self.dsb_larg_pil.valueChanged.connect(self.update_piles)
         self.dsb_long_pil.valueChanged.connect(self.update_piles)
+        self.dsb_q_pas.valueChanged.connect(self.update_min_q_max)
+        self.dsb_q_min.valueChanged.connect(self.update_min_q_max)
+        self.tab_trav.itemChanged.connect(self.verif_larg_trav)
+
         if met == '72':
             self.gb_form_cul.buttonClicked[int].connect(self.change_opt_culee)
 
@@ -144,3 +148,10 @@ class MetBradleyWidget(QWidget):
             self.tab_pile.cellWidget(row, 0).setCurrentIndex(self.cb_form_pil.currentIndex())
             self.tab_pile.item(row, 1).setData(0, self.dsb_larg_pil.value())
             self.tab_pile.item(row, 2).setData(0, self.dsb_long_pil.value())
+
+    def update_min_q_max(self):
+        self.dsb_q_max.setMinimum(self.dsb_q_min.value() + self.dsb_q_pas.value())
+
+    def verif_larg_trav(self, itm):
+        if itm.data(0) <= 0.:
+            itm.setData(0, 1.)
