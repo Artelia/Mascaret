@@ -1357,12 +1357,8 @@ class ClassMascaret:
             self.wq.init_conc_tracer()
         if dico_loi_struct.keys():
             for name in dico_loi_struct.keys():
-                self.mdb.select("struct_laws",
-                       where="id_config={}".format(dico_loi_struct[name]['id_config']),
-                       order="id_var, id_oder", list_var=['value'])
-
-                # create_law(list_final, name, dico_loi_struct[name]['type'])
-
+                list_final = self.tbst.get_list_law(dico_loi_struct[name]['id_config'])
+                self.tbst.create_law(list_final, name, dico_loi_struct[name]['type'])
 
         if self.mgis.DEBUG:
             self.mgis.add_info("Tracer files are created.")

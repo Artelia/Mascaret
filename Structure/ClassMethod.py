@@ -19,7 +19,8 @@ email                :
 """
 import math as m
 import numpy as np
-
+import collections
+import os
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -458,10 +459,10 @@ class ClassMethod:
         #
         return struct_dico
 
-    def create_law(self, list_final, nom,type):
+    def create_law(self, dossier, nom,type, list_final):
         """creeation of law"""
 
-        with open(os.path.join(self.dossier_file_masc, nom + '.loi'), 'w') as fich:
+        with open(os.path.join(dossier, nom + '.loi'), 'w') as fich:
             fich.write('# ' + nom + '\n')
             if type == 6 :
                 fich.write('# Debit Cote_Aval Cote_Amont\n')
@@ -493,11 +494,22 @@ class ClassMethod:
 
         self.mdb.run_query(sql, many=True, list_many=list_insert)
 
-    def get_law(self,name,id_config):
-        sql = "SELECT {0}.{1}};".format(self.mdb.SCHEMA,
-                                                            'struct_laws',
-                                                            var,
-                                                            valeurs)
+    def get_list_law(self,id_config):
+        where="WHERE id_config={}".format(id_config)
+        order="ORDER BY id_var, id_order "
+        sql = "SELECT {4} FROM {0}.{1} {2} {3};"
+        tabval=self.mdb.run_query(sql.format(self.mdb.SCHEMA, "struct_laws",where, order,'id_var , value'),fetch=True)
+        tabval=np.array(tabval)
+        nbval=collections.Counter(tabval[:,0])
+        nb=int(nbval[0])
+        nb_val=int(len(nbval.keys()))
+        liste_f=[]
+        for i in range(nb):
+            list_tmp=[]
+            for j in nbval.keys():
+                list_tmp.append(tabval[int(j)*nb+i , 1])
+            liste_f.append(list_tmp)
+        return liste_f
 
     # def main(self):
     #     self.brad=ClassBradley(self)

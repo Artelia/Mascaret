@@ -67,6 +67,9 @@ class GraphStructure(GraphCommon):
             sql = "SELECT var, value FROM {0}.struct_param WHERE id_config = {1} " \
                   "AND var IN ('ZTOPTAB', 'EPAITAB', 'FIRSTWD')".format(self.mdb.SCHEMA, config)
             rows = self.mdb.run_query(sql, fetch=True)
+            if rows == []:
+                self.canvas.draw()
+                return
             for r in rows:
                 param[r[0]] = r[1]
 
