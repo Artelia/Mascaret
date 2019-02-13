@@ -18,12 +18,15 @@ email                :
  ***************************************************************************/
 """
 
-from ..GraphCommon import GraphCommon
-from .ClassMethod import ClassMethod
 from matplotlib.patches import Polygon as mpoly
+
+from .ClassMethod import ClassMethod
+from ..GraphCommon import GraphCommon
+
 
 class GraphStructure(GraphCommon):
     """class Dialog GraphWaterQ"""
+
     def __init__(self, mgis=None, lay=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
@@ -51,7 +54,6 @@ class GraphStructure(GraphCommon):
                                              edgecolor='black', alpha=1., hatch=None)
         self.axes.add_patch(self.courbes['ouvrage_poly'])
 
-
     def initGraph(self, config):
         if config is not None:
             for elem in self.courbes['elem']:
@@ -73,7 +75,8 @@ class GraphStructure(GraphCommon):
             for r in rows:
                 param[r[0]] = r[1]
 
-            minx, miny, maxx, maxy = min(dico_profil['x']), min(dico_profil['z']) - 1, max(dico_profil['x']), param['ZTOPTAB'] + 1
+            minx, miny, maxx, maxy = min(dico_profil['x']), min(dico_profil['z']) - 1, max(dico_profil['x']), param[
+                'ZTOPTAB'] + 1
             x_left = param['FIRSTWD']
 
             sql = "SELECT id_elem, type FROM {0}.struct_elem WHERE id_config = {1} " \
@@ -86,9 +89,9 @@ class GraphStructure(GraphCommon):
                     larg = self.mdb.run_query(sql, fetch=True)[0][0]
                     self.courbes['elem'].append(mpoly([(x_left, miny - 90),
                                                        (x_left, param['ZTOPTAB'] - param['EPAITAB']),
-                                                       (x_left + larg , param['ZTOPTAB'] - param['EPAITAB']),
-                                                       (x_left + larg , miny - 90)],
-                                                      zorder=90-e, facecolor='w', edgecolor='black', alpha=1.))
+                                                       (x_left + larg, param['ZTOPTAB'] - param['EPAITAB']),
+                                                       (x_left + larg, miny - 90)],
+                                                      zorder=90 - e, facecolor='w', edgecolor='black', alpha=1.))
                     self.axes.add_patch(self.courbes['elem'][-1])
                     x_left += larg
                 elif elem[1] == 1:
@@ -109,10 +112,10 @@ class GraphStructure(GraphCommon):
                             'z': [miny - 90, param['ZTOPTAB'], param['ZTOPTAB'], miny - 90]}
             # self.courbes['ouvrage_line'].set_data(dico_ouvrage['x'], dico_ouvrage['z'])
             self.courbes['ouvrage_poly'].set_xy([(dico_ouvrage['x'][r], dico_ouvrage['z'][r])
-                                                for r in range(len(dico_ouvrage['x']))])
+                                                 for r in range(len(dico_ouvrage['x']))])
 
             self.axes.set_xlim((minx, maxx))
-            self.axes.set_ylim((miny , maxy))
+            self.axes.set_ylim((miny, maxy))
             self.canvas.draw()
 
         return

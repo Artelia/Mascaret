@@ -73,6 +73,7 @@ class MascPlugDialog(QMainWindow):
         self.dossierSQL = os.path.join(os.path.join(self.masplugPath, "db"), "sql")
         # style des couches
         self.dossierStyle = os.path.join(os.path.join(self.masplugPath, "db"), "style")
+        self.dossier_struct = os.path.join(os.path.join(self.masplugPath, "Structure"),'Abacus')
         self.repProject = None
 
         self.box = ClassWarningBox(self)
@@ -777,7 +778,7 @@ Version : {}
         ok = self.box.yes_no_q('Do you want add hydraulic structure tables ? \n '
                                'WARNING: if the tables exist then it will be emptied.')
         if ok:
-            self.mdb.add_table_struct()
+            self.mdb.add_table_struct(self.dossier_struct)
 
     def fct_test(self):
         cl=ClassMethod(self)
