@@ -146,7 +146,6 @@ def fill_qcombobox(cb, lst, val_def=None, icn=None):
 
     for elem in lst:
         if icn:
-            print(icn.format(elem[0]))
             cb.addItem(QIcon(icn.format(elem[0])),elem[1], elem[0])
         else:
             cb.addItem(elem[1], elem[0])

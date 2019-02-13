@@ -140,11 +140,12 @@ class ClassStructureEditDialog(QDialog):
             self.reject_page()
 
     def save_struct(self):
-        verif = True
+        meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
+        if meth in (0, 4):
+            verif, msg = self.verif_bradley(self.id_struct)
+
         if verif:
             name = str(self.txt_name.text())
-            meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
-            print(meth)
             active = self.cc_active.isChecked()
             sql = "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4} WHERE id = {1}" \
                 .format(self.mdb.SCHEMA, self.id_struct, name, meth, active)
