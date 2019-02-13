@@ -781,6 +781,7 @@ Version : {}
             self.mdb.add_table_struct(self.dossier_struct)
 
     def fct_test(self):
-        cl=ClassMethod(self)
-        list_final =  cl.get_list_law(6)
-        cl.create_law(self.masplugPath,'toto',6,list_final)
+        # cl=ClassMethod(self)
+        # list_final =  cl.get_list_law(6)
+        # cl.create_law(self.masplugPath,'toto',6,list_final)
+        self.mdb.insert_abacus_table(self.dossier_struct)
