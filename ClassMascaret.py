@@ -63,7 +63,7 @@ class ClassMascaret:
         # kernel list
         self.Klist = ["steady", "unsteady", "transcritical"]
         self.wq = ClassMascWQ(self.mgis, self.dossier_file_masc)
-        self.tbst=ClassTableStructure(self.mgis,self.mdb)
+        self.tbst = ClassTableStructure()
 
     def creer_geo(self):
         """creation of gemoetry file"""
@@ -786,7 +786,18 @@ class ClassMascaret:
         # except Exception as e:
         #     self.mgis.add_info("Error: save Xcas file")
         #     self.mgis.add_info('error: {}'.format(e))
-        return dict_lois
+
+        # add struct before harminization
+        dict_lois_tmp=dict_lois.copy()
+        dico_loi_struct={}
+        for name in dict_lois_tmp.keys():
+            if name in loi_struct['laws']:
+                dico_loi_struct[name] = dict_lois[name]
+                idx = loi_struct['laws'].index(name)
+                dico_loi_struct[name]['id_config'] = loi_struct['id_config'][idx]
+                del dict_lois[name]
+        print(dico_loi_struct)
+        return dict_lois,dico_loi_struct
 
     def add_wq_xcas(self, fichier_cas, noyau, dict_libres):
         """Modification of xcas for Water Quality"""
@@ -920,7 +931,9 @@ class ClassMascaret:
 
         liste = ["type", "branchnum", "abscissa", "z_crest", "z_average_crest",
                 "z_break", "flowratecoeff", "wide_floodgate", "thickness"]
-        loi_struct=[]
+        loi_struct={}
+        loi_struct['laws']=[]
+        loi_struct['id_config']=[]
         if len(seuil["name"]) == 0:
             seuils={'name':[],}
             for ls in liste:
@@ -928,10 +941,10 @@ class ClassMascaret:
 
         for i, name in enumerate(dico_str['name']):
             seuil['name'].append(del_accent(name))
-            loi_struct.append(del_accent(name))
+            loi_struct['laws'].append(del_accent(name))
+            loi_struct['id_config'].append(dico_str['id'][i])
             for  ls in liste:
                 if ls == "type":
-
                     seuil[ls].append(self.typ_struct(dico_str['method'][i]))
                 elif ls == 'abscissa':
                     seuil[ls].append(dico_str['abscissa'][i])
@@ -1335,13 +1348,17 @@ class ClassMascaret:
 
         date_debut = None
 
-        dict_lois = self.creer_xcas(noyau)
+        dict_lois,dico_loi_struct = self.creer_xcas(noyau)
         if self.mgis.DEBUG:
             self.mgis.add_info("Xcas file is created.")
         if par['presenceTraceurs']:
             self.wq.create_filephy()
             self.wq.law_tracer()
             self.wq.init_conc_tracer()
+        if dico_loi_struct.keys():
+            for name in dico_loi_struct.keys():
+                list_final = self.tbst.get_list_law(dico_loi_struct[name]['id_config'])
+                self.tbst.create_law(list_final, name, dico_loi_struct[name]['type'])
 
         if self.mgis.DEBUG:
             self.mgis.add_info("Tracer files are created.")

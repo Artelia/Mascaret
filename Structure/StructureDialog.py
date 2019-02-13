@@ -43,7 +43,7 @@ class ClassStructureDialog(QDialog):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-        self.tbst = ClassTableStructure(self.mgis, self.mdb)
+        self.tbst = ClassTableStructure()
         # self.cur_wq_mod = self.tbwq.get_cur_wq_mod()
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_structure.ui'), self)

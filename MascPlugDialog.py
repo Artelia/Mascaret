@@ -37,7 +37,7 @@ from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
 from .Structure.StructureDialog import ClassStructureDialog
 from .db.ClassMasDatabase import ClassMasDatabase
 from .ui.custom_control import ClassWarningBox
-from .Structure.ClassTmp import ClassTmp
+from .Structure.ClassMethod import ClassMethod
 from .Structure.ClassBradley import ClassBradley
 
 
@@ -780,26 +780,6 @@ Version : {}
             self.mdb.add_table_struct(self.dossierSQL)
 
     def fct_test(self):
-        # dossier=r"C:\Users\mehdi-pierre.daou\.qgis2\python\plugins\Mascaret\Structure\Abacus"
-        # # self.mdb.insert_abacus_table(dossier)
-        # cl = ClassTmp(self)
-        # cl2 =ClassBradley(cl)
-        # cl2.main()
-        mas = ClassMascaret(self)
-        mas
-        mas.add_str_xcas()
-        # cl.show()
-
-        # cl=ClassTmp(self)
-        # cl.show()
-
-        # # cl.copy_profil(28)
-        #
-
-
-
-        # cl.create_poly_elem()
-
-        #inssert abacus
-
-
+        cl=ClassMethod(self)
+        list_final =  cl.get_list_law(6)
+        cl.create_law(self.masplugPath,'toto',6,list_final)

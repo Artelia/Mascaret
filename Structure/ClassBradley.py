@@ -40,7 +40,7 @@ class ClassBradley:
         self.dico_abc = {}
         self.dossier_file_masc = os.path.join(self.mgis.masplugPath, "mascaret")
 
-    def check_coefm(self, coefm):
+    def check_coefm(self, coefm,verb=False):
         cond = True
         msg = 'The following coeficients leave application domain :\n'
         if coefm < 0.45:
@@ -55,21 +55,19 @@ class ClassBradley:
         if coefm < 0.3 or coefm > 1:
             msg += '\t - Ks coeficient\n'
             cond = False
-        if not cond:
+        if not cond and verb:
             print(msg)
         return cond
 
-    def bradley(self, method='Bradley 78'):
-
-
-
-        # if  self.parent.checkprofil(self.parent.id_config):
-        #     profil = self.parent.get_profil(self.parent.id_config)
-        # else:
-        #     msg = "Profile copy isn't found"
-        #     self.mgis.add_info(msg)
-        #     print(msg)
-        #     return
+    def bradley(self, id_config, method='Bradley 78'):
+        """ Bradley method"""
+        if  self.parent.checkprofil(id_config):
+            profil = self.parent.get_profil(id_config)
+        else:
+            msg = "Profile copy isn't found"
+            self.mgis.add_info(msg)
+            print(msg)
+            return
 
         self.dico_name_abac = {'Bradley 78':
                                    {'abac': ['bradley', 'bradley78']},
@@ -78,60 +76,64 @@ class ClassBradley:
                                }
         self.dico_abc = self.parent.get_abac(self.dico_name_abac[method]['abac'])
         # for test ***************************
+        #
+        #
+        # profil = {'x': [0.00,
+        #                 0.01,
+        #                 100.00,
+        #                 100.10,
+        #                 150.00,
+        #                 150.01,
+        #                 ],
+        #           'z': [25,
+        #                 6.5,
+        #                 6.5,
+        #                 14,
+        #                 14,
+        #                 25,
+        #                 ]}
+        # list_poly_pil = [Polygon([[44, 6.5], [44, 18.45], [45.50, 18.45], [45.50, 6.5], [44, 6.5]]),
+        #                  Polygon([[85.5, 6.5], [85.5, 18.45], [87, 18.45], [87, 6.5], [85.5, 6.5]]),
+        #                  Polygon([[127, 14], [127, 18.45], [128.50, 18.45], [128.50, 14], [127, 14]])]
 
-
-        profil = {'x': [0.00,
-                        0.01,
-                        100.00,
-                        100.10,
-                        150.00,
-                        150.01,
-                        ],
-                  'z': [25,
-                        6.5,
-                        6.5,
-                        14,
-                        14,
-                        25,
-                        ]}
-        list_poly_pil = [Polygon([[44, 6.5], [44, 18.45], [45.50, 18.45], [45.50, 6.5], [44, 6.5]]),
-                         Polygon([[85.5, 6.5], [85.5, 18.45], [87, 18.45], [87, 6.5], [85.5, 6.5]]),
-                         Polygon([[127, 14], [127, 18.45], [128.50, 18.45], [128.50, 14], [127, 14]])]
-
-        self.param_g = {}
-        self.param_g = {}
-        self.param_g['PASH'] = 0.25
-        self.param_g['MINH'] =  2
-        self.param_g['PASQ'] = 10
-        self.param_g['MAXQ']=1000
-        self.param_g['MINQ']=10
-
-        self.param_g['BIAIOUV'] = 5
-        self.param_g['NBTRAV'] = 4
-        self.param_g['FIRSTWD'] = 4
-        self.param_g['TOTALOUV'] = 140.0  # ouverture traver
-        self.param_g['TOTALW'] = 144.5
-        self.param_g['FORMCUL'] = 1
-        self.param_g['ORIENTM'] = 30  # 30 45 60
-        self.param_g['PENTTAL'] = 0
-        self.param_g['ZTOPTAB'] = 19.55
-        self.param_g['EPAITAB'] = 1.1
-        self.param_g['BIAICUL']=0
-        list_recup=['BIAIOUV','NBTRAV','TOTALOUV',
+        # self.param_g = {}
+        # self.param_g = {}
+        # self.param_g['PASH'] = 0.25
+        # self.param_g['MINH'] =  2
+        # self.param_g['PASQ'] = 10
+        # self.param_g['MAXQ']=1000
+        # self.param_g['MINQ']=10
+        #
+        # self.param_g['BIAIOUV'] = 5
+        # self.param_g['NBTRAVE'] = 4
+        # self.param_g['FIRSTWD'] = 4
+        # self.param_g['TOTALOUV'] = 140.0  # ouverture traver
+        # self.param_g['TOTALW'] = 144.5
+        # self.param_g['FORMCUL'] = 1
+        # self.param_g['ORIENTM'] = 30  # 30 45 60
+        # self.param_g['PENTTAL'] = 0
+        # self.param_g['ZTOPTAB'] = 19.55
+        # self.param_g['EPAITAB'] = 1.1
+        # self.param_g['BIAICUL']=0
+        # bradley considere une forme de pile
+        # self.param_g['BIAIPIL']=0
+        # self.param_g['LARGPIL'] = 1.5
+        # self.param_g['LONGPIL'] = 11
+        # self.param_g['FORMPIL'] = 5  # ATTENTION 1 seul Type de pil est permit dans la formulation et commence par 1
+        # *****************************************
+        list_recup=['FIRSTWD','BIAIOUV','NBTRAVE','TOTALOUV',
                     'TOTALW','FORMCUL','ORIENTM',
-                    'PENTTAL','ZTOPTAB','EPAITAB','BIAICUL'
+                    'PENTTAL','ZTOPTAB','EPAITAB','BIAICUL',
                     #pile de pont
-                    'LARGPIL','LONGPIL','FORMPIL','BIAIPIL']
-        # self.parent.get_param_g(self, list_recup)
+                   'LARGPIL','LONGPIL','FORMPIL','BIAIPIL',
+                    #numeric
+                    'MINH','PASH','MINQ','MAXQ','PASQ']
+        self.param_g=self.parent.get_param_g(list_recup, id_config)
+        where= 'id_config={} and type=1'.format(id_config)
+        order='id_elem'
+        list_poly_pil=self.parent.select_poly('struct_elem', where,order)['polygon']
         self.param_g['ZPC'] = self.param_g['ZTOPTAB'] - self.param_g['EPAITAB']
 
-        # bradley considere une forme de pile
-        self.param_g['BIAIPIL']=0
-        self.param_g['LARGPIL'] = 1.5
-        self.param_g['LONGPIL'] = 11
-        self.param_g['FORMPIL'] = 5  # ATTENTION 1 seul Type de pil est permit dans la formulation et commence par 1
-
-        # *****************************************
         poly_p = self.parent.poly_profil(profil)
         (minx, miny, maxx, maxy) = poly_p.bounds
 
@@ -139,10 +141,8 @@ class ClassBradley:
         list_q = list(np.arange( self.param_g['MINQ'],  self.param_g['MAXQ'], self.param_g['PASQ'] ))
 
         self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
-        self.param_g['NBPIL'] = self.param_g['NBTRAV'] - 1
-
-        list_final = []
-        # Test
+        self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
+        list_final=[]
 
         for hn in list_hn:
             for q in list_q:
@@ -175,11 +175,11 @@ class ClassBradley:
                     coefm = q1 / qtot
                 else:
                     coefm = 0
-
                 # print('q1,q2,q3',q1,q2,q3)
                 # print('area q1, area q2,area q3', ssoh, self.parent.coup_poly_v(poly_wet,self.param_g['FIRSTWD'],typ='R').area,
                 #       self.parent.coup_poly_v(poly_wet,self.param_g['TOTALW'],typ='L' ).area)
-                self.check_coefm(coefm)
+                if self.check_coefm(coefm,verb=False):
+                    continue
                 # print('coefm',coefm)
                 s1 = ssoh - area_pil_proj
                 # print('S1',s1)
@@ -222,10 +222,10 @@ class ClassBradley:
                 # print('j',j)
 
                 dkp = np.interp(j, self.dico_abc['DKp_abac']['J'],
-                                self.dico_abc['DKp_abac'][str(self.param_g['FORMPIL'])])
+                                self.dico_abc['DKp_abac'][str(int(self.param_g['FORMPIL']))])
                 # print('Dkp', dkp)
                 coefs = np.interp(coefm, self.dico_abc['s_abac']['M'],
-                                  self.dico_abc['s_abac'][str(self.param_g['FORMPIL'])])
+                                  self.dico_abc['s_abac'][str(int(self.param_g['FORMPIL']))])
                 # print('s', coefs)
                 dkp = dkp * coefs
                 # print('sDkp',dkp)
@@ -294,33 +294,12 @@ class ClassBradley:
                 # print("Remout Total", remout)
                 list_final.append([q, hn, hn + remout])
 
+        self.parent.save_law_st(method, id_config, list_final)
+
         return list_final
 
-    def law_brad(self, list_final, nom):
-        """creeation of law"""
-
-        with open(os.path.join(self.dossier_file_masc, nom + '.loi'), 'w') as fich:
-            fich.write('# ' + nom + '\n')
-            fich.write('# Debit Cote_Aval Cote_Amont\n')
-            chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
-            for val in list_final:
-                dico = {'flowrate': val[0], 'z_downstream': val[1], 'z_upstream': val[2]}
-                fich.write(chaine.format(**dico))
-
-    # def write_law(self):
-    #     ouvrage = self.mdb.select("weirs", "active")
 
 
-    def main(self):
-        struct_dico = self.parent.get_struct()
-        for id_config in struct_dico:
-            dico_st = struct_dico[id_config]
-            if dico_st["active"]:
-                if dico_st['idmethod'] == 0 or dico_st['idmethod'] == 4:
-                    listf = self.bradley(method=dico_st['method'])
-                    self.parent.save_law_st(dico_st, id_config, listf)
-                    self.write_law()
-                elif dico_st['idmethod'] == 2:
-                    pass
-                else:
-                    pass
+
+
+

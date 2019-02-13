@@ -301,7 +301,6 @@ class ClassMasDatabase(object):
         tabs = [tab[0] for tab in self.run_query(qry, fetch=True)]
         return tabs
 
-    #
     def refresh_uris(self):
         """
         Setting layers uris list from QgsProject.
@@ -339,7 +338,6 @@ class ClassMasDatabase(object):
         vlayer = QgsVectorLayer(uri.uri(), vl_name, 'postgres')
         return vlayer
 
-    #
     def add_vlayer(self, vlayer):
         """
         Handling adding layer process to QGIS view.
@@ -547,7 +545,6 @@ class ClassMasDatabase(object):
                     self.mgis.add_info('  {0} OK'.format(obj.name))
             except:
                 self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
-
 
     def create__first_model(self):
         """ 
@@ -766,7 +763,7 @@ $BODY$
             lvar = '*'
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        print(sql.format(self.SCHEMA, table, where, order,lvar))
+        # print(sql.format(self.SCHEMA, table, where, order,lvar))
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order,lvar), fetch=True, namvar=True)
         cols = [col[0] for col in namCol]
         dico = {}

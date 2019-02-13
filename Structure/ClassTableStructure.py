@@ -31,9 +31,7 @@ else:  # qt5
     from qgis.PyQt.QtWidgets import *
 
 class ClassTableStructure:
-    def __init__(self, mgis, mdb):
-        self.mgis = mgis
-        self.mdb = mdb
+    def __init__(self):
         self.structure_default()
 
     def structure_default(self):
@@ -88,7 +86,10 @@ class ClassTableStructure:
                                'PASQ': {'name': 'Discrétisation du débit pour le calcul de la loi', 'unit': ''},
                                'MINQ': {'name': 'Débit minimum pour le calcul de la loi', 'unit': ''},
                                'MAXQ': {'name': 'Débit maximum pour le calcul de la loi', 'unit': ''},
-                               'NBTRAVE': {'name': 'Nombre de travées', 'unit': None}}
+                               'NBTRAVE': {'name': 'Nombre de travées', 'unit': None},
+                               "TOTALOUV": {'name': 'Largeur ouverture de travées', 'unit': 'm'},
+                               "TOTALW": {'name': 'Largeur du pont', 'unit': 'm'}
+                               }
 
         self.dico_typ_elem = {0: 'Travee',
                               1: 'Pile',
@@ -101,6 +102,11 @@ class ClassTableStructure:
                               }
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
+        self.dico_law_struct={'Bradley 78':
+                                  {0: 'flowrate', 1:'z_downstream',0:'flowrate',2:'z_upstream'},
+                              'Bradley 72':
+                                  {0: 'flowrate',1: 'z_downstream',  2: 'z_upstream'}
+                              }
 
 def ctrl_set_value(ctrl, val):
     if ctrl.metaObject().className() in ('QSpinBox', 'QDoubleSpinBox'):

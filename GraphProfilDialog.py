@@ -44,7 +44,7 @@ from qgis.gui import *
 
 from .Function import isfloat, interpole
 from .WaterQuality.ClassTableWQ import ClassTableWQ
-from .Structure.ClassTmp import ClassTmp
+from .Structure.ClassMethod import ClassMethod
 from .Structure.StructureCreateDialog import ClassStructureCreateDialog
 
 if int(qVersion()[0]) < 5:  # qt4
@@ -212,7 +212,7 @@ class GraphProfil(GraphCommon):
         self.init_ui_common_p(gid)
         self.gui_graph(self.ui)
         self.init_ui()
-        self.struct=ClassTmp(self.mgis)
+        self.struct=ClassMethod(self.mgis)
 
         # action
         self.ui.actionBtTools_point_selection.triggered.connect(self.selector_toggled)

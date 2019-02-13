@@ -27,7 +27,7 @@ from qgis.utils import *
 
 from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
 from .MetBradleyWidget import MetBradleyWidget
-from .ClassTmp import ClassTmp
+from .ClassMethod import ClassMethod
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -40,8 +40,8 @@ class ClassStructureEditDialog(QDialog):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-        self.tbst = ClassTableStructure(self.mgis, self.mdb)
-        self.cltmp = ClassTmp(self.mgis)
+        self.tbst = ClassTableStructure()
+        self.clmeth = ClassMethod(self.mgis)
         self.wgt_met = QWidget()
 
         self.param_meth_calc = {0: {'name': 'Bradley 72',
@@ -182,7 +182,8 @@ class ClassStructureEditDialog(QDialog):
                               "VALUES ({1}, {2}, '{3}', {4})".format(self.mdb.SCHEMA, self.id_struct,
                                                                      id_elem, var, val)
                         self.mdb.execute(sql)
-            self.cltmp.create_poly_elem(self.id_struct,self.typ_struct)
+            self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
+            self.clmeth.sav_meth(self.id_struct,meth)
             return True
         else:
             return False
