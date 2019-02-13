@@ -524,7 +524,7 @@ class ClassMasDatabase(object):
         tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
         tbwq.default_tab_phy()
 
-    def add_table_struct(self, dossier):
+    def add_table_struct(self,dossier):
         """
         Add table  for water Quality model
         """
@@ -545,6 +545,7 @@ class ClassMasDatabase(object):
                     self.mgis.add_info('  {0} OK'.format(obj.name))
             except:
                 self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
+        self.insert_abacus_table(dossier)
 
     def create__first_model(self):
         """ 
@@ -1056,13 +1057,14 @@ $BODY$
 
     def insert_abacus_table(self,dossier):
         list_fich = os.listdir(dossier)
-        print(list_fich)
+        # print(list_fich)
         for fich in list_fich:
             fichabac = os.path.join(dossier, fich)
             liste_value = []
             with open(fichabac, 'r') as file:
                 for ligne in file:
                     liste_value.append(ligne.replace('\n', '').split(';'))
+            # print(fichabac, liste_value)
             mehtod = liste_value[0][1]
             name_abc = liste_value[1][1]
             list_var = liste_value[2]

@@ -18,12 +18,15 @@ email                :
  ***************************************************************************/
 """
 
-from ..GraphCommon import GraphCommon
-from .ClassMethod import ClassMethod
 from matplotlib.patches import Polygon as mpoly
+
+from .ClassMethod import ClassMethod
+from ..GraphCommon import GraphCommon
+
 
 class GraphStructure(GraphCommon):
     """class Dialog GraphWaterQ"""
+
     def __init__(self, mgis=None, lay=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
@@ -51,7 +54,6 @@ class GraphStructure(GraphCommon):
         self.courbes['ouvrage_poly'] = mpoly([(0., 0.), (0., 0.)], zorder=9, facecolor='#D1D1D1',
                                              edgecolor='black', alpha=1., hatch=None)
         self.axes.add_patch(self.courbes['ouvrage_poly'])
-
 
     def initGraph(self, config):
         if config is not None:

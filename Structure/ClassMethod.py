@@ -17,22 +17,21 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+import collections
 import math as m
 import numpy as np
-import collections
 import os
+import shapely.affinity
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
-
-
-from shapely.geometry import *
-import shapely.affinity
 from shapely import wkb
+from shapely.geometry import *
 
-from .ClassTableStructure import ClassTableStructure
 from .ClassBradley import ClassBradley
+from .ClassTableStructure import ClassTableStructure
+
 
 class ClassMethod:
     def __init__(self, mgis):
@@ -178,7 +177,7 @@ class ClassMethod:
             print('Inconsistent Z for the pier')
         return poly_t
 
-    def create_poly_elem(self,id_config,config_type):
+    def create_poly_elem(self, id_config, config_type):
         # TODO reactualiser variable
         # get profil
         if self.checkprofil(id_config):
@@ -201,8 +200,8 @@ class ClassMethod:
             list_recup = ['EPAITAB', 'ZTOPTAB', 'FIRSTWD']
             param_g = self.get_param_g(list_recup, id_config)
             param_g['ZPC'] = param_g['ZTOPTAB'] - param_g['EPAITAB']
-            recup_trav= ['LARGTRA']
-            recup_pil = ['FORMPIL','LARGPIL','LONGPIL']
+            recup_trav = ['LARGTRA']
+            recup_pil = ['FORMPIL', 'LARGPIL', 'LONGPIL']
         if config_type == 'PA':
             # parametre general
             list_recup = ['ZTOPTAB', 'FIRSTWD']
@@ -215,7 +214,7 @@ class ClassMethod:
         first = True
         width = 0
         width_prec = 0
-        width_trav=0
+        width_trav = 0
 
         if not lid_elem["id_elem"]:
             msg = "Not element in table in create_poly_elem function"
@@ -224,12 +223,12 @@ class ClassMethod:
             # parametre element
 
             if lid_elem["type"][i] == 1:
-                param_elem = self.get_param_elem(id_elem,recup_pil, id_config)
+                param_elem = self.get_param_elem(id_elem, recup_pil, id_config)
                 param_elem['LARG'] = param_elem['LARGPIL']
             else:
                 param_elem = self.get_param_elem(id_elem, recup_trav, id_config)
-                param_elem['LARG']=param_elem['LARGTRA']
-                width_trav+=param_elem['LARG']
+                param_elem['LARG'] = param_elem['LARGTRA']
+                width_trav += param_elem['LARG']
             if first:
                 width = param_g['FIRSTWD']
                 first = False
@@ -271,18 +270,16 @@ class ClassMethod:
                 self.mdb.run_query(sql)
         width += width_prec
 
-        sql="INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALW', {2});\n".format(self.mdb.SCHEMA,
-                                                                                                 id_config,
-                                                                        width)
-        sql+="INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALOUV', {2});".format(self.mdb.SCHEMA,
-                                                                                                 id_config,
-                                                                        width_trav)
+        sql = "INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALW', {2});\n".format(self.mdb.SCHEMA,
+                                                                                                        id_config,
+                                                                                                        width)
+        sql += "INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALOUV', {2});".format(
+            self.mdb.SCHEMA,
+            id_config,
+            width_trav)
         self.mdb.run_query(sql)
 
-
-        # return poly_final
-
-    def select_poly(self, table, where='',order='', var='polygon'):
+    def select_poly(self, table, where='', order='', var='polygon'):
         """ select polygon
         example:
                 where = "id_config = {0} AND id_elem = {1}".format(self.id_config, id_elem)
@@ -290,30 +287,30 @@ class ClassMethod:
                 print(toto)
         """
 
-        poly_l = self.mdb.select(table, where=where,order=order, list_var=[var])
+        poly_l = self.mdb.select(table, where=where, order=order, list_var=[var])
         list_poly = []
         for poly in poly_l[var]:
-            try: #python2
+            try:  # python2
                 list_poly.append(wkb.loads(poly.decode('hex')))
-            except:#python3
+            except:  # python3
                 list_poly.append(wkb.loads(poly))
 
         poly_l[var] = list_poly
         return poly_l
 
-    def copy_profil(self, gid, id_struct,feature):
+    def copy_profil(self, gid, id_struct, feature):
         """Profil copy"""
         colonnes = ['id_config', 'id_order', 'x', 'z']
         tab = {'x': [], 'z': []}
 
         where = "gid = '{0}' ".format(gid)
-        feature = self.mdb.select('profiles', where=where, list_var=['x', 'z','abscissa',''])
+        feature = self.mdb.select('profiles', where=where, list_var=['x', 'z', 'abscissa', ''])
         tab['x'] = [float(var) for var in feature["x"][0].split()]
         tab['z'] = [float(var) for var in feature["z"][0].split()]
 
         if len(tab['x']) == 0 or len(tab['z']) == 0:
-                self.mgis.add_info("Check if the profile is saved.")
-                return
+            self.mgis.add_info("Check if the profile is saved.")
+            return
 
         xz = list(zip(tab['x'], tab['z']))
         values = []
@@ -323,8 +320,8 @@ class ClassMethod:
         self.mdb.insert_res('profil_struct', values, colonnes)
 
         tab = {'abscissa': feature['abscissa'],
-               'branchnum':feature['branchnum'],
-               'id_config':id_struct}
+               'branchnum': feature['branchnum'],
+               'id_config': id_struct}
         self.mdb.update('struct_config', tab, var='id_config')
         # sql = """UPDATE {0}.{1} SET abscissa='{2}', branchnum={3}  WHERE id_config='{4}'"""
         #
@@ -371,7 +368,7 @@ class ClassMethod:
                                [xo[0], miny - 1], [minx - 1, miny - 1],
                                [minx - 1, maxy + 1]])
 
-            delpolyR = Polygon([[xo[1], maxy + 1], [maxx + 1, maxy + 1],
+            delpoly_r = Polygon([[xo[1], maxy + 1], [maxx + 1, maxy + 1],
                                 [maxx + 1, miny - 1], [xo[1], miny - 1],
                                 [xo[1], maxy + 1]])
         else:
@@ -386,7 +383,7 @@ class ClassMethod:
             msg = "Error: delpoly creation in calc_polyw()"
 
         if typ == 'LR' and not polyw.is_empty:
-            polyw = polyw.difference(delpolyR)
+            polyw = polyw.difference(delpoly_r)
             if not polyw.is_valid:
                 polyw = GeometryCollection()
                 msg = "Error: Wet polygon creation"
@@ -403,6 +400,7 @@ class ClassMethod:
         for metho in list_recup:
             where = "nam_method = '{0}' ".format(metho)
             list_nam = self.mdb.select_distinct("nam_abac", table, where)['nam_abac']
+
             name_abac += list_nam
             for nam_abc in list_nam:
                 sql = "SELECT DISTINCT var FROM {}.{} WHERE nam_method='{}' and nam_abac='{}';".format(
@@ -459,12 +457,12 @@ class ClassMethod:
         #
         return struct_dico
 
-    def create_law(self, dossier, nom,type, list_final):
+    def create_law(self, dossier, nom, type, list_final):
         """creeation of law"""
 
         with open(os.path.join(dossier, nom + '.loi'), 'w') as fich:
             fich.write('# ' + nom + '\n')
-            if type == 6 :
+            if type == 6:
                 fich.write('# Debit Cote_Aval Cote_Amont\n')
                 chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
                 for val in list_final:
@@ -494,20 +492,21 @@ class ClassMethod:
 
         self.mdb.run_query(sql, many=True, list_many=list_insert)
 
-    def get_list_law(self,id_config):
-        where="WHERE id_config={}".format(id_config)
-        order="ORDER BY id_var, id_order "
+    def get_list_law(self, id_config):
+        where = "WHERE id_config={}".format(id_config)
+        order = "ORDER BY id_var, id_order "
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        tabval=self.mdb.run_query(sql.format(self.mdb.SCHEMA, "struct_laws",where, order,'id_var , value'),fetch=True)
-        tabval=np.array(tabval)
-        nbval=collections.Counter(tabval[:,0])
-        nb=int(nbval[0])
-        nb_val=int(len(nbval.keys()))
-        liste_f=[]
+        tabval = self.mdb.run_query(sql.format(self.mdb.SCHEMA, "struct_laws", where, order, 'id_var , value'),
+                                    fetch=True)
+        tabval = np.array(tabval)
+        nbval = collections.Counter(tabval[:, 0])
+        nb = int(nbval[0])
+        nb_val = int(len(nbval.keys()))
+        liste_f = []
         for i in range(nb):
-            list_tmp=[]
+            list_tmp = []
             for j in nbval.keys():
-                list_tmp.append(tabval[int(j)*nb+i , 1])
+                list_tmp.append(tabval[int(j) * nb + i, 1])
             liste_f.append(list_tmp)
         return liste_f
 
@@ -525,14 +524,15 @@ class ClassMethod:
     #             else:
     #                 pass
 
-    def sav_meth(self,id_config,idmethod):
+    def sav_meth(self, id_config, idmethod):
         self.brad = ClassBradley(self)
         if idmethod == 0 or idmethod == 4:
-            self.brad.bradley(id_config,self.tbst.dico_meth_calc[idmethod])
+            self.brad.bradley(id_config, self.tbst.dico_meth_calc[idmethod])
         elif idmethod == 2:
             pass
         else:
             pass
+
 
 if __name__ == '__main__':
     pass

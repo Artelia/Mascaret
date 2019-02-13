@@ -40,7 +40,7 @@ class ClassBradley:
         self.dico_abc = {}
         self.dossier_file_masc = os.path.join(self.mgis.masplugPath, "mascaret")
 
-    def check_coefm(self, coefm,verb=False):
+    def check_coefm(self, coefm, verb=False):
         cond = True
         msg = 'The following coeficients leave application domain :\n'
         if coefm < 0.45:
@@ -61,7 +61,7 @@ class ClassBradley:
 
     def bradley(self, id_config, method='Bradley 78'):
         """ Bradley method"""
-        if  self.parent.checkprofil(id_config):
+        if self.parent.checkprofil(id_config):
             profil = self.parent.get_profil(id_config)
         else:
             msg = "Profile copy isn't found"
@@ -69,80 +69,34 @@ class ClassBradley:
             print(msg)
             return
 
-        self.dico_name_abac = {'Bradley 78':
-                                   {'abac': ['bradley', 'bradley78']},
-                               'Bradley 72':
-                                   {'abac': ['bradley', 'bradley72']}
-                               }
+        self.dico_name_abac = {
+            'Bradley 78': {'abac': ['bradley', 'bradley78']},
+            'Bradley 72': {'abac': ['bradley', 'bradley72']}
+        }
         self.dico_abc = self.parent.get_abac(self.dico_name_abac[method]['abac'])
-        # for test ***************************
-        #
-        #
-        # profil = {'x': [0.00,
-        #                 0.01,
-        #                 100.00,
-        #                 100.10,
-        #                 150.00,
-        #                 150.01,
-        #                 ],
-        #           'z': [25,
-        #                 6.5,
-        #                 6.5,
-        #                 14,
-        #                 14,
-        #                 25,
-        #                 ]}
-        # list_poly_pil = [Polygon([[44, 6.5], [44, 18.45], [45.50, 18.45], [45.50, 6.5], [44, 6.5]]),
-        #                  Polygon([[85.5, 6.5], [85.5, 18.45], [87, 18.45], [87, 6.5], [85.5, 6.5]]),
-        #                  Polygon([[127, 14], [127, 18.45], [128.50, 18.45], [128.50, 14], [127, 14]])]
 
-        # self.param_g = {}
-        # self.param_g = {}
-        # self.param_g['PASH'] = 0.25
-        # self.param_g['MINH'] =  2
-        # self.param_g['PASQ'] = 10
-        # self.param_g['MAXQ']=1000
-        # self.param_g['MINQ']=10
-        #
-        # self.param_g['BIAIOUV'] = 5
-        # self.param_g['NBTRAVE'] = 4
-        # self.param_g['FIRSTWD'] = 4
-        # self.param_g['TOTALOUV'] = 140.0  # ouverture traver
-        # self.param_g['TOTALW'] = 144.5
-        # self.param_g['FORMCUL'] = 1
-        # self.param_g['ORIENTM'] = 30  # 30 45 60
-        # self.param_g['PENTTAL'] = 0
-        # self.param_g['ZTOPTAB'] = 19.55
-        # self.param_g['EPAITAB'] = 1.1
-        # self.param_g['BIAICUL']=0
-        # bradley considere une forme de pile
-        # self.param_g['BIAIPIL']=0
-        # self.param_g['LARGPIL'] = 1.5
-        # self.param_g['LONGPIL'] = 11
-        # self.param_g['FORMPIL'] = 5  # ATTENTION 1 seul Type de pil est permit dans la formulation et commence par 1
-        # *****************************************
-        list_recup=['FIRSTWD','BIAIOUV','NBTRAVE','TOTALOUV',
-                    'TOTALW','FORMCUL','ORIENTM',
-                    'PENTTAL','ZTOPTAB','EPAITAB','BIAICUL',
-                    #pile de pont
-                   'LARGPIL','LONGPIL','FORMPIL','BIAIPIL',
-                    #numeric
-                    'MINH','PASH','MINQ','MAXQ','PASQ']
-        self.param_g=self.parent.get_param_g(list_recup, id_config)
-        where= 'id_config={} and type=1'.format(id_config)
-        order='id_elem'
-        list_poly_pil=self.parent.select_poly('struct_elem', where,order)['polygon']
+        list_recup = ['FIRSTWD', 'BIAIOUV', 'NBTRAVE', 'TOTALOUV',
+                      'TOTALW', 'FORMCUL', 'ORIENTM',
+                      'PENTTAL', 'ZTOPTAB', 'EPAITAB', 'BIAICUL',
+                      # pile de pont
+                      'LARGPIL', 'LONGPIL', 'FORMPIL', 'BIAIPIL',
+                      # numeric
+                      'MINH', 'PASH', 'MINQ', 'MAXQ', 'PASQ']
+        self.param_g = self.parent.get_param_g(list_recup, id_config)
+        where = 'id_config={} and type=1'.format(id_config)
+        order = 'id_elem'
+        list_poly_pil = self.parent.select_poly('struct_elem', where, order)['polygon']
         self.param_g['ZPC'] = self.param_g['ZTOPTAB'] - self.param_g['EPAITAB']
 
         poly_p = self.parent.poly_profil(profil)
         (minx, miny, maxx, maxy) = poly_p.bounds
 
         list_hn = list(np.arange(miny + self.param_g['MINH'], self.param_g['ZPC'], self.param_g['PASH']))
-        list_q = list(np.arange( self.param_g['MINQ'],  self.param_g['MAXQ'], self.param_g['PASQ'] ))
+        list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
 
         self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
         self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
-        list_final=[]
+        list_final = []
 
         for hn in list_hn:
             for q in list_q:
@@ -176,9 +130,10 @@ class ClassBradley:
                 else:
                     coefm = 0
                 # print('q1,q2,q3',q1,q2,q3)
-                # print('area q1, area q2,area q3', ssoh, self.parent.coup_poly_v(poly_wet,self.param_g['FIRSTWD'],typ='R').area,
+                # print('area q1, area q2,area q3', ssoh,
+                # self.parent.coup_poly_v(poly_wet,self.param_g['FIRSTWD'],typ='R').area,
                 #       self.parent.coup_poly_v(poly_wet,self.param_g['TOTALW'],typ='L' ).area)
-                if self.check_coefm(coefm,verb=False):
+                if self.check_coefm(coefm, verb=False):
                     continue
                 # print('coefm',coefm)
                 s1 = ssoh - area_pil_proj
@@ -288,7 +243,7 @@ class ClassBradley:
                 poly_wet = self.parent.coup_poly_h(poly_p, hmon)
                 area_amont = poly_wet.area
                 term2 = alpha1 * ((s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (
-                2. * self.grav)
+                    2. * self.grav)
                 # print("term2 Remout", term2)
                 remout = term1 + term2
                 # print("Remout Total", remout)
@@ -297,9 +252,3 @@ class ClassBradley:
         self.parent.save_law_st(method, id_config, list_final)
 
         return list_final
-
-
-
-
-
-

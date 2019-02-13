@@ -24,11 +24,13 @@ from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
+
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
 else:  # qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QIcon
+    from qgis.PyQt.QtGui import QIcon
     from qgis.PyQt.QtWidgets import *
+
 
 class ClassTableStructure:
     def __init__(self):
@@ -102,11 +104,13 @@ class ClassTableStructure:
                               }
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
-        self.dico_law_struct={'Bradley 78':
-                                  {0: 'flowrate', 1:'z_downstream',0:'flowrate',2:'z_upstream'},
-                              'Bradley 72':
-                                  {0: 'flowrate',1: 'z_downstream',  2: 'z_upstream'}
-                              }
+        self.dico_law_struct = {
+            'Bradley 78':
+                {0: 'flowrate', 1: 'z_downstream', 0: 'flowrate', 2: 'z_upstream'},
+            'Bradley 72':
+                {0: 'flowrate', 1: 'z_downstream', 2: 'z_upstream'}
+        }
+
 
 def ctrl_set_value(ctrl, val):
     if ctrl.metaObject().className() in ('QSpinBox', 'QDoubleSpinBox'):
@@ -117,6 +121,7 @@ def ctrl_set_value(ctrl, val):
         ctrl.setCheckState(Qt.CheckState(int(val)))
     elif ctrl.metaObject().className() == 'QButtonGroup':
         ctrl.button(int(val)).click()
+
 
 def ctrl_get_value(ctrl):
     val = None
@@ -134,11 +139,12 @@ def ctrl_get_value(ctrl):
         val = ctrl.checkedId()
     return val
 
+
 def fill_qcombobox(cb, lst, val_def=None, icn=None):
     cb.blockSignals(True)
     cb.clear()
 
-    if val_def != None:
+    if val_def is not None:
         if lst[0][0] == val_def:
             cb.blockSignals(False)
     else:
@@ -146,11 +152,12 @@ def fill_qcombobox(cb, lst, val_def=None, icn=None):
 
     for elem in lst:
         if icn:
-            cb.addItem(QIcon(icn.format(elem[0])),elem[1], elem[0])
+            print(icn.format(elem[0]))
+            cb.addItem(QIcon(icn.format(elem[0])), elem[1], elem[0])
         else:
             cb.addItem(elem[1], elem[0])
 
-    if val_def != None:
+    if val_def is not None:
         if lst[0][0] != val_def:
             cb.blockSignals(False)
             cb.setCurrentIndex(cb.findData(val_def))
