@@ -238,20 +238,16 @@ class ClassMethod:
             if lid_elem["type"][i] != 1:
                 # # pont Cadre
                 if config_type == 'PC':
-                    # polygon
                     poly_elem = self.poly_pont_cadre(param_g, param_elem, width, zmin)
-                    # if not poly_elem.is_empty:
-                    #     self.draw_test(poly_elem,decal_ax=10)
                 # pont arc
                 if config_type == 'PA':
-                    # polygon
                     poly_elem = self.poly_arch(param_g, param_elem, width, zmin, type='ellipse')
             else:
-
                 poly_elem = self.poly_pil(param_g, param_elem, width, zmin)
-                # self.draw_test(poly_elem, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
+
             # print(poly_elem,lid_elem["type"][i])
             # final
+            print(poly_elem.exterior.coords.xy)
             if not poly_elem.is_empty:
                 poly_final = poly_elem.difference(poly_p)
             else:

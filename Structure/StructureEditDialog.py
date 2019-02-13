@@ -182,6 +182,7 @@ class ClassStructureEditDialog(QDialog):
                               "VALUES ({1}, {2}, '{3}', {4})".format(self.mdb.SCHEMA, self.id_struct,
                                                                      id_elem, var, val)
                         self.mdb.execute(sql)
+
             self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
             self.clmeth.sav_meth(self.id_struct,meth)
             return True
