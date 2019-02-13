@@ -33,6 +33,7 @@ class GraphStructure(GraphCommon):
 
     def initUI(self):
         self.axes = self.fig.add_subplot(111)
+        self.fig.subplots_adjust(left=0.05, right=0.98, top=0.95, bottom=0.08)
         self.axes.tick_params(axis='both', labelsize=7.)
         self.axes.grid(False)
         self.courbes = {'profil_poly': None,
