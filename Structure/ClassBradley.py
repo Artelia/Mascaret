@@ -75,52 +75,7 @@ class ClassBradley:
                                    {'abac': ['bradley', 'bradley72']}
                                }
         self.dico_abc = self.parent.get_abac(self.dico_name_abac[method]['abac'])
-        # for test ***************************
-        #
-        #
-        # profil = {'x': [0.00,
-        #                 0.01,
-        #                 100.00,
-        #                 100.10,
-        #                 150.00,
-        #                 150.01,
-        #                 ],
-        #           'z': [25,
-        #                 6.5,
-        #                 6.5,
-        #                 14,
-        #                 14,
-        #                 25,
-        #                 ]}
-        # list_poly_pil = [Polygon([[44, 6.5], [44, 18.45], [45.50, 18.45], [45.50, 6.5], [44, 6.5]]),
-        #                  Polygon([[85.5, 6.5], [85.5, 18.45], [87, 18.45], [87, 6.5], [85.5, 6.5]]),
-        #                  Polygon([[127, 14], [127, 18.45], [128.50, 18.45], [128.50, 14], [127, 14]])]
 
-        # self.param_g = {}
-        # self.param_g = {}
-        # self.param_g['PASH'] = 0.25
-        # self.param_g['MINH'] =  2
-        # self.param_g['PASQ'] = 10
-        # self.param_g['MAXQ']=1000
-        # self.param_g['MINQ']=10
-        #
-        # self.param_g['BIAIOUV'] = 5
-        # self.param_g['NBTRAVE'] = 4
-        # self.param_g['FIRSTWD'] = 4
-        # self.param_g['TOTALOUV'] = 140.0  # ouverture traver
-        # self.param_g['TOTALW'] = 144.5
-        # self.param_g['FORMCUL'] = 1
-        # self.param_g['ORIENTM'] = 30  # 30 45 60
-        # self.param_g['PENTTAL'] = 0
-        # self.param_g['ZTOPTAB'] = 19.55
-        # self.param_g['EPAITAB'] = 1.1
-        # self.param_g['BIAICUL']=0
-        # bradley considere une forme de pile
-        # self.param_g['BIAIPIL']=0
-        # self.param_g['LARGPIL'] = 1.5
-        # self.param_g['LONGPIL'] = 11
-        # self.param_g['FORMPIL'] = 5  # ATTENTION 1 seul Type de pil est permit dans la formulation et commence par 1
-        # *****************************************
         list_recup=['FIRSTWD','BIAIOUV','NBTRAVE','TOTALOUV',
                     'TOTALW','FORMCUL','ORIENTM',
                     'PENTTAL','ZTOPTAB','EPAITAB','BIAICUL',

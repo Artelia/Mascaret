@@ -777,7 +777,7 @@ Version : {}
         ok = self.box.yes_no_q('Do you want add hydraulic structure tables ? \n '
                                'WARNING: if the tables exist then it will be emptied.')
         if ok:
-            self.mdb.add_table_struct(self.dossierSQL)
+            self.mdb.add_table_struct()
 
     def fct_test(self):
         cl=ClassMethod(self)

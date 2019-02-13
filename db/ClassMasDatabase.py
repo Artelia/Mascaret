@@ -524,7 +524,7 @@ class ClassMasDatabase(object):
         tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
         tbwq.default_tab_phy()
 
-    def add_table_struct(self, dossier):
+    def add_table_struct(self):
         """
         Add table  for water Quality model
         """

@@ -791,7 +791,7 @@ class profil_struct(MasObject):
                       ('id_order', 'integer'),
                       ('x', 'float'),
                       ('z', 'float'),
-                      ('CONSTRAINT profil_struct_pkey', 'PRIMARY KEY (order_,id_config,id_prof_ori)')]
+                      ('CONSTRAINT profil_struct_pkey', 'PRIMARY KEY (id_order,id_config)')]
 
 
 # parameters
