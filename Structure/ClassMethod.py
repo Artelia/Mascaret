@@ -21,6 +21,7 @@ import collections
 import math as m
 import numpy as np
 import os
+import sys
 import shapely.affinity
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
@@ -284,11 +285,9 @@ class ClassMethod:
 
         poly_l = self.mdb.select(table, where=where, order=order, list_var=[var])
         list_poly = []
+
         for poly in poly_l[var]:
-            try:  # python2
-                list_poly.append(wkb.loads(poly.decode('hex')))
-            except:  # python3
-                list_poly.append(wkb.loads(poly))
+                list_poly.append(wkb.loads(poly,hex=True))
 
         poly_l[var] = list_poly
         return poly_l

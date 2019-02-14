@@ -232,7 +232,7 @@ def del_accent(ligne):
                u'i': [u'î', u'ï'],
                u'u': [u'ù', u'ü', u'û'],
                u'o': [u'ô', u'ö']}
-    for (char, accented_chars) in accents.iteritems():
+    for (char, accented_chars) in accents.items():
         for accented_char in accented_chars:
             ligne = ligne.replace(accented_char, char)
     return ligne
