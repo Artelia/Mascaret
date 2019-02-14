@@ -58,6 +58,7 @@ class ClassStructureEditDialog(QDialog):
                                 }
 
         self.id_struct = id_struct
+        self.current_meth=0
         self.lst_meth_calc = []
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_structure_edit.ui'), self)
 
@@ -135,20 +136,22 @@ class ClassStructureEditDialog(QDialog):
     def accept_page(self):
         # save Info
         if self.save_struct():
+            self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
+            self.clmeth.sav_meth(self.id_struct,self.current_meth)
             self.accept()
         # else:
         #     self.reject_page()
 
     def save_struct(self):
-        meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
-        if meth in (0, 4):
+        self.current_meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
+        if self.current_meth in (0, 4):
             verif, msg = self.verif_bradley(self.id_struct)
 
         if verif:
             name = str(self.txt_name.text())
             active = self.cc_active.isChecked()
             sql = "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4} WHERE id = {1}" \
-                .format(self.mdb.SCHEMA, self.id_struct, name, meth, active)
+                .format(self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active)
             self.mdb.execute(sql)
 
             sql = "DELETE FROM {0}.struct_param WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
@@ -183,8 +186,6 @@ class ClassStructureEditDialog(QDialog):
                               "VALUES ({1}, {2}, '{3}', {4})".format(self.mdb.SCHEMA, self.id_struct,
                                                                      id_elem, var, val)
                         self.mdb.execute(sql)
-            self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
-            self.clmeth.sav_meth(self.id_struct,meth)
             return True
         else:
             msg_txt = "Erreurs lor de la construction de la structure :"

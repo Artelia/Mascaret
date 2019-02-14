@@ -917,7 +917,6 @@ $BODY$
                                                             table,
                                                             var,
                                                             valeurs)
-        print(sql)
         self.run_query(sql, many=True, list_many=liste_value)
 
     def update_res(self, table, liste_value, colonnes):

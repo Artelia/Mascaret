@@ -158,8 +158,8 @@ class ClassMethod:
         liste_poly = [[x0_p, zmin_p], [x0_p, z0_p]]
         for x, z in list(zip(profil['x'], profil['z'])):
             liste_poly.append([x, z])
-
-        liste_poly.append([profil['x'][-1], zmin_p])
+        liste_poly.append([profil['x'][-1] + 1, profil['z'][-1]])
+        liste_poly.append([profil['x'][-1] + 1, zmin_p])
         liste_poly.append([x0_p, zmin_p])
         poly_p = Polygon(liste_poly)
         return poly_p
@@ -247,7 +247,6 @@ class ClassMethod:
 
             # print(poly_elem,lid_elem["type"][i])
             # final
-            print(poly_elem.exterior.coords.xy)
             if not poly_elem.is_empty:
                 poly_final = poly_elem.difference(poly_p)
             else:
@@ -365,8 +364,8 @@ class ClassMethod:
                                [minx - 1, maxy + 1]])
 
             delpoly_r = Polygon([[xo[1], maxy + 1], [maxx + 1, maxy + 1],
-                                [maxx + 1, miny - 1], [xo[1], miny - 1],
-                                [xo[1], maxy + 1]])
+                                 [maxx + 1, miny - 1], [xo[1], miny - 1],
+                                 [xo[1], maxy + 1]])
         else:
             delpoly = GeometryCollection()
         if not delpoly.is_empty:
@@ -406,12 +405,15 @@ class ClassMethod:
                 dico_abc[nam_abc] = {}
                 for var in list_var:
                     dico_abc[nam_abc][var[0]] = []
+                    dico_abc[nam_abc]['order_{}'.format(var[0])] = []
 
-                sql = "SELECT  var,value FROM {}.{} WHERE nam_method='{}' and nam_abac='{}' ORDER by id_order ;".format(
-                    self.mdb.SCHEMA, table, metho, nam_abc)
+                sql = "SELECT  var,value,id_order FROM {}.{} WHERE nam_method='{}' " \
+                      "and nam_abac='{}' ORDER by id_order ;".format(self.mdb.SCHEMA, table, metho, nam_abc)
                 rows = self.mdb.run_query(sql, fetch=True, namvar=False)
+
                 for row in rows:
                     dico_abc[nam_abc][row[0]].append(row[1])
+                    dico_abc[nam_abc]['order_{}'.format(row[0])].append(row[2])
 
         return dico_abc
 
@@ -455,12 +457,18 @@ class ClassMethod:
 
     def create_law(self, dossier, nom, type, list_final):
         """creeation of law"""
-
         with open(os.path.join(dossier, nom + '.loi'), 'w') as fich:
             fich.write('# ' + nom + '\n')
             if type == 6:
                 fich.write('# Debit Cote_Aval Cote_Amont\n')
                 chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
+                info = np.array(list_final)
+                # info = info[np.lexsort(([0,1]*info[:,[0,0]]).T)]
+                # trie de la colonne 0 à 2
+                info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
+                info = info[info[:, 1].argsort(kind='mergesort')]
+                info = info[info[:, 0].argsort(kind='mergesort')]
+                list_final = list(info)
                 for val in list_final:
                     dico = {'flowrate': val[0], 'z_downstream': val[1], 'z_upstream': val[2]}
                     fich.write(chaine.format(**dico))

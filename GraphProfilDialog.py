@@ -43,9 +43,9 @@ from qgis.core import *
 from qgis.gui import *
 
 from .Function import isfloat, interpole
-from .WaterQuality.ClassTableWQ import ClassTableWQ
 from .Structure.ClassMethod import ClassMethod
 from .Structure.StructureCreateDialog import ClassStructureCreateDialog
+from .WaterQuality.ClassTableWQ import ClassTableWQ
 
 if int(qVersion()[0]) < 5:  # qt4
 
@@ -212,7 +212,7 @@ class GraphProfil(GraphCommon):
         self.init_ui_common_p(gid)
         self.gui_graph(self.ui)
         self.init_ui()
-        self.struct=ClassMethod(self.mgis)
+        self.struct = ClassMethod(self.mgis)
 
         # action
         self.ui.actionBtTools_point_selection.triggered.connect(self.selector_toggled)
@@ -364,13 +364,14 @@ class GraphProfil(GraphCommon):
 
     def create_struct(self):
         """ creation of hydraulic structure"""
-        #TODO
-        #self.struct.GUI()
-        #choix pour la création de la config
+        # TODO
+        # self.struct.GUI()
+        # choix pour la création de la config
         # return
         dlg = ClassStructureCreateDialog(self.mgis, self.gid)
         if dlg.exec_():
-            print("create_struct")
+            pass
+            # print("create_struct")
         # if self.feature["x"] and self.feature["z"]:
         #     self.struct.copy_profil(self.gid)
         #     print("create_struct")
@@ -1288,7 +1289,7 @@ class GraphProfilRes(GraphCommon):
             # dico = self.mdb.select_distinct("date, run, scenario",
             #                                      "runs",
             #                                      condition)
-            dico_run = self.mdb.select_distinct("date, run, scenario,t","runs")
+            dico_run = self.mdb.select_distinct("date, run, scenario,t", "runs")
 
             if not dico_run:
                 self.mgis.add_info("No simulation to show")
@@ -1733,18 +1734,31 @@ class GraphHydro(GraphCommon):
         # dico = self.mdb.select_distinct("date, run, scenario",
         #                                           "runs",
         #                                           condition)
-        dico_run = self.mdb.select_distinct("date, run, scenario",
-                                           "runs")
+        dico_run = self.mdb.select_distinct("date, run, scenario, pk",
+                                            "runs")
 
         if not dico_run:
             self.mgis.add_info("No simulation to show")
             return False
-        self.listeRuns = {}
-        for run, scen in zip(dico_run["run"], dico_run["scenario"]):
-            if run not in self.listeRuns.keys():
-                self.listeRuns[run] = []
-            self.listeRuns[run].append(scen)
 
+        self.listeRuns = {}
+        for run, scen, pk in zip(dico_run["run"], dico_run["scenario"], dico_run['pk']):
+            if type == 't':
+                try:
+                    pk_tmp = [round(elem, 2) for elem in pk]
+                    idx = pk_tmp.index(self.position)
+                    if run not in self.listeRuns.keys():
+                        self.listeRuns[run] = []
+                    self.listeRuns[run].append(scen)
+                except ValueError:
+                    pass
+            else:
+                if run not in self.listeRuns.keys():
+                    self.listeRuns[run] = []
+                self.listeRuns[run].append(scen)
+
+        if self.listeRuns == {}:
+            self.mgis.add_info('No results for this profile. \n')
         self.run = sorted(self.listeRuns.keys())[-1]
 
         self.scenario = self.listeRuns[self.run][-1]
@@ -1861,7 +1875,6 @@ class GraphHydro(GraphCommon):
         self.etiquetteLaisses = []
 
         self.maj_liste()
-
         self.maj_tab()
         self.maj_laisses()
         self.maj_legende()
@@ -2136,6 +2149,7 @@ class GraphHydro(GraphCommon):
                 self.comboTimePK.addItem(str(x))
             else:
                 self.comboTimePK.addItem('{0:%d/%m/%Y %H:%M}'.format(x))
+
         try:
             index = self.liste[self.inv]['abs'].index(self.position)
         except ValueError as e:

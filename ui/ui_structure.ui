@@ -57,40 +57,46 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QTreeWidget" name="tree_struct">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="alternatingRowColors">
-          <bool>true</bool>
-         </property>
-         <column>
-          <property name="text">
-           <string>Configuration</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Profile</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Method</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Comments</string>
-          </property>
-         </column>
-        </widget>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="lay_graph"/>
+        <layout class="QVBoxLayout" name="lay_graph">
+         <item>
+          <widget class="QTreeWidget" name="tree_struct">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+           <column>
+            <property name="text">
+             <string>Configuration</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Profile</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Method</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Active</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Comments</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>

@@ -30,17 +30,13 @@ from .ClassMNT import ClassMNT
 from .ClassMascaret import ClassMascaret
 from .ClassParameterDialog import ClassParameterDialog
 from .GraphProfilDialog import IdentifyFeatureTool
+# # structures
+from .Structure.StructureDialog import ClassStructureDialog
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
-# # structures
-from .Structure.StructureDialog import ClassStructureDialog
 from .db.ClassMasDatabase import ClassMasDatabase
 from .ui.custom_control import ClassWarningBox
-from .Structure.ClassMethod import ClassMethod
-from .Structure.ClassBradley import ClassBradley
-
-
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -73,7 +69,7 @@ class MascPlugDialog(QMainWindow):
         self.dossierSQL = os.path.join(os.path.join(self.masplugPath, "db"), "sql")
         # style des couches
         self.dossierStyle = os.path.join(os.path.join(self.masplugPath, "db"), "style")
-        self.dossier_struct = os.path.join(os.path.join(self.masplugPath, "Structure"),'Abacus')
+        self.dossier_struct = os.path.join(os.path.join(self.masplugPath, "Structure"), 'Abacus')
         self.repProject = None
 
         self.box = ClassWarningBox(self)
@@ -175,9 +171,9 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
         self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
-        #TODO a supp
+        # TODO a supp
         # self.ui.actionStructures.triggered.connect()
-        self.ui.actionTest_struct.triggered.connect(self.fct_test)
+        # self.ui.actionTest_struct.triggered.connect(self.fct_test)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -744,12 +740,12 @@ Version : {}
         self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
         cl = ClassMascWQ(self, self.dossierFileMasc)
         try:
-        # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:
-        #     #simul date
-        #     # dat1=datetime.datetime(2019, 1, 13, 13, 35, 12)
-        #     # dat2=datetime.datetime(2019, 1, 10, 13, 35, 12)
-        #     # cl.create_filemet(dossier=folder_name_path,typ_time='date',datefirst=dat2, dateend=dat1)
-        #     cl.create_filemet(dossier=folder_name_path)
+            # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:
+            #     #simul date
+            #     # dat1=datetime.datetime(2019, 1, 13, 13, 35, 12)
+            #     # dat2=datetime.datetime(2019, 1, 10, 13, 35, 12)
+            #     # cl.create_filemet(dossier=folder_name_path,typ_time='date',datefirst=dat2, dateend=dat1)
+            #     cl.create_filemet(dossier=folder_name_path)
             cl.init_conc_tracer(dossier=folder_name_path)
             cl.create_filephy(dossier=folder_name_path)
             cl.law_tracer(dossier=folder_name_path)
@@ -765,7 +761,7 @@ Version : {}
         if ok:
             self.mdb.add_table_wq(self.dossierSQL)
 
-    #  *******************************
+    # *******************************
     #    Structures
     # *******************************
     def fct_structures(self):

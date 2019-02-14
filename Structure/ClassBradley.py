@@ -55,6 +55,9 @@ class ClassBradley:
         if coefm < 0.3 or coefm > 1:
             msg += '\t - Ks coeficient\n'
             cond = False
+        if m.isnan(coefm):
+            msg = '\t m coeficient is NAN\n'
+            cond = False
         if not cond and verb:
             print(msg)
         return cond
@@ -90,33 +93,58 @@ class ClassBradley:
 
         poly_p = self.parent.poly_profil(profil)
         (minx, miny, maxx, maxy) = poly_p.bounds
+        list_hn = [miny]
+        list_hn += list(np.arange(miny + self.param_g['MINH'], self.param_g['ZPC'], self.param_g['PASH']))
+        list_hn.append(self.param_g['ZPC'])
 
-        list_hn = list(np.arange(miny + self.param_g['MINH'], self.param_g['ZPC'], self.param_g['PASH']))
         list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
+        list_q.append(self.param_g['MAXQ'])
 
         self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
         self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
         list_final = []
 
+        type_kb = self.def_type_kb(method)
+
+        if self.param_g['BIAICUL'] == '0':
+            abac_dks = "dKs_casA_abac"
+        else:
+            abac_dks = "dKs_casB_abac"
+
+        list_ph = []
+        for key in self.dico_abc[abac_dks].keys():
+            if key != 'M' and key != 'phi>45' and 'order_' not in key:
+                list_ph.append((key, float(key.split('=')[1])))
+        list_ph = sorted(list_ph)
+
+        list_e = []
+        for key in self.dico_abc['dKe_abac'].keys():
+            if key != 'M' and 'order_' not in key:
+                list_e.append((key, float(key.split('=')[1])))
+        list_e = sorted(list_e)
+
+        coef_cor_biais = (self.param_g['LONGPIL'] * m.sin(self.param_g['BIAIOUV']) +
+                          self.param_g['LARGPIL'] * m.cos(self.param_g['BIAIOUV'])) / self.param_g['LARGPIL']
+
         for hn in list_hn:
             for q in list_q:
+                # print('hn,q',hn,q)
                 area_pil = 0
                 area_pil_proj = 0
                 poly_wet = self.parent.coup_poly_h(poly_p, hn)
+                if poly_wet.is_empty:
+                    continue
+
                 area_wet = poly_wet.area
                 # print('area_wet',area_wet)
                 umoy = q / area_wet
                 for poly_pil in list_poly_pil:
                     poly_pil = self.parent.coup_poly_h(poly_pil, hn)
                     if self.param_g['BIAIOUV'] != 0:
-                        area_pil_proj += poly_pil.area * \
-                                         (self.param_g['LONG'] * m.sin(self.param_g['BIAIOUV']) +
-                                          self.param_g['LARG'] * m.cos(self.param_g['BIAIOUV'])) \
-                                         / self.param_g['LARG']
+                        area_pil_proj += poly_pil.area * coef_cor_biais
                     area_pil += poly_pil.area
                 if area_pil_proj == 0:
                     area_pil_proj = area_pil
-
                 ssoh = self.parent.coup_poly_v(poly_wet, [self.param_g['FIRSTWD'], self.param_g['TOTALW']],
                                                typ='LR').area
                 q1 = ssoh * umoy
@@ -125,109 +153,75 @@ class ClassBradley:
                 qtot = q1 + q2 + q3
                 alpha1 = 1
                 alpha2 = 1
-                if qtot == 0:
+                if qtot != 0:
                     coefm = q1 / qtot
                 else:
+                    # hyp si debit null cote aval =cote amon
+                    list_final.append([q, hn, hn])
                     coefm = 0
                 # print('q1,q2,q3',q1,q2,q3)
                 # print('area q1, area q2,area q3', ssoh,
                 # self.parent.coup_poly_v(poly_wet,self.param_g['FIRSTWD'],typ='R').area,
                 #       self.parent.coup_poly_v(poly_wet,self.param_g['TOTALW'],typ='L' ).area)
-                if self.check_coefm(coefm, verb=False):
+                # print('coefm', coefm)
+                if not self.check_coefm(coefm):
                     continue
-                # print('coefm',coefm)
+
                 s1 = ssoh - area_pil_proj
                 # print('S1',s1)
                 va = q / s1
                 # print('Va', va)
                 # *************** kb
-                if method == 'Bradley 78':
-                    if self.param_g['TOTALOUV'] > 60 and self.param_g['FORMCUL'] == 1:
-                        list_inter = self.dico_abc["kb_abac"]['Others']
-                    else:
-                        list_inter = self.dico_abc["kb_abac"]['type1<60m']
-                    kb = np.interp(coefm, self.dico_abc["kb_abac"]['M'], list_inter)
-                    # print('kb',kb)
-                elif method == 'Bradley 72':
-                    if self.param_g['FORMCUL'] == 1:
-                        list_inter = self.dico_abc["kb_abac"]['type1']
-                    elif self.param_g['FORMCUL'] == 2:
-                        if self.param_g['ORIENTM'] == 30:
-                            list_inter = self.dico_abc["kb_abac"]['type2_30deg']
-                        else:
-                            list_inter = self.dico_abc["kb_abac"]['type2_45to60deg']
-                    elif self.param_g['FORMCUL'] == 3:
-                        if self.param_g['PENTTAL'] == 0:
-                            list_inter = self.dico_abc["kb_abac"]['type3_1:1']
-                        elif self.param_g['PENTTAL'] == 1:
-                            list_inter = self.dico_abc["kb_abac"]['type3_1.5:1']
-                        else:
-                            list_inter = self.dico_abc["kb_abac"]['type3_2:1']
-                    else:
-                        # defaut 1
-                        list_inter = self.dico_abc["kb_abac"]['type1']
-
-                    kb = np.interp(coefm, self.dico_abc["kb_abac"]['M'], list_inter)
-                else:
-                    kb = 0
+                list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, "kb_abac", 'M', type_kb)
+                kb = np.interp(coefm, list_inter_x, list_inter_y)
 
                 # *************** Dkp
                 # print(area_pil_proj,ssoh,area_pil)
                 j = area_pil_proj / ssoh
                 # print('j',j)
+                list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, 'DKp_abac', 'J',
+                                                                  str(int(self.param_g['FORMPIL'])))
+                dkp = np.interp(coefm, list_inter_x, list_inter_y)
 
-                dkp = np.interp(j, self.dico_abc['DKp_abac']['J'],
-                                self.dico_abc['DKp_abac'][str(int(self.param_g['FORMPIL']))])
                 # print('Dkp', dkp)
-                coefs = np.interp(coefm, self.dico_abc['s_abac']['M'],
-                                  self.dico_abc['s_abac'][str(int(self.param_g['FORMPIL']))])
+                list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, 's_abac', 'M',
+                                                                  str(int(self.param_g['FORMPIL'])))
+                coefs = np.interp(coefm, list_inter_x, list_inter_y)
                 # print('s', coefs)
                 dkp = dkp * coefs
                 # print('sDkp',dkp)
-
                 if q3 < q2:
                     e_calc = 1 - q3 / q2
                 elif q2 < q3:
                     e_calc = 1 - q2 / q3
                 else:
                     e_calc = 0
-                list_e = []
-                for key in self.dico_abc['dKe_abac'].keys():
-                    if key != 'M':
-                        list_e.append((key, float(key.split('=')[1])))
-                list_e = sorted(list_e)
 
                 list_m_interp = []
                 list_e_interp = []
                 for ee in list_e:
-                    list_m_interp.append(
-                        np.interp(coefm, self.dico_abc['dKe_abac']['M'], self.dico_abc['dKe_abac'][ee[0]]))
+                    list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, 'dKe_abac', 'M', ee[0])
+                    inter_tmp = np.interp(coefm, list_inter_x, list_inter_y)
+                    list_m_interp.append(inter_tmp)
                     list_e_interp.append(ee[1])
 
                 dke = np.interp(e_calc, list_e_interp, list_m_interp)
                 # print('dke', dke)
 
-                if self.param_g['BIAICUL'] == '0':
-                    abac_dks = "dKs_casA_abac"
-                else:
-                    abac_dks = "dKs_casB_abac"
                 if self.param_g['BIAIPIL'] == 0:
                     dks = 0
                 else:
                     if self.param_g['BIAIOUV'] > 45:
-                        dksx = np.interp(coefm, self.dico_abc[abac_dks]['M'], self.dico_abc[abac_dks]['phi>45'])
+                        list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, abac_dks, 'M', 'phi>45')
+                        dksx = np.interp(coefm, list_inter_x, list_inter_y)
                     else:
-                        list_ph = []
-                        for key in self.dico_abc[abac_dks].keys():
-                            if key != 'M' and key != 'phi>45':
-                                list_ph.append((key, float(key.split('=')[1])))
-                        list_ph = sorted(list_ph)
 
                         list_m_interp = []
                         list_ph_interp = []
                         for ph in list_ph:
-                            list_m_interp.append(
-                                np.interp(coefm, self.dico_abc[abac_dks]['M'], self.dico_abc[abac_dks][ph[0]]))
+                            list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, abac_dks, 'M', ph[0])
+                            inter_tmp = np.interp(coefm, list_inter_x, list_inter_y)
+                            list_m_interp.append(inter_tmp)
                             list_ph_interp.append(ph[1])
                         dksx = np.interp(self.param_g['BIAIOUV'], list_ph_interp, list_m_interp)
 
@@ -249,6 +243,64 @@ class ClassBradley:
                 # print("Remout Total", remout)
                 list_final.append([q, hn, hn + remout])
 
-        self.parent.save_law_st(method, id_config, list_final)
+        if list_final == []:
+            sql = "SELECT name FROM {0}.{1} WHERE id={2}".format(self.mdb.SCHEMA, 'struct_config', id_config)
 
-        return list_final
+            name = self.mdb.run_query(sql, fetch=True)
+            name = name[0][0]
+
+            sql = "UPDATE {0}.{1} SET {2}  WHERE id={3};".format(self.mdb.SCHEMA, 'struct_config', 'active=False',
+                                                                 id_config)
+            self.mdb.run_query(sql)
+
+            self.mgis.add_info(
+                "No values for the law because the coefficients leave application domain of Bradley method.\n"
+                "The <<{}>> hydraulic structur is deactivated".format(name))
+        else:
+            self.parent.save_law_st(method, id_config, list_final)
+
+            # return list_final
+
+    def def_type_kb(self, method):
+        if method == 'Bradley 78':
+            if self.param_g['TOTALOUV'] > 60 and self.param_g['FORMCUL'] == 1:
+                type_kb = 'Others'
+            else:
+                type_kb = 'type1<60m'
+                list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, "kb_abac", 'M', type_kb)
+                self.dico_abc["kb_abac"]['M'] = list_inter_x
+                self.dico_abc["kb_abac"][type_kb] = list_inter_y
+
+        elif method == 'Bradley 72':
+            if self.param_g['FORMCUL'] == 1:
+                type_kb = 'type1'
+            elif self.param_g['FORMCUL'] == 2:
+                if self.param_g['ORIENTM'] == 30:
+                    type_kb = 'type2_30deg'
+                else:
+                    type_kb = 'type2_45to60deg'
+            elif self.param_g['FORMCUL'] == 3:
+                if self.param_g['PENTTAL'] == 0:
+                    type_kb = 'type3_1:1'
+                elif self.param_g['PENTTAL'] == 1:
+                    type_kb = 'type3_1.5:1'
+                else:
+                    type_kb = 'type3_2:1'
+            else:
+                # defaut 1
+                type_kb = 'type1'
+                # list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, "kb_abac", 'M', type_kb)
+        return type_kb
+
+    def check_listinter(self, dico_abc, name_abc, varx, vary):
+        if len(dico_abc[name_abc][varx]) == len(dico_abc[name_abc][vary]):
+            return dico_abc[name_abc][varx], dico_abc[name_abc][vary]
+        else:
+            list_inter_x = []
+            list_inter_y = []
+            for idx, orderx in enumerate(dico_abc[name_abc]['order_{}'.format(varx)]):
+                for jdx, ordery in enumerate(dico_abc[name_abc]['order_{}'.format(vary)]):
+                    if orderx == ordery:
+                        list_inter_x.append(dico_abc[name_abc][varx][idx])
+                        list_inter_y.append(dico_abc[name_abc][vary][jdx])
+            return list_inter_x, list_inter_y

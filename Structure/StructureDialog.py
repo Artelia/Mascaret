@@ -73,7 +73,7 @@ class ClassStructureDialog(QDialog):
             typ_itm.setData(0, 32, id_type)
             typ_itm.setText(0, elem['name'])
             self.tree_struct.addTopLevelItem(typ_itm)
-            sql = "SELECT id, name, id_prof_ori, method, comment FROM {0}.struct_config " \
+            sql = "SELECT id, name, id_prof_ori, method, comment,active FROM {0}.struct_config " \
                   "WHERE type = '{1}' ORDER BY name".format(self.mdb.SCHEMA, id_type)
             rows = self.mdb.run_query(sql, fetch=True)
             for row in rows:
@@ -86,9 +86,14 @@ class ClassStructureDialog(QDialog):
                     ouv_itm.setText(1, dico_profil[row[2]])
                 else:
                     ouv_itm.setText(1, "#deleted")
+                if not row[5]:
+                    ouv_itm.setText(3, 'Deactivated')
+                else:
+                    ouv_itm.setText(3, '')
                 if row[3] != None:
                     ouv_itm.setText(2, self.tbst.dico_meth_calc[row[3]])
-                ouv_itm.setText(3, str(row[4]))
+                ouv_itm.setText(4, str(row[4]))
+
                 typ_itm.addChild(ouv_itm)
             typ_itm.setExpanded(True)
 
@@ -107,7 +112,7 @@ class ClassStructureDialog(QDialog):
             itm = self.tree_struct.selectedItems()[0]
             struct = itm.data(0, 32)
             self.graph_struct.initGraph(struct)
-            print ("drawing struct : ", struct)
+            # print ("drawing struct : ", struct)
         else:
             self.graph_struct.initGraph(None)
 

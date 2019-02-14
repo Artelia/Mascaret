@@ -34,9 +34,9 @@ from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
 from .Function import str2bool, del_accent
+from .Structure.ClassMethod import ClassMethod
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
-from .Structure.ClassTableStructure import ClassTableStructure
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -63,7 +63,7 @@ class ClassMascaret:
         # kernel list
         self.Klist = ["steady", "unsteady", "transcritical"]
         self.wq = ClassMascWQ(self.mgis, self.dossier_file_masc)
-        self.tbst = ClassTableStructure()
+        self.clmeth = ClassMethod(self.mgis)
 
     def creer_geo(self):
         """creation of gemoetry file"""
@@ -344,7 +344,7 @@ class ClassMascaret:
         planim = self.planim_select()
         maillage = self.maillage_select()
         dico_str = self.mdb.select('struct_config', "active", "abscissa")
-        seuils,loi_struct = self.modif_seuil(seuils, dico_str)
+        seuils, loi_struct = self.modif_seuil(seuils, dico_str)
 
         # Extrémités
         numero = branches["branch"]
@@ -460,11 +460,11 @@ class ClassMascaret:
                 liste_stock["limDroitLitMaj"].append(lim_droit_lit_maj)
 
         for i, type in enumerate(seuils["type"]):
-            print(type,seuils["name"][i])
+            # print(type, seuils["name"][i])
             if type not in (3, 4):
                 dict_lois[seuils["name"][i]] = {'type': abaque_toloi[type],
                                                 'formule': None,
-                                                'valeurperm':None}
+                                                'valeurperm': None}
 
         for i, nom in enumerate(apports["name"]):
             if nom not in dict_lois.keys():
@@ -586,7 +586,7 @@ class ClassMascaret:
                     SubElement(struct, l).text = str(seuils[liste_en[kk].lower()][i])
 
             if seuils["type"][i] not in (3, 4):
-                SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()).index(nom)+1)
+                SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()).index(nom) + 1)
             else:
                 SubElement(struct, "numLoi").text = '-0'
 
@@ -788,16 +788,16 @@ class ClassMascaret:
         #     self.mgis.add_info('error: {}'.format(e))
 
         # add struct before harminization
-        dict_lois_tmp=dict_lois.copy()
-        dico_loi_struct={}
+        dict_lois_tmp = dict_lois.copy()
+        dico_loi_struct = {}
         for name in dict_lois_tmp.keys():
             if name in loi_struct['laws']:
                 dico_loi_struct[name] = dict_lois[name]
                 idx = loi_struct['laws'].index(name)
                 dico_loi_struct[name]['id_config'] = loi_struct['id_config'][idx]
                 del dict_lois[name]
-        print(dico_loi_struct)
-        return dict_lois,dico_loi_struct
+        # print(dico_loi_struct)
+        return dict_lois, dico_loi_struct
 
     def add_wq_xcas(self, fichier_cas, noyau, dict_libres):
         """Modification of xcas for Water Quality"""
@@ -927,23 +927,23 @@ class ClassMascaret:
 
         return True
 
-    def modif_seuil(self,seuil, dico_str):
+    def modif_seuil(self, seuil, dico_str):
 
         liste = ["type", "branchnum", "abscissa", "z_crest", "z_average_crest",
-                "z_break", "flowratecoeff", "wide_floodgate", "thickness"]
-        loi_struct={}
-        loi_struct['laws']=[]
-        loi_struct['id_config']=[]
+                 "z_break", "flowratecoeff", "wide_floodgate", "thickness"]
+        loi_struct = {}
+        loi_struct['laws'] = []
+        loi_struct['id_config'] = []
         if len(seuil["name"]) == 0:
-            seuils={'name':[],}
+            seuils = {'name': [], }
             for ls in liste:
-                seuils[ls]=[]
+                seuils[ls] = []
 
         for i, name in enumerate(dico_str['name']):
             seuil['name'].append(del_accent(name))
             loi_struct['laws'].append(del_accent(name))
             loi_struct['id_config'].append(dico_str['id'][i])
-            for  ls in liste:
+            for ls in liste:
                 if ls == "type":
                     seuil[ls].append(self.typ_struct(dico_str['method'][i]))
                 elif ls == 'abscissa':
@@ -954,126 +954,18 @@ class ClassMascaret:
                     seuil[ls].append(99999)
                 elif ls == 'z_crest':
                     where = "id_config ='{}'".format(dico_str['id'][i])
-                    zmin=self.mdb.select_min("z", "profil_struct", where)
+                    zmin = self.mdb.select_min("z", "profil_struct", where)
                     seuil[ls].append(zmin)
                 else:
                     seuil[ls].append(None)
 
-        return seuil,loi_struct
+        return seuil, loi_struct
 
-    def typ_struct(self,meth):
+    def typ_struct(self, meth):
         if meth == 0 or meth == 4:
-           return 1
+            return 1
         else:
             return None
-
-    # def add_str_xcas(self,  cas):
-    #     """Modification of xcas for Hydraulic dico_str"""
-    #     dico_str = self.mdb.select('struct_config', "active", "abscissa")
-    #
-    #     singularite =  cas.find("parametresSingularite")
-    #     nbseuil = singularite.find("nbSeuils")
-    #     nbs = int(nbseuil.text)
-    #     nbseuil.text = str(nbs+len(dico_str['method'])+1)
-    #
-    #     if len(dico_str['method']) > 0:
-    #         e_tseuils = singularite.find("seuils")
-    #     else:
-    #         return dict_lois
-    #     liste = ["type", "numBranche", "abscisse", "coteCrete", "coteCreteMoy",
-    #              "coteRupture", "coeffDebit", "largVanne", "epaisseur"]
-    #     for i, meth in enumerate(dico_str['method']) :
-    #         where = "id_config ='{}'".format(dico_str['id'][i])
-    #         zmin=self.mdb.select_min("z", "profil_struct", where)
-    #         # bradeley method
-    #         if meth == 0 or meth == 4:
-    #
-    #             type_sing = 1
-    #         else:
-    #             continue
-    #
-    #         struct = SubElement(e_tseuils, "structureParametresSeuil")
-    #         SubElement(struct, "nom").text = dico_str['name'][i]
-    #         for kk, ls in enumerate(liste):
-    #             if  ls=="type":
-    #                 SubElement(struct, ls).text = str(type_sing)
-    #             elif ls == 'abscisse':
-    #                 SubElement(struct, ls).text = str(dico_str['abscissa'][i])
-    #             elif ls == "numBranche":
-    #                 SubElement(struct, ls).text = str(dico_str['branchnum'][i])
-    #             elif ls == 'coteRupture':
-    #                 SubElement(struct, ls).text = str(99999)
-    #             elif ls == 'coteCrete':
-    #                 SubElement(struct, ls).text = str(zmin)
-    #             else:
-    #                 SubElement(struct, ls).text = '-0'
-    #
-    #         if type_sing not in (3, 4):
-    #             SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()).index(nom) + 1)
-    #         else:
-    #             SubElement(struct, "numLoi").text = '-0'
-    #
-    #         if seuils["type"][i] != 3:
-    #             SubElement(struct, "nbPtLoiSeuil").text = '-0'
-
-
-        # # print(self.tbst.dico_meth_calc[meth])
-        # # self.tbst.dico_meth_calc[meth]
-        # lois = SubElement(hydrauliques, "lois")
-        # hydrauliques = SubElement(cas, "parametresLoisHydrauliques")
-        # for nom in sorted(dict_lois.keys()):
-        #     struct = SubElement(lois, "structureParametresLoi")
-        #     SubElement(struct, "nom").text = nom
-        #     SubElement(struct, "type").text = str(dict_lois[nom]['type'])
-        #     donnees = SubElement(struct, "donnees")
-        #     SubElement(donnees, "modeEntree").text = '1'
-        #     SubElement(donnees, "fichier").text = '{}.loi'.format(nom)
-        #     SubElement(donnees, "uniteTps").text = '-0'
-        #     SubElement(donnees, "nbPoints").text = '-0'
-        #     SubElement(donnees, "nbDebitsDifferents").text = '-0'
-
-
-
-
-        # return dict_lois
-        #SubElement(singularite, "nbSeuils").text = str(len(seuils["name"]))
-        # if len(seuils["name"]) > 0:
-        #     e_tseuils = SubElement(singularite, "seuils")
-        #
-        # liste = ["type", "numBranche", "abscisse", "coteCrete", "coteCreteMoy",
-        #          "coteRupture", "coeffDebit", "largVanne", "epaisseur"]
-        # liste_en = ["type", "branchnum", "abscissa", "z_crest", "z_average_crest",
-        #             "z_break", "flowratecoeff", "wide_floodgate", "thickness"]
-        #
-        # for i, nom in enumerate(seuils["name"]):
-        #     struct = SubElement(e_tseuils, "structureParametresSeuil")
-        #     SubElement(struct, "nom").text = nom
-        #     for kk, l in enumerate(liste):
-        #         if seuils[liste_en[kk].lower()][i] is None:
-        #             SubElement(struct, l).text = '-0'
-        #         else:
-        #             SubElement(struct, l).text = str(seuils[liste_en[kk].lower()][i])
-        #
-        #     if seuils["type"][i] not in (3, 4):
-        #         SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()))
-        #     else:
-        #         SubElement(struct, "numLoi").text = '-0'
-        #     if seuils["type"][i] != 3:
-        #         SubElement(struct, "nbPtLoiSeuil").text = '-0'
-        #     else:
-        #         try:
-        #             i = prof_seuil["name"].index(nom)
-        #             long = len(prof_seuil['x'][i].split())
-        #             SubElement(struct, "nbPtLoiSeuil").text = str(long)
-        #             SubElement(struct, "abscTravCrete").text = prof_seuil['x'][i]
-        #             SubElement(struct, "cotesCrete").text = prof_seuil['z'][i]
-        #
-        #         except:
-        #             msg = 'Profil de crete introuvable pour {}'
-        #             QMessageBox.warning(None, 'Message', msg.format(nom))
-        #             return
-        #
-        #     SubElement(struct, "gradient").text = "-0"
 
     def modif_xcas(self, parametres, xcasfile, fich_sortie=None):
         fich_entree = os.path.join(self.dossier_file_masc, xcasfile)
@@ -1348,7 +1240,7 @@ class ClassMascaret:
 
         date_debut = None
 
-        dict_lois,dico_loi_struct = self.creer_xcas(noyau)
+        dict_lois, dico_loi_struct = self.creer_xcas(noyau)
         if self.mgis.DEBUG:
             self.mgis.add_info("Xcas file is created.")
         if par['presenceTraceurs']:
@@ -1357,8 +1249,11 @@ class ClassMascaret:
             self.wq.init_conc_tracer()
         if dico_loi_struct.keys():
             for name in dico_loi_struct.keys():
-                list_final = self.tbst.get_list_law(dico_loi_struct[name]['id_config'])
-                self.tbst.create_law(list_final, name, dico_loi_struct[name]['type'])
+                list_final = self.clmeth.get_list_law(dico_loi_struct[name]['id_config'])
+
+                self.clmeth.create_law(self.dossier_file_masc, name, dico_loi_struct[name]['type'], list_final)
+                self.clmeth.create_law(self.dossier_file_masc, name + '_init', dico_loi_struct[name]['type'],
+                                       list_final)
 
         if self.mgis.DEBUG:
             self.mgis.add_info("Tracer files are created.")
@@ -1425,7 +1320,7 @@ class ClassMascaret:
                 self.obs_to_loi(dict_lois, date_debut, date_fin)
 
             else:
-                #TODO ATTENTION CREATION LOI STRUCTUR HYdraulic
+                # TODO ATTENTION CREATION LOI STRUCTUR HYdraulic
                 # transcritical unsteady hors evenement
                 if par['presenceTraceurs']:
                     if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
@@ -1483,7 +1378,7 @@ class ClassMascaret:
                                  self.baseName + '_init', comments, par['presenceTraceurs'])
                 else:
                     self.mgis.add_info("No Run initialization.\n"
-                                      " The initial boundaries come from {} scenario.".format(sceninit))
+                                       " The initial boundaries come from {} scenario.".format(sceninit))
 
                 self.opt_to_lig(run, sceninit, self.baseName)
                 tab = {"LigEauInit": {'valeur': 'true',
@@ -1507,7 +1402,7 @@ class ClassMascaret:
                 # liste2=list(dico_run["scenario"])
 
                 dico_run = self.mdb.select_distinct("run",
-                                                   "runs")
+                                                    "runs")
                 if dico_run != {}:
                     liste_run = ['{}'.format(v) for v in dico_run['run']]
                 else:
@@ -1524,7 +1419,7 @@ class ClassMascaret:
                     else:
                         condition = "run LIKE '{0}'".format(case)
                         dico_scen = self.mdb.select_distinct("scenario",
-                                                            "runs", condition)
+                                                             "runs", condition)
                         liste_scen = ['{}'.format(v) for v in dico_scen["scenario"]]
 
                         scen2, ok = QInputDialog.getItem(None,
@@ -1884,7 +1779,7 @@ class ClassMascaret:
     #             txt += str(var)
     #         txt += " "
     #     return txt
-    
+
     @staticmethod
     def check_none(liste):
         """ Check if None is list"""
