@@ -285,10 +285,13 @@ class ClassMethod:
 
         poly_l = self.mdb.select(table, where=where, order=order, list_var=[var])
         list_poly = []
-
+        version = sys.version.split()[0]
+        version = version.split('.')[0]
         for poly in poly_l[var]:
+            if version==3:
                 list_poly.append(wkb.loads(poly,hex=True))
-
+            else:
+                list_poly.append(wkb.loads(poly.decode('hex')))
         poly_l[var] = list_poly
         return poly_l
 
