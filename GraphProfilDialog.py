@@ -1743,7 +1743,8 @@ class GraphHydro(GraphCommon):
 
         self.listeRuns = {}
         for run, scen, pk in zip(dico_run["run"], dico_run["scenario"], dico_run['pk']):
-            if type == 't':
+            print(type)
+            if self.type == 't':
                 try:
                     pk_tmp = [round(elem, 2) for elem in pk]
                     idx = pk_tmp.index(self.position)
@@ -1757,6 +1758,7 @@ class GraphHydro(GraphCommon):
                     self.listeRuns[run] = []
                 self.listeRuns[run].append(scen)
 
+        print(self.listeRuns)
         if self.listeRuns == {}:
             self.mgis.add_info('No results for this profile. \n')
         self.run = sorted(self.listeRuns.keys())[-1]
