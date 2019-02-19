@@ -120,9 +120,9 @@
     <property key="labeling/distMapUnitMaxScale" value="0"/>
     <property key="labeling/distMapUnitMinScale" value="0"/>
     <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
-    <property key="labeling/drawLabels" value="false"/>
-    <property key="labeling/enabled" value="false"/>
-    <property key="labeling/fieldName" value=""/>
+    <property key="labeling/drawLabels" value="true"/>
+    <property key="labeling/enabled" value="true"/>
+    <property key="labeling/fieldName" value="name"/>
     <property key="labeling/fitInPolygonOnly" value="false"/>
     <property key="labeling/fontBold" value="false"/>
     <property key="labeling/fontCapitals" value="0"/>
@@ -142,7 +142,7 @@
     <property key="labeling/fontWeight" value="50"/>
     <property key="labeling/fontWordSpacing" value="0"/>
     <property key="labeling/formatNumbers" value="false"/>
-    <property key="labeling/isExpression" value="true"/>
+    <property key="labeling/isExpression" value="false"/>
     <property key="labeling/labelOffsetInMapUnits" value="true"/>
     <property key="labeling/labelOffsetMapUnitMaxScale" value="0"/>
     <property key="labeling/labelOffsetMapUnitMinScale" value="0"/>
@@ -313,24 +313,26 @@
   <aliases>
     <alias field="active" index="7" name="Active"/>
     <alias field="area" index="5" name="Area (m2)"/>
+    <alias field="basinnum" index="2" name="Basin number"/>
     <alias field="initlevel" index="3" name="Reference level (m)"/>
     <alias field="level" index="4" name="Level (m)"/>
     <alias field="name" index="1" name="Name"/>
-    <alias field="basinnum" index="2" name="Basin number"/>
     <alias field="volume" index="6" name="Volume (m3)"/>
   </aliases>
   <excludeAttributesWMS/>
   <excludeAttributesWFS/>
-  <attributeactions default="-1"/>
+  <attributeactions default="0">
+    <actionsetting showInAttributeTable="0" action="from qgis.utils import iface&#xd;&#xa;from qgis.gui import QgsMessageBar&#xd;&#xa;import processing&#xd;&#xa;&#xd;&#xa;# Initialisation des parametres pour le calcul des courbes hypsometriques&#xd;&#xa;nom_MNT = 'DEM_basins' #couche raster MNT&#xd;&#xa;nom_casiers = 'basins' # couche vectorielle des casiers&#xd;&#xa;delta_z = 1 # loi surface volume tous les metres&#xd;&#xa;sortie = None # fichiers resultats dans repertoire users/Appdata/Local/temp&#xd;&#xa;&#xd;&#xa;# couches Qgis&#xd;&#xa;existence_couches = True&#xd;&#xa;try:&#xd;&#xa;&#x9;couche_MNT = QgsMapLayerRegistry.instance().mapLayersByName(nom_MNT)[0]&#xd;&#xa;except:&#xd;&#xa;&#x9;print('DEM pas trouvé')&#xd;&#xa;&#x9;iface.messageBar().pushWidget(iface.messageBar().createMessage( u'no DEM_basins layer found'), QgsMessageBar.WARNING, 3)&#xd;&#xa;&#x9;existence_couches = False&#xd;&#xa;&#xd;&#xa;try:&#xd;&#xa;&#x9;couche_basins = QgsMapLayerRegistry.instance().mapLayersByName(nom_casiers)[0]&#xd;&#xa;except:&#xd;&#xa;&#x9;print('basins pas trouvé')&#xd;&#xa;&#x9;iface.messageBar().pushWidget(iface.messageBar().createMessage( u'no basins layer found'), QgsMessageBar.WARNING, 3)&#xd;&#xa;&#x9;existence_couches = False&#xd;&#xa;&#xd;&#xa;# Generation de la loi surface volume&#xd;&#xa;if existence_couches:&#xd;&#xa;&#x9;# Execution de l'algorithme QGis de courbes hypsometriques &#xd;&#xa;&#x9;resultat = processing.runalg(&quot;qgis:hypsometriccurves&quot;,nom_MNT,nom_casiers,delta_z,False,sortie)&#xd;&#xa;&#x9;resultat_chemin = resultat['OUTPUT_DIRECTORY']&#xd;&#xa;&#x9;print(resultat_chemin)&#xd;&#xa;&#x9;&#xd;&#xa;&#x9;# Traitement des casiers selectionnes&#xd;&#xa;&#x9;features = couche_basins.selectedFeatures()&#xd;&#xa;&#x9;if features == []:&#xd;&#xa;&#x9;&#x9;iface.messageBar().pushWidget(iface.messageBar().createMessage( u'no selected features in basins layer'), QgsMessageBar.WARNING, 3)&#xd;&#xa;&#x9;else:&#xd;&#xa;&#x9;&#x9;couche_basins.startEditing()&#xd;&#xa;&#x9;&#x9;for feature in features:&#xd;&#xa;&#x9;&#x9;&#x9;id = feature.id() # gid du casier&#xd;&#xa;&#x9;&#x9;&#x9;nom_fichier = 'hystogram_basins_'+str(id)+'.csv'&#xd;&#xa;&#x9;&#x9;&#x9;chemin_fichier = resultat_chemin+'\\'+nom_fichier&#xd;&#xa;&#x9;&#x9;&#x9;lignes = []&#xd;&#xa;&#x9;&#x9;&#x9;try:&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;fichier = open(chemin_fichier,'r')&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;fichier.readline() # entete&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;lignes = fichier.readlines() # lignes surface, elevation&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;fichier.close()&#xd;&#xa;&#x9;&#x9;&#x9;except IOError:&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;print('no DEM found for Basin gid:'+str(id))&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;iface.messageBar().pushWidget(iface.messageBar().createMessage( u'no DEM found for Basin gid:'+str(id)), QgsMessageBar.WARNING, 3)&#xd;&#xa;&#x9;&#x9;&#xd;&#xa;&#x9;&#x9;&#x9;# Calcul du volume&#xd;&#xa;&#x9;&#x9;&#x9;if lignes &lt;>[]:&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;# initialisation&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;volume = 0&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;delta_z = 1.0 # metre&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;surface_inf = 0&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;surface_sup = 0&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;liste_Z =[]&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;liste_S = []&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;liste_V = []&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;index = 0&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;z = 0&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;# Traitement&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;for ligne in lignes:&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;chaine = ligne.split(',')&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;surface_inf = surface_sup&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;surface_sup = float(chaine[0])&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;if index ==0:&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;z = float(chaine[1])&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;volume = 0&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;else:&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;z += delta_z&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;# Ajout du volume elementaire calcule sur la surface moyenne&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;volume += delta_z*(surface_sup+surface_inf)/2&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;# Listes pour la loi surface-volume&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;liste_Z.append(&quot;%0.2f&quot; %z)&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;liste_S.append(&quot;%0.0f&quot; %surface_sup)&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;liste_V.append(&quot;%0.0f&quot; %volume)&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;#print(liste_Z)&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;#print(liste_S)&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;#print(liste_V)&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#x9;index +=1&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;# Ecriture de la loi surface-volume&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;feature['level']=' '.join(liste_Z)&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;feature['area']=' '.join(liste_S)&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;feature['volume']=' '.join(liste_V)&#xd;&#xa;&#x9;&#x9;&#x9;&#x9;couche_basins.updateFeature(feature)&#xd;&#xa;&#x9;&#xd;&#xa;&#x9;&#x9;# Commit et fin de l'edition&#xd;&#xa;&#x9;&#x9;couche_basins.commitChanges()&#xd;&#xa;&#x9;&#x9;&#x9;&#xd;&#xa;&#xd;&#xa;&#x9;&#x9;&#xd;&#xa;" icon="" capture="0" type="1" name="Generate water storage relationship" shortTitle=""/>
+  </attributeactions>
   <attributetableconfig actionWidgetStyle="dropDown" sortExpression="COALESCE(&quot;branch&quot;, '&lt;NULL>')" sortOrder="0">
     <columns>
-      <column width="-1" hidden="0" type="field" name="gid"/>
+      <column width="337" hidden="0" type="field" name="gid"/>
       <column width="-1" hidden="0" type="field" name="name"/>
       <column width="-1" hidden="0" type="field" name="basinnum"/>
       <column width="-1" hidden="0" type="field" name="initlevel"/>
-      <column width="-1" hidden="0" type="field" name="level"/>
-      <column width="-1" hidden="0" type="field" name="area"/>
-      <column width="-1" hidden="0" type="field" name="volume"/>
+      <column width="266" hidden="0" type="field" name="level"/>
+      <column width="501" hidden="0" type="field" name="area"/>
+      <column width="1128" hidden="0" type="field" name="volume"/>
       <column width="-1" hidden="0" type="field" name="active"/>
       <column width="-1" hidden="1" type="actions"/>
     </columns>
@@ -369,7 +371,6 @@ def my_form_open(dialog, layer, feature):
         <attributeEditorField index="6" name="volume"/>
       </attributeEditorContainer>
     </attributeEditorContainer>
-    <attributeEditorRelation relation="R_basin_link" name="R_basin_link"/>
   </attributeEditorForm>
   <widgets>
     <widget name="R_basin_link">

@@ -216,7 +216,7 @@ class Class_Mascaret():
                     surfaces = casiers["area"][i]
                     volumes = casiers["volume"][i]
                     for j,cote in enumerate(cotes.split()):
-                        fich.write('{0:.1f} {1:.1f} {2:.1f}\n'.format(float(cotes.split()[j]),float(surfaces.split()[j]),float(volumes.split()[j])))
+                        fich.write('{0:.2f} {1:.2f} {2:.2f}\n'.format(float(cotes.split()[j]),float(surfaces.split()[j]),float(volumes.split()[j])))
 
             self.mgis.addInfo("Creation of the basin file is done")
         except Exception as e:

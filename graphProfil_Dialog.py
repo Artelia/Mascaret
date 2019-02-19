@@ -2106,8 +2106,8 @@ class GraphHydro(GraphCommon):
 
     def majListe(self):
         self.date = False
-        condition = "run='{0}' AND scenario='{1}'".format(self.run,
-                                                          self.scenario)
+        # ajout de condition sur le pk pour eviter le chargement des resultats casiers et liaisons
+        condition = "run='{0}' AND scenario='{1}' AND pk is not Null".format(self.run, self.scenario)
         temp = self.mdb.selectDistinct("date", "resultats", condition)
 
         if temp["date"][0]:
@@ -2192,8 +2192,8 @@ class GraphHydro(GraphCommon):
         self.comboTimePK.currentIndexChanged['QString'].connect(self.comboTimePKChange)
 
     def majTab(self):
-        condition = """run='{0}' AND scenario='{1}' """.format(self.run,
-                                                               self.scenario)
+        # ajout de condition sur le pk pour eviter le chargement des resultats casiers et liaisons
+        condition = """run='{0}' AND scenario='{1}' AND pk is not Null """.format(self.run, self.scenario)
 
         if self.type == "pk":
             condition += """AND branche={}""".format(self.branche)
@@ -2962,8 +2962,12 @@ class GraphBasin(GraphCommon):
         self.leg.draggable(True)
 
     def majLimites(self):
-        miniX = min(self.tab['date'])
-        maxiX = max(self.tab['date'])
+        if self.tab['date']:
+           miniX = min(self.tab['date'])
+           maxiX = max(self.tab['date'])
+        else:
+           miniX = None
+           maxiX = None
         miniY = None
         maxiY = None
         self.axes.set_xlim(miniX, maxiX)
