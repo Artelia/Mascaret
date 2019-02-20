@@ -27,7 +27,7 @@ from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
-from shapely import wkb
+from shapely import wkt
 from shapely.geometry import *
 
 from .ClassBradley import ClassBradley
@@ -282,18 +282,26 @@ class ClassMethod:
                 toto=self.select_poly('struct_elem',where)
                 print(toto)
         """
+        list_var=[]
+        if where:
+            where = " WHERE " + where + " "
+        if order:
+            order = " ORDER BY " + order
+        sql = "SELECT ST_AsText(Polygon)  AS Polygon  FROM {0}.{1} {2} {3};"
+        (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA, table, where, order), fetch=True, namvar=True)
+        cols = [col[0] for col in namCol]
+        dico = {}
+        for col in cols:
+            dico[col] = []
 
-        poly_l = self.mdb.select(table, where=where, order=order, list_var=[var])
-        list_poly = []
-        version = sys.version.split()[0]
-        version = version.split('.')[0]
-        for poly in poly_l[var]:
-            if version==3:
-                list_poly.append(wkb.loads(poly,hex=True))
-            else:
-                list_poly.append(wkb.loads(poly.decode('hex')))
-        poly_l[var] = list_poly
-        return poly_l
+        for row in results:
+            for i, val in enumerate(row):
+                try:
+                    dico[cols[i]].append(wkt.loads(val.strip()))
+                except:
+                    dico[cols[i]].append(wkt.loads(val))
+
+        return dico
 
     def copy_profil(self, gid, id_struct, feature):
         """Profil copy"""

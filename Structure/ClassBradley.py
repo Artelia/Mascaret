@@ -86,8 +86,8 @@ class ClassBradley:
                       # numeric
                       'MINH', 'PASH', 'MINQ', 'MAXQ', 'PASQ']
         self.param_g = self.parent.get_param_g(list_recup, id_config)
-        where = 'id_config={} and type=1'.format(id_config)
-        order = 'id_elem'
+        where = " id_config={} and type=1 ".format(id_config)
+        order = "id_elem"
         list_poly_pil = self.parent.select_poly('struct_elem', where, order)['polygon']
         self.param_g['ZPC'] = self.param_g['ZTOPTAB'] - self.param_g['EPAITAB']
 
