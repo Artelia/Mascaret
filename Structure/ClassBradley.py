@@ -18,7 +18,6 @@ email                :
  ***************************************************************************/
 """
 import math as m
-# from ..Function  import interp
 import numpy as np
 import os
 from qgis.PyQt.QtCore import *
@@ -35,8 +34,7 @@ class ClassBradley:
         self.mgis = self.parent.mgis
         self.mdb = self.parent.mdb
         self.tbst = self.parent.tbst
-        self.grav = 9.81
-        self.DEBUG = True
+        self.grav=self.parent.grav
         self.dico_abc = {}
         self.dossier_file_masc = os.path.join(self.mgis.masplugPath, "mascaret")
 
