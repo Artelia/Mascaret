@@ -540,6 +540,8 @@ class ClassMethod:
 
     def sav_meth(self, id_config, idmethod):
         self.brad = ClassBradley(self)
+
+
         if idmethod == 0 or idmethod == 4:
             self.brad.bradley(id_config, self.tbst.dico_meth_calc[idmethod])
         elif idmethod == 2:
