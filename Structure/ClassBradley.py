@@ -393,9 +393,9 @@ class ClassBradley:
 
     def meth_seuil(self, zam, zav,zcret,cf,larg):
 
-        cf = self.param_g['COEFDEB']
-        zcret = self.param_g['ZTOPTAB']
-        larg = self.param_g['TOTALW']
+        # cf = self.param_g['COEFDEB']
+        # zcret = self.param_g['ZTOPTAB']
+        # larg = self.param_g['TOTALW']
 
         ct = cf * m.sqrt(2 * self.grav)
         typ_s=0 # 0 :'thick', 1: thin
@@ -432,16 +432,21 @@ class ClassBradley:
 
         return q
 
-    def meth_orif(self, zam, zav, zinf, zsup):
-        #min profil
-        zinf = self.poly_p.bounds[1]
-        zup = self.param_g['ZPC']
+    def meth_orif(self, zam, zav, zinf, zsup, larg, cf):
+
+        # zinf = self.poly_p.bounds[1] #min profil
+        # zup = self.param_g['ZPC']
+        # cf= 1 #coef debit
+        # larg =self.param_g["TOTALOUV"]
 
         ouv =  zsup - zinf
         h1 = zam - zinf
         h2 = zav - zinf
-        hav=min(h1,h2)
-        ham=max(h1,h2)
+        hav = min(h1, h2)
+        ham = max(h1, h2)
+
+        ct = cf * m.sqrt(2 * self.grav)
+        surf =  larg * ouv  # rempalce larg* ouv par surface mouillé ?
 
         if ham < 0:
             print('erreur loi orrifice ham <0')
@@ -451,6 +456,17 @@ class ClassBradley:
         else:
             sens_ecoul = -1
 
-        if hav < ouv and ham <1.5*ouv
+        if hav < ouv and ham <1.5*ouv: # attnetion cas d'un pont   ham <1.5*ouv: tjrs vrai
+            # equiv. seuil
+            q = self.meth_seuil(zam, zav, zinf,cf,larg)
+            # cas d'un pont zinf etant = mini profil
+            # q = umoy *
+        else:
+            if hav > ouv:
+                q = ct * surf *m.sqrt(ham-hav)
+            else :
+                q = ct * surf * m.sqrt(ham)
+            q = sens_ecoul * q
 
-        ch = ham + m.power(vam,2)/(2*self.grav)
+        return q
+
