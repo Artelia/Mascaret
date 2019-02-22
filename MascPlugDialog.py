@@ -293,11 +293,21 @@ class MascPlugDialog(QMainWindow):
         settings.endGroup()
 
         settings.beginGroup('/PostgreSQL/connections/{0}'.format(conn_name))
+        # first try to get the credentials from AuthManager, then from the basic settings
+        authconf = settings.value('authcfg', None)
+        if authconf:
+            auth_manager = QgsApplication.authManager()
+            conf = QgsAuthMethodConfig()
+            auth_manager.loadAuthenticationConfig(authconf, conf, True)
+            if conf.id():
+                self.user = conf.config('username', '')
+                self.passwd = conf.config('password', '')
+        else:
+            self.user = settings.value('username')
+            self.passwd = settings.value('password')
         self.host = settings.value('host')
         self.port = settings.value('port')
         self.database = settings.value('database')
-        self.user = settings.value('username')
-        self.passwd = settings.value('password')
         settings.endGroup()
         # create a new connection to masPlug database
         self.mdb = ClassMasDatabase(self, self.database, self.host, self.port, self.user, self.passwd)
