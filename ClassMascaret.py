@@ -466,6 +466,7 @@ class ClassMascaret:
                                                 'formule': None,
                                                 'valeurperm': None}
 
+
         for i, nom in enumerate(apports["name"]):
             if nom not in dict_lois.keys():
                 dict_lois[nom] = {'type': 1,
@@ -587,6 +588,7 @@ class ClassMascaret:
 
             if seuils["type"][i] not in (3, 4):
                 SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()).index(nom) + 1)
+
             else:
                 SubElement(struct, "numLoi").text = '-0'
 

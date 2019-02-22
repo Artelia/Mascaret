@@ -34,6 +34,8 @@ changelog=
              Add hydraulic structure table
     0.2.0 :  Add water quality feature
     0.1.13 : Correction of parameters GUI bug
+             Correction of weirs bug in xcas file
+             Correction of connection data base bug
     0.1.12 : Addition of the "port" option for import and export model command with postgres
              Correction of bug related to the initial value equal "None" when ".lig" file is used
              Correction of ".lig" file copy bug for QGIS3
