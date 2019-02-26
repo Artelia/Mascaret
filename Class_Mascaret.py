@@ -455,7 +455,7 @@ class Class_Mascaret():
 
             for i, type in enumerate(seuils["type"]):
                 if type not in (3, 4):
-                    dict_lois[seuils["name"][i]] = {'type': abaque_toloi[type]}
+                    dictLois[seuils["name"][i]] = {'type': abaqueToloi[type]}
 
             for i, nom in enumerate(apports["name"]):
                 if nom not in dictLois.keys():
@@ -577,7 +577,7 @@ class Class_Mascaret():
                         SubElement(struct, l).text = str(seuils[liste_en[kk].lower()][i])
 
                 if seuils["type"][i] not in (3, 4):
-                    SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()).index(nom) + 1)
+                    SubElement(struct, "numLoi").text = str(sorted(dictLois.keys()).index(nom) + 1)
                 else:
                     SubElement(struct, "numLoi").text = '-0'
 
