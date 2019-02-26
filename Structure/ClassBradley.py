@@ -460,7 +460,6 @@ class ClassBradley:
             # equiv. seuil
             q = self.meth_seuil(zam, zav, zinf,cf,larg)
             # cas d'un pont zinf etant = mini profil
-            # q = umoy *
         else:
             if hav > ouv:
                 q = ct * surf *m.sqrt(ham-hav)
