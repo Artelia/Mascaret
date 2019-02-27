@@ -41,6 +41,8 @@ class ClassBradley:
         self.param_g = {}
         self.poly_p = None
         self.qh_j_no_hy = []
+        # valeur pour éviter des débit null et blocker le model
+        self.deb_min=0.0001
 
     def init_method(self, id_config):
         if self.parent.checkprofil(id_config):
@@ -57,9 +59,10 @@ class ClassBradley:
                       # pile de pont
                       'LARGPIL', 'LONGPIL', 'FORMPIL', 'BIAIPIL',
                       # numeric
-                      'MAXH', 'MINH', 'PASH', 'MINQ', 'MAXQ', 'PASQ']
-        self.param_g = self.parent.get_param_g(list_recup, id_config)
+                      'MINH', 'PASH', 'MINQ', 'MAXQ', 'PASQ']
 
+                      # 'MAXH', 'MINH', 'PASH', 'MINQ', 'MAXQ', 'PASQ']
+        self.param_g = self.parent.get_param_g(list_recup, id_config)
         self.param_g['ZPC'] = self.param_g['ZTOPTAB'] - self.param_g['EPAITAB']
         self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
         self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
@@ -165,10 +168,10 @@ class ClassBradley:
 
         return coef_cor_biais, type_kb, list_ph, list_e
 
-    def meth_brad(self, hn, q, list_poly_pil, coef_cor_biais, type_kb, list_ph, list_e):
+    def meth_brad(self, zav, q, list_poly_pil, coef_cor_biais, type_kb, list_ph, list_e):
         """
         Compute  h upstream with bradley method
-        :param hn: h downstream
+        :param zav: zav downstream
         :param q: flow rate
         :param list_poly_pil: span polygon list
         :param coef_cor_biais: angle correction coefficient
@@ -179,7 +182,7 @@ class ClassBradley:
         """
         area_pil = 0
         area_pil_proj = 0
-        poly_wet = self.parent.coup_poly_h(self.poly_p, hn)
+        poly_wet = self.parent.coup_poly_h(self.poly_p, zav)
         if poly_wet.is_empty:
             return None
 
@@ -187,7 +190,7 @@ class ClassBradley:
         # print('area_wet',area_wet)
         umoy = q / area_wet
         for poly_pil in list_poly_pil:
-            poly_pil = self.parent.coup_poly_h(poly_pil, hn)
+            poly_pil = self.parent.coup_poly_h(poly_pil, zav)
             if self.param_g['BIAIOUV'] != 0:
                 area_pil_proj += poly_pil.area * coef_cor_biais
             area_pil += poly_pil.area
@@ -205,8 +208,8 @@ class ClassBradley:
             coefm = q1 / qtot
         else:
             # hyp si debit null cote aval =cote amon
-            # list_final.append([q, hn, hn])
-            return [q, hn, hn]
+            # list_final.append([q, zav, zav])
+            return [self.deb_min, zav, zav]
             # coefm = 0
 
         # print('q1,q2,q3',q1,q2,q3)
@@ -228,7 +231,7 @@ class ClassBradley:
         # *************** Dkp
         # print(area_pil_proj,ssoh,area_pil)
         j = area_pil_proj / ssoh
-        j = self.check_j(j, int(self.param_g['FORMPIL']), q, hn)
+        j = self.check_j(j, int(self.param_g['FORMPIL']), q, zav)
         # print('j',j)
         list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, 'DKp_abac', 'J',
                                                           str(int(self.param_g['FORMPIL'])))
@@ -283,7 +286,7 @@ class ClassBradley:
         # print("dks",dks)
         term1 = (kb + dkp + dke + dks) * va ** 2 / (2. * self.grav) * alpha2
         # print("term1 Remout",term1)
-        hmon = hn + term1
+        hmon = zav + term1
         poly_wet = self.parent.coup_poly_h(self.poly_p, hmon)
         area_amont = poly_wet.area
         term2 = alpha1 * ((s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (
@@ -292,20 +295,21 @@ class ClassBradley:
         remout = term1 + term2
 
         # print("Remout Total", remout)
-        return [q, hn, hn + remout]
+        return [q, zav, zav + remout]
 
     def bradley(self, id_config, method='Bradley 78'):
         """ Bradley method"""
 
         self.init_method(id_config)
+
         where = " id_config={} and type=1 ".format(id_config)
         order = "id_elem"
         list_poly_pil = self.parent.select_poly('struct_elem', where, order)['polygon']
 
         (minx, miny, maxx, maxy) = self.poly_p.bounds
-        list_hn = [miny]
-        list_hn += list(np.arange(miny + self.param_g['MINH'], self.param_g['ZPC'], self.param_g['PASH']))
-        list_hn.append(self.param_g['ZPC'])
+        list_zav = [miny]
+        list_zav += list(np.arange(miny + self.param_g['MINH'], self.param_g['ZPC'], self.param_g['PASH']))
+        list_zav.append(self.param_g['ZPC'])
 
         list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
         list_q.append(self.param_g['MAXQ'])
@@ -314,15 +318,81 @@ class ClassBradley:
 
         (coef_cor_biais, type_kb, list_ph, list_e) = self.init_bradley(method)
 
-        for hn in list_hn:
+        for zav in list_zav:
             for q in list_q:
-                # print('hn,q',hn,q)
-                value = self.meth_brad(hn, q, list_poly_pil, coef_cor_biais, type_kb, list_ph, list_e)
+                # print('zav,q',zav,q)
+                value = self.meth_brad(zav, q, list_poly_pil, coef_cor_biais, type_kb, list_ph, list_e)
                 if value is None:
                     continue
                 else:
+                    if value[2] > self.param_g['ZPC']:
+                        break
                     list_final.append(value)
-        print(self.qh_j_no_hy)
+
+
+        #**********************************************************************************************
+        # orifice and seuil
+        #*********************************************************************************************
+        #***********************************
+        # add Variable
+        self.param_g['COEF']=0.5# USER
+        cf=self.param_g['COEF']
+        self.param_g['HMAX']=15
+
+
+        #*************************************
+
+        qmax_brad = max(np.array(list_final)[:,0])
+        ham_max_brad = max(np.array(list_final)[:, 2])
+        list_zam = list(np.arange(self.param_g['ZPC'], self.param_g['HMAX'], self.param_g['PASH']))
+        list_zam.append(self.param_g['HMAX'])
+        list_zav = list(np.arange(self.param_g['ZPC'], self.param_g['HMAX'], self.param_g['PASH']))
+        list_zav.append(self.param_g['HMAX'])
+
+        where = " id_config={} and type=0 ".format(id_config)
+        order = "id_elem"
+        list_poly_trav = self.parent.select_poly('struct_elem', where, order)['polygon']
+
+        surf=0
+        for poly_trav in list_poly_trav:
+            surf+=poly_trav.area
+
+        zinf_vann=self.poly_p.bounds[1] #z min du profil
+        zcret=self.param_g['ZTOPTAB']
+
+        for zav in list_zav:
+            # hyp. forcage zav<zam,(car MINQ >0)
+            idx=list_zam.index(zav)
+            for zam in list_zam[idx:]:
+            # for zam in list_zam:
+                q_seuil=0
+                if zam != zav :
+                    q_ori = self.meth_orif(zam, zav, zinf_vann, self.param_g['ZPC'],
+                                           zcret, self.param_g['TOTALOUV'], cf, surf)
+                    print('q_ori',q_ori)
+                    if zam >= zcret:
+                        q_seuil = self.meth_seuil( zam, zav, zcret, cf, self.param_g['TOTALOUV'])
+                    print('q_seuil',q_seuil)
+                    if q_ori == None :
+                        value=None
+                    else:
+                        value=[q_ori+q_seuil, zav,zam]
+                else:
+                    # attention traitemen peut être différent
+                    value=[self.deb_min, zav,zam]
+
+                if value is None:
+                    continue
+                else:
+                    if value[0] > self.param_g['MAXQ']:
+                        break
+
+                    list_final.append(value)
+
+
+        # **********************************************************************************************
+        # save
+        # *********************************************************************************************
         if list_final == []:
             sql = "SELECT name FROM {0}.{1} WHERE id={2}".format(self.mdb.SCHEMA, 'struct_config', id_config)
 
@@ -339,7 +409,7 @@ class ClassBradley:
         else:
             self.parent.save_law_st(method, id_config, list_final)
 
-            # return list_final
+        return list_final
 
     def def_type_kb(self, method):
         if method == 'Bradley 78':
@@ -372,73 +442,43 @@ class ClassBradley:
                 # list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, "kb_abac", 'M', type_kb)
         return type_kb
 
-    # *******************************************************
-    # Seuil
-    # *******************************************************
-    #     def seuil(self, id_config, method=''):
-    #         self.init_method()
-    #         (minx, miny, maxx, maxy) = self.poly_p.bounds
-    #         hmini_aval = self.param_g['ZPC']
-    #         hmini_amont = self.param_g['ZTOPTAB']
-    #         hmax = self.param_g['HMAX']
-    #
-    #         list_haval = list(np.arange(self.param_g['ZPC'], self.param_g['HMAX'], self.param_g['PASH']))
-    #         list_hamont = list(np.arange(self.param_g['ZTOPTAB'], self.param_g['HMAX'], self.param_g['PASH']))
-    #         list_hn.append(self.param_g['ZPC'])
-    #
-    #         list_final = []
-    #         for hamont in list_hn:
-    #             for haval in list_hn:
-    #                 pass
-
     def meth_seuil(self, zam, zav,zcret,cf,larg):
-
-        # cf = self.param_g['COEFDEB']
-        # zcret = self.param_g['ZTOPTAB']
-        # larg = self.param_g['TOTALW']
-
+        """ methode seuil"""
         ct = cf * m.sqrt(2 * self.grav)
         typ_s=0 # 0 :'thick', 1: thin
 
         h1 = max(zam - zcret, 0)
         h2 = max(zav - zcret, 0)
         if h1 ==0 and h2 ==0:
-            q=0
-            return q
+            return 0
         ham = max(h1, h2)
         hav = min(h1, h2)
+        r=hav/ham
         if (h1 >= h2):
             sens_ecoul = 1
         else:
             sens_ecoul = -1
 
-        r = ham / hav
-        q_denoy = ct*larg*m.power(ham,1.5)
-
+        q_denoy = ct*larg*m.pow(ham,1.5)
         if typ_s == 0:
-            if r<=0.8:
+            if r <= 0.8:
                 k=1
-            elif 0.8<r<=1:
-                k=-25*m.power(r,2)+40*r-15
+            elif 0.8<r<= 1:
+                k=-25*m.pow(r,2)+40*r-15
             else:
                 k=0
         else:
             if ham == 0.:
                 k=1
             else:
-                k = m.power(m.power(1-r,1.5),0.385)
+                k = m.pow(m.pow(1-r,1.5),0.385)
 
         q = sens_ecoul * k * q_denoy
 
         return q
 
-    def meth_orif(self, zam, zav, zinf, zsup, larg, cf):
-
-        # zinf = self.poly_p.bounds[1] #min profil
-        # zup = self.param_g['ZPC']
-        # cf= 1 #coef debit
-        # larg =self.param_g["TOTALOUV"]
-
+    def meth_orif(self, zam, zav, zinf, zsup, zcret, larg, cf,surf):
+        """ methode orifice"""
         ouv =  zsup - zinf
         h1 = zam - zinf
         h2 = zav - zinf
@@ -446,20 +486,17 @@ class ClassBradley:
         ham = max(h1, h2)
 
         ct = cf * m.sqrt(2 * self.grav)
-        surf =  larg * ouv  # rempalce larg* ouv par surface mouillé ?
 
         if ham < 0:
-            print('erreur loi orrifice ham <0')
+            print('erreur loi orifice ham <0')
             return None
         if (h1 >= h2):
             sens_ecoul = 1
         else:
             sens_ecoul = -1
 
-        if hav < ouv and ham <1.5*ouv: # attnetion cas d'un pont   ham <1.5*ouv: tjrs vrai
-            # equiv. seuil
-            q = self.meth_seuil(zam, zav, zinf,cf,larg)
-            # cas d'un pont zinf etant = mini profil
+        if hav < ouv and ham <1.5*ouv: # attention cas d'un pont   hav < ouv: tjrs faux
+            q = self.meth_seuil(zam, zav, zcret, cf,larg)[0]
         else:
             if hav > ouv:
                 q = ct * surf *m.sqrt(ham-hav)

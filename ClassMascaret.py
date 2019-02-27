@@ -964,6 +964,7 @@ class ClassMascaret:
         return seuil, loi_struct
 
     def typ_struct(self, meth):
+        """function to know the law type"""
         if meth == 0 or meth == 4:
             return 1
         else:
@@ -1176,6 +1177,19 @@ class ClassMascaret:
                 tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
                 self.creer_loi(nom + '_init', tab, 2)
 
+    def  fct_comment(self):
+        liste_col = self.mdb.list_columns('runs')
+        if 'comments' in liste_col:
+            comments, ok = QInputDialog.getText(QWidget(), 'Comments',
+                                                'if you want to input a comment :')
+            if not ok:
+                if self.mgis.DEBUG:
+                    self.mgis.add_info("No comments.")
+                    comments = ''
+        else:
+            comments = ''
+        return comments
+
     def mascaret(self, noyau, run):
         """creation file and to run mascaret"""
         comments = ''
@@ -1198,6 +1212,7 @@ class ClassMascaret:
             self.clean_res()
 
         if par["evenement"] and noyau != "steady":
+            # comments=self.fct_comment()
 
             dict_scen_tmp = self.mdb.select('scenarios', 'run', 'starttime')
             listexclu = []
@@ -1223,16 +1238,7 @@ class ClassMascaret:
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Canceled Simulation because of {0} already exists.".format(scen))
                 return
-            liste_col = self.mdb.list_columns('runs')
-            if 'comments' in liste_col:
-                comments, ok = QInputDialog.getText(QWidget(), 'Comments',
-                                                    'if you want to input a comment :')
-                if not ok:
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info("No comments.")
-                        comments = ''
-            else:
-                comments = ''
+            comments=self.fct_comment()
 
             dict_scen = {'name': [scen]}
 
@@ -1249,6 +1255,7 @@ class ClassMascaret:
             self.wq.create_filephy()
             self.wq.law_tracer()
             self.wq.init_conc_tracer()
+
         if dico_loi_struct.keys():
             for name in dico_loi_struct.keys():
                 list_final = self.clmeth.get_list_law(dico_loi_struct[name]['id_config'])
