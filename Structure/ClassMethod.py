@@ -30,6 +30,7 @@ from qgis.gui import *
 from shapely import wkt
 from shapely.geometry import *
 
+import time
 from .ClassBradley import ClassBradley
 from .ClassTableStructure import ClassTableStructure
 
@@ -484,7 +485,7 @@ class ClassMethod:
                     fich.write(chaine.format(**dico))
 
     def save_law_st(self, method, id_config, list_val):
-
+        start=time.time()
         self.mdb.delete('struct_laws', where="id_config = '{}'".format(id_config))
         liste_col = self.mdb.list_columns('struct_laws')
         list_insert = []
@@ -499,13 +500,17 @@ class ClassMethod:
             valeurs += '%s,'
         valeurs = valeurs[:-1] + ")"
 
-        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
-                                                            'struct_laws',
-                                                            var,
-                                                            valeurs)
+        sql=''
+        for a in list_insert:
+            valeurs=str(tuple(a))
+            sql += "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
+                                                                'struct_laws',
+                                                                var,
+                                                                valeurs)
 
-        self.mdb.run_query(sql, many=True, list_many=list_insert)
-
+        self.mdb.run_query(sql)
+        tfinal = time.time()-start
+        print('tfinal ',tfinal)
     def get_list_law(self, id_config):
         where = "WHERE id_config={}".format(id_config)
         order = "ORDER BY id_var, id_order "
@@ -540,7 +545,6 @@ class ClassMethod:
 
     def sav_meth(self, id_config, idmethod):
         self.brad = ClassBradley(self)
-
 
         if idmethod == 0 or idmethod == 4:
             self.brad.bradley(id_config, self.tbst.dico_meth_calc[idmethod])
