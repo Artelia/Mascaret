@@ -992,6 +992,7 @@ class ClassMascaret:
             arbre.write(fich_entree)
 
     def creer_loi(self, nom, tab, type):
+        print(nom)
         with open(os.path.join(self.dossier_file_masc, nom + '.loi'), 'w') as fich:
             fich.write('# ' + nom + '\n')
             if type == 1:

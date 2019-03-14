@@ -267,10 +267,8 @@ class ClassMethod:
                 self.mdb.run_query(sql)
         width += width_prec
 
-        sql = "INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALW', {2});\n".format(self.mdb.SCHEMA,
-                                                                                                        id_config,
-                                                                                                        width)
-        sql += "INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALOUV', {2});".format(
+
+        sql = "INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALOUV', {2});".format(
             self.mdb.SCHEMA,
             id_config,
             width_trav)
@@ -338,6 +336,27 @@ class ClassMethod:
         #                           id_config))
 
     def coup_poly_h(self, poly, cote):
+        """fonction si ligne cote es compris entre le xmin et xmax"""
+        msg = None
+        (minx, miny, maxx, maxy) = poly.bounds
+        delpoly = Polygon([[minx - 1, cote], [maxx + 1, cote],
+                           [maxx + 1, maxy + 1], [minx - 1, maxy + 1],
+                           [minx - 1, cote]])
+        if not delpoly.is_empty:
+            polyw = poly.difference(delpoly)
+            if not polyw.is_valid:
+                polyw = GeometryCollection()
+                msg = "Error: Wet polygon creation"
+        else:
+            polyw = GeometryCollection()
+            msg = "Error: delpoly creation in calc_polyw()"
+
+        if self.mgis.DEBUG and msg is not None:
+            print(msg)
+        return polyw
+
+    def coup_poly_h(self, poly, cote):
+        """fonction si ligne cote es compris entre le xmin et xmax"""
         msg = None
         (minx, miny, maxx, maxy) = poly.bounds
         delpoly = Polygon([[minx - 1, cote], [maxx + 1, cote],
@@ -466,11 +485,15 @@ class ClassMethod:
         #
         return struct_dico
 
-    def create_law(self, dossier, nom, type, list_final):
+    def create_law(self, dossier, nom, typel, list_final):
         """creeation of law"""
+
+        if list_final == []:
+            return
+
         with open(os.path.join(dossier, nom + '.loi'), 'w') as fich:
             fich.write('# ' + nom + '\n')
-            if type == 6:
+            if typel == 6:
                 fich.write('# Debit Cote_Aval Cote_Amont\n')
                 chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
                 info = np.array(list_final)
@@ -507,21 +530,25 @@ class ClassMethod:
                                                                 'struct_laws',
                                                                 var,
                                                                 valeurs)
-
         self.mdb.run_query(sql)
         tfinal = time.time()-start
         print('tfinal ',tfinal)
+
     def get_list_law(self, id_config):
+        liste_f = []
+
         where = "WHERE id_config={}".format(id_config)
         order = "ORDER BY id_var, id_order "
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
         tabval = self.mdb.run_query(sql.format(self.mdb.SCHEMA, "struct_laws", where, order, 'id_var , value'),
                                     fetch=True)
+        if not tabval:
+            return liste_f
         tabval = np.array(tabval)
         nbval = collections.Counter(tabval[:, 0])
         nb = int(nbval[0])
         nb_val = int(len(nbval.keys()))
-        liste_f = []
+
         for i in range(nb):
             list_tmp = []
             for j in nbval.keys():
@@ -543,13 +570,16 @@ class ClassMethod:
     #             else:
     #                 pass
 
-    def sav_meth(self, id_config, idmethod):
+    def sav_meth(self, id_config, idmethod,ui):
         self.brad = ClassBradley(self)
 
-        if idmethod == 0 or idmethod == 4:
-            self.brad.bradley(id_config, self.tbst.dico_meth_calc[idmethod])
-        elif idmethod == 2:
-            pass
+        if idmethod == 0 or idmethod == 4: # brad
+            self.brad.bradley(id_config, self.tbst.dico_meth_calc[idmethod],ui)
+        elif idmethod == 1: #borda
+            self.brad.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+        elif idmethod == 3: #borda
+        # if idmethod == 0 or idmethod == 4:
+            self.brad.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         else:
             pass
 
