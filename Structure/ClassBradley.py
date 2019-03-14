@@ -379,24 +379,21 @@ class ClassBradley:
 
                     # for zam in self.list_zam:
                     q_seuil = 0
-                    if zam != zav:
-                        # q_ori = self.meth_orif_mas(zam, zav, zinf_vann, self.param_g['ZPC'],
-                        #                          self.param_g['TOTALOUV'], cf, cfo , surf)
-                        q_ori = self.meth_orif_cano(zam, zav, zinf_vann, self.param_g['ZPC'], zcret,
-                                                    self.param_g['TOTALOUV'], self.param_g['COEFDS'],
-                                                    self.param_g['COEFDO'], surf)
 
-                        # print('zam q_ori',zam, q_ori)
-                        if zam >= zcret:
-                            q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
-                        # print('q_seuil',zam, q_seuil)
-                        if q_ori is None:
-                            value = None
-                        else:
-                            value = [q_ori + q_seuil, zav, zam]
+                    # q_ori = self.meth_orif_mas(zam, zav, zinf_vann, self.param_g['ZPC'],
+                    #                          self.param_g['TOTALOUV'], cf, cfo , surf)
+                    q_ori = self.meth_orif_cano(zam, zav, zinf_vann, self.param_g['ZPC'], zcret,
+                                                self.param_g['TOTALOUV'], self.param_g['COEFDS'],
+                                                self.param_g['COEFDO'], surf)
+
+                    # print('zam q_ori',zam, q_ori)
+                    if zam >= zcret:
+                        q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
+                    # print('q_seuil',zam, q_seuil)
+                    if q_ori is None:
+                        value = None
                     else:
-                        # attention traitemen peut être différent
-                        value = [self.deb_min, zav, zam]
+                        value = [q_ori + q_seuil, zav, zam]
 
                     if value is None:
                         continue

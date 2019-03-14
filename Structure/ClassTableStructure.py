@@ -85,14 +85,15 @@ class ClassTableStructure:
                                'PENTTAL': {'name': 'Pente de talus des culées', 'unit': None},
                                'PASH': {'name': 'Discrétisation de la hauteur pour le calcul de la loi', 'unit': 'm'},
                                'MINH': {'name': 'Hauteur d\'eau minimum pour le calcul de la loi', 'unit': 'm'},
-                               'MAXH': {'name': 'Hauteur d\'eau maximum pour le calcul de la loi', 'unit': 'm'},#MDU
+                               'MAXH': {'name': 'Hauteur d\'eau maximum pour le calcul de la loi', 'unit': 'm'},  #MDU
                                'PASQ': {'name': 'Discrétisation du débit pour le calcul de la loi', 'unit': ''},
                                'MINQ': {'name': 'Débit minimum pour le calcul de la loi', 'unit': ''},
                                'MAXQ': {'name': 'Débit maximum pour le calcul de la loi', 'unit': ''},
                                'NBTRAVE': {'name': 'Nombre de travées', 'unit': None},
                                "TOTALOUV": {'name': 'Largeur ouverture de travées', 'unit': 'm'},
                                # "TOTALW": {'name': 'Largeur du pont', 'unit': 'm'},
-                               'COEFDEB': {'name': 'Coeficient de debitance', 'unit': ''} #MDU
+                               'COEFDS': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':0.385},  #MDU
+                               'COEFDO': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':1}  # MDU
                                }
 
         self.dico_typ_elem = {0: 'Travee',
