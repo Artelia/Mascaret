@@ -120,16 +120,16 @@ class ClassStructureDialog(QDialog):
         dlg = ClassStructureCreateDialog(self.mgis, None)
         if dlg.exec_():
             id = dlg.id_struct
-            self.fill_lst_struct(id)
             self.edit_struct()
+            self.fill_lst_struct(id)
 
     def edit_struct(self):
         if self.tree_struct.selectedItems():
             itm = self.tree_struct.selectedItems()[0]
             id = itm.data(0, 32)
             dlg = ClassStructureEditDialog(self.mgis, id)
-            if dlg.exec_():
-                self.fill_lst_struct(id)
+            dlg.exec_()
+            self.fill_lst_struct(id)
 
     def del_struct(self):
         if self.tree_struct.selectedItems():

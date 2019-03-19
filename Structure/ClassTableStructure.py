@@ -40,7 +40,7 @@ class ClassTableStructure:
         self.dico_meth_calc = {0: 'Bradley 72',
                                1: 'Borda',
                                2: 'Loi de seuil',
-                               3: 'Loi d''orifice',
+                               3: 'Loi d\'orifice',
                                4: 'Bradley 78'}
 
         self.dico_meth_draw = {0: 'Method 1',
@@ -54,8 +54,8 @@ class ClassTableStructure:
                                                 'FORMCUL', 'ORIENTM', 'PENTTAL', 'FORMPIL', 'METTEST', 'LARGPIL',
                                                 'LONGPIL', 'PASH', 'MINH', 'PASQ',
                                                 'MINQ', 'MAXQ', 'NBTRAVE', 'METBR72', 'METBR78'],
-                                      'meth_calc': [0, 4],
-                                      'meth_draw': [[0], [0]]
+                                      'meth_calc': [0, 4, 1, 3],
+                                      'meth_draw': [[0], [0], [0], [0]]
                                       },
                                'PA': {'name': 'Pont arche',
                                       'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
@@ -85,15 +85,15 @@ class ClassTableStructure:
                                'PENTTAL': {'name': 'Pente de talus des culées', 'unit': None},
                                'PASH': {'name': 'Discrétisation de la hauteur pour le calcul de la loi', 'unit': 'm'},
                                'MINH': {'name': 'Hauteur d\'eau minimum pour le calcul de la loi', 'unit': 'm'},
-                               'MAXH': {'name': 'Hauteur d\'eau maximum pour le calcul de la loi', 'unit': 'm'},  #MDU
+                               'MAXH': {'name': 'Hauteur d\'eau maximum pour le calcul de la loi', 'unit': 'm'},
                                'PASQ': {'name': 'Discrétisation du débit pour le calcul de la loi', 'unit': ''},
                                'MINQ': {'name': 'Débit minimum pour le calcul de la loi', 'unit': ''},
                                'MAXQ': {'name': 'Débit maximum pour le calcul de la loi', 'unit': ''},
                                'NBTRAVE': {'name': 'Nombre de travées', 'unit': None},
                                "TOTALOUV": {'name': 'Largeur ouverture de travées', 'unit': 'm'},
                                # "TOTALW": {'name': 'Largeur du pont', 'unit': 'm'},
-                               'COEFDS': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':0.385},  #MDU
-                               'COEFDO': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':1}  # MDU
+                               'COEFDS': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':0.385},
+                               'COEFDO': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':1}
                                }
 
         self.dico_typ_elem = {0: 'Travee',
@@ -123,7 +123,8 @@ def ctrl_set_value(ctrl, val):
     if ctrl.metaObject().className() in ('QSpinBox', 'QDoubleSpinBox'):
         ctrl.setValue(val)
     elif ctrl.metaObject().className() == 'QComboBox':
-        ctrl.setCurrentIndex(ctrl.findData(int(val)))
+        ctrl.setCurrentIndex(ctrl.findData(val))
+        # ctrl.setCurrentIndex(ctrl.findData(int(val)))
     elif ctrl.metaObject().className() == 'QCheckBox':
         ctrl.setCheckState(Qt.CheckState(int(val)))
     elif ctrl.metaObject().className() == 'QButtonGroup':
@@ -139,7 +140,8 @@ def ctrl_get_value(ctrl):
     elif ctrl.metaObject().className() == 'QDateTimeEdit':
         val = ctrl.dateTime().toString('yyyy-MM-dd HH:mm:ss')
     elif ctrl.metaObject().className() == 'QComboBox':
-        val = int(ctrl.itemData(ctrl.currentIndex()))
+        val = ctrl.itemData(ctrl.currentIndex())
+        # val = int(ctrl.itemData(ctrl.currentIndex()))
     elif ctrl.metaObject().className() == 'QCheckBox':
         val = int(ctrl.checkState())
     elif ctrl.metaObject().className() == 'QButtonGroup':

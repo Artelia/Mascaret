@@ -27,6 +27,8 @@ from qgis.utils import *
 
 from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
 from .MetBradleyWidget import MetBradleyWidget
+from .MetBordaWidget import MetBordaWidget
+from .MetOrificeWidget import MetOrificeWidget
 from .ClassMethod import ClassMethod
 
 if int(qVersion()[0]) < 5:  # qt4
@@ -46,14 +48,20 @@ class ClassStructureEditDialog(QDialog):
 
         self.param_meth_calc = {0: {'name': 'Bradley 72',
                                     'wgt': MetBradleyWidget,
-                                    'wgt_param': [self.mgis, '72'],
+                                    'wgt_param': [self.mgis, '72', id_struct],
                                     'ctrl': 'bradley'},
-                                1: 'Borda',
+                                1: {'name': 'Borda',
+                                    'wgt': MetBordaWidget,
+                                    'wgt_param': [self.mgis, id_struct],
+                                    'ctrl': 'borda'},
                                 2: 'Loi de seuil',
-                                3: 'Loi d''orifice',
+                                3: {'name': 'Loi d\'orifice',
+                                    'wgt': MetOrificeWidget,
+                                    'wgt_param': [self.mgis, id_struct],
+                                    'ctrl': 'orifice'},
                                 4: {'name': 'Bradley 78',
                                     'wgt': MetBradleyWidget,
-                                    'wgt_param': [self.mgis, '78'],
+                                    'wgt_param': [self.mgis, '78', id_struct],
                                     'ctrl': 'bradley'}
                                 }
 
@@ -104,6 +112,8 @@ class ClassStructureEditDialog(QDialog):
             if param in self.wgt_met.dico_ctrl.keys():
                 ctrls = self.wgt_met.dico_ctrl[param]
                 for ctrl in ctrls:
+                    if param == 'FORMPIL':
+                        val = str(val).replace('.', '_').replace('_0', '')
                     ctrl_set_value(ctrl, val)
 
         for tab, param in self.wgt_met.dico_tab.items():
@@ -123,10 +133,15 @@ class ClassStructureEditDialog(QDialog):
                     if len(row) > 0:
                         val = row[0][0]
                     else:
-                        val = col['valdef']
+                        val = ctrl_get_value(col['valdef'])
+
+                    if col['fld'] == 'FORMPIL':
+                        val = str(val).replace('.', '_').replace('_0', '')
+                    print('display',col['fld'], val)
+
                     if col['cb']:
                         cb = QComboBox()
-                        fill_qcombobox(cb, col['cb'], val_def=int(val))
+                        fill_qcombobox(cb, col['cb'], val_def=val)
                         tab.setCellWidget(r, c, cb)
                     else:
                         itm = QTableWidgetItem()
@@ -144,12 +159,25 @@ class ClassStructureEditDialog(QDialog):
 
     def save_struct(self):
         self.current_meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
-        if self.current_meth in (0, 4):
+        if self.current_meth in [0, 4]:
+            verif, msg = self.verif_bradley(self.id_struct)
+        elif self.current_meth in [1]:
+            verif, msg = self.verif_bradley(self.id_struct)
+        elif self.current_meth in [3]:
             verif, msg = self.verif_bradley(self.id_struct)
 
         if verif:
             name = str(self.txt_name.text())
             active = self.cc_active.isChecked()
+            if active:
+                sql = "SELECT id_prof_ori FROM {0}.struct_config WHERE id = {1}".format(self.mdb.SCHEMA,
+                                                                                        self.id_struct)
+                row = self.mdb.run_query(sql, fetch=True)
+                id_profil = row[0][0]
+                sql = "UPDATE {0}.struct_config SET active = FALSE WHERE id_prof_ori = {1}".format(self.mdb.SCHEMA,
+                                                                                                   id_profil)
+                self.mdb.execute(sql)
+
             sql = "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4} WHERE id = {1}" \
                 .format(self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active)
             self.mdb.execute(sql)
@@ -162,7 +190,11 @@ class ClassStructureEditDialog(QDialog):
             self.mdb.execute(sql)
 
             for var, ctrls in self.wgt_met.dico_ctrl.items():
-                val = float(ctrl_get_value(ctrls[0]))
+                if var == 'FORMPIL':
+                    val = float(ctrl_get_value(ctrls[0]).replace('_', '.'))
+                else:
+                    val = float(ctrl_get_value(ctrls[0]))
+
                 sql = "INSERT INTO {0}.struct_param (id_config, var, value) VALUES ({1}, '{2}', {3})" \
                     .format(self.mdb.SCHEMA, self.id_struct, var, val)
                 self.mdb.execute(sql)
@@ -179,6 +211,8 @@ class ClassStructureEditDialog(QDialog):
                         if col['cb']:
                             cb = tab.cellWidget(r, c)
                             val = cb.itemData(cb.currentIndex())
+                            if var == 'FORMPIL':
+                                val = val.replace('_', '.')
                         else:
                             itm = tab.item(r, c)
                             val = itm.data(0)

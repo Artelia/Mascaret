@@ -577,7 +577,7 @@ class ClassMethod:
             self.brad.bradley(id_config, self.tbst.dico_meth_calc[idmethod],ui)
         elif idmethod == 1: #borda
             self.brad.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
-        elif idmethod == 3: #borda
+        elif idmethod == 3: #orifice
         # if idmethod == 0 or idmethod == 4:
             self.brad.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         else:
