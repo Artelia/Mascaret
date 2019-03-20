@@ -142,18 +142,16 @@ class ClassStructureEditDialog(QDialog):
 
                     if col['fld'] == 'FORMPIL':
                         val = str(val).replace('.', '_').replace('_0', '')
-                    print('display',col['fld'], val)
+                    # print('display',col['fld'], val)
 
                     if col['cb']:
                         cb = QComboBox()
                         fill_qcombobox(cb, col['cb'], val_def=val)
                         tab.setCellWidget(r, c, cb)
-                        print(r, c, 'cb')
                     else:
                         itm = QTableWidgetItem()
                         itm.setData(0, val)
                         tab.setItem(r, c, itm)
-                        print(r, c, 'itm')
 
             tab.hide()
             tab.resizeColumnsToContents()
@@ -163,8 +161,8 @@ class ClassStructureEditDialog(QDialog):
     def accept_page(self):
         # save Info
         if self.save_struct():
+            self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
             if self.current_meth not in [5]:
-                self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
                 self.clmeth.sav_meth(self.id_struct,self.current_meth, self.ui)
             self.accept()
         # else:
