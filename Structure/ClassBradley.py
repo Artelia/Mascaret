@@ -54,7 +54,7 @@ class ClassBradley:
             print(msg)
             return
 
-        list_recup = ['FIRSTWD', 'BIAIOUV', 'NBTRAVE', 'TOTALOUV',
+        list_recup = ['FIRSTWD', 'BIAIOUV', 'NBTRAVE',
                       'FORMCUL', 'ORIENTM',
                       'PENTTAL', 'ZTOPTAB', 'EPAITAB', 'BIAICUL', 'COEFDS','COEFDO',
                       # pile de pont
@@ -94,7 +94,7 @@ class ClassBradley:
         for poly in self.list_poly_trav:
             (minx, miny, maxx, maxy) = poly.bounds
             self.param_elem['ZMAXELEM'].append(maxy)
-            self.param_elem['LARGELEM'].append(maxx-minx)
+            self.param_elem['LARGELEM'].append(maxx - minx)
             self.param_elem['SURFELEM'].append(poly.area)
 
     def check_listinter(self, dico_abc, name_abc, varx, vary):
@@ -137,7 +137,6 @@ class ClassBradley:
         return cond
 
     def check_j(self, j, form, q, h):
-
         if form == 1 and j > 0.057:
             if [q, h] not in self.qh_j_no_hy:
                 self.qh_j_no_hy.append([q, h])
@@ -176,6 +175,10 @@ class ClassBradley:
             'Bradley 72': {'abac': ['bradley', 'bradley72']}
         }
         self.dico_abc = self.parent.get_abac(self.dico_name_abac[method]['abac'])
+        self.param_g['TOTALOUV']=0
+        for poly in self.list_poly_trav:
+            (minx, miny, maxx, maxy) = poly.bounds
+            self.param_g['TOTALOUV'] += (maxx - minx)
 
         type_kb = self.def_type_kb(method)
 

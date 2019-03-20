@@ -105,6 +105,8 @@ class ClassMethod:
 
     def poly_arch(self, param_g, param_elem, x0=None, zmin=-99999):
         """ creation polygone for "pont arch" """
+        print("eeee", param_g['FORMARC'],param_elem['ZMINARC'],param_elem['ZMAXARC'])
+        print(param_elem['LARG'])
         type = param_g['FORMARC']
         if x0 is None:
             x0 = param_g['FIRSTWD']  # point depart
@@ -135,7 +137,7 @@ class ClassMethod:
             # Let create a circle of radius 1 around center point:
             circ = Point([x_c, z_c]).buffer(1)
             # Let create the ellipse along x and y:
-            ell = shapely.affinity.scale(circ, int(a), int(b))
+            ell = shapely.affinity.scale(circ, a, b)
             # # If one need to rotate it clockwise along an upward pointing x axis:
             # poly_t = shapely.affinity.rotate(ell, 90 - ellipse[2])
             # # According to the man, a positive value means a anti-clockwise angle,
@@ -167,7 +169,7 @@ class ClassMethod:
         poly_p = Polygon(liste_poly)
         return poly_p
 
-    def poly_pil(self, param_g, param_elem, x0, zmin=-99999):
+    def poly_pil(self, param_elem, x0, zmin=-99999):
         """ creation polygone for "pont cadre" """
         x1 = x0 + param_elem['LARG']
         z0 = param_elem['ZMAXELEM']
@@ -207,23 +209,29 @@ class ClassMethod:
             recup_trav = ['LARGTRA']
             recup_pil = ['FORMPIL', 'LARGPIL', 'LONGPIL']
             recup_p1 = []
-        if config_type == 'PA':
+        elif config_type == 'PA':
             # parametre general
             list_recup = ['FORMARC', 'ZTOPTAB', 'FIRSTWD']
             param_g = self.get_param_g(list_recup, id_config)
             recup_trav = ['LARGTRA', 'ZMINARC', 'ZMAXARC']
             recup_pil = ['LARGPIL']
             recup_p1 = ['FORMARC','ZMINARC']
+        elif config_type == 'PD':
+            #dalot
+            pass
+        elif config_type == 'PD':
+            # buse
+            pass
 
         where = "id_config = {0}".format(id_config)  # type=0 span, =1 bridge peir
         order = "id_elem"
         lid_elem = self.mdb.select('struct_elem', where=where, order=order, list_var=['id_elem', "type"])
         first = True
+
         width = 0
         width_prec = 0
         width_trav = 0
-
-
+        sav_zmaxelem = 0
         if not lid_elem["id_elem"]:
             msg = "Not element in table in create_poly_elem function"
             print(msg)
@@ -235,8 +243,6 @@ class ClassMethod:
                 param_elem['LARG'] = param_elem['LARGPIL']
                 if recup_p1:
                     param_p1 = self.get_param_elem(id_elem+1, recup_p1, id_config)
-                param_elem['ZMAXELEM'] = 0
-                param_elem['ZMAXELEM_P1'] = 0
             else:
                 param_elem = self.get_param_elem(id_elem, recup_trav, id_config)
                 param_elem['LARG'] = param_elem['LARGTRA']
@@ -251,20 +257,23 @@ class ClassMethod:
                 # # pont Cadre
                 if config_type == 'PC':
                     param_elem['ZMAXELEM'] = param_g['ZPC']
+                    sav_zmaxelem = param_elem['ZMAXELEM']
                     poly_elem = self.poly_pont_cadre(param_g, param_elem, width, zmin)
                 # pont arc
                 if config_type == 'PA':
                     param_elem['ZMAXELEM'] = param_elem['ZMINARC']
+                    sav_zmaxelem = param_elem['ZMAXELEM']
                     poly_elem = self.poly_arch(param_g, param_elem, width, zmin)
             else:
                 #Attention Arc  hauteur different entre droite et gauchs(aproximation  /|  ) pb seul bradley
                 #                                                                     |_|
                 if config_type == 'PC':
+                    param_elem['ZMAXELEM'] = sav_zmaxelem
                     param_elem['ZMAXELEM_P1'] = param_g['ZPC']
                 if config_type == 'PA':
+                    param_elem['ZMAXELEM'] = sav_zmaxelem
                     param_elem['ZMAXELEM_P1'] = param_p1['ZMINARC']
-
-                poly_elem = self.poly_pil(param_g, param_elem, width, zmin)
+                poly_elem = self.poly_pil( param_elem, width, zmin)
 
             # print(poly_elem,lid_elem["type"][i])
             # final
@@ -286,17 +295,17 @@ class ClassMethod:
                 self.mdb.run_query(sql)
         width += width_prec
 
-        sql = "SELECT * FROM {0}.struct_param WHERE id_config = {1} AND var = 'TOTALOUV'" \
-            .format(self.mdb.SCHEMA, id_config)
-        row = self.mdb.run_query(sql, fetch=True)
-        if len(row) > 0:
-            sql = "UPDATE {0}.struct_param SET value = {2} WHERE id_config = {1} AND var = 'TOTALOUV'" \
-                .format(self.mdb.SCHEMA, id_config, width_trav)
-            self.mdb.execute(sql)
-        else:
-            sql = "INSERT INTO {0}.struct_param (id_config, var, value) VALUES ({1}, 'TOTALOUV', {2})" \
-                .format(self.mdb.SCHEMA, id_config, width_trav)
-            self.mdb.execute(sql)
+        # sql = "SELECT * FROM {0}.struct_param WHERE id_config = {1} AND var = 'TOTALOUV'" \
+        #     .format(self.mdb.SCHEMA, id_config)
+        # row = self.mdb.run_query(sql, fetch=True)
+        # if len(row) > 0:
+        #     sql = "UPDATE {0}.struct_param SET value = {2} WHERE id_config = {1} AND var = 'TOTALOUV'" \
+        #         .format(self.mdb.SCHEMA, id_config, width_trav)
+        #     self.mdb.execute(sql)
+        # else:
+        #     sql = "INSERT INTO {0}.struct_param (id_config, var, value) VALUES ({1}, 'TOTALOUV', {2})" \
+        #         .format(self.mdb.SCHEMA, id_config, width_trav)
+        #     self.mdb.execute(sql)
 
         # sql = "INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALOUV', {2});".format(
         #     self.mdb.SCHEMA,
