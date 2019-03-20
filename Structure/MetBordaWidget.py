@@ -46,7 +46,7 @@ class MetBordaWidget(QWidget):
         self.dsb_larg_pil.valueChanged.connect(self.update_piles)
         self.dsb_h_pas.valueChanged.connect(self.update_min_h_max)
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
-        self.dsb_cote_tab.valueChanged.connect(self.update_max_h_max)
+        # self.dsb_cote_tab.valueChanged.connect(self.update_max_h_max)
         self.tab_trav.itemChanged.connect(self.verif_larg_trav)
 
         self.dico_ctrl = {'FIRSTWD': [self.dsb_abs_cul_rg],

@@ -19,6 +19,8 @@ email                :
 """
 
 from matplotlib.patches import Polygon as mpoly
+# from shapely.geometry import Polygon as spoly
+from shapely.wkt import loads as wktLoads
 
 from .ClassMethod import ClassMethod
 from ..GraphCommon import GraphCommon
@@ -76,6 +78,10 @@ class GraphStructure(GraphCommon):
             self.courbes['profil_poly'].set_xy([(dico_profil['x'][r], dico_profil['z'][r])
                                                 for r in range(len(dico_profil['x']))])
 
+            sql = "SELECT type FROM {0}.struct_config WHERE id = {1} ".format(self.mdb.SCHEMA, config)
+            rows = self.mdb.run_query(sql, fetch=True)
+            typ_struct = rows[0][0]
+
             sql = "SELECT var, value FROM {0}.struct_param WHERE id_config = {1} " \
                   "AND var IN ('ZTOPTAB', 'EPAITAB', 'FIRSTWD')".format(self.mdb.SCHEMA, config)
             rows = self.mdb.run_query(sql, fetch=True)
@@ -94,28 +100,23 @@ class GraphStructure(GraphCommon):
                 self.courbes['ouvrage_poly'].set_xy([(dico_ouvrage['x'][r], dico_ouvrage['z'][r])
                                                     for r in range(len(dico_ouvrage['x']))])
 
-                x_left = param['FIRSTWD']
-                sql = "SELECT id_elem, type FROM {0}.struct_elem WHERE id_config = {1} " \
+                sql = "SELECT id_elem, type, ST_AsText(polygon) FROM {0}.struct_elem WHERE id_config = {1} " \
                       "ORDER BY id_elem".format(self.mdb.SCHEMA, config)
                 lst_elem = self.mdb.run_query(sql, fetch=True)
-                for e, elem in enumerate(lst_elem):
-                    if elem[1] == 0:
-                        sql = "SELECT value FROM {0}.struct_elem_param WHERE id_config = {1} and id_elem = {2} " \
-                              "and var = 'LARGTRA'".format(self.mdb.SCHEMA, config, elem[0])
-                        larg = self.mdb.run_query(sql, fetch=True)[0][0]
-                        self.courbes['elem'].append(mpoly([(x_left, miny - 90),
-                                                           (x_left, param['ZTOPTAB'] - param['EPAITAB']),
-                                                           (x_left + larg , param['ZTOPTAB'] - param['EPAITAB']),
-                                                           (x_left + larg , miny - 90)],
-                                                          zorder=90-e, facecolor='w', edgecolor='black', alpha=1.))
-                        self.axes.add_patch(self.courbes['elem'][-1])
-                        x_left += larg
-                    elif elem[1] == 1:
-                        sql = "SELECT value FROM {0}.struct_elem_param WHERE id_config = {1} and id_elem = {2} " \
-                              "and var = 'LARGPIL'".format(self.mdb.SCHEMA, config, elem[0])
-                        larg = self.mdb.run_query(sql, fetch=True)[0][0]
-                        x_left += larg
+                if typ_struct == 'PC':
+                    for e, elem in enumerate(lst_elem):
+                        if elem[1] == 0:
+                            poly = wktLoads(elem[2])
+                            poly_coord = [pt for pt in poly.exterior.coords]
+                            self.courbes['elem'].append(mpoly(poly_coord,
+                                                              zorder=90-e, facecolor='w', edgecolor='black', alpha=1.))
+                            self.axes.add_patch(self.courbes['elem'][-1])
+                else:
+                    for e, elem in enumerate(lst_elem):
+                        print (elem[2])
+
                 self.update_limites(minx, miny, maxx, maxy)
+
 
     def update_limites(self, minx, miny, maxx, maxy):
         self.axes.set_xlim((minx, maxx))

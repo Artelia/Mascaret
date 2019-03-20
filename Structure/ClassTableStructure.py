@@ -41,7 +41,8 @@ class ClassTableStructure:
                                1: 'Borda',
                                2: 'Loi de seuil',
                                3: 'Loi d\'orifice',
-                               4: 'Bradley 78'}
+                               4: 'Bradley 78',
+                               5: 'Borda'}
 
         self.dico_meth_draw = {0: 'Method 1',
                                1: 'Method 2',
@@ -59,7 +60,8 @@ class ClassTableStructure:
                                       },
                                'PA': {'name': 'Pont arche',
                                       'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
-                                      'meth_calc': [1]
+                                      'meth_calc': [5],
+                                      'meth_draw': [[0]]
                                       },
                                'DA': {'name': 'Dalot',
                                       'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
@@ -93,7 +95,8 @@ class ClassTableStructure:
                                "TOTALOUV": {'name': 'Largeur ouverture de travées', 'unit': 'm'},
                                # "TOTALW": {'name': 'Largeur du pont', 'unit': 'm'},
                                'COEFDS': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':0.385},
-                               'COEFDO': {'name': 'Coeficient de la loi de orifice', 'unit': '','default':1}
+                               'COEFDO': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':1},
+                               'FORMARC': {'name': 'Forme des arches', 'unit': ''}
                                }
 
         self.dico_typ_elem = {0: 'Travee',
@@ -103,10 +106,14 @@ class ClassTableStructure:
         self.dico_elem_prm = {'LARGTRA': {'name': 'Largeur de la travee', 'unit': 'm'},
                               'FORMPIL': {'name': 'Forme des piles', 'unit': None},
                               'LARGPIL': {'name': 'Largeur des piles', 'unit': 'm'},
-                              'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'}
-                              }
+                              'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'},
+                              'ZMINARC': {'name': 'Z bas de l''arche', 'unit': 'm'},
+                              'ZMAXARC': {'name': 'Z haut de l''arche', 'unit': 'm'},
+                              'METHARC': {'name': 'Méthode de construction de l''arche', 'unit': None}}
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
+        self.dico_forme_arche = {1: 'Circulaire', 2: 'Ellipsoïdale'}
+
         self.dico_law_struct = {
             'Bradley 78':
                 {0: 'flowrate', 1: 'z_downstream', 2: 'z_upstream'},

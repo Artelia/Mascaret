@@ -111,7 +111,7 @@ class ClassMethod:
         x_c = param_elem['LARG'] / 2. + x0
         z = param_elem['cotarc']
         if type == 'ellipse':
-            zmax = param_elem['cotmax']
+            zmax = param_elem['ZMAXARC']
             # hyp. zmax-z=b/2
             b = 2 * (zmax - z)
             z_c = zmax - b
@@ -210,9 +210,9 @@ class ClassMethod:
             # parametre general
             list_recup = ['ZTOPTAB', 'FIRSTWD']
             param_g = self.get_param_g(list_recup, id_config)
-            recup_trav = ['LARGTRA', 'cotmax', 'cotarc']
+            recup_trav = ['LARGTRA', 'ZMINARC', 'ZMAXARC']
             recup_pil = ['FORMARC', 'LARGPIL']
-            recup_p1 = ['FORMARC','cotarc']
+            recup_p1 = ['FORMARC','ZMINARC']
 
         where = "id_config = {0}".format(id_config)  # type=0 span, =1 bridge peir
         order = "id_elem"
