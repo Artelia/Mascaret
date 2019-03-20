@@ -29,6 +29,7 @@ from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_v
 from .MetBradleyWidget import MetBradleyWidget
 from .MetBordaWidget import MetBordaWidget
 from .MetOrificeWidget import MetOrificeWidget
+from .MetBordaPaWidget import MetBordaPaWidget
 from .ClassMethod import ClassMethod
 
 if int(qVersion()[0]) < 5:  # qt4
@@ -62,7 +63,11 @@ class ClassStructureEditDialog(QDialog):
                                 4: {'name': 'Bradley 78',
                                     'wgt': MetBradleyWidget,
                                     'wgt_param': [self.mgis, '78', id_struct],
-                                    'ctrl': 'bradley'}
+                                    'ctrl': 'bradley'},
+                                5: {'name': 'Borda',
+                                    'wgt': MetBordaPaWidget,
+                                    'wgt_param': [self.mgis, id_struct],
+                                    'ctrl': 'borda'}
                                 }
 
         self.id_struct = id_struct
@@ -117,14 +122,14 @@ class ClassStructureEditDialog(QDialog):
                     ctrl_set_value(ctrl, val)
 
         for tab, param in self.wgt_met.dico_tab.items():
-            # tab.setRowCount(0)
+            tab.setRowCount(0)
             t = param['type']
             sql = "SELECT id_elem FROM {0}.struct_elem " \
                   "WHERE id_config = {1} AND type = {2} ORDER BY id_elem".format(self.mdb.SCHEMA, self.id_struct, t)
             elems = self.mdb.run_query(sql, fetch=True)
 
             for r, elem in enumerate(elems):
-                # tab.insertRow(r)
+                tab.insertRow(r)
                 for c, col in enumerate(param['col']):
                     sql = "SELECT value FROM {0}.struct_elem_param WHERE id_config = {1} " \
                           "AND id_elem = {2} and var = '{3}'".format(self.mdb.SCHEMA, self.id_struct,
@@ -143,16 +148,24 @@ class ClassStructureEditDialog(QDialog):
                         cb = QComboBox()
                         fill_qcombobox(cb, col['cb'], val_def=val)
                         tab.setCellWidget(r, c, cb)
+                        print(r, c, 'cb')
                     else:
                         itm = QTableWidgetItem()
                         itm.setData(0, val)
                         tab.setItem(r, c, itm)
+                        print(r, c, 'itm')
+
+            tab.hide()
+            tab.resizeColumnsToContents()
+            tab.resizeRowsToContents()
+            tab.show()
 
     def accept_page(self):
         # save Info
         if self.save_struct():
-            self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
-            self.clmeth.sav_meth(self.id_struct,self.current_meth, self.ui)
+            if self.current_meth not in [5]:
+                self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
+                self.clmeth.sav_meth(self.id_struct,self.current_meth, self.ui)
             self.accept()
         # else:
         #     self.reject_page()
@@ -165,6 +178,8 @@ class ClassStructureEditDialog(QDialog):
             verif, msg = self.verif_bradley(self.id_struct)
         elif self.current_meth in [3]:
             verif, msg = self.verif_bradley(self.id_struct)
+        elif self.current_meth in [5]:
+            verif, msg = True, ''
 
         if verif:
             name = str(self.txt_name.text())
@@ -182,8 +197,8 @@ class ClassStructureEditDialog(QDialog):
                 .format(self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active)
             self.mdb.execute(sql)
 
-            sql = "DELETE FROM {0}.struct_param WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
-            self.mdb.execute(sql)
+            # sql = "DELETE FROM {0}.struct_param WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
+            # self.mdb.execute(sql)
             sql = "DELETE FROM {0}.struct_elem WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
             self.mdb.execute(sql)
             sql = "DELETE FROM {0}.struct_elem_param WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
@@ -195,9 +210,17 @@ class ClassStructureEditDialog(QDialog):
                 else:
                     val = float(ctrl_get_value(ctrls[0]))
 
-                sql = "INSERT INTO {0}.struct_param (id_config, var, value) VALUES ({1}, '{2}', {3})" \
-                    .format(self.mdb.SCHEMA, self.id_struct, var, val)
-                self.mdb.execute(sql)
+                sql = "SELECT * FROM {0}.struct_param WHERE id_config = {1} AND var = '{2}'" \
+                    .format(self.mdb.SCHEMA, self.id_struct, var)
+                row = self.mdb.run_query(sql, fetch=True)
+                if len(row) > 0:
+                    sql = "UPDATE {0}.struct_param SET value = {3} WHERE id_config = {1} AND var = '{2}'" \
+                        .format(self.mdb.SCHEMA, self.id_struct, var, val)
+                    self.mdb.execute(sql)
+                else:
+                    sql = "INSERT INTO {0}.struct_param (id_config, var, value) VALUES ({1}, '{2}', {3})" \
+                        .format(self.mdb.SCHEMA, self.id_struct, var, val)
+                    self.mdb.execute(sql)
 
             for tab, param in self.wgt_met.dico_tab.items():
                 type_elem = param['type']

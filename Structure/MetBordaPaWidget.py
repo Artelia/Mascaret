@@ -33,25 +33,29 @@ else:  # qt5
     from qgis.PyQt.QtGui import QIcon
     from qgis.PyQt.QtWidgets import *
 
-class MetOrificeWidget(QWidget):
+class MetBordaPaWidget(QWidget):
     def __init__(self, mgis, id_struct=None):
         QWidget.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_borda.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_borda_pa.ui'), self)
         self.id_struct = id_struct
 
         self.sb_nb_trav.valueChanged.connect(self.change_ntrav)
         self.dsb_larg_pil.valueChanged.connect(self.update_piles)
         self.dsb_h_pas.valueChanged.connect(self.update_min_h_max)
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
+        self.cb_form_arch.currentIndexChanged.connect(self.change_form_arch)
         # self.dsb_cote_tab.valueChanged.connect(self.update_max_h_max)
         self.tab_trav.itemChanged.connect(self.verif_larg_trav)
 
+        fill_qcombobox(self.cb_form_arch, [[1, 'Circulaire'], [2, 'Ellipsoïdale']],
+                       icn=os.path.join(self.mgis.masplugPath, 'Structure/images/arches/arche{}.png'))
+
         self.dico_ctrl = {'FIRSTWD': [self.dsb_abs_cul_rg],
                           'ZTOPTAB': [self.dsb_cote_tab],
-                          'EPAITAB': [self.dsb_epai_tab],
+                          'FORMARC': [self.cb_form_arch],
                           'LARGPIL': [self.dsb_larg_pil],
                           'PASH': [self.dsb_h_pas],
                           'MINH': [self.dsb_h_min],
@@ -62,7 +66,12 @@ class MetOrificeWidget(QWidget):
 
         self.dico_tab = {self.tab_trav: {'type': 0,
                                          'id': '({}*2) + 1',
-                                         'col': [{'fld': 'LARGTRA', 'cb': None, 'valdef': 1.}]},
+                                         'col': [{'fld': 'LARGTRA', 'cb': None, 'valdef': 1.},
+                                                 {'fld': 'ZMINARC', 'cb': None, 'valdef': 0.},
+                                                 {'fld': 'ZMAXARC', 'cb': None, 'valdef': 0.},
+                                                 {'fld': 'METHARC',
+                                                  'cb': [[1, 'Circulaire'], [2, 'Ellipsoïdale']],
+                                                  'valdef': 1}]},
                          self.tab_pile: {'type': 1,
                                          'id': '({}*2) + 2',
                                          'col': [{'fld': 'LARGPIL', 'cb': None, 'valdef': self.dsb_larg_pil}]}
@@ -82,6 +91,18 @@ class MetOrificeWidget(QWidget):
         else:
             for p in range (nrow_pile, nb_pile):
                 self.insert_elem(self.tab_pile, p)
+
+    def change_form_arch(self):
+        if ctrl_get_value(self.cb_form_arch) == 1:
+            self.tab_trav.hideColumn(2)
+            self.tab_trav.hideColumn(3)
+        else:
+            self.tab_trav.showColumn(2)
+            self.tab_trav.showColumn(3)
+        self.tab_trav.hide()
+        self.tab_trav.resizeColumnsToContents()
+        self.tab_trav.resizeRowsToContents()
+        self.tab_trav.show()
 
     def insert_elem(self, tab, row):
         tab.insertRow(row)
