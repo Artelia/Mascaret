@@ -103,17 +103,17 @@ class GraphStructure(GraphCommon):
                 sql = "SELECT id_elem, type, ST_AsText(polygon) FROM {0}.struct_elem WHERE id_config = {1} " \
                       "ORDER BY id_elem".format(self.mdb.SCHEMA, config)
                 lst_elem = self.mdb.run_query(sql, fetch=True)
-                if typ_struct == 'PC':
-                    for e, elem in enumerate(lst_elem):
-                        if elem[1] == 0:
-                            poly = wktLoads(elem[2])
-                            poly_coord = [pt for pt in poly.exterior.coords]
-                            self.courbes['elem'].append(mpoly(poly_coord,
-                                                              zorder=90-e, facecolor='w', edgecolor='black', alpha=1.))
-                            self.axes.add_patch(self.courbes['elem'][-1])
-                else:
-                    for e, elem in enumerate(lst_elem):
-                        print (elem[2])
+                # if typ_struct == 'PC':
+                for e, elem in enumerate(lst_elem):
+                    if elem[1] == 0:
+                        poly = wktLoads(elem[2])
+                        poly_coord = [pt for pt in poly.exterior.coords]
+                        self.courbes['elem'].append(mpoly(poly_coord,
+                                                          zorder=90-e, facecolor='w', edgecolor='black', alpha=1.))
+                        self.axes.add_patch(self.courbes['elem'][-1])
+                # else:
+                #     for e, elem in enumerate(lst_elem):
+                #         print (elem[2])
 
                 self.update_limites(minx, miny, maxx, maxy)
 

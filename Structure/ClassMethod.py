@@ -103,21 +103,22 @@ class ClassMethod:
             print('Inconsistent Z for the span')
         return poly_t
 
-    def poly_arch(self, param_g, param_elem, x0=None, zmin=-99999, type='circle'):
+    def poly_arch(self, param_g, param_elem, x0=None, zmin=-99999):
         """ creation polygone for "pont arch" """
+        type = param_g['FORMARC']
         if x0 is None:
             x0 = param_g['FIRSTWD']  # point depart
         x1 = x0 + param_elem['LARG']
         x_c = param_elem['LARG'] / 2. + x0
-        z = param_elem['cotarc']
-        if type == 'ellipse':
+        z = param_elem['ZMINARC']
+        if type == 2: #ellipse
             zmax = param_elem['ZMAXARC']
             # hyp. zmax-z=b/2
             b = 2 * (zmax - z)
             z_c = zmax - b
             frac = m.pow(x0 - x_c, 2) / (1 - m.pow(z - z_c, 2) / m.pow(b, 2))
             a = m.sqrt(frac)
-        elif type == 'circle':
+        elif type == 1: #circle
             b = param_elem['LARG'] / 2.
             a = b
             z_c = z
@@ -208,10 +209,10 @@ class ClassMethod:
             recup_p1 = []
         if config_type == 'PA':
             # parametre general
-            list_recup = ['ZTOPTAB', 'FIRSTWD']
+            list_recup = ['FORMARC', 'ZTOPTAB', 'FIRSTWD']
             param_g = self.get_param_g(list_recup, id_config)
             recup_trav = ['LARGTRA', 'ZMINARC', 'ZMAXARC']
-            recup_pil = ['FORMARC', 'LARGPIL']
+            recup_pil = ['LARGPIL']
             recup_p1 = ['FORMARC','ZMINARC']
 
         where = "id_config = {0}".format(id_config)  # type=0 span, =1 bridge peir
@@ -253,15 +254,15 @@ class ClassMethod:
                     poly_elem = self.poly_pont_cadre(param_g, param_elem, width, zmin)
                 # pont arc
                 if config_type == 'PA':
-                    param_elem['ZMAXELEM'] = param_elem['cotarc']
-                    poly_elem = self.poly_arch(param_g, param_elem, width, zmin, type=param_elem['FORMARC'])
+                    param_elem['ZMAXELEM'] = param_elem['ZMINARC']
+                    poly_elem = self.poly_arch(param_g, param_elem, width, zmin)
             else:
                 #Attention Arc  hauteur different entre droite et gauchs(aproximation  /|  ) pb seul bradley
                 #                                                                     |_|
                 if config_type == 'PC':
                     param_elem['ZMAXELEM_P1'] = param_g['ZPC']
                 if config_type == 'PA':
-                    param_elem['ZMAXELEM_P1'] = param_p1['cotarc']
+                    param_elem['ZMAXELEM_P1'] = param_p1['ZMINARC']
 
                 poly_elem = self.poly_pil(param_g, param_elem, width, zmin)
 
