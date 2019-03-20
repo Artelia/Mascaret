@@ -56,31 +56,21 @@ class ClassBradley:
 
         list_recup = ['FIRSTWD', 'BIAIOUV', 'NBTRAVE', 'TOTALOUV',
                       'FORMCUL', 'ORIENTM',
-                      'PENTTAL', 'ZTOPTAB', 'EPAITAB', 'BIAICUL',  # 'COEFDEB',
+                      'PENTTAL', 'ZTOPTAB', 'EPAITAB', 'BIAICUL', 'COEFDS','COEFDO',
                       # pile de pont
                       'LARGPIL', 'LONGPIL', 'FORMPIL', 'BIAIPIL',
                       # numeric
-                      'MINH', 'PASH', 'MINQ', 'MAXQ', 'PASQ']
-
-        # 'MAXH', 'MINH', 'PASH', 'MINQ', 'MAXQ', 'PASQ']
+                      'MAXH', 'MINH', 'PASH', 'MINQ', 'MAXQ', 'PASQ']
         # 'TOTALW',
         self.param_g = self.parent.get_param_g(list_recup, id_config)
-        self.param_g['ZPC'] = self.param_g['ZTOPTAB'] - self.param_g['EPAITAB']
-        self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
+
         self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
         self.poly_p = self.parent.poly_profil(profil)
+
         poly_tmp=self.parent.coup_poly_h(self.poly_p, self.param_g['ZTOPTAB'])
         (minx, miny, maxx, maxy) = poly_tmp.bounds
         self.param_g['TOTALW']=maxx-minx
 
-        # **********************************************************************************************
-        # orifice and seuil
-        # *********************************************************************************************
-        # ***********************************
-        # add Variable
-        self.param_g['COEFDS'] = 0.385  # USER
-        self.param_g['COEFDO'] = 1  # 0.65 # USER
-        self.param_g['HMAX'] = 15
 
         # ***********************************
         where = " id_config={} and type=1 ".format(id_config)
@@ -90,14 +80,22 @@ class ClassBradley:
         (minx, miny, maxx, maxy) = self.poly_p.bounds
         self.minz=miny
         self.list_zav = [miny]
-        self.list_zav += list(np.arange(self.minz + self.param_g['MINH'], self.param_g['HMAX']+self.minz, self.param_g['PASH']))
-        self.list_zav.append(self.param_g['HMAX']+self.minz)
+        self.list_zav += list(np.arange(self.minz + self.param_g['MINH'], self.param_g['MAXH']+self.minz, self.param_g['PASH']))
+        self.list_zav.append(self.param_g['MAXH']+self.minz)
 
         self.list_zam = np.array(self.list_zav)
 
         where = " id_config={} and type=0 ".format(id_config)
         order = "id_elem"
         self.list_poly_trav = self.parent.select_poly('struct_elem', where, order)['polygon']
+
+        #TODO modifier ZPC car arch depend element
+        self.param_elem={'ZMAXELEM': [],'LARGELEM':[],'SURFELEM':[]}
+        for poly in self.list_poly_trav:
+            (minx, miny, maxx, maxy) = poly.bounds
+            self.param_elem['ZMAXELEM'].append(maxy)
+            self.param_elem['LARGELEM'].append(maxx-minx)
+            self.param_elem['SURFELEM'].append(poly.area)
 
     def check_listinter(self, dico_abc, name_abc, varx, vary):
         if len(dico_abc[name_abc][varx]) == len(dico_abc[name_abc][vary]):
@@ -203,10 +201,10 @@ class ClassBradley:
 
         return coef_cor_biais, type_kb, list_ph, list_e
 
-    def meth_brad(self, hav, q, coef_cor_biais, type_kb, list_ph, list_e):
+    def meth_brad(self, zav, q, coef_cor_biais, type_kb, list_ph, list_e):
         """
         Compute  h upstream with bradley method
-        :param hav: hav downstream
+        :param zav: zav cote downstream
         :param q: flow rate
 
         :param coef_cor_biais: angle correction coefficient
@@ -217,14 +215,14 @@ class ClassBradley:
         """
         area_pil = 0
         area_pil_proj = 0
-        poly_wet = self.parent.coup_poly_h(self.poly_p, hav+self.minz)
+        poly_wet = self.parent.coup_poly_h(self.poly_p, zav + self.minz)
         if poly_wet.is_empty:
             return None
         area_wet = poly_wet.area
         # print('area_wet',area_wet)
         umoy = q / area_wet
         for poly_pil in self.list_poly_pil:
-            poly_pil = self.parent.coup_poly_h(poly_pil, hav+self.minz)
+            poly_pil = self.parent.coup_poly_h(poly_pil, zav + self.minz)
             if self.param_g['BIAIOUV'] != 0:
                 area_pil_proj += poly_pil.area * coef_cor_biais
             area_pil += poly_pil.area
@@ -242,8 +240,8 @@ class ClassBradley:
             coefm = q1 / qtot
         else:
             # hyp si debit null cote aval =cote amon
-            # list_final.append([q, hav, hav])
-            return [self.deb_min, hav, hav]
+            # list_final.append([q, zav, zav])
+            return [self.deb_min, zav, zav]
             # coefm = 0
 
         # print('q1,q2,q3',q1,q2,q3)
@@ -265,7 +263,7 @@ class ClassBradley:
         # *************** Dkp
         # print(area_pil_proj,ssoh,area_pil)
         j = area_pil_proj / ssoh
-        j = self.check_j(j, int(self.param_g['FORMPIL']), q, hav)
+        j = self.check_j(j, int(self.param_g['FORMPIL']), q, zav)
         # print('j',j)
         list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, 'DKp_abac', 'J',
                                                           str(int(self.param_g['FORMPIL'])))
@@ -320,7 +318,7 @@ class ClassBradley:
         # print("dks",dks)
         term1 = (kb + dkp + dke + dks) * va ** 2 / (2. * self.grav) * alpha2
         # print("term1 Remout",term1)
-        hmon = hav + term1
+        hmon = zav + term1
         poly_wet = self.parent.coup_poly_h(self.poly_p, hmon+self.minz)
         area_amont = poly_wet.area
         term2 = alpha1 * ((s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (
@@ -329,38 +327,40 @@ class ClassBradley:
         remout = term1 + term2
 
         # print("Remout Total", remout)
-        return [q, hav, hav + remout]
+        return [q, zav, zav + remout]
 
     def bradley(self, id_config, method='Bradley 78', ui=None):
         """cas methode bradley"""
 
         # *************************************
         self.init_method(id_config)
+        self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
         list_final = []
 
         (coef_cor_biais, type_kb, list_ph, list_e) = self.init_bradley(method)
 
-        surf = 0
-        for poly_trav in self.list_poly_trav:
-            surf += poly_trav.area
+        # surf = 0
+        # self.param_elem['SURFELEM']=[]
+        # for poly_trav in self.list_poly_trav:
+        #     surf += poly_trav.area
+
 
         zinf_vann = self.poly_p.bounds[1]  # z min du profil
         zcret = self.param_g['ZTOPTAB']
-        # self.list_zav=[6]
-        epstr = self.param_g['EPAITAB'] * 0.05
+        # self.list_zav=[9.75,6.25]
+        ztransi=  min(self.param_elem['ZMAXELEM'])# Z de transition
+
         for zav in self.list_zav:
             list_brad = []
             qmax = self.param_g['MINQ']
             za = self.list_zam[0]
-            value_save = None
             for q in self.list_q:
                 value = self.meth_brad(zav-self.minz, q, coef_cor_biais, type_kb, list_ph, list_e)
                 # [q, zav, zav + remout]
                 if value is None:
                     continue
                 else:
-                    if value[2] > self.param_g['ZPC']:
-                        value_save = value
+                    if value[2] >  ztransi:
                         break
                     # print('brad va', value)
                     list_final.append(value)
@@ -370,40 +370,46 @@ class ClassBradley:
             if len(list_brad) > 0:
                 qmax = max(np.array(list_brad)[:, 0])
                 za = list_brad[-1][2]
-
             # idx = list_zam.index(zav)
             idx = np.where(self.list_zam > za)[0]
-
             if len(idx) > 0:
+
                 for zam in self.list_zam[idx[0]:]:
+                    if zav != zam:
+                        q_seuil = 0
+                        # q_ori = self.meth_orif_mas(zam, zav, zinf_vann, self.param_g['ZPC'],
+                        #                          self.param_g['TOTALOUV'], cf, cfo , surf)
+                        # q_ori = self.meth_orif_cano(zam, zav, zinf_vann, self.param_elem['ZMAXELEM'][0], zcret,
+                        #                             self.param_g['TOTALOUV'], self.param_g['COEFDS'],
+                        #                             self.param_g['COEFDO'], self.param_elem['SURFELEM'])
+                        # print(q_ori,self.param_g['TOTALOUV'])
+                        q_ori=0
+                        for i,zsup in enumerate(self.param_elem['ZMAXELEM']):
+                            q_ori += self.meth_orif_cano(zam, zav, zinf_vann, zsup, zcret,
+                                                            self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
+                                                        self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
 
-                    # for zam in self.list_zam:
-                    q_seuil = 0
+                        # print('zam q_ori',zam, q_ori)
+                        if zam >= zcret:
+                            q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
+                        # print('q_seuil',zam, q_seuil)
+                        if q_ori == 0 and q_seuil == 0:
+                            value = None
+                        else:
+                            value = [q_ori + q_seuil, zav, zam]
 
-                    # q_ori = self.meth_orif_mas(zam, zav, zinf_vann, self.param_g['ZPC'],
-                    #                          self.param_g['TOTALOUV'], cf, cfo , surf)
-                    q_ori = self.meth_orif_cano(zam, zav, zinf_vann, self.param_g['ZPC'], zcret,
-                                                self.param_g['TOTALOUV'], self.param_g['COEFDS'],
-                                                self.param_g['COEFDO'], surf)
+                        if value is None:
+                            continue
+                        else:
+                            if value[0] > self.param_g['MAXQ']:
+                                break
 
-                    # print('zam q_ori',zam, q_ori)
-                    if zam >= zcret:
-                        q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
-                    # print('q_seuil',zam, q_seuil)
-                    if q_ori is None:
-                        value = None
+                            if value[0] > qmax:
+                                # print('ori va',value)
+                                list_final.append(value)
                     else:
-                        value = [q_ori + q_seuil, zav, zam]
+                        list_final.append([self.deb_min, zav, zam])
 
-                    if value is None:
-                        continue
-                    else:
-                        if value[0] > self.param_g['MAXQ']:
-                            break
-
-                        if value[0] > qmax:
-                            # print('ori va',value)
-                            list_final.append(value)
 
         self.save_list_final(list_final, id_config, method)
 
@@ -476,7 +482,6 @@ class ClassBradley:
             sens_ecoul = 1
         else:
             sens_ecoul = -1
-
         q_denoy = ct * larg * m.pow(ham, 1.5)
         if typ_s == 0:
             if r <= 0.8:
@@ -652,9 +657,14 @@ class ClassBradley:
 
                 for zam in self.list_zam[idx[0]:]:
                     q_seuil = 0
-                    q_ori = self.meth_orif_cano(zam, zav, zinf_vann, self.param_g['ZPC'], zcret,
-                                                self.param_g['TOTALOUV'], self.param_g['COEFDS'],
-                                                self.param_g['COEFDO'], surf)
+                    # q_ori = self.meth_orif_cano(zam, zav, zinf_vann, self.param_g['ZPC'], zcret,
+                    #                             self.param_g['TOTALOUV'], self.param_g['COEFDS'],
+                    #                             self.param_g['COEFDO'], surf)
+                    q_ori = 0
+                    for i,zsup in enumerate(self.param_elem['ZMAXELEM']):
+                        q_ori += self.meth_orif_cano(zam, zav, zinf_vann, zsup, zcret,
+                                                     self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
+                                                     self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
                     if zam >= zcret:
                         q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
                         # print('q_seuil', q_seuil,zav,zam)

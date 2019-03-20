@@ -93,7 +93,7 @@ class ClassTableStructure:
                                "TOTALOUV": {'name': 'Largeur ouverture de travées', 'unit': 'm'},
                                # "TOTALW": {'name': 'Largeur du pont', 'unit': 'm'},
                                'COEFDS': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':0.385},
-                               'COEFDO': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':1}
+                               'COEFDO': {'name': 'Coeficient de la loi de orifice', 'unit': '','default':1}
                                }
 
         self.dico_typ_elem = {0: 'Travee',

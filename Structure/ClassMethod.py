@@ -107,8 +107,8 @@ class ClassMethod:
         """ creation polygone for "pont arch" """
         if x0 is None:
             x0 = param_g['FIRSTWD']  # point depart
-        x1 = x0 + param_elem['LARGTRA']
-        x_c = param_elem['LARGTRA'] / 2. + x0
+        x1 = x0 + param_elem['LARG']
+        x_c = param_elem['LARG'] / 2. + x0
         z = param_elem['cotarc']
         if type == 'ellipse':
             zmax = param_elem['cotmax']
@@ -169,10 +169,11 @@ class ClassMethod:
     def poly_pil(self, param_g, param_elem, x0, zmin=-99999):
         """ creation polygone for "pont cadre" """
         x1 = x0 + param_elem['LARG']
-        z = param_g['ZPC']  # point haut
+        z0 = param_elem['ZMAXELEM']
+        z1 = param_elem['ZMAXELEM_P1']  # point haut
         zmin_t = zmin - 10
-        if zmin < z:
-            poly_t = Polygon([[x0, zmin_t], [x0, z], [x1, z], [x1, zmin_t], [x0, zmin_t]])
+        if zmin < z1 and zmin < z0:
+            poly_t = Polygon([[x0, zmin_t], [x0, z0], [x1, z1], [x1, zmin_t], [x0, zmin_t]])
         else:
             poly_t = GeometryCollection()
 
@@ -204,11 +205,14 @@ class ClassMethod:
             param_g['ZPC'] = param_g['ZTOPTAB'] - param_g['EPAITAB']
             recup_trav = ['LARGTRA']
             recup_pil = ['FORMPIL', 'LARGPIL', 'LONGPIL']
+            recup_p1 = []
         if config_type == 'PA':
             # parametre general
             list_recup = ['ZTOPTAB', 'FIRSTWD']
             param_g = self.get_param_g(list_recup, id_config)
             recup_trav = ['LARGTRA', 'cotmax', 'cotarc']
+            recup_pil = ['FORMARC', 'LARGPIL']
+            recup_p1 = ['FORMARC','cotarc']
 
         where = "id_config = {0}".format(id_config)  # type=0 span, =1 bridge peir
         order = "id_elem"
@@ -217,6 +221,7 @@ class ClassMethod:
         width = 0
         width_prec = 0
         width_trav = 0
+
 
         if not lid_elem["id_elem"]:
             msg = "Not element in table in create_poly_elem function"
@@ -227,6 +232,10 @@ class ClassMethod:
             if lid_elem["type"][i] == 1:
                 param_elem = self.get_param_elem(id_elem, recup_pil, id_config)
                 param_elem['LARG'] = param_elem['LARGPIL']
+                if recup_p1:
+                    param_p1 = self.get_param_elem(id_elem+1, recup_p1, id_config)
+                param_elem['ZMAXELEM'] = 0
+                param_elem['ZMAXELEM_P1'] = 0
             else:
                 param_elem = self.get_param_elem(id_elem, recup_trav, id_config)
                 param_elem['LARG'] = param_elem['LARGTRA']
@@ -240,11 +249,20 @@ class ClassMethod:
             if lid_elem["type"][i] != 1:
                 # # pont Cadre
                 if config_type == 'PC':
+                    param_elem['ZMAXELEM'] = param_g['ZPC']
                     poly_elem = self.poly_pont_cadre(param_g, param_elem, width, zmin)
                 # pont arc
                 if config_type == 'PA':
-                    poly_elem = self.poly_arch(param_g, param_elem, width, zmin, type='ellipse')
+                    param_elem['ZMAXELEM'] = param_elem['cotarc']
+                    poly_elem = self.poly_arch(param_g, param_elem, width, zmin, type=param_elem['FORMARC'])
             else:
+                #Attention Arc  hauteur different entre droite et gauchs(aproximation  /|  ) pb seul bradley
+                #                                                                     |_|
+                if config_type == 'PC':
+                    param_elem['ZMAXELEM_P1'] = param_g['ZPC']
+                if config_type == 'PA':
+                    param_elem['ZMAXELEM_P1'] = param_p1['cotarc']
+
                 poly_elem = self.poly_pil(param_g, param_elem, width, zmin)
 
             # print(poly_elem,lid_elem["type"][i])
@@ -508,7 +526,7 @@ class ClassMethod:
                     fich.write(chaine.format(**dico))
 
     def save_law_st(self, method, id_config, list_val):
-        start=time.time()
+        # start=time.time()
         self.mdb.delete('struct_laws', where="id_config = '{}'".format(id_config))
         liste_col = self.mdb.list_columns('struct_laws')
         list_insert = []
@@ -516,12 +534,12 @@ class ClassMethod:
         for j in self.tbst.dico_law_struct[method].keys():
             for i, val in enumerate(list_val[:, j]):
                 list_insert.append([id_config, j, i, val])
-        #
         var = ",".join(liste_col)
-        valeurs = "("
-        for k in liste_col:
-            valeurs += '%s,'
-        valeurs = valeurs[:-1] + ")"
+        #
+        # valeurs = "("
+        # for k in liste_col:
+        #     valeurs += '%s,'
+        # valeurs = valeurs[:-1] + ")"
 
         sql=''
         for a in list_insert:
@@ -531,8 +549,8 @@ class ClassMethod:
                                                                 var,
                                                                 valeurs)
         self.mdb.run_query(sql)
-        tfinal = time.time()-start
-        print('tfinal ',tfinal)
+        # tfinal = time.time()-start
+        # print('tfinal ',tfinal)
 
     def get_list_law(self, id_config):
         liste_f = []
