@@ -162,8 +162,7 @@ class ClassStructureEditDialog(QDialog):
         # save Info
         if self.save_struct():
             self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
-            if self.current_meth not in [5]:
-                self.clmeth.sav_meth(self.id_struct,self.current_meth, self.ui)
+            self.clmeth.sav_meth(self.id_struct,self.current_meth, self.ui)
             self.accept()
         # else:
         #     self.reject_page()

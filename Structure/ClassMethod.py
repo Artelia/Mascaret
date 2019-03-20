@@ -286,12 +286,23 @@ class ClassMethod:
                 self.mdb.run_query(sql)
         width += width_prec
 
+        sql = "SELECT * FROM {0}.struct_param WHERE id_config = {1} AND var = 'TOTALOUV'" \
+            .format(self.mdb.SCHEMA, id_config)
+        row = self.mdb.run_query(sql, fetch=True)
+        if len(row) > 0:
+            sql = "UPDATE {0}.struct_param SET value = {2} WHERE id_config = {1} AND var = 'TOTALOUV'" \
+                .format(self.mdb.SCHEMA, id_config, width_trav)
+            self.mdb.execute(sql)
+        else:
+            sql = "INSERT INTO {0}.struct_param (id_config, var, value) VALUES ({1}, 'TOTALOUV', {2})" \
+                .format(self.mdb.SCHEMA, id_config, width_trav)
+            self.mdb.execute(sql)
 
-        sql = "INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALOUV', {2});".format(
-            self.mdb.SCHEMA,
-            id_config,
-            width_trav)
-        self.mdb.run_query(sql)
+        # sql = "INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALOUV', {2});".format(
+        #     self.mdb.SCHEMA,
+        #     id_config,
+        #     width_trav)
+        # self.mdb.run_query(sql)
 
     def select_poly(self, table, where='', order='', var='polygon'):
         """ select polygon
