@@ -65,14 +65,14 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="0">
+     <item row="3" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
         <string>Largeur des piles</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="3" column="1">
       <widget class="QDoubleSpinBox" name="dsb_larg_pil">
        <property name="maximumSize">
         <size>
@@ -94,7 +94,7 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="2">
+     <item row="3" column="2">
       <spacer name="horizontalSpacer_3">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -106,23 +106,6 @@
         </size>
        </property>
       </spacer>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Forme des arches</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QComboBox" name="cb_form_arch">
-       <property name="iconSize">
-        <size>
-         <width>30</width>
-         <height>15</height>
-        </size>
-       </property>
-      </widget>
      </item>
     </layout>
    </item>
@@ -398,6 +381,11 @@
          </attribute>
          <column>
           <property name="text">
+           <string>Forme de l'arche</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
            <string>Largeur</string>
           </property>
          </column>
@@ -409,11 +397,6 @@
          <column>
           <property name="text">
            <string>Z haut de l'arche</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Méthode de construction</string>
           </property>
          </column>
         </widget>

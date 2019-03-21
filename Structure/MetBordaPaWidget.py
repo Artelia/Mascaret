@@ -46,16 +46,14 @@ class MetBordaPaWidget(QWidget):
         self.dsb_larg_pil.valueChanged.connect(self.update_piles)
         self.dsb_h_pas.valueChanged.connect(self.update_min_h_max)
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
-        self.cb_form_arch.currentIndexChanged.connect(self.change_form_arch)
         # self.dsb_cote_tab.valueChanged.connect(self.update_max_h_max)
         self.tab_trav.itemChanged.connect(self.verif_larg_trav)
 
-        fill_qcombobox(self.cb_form_arch, [[1, 'Circulaire'], [2, 'Ellipsoïdale']],
-                       icn=os.path.join(self.mgis.masplugPath, 'Structure/images/arches/arche{}.png'))
+        # fill_qcombobox(self.cb_form_arch, [[1, 'Circulaire'], [2, 'Ellipsoïdale']],
+        #                icn=os.path.join(self.mgis.masplugPath, 'Structure/images/arches/arche{}.png'))
 
         self.dico_ctrl = {'FIRSTWD': [self.dsb_abs_cul_rg],
                           'ZTOPTAB': [self.dsb_cote_tab],
-                          'FORMARC': [self.cb_form_arch],
                           'LARGPIL': [self.dsb_larg_pil],
                           'PASH': [self.dsb_h_pas],
                           'MINH': [self.dsb_h_min],
@@ -66,12 +64,13 @@ class MetBordaPaWidget(QWidget):
 
         self.dico_tab = {self.tab_trav: {'type': 0,
                                          'id': '({}*2) + 1',
-                                         'col': [{'fld': 'LARGTRA', 'cb': None, 'valdef': 1.},
+                                         'col': [{'fld': 'FORMARC',
+                                                  'cb': [[1, 'Demi cercle'], [2, 'Ellipse']],
+                                                  'fn': self.test,
+                                                  'valdef': 2},
+                                                 {'fld': 'LARGTRA', 'cb': None, 'valdef': 1.},
                                                  {'fld': 'ZMINARC', 'cb': None, 'valdef': 0.},
-                                                 {'fld': 'ZMAXARC', 'cb': None, 'valdef': 0.},
-                                                 {'fld': 'METHARC',
-                                                  'cb': [[1, 'Circulaire'], [2, 'Ellipsoïdale']],
-                                                  'valdef': 1}]},
+                                                 {'fld': 'ZMAXARC', 'cb': None, 'valdef': 0.}]},
                          self.tab_pile: {'type': 1,
                                          'id': '({}*2) + 2',
                                          'col': [{'fld': 'LARGPIL', 'cb': None, 'valdef': self.dsb_larg_pil}]}
@@ -114,8 +113,10 @@ class MetBordaPaWidget(QWidget):
 
             if col['cb']:
                 cb = QComboBox()
-                fill_qcombobox(cb, col['cb'], val_def=val)
+                cb.setProperty("row", row)
                 tab.setCellWidget(row, c, cb)
+                tab.cellWidget(row, c).currentIndexChanged.connect(col['fn'])
+                fill_qcombobox(tab.cellWidget(row, c), col['cb'], val_def=val)
             else:
                 itm = QTableWidgetItem()
                 itm.setData(0, val)
@@ -136,5 +137,18 @@ class MetBordaPaWidget(QWidget):
         self.dsb_h_max.setMaximum(round((self.dsb_cote_tab.value() - z_min) * 1.25))
 
     def verif_larg_trav(self, itm):
-        if itm.data(0) <= 0.:
-            itm.setData(0, 1.)
+        if itm.column() == 0:
+            if itm.data(0) <= 0.:
+                itm.setData(0, 1.)
+
+    def test(self):
+        tw = self.sender().parent().parent()
+        cb = self.sender()
+        r = cb.property("row")
+
+        itm = QTableWidgetItem()
+        if ctrl_get_value(cb) == 1: #cercle
+            itm.setFlags(Qt.ItemIsSelectable)
+        elif ctrl_get_value(cb) == 2: #ellipse
+            itm.setData(0, self.dico_tab[tw]['col'][2]['valdef'])
+        tw.setItem(r, 3, itm)
