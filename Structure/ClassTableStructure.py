@@ -121,7 +121,7 @@ class ClassTableStructure:
                 {0: 'flowrate', 1: 'z_downstream', 2: 'z_upstream'},
             'Borda':
                 {0: 'flowrate', 1: 'z_downstream', 2: 'z_upstream'},
-            'Loi d''orifice':
+            'Loi d\'orifice':
                 {0: 'flowrate', 1: 'z_downstream', 2: 'z_upstream'}
         }
 

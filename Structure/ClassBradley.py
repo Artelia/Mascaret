@@ -587,7 +587,7 @@ class ClassBradley:
         """Borda methode for structure"""
         self.init_method(id_config)
         list_final = []
-        qmax = self.param_g['MINQ']
+        qmax = self.deb_min #self.param_g['MINQ']
         zcret = self.param_g['ZTOPTAB']
 
         for zav in self.list_zav:
@@ -620,8 +620,8 @@ class ClassBradley:
                     if value is None:
                         continue
                     else:
-                        if value[0] > self.param_g['MAXQ']:
-                            break
+                        # if value[0] > self.param_g['MAXQ']:
+                        #     break
 
                         if value[0] > qmax:
                             # print('ori va',value)
@@ -631,15 +631,19 @@ class ClassBradley:
 
         return list_final
 
-    def orifice(self, id_config, method='Orifice', ui=None):
+    def orifice(self, id_config, method='Loi d\'orifice', ui=None):
         """orifice methode for structure"""
         self.init_method(id_config)
         list_final = []
         qmax = self.param_g['MINQ']
         zcret = self.param_g['ZTOPTAB']
         surf = 0
+        self.param_g['TOTALOUV']=0
         for poly_trav in self.list_poly_trav:
             surf += poly_trav.area
+            (minx, miny, maxx, maxy) = poly_trav.bounds
+            self.param_g['TOTALOUV'] += (maxx - minx)
+            self.param_g['ZPC']=zcret-maxy
 
         zinf_vann = self.poly_p.bounds[1]  # z min du profil
 
@@ -689,13 +693,10 @@ class ClassBradley:
 
         return list_final
 
-
-
     def meth_borda(self, sav, sc, zam, zav):
         k = (sav / sc - 1) ** 2
         q = m.sqrt((zam - zav) * 2 * self.grav / k)
         return q
-
 
     def area_wet_fct(self, poly, zav):
         poly_wet = self.parent.coup_poly_h(poly, zav)

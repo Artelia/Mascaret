@@ -460,7 +460,6 @@ class ClassMascaret:
                 liste_stock["limDroitLitMaj"].append(lim_droit_lit_maj)
 
         for i, type in enumerate(seuils["type"]):
-            # print(type, seuils["name"][i])
             if type not in (3, 4):
                 dict_lois[seuils["name"][i]] = {'type': abaque_toloi[type],
                                                 'formule': None,
@@ -965,7 +964,8 @@ class ClassMascaret:
 
     def typ_struct(self, meth):
         """function to know the law type"""
-        if meth == 0 or meth == 4:
+
+        if meth == 0 or meth == 4 or meth == 1 or meth == 5  or meth == 3:
             return 1
         else:
             return None
@@ -992,7 +992,6 @@ class ClassMascaret:
             arbre.write(fich_entree)
 
     def creer_loi(self, nom, tab, type):
-        print(nom)
         with open(os.path.join(self.dossier_file_masc, nom + '.loi'), 'w') as fich:
             fich.write('# ' + nom + '\n')
             if type == 1:

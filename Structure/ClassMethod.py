@@ -88,7 +88,7 @@ class ClassMethod:
         else:
             return False
 
-    def poly_pont_cadre(self, param_g, param_elem, x0=None, zmin=-99999):
+    def poly_pont_cadre(self, param_g, param_elem, x0=None, zmin=-99999, ecart=10):
         """ creation polygone for "pont cadre" """
         if x0 is None:
             x0 = param_g['FIRSTWD']  # point depart
@@ -102,6 +102,28 @@ class ClassMethod:
 
             print('Inconsistent Z for the span')
         return poly_t
+
+    def poly_dalot(self, x0,z_rad ):
+        """ creation polygone for "pont cadre" """
+        x1 = x0 + param_elem['LARGTRA']
+        z = z_rad + param_elem['HDALO']  # point haut
+        zmin_t = z_rad
+        if zmin < z:
+            poly_t = Polygon([[x0, zmin_t], [x0, z], [x1, z], [x1, zmin_t], [x0, zmin_t]])
+        else:
+            poly_t = GeometryCollection()
+
+            print('Inconsistent Z for the span')
+        return poly_t
+
+    def poly_buse(self,x0,z_rad,ray):
+        """z_rad cote radier
+            x0 x en zero"""
+        z_c = z_rad + ray
+        x0 = x0 + ray
+        circ = Point([x_c, z_c]).buffer(ray)
+        return circ
+
 
     def poly_arch(self, param_g, param_elem, x0=None, zmin=-99999):
         """ creation polygone for "pont arch" """
@@ -216,10 +238,10 @@ class ClassMethod:
             recup_trav = ['LARGTRA', 'ZMINARC', 'ZMAXARC']
             recup_pil = ['LARGPIL']
             recup_p1 = ['FORMARC','ZMINARC']
-        elif config_type == 'PD':
+        elif config_type == 'DALOT':
             #dalot
             pass
-        elif config_type == 'PD':
+        elif config_type == 'BUSE':
             # buse
             pass
 
@@ -260,22 +282,31 @@ class ClassMethod:
                     sav_zmaxelem = param_elem['ZMAXELEM']
                     poly_elem = self.poly_pont_cadre(param_g, param_elem, width, zmin)
                 # pont arc
-                if config_type == 'PA':
+                elif config_type == 'PA':
                     param_elem['ZMAXELEM'] = param_elem['ZMINARC']
                     sav_zmaxelem = param_elem['ZMAXELEM']
                     poly_elem = self.poly_arch(param_g, param_elem, width, zmin)
+                # buse
+                elif config_type == 'BUSE':
+                    # self.poly_buse()
+                    pass
+                # buse
+                elif config_type == 'BUSE':
+                    # self.poly_dalot()
+                    pass
+
             else:
                 #Attention Arc  hauteur different entre droite et gauchs(aproximation  /|  ) pb seul bradley
                 #                                                                     |_|
                 if config_type == 'PC':
                     param_elem['ZMAXELEM'] = sav_zmaxelem
                     param_elem['ZMAXELEM_P1'] = param_g['ZPC']
-                if config_type == 'PA':
+                    poly_elem = self.poly_pil(param_elem, width, zmin)
+                elif config_type == 'PA':
                     param_elem['ZMAXELEM'] = sav_zmaxelem
                     param_elem['ZMAXELEM_P1'] = param_p1['ZMINARC']
-                poly_elem = self.poly_pil( param_elem, width, zmin)
+                    poly_elem = self.poly_pil( param_elem, width, zmin)
 
-            # print(poly_elem,lid_elem["type"][i])
             # final
             if not poly_elem.is_empty:
                 poly_final = poly_elem.difference(poly_p)
@@ -614,7 +645,7 @@ class ClassMethod:
 
         if idmethod == 0 or idmethod == 4: # brad
             self.brad.bradley(id_config, self.tbst.dico_meth_calc[idmethod],ui)
-        elif idmethod == 1: #borda
+        elif idmethod == 5: #borda
             self.brad.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         elif idmethod == 3: #orifice
         # if idmethod == 0 or idmethod == 4:
