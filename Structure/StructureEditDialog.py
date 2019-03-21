@@ -47,31 +47,22 @@ class ClassStructureEditDialog(QDialog):
         self.clmeth = ClassMethod(self.mgis)
         self.wgt_met = QWidget()
 
-        self.param_meth_calc = {0: {'name': 'Bradley 72',
-                                    'wgt': MetBradleyWidget,
-                                    'wgt_param': [self.mgis, '72', id_struct],
-                                    'ctrl': 'bradley'},
-                                1: {'name': 'Borda',
-                                    'wgt': MetBordaWidget,
-                                    'wgt_param': [self.mgis, id_struct],
-                                    'ctrl': 'borda'},
-                                2: 'Loi de seuil',
-                                3: {'name': 'Loi d\'orifice',
-                                    'wgt': MetOrificeWidget,
-                                    'wgt_param': [self.mgis, id_struct],
-                                    'ctrl': 'orifice'},
-                                4: {'name': 'Bradley 78',
-                                    'wgt': MetBradleyWidget,
-                                    'wgt_param': [self.mgis, '78', id_struct],
-                                    'ctrl': 'bradley'},
-                                5: {'name': 'Borda',
-                                    'wgt': MetBordaPaWidget,
-                                    'wgt_param': [self.mgis, id_struct],
-                                    'ctrl': 'borda'}
+        self.param_meth_calc = {'PC': {0: {'wgt': MetBradleyWidget,
+                                           'wgt_param': [self.mgis, '72', id_struct]},
+                                       1: {'wgt': MetBordaWidget,
+                                           'wgt_param': [self.mgis, id_struct]},
+                                       3: {'wgt': MetOrificeWidget,
+                                           'wgt_param': [self.mgis, id_struct]},
+                                       4: {'wgt': MetBradleyWidget,
+                                           'wgt_param': [self.mgis, '78', id_struct]}
+                                       },
+                                'PA': {1: {'wgt': MetBordaPaWidget,
+                                           'wgt_param': [self.mgis, id_struct]}
+                                       }
                                 }
 
         self.id_struct = id_struct
-        self.current_meth=0
+        self.current_meth = 0
         self.lst_meth_calc = []
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_structure_edit.ui'), self)
 
@@ -102,7 +93,7 @@ class ClassStructureEditDialog(QDialog):
                 self.save_struct()
         self.txt_name.setFocus()
         self.met_calc = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
-        param = self.param_meth_calc[self.met_calc]
+        param = self.param_meth_calc[self.typ_struct][self.met_calc]
         self.wgt_met = param['wgt'](*param['wgt_param'])
         self.sw_input.addWidget(self.wgt_met)
         self.sw_input.setCurrentIndex(1)
@@ -159,21 +150,23 @@ class ClassStructureEditDialog(QDialog):
         # save Info
         if self.save_struct():
             self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
-            self.clmeth.sav_meth(self.id_struct,self.current_meth, self.ui)
+            if self.current_meth in [0, 4]:
+                self.clmeth.sav_meth(self.id_struct,self.current_meth, self.ui)
             self.accept()
         # else:
         #     self.reject_page()
 
     def save_struct(self):
         self.current_meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
-        if self.current_meth in [0, 4]:
-            verif, msg = self.verif_bradley(self.id_struct)
-        elif self.current_meth in [1]:
-            verif, msg = self.verif_bradley(self.id_struct)
-        elif self.current_meth in [3]:
-            verif, msg = self.verif_bradley(self.id_struct)
-        elif self.current_meth in [5]:
-            verif, msg = True, ''
+        if self.typ_struct == 'PC':
+            if self.current_meth in [0, 4]:
+                verif, msg = self.verif_bradley(self.id_struct)
+            elif self.current_meth in [1]:
+                verif, msg = self.verif_bradley(self.id_struct)
+            elif self.current_meth in [3]:
+                verif, msg = self.verif_bradley(self.id_struct)
+        else:
+            verif, msg = True, ""
 
         if verif:
             name = str(self.txt_name.text())
@@ -285,3 +278,12 @@ class ClassStructureEditDialog(QDialog):
             msg.append("La largeur totale de la structure est superieure a la largeur du profil")
 
         return valid, msg
+
+    def verif_pc(self, id_struct):
+        msg = []
+        valid = True
+
+    def verif_exist_trav(self):
+        if ctrl_get_value(self.wgt_met.dico_ctrl['NBTRAVE'][0]) < 1.:
+            valid = False
+            msg.append("Aucune travee de saisie")

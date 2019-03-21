@@ -41,8 +41,7 @@ class ClassTableStructure:
                                1: 'Borda',
                                2: 'Loi de seuil',
                                3: 'Loi d\'orifice',
-                               4: 'Bradley 78',
-                               5: 'Borda'}
+                               4: 'Bradley 78'}
 
         self.dico_meth_draw = {0: 'Method 1',
                                1: 'Method 2',
@@ -60,7 +59,7 @@ class ClassTableStructure:
                                       },
                                'PA': {'name': 'Pont arche',
                                       'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
-                                      'meth_calc': [5],
+                                      'meth_calc': [1],
                                       'meth_draw': [[0]]
                                       },
                                'DA': {'name': 'Dalot',

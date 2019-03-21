@@ -78,9 +78,9 @@ class GraphStructure(GraphCommon):
             self.courbes['profil_poly'].set_xy([(dico_profil['x'][r], dico_profil['z'][r])
                                                 for r in range(len(dico_profil['x']))])
 
-            sql = "SELECT type FROM {0}.struct_config WHERE id = {1} ".format(self.mdb.SCHEMA, config)
-            rows = self.mdb.run_query(sql, fetch=True)
-            typ_struct = rows[0][0]
+            # sql = "SELECT type FROM {0}.struct_config WHERE id = {1} ".format(self.mdb.SCHEMA, config)
+            # rows = self.mdb.run_query(sql, fetch=True)
+            # typ_struct = rows[0][0]
 
             sql = "SELECT var, value FROM {0}.struct_param WHERE id_config = {1} " \
                   "AND var IN ('ZTOPTAB', 'EPAITAB', 'FIRSTWD')".format(self.mdb.SCHEMA, config)
@@ -103,7 +103,6 @@ class GraphStructure(GraphCommon):
                 sql = "SELECT id_elem, type, ST_AsText(polygon) FROM {0}.struct_elem WHERE id_config = {1} " \
                       "ORDER BY id_elem".format(self.mdb.SCHEMA, config)
                 lst_elem = self.mdb.run_query(sql, fetch=True)
-                # if typ_struct == 'PC':
                 for e, elem in enumerate(lst_elem):
                     if elem[1] == 0:
                         poly = wktLoads(elem[2])
@@ -111,9 +110,6 @@ class GraphStructure(GraphCommon):
                         self.courbes['elem'].append(mpoly(poly_coord,
                                                           zorder=90-e, facecolor='w', edgecolor='black', alpha=1.))
                         self.axes.add_patch(self.courbes['elem'][-1])
-                # else:
-                #     for e, elem in enumerate(lst_elem):
-                #         print (elem[2])
 
                 self.update_limites(minx, miny, maxx, maxy)
 
