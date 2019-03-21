@@ -122,14 +122,14 @@ class ClassStructureEditDialog(QDialog):
                     ctrl_set_value(ctrl, val)
 
         for tab, param in self.wgt_met.dico_tab.items():
-            tab.setRowCount(0)
+            # tab.setRowCount(0)
             t = param['type']
             sql = "SELECT id_elem FROM {0}.struct_elem " \
                   "WHERE id_config = {1} AND type = {2} ORDER BY id_elem".format(self.mdb.SCHEMA, self.id_struct, t)
             elems = self.mdb.run_query(sql, fetch=True)
 
             for r, elem in enumerate(elems):
-                tab.insertRow(r)
+                # tab.insertRow(r)
                 for c, col in enumerate(param['col']):
                     sql = "SELECT value FROM {0}.struct_elem_param WHERE id_config = {1} " \
                           "AND id_elem = {2} and var = '{3}'".format(self.mdb.SCHEMA, self.id_struct,
@@ -142,16 +142,13 @@ class ClassStructureEditDialog(QDialog):
 
                     if col['fld'] == 'FORMPIL':
                         val = str(val).replace('.', '_').replace('_0', '')
-                    # print('display',col['fld'], val)
 
                     if col['cb']:
-                        cb = QComboBox()
-                        fill_qcombobox(cb, col['cb'], val_def=val)
-                        tab.setCellWidget(r, c, cb)
+                        cb = tab.cellWidget(r, c)
+                        ctrl_set_value(cb, val)
                     else:
-                        itm = QTableWidgetItem()
+                        itm = tab.item(r, c)
                         itm.setData(0, val)
-                        tab.setItem(r, c, itm)
 
             tab.hide()
             tab.resizeColumnsToContents()
@@ -236,6 +233,8 @@ class ClassStructureEditDialog(QDialog):
                         else:
                             itm = tab.item(r, c)
                             val = itm.data(0)
+                        if val == None:
+                            val = 'Null'
                         sql = "INSERT INTO {0}.struct_elem_param (id_config, id_elem, var, value) " \
                               "VALUES ({1}, {2}, '{3}', {4})".format(self.mdb.SCHEMA, self.id_struct,
                                                                      id_elem, var, val)

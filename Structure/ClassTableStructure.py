@@ -95,8 +95,7 @@ class ClassTableStructure:
                                "TOTALOUV": {'name': 'Largeur ouverture de travées', 'unit': 'm'},
                                # "TOTALW": {'name': 'Largeur du pont', 'unit': 'm'},
                                'COEFDS': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':0.385},
-                               'COEFDO': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':1},
-                               'FORMARC': {'name': 'Forme des arches', 'unit': ''}
+                               'COEFDO': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':1}
                                }
 
         self.dico_typ_elem = {0: 'Travee',
@@ -107,9 +106,9 @@ class ClassTableStructure:
                               'FORMPIL': {'name': 'Forme des piles', 'unit': None},
                               'LARGPIL': {'name': 'Largeur des piles', 'unit': 'm'},
                               'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'},
+                              'FORMARC': {'name': 'Forme de l''arche', 'unit': None},
                               'ZMINARC': {'name': 'Z bas de l''arche', 'unit': 'm'},
-                              'ZMAXARC': {'name': 'Z haut de l''arche', 'unit': 'm'},
-                              'METHARC': {'name': 'Méthode de construction de l''arche', 'unit': None}}
+                              'ZMAXARC': {'name': 'Z haut de l''arche', 'unit': 'm'}}
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
         self.dico_forme_arche = {1: 'Circulaire', 2: 'Ellipsoïdale'}

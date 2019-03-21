@@ -127,9 +127,9 @@ class ClassMethod:
 
     def poly_arch(self, param_g, param_elem, x0=None, zmin=-99999):
         """ creation polygone for "pont arch" """
-        print("eeee", param_g['FORMARC'],param_elem['ZMINARC'],param_elem['ZMAXARC'])
+        print("eeee", param_elem['ZMINARC'],param_elem['ZMAXARC'])
         print(param_elem['LARG'])
-        type = param_g['FORMARC']
+        type = param_elem['FORMARC']
         if x0 is None:
             x0 = param_g['FIRSTWD']  # point depart
         x1 = x0 + param_elem['LARG']
@@ -233,9 +233,9 @@ class ClassMethod:
             recup_p1 = []
         elif config_type == 'PA':
             # parametre general
-            list_recup = ['FORMARC', 'ZTOPTAB', 'FIRSTWD']
+            list_recup = ['ZTOPTAB', 'FIRSTWD']
             param_g = self.get_param_g(list_recup, id_config)
-            recup_trav = ['LARGTRA', 'ZMINARC', 'ZMAXARC']
+            recup_trav = ['FORMARC', 'LARGTRA', 'ZMINARC', 'ZMAXARC']
             recup_pil = ['LARGPIL']
             recup_p1 = ['FORMARC','ZMINARC']
         elif config_type == 'DALOT':
