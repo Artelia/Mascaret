@@ -11,14 +11,14 @@ name=Mascaret
 description=Pre and Post-processing for Mascaret (http://www.opentelemac.org/).
 about= Plugin dedicated to the building and exploitation of Mascaret models.
        Requires PostgreSQL and PostGIS.
-       Developed by Mehdi-Pierre DAOU, Christophe COULET (Artelia)
+       Developed by Mehdi-Pierre DAOU, Christophe COULET (Artelia),Bagot Philippe (Cerema)
        Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
        Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek (Many thanks for the work they've done on RiverGis)
 
 qgisMinimumVersion=2.14.18
 qgisMaximumVersion=3.99
 
-version=0.1.13
+version=0.2.1
 
 author=Artelia Eau et Environnement
 email=mehdi-pierre.daou@arteliagroup.com
@@ -29,6 +29,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    0.2.1  : Add added basin feature
     0.1.13 : Correction of parameters GUI bug
              Correction of weirs bug in xcas file
              Correction of connection data base bug
