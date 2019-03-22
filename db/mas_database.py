@@ -403,7 +403,7 @@ class MasDatabase(object):
             tables = [ maso.scenarios, maso.lateral_inflows, maso.lateral_weirs, maso.extremities,
                       maso.flood_marks, maso.hydraulic_head, maso.outputs,
                       maso.weirs, maso.profiles, maso.topo, maso.branchs,
-                      maso.observations, maso.parametres, maso.resultats,maso.runs,maso.laws]
+                      maso.observations, maso.parametres, maso.resultats,maso.runs,maso.laws, maso.basins, maso.links]
 
             tables.sort(key=lambda x: x().order)
 
@@ -550,7 +550,9 @@ class MasDatabase(object):
         tables.sort(key=lambda x: x[1].order)
         for (name, obj) in tables:
             try:
-                if obj.order < 12:
+                #if obj.order < 12:
+                # Pour les order 17 et 18 relatifs aux casiers
+                if obj.order not in [12,13,14,15,16]:
                     self.add_to_view(obj)
                     if self.mgis.DEBUG:
                         self.mgis.addInfo(' View {0} : OK'.format(obj.name))
