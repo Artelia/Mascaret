@@ -41,6 +41,7 @@
 "Minimum minor river bed velocity";"VINF";"m/s";4;"salmon"
 "Cumulative volume of the storage area";"VOLS";"m3";0;"green"
 "Cumulative volume of the active river bed";"VOL";"m3";0;"black"
+"Total wetted area";"ATOT";"m2";2;"turquoise"
 "Basin water level";"BZ";"m";3;"blue"
 "Basin area";"BAREA";"x1000 m2";0;"red"
 "Basin volume";"BVOL";"x1000 m3";0;"green"

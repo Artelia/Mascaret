@@ -18,18 +18,13 @@ email                :
  ***************************************************************************/
 comment:
      creerGEO()
-     creerGEOCasier()
      fmt(liste)
-     fmtSansNone(liste,remplaceNone)
-     fmtNumBasin(liste,dico_num,remplaceNone)
-     fmtPlaniCasier(liste)
      creerXCAS( noyau)
      indent(elem, level=0)
      modifXCAS(parametres, dossier, fichSortie=None)
      mascaret(noyau)
      lanceMascaret(fichierCAS)
      litOPT( run, scen, dateDebut, messageBar)
-     litCasiersOPT( run, scen, dateDebut, nomfic, critere)
      OPTtoLIG(run, scen)
      copyLIG
      copyRunFile(rep)
@@ -198,67 +193,9 @@ class Class_Mascaret():
             self.mgis.addInfo("Error: save the geometry")
             self.mgis.addInfo(str(e))
 
-    # Fonction de creation du fichier .casier avec la loi surface-volume
-    def creerGEOCasier(self):
-        try:
-            nomfich = os.path.join(self.dossierFileMasc, self.baseName+'.casier')
-
-            if os.path.isfile(nomfich):
-                sauv = nomfich.replace(".casier", "_old.casier")
-                shutil.move(nomfich, sauv)
-
-            casiers = self.mdb.select("basins", "active ORDER BY basinnum")
-
-            with open(nomfich, 'w') as fich:
-                for i, nom in enumerate(casiers["name"]):
-                    fich.write('CASIER {0}\n'.format(nom))
-                    cotes = casiers["level"][i]
-                    surfaces = casiers["area"][i]
-                    volumes = casiers["volume"][i]
-                    for j,cote in enumerate(cotes.split()):
-                        fich.write('{0:.2f} {1:.2f} {2:.2f}\n'.format(float(cotes.split()[j]),float(surfaces.split()[j]),float(volumes.split()[j])))
-
-            self.mgis.addInfo("Creation of the basin file is done")
-        except Exception as e:
-            self.mgis.addInfo("Error: save the basin file")
-            self.mgis.addInfo(str(e))
-
     def fmt(self, liste):
         # list(map(str, liste))
         return (" ".join([str(var) for var in liste]))
-
-    # Fonction de remplacement des None de la liste par la valeur remplaceNone cad -1 ou -1.0 pour le moteur Mascaret
-    def fmtSansNone(self,liste,remplaceNone):
-        liste = [remplaceNone if var == None else var for var in liste]
-        return (" ".join([str(var) for var in liste]))
-
-    # Fonction de transformation de la liste de numeros basin/link sous Qgis en une chaine de numeros pour le moteur Mascaret
-    def fmtNumBasin(self,liste,dico_num,remplaceNone): 
-        liste_numMasca = []
-        for numQgis in liste:
-            if numQgis == None:
-               # Ajout d'une valeur nulle codee ici par remplaceNone, cad -1 ou -1.0, pour le moteur mascaret 
-               liste_numMasca.append(remplaceNone)
-            else:
-               # Inversion du dictionnaire: on cherche le numero mascaret pour le numero de casier sous Qgis
-               liste_numMasca.append(dico_num.keys()[dico_num.values().index(numQgis)])  
-        return (" ".join([str(var) for var in liste_numMasca]))
-
-    # Fonction de calcul du planimetrage entre 2 niveaux de la loi surface volume du casier
-    def fmtPlaniCasier(self,liste):
-        liste_plani = []
-        for chaine_z in liste:
-            try:
-                liste_z = chaine_z.split()
-                # Calcul des parties entieres et decimale de la planimetrie
-                plani_entier = int((float(liste_z[1]) - float(liste_z[0]))//1)
-                liste_plani.append(str(plani_entier))
-                plani_decimale = int((float(liste_z[1]) - float(liste_z[0]))%1)
-                if plani_decimale >0:
-                   self.mgis.addInfo("Simulation Error: the basin planimetry has to be an integer value")
-            except:
-                self.mgis.addInfo("Simulation Error: the basin planimetry is not correct")
-        return (" ".join([str(var) for var in liste_plani]))
 
     def indent(self, elem, level=0):
         """indentation auto"""
@@ -412,8 +349,6 @@ class Class_Mascaret():
             sorties = self.mdb.select("outputs", "", "abscissa")
             planim = self.planim_select()
             maillage = self.maillage_select()
-            casiers = self.mdb.select("basins", "active ORDER BY basinnum ")
-            liaisons = self.mdb.select("links", "active ORDER BY linknum ")
 
             # Extrémités
             numero = branches["branch"]
@@ -520,7 +455,7 @@ class Class_Mascaret():
 
             for i, type in enumerate(seuils["type"]):
                 if type not in (3, 4):
-                    dictLois[seuils["name"][i]] = {'type': abaqueToloi[type]}
+                    dict_lois[seuils["name"][i]] = {'type': abaque_toloi[type]}
 
             for i, nom in enumerate(apports["name"]):
                 if nom not in dictLois.keys():
@@ -642,7 +577,7 @@ class Class_Mascaret():
                         SubElement(struct, l).text = str(seuils[liste_en[kk].lower()][i])
 
                 if seuils["type"][i] not in (3, 4):
-                    SubElement(struct, "numLoi").text = str(sorted(dictLois.keys()).index(nom) + 1)
+                    SubElement(struct, "numLoi").text = str(sorted(dict_lois.keys()).index(nom) + 1)
                 else:
                     SubElement(struct, "numLoi").text = '-0'
 
@@ -670,41 +605,6 @@ class Class_Mascaret():
                 SubElement(pertes, "numBranche").text = self.fmt(pertescharg["branchnum"])
                 SubElement(pertes, "abscisses").text = self.fmt(pertescharg["abscissa"])
                 SubElement(pertes, "coefficients").text = self.fmt(pertescharg["coeff"])
-
-            # Casiers et liaisons
-            if len(casiers["name"]) > 0:
-                # Creation du dictionnaire de numero de casier entre mascaret (cle) et qgis (valeur)
-                self.dico_basinnum = {}
-                for i, numQgis in enumerate(casiers["basinnum"],1): self.dico_basinnum[i] = numQgis
-                # Creation du dictionnaire de numero de liaison entre mascaret (cle) et qgis (valeur)
-                self.dico_linknum = {}
-                for i, numQgis in enumerate(liaisons["linknum"],1): self.dico_linknum[i] = numQgis
-                # Creation des lignes a ajouter dans Xcas
-                casier = SubElement(cas, "parametresCasier")
-                SubElement(casier, "nbCasiers").text = str(len(casiers["name"]))
-                SubElement(casier, "optionPlanimetrage").text = self.fmtPlaniCasier(casiers["level"])
-                SubElement(casier, "optionCalcul").text = "1" #Todo
-                SubElement(casier, "fichierGeomCasiers").text = "mascaret.casier" #Todo
-                SubElement(casier, "cotesInitiale").text = self.fmtSansNone(casiers["initlevel"],'-1.0')
-                # Liaisons (champs non listes = active et linknum)
-                ETliaisons = SubElement(casier, "liaisons")
-                SubElement(ETliaisons, "nbLiaisons").text = str(len(liaisons["name"]))
-                SubElement(ETliaisons, "types").text = self.fmtSansNone(liaisons["type"],'-1.0')
-                SubElement(ETliaisons, "nature").text = self.fmtSansNone(liaisons["nature"],'-1.0')
-                SubElement(ETliaisons, "cote").text = self.fmtSansNone(liaisons["level"],'-1.0')
-                SubElement(ETliaisons, "largeur").text = self.fmtSansNone(liaisons["width"],'-1.0')
-                SubElement(ETliaisons, "longueur").text = self.fmtSansNone(liaisons["length"],'-1.0')
-                SubElement(ETliaisons, "rugosite").text = self.fmtSansNone(liaisons["roughness"],'-1.0')
-                SubElement(ETliaisons, "section").text = self.fmtSansNone(liaisons["crosssection"],'-1.0')
-                SubElement(ETliaisons, "coefPerteCharge").text = self.fmtSansNone(liaisons["headlosscoef"],'-1.0')
-                SubElement(ETliaisons, "coefDebitSeuil").text = self.fmtSansNone(liaisons["weirdischargecoef"],'-1.0')
-                SubElement(ETliaisons, "coefActivation").text = self.fmtSansNone(liaisons["activationcoef"],'-1.0')
-                SubElement(ETliaisons, "coefDebitOrifice").text = self.fmtSansNone(liaisons["pipedischargecoef"],'-1.0')
-                SubElement(ETliaisons, "typeOrifice").text = self.fmtSansNone(liaisons["culverttype"],'-1')
-                SubElement(ETliaisons, "numCasierOrigine").text = self.fmtNumBasin(liaisons["basinstart"],self.dico_basinnum,'-1')
-                SubElement(ETliaisons, "numCasierFin").text = self.fmtNumBasin(liaisons["basinend"],self.dico_linknum,'-1')
-                SubElement(ETliaisons, "numBiefAssocie").text = self.fmtSansNone(liaisons["branchnum"],'-1')
-                SubElement(ETliaisons, "abscBief").text = self.fmtSansNone(liaisons["abscissa"],'-1.0')
 
             ### Apports et déversoirs
             apportDever = SubElement(cas, "parametresApportDeversoirs")
@@ -1088,10 +988,6 @@ class Class_Mascaret():
         else:
             self.clean_res()
 
-        # Creation du fichier de la geometrie des casiers uniquement en non-permanent et si presence des casiers
-        if par["presenceCasiers"] and noyau == "unsteady":
-            self.creerGEOCasier()
-
         if par["evenement"] and noyau != "steady":
 
             dictScen_tmp = self.mdb.select('scenarios', 'run', 'starttime')
@@ -1324,11 +1220,6 @@ class Class_Mascaret():
                 return
 
             self.litOPT(run, scen, dateDebut, self.baseName,comments)
-            # Lecture de l'OPT des casiers et liaisons puis ecriture dans la table resultats
-            if par["presenceCasiers"] and noyau == "unsteady":
-               self.litCasiersOPT( run, scen, dateDebut,self.baseName, "basin")
-               self.litCasiersOPT( run, scen, dateDebut,self.baseName, "link")
-
         self.iface.messageBar().clearWidgets()
         self.mgis.addInfo("Simulation finished")
         return
@@ -1447,91 +1338,6 @@ class Class_Mascaret():
                     self.mdb.addColumns("resultats", c.lower())
 
             self.mdb.insertRes("resultats", value, col)
-
-        return True
-
-    #Fonction de lecture des resultats casiers et liaisons
-    def litCasiersOPT(self, run, scen, dateDebut,baseNamefile, critere):
-
-        if critere == "basin":
-            nomFich = os.path.join(self.dossierFileMasc, baseNamefile + '.cas_opt')
-            col = ['t', 'bnum', 'bz', 'barea', 'bvol']
-        else:
-            nomFich = os.path.join(self.dossierFileMasc, baseNamefile + '.liai_opt')
-            col = ['t', 'lnum', 'lq', 'lvel']
-
-        t = set([])
-
-        if self.mgis.DEBUG:
-            self.mgis.addInfo("Load data ....")
-        if not os.path.isfile(nomFich) :
-            self.mgis.addInfo("Simulation Error: there aren't basin results")
-            return False
-
-        with open(nomFich, 'r') as source:
-            var = source.readline()
-
-            ligne = source.readline()
-            while '[resultats]' not in ligne:
-                ligne = source.readline()
-
-            data = csv.DictReader(source, delimiter=';', fieldnames=col)
-            if dateDebut:
-                col.append("date")
-            col.append("run")
-            col.append("scenario")
-
-            value=[]
-            for ligne in data:
-                if dateDebut:
-                    d = dateDebut + datetime.timedelta(
-                                seconds=float(ligne["t"]))
-                    ligne["date"] = d
-                    t.add("{:%Y-%m-%d %H:%M}".format(d))
-                else:
-                    t.add(ligne["t"])
-
-                ligne["run"] = run
-                ligne["scenario"] = scen
-
-                ligne_list=[]
-                for k in col:
-                    if k=='bnum':
-                        #extrait le numero mascaret de casier
-                        numero_masca = re.findall('\d+', ligne[k])[0]
-                        #convertit le numero masca en qgis (different si un casier inactif)
-                        numero_qgis = str(self.dico_basinnum[int(numero_masca)])
-                        ligne_list.append(numero_qgis)
-                    elif k=='lnum':
-                        #extrait le numero mascaret de liaison
-                        numero_masca = re.findall('\d+', ligne[k])[0]
-                        #convertit le numero masca en qgis (different si une liaison inactive)
-                        numero_qgis = str(self.dico_linknum[int(numero_masca)])
-                        ligne_list.append(numero_qgis)
-                    else:
-                        ligne_list.append(ligne[k])
-
-                value.append(ligne_list)
-
-            maintenant = datetime.datetime.utcnow()
-
-            tab = {run: {"scenario": scen,
-                         "date": "{:%Y-%m-%d %H:%M}".format(maintenant),
-                         "t": list(t)}}
-
-            self.mdb.insert("runs",
-                             tab,
-                             ["run", "date", "scenario", "t"],
-
-                             ",")
-            listeCol = self.mdb.listColumns("resultats")
-
-            for c in col:
-                if c.lower() not in listeCol:
-                    self.mdb.addColumns("resultats", c.lower())
-
-            self.mdb.insertRes("resultats", value,col)
-
 
         return True
 
@@ -1662,8 +1468,6 @@ class Class_Mascaret():
             shutil.copy2(os.path.join(self.dossierFileMasc, self.baseName + ".geo"), rep)
         elif case == 'georef':
             shutil.copy2(os.path.join(self.dossierFileMasc, self.baseName + ".georef"), rep)
-        elif case=='casier':
-            shutil.copy2(os.path.join(self.dossierFileMasc, self.baseName+".casier"), rep)
         else:
             self.mgis.addInfo('No file to export')
 

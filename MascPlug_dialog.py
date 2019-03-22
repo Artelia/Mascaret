@@ -143,13 +143,11 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionCross_section.triggered.connect(self.mainGraph)
         self.ui.actionHydrogramme.triggered.connect(self.mainGraph)
         self.ui.actionCross_section_results.triggered.connect(self.mainGraph)
-        self.ui.actionBasin.triggered.connect(self.mainGraph)
 
         # creatoin model
         self.ui.action_Extract_MNTfor_profile.triggered.connect(self.MntToProfil)
         self.ui.actionCreate_Geometry.triggered.connect(self.fct_createGeo)
         self.ui.actionCreate_xcas.triggered.connect(self.fct_createXcas)
-        self.ui.actionCreate_Basin.triggered.connect(self.fct_createCasier)
         self.ui.actionParameters.triggered.connect(self.fct_parametres)
         self.ui.actionRun.triggered.connect(self.fct_run)
         self.ui.actionDelete_Run.triggered.connect(self.del_run)
@@ -288,21 +286,11 @@ class MascPlugDialog(QMainWindow):
         settings.endGroup()
 
         settings.beginGroup('/PostgreSQL/connections/{0}'.format(connName))
-        # first try to get the credentials from AuthManager, then from the basic settings
-        authconf = settings.value('authcfg', None)
-        if authconf:
-            auth_manager = QgsApplication.authManager()
-            conf = QgsAuthMethodConfig()
-            auth_manager.loadAuthenticationConfig(authconf, conf, True)
-            if conf.id():
-                self.user = conf.config('username', '')
-                self.passwd = conf.config('password', '')
-        else:
-            self.user = settings.value('username')
-            self.passwd = settings.value('password')
         self.host = settings.value('host')
         self.port = settings.value('port')
         self.database = settings.value('database')
+        self.user = settings.value('username')
+        self.passwd = settings.value('password')
         settings.endGroup()
         # create a new connection to masPlug database
         self.mdb = MasDatabase(self, self.database, self.host, self.port, self.user, self.passwd)
@@ -471,27 +459,6 @@ class MascPlugDialog(QMainWindow):
         if fileNamePath:
             clam.copyFileModel(fileNamePath, case='geo')
 
-    def fct_createCasier(self):
-        """ create file .Casier """
-        # Mascaret.exe demande un .casier et pas basin d'ou le nom de la fonction
-        # Pas de dialog box sur le noyau: les casiers sont uniquement en transitoire
-        
-        clam = Class_Mascaret(self)
-        # Appel de la fonction creerGEOCasier() définie dans Class_Mascaret.py
-        clam.creerGEOCasier()
-        if int(qVersion()[0]) < 5:  # qt4
-            fileNamePath= QFileDialog.getSaveFileName(self, "saveFile",
-                                                          "{0}.casier".format(
-                                                              os.path.join(self.masplugPath, clam.baseName)),
-                                                          filter="CASIER (*.casier)")
-        else: #qt5
-            fileNamePath,_= QFileDialog.getSaveFileName(self, "saveFile",
-                                                       "{0}.casier".format(os.path.join(self.masplugPath,clam.baseName)),
-                                                      filter="CASIER (*.casier)")
-
-        if fileNamePath:
-            clam.copyFileModel(fileNamePath, case='casier')
-
     def fct_run(self):
         """ Run Mascaret"""
         case, ok = QInputDialog.getItem(None,
@@ -621,31 +588,22 @@ class MascPlugDialog(QMainWindow):
         self.profil=self.ui.actionCross_section.isChecked()
         self.hydrogramme=self.ui.actionHydrogramme.isChecked()
         self.profilResult=self.ui.actionCross_section_results.isChecked()
-        self.basinResult=self.ui.actionBasin.isChecked()
 
         # prevents use of other graphic button
         self.ui.actionHydrogramme.setEnabled(True)
         self.ui.actionCross_section.setEnabled(True)
         self.ui.actionCross_section_results.setEnabled(True)
-        self.ui.actionBasin.setEnabled(True)
 
         if self.profil:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section_results.setEnabled(False)
-            self.ui.actionBasin.setEnabled(False)
 
         elif self.hydrogramme :
             self.ui.actionCross_section_results.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)
-            self.ui.actionBasin.setEnabled(False)
         elif self.profilResult:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)
-            self.ui.actionBasin.setEnabled(False)
-        elif self.basinResult:
-            self.ui.actionHydrogramme.setEnabled(False)
-            self.ui.actionCross_section.setEnabled(False)
-            self.ui.actionCross_section_results.setEnabled(False)
 
         self.prev_tool = canvas.mapTool()
         self.map_tool = IdentifyFeatureTool(self)

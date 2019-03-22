@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>699</width>
-    <height>628</height>
+    <width>859</width>
+    <height>738</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -176,7 +176,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>699</width>
+     <width>859</width>
      <height>21</height>
     </rect>
    </property>
@@ -211,11 +211,18 @@
     <property name="title">
      <string>Database</string>
     </property>
+    <widget class="QMenu" name="menuUpate_table">
+     <property name="title">
+      <string>Update Table</string>
+     </property>
+     <addaction name="actionAdd_WQ_tables"/>
+    </widget>
     <addaction name="actionRefresh_Database"/>
     <addaction name="separator"/>
     <addaction name="actionCreate_New_Model"/>
     <addaction name="actionLoad_Model"/>
     <addaction name="actionDeleteModel"/>
+    <addaction name="menuUpate_table"/>
     <addaction name="separator"/>
     <addaction name="actionExport_Model"/>
     <addaction name="actionImport_Model"/>
@@ -241,12 +248,20 @@
     </property>
     <addaction name="actionHydrogramme"/>
     <addaction name="actionCross_section_results"/>
-    <addaction name="actionBasin"/>
+   </widget>
+   <widget class="QMenu" name="menuWater_Quality">
+    <property name="title">
+     <string>Water Quality</string>
+    </property>
+    <addaction name="actionParameters_Water_Quality"/>
+    <addaction name="actionTracer_Laws"/>
+    <addaction name="actionexport_tracer_files"/>
    </widget>
    <addaction name="menuDB"/>
    <addaction name="menu_Tools"/>
    <addaction name="menuRun"/>
    <addaction name="menuPost_Treatment"/>
+   <addaction name="menuWater_Quality"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="dbToolBar">
@@ -294,7 +309,6 @@
    <addaction name="separator"/>
    <addaction name="actionCreate_Geometry"/>
    <addaction name="actionCreate_xcas"/>
-   <addaction name="actionCreate_Basin"/>
    <addaction name="separator"/>
    <addaction name="actionRun"/>
    <addaction name="separator"/>
@@ -313,7 +327,19 @@
    </attribute>
    <addaction name="actionHydrogramme"/>
    <addaction name="actionCross_section_results"/>
-   <addaction name="actionBasin"/>
+  </widget>
+  <widget class="QToolBar" name="WaterQualityToolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionParameters_Water_Quality"/>
+   <addaction name="actionTracer_Laws"/>
   </widget>
   <action name="actionWebsite">
    <property name="icon">
@@ -535,6 +561,37 @@
    <property name="text">
     <string>Import Model</string>
    </property>
+  </action>
+  <action name="actionParameters_Water_Quality">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/parameterWQ.png</normaloff>:/plugins/Mascaret/icones/parameterWQ.png</iconset>
+   </property>
+   <property name="text">
+    <string>Parameters WQ</string>
+   </property>
+  </action>
+  <action name="actionTracer_Laws">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/lawWQ.png</normaloff>:/plugins/Mascaret/icones/lawWQ.png</iconset>
+   </property>
+   <property name="text">
+    <string>Tracer Laws</string>
+   </property>
+  </action>
+  <action name="actionexport_tracer_files">
+   <property name="text">
+    <string>Export Tracer Files</string>
+   </property>
+  </action>
+  <action name="actionAdd_WQ_tables">
+   <property name="text">
+    <string>Add WQ tables</string>
+ </property>
   </action>
   <action name="actionCreate_Basin">
    <property name="icon">
