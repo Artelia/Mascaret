@@ -110,8 +110,8 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
             flag_hydro = self.mgis.hydrogramme
             flag_profil = self.mgis.profil
-            flag_profil_r = self.mgis.profilResult
-            flag_casier_r = self.mgis.basinResult
+            flag_profil_r = self.mgis.profil_result
+            flag_casier_r = self.mgis.basin_result
             # self.mgis.add_info("flag_hydro: {0} \n flag_profil: {1} \n flag_profil_r:
             # {2} \n".format(flag_hydro,flag_profil,flag_profil_r))
             if couche == 'profiles' and flag_profil:
@@ -1808,7 +1808,7 @@ class GraphHydro(GraphCommon):
         # self.obs[codes[i]][types[i]].append(val)
 
 
-        self.columns = self.mdb.listColumns("resultats")[8:]
+        self.columns = self.mdb.list_columns("resultats")[8:]
         # self.mgis.addInfo(' ListG {}'.format(self.columns))
         self.colVal = []
         self.unite = ""
@@ -2102,7 +2102,7 @@ class GraphHydro(GraphCommon):
         self.date = False
         condition = "run='{0}' AND scenario='{1}'".format(self.run,
                                                           self.scenario)
-        temp = self.mdb.selectDistinct("date", "resultats", condition)
+        temp = self.mdb.select_distinct("date", "resultats", condition)
 
         if temp["date"][0]:
             self.date = True
@@ -2568,7 +2568,7 @@ class GraphBasin(GraphCommon):
         self.combo_time_pk = self.ui.comboBox_time
         self.combo_var1 = self.ui.comboBox_var1
         # insert graphic and toolsbars of graphic
-        self.GUI_graph(self.ui)
+        self.gui_graph(self.ui)
 
         self.initUI()
 
@@ -2602,7 +2602,7 @@ class GraphBasin(GraphCommon):
 
         self.flag = False
 
-        dico_run = self.mdb.selectDistinct("date, run, scenario",
+        dico_run = self.mdb.select_distinct("date, run, scenario",
                                            "runs")
 
         if not dico_run:
@@ -2634,10 +2634,10 @@ class GraphBasin(GraphCommon):
 
         if self.type == 'basins':
             # Extraction des colonnes bz, barea, bvol
-            self.columns = [self.mdb.listColumns("resultats")[20],self.mdb.listColumns("resultats")[21],self.mdb.listColumns("resultats")[22]]
+            self.columns = [self.mdb.list_columns("resultats")[20],self.mdb.list_columns("resultats")[21],self.mdb.list_columns("resultats")[22]]
         else:
             # Extraction des colonnes lq, lvel
-            self.columns = [self.mdb.listColumns("resultats")[24],self.mdb.listColumns("resultats")[25]]
+            self.columns = [self.mdb.list_columns("resultats")[24],self.mdb.list_columns("resultats")[25]]
 
         self.colVal = []
         self.unite = ""
@@ -2842,7 +2842,7 @@ class GraphBasin(GraphCommon):
         self.date = False
         condition = "run='{0}' AND scenario='{1}'".format(self.run,
                                                           self.scenario)
-        temp = self.mdb.selectDistinct("date", "resultats", condition)
+        temp = self.mdb.select_distinct("date", "resultats", condition)
 
         self.liste['date']['abs'] = temp["date"]
         self.position_legende = 'upper left'

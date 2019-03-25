@@ -227,7 +227,7 @@ class ClassMascaret:
                 liste_num_masca.append(remplace_none)
             else:
                 # Inversion du dictionnaire: on cherche le numero mascaret pour le numero de casier sous Qgis
-                liste_num_masca.append(dico_num.keys()[dico_num.values().index(num_qgis)])
+                liste_num_masca.append(list(dico_num.keys())[list(dico_num.values()).index(num_qgis)])
         return (" ".join([str(var) for var in liste_num_masca]))
 
         # Fonction de calcul du planimetrage entre 2 niveaux de la loi surface volume du casier
