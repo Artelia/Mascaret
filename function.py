@@ -7,7 +7,6 @@ Date                 : June,2017
 copyright            : (C) 2017 by Artelia
 email                :
 ***************************************************************************/
-
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -219,7 +218,6 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
             couche_riv.updateFeature(f)
 
         couche_riv.commitChanges()
-
         # del(couche_dissoute)
         # liste = glob.glob(nom_fich[:-4]+".*")
         # for fich in liste :
