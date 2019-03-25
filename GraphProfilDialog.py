@@ -111,7 +111,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             flag_hydro = self.mgis.hydrogramme
             flag_profil = self.mgis.profil
             flag_profil_r = self.mgis.profilResult
-            flagCasierR = self.mgis.basinResult
+            flag_casier_r = self.mgis.basinResult
             # self.mgis.add_info("flag_hydro: {0} \n flag_profil: {1} \n flag_profil_r:
             # {2} \n".format(flag_hydro,flag_profil,flag_profil_r))
             if couche == 'profiles' and flag_profil:
@@ -161,7 +161,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 # graph_hyd.exec_()
                 graph_hyd_pk.show()
 
-            if flagCasierR and couche in ('basins', 'links'):
+            if flag_casier_r and couche in ('basins', 'links'):
                 feature = results[0].mFeature
                 selection_nontrie = {'num': [], 'nom': []}
                 selection = {'num': [], 'nom': []}
@@ -187,8 +187,8 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
                 # self.mgis.addInfo('nom de la couche choisie' +str(couche))
 
-                graphBasinLink = GraphBasin(feature, self.mgis, selection, feature['name'], couche)
-                graphBasinLink.show()
+                graph_basin_link = GraphBasin(feature, self.mgis, selection, feature['name'], couche)
+                graph_basin_link.show()
         return
 
 
@@ -199,15 +199,15 @@ class GraphCommon(QDialog):
         self.mdb = self.mgis.mdb
         self.tbwq = ClassTableWQ(self.mgis, self.mdb)
 
-        self.dossierPlugin = self.mgis.masplugPath
-        self.dossierProjet = self.mgis.repProject
+        self.dossier_plugin = self.mgis.masplugPath
+        self.dossier_projet = self.mgis.repProject
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
 
     def init_ui_common_p(self, gid):
         """variables in common for profile graphics"""
         self.gid = gid
-        self.coucheProfils = self.mgis.coucheProfils
+        self.couche_profils = self.mgis.coucheProfils
         # try:
         self.liste = self.mdb.select("profiles", "", "abscissa")
         # except:
@@ -220,14 +220,14 @@ class GraphCommon(QDialog):
         self.courbes = []
 
     def gui_graph(self, ui):
-        self.verticalLayout_99 = QVBoxLayout(ui.widget_figure)
-        self.verticalLayout_99.setObjectName("verticalLayout_99")
-        self.verticalLayout_99.addWidget(self.canvas)
+        self.vertical_layout_99 = QVBoxLayout(ui.widget_figure)
+        self.vertical_layout_99.setObjectName("verticalLayout_99")
+        self.vertical_layout_99.addWidget(self.canvas)
 
         self.toolbar = NavigationToolbar(self.canvas, self)
-        self.verticalLayout_98 = QVBoxLayout(ui.widget_toolsbar)
-        self.verticalLayout_98.setObjectName("verticalLayout_98")
-        self.verticalLayout_98.addWidget(self.toolbar)
+        self.vertical_layout_98 = QVBoxLayout(ui.widget_toolsbar)
+        self.vertical_layout_98.setObjectName("verticalLayout_98")
+        self.vertical_layout_98.addWidget(self.toolbar)
 
 
 class GraphProfil(GraphCommon):
@@ -308,7 +308,7 @@ class GraphProfil(GraphCommon):
                                    zorder=95, label='Topo', picker=5)
             self.courbeTopo.append(temp)
 
-        self.etiquetteTopo = []
+        self.etiquette_topo = []
         self.courbes = [self.courbeProfil, self.courbeMNT]
 
         # Selelection Zones
@@ -545,7 +545,7 @@ class GraphProfil(GraphCommon):
         """ Save les modification du à la translation de la topo"""
         for nom, t in self.topo.items():
             for x, z, gid, ordre in zip(t['x'], t['z'], t['gid'], t['ordre']):
-                for f in self.coucheProfils.getFeatures():
+                for f in self.couche_profils.getFeatures():
                     if f["name"] == self.nom:
                         p = f.geometry().interpolate(x).asPoint()
                         geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(p.x(), p.y(), self.mdb.SRID)
@@ -603,17 +603,17 @@ class GraphProfil(GraphCommon):
         if int(qVersion()[0]) < 5:  # qt4
             fichiers = QFileDialog.getOpenFileNames(None,
                                                     'File Selection',
-                                                    self.dossierProjet,
+                                                    self.dossier_projet,
                                                     "File (*.txt *.csv)")
         else:  # qt5
             fichiers, _ = QFileDialog.getOpenFileNames(None,
                                                        'File Selection',
-                                                       self.dossierProjet,
+                                                       self.dossier_projet,
                                                        "File (*.txt *.csv)")
 
         if fichiers:
 
-            self.charger_bathy(fichiers, self.coucheProfils,
+            self.charger_bathy(fichiers, self.couche_profils,
                                self.nom)
 
             self.extrait_topo()
@@ -669,12 +669,12 @@ class GraphProfil(GraphCommon):
         if int(qVersion()[0]) < 5:  # qt4
             fichier = QFileDialog.getOpenFileName(None,
                                                   'Sélection des fichiers',
-                                                  self.dossierProjet,
+                                                  self.dossier_projet,
                                                   "Fichier (*.png *.jpg)")
         else:  # qt5
             fichier, _ = QFileDialog.getOpenFileName(None,
                                                      'Sélection des fichiers',
-                                                     self.dossierProjet,
+                                                     self.dossier_projet,
                                                      "Fichier (*.png *.jpg)")
 
         try:
@@ -1287,10 +1287,10 @@ class GraphProfilRes(GraphCommon):
             #
             self.ui.actionBt_exportCSV.triggered.connect(self.export_csv)
             # self.ui.actionComboBox_State.triggered.connect(self.combo_run_changed)
-            self.comboRun.currentIndexChanged['QString'].connect(self.combo_run_changed)
+            self.combo_run.currentIndexChanged['QString'].connect(self.combo_run_changed)
             # self.ui.comboBox_State.currentIndexChanged.connect(self.combo_run_changed)
-            self.comboScen.currentIndexChanged['QString'].connect(self.combo_scen_changed)
-            self.comboTime.currentIndexChanged['QString'].connect(self.combo_time_changed)
+            self.combo_scen.currentIndexChanged['QString'].connect(self.combo_scen_changed)
+            self.combo_time.currentIndexChanged['QString'].connect(self.combo_time_changed)
 
     def init_ui(self):
 
@@ -1306,29 +1306,29 @@ class GraphProfilRes(GraphCommon):
                 self.mgis.add_info("No simulation to show")
                 return False
 
-            self.listeRuns = {}
+            self.liste_runs = {}
             for run, scen in zip(dico_run["run"], dico_run["scenario"]):
-                if run not in self.listeRuns.keys():
-                    self.listeRuns[run] = []
-                self.listeRuns[run].append(scen)
+                if run not in self.liste_runs.keys():
+                    self.liste_runs[run] = []
+                self.liste_runs[run].append(scen)
 
-            self.run = list(self.listeRuns.keys())[-1]
-            self.scenario = self.listeRuns[self.run][-1]
+            self.run = list(self.liste_runs.keys())[-1]
+            self.scenario = self.liste_runs[self.run][-1]
 
             # listing
-            self.comboRun = self.ui.comboBox_State
-            self.comboRun.clear()
-            self.comboRun.addItems(self.listeRuns.keys())
-            le = len(self.listeRuns.keys())
-            self.comboRun.setCurrentIndex(le - 1)
-            self.comboScen = self.ui.comboBox_Scenar
-            self.comboScen.clear()
-            self.comboScen.addItems(self.listeRuns[self.run])
-            le = len(self.listeRuns[self.run])
-            self.comboScen.setCurrentIndex(le - 1)
+            self.combo_run = self.ui.comboBox_State
+            self.combo_run.clear()
+            self.combo_run.addItems(self.liste_runs.keys())
+            le = len(self.liste_runs.keys())
+            self.combo_run.setCurrentIndex(le - 1)
+            self.combo_scen = self.ui.comboBox_Scenar
+            self.combo_scen.clear()
+            self.combo_scen.addItems(self.liste_runs[self.run])
+            le = len(self.liste_runs[self.run])
+            self.combo_scen.setCurrentIndex(le - 1)
 
             # time list
-            self.comboTime = self.ui.comboBox_Time
+            self.combo_time = self.ui.comboBox_Time
             self.posit = 'Hmax'
             self.listcombo_time()
 
@@ -1338,14 +1338,14 @@ class GraphProfilRes(GraphCommon):
             # figure
             self.axes = self.fig.add_subplot(111)
             self.axes.grid(True)
-            self.courbeProfil, = self.axes.plot([], [], zorder=100, label='Profile')
+            self.courbe_profil, = self.axes.plot([], [], zorder=100, label='Profile')
             # self.aireMouillee, = self.axes.plot([], [], zorder=90, label='aire')
 
-            self.courbes = [self.courbeProfil]
+            self.courbes = [self.courbe_profil]
 
             rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='pink',
                                      alpha=0.5, lw=1, zorder=80)
-            self.litMineur = self.axes.add_patch(rect)
+            self.lit_mineur = self.axes.add_patch(rect)
 
             rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green',
                                      alpha=0.3, lw=1, zorder=80)
@@ -1360,7 +1360,7 @@ class GraphProfilRes(GraphCommon):
 
             self.label_hmax = self.ui.label_hmax
 
-            self.titleFig = self.fig.suptitle("")
+            self.title_fig = self.fig.suptitle("")
 
             self.maj_graph()
             self.maj_legende()
@@ -1378,11 +1378,11 @@ class GraphProfilRes(GraphCommon):
 
     def listcombo_time(self):
         """creation of the Time list"""
-        self.comboTime.currentIndexChanged['QString'].disconnect()
-        self.comboTime.clear()
+        self.combo_time.currentIndexChanged['QString'].disconnect()
+        self.combo_time.clear()
         self.date = False
         self.type = 't'
-        self.listeTime = {'t': [], 'date': []}
+        self.liste_time = {'t': [], 'date': []}
         condition = "run='{0}' AND scenario='{1}'".format(self.run,
                                                           self.scenario)
         temp = self.mdb.select_distinct("date", "resultats", condition)
@@ -1394,18 +1394,18 @@ class GraphProfilRes(GraphCommon):
             if self.type == 'date':
                 self.type = 't'
 
-        self.listeTime['date'] = temp['date']
+        self.liste_time['date'] = temp['date']
         temp = self.mdb.select_distinct("t", "resultats", condition)
-        self.listeTime['t'] = temp['t']
-        self.comboTime.addItem('Hmax')
-        for x in self.listeTime[self.type]:
+        self.liste_time['t'] = temp['t']
+        self.combo_time.addItem('Hmax')
+        for x in self.liste_time[self.type]:
             if isinstance(x, float):
-                self.comboTime.addItem(str(x))
+                self.combo_time.addItem(str(x))
             else:
-                self.comboTime.addItem('{0:%d/%m/%Y %H:%M:%S}'.format(x))
+                self.combo_time.addItem('{0:%d/%m/%Y %H:%M:%S}'.format(x))
         self.posit = 'Hmax'
-        self.comboTime.setCurrentIndex(0)
-        self.comboTime.currentIndexChanged['QString'].connect(self.combo_time_changed)
+        self.combo_time.setCurrentIndex(0)
+        self.combo_time.currentIndexChanged['QString'].connect(self.combo_time_changed)
 
     def export_csv(self):
         """Export Table to .CSV file"""
@@ -1465,7 +1465,7 @@ class GraphProfilRes(GraphCommon):
         self.extrait_profil()
 
         ta = self.tab[self.nom]
-        self.courbeProfil.set_data(ta['x'], ta['z'])
+        self.courbe_profil.set_data(ta['x'], ta['z'])
 
         self.remplir_tab([ta['x'], ta['z']])
 
@@ -1475,11 +1475,11 @@ class GraphProfilRes(GraphCommon):
         ta['rightstock'] = self.feature["rightstock"]
 
         if ta['x'] and ta['leftminbed'] and ta['rightminbed']:
-            self.litMineur.set_x(ta['leftminbed'])
-            self.litMineur.set_width(ta['rightminbed'] - ta['leftminbed'])
-            self.litMineur.set_visible(True)
+            self.lit_mineur.set_x(ta['leftminbed'])
+            self.lit_mineur.set_width(ta['rightminbed'] - ta['leftminbed'])
+            self.lit_mineur.set_visible(True)
         else:
-            self.litMineur.set_visible(False)
+            self.lit_mineur.set_visible(False)
 
         if ta['x'] and ta["leftstock"]:
             mini = min(ta['x'])
@@ -1499,14 +1499,14 @@ class GraphProfilRes(GraphCommon):
         # value H
         self.maj_val()
 
-        if self.zH is not None:
+        if self.z_h is not None:
             self.label_hmax.setText('{0}'.format(self.zmax))
             temp1 = np.array(ta['z'])
 
             if self.posit == 'Hmax':
                 temp2 = np.array([self.zmax] * len(ta['z']))
             else:
-                h = self.zH['zref'][0] + self.zH['y'][0]
+                h = self.z_h['zref'][0] + self.z_h['y'][0]
                 temp2 = np.array([h] * len(ta['z']))
 
             aire = self.axes.fill_between(ta['x'], temp1, temp2,
@@ -1526,11 +1526,11 @@ class GraphProfilRes(GraphCommon):
             self.axes.collections.remove(aire)
             # Figure title
             if self.posit == 'Hmax':
-                self.titleFig.set_text('Max of water level, {0} m '.format(self.zmax))
+                self.title_fig.set_text('Max of water level, {0} m '.format(self.zmax))
             elif isinstance(self.posit, float):
-                self.titleFig.set_text('Water level, {0} m - {1} s'.format(h, self.posit))
+                self.title_fig.set_text('Water level, {0} m - {1} s'.format(h, self.posit))
             else:
-                self.titleFig.set_text('Water level, {0} m - {1:%d/%m/%Y %H:%M}'.format(h, self.posit))
+                self.title_fig.set_text('Water level, {0} m - {1:%d/%m/%Y %H:%M}'.format(h, self.posit))
 
         self.canvas.draw()
 
@@ -1585,12 +1585,12 @@ class GraphProfilRes(GraphCommon):
         # self.mgis.add_info("scenario")
         # self.mgis.add_info(self.scenario)
 
-        if self.scenario not in self.listeRuns[self.run]:
-            self.scenario = self.listeRuns[self.run][-1]
-        self.comboScen.currentIndexChanged['QString'].disconnect()
-        self.comboScen.clear()
-        self.comboScen.addItems(self.listeRuns[self.run])
-        self.comboScen.currentIndexChanged['QString'].connect(
+        if self.scenario not in self.liste_runs[self.run]:
+            self.scenario = self.liste_runs[self.run][-1]
+        self.combo_scen.currentIndexChanged['QString'].disconnect()
+        self.combo_scen.clear()
+        self.combo_scen.addItems(self.liste_runs[self.run])
+        self.combo_scen.currentIndexChanged['QString'].connect(
             self.combo_scen_changed)
 
         self.listcombo_time()
@@ -1626,14 +1626,14 @@ class GraphProfilRes(GraphCommon):
         self.zmax = self.mdb.select_max("z", "resultats", condition)
 
         if self.posit == 'Hmax':
-            self.zH = self.zmax
+            self.z_h = self.zmax
         elif isinstance(self.posit, datetime):
             condition += """ AND date='{:%Y-%m-%d %H:%M:%S}'""".format(
                 self.posit)
-            self.zH = self.mdb.select("resultats", condition, "t")
+            self.z_h = self.mdb.select("resultats", condition, "t")
         else:
             condition += " AND t={0}".format(self.posit)
-            self.zH = self.mdb.select("resultats", condition, "t")
+            self.z_h = self.mdb.select("resultats", condition, "t")
 
     def avance(self, val):
 
@@ -1690,10 +1690,10 @@ class GraphHydro(GraphCommon):
         self.position = position
         self.select = select
         self.type = type
-        self.comboRun = self.ui.comboBox_State
-        self.comboScen = self.ui.comboBox_Scenar
-        self.comboTimePK = self.ui.comboBox_time
-        self.comboVar1 = self.ui.comboBox_var1
+        self.combo_run = self.ui.comboBox_State
+        self.combo_scen = self.ui.comboBox_Scenar
+        self.combo_time_pk = self.ui.comboBox_time
+        self.combo_var1 = self.ui.comboBox_var1
         # insert graphic and toolsbars of graphic
         self.gui_graph(self.ui)
 
@@ -1707,10 +1707,10 @@ class GraphHydro(GraphCommon):
         #
         #
         self.ui.actionBt_exportCSV.triggered.connect(self.export_csv)
-        self.comboRun.currentIndexChanged['QString'].connect(self.combo_run_changed)
-        self.comboScen.currentIndexChanged['QString'].connect(self.combo_scen_changed)
-        self.comboVar1.currentIndexChanged['QString'].connect(self.combo_var1_changed)
-        self.comboTimePK.currentIndexChanged['QString'].connect(self.combo_time_pk_change)
+        self.combo_run.currentIndexChanged['QString'].connect(self.combo_run_changed)
+        self.combo_scen.currentIndexChanged['QString'].connect(self.combo_scen_changed)
+        self.combo_var1.currentIndexChanged['QString'].connect(self.combo_var1_changed)
+        self.combo_time_pk.currentIndexChanged['QString'].connect(self.combo_time_pk_change)
 
     #         # self.ui.actionComboBox_var2.triggered.connect()
     #         # self.ui.actionTableWidget_RES.triggered.connect()
@@ -1733,7 +1733,7 @@ class GraphHydro(GraphCommon):
 
         # 'Cote'#''None'
         self.var1 = 'Z'
-        self.coteVar = ['ZREF', 'Z', 'ZMAX', 'ZMIN']
+        self.cote_var = ['ZREF', 'Z', 'ZMAX', 'ZMIN']
         self.debVar = ['Q', 'QMIN', 'QMAJ', 'QMAX']
 
         self.obs = {}
@@ -1761,16 +1761,16 @@ class GraphHydro(GraphCommon):
 
         self.scenario = self.listeRuns[self.run][-1]
 
-        self.comboRun.clear()
-        self.comboRun.addItems(sorted(self.listeRuns.keys()))
+        self.combo_run.clear()
+        self.combo_run.addItems(sorted(self.listeRuns.keys()))
         le = len(self.listeRuns.keys())
-        self.comboRun.setCurrentIndex(le - 1)
+        self.combo_run.setCurrentIndex(le - 1)
 
-        self.comboScen.clear()
+        self.combo_scen.clear()
         # self.mgis.add_info('{}'.format(self.listeRuns[self.run]))
-        self.comboScen.addItems(self.listeRuns[self.run])
+        self.combo_scen.addItems(self.listeRuns[self.run])
         le = len(self.listeRuns[self.run])
-        self.comboScen.setCurrentIndex(le - 1)
+        self.combo_scen.setCurrentIndex(le - 1)
 
         temp = self.mdb.select_distinct("abscissa", "weirs", "active")
         if temp:
@@ -1778,7 +1778,7 @@ class GraphHydro(GraphCommon):
         else:
             seuils = []
 
-        self.comboTimePK.clear()
+        self.combo_time_pk.clear()
 
         self.columns = self.mdb.list_columns("resultats")[8:]
         # self.mgis.add_info(' ListG {}'.format(self.columns))
@@ -1818,7 +1818,7 @@ class GraphHydro(GraphCommon):
             try:
                 if self.variables[col]['code'] == self.var1:
                     self.unite = self.variables[col]['unite']
-                    self.var1Name = self.variables[col]['nom']
+                    self.var1_name = self.variables[col]['nom']
                     self.colVal.append(col)
             except:
                 self.columns_tra.append(col)
@@ -1849,7 +1849,7 @@ class GraphHydro(GraphCommon):
             liste_nom.append(self.variables[col]['nom'])
             codd = self.variables[col]['code']
             # var = self.variables[col]['nom'].split()[0]
-            if codd in self.coteVar:
+            if codd in self.cote_var:
                 var = 'Levels'
             elif codd in self.debVar:
                 var = 'Flow rates'
@@ -1869,8 +1869,8 @@ class GraphHydro(GraphCommon):
 
         # comboGrandeur
 
-        self.comboVar1.clear()
-        self.comboVar1.addItems(liste_g)
+        self.combo_var1.clear()
+        self.combo_var1.addItems(liste_g)
         # if self.var1:
         #     self.comboVar1.setCurrentIndex(liste_g.index(self.var1))
 
@@ -1883,21 +1883,21 @@ class GraphHydro(GraphCommon):
             self.axes.set_xlabel('Time (s)')
             self.axes.grid(True)
 
-        self.axes.set_ylabel("{0} ({1})".format(self.var1Name, self.unite))
+        self.axes.set_ylabel("{0} ({1})".format(self.var1_name, self.unite))
 
-        self.courbeHydro = {}
+        self.courbe_hydro = {}
 
         for i, col in enumerate(self.columns):
             couleur = self.variables[col]['couleur']
             temp, = self.axes.plot([], [], zorder=100, color=couleur)
-            self.courbeHydro[col] = temp
+            self.courbe_hydro[col] = temp
 
-        self.courbeObs, = self.axes.plot([], [], color='grey',
-                                         marker='o', markeredgewidth=0,
-                                         zorder=90, label='Observation')
+        self.courbe_obs, = self.axes.plot([], [], color='grey',
+                                          marker='o', markeredgewidth=0,
+                                          zorder=90, label='Observation')
 
-        self.courbeLaisses = self.axes.scatter([], [], label="Flood marks")
-        self.etiquetteLaisses = []
+        self.courbe_laisses = self.axes.scatter([], [], label="Flood marks")
+        self.etiquette_laisses = []
 
         self.maj_liste()
 
@@ -1980,7 +1980,7 @@ class GraphHydro(GraphCommon):
         couleur.append('black')
 
         for col in self.colVal:
-            if self.tab[col] and self.courbeHydro[col].get_visible():
+            if self.tab[col] and self.courbe_hydro[col].get_visible():
                 index = self.tab[self.type].index(absc)
                 val = self.tab[col][index]
                 nom = self.variables[col]['nom']
@@ -1994,7 +1994,7 @@ class GraphHydro(GraphCommon):
         if self.obs and absc in self.obs['date']:
             index = self.obs['date'].index(absc)
 
-            if self.var1 in self.coteVar:
+            if self.var1 in self.cote_var:
                 liste.append(self.obs['valeur'][index])
                 unite.append("m")
                 couleur.append("grey")
@@ -2088,12 +2088,12 @@ class GraphHydro(GraphCommon):
             if vis:
                 legline.set_alpha(1.0)
                 if courbe.get_label() == "Flood marks":
-                    for e in self.etiquetteLaisses:
+                    for e in self.etiquette_laisses:
                         e.set_visible(True)
             else:
                 legline.set_alpha(0.2)
                 if courbe.get_label() == "Flood marks":
-                    for e in self.etiquetteLaisses:
+                    for e in self.etiquette_laisses:
                         e.set_visible(False)
 
             self.canvas.draw()
@@ -2134,9 +2134,9 @@ class GraphHydro(GraphCommon):
                 if i % 12 == 0 or i == len(self.liste[self.inv]['abs']) - 1:
                     ss['abs'].append(x)
 
-            self.exclutColonnes = ['rdc', 'rdg', 'zmin', 'q2d', 'q2g', 'qmax']
+            self.exclut_colonnes = ['rdc', 'rdg', 'zmin', 'q2d', 'q2g', 'qmax']
 
-            self.positionLegende = 'upper right'
+            self.position_legende = 'upper right'
 
         else:
             self.inv = 'pk'
@@ -2157,9 +2157,9 @@ class GraphHydro(GraphCommon):
 
             # self.exclutColonnes = ['rdc', 'rdg', 'zref', 'zmin', 'zmax', 'q2d',
             #                        'q2g', 'qmax']
-            self.exclutColonnes = ['rdc', 'rdg', 'zref', 'zmin', 'zmax', 'q2d',
+            self.exclut_colonnes = ['rdc', 'rdg', 'zref', 'zmin', 'zmax', 'q2d',
                                    'q2g', 'qmax']
-            self.positionLegende = 'upper left'
+            self.position_legende = 'upper left'
 
         if 'nom' in ss.keys() and self.position in ss['abs']:
             pos = ss['abs'].index(self.position)
@@ -2167,21 +2167,21 @@ class GraphHydro(GraphCommon):
         else:
             self.nom = str(self.position)
         #
-        self.comboTimePK.currentIndexChanged['QString'].disconnect()
-        self.comboTimePK.clear()
+        self.combo_time_pk.currentIndexChanged['QString'].disconnect()
+        self.combo_time_pk.clear()
 
         for x in self.liste[self.inv]['abs']:
             if isinstance(self.position, float):
-                self.comboTimePK.addItem(str(x))
+                self.combo_time_pk.addItem(str(x))
             else:
-                self.comboTimePK.addItem('{0:%d/%m/%Y %H:%M}'.format(x))
+                self.combo_time_pk.addItem('{0:%d/%m/%Y %H:%M}'.format(x))
         try:
             index = self.liste[self.inv]['abs'].index(self.position)
         except ValueError as e:
             self.mgis.add_info('No results for this profile. \n Error : {}'.format(str(e)))
 
-        self.comboTimePK.setCurrentIndex(index)
-        self.comboTimePK.currentIndexChanged['QString'].connect(self.combo_time_pk_change)
+        self.combo_time_pk.setCurrentIndex(index)
+        self.combo_time_pk.currentIndexChanged['QString'].connect(self.combo_time_pk_change)
 
     def majTab(self):
         condition = """run='{0}' AND scenario='{1}' """.format(self.run,
@@ -2203,7 +2203,7 @@ class GraphHydro(GraphCommon):
         for c in self.columns:
             if self.tab[c] != [None] * len(self.tab[c]):
                 self.listeTab.append(self.tab[c])
-                self.courbeHydro[c].set_data(self.tab[self.type], self.tab[c])
+                self.courbe_hydro[c].set_data(self.tab[self.type], self.tab[c])
             else:
                 self.tab[c] = []
         # gui
@@ -2224,16 +2224,16 @@ class GraphHydro(GraphCommon):
 
         self.axes.set_title(r'{0} - {1} {2}'.format(self.titre, self.nom, fin))
 
-        self.axes.set_ylabel(r"{0} ({1})".format(self.var1Name, self.unite))
+        self.axes.set_ylabel(r"{0} ({1})".format(self.var1_name, self.unite))
         # self.axes.set_ylabel(r""+self.var1+" "+self.unite)
         # self.axes.set_ylabel(r"" + self.var1Name + "  "  + self.unite)
-        if self.var1 in self.coteVar:
-            self.courbeLaisses.set_visible(True)
-            for e in self.etiquetteLaisses:
+        if self.var1 in self.cote_var:
+            self.courbe_laisses.set_visible(True)
+            for e in self.etiquette_laisses:
                 e.set_visible(True)
         else:
-            self.courbeLaisses.set_visible(False)
-            for e in self.etiquetteLaisses:
+            self.courbe_laisses.set_visible(False)
+            for e in self.etiquette_laisses:
                 e.set_visible(False)
 
         try:
@@ -2244,7 +2244,7 @@ class GraphHydro(GraphCommon):
             mini = min(self.liste['date']['abs'])
             maxi = max(self.liste['date']['abs'])
 
-            if self.var1 in self.coteVar:
+            if self.var1 in self.cote_var:
                 gg = 'H'
             elif self.var1 in self.debVar:
                 gg = 'Q'
@@ -2258,7 +2258,7 @@ class GraphHydro(GraphCommon):
             self.obs = self.mdb.select("observations", condition, "date")
 
             if self.obs["valeur"]:
-                if self.var1 in self.coteVar:
+                if self.var1 in self.cote_var:
                     # self.obs['valeur'] = list(map(lambda x: x + zero,
                     #                          self.obs['valeur']))
                     tempo = []
@@ -2266,15 +2266,15 @@ class GraphHydro(GraphCommon):
                         tempo.append(var1 + zero)
                     self.obs['valeur'] = tempo
 
-                self.courbeObs.set_data(self.obs['date'], self.obs['valeur'])
-                self.courbeObs.set_visible(True)
+                self.courbe_obs.set_data(self.obs['date'], self.obs['valeur'])
+                self.courbe_obs.set_visible(True)
             else:
                 raise
 
         except:
             # if self.mgis.DEBUG:
             #     self.mgis.add_info("No observation")
-            self.courbeObs.set_visible(False)
+            self.courbe_obs.set_visible(False)
             self.obs = {}
 
         self.canvas.draw()
@@ -2285,18 +2285,18 @@ class GraphHydro(GraphCommon):
             vv = self.variables[col]
             if self.tab[col] and vv['code'] == var:
                 self.colVal.append(col)
-                self.courbeHydro[col].set_visible(True)
-                self.courbeHydro[col].set_label(vv['nom'])
-                self.courbeHydro[col].set_color(vv['couleur'])
+                self.courbe_hydro[col].set_visible(True)
+                self.courbe_hydro[col].set_label(vv['nom'])
+                self.courbe_hydro[col].set_color(vv['couleur'])
             else:
-                self.courbeHydro[col].set_visible(False)
+                self.courbe_hydro[col].set_visible(False)
 
-        self.courbes = [self.courbeHydro[col] for col in self.colVal]
+        self.courbes = [self.courbe_hydro[col] for col in self.colVal]
 
     def maj_legende(self):
         self.colVal = []
-        if self.var1 in self.coteVar:
-            for var in self.coteVar:
+        if self.var1 in self.cote_var:
+            for var in self.cote_var:
                 self.add_courb(var)
         elif self.var1 in self.debVar:
             for var in self.debVar:
@@ -2305,21 +2305,21 @@ class GraphHydro(GraphCommon):
             self.add_courb(self.var1)
 
         if self.obs:
-            self.courbes.append(self.courbeObs)
+            self.courbes.append(self.courbe_obs)
         handles = [c for c in self.courbes]
-        if self.var1 in self.coteVar:
+        if self.var1 in self.cote_var:
             handles.append(mlines.Line2D([], [], color='darkcyan', marker='+',
                                          linewidth=0,
                                          markersize=10, label='Flood marks'))
-            self.courbes.append(self.courbeLaisses)
+            self.courbes.append(self.courbe_laisses)
         else:
-            self.courbeLaisses.set_visible(False)
-            for e in self.etiquetteLaisses:
+            self.courbe_laisses.set_visible(False)
+            for e in self.etiquette_laisses:
                 e.set_visible(False)
         liste_noms = [c.get_label() for c in self.courbes]
 
         self.leg = self.axes.legend(handles, liste_noms,
-                                    loc=self.positionLegende,
+                                    loc=self.position_legende,
                                     fancybox=False,
                                     shadow=False,
                                     fontsize="small")
@@ -2337,7 +2337,7 @@ class GraphHydro(GraphCommon):
 
             for col in self.variables.keys():
                 nom = self.variables[col]['nom']
-                if nom == courbe.get_label() and col in self.exclutColonnes:
+                if nom == courbe.get_label() and col in self.exclut_colonnes:
                     legline.set_alpha(0.2)
                     legline.set_visible(True)
                     courbe.set_visible(False)
@@ -2361,7 +2361,7 @@ class GraphHydro(GraphCommon):
 
         col_visibles = []
         for col in self.colVal:
-            if self.courbeHydro[col].get_visible():
+            if self.courbe_hydro[col].get_visible():
                 col_visibles.append(col)
 
         temp = [min(self.tab[c]) for c in col_visibles if self.tab[c]]
@@ -2385,11 +2385,11 @@ class GraphHydro(GraphCommon):
         self.canvas.draw()
 
     def maj_laisses(self):
-        self.courbeLaisses.set_visible(False)
-        self.courbeLaisses = self.axes.scatter([], [], label="Flood marks")
-        for e in self.etiquetteLaisses:
+        self.courbe_laisses.set_visible(False)
+        self.courbe_laisses = self.axes.scatter([], [], label="Flood marks")
+        for e in self.etiquette_laisses:
             self.axes.texts.remove(e)
-        self.etiquetteLaisses = []
+        self.etiquette_laisses = []
 
         condition = "event = '{}'".format(self.scenario)
         self.laisses = self.mdb.select("flood_marks", condition, "abscissa")
@@ -2431,14 +2431,14 @@ class GraphHydro(GraphCommon):
             couleurs = ["black"] * len(xx)
             taille = [1] * len(xx)
 
-        self.courbeLaisses = self.axes.scatter(xx, zz,
-                                               color=couleurs,
-                                               marker='+',
-                                               label="Flood marks",
-                                               s=80,
-                                               linewidth=taille)
+        self.courbe_laisses = self.axes.scatter(xx, zz,
+                                                color=couleurs,
+                                                marker='+',
+                                                label="Flood marks",
+                                                s=80,
+                                                linewidth=taille)
 
-        self.courbeLaisses.set_visible(True)
+        self.courbe_laisses.set_visible(True)
         # self.courbeLaisses.set_color(couleurs)
         for x, z, c in zip(xx, zz, couleurs):
             temp = self.axes.annotate(str(z), xy=(x, z), xytext=(3, 3),
@@ -2447,7 +2447,7 @@ class GraphHydro(GraphCommon):
                                       color=c,
                                       textcoords='offset points')
 
-            self.etiquetteLaisses.append(temp)
+            self.etiquette_laisses.append(temp)
 
             # except :
             # return
@@ -2467,12 +2467,12 @@ class GraphHydro(GraphCommon):
         self.run = text
         if self.scenario not in self.listeRuns[self.run]:
             self.scenario = self.listeRuns[self.run][-1]
-        self.comboScen.currentIndexChanged['QString'].disconnect()
-        self.comboScen.clear()
-        self.comboScen.addItems(self.listeRuns[self.run])
-        self.comboScen.setCurrentIndex(self.listeRuns[self.run].index(
+        self.combo_scen.currentIndexChanged['QString'].disconnect()
+        self.combo_scen.clear()
+        self.combo_scen.addItems(self.listeRuns[self.run])
+        self.combo_scen.setCurrentIndex(self.listeRuns[self.run].index(
             self.scenario))
-        self.comboScen.currentIndexChanged['QString'].connect(
+        self.combo_scen.currentIndexChanged['QString'].connect(
             self.combo_scen_changed)
 
         self.maj_liste()
@@ -2497,18 +2497,18 @@ class GraphHydro(GraphCommon):
 
         if text == 'Levels':
             self.unite = 'm'
-            self.var1Name = 'Z'
+            self.var1_name = 'Z'
             self.var1 = 'Z'
         elif text == 'Flow rates':
             self.unite = r'$m^3/s$'
-            self.var1Name = 'Q'
+            self.var1_name = 'Q'
             self.var1 = 'Q'
         else:
             for col in self.columns:
                 if self.variables[col]['nom'] == text:
                     self.var1 = self.variables[col]['code']
                     self.unite = self.variables[col]['unite']
-                    self.var1Name = text
+                    self.var1_name = text
                     break
         self.maj_legende()
         self.maj_graph()
@@ -2546,7 +2546,7 @@ class GraphHydro(GraphCommon):
             else:
                 self.nom = str(self.position)
             index = self.liste[self.inv]['abs'].index(self.position)
-            self.comboTimePK.setCurrentIndex(index)
+            self.combo_time_pk.setCurrentIndex(index)
             self.maj_limites()
 """---------------------------------------------------------------------------------
         Classe de gestion du graphique pour les casiers et les liaisons 
@@ -2563,10 +2563,10 @@ class GraphBasin(GraphCommon):
         self.position = position
         self.select = select
         self.type = type
-        self.comboRun = self.ui.comboBox_State
-        self.comboScen = self.ui.comboBox_Scenar
-        self.comboTimePK = self.ui.comboBox_time
-        self.comboVar1 = self.ui.comboBox_var1
+        self.combo_run = self.ui.comboBox_State
+        self.combo_scen = self.ui.comboBox_Scenar
+        self.combo_time_pk = self.ui.comboBox_time
+        self.combo_var1 = self.ui.comboBox_var1
         # insert graphic and toolsbars of graphic
         self.GUI_graph(self.ui)
 
@@ -2580,10 +2580,10 @@ class GraphBasin(GraphCommon):
         #
         #
         self.ui.actionBt_exportCSV.triggered.connect(self.exportCSV)
-        self.comboRun.currentIndexChanged['QString'].connect(self.comboRunChanged)
-        self.comboScen.currentIndexChanged['QString'].connect(self.comboScenChanged)
-        self.comboVar1.currentIndexChanged['QString'].connect(self.comboVar1Changed)
-        self.comboTimePK.currentIndexChanged['QString'].connect(self.comboTimePKChange)
+        self.combo_run.currentIndexChanged['QString'].connect(self.combo_run_changed)
+        self.combo_scen.currentIndexChanged['QString'].connect(self.combo_scen_changed)
+        self.combo_var1.currentIndexChanged['QString'].connect(self.combo_var1_changed)
+        self.combo_time_pk.currentIndexChanged['QString'].connect(self.combo_time_p_k_change)
 
     #
     def initUI(self):
@@ -2608,29 +2608,29 @@ class GraphBasin(GraphCommon):
         if not dico_run:
             self.mgis.addInfo("No simulation to show")
             return False
-        self.listeRuns = {}
+        self.liste_runs = {}
         for run, scen in zip(dico_run["run"], dico_run["scenario"]):
-            if not run in self.listeRuns.keys():
-                self.listeRuns[run] = []
+            if not run in self.liste_runs.keys():
+                self.liste_runs[run] = []
             # Exclusion des scenarios en régime permanent pour lesquels il n'y a pas de calcul casier
             if scen[len(scen)-5:] != '_init':
-               self.listeRuns[run].append(scen)
+               self.liste_runs[run].append(scen)
 
-        self.run = sorted(self.listeRuns.keys())[-1]
+        self.run = sorted(self.liste_runs.keys())[-1]
 
-        self.scenario = self.listeRuns[self.run][-1]
+        self.scenario = self.liste_runs[self.run][-1]
 
-        self.comboRun.clear()
-        self.comboRun.addItems(sorted(self.listeRuns.keys()))
-        le = len(self.listeRuns.keys())
-        self.comboRun.setCurrentIndex(le - 1)
+        self.combo_run.clear()
+        self.combo_run.addItems(sorted(self.liste_runs.keys()))
+        le = len(self.liste_runs.keys())
+        self.combo_run.setCurrentIndex(le - 1)
 
-        self.comboScen.clear()
-        self.comboScen.addItems(self.listeRuns[self.run])
-        le = len(self.listeRuns[self.run])
-        self.comboScen.setCurrentIndex(le - 1)
+        self.combo_scen.clear()
+        self.combo_scen.addItems(self.liste_runs[self.run])
+        le = len(self.liste_runs[self.run])
+        self.combo_scen.setCurrentIndex(le - 1)
 
-        self.comboTimePK.clear()
+        self.combo_time_pk.clear()
 
         if self.type == 'basins':
             # Extraction des colonnes bz, barea, bvol
@@ -2645,7 +2645,7 @@ class GraphBasin(GraphCommon):
         # Initialisation sur la 1ere colonne
         self.var1 = self.variables[self.columns[0]]['code']
         self.unite = self.variables[self.columns[0]]['unite']
-        self.var1Name = self.variables[self.columns[0]]['nom']
+        self.var1_name = self.variables[self.columns[0]]['nom']
         self.colVal.append(self.columns[0])
         listeNom = ['t']
         # default value
@@ -2664,27 +2664,27 @@ class GraphBasin(GraphCommon):
         self.tableau.setHorizontalHeaderLabels(listeNom)
         self.tableau.addAction(CopySelectedCellsAction(self.tableau))
 
-        self.comboVar1.clear()
-        self.comboVar1.addItems(listeG)
+        self.combo_var1.clear()
+        self.combo_var1.addItems(listeG)
 
         # Figure
         self.axes = self.fig.add_subplot(111)
         self.axes.set_xlabel('Time (s)')
         self.axes.grid(True)
-        self.axes.set_ylabel("{0} ({1})".format(self.var1Name, self.unite))
+        self.axes.set_ylabel("{0} ({1})".format(self.var1_name, self.unite))
 
-        self.courbeHydro = {}
+        self.courbe_hydro = {}
 
         for i, col in enumerate(self.columns):
             couleur = self.variables[col]['couleur']
             temp, = self.axes.plot([], [], zorder=100, color=couleur)
-            self.courbeHydro[col] = temp
+            self.courbe_hydro[col] = temp
 
-        self.majListe()
-        self.majTab()
-        self.majLegende()
-        self.majGraph()
-        self.majLimites()
+        self.maj_liste()
+        self.maj_tab()
+        self.maj_legende()
+        self.maj_graph()
+        self.maj_limites()
 
         self.fig.tight_layout()
         self.fig.patch.set_facecolor((0.94, 0.94, 0.94))
@@ -2749,7 +2749,7 @@ class GraphBasin(GraphCommon):
         couleur.append('black')
 
         for col in self.colVal:
-            if self.tab[col] and self.courbeHydro[col].get_visible():
+            if self.tab[col] and self.courbe_hydro[col].get_visible():
                 index = self.tab[self.type].index(absc)
                 val = self.tab[col][index]
                 nom = self.variables[col]['nom']
@@ -2795,13 +2795,13 @@ class GraphBasin(GraphCommon):
                 ligne += "{0} ; ".format(self.variables[col]['nom'])
             file.write(ligne + " \n")
 
-            nbl = len(self.listeTab[0]) #nombre de pas de temps
+            nbl = len(self.liste_tab[0]) #nombre de pas de temps
 
             # Boucle sur les pas de temps
             for j in range(nbl):
                 ligne = ""
                 # Boucle sur les colonnes de variables BZ, BArea, BVol pour casier et LQ,LVEL pour liaisons
-                for i, val in enumerate(self.listeTab):
+                for i, val in enumerate(self.liste_tab):
                     ligne += "{0} ; ".format(str(val[j]))
                 file.write(ligne + " \n")
 
@@ -2838,21 +2838,21 @@ class GraphBasin(GraphCommon):
 
             self.canvas.draw()
 
-    def majListe(self):
+    def maj_liste(self):
         self.date = False
         condition = "run='{0}' AND scenario='{1}'".format(self.run,
                                                           self.scenario)
         temp = self.mdb.selectDistinct("date", "resultats", condition)
 
         self.liste['date']['abs'] = temp["date"]
-        self.positionLegende = 'upper left'
+        self.position_legende = 'upper left'
         self.nom = str(self.position)
 
-        self.comboTimePK.currentIndexChanged['QString'].disconnect()
-        self.comboTimePK.clear()
+        self.combo_time_pk.currentIndexChanged['QString'].disconnect()
+        self.combo_time_pk.clear()
 
         for x in self.liste['selection']['nom']:
-            self.comboTimePK.addItem(str(x))
+            self.combo_time_pk.addItem(str(x))
 
         try:
             index = self.liste['selection']['nom'].index(self.position)
@@ -2860,10 +2860,10 @@ class GraphBasin(GraphCommon):
             self.mgis.addInfo('No results for this profile. \n Error : {}'.format(str(e)))
 
 
-        self.comboTimePK.setCurrentIndex(index)
-        self.comboTimePK.currentIndexChanged['QString'].connect(self.comboTimePKChange)
+        self.combo_time_pk.setCurrentIndex(index)
+        self.combo_time_pk.currentIndexChanged['QString'].connect(self.combo_time_p_k_change)
 
-    def majTab(self):
+    def maj_tab(self):
         condition = """run='{0}' AND scenario='{1}' """.format(self.run,
                                                                self.scenario)
 
@@ -2879,61 +2879,61 @@ class GraphBasin(GraphCommon):
         self.tab = self.mdb.select("resultats", condition, "t")
 
         # Alimentation de la colonne des dates dans le tableau
-        self.listeTab = [self.tab['date']]
+        self.liste_tab = [self.tab['date']]
         for c in self.columns:
             if self.tab[c] != [None] * len(self.tab[c]):
-                self.listeTab.append(self.tab[c])
+                self.liste_tab.append(self.tab[c])
                 # Valeurs en milliers pour barea et bvol passees dans les courbes pour ameliorer la visibilite des graphes
                 if  c == 'barea' or c == 'bvol':
-                   self.courbeHydro[c].set_data(self.tab['date'], [valeur/1000 for valeur in self.tab[c]] )
+                   self.courbe_hydro[c].set_data(self.tab['date'], [valeur / 1000 for valeur in self.tab[c]])
                 else:
-                   self.courbeHydro[c].set_data(self.tab['date'], self.tab[c])
+                   self.courbe_hydro[c].set_data(self.tab['date'], self.tab[c])
             else:
                 self.tab[c] = []
         # gui
-        self.remplirTab(self.listeTab)
+        self.remplir_tab(self.liste_tab)
 
-    def remplirTab(self, liste):
+    def remplir_tab(self, liste):
         """ Fill items in the table """
         self.tableau.setRowCount(len(liste[0]))
         for j, val in enumerate(liste):
             for i, v in enumerate(val):
                 self.tableau.setItem(i, j, QTableWidgetItem(str(v)))
 
-    def majGraph(self):
+    def maj_graph(self):
 
         self.axes.set_title(r'{0} - {1}'.format(self.titre, self.nom))
-        self.axes.set_ylabel(r"{0} ({1})".format(self.var1Name, self.unite))
+        self.axes.set_ylabel(r"{0} ({1})".format(self.var1_name, self.unite))
 
         mini = min(self.liste['date']['abs'])
         maxi = max(self.liste['date']['abs'])
 
         self.canvas.draw()
 
-    def addCourb(self, var):
+    def add_courb(self, var):
         """add courbe for visualization"""
         for col in self.columns:
             V = self.variables[col]
             if self.tab[col] and V['code'] == var:
                 self.colVal.append(col)
-                self.courbeHydro[col].set_visible(True)
-                self.courbeHydro[col].set_label(V['nom'])
-                self.courbeHydro[col].set_color(V['couleur'])
+                self.courbe_hydro[col].set_visible(True)
+                self.courbe_hydro[col].set_label(V['nom'])
+                self.courbe_hydro[col].set_color(V['couleur'])
             else:
-                self.courbeHydro[col].set_visible(False)
+                self.courbe_hydro[col].set_visible(False)
 
-        self.courbes = [self.courbeHydro[col] for col in self.colVal]
+        self.courbes = [self.courbe_hydro[col] for col in self.colVal]
 
-    def majLegende(self):
+    def maj_legende(self):
         self.colVal = []
-        self.addCourb(self.var1)
+        self.add_courb(self.var1)
 
         handles = [c for c in self.courbes]
 
         listeNoms = [c.get_label() for c in self.courbes]
 
         self.leg = self.axes.legend(handles, listeNoms,
-                                    loc=self.positionLegende,
+                                    loc=self.position_legende,
                                     fancybox=False,
                                     shadow=False,
                                     fontsize="small")
@@ -2951,7 +2951,7 @@ class GraphBasin(GraphCommon):
         # rend deplacable la legende mais fonctionne mal avec le choix des ligne dans la légende
         self.leg.draggable(True)
 
-    def majLimites(self):
+    def maj_limites(self):
         if self.tab['date']:
            miniX = min(self.tab['date'])
            maxiX = max(self.tab['date'])
@@ -2972,16 +2972,16 @@ class GraphBasin(GraphCommon):
 
         colVisibles = []
         for col in self.colVal:
-            if self.courbeHydro[col].get_visible():
+            if self.courbe_hydro[col].get_visible():
                 colVisibles.append(col)
 
         # Recherche de la valeur mini sur les valeurs de la courbe et non du tableau, [1] pour les valeurs en ordonnees
-        temp = [min(self.courbeHydro[c].get_data()[1]) for c in colVisibles if self.courbeHydro[c].get_data()]
+        temp = [min(self.courbe_hydro[c].get_data()[1]) for c in colVisibles if self.courbe_hydro[c].get_data()]
         if temp:
             miniY = min(temp)
 
         # Recherche de la valeur maxi sur les valeurs de la courbe et non du tableau, [1] pour les valeurs en ordonnees
-        temp = [max(self.courbeHydro[c].get_data()[1]) for c in colVisibles if self.courbeHydro[c].get_data()]
+        temp = [max(self.courbe_hydro[c].get_data()[1]) for c in colVisibles if self.courbe_hydro[c].get_data()]
         if temp:
             maxiY = max(temp)
 
@@ -2996,49 +2996,49 @@ class GraphBasin(GraphCommon):
         self.canvas.draw()
 
 
-    def comboTimePKChange(self, text):
+    def combo_time_p_k_change(self, text):
         self.position = text
         self.nom = self.position
-        self.majTab()
-        self.majGraph()
-        self.majLimites()
+        self.maj_tab()
+        self.maj_graph()
+        self.maj_limites()
 
 
-    def comboRunChanged(self, text):
+    def combo_run_changed(self, text):
         self.run = text
-        if not self.scenario in self.listeRuns[self.run]:
-            self.scenario = self.listeRuns[self.run][-1]
-        self.comboScen.currentIndexChanged['QString'].disconnect()
-        self.comboScen.clear()
-        self.comboScen.addItems(self.listeRuns[self.run])
-        self.comboScen.setCurrentIndex(self.listeRuns[self.run].index(
+        if not self.scenario in self.liste_runs[self.run]:
+            self.scenario = self.liste_runs[self.run][-1]
+        self.combo_scen.currentIndexChanged['QString'].disconnect()
+        self.combo_scen.clear()
+        self.combo_scen.addItems(self.liste_runs[self.run])
+        self.combo_scen.setCurrentIndex(self.liste_runs[self.run].index(
             self.scenario))
-        self.comboScen.currentIndexChanged['QString'].connect(
-            self.comboScenChanged)
+        self.combo_scen.currentIndexChanged['QString'].connect(
+            self.combo_scen_changed)
 
-        self.majListe()
-        self.majTab()
-        self.majGraph()
-        self.majLimites()
+        self.maj_liste()
+        self.maj_tab()
+        self.maj_graph()
+        self.maj_limites()
 
 
-    def comboScenChanged(self, text):
+    def combo_scen_changed(self, text):
         self.scenario = text
-        self.majListe()
-        self.majTab()
-        self.majGraph()
-        self.majLimites()
+        self.maj_liste()
+        self.maj_tab()
+        self.maj_graph()
+        self.maj_limites()
 
-    def comboVar1Changed(self, text):
+    def combo_var1_changed(self, text):
         for col in self.columns:
             if self.variables[col]['nom'] == text:
                 self.var1 = self.variables[col]['code']
                 self.unite = self.variables[col]['unite']
-                self.var1Name = text
+                self.var1_name = text
                 break
-        self.majLegende()
-        self.majGraph()
-        self.majLimites()
+        self.maj_legende()
+        self.maj_graph()
+        self.maj_limites()
 
     def avance(self, val):
         # TODO
@@ -3056,5 +3056,5 @@ class GraphBasin(GraphCommon):
             self.position = self.liste['selection']['nom'][pos]
             self.nom = self.position
             index = self.liste['selection']['nom'].index(self.position)
-            self.comboTimePK.setCurrentIndex(index)
-            self.majLimites()
+            self.combo_time_pk.setCurrentIndex(index)
+            self.maj_limites()

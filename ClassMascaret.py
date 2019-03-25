@@ -670,10 +670,9 @@ class ClassMascaret:
             SubElement(pertes, "abscisses").text = self.fmt(pertescharg["abscissa"])
             SubElement(pertes, "coefficients").text = self.fmt(pertescharg["coeff"])
 
-            # Casiers et liaisons
-            if len(casiers["name"]) > 0:
-
-
+        # Casiers et liaisons
+        if len(casiers["name"]) > 0:
+            self.add_basin_xcas(fichier_cas, casiers, liaisons)
         ### Apports et déversoirs
         apport_dever = SubElement(cas, "parametresApportDeversoirs")
 
@@ -847,7 +846,7 @@ class ClassMascaret:
         #     self.mgis.add_info('error: {}'.format(e))
         return dict_lois
 
-    def add_basin_xcas(self, fichier_cas, noyau, dict_libres,liaisons):
+    def add_basin_xcas(self, fichier_cas, casiers, liaisons):
         # Creation du dictionnaire de numero de casier entre mascaret (cle) et qgis (valeur)
         self.dico_basinnum = {}
         for i, num_qgis in enumerate(casiers["basinnum"], 1): self.dico_basinnum[i] = num_qgis

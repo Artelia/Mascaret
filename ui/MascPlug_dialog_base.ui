@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -248,6 +248,7 @@
     </property>
     <addaction name="actionHydrogramme"/>
     <addaction name="actionCross_section_results"/>
+    <addaction name="actionBasin"/>
    </widget>
    <widget class="QMenu" name="menuWater_Quality">
     <property name="title">
@@ -309,6 +310,7 @@
    <addaction name="separator"/>
    <addaction name="actionCreate_Geometry"/>
    <addaction name="actionCreate_xcas"/>
+   <addaction name="actionCreate_Basin"/>
    <addaction name="separator"/>
    <addaction name="actionRun"/>
    <addaction name="separator"/>
@@ -327,6 +329,7 @@
    </attribute>
    <addaction name="actionHydrogramme"/>
    <addaction name="actionCross_section_results"/>
+   <addaction name="actionBasin"/>
   </widget>
   <widget class="QToolBar" name="WaterQualityToolBar">
    <property name="windowTitle">
