@@ -52,8 +52,8 @@ class MascPlugDialog(QMainWindow):
             QApplication.restoreOverrideCursor()
         self.setAttribute(Qt.WA_DeleteOnClose)
 
-        self.masplug_path = os.path.dirname(__file__)
-        self.ui = loadUi(os.path.join(self.masplug_path, 'ui/MascPlug_dialog_base.ui'), self)
+        self.masplugPath = os.path.dirname(__file__)
+        self.ui = loadUi(os.path.join(self.masplugPath, 'ui/MascPlug_dialog_base.ui'), self)
         # variables
         self.DEBUG = 1
         self.curConnName = None
@@ -65,15 +65,15 @@ class MascPlugDialog(QMainWindow):
 
         # self.pathPostgres = self.masplugPath
         # emplacement objet sql
-        self.dossier_sql = os.path.join(os.path.join(self.masplug_path, "db"), "sql")
+        self.dossier_sql = os.path.join(os.path.join(self.masplugPath, "db"), "sql")
         # style des couches
-        self.dossier_style = os.path.join(os.path.join(self.masplug_path, "db"), "style")
+        self.dossier_style = os.path.join(os.path.join(self.masplugPath, "db"), "style")
         self.repProject = None
 
         self.box = ClassWarningBox(self)
         # variables liste of results
         self.variables = {}
-        with open(os.path.join(self.masplug_path, 'variables.dat'), 'r') as fichier:
+        with open(os.path.join(self.masplugPath, 'variables.dat'), 'r') as fichier:
             for ligne in fichier:
                 val = ligne.strip().replace('"', '').split(';')
                 self.variables[val[1].lower()] = {'nom': val[0],
@@ -449,12 +449,12 @@ class MascPlugDialog(QMainWindow):
             if int(qVersion()[0]) < 5:  # qt4
                 file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
                                                              "{0}.xcas".format(
-                                                                 os.path.join(self.masplug_path, clam.baseName)),
+                                                                 os.path.join(self.masplugPath, clam.baseName)),
                                                              filter="XCAS (*.xcas)")
             else:  # qt5
                 file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
                                                                 "{0}.xcas".format(
-                                                                    os.path.join(self.masplug_path, clam.baseName)),
+                                                                    os.path.join(self.masplugPath, clam.baseName)),
                                                                 filter="XCAS (*.xcas)")
             if file_name_path:
                 clam.copy_file_model(file_name_path, case='xcas')
@@ -467,12 +467,12 @@ class MascPlugDialog(QMainWindow):
         if int(qVersion()[0]) < 5:  # qt4
             file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
                                                          "{0}.geo".format(
-                                                             os.path.join(self.masplug_path, clam.baseName)),
+                                                             os.path.join(self.masplugPath, clam.baseName)),
                                                          filter="GEO (*.geo)")
         else:  # qt5
             file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
                                                             "{0}.geo".format(
-                                                                os.path.join(self.masplug_path, clam.baseName)),
+                                                                os.path.join(self.masplugPath, clam.baseName)),
                                                             filter="GEO (*.geo)")
 
         if file_name_path:
@@ -483,22 +483,22 @@ class MascPlugDialog(QMainWindow):
         # Mascaret.exe demande un .casier et pas basin d'ou le nom de la fonction
         # Pas de dialog box sur le noyau: les casiers sont uniquement en transitoire
 
-        clam = classMascaret(self)
+        clam = ClassMascaret(self)
         # Appel de la fonction creerGEOCasier() d�finie dans Class_Mascaret.py
-        clam.creerGEOCasier()
+        clam.creer_geo_casier()
         if int(qVersion()[0]) < 5:  # qt4
-            fileNamePath = QFileDialog.getSaveFileName(self, "saveFile",
+            file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
                                                        "{0}.casier".format(
-                                                           os.path.join(self.masplug_path, clam.baseName)),
-                                                       filter="CASIER (*.casier)")
+                                                           os.path.join(self.masplugPath, clam.baseName)),
+                                                         filter="CASIER (*.casier)")
         else:  # qt5
-            fileNamePath, _ = QFileDialog.getSaveFileName(self, "saveFile",
+            file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
                                                           "{0}.casier".format(
-                                                              os.path.join(self.masplug_path, clam.baseName)),
-                                                          filter="CASIER (*.casier)")
+                                                              os.path.join(self.masplugPath, clam.baseName)),
+                                                            filter="CASIER (*.casier)")
 
-        if fileNamePath:
-            clam.copy_file_model(fileNamePath, case='casier')
+        if file_name_path:
+            clam.copy_file_model(file_name_path, case='casier')
 
 
     def fct_run(self):
@@ -542,9 +542,9 @@ class MascPlugDialog(QMainWindow):
 
     def read_settings(self, defaults=False):
         """read Option"""
-        s_file = os.path.join(self.masplug_path, 'settings.json')
+        s_file = os.path.join(self.masplugPath, 'settings.json')
         if not os.path.isfile(s_file) or defaults:
-            s_file = os.path.join(self.masplug_path, 'default_settings.json')
+            s_file = os.path.join(self.masplugPath, 'default_settings.json')
         with open(s_file, 'r') as f:
             self.opts = json.load(f)
         for group, options in self.opts.items():
@@ -573,7 +573,7 @@ class MascPlugDialog(QMainWindow):
                         self.add_info("Error: write_settings , group :{0}".format(group))
                         pass
         # self.add_info('{0}'.format(self.opts))
-        with open(os.path.join(self.masplug_path, 'settings.json'), 'w') as f:
+        with open(os.path.join(self.masplugPath, 'settings.json'), 'w') as f:
             json.dump(self.opts, f)
 
             # *******************************
@@ -588,13 +588,13 @@ class MascPlugDialog(QMainWindow):
         if int(qVersion()[0]) < 5:  # qt4
             file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
                                                          "{0}.psql".format(
-                                                             os.path.join(self.masplug_path,
+                                                             os.path.join(self.masplugPath,
                                                                           self.mdb.dbname + "_" + self.mdb.SCHEMA)),
                                                          filter="PSQL (*.psql);;File (*)")
         else:  # qt5
             file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
                                                             "{0}.psql".format(
-                                                                os.path.join(self.masplug_path,
+                                                                os.path.join(self.masplugPath,
                                                                              self.mdb.dbname + "_" + self.mdb.SCHEMA)),
                                                             filter="PSQL (*.psql);;File (*)")
 
@@ -607,12 +607,12 @@ class MascPlugDialog(QMainWindow):
         if int(qVersion()[0]) < 5:  # qt4
             file_name_path = QFileDialog.getOpenFileNames(None,
                                                           'File Selection',
-                                                          self.masplug_path,
+                                                          self.masplugPath,
                                                           filter="PSQL (*.psql);;File (*)")
         else:  # qt5
             file_name_path, _ = QFileDialog.getOpenFileNames(None,
                                                              'File Selection',
-                                                             self.masplug_path,
+                                                             self.masplugPath,
                                                              filter="PSQL (*.psql);;File (*)")
         if self.mdb.check_extension():
             self.add_info(" Shema est {}".format(self.SCHEMA))
@@ -724,13 +724,13 @@ class MascPlugDialog(QMainWindow):
     def windinfo(self, txt, title='Informations'):
         msg = QMessageBox()
         msg.setWindowTitle(title)
-        msg.setWindowIcon(QIcon(os.path.join(os.path.join(self.masplug_path, 'icones'), 'icon_base.png')))
+        msg.setWindowIcon(QIcon(os.path.join(os.path.join(self.masplugPath, 'icones'), 'icon_base.png')))
         msg.setText(txt)
         msg.setStandardButtons(QMessageBox.Ok)
         retval = msg.exec_()
 
     def about(self):
-        file = open(os.path.join(self.masplug_path, 'metadata.txt'), 'r')
+        file = open(os.path.join(self.masplugPath, 'metadata.txt'), 'r')
         for ligne in file:
             if ligne.find("version=") > -1:
                 ligne = ligne.split('=')
@@ -771,7 +771,7 @@ Version : {}
     def fct_export_tracer_files(self):
         folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
 
-        self.dossierFileMasc = os.path.join(self.masplug_path, "mascaret")
+        self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
         cl = ClassMascWQ(self, self.dossierFileMasc)
         # try:
         # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:

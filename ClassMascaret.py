@@ -1786,13 +1786,29 @@ class ClassMascaret:
     def copy_file_model(self, rep, case=None):
         # self.mgis.add_info('{}'.format(rep))
         if case == 'xcas':
-            shutil.copy2(os.path.join(self.dossier_file_masc, self.baseName + ".xcas"), rep)
+            file =os.path.join(self.dossier_file_masc, self.baseName + ".xcas")
+            if os.path.isfile(file) :
+                shutil.copy2(file, rep)
+            else:
+                self.mgis.add_info('{} not found'.format(file))
         elif case == 'geo':
-            shutil.copy2(os.path.join(self.dossier_file_masc, self.baseName + ".geo"), rep)
+            file =os.path.join(self.dossier_file_masc, self.baseName + ".geo")
+            if os.path.isfile(file):
+                shutil.copy2(file, rep)
+            else:
+                self.mgis.add_info('{} not found'.format(file))
         elif case == 'georef':
-            shutil.copy2(os.path.join(self.dossier_file_masc, self.baseName + ".georef"), rep)
+            file =os.path.join(self.dossier_file_masc, self.baseName + ".georef")
+            if os.path.isfile(file) :
+                shutil.copy2(file, rep)
+            else:
+                self.mgis.add_info('{} not found'.format(file))
         elif case == 'casier':
-            shutil.copy2(os.path.join(self.dossier_file_masc, self.baseName + ".casier"), rep)
+            file =os.path.join(self.dossier_file_masc, self.baseName + ".casier")
+            if os.path.isfile(file) :
+                shutil.copy2(file, rep)
+            else:
+                self.mgis.add_info('{} not found'.format(file))
         else:
             self.mgis.add_info('No file to export')
 
