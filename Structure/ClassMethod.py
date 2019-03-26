@@ -103,25 +103,25 @@ class ClassMethod:
             print('Inconsistent Z for the span')
         return poly_t
 
-    def poly_dalot(self, x0,z_rad ):
+    def poly_dalot(self, param_elem, x0):
         """ creation polygone for "pont cadre" """
         x1 = x0 + param_elem['LARGTRA']
-        z = z_rad + param_elem['HDALO']  # point haut
-        zmin_t = z_rad
+        z = param_elem['COTERAD'] + param_elem['HAUTRAD']  # point haut
+        zmin = param_elem['COTERAD']
         if zmin < z:
-            poly_t = Polygon([[x0, zmin_t], [x0, z], [x1, z], [x1, zmin_t], [x0, zmin_t]])
+            poly_t = Polygon([[x0, zmin], [x0, z], [x1, z], [x1, zmin], [x0, zmin]])
         else:
             poly_t = GeometryCollection()
 
             print('Inconsistent Z for the span')
         return poly_t
 
-    def poly_buse(self,x0,z_rad,ray):
+    def poly_buse(self, param_elem):
         """z_rad cote radier
             x0 x en zero"""
-        z_c = z_rad + ray
-        x0 = x0 + ray
-        circ = Point([x_c, z_c]).buffer(ray)
+        z_c = param_elem['COTERAD'] + (param_elem['LARGTRA'] / 2)
+        x_c = param_elem['ABSBUSE']
+        circ = Point([x_c, z_c]).buffer(param_elem['LARGTRA'] / 2)
         return circ
 
 
@@ -238,12 +238,17 @@ class ClassMethod:
             recup_trav = ['FORMARC', 'LARGTRA', 'ZMINARC', 'ZMAXARC']
             recup_pil = ['LARGPIL']
             recup_p1 = ['FORMARC','ZMINARC']
-        elif config_type == 'DALOT':
-            #dalot
-            pass
-        elif config_type == 'BUSE':
-            # buse
-            pass
+        elif config_type == 'DA':
+            list_recup = ['ZTOPTAB', 'FIRSTWD']
+            param_g = self.get_param_g(list_recup, id_config)
+            recup_trav = ['LARGTRA', 'COTERAD', 'HAUTRAD']
+            recup_pil = ['LARGPIL']
+            recup_p1 = ['COTERAD', 'HAUTRAD']
+        elif config_type == 'BU':
+            list_recup = ['ZTOPTAB']
+            param_g = self.get_param_g(list_recup, id_config)
+            param_g['FIRSTWD'] = 0
+            recup_trav = ['COTERAD', 'ABSBUSE', 'LARGTRA']
 
         where = "id_config = {0}".format(id_config)  # type=0 span, =1 bridge peir
         order = "id_elem"
@@ -287,13 +292,13 @@ class ClassMethod:
                     sav_zmaxelem = param_elem['ZMAXELEM']
                     poly_elem = self.poly_arch(param_g, param_elem, width, zmin)
                 # buse
-                elif config_type == 'BUSE':
-                    # self.poly_buse()
-                    pass
+                elif config_type == 'DA':
+                    param_elem['ZMAXELEM'] = param_elem['COTERAD'] + param_elem['HAUTRAD']
+                    sav_zmaxelem = param_elem['ZMAXELEM']
+                    poly_elem = self.poly_dalot(param_elem, width)
                 # buse
-                elif config_type == 'BUSE':
-                    # self.poly_dalot()
-                    pass
+                elif config_type == 'BU':
+                    poly_elem = self.poly_buse(param_elem)
 
             else:
                 #Attention Arc  hauteur different entre droite et gauchs(aproximation  /|  ) pb seul bradley
@@ -305,6 +310,10 @@ class ClassMethod:
                 elif config_type == 'PA':
                     param_elem['ZMAXELEM'] = sav_zmaxelem
                     param_elem['ZMAXELEM_P1'] = param_p1['ZMINARC']
+                    poly_elem = self.poly_pil( param_elem, width, zmin)
+                elif config_type == 'DA':
+                    param_elem['ZMAXELEM'] = sav_zmaxelem
+                    param_elem['ZMAXELEM_P1'] = param_p1['COTERAD'] + param_p1['HAUTRAD']
                     poly_elem = self.poly_pil( param_elem, width, zmin)
 
             # final

@@ -64,11 +64,12 @@ class ClassTableStructure:
                                       },
                                'DA': {'name': 'Dalot',
                                       'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
-                                      'meth_calc': [2, 3]
+                                      'meth_calc': [3],
+                                      'meth_draw': [[0]]
                                       },
                                'BU': {'name': 'Buse',
-                                      'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
-                                      'meth_calc': [1]
+                                      'meth_calc': [1],
+                                      'meth_draw': [[0]]
                                       }
                                }
 
@@ -107,7 +108,10 @@ class ClassTableStructure:
                               'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'},
                               'FORMARC': {'name': 'Forme de l''arche', 'unit': None},
                               'ZMINARC': {'name': 'Z bas de l''arche', 'unit': 'm'},
-                              'ZMAXARC': {'name': 'Z haut de l''arche', 'unit': 'm'}}
+                              'ZMAXARC': {'name': 'Z haut de l''arche', 'unit': 'm'},
+                              'COTERAD': {'name': 'Cote du radier', 'unit': 'm'},
+                              'HAUTRAD': {'name': 'Hauteur du radier', 'unit': 'm'},
+                              'ABSBUSE': {'name': 'Abscisse du centre de la buse', 'unit': 'm'}}
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
         self.dico_forme_arche = {1: 'Circulaire', 2: 'Ellipsoïdale'}

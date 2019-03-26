@@ -25,11 +25,15 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
+from shapely.geometry import Point
+
 from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
 from .MetBradleyWidget import MetBradleyWidget
 from .MetBordaWidget import MetBordaWidget
 from .MetOrificeWidget import MetOrificeWidget
 from .MetBordaPaWidget import MetBordaPaWidget
+from .MetOrificeDaWidget import MetOrificeDaWidget
+from .MetBordaBuWidget import MetBordaBuWidget
 from .ClassMethod import ClassMethod
 
 if int(qVersion()[0]) < 5:  # qt4
@@ -57,6 +61,12 @@ class ClassStructureEditDialog(QDialog):
                                            'wgt_param': [self.mgis, '78', id_struct]}
                                        },
                                 'PA': {1: {'wgt': MetBordaPaWidget,
+                                           'wgt_param': [self.mgis, id_struct]}
+                                       },
+                                'DA': {3: {'wgt': MetOrificeDaWidget,
+                                           'wgt_param': [self.mgis, id_struct]}
+                                       },
+                                'BU': {1: {'wgt': MetBordaBuWidget,
                                            'wgt_param': [self.mgis, id_struct]}
                                        }
                                 }
@@ -150,7 +160,7 @@ class ClassStructureEditDialog(QDialog):
         # save Info
         if self.save_struct():
             self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
-            if self.current_meth in [0, 4]:
+            if self.typ_struct in ['PC', 'PA']:
                 self.clmeth.sav_meth(self.id_struct,self.current_meth, self.ui)
             self.accept()
         # else:
@@ -159,12 +169,13 @@ class ClassStructureEditDialog(QDialog):
     def save_struct(self):
         self.current_meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
         if self.typ_struct == 'PC':
-            if self.current_meth in [0, 4]:
-                verif, msg = self.verif_bradley(self.id_struct)
-            elif self.current_meth in [1]:
-                verif, msg = self.verif_bradley(self.id_struct)
-            elif self.current_meth in [3]:
-                verif, msg = self.verif_bradley(self.id_struct)
+            verif, msg = self.verif_pc(self.id_struct)
+        elif self.typ_struct == 'PA':
+            verif, msg = self.verif_pa(self.id_struct)
+        elif self.typ_struct == 'DA':
+            verif, msg = self.verif_da(self.id_struct)
+        elif self.typ_struct == 'BU':
+            verif, msg = self.verif_bu(self.id_struct)
         else:
             verif, msg = True, ""
 
@@ -245,45 +256,297 @@ class ClassStructureEditDialog(QDialog):
             self.mgis.add_info("Cancel of Structure")
         self.reject()
 
-    def verif_bradley(self, id_struct):
-        msg = []
-        valid = True
 
-        if ctrl_get_value(self.wgt_met.dico_ctrl['NBTRAVE'][0]) < 1.:
+    def verif_pc(self, id_struct):
+        valid, msg = True, []
+
+        v, m = self.verif_exist_trav()
+        if not v:
             valid = False
-            msg.append("Aucune travee de saisie")
+            msg.append(m)
 
-        sql = "SELECT x, z FROM {0}.profil_struct WHERE id_config = {1} ORDER BY id_order".format(self.mdb.SCHEMA,
-                                                                                                  id_struct)
-        rows = self.mdb.run_query(sql, fetch=True)
-        x = [r[0] for r in rows]
-        z = [r[1] for r in rows]
-        profil_x_max = max(x)
-        profil_z_min = min(z)
-
-        cote_bas_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0]) - ctrl_get_value(self.wgt_met.dico_ctrl['EPAITAB'][0])
-        # print ('bas tab', cote_bas_tablier, ', ', profil_z_min)
-        if cote_bas_tablier <= profil_z_min:
+        v, m = self.verif_bas_tablier(id_struct)
+        if not v:
             valid = False
-            msg.append("La cote du bas du tablier est inferieure à la cote minimum du profil")
+            msg.append(m)
 
-        x_fin = ctrl_get_value(self.wgt_met.dico_ctrl['FIRSTWD'][0])
-        x_fin += (ctrl_get_value(self.wgt_met.dico_ctrl['NBTRAVE'][0]) - 1) * ctrl_get_value(self.wgt_met.dico_ctrl['LARGPIL'][0])
-        for r in range(self.wgt_met.tab_trav.rowCount()):
-            itm = self.wgt_met.tab_trav.item(r, 0)
-            x_fin += itm.data(0)
-        # print('x_fin', x_fin, ', ', profil_x_max)
-        if x_fin > profil_x_max:
+        v, m = self.verif_larg_struct(id_struct)
+        if not v:
             valid = False
-            msg.append("La largeur totale de la structure est superieure a la largeur du profil")
+            msg.append(m)
 
         return valid, msg
 
-    def verif_pc(self, id_struct):
-        msg = []
-        valid = True
+
+    def verif_pa(self, id_struct):
+        valid, msg = True, []
+
+        v, m = self.verif_exist_trav()
+        if not v:
+            valid = False
+            msg.append(m)
+
+        v, m = self.verif_haut_tablier(id_struct)
+        if not v:
+            valid = False
+            msg.append(m)
+
+        v, m = self.verif_larg_struct(id_struct)
+        if not v:
+            valid = False
+            msg.append(m)
+
+        v, m = self.verif_z_arche()
+        if not v:
+            valid = False
+            msg.append(m)
+
+        v, m = self.verif_arche_tab()
+        if not v:
+            valid = False
+            msg.append(m)
+
+        v, m = self.verif_arche_profil(id_struct)
+        if not v:
+            valid = False
+            msg.append(m)
+
+        return valid, msg
+
+
+    def verif_da(self, id_struct):
+        valid, msg = True, []
+
+        v, m = self.verif_exist_trav()
+        if not v:
+            valid = False
+            msg.append(m)
+
+        v, m = self.verif_haut_tablier(id_struct)
+        if not v:
+            valid = False
+            msg.append(m)
+
+        v, m = self.verif_larg_struct(id_struct)
+        if not v:
+            valid = False
+            msg.append(m)
+
+        v, m = self.verif_radier_tab()
+        if not v:
+            valid = False
+            msg.append(m)
+
+        return valid, msg
+
+
+    def verif_bu(self, id_struct):
+        valid, msg = True, []
+
+        v, m = self.verif_exist_trav()
+        if not v:
+            valid = False
+            msg.append(m)
+
+        v, m = self.verif_haut_tablier(id_struct)
+        if not v:
+            valid = False
+            msg.append(m)
+
+        v, m = self.verif_buse_tab()
+        if not v:
+            valid = False
+            msg.append(m)
+
+        v, m = self.verif_buse_intersect()
+        if not v:
+            valid = False
+            msg.append(m)
+
+        return valid, msg
+
 
     def verif_exist_trav(self):
         if ctrl_get_value(self.wgt_met.dico_ctrl['NBTRAVE'][0]) < 1.:
-            valid = False
-            msg.append("Aucune travee de saisie")
+            return False, "Aucune travee de saisie"
+        else:
+            return True, None
+
+
+    def verif_haut_tablier(self, id_struct):
+        sql = "SELECT MIN(z) FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
+        rows = self.mdb.run_query(sql, fetch=True)
+        profil_z_min = rows[0][0]
+
+        cote_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0])
+        if cote_tablier <= profil_z_min:
+            return False, "La cote du tablier est inferieure à la cote minimum du profil"
+        else:
+            return True, None
+
+
+    def verif_bas_tablier(self, id_struct):
+        sql = "SELECT MIN(z) FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
+        rows = self.mdb.run_query(sql, fetch=True)
+        profil_z_min = rows[0][0]
+
+        cote_bas_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0]) - ctrl_get_value(self.wgt_met.dico_ctrl['EPAITAB'][0])
+        if cote_bas_tablier <= profil_z_min:
+            return False, "La cote du bas du tablier est inferieure à la cote minimum du profil"
+        else:
+            return True, None
+
+
+    def verif_larg_struct(self, id_struct):
+        for v, var in enumerate(self.wgt_met.dico_tab[self.wgt_met.tab_trav]['col']):
+            if var['fld'] == "LARGTRA":
+                col_trav = v
+                break
+
+        for v, var in enumerate(self.wgt_met.dico_tab[self.wgt_met.tab_pile]['col']):
+            if var['fld'] == "LARGPIL":
+                col_pile = v
+                break
+
+        sql = "SELECT MAX(x) FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
+        rows = self.mdb.run_query(sql, fetch=True)
+        profil_x_max = rows[0][0]
+
+        x_fin = ctrl_get_value(self.wgt_met.dico_ctrl['FIRSTWD'][0])
+        for r in range(self.wgt_met.tab_trav.rowCount()):
+            itm = self.wgt_met.tab_trav.item(r, col_trav)
+            x_fin += itm.data(0)
+        for r in range(self.wgt_met.tab_pile.rowCount()):
+            itm = self.wgt_met.tab_pile.item(r, col_pile)
+            x_fin += itm.data(0)
+
+        if x_fin > profil_x_max:
+            return False, "La largeur totale de la structure est superieure a la largeur du profil"
+        else:
+            return True, None
+
+
+    def verif_z_arche(self):
+        arche_err = []
+        for r in range(self.wgt_met.tab_trav.rowCount()):
+            forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
+            if forme_arche == 2:
+                if self.wgt_met.tab_trav.item(r, 2).data(0) >= self.wgt_met.tab_trav.item(r, 3).data(0):
+                    arche_err.append(r + 1)
+
+        if len(arche_err) > 0:
+            txt_arche = ""
+            for arche in arche_err:
+                txt_arche += "{}, ".format(arche)
+            return False, "Arche(s) {} : Z haut <= Z bas".format(txt_arche[:-2])
+        else:
+            return True, None
+
+
+    def verif_arche_tab(self):
+        arche_err = []
+        cote_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0])
+        for r in range(self.wgt_met.tab_trav.rowCount()):
+            forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
+            if forme_arche == 1:
+                z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
+            elif forme_arche == 2:
+                z_top = self.wgt_met.tab_trav.item(r, 3).data(0)
+            if z_top >= cote_tablier:
+                arche_err.append(r + 1)
+
+        if len(arche_err) > 0:
+            txt_arche = ""
+            for arche in arche_err:
+                txt_arche += "{}, ".format(arche)
+            return False, "Arche(s) {} : Z haut >= Cote du haut du tablier".format(txt_arche[:-2])
+        else:
+            return True, None
+
+
+    def verif_arche_profil(self, id_struct):
+        arche_err = []
+        x_tmp = ctrl_get_value(self.wgt_met.dico_ctrl['FIRSTWD'][0])
+        nb_arche = ctrl_get_value(self.wgt_met.dico_ctrl['NBTRAVE'][0])
+
+        for r in range(self.wgt_met.tab_trav.rowCount()):
+            larg = self.wgt_met.tab_trav.item(r, 1).data(0)
+            if r not in [0, nb_arche - 1]:
+                forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
+                if forme_arche == 1:
+                    z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
+                elif forme_arche == 2:
+                    z_top = self.wgt_met.tab_trav.item(r, 3).data(0)
+                sql = "SELECT MAX(z) FROM {0}.profil_struct " \
+                      "WHERE id_config = {1} AND x >= {2} AND x <= {3}".format(self.mdb.SCHEMA, id_struct, x_tmp, larg + x_tmp)
+                rows = self.mdb.run_query(sql, fetch=True)
+                profil_z_max = rows[0][0]
+                if profil_z_max >= z_top:
+                    arche_err.append(r + 1)
+            x_tmp += larg
+
+        if len(arche_err) > 0:
+            txt_arche = ""
+            for arche in arche_err:
+                txt_arche += "{}, ".format(arche)
+            return False, "Arche(s) {} : Z haut <= Cote max du profil".format(txt_arche[:-2])
+        else:
+            return True, None
+
+
+    def verif_radier_tab(self):
+        rad_err = []
+        cote_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0])
+        for r in range(self.wgt_met.tab_trav.rowCount()):
+            z_top = self.wgt_met.tab_trav.item(r, 0).data(0) + self.wgt_met.tab_trav.item(r, 1).data(0)
+            if z_top >= cote_tablier:
+                rad_err.append(r + 1)
+
+        if len(rad_err) > 0:
+            txt_rad = ""
+            for rad in rad_err:
+                txt_rad += "{}, ".format(rad)
+            return False, "Dalot(s) {} : Z haut >= Cote du haut du tablier".format(txt_rad[:-2])
+        else:
+            return True, None
+
+
+    def verif_buse_tab(self):
+        buse_err = []
+        cote_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0])
+        for r in range(self.wgt_met.tab_trav.rowCount()):
+            z_top = self.wgt_met.tab_trav.item(r, 1).data(0) + self.wgt_met.tab_trav.item(r, 2).data(0)
+            if z_top >= cote_tablier:
+                buse_err.append(r + 1)
+
+        if len(buse_err) > 0:
+            txt_buse = ""
+            for buse in buse_err:
+                txt_buse += "{}, ".format(buse)
+            return False, "Buse(s) {} : Z haut >= Cote du haut du tablier".format(txt_buse[:-2])
+        else:
+            return True, None
+
+
+    def verif_buse_intersect(self):
+        buse_err = []
+        for c1 in range(self.wgt_met.tab_trav.rowCount()):
+            x_c = self.wgt_met.tab_trav.item(c1, 0).data(0)
+            ray = self.wgt_met.tab_trav.item(c1, 2).data(0) / 2
+            z_c = self.wgt_met.tab_trav.item(c1, 1).data(0) + ray
+            circ1 = Point([x_c, z_c]).buffer(ray)
+            for c2 in range(c1 + 1, self.wgt_met.tab_trav.rowCount()):
+                x_c = self.wgt_met.tab_trav.item(c2, 0).data(0)
+                ray = self.wgt_met.tab_trav.item(c2, 2).data(0) / 2
+                z_c = self.wgt_met.tab_trav.item(c2, 1).data(0) + ray
+                circ2 = Point([x_c, z_c]).buffer(ray)
+                if circ1.intersects(circ2):
+                    buse_err.append((c1, c2))
+
+        if len(buse_err) > 0:
+            txt_buse = ""
+            for buse in buse_err:
+                txt_buse += "{}, ".format(buse)
+            return False, "Intersection(s) detectee(s) : {}".format(txt_buse[:-2])
+        else:
+            return True, None

@@ -101,7 +101,7 @@ class GraphStructure(GraphCommon):
                                                     for r in range(len(dico_ouvrage['x']))])
 
                 sql = "SELECT id_elem, type, ST_AsText(polygon) FROM {0}.struct_elem WHERE id_config = {1} " \
-                      "ORDER BY id_elem".format(self.mdb.SCHEMA, config)
+                      "AND polygon is Not Null ORDER BY id_elem".format(self.mdb.SCHEMA, config)
                 lst_elem = self.mdb.run_query(sql, fetch=True)
                 for e, elem in enumerate(lst_elem):
                     if elem[1] == 0:
