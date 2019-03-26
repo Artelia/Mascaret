@@ -127,8 +127,6 @@ class ClassMethod:
 
     def poly_arch(self, param_g, param_elem, x0=None, zmin=-99999):
         """ creation polygone for "pont arch" """
-        print("eeee", param_elem['ZMINARC'],param_elem['ZMAXARC'])
-        print(param_elem['LARG'])
         type = param_elem['FORMARC']
         if x0 is None:
             x0 = param_g['FIRSTWD']  # point depart
@@ -316,10 +314,12 @@ class ClassMethod:
                     param_elem['ZMAXELEM_P1'] = param_p1['COTERAD'] + param_p1['HAUTRAD']
                     poly_elem = self.poly_pil( param_elem, width, zmin)
 
+
             # final
             if not poly_elem.is_empty:
                 poly_final = poly_elem.difference(poly_p)
             else:
+                poly_final = GeometryCollection()
                 msg = 'Element bridge polygon is empty.'
                 if self.mgis.DEBUG:
                     self.mgis.add_info(msg)
@@ -328,6 +328,7 @@ class ClassMethod:
             if not poly_final.is_empty:
                 # self.draw_test(poly_final, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
                 # # stock element
+                # TODO test multipolygon ajouté un null
                 where = "WHERE id_config = {0}  AND id_elem = {1} ".format(id_config, id_elem)
                 sql = """UPDATE {0}.struct_elem SET polygon ='{1}'  {2}""".format(self.mdb.SCHEMA,
                                                                                   poly_final,
@@ -371,13 +372,14 @@ class ClassMethod:
         dico = {}
         for col in cols:
             dico[col] = []
-
+        print(results)
         for row in results:
             for i, val in enumerate(row):
-                try:
-                    dico[cols[i]].append(wkt.loads(val.strip()))
-                except:
-                    dico[cols[i]].append(wkt.loads(val))
+                if val is not None:
+                    try:
+                        dico[cols[i]].append(wkt.loads(val.strip()))
+                    except:
+                        dico[cols[i]].append(wkt.loads(val))
 
         return dico
 
@@ -654,7 +656,7 @@ class ClassMethod:
 
         if idmethod == 0 or idmethod == 4: # brad
             self.brad.bradley(id_config, self.tbst.dico_meth_calc[idmethod],ui)
-        elif idmethod == 5: #borda
+        elif  idmethod == 1: #borda
             self.brad.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         elif idmethod == 3: #orifice
         # if idmethod == 0 or idmethod == 4:

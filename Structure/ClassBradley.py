@@ -73,10 +73,6 @@ class ClassBradley:
 
 
         # ***********************************
-        where = " id_config={} and type=1 ".format(id_config)
-        order = "id_elem"
-        self.list_poly_pil = self.parent.select_poly('struct_elem', where, order)['polygon']
-
         (minx, miny, maxx, maxy) = self.poly_p.bounds
         self.minz=miny
         self.list_zav = [miny]
@@ -167,6 +163,10 @@ class ClassBradley:
     def init_bradley(self, method):
         """ initialisation for bradley method"""
         # only brad
+        where = " id_config={} and type=1 ".format(id_config)
+        order = "id_elem"
+        self.list_poly_pil = self.parent.select_poly('struct_elem', where, order)['polygon']
+
         self.list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
         self.list_q.append(self.param_g['MAXQ'])
 
