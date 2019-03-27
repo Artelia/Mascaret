@@ -425,35 +425,105 @@ class tracer_lateral_inflows(MasObject):
         qry += self.pg_create_calcul_abscisse()
         return qry
 
-    # *********** Water quality ***************
-    class tracer_lateral_inflows(MasObject):
-        def __init__(self):
-            super(tracer_lateral_inflows, self).__init__()
-            self.order = 12
-            self.geom_type = 'Point'
-            self.attrs = [('gid', ' serial NOT NULL'),
-                          ('name', ' character varying(30)'),
-                          ('branchnum', ' integer'),
-                          ('abscissa', ' float'),
-                          ('length', ' float'),
-                          ('law_wq', ' text'),
-                          ('typeSources', ' integer'),
-                          ('active', ' boolean'),
-                          ('CONSTRAINT tracer_lateral_inflows_pkey', ' PRIMARY KEY (gid)')]
+# *********** Water quality ***************
+class tracer_lateral_inflows(MasObject):
+    def __init__(self):
+        super(tracer_lateral_inflows, self).__init__()
+        self.order = 13
+        self.geom_type = 'Point'
+        self.attrs = [('gid', ' serial NOT NULL'),
+                      ('name', ' character varying(30)'),
+                      ('branchnum', ' integer'),
+                      ('abscissa', ' float'),
+                      ('length', ' float'),
+                      ('law_wq', ' text'),
+                      ('typeSources', ' integer'),
+                      ('active', ' boolean'),
+                      ('CONSTRAINT tracer_lateral_inflows_pkey', ' PRIMARY KEY (gid)')]
 
-        def pg_create_table(self):
-            qry = super(self.__class__, self).pg_create_table()
-            qry += '\n'
-            qry += self.pg_create_index()
-            qry += '\n'
-            qry += self.pg_create_calcul_abscisse()
-            return qry
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        qry += '\n'
+        qry += self.pg_create_calcul_abscisse()
+        return qry
 
+# **************** Basins *************************
+class basins(MasObject):
+    def __init__(self):
+        super(basins, self).__init__()
+        self.order = 14
+        self.geom_type = 'MultiPolygon'
+        self.attrs = [('gid', 'serial NOT NULL'),
+                      ('name', 'character varying(30)'),
+                      ('basinnum', 'integer'),
+                      ('initlevel', 'float'),
+                      ('level', 'text'),
+                      ('area', 'text'),
+                      ('volume', 'text'),
+                      ('active', 'boolean'),
+                      ('CONSTRAINT basins_pkey', 'PRIMARY KEY (gid)'),
+                      ('CONSTRAINT basin_name_unique', 'UNIQUE (name)'),
+                      ('CONSTRAINT basin_num_unique', 'UNIQUE (basinnum)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        return qry
+
+# *****************************************
+class links(MasObject):
+    def __init__(self):
+        super(links, self).__init__()
+        self.order = 15
+        self.geom_type = 'MultiLineString'
+        self.attrs = [('gid', 'serial NOT NULL'),
+                      ('name', 'character varying(30)'),
+                      ('linknum', 'integer'),
+                      ('type', 'integer'),
+                      ('nature', 'integer'),
+                      ('level', 'float'),
+                      ('length', 'float'),
+                      ('width', 'float'),
+                      ('roughness', 'float'),
+                      ('crosssection', 'float'),
+                      ('headlosscoef', 'float'),
+                      ('weirdischargecoef', 'float'),
+                      ('activationcoef', 'float'),
+                      ('pipedischargecoef', 'float'),
+                      ('culverttype', 'integer'),
+                      ('basinstart', 'integer'),
+                      ('basinend', 'integer'),
+                      ('branchnum', 'integer'),
+                      ('abscissa', 'float'),
+                      ('active', 'boolean'),
+                      ('CONSTRAINT links_pkey', 'PRIMARY KEY (gid)'),
+                      ('CONSTRAINT link_name_unique', 'UNIQUE (name)'),
+                      ('CONSTRAINT link_num_unique', 'UNIQUE (linknum)')]
+
+    def pg_create_calcul_abscisse(self):
+        qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
+              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_profil();\n'
+        return qry
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        qry += '\n'
+        qry += self.pg_create_calcul_abscisse()
+        return qry
+
+
+#*******************************************
 # ******************************************
 class resultats(MasObject):
     def __init__(self):
         super(resultats, self).__init__()
-        self.order = 13
+        self.order = 16
         self.geom_type = None
         self.attrs = [ ('id',' serial NOT NULL'),
                        ('run',' character varying(30)'),
@@ -504,7 +574,7 @@ class resultats(MasObject):
 class runs(MasObject):
     def __init__(self):
         super(runs, self).__init__()
-        self.order = 14
+        self.order = 17
         self.geom_type = None
         self.attrs = [('id serial', 'NOT NULL'),
                       ('run', 'character varying(30)'),
@@ -521,7 +591,7 @@ class runs(MasObject):
 class observations(MasObject):
     def __init__(self):
         super(observations, self).__init__()
-        self.order = 15
+        self.order = 18
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('code', 'character(10)'),
@@ -536,7 +606,7 @@ class observations(MasObject):
 class parametres(MasObject):
     def __init__(self):
         super(parametres, self).__init__()
-        self.order = 16
+        self.order = 19
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('parametre', 'text'),
@@ -555,7 +625,7 @@ class parametres(MasObject):
 class calcul_abscisse(MasObject):
     def __init__(self):
         super(calcul_abscisse, self).__init__()
-        self.order = 17
+        self.order = 20
 
     def pg_create_calcul_abscisse(self):
         qry = """CREATE OR REPLACE FUNCTION {0}()  
@@ -690,7 +760,7 @@ class calcul_abscisse(MasObject):
 class laws_wq(MasObject):
     def __init__(self):
         super(laws_wq, self).__init__()
-        self.order = 18
+        self.order = 21
         self.geom_type = None
         self.attrs = [
             ('id_config', 'integer'),
@@ -698,79 +768,13 @@ class laws_wq(MasObject):
             ('time', 'float'),
             ('value', 'float'),
             ('CONSTRAINT cle_laws_wq', 'PRIMARY KEY (id_config, id_trac, time)')]
-#*****************************************
-class basins(MasObject):
-    def __init__(self):
-        super(basins, self).__init__()
-        self.order = 17
-        self.geom_type = 'MultiPolygon'
-        self.attrs = [  ('gid', 'serial NOT NULL'),
-                        ('name', 'character varying(30)'),
-                        ('basinnum', 'integer'),
-                        ('initlevel', 'float'),
-                        ('level', 'text'),
-                        ('area', 'text'),
-                        ('volume', 'text'),
-                        ('active', 'boolean'),
-                        ('CONSTRAINT basins_pkey','PRIMARY KEY (gid)'),
-                        ('CONSTRAINT basin_name_unique', 'UNIQUE (name)'),
-                        ('CONSTRAINT basin_num_unique', 'UNIQUE (basinnum)')]
-
-    def pg_create_table(self):
-        qry= super(self.__class__,self).pg_create_table()
-        qry +='\n'
-        qry +=self.pg_create_index()
-        return qry
-#*****************************************
-class links(MasObject):
-    def __init__(self):
-        super(links, self).__init__()
-        self.order = 18
-        self.geom_type = 'MultiLineString'
-        self.attrs = [  ('gid', 'serial NOT NULL'),
-                        ('name', 'character varying(30)'),
-                        ('linknum', 'integer'),
-                        ('type', 'integer'),
-                        ('nature', 'integer'),
-                        ('level', 'float'),
-                        ('length', 'float'),
-                        ('width', 'float'),
-                        ('roughness', 'float'),
-                        ('crosssection', 'float'),
-                        ('headlosscoef', 'float'),
-                        ('weirdischargecoef', 'float'),
-                        ('activationcoef', 'float'),
-                        ('pipedischargecoef', 'float'),
-                        ('culverttype', 'integer'),
-                        ('basinstart', 'integer'),
-                        ('basinend', 'integer'),
-                        ('branchnum', 'integer'),
-                        ('abscissa', 'float'),
-                        ('active', 'boolean'),
-                        ('CONSTRAINT links_pkey','PRIMARY KEY (gid)'),
-                        ('CONSTRAINT link_name_unique', 'UNIQUE (name)'),
-                        ('CONSTRAINT link_num_unique', 'UNIQUE (linknum)')]
-
-    def pg_create_calcul_abscisse(self):
-        qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
-              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
-        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_profil();\n'
-        return qry
-
-    def pg_create_table(self):
-        qry= super(self.__class__,self).pg_create_table()
-        qry +='\n'
-        qry +=self.pg_create_index()
-        qry += '\n'
-        qry +=self.pg_create_calcul_abscisse()
-        return qry
 
 #*****************************************
 
 class tracer_physic(MasObject):
     def __init__(self):
         super(tracer_physic, self).__init__()
-        self.order = 19
+        self.order = 22
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('type', 'text'),
@@ -784,7 +788,7 @@ class tracer_physic(MasObject):
 class tracer_name(MasObject):
     def __init__(self):
         super(tracer_name, self).__init__()
-        self.order = 20
+        self.order = 23
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('type', 'text'),
@@ -799,7 +803,7 @@ class tracer_name(MasObject):
 class tracer_config(MasObject):
     def __init__(self):
         super(tracer_config, self).__init__()
-        self.order = 21
+        self.order = 24
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -810,7 +814,7 @@ class tracer_config(MasObject):
 class meteo_config(MasObject):
     def __init__(self):
         super(meteo_config, self).__init__()
-        self.order = 22
+        self.order = 25
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -822,7 +826,7 @@ class meteo_config(MasObject):
 class laws_meteo(MasObject):
     def __init__(self):
         super(laws_meteo, self).__init__()
-        self.order = 23
+        self.order = 26
         self.geom_type = None
         self.attrs = [
             ('id_config', 'integer'),
@@ -835,7 +839,7 @@ class laws_meteo(MasObject):
 class init_conc_config(MasObject):
     def __init__(self):
         super(init_conc_config, self).__init__()
-        self.order = 24
+        self.order = 27
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -847,7 +851,7 @@ class init_conc_config(MasObject):
 class init_conc_wq(MasObject):
     def __init__(self):
         super(init_conc_wq, self).__init__()
-        self.order = 25
+        self.order = 28
         self.geom_type = None
         self.attrs = [
             ('id_config', 'integer'),

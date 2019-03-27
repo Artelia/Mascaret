@@ -593,7 +593,7 @@
   </action>
   <action name="actionAdd_WQ_tables">
    <property name="text">
-    <string>Add WQ tables</string>
+    <string>Add WQ and Basins tables</string>
  </property>
   </action>
   <action name="actionCreate_Basin">
