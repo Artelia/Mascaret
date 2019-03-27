@@ -492,7 +492,6 @@ class ClassMasDatabase(object):
         """
         self.run_query(sql.format(self.SCHEMA))
         fichparam = os.path.join(dossier, "parametres.csv")
-        print(fichparam)
         # self.run_query(req.format(self.SCHEMA, fichparam))
         liste_value = []
         with open(fichparam, 'r') as file:
@@ -519,7 +518,6 @@ class ClassMasDatabase(object):
         """
         Add table  for water Quality model
         """
-        print('tttttttt')
         tables = [Maso.tracer_lateral_inflows, Maso.tracer_physic, Maso.tracer_name,
                   Maso.tracer_config, Maso.laws_wq, Maso.init_conc_config,
                   Maso.init_conc_wq, Maso.meteo_config, Maso.laws_meteo]
@@ -543,7 +541,6 @@ class ClassMasDatabase(object):
         sql = """ALTER TABLE {}.parametres ADD COLUMN IF NOT EXISTS gui_type text DEFAULT 'parameters';"""
         self.run_query(sql.format(self.SCHEMA))
         fichparam = os.path.join(dossier, "parametres.csv")
-        print(fichparam)
         # self.run_query(req.format(self.SCHEMA, fichparam))
         liste_value = []
         with open(fichparam, 'r') as file:
