@@ -33,20 +33,19 @@ else:  # qt5
     from qgis.PyQt.QtGui import QIcon
     from qgis.PyQt.QtWidgets import *
 
-class MetOrificeWidget(QWidget):
+class MetBordaPcWidget(QWidget):
     def __init__(self, mgis, id_struct=None):
         QWidget.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_borda.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_borda_pc.ui'), self)
         self.id_struct = id_struct
 
         self.sb_nb_trav.valueChanged.connect(self.change_ntrav)
         self.dsb_larg_pil.valueChanged.connect(self.update_piles)
         self.dsb_h_pas.valueChanged.connect(self.update_min_h_max)
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
-        # self.dsb_cote_tab.valueChanged.connect(self.update_max_h_max)
         self.tab_trav.itemChanged.connect(self.verif_larg_trav)
 
         self.dico_ctrl = {'FIRSTWD': [self.dsb_abs_cul_rg],
@@ -106,13 +105,6 @@ class MetOrificeWidget(QWidget):
 
     def update_min_h_max(self):
         self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
-
-    def update_max_h_max(self):
-        sql = "SELECT MIN(z) FROM {0}.profil_struct " \
-              "WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
-        rows = self.mdb.run_query(sql, fetch=True)
-        z_min = rows[0][0]
-        self.dsb_h_max.setMaximum(round((self.dsb_cote_tab.value() - z_min) * 1.25))
 
     def verif_larg_trav(self, itm):
         if itm.data(0) <= 0.:

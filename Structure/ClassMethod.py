@@ -106,7 +106,7 @@ class ClassMethod:
     def poly_dalot(self, param_elem, x0):
         """ creation polygone for "pont cadre" """
         x1 = x0 + param_elem['LARGTRA']
-        z = param_elem['COTERAD'] + param_elem['HAUTRAD']  # point haut
+        z = param_elem['COTERAD'] + param_elem['HAUTDAL']  # point haut
         zmin = param_elem['COTERAD']
         if zmin < z:
             poly_t = Polygon([[x0, zmin], [x0, z], [x1, z], [x1, zmin], [x0, zmin]])
@@ -239,9 +239,9 @@ class ClassMethod:
         elif config_type == 'DA':
             list_recup = ['ZTOPTAB', 'FIRSTWD']
             param_g = self.get_param_g(list_recup, id_config)
-            recup_trav = ['LARGTRA', 'COTERAD', 'HAUTRAD']
+            recup_trav = ['LARGTRA', 'COTERAD', 'HAUTDAL']
             recup_pil = ['LARGPIL']
-            recup_p1 = ['COTERAD', 'HAUTRAD']
+            recup_p1 = ['COTERAD', 'HAUTDAL']
         elif config_type == 'BU':
             list_recup = ['ZTOPTAB']
             param_g = self.get_param_g(list_recup, id_config)
@@ -291,7 +291,7 @@ class ClassMethod:
                     poly_elem = self.poly_arch(param_g, param_elem, width, zmin)
                 # buse
                 elif config_type == 'DA':
-                    param_elem['ZMAXELEM'] = param_elem['COTERAD'] + param_elem['HAUTRAD']
+                    param_elem['ZMAXELEM'] = param_elem['COTERAD'] + param_elem['HAUTDAL']
                     sav_zmaxelem = param_elem['ZMAXELEM']
                     poly_elem = self.poly_dalot(param_elem, width)
                 # buse
@@ -311,7 +311,7 @@ class ClassMethod:
                     poly_elem = self.poly_pil( param_elem, width, zmin)
                 elif config_type == 'DA':
                     param_elem['ZMAXELEM'] = sav_zmaxelem
-                    param_elem['ZMAXELEM_P1'] = param_p1['COTERAD'] + param_p1['HAUTRAD']
+                    param_elem['ZMAXELEM_P1'] = param_p1['COTERAD'] + param_p1['HAUTDAL']
                     poly_elem = self.poly_pil( param_elem, width, zmin)
 
 

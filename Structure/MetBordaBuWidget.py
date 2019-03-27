@@ -45,11 +45,7 @@ class MetBordaBuWidget(QWidget):
         self.sb_nb_trav.valueChanged.connect(self.change_ntrav)
         self.dsb_h_pas.valueChanged.connect(self.update_min_h_max)
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
-        # self.dsb_cote_tab.valueChanged.connect(self.update_max_h_max)
         self.tab_trav.itemChanged.connect(self.verif_param_trav)
-
-        # fill_qcombobox(self.cb_form_arch, [[1, 'Circulaire'], [2, 'Ellipsoïdale']],
-        #                icn=os.path.join(self.mgis.masplugPath, 'Structure/images/arches/arche{}.png'))
 
         self.dico_ctrl = {'ZTOPTAB': [self.dsb_cote_tab],
                           'PASH': [self.dsb_h_pas],
@@ -94,13 +90,6 @@ class MetBordaBuWidget(QWidget):
 
     def update_min_h_max(self):
         self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
-
-    def update_max_h_max(self):
-        sql = "SELECT MIN(z) FROM {0}.profil_struct " \
-              "WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
-        rows = self.mdb.run_query(sql, fetch=True)
-        z_min = rows[0][0]
-        self.dsb_h_max.setMaximum(round((self.dsb_cote_tab.value() - z_min) * 1.25))
 
     def verif_param_trav(self, itm):
         if itm.data(0) <= 0.:
