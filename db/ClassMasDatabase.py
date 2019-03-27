@@ -1038,8 +1038,9 @@ $BODY$
         sql = "SELECT nspname from pg_catalog.pg_namespace;"
         info = self.run_query(sql, fetch=True)
         listf = []
-        for row in info:
-            listf.append(row[0])
+        if info != None:
+            for row in info:
+                listf.append(row[0])
         return listf
 
     def checkschema_import(self, file):

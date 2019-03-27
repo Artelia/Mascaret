@@ -39,7 +39,7 @@ class MetBradleyPcWidget(QWidget):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_bradley.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_bradley_pc.ui'), self)
         self.id_struct = id_struct
 
         self.dico_pile = ['1', '2', '3', '4', '5_1', '5_2', '6', '7', '8']

@@ -567,7 +567,7 @@ class ClassMethod:
         return struct_dico
 
     def create_law(self, dossier, nom, typel, list_final):
-        """creeation of law"""
+        """creation of law"""
 
         if list_final == []:
             return
@@ -589,7 +589,7 @@ class ClassMethod:
                     fich.write(chaine.format(**dico))
 
     def save_law_st(self, method, id_config, list_val):
-        # start=time.time()
+        """ stock law in database"""
         self.mdb.delete('struct_laws', where="id_config = '{}'".format(id_config))
         liste_col = self.mdb.list_columns('struct_laws')
         list_insert = []
@@ -598,11 +598,6 @@ class ClassMethod:
             for i, val in enumerate(list_val[:, j]):
                 list_insert.append([id_config, j, i, val])
         var = ",".join(liste_col)
-        #
-        # valeurs = "("
-        # for k in liste_col:
-        #     valeurs += '%s,'
-        # valeurs = valeurs[:-1] + ")"
 
         sql=''
         for a in list_insert:
@@ -612,8 +607,6 @@ class ClassMethod:
                                                                 var,
                                                                 valeurs)
         self.mdb.run_query(sql)
-        # tfinal = time.time()-start
-        # print('tfinal ',tfinal)
 
     def get_list_law(self, id_config):
         liste_f = []
@@ -628,7 +621,6 @@ class ClassMethod:
         tabval = np.array(tabval)
         nbval = collections.Counter(tabval[:, 0])
         nb = int(nbval[0])
-        nb_val = int(len(nbval.keys()))
 
         for i in range(nb):
             list_tmp = []
@@ -637,19 +629,6 @@ class ClassMethod:
             liste_f.append(list_tmp)
         return liste_f
 
-    # def main(self):
-    #     self.brad=ClassBradley(self)
-    #     struct_dico = self.get_struct()
-    #     for id_config in struct_dico:
-    #         dico_st = struct_dico[id_config]
-    #         if dico_st["active"]:
-    #             if dico_st['idmethod'] == 0 or dico_st['idmethod'] == 4:
-    #                 listf =  self.brad.bradley(method=dico_st['method'])
-    #                 self.save_law_st(dico_st['method'], id_config, listf)
-    #             elif dico_st['idmethod'] == 2:
-    #                 pass
-    #             else:
-    #                 pass
 
     def sav_meth(self, id_config, idmethod,ui):
         self.brad = ClassBradley(self)
