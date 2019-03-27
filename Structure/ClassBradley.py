@@ -54,15 +54,16 @@ class ClassBradley:
             print(msg)
             return
 
-        list_recup = ['FIRSTWD', 'BIAIOUV', 'NBTRAVE',
-                      'FORMCUL', 'ORIENTM',
-                      'PENTTAL', 'ZTOPTAB', 'EPAITAB', 'BIAICUL', 'COEFDS','COEFDO',
-                      # pile de pont
-                      'LARGPIL', 'LONGPIL', 'FORMPIL', 'BIAIPIL',
+        list_recup = ['FIRSTWD', 'NBTRAVE',
+                      'ZTOPTAB', 'COEFDS','COEFDO',
                       # numeric
-                      'MAXH', 'MINH', 'PASH', 'MINQ', 'MAXQ', 'PASQ']
-        # 'TOTALW',
+                      'MAXH', 'MINH', 'PASH']
         self.param_g = self.parent.get_param_g(list_recup, id_config)
+        list_key = list(self.param_g.keys())
+        if not 'COEFDO' in list_key:
+            self.param_g['COEFDO'] = 1
+        if not 'COEFDS' in list_key:
+            self.param_g['COEFDS'] = 0.385
 
         self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
         self.poly_p = self.parent.poly_profil(profil)
@@ -85,7 +86,7 @@ class ClassBradley:
         order = "id_elem"
         self.list_poly_trav = self.parent.select_poly('struct_elem', where, order)['polygon']
 
-        #TODO modifier ZPC car arch depend element
+        #TODO modifier ZPC car arch depend element meme pour dalot
         self.param_elem={'ZMAXELEM': [],'LARGELEM':[],'SURFELEM':[]}
         for poly in self.list_poly_trav:
             (minx, miny, maxx, maxy) = poly.bounds
@@ -160,8 +161,17 @@ class ClassBradley:
             j = 0.18  # hyp for working
         return j
 
-    def init_bradley(self, method):
+    def init_bradley(self, method,id_config):
         """ initialisation for bradley method"""
+        list_recup = [ 'BIAIOUV'
+                      'FORMCUL', 'ORIENTM',
+                      'PENTTAL',  'EPAITAB', 'BIAICUL',
+                      # pile de pont
+                      'LARGPIL', 'LONGPIL', 'FORMPIL', 'BIAIPIL',
+                      # numeric
+                       'MINQ', 'PASQ']
+        param_g_temp = self.parent.get_param_g(list_recup, id_config)
+        self.param_g.param_g_temp()
         # only brad
         where = " id_config={} and type=1 ".format(id_config)
         order = "id_elem"
@@ -340,7 +350,7 @@ class ClassBradley:
         self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
         list_final = []
 
-        (coef_cor_biais, type_kb, list_ph, list_e) = self.init_bradley(method)
+        (coef_cor_biais, type_kb, list_ph, list_e) = self.init_bradley(method,id_config)
 
         # surf = 0
         # self.param_elem['SURFELEM']=[]
@@ -433,7 +443,7 @@ class ClassBradley:
             self.mdb.run_query(sql)
 
             self.mgis.add_info(
-                "No values for the law because the coefficients leave application domain of Bradley method.\n"
+                "No values for the law because the coefficients leave application domain of the method.\n"
                 "The <<{}>> hydraulic structur is deactivated".format(name))
         else:
             self.parent.save_law_st(method, id_config, list_final)
@@ -620,6 +630,7 @@ class ClassBradley:
                     if value is None:
                         continue
                     else:
+                        #TODO Qmax que faire
                         # if value[0] > self.param_g['MAXQ']:
                         #     break
 
@@ -635,7 +646,7 @@ class ClassBradley:
         """orifice methode for structure"""
         self.init_method(id_config)
         list_final = []
-        qmax = self.param_g['MINQ']
+        qmax = self.deb_min #self.param_g['MINQ']
         zcret = self.param_g['ZTOPTAB']
         surf = 0
         self.param_g['TOTALOUV']=0
@@ -682,8 +693,9 @@ class ClassBradley:
                     if value is None:
                         continue
                     else:
-                        if value[0] > self.param_g['MAXQ']:
-                            break
+                        #TODO Qmax que faire
+                        # if value[0] > self.param_g['MAXQ']:
+                        #     break
 
                         if value[0] > qmax:
                             # print('ori va',value)

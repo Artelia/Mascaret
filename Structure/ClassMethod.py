@@ -328,7 +328,8 @@ class ClassMethod:
             if not poly_final.is_empty:
                 # self.draw_test(poly_final, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
                 # # stock element
-                # TODO test multipolygon ajouté un null
+                if poly_final.geom_type == 'MultiPolygon':
+                    poly_final='Null'
                 where = "WHERE id_config = {0}  AND id_elem = {1} ".format(id_config, id_elem)
                 sql = """UPDATE {0}.struct_elem SET polygon ='{1}'  {2}""".format(self.mdb.SCHEMA,
                                                                                   poly_final,
@@ -372,7 +373,6 @@ class ClassMethod:
         dico = {}
         for col in cols:
             dico[col] = []
-        print(results)
         for row in results:
             for i, val in enumerate(row):
                 if val is not None:
@@ -659,7 +659,6 @@ class ClassMethod:
         elif  idmethod == 1: #borda
             self.brad.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         elif idmethod == 3: #orifice
-        # if idmethod == 0 or idmethod == 4:
             self.brad.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         else:
             pass

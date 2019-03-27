@@ -160,8 +160,8 @@ class ClassStructureEditDialog(QDialog):
         # save Info
         if self.save_struct():
             self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
-            if self.typ_struct in ['PC', 'PA']:
-                self.clmeth.sav_meth(self.id_struct,self.current_meth, self.ui)
+            # if self.typ_struct in ['PC', 'PA']:
+            self.clmeth.sav_meth(self.id_struct,self.current_meth, self.ui)
             self.accept()
         # else:
         #     self.reject_page()
