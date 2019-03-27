@@ -59,17 +59,17 @@ class ClassTableStructure:
                                       },
                                'PA': {'name': 'Pont arche',
                                       'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
-                                      'meth_calc': [1],
-                                      'meth_draw': [[0]]
+                                      'meth_calc': [1, 3],
+                                      'meth_draw': [[0], [0]]
                                       },
                                'DA': {'name': 'Dalot',
                                       'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
-                                      'meth_calc': [3],
-                                      'meth_draw': [[0]]
+                                      'meth_calc': [1, 3],
+                                      'meth_draw': [[0], [0]]
                                       },
                                'BU': {'name': 'Buse',
-                                      'meth_calc': [1],
-                                      'meth_draw': [[0]]
+                                      'meth_calc': [1, 3],
+                                      'meth_draw': [[0], [0]]
                                       }
                                }
 
@@ -110,7 +110,7 @@ class ClassTableStructure:
                               'ZMINARC': {'name': 'Z bas de l''arche', 'unit': 'm'},
                               'ZMAXARC': {'name': 'Z haut de l''arche', 'unit': 'm'},
                               'COTERAD': {'name': 'Cote du radier', 'unit': 'm'},
-                              'HAUTRAD': {'name': 'Hauteur du radier', 'unit': 'm'},
+                              'HAUTDAL': {'name': 'Hauteur du dalot', 'unit': 'm'},
                               'ABSBUSE': {'name': 'Abscisse du centre de la buse', 'unit': 'm'}}
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}

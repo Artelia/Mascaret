@@ -27,14 +27,22 @@ from qgis.utils import *
 
 from shapely.geometry import Point
 
-from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
-from .MetBradleyWidget import MetBradleyWidget
-from .MetBordaWidget import MetBordaWidget
-from .MetOrificeWidget import MetOrificeWidget
-from .MetBordaPaWidget import MetBordaPaWidget
-from .MetOrificeDaWidget import MetOrificeDaWidget
-from .MetBordaBuWidget import MetBordaBuWidget
 from .ClassMethod import ClassMethod
+from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
+
+# Widgets Pont cadre
+from .MetBradleyPcWidget import MetBradleyPcWidget
+from .MetBordaPcWidget import MetBordaPcWidget
+from .MetOrificePcWidget import MetOrificePcWidget
+# Widgets Pont arche
+from .MetBordaPaWidget import MetBordaPaWidget
+from .MetOrificePaWidget import MetOrificePaWidget
+# Widgets Dalot
+from .MetBordaDaWidget import MetBordaDaWidget
+from .MetOrificeDaWidget import MetOrificeDaWidget
+# Widgets Buse
+from .MetBordaBuWidget import MetBordaBuWidget
+from .MetOrificeBuWidget import MetOrificeBuWidget
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -51,22 +59,28 @@ class ClassStructureEditDialog(QDialog):
         self.clmeth = ClassMethod(self.mgis)
         self.wgt_met = QWidget()
 
-        self.param_meth_calc = {'PC': {0: {'wgt': MetBradleyWidget,
+        self.param_meth_calc = {'PC': {0: {'wgt': MetBradleyPcWidget,
                                            'wgt_param': [self.mgis, '72', id_struct]},
-                                       1: {'wgt': MetBordaWidget,
+                                       1: {'wgt': MetBordaPcWidget,
                                            'wgt_param': [self.mgis, id_struct]},
-                                       3: {'wgt': MetOrificeWidget,
+                                       3: {'wgt': MetOrificePcWidget,
                                            'wgt_param': [self.mgis, id_struct]},
-                                       4: {'wgt': MetBradleyWidget,
+                                       4: {'wgt': MetBradleyPcWidget,
                                            'wgt_param': [self.mgis, '78', id_struct]}
                                        },
                                 'PA': {1: {'wgt': MetBordaPaWidget,
+                                           'wgt_param': [self.mgis, id_struct]},
+                                       3: {'wgt': MetOrificePaWidget,
                                            'wgt_param': [self.mgis, id_struct]}
                                        },
-                                'DA': {3: {'wgt': MetOrificeDaWidget,
+                                'DA': {1: {'wgt': MetBordaDaWidget,
+                                           'wgt_param': [self.mgis, id_struct]},
+                                       3: {'wgt': MetOrificeDaWidget,
                                            'wgt_param': [self.mgis, id_struct]}
                                        },
                                 'BU': {1: {'wgt': MetBordaBuWidget,
+                                           'wgt_param': [self.mgis, id_struct]},
+                                       3: {'wgt': MetOrificeBuWidget,
                                            'wgt_param': [self.mgis, id_struct]}
                                        }
                                 }
