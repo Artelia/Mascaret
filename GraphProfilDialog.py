@@ -1807,13 +1807,18 @@ class GraphHydro(GraphCommon):
 
         length_color = len(color_names)
         cpt = 0
+        ncolor={'aliceblue': 'blue'}
         for i, col in enumerate(self.columns_tra):
             if cpt < length_color:
-                color = color_names[cpt]
+                if color_names[cpt] in list(ncolor.keys()):
+                    color =ncolor[color_names[cpt]]
+                else:
+                    color = color_names[cpt]
                 cpt += 1
             else:
                 color = color_names[0]
                 cpt = 1
+
             self.variables[col.lower()] = {'nom': self.tbwq.dico_phy[name_tra]['tracer'][i]['text'],
                                            'code': self.tbwq.dico_phy[name_tra]['tracer'][i]['sigle'],
                                            'unite': 'unit',

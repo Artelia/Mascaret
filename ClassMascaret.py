@@ -168,6 +168,17 @@ class ClassMascaret:
                                                                                                       cood2X, cood2Y,
                                                                                                       cood_axe_x,
                                                                                                       cood_axe_y))
+                            dif=tab_x[-1] - geom.length()
+                            if dif > 0:
+                                dif += 1
+                                # garde line centree
+                                geom = geom.extendLine(dif/2.,dif/2.)
+                                feature_list[id].setGeometry(geom)
+                                #change geometry
+                                vlayer.startEditing()
+                                vlayer.updateFeature(feature_list[id])
+                                # Call commit to save the changes
+                                vlayer.commitChanges()
 
                             for x, z in zip(tab_x, tab_z):
                                 if lit_min_g <= x <= lit_min_d:

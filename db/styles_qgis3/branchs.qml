@@ -740,6 +740,8 @@
     <property key="dualview/previewExpressions">
       <value>COALESCE( "branch", '&lt;NULL>' )</value>
       <value>COALESCE( "branch", '&lt;NULL>' )</value>
+      <value>COALESCE( "branch", '&lt;NULL>' )</value>
+      <value>COALESCE( "branch", '&lt;NULL>' )</value>
     </property>
     <property key="embeddedWidgets/count" value="0"/>
     <property key="variableNames"/>
@@ -790,7 +792,7 @@
             <Option type="bool" name="AllowNull" value="false"/>
             <Option type="QString" name="FilterExpression" value=""/>
             <Option type="QString" name="Key" value="name"/>
-            <Option type="QString" name="Layer" value="extremities_0bd8d953_4747_4764_a2a1_1c2275d330bc"/>
+            <Option type="QString" name="Layer" value="extremities_3636287c_9d42_4e0f_9cbf_cb0c332012e7"/>
             <Option type="int" name="NofColumns" value="1"/>
             <Option type="bool" name="OrderByValue" value="false"/>
             <Option type="bool" name="UseCompleter" value="false"/>
@@ -807,7 +809,7 @@
             <Option type="bool" name="AllowNull" value="false"/>
             <Option type="QString" name="FilterExpression" value=""/>
             <Option type="QString" name="Key" value="name"/>
-            <Option type="QString" name="Layer" value="extremities_0bd8d953_4747_4764_a2a1_1c2275d330bc"/>
+            <Option type="QString" name="Layer" value="extremities_3636287c_9d42_4e0f_9cbf_cb0c332012e7"/>
             <Option type="int" name="NofColumns" value="1"/>
             <Option type="bool" name="OrderByValue" value="false"/>
             <Option type="bool" name="UseCompleter" value="false"/>
