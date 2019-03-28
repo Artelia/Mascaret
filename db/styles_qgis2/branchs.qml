@@ -1,5 +1,5 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis version="2.18.19" simplifyAlgorithm="0" minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" readOnly="0" simplifyMaxScale="1" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+<qgis version="2.18.13" simplifyAlgorithm="0" minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" readOnly="0" simplifyMaxScale="1" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
   <edittypes>
     <edittype widgetv2type="TextEdit" name="gid">
       <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
@@ -7,11 +7,11 @@
     <edittype widgetv2type="TextEdit" name="branch">
       <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
     </edittype>
-    <edittype widgetv2type="TextEdit" name="startb">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+    <edittype widgetv2type="ValueRelation" name="startb">
+      <widgetv2config OrderByValue="0" AllowNull="0" FilterExpression="" UseCompleter="0" fieldEditable="1" Key="name" constraint="" Layer="extremities20190328155330063" Value="name" labelOnTop="0" constraintDescription="" AllowMulti="0" notNull="0"/>
     </edittype>
-    <edittype widgetv2type="TextEdit" name="endb">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+    <edittype widgetv2type="ValueRelation" name="endb">
+      <widgetv2config OrderByValue="0" AllowNull="0" FilterExpression="" UseCompleter="0" fieldEditable="1" Key="name" constraint="" Layer="extremities20190328155330063" Value="name" labelOnTop="0" constraintDescription="" AllowMulti="0" notNull="0"/>
     </edittype>
     <edittype widgetv2type="TextEdit" name="zonenum">
       <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
@@ -819,6 +819,6 @@ def my_form_open(dialog, layer, feature):
     <default field="planim" expression=""/>
     <default field="active" expression=""/>
   </defaults>
-  <previewExpression></previewExpression>
+  <previewExpression>COALESCE( "branch", '&lt;NULL>' )</previewExpression>
   <layerGeometryType>1</layerGeometryType>
 </qgis>
