@@ -1,5 +1,5 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis version="2.18.19" simplifyAlgorithm="0" minimumScale="0" maximumScale="200000" simplifyDrawingHints="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" readOnly="0" simplifyMaxScale="1" hasScaleBasedVisibilityFlag="1" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+<qgis version="2.18.13" simplifyAlgorithm="0" minimumScale="0" maximumScale="200000" simplifyDrawingHints="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" readOnly="0" simplifyMaxScale="1" hasScaleBasedVisibilityFlag="1" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
   <edittypes>
     <edittype widgetv2type="TextEdit" name="gid">
       <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
@@ -7,63 +7,43 @@
     <edittype widgetv2type="TextEdit" name="name">
       <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
     </edittype>
-    <edittype widgetv2type="TextEdit" name="method">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="firstvalue">
+    <edittype widgetv2type="TextEdit" name="branchnum">
       <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
     </edittype>
     <edittype widgetv2type="TextEdit" name="abscissa">
       <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
     </edittype>
-    <edittype widgetv2type="TextEdit" name="ordinates">
+    <edittype widgetv2type="TextEdit" name="length">
       <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
     </edittype>
-    <edittype widgetv2type="TextEdit" name="angles">
+    <edittype widgetv2type="TextEdit" name="law_wq">
       <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+    </edittype>
+    <edittype widgetv2type="ValueMap" name="typesources">
+      <widgetv2config fieldEditable="1" constraint="" labelOnTop="0" constraintDescription="" notNull="0">
+        <value key="Flux per time Unit" value="3"/>
+        <value key="Surface-like" value="2"/>
+        <value key="Volume-like" value="1"/>
+      </widgetv2config>
     </edittype>
     <edittype widgetv2type="CheckBox" name="active">
       <widgetv2config fieldEditable="1" UncheckedState="f" constraint="" CheckedState="t" labelOnTop="0" constraintDescription="" notNull="0"/>
     </edittype>
-        <edittype widgetv2type="ValueMap" name="type">
-      <widgetv2config fieldEditable="1" labelOnTop="0">
-        <value key="Junction" value="10"/>
-        <value key="Free evacuation" value="6"/>
-        <value key="Normal Height" value="7"/>
-        <value key="Hydrograph" value="1"/>
-        <value key="Limnigraph" value="2"/>
-        <value key="Limnihydro water level and flow rate" value="8"/>
-        <value key="Regulation law" value="5"/>
-        <value key="Dam/Weir Zam=f(Q,Zav)" value="0"/>
-        <value key="Taring curve Q=f(Z)" value="4"/>
-        <value key="Taring curve Z=f(Q)" value="3"/>
-      </widgetv2config>
-    </edittype>
-    <edittype widgetv2type="ValueMap" name="tracer_boundary_condition_type">
-      <widgetv2config fieldEditable="1" labelOnTop="0">
-        <value key="Neuman" value="1"/>
-        <value key="Dirichlet" value="2"/>
-      </widgetv2config>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="law_wq">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    
   </edittypes>
   <renderer-v2 attr="active" forceraster="0" symbollevels="0" type="categorizedSymbol" enableorderby="0">
     <categories>
-      <category render="true" symbol="0" value="t" label="active"/>
-      <category render="true" symbol="1" value="f" label="inactive"/>
+      <category render="true" symbol="0" value="f" label="Inactive"/>
+      <category render="true" symbol="1" value="t" label="Active"/>
     </categories>
     <symbols>
       <symbol alpha="1" clip_to_extent="1" type="marker" name="0">
         <layer pass="0" class="SimpleMarker" locked="0">
-          <prop k="angle" v="0"/>
-          <prop k="color" v="227,26,28,255"/>
+          <prop k="angle" v="90"/>
+          <prop k="color" v="82,82,82,255"/>
           <prop k="horizontal_anchor_point" v="1"/>
           <prop k="joinstyle" v="bevel"/>
-          <prop k="name" v="circle"/>
-          <prop k="offset" v="0,0"/>
+          <prop k="name" v="arrow"/>
+          <prop k="offset" v="0,2.5"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
           <prop k="outline_color" v="0,0,0,255"/>
@@ -72,7 +52,7 @@
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="outline_width_unit" v="MM"/>
           <prop k="scale_method" v="area"/>
-          <prop k="size" v="3"/>
+          <prop k="size" v="5"/>
           <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="size_unit" v="MM"/>
           <prop k="vertical_anchor_point" v="1"/>
@@ -80,12 +60,12 @@
       </symbol>
       <symbol alpha="1" clip_to_extent="1" type="marker" name="1">
         <layer pass="0" class="SimpleMarker" locked="0">
-          <prop k="angle" v="0"/>
-          <prop k="color" v="106,106,106,255"/>
+          <prop k="angle" v="90"/>
+          <prop k="color" v="255,72,0,255"/>
           <prop k="horizontal_anchor_point" v="1"/>
           <prop k="joinstyle" v="bevel"/>
-          <prop k="name" v="circle"/>
-          <prop k="offset" v="0,0"/>
+          <prop k="name" v="arrow"/>
+          <prop k="offset" v="0,2.5"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
           <prop k="outline_color" v="0,0,0,255"/>
@@ -94,7 +74,7 @@
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="outline_width_unit" v="MM"/>
           <prop k="scale_method" v="area"/>
-          <prop k="size" v="3"/>
+          <prop k="size" v="5"/>
           <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="size_unit" v="MM"/>
           <prop k="vertical_anchor_point" v="1"/>
@@ -104,12 +84,12 @@
     <source-symbol>
       <symbol alpha="1" clip_to_extent="1" type="marker" name="0">
         <layer pass="0" class="SimpleMarker" locked="0">
-          <prop k="angle" v="0"/>
-          <prop k="color" v="227,26,28,255"/>
+          <prop k="angle" v="90"/>
+          <prop k="color" v="44,171,255,255"/>
           <prop k="horizontal_anchor_point" v="1"/>
           <prop k="joinstyle" v="bevel"/>
-          <prop k="name" v="circle"/>
-          <prop k="offset" v="0,0"/>
+          <prop k="name" v="arrow"/>
+          <prop k="offset" v="0,2.5"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
           <prop k="outline_color" v="0,0,0,255"/>
@@ -118,7 +98,7 @@
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="outline_width_unit" v="MM"/>
           <prop k="scale_method" v="diameter"/>
-          <prop k="size" v="3"/>
+          <prop k="size" v="5"/>
           <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="size_unit" v="MM"/>
           <prop k="vertical_anchor_point" v="1"/>
@@ -305,7 +285,7 @@
   <blendMode>0</blendMode>
   <featureBlendMode>0</featureBlendMode>
   <layerTransparency>0</layerTransparency>
-  <displayfield>branch</displayfield>
+  <displayfield>name</displayfield>
   <label>0</label>
   <labelattributes>
     <label fieldname="" text="Label"/>
@@ -330,6 +310,7 @@
   <SingleCategoryDiagramRenderer diagramType="Histogram" sizeLegend="0" attributeLegend="1">
     <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" sizeScale="0,0,0,0,0,0" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="200000" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="1" enabled="0" height="15" lineSizeScale="0,0,0,0,0,0" sizeType="MM" lineSizeType="MM" minScaleDenominator="inf">
       <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
+      <attribute field="" color="#000000" label=""/>
     </DiagramCategory>
     <symbol alpha="1" clip_to_extent="1" type="marker" name="sizeSymbol">
       <layer pass="0" class="SimpleMarker" locked="0">
@@ -359,27 +340,25 @@
   <aliases>
     <alias field="gid" index="0" name=""/>
     <alias field="name" index="1" name=""/>
-    <alias field="type" index="2" name=""/>
-    <alias field="method" index="3" name=""/>
-    <alias field="firstvalue" index="4" name=""/>
-    <alias field="abscissa" index="5" name=""/>
-    <alias field="ordinates" index="6" name=""/>
-    <alias field="angles" index="7" name=""/>
-    <alias field="active" index="8" name=""/>
+    <alias field="branchnum" index="2" name=""/>
+    <alias field="abscissa" index="3" name=""/>
+    <alias field="length" index="4" name=""/>
+    <alias field="law_wq" index="5" name=""/>
+    <alias field="typesources" index="6" name=""/>
+    <alias field="active" index="7" name=""/>
   </aliases>
   <excludeAttributesWMS/>
   <excludeAttributesWFS/>
   <attributeactions default="-1"/>
-  <attributetableconfig actionWidgetStyle="dropDown" sortExpression="" sortOrder="0">
+  <attributetableconfig actionWidgetStyle="dropDown" sortExpression="&quot;law_wq&quot;" sortOrder="1">
     <columns>
       <column width="-1" hidden="0" type="field" name="gid"/>
       <column width="-1" hidden="0" type="field" name="name"/>
-      <column width="-1" hidden="0" type="field" name="type"/>
-      <column width="-1" hidden="0" type="field" name="method"/>
-      <column width="-1" hidden="0" type="field" name="firstvalue"/>
+      <column width="-1" hidden="0" type="field" name="branchnum"/>
       <column width="-1" hidden="0" type="field" name="abscissa"/>
-      <column width="-1" hidden="0" type="field" name="ordinates"/>
-      <column width="-1" hidden="0" type="field" name="angles"/>
+      <column width="-1" hidden="0" type="field" name="length"/>
+      <column width="-1" hidden="0" type="field" name="law_wq"/>
+      <column width="-1" hidden="0" type="field" name="typesources"/>
       <column width="-1" hidden="0" type="field" name="active"/>
       <column width="-1" hidden="1" type="actions"/>
     </columns>
@@ -390,40 +369,30 @@
   <editforminitfilepath></editforminitfilepath>
   <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
 """
-Les formulaires QGIS peuvent avoir une fonction Python qui sera appelée à l'ouverture du formulaire.
+QGIS forms can have a Python function that is called when the form is
+opened.
 
-Utilisez cette fonction pour ajouter plus de fonctionnalités à vos formulaires.
+Use this function to add extra logic to your forms.
 
-Entrez le nom de la fonction dans le champ "Fonction d'initialisation Python".
-Voici un exemple à suivre:
+Enter the name of the function in the "Python Init function"
+field.
+An example follows:
 """
 from qgis.PyQt.QtWidgets import QWidget
 
 def my_form_open(dialog, layer, feature):
-    geom = feature.geometry()
-    control = dialog.findChild(QWidget, "MyLineEdit")
-
+	geom = feature.geometry()
+	control = dialog.findChild(QWidget, "MyLineEdit")
 ]]></editforminitcode>
   <featformsuppress>0</featformsuppress>
   <editorlayout>tablayout</editorlayout>
   <attributeEditorForm>
     <attributeEditorContainer showLabel="1" visibilityExpressionEnabled="0" visibilityExpression="" name="infos" groupBox="0" columnCount="0">
       <attributeEditorField showLabel="1" index="1" name="name"/>
-      <attributeEditorField showLabel="1" index="2" name="type"/>
-      <attributeEditorField showLabel="1" index="8" name="active"/>
-    </attributeEditorContainer>
-    <attributeEditorContainer showLabel="1" visibilityExpressionEnabled="0" visibilityExpression="" name="junctions" groupBox="0" columnCount="0">
-      <attributeEditorField showLabel="1" index="5" name="abscissa"/>
-      <attributeEditorField showLabel="1" index="6" name="ordinates"/>
-      <attributeEditorField showLabel="1" index="7" name="angles"/>
-    </attributeEditorContainer>
-    <attributeEditorContainer showLabel="1" visibilityExpressionEnabled="0" visibilityExpression="" name="others" groupBox="0" columnCount="0">
-      <attributeEditorField showLabel="1" index="3" name="method"/>
-      <attributeEditorField showLabel="1" index="4" name="firstvalue"/>
-    </attributeEditorContainer>
-    <attributeEditorContainer name="Water Quality">
-      <attributeEditorField index="9" name="tracer_boundary_condition_type"/>
-      <attributeEditorField index="10" name="law_wq"/>
+      <attributeEditorField showLabel="1" index="7" name="active"/>
+      <attributeEditorField showLabel="1" index="5" name="law_wq"/>
+      <attributeEditorField showLabel="1" index="6" name="typeSources"/>
+      <attributeEditorField showLabel="1" index="4" name="length"/>
     </attributeEditorContainer>
   </attributeEditorForm>
   <widgets/>
@@ -434,14 +403,13 @@ def my_form_open(dialog, layer, feature):
   <defaults>
     <default field="gid" expression=""/>
     <default field="name" expression=""/>
-    <default field="type" expression=""/>
-    <default field="method" expression=""/>
-    <default field="firstvalue" expression=""/>
+    <default field="branchnum" expression=""/>
     <default field="abscissa" expression=""/>
-    <default field="ordinates" expression=""/>
-    <default field="angles" expression=""/>
+    <default field="length" expression=""/>
+    <default field="law_wq" expression=""/>
+    <default field="typesources" expression=""/>
     <default field="active" expression=""/>
   </defaults>
-  <previewExpression></previewExpression>
+  <previewExpression>COALESCE( "name", '&lt;NULL>' )</previewExpression>
   <layerGeometryType>0</layerGeometryType>
 </qgis>
