@@ -112,7 +112,6 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
             continue
 
         couche = get_couche(c, iface)
-        print(c)
         if couche.wkbType() == 5:
             couche_noeud = QgsVectorLayer("Point", "temporary_points", "memory")
 
