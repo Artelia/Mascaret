@@ -216,7 +216,7 @@ class ClassWaterQualityDialog(QDialog):
         condition = """type='{0}'""".format(self.type)
         # self.mgis.add_info(condition)
         self.tab_tracer_name = self.mdb.select("tracer_name", condition)
-        # print(self.tab_tracer_name)
+
 
         self.dicoTrac = []
         for t in range(len(self.tab_tracer_name["id"])):

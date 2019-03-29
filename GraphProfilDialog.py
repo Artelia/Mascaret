@@ -112,7 +112,8 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
             flag_hydro = self.mgis.hydrogramme
             flag_profil = self.mgis.profil
-            flag_profil_r = self.mgis.profilResult
+            flag_profil_r = self.mgis.profil_result
+            flag_casier_r = self.mgis.basin_result
             # self.mgis.add_info("flag_hydro: {0} \n flag_profil: {1} \n flag_profil_r:
             # {2} \n".format(flag_hydro,flag_profil,flag_profil_r))
             if couche == 'profiles' and flag_profil:
@@ -161,6 +162,35 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 graph_hyd_pk = GraphHydro(feature, self.mgis, {}, '', 'pk')
                 # graph_hyd.exec_()
                 graph_hyd_pk.show()
+
+            if flag_casier_r and couche in ('basins', 'links'):
+                feature = results[0].mFeature
+                selection_nontrie = {'num': [], 'nom': []}
+                selection = {'num': [], 'nom': []}
+
+                field_names = [field.name() for field
+                               in results[0].mLayer.fields()]
+
+                # Boucle sur les attributs de la couche casier ou liaison clickee
+                for f in results[0].mLayer.getFeatures():
+                    if f['name']:  # si un casier ou une liaison existe
+                        selection_nontrie['nom'].append(f['name'])
+                        if couche == 'links':
+                            selection_nontrie['num'].append(f['linknum'])
+                        else:
+                            selection_nontrie['num'].append(f['basinnum'])
+
+                # Tri sur les noms des objets
+                A = selection_nontrie['nom']
+                for nom in sorted(A):
+                    index = A.index(nom)
+                    selection['nom'].append(selection_nontrie['nom'][index])
+                    selection['num'].append(selection_nontrie['num'][index])
+
+                # self.mgis.addInfo('nom de la couche choisie' +str(couche))
+
+                graph_basin_link = GraphBasin(feature, self.mgis, selection, feature['name'], couche)
+                graph_basin_link.show()
         return
 
 
@@ -1783,8 +1813,12 @@ class GraphHydro(GraphCommon):
             seuils = []
 
         self.comboTimePK.clear()
+        columns_tmp = self.mdb.list_columns("resultats")[8:]
+        self.columns=[]
+        for col in columns_tmp :
+            if not col in ['bnum','lnum']:
+                self.columns.append(col)
 
-        self.columns = self.mdb.list_columns("resultats")[8:]
         # self.mgis.add_info(' ListG {}'.format(self.columns))
 
         self.colVal = []
@@ -1807,13 +1841,18 @@ class GraphHydro(GraphCommon):
 
         length_color = len(color_names)
         cpt = 0
+        ncolor={'aliceblue': 'blue'}
         for i, col in enumerate(self.columns_tra):
             if cpt < length_color:
-                color = color_names[cpt]
+                if color_names[cpt] in list(ncolor.keys()):
+                    color =ncolor[color_names[cpt]]
+                else:
+                    color = color_names[cpt]
                 cpt += 1
             else:
                 color = color_names[0]
                 cpt = 1
+
             self.variables[col.lower()] = {'nom': self.tbwq.dico_phy[name_tra]['tracer'][i]['text'],
                                            'code': self.tbwq.dico_phy[name_tra]['tracer'][i]['sigle'],
                                            'unite': 'unit',
@@ -1865,9 +1904,9 @@ class GraphHydro(GraphCommon):
         self.courbeHydro = {}
 
         for i, col in enumerate(self.columns):
-            couleur = self.variables[col]['couleur']
-            temp, = self.axes.plot([], [], zorder=100, color=couleur)
-            self.courbeHydro[col] = temp
+                couleur = self.variables[col]['couleur']
+                temp, = self.axes.plot([], [], zorder=100, color=couleur)
+                self.courbeHydro[col] = temp
 
         self.courbeObs, = self.axes.plot([], [], color='grey',
                                          marker='o', markeredgewidth=0,
@@ -2095,7 +2134,11 @@ class GraphHydro(GraphCommon):
 
         temp = self.mdb.select_distinct('pk', "resultats", condition)
         # TODO delete round in future
-        self.liste['pk']['abs'] = [round(elem, 2) for elem in temp['pk']]
+        self.liste['pk']['abs']=[]
+        for elem in temp['pk']:
+            if elem is not None:
+                self.liste['pk']['abs'].append( round(elem, 2))
+        # self.liste['pk']['abs'] = [round(elem, 2) for elem in temp['pk']]
         ss = self.liste['selection']
 
         if self.type == 'pk':
@@ -2523,4 +2566,514 @@ class GraphHydro(GraphCommon):
                 self.nom = str(self.position)
             index = self.liste[self.inv]['abs'].index(self.position)
             self.comboTimePK.setCurrentIndex(index)
+            self.maj_limites()
+"""---------------------------------------------------------------------------------
+        Classe de gestion du graphique pour les casiers et les liaisons 
+------------------------------------------------------------------------------------"""
+
+#___________________________________________________________________________________________________________________________________________________________________________________________
+class GraphBasin(GraphCommon):
+    def __init__(self, feature, mgis, select, position, type):
+        # feature, selection, position, type, main
+        GraphCommon.__init__(self, mgis)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/graphBasin.ui'), self)
+
+        self.feature = feature
+        self.position = position
+        self.select = select
+        self.type = type
+        self.combo_run = self.ui.comboBox_State
+        self.combo_scen = self.ui.comboBox_Scenar
+        self.combo_time_pk = self.ui.comboBox_time
+        self.combo_var1 = self.ui.comboBox_var1
+        # insert graphic and toolsbars of graphic
+        self.gui_graph(self.ui)
+
+        self.initUI()
+
+        # Action
+        self.ui.actionBt_reculTot.triggered.connect(lambda: self.avance(-10))
+        self.ui.actionBt_recul.triggered.connect(lambda: self.avance(-1))
+        self.ui.actionBt_av.triggered.connect(lambda: self.avance(1))
+        self.ui.actionBt_avTot.triggered.connect(lambda: self.avance(10))
+        #
+        #
+        self.ui.actionBt_exportCSV.triggered.connect(self.exportCSV)
+        self.combo_run.currentIndexChanged['QString'].connect(self.combo_run_changed)
+        self.combo_scen.currentIndexChanged['QString'].connect(self.combo_scen_changed)
+        self.combo_var1.currentIndexChanged['QString'].connect(self.combo_var1_changed)
+        self.combo_time_pk.currentIndexChanged['QString'].connect(self.combo_time_p_k_change)
+
+    #
+    def initUI(self):
+
+        if self.type == 'basins':
+            self.titre = 'Basin '
+            self.basin = self.feature["basinnum"]
+        else:
+            self.titre = 'Link '
+            self.link = self.feature["linknum"]
+
+        self.liste = {'selection': self.select, 't': {}, 'date': {}}
+
+        self.temps = 'max'
+        self.variables = self.mgis.variables
+
+        self.flag = False
+
+        dico_run = self.mdb.select_distinct("date, run, scenario",
+                                           "runs")
+
+        if not dico_run:
+            self.mgis.addInfo("No simulation to show")
+            return False
+        self.liste_runs = {}
+        for run, scen in zip(dico_run["run"], dico_run["scenario"]):
+            if not run in self.liste_runs.keys():
+                self.liste_runs[run] = []
+            # Exclusion des scenarios en régime permanent pour lesquels il n'y a pas de calcul casier
+            if scen[len(scen)-5:] != '_init':
+               self.liste_runs[run].append(scen)
+
+        self.run = sorted(self.liste_runs.keys())[-1]
+
+        self.scenario = self.liste_runs[self.run][-1]
+
+        self.combo_run.clear()
+        self.combo_run.addItems(sorted(self.liste_runs.keys()))
+        le = len(self.liste_runs.keys())
+        self.combo_run.setCurrentIndex(le - 1)
+
+        self.combo_scen.clear()
+        self.combo_scen.addItems(self.liste_runs[self.run])
+        le = len(self.liste_runs[self.run])
+        self.combo_scen.setCurrentIndex(le - 1)
+
+        self.combo_time_pk.clear()
+
+        if self.type == 'basins':
+            # Extraction des colonnes bz, barea, bvol
+            self.columns = [self.mdb.list_columns("resultats")[20],self.mdb.list_columns("resultats")[21],self.mdb.list_columns("resultats")[22]]
+        else:
+            # Extraction des colonnes lq, lvel
+            self.columns = [self.mdb.list_columns("resultats")[24],self.mdb.list_columns("resultats")[25]]
+
+        self.colVal = []
+        self.unite = ""
+
+        # Initialisation sur la 1ere colonne
+        self.var1 = self.variables[self.columns[0]]['code']
+        self.unite = self.variables[self.columns[0]]['unite']
+        self.var1_name = self.variables[self.columns[0]]['nom']
+        self.colVal.append(self.columns[0])
+        listeNom = ['t']
+        # default value
+        listeG = []
+        for col in self.columns:
+            listeNom.append(self.variables[col]['nom'])
+            codd = self.variables[col]['code']
+            var = self.variables[col]['nom']
+            if not var in listeG:
+                listeG.append(var)
+
+        # creation tableau
+        self.tableau = self.ui.tableWidget_RES
+        self.tableau.setColumnCount(len(listeNom))
+        self.tableau.setRowCount(0)
+        self.tableau.setHorizontalHeaderLabels(listeNom)
+        self.tableau.addAction(CopySelectedCellsAction(self.tableau))
+
+        self.combo_var1.clear()
+        self.combo_var1.addItems(listeG)
+
+        # Figure
+        self.axes = self.fig.add_subplot(111)
+        self.axes.set_xlabel('Time (s)')
+        self.axes.grid(True)
+        self.axes.set_ylabel("{0} ({1})".format(self.var1_name, self.unite))
+
+        self.courbe_hydro = {}
+
+        for i, col in enumerate(self.columns):
+            couleur = self.variables[col]['couleur']
+            temp, = self.axes.plot([], [], zorder=100, color=couleur)
+            self.courbe_hydro[col] = temp
+
+        self.maj_liste()
+        self.maj_tab()
+        self.maj_legende()
+        self.maj_graph()
+        self.maj_limites()
+
+        self.fig.tight_layout()
+        self.fig.patch.set_facecolor((0.94, 0.94, 0.94))
+        self.fig.canvas.mpl_connect('pick_event', self.onpick)
+
+
+        self.annotation = []
+        box = dict(boxstyle='round,pad=0.5', fc='white', alpha=0.7)
+        txtcoord = 'offset points'
+        for i in range(10):
+            self.annotation.append(self.axes.annotate("",
+                                                      xy=(0, 0),
+                                                      ha='left',
+                                                      xytext=(10, 0),
+                                                      textcoords=txtcoord,
+                                                      va='top',
+                                                      bbox=box,
+                                                      visible=False,
+                                                      zorder=110))
+        self.ligne = self.axes.axvline(color="black")
+
+        self.rect = self.axes.add_patch(patches.Rectangle((0, 0), 0, 0,
+                                                          zorder=101,
+                                                          color='white',
+                                                          alpha=0.8))
+
+        self.clic = self.fig.canvas.mpl_connect('button_press_event',
+                                                self.onclick)
+        self.declic = self.fig.canvas.mpl_connect('button_release_event',
+                                                  self.offclick)
+        self.motion = self.fig.canvas.mpl_connect('motion_notify_event',
+                                                  self.onpress)
+        return True
+
+    def affiche_cadre(self, event):
+        flag = True
+        for c in self.toolbar.findChildren(QToolButton):
+            if c.isChecked():
+                flag = False
+                break
+
+        if not flag or not event.xdata or not event.ydata:
+            for a in self.annotation:
+                a.set_visible(False)
+            self.ligne.set_visible(False)
+            self.canvas.draw()
+            return
+
+        liste = []
+        unite = []
+        couleur = []
+
+        if self.type == 'date':
+            temp = round((event.xdata - 719163) * 24) * 3600
+            decal = datetime.utcfromtimestamp(temp)
+            absc = min(self.tab[self.type], key=lambda x: abs(x - decal))
+        else:
+            absc = min(self.tab[self.type], key=lambda x: abs(x - event.xdata))
+
+        liste.append(absc)
+        unite.append("")
+        couleur.append('black')
+
+        for col in self.colVal:
+            if self.tab[col] and self.courbe_hydro[col].get_visible():
+                index = self.tab[self.type].index(absc)
+                val = self.tab[col][index]
+                nom = self.variables[col]['nom']
+                liste.append(val)
+                unite.append(self.variables[col]['unite'])
+                couleur.append(self.variables[col]['couleur'])
+
+        for i, a in enumerate(self.annotation):
+            if i < len(liste):
+                a.set_text("{0} {1}".format(liste[i], unite[i]))
+                a.set_color(couleur[i])
+                if i == 0:
+                    ymin, ymax = self.axes.get_ylim()
+                    a.xytext = (10, 20)
+                    a.xy = (absc, ymin)
+                else:
+                    a.xy = (absc, liste[i])
+                a.set_visible(True)
+            else:
+                a.set_visible(False)
+
+        self.ligne.set_xdata(absc)
+        self.ligne.set_visible(True)
+        self.canvas.draw()
+
+    def exportCSV(self):
+        """Export Table to .CSV file"""
+        # recupe tab export CSV
+        default_name=self.nom.replace(' ','_').replace(':','-')
+        if int(qVersion()[0]) < 5: #qt4
+            fileNamePath= QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(default_name),
+                                                       filter="CSV (*.csv *.)")
+        else: #qt5
+            fileNamePath,_ = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(default_name),
+                                                   filter="CSV (*.csv *.)")
+
+        if fileNamePath:
+            file = open(fileNamePath, 'w')
+            ligne = '# {0} - {1} \n'.format(self.titre, self.nom)
+            file.write(ligne + " \n")
+            ligne = "# {0} ; ".format('date')
+            for col in self.columns:
+                ligne += "{0} ; ".format(self.variables[col]['nom'])
+            file.write(ligne + " \n")
+
+            nbl = len(self.liste_tab[0]) #nombre de pas de temps
+
+            # Boucle sur les pas de temps
+            for j in range(nbl):
+                ligne = ""
+                # Boucle sur les colonnes de variables BZ, BArea, BVol pour casier et LQ,LVEL pour liaisons
+                for i, val in enumerate(self.liste_tab):
+                    ligne += "{0} ; ".format(str(val[j]))
+                file.write(ligne + " \n")
+
+            file.close()
+
+    def onclick(self, event):
+        self.flag = True
+        if event.button == 1:
+            self.affiche_cadre(event)
+            self.fig.canvas.draw()
+
+    def offclick(self, event):
+        for a in self.annotation:
+            a.set_visible(False)
+        self.ligne.set_visible(False)
+        self.flag = False
+        self.canvas.draw()
+
+    def onpress(self, event):
+
+        if event.button == 1 and self.flag:
+            self.affiche_cadre(event)
+
+    def onpick(self, event):
+        legline = event.artist
+        if legline in self.lined.keys():
+            courbe = self.lined[legline]
+            vis = not courbe.get_visible()
+            courbe.set_visible(vis)
+            if vis:
+                legline.set_alpha(1.0)
+            else:
+                legline.set_alpha(0.2)
+
+            self.canvas.draw()
+
+    def maj_liste(self):
+        self.date = False
+        condition = "run='{0}' AND scenario='{1}'".format(self.run,
+                                                          self.scenario)
+        temp = self.mdb.select_distinct("date", "resultats", condition)
+
+        self.liste['date']['abs'] = temp["date"]
+        self.position_legende = 'upper left'
+        self.nom = str(self.position)
+
+        self.combo_time_pk.currentIndexChanged['QString'].disconnect()
+        self.combo_time_pk.clear()
+
+        for x in self.liste['selection']['nom']:
+            self.combo_time_pk.addItem(str(x))
+
+        try:
+            index = self.liste['selection']['nom'].index(self.position)
+        except ValueError as e :
+            self.mgis.addInfo('No results for this profile. \n Error : {}'.format(str(e)))
+
+
+        self.combo_time_pk.setCurrentIndex(index)
+        self.combo_time_pk.currentIndexChanged['QString'].connect(self.combo_time_p_k_change)
+
+    def maj_tab(self):
+        condition = """run='{0}' AND scenario='{1}' """.format(self.run,
+                                                               self.scenario)
+
+        index = self.liste['selection']['nom'].index(self.position)
+        numero = self.liste['selection']['num'][index]
+        # Cette operation car Mascaret renvoie les numeros de casiers, il ignore les noms
+        if self.type == 'basins':
+           condition += """AND {0}={1}""".format('bnum', numero)
+        else:
+           condition += """AND {0}={1}""".format('lnum', numero)
+
+        #self.mgis.addInfo(condition)
+        self.tab = self.mdb.select("resultats", condition, "t")
+
+        # Alimentation de la colonne des dates dans le tableau
+        self.liste_tab = [self.tab['date']]
+        for c in self.columns:
+            if self.tab[c] != [None] * len(self.tab[c]):
+                self.liste_tab.append(self.tab[c])
+                # Valeurs en milliers pour barea et bvol passees dans les courbes pour ameliorer la visibilite des graphes
+                if  c == 'barea' or c == 'bvol':
+                   self.courbe_hydro[c].set_data(self.tab['date'], [valeur / 1000 for valeur in self.tab[c]])
+                else:
+                   self.courbe_hydro[c].set_data(self.tab['date'], self.tab[c])
+            else:
+                self.tab[c] = []
+        # gui
+        self.remplir_tab(self.liste_tab)
+
+    def remplir_tab(self, liste):
+        """ Fill items in the table """
+        self.tableau.setRowCount(len(liste[0]))
+        for j, val in enumerate(liste):
+            for i, v in enumerate(val):
+                self.tableau.setItem(i, j, QTableWidgetItem(str(v)))
+
+    def maj_graph(self):
+
+        self.axes.set_title(r'{0} - {1}'.format(self.titre, self.nom))
+        self.axes.set_ylabel(r"{0} ({1})".format(self.var1_name, self.unite))
+
+        mini = min(self.liste['date']['abs'])
+        maxi = max(self.liste['date']['abs'])
+
+        self.canvas.draw()
+
+    def add_courb(self, var):
+        """add courbe for visualization"""
+        for col in self.columns:
+            V = self.variables[col]
+            if self.tab[col] and V['code'] == var:
+                self.colVal.append(col)
+                self.courbe_hydro[col].set_visible(True)
+                self.courbe_hydro[col].set_label(V['nom'])
+                self.courbe_hydro[col].set_color(V['couleur'])
+            else:
+                self.courbe_hydro[col].set_visible(False)
+
+        self.courbes = [self.courbe_hydro[col] for col in self.colVal]
+
+    def maj_legende(self):
+        self.colVal = []
+        self.add_courb(self.var1)
+
+        handles = [c for c in self.courbes]
+
+        listeNoms = [c.get_label() for c in self.courbes]
+
+        self.leg = self.axes.legend(handles, listeNoms,
+                                    loc=self.position_legende,
+                                    fancybox=False,
+                                    shadow=False,
+                                    fontsize="small")
+        self.leg.get_frame().set_alpha(0.4)
+
+        self.lined = dict()
+        for legline, courbe in zip(self.leg.get_lines(), self.courbes):
+            legline.set_picker(5)
+            legline.set_linewidth(3)
+            legline.set_alpha(1.0)
+            legline.set_visible(True)
+            self.lined[legline] = courbe
+            courbe.set_visible(True)
+
+        # rend deplacable la legende mais fonctionne mal avec le choix des ligne dans la légende
+        self.leg.draggable(True)
+
+    def maj_limites(self):
+        if self.tab['date']:
+           miniX = min(self.tab['date'])
+           maxiX = max(self.tab['date'])
+        else:
+           miniX = None
+           maxiX = None
+        miniY = None
+        maxiY = None
+        self.axes.set_xlim(miniX, maxiX)
+
+        if isinstance(miniX, datetime):
+            date = mdates.DateFormatter('%d/%m/%Y')
+        else:
+            date = FormatStrFormatter('%d')
+        self.axes.xaxis.set_major_formatter(date)
+
+        marge = 0.05
+
+        colVisibles = []
+        for col in self.colVal:
+            if self.courbe_hydro[col].get_visible():
+                colVisibles.append(col)
+
+        # Recherche de la valeur mini sur les valeurs de la courbe et non du tableau, [1] pour les valeurs en ordonnees
+        temp = [min(self.courbe_hydro[c].get_data()[1]) for c in colVisibles if self.courbe_hydro[c].get_data()]
+        if temp:
+            miniY = min(temp)
+
+        # Recherche de la valeur maxi sur les valeurs de la courbe et non du tableau, [1] pour les valeurs en ordonnees
+        temp = [max(self.courbe_hydro[c].get_data()[1]) for c in colVisibles if self.courbe_hydro[c].get_data()]
+        if temp:
+            maxiY = max(temp)
+
+        # Cas special: si la surface du casier est constante, pour eviter une anomalie d'echelle
+        if miniY == maxiY:
+           miniY = 0
+
+        if miniY is not None and maxiY is not None:
+            diff = maxiY - miniY
+            self.axes.set_ylim(miniY - diff * marge, maxiY + diff * marge)
+
+        self.canvas.draw()
+
+
+    def combo_time_p_k_change(self, text):
+        self.position = text
+        self.nom = self.position
+        self.maj_tab()
+        self.maj_graph()
+        self.maj_limites()
+
+
+    def combo_run_changed(self, text):
+        self.run = text
+        if not self.scenario in self.liste_runs[self.run]:
+            self.scenario = self.liste_runs[self.run][-1]
+        self.combo_scen.currentIndexChanged['QString'].disconnect()
+        self.combo_scen.clear()
+        self.combo_scen.addItems(self.liste_runs[self.run])
+        self.combo_scen.setCurrentIndex(self.liste_runs[self.run].index(
+            self.scenario))
+        self.combo_scen.currentIndexChanged['QString'].connect(
+            self.combo_scen_changed)
+
+        self.maj_liste()
+        self.maj_tab()
+        self.maj_graph()
+        self.maj_limites()
+
+
+    def combo_scen_changed(self, text):
+        self.scenario = text
+        self.maj_liste()
+        self.maj_tab()
+        self.maj_graph()
+        self.maj_limites()
+
+    def combo_var1_changed(self, text):
+        for col in self.columns:
+            if self.variables[col]['nom'] == text:
+                self.var1 = self.variables[col]['code']
+                self.unite = self.variables[col]['unite']
+                self.var1_name = text
+                break
+        self.maj_legende()
+        self.maj_graph()
+        self.maj_limites()
+
+    def avance(self, val):
+        # TODO
+        if abs(val) == 10:
+            #var = 'selection'
+            val = val / 10
+        #else:
+        #    var = self.inv
+
+        S = self.liste['selection']
+
+        pos = self.liste['selection']['nom'].index(self.position)
+        pos += val
+        if pos < len(self.liste['selection']['nom']) and pos >= 0:
+            self.position = self.liste['selection']['nom'][pos]
+            self.nom = self.position
+            index = self.liste['selection']['nom'].index(self.position)
+            self.combo_time_pk.setCurrentIndex(index)
             self.maj_limites()

@@ -66,9 +66,9 @@ class MascPlugDialog(QMainWindow):
 
         # self.pathPostgres = self.masplugPath
         # emplacement objet sql
-        self.dossierSQL = os.path.join(os.path.join(self.masplugPath, "db"), "sql")
+        self.dossier_sql = os.path.join(os.path.join(self.masplugPath, "db"), "sql")
         # style des couches
-        self.dossierStyle = os.path.join(os.path.join(self.masplugPath, "db"), "style")
+        self.dossier_style = os.path.join(os.path.join(self.masplugPath, "db"), "style")
         self.dossier_struct = os.path.join(os.path.join(self.masplugPath, "Structure"), 'Abacus')
         self.repProject = None
 
@@ -146,11 +146,13 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionCross_section.triggered.connect(self.main_graph)
         self.ui.actionHydrogramme.triggered.connect(self.main_graph)
         self.ui.actionCross_section_results.triggered.connect(self.main_graph)
+        self.ui.actionBasin.triggered.connect(self.main_graph)
 
         # creatoin model
         self.ui.action_Extract_MNTfor_profile.triggered.connect(self.mnt_to_profil)
         self.ui.actionCreate_Geometry.triggered.connect(self.fct_create_geo)
         self.ui.actionCreate_xcas.triggered.connect(self.fct_create_xcas)
+        self.ui.actionCreate_Basin.triggered.connect(self.fct_create_casier)
         self.ui.actionParameters.triggered.connect(self.fct_parametres)
         self.ui.actionRun.triggered.connect(self.fct_run)
         self.ui.actionDelete_Run.triggered.connect(self.del_run)
@@ -336,7 +338,7 @@ class MascPlugDialog(QMainWindow):
 
         if ok:
             self.mdb.SCHEMA = model_name.lower()
-            self.mdb.create_model(self.dossierSQL)
+            self.mdb.create_model(self.dossier_sql)
             self.mdb.last_schema = self.mdb.SCHEMA
             self.enable_all_actions()
         else:
@@ -485,6 +487,29 @@ class MascPlugDialog(QMainWindow):
 
         if file_name_path:
             clam.copy_file_model(file_name_path, case='geo')
+
+    def fct_create_casier(self):
+        """ create file .Casier """
+        # Mascaret.exe demande un .casier et pas basin d'ou le nom de la fonction
+        # Pas de dialog box sur le noyau: les casiers sont uniquement en transitoire
+
+        clam = ClassMascaret(self)
+        # Appel de la fonction creerGEOCasier() d�finie dans Class_Mascaret.py
+        clam.creer_geo_casier()
+        if int(qVersion()[0]) < 5:  # qt4
+            file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
+                                                       "{0}.casier".format(
+                                                           os.path.join(self.masplugPath, clam.baseName)),
+                                                         filter="CASIER (*.casier)")
+        else:  # qt5
+            file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
+                                                          "{0}.casier".format(
+                                                              os.path.join(self.masplugPath, clam.baseName)),
+                                                            filter="CASIER (*.casier)")
+
+        if file_name_path:
+            clam.copy_file_model(file_name_path, case='casier')
+
 
     def fct_run(self):
         """ Run Mascaret"""
@@ -669,23 +694,32 @@ class MascPlugDialog(QMainWindow):
         self.coucheProfils = None
         self.profil = self.ui.actionCross_section.isChecked()
         self.hydrogramme = self.ui.actionHydrogramme.isChecked()
-        self.profilResult = self.ui.actionCross_section_results.isChecked()
+        self.profil_result = self.ui.actionCross_section_results.isChecked()
+        self.basin_result = self.ui.actionBasin.isChecked()
 
         # prevents use of other graphic button
         self.ui.actionHydrogramme.setEnabled(True)
         self.ui.actionCross_section.setEnabled(True)
         self.ui.actionCross_section_results.setEnabled(True)
+        self.ui.actionBasin.setEnabled(True)
 
         if self.profil:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section_results.setEnabled(False)
+            self.ui.actionBasin.setEnabled(False)
 
         elif self.hydrogramme:
             self.ui.actionCross_section_results.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)
-        elif self.profilResult:
+            self.ui.actionBasin.setEnabled(False)
+        elif self.profil_result:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)
+            self.ui.actionBasin.setEnabled(False)
+        elif self.basin_result:
+            self.ui.actionHydrogramme.setEnabled(False)
+            self.ui.actionCross_section.setEnabled(False)
+            self.ui.actionCross_section_results.setEnabled(False)
 
         self.prev_tool = canvas.mapTool()
         self.map_tool = IdentifyFeatureTool(self)
@@ -765,11 +799,12 @@ Version : {}
             self.add_info('Export failed.')
 
     def fct_add_wq_tables(self):
-
-        ok = self.box.yes_no_q('Do you want add tracer tables ? \n '
+        ok = self.box.yes_no_q('Do you want add tracer tables and basins tables ? \n '
                                'WARNING: if the tables exist then it will be emptied.')
         if ok:
-            self.mdb.add_table_wq(self.dossierSQL)
+            self.mdb.add_table_basins(self.dossier_sql)
+            self.mdb.add_table_wq(self.dossier_sql)
+
 
     # *******************************
     #    Structures

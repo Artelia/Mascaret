@@ -64,32 +64,36 @@
 64;variablesStockees;false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false;false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false;false false false false false true true true false false true false false false false false false false false false false false true false false false false false false false true false false false false false false false false true false false;Write the results;parametresVariablesStockees;;False;parameters
 65;initialisationAuto;FALSE;TRUE;TRUE;Initialisation with a steady run;;;True;parameters
 66;evenement;TRUE;TRUE;TRUE;Mode;;;True;parameters
-67;presenceTraceurs;FALSE;FALSE;FALSE;Activation of the water quality module;parametresTraceur;;True;tracers
-68;nbTraceur;1;1;1;Number of constituents;parametresTraceur;;True;tracers
-69;convectionTraceurs;true ;true ;true ;;parametresTraceur;parametresConvectionDiffusion;False;tracers
-70;optionConvection;2;2;2;Convection method;parametresTraceur;parametresConvectionDiffusion;True;tracers
-71;ordreSchemaConvec;0;0;0;Scheme order;parametresTraceur;parametresConvectionDiffusion;True;tracers
-72;paramW;0;0;0;Parameter W;parametresTraceur;parametresConvectionDiffusion;True;tracers
-73;LimitPente;FALSE;FALSE;FALSE;Slope limiter;parametresTraceur;parametresConvectionDiffusion;True;tracers
-74;diffusionTraceurs;false;false;false;;parametresTraceur;parametresConvectionDiffusion;False;tracers
-75;optionCalculDiffusion;1;1;1;Diffusion method;parametresTraceur;parametresConvectionDiffusion;True;tracers
-76;coeffDiffusion1;0;0;0;;parametresTraceur;parametresConvectionDiffusion;False;tracers
-77;coeffDiffusion2;0;0;0;;parametresTraceur;parametresConvectionDiffusion;True;tracers
-78;modeleQualiteEau;1;1;1;Water quality module;parametresTraceur;parametresNumeriquesQualiteEau;True;tracers
-79;fichParamPhysiqueTracer;mascaret.phy;mascaret.phy;mascaret.phy;;parametresTraceur;parametresNumeriquesQualiteEau;False;tracers
-80;fichMeteoTracer;mascaret.met;mascaret.met;mascaret.met;;parametresTraceur;parametresNumeriquesQualiteEau;False;tracers
-81;frequenceCouplHydroTracer;1;1;1;Frequency for coupling ;parametresTraceur;parametresNumeriquesQualiteEau;True;tracers
-82;fichListTracer;mascaret.tra_lis;mascaret.tra_lis;mascaret.tra_lis;;parametresTraceur;parametresImpressionTraceur;False;tracers
-83;concentInit;FALSE;FALSE;FALSE;Initial Concentration;parametresTraceur;parametresImpressionTraceur;True;tracers
-84;loiTracer;FALSE;FALSE;FALSE;Tracer law used;parametresTraceur;parametresImpressionTraceur;True;tracers
-85;concentrations;TRUE;TRUE;TRUE;Concentrations;parametresTraceur;parametresImpressionTraceur;True;tracers
-86;bilanTracer;TRUE;TRUE;TRUE;Constituants balance;parametresTraceur;parametresImpressionTraceur;True;tracers
-87;fichResultTracer;mascaret.tra_opt;mascaret.tra_opt;mascaret.tra_opt;;parametresTraceur;parametresImpressionTraceur;False;tracers
-88;formatFichResultat;2;2;2;;parametresTraceur;parametresImpressionTraceur;False;tracers
-89;typeCondLimTracer;1 2;1 2;1 2;;parametresTraceur;parametresConditionsLimitesTraceur;False;tracers
-90;numLoiCondLimTracer;1 1;1 1;1 1;;parametresTraceur;parametresConditionsLimitesTraceur;False;tracers
-91;presenceConcInit;FALSE;FALSE;FALSE;Presence of initial conditions;parametresTraceur;parametresConcentrationsInitialesTraceur;True;tracers
-92;modeEntree;1;1;1;;parametresTraceur;parametresConcentrationsInitialesTraceur;False;tracers
-93;fichConcInit;mascaret.conc;mascaret.conc;mascaret.conc;;parametresTraceur;parametresConcentrationsInitialesTraceur;False;tracers
-94;nbPts;0;0;0;;parametresTraceur;parametresConcentrationsInitialesTraceur;False;tracers
-95;fichmeteo;FALSE;FALSE;FALSE;;;;False;tracers
+67;resultatCasier;mascaret.cas_opt;mascaret.cas_opt;mascaret.cas_opt;;parametresImpressionResultats;casier;False;basins
+68;listingCasier;mascaret.cas_lis;mascaret.cas_lis;mascaret.cas_lis;;parametresImpressionResultats;casier;False;basins
+69;resultatLiaison;mascaret.liai_opt;mascaret.liai_opt;mascaret.liai_opt;;parametresImpressionResultats;casier;False;basins
+70;listingLiaison;mascaret.liai_lis;mascaret.liai_lis;mascaret.liai_lis;;parametresImpressionResultats;casier;False;basins
+71;presenceTraceurs;FALSE;FALSE;FALSE;Activation of the water quality module;parametresTraceur;;True;tracers
+72;nbTraceur;1;1;1;Number of constituents;parametresTraceur;;True;tracers
+73;convectionTraceurs;true ;true ;true ;;parametresTraceur;parametresConvectionDiffusion;False;tracers
+74;optionConvection;2;2;2;Convection method;parametresTraceur;parametresConvectionDiffusion;True;tracers
+75;ordreSchemaConvec;0;0;0;Scheme order;parametresTraceur;parametresConvectionDiffusion;True;tracers
+76;paramW;0;0;0;Parameter W;parametresTraceur;parametresConvectionDiffusion;True;tracers
+77;LimitPente;FALSE;FALSE;FALSE;Slope limiter;parametresTraceur;parametresConvectionDiffusion;True;tracers
+78;diffusionTraceurs;false;false;false;;parametresTraceur;parametresConvectionDiffusion;False;tracers
+79;optionCalculDiffusion;1;1;1;Diffusion method;parametresTraceur;parametresConvectionDiffusion;True;tracers
+80;coeffDiffusion1;0;0;0;;parametresTraceur;parametresConvectionDiffusion;False;tracers
+81;coeffDiffusion2;0;0;0;;parametresTraceur;parametresConvectionDiffusion;True;tracers
+82;modeleQualiteEau;1;1;1;Water quality module;parametresTraceur;parametresNumeriquesQualiteEau;True;tracers
+83;fichParamPhysiqueTracer;mascaret.phy;mascaret.phy;mascaret.phy;;parametresTraceur;parametresNumeriquesQualiteEau;False;tracers
+84;fichMeteoTracer;mascaret.met;mascaret.met;mascaret.met;;parametresTraceur;parametresNumeriquesQualiteEau;False;tracers
+85;frequenceCouplHydroTracer;1;1;1;Frequency for coupling ;parametresTraceur;parametresNumeriquesQualiteEau;True;tracers
+86;fichListTracer;mascaret.tra_lis;mascaret.tra_lis;mascaret.tra_lis;;parametresTraceur;parametresImpressionTraceur;False;tracers
+87;concentInit;FALSE;FALSE;FALSE;Initial Concentration;parametresTraceur;parametresImpressionTraceur;True;tracers
+88;loiTracer;FALSE;FALSE;FALSE;Tracer law used;parametresTraceur;parametresImpressionTraceur;True;tracers
+89;concentrations;TRUE;TRUE;TRUE;Concentrations;parametresTraceur;parametresImpressionTraceur;True;tracers
+90;bilanTracer;TRUE;TRUE;TRUE;Constituants balance;parametresTraceur;parametresImpressionTraceur;True;tracers
+91;fichResultTracer;mascaret.tra_opt;mascaret.tra_opt;mascaret.tra_opt;;parametresTraceur;parametresImpressionTraceur;False;tracers
+92;formatFichResultat;2;2;2;;parametresTraceur;parametresImpressionTraceur;False;tracers
+93;typeCondLimTracer;1 2;1 2;1 2;;parametresTraceur;parametresConditionsLimitesTraceur;False;tracers
+94;numLoiCondLimTracer;1 1;1 1;1 1;;parametresTraceur;parametresConditionsLimitesTraceur;False;tracers
+95;presenceConcInit;FALSE;FALSE;FALSE;Presence of initial conditions;parametresTraceur;parametresConcentrationsInitialesTraceur;True;tracers
+96;modeEntree;1;1;1;;parametresTraceur;parametresConcentrationsInitialesTraceur;False;tracers
+97;fichConcInit;mascaret.conc;mascaret.conc;mascaret.conc;;parametresTraceur;parametresConcentrationsInitialesTraceur;False;tracers
+98;nbPts;0;0;0;;parametresTraceur;parametresConcentrationsInitialesTraceur;False;tracers
+99;fichmeteo;FALSE;FALSE;FALSE;;;;False;tracers

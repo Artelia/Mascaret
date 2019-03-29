@@ -81,4 +81,4 @@ class ClassMNT(QObject):
         try:  # qgis2
             self.profil.saveEdits()
         except:  # qgis 3
-            pass
+            self.profil.commitChanges()
