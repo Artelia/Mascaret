@@ -1385,7 +1385,7 @@ class GraphProfilRes(GraphCommon):
         self.listeTime = {'t': [], 'date': []}
         condition = "run='{0}' AND scenario='{1}'".format(self.run,
                                                           self.scenario)
-        temp = self.mdb.select_distinct("date", "resultats", condition)
+        temp = self.mdb.select_distinct("date", "resultats", condition,'date')
         if temp["date"][0]:
             self.date = True
             if self.type == 't':
@@ -1395,7 +1395,7 @@ class GraphProfilRes(GraphCommon):
                 self.type = 't'
 
         self.listeTime['date'] = temp['date']
-        temp = self.mdb.select_distinct("t", "resultats", condition)
+        temp = self.mdb.select_distinct("t", "resultats", condition,'t')
         self.listeTime['t'] = temp['t']
         self.comboTime.addItem('Hmax')
         for x in self.listeTime[self.type]:
@@ -1513,9 +1513,21 @@ class GraphProfilRes(GraphCommon):
                                           where=temp2 >= temp1,
                                           interpolate=True)
             self.aire = []
+
+
+
             for p in aire.get_paths():
+                if ta['leftminbed'] is not None:
+                    gauch = ta['leftminbed']
+                else:
+                    gauch = min(p.vertices[:,0])
+                if ta['rightminbed'] is not None:
+                    droit = ta['rightminbed']
+                else:
+                    droit = max(p.vertices[:,0])
                 for x, y in p.vertices:
-                    if ta['leftminbed'] <= x <= ta['rightminbed']:
+
+                    if gauch <= x <= droit:
                         patch = patches.PathPatch(p,
                                                   facecolor='deepskyblue',
                                                   lw=0)
@@ -2084,7 +2096,7 @@ class GraphHydro(GraphCommon):
         self.date = False
         condition = "run='{0}' AND scenario='{1}'".format(self.run,
                                                           self.scenario)
-        temp = self.mdb.select_distinct("date", "resultats", condition)
+        temp = self.mdb.select_distinct("date", "resultats", condition,'date')
 
         if temp["date"][0]:
             self.date = True
@@ -2096,10 +2108,10 @@ class GraphHydro(GraphCommon):
 
         self.liste['date']['abs'] = temp["date"]
 
-        temp = self.mdb.select_distinct("t", "resultats", condition)
+        temp = self.mdb.select_distinct("t", "resultats", condition,'t')
         self.liste['t']['abs'] = temp["t"]
 
-        temp = self.mdb.select_distinct('pk', "resultats", condition)
+        temp = self.mdb.select_distinct('pk', "resultats", condition,'pk')
         # TODO delete round in future
         self.liste['pk']['abs']=[]
         for elem in temp['pk']:
@@ -2828,7 +2840,7 @@ class GraphBasin(GraphCommon):
         self.date = False
         condition = "run='{0}' AND scenario='{1}'".format(self.run,
                                                           self.scenario)
-        temp = self.mdb.select_distinct("date", "resultats", condition)
+        temp = self.mdb.select_distinct("date", "resultats", condition,'date')
 
         self.liste['date']['abs'] = temp["date"]
         self.position_legende = 'upper left'
