@@ -123,7 +123,12 @@ class ClassParameterDialog(QDialog):
                           "Maximum flow rate",
                           "Date of maximum flow rate",
                           "Maximum energy",
-                          "Total wetted area"
+                          "Total wetted area",
+                          "Basin water level",
+                          "Basin area",
+                          "Basin volume",
+                          "Link flow rate",
+                          "Link velocity"
                           ]
 
         self.variables = ['ZREF',
@@ -168,7 +173,12 @@ class ClassParameterDialog(QDialog):
                           'QMAX',
                           'TQMA',
                           'EMAX',
-                          'ATOT'
+                          'ATOT',
+                          'ZCAS',
+                          'SURCAS',
+                          'VOLCAS',
+                          'QECH',
+                          'VECH'
                           ]
         # Q
 

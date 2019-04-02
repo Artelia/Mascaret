@@ -63,6 +63,7 @@ class ClassMascaret:
         self.Klist = ["steady", "unsteady", "transcritical"]
         self.wq = ClassMascWQ(self.mgis, self.dossierFileMasc)
 
+
     def creer_geo(self):
         """creation of gemoetry file"""
         try:
@@ -1496,11 +1497,14 @@ class ClassMascaret:
             if not finish:
                 self.mgis.add_info("Simulation error")
                 return
-            self.lit_opt(run, scen, date_debut, self.baseName, comments, par['presenceTraceurs'])
+
             # Lecture de l'OPT des casiers et liaisons puis ecriture dans la table resultats
+            cond_casier=False
             if par["presenceCasiers"] and noyau == "unsteady":
-                self.lit_casiers_opt(run, scen, date_debut, self.baseName, "basin")
-                self.lit_casiers_opt(run, scen, date_debut, self.baseName, "link")
+                cond_casier=True
+                # self.lit_casiers_opt(run, scen, date_debut, self.baseName, "basin")
+                # self.lit_casiers_opt(run, scen, date_debut, self.baseName, "link")
+            self.lit_opt(run, scen, date_debut, self.baseName, comments, par['presenceTraceurs'],cond_casier)
 
         self.iface.messageBar().clearWidgets()
         self.mgis.add_info("Simulation finished")
@@ -1538,9 +1542,8 @@ class ClassMascaret:
         self.mgis.add_info("{0}".format(p.communicate()[0].decode("utf-8")))
         return True
 
-    def lit_opt(self, run, scen, date_debut, base_namefile, comments='', tracer=False):
+    def lit_opt(self, run, scen, date_debut, base_namefile, comments='', tracer=False,casier=False):
         nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
-
         # tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
         if self.mgis.DEBUG:
             self.mgis.add_info("Load data ....")
@@ -1561,6 +1564,7 @@ class ClassMascaret:
                 if c not in col:
                     col.append(c)
                     lind.append(i)
+            # add value_tra in value list
             for j, lignval in enumerate(value):
                 for i in lind:
                     lignval.append(value_tra[j][i])
@@ -1579,100 +1583,27 @@ class ClassMascaret:
         if tracer:
             tab[run]['wq'] = self.wq.cur_wq_mod
             listimport.append("wq")
+
         self.mdb.insert("runs",
                         tab,
                         listimport,
                         ",")
         liste_col = self.mdb.list_columns("resultats")
-
         for c in col:
             if c.lower() not in liste_col:
                 self.mdb.add_columns("resultats", c.lower())
 
         self.mdb.insert_res("resultats", value, col)
 
-        return True
+        if casier:
+            nom_fich_bas = os.path.join(self.dossierFileMasc, base_namefile + '.cas_opt')
+            nom_fich_link = os.path.join(self.dossierFileMasc, base_namefile + '.liai_opt')
 
-    def lit_casiers_opt(self, run, scen, date_debut, baseNamefile, critere):
+            t_bas, pk_bas, col_bas, value_bas = self.read_opt(nom_fich_bas, date_debut, scen, run, init_col =['t','bnum'])
+            t_link, pk_link, col_link, value_link = self.read_opt(nom_fich_link, date_debut, scen, run, init_col = ['t','lnum'])
 
-        if critere == "basin":
-            nom_fich = os.path.join(self.dossierFileMasc, baseNamefile + '.cas_opt')
-            col = ['t', 'bnum', 'bz', 'barea', 'bvol']
-        else:
-            nom_fich = os.path.join(self.dossierFileMasc, baseNamefile + '.liai_opt')
-            col = ['t', 'lnum', 'lq', 'lvel']
-
-        t = set([])
-
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Load data ....")
-        if not os.path.isfile(nom_fich):
-            self.mgis.add_info("Simulation Error: there aren't basin results")
-            return False
-
-        with open(nom_fich, 'r') as source:
-            var = source.readline()
-
-            ligne = source.readline()
-            while '[resultats]' not in ligne:
-                ligne = source.readline()
-
-            data = csv.DictReader(source, delimiter=';', fieldnames=col)
-            if date_debut:
-                col.append("date")
-            col.append("run")
-            col.append("scenario")
-
-            value = []
-            for ligne in data:
-                if date_debut:
-                    d = date_debut + datetime.timedelta(
-                        seconds=float(ligne["t"]))
-                    ligne["date"] = d
-                    t.add("{:%Y-%m-%d %H:%M}".format(d))
-                else:
-                    t.add(ligne["t"])
-
-                ligne["run"] = run
-                ligne["scenario"] = scen
-
-                ligne_list = []
-                for k in col:
-                    if k == 'bnum':
-                        # extrait le numero mascaret de casier
-                        numero_masca = re.findall('\d+', ligne[k])[0]
-                        # convertit le numero masca en qgis (different si un casier inactif)
-                        numero_qgis = str(self.dico_basinnum[int(numero_masca)])
-                        ligne_list.append(numero_qgis)
-                    elif k == 'lnum':
-                        # extrait le numero mascaret de liaison
-                        numero_masca = re.findall('\d+', ligne[k])[0]
-                        # convertit le numero masca en qgis (different si une liaison inactive)
-                        numero_qgis = str(self.dico_linknum[int(numero_masca)])
-                        ligne_list.append(numero_qgis)
-                    else:
-                        ligne_list.append(ligne[k])
-
-                value.append(ligne_list)
-
-            maintenant = datetime.datetime.utcnow()
-
-            tab = {run: {"scenario": scen,
-                         "date": "{:%Y-%m-%d %H:%M}".format(maintenant),
-                         "t": list(t)}}
-
-            self.mdb.insert("runs",
-                            tab,
-                            ["run", "date", "scenario", "t"],
-
-                            ",")
-            listeCol = self.mdb.list_columns("resultats")
-
-            for c in col:
-                if c.lower() not in listeCol:
-                    self.mdb.add_columns("resultats", c.lower())
-
-            self.mdb.insert_res("resultats", value, col)
+            self.mdb.insert_res("resultats_basin", value_bas, col_bas)
+            self.mdb.insert_res("resultats_links", value_link, col_link)
 
         return True
 
@@ -1711,7 +1642,7 @@ class ClassMascaret:
             i1i2.append(str(i1[b]))
             i1i2.append(str(i2[b]))
 
-        with open(os.path.join(self.dossierFileMasc, self.baseName + '.lig'), 'w') as fich:
+        with open(os.path.join(self.dossierFileMasc, base_namefiles + '.lig'), 'w') as fich:
             date = datetime.datetime.utcnow()
             fich.write(
                 'RESULTATS CALCUL,DATE :  {0:%d/%m/%y %H:%M}\n'.format(date))
@@ -1857,19 +1788,26 @@ class ClassMascaret:
         else:
             return True
 
-    @staticmethod
-    def read_opt(nom_fich, date_debut, scen, run):
+    def read_opt(self,nom_fich, date_debut, scen, run, init_col=[]):
         """ Read opt file"""
         t = set([])
         pk = set([])
+        if init_col ==[]:
+                col = ['t', 'branche', 'section', 'pk']
+        else:
+            col = init_col
+
         with open(nom_fich, 'r') as source:
             var = source.readline()
-            col = ['t', 'branche', 'section', 'pk']
+            if var[:2] =='/*': #comment
+                var = source.readline()
+
             ligne = source.readline()
+
             while '[resultats]' not in ligne:
-                temp = ligne.replace('"', '').replace('NaN', "'NULL'").split(';')
-                col.append(temp[1].lower())
-                ligne = source.readline()
+                    temp = ligne.replace('"', '').replace('NaN', "'NULL'").split(';')
+                    col.append(temp[1].lower())
+                    ligne = source.readline()
 
             data = csv.DictReader(source, delimiter=';', fieldnames=col)
             if date_debut:
@@ -1886,31 +1824,47 @@ class ClassMascaret:
                     t.add("{:%Y-%m-%d %H:%M}".format(d))
                 else:
                     t.add(ligne["t"])
-
-                # TODO delete round in future
-                tempo = str(round(float(ligne["pk"]), 2))
-                pk.add(tempo)
                 ligne["run"] = run
                 ligne["scenario"] = scen
-                ligne["section"] = ligne["section"].replace('"', '')
-                ligne["branche"] = ligne["branche"].replace('"', '')
+
+                if 'pk' in ligne.keys():
+                    tempo = str(round(float(ligne["pk"]), 2))
+                    pk.add(tempo)
+                if "section" in ligne.keys():
+                    ligne["section"] = ligne["section"].replace('"', '')
+                if "branche" in ligne.keys():
+                    ligne["branche"] = ligne["branche"].replace('"', '')
 
                 ligne_list = []
-                delcond = False
+                delcond_qtot = False
+
                 for k in col:
                     if k == 'qtot':
-                        delcond = True
+                        delcond_qtot = True
                     elif k == 'pk':
-                        # TODO delete round in future
                         tempo = str(round(float(ligne[k]), 2))
                         ligne_list.append(tempo)
+                    elif k == 'bnum':
+                        # extrait le numero mascaret de casier
+                        numero_masca = re.findall('\d+', ligne[k])[0]
+
+                        # convertit le numero masca en qgis (different si un casier inactif)
+                        numero_qgis = str(self.dico_basinnum[int(numero_masca)])
+                        ligne_list.append(numero_qgis)
+                    elif k == 'lnum':
+                        # extrait le numero mascaret de liaison
+                        numero_masca = re.findall('\d+', ligne[k])[0]
+                        # convertit le numero masca en qgis (different si une liaison inactive)
+                        numero_qgis = str(self.dico_linknum[int(numero_masca)])
+                        ligne_list.append(numero_qgis)
                     else:
                         ligne_list.append(ligne[k])
 
                 value.append(ligne_list)
         # delete 'qtot' because of the same that 'q'
-        if delcond:
+        if delcond_qtot :
             col.remove("qtot")
+
         return t, pk, col, value
 
     @staticmethod

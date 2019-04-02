@@ -416,7 +416,7 @@ class ClassMasDatabase(object):
                       Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
                       Maso.observations, Maso.parametres, Maso.resultats, Maso.runs, Maso.laws,
                       #bassin
-                      Maso.basins, Maso.links,
+                      Maso.basins, Maso.links, Maso.resultats_basin, Maso.resultats_links,
                       # qualite d'eau
                       Maso.tracer_lateral_inflows, Maso.tracer_physic, Maso.tracer_name,
                       Maso.tracer_config, Maso.laws_wq,
@@ -472,7 +472,9 @@ class ClassMasDatabase(object):
         Add table  for water Quality model
         """
 
-        tables = [Maso.basins, Maso.links]
+        tables = [
+                Maso.basins, Maso.links,
+                  Maso.resultats_basin, Maso.resultats_links]
         tables.sort(key=lambda x: x().order)
 
         for masobj_class in tables:
@@ -482,15 +484,7 @@ class ClassMasDatabase(object):
                     self.mgis.add_info('  {0} OK'.format(obj.name))
             except:
                 self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
-        sql = """ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS bnum integer;
-        ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS bz float;
-        ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS barea float;
-        ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS bvol float;
-        ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS lnum integer;
-        ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS lq float;
-        ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS lvel float;
-        """
-        self.run_query(sql.format(self.SCHEMA))
+
         fichparam = os.path.join(dossier, "parametres.csv")
         # self.run_query(req.format(self.SCHEMA, fichparam))
         liste_value = []

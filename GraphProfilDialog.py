@@ -1301,7 +1301,6 @@ class GraphProfilRes(GraphCommon):
             #                                      "runs",
             #                                      condition)
             dico_run = self.mdb.select_distinct("date, run, scenario,t","runs")
-
             if not dico_run:
                 self.mgis.add_info("No simulation to show")
                 return False
@@ -1323,9 +1322,11 @@ class GraphProfilRes(GraphCommon):
             self.comboRun.setCurrentIndex(le - 1)
             self.comboScen = self.ui.comboBox_Scenar
             self.comboScen.clear()
+
             self.comboScen.addItems(self.listeRuns[self.run])
             le = len(self.listeRuns[self.run])
             self.comboScen.setCurrentIndex(le - 1)
+
 
             # time list
             self.comboTime = self.ui.comboBox_Time
@@ -2631,11 +2632,9 @@ class GraphBasin(GraphCommon):
         self.combo_time_pk.clear()
 
         if self.type == 'basins':
-            # Extraction des colonnes bz, barea, bvol
-            self.columns = [self.mdb.list_columns("resultats")[20],self.mdb.list_columns("resultats")[21],self.mdb.list_columns("resultats")[22]]
+            self.columns = ['zcas','surcas','volcas']
         else:
-            # Extraction des colonnes lq, lvel
-            self.columns = [self.mdb.list_columns("resultats")[24],self.mdb.list_columns("resultats")[25]]
+            self.columns = ['qech', 'vech']
 
         self.colVal = []
         self.unite = ""
@@ -2840,7 +2839,10 @@ class GraphBasin(GraphCommon):
         self.date = False
         condition = "run='{0}' AND scenario='{1}'".format(self.run,
                                                           self.scenario)
-        temp = self.mdb.select_distinct("date", "resultats", condition,'date')
+        if self.type == 'basins':
+            temp = self.mdb.select_distinct("date", "resultats_basin", condition,'date')
+        else:
+            temp = self.mdb.select_distinct("date", "resultats_links", condition, 'date')
 
         self.liste['date']['abs'] = temp["date"]
         self.position_legende = 'upper left'
@@ -2874,7 +2876,11 @@ class GraphBasin(GraphCommon):
            condition += """AND {0}={1}""".format('lnum', numero)
 
         #self.mgis.addInfo(condition)
-        self.tab = self.mdb.select("resultats", condition, "t")
+        if self.type == 'basins':
+            self.tab = self.mdb.select("resultats_basin", condition, "t")
+
+        else:
+            self.tab = self.mdb.select("resultats_links", condition, "t")
 
         # Alimentation de la colonne des dates dans le tableau
         self.liste_tab = [self.tab['date']]
@@ -2882,7 +2888,7 @@ class GraphBasin(GraphCommon):
             if self.tab[c] != [None] * len(self.tab[c]):
                 self.liste_tab.append(self.tab[c])
                 # Valeurs en milliers pour barea et bvol passees dans les courbes pour ameliorer la visibilite des graphes
-                if  c == 'barea' or c == 'bvol':
+                if  c == 'surcas' or c == 'volcas':
                    self.courbe_hydro[c].set_data(self.tab['date'], [valeur / 1000 for valeur in self.tab[c]])
                 else:
                    self.courbe_hydro[c].set_data(self.tab['date'], self.tab[c])
