@@ -7,11 +7,11 @@
     <edittype widgetv2type="TextEdit" name="branch">
       <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
     </edittype>
-    <edittype widgetv2type="ValueRelation" name="startb">
-      <widgetv2config OrderByValue="0" AllowNull="0" FilterExpression="" UseCompleter="0" fieldEditable="1" Key="name" constraint="" Layer="extremities20190328155330063" Value="name" labelOnTop="0" constraintDescription="" AllowMulti="0" notNull="0"/>
+    <edittype widgetv2type="TextEdit" name="startb">
+      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
     </edittype>
-    <edittype widgetv2type="ValueRelation" name="endb">
-      <widgetv2config OrderByValue="0" AllowNull="0" FilterExpression="" UseCompleter="0" fieldEditable="1" Key="name" constraint="" Layer="extremities20190328155330063" Value="name" labelOnTop="0" constraintDescription="" AllowMulti="0" notNull="0"/>
+    <edittype widgetv2type="TextEdit" name="endb">
+      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
     </edittype>
     <edittype widgetv2type="TextEdit" name="zonenum">
       <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
