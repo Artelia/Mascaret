@@ -395,6 +395,7 @@ class GraphProfil(GraphCommon):
             self.image.set_visible(False)
         self.rectSelection.set_visible(False)
         self.selected = {}
+        self.courbeSelection.set_data([], [])
         pos = self.position
         pos += val
 
