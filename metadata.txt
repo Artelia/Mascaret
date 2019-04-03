@@ -11,7 +11,7 @@ name=Mascaret
 description=Pre and Post-processing for Mascaret (http://www.opentelemac.org/).
 about= Plugin dedicated to the building and exploitation of Mascaret models.
        Requires PostgreSQL and PostGIS.
-       Developed by Mehdi-Pierre DAOU, Christophe COULET (Artelia)
+       Developed by Mehdi-Pierre DAOU, Christophe COULET (Artelia),Bagot Philippe (Cerema)
        Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
        Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek (Many thanks for the work they've done on RiverGis)
 
@@ -32,6 +32,7 @@ changelog=
     0.4.0 :  Add Bradley method for hydraulic structure
              Add hydraulic structure GUI
              Add hydraulic structure table
+    0.3.2  : Modification of basins and links result tables
     0.3.1  : Add added water quality feature
     0.2.1  : Add added basin feature
     0.2.0 :  Add water quality feature

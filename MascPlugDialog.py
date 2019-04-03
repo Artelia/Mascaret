@@ -20,6 +20,7 @@ email                :
 import json
 import math
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -34,6 +35,7 @@ from .GraphProfilDialog import IdentifyFeatureTool
 from .Structure.StructureDialog import ClassStructureDialog
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
+# # water quality
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
 from .db.ClassMasDatabase import ClassMasDatabase
 from .ui.custom_control import ClassWarningBox
@@ -376,6 +378,8 @@ class MascPlugDialog(QMainWindow):
         else:
             self.add_info('Droping Model cancelled.')
 
+
+
             # **************************************
             #  Menus Functions
             # **************************************
@@ -498,18 +502,17 @@ class MascPlugDialog(QMainWindow):
         clam.creer_geo_casier()
         if int(qVersion()[0]) < 5:  # qt4
             file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
-                                                       "{0}.casier".format(
-                                                           os.path.join(self.masplugPath, clam.baseName)),
+                                                         "{0}.casier".format(
+                                                             os.path.join(self.masplugPath, clam.baseName)),
                                                          filter="CASIER (*.casier)")
         else:  # qt5
             file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
-                                                          "{0}.casier".format(
-                                                              os.path.join(self.masplugPath, clam.baseName)),
+                                                            "{0}.casier".format(
+                                                                os.path.join(self.masplugPath, clam.baseName)),
                                                             filter="CASIER (*.casier)")
 
         if file_name_path:
             clam.copy_file_model(file_name_path, case='casier')
-
 
     def fct_run(self):
         """ Run Mascaret"""
@@ -625,7 +628,7 @@ class MascPlugDialog(QMainWindow):
                                                              self.masplugPath,
                                                              filter="PSQL (*.psql);;File (*)")
         if self.mdb.check_extension():
-            self.add_info(" Shema est {}".format(self.mdb.SCHEMA))
+            self.add_info(" Shema est {}".format(self.SCHEMA))
             self.mdb.create__first_model()
 
         for file in file_name_path:
@@ -804,7 +807,9 @@ Version : {}
         if ok:
             self.mdb.add_table_basins(self.dossier_sql)
             self.mdb.add_table_wq(self.dossier_sql)
-
+            sql='ALTER TABLE IF EXISTS {0}.scenarios RENAME TO events;'
+            self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            self.mdb.load_model()
 
     # *******************************
     #    Structures

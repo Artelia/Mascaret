@@ -19,6 +19,7 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -123,7 +124,12 @@ class ClassParameterDialog(QDialog):
                           "Maximum flow rate",
                           "Date of maximum flow rate",
                           "Maximum energy",
-                          "Total wetted area"
+                          "Total wetted area",
+                          "Basin water level",
+                          "Basin area",
+                          "Basin volume",
+                          "Link flow rate",
+                          "Link velocity"
                           ]
 
         self.variables = ['ZREF',
@@ -168,7 +174,12 @@ class ClassParameterDialog(QDialog):
                           'QMAX',
                           'TQMA',
                           'EMAX',
-                          'ATOT'
+                          'ATOT',
+                          'ZCAS',
+                          'SURCAS',
+                          'VOLCAS',
+                          'QECH',
+                          'VECH'
                           ]
         # Q
 
@@ -293,7 +304,7 @@ class ClassParameterDialog(QDialog):
     def del_observ(self):
         """delete observation """
         dico_code = self.mdb.select_distinct("code",
-                                            "Observations")
+                                             "Observations")
         ok = False
         if dico_code:
             # self.mgis.add_info("{}".format(dico_code))

@@ -96,16 +96,16 @@ class laws(MasObject):
 
 
 # *****************************************
-class scenarios(MasObject):
+class events(MasObject):
     def __init__(self):
-        super(scenarios, self).__init__()
+        super(events, self).__init__()
         self.order = 1
         self.geom_type = None
         self.attrs = [('name', 'character varying(30) NOT NULL'),
                       ('starttime', 'timestamp without time zone'),
                       ('endtime', 'timestamp without time zone'),
                       ('run', 'boolean'),
-                      ('CONSTRAINT cle_scenarios', 'PRIMARY KEY (name)')]
+                      ('CONSTRAINT cle_events', 'PRIMARY KEY (name)')]
 
 
 # *****************************************
@@ -425,6 +425,7 @@ class tracer_lateral_inflows(MasObject):
         qry += self.pg_create_calcul_abscisse()
         return qry
 
+
 # *********** Water quality ***************
 class tracer_lateral_inflows(MasObject):
     def __init__(self):
@@ -449,6 +450,7 @@ class tracer_lateral_inflows(MasObject):
         qry += self.pg_create_calcul_abscisse()
         return qry
 
+
 # **************** Basins *************************
 class basins(MasObject):
     def __init__(self):
@@ -472,6 +474,7 @@ class basins(MasObject):
         qry += '\n'
         qry += self.pg_create_index()
         return qry
+
 
 # *****************************************
 class links(MasObject):
@@ -518,40 +521,74 @@ class links(MasObject):
         return qry
 
 
-#*******************************************
+# *******************************************
 # ******************************************
 class resultats(MasObject):
     def __init__(self):
         super(resultats, self).__init__()
         self.order = 16
         self.geom_type = None
-        self.attrs = [ ('id',' serial NOT NULL'),
-                       ('run',' character varying(30)'),
-                       ('scenario',' character varying(30)'),
-                       ('date',' timestamp without time zone'),
-                       ('t',' float'),
-                       ('branche',' integer'),
-                       ('section',' integer'),
-                       ('pk',' float'),
-                       ('zref',' float'),
-                       ('z',' float'),
-                       ('qmin',' float'),
-                       ('qmaj',' float'),
-                       ('kmin',' float'),
-                       ('kmaj',' float'),
-                       ('fr',' float'),
-                       ('y',' float'),
-                       ('zmax',' float'),
-                       ('qmax',' float'),
-                       ('q',' float'),
-                       ('bnum',' integer'),
-                       ('bz',' float'),
-                       ('barea',' float'),
-                       ('bvol',' float'),
-                       ('lnum',' integer'),
-                       ('lq',' float'),
-                       ('lvel',' float'),
-                       ('CONSTRAINT projet_pkey',' PRIMARY KEY (id)')]
+        self.attrs = [('id', ' serial NOT NULL'),
+                      ('run', ' character varying(30)'),
+                      ('scenario', ' character varying(30)'),
+                      ('date', ' timestamp without time zone'),
+                      ('t', ' float'),
+                      ('branche', ' integer'),
+                      ('section', ' integer'),
+                      ('pk', ' float'),
+                      ('zref', ' float'),
+                      ('z', ' float'),
+                      ('qmin', ' float'),
+                      ('qmaj', ' float'),
+                      ('kmin', ' float'),
+                      ('kmaj', ' float'),
+                      ('fr', ' float'),
+                      ('y', ' float'),
+                      ('zmax', ' float'),
+                      ('qmax', ' float'),
+                      ('q', ' float'),
+                      ('bnum', ' integer'),
+                      ('zcas', ' float'),
+                      ('surcas', ' float'),
+                      ('volcas', ' float'),
+                      ('lnum', ' integer'),
+                      ('qech', ' float'),
+                      ('vech', ' float'),
+                      ('CONSTRAINT projet_pkey', ' PRIMARY KEY (id)')]
+
+
+class resultats_basin(MasObject):
+    def __init__(self):
+        super(resultats_basin, self).__init__()
+        self.order = 17
+        self.geom_type = None
+        self.attrs = [('id', ' serial NOT NULL'),
+                      ('run', ' character varying(30)'),
+                      ('scenario', ' character varying(30)'),
+                      ('date', ' timestamp without time zone'),
+                      ('t', ' float'),
+                      ('bnum', ' integer'),
+                      ('zcas', ' float'),
+                      ('surcas', ' float'),
+                      ('volcas', ' float'),
+                      ('CONSTRAINT res_basinkey', ' PRIMARY KEY (id)')]
+
+
+class resultats_links(MasObject):
+    def __init__(self):
+        super(resultats_links, self).__init__()
+        self.order = 18
+        self.geom_type = None
+        self.attrs = [('id', ' serial NOT NULL'),
+                      ('run', ' character varying(30)'),
+                      ('scenario', ' character varying(30)'),
+                      ('date', ' timestamp without time zone'),
+                      ('t', ' float'),
+                      ('lnum', ' integer'),
+                      ('qech', ' float'),
+                      ('vech', ' float'),
+                      ('CONSTRAINT res_linkkey', ' PRIMARY KEY (id)')]
+
 
 # TODO: Modifier la table de cette facon
 # class results(MasObject):
@@ -574,7 +611,7 @@ class resultats(MasObject):
 class runs(MasObject):
     def __init__(self):
         super(runs, self).__init__()
-        self.order = 17
+        self.order = 19
         self.geom_type = None
         self.attrs = [('id serial', 'NOT NULL'),
                       ('run', 'character varying(30)'),
@@ -591,7 +628,7 @@ class runs(MasObject):
 class observations(MasObject):
     def __init__(self):
         super(observations, self).__init__()
-        self.order = 18
+        self.order = 20
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('code', 'character(10)'),
@@ -606,7 +643,7 @@ class observations(MasObject):
 class parametres(MasObject):
     def __init__(self):
         super(parametres, self).__init__()
-        self.order = 19
+        self.order = 21
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('parametre', 'text'),
@@ -625,7 +662,7 @@ class parametres(MasObject):
 class calcul_abscisse(MasObject):
     def __init__(self):
         super(calcul_abscisse, self).__init__()
-        self.order = 20
+        self.order = 22
 
     def pg_create_calcul_abscisse(self):
         qry = """CREATE OR REPLACE FUNCTION {0}()  
@@ -760,7 +797,7 @@ class calcul_abscisse(MasObject):
 class laws_wq(MasObject):
     def __init__(self):
         super(laws_wq, self).__init__()
-        self.order = 21
+        self.order = 23
         self.geom_type = None
         self.attrs = [
             ('id_config', 'integer'),
@@ -769,12 +806,13 @@ class laws_wq(MasObject):
             ('value', 'float'),
             ('CONSTRAINT cle_laws_wq', 'PRIMARY KEY (id_config, id_trac, time)')]
 
-#*****************************************
+
+# *****************************************
 
 class tracer_physic(MasObject):
     def __init__(self):
         super(tracer_physic, self).__init__()
-        self.order = 22
+        self.order = 24
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('type', 'text'),
@@ -788,7 +826,7 @@ class tracer_physic(MasObject):
 class tracer_name(MasObject):
     def __init__(self):
         super(tracer_name, self).__init__()
-        self.order = 23
+        self.order = 25
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('type', 'text'),
@@ -803,7 +841,7 @@ class tracer_name(MasObject):
 class tracer_config(MasObject):
     def __init__(self):
         super(tracer_config, self).__init__()
-        self.order = 24
+        self.order = 26
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -814,7 +852,7 @@ class tracer_config(MasObject):
 class meteo_config(MasObject):
     def __init__(self):
         super(meteo_config, self).__init__()
-        self.order = 25
+        self.order = 27
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -826,7 +864,7 @@ class meteo_config(MasObject):
 class laws_meteo(MasObject):
     def __init__(self):
         super(laws_meteo, self).__init__()
-        self.order = 26
+        self.order = 28
         self.geom_type = None
         self.attrs = [
             ('id_config', 'integer'),
@@ -839,7 +877,7 @@ class laws_meteo(MasObject):
 class init_conc_config(MasObject):
     def __init__(self):
         super(init_conc_config, self).__init__()
-        self.order = 27
+        self.order = 29
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -851,7 +889,7 @@ class init_conc_config(MasObject):
 class init_conc_wq(MasObject):
     def __init__(self):
         super(init_conc_wq, self).__init__()
-        self.order = 28
+        self.order = 30
         self.geom_type = None
         self.attrs = [
             ('id_config', 'integer'),

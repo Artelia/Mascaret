@@ -17,11 +17,12 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import psycopg2
-import psycopg2.extras
 import os
 import numpy as np
 import subprocess
+
+import psycopg2
+import psycopg2.extras
 from qgis.core import QgsVectorLayer, QgsProject
 
 from . import MasObject as Maso
@@ -410,12 +411,12 @@ class ClassMasDatabase(object):
                 self.mgis.add_info('<br>Model "{0}" created.'.format(self.SCHEMA))
 
             # table
-            tables = [Maso.scenarios, Maso.lateral_inflows, Maso.lateral_weirs, Maso.extremities,
+            tables = [Maso.events, Maso.lateral_inflows, Maso.lateral_weirs, Maso.extremities,
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
                       Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
                       Maso.observations, Maso.parametres, Maso.resultats, Maso.runs, Maso.laws,
-                      #bassin
-                      Maso.basins, Maso.links,
+                      # bassin
+                      Maso.basins, Maso.links, Maso.resultats_basin, Maso.resultats_links,
                       # qualite d'eau
                       Maso.tracer_lateral_inflows, Maso.tracer_physic, Maso.tracer_name,
                       Maso.tracer_config, Maso.laws_wq,
@@ -477,7 +478,8 @@ class ClassMasDatabase(object):
         Add table  for water Quality model
         """
 
-        tables = [Maso.basins, Maso.links]
+        tables = [Maso.basins, Maso.links,
+                  Maso.resultats_basin, Maso.resultats_links]
         tables.sort(key=lambda x: x().order)
 
         for masobj_class in tables:
@@ -487,15 +489,7 @@ class ClassMasDatabase(object):
                     self.mgis.add_info('  {0} OK'.format(obj.name))
             except:
                 self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
-        sql = """ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS bnum integer;
-        ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS bz float;
-        ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS barea float;
-        ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS bvol float;
-        ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS lnum integer;
-        ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS lq float;
-        ALTER TABLE {0}.resultats ADD COLUMN IF NOT EXISTS lvel float;
-        """
-        self.run_query(sql.format(self.SCHEMA))
+
         fichparam = os.path.join(dossier, "parametres.csv")
         # self.run_query(req.format(self.SCHEMA, fichparam))
         liste_value = []
@@ -513,9 +507,9 @@ class ClassMasDatabase(object):
         valeurs = valeurs[:-1] + ")"
 
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3} ON CONFLICT DO NOTHING;".format(self.SCHEMA,
-                                                            'parametres',
-                                                            var,
-                                                            valeurs)
+                                                                                   'parametres',
+                                                                                   var,
+                                                                                   valeurs)
 
         self.run_query(sql, many=True, list_many=liste_value)
 
@@ -563,9 +557,9 @@ class ClassMasDatabase(object):
         valeurs = valeurs[:-1] + ")"
 
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3} ON CONFLICT DO NOTHING;".format(self.SCHEMA,
-                                                            'parametres',
-                                                            var,
-                                                            valeurs)
+                                                                                   'parametres',
+                                                                                   var,
+                                                                                   valeurs)
 
         self.run_query(sql, many=True, list_many=liste_value)
 
@@ -705,7 +699,7 @@ class ClassMasDatabase(object):
         tables.sort(key=lambda x: x[1].order)
         for (name, obj) in tables:
             try:
-                #TODO modif if new geometric table
+                # TODO modif if new geometric table
                 if obj.order < 16:
                     self.add_to_view(obj)
                     if self.mgis.DEBUG:
