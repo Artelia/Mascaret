@@ -182,7 +182,8 @@ class ClassWaterQualityDialog(QDialog):
                     obj.setCurrentIndex(val)
                 else:
                     if self.mgis.DEBUG:
-                        self.mgis.add_info("param {}  obj {}  val {}".format(param, obj, info['val']))
+                        pass
+                        # self.mgis.add_info("param {}  obj {}  val {}".format(param, obj, info['val']))
 
         self.type = self.modeleQualiteEau.itemText(self.modeleQualiteEau.currentIndex())
         self.table_Tr = self.ui.tableWidget
