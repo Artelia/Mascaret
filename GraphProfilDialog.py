@@ -1539,7 +1539,7 @@ class GraphProfilRes(GraphCommon):
             self.axes.collections.remove(aire)
             # Figure title
             if self.posit == 'Hmax':
-                self.titleFig.set_text('Max of water level, {0} m '.format(self.zmax))
+                self.titleFig.set_text('Max of water level, {0} m '.format(round(self.zmax, 3)))
             elif isinstance(self.posit, float):
                 self.titleFig.set_text('Water level, {0} m - {1} s'.format(h, self.posit))
             else:

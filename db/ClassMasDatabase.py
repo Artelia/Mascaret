@@ -472,8 +472,7 @@ class ClassMasDatabase(object):
         Add table  for water Quality model
         """
 
-        tables = [
-                Maso.basins, Maso.links,
+        tables = [Maso.basins, Maso.links,
                   Maso.resultats_basin, Maso.resultats_links]
         tables.sort(key=lambda x: x().order)
 

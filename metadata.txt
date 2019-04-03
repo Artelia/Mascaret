@@ -29,6 +29,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    0.3.2  : Modification of basins and links result tables
     0.3.1  : Add added water quality feature
     0.2.1  : Add added basin feature
     0.1.13 : Correction of parameters GUI bug
