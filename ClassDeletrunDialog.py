@@ -157,6 +157,8 @@ class ClassDeletrunDialog(QDialog):
                 sql = "run = '{0}' AND scenario IN ({1})".format(run,
                                                                  ",".join(scenarios))
                 self.mdb.delete("resultats", sql)
+                self.mdb.delete("resultats_basin", sql)
+                self.mdb.delete("resultats_links", sql)
                 self.mdb.delete("runs", sql)
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Deletion of {0} scenario for {1} is done".format(scenarios, run))
