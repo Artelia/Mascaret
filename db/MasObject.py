@@ -96,16 +96,16 @@ class laws(MasObject):
 
 
 # *****************************************
-class scenarios(MasObject):
+class events(MasObject):
     def __init__(self):
-        super(scenarios, self).__init__()
+        super(events, self).__init__()
         self.order = 1
         self.geom_type = None
         self.attrs = [('name', 'character varying(30) NOT NULL'),
                       ('starttime', 'timestamp without time zone'),
                       ('endtime', 'timestamp without time zone'),
                       ('run', 'boolean'),
-                      ('CONSTRAINT cle_scenarios', 'PRIMARY KEY (name)')]
+                      ('CONSTRAINT cle_events', 'PRIMARY KEY (name)')]
 
 
 # *****************************************

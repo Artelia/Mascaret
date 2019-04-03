@@ -367,6 +367,8 @@ class MascPlugDialog(QMainWindow):
         else:
             self.add_info('Droping Model cancelled.')
 
+
+
             # **************************************
             #  Menus Functions
             # **************************************
@@ -794,5 +796,6 @@ Version : {}
         if ok:
             self.mdb.add_table_basins(self.dossier_sql)
             self.mdb.add_table_wq(self.dossier_sql)
-            # sql='ALTER TABLE IF EXISTS table_name RENAME TO new_table_name;'
-            # self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            sql='ALTER TABLE IF EXISTS {0}.scenarios RENAME TO events;'
+            self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            self.mdb.load_model()

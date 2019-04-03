@@ -1259,7 +1259,7 @@ class ClassMascaret:
 
         if par["evenement"] and noyau != "steady":
 
-            dict_scen_tmp = self.mdb.select('scenarios', 'run', 'starttime')
+            dict_scen_tmp = self.mdb.select('events', 'run', 'starttime')
             listexclu = []
             if len(dict_scen_tmp['name']) == 0:
                 self.mgis.add_info("Warning: scenario not found")

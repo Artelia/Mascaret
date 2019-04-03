@@ -412,7 +412,7 @@ class ClassMasDatabase(object):
                 self.mgis.add_info('<br>Model "{0}" created.'.format(self.SCHEMA))
 
             # table
-            tables = [Maso.scenarios, Maso.lateral_inflows, Maso.lateral_weirs, Maso.extremities,
+            tables = [Maso.events, Maso.lateral_inflows, Maso.lateral_weirs, Maso.extremities,
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
                       Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
                       Maso.observations, Maso.parametres, Maso.resultats, Maso.runs, Maso.laws,
