@@ -19,6 +19,7 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -303,7 +304,7 @@ class ClassParameterDialog(QDialog):
     def del_observ(self):
         """delete observation """
         dico_code = self.mdb.select_distinct("code",
-                                            "Observations")
+                                             "Observations")
         ok = False
         if dico_code:
             # self.mgis.add_info("{}".format(dico_code))

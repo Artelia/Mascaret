@@ -425,6 +425,7 @@ class tracer_lateral_inflows(MasObject):
         qry += self.pg_create_calcul_abscisse()
         return qry
 
+
 # *********** Water quality ***************
 class tracer_lateral_inflows(MasObject):
     def __init__(self):
@@ -449,6 +450,7 @@ class tracer_lateral_inflows(MasObject):
         qry += self.pg_create_calcul_abscisse()
         return qry
 
+
 # **************** Basins *************************
 class basins(MasObject):
     def __init__(self):
@@ -472,6 +474,7 @@ class basins(MasObject):
         qry += '\n'
         qry += self.pg_create_index()
         return qry
+
 
 # *****************************************
 class links(MasObject):
@@ -518,40 +521,41 @@ class links(MasObject):
         return qry
 
 
-#*******************************************
+# *******************************************
 # ******************************************
 class resultats(MasObject):
     def __init__(self):
         super(resultats, self).__init__()
         self.order = 16
         self.geom_type = None
-        self.attrs = [ ('id',' serial NOT NULL'),
-                       ('run',' character varying(30)'),
-                       ('scenario',' character varying(30)'),
-                       ('date',' timestamp without time zone'),
-                       ('t',' float'),
-                       ('branche',' integer'),
-                       ('section',' integer'),
-                       ('pk',' float'),
-                       ('zref',' float'),
-                       ('z',' float'),
-                       ('qmin',' float'),
-                       ('qmaj',' float'),
-                       ('kmin',' float'),
-                       ('kmaj',' float'),
-                       ('fr',' float'),
-                       ('y',' float'),
-                       ('zmax',' float'),
-                       ('qmax',' float'),
-                       ('q',' float'),
-                       ('bnum',' integer'),
-                       ('zcas',' float'),
-                       ('surcas',' float'),
-                       ('volcas',' float'),
-                       ('lnum',' integer'),
-                       ('qech',' float'),
-                       ('vech',' float'),
-                       ('CONSTRAINT projet_pkey',' PRIMARY KEY (id)')]
+        self.attrs = [('id', ' serial NOT NULL'),
+                      ('run', ' character varying(30)'),
+                      ('scenario', ' character varying(30)'),
+                      ('date', ' timestamp without time zone'),
+                      ('t', ' float'),
+                      ('branche', ' integer'),
+                      ('section', ' integer'),
+                      ('pk', ' float'),
+                      ('zref', ' float'),
+                      ('z', ' float'),
+                      ('qmin', ' float'),
+                      ('qmaj', ' float'),
+                      ('kmin', ' float'),
+                      ('kmaj', ' float'),
+                      ('fr', ' float'),
+                      ('y', ' float'),
+                      ('zmax', ' float'),
+                      ('qmax', ' float'),
+                      ('q', ' float'),
+                      ('bnum', ' integer'),
+                      ('zcas', ' float'),
+                      ('surcas', ' float'),
+                      ('volcas', ' float'),
+                      ('lnum', ' integer'),
+                      ('qech', ' float'),
+                      ('vech', ' float'),
+                      ('CONSTRAINT projet_pkey', ' PRIMARY KEY (id)')]
+
 
 class resultats_basin(MasObject):
     def __init__(self):
@@ -569,6 +573,7 @@ class resultats_basin(MasObject):
                       ('volcas', ' float'),
                       ('CONSTRAINT res_basinkey', ' PRIMARY KEY (id)')]
 
+
 class resultats_links(MasObject):
     def __init__(self):
         super(resultats_links, self).__init__()
@@ -583,6 +588,7 @@ class resultats_links(MasObject):
                       ('qech', ' float'),
                       ('vech', ' float'),
                       ('CONSTRAINT res_linkkey', ' PRIMARY KEY (id)')]
+
 
 # TODO: Modifier la table de cette facon
 # class results(MasObject):
@@ -800,7 +806,8 @@ class laws_wq(MasObject):
             ('value', 'float'),
             ('CONSTRAINT cle_laws_wq', 'PRIMARY KEY (id_config, id_trac, time)')]
 
-#*****************************************
+
+# *****************************************
 
 class tracer_physic(MasObject):
     def __init__(self):

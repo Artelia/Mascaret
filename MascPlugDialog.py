@@ -20,6 +20,7 @@ email                :
 import json
 import math
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -488,18 +489,17 @@ class MascPlugDialog(QMainWindow):
         clam.creer_geo_casier()
         if int(qVersion()[0]) < 5:  # qt4
             file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
-                                                       "{0}.casier".format(
-                                                           os.path.join(self.masplugPath, clam.baseName)),
+                                                         "{0}.casier".format(
+                                                             os.path.join(self.masplugPath, clam.baseName)),
                                                          filter="CASIER (*.casier)")
         else:  # qt5
             file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
-                                                          "{0}.casier".format(
-                                                              os.path.join(self.masplugPath, clam.baseName)),
+                                                            "{0}.casier".format(
+                                                                os.path.join(self.masplugPath, clam.baseName)),
                                                             filter="CASIER (*.casier)")
 
         if file_name_path:
             clam.copy_file_model(file_name_path, case='casier')
-
 
     def fct_run(self):
         """ Run Mascaret"""
@@ -794,4 +794,5 @@ Version : {}
         if ok:
             self.mdb.add_table_basins(self.dossier_sql)
             self.mdb.add_table_wq(self.dossier_sql)
-
+            # sql='ALTER TABLE IF EXISTS table_name RENAME TO new_table_name;'
+            # self.mdb.run_query(sql.format(self.mdb.SCHEMA))

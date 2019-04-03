@@ -17,10 +17,11 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import psycopg2
-import psycopg2.extras
 import os
 import subprocess
+
+import psycopg2
+import psycopg2.extras
 from qgis.core import QgsVectorLayer, QgsProject
 
 from . import MasObject as Maso
@@ -415,7 +416,7 @@ class ClassMasDatabase(object):
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
                       Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
                       Maso.observations, Maso.parametres, Maso.resultats, Maso.runs, Maso.laws,
-                      #bassin
+                      # bassin
                       Maso.basins, Maso.links, Maso.resultats_basin, Maso.resultats_links,
                       # qualite d'eau
                       Maso.tracer_lateral_inflows, Maso.tracer_physic, Maso.tracer_name,
@@ -501,9 +502,9 @@ class ClassMasDatabase(object):
         valeurs = valeurs[:-1] + ")"
 
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3} ON CONFLICT DO NOTHING;".format(self.SCHEMA,
-                                                            'parametres',
-                                                            var,
-                                                            valeurs)
+                                                                                   'parametres',
+                                                                                   var,
+                                                                                   valeurs)
 
         self.run_query(sql, many=True, list_many=liste_value)
 
@@ -550,9 +551,9 @@ class ClassMasDatabase(object):
         valeurs = valeurs[:-1] + ")"
 
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3} ON CONFLICT DO NOTHING;".format(self.SCHEMA,
-                                                            'parametres',
-                                                            var,
-                                                            valeurs)
+                                                                                   'parametres',
+                                                                                   var,
+                                                                                   valeurs)
 
         self.run_query(sql, many=True, list_many=liste_value)
 
@@ -669,7 +670,7 @@ class ClassMasDatabase(object):
         tables.sort(key=lambda x: x[1].order)
         for (name, obj) in tables:
             try:
-                #TODO modif if new geometric table
+                # TODO modif if new geometric table
                 if obj.order < 16:
                     self.add_to_view(obj)
                     if self.mgis.DEBUG:

@@ -20,8 +20,9 @@ comment:
         distance
         interpole
 """
-import dateutil
 import math
+
+import dateutil
 
 
 def data_to_float(txt):
@@ -31,12 +32,14 @@ def data_to_float(txt):
     except ValueError:
         return None
 
+
 def data_to_date(txt):
     try:
         dateutil.parser.parse(txt, dayfirst=True)
         return dateutil.parser.parse(txt, dayfirst=True)
     except ValueError:
         return None
+
 
 def data_to_int(txt):
     try:
@@ -45,6 +48,7 @@ def data_to_int(txt):
     except ValueError:
         return None
 
+
 def isfloat(value):
     try:
         float(value)
@@ -52,8 +56,10 @@ def isfloat(value):
     except ValueError:
         return False
 
+
 def distance(a, b):
     return math.sqrt(math.pow(a.x() - b.x(), 2) + math.pow(a.y() - b.y(), 2))
+
 
 def interpole(a, l1, l2):
     """ Interpolation
@@ -69,6 +75,7 @@ def interpole(a, l1, l2):
     else:
         return None
 
+
 def str2bool(s):
     """string to bool"""
     if "True" in s or "TRUE" in s:
@@ -76,12 +83,14 @@ def str2bool(s):
     else:
         return False
 
+
 def get_couche(nom, iface):
     for couche in iface.legendInterface().layers():
         if couche.name() == nom:
             return couche
 
     return None
+
 
 def calcul_abscisses(liste_couches, riviere, iface, dossier):
     couche_riv = get_couche(riviere, iface)
