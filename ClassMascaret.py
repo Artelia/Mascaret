@@ -1379,8 +1379,8 @@ class ClassMascaret:
             for name in dico_loi_struct.keys():
                 list_final = self.clmeth.get_list_law(dico_loi_struct[name]['id_config'])
 
-                self.clmeth.create_law(self.dossier_file_masc, name, dico_loi_struct[name]['type'], list_final)
-                self.clmeth.create_law(self.dossier_file_masc, name + '_init', dico_loi_struct[name]['type'],
+                self.clmeth.create_law(self.dossierFileMasc, name, dico_loi_struct[name]['type'], list_final)
+                self.clmeth.create_law(self.dossierFileMasc, name + '_init', dico_loi_struct[name]['type'],
                                        list_final)
 
         if self.mgis.DEBUG:
