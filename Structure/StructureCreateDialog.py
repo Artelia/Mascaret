@@ -101,6 +101,8 @@ class ClassStructureCreateDialog(QDialog):
             values.append([self.id_struct, order, x, z])
         self.mdb.insert_res('profil_struct', values, colonnes)
 
+        self.struct.update_etat_struct_prof(self.id_struct, active=False)
+
 
         self.accept()
 

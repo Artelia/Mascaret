@@ -176,7 +176,10 @@ class ClassStructureEditDialog(QDialog):
             self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
             active = self.cc_active.isChecked()
             if active:
+                self.clmeth.update_etat_struct_prof(self.id_struct, active=True)
                 self.clmeth.sav_meth(self.id_struct,self.current_meth, self.ui)
+            else:
+                self.clmeth.update_etat_struct_prof(self.id_struct, active=False)
             self.accept()
         # else:
         #     self.reject_page()

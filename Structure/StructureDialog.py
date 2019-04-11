@@ -29,6 +29,7 @@ from .ClassTableStructure import ClassTableStructure
 from .GraphStructure import GraphStructure
 from .StructureEditDialog import ClassStructureEditDialog
 from .StructureCreateDialog import ClassStructureCreateDialog
+from .ClassMethod import ClassMethod
 # from ..Function import data_to_float
 
 if int(qVersion()[0]) < 5:  # qt4
@@ -44,6 +45,7 @@ class ClassStructureDialog(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
+        self.struct = ClassMethod(self.mgis)
         # self.cur_wq_mod = self.tbwq.get_cur_wq_mod()
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_structure.ui'), self)
@@ -135,6 +137,7 @@ class ClassStructureDialog(QDialog):
         if self.tree_struct.selectedItems():
             itm = self.tree_struct.selectedItems()[0]
             id_struct = itm.data(0, 32)
+            self.struct.update_etat_struct_prof(id_struct,delete=True)
             sql = "DELETE FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
             self.mdb.execute(sql)
             sql = "DELETE FROM {0}.struct_elem_param WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
@@ -146,6 +149,7 @@ class ClassStructureDialog(QDialog):
             sql = "DELETE FROM {0}.struct_config WHERE id = {1}".format(self.mdb.SCHEMA, id_struct)
             self.mdb.execute(sql)
             self.fill_lst_struct()
+
 
     # def update_cur_item(self):
     #     itm = self.tree_struct.selectedItems()[0]

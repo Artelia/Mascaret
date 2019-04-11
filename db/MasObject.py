@@ -197,7 +197,7 @@ class profiles(MasObject):
                       ('xmnt', 'text'),
                       ('zmnt', 'text'),
                       ('active', 'boolean'),
-                      ('struct', 'integer'),
+                      ('struct', 'integer DEFAULT 0'),
                       ('CONSTRAINT profiles_pkey', 'PRIMARY KEY (gid)'),
                       ('CONSTRAINT profile_unique', 'UNIQUE (name)')]
 

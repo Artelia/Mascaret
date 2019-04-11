@@ -408,6 +408,7 @@ class ClassMethod:
                'branchnum': feature['branchnum'],
                'id_config': id_struct}
         self.mdb.update('struct_config', tab, var='id_config')
+
         # sql = """UPDATE {0}.{1} SET abscissa='{2}', branchnum={3}  WHERE id_config='{4}'"""
         #
         # self.mdb.run_query(sql.format(self.mdb.SCHEMA,
@@ -641,7 +642,30 @@ class ClassMethod:
             self.brad.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         else:
             pass
+    def update_etat_struct_prof(self, id_config, active=True, delete=False):
+        where = "id = {0}".format(id_config)
+        prof = self.mdb.select('struct_config', where=where, list_var=['id_prof_ori'])
+        gid = prof['id_prof_ori'][0]
+        if active:
+            tab = {'table': 'profiles',
+                   'schema' : self.mdb.SCHEMA,
+                   'gid': gid,
+                   'struct': 2}
+        elif delete:
+            tab = {'table': 'profiles',
+                   'schema' : self.mdb.SCHEMA,
+                   'gid': gid,
+                   'struct': 0}
+        else:
+            tab = {'table': 'profiles',
+                   'schema' : self.mdb.SCHEMA,
+                   'gid': gid,
+                   'struct': 1}
+        # self.mdb.update('profiles', tab, var='gid')
 
+        sql = "UPDATE {schema}.{table} SET struct={struct}  WHERE gid={gid}".format(**tab)
+        print(sql)
+        self.mdb.run_query(sql)
 
 if __name__ == '__main__':
     pass
