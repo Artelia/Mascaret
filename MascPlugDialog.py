@@ -628,7 +628,7 @@ class MascPlugDialog(QMainWindow):
                                                              self.masplugPath,
                                                              filter="PSQL (*.psql);;File (*)")
         if self.mdb.check_extension():
-            self.add_info(" Shema est {}".format(self.SCHEMA))
+            self.add_info(" Shema est {}".format(self.mdb.SCHEMA))
             self.mdb.create__first_model()
 
         for file in file_name_path:
