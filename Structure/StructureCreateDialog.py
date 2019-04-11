@@ -27,7 +27,7 @@ from qgis.utils import *
 
 from .ClassTableStructure import ClassTableStructure
 from .ClassMethod import ClassMethod
-from .ClassBradley import ClassBradley
+from .ClassLaws import ClassLaws
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *

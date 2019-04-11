@@ -28,7 +28,7 @@ from qgis.gui import *
 from shapely.geometry import *
 
 
-class ClassBradley:
+class ClassLaws:
     def __init__(self, parent):
         self.parent = parent
         self.mgis = self.parent.mgis
@@ -163,15 +163,16 @@ class ClassBradley:
 
     def init_bradley(self, method,id_config):
         """ initialisation for bradley method"""
-        list_recup = [ 'BIAIOUV'
+        list_recup = [ 'BIAIOUV',
                       'FORMCUL', 'ORIENTM',
                       'PENTTAL',  'EPAITAB', 'BIAICUL',
                       # pile de pont
                       'LARGPIL', 'LONGPIL', 'FORMPIL', 'BIAIPIL',
                       # numeric
-                       'MINQ', 'PASQ']
+                       'MAXQ','MINQ', 'PASQ']
         param_g_temp = self.parent.get_param_g(list_recup, id_config)
-        self.param_g.param_g_temp()
+        self.param_g.update(param_g_temp)
+        self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
         # only brad
         where = " id_config={} and type=1 ".format(id_config)
         order = "id_elem"
@@ -347,10 +348,11 @@ class ClassBradley:
 
         # *************************************
         self.init_method(id_config)
-        self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
+
         list_final = []
 
         (coef_cor_biais, type_kb, list_ph, list_e) = self.init_bradley(method,id_config)
+
 
         # surf = 0
         # self.param_elem['SURFELEM']=[]
@@ -363,6 +365,7 @@ class ClassBradley:
         # self.list_zav=[9.75,6.25]
         ztransi=  min(self.param_elem['ZMAXELEM'])# Z de transition
 
+
         for zav in self.list_zav:
             list_brad = []
             qmax = self.param_g['MINQ']
@@ -370,23 +373,31 @@ class ClassBradley:
             for q in self.list_q:
                 value = self.meth_brad(zav-self.minz, q, coef_cor_biais, type_kb, list_ph, list_e)
                 # [q, zav, zav + remout]
+                print(value)
                 if value is None:
                     continue
                 else:
-                    if value[2] >  ztransi:
+                    if value[2] > ztransi:
                         break
                     # print('brad va', value)
                     list_final.append(value)
                     list_brad.append(value)
 
             # hyp. forcage zav<zam,(car MINQ >0)
+
             if len(list_brad) > 0:
                 qmax = max(np.array(list_brad)[:, 0])
                 za = list_brad[-1][2]
-            # idx = list_zam.index(zav)
-            idx = np.where(self.list_zam > za)[0]
-            if len(idx) > 0:
+            else:
+                za = zav
 
+            # idx = list_zam.index(zav)
+
+            idx = np.where(self.list_zam > za)[0]
+
+            if len(idx) > 0:
+                if self.list_zam[idx[0]-1] == zav:
+                    list_final.append([self.deb_min, zav, zav])
                 for zam in self.list_zam[idx[0]:]:
                     if zav != zam:
                         q_seuil = 0
@@ -659,6 +670,7 @@ class ClassBradley:
         zinf_vann = self.poly_p.bounds[1]  # z min du profil
 
         for zav in self.list_zav:
+            qtest=0
             pr_area_wet = self.area_wet_fct(self.poly_p, zav)
             area_wet = 0
             for poly_trav in self.list_poly_trav:
@@ -693,13 +705,16 @@ class ClassBradley:
                     if value is None:
                         continue
                     else:
+
                         #TODO Qmax que faire
                         # if value[0] > self.param_g['MAXQ']:
                         #     break
 
-                        if value[0] > qmax:
+                        if value[0] > qmax and value[0]>qtest:
                             # print('ori va',value)
                             list_final.append(value)
+                            # impose debit toujours superieur
+                            qtest =value[0]
 
         self.save_list_final(list_final, id_config, method)
 

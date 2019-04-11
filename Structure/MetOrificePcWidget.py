@@ -39,7 +39,7 @@ class MetOrificePcWidget(QWidget):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_borda_pc.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_orifice_pc.ui'), self)
         self.id_struct = id_struct
 
         self.sb_nb_trav.valueChanged.connect(self.change_ntrav)

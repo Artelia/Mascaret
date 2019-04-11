@@ -590,6 +590,9 @@ class ClassMasDatabase(object):
                 self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
         self.insert_abacus_table(dossier)
 
+        sql = """ALTER TABLE {}.profiles ADD COLUMN IF NOT EXISTS struct integer;"""
+        self.run_query(sql.format(self.SCHEMA))
+
     def create__first_model(self):
         """ 
         To add variable in db for the first model creation

@@ -31,7 +31,7 @@ from shapely import wkt
 from shapely.geometry import *
 
 import time
-from .ClassBradley import ClassBradley
+from .ClassLaws import ClassLaws
 from .ClassTableStructure import ClassTableStructure
 
 
@@ -631,7 +631,7 @@ class ClassMethod:
 
 
     def sav_meth(self, id_config, idmethod,ui):
-        self.brad = ClassBradley(self)
+        self.brad = ClassLaws(self)
 
         if idmethod == 0 or idmethod == 4: # brad
             self.brad.bradley(id_config, self.tbst.dico_meth_calc[idmethod],ui)

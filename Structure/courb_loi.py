@@ -43,7 +43,6 @@ def courb(tab):
     print(tab)
     for i, info in enumerate(tab):
         zav=info[0]
-        print(zav)
         if zav == zav_sav:
             i_save =i
         else:
@@ -64,7 +63,7 @@ def courb(tab):
 
     plt.title('deb =fct(am) pour un av')
     plt.show()
-path='../mascaret/struct_test.loi'
+path='../mascaret/cadre_test.loi'
 tab=read_loi(path)
 tab=ptrait(tab)
 courb(tab)
