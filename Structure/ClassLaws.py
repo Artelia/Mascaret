@@ -373,7 +373,7 @@ class ClassLaws:
             for q in self.list_q:
                 value = self.meth_brad(zav-self.minz, q, coef_cor_biais, type_kb, list_ph, list_e)
                 # [q, zav, zav + remout]
-                print(value)
+
                 if value is None:
                     continue
                 else:
@@ -385,7 +385,7 @@ class ClassLaws:
 
             # hyp. forcage zav<zam,(car MINQ >0)
 
-            if len(list_brad) > 0:
+            if len(list_brad) > 0 :
                 qmax = max(np.array(list_brad)[:, 0])
                 za = list_brad[-1][2]
             else:
@@ -394,8 +394,7 @@ class ClassLaws:
             # idx = list_zam.index(zav)
 
             idx = np.where(self.list_zam > za)[0]
-
-            if len(idx) > 0:
+            if len(idx) > 0 :
                 if self.list_zam[idx[0]-1] == zav:
                     list_final.append([self.deb_min, zav, zav])
                 for zam in self.list_zam[idx[0]:]:
@@ -730,3 +729,5 @@ class ClassLaws:
         if poly_wet.is_empty:
             return 0
         return poly_wet.area
+
+

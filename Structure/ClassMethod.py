@@ -572,7 +572,6 @@ class ClassMethod:
 
         if list_final == []:
             return
-
         with open(os.path.join(dossier, nom + '.loi'), 'w') as fich:
             fich.write('# ' + nom + '\n')
             if typel == 6:
@@ -585,9 +584,34 @@ class ClassMethod:
                 info = info[info[:, 1].argsort(kind='mergesort')]
                 info = info[info[:, 0].argsort(kind='mergesort')]
                 list_final = list(info)
+                #list_final= self.complete_law(info)
+
                 for val in list_final:
                     dico = {'flowrate': val[0], 'z_downstream': val[1], 'z_upstream': val[2]}
                     fich.write(chaine.format(**dico))
+
+    def complete_law(self, info):
+        new_info=[]
+        q_unique = np.unique(info[:,0])
+        h_unique = np.unique(info[:, 1])
+        for deb in q_unique:
+            info_tmp = info[np.where(info[:,0]==deb)]
+            if len(info_tmp>1) :
+                print(info_tmp)
+
+                hmax = max(list(info_tmp[:, 1]))
+                idmax = list(info_tmp[:, 1]).index(hmax)
+                hmin = min(list(info_tmp[:, 1]))
+                idmin = list(info_tmp[:, 1]).index(hmin)
+                varmax = abs(info_tmp[idmax , 1]-info_tmp[idmax , 2])
+                val_tmp=np.interp(h_unique, info_tmp[:, 1], info_tmp[:, 2])
+                for i,hau in enumerate(h_unique):
+                    valf =  val_tmp[i]
+                    if hau > hmax:
+                        valf = hau + varmax
+                    new_info.append([deb,hau,valf])
+        return new_info
+
 
     def save_law_st(self, method, id_config, list_val):
         """ stock law in database"""
@@ -630,7 +654,6 @@ class ClassMethod:
             liste_f.append(list_tmp)
         return liste_f
 
-
     def sav_meth(self, id_config, idmethod,ui):
         self.brad = ClassLaws(self)
 
@@ -642,6 +665,7 @@ class ClassMethod:
             self.brad.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         else:
             pass
+
     def update_etat_struct_prof(self, id_config, active=True, delete=False):
         where = "id = {0}".format(id_config)
         prof = self.mdb.select('struct_config', where=where, list_var=['id_prof_ori'])
