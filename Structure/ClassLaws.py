@@ -435,6 +435,7 @@ class ClassLaws:
 
 
         self.save_list_final(list_final, id_config, method)
+        print(list_final)
 
         return list_final
 

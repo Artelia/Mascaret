@@ -40,7 +40,7 @@ def courb(tab):
     i_old=0
     cmpt=0
     i_save=0
-    print(tab)
+    #print(tab)
     for i, info in enumerate(tab):
         zav=info[0]
         if zav == zav_sav:
@@ -64,6 +64,8 @@ def courb(tab):
 path='../mascaret/cadre_test.loi'
 tab=read_loi(path)
 tab=ptrait(tab)
-print(tab[np.where(tab[:, 0] == 9.5)])
+print(tab[np.where(tab[:, 0] == 3)])
 courb(tab)
+print(tab)
+
 
