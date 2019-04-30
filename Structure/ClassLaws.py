@@ -76,8 +76,8 @@ class ClassLaws:
         # ***********************************
         (minx, miny, maxx, maxy) = self.poly_p.bounds
         self.minz=miny
-        self.list_zav = [miny]
-        self.list_zav += list(np.arange(self.minz + self.param_g['MINH'], self.param_g['MAXH']+self.minz, self.param_g['PASH']))
+        #self.list_zav = [miny]
+        self.list_zav = list(np.arange(self.minz + self.param_g['MINH'], self.param_g['MAXH']+self.minz, self.param_g['PASH']))
         self.list_zav.append(self.param_g['MAXH']+self.minz)
 
         self.list_zam = np.array(self.list_zav)
@@ -358,7 +358,7 @@ class ClassLaws:
         # self.param_elem['SURFELEM']=[]
         # for poly_trav in self.list_poly_trav:
         #     surf += poly_trav.area
-
+        val=90/len(self.list_zav)
 
         zinf_vann = self.poly_p.bounds[1]  # z min du profil
         zcret = self.param_g['ZTOPTAB']
@@ -390,7 +390,7 @@ class ClassLaws:
                 za = list_brad[-1][2]
             else:
                 za = zav
-
+            #******************* OK **********************************
             # idx = list_zam.index(zav)
 
             idx = np.where(self.list_zam > za)[0]
@@ -398,6 +398,7 @@ class ClassLaws:
                 if self.list_zam[idx[0]-1] == zav:
                     list_final.append([self.deb_min, zav, zav])
                 for zam in self.list_zam[idx[0]:]:
+                    print("kkkkkk",zav,zam)
                     if zav != zam:
                         q_seuil = 0
                         # q_ori = self.meth_orif_mas(zam, zav, zinf_vann, self.param_g['ZPC'],
@@ -414,7 +415,7 @@ class ClassLaws:
 
                         # print('zam q_ori',zam, q_ori)
                         if zam >= zcret:
-                            q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
+                             q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
                         # print('q_seuil',zam, q_seuil)
                         if q_ori == 0 and q_seuil == 0:
                             value = None
@@ -433,9 +434,12 @@ class ClassLaws:
                     else:
                         list_final.append([self.deb_min, zav, zam])
 
-
+            if ui is not None:
+                ui.progress_bar(val)
         self.save_list_final(list_final, id_config, method)
-        print(list_final)
+        if ui is not None:
+            ui.progress_bar(100)
+       # print(list_final)
 
         return list_final
 
@@ -610,6 +614,7 @@ class ClassLaws:
         list_final = []
         qmax = self.deb_min #self.param_g['MINQ']
         zcret = self.param_g['ZTOPTAB']
+        val=90/len(self.list_zav)
 
         for zav in self.list_zav:
             pr_area_wet = self.area_wet_fct(self.poly_p, zav)
@@ -648,9 +653,11 @@ class ClassLaws:
                         if value[0] > qmax:
                             # print('ori va',value)
                             list_final.append(value)
-
+            if ui is not None:
+                ui.progress_bar(val)
         self.save_list_final(list_final, id_config, method)
-
+        if ui is not None:
+            ui.progress_bar(100)
         return list_final
 
     def orifice(self, id_config, method='Loi d\'orifice', ui=None):
@@ -660,6 +667,7 @@ class ClassLaws:
         qmax = self.deb_min #self.param_g['MINQ']
         zcret = self.param_g['ZTOPTAB']
         surf = 0
+        val = 90 / len(self.list_zav)
         self.param_g['TOTALOUV']=0
         for poly_trav in self.list_poly_trav:
             surf += poly_trav.area
@@ -715,9 +723,11 @@ class ClassLaws:
                             list_final.append(value)
                             # impose debit toujours superieur
                             qtest =value[0]
-
+            if ui is not None:
+                ui.progress_bar(val)
         self.save_list_final(list_final, id_config, method)
-
+        if ui is not None:
+            ui.progress_bar(100)
         return list_final
 
     def meth_borda(self, sav, sc, zam, zav):

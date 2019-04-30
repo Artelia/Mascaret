@@ -584,7 +584,7 @@ class ClassMethod:
                 info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
                 info = info[info[:, 1].argsort(kind='mergesort')]
                 info = info[info[:, 0].argsort(kind='mergesort')]
-               # list_final = list(info)
+                #list_final = list(info)
                 list_final= self.complete_law(info)
 
                 for val in list_final:

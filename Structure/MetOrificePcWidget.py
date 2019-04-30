@@ -42,6 +42,10 @@ class MetOrificePcWidget(QWidget):
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_orifice_pc.ui'), self)
         self.id_struct = id_struct
 
+        self.completed = 0
+        self.progress = self.ui.progressBar
+        self.progress.setValue(0)
+
         self.sb_nb_trav.valueChanged.connect(self.change_ntrav)
         self.dsb_larg_pil.valueChanged.connect(self.update_piles)
         self.dsb_h_pas.valueChanged.connect(self.update_min_h_max)
@@ -110,3 +114,9 @@ class MetOrificePcWidget(QWidget):
     def verif_larg_trav(self, itm):
         if itm.data(0) <= 0.:
             itm.setData(0, 1.)
+
+    def progress_bar(self,val):
+        self.completed += val
+        if self.completed >100:
+            self.completed = 100
+        self.progress.setValue(self.completed)

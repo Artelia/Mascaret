@@ -177,7 +177,7 @@ class ClassStructureEditDialog(QDialog):
             active = self.cc_active.isChecked()
             if active:
                 self.clmeth.update_etat_struct_prof(self.id_struct, active=True)
-                self.clmeth.sav_meth(self.id_struct,self.current_meth, self.ui)
+                self.clmeth.sav_meth(self.id_struct,self.current_meth, self.wgt_met)
             else:
                 self.clmeth.update_etat_struct_prof(self.id_struct, active=False)
             self.accept()

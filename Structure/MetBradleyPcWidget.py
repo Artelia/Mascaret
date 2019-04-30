@@ -42,7 +42,12 @@ class MetBradleyPcWidget(QWidget):
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_bradley_pc.ui'), self)
         self.id_struct = id_struct
 
+        self.completed = 0
+        self.progress = self.ui.progressBar
+        self.progress.setValue(0)
+
         self.dico_pile = ['1', '2', '3', '4', '5_1', '5_2', '6', '7', '8']
+
 
         self.frm_orient_mur.hide()
         self.frm_pente_tal.hide()
@@ -166,3 +171,10 @@ class MetBradleyPcWidget(QWidget):
     def verif_larg_trav(self, itm):
         if itm.data(0) <= 0.:
             itm.setData(0, 1.)
+
+    def progress_bar(self,val):
+        self.completed += val
+        if self.completed >100:
+            self.completed = 100
+        self.progress.setValue(self.completed)
+
