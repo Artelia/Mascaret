@@ -597,20 +597,20 @@ class ClassMethod:
         h_unique = np.unique(info[:, 1])
         for deb in q_unique:
             info_tmp = info[np.where(info[:,0]==deb)]
-            if len(info_tmp)>1:
-                hmax = max(list(info_tmp[:, 1]))
-                idmax = list(info_tmp[:, 1]).index(hmax)
-                hmin = min(list(info_tmp[:, 1]))
-                idmin = list(info_tmp[:, 1]).index(hmin)
-                varmax = abs(info_tmp[idmax , 1]-info_tmp[idmax , 2])
+            # if len(info_tmp)>1:
+            hmax = max(list(info_tmp[:, 1]))
+            idmax = list(info_tmp[:, 1]).index(hmax)
+            hmin = min(list(info_tmp[:, 1]))
+            idmin = list(info_tmp[:, 1]).index(hmin)
+            varmax = abs(info_tmp[idmax , 1]-info_tmp[idmax , 2])
 
-                val_tmp=np.interp(h_unique, info_tmp[:, 1], info_tmp[:, 2])
+            val_tmp=np.interp(h_unique, info_tmp[:, 1], info_tmp[:, 2])
 
-                for i,hau in enumerate(h_unique):
-                    valf =  val_tmp[i]
-                    if hau > hmax:
-                        valf = hau + varmax
-                    new_info.append([deb,hau,valf])
+            for i,hau in enumerate(h_unique):
+                valf =  val_tmp[i]
+                if hau > hmax:
+                    valf = hau + varmax
+                new_info.append([deb,hau,valf])
         return new_info
 
 

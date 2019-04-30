@@ -398,7 +398,7 @@ class ClassLaws:
                 if self.list_zam[idx[0]-1] == zav:
                     list_final.append([self.deb_min, zav, zav])
                 for zam in self.list_zam[idx[0]:]:
-                    print("kkkkkk",zav,zam)
+                   # print("kkkkkk",zav,zam)
                     if zav != zam:
                         q_seuil = 0
                         # q_ori = self.meth_orif_mas(zam, zav, zinf_vann, self.param_g['ZPC'],
