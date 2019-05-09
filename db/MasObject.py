@@ -521,13 +521,25 @@ class links(MasObject):
         qry += self.pg_create_calcul_abscisse()
         return qry
 
-
+# *****************************************
+class observations(MasObject):
+    def __init__(self):
+        super(observations, self).__init__()
+        self.order = 16
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('code', 'character(10)'),
+                      ('type', 'character(1)'),
+                      ('comment', 'character varying(50)'),
+                      ('valeur', 'float'),
+                      ('date', 'timestamp without time zone'),
+                      ('CONSTRAINT cle_obs ', 'PRIMARY KEY (id)')]
 # *******************************************
 # ******************************************
 class resultats(MasObject):
     def __init__(self):
         super(resultats, self).__init__()
-        self.order = 16
+        self.order = 17
         self.geom_type = None
         self.attrs = [('id', ' serial NOT NULL'),
                       ('run', ' character varying(30)'),
@@ -561,7 +573,7 @@ class resultats(MasObject):
 class resultats_basin(MasObject):
     def __init__(self):
         super(resultats_basin, self).__init__()
-        self.order = 17
+        self.order = 18
         self.geom_type = None
         self.attrs = [('id', ' serial NOT NULL'),
                       ('run', ' character varying(30)'),
@@ -578,7 +590,7 @@ class resultats_basin(MasObject):
 class resultats_links(MasObject):
     def __init__(self):
         super(resultats_links, self).__init__()
-        self.order = 18
+        self.order = 19
         self.geom_type = None
         self.attrs = [('id', ' serial NOT NULL'),
                       ('run', ' character varying(30)'),
@@ -612,7 +624,7 @@ class resultats_links(MasObject):
 class runs(MasObject):
     def __init__(self):
         super(runs, self).__init__()
-        self.order = 19
+        self.order = 20
         self.geom_type = None
         self.attrs = [('id serial', 'NOT NULL'),
                       ('run', 'character varying(30)'),
@@ -624,20 +636,6 @@ class runs(MasObject):
                       ('wq', 'text'),
                       ('CONSTRAINT cle_runs', 'PRIMARY KEY (id)')]
 
-
-# *****************************************
-class observations(MasObject):
-    def __init__(self):
-        super(observations, self).__init__()
-        self.order = 20
-        self.geom_type = None
-        self.attrs = [('id', 'serial NOT NULL'),
-                      ('code', 'character(10)'),
-                      ('type', 'character(1)'),
-                      ('comment', 'character varying(50)'),
-                      ('valeur', 'float'),
-                      ('date', 'timestamp without time zone'),
-                      ('CONSTRAINT cle_obs ', 'PRIMARY KEY (id)')]
 
 
 # *****************************************

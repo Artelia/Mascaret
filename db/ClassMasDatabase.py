@@ -471,7 +471,7 @@ class ClassMasDatabase(object):
 
         except Exception as e:
             self.mgis.add_info("Echec of creation model")
-            self.mgis.add_info(e)
+            #self.mgis.add_info(e)
 
     def add_table_basins(self, dossier):
         """
@@ -705,7 +705,7 @@ class ClassMasDatabase(object):
         for (name, obj) in tables:
             try:
                 # TODO modif if new geometric table
-                if obj.order < 16:
+                if obj.order < 17:
                     self.add_to_view(obj)
                     if self.mgis.DEBUG:
                         self.mgis.add_info(' View {0} : OK'.format(obj.name))

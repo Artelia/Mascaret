@@ -1275,8 +1275,8 @@ class CopySelectedCellsAction(QAction):
             clipboard = ''
             nrows = len(columns[0])
             ncols = len(columns)
-            for r in xrange(nrows):
-                for c in xrange(ncols):
+            for r in range(nrows):
+                for c in range(ncols):
                     clipboard += columns[c][r]
                     if c != ncols - 1:
                         clipboard += '\t'

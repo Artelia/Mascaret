@@ -389,6 +389,7 @@ class ClassLaws:
                 qmax = max(np.array(list_brad)[:, 0])
                 za = list_brad[-1][2]
             else:
+                qmax= self.deb_min
                 za = zav
             #******************* OK **********************************
             # idx = list_zam.index(zav)
@@ -396,9 +397,9 @@ class ClassLaws:
             idx = np.where(self.list_zam > za)[0]
             if len(idx) > 0 :
                 if self.list_zam[idx[0]-1] == zav:
-                    list_final.append([self.deb_min, zav, zav])
+                    if self.deb_min == qmax:
+                        list_final.append([self.deb_min, zav, zav])
                 for zam in self.list_zam[idx[0]:]:
-                   # print("kkkkkk",zav,zam)
                     if zav != zam:
                         q_seuil = 0
                         # q_ori = self.meth_orif_mas(zam, zav, zinf_vann, self.param_g['ZPC'],
@@ -431,15 +432,20 @@ class ClassLaws:
                             if value[0] > qmax:
                                 # print('ori va',value)
                                 list_final.append(value)
-                    else:
-                        list_final.append([self.deb_min, zav, zam])
+                    # else:
+                    #     list_final.append([self.deb_min, zav, zam])
 
             if ui is not None:
                 ui.progress_bar(val)
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
-       # print(list_final)
+        f= open(r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\toto.csv','w')
+        f.write('q ;zav ;zam \n')
+        for val in list_final :
+            f.write('{}; {} ;{} \n'.format(val[0],val[1],val[2]))
+
+        f.close()
 
         return list_final
 
