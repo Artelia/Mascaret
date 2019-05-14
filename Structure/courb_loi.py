@@ -47,10 +47,10 @@ def courb(tab):
             i_save =i
         else:
             cmpt += 1
-            if zav_sav==9.5:
+            # if zav_sav==9.5:
 
-                ax.plot(tab[i_old:i_save+1, 1],tab[i_old:i_save+1, 2], label=str(zav_sav),marker='+')
-                ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., ncol=3)
+            ax.plot(tab[i_old:i_save+1, 1],tab[i_old:i_save+1, 2], label=str(zav_sav),marker='+')
+            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., ncol=3)
             zav_sav=zav
             i_old = i
     ax.plot(tab[i_old:i_save+1, 1],tab[i_old:i_save+1, 2], label=str(zav_sav))
@@ -64,7 +64,7 @@ def courb(tab):
 path='../mascaret/cadre_test.loi'
 tab=read_loi(path)
 tab=ptrait(tab)
-print(tab[np.where(tab[:, 0] == 3)])
+#print(tab[np.where(tab[:, 0] == 3)])
 courb(tab)
 print(tab)
 

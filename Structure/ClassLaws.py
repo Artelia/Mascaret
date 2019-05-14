@@ -343,12 +343,27 @@ class ClassLaws:
         # print("Remout Total", remout)
         return [q, zav, zav + remout]
 
+    def  filtre_list(self, liste, valG,valD) :
+        """
+        To filter list
+        :param liste: list to filter
+        :param valG: left value
+        :param valD:  right value
+        :return: (list)
+        """
+        idx = np.where(valG < liste)[0]
+        sortie = liste[idx]
+        idx = np.where(sortie < valD)[0]
+
+        return list(sortie[idx])
+
     def bradley(self, id_config, method='Bradley 78', ui=None):
         """cas methode bradley"""
 
         # *************************************
         self.init_method(id_config)
-
+        first= True
+        #list_final = []
         list_final = []
 
         (coef_cor_biais, type_kb, list_ph, list_e) = self.init_bradley(method,id_config)
@@ -365,11 +380,11 @@ class ClassLaws:
         # self.list_zav=[9.75,6.25]
         ztransi=  min(self.param_elem['ZMAXELEM'])# Z de transition
 
-
         for zav in self.list_zav:
             list_brad = []
             qmax = self.param_g['MINQ']
             za = self.list_zam[0]
+            brad_lim = None
             for q in self.list_q:
                 value = self.meth_brad(zav-self.minz, q, coef_cor_biais, type_kb, list_ph, list_e)
                 # [q, zav, zav + remout]
@@ -378,36 +393,47 @@ class ClassLaws:
                     continue
                 else:
                     if value[2] > ztransi:
+                        brad_lim = value
                         break
                     # print('brad va', value)
-                    list_final.append(value)
+                    #list_final.append(value)
                     list_brad.append(value)
 
-            # hyp. forcage zav<zam,(car MINQ >0)
-
+            # traitement entre les deux loi
+            list_ori = []
             if len(list_brad) > 0 :
-                qmax = max(np.array(list_brad)[:, 0])
-                za = list_brad[-1][2]
+                # interpol ztrans
+                list_ori.append(list_brad[-1])
+                if  brad_lim :
+                    list_ztran = self.filtre_list(self.list_zam, list_brad[-1][2], ztransi)
+                    # interpolation
+                    list_ztran = list_ztran + [ztransi]
+                    q_tmp = np.array([list_brad[-1][0], brad_lim[0]])
+                    zam_tmp = np.array([list_brad[-1][2], brad_lim[2]])
+                    q_new = np.interp(list_ztran, zam_tmp,q_tmp)
+                    interpol_list = [[a,b,c] for a,b,c in zip(q_new, [zav] * len(list_ztran), list_ztran)]
+
+                    list_ori =  list_ori + interpol_list
+                    qmax = max(q_new)
+                    za = ztransi
+                else:
+                    qmax = max(np.array(list_brad)[:, 0])
+                    za = list_brad[-1][2]
+                    list_ori.append([qmax, zav, za])
             else:
                 qmax= self.deb_min
                 za = zav
-            #******************* OK **********************************
-            # idx = list_zam.index(zav)
+                list_ori.append([qmax,zav,za])
+
 
             idx = np.where(self.list_zam > za)[0]
             if len(idx) > 0 :
-                if self.list_zam[idx[0]-1] == zav:
-                    if self.deb_min == qmax:
-                        list_final.append([self.deb_min, zav, zav])
+                # if self.list_zam[idx[0]-1] == zav:
+                    #if self.deb_min == qmax:
+                       # list_final.append([self.deb_min, zav, zav])
                 for zam in self.list_zam[idx[0]:]:
                     if zav != zam:
                         q_seuil = 0
-                        # q_ori = self.meth_orif_mas(zam, zav, zinf_vann, self.param_g['ZPC'],
-                        #                          self.param_g['TOTALOUV'], cf, cfo , surf)
-                        # q_ori = self.meth_orif_cano(zam, zav, zinf_vann, self.param_elem['ZMAXELEM'][0], zcret,
-                        #                             self.param_g['TOTALOUV'], self.param_g['COEFDS'],
-                        #                             self.param_g['COEFDO'], self.param_elem['SURFELEM'])
-                        # print(q_ori,self.param_g['TOTALOUV'])
                         q_ori=0
                         for i,zsup in enumerate(self.param_elem['ZMAXELEM']):
                             q_ori += self.meth_orif_cano(zam, zav, zinf_vann, zsup, zcret,
@@ -422,30 +448,52 @@ class ClassLaws:
                             value = None
                         else:
                             value = [q_ori + q_seuil, zav, zam]
-
+                        # print('cccccccccc')
+                        # print(q_ori + q_seuil,zav, zam)
+                        # print('cccccccccc')
                         if value is None:
                             continue
                         else:
                             if value[0] > self.param_g['MAXQ']:
+                                list_ori.append(value)
                                 break
+                            #
+                            # if value[0] > qmax: # permet l'interpolation des valeur h superieur même si le débit inferieur
+                            # print('ori va',value)
+                            list_ori.append(value)
+                            #list_final.append(value)
 
-                            if value[0] > qmax:
-                                # print('ori va',value)
-                                list_final.append(value)
-                    # else:
+                    # else: # a priori inutil
                     #     list_final.append([self.deb_min, zav, zam])
+
+            # interpol q fix
+            if len(list_ori) > 1:
+                # list_q_tmp = self.list_q
+                idx = np.where(np.array(self.list_q) >list_ori[0][0])[0]
+                if len(idx) > 0:
+                    list_q_tmp = self.list_q[idx[0]:]
+                else:
+                    list_q_tmp = self.list_q
+                q_tmp =np.array(list_ori)[:,0]
+                zam_tmp = np.array(list_ori)[:, 2]
+                zam_f = np.interp(list_q_tmp,  q_tmp,zam_tmp)
+                interpol_list = [[a, b, c] for a, b, c in zip(list_q_tmp, [zav] * len(zam_f), zam_f)]
+                list_ori = interpol_list
+            else:
+                list_ori=[]
+            list_final = list_final + list_brad + list_ori
 
             if ui is not None:
                 ui.progress_bar(val)
         self.save_list_final(list_final, id_config, method)
-        if ui is not None:
-            ui.progress_bar(100)
-        f= open(r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\toto.csv','w')
-        f.write('q ;zav ;zam \n')
-        for val in list_final :
-            f.write('{}; {} ;{} \n'.format(val[0],val[1],val[2]))
-
-        f.close()
+        # if ui is not None:
+        #     ui.progress_bar(100)
+        # f= open(r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\toto.csv','w')
+        # f.write('q ;zav ;zam \n')
+        # for val in list_final :
+        #     f.write('{}; {} ;{} \n'.format(val[0],val[1],val[2]))
+        #
+        # f.close()
 
         return list_final
 
@@ -570,7 +618,7 @@ class ClassLaws:
         hav = min(h1, h2)
         ham = max(h1, h2)
         epsd = 0.01
-        epso = 0.05 * (zcret - zsup)
+        epso = 0# 0.05 * (zcret - zsup)
         rac_epsd = m.sqrt(0.01)
         ct = cfo * m.sqrt(2 * self.grav)
         if (h1 >= h2):

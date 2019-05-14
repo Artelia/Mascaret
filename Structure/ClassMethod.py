@@ -584,34 +584,34 @@ class ClassMethod:
                 info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
                 info = info[info[:, 1].argsort(kind='mergesort')]
                 info = info[info[:, 0].argsort(kind='mergesort')]
-                #list_final = list(info)
-                list_final= self.complete_law(info)
+                list_final = list(info)
+                # list_final= self.complete_law(info)
 
                 for val in list_final:
                     dico = {'flowrate': val[0], 'z_downstream': val[1], 'z_upstream': val[2]}
                     fich.write(chaine.format(**dico))
 
-    def complete_law(self, info):
-        new_info=[]
-        q_unique = np.unique(info[:,0])
-        h_unique = np.unique(info[:, 1])
-        for deb in q_unique:
-            info_tmp = info[np.where(info[:,0]==deb)]
-            # if len(info_tmp)>1:
-            hmax = max(list(info_tmp[:, 1]))
-            idmax = list(info_tmp[:, 1]).index(hmax)
-            hmin = min(list(info_tmp[:, 1]))
-            idmin = list(info_tmp[:, 1]).index(hmin)
-            varmax = abs(info_tmp[idmax , 1]-info_tmp[idmax , 2])
-
-            val_tmp=np.interp(h_unique, info_tmp[:, 1], info_tmp[:, 2])
-
-            for i,hau in enumerate(h_unique):
-                valf =  val_tmp[i]
-                if hau > hmax:
-                    valf = hau + varmax
-                new_info.append([deb,hau,valf])
-        return new_info
+    # def complete_law(self, info):
+    #     new_info=[]
+    #     q_unique = np.unique(info[:,0])
+    #     h_unique = np.unique(info[:, 1])
+    #     for deb in q_unique:
+    #         info_tmp = info[np.where(info[:,0]==deb)]
+    #         # if len(info_tmp)>1:
+    #         hmax = max(list(info_tmp[:, 1]))
+    #         idmax = list(info_tmp[:, 1]).index(hmax)
+    #         hmin = min(list(info_tmp[:, 1]))
+    #         idmin = list(info_tmp[:, 1]).index(hmin)
+    #         varmax = abs(info_tmp[idmax , 1]-info_tmp[idmax , 2])
+    #
+    #         val_tmp=np.interp(h_unique, info_tmp[:, 1], info_tmp[:, 2])
+    #
+    #         for i,hau in enumerate(h_unique):
+    #             valf =  val_tmp[i]
+    #             if hau > hmax:
+    #                 valf = hau + varmax
+    #             new_info.append([deb,hau,valf])
+    #     return new_info
 
 
     def save_law_st(self, method, id_config, list_val):
