@@ -821,6 +821,7 @@ class ClassMascaret:
         fich_xcas = '{}_init.xcas'.format(self.baseName)
         parametres_generaux.find('fichMotsCles').text = fich_xcas
         parametres_generaux.find('code').text = '1'
+        parametres_generaux.find('presenceCasiers').text = 'false'
         parametres_temporels = param_cas.find('parametresTemporels')
         parametres_temporels.find('pasTemps').text = '{}'.format(dt_init)
         parametres_temporels.find('critereArret').text = '2'

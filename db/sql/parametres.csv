@@ -7,7 +7,7 @@
 7;fichSauvModele;mascaret.tmp;mascaret.tmp;mascaret.tmp;;parametresGeneraux;;False;parameters
 8;validationCode;FALSE;FALSE;FALSE;;parametresGeneraux;;False;parameters
 9;typeValidation;1;1;1;;parametresGeneraux;;False;parameters
-10;presenceCasiers;FALSE;FALSE;FALSE;Presence of storage area;parametresGeneraux;;False;parameters
+10;presenceCasiers;FALSE;FALSE;FALSE;Presence of storage area;parametresGeneraux;;True;parameters
 11;bibliotheque;mascaretV5P1.a damoV3P0.a;mascaretV5P1.a damoV3P0.a;mascaretV5P1.a damoV3P0.a;;parametresGeneraux;bibliotheques;False;parameters
 12;perteChargeConf;FALSE;FALSE;FALSE;Automatic head losses at junctions;parametresModelePhysique;;True;parameters
 13;compositionLits;1;1;1;Cross section layout;parametresModelePhysique;;True;parameters
