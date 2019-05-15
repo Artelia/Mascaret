@@ -486,8 +486,8 @@ class ClassLaws:
             if ui is not None:
                 ui.progress_bar(val)
         self.save_list_final(list_final, id_config, method)
-        # if ui is not None:
-        #     ui.progress_bar(100)
+        if ui is not None:
+            ui.progress_bar(100)
         # f= open(r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\toto.csv','w')
         # f.write('q ;zav ;zam \n')
         # for val in list_final :
