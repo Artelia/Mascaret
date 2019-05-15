@@ -11,12 +11,13 @@ name=Mascaret
 description=Pre and Post-processing for Mascaret (http://www.opentelemac.org/).
 about= Plugin dedicated to the building and exploitation of Mascaret models.
        Requires PostgreSQL and PostGIS.
-       Developed by Mehdi-Pierre DAOU, Christophe COULET (Artelia),Bagot Philippe (Cerema)
+       Developed by Mehdi-Pierre DAOU, Christophe COULET (Artelia)
+       With contribution of Philippe BAGOT (Cerema) for storage area
        Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
        Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek (Many thanks for the work they've done on RiverGis)
 
 qgisMinimumVersion=2.18
-qgisMaximumVersion=3.4
+qgisMaximumVersion=3.99
 
 version=0.4.0
 
@@ -29,12 +30,14 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    0.4.0 :  Add Bradley method for hydraulic structure
-             Add hydraulic structure GUI
-             Add hydraulic structure table
+    0.4.0 :  Addition of Bradley method for hydraulic structure
+             Addition of hydraulic structure GUI
+             Addition of hydraulic structure table
+    0.3.4  : Correction of Ctrl+C Ctrl+V bug for the  table of hydro. results
+    0.3.3  : Correction of import bug
     0.3.2  : Modification of basins and links result tables
-    0.3.1  : Add added water quality feature
-    0.2.1  : Add added basin feature
+    0.3.1  : Addition of water quality feature
+    0.2.1  : Addition of basin(or storage area) feature
     0.1.13 : Correction of parameters GUI bug
              Correction of weirs bug in xcas file
              Correction of connection data base bug
