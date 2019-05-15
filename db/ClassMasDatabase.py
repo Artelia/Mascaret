@@ -505,8 +505,10 @@ class ClassMasDatabase(object):
                                                                                    'parametres',
                                                                                    var,
                                                                                    valeurs)
-
         self.run_query(sql, many=True, list_many=liste_value)
+
+        sql = """UPDATE {}.parametres SET gui='True' WHERE parametre='presenceCasiers';"""
+        self.run_query(sql.format(self.SCHEMA))
 
     def add_table_wq(self, dossier):
         """
