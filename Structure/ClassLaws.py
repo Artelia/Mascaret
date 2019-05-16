@@ -387,6 +387,7 @@ class ClassLaws:
                     list_brad.append(value)
 
             # traitement entre les deux loi
+
             list_ori = []
             if len(list_brad) > 0 :
                 # interpol ztrans
@@ -401,7 +402,6 @@ class ClassLaws:
                     interpol_list = [[a,b,c] for a,b,c in zip(q_new, [zav] * len(list_ztran), list_ztran)]
 
                     list_ori =  list_ori + interpol_list
-                    print(list_ori,zav)
                     qmax = max(q_new)
                     za = ztransi
                 else:
@@ -448,15 +448,15 @@ class ClassLaws:
 
             # interpol q fix
             if len(list_ori) > 1:
-                # list_q_tmp = self.list_q
                 idx = np.where(np.array(self.list_q) >list_ori[0][0])[0]
                 if len(idx) > 0:
                     list_q_tmp = self.list_q[idx[0]:]
                 else:
                     list_q_tmp = self.list_q
+
                 q_tmp =np.array(list_ori)[:,0]
                 zam_tmp = np.array(list_ori)[:, 2]
-                zam_f = np.interp(list_q_tmp,  q_tmp,zam_tmp)
+                zam_f = np.interp(list_q_tmp, q_tmp, zam_tmp)
                 interpol_list = [[a, b, c] for a, b, c in zip(list_q_tmp, [zav] * len(zam_f), zam_f)]
                 list_ori = interpol_list
             else:
@@ -468,12 +468,7 @@ class ClassLaws:
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
-        f= open(r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\toto.csv','w')
-        f.write('q ;zav ;zam \n')
-        for val in list_final :
-            f.write('{}; {} ;{} \n'.format(val[0],val[1],val[2]))
-
-        f.close()
+        self.test_csv(list_final)
 
         return list_final
 
@@ -668,12 +663,11 @@ class ClassLaws:
         """
         tmp = np.array(list_final)
         qmin = min(tmp[:,0])
-        # min des qmax
-        qmax = self.search_qmax(tmp)
+
+        qmax = max(tmp[:,0])
         # int(qmin) pour avoir des valeurs rondes
         q_new = np.arange(int(qmin), qmax , pasq)
         q_new[0]=qmin
-
         list_final=[]
         for zav in np.unique(tmp[:,1]):
             idx = np.where(tmp[:,1] == zav)[0]
@@ -691,6 +685,7 @@ class ClassLaws:
 
     def borda(self, id_config, method='Borda', ui=None):
         """Borda methode for structure"""
+        # TODO a check bizar
         self.init_method(id_config)
         list_final = []
         qmax = self.deb_min #self.param_g['MINQ']
@@ -716,11 +711,11 @@ class ClassLaws:
                 for zam in self.list_zam[idx[0]:]:
                     q_seuil = 0
                     q_bor = self.meth_borda(pr_area_wet, area_wet, zam, zav)
-                    # print('q_bor',q_bor,zav,zam)
+                    print('q_bor',q_bor,zav,zam)
 
                     if zam >= zcret:
                         q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
-                        # print('q_seuil', q_seuil,zav,zam)
+                        print('q_seuil', q_seuil,zav,zam)
                     if q_bor is None:
                         value = None
                     else:
@@ -738,18 +733,19 @@ class ClassLaws:
 
         list_final = self.interpol_list_final_for_new_q(list_final, pasq=10)
         # print(list_final)
+        self.test_csv(list_final)
 
-        f= open(r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\toto.csv','w')
-        f.write('q ;zav ;zam \n')
-        for val in list_final :
-            f.write('{}; {} ;{} \n'.format(val[0],val[1],val[2]))
-        f.close()
 
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
         return list_final
-
+    def test_csv(self,list_final):
+        f= open(r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\toto.csv','w')
+        f.write('q ;zav ;zam \n')
+        for val in list_final :
+            f.write('{}; {} ;{} \n'.format(val[0],val[1],val[2]))
+        f.close()
     def orifice(self, id_config, method='Loi d\'orifice', ui=None):
         """orifice methode for structure"""
         self.init_method(id_config)
@@ -807,6 +803,9 @@ class ClassLaws:
                             qtest =value[0]
             if ui is not None:
                 ui.progress_bar(val)
+
+        list_final = self.interpol_list_final_for_new_q(list_final, pasq=10)
+        self.test_csv(list_final)
 
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
