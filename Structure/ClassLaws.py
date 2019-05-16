@@ -359,20 +359,12 @@ class ClassLaws:
 
     def bradley(self, id_config, method='Bradley 78', ui=None):
         """cas methode bradley"""
-
         # *************************************
         self.init_method(id_config)
-        first= True
-        #list_final = []
         list_final = []
 
         (coef_cor_biais, type_kb, list_ph, list_e) = self.init_bradley(method,id_config)
 
-
-        # surf = 0
-        # self.param_elem['SURFELEM']=[]
-        # for poly_trav in self.list_poly_trav:
-        #     surf += poly_trav.area
         val=90/len(self.list_zav)
 
         zinf_vann = self.poly_p.bounds[1]  # z min du profil
@@ -382,21 +374,16 @@ class ClassLaws:
 
         for zav in self.list_zav:
             list_brad = []
-            qmax = self.param_g['MINQ']
-            za = self.list_zam[0]
             brad_lim = None
             for q in self.list_q:
                 value = self.meth_brad(zav-self.minz, q, coef_cor_biais, type_kb, list_ph, list_e)
                 # [q, zav, zav + remout]
-
                 if value is None:
                     continue
                 else:
                     if value[2] > ztransi:
                         brad_lim = value
                         break
-                    # print('brad va', value)
-                    #list_final.append(value)
                     list_brad.append(value)
 
             # traitement entre les deux loi
@@ -414,6 +401,7 @@ class ClassLaws:
                     interpol_list = [[a,b,c] for a,b,c in zip(q_new, [zav] * len(list_ztran), list_ztran)]
 
                     list_ori =  list_ori + interpol_list
+                    print(list_ori,zav)
                     qmax = max(q_new)
                     za = ztransi
                 else:
@@ -424,7 +412,6 @@ class ClassLaws:
                 qmax= self.deb_min
                 za = zav
                 list_ori.append([qmax,zav,za])
-
 
             idx = np.where(self.list_zam > za)[0]
             if len(idx) > 0 :
@@ -448,23 +435,16 @@ class ClassLaws:
                             value = None
                         else:
                             value = [q_ori + q_seuil, zav, zam]
-                        # print('cccccccccc')
-                        # print(q_ori + q_seuil,zav, zam)
-                        # print('cccccccccc')
                         if value is None:
                             continue
                         else:
                             if value[0] > self.param_g['MAXQ']:
                                 list_ori.append(value)
                                 break
-                            #
-                            # if value[0] > qmax: # permet l'interpolation des valeur h superieur même si le débit inferieur
+                            # if value[0] > qmax: # permet l'interpolation des valeurs h superieur même si le débit inferieur
                             # print('ori va',value)
+                            # probléme peut venir de ça
                             list_ori.append(value)
-                            #list_final.append(value)
-
-                    # else: # a priori inutil
-                    #     list_final.append([self.deb_min, zav, zam])
 
             # interpol q fix
             if len(list_ori) > 1:
@@ -488,12 +468,12 @@ class ClassLaws:
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
-        # f= open(r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\toto.csv','w')
-        # f.write('q ;zav ;zam \n')
-        # for val in list_final :
-        #     f.write('{}; {} ;{} \n'.format(val[0],val[1],val[2]))
-        #
-        # f.close()
+        f= open(r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\toto.csv','w')
+        f.write('q ;zav ;zam \n')
+        for val in list_final :
+            f.write('{}; {} ;{} \n'.format(val[0],val[1],val[2]))
+
+        f.close()
 
         return list_final
 
@@ -662,6 +642,53 @@ class ClassLaws:
 
         return q
 
+    def search_qmax(self,tmp):
+        """
+        search the most little max
+        :param tmp: list of values
+        :return:
+        """
+        list_qmax = []
+        for zav in np.unique(tmp[:, 1]):
+            idx = np.where(tmp[:, 1] == zav)[0]
+            if len(idx)>0:
+                list_qmax.append(max(tmp[idx, 0]))
+        if list_qmax :
+            qmax = min(list_qmax)
+        else:
+            qmax= max(tmp[:, 0])
+
+        return qmax
+
+    def interpol_list_final_for_new_q(self, list_final, pasq = 10):
+        """
+        Search the  new (q, zav) couple and interpole with new q
+        :param list_final
+        :return:
+        """
+        tmp = np.array(list_final)
+        qmin = min(tmp[:,0])
+        # min des qmax
+        qmax = self.search_qmax(tmp)
+        # int(qmin) pour avoir des valeurs rondes
+        q_new = np.arange(int(qmin), qmax , pasq)
+        q_new[0]=qmin
+
+        list_final=[]
+        for zav in np.unique(tmp[:,1]):
+            idx = np.where(tmp[:,1] == zav)[0]
+            if len(idx)> 1:
+                q_tmp = tmp[idx,0]
+                zam_tmp = tmp[idx,2]
+                zam_f = np.interp(q_new, q_tmp, zam_tmp)
+                interpol_list = [[a, b, c] for a, b, c in zip(q_new, [zav] * len(zam_f), zam_f)]
+                list_ori = interpol_list
+            else:
+                list_ori = []
+            list_final = list_final + list_ori
+
+        return list_final
+
     def borda(self, id_config, method='Borda', ui=None):
         """Borda methode for structure"""
         self.init_method(id_config)
@@ -671,6 +698,7 @@ class ClassLaws:
         val=90/len(self.list_zav)
 
         for zav in self.list_zav:
+
             pr_area_wet = self.area_wet_fct(self.poly_p, zav)
             area_wet = 0
             for poly_trav in self.list_poly_trav:
@@ -700,15 +728,23 @@ class ClassLaws:
                     if value is None:
                         continue
                     else:
-                        #TODO Qmax que faire
-                        # if value[0] > self.param_g['MAXQ']:
-                        #     break
-
                         if value[0] > qmax:
                             # print('ori va',value)
                             list_final.append(value)
+
+
             if ui is not None:
                 ui.progress_bar(val)
+
+        list_final = self.interpol_list_final_for_new_q(list_final, pasq=10)
+        # print(list_final)
+
+        f= open(r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\toto.csv','w')
+        f.write('q ;zav ;zam \n')
+        for val in list_final :
+            f.write('{}; {} ;{} \n'.format(val[0],val[1],val[2]))
+        f.close()
+
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
@@ -749,9 +785,6 @@ class ClassLaws:
 
                 for zam in self.list_zam[idx[0]:]:
                     q_seuil = 0
-                    # q_ori = self.meth_orif_cano(zam, zav, zinf_vann, self.param_g['ZPC'], zcret,
-                    #                             self.param_g['TOTALOUV'], self.param_g['COEFDS'],
-                    #                             self.param_g['COEFDO'], surf)
                     q_ori = 0
                     for i,zsup in enumerate(self.param_elem['ZMAXELEM']):
                         q_ori += self.meth_orif_cano(zam, zav, zinf_vann, zsup, zcret,
@@ -767,11 +800,6 @@ class ClassLaws:
                     if value is None:
                         continue
                     else:
-
-                        #TODO Qmax que faire
-                        # if value[0] > self.param_g['MAXQ']:
-                        #     break
-
                         if value[0] > qmax and value[0]>qtest:
                             # print('ori va',value)
                             list_final.append(value)
@@ -779,6 +807,7 @@ class ClassLaws:
                             qtest =value[0]
             if ui is not None:
                 ui.progress_bar(val)
+
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
