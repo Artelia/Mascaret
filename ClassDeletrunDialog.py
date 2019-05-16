@@ -17,57 +17,60 @@ email                :
  *                                                                         *
  ***************************************************************************/
  """
+import os
+from datetime import datetime
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
-from qgis.PyQt.uic import *
-from qgis.PyQt.QtCore import *
-if int(qVersion()[0])<5:   #qt4
+
+from .ui.custom_control import ClassWarningBox
+
+if int(qVersion()[0]) < 5:  # qt4
 
     from qgis.PyQt.QtGui import *
-else: #qt4
+else:  # qt4
     from qgis.PyQt.QtWidgets import *
 
-from datetime import datetime
-import os
 
-from .ui.warningbox import Class_warningBox
-
-
-class class_deletrun_dialog(QDialog):
-
+class ClassDeletrunDialog(QDialog):
+    """
+    Class allow to delete run
+    """
     def __init__(self, mgis, iface):
         QDialog.__init__(self)
-        self.mgis=mgis
-        self.mdb =self.mgis.mdb
+        self.mgis = mgis
+        self.mdb = self.mgis.mdb
         self.iface = iface
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_delete.ui'), self)
-        self.box = Class_warningBox(self.mgis)
-        self.initGUI()
+        self.box = ClassWarningBox(self.mgis)
+        self.listeRuns = []
+        self.listeScen = {}
+        self.init_gui()
 
-    def initGUI(self):
-
-        listeCol = self.mdb.listColumns('runs')
+    def init_gui(self):
+        """
+            initialisation GUI
+        """
+        liste_col = self.mdb.list_columns('runs')
+        self.cond_com = ('comments' in liste_col)
 
         dico = self.mdb.select("runs", "", "date")
 
-        self.listeRuns = []
-        self.listeScen = {}
-        self.cond_com=('comments' in listeCol)
-
         if self.cond_com:
-            for run, scen, date,comments in zip(dico["run"], dico["scenario"], dico["date"], dico["comments"]):
-                if not run in self.listeRuns:
+            for run, scen, date, comments in zip(dico["run"], dico["scenario"], dico["date"], dico["comments"]):
+                if run not in self.listeRuns:
                     self.listeRuns.append(run)
                     self.listeScen[run] = []
-                self.listeScen[run].append((scen, date,comments))
+                self.listeScen[run].append((scen, date, comments))
         else:
             for run, scen, date in zip(dico["run"], dico["scenario"], dico["date"]):
-                if not run in self.listeRuns:
+                if run not in self.listeRuns:
                     self.listeRuns.append(run)
                     self.listeScen[run] = []
                 self.listeScen[run].append((scen, date))
 
-        if len(self.listeRuns)>0:
+        if len(self.listeRuns) > 0:
             self.tree = self.ui.treeWidget
 
             self.parent = {}
@@ -86,8 +89,8 @@ class class_deletrun_dialog(QDialog):
 
                 self.child[run] = {}
                 maxi = datetime(1900, 1, 1, 0, 0)
-                if self.cond_com :
-                    for scen, date,comments in self.listeScen[run]:
+                if self.cond_com:
+                    for scen, date, comments in self.listeScen[run]:
                         self.child[run][scen] = QTreeWidgetItem(self.parent[run])
                         self.child[run][scen].setFlags(self.child[run][scen].flags() |
                                                        Qt.ItemIsUserCheckable)
@@ -123,15 +126,14 @@ class class_deletrun_dialog(QDialog):
         self.ui.b_delete.clicked.connect(self.lancement)
         self.ui.b_cancel.clicked.connect(self.annule)
 
-
     def lancement(self):
-
+        """ Delete selection function"""
         selection = {}
         for run in self.listeRuns:
             if self.parent[run].checkState(0) > 0:
                 selection[run] = []
                 if self.cond_com:
-                    for scen, date,comments in self.listeScen[run]:
+                    for scen, date, comments in self.listeScen[run]:
                         if self.child[run][scen].checkState(0) > 1:
                             selection[run].append("'{}'".format(scen))
                 else:
@@ -142,10 +144,10 @@ class class_deletrun_dialog(QDialog):
         self.close()
 
         self.iface.messageBar().clearWidgets()
-        progressMessageBar = self.iface.messageBar()
+        progress_message_bar = self.iface.messageBar()
         progress = QProgressBar()
         progress.setMaximum(100)
-        progressMessageBar.pushWidget(progress)
+        progress_message_bar.pushWidget(progress)
 
         n = len(selection.keys())
         ok = self.box.yes_no_q('Do you want to delete ?')
@@ -155,15 +157,16 @@ class class_deletrun_dialog(QDialog):
                 sql = "run = '{0}' AND scenario IN ({1})".format(run,
                                                                  ",".join(scenarios))
                 self.mdb.delete("resultats", sql)
+                self.mdb.delete("resultats_basin", sql)
+                self.mdb.delete("resultats_links", sql)
                 self.mdb.delete("runs", sql)
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Deletion of {0} scenario for {1} is done".format(scenarios, run))
-
+                    self.mgis.add_info("Deletion of {0} scenario for {1} is done".format(scenarios, run))
 
                 progress.setValue(i / float(n) * 100)
 
         self.iface.messageBar().clearWidgets()
 
     def annule(self):
+        """"Cancel """
         self.close()
-

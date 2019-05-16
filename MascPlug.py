@@ -17,59 +17,52 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-
-
-
-
-from qgis.PyQt.uic import *
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.uic import *
 
-if int(qVersion()[0])<5:
-    from qgis.PyQt.QtGui import QApplication,QAction,QIcon
+from .MascPlugDialog import MascPlugDialog
+
+if int(qVersion()[0]) < 5:
+    from qgis.PyQt.QtGui import QApplication, QAction, QIcon
     try:
         from . import resources
     except ImportError:
         pass
-else:    #qt5
-    from qgis.PyQt.QtWidgets import QApplication,QAction
+else:  # qt5
+    from qgis.PyQt.QtWidgets import QApplication, QAction
     from qgis.PyQt.QtGui import QIcon
+
     try:
         from . import resourcesQT5
     except ImportError:
         pass
 
 
-
-from .MascPlug_dialog import MascPlugDialog
-
-# Import the code for the dialog
-
-
-
 class MascPlug:
     """QGIS Plugin Implementation."""
+
     def __init__(self, iface):
         self.iface = iface
         self.dlg = None
         self.icon_path = ":/plugins/Mascaret/icones/icon_base.png"
-        self.namePlug='Mascaret'
-
+        self.name_plug = 'Mascaret'
 
     def initGui(self):
-        self.action = QAction(QIcon(self.icon_path), QApplication.translate(self.namePlug, self.namePlug),
+        """ initialisation GUI"""
+        self.action = QAction(QIcon(self.icon_path), QApplication.translate(self.name_plug, self.name_plug),
                               self.iface.mainWindow())
-        self.action.setObjectName(self.namePlug)
+        self.action.setObjectName(self.name_plug)
 
         # QObject.connect(self.action, SIGNAL('triggered()'), self.run)
         self.action.triggered.connect(self.run)
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.action)
-        self.iface.addPluginToMenu(QApplication.translate(self.namePlug, self.namePlug), self.action)
+        self.iface.addPluginToMenu(QApplication.translate(self.name_plug, self.name_plug), self.action)
 
     def unload(self):
         # Remove the plugin menu item and icon
         self.iface.removeToolBarIcon(self.action)
-        self.iface.removePluginMenu(QApplication.translate(self.namePlug, self.namePlug), self.action)
+        self.iface.removePluginMenu(QApplication.translate(self.name_plug, self.name_plug), self.action)
 
         if self.dlg is not None:
             self.dlg.close()
@@ -78,14 +71,12 @@ class MascPlug:
         # keep opened only one instance
         if self.dlg is None:
             self.dlg = MascPlugDialog(self.iface)
-            self.dlg.destroyed.connect(self.onDestroyed)
-            # QObject.connect(self.dlg, SIGNAL('destroyed(QObject *)'), self.onDestroyed)
+            self.dlg.destroyed.connect(self.on_destroyed)
+            # QObject.connect(self.dlg, SIGNAL('destroyed(QObject *)'), self.on_destroyed)
         self.dlg.show()
         self.dlg.raise_()
         self.dlg.setWindowState(self.dlg.windowState() & ~Qt.WindowMinimized)
         self.dlg.activateWindow()
 
-    def onDestroyed(self, obj):
+    def on_destroyed(self, obj):
         self.dlg = None
-
-

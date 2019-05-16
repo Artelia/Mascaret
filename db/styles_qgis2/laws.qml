@@ -21,7 +21,7 @@
         <value key="Rating curve Q=f(Z)" value="5"/>
         <value key="Rating curve Z=f(Q)" value="4"/>
         <value key="Hydrograph Q(t)" value="1"/>
-        <value key="limnograph Z(t)" value="2"/>
+        <value key="limnigraph Z(t)" value="2"/>
         <value key="Limnihydrograph Z,Q(t)" value="3"/>
         <value key="Weir Zam=f(Q,Zav)" value="6"/>
         <value key="Floodgate Zinf,Zsup=f(t)" value="7"/>

@@ -18,23 +18,21 @@ email                :
  ***************************************************************************/
 """
 
-
+# from shapely.wkb import loads
+import numpy as np
 from qgis.PyQt.QtCore import *
 from qgis.core import *
 from qgis.gui import *
-#from shapely.wkb import loads
-import numpy as np
 
 
+class ClassMNT(QObject):
+    """Example worker for calculating the total area of all features in a layer"""
 
-class Worker(QObject):
-    '''Example worker for calculating the total area of all features in a layer'''
-
-    def __init__(self,main, profil, raster, facteur):
+    def __init__(self, main, profil, raster, facteur):
         QObject.__init__(self)
-        self.mgis=main
+        self.mgis = main
         self.profil = profil
-        self.rasterProvider = raster.dataProvider()
+        self.raster_provider = raster.dataProvider()
         self.res = raster.rasterUnitsPerPixelX()
         self.facteur = facteur
         self.mnt = {}
@@ -50,9 +48,9 @@ class Worker(QObject):
             geomcoupe = feature.geometry()
             longueur = geomcoupe.length()
             if longueur < self.res:
-                self.mgis.addInfo("Problem {0} between lenght profile : {1} and Raster accurancy : {2}."
-                                  .format(feature["name"],longueur,self.res))
-                self.mgis.addInfo("This problem could come from the projection units.")
+                self.mgis.add_info("Problem {0} between lenght profile : {1} and Raster accurancy : {2}."
+                                   .format(feature["name"], longueur, self.res))
+                self.mgis.add_info("This problem could come from the projection units.")
 
             else:
                 nom = feature["name"]
@@ -60,32 +58,27 @@ class Worker(QObject):
                 feature["xmnt"] = ""
                 feature["zmnt"] = ""
 
-                #self.res taille du la résolution du raster
-                print("int(longueur)",longueur,"int(self.res)",self.res)
+                # self.res taille du la résolution du raste
 
-                for dist in np.arange(0.0, round(longueur,3), round(self.res,3)):
+                for dist in np.arange(0.0, round(longueur, 3), round(self.res, 3)):
 
                     point = geomcoupe.interpolate(dist)
-                    ident = self.rasterProvider.identify(point.asPoint(),
-                                                         QgsRaster.IdentifyFormatValue).results()
+                    ident = self.raster_provider.identify(point.asPoint(),
+                                                          QgsRaster.IdentifyFormatValue).results()
 
                     if ident[1]:
                         feature["xmnt"] += " " + str(dist)
                         feature["zmnt"] += " " + str(ident[1] / self.facteur)
                 self.profil.updateFeature(feature)
 
-
-                if len(feature["zmnt"])>0:
-                    self.mgis.addInfo("Extraction of {0} : Ok".format(feature['name'] ))
+                if len(feature["zmnt"]) > 0:
+                    self.mgis.add_info("Extraction of {0} : Ok".format(feature['name']))
                 else:
-                    self.mgis.addInfo("Extraction of {} : Echec".format(feature['name']))
-                    self.mgis.addInfo("This problem could come from the different projection"
-                                      " between the raster and the profile")
+                    self.mgis.add_info("Extraction of {} : Echec".format(feature['name']))
+                    self.mgis.add_info("This problem could come from the different projection"
+                                       " between the raster and the profile")
 
-        try:#qgis2
+        try:  # qgis2
             self.profil.saveEdits()
-        except: # qgis 3
-            pass
-
-
-
+        except:  # qgis 3
+            self.profil.commitChanges()

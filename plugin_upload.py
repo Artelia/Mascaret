@@ -5,8 +5,8 @@
         git sha              : $TemplateVCSFormat
 """
 
-import sys
 import getpass
+import sys
 import xmlrpclib
 from optparse import OptionParser
 
@@ -38,18 +38,18 @@ def main(parameters, arguments):
     try:
         plugin_id, version_id = server.plugin.upload(
             xmlrpclib.Binary(open(arguments[0]).read()))
-        print ("Plugin ID: {}".format( plugin_id))
-        print ("Version ID: {}".format(version_id))
+        print("Plugin ID: {}".format(plugin_id))
+        print("Version ID: {}".format(version_id))
     except xmlrpclib.ProtocolError, err:
-        print ("A protocol error occurred")
-        print ("URL: {}".format( hide_password(err.url, 0)))
-        print ("HTTP/HTTPS headers: {}".format( err.headers))
-        print ("Error code: {}".format( err.errcode))
-        print ("Error message: {}".format( err.errmsg))
+        print("A protocol error occurred")
+        print("URL: {}".format(hide_password(err.url, 0)))
+        print("HTTP/HTTPS headers: {}".format(err.headers))
+        print("Error code: {}".format(err.errcode))
+        print("Error message: {}".format(err.errmsg))
     except xmlrpclib.Fault, err:
-        print ("A fault occurred")
-        print ("Fault code: {}".format( err.faultCode))
-        print ("Fault string: {}".format(err.faultString))
+        print("A fault occurred")
+        print("Fault code: {}".format(err.faultCode))
+        print("Fault string: {}".format(err.faultString))
 
 
 def hide_password(url, start=6):
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         help="Specify server name", metavar="plugins.qgis.org")
     options, args = parser.parse_args()
     if len(args) != 1:
-        print ("Please specify zip file.\n")
+        print("Please specify zip file.\n")
         parser.print_help()
         sys.exit(1)
     if not options.server:
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     if not options.username:
         # interactive mode
         username = getpass.getuser()
-        print ("Please enter user name [{}] :".format(username))
+        print("Please enter user name [{}] :".format(username))
         res = raw_input()
         if res != "":
             options.username = res

@@ -65,7 +65,7 @@
                 <Option name="Hydrograph Q(t)" type="QString" value="1"/>
               </Option>
               <Option type="Map">
-                <Option name="limnograph Z(t)" type="QString" value="2"/>
+                <Option name="limnigraph Z(t)" type="QString" value="2"/>
               </Option>
               <Option type="Map">
                 <Option name="Limnihydrograph Z,Q(t)" type="QString" value="3"/>
