@@ -429,7 +429,7 @@ class ClassMascaret:
         branches["abscdebut"] = []
         branches["abscfin"] = []
 
-        liste = zip(profils["abscissa"], profils["branchnum"])
+        liste = list(zip(profils["abscissa"], profils["branchnum"]))
         for i, num in enumerate(numero):
             temp = [a for a, n in liste if n == num]
             if temp:
