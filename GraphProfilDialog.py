@@ -2517,7 +2517,7 @@ class GraphHydro(GraphCommon):
         # TODO
         if abs(val) == 10:
             var = 'selection'
-            val = val / 10
+            val = int(val / 10)
         else:
             var = self.inv
 
@@ -3047,7 +3047,7 @@ class GraphBasin(GraphCommon):
         # TODO
         if abs(val) == 10:
             # var = 'selection'
-            val = val / 10
+            val = int(val / 10)
         # else:
         #    var = self.inv
 
