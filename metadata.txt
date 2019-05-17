@@ -33,6 +33,7 @@ changelog=
     0.3.4  : Correction of Ctrl+C Ctrl+V bug for the  table of hydro. results
              Correction of auto-initialisation bug for the basins
              Correction of next button in graphics
+             Correction of datetime  bug to write csv file
     0.3.3  : Correction of import bug
     0.3.2  : Modification of basins and links result tables
     0.3.1  : Addition of water quality feature
