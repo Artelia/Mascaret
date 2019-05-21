@@ -400,10 +400,13 @@ class ClassLaws:
                     zam_tmp = np.array([list_brad[-1][2], brad_lim[2]])
                     q_new = np.interp(list_ztran, zam_tmp,q_tmp)
                     interpol_list = [[a,b,c] for a,b,c in zip(q_new, [zav] * len(list_ztran), list_ztran)]
-
                     list_ori =  list_ori + interpol_list
                     qmax = max(q_new)
                     za = ztransi
+                    if not(ztransi in self.list_zav) :
+                        self.list_zav.sort()
+                        self.list_zav.append(ztransi)
+
                 else:
                     qmax = max(np.array(list_brad)[:, 0])
                     za = list_brad[-1][2]
@@ -463,14 +466,50 @@ class ClassLaws:
                 list_ori=[]
             list_final = list_final + list_brad + list_ori
 
+
             if ui is not None:
                 ui.progress_bar(val)
+        list_final = self.transition_charge(list_final,ztransi)
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
         self.test_csv(list_final)
 
         return list_final
+
+    def transition_charge(self,list_final,ztransi):
+        """
+
+        :param list_final: law interpol
+        :param ztransi:
+        :return:
+        """
+        #trie pour être sûr
+        print( "11111111111",info)
+
+        # cherche nb de debi
+        idxq = np.where(info[:,0] == self.list_q[0])[0]
+        lon= len(idxq)
+        #cherche position transition
+        idxz= np.where(info[0:lon, :] < ztransi)[0][-1]
+        print(idxz)
+        #ajout de Z pour  acroite le point d'infexion
+        for id, deb in enumerate(self.list_q):
+            tab_tmp = info[idxz+lon*id,:]
+            tab_tmp1 = info[idxz+lon*id+1, :]
+            print( tab_tmp, tab_tmp1,idxz,ztransi)
+            zmoy = (tab_tmp[1]+tab_tmp1[1])/2
+            ecart1 = tab_tmp[2]-tab_tmp[1]
+            z1 = (tab_tmp[1]+ 2 * zmoy)/3
+            ecart2 = tab_tmp1[2] - tab_tmp1[1]
+            z2 = (tab_tmp1[1] + 2 * zmoy) / 3
+            list_final.append([deb, z1, z1 + ecart1])
+            list_final.append([deb, zmoy, (tab_tmp1[2]+tab_tmp[2])/2])
+            list_final.append([deb, z2, z2 + ecart2])
+            print([deb, z1, z1 + ecart1],[deb, zmoy, (tab_tmp1[2]+tab_tmp[2])/2], [deb, z2, z2 + ecart2])
+        return list_final
+
+
 
     def save_list_final(self, list_final, id_config, method):
         # **********************************************************************************************
@@ -740,12 +779,14 @@ class ClassLaws:
         if ui is not None:
             ui.progress_bar(100)
         return list_final
+
     def test_csv(self,list_final):
         f= open(r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\toto.csv','w')
         f.write('q ;zav ;zam \n')
         for val in list_final :
             f.write('{}; {} ;{} \n'.format(val[0],val[1],val[2]))
         f.close()
+
     def orifice(self, id_config, method='Loi d\'orifice', ui=None):
         """orifice methode for structure"""
         self.init_method(id_config)
