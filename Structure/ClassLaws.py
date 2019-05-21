@@ -500,6 +500,54 @@ class ClassLaws:
 
         return list_final
 
+    def transition_charge2(self,list_final,ztransi):
+        """
+        :param list_final: law interpol
+        :param ztransi:
+        :return:
+        """
+        #trie pour être sûr
+        info = self.parent.sort_law(list_final)
+        # cherche nb de debit
+        idxq = np.where(info[:,0] == self.list_q[0])[0]
+        lon= len(idxq)
+        #cherche position transition
+        idxz= np.where(info[0:lon, :] < ztransi)[0][-1]
+        #ajout de Z pour  acroite le point d'infexion
+        for id, deb in enumerate(self.list_q):
+            tab_tmp = info[idxz+lon*id,:]
+            tab_tmp1 = info[idxz+lon*id+1, :]
+            tab_tmp2 = info[idxz + lon * id + 2, :]
+            dist0= abs(tab_tmp1[1] - tab_tmp[1] )
+            dist1=abs(tab_tmp2[1]  - tab_tmp1[1] )
+            z_tmp = [tab_tmp[1], tab_tmp2[1]]
+            zam_tmp = [tab_tmp[2], tab_tmp2[2]]
+            if dist0 < dist1:
+                zval = tab_tmp1[1]+dist0
+                zam_val = np.interp(zval , z_tmp, zam_tmp)
+                tab_tmp1=[deb, zval, zam_val]
+            elif dist0 > dist1 :
+                zval = tab_tmp1[1] - dist1
+                zam_val = np.interp(zval, z_tmp, zam_tmp)
+                tab_tmp = [deb, zval, zam_val]
+                tab_tmp1 = tab_tmp2
+            else:
+                tab_tmp1 = tab_tmp2
+
+            ecart1 = tab_tmp[2]-tab_tmp[1]
+            ecart2 = tab_tmp1[2] - tab_tmp1[1]
+            ecartmoy = (tab_tmp1[2]+tab_tmp[2]) / 2.
+
+            zmoy = (tab_tmp[1] + tab_tmp1[1]) / 2.
+            z1 = (2 * tab_tmp[1]+ tab_tmp1[1]) / 3.
+            z2 = (2 * tab_tmp1[1] + tab_tmp[1]) / 3.
+
+            list_final.append([deb, z1, z1 + ecart1])
+            list_final[idxz+lon*id+1] = [deb, zmoy, ecartmoy]
+            list_final.append([deb, z2, z2 + ecart2])
+
+        return list_final
+
     def save_list_final(self, list_final, id_config, method):
         # **********************************************************************************************
         # save
