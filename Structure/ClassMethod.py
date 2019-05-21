@@ -33,8 +33,6 @@ from shapely.geometry import *
 import time
 from .ClassLaws import ClassLaws
 from .ClassTableStructure import ClassTableStructure
-from scipy import interpolate
-
 
 class ClassMethod:
     def __init__(self, mgis):
@@ -578,8 +576,7 @@ class ClassMethod:
             if typel == 6:
                 fich.write('# Debit Cote_Aval Cote_Amont\n')
                 chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
-                list_final = self.sort_law(list_final)
-                # list_final= self.complete_law(info)
+                list_final = list(self.sort_law(list_final))
 
                 for val in list_final:
                     dico = {'flowrate': val[0], 'z_downstream': val[1], 'z_upstream': val[2]}
@@ -590,16 +587,14 @@ class ClassMethod:
         """
         sort the law
         :param list_final: law data
-
+        return numpy.array
         """
         info = np.array(list_final)
         # trie de la colonne 0 à 2
         info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
         info = info[info[:, 1].argsort(kind='mergesort')]
         info = info[info[:, 0].argsort(kind='mergesort')]
-        list_final=list(info)
-
-        return list_final
+        return info
 
 
     def save_law_st(self, method, id_config, list_val):
