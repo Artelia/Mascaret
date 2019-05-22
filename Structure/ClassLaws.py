@@ -391,19 +391,22 @@ class ClassLaws:
                 # interpol ztrans
                 list_ori.append(list_brad[-1])
                 if  brad_lim :
-                    list_ztran = self.filtre_list(self.list_zam, list_brad[-1][2], ztransi)
-                    # interpolation
-                    list_ztran = list_ztran + [ztransi]
-                    q_tmp = np.array([list_brad[-1][0], brad_lim[0]])
-                    zam_tmp = np.array([list_brad[-1][2], brad_lim[2]])
-                    q_new = np.interp(list_ztran, zam_tmp,q_tmp)
-                    interpol_list = [[a,b,c] for a,b,c in zip(q_new, [zav] * len(list_ztran), list_ztran)]
-                    list_ori =  list_ori + interpol_list
-                    # qmax = max(q_new)
+                    # change1
+                    # list_ztran = self.filtre_list(self.list_zam, list_brad[-1][2], ztransi)
+                    # # interpolation
+                    # list_ztran = list_ztran + [ztransi]
+                    # q_tmp = np.array([list_brad[-1][0], brad_lim[0]])
+                    # zam_tmp = np.array([list_brad[-1][2], brad_lim[2]])
+                    # q_new = np.interp(list_ztran, zam_tmp,q_tmp)
+                    # interpol_list = [[a,b,c] for a,b,c in zip(q_new, [zav] * len(list_ztran), list_ztran)]
+                    # list_ori =  list_ori + interpol_list
+                    # # qmax = max(q_new)
+                    # if not(ztransi in self.list_zav) :
+                    #     self.list_zav.sort()
+                    #     self.list_zav.append(ztransi)
+                    # change3 et4
                     za = ztransi
-                    if not(ztransi in self.list_zav) :
-                        self.list_zav.sort()
-                        self.list_zav.append(ztransi)
+
                 else:
                     qmax = max(np.array(list_brad)[:, 0])
                     za = list_brad[-1][2]
@@ -468,30 +471,76 @@ class ClassLaws:
 
         return list_final
 
-    def transition_charge(self,list_final,ztransi):
+    def transition_charge(self, list_final, ztransi):
         """
         :param list_final: law interpol
         :param ztransi:
         :return:
         """
-        #trie pour être sûr
+        # trie pour être sûr
         info = self.parent.sort_law(list_final)
         # cherche nb de debi
-        idxq = np.where(info[:,0] == self.list_q[0])[0]
-        lon= len(idxq)
-        #cherche position transition
-        idxz= np.where(info[0:lon, :] < ztransi)[0][-1]
-        #ajout de Z pour  acroite le point d'infexion
+        idxq = np.where(info[:, 0] == self.list_q[0])[0]
+        lon = len(idxq)
+        # cherche position transition
+        idxz = np.where(info[0:lon, :] < ztransi)[0][-1]
+        # ajout de Z pour  acroite le point d'infexion
         for id, deb in enumerate(self.list_q):
-            tab_tmp = info[idxz+lon*id,:]
-            tab_tmp1 = info[idxz+lon*id+1, :]
+            tab_tmp = info[idxz + lon * id, :]
+            tab_tmp1 = info[idxz + lon * id + 1, :]
 
-            ecart1 = tab_tmp[2]-tab_tmp[1]
+            ecart1 = tab_tmp[2] - tab_tmp[1]
             ecart2 = tab_tmp1[2] - tab_tmp1[1]
-            ecartmoy = (tab_tmp1[2]+tab_tmp[2]) / 2.
+            ecartmoy = (tab_tmp1[2] + tab_tmp[2]) / 2.
 
             zmoy = (tab_tmp[1] + tab_tmp1[1]) / 2.
-            z1 = (2 * tab_tmp[1]+ tab_tmp1[1]) / 3.
+            z1 = (2 * tab_tmp[1] + tab_tmp1[1]) / 3.
+            z2 = (2 * tab_tmp1[1] + tab_tmp[1]) / 3.
+
+            list_final.append([deb, z1, z1 + ecart1])
+            list_final.append([deb, zmoy, ecartmoy])
+            list_final.append([deb, z2, z2 + ecart2])
+
+        return list_final
+
+    def transition_charge3(self, list_final, ztransi):
+        """
+        :param list_final: law interpol
+        :param ztransi:
+        :return:
+        """
+        # trie pour être sûr
+        info = self.parent.sort_law(list_final)
+        # cherche nb de debit
+        idxq = np.where(info[:, 0] == self.list_q[0])[0]
+        lon = len(idxq)
+        # cherche position transition
+        idxz = np.where(info[0:lon, :] < ztransi)[0][-1]
+        # ajout de Z pour  acroite le point d'infexion
+        for id, deb in enumerate(self.list_q):
+            tab_tmp = info[idxz + lon * id, :]
+            tab_tmp1 = info[idxz + lon * id + 1, :]
+            #print(tab_tmp ,tab_tmp1,ztransi)
+            dist0 = abs(ztransi - tab_tmp[1])
+            dist1 = abs( tab_tmp1[1]- ztransi)
+            z_tmp = [tab_tmp[1], tab_tmp1[1]]
+            zam_tmp = [tab_tmp[2], tab_tmp1[2]]
+            if dist0 < dist1:
+                zval = ztransi + dist0
+                zam_val = np.interp(zval, z_tmp, zam_tmp)
+                tab_tmp1 = [deb, zval, zam_val]
+            elif dist0 > dist1:
+                zval = ztransi - dist1
+                zam_val = np.interp(zval, z_tmp, zam_tmp)
+                tab_tmp = [deb, zval, zam_val]
+
+            #print(tab_tmp, tab_tmp1)
+            ecart1 = tab_tmp[2] - tab_tmp[1]
+            ecart2 = tab_tmp1[2] - tab_tmp1[1]
+            ecartmoy = (tab_tmp1[2] + tab_tmp[2]) / 2.
+
+            zmoy = (tab_tmp[1] + tab_tmp1[1]) / 2.
+            z1 = (2 * tab_tmp[1] + tab_tmp1[1]) / 3.
             z2 = (2 * tab_tmp1[1] + tab_tmp[1]) / 3.
 
             list_final.append([deb, z1, z1 + ecart1])
@@ -544,6 +593,87 @@ class ClassLaws:
 
             list_final.append([deb, z1, z1 + ecart1])
             list_final[idxz+lon*id+1] = [deb, zmoy, ecartmoy]
+            list_final.append([deb, z2, z2 + ecart2])
+
+        return list_final
+
+    def transition_charge4(self, list_final, ztransi):
+        """
+        :param list_final: law interpol
+        :param ztransi:
+        :return:
+        """
+        # trie pour être sûr
+        info = self.parent.sort_law(list_final)
+        # cherche nb de debi
+        idxq = np.where(info[:, 0] == self.list_q[0])[0]
+        lon = len(idxq)
+        # cherche position transition
+        idxz = np.where(info[0:lon, :] < ztransi)[0][-1]
+        # ajout de Z pour  acroite le point d'infexion
+        for id, deb in enumerate(self.list_q):
+            tab_tmp = info[idxz + lon * id, :]
+            tab_tmp1 = info[idxz + lon * id + 1, :]
+            if tab_tmp1[1] == ztransi:
+                tab_tmp1 = info[idxz + lon * id + 2, :]
+
+
+            ecart1 = tab_tmp[2] - tab_tmp[1]
+            ecart2 = tab_tmp1[2] - tab_tmp1[1]
+            ecartmoy = (tab_tmp1[2] + tab_tmp[2]) / 2.
+
+            zmoy = (tab_tmp[1] + tab_tmp1[1]) / 2.
+            z1 = (2 * tab_tmp[1] + tab_tmp1[1]) / 3.
+            z2 = (2 * tab_tmp1[1] + tab_tmp[1]) / 3.
+
+            list_final.append([deb, z1, z1 + ecart1])
+            list_final.append([deb, zmoy, ecartmoy])
+            list_final.append([deb, z2, z2 + ecart2])
+
+        return list_final
+
+    def transition_charge5(self,list_final,ztransi):
+        """
+        :param list_final: law interpol
+        :param ztransi:
+        :return:
+        """
+        #trie pour être sûr
+        info = self.parent.sort_law(list_final)
+        # cherche nb de debit
+        idxq = np.where(info[:,0] == self.list_q[0])[0]
+        lon= len(idxq)
+        #cherche position transition
+        idxz= np.where(info[0:lon, :] < ztransi)[0][-1]
+        #ajout de Z pour  acroite le point d'infexion
+        for id, deb in enumerate(self.list_q):
+
+            tab_tmp = info[idxz + lon * id, :]
+            tab_tmp1 = info[idxz + lon * id + 1, :]
+
+            # print(tab_tmp ,tab_tmp1,ztransi)
+            dist0 = abs(ztransi - tab_tmp[1])
+            dist1 = abs(tab_tmp1[1] - ztransi)
+            if tab_tmp1[1] == ztransi:
+                tab_tmp1 = info[idxz + lon * id + 2, :]
+                ecart1 = tab_tmp[2] - tab_tmp[1]
+                ecart2 = tab_tmp1[2] - tab_tmp1[1]
+            elif dist0 < dist1:
+                zval = ztransi + dist0
+                ecart2 = tab_tmp1[2] - tab_tmp1[1]
+                tab_tmp1 = [deb, zval, zval + ecart2]
+                ecart1 = tab_tmp[2] - tab_tmp[1]
+            elif dist0 > dist1:
+                zval = ztransi - dist1
+                ecart1 = tab_tmp[2] - tab_tmp[1]
+                tab_tmp = [deb, zval, zval + ecart1]
+                ecart2 = tab_tmp1[2] - tab_tmp1[1]
+
+            ecartmoy = (tab_tmp1[2] + tab_tmp[2]) / 2.
+            z1 = (2 * tab_tmp[1] + tab_tmp1[1]) / 3.
+            z2 = (2 * tab_tmp1[1] + tab_tmp[1]) / 3.
+            list_final.append([deb, z1, z1 + ecart1])
+            list_final[idxz+lon*id+1] = [deb, ztransi, ecartmoy]
             list_final.append([deb, z2, z2 + ecart2])
 
         return list_final
