@@ -369,6 +369,7 @@ class ClassLaws:
 
         zinf_vann = self.poly_p.bounds[1]  # z min du profil
         zcret = self.param_g['ZTOPTAB']
+        # self.list_zav=[9.75,6.25]
         ztransi=  min(self.param_elem['ZMAXELEM'])# Z de transition
 
         for zav in self.list_zav:
@@ -386,25 +387,18 @@ class ClassLaws:
                     list_brad.append(value)
 
             # traitement entre les deux loi
+
             list_ori = []
             if len(list_brad) > 0 :
                 # interpol ztrans
                 list_ori.append(list_brad[-1])
                 if  brad_lim :
-                    # change1
-                    list_ztran = self.filtre_list(self.list_zam, list_brad[-1][2], ztransi)
                     # interpolation
-                    list_ztran = list_ztran + [ztransi]
                     q_tmp = np.array([list_brad[-1][0], brad_lim[0]])
                     zam_tmp = np.array([list_brad[-1][2], brad_lim[2]])
-                    q_new = np.interp(list_ztran, zam_tmp,q_tmp)
-                    interpol_list = [[a,b,c] for a,b,c in zip(q_new, [zav] * len(list_ztran), list_ztran)]
-                    list_ori =  list_ori + interpol_list
-                    # qmax = max(q_new)
-                    if not(ztransi in self.list_zav) :
-                        self.list_zav.sort()
-                        self.list_zav.append(ztransi)
-                    # change3 et4
+                    q_new = np.interp(ztransi, zam_tmp,q_tmp)
+                    list_ori =  list_ori + [[q_new ,zav ,ztransi]]
+                    qmax = q_new
                     za = ztransi
 
                 else:
@@ -418,6 +412,9 @@ class ClassLaws:
 
             idx = np.where(self.list_zam > za)[0]
             if len(idx) > 0 :
+                # if self.list_zam[idx[0]-1] == zav:
+                    #if self.deb_min == qmax:
+                       # list_final.append([self.deb_min, zav, zav])
                 for zam in self.list_zam[idx[0]:]:
                     if zav != zam:
                         q_seuil = 0
@@ -426,6 +423,7 @@ class ClassLaws:
                             q_ori += self.meth_orif_cano(zam, zav, zinf_vann, zsup, zcret,
                                                             self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
                                                         self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
+
                         # print('zam q_ori',zam, q_ori)
                         if zam >= zcret:
                              q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
@@ -441,6 +439,8 @@ class ClassLaws:
                                 list_ori.append(value)
                                 break
                             # if value[0] > qmax: # permet l'interpolation des valeurs h superieur même si le débit inferieur
+                            # print('ori va',value)
+                            # probléme peut venir de ça
                             list_ori.append(value)
 
             # interpol q fix
@@ -450,7 +450,7 @@ class ClassLaws:
                     list_q_tmp = self.list_q[idx[0]:]
                 else:
                     list_q_tmp = self.list_q
-
+                print(list_ori)
                 q_tmp =np.array(list_ori)[:,0]
                 zam_tmp = np.array(list_ori)[:, 2]
                 zam_f = np.interp(list_q_tmp, q_tmp, zam_tmp)
@@ -460,73 +460,56 @@ class ClassLaws:
                 list_ori=[]
             list_final = list_final + list_brad + list_ori
 
+
             if ui is not None:
                 ui.progress_bar(val)
         list_final = self.transition_charge(list_final,ztransi)
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
-        # todo a delete
         self.test_csv(list_final)
 
         return list_final
 
     def transition_charge(self,list_final,ztransi):
         """
+
         :param list_final: law interpol
         :param ztransi:
         :return:
         """
-        # corrige perte de charge  au point de passage en charge
         #trie pour être sûr
         info = self.parent.sort_law(list_final)
-        list_final = list(info)
-        # cherche nb de debit
+        # cherche nb de debi
         idxq = np.where(info[:,0] == self.list_q[0])[0]
         lon= len(idxq)
         #cherche position transition
         idxz= np.where(info[0:lon, :] < ztransi)[0][-1]
+
         #ajout de Z pour  acroite le point d'infexion
         for id, deb in enumerate(self.list_q):
-            tab_tmp = info[idxz + lon * id, :]
-            tab_tmp1 = info[idxz + lon * id + 1, :]  # Ztransi
-            tab_tmp2 = info[idxz + lon * id + 2, :] #
-            print(tab_tmp, tab_tmp2,ztransi)
-            dist1=abs(tab_tmp1[1]-tab_tmp[1])
-            dist2 = abs(tab_tmp2[1] - tab_tmp1[1])
+            tab_tmp = info[idxz+lon*id,:]
+            tab_tmp1 = info[idxz+lon*id+1, :]
+            zmoy = (tab_tmp[1]+tab_tmp1[1])/2
+            ecartmoy = (tab_tmp1[2]+tab_tmp[2])/2 - zmoy
+            ecart1 = tab_tmp[2]-tab_tmp[1]
+            ecart2 = tab_tmp1[2] - tab_tmp1[1]
+            if ecart2 < ecartmoy:
+                ecart2 = ecartmoy
+                #return list_final
+            if ecart1 > ecartmoy:
+                ecart1= ecartmoy
+                #return list_final
 
-            zam_moy = (tab_tmp2[2] + tab_tmp[2]) / 2.
-            ecartmoy = zam_moy - ztransi
-            ecart = tab_tmp[2]-tab_tmp[1]
-            ecart2 = tab_tmp2[2]-tab_tmp2[1]
-            if ecart < ecartmoy:
-                ecartf = ecart
-            else:
-                ecartf = ecartmoy
-            if ecart2 > ecartmoy:
-                ecartf2 = ecart2
-            else:
-                ecartf2 = ecartmoy
+            z1 = (tab_tmp[1]+ 2 * zmoy)/3
+            z2 = (tab_tmp1[1] + 2 * zmoy) / 3
 
-            if dist1==dist2:
-                pass
-            elif dist1 < dist2:
-                zval = ztransi + dist1
-                z1 = (2 * tab_tmp[1] + zval) / 3.
-                z2 = (2 * zval + tab_tmp[1]) / 3.
-
-                list_final.append([deb, z1, z1 + ecartf])
-                list_final[idxz + lon * id + 1] = [deb, ztransi, zam_moy]
-                list_final.append([deb, z2, z2 + ecartf2])
-
-            elif dist1 > dist2:
-                zval = ztransi - dist2
-
-                z1 = (2 * zval + tab_tmp2[1]) / 3.
-                z2 = (2 * tab_tmp2[1] + zval) / 3.
-
+            list_final.append([deb, z1, z1 + ecart1])
+            list_final.append([deb, zmoy, (tab_tmp1[2]+tab_tmp[2])/2])
+            list_final.append([deb, z2, z2 + ecart2])
 
         return list_final
+
 
     def save_list_final(self, list_final, id_config, method):
         # **********************************************************************************************
@@ -711,7 +694,7 @@ class ClassLaws:
 
         return qmax
 
-    def interpol_law_for_new_q(self, list_final, pasq = 10):
+    def interpol_list_final_for_new_q(self, list_final, pasq = 10):
         """
         Search the  new (q, zav) couple and interpole with new q
         :param list_final
@@ -746,6 +729,7 @@ class ClassLaws:
         list_final = []
         qmax = self.deb_min #self.param_g['MINQ']
         zcret = self.param_g['ZTOPTAB']
+       # self.list_zav =[3,4,6,7,9]
         val=90/len(self.list_zav)
 
         for zav in self.list_zav:
@@ -767,7 +751,8 @@ class ClassLaws:
                 for zam in self.list_zam[idx[0]:]:
                     q_seuil = 0
                     q_bor = self.meth_borda(pr_area_wet, area_wet, zam, zav)
-                    print('q_bor',q_bor,zav,zam)
+
+                    print('q_bor',q_bor,zav,zam, area_wet)
 
                     if zam >= zcret:
                         q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
@@ -787,7 +772,7 @@ class ClassLaws:
             if ui is not None:
                 ui.progress_bar(val)
 
-        list_final = self.interpol_law_for_new_q(list_final, pasq=10)
+        list_final = self.interpol_list_final_for_new_q(list_final, pasq=10)
         # print(list_final)
         self.test_csv(list_final)
 
@@ -862,7 +847,7 @@ class ClassLaws:
             if ui is not None:
                 ui.progress_bar(val)
 
-        list_final = self.interpol_law_for_new_q(list_final, pasq=10)
+        list_final = self.interpol_list_final_for_new_q(list_final, pasq=10)
         self.test_csv(list_final)
 
         self.save_list_final(list_final, id_config, method)
@@ -872,7 +857,7 @@ class ClassLaws:
 
     def meth_borda(self, sav, sc, zam, zav):
         k = (sav / sc - 1) ** 2
-        q = m.sqrt((zam - zav) * 2 * self.grav / k)
+        q = m.sqrt((zam - zav) * 2 * self.grav / k) * sav
         return q
 
     def area_wet_fct(self, poly, zav):
