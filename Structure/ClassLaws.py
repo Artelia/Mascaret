@@ -18,8 +18,9 @@ email                :
  ***************************************************************************/
 """
 import math as m
-import numpy as np
 import os
+
+import numpy as np
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
@@ -394,6 +395,7 @@ class ClassLaws:
                 list_ori.append(list_brad[-1])
                 if  brad_lim :
                     # interpolation
+                    print(list_brad[-1:-4])
                     q_tmp = np.array([list_brad[-1][0], brad_lim[0]])
                     zam_tmp = np.array([list_brad[-1][2], brad_lim[2]])
                     q_new = np.interp(ztransi, zam_tmp,q_tmp)
@@ -722,9 +724,105 @@ class ClassLaws:
 
         return list_final
 
+    def borda_q(self, id_config, method='Borda', ui=None):
+        """Borda methode for structure"""
+        self.init_method(id_config)
+        list_final = []
+        qmax = self.deb_min #self.param_g['MINQ']
+        zcret = self.param_g['ZTOPTAB']
+       # self.list_zav =[3,4,6,7,9]
+        val=90/len(self.list_zav)
+        area_tot=0.
+        for poly_trav in self.list_poly_trav:
+            area_tot += poly_trav.area
+
+        for zav in self.list_zav:
+
+            pr_area_wet = self.area_wet_fct(self.poly_p, zav)
+            area_wet = 0
+            for poly_trav in self.list_poly_trav:
+                area_wet += self.area_wet_fct(poly_trav, zav)
+            if pr_area_wet == 0 or area_wet ==0:
+                continue
+            list_borda=[]
+            for q in self.list_q:
+                if pr_area_wet!=0 and area_wet != 0 :
+                    zam= self.meth_borda_z(pr_area_wet, area_wet, q, zav)
+                    # [q, zav, zam]
+
+                    if zam > zcret:
+                        borda_lim = [q, zav, zam]
+                        break
+                    list_borda.append([q, zav, zam])
+
+                list_seuil = []
+                if len(list_borda) > 0:
+                    # interpol ztrans
+                    list_seuil.append(list_borda[-1])
+                    if borda_lim:
+                        # interpolation
+                        q_tmp = np.array([list_borda[-1][0], borda_lim[0]])
+                        zam_tmp = np.array([list_borda[-1][2], borda_lim[2]])
+                        q_new = np.interp(zcret, zam_tmp, q_tmp)
+                        list_seuil = list_seuil + [[q_new, zav, zcret]]
+                        qmax = q_new
+                        za = zcret
+                    else:
+                        qmax = max(np.array(list_borda)[:, 0])
+                        za = list_borda[-1][2]
+                        list_seuil.append([qmax, zav, za])
+                else:
+                    qmax = self.deb_min
+                    za = zav
+                    list_seuil.append([qmax, zav, za])
+
+
+                idx = np.where(self.list_zam > za)[0]
+                if len(idx) > 0:
+                    for zam in self.list_zam[idx[0]:]:
+                        q_borda = self.meth_borda_q(pr_area_wet, area_tot, zam, zav)
+                        q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
+                        print('q_seuil', q_seuil,zav,zam)
+
+                        value = [q_seuil + q_borda, zav, zam]
+                        if q_seuil is None:
+                            continue
+                        else:
+                            if value[0] > qmax:
+                                # print('ori va',value)
+                                list_seuil.append(value)
+
+                if len(list_seuil) > 1:
+                    idx = np.where(np.array(self.list_q) > list_seuil[0][0])[0]
+                    if len(idx) > 0:
+                        list_q_tmp = self.list_q[idx[0]:]
+                    else:
+                        list_q_tmp = self.list_q
+                    print(list_seuil)
+                    q_tmp = np.array(list_seuil)[:, 0]
+                    zam_tmp = np.array(list_seuil)[:, 2]
+                    zam_f = np.interp(list_q_tmp, q_tmp, zam_tmp)
+                    interpol_list = [[a, b, c] for a, b, c in zip(list_q_tmp, [zav] * len(zam_f), zam_f)]
+                    list_seuil = interpol_list
+                else:
+                    list_seuil = []
+
+                list_final = list_final + list_brad + list_ori
+            if ui is not None:
+                ui.progress_bar(val)
+
+        list_final = self.interpol_list_final_for_new_q(list_final, pasq=10)
+        # print(list_final)
+        self.test_csv(list_final)
+
+
+        self.save_list_final(list_final, id_config, method)
+        if ui is not None:
+            ui.progress_bar(100)
+        return list_final
+
     def borda(self, id_config, method='Borda', ui=None):
         """Borda methode for structure"""
-        # TODO a check bizar
         self.init_method(id_config)
         list_final = []
         qmax = self.deb_min #self.param_g['MINQ']
@@ -750,7 +848,7 @@ class ClassLaws:
 
                 for zam in self.list_zam[idx[0]:]:
                     q_seuil = 0
-                    q_bor = self.meth_borda(pr_area_wet, area_wet, zam, zav)
+                    q_bor = self.meth_borda_q(pr_area_wet, area_wet, zam, zav)
 
                     print('q_bor',q_bor,zav,zam, area_wet)
 
@@ -855,10 +953,14 @@ class ClassLaws:
             ui.progress_bar(100)
         return list_final
 
-    def meth_borda(self, sav, sc, zam, zav):
+    def meth_borda_q(self, sav, sc, zam, zav):
         k = (sav / sc - 1) ** 2
         q = m.sqrt((zam - zav) * 2 * self.grav / k) * sav
         return q
+    def meth_borda_z(self, sav, sc, q ,zav):
+        k = (sav / sc - 1) ** 2
+        zam = (q / sav) ** 2 * k / (2 * self.grav) + zav
+        return zam
 
     def area_wet_fct(self, poly, zav):
         poly_wet = self.parent.coup_poly_h(poly, zav)
