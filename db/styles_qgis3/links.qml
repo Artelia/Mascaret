@@ -1,19 +1,19 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis simplifyDrawingHints="0" simplifyLocal="1" styleCategories="AllStyleCategories" simplifyDrawingTol="1" maxScale="100000" labelsEnabled="0" hasScaleBasedVisibilityFlag="0" minScale="200000" simplifyMaxScale="1" simplifyAlgorithm="0" readOnly="0" version="3.4.2-Madeira">
+<qgis labelsEnabled="0" simplifyDrawingTol="1" readOnly="0" hasScaleBasedVisibilityFlag="0" version="3.4.2-Madeira" styleCategories="AllStyleCategories" simplifyDrawingHints="0" maxScale="100000" simplifyMaxScale="1" simplifyAlgorithm="0" minScale="200000" simplifyLocal="1">
   <flags>
     <Identifiable>1</Identifiable>
     <Removable>1</Removable>
     <Searchable>1</Searchable>
   </flags>
-  <renderer-v2 type="categorizedSymbol" forceraster="0" symbollevels="0" enableorderby="0" attr="active">
+  <renderer-v2 type="categorizedSymbol" enableorderby="0" attr="active" forceraster="0" symbollevels="0">
     <categories>
-      <category value="" label="" symbol="0" render="true"/>
-      <category value="false" label="Inactive" symbol="1" render="true"/>
-      <category value="true" label="Active" symbol="2" render="true"/>
+      <category render="true" symbol="0" value="" label=""/>
+      <category render="true" symbol="1" value="false" label="Inactive"/>
+      <category render="true" symbol="2" value="true" label="Active"/>
     </categories>
     <symbols>
-      <symbol type="line" name="0" clip_to_extent="1" alpha="1">
-        <layer locked="0" enabled="1" pass="0" class="SimpleLine">
+      <symbol type="line" alpha="1" clip_to_extent="1" name="0">
+        <layer locked="0" pass="0" enabled="1" class="SimpleLine">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -31,15 +31,15 @@
           <prop k="width_map_unit_scale" v="3x:0,0,0,0,0,0"/>
           <data_defined_properties>
             <Option type="Map">
-              <Option value="" type="QString" name="name"/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option value="collection" type="QString" name="type"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol type="line" name="1" clip_to_extent="1" alpha="1">
-        <layer locked="0" enabled="1" pass="0" class="SimpleLine">
+      <symbol type="line" alpha="1" clip_to_extent="1" name="1">
+        <layer locked="0" pass="0" enabled="1" class="SimpleLine">
           <prop k="capstyle" v="round"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -57,13 +57,13 @@
           <prop k="width_map_unit_scale" v="3x:0,0,0,0,0,0"/>
           <data_defined_properties>
             <Option type="Map">
-              <Option value="" type="QString" name="name"/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option value="collection" type="QString" name="type"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
-        <layer locked="1" enabled="1" pass="0" class="SimpleLine">
+        <layer locked="1" pass="0" enabled="1" class="SimpleLine">
           <prop k="capstyle" v="round"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -81,15 +81,15 @@
           <prop k="width_map_unit_scale" v="3x:0,0,0,0,0,0"/>
           <data_defined_properties>
             <Option type="Map">
-              <Option value="" type="QString" name="name"/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option value="collection" type="QString" name="type"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol type="line" name="2" clip_to_extent="1" alpha="1">
-        <layer locked="0" enabled="1" pass="0" class="SimpleLine">
+      <symbol type="line" alpha="1" clip_to_extent="1" name="2">
+        <layer locked="0" pass="0" enabled="1" class="SimpleLine">
           <prop k="capstyle" v="round"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -107,13 +107,13 @@
           <prop k="width_map_unit_scale" v="3x:0,0,0,0,0,0"/>
           <data_defined_properties>
             <Option type="Map">
-              <Option value="" type="QString" name="name"/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option value="collection" type="QString" name="type"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
-        <layer locked="1" enabled="1" pass="0" class="SimpleLine">
+        <layer locked="1" pass="0" enabled="1" class="SimpleLine">
           <prop k="capstyle" v="round"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -131,17 +131,17 @@
           <prop k="width_map_unit_scale" v="3x:0,0,0,0,0,0"/>
           <data_defined_properties>
             <Option type="Map">
-              <Option value="" type="QString" name="name"/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option value="collection" type="QString" name="type"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
     </symbols>
     <source-symbol>
-      <symbol type="marker" name="0" clip_to_extent="1" alpha="1">
-        <layer locked="0" enabled="1" pass="0" class="SimpleMarker">
+      <symbol type="marker" alpha="1" clip_to_extent="1" name="0">
+        <layer locked="0" pass="0" enabled="1" class="SimpleMarker">
           <prop k="angle" v="0"/>
           <prop k="color" v="253,191,111,255"/>
           <prop k="horizontal_anchor_point" v="1"/>
@@ -162,13 +162,13 @@
           <prop k="vertical_anchor_point" v="1"/>
           <data_defined_properties>
             <Option type="Map">
-              <Option value="" type="QString" name="name"/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option value="collection" type="QString" name="type"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
-        <layer locked="0" enabled="1" pass="0" class="SimpleMarker">
+        <layer locked="0" pass="0" enabled="1" class="SimpleMarker">
           <prop k="angle" v="0"/>
           <prop k="color" v="255,0,0,255"/>
           <prop k="horizontal_anchor_point" v="1"/>
@@ -189,9 +189,9 @@
           <prop k="vertical_anchor_point" v="1"/>
           <data_defined_properties>
             <Option type="Map">
-              <Option value="" type="QString" name="name"/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option value="collection" type="QString" name="type"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
@@ -201,6 +201,9 @@
     <sizescale/>
   </renderer-v2>
   <customproperties>
+    <property key="dualview/previewExpressions">
+      <value>gid</value>
+    </property>
     <property value="0" key="embeddedWidgets/count"/>
     <property key="variableNames"/>
     <property key="variableValues"/>
@@ -208,22 +211,22 @@
   <blendMode>0</blendMode>
   <featureBlendMode>0</featureBlendMode>
   <layerOpacity>1</layerOpacity>
-  <SingleCategoryDiagramRenderer diagramType="Histogram" attributeLegend="1">
-    <DiagramCategory diagramOrientation="Up" penWidth="0" enabled="0" barWidth="5" width="15" maxScaleDenominator="200000" height="15" backgroundColor="#ffffff" rotationOffset="270" minScaleDenominator="100000" lineSizeScale="3x:0,0,0,0,0,0" scaleDependency="Area" penColor="#000000" scaleBasedVisibility="1" minimumSize="0" sizeType="MM" penAlpha="255" sizeScale="3x:0,0,0,0,0,0" opacity="1" labelPlacementMethod="XHeight" lineSizeType="MM" backgroundAlpha="255">
-      <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
+  <SingleCategoryDiagramRenderer attributeLegend="1" diagramType="Histogram">
+    <DiagramCategory lineSizeScale="3x:0,0,0,0,0,0" sizeScale="3x:0,0,0,0,0,0" width="15" barWidth="5" penAlpha="255" scaleBasedVisibility="1" height="15" labelPlacementMethod="XHeight" backgroundAlpha="255" penWidth="0" minScaleDenominator="100000" opacity="1" maxScaleDenominator="200000" scaleDependency="Area" sizeType="MM" lineSizeType="MM" diagramOrientation="Up" enabled="0" backgroundColor="#ffffff" penColor="#000000" rotationOffset="270" minimumSize="0">
+      <fontProperties style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0"/>
       <attribute color="#000000" field="" label=""/>
     </DiagramCategory>
   </SingleCategoryDiagramRenderer>
-  <DiagramLayerSettings priority="0" obstacle="0" linePlacementFlags="2" showAll="1" placement="2" dist="0" zIndex="0">
+  <DiagramLayerSettings linePlacementFlags="2" priority="0" dist="0" obstacle="0" zIndex="0" showAll="1" placement="2">
     <properties>
       <Option type="Map">
-        <Option value="" type="QString" name="name"/>
+        <Option type="QString" value="" name="name"/>
         <Option name="properties"/>
-        <Option value="collection" type="QString" name="type"/>
+        <Option type="QString" value="collection" name="type"/>
       </Option>
     </properties>
   </DiagramLayerSettings>
-  <geometryOptions geometryPrecision="0" removeDuplicateNodes="0">
+  <geometryOptions removeDuplicateNodes="0" geometryPrecision="0">
     <activeChecks/>
     <checkConfiguration/>
   </geometryOptions>
@@ -231,165 +234,258 @@
     <field name="gid">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="name">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="linknum">
-      <editWidget type="Range">
+      <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="type">
-      <editWidget type="Range">
+      <editWidget type="ValueMap">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="List" name="map">
+              <Option type="Map">
+                <Option type="QString" value="2" name="Channel"/>
+              </Option>
+              <Option type="Map">
+                <Option type="QString" value="4" name="Culvert"/>
+              </Option>
+              <Option type="Map">
+                <Option type="QString" value="3" name="Syphon"/>
+              </Option>
+              <Option type="Map">
+                <Option type="QString" value="1" name="Weir"/>
+              </Option>
+            </Option>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="nature">
-      <editWidget type="Range">
+      <editWidget type="ValueMap">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="List" name="map">
+              <Option type="Map">
+                <Option type="QString" value="1" name="Basin - reach"/>
+              </Option>
+              <Option type="Map">
+                <Option type="QString" value="2" name="Basin - basin"/>
+              </Option>
+            </Option>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="level">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="length">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="width">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="roughness">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="crosssection">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="headlosscoef">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="weirdischargecoef">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="activationcoef">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="pipedischargecoef">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="culverttype">
-      <editWidget type="Range">
+      <editWidget type="ValueMap">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="List" name="map">
+              <Option type="Map">
+                <Option type="QString" value="1" name="Both directions"/>
+              </Option>
+              <Option type="Map">
+                <Option type="QString" value="3" name="Reach towards Storage area"/>
+              </Option>
+              <Option type="Map">
+                <Option type="QString" value="5" name="Storage area from downstream to upstream"/>
+              </Option>
+              <Option type="Map">
+                <Option type="QString" value="4" name="Storage area from upstream to downstream"/>
+              </Option>
+              <Option type="Map">
+                <Option type="QString" value="2" name="Storage area towards the reach"/>
+              </Option>
+            </Option>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="basinstart">
-      <editWidget type="Range">
+      <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="basinend">
-      <editWidget type="Range">
+      <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="branchnum">
-      <editWidget type="Range">
+      <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="abscissa">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
     <field name="active">
       <editWidget type="CheckBox">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="QString" value="" name="CheckedState"/>
+            <Option type="QString" value="" name="UncheckedState"/>
+          </Option>
         </config>
       </editWidget>
     </field>
   </fieldConfiguration>
   <aliases>
-    <alias index="0" name="" field="gid"/>
-    <alias index="1" name="Name" field="name"/>
-    <alias index="2" name="Link number" field="linknum"/>
-    <alias index="3" name="Type" field="type"/>
-    <alias index="4" name="Nature" field="nature"/>
-    <alias index="5" name="Level (m)" field="level"/>
-    <alias index="6" name="Length (m)" field="length"/>
-    <alias index="7" name="Width (m)" field="width"/>
-    <alias index="8" name="Roughness" field="roughness"/>
-    <alias index="9" name="Cross section (m2)" field="crosssection"/>
-    <alias index="10" name="Head loss coefficient" field="headlosscoef"/>
-    <alias index="11" name="Weir discharge coefficient" field="weirdischargecoef"/>
-    <alias index="12" name="Activation coefficient" field="activationcoef"/>
-    <alias index="13" name="Pipe discharge coefficient" field="pipedischargecoef"/>
-    <alias index="14" name="Culvert type" field="culverttype"/>
-    <alias index="15" name="Basin number start" field="basinstart"/>
-    <alias index="16" name="Basin number end" field="basinend"/>
-    <alias index="17" name="Branch number" field="branchnum"/>
-    <alias index="18" name="Abscissa (m)" field="abscissa"/>
-    <alias index="19" name="Active" field="active"/>
+    <alias field="gid" index="0" name=""/>
+    <alias field="name" index="1" name="Name"/>
+    <alias field="linknum" index="2" name="Link number"/>
+    <alias field="type" index="3" name="Type"/>
+    <alias field="nature" index="4" name="Nature"/>
+    <alias field="level" index="5" name="Level (m)"/>
+    <alias field="length" index="6" name="Length (m)"/>
+    <alias field="width" index="7" name="Width (m)"/>
+    <alias field="roughness" index="8" name="Roughness"/>
+    <alias field="crosssection" index="9" name="Cross section (m2)"/>
+    <alias field="headlosscoef" index="10" name="Head loss coefficient"/>
+    <alias field="weirdischargecoef" index="11" name="Weir discharge coefficient"/>
+    <alias field="activationcoef" index="12" name="Activation coefficient"/>
+    <alias field="pipedischargecoef" index="13" name="Pipe discharge coefficient"/>
+    <alias field="culverttype" index="14" name="Culvert type"/>
+    <alias field="basinstart" index="15" name="Basin number start"/>
+    <alias field="basinend" index="16" name="Basin number end"/>
+    <alias field="branchnum" index="17" name="Branch number"/>
+    <alias field="abscissa" index="18" name="Abscissa (m)"/>
+    <alias field="active" index="19" name="Active"/>
   </aliases>
   <excludeAttributesWMS/>
   <excludeAttributesWFS/>
@@ -416,26 +512,26 @@
     <default field="active" expression="" applyOnUpdate="0"/>
   </defaults>
   <constraints>
-    <constraint exp_strength="0" field="gid" unique_strength="1" constraints="3" notnull_strength="1"/>
-    <constraint exp_strength="0" field="name" unique_strength="1" constraints="2" notnull_strength="0"/>
-    <constraint exp_strength="0" field="linknum" unique_strength="1" constraints="2" notnull_strength="0"/>
-    <constraint exp_strength="0" field="type" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="nature" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="level" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="length" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="width" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="roughness" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="crosssection" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="headlosscoef" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="weirdischargecoef" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="activationcoef" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="pipedischargecoef" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="culverttype" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="basinstart" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="basinend" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="branchnum" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="abscissa" unique_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint exp_strength="0" field="active" unique_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="gid" unique_strength="1" exp_strength="0" constraints="3" notnull_strength="1"/>
+    <constraint field="name" unique_strength="1" exp_strength="0" constraints="2" notnull_strength="0"/>
+    <constraint field="linknum" unique_strength="1" exp_strength="0" constraints="2" notnull_strength="0"/>
+    <constraint field="type" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="nature" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="level" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="length" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="width" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="roughness" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="crosssection" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="headlosscoef" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="weirdischargecoef" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="activationcoef" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="pipedischargecoef" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="culverttype" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="basinstart" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="basinend" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="branchnum" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="abscissa" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint field="active" unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0"/>
   </constraints>
   <constraintExpressions>
     <constraint desc="" field="gid" exp=""/>
@@ -463,29 +559,29 @@
   <attributeactions>
     <defaultAction value="{00000000-0000-0000-0000-000000000000}" key="Canvas"/>
   </attributeactions>
-  <attributetableconfig sortExpression="" sortOrder="0" actionWidgetStyle="dropDown">
+  <attributetableconfig sortOrder="0" actionWidgetStyle="dropDown" sortExpression="">
     <columns>
-      <column width="-1" type="field" name="gid" hidden="0"/>
-      <column width="-1" type="field" name="name" hidden="0"/>
-      <column width="-1" type="field" name="linknum" hidden="0"/>
-      <column width="-1" type="field" name="type" hidden="0"/>
-      <column width="-1" type="field" name="nature" hidden="0"/>
-      <column width="-1" type="field" name="level" hidden="0"/>
-      <column width="-1" type="field" name="length" hidden="0"/>
-      <column width="-1" type="field" name="width" hidden="0"/>
-      <column width="-1" type="field" name="roughness" hidden="0"/>
-      <column width="-1" type="field" name="crosssection" hidden="0"/>
-      <column width="-1" type="field" name="headlosscoef" hidden="0"/>
-      <column width="-1" type="field" name="weirdischargecoef" hidden="0"/>
-      <column width="-1" type="field" name="activationcoef" hidden="0"/>
-      <column width="-1" type="field" name="pipedischargecoef" hidden="0"/>
-      <column width="-1" type="field" name="culverttype" hidden="0"/>
-      <column width="-1" type="field" name="branchnum" hidden="0"/>
-      <column width="-1" type="field" name="abscissa" hidden="0"/>
-      <column width="-1" type="field" name="active" hidden="0"/>
-      <column width="-1" type="actions" hidden="1"/>
-      <column width="-1" type="field" name="basinstart" hidden="0"/>
-      <column width="-1" type="field" name="basinend" hidden="0"/>
+      <column type="field" width="-1" hidden="0" name="gid"/>
+      <column type="field" width="-1" hidden="0" name="name"/>
+      <column type="field" width="-1" hidden="0" name="linknum"/>
+      <column type="field" width="-1" hidden="0" name="type"/>
+      <column type="field" width="-1" hidden="0" name="nature"/>
+      <column type="field" width="-1" hidden="0" name="level"/>
+      <column type="field" width="-1" hidden="0" name="length"/>
+      <column type="field" width="-1" hidden="0" name="width"/>
+      <column type="field" width="-1" hidden="0" name="roughness"/>
+      <column type="field" width="-1" hidden="0" name="crosssection"/>
+      <column type="field" width="-1" hidden="0" name="headlosscoef"/>
+      <column type="field" width="-1" hidden="0" name="weirdischargecoef"/>
+      <column type="field" width="-1" hidden="0" name="activationcoef"/>
+      <column type="field" width="-1" hidden="0" name="pipedischargecoef"/>
+      <column type="field" width="-1" hidden="0" name="culverttype"/>
+      <column type="field" width="-1" hidden="0" name="branchnum"/>
+      <column type="field" width="-1" hidden="0" name="abscissa"/>
+      <column type="field" width="-1" hidden="0" name="active"/>
+      <column type="actions" width="-1" hidden="1"/>
+      <column type="field" width="-1" hidden="0" name="basinstart"/>
+      <column type="field" width="-1" hidden="0" name="basinend"/>
     </columns>
   </attributetableconfig>
   <conditionalstyles>
@@ -515,64 +611,64 @@ def my_form_open(dialog, layer, feature):
   <featformsuppress>0</featformsuppress>
   <editorlayout>tablayout</editorlayout>
   <attributeEditorForm>
-    <attributeEditorContainer name="infos" visibilityExpressionEnabled="0" showLabel="1" columnCount="0" visibilityExpression="" groupBox="0">
-      <attributeEditorField index="1" name="name" showLabel="1"/>
-      <attributeEditorField index="2" name="linknum" showLabel="1"/>
-      <attributeEditorField index="3" name="type" showLabel="1"/>
-      <attributeEditorField index="4" name="nature" showLabel="1"/>
-      <attributeEditorField index="18" name="abscissa" showLabel="1"/>
-      <attributeEditorField index="15" name="basinstart" showLabel="1"/>
-      <attributeEditorField index="16" name="basinend" showLabel="1"/>
-      <attributeEditorField index="19" name="active" showLabel="1"/>
+    <attributeEditorContainer columnCount="0" visibilityExpressionEnabled="0" showLabel="1" visibilityExpression="" groupBox="0" name="infos">
+      <attributeEditorField index="1" showLabel="1" name="name"/>
+      <attributeEditorField index="2" showLabel="1" name="linknum"/>
+      <attributeEditorField index="3" showLabel="1" name="type"/>
+      <attributeEditorField index="4" showLabel="1" name="nature"/>
+      <attributeEditorField index="18" showLabel="1" name="abscissa"/>
+      <attributeEditorField index="15" showLabel="1" name="basinstart"/>
+      <attributeEditorField index="16" showLabel="1" name="basinend"/>
+      <attributeEditorField index="19" showLabel="1" name="active"/>
     </attributeEditorContainer>
-    <attributeEditorContainer name="weir" visibilityExpressionEnabled="0" showLabel="1" columnCount="0" visibilityExpression="" groupBox="0">
-      <attributeEditorField index="5" name="level" showLabel="1"/>
-      <attributeEditorField index="7" name="width" showLabel="1"/>
-      <attributeEditorField index="11" name="weirdischargecoef" showLabel="1"/>
-      <attributeEditorField index="12" name="activationcoef" showLabel="1"/>
+    <attributeEditorContainer columnCount="0" visibilityExpressionEnabled="0" showLabel="1" visibilityExpression="" groupBox="0" name="weir">
+      <attributeEditorField index="5" showLabel="1" name="level"/>
+      <attributeEditorField index="7" showLabel="1" name="width"/>
+      <attributeEditorField index="11" showLabel="1" name="weirdischargecoef"/>
+      <attributeEditorField index="12" showLabel="1" name="activationcoef"/>
     </attributeEditorContainer>
-    <attributeEditorContainer name="channel" visibilityExpressionEnabled="0" showLabel="1" columnCount="0" visibilityExpression="" groupBox="0">
-      <attributeEditorField index="5" name="level" showLabel="1"/>
-      <attributeEditorField index="7" name="width" showLabel="1"/>
-      <attributeEditorField index="6" name="length" showLabel="1"/>
-      <attributeEditorField index="8" name="roughness" showLabel="1"/>
+    <attributeEditorContainer columnCount="0" visibilityExpressionEnabled="0" showLabel="1" visibilityExpression="" groupBox="0" name="channel">
+      <attributeEditorField index="5" showLabel="1" name="level"/>
+      <attributeEditorField index="7" showLabel="1" name="width"/>
+      <attributeEditorField index="6" showLabel="1" name="length"/>
+      <attributeEditorField index="8" showLabel="1" name="roughness"/>
     </attributeEditorContainer>
-    <attributeEditorContainer name="syphon" visibilityExpressionEnabled="0" showLabel="1" columnCount="0" visibilityExpression="" groupBox="0">
-      <attributeEditorField index="5" name="level" showLabel="1"/>
-      <attributeEditorField index="6" name="length" showLabel="1"/>
-      <attributeEditorField index="9" name="crosssection" showLabel="1"/>
-      <attributeEditorField index="10" name="headlosscoef" showLabel="1"/>
+    <attributeEditorContainer columnCount="0" visibilityExpressionEnabled="0" showLabel="1" visibilityExpression="" groupBox="0" name="syphon">
+      <attributeEditorField index="5" showLabel="1" name="level"/>
+      <attributeEditorField index="6" showLabel="1" name="length"/>
+      <attributeEditorField index="9" showLabel="1" name="crosssection"/>
+      <attributeEditorField index="10" showLabel="1" name="headlosscoef"/>
     </attributeEditorContainer>
-    <attributeEditorContainer name="culvert" visibilityExpressionEnabled="0" showLabel="1" columnCount="0" visibilityExpression="" groupBox="0">
-      <attributeEditorField index="5" name="level" showLabel="1"/>
-      <attributeEditorField index="7" name="width" showLabel="1"/>
-      <attributeEditorField index="9" name="crosssection" showLabel="1"/>
-      <attributeEditorField index="11" name="weirdischargecoef" showLabel="1"/>
-      <attributeEditorField index="13" name="pipedischargecoef" showLabel="1"/>
-      <attributeEditorField index="14" name="culverttype" showLabel="1"/>
+    <attributeEditorContainer columnCount="0" visibilityExpressionEnabled="0" showLabel="1" visibilityExpression="" groupBox="0" name="culvert">
+      <attributeEditorField index="5" showLabel="1" name="level"/>
+      <attributeEditorField index="7" showLabel="1" name="width"/>
+      <attributeEditorField index="9" showLabel="1" name="crosssection"/>
+      <attributeEditorField index="11" showLabel="1" name="weirdischargecoef"/>
+      <attributeEditorField index="13" showLabel="1" name="pipedischargecoef"/>
+      <attributeEditorField index="14" showLabel="1" name="culverttype"/>
     </attributeEditorContainer>
   </attributeEditorForm>
   <editable>
-    <field name="abscissa" editable="1"/>
-    <field name="activationcoef" editable="1"/>
-    <field name="active" editable="1"/>
-    <field name="basinend" editable="1"/>
-    <field name="basinstart" editable="1"/>
-    <field name="branchnum" editable="1"/>
-    <field name="crosssection" editable="1"/>
-    <field name="culverttype" editable="1"/>
-    <field name="gid" editable="1"/>
-    <field name="headlosscoef" editable="1"/>
-    <field name="length" editable="1"/>
-    <field name="level" editable="1"/>
-    <field name="linknum" editable="1"/>
-    <field name="name" editable="1"/>
-    <field name="nature" editable="1"/>
-    <field name="pipedischargecoef" editable="1"/>
-    <field name="roughness" editable="1"/>
-    <field name="type" editable="1"/>
-    <field name="weirdischargecoef" editable="1"/>
-    <field name="width" editable="1"/>
+    <field editable="1" name="abscissa"/>
+    <field editable="1" name="activationcoef"/>
+    <field editable="1" name="active"/>
+    <field editable="1" name="basinend"/>
+    <field editable="1" name="basinstart"/>
+    <field editable="1" name="branchnum"/>
+    <field editable="1" name="crosssection"/>
+    <field editable="1" name="culverttype"/>
+    <field editable="1" name="gid"/>
+    <field editable="1" name="headlosscoef"/>
+    <field editable="1" name="length"/>
+    <field editable="1" name="level"/>
+    <field editable="1" name="linknum"/>
+    <field editable="1" name="name"/>
+    <field editable="1" name="nature"/>
+    <field editable="1" name="pipedischargecoef"/>
+    <field editable="1" name="roughness"/>
+    <field editable="1" name="type"/>
+    <field editable="1" name="weirdischargecoef"/>
+    <field editable="1" name="width"/>
   </editable>
   <labelOnTop>
     <field name="abscissa" labelOnTop="0"/>
