@@ -186,7 +186,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     selection['nom'].append(selection_nontrie['nom'][index])
                     selection['num'].append(selection_nontrie['num'][index])
 
-                # self.mgis.addInfo('nom de la couche choisie' +str(couche))
+                # self.mgis.add_info('nom de la couche choisie' +str(couche))
 
                 graph_basin_link = GraphBasin(feature, self.mgis, selection, feature['name'], couche)
                 graph_basin_link.show()
@@ -2041,11 +2041,12 @@ class GraphHydro(GraphCommon):
 
             nbl = len(self.listeTab[0])
             nbc = len(self.listeTab)
-            tab1 = np.eye(nbl, nbc)
+            tab1 = np.eye(nbl, nbc).astype(str)
             for j, val in enumerate(self.listeTab):
                 for i, v in enumerate(val):
-                    tab1[i, j] = v
-
+                    if isinstance(v, datetime):
+                        v = v.strftime("%Y-%m-%d %H:%M:%S")
+                    tab1[i, j] = str(v)
             for j in range(nbl):
                 ligne = ""
                 for i, val in enumerate(tab1[j, :]):
@@ -2517,7 +2518,7 @@ class GraphHydro(GraphCommon):
         # TODO
         if abs(val) == 10:
             var = 'selection'
-            val = val / 10
+            val = int(val / 10)
         else:
             var = self.inv
 
@@ -2608,7 +2609,7 @@ class GraphBasin(GraphCommon):
                                             "runs")
 
         if not dico_run:
-            self.mgis.addInfo("No simulation to show")
+            self.mgis.add_info("No simulation to show")
             return False
         self.liste_runs = {}
         for run, scen in zip(dico_run["run"], dico_run["scenario"]):
@@ -2801,7 +2802,11 @@ class GraphBasin(GraphCommon):
                 ligne = ""
                 # Boucle sur les colonnes de variables BZ, BArea, BVol pour casier et LQ,LVEL pour liaisons
                 for i, val in enumerate(self.liste_tab):
-                    ligne += "{0} ; ".format(str(val[j]))
+                    if isinstance(val[j], datetime):
+                        valj = val[j].strftime("%Y-%m-%d %H:%M:%S")
+                    else:
+                        valj = val[j]
+                    ligne += "{0} ; ".format(str(valj))
                 file.write(ligne + " \n")
 
             file.close()
@@ -2859,7 +2864,7 @@ class GraphBasin(GraphCommon):
         try:
             index = self.liste['selection']['nom'].index(self.position)
         except ValueError as e:
-            self.mgis.addInfo('No results for this profile. \n Error : {}'.format(str(e)))
+            self.mgis.add_info('No results for this profile. \n Error : {}'.format(str(e)))
 
         self.combo_time_pk.setCurrentIndex(index)
         self.combo_time_pk.currentIndexChanged['QString'].connect(self.combo_time_p_k_change)
@@ -2876,7 +2881,7 @@ class GraphBasin(GraphCommon):
         else:
             condition += """AND {0}={1}""".format('lnum', numero)
 
-        # self.mgis.addInfo(condition)
+        # self.mgis.add_info(condition)
         if self.type == 'basins':
             self.tab = self.mdb.select("resultats_basin", condition, "t")
 
@@ -3047,7 +3052,7 @@ class GraphBasin(GraphCommon):
         # TODO
         if abs(val) == 10:
             # var = 'selection'
-            val = val / 10
+            val = int(val / 10)
         # else:
         #    var = self.inv
 
