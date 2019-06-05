@@ -88,6 +88,7 @@ class ClassLaws:
 
         # TODO modifier ZPC car arch depend element meme pour dalot
         self.param_elem = {'ZMAXELEM': [], 'LARGELEM': [], 'SURFELEM': []}
+
         for poly in self.list_poly_trav:
             (minx, miny, maxx, maxy) = poly.bounds
             self.param_elem['ZMAXELEM'].append(maxy)
@@ -238,26 +239,29 @@ class ClassLaws:
         :param list_e: e list in abacus
         :return  [flowrate, h downstream, h upstream]
         """
+
         area_pil = 0
         area_pil_proj = 0
-        poly_wet = self.parent.coup_poly_h(self.poly_p, zav + self.minz)
+
+        poly_wet = self.parent.coup_poly_h(self.poly_p, zav )
         if poly_wet.is_empty:
             return None
         area_wet = poly_wet.area
         # print('area_wet',area_wet)
         umoy = q / area_wet
         for poly_pil in self.list_poly_pil:
-            poly_pil = self.parent.coup_poly_h(poly_pil, zav + self.minz)
+            poly_pil = self.parent.coup_poly_h(poly_pil, zav)
             if self.param_g['BIAIOUV'] != 0:
                 area_pil_proj += poly_pil.area * coef_cor_biais
             area_pil += poly_pil.area
         if area_pil_proj == 0:
             area_pil_proj = area_pil
-        ssoh = self.parent.coup_poly_v(poly_wet, [self.param_g['FIRSTWD'], self.param_g['TOTALW']],
+        left_bank = self.param_g['FIRSTWD'] + self.param_g['TOTALOUV'] + self.param_g['LARGPIL'] * len(self.list_poly_pil)
+        ssoh = self.parent.coup_poly_v(poly_wet, [self.param_g['FIRSTWD'], left_bank],
                                        typ='LR').area
         q1 = ssoh * umoy
         q2 = self.parent.coup_poly_v(poly_wet, self.param_g['FIRSTWD'], typ='R').area * umoy
-        q3 = self.parent.coup_poly_v(poly_wet, self.param_g['TOTALW'], typ='L').area * umoy
+        q3 = self.parent.coup_poly_v(poly_wet, left_bank , typ='L').area * umoy
         qtot = q1 + q2 + q3
         alpha1 = 1
         alpha2 = 1
@@ -269,16 +273,19 @@ class ClassLaws:
             return [self.deb_min, zav, zav]
             # coefm = 0
 
+
+
         # print('q1,q2,q3',q1,q2,q3)
         # print('area q1, area q2,area q3', ssoh,
         # self.parent.coup_poly_v(poly_wet,self.param_g['FIRSTWD'],typ='R').area,
-        #       self.parent.coup_poly_v(poly_wet,self.param_g['TOTALW'],typ='L' ).area)
+        #       self.parent.coup_poly_v(poly_wet,left_bank,typ='L' ).area)
+        # print(self.param_g['FIRSTWD'],left_bank)
         # print('coefm', coefm)
         if not self.check_coefm(coefm):
             return None
 
         s1 = ssoh - area_pil_proj
-        # print('S1',s1)
+         # print('S1',s1)
         va = q / s1
         # print('Va', va)
         # *************** kb
@@ -344,7 +351,7 @@ class ClassLaws:
         term1 = (kb + dkp + dke + dks) * va ** 2 / (2. * self.grav) * alpha2
         # print("term1 Remout",term1)
         hmon = zav + term1
-        poly_wet = self.parent.coup_poly_h(self.poly_p, hmon + self.minz)
+        poly_wet = self.parent.coup_poly_h(self.poly_p, hmon)
         area_amont = poly_wet.area
         term2 = alpha1 * ((s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (
             2. * self.grav)
@@ -405,7 +412,7 @@ class ClassLaws:
         list_brad = []
         brad_lim = None
         for q in self.list_q:
-            value = self.meth_brad(zav - self.minz, q, self.coef_cor_biais,
+            value = self.meth_brad(zav, q, self.coef_cor_biais,
                                    self.type_kb, self.list_ph, self.list_e)
             # [q, zav, zav + remout]
             if value is None:

@@ -35,7 +35,7 @@ from .ClassLaws import ClassLaws
 from .ClassTableStructure import ClassTableStructure
 from scipy import interpolate
 
-
+# TODO
 class ClassMethod:
     def __init__(self, mgis):
         self.mgis = mgis
