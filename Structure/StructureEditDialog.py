@@ -93,12 +93,15 @@ class ClassStructureEditDialog(QDialog):
         self.cb_met_calc.currentIndexChanged[int].connect(self.change_met_calc)
         self.b_ok.accepted.connect(self.accept_page)
         self.b_ok.rejected.connect(self.reject_page)
+        self.b_up_prof.clicked.connect(self.update_profil)
+        self.b_up_prof.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/update.png')))
 
         if id_struct:
             self.is_loading = True
-            sql = "SELECT name, type, method, active FROM {0}.struct_config " \
+            sql = "SELECT name, type, method, active, id_prof_ori FROM {0}.struct_config " \
                   "WHERE id = {1}".format(self.mdb.SCHEMA, self.id_struct)
             rows = self.mdb.run_query(sql, fetch=True)
+            self.id_prof_ori = rows[0][4]
             self.typ_struct = rows[0][1]
 
             for m in self.tbst.dico_struc_typ[self.typ_struct]['meth_calc']:
@@ -109,6 +112,38 @@ class ClassStructureEditDialog(QDialog):
             self.cc_active.setChecked(rows[0][3])
             fill_qcombobox(self.cb_met_calc, self.lst_meth_calc, val_def=rows[0][2])
             self.is_loading = False
+
+            rows = self.mdb.run_query("SELECT gid FROM {0}.profiles".format(self.mdb.SCHEMA), fetch=True)
+
+            list_p = [v[0] for v in rows]
+            if self.id_prof_ori  in list_p :
+                self.b_up_prof.setEnabled(True)
+            else:
+                self.b_up_prof.setEnabled(False)
+
+    def update_profil (self):
+        """
+        update zx of profil
+        """
+        tab = {'x': [], 'z': []}
+        where = "gid = '{0}' ".format(self.id_prof_ori)
+        feature = self.mdb.select('profiles', where=where, list_var=['x', 'z', 'abscissa', 'branchnum'])
+        tab['x'] = [float(var) for var in feature["x"][0].split()]
+        tab['z'] = [float(var) for var in feature["z"][0].split()]
+
+        if len(tab['x']) == 0 or len(tab['z']) == 0:
+            self.mgis.add_info("Check if the profile is saved.")
+            return
+
+        colonnes = ['id_config', 'id_order', 'x', 'z']
+        xz = list(zip(tab['x'], tab['z']))
+        values = []
+        for order, (x, z) in enumerate(xz):
+            values.append([self.id_struct, order, x, z])
+
+        self.mdb.delete('profil_struct', where='id_config = {}'.format(self.id_struct))
+        self.mdb.insert_res('profil_struct', values, colonnes)
+        self.clmeth.update_etat_struct_prof(self.id_struct, active=False)
 
     def change_met_calc(self, idx):
         if not self.is_loading:

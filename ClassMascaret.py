@@ -1304,7 +1304,7 @@ class ClassMascaret:
                     comments = ''
         else:
             comments = ''
-        return comments
+        return comments.replace("'","''")
 
     def mascaret(self, noyau, run):
         """creation file and to run mascaret"""

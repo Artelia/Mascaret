@@ -94,6 +94,7 @@ class ClassLaws:
             self.param_elem['ZMAXELEM'].append(maxy)
             self.param_elem['LARGELEM'].append(maxx - minx)
             self.param_elem['SURFELEM'].append(poly.area)
+        print(self.param_elem['SURFELEM'])
 
     def check_listinter(self, dico_abc, name_abc, varx, vary):
         if len(dico_abc[name_abc][varx]) == len(dico_abc[name_abc][vary]):
@@ -383,7 +384,7 @@ class ClassLaws:
 
         self.init_bradley(method, id_config)
 
-        val = 90 / len(self.list_zav)
+        val = 75 / len(self.list_zav)
 
         # self.list_zav=[9.75,6.25]
         ztransi = min(self.param_elem['ZMAXELEM'])
@@ -392,8 +393,11 @@ class ClassLaws:
             list_final = self.calc_law_brad(list_final, zav, ztransi)
             if ui is not None:
                 ui.progress_bar(val)
+        # correction of the law
         list_final = self.transition_charge(list_final, ztransi)
         list_final = self.complete_law(list_final)
+        if ui is not None:
+            ui.progress_bar(90)
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
