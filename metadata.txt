@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=2.18
 qgisMaximumVersion=3.99
 
-version=0.3.5
+version=1.0.0
 
 author=Artelia Eau et Environnement
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,6 +30,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    1.0.0  : First official version
     0.3.5  : Correction of xcas file for the basins
     0.3.4  : Correction of Ctrl+C Ctrl+V bug for the  table of hydro. results
              Correction of auto-initialisation bug for the basins
@@ -93,7 +94,7 @@ repository=https://github.com/Artelia/Mascaret
 category=Database
 icon=icones/icon_base.png
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
