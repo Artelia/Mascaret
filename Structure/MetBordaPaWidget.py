@@ -50,6 +50,8 @@ class MetBordaPaWidget(QWidget):
         self.dsb_larg_pil.valueChanged.connect(self.update_piles)
         self.dsb_h_pas.valueChanged.connect(self.update_min_h_max)
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
+        self.dsb_q_pas.valueChanged.connect(self.update_min_q_max)
+        self.dsb_q_min.valueChanged.connect(self.update_min_q_max)
         self.tab_trav.itemChanged.connect(self.verif_larg_trav)
 
         self.dico_ctrl = {'FIRSTWD': [self.dsb_abs_cul_rg],
@@ -58,8 +60,12 @@ class MetBordaPaWidget(QWidget):
                           'PASH': [self.dsb_h_pas],
                           'MINH': [self.dsb_h_min],
                           'MAXH': [self.dsb_h_max],
+                          'PASQ': [self.dsb_q_pas],
+                          'MINQ': [self.dsb_q_min],
+                          'MAXQ': [self.dsb_q_max],
                           'NBTRAVE': [self.sb_nb_trav],
-                          'COEFDS': [self.dsb_ds]
+                          'COEFDS': [self.dsb_ds],
+                          'COEFBOR': [self.dsb_borda]
                           }
 
         self.dico_tab = {self.tab_trav: {'type': 0,
@@ -116,6 +122,9 @@ class MetBordaPaWidget(QWidget):
 
     def update_min_h_max(self):
         self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
+
+    def update_min_q_max(self):
+        self.dsb_q_max.setMinimum(self.dsb_q_min.value() + self.dsb_q_pas.value())
 
     def verif_larg_trav(self, itm):
         if itm.column() == 0:

@@ -65,7 +65,7 @@ class MetBordaPcWidget(QWidget):
                           'MAXQ': [self.dsb_q_max],
                           'NBTRAVE': [self.sb_nb_trav],
                           'COEFDS': [self.dsb_ds],
-                          'COEFDO': [self.dsb_do]
+                          'COEFBOR': [self.dsb_borda]
                           }
 
         self.dico_tab = {self.tab_trav: {'type': 0,

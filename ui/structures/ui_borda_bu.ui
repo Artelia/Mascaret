@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>685</width>
-    <height>679</height>
+    <width>762</width>
+    <height>777</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,19 +28,6 @@
    </property>
    <item>
     <layout class="QGridLayout" name="gridLayout_2">
-     <item row="1" column="2">
-      <spacer name="horizontalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_6">
        <property name="text">
@@ -64,76 +51,71 @@
        </property>
       </widget>
      </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox_4">
-     <property name="title">
-      <string>Paramètres</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_16">
-      <property name="leftMargin">
-       <number>5</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>5</number>
-      </property>
-      <property name="bottomMargin">
-       <number>5</number>
-      </property>
-      <item>
-       <layout class="QGridLayout" name="gridLayout_9">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_29">
-          <property name="text">
-           <string>Hauteur d'eau</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QLabel" name="label_28">
-          <property name="text">
-           <string>Bornes</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4">
-         <layout class="QHBoxLayout" name="horizontalLayout_12">
-          <item>
-           <widget class="QLabel" name="label_34">
+     <item row="1" column="2">
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="2" column="0">
+      <widget class="QGroupBox" name="groupBox_5">
+       <property name="title">
+        <string>Paramètres</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_18">
+        <property name="leftMargin">
+         <number>5</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>5</number>
+        </property>
+        <property name="bottomMargin">
+         <number>5</number>
+        </property>
+        <item>
+         <layout class="QGridLayout" name="gridLayout_11">
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_8">
             <property name="text">
-             <string>Min</string>
+             <string>Pas de discrétisation</string>
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QDoubleSpinBox" name="dsb_h_min">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_45">
+            <property name="text">
+             <string>Débit pris en compte </string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QDoubleSpinBox" name="dsb_q_pas">
             <property name="maximumSize">
              <size>
               <width>80</width>
               <height>16777215</height>
              </size>
             </property>
-            <property name="suffix">
-             <string> m</string>
+            <property name="minimum">
+             <double>0.010000000000000</double>
             </property>
             <property name="maximum">
              <double>10000.000000000000000</double>
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QLabel" name="label_35">
-            <property name="text">
-             <string>Max</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QDoubleSpinBox" name="dsb_h_max">
+          <item row="0" column="2">
+           <widget class="QDoubleSpinBox" name="dsb_h_pas">
             <property name="maximumSize">
              <size>
               <width>80</width>
@@ -154,8 +136,231 @@
             </property>
            </widget>
           </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Pas de discrétisation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="label_46">
+            <property name="text">
+             <string>Bornes</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_47">
+            <property name="text">
+             <string>Hauteur d'eau</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <layout class="QHBoxLayout" name="horizontalLayout_16">
+            <item>
+             <widget class="QLabel" name="label_48">
+              <property name="text">
+               <string>Min</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="dsb_h_min">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="suffix">
+               <string> m</string>
+              </property>
+              <property name="maximum">
+               <double>10000.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_49">
+              <property name="text">
+               <string>Max</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="dsb_h_max">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="suffix">
+               <string> m</string>
+              </property>
+              <property name="minimum">
+               <double>0.010000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>10000.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>1.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_16">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLabel" name="label_50">
+            <property name="text">
+             <string>Bornes</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <layout class="QHBoxLayout" name="horizontalLayout_17">
+            <item>
+             <widget class="QLabel" name="label_51">
+              <property name="text">
+               <string>Min</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="dsb_q_min">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="maximum">
+               <double>10000.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_52">
+              <property name="text">
+               <string>Max</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="dsb_q_max">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="minimum">
+               <double>0.010000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>10000.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_17">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_18">
           <item>
-           <spacer name="horizontalSpacer_12">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>Coefficients</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_53">
+            <property name="text">
+             <string>DSeuil</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="dsb_ds">
+            <property name="maximumSize">
+             <size>
+              <width>80</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="maximum">
+             <double>10000.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.385000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_54">
+            <property name="text">
+             <string>DBorda</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="dsb_borda">
+            <property name="maximumSize">
+             <size>
+              <width>80</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="maximum">
+             <double>10000.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.450000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_18">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -169,72 +374,10 @@
           </item>
          </layout>
         </item>
-        <item row="0" column="2">
-         <widget class="QDoubleSpinBox" name="dsb_h_pas">
-          <property name="maximumSize">
-           <size>
-            <width>80</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="suffix">
-           <string> m</string>
-          </property>
-          <property name="minimum">
-           <double>0.010000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>10000.000000000000000</double>
-          </property>
-          <property name="value">
-           <double>1.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>Pas de discrétisation</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>Coefficients</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLabel" name="label_36">
-          <property name="text">
-           <string>DS</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QDoubleSpinBox" name="dsb_ds">
-          <property name="maximumSize">
-           <size>
-            <width>80</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="decimals">
-           <number>3</number>
-          </property>
-          <property name="maximum">
-           <double>10000.000000000000000</double>
-          </property>
-          <property name="value">
-           <double>0.385000000000000</double>
-          </property>
-         </widget>
-        </item>
        </layout>
-      </item>
-     </layout>
-    </widget>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_6">

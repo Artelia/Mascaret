@@ -390,7 +390,7 @@
         <item>
          <widget class="QLabel" name="label_37">
           <property name="text">
-           <string>DS</string>
+           <string>DSeuil</string>
           </property>
          </widget>
         </item>
@@ -416,12 +416,12 @@
         <item>
          <widget class="QLabel" name="label_38">
           <property name="text">
-           <string>DO</string>
+           <string>DBorda</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QDoubleSpinBox" name="dsb_do">
+         <widget class="QDoubleSpinBox" name="dsb_borda">
           <property name="maximumSize">
            <size>
             <width>80</width>
@@ -434,8 +434,11 @@
           <property name="maximum">
            <double>10000.000000000000000</double>
           </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
           <property name="value">
-           <double>1.000000000000000</double>
+           <double>0.450000000000000</double>
           </property>
          </widget>
         </item>

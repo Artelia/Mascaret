@@ -675,7 +675,6 @@ class ClassMethod:
         # self.mdb.update('profiles', tab, var='gid')
 
         sql = "UPDATE {schema}.{table} SET struct={struct}  WHERE gid={gid}".format(**tab)
-        print(sql)
         self.mdb.run_query(sql)
 
 if __name__ == '__main__':

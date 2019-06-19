@@ -49,14 +49,20 @@ class MetBordaBuWidget(QWidget):
         self.sb_nb_trav.valueChanged.connect(self.change_ntrav)
         self.dsb_h_pas.valueChanged.connect(self.update_min_h_max)
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
-        self.tab_trav.itemChanged.connect(self.verif_param_trav)
+        self.dsb_q_pas.valueChanged.connect(self.update_min_q_max)
+        self.dsb_q_min.valueChanged.connect(self.update_min_q_max)
+
 
         self.dico_ctrl = {'ZTOPTAB': [self.dsb_cote_tab],
                           'PASH': [self.dsb_h_pas],
                           'MINH': [self.dsb_h_min],
                           'MAXH': [self.dsb_h_max],
+                          'PASQ': [self.dsb_q_pas],
+                          'MINQ': [self.dsb_q_min],
+                          'MAXQ': [self.dsb_q_max],
                           'NBTRAVE': [self.sb_nb_trav],
-                          'COEFDS': [self.dsb_ds]
+                          'COEFDS': [self.dsb_ds],
+                          'COEFBOR': [self.dsb_borda]
                           }
 
         self.dico_tab = {self.tab_trav: {'type': 0,
@@ -94,6 +100,9 @@ class MetBordaBuWidget(QWidget):
 
     def update_min_h_max(self):
         self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
+
+    def update_min_q_max(self):
+        self.dsb_q_max.setMinimum(self.dsb_q_min.value() + self.dsb_q_pas.value())
 
     def verif_param_trav(self, itm):
         if itm.data(0) <= 0.:
