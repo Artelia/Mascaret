@@ -51,13 +51,12 @@ class ClassLaws:
         else:
             msg = "Profile copy isn't found"
             self.mgis.add_info(msg)
-            print(msg)
             return
 
         list_recup = ['FIRSTWD', 'NBTRAVE',
                       'ZTOPTAB', 'COEFDS', 'COEFDO',
                       # numeric
-                      'MAXH', 'MINH', 'PASH']
+                      'MAXH', 'MINH', 'PASH','PASQ']
         self.param_g = self.parent.get_param_g(list_recup, id_config)
         list_key = list(self.param_g.keys())
         if not 'COEFDO' in list_key:
@@ -183,7 +182,7 @@ class ClassLaws:
                       # pile de pont
                       'LARGPIL', 'LONGPIL', 'FORMPIL', 'BIAIPIL',
                       # numeric
-                      'MAXQ', 'MINQ', 'PASQ']
+                      'MAXQ', 'MINQ']
         param_g_temp = self.parent.get_param_g(list_recup, id_config)
         self.param_g.update(param_g_temp)
         self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
@@ -564,6 +563,7 @@ class ClassLaws:
         # Get unique rows
         out = sorted_data[row_mask]
         return list(out)
+
     def complete_law(self, list_final):
         info = self.parent.sort_law(list_final)
         unique, counts = np.unique(info[:, 1], return_counts=True)
@@ -931,7 +931,7 @@ class ClassLaws:
 
         self.init_method(id_config)
         if method == "Borda":
-            list_recup = ['MAXQ', 'MINQ', 'PASQ','COEFBOR']
+            list_recup = ['MAXQ', 'MINQ','COEFBOR']
             param_g_temp = self.parent.get_param_g(list_recup, id_config)
             self.param_g.update(param_g_temp)
             self.list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
@@ -988,11 +988,6 @@ class ClassLaws:
         zcret = self.param_g['ZTOPTAB']
         # surf = 0
         val = 90 / len(self.list_zav)
-        # self.param_g['TOTALOUV'] = 0
-        # for poly_trav in self.list_poly_trav:
-        #     surf += poly_trav.area
-        #     (minx, miny, maxx, maxy) = poly_trav.bounds
-        #     self.param_g['TOTALOUV'] += (maxx - minx)
 
         #zinf_vann = self.poly_p.bounds[1]  # z min du profil
 
@@ -1047,7 +1042,7 @@ class ClassLaws:
             if ui is not None:
                 ui.progress_bar(val)
 
-        list_final, self.list_q = self.interpol_list_final_for_new_q(list_final, pasq=10)
+        list_final, self.list_q = self.interpol_list_final_for_new_q(list_final, pasq=self.param_g['PASQ'])
         # list_final = self.complete_law(list_final)
 
         list_final = self.transition_charge(list_final,ztransi)

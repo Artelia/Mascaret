@@ -56,6 +56,7 @@ class MetOrificeDaWidget(QWidget):
                           'PASH': [self.dsb_h_pas],
                           'MINH': [self.dsb_h_min],
                           'MAXH': [self.dsb_h_max],
+                          'PASQ': [self.dsb_q_pas],
                           'NBTRAVE': [self.sb_nb_trav],
                           'COEFDS': [self.dsb_ds],
                           'COEFDO': [self.dsb_do]
