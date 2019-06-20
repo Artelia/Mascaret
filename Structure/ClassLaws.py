@@ -29,6 +29,9 @@ from qgis.gui import *
 
 
 class ClassLaws:
+    """
+    Class contain the different methods to create the laws
+    """
     def __init__(self, parent):
         self.parent = parent
         self.mgis = self.parent.mgis
@@ -45,7 +48,12 @@ class ClassLaws:
         self.deb_min = 0.0001
 
     def init_method(self, id_config):
-        """intialisation variables"""
+        """
+        intialisation variables
+        :param id_config:  index of hydraulic structure
+        :return:
+        """
+
         if self.parent.checkprofil(id_config):
             profil = self.parent.get_profil(id_config)
         else:
@@ -56,7 +64,7 @@ class ClassLaws:
         list_recup = ['FIRSTWD', 'NBTRAVE',
                       'ZTOPTAB', 'COEFDS', 'COEFDO',
                       # numeric
-                      'MAXH', 'MINH', 'PASH','PASQ']
+                      'MAXH', 'MINH', 'PASH', 'PASQ']
         self.param_g = self.parent.get_param_g(list_recup, id_config)
         list_key = list(self.param_g.keys())
         if not 'COEFDO' in list_key:
@@ -71,10 +79,8 @@ class ClassLaws:
         (minx, miny, maxx, maxy) = poly_tmp.bounds
         self.param_g['TOTALW'] = maxx - minx
 
-        # ***********************************
         (minx, miny, maxx, maxy) = self.poly_p.bounds
         self.minz = miny
-        # self.list_zav = [miny]
         self.list_zav = list(
             np.arange(self.minz + self.param_g['MINH'], self.param_g['MAXH'] + self.minz, self.param_g['PASH']))
         self.list_zav.append(self.param_g['MAXH'] + self.minz)
@@ -85,8 +91,7 @@ class ClassLaws:
         order = "id_elem"
         self.list_poly_trav = self.parent.select_poly('struct_elem', where, order)['polygon']
 
-        # TODO modifier ZPC car arch depend element meme pour dalot
-        self.param_elem = {'ZMAXELEM': [], 'LARGELEM': [], 'SURFELEM': [],'ZMINELEM' :[]}
+        self.param_elem = {'ZMAXELEM': [], 'LARGELEM': [], 'SURFELEM': [], 'ZMINELEM': []}
 
         for poly in self.list_poly_trav:
             (minx, miny, maxx, maxy) = poly.bounds
@@ -96,6 +101,14 @@ class ClassLaws:
             self.param_elem['ZMINELEM'].append(miny)
 
     def check_listinter(self, dico_abc, name_abc, varx, vary):
+        """
+        Check the interpolated list
+        :param dico_abc: dico where the lists are contained
+        :param name_abc: key of dico
+        :param varx: key of x value
+        :param vary: key of y value
+        :return: new list
+        """
         if len(dico_abc[name_abc][varx]) == len(dico_abc[name_abc][vary]):
             return dico_abc[name_abc][varx], dico_abc[name_abc][vary]
         else:
@@ -108,11 +121,13 @@ class ClassLaws:
                         list_inter_y.append(dico_abc[name_abc][vary][jdx])
             return list_inter_x, list_inter_y
 
-            # *******************************************************
-            # Bradley
-            # *******************************************************
-
     def check_coefm(self, coefm, verb=False):
+        """
+        Check m coeficient to test  application domain
+        :param coefm: m coeficient
+        :param verb: verb: verbose yes or no
+        :return:
+        """
         cond = True
         msg = 'The following coeficients leave application domain :\n'
         if coefm < 0.45:
@@ -135,6 +150,15 @@ class ClassLaws:
         return cond
 
     def check_j(self, j, form, q, h, verb=False):
+        """
+        Check j parameter and modifie
+        :param j: parameter method Bradley
+        :param form: Span form
+        :param q: flow rate
+        :param h: water level
+        :param verb: verbose yes or no
+        :return:
+        """
         msg = 'The j coeficients > {} for {} span form with q = {} and h = {}.\n'
         cond = True
         if form == 1 and j > 0.057:
@@ -175,7 +199,12 @@ class ClassLaws:
         return j
 
     def init_bradley(self, method, id_config):
-        """ initialisation for bradley method"""
+        """
+        initialisation for bradley method
+        :param method: mehtod of compute
+        :param id_config:  index of hydraulic structure
+        :return:
+        """
         list_recup = ['BIAIOUV',
                       'FORMCUL', 'ORIENTM',
                       'PENTTAL', 'EPAITAB', 'BIAICUL',
@@ -224,14 +253,13 @@ class ClassLaws:
         self.list_e = sorted(self.list_e)
 
         self.coef_cor_biais = (self.param_g['LONGPIL'] * m.sin(self.param_g['BIAIOUV']) +
-                          self.param_g['LARGPIL'] * m.cos(self.param_g['BIAIOUV'])) / self.param_g['LARGPIL']
+                               self.param_g['LARGPIL'] * m.cos(self.param_g['BIAIOUV'])) / self.param_g['LARGPIL']
 
     def meth_brad(self, zav, q, coef_cor_biais, type_kb, list_ph, list_e):
         """
         Compute  h upstream with bradley method
         :param zav: zav cote downstream
         :param q: flow rate
-
         :param coef_cor_biais: angle correction coefficient
         :param type_kb: kb coefficient type
         :param list_ph: phi list in abacus
@@ -242,7 +270,7 @@ class ClassLaws:
         area_pil = 0
         area_pil_proj = 0
 
-        poly_wet = self.parent.coup_poly_h(self.poly_p, zav )
+        poly_wet = self.parent.coup_poly_h(self.poly_p, zav)
         if poly_wet.is_empty:
             return None
         area_wet = poly_wet.area
@@ -255,12 +283,13 @@ class ClassLaws:
             area_pil += poly_pil.area
         if area_pil_proj == 0:
             area_pil_proj = area_pil
-        left_bank = self.param_g['FIRSTWD'] + self.param_g['TOTALOUV'] + self.param_g['LARGPIL'] * len(self.list_poly_pil)
+        left_bank = self.param_g['FIRSTWD'] + self.param_g['TOTALOUV'] + self.param_g['LARGPIL'] * len(
+            self.list_poly_pil)
         ssoh = self.parent.coup_poly_v(poly_wet, [self.param_g['FIRSTWD'], left_bank],
                                        typ='LR').area
         q1 = ssoh * umoy
         q2 = self.parent.coup_poly_v(poly_wet, self.param_g['FIRSTWD'], typ='R').area * umoy
-        q3 = self.parent.coup_poly_v(poly_wet, left_bank , typ='L').area * umoy
+        q3 = self.parent.coup_poly_v(poly_wet, left_bank, typ='L').area * umoy
         qtot = q1 + q2 + q3
         alpha1 = 1
         alpha2 = 1
@@ -272,8 +301,6 @@ class ClassLaws:
             return [self.deb_min, zav, zav]
             # coefm = 0
 
-
-
         # print('q1,q2,q3',q1,q2,q3)
         # print('area q1, area q2,area q3', ssoh,
         # self.parent.coup_poly_v(poly_wet,self.param_g['FIRSTWD'],typ='R').area,
@@ -284,7 +311,7 @@ class ClassLaws:
             return None
 
         s1 = ssoh - area_pil_proj
-         # print('S1',s1)
+        # print('S1',s1)
         va = q / s1
         # print('Va', va)
         # *************** kb
@@ -375,8 +402,13 @@ class ClassLaws:
         return list(sortie[idx])
 
     def bradley(self, id_config, method='Bradley 78', ui=None):
-        """cas methode bradley"""
-        # *************************************
+        """
+        Bradley method for structure
+        :param id_config:  index of hydraulic structure
+        :param method: mehtod of compute
+        :param ui: gui object
+        :return: law list
+        """
         self.init_method(id_config)
         list_final = []
 
@@ -399,17 +431,17 @@ class ClassLaws:
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
-        self.test_csv(list_final)
+        self.write_csv(list_final)
 
         return list_final
 
-    def calc_law_brad(self,list_final, zav, ztransi):
+    def calc_law_brad(self, list_final, zav, ztransi):
         """
-
-        :param list_final: law list
+        Compute bradley method
+        :param list_final: list of law values
         :param zav: z dowstream
-        :param ztransi: z transition stream
-        :return:
+        :param ztransi: z transition stream (free surface flow and flow under load)
+        :return: new list of law values
         """
         list_brad = []
         brad_lim = None
@@ -425,7 +457,7 @@ class ClassLaws:
                     break
                 list_brad.append(value)
 
-        # traitement entre les deux loi
+        # treatment transition law
         list_ori = []
         if len(list_brad) > 0:
             qmax = max(np.array(list_brad)[:, 0])
@@ -452,17 +484,15 @@ class ClassLaws:
 
         idx = np.where(self.list_zam > za)[0]
         if len(idx) > 0:
-            # zinf_vann = self.poly_p.bounds[1]
             zcret = self.param_g['ZTOPTAB']
             for zam in self.list_zam[idx[0]:]:
                 if zav != zam:
                     q_seuil = 0
                     q_ori = 0
                     for i, zsup in enumerate(self.param_elem['ZMAXELEM']):
-
-                        q_ori += self.meth_orif_cano(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
-                                                     self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
-                                                     self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
+                        q_ori += self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
+                                                self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
+                                                self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
 
                     # print('zam q_ori',zam, q_ori)
                     if zam >= zcret:
@@ -478,9 +508,6 @@ class ClassLaws:
                         if value[0] > self.param_g['MAXQ']:
                             list_ori.append(value)
                             break
-                        # if value[0] > qmax: # permet l'interpolation des valeurs h superieur même si le débit inferieur
-                        # print('ori va',value)
-                        # probleme peut venir de ça
                         list_ori.append(value)
 
         # interpol q fix
@@ -502,25 +529,32 @@ class ClassLaws:
 
     def transition_charge(self, list_final, ztransi):
         """
-        :param list_final: law interpol
-        :param ztransi:
-        :return:
+        Treatment of transition flow (free surface flow and flow under load)
+        :param list_final: list of law values
+        :param ztransi:  z transition stream
+        :return: new list of law values
         """
         list_add = []
         if isinstance(ztransi, list):
             uniques = np.unique(np.array(ztransi))
-            for z_tmp in uniques :
-                list_add += self.calc_transi(list_final,z_tmp)
+            for z_tmp in uniques:
+                list_add += self.calc_transi(list_final, z_tmp)
         else:
             list_add = self.calc_transi(list_final, ztransi)
         list_final = list_final + list_add
         return list_final
 
-    def calc_transi(self, list_final,ztransi):
-        list_add=[]
-        # trie pour être sûr
+    def calc_transi(self, list_final, ztransi):
+        """
+        Compute value of transition flow (free surface flow and flow under load)
+        :param list_final: list of law values
+        :param ztransi:  z transition stream
+        :return: added value list
+        """
+        list_add = []
+
         info = self.parent.sort_law(list_final)
-        # ajout de Z pour  acroite le point d'infexion
+        # add Z pour  acroite le point d'infexion
         for id, deb in enumerate(self.list_q):
             # cherche nb de debi
             idxq = np.where(info[:, 0] == deb)[0]
@@ -554,6 +588,11 @@ class ClassLaws:
         return list_add
 
     def delete_doublon(self, liste):
+        """
+        Delete  duplicate value
+        :param liste: list
+        :return: new list
+        """
         data = np.array(liste)
         sorted_idx = np.lexsort(data.T)
         sorted_data = data[sorted_idx, :]
@@ -565,6 +604,11 @@ class ClassLaws:
         return list(out)
 
     def complete_law(self, list_final):
+        """
+        Add value to have the same value number for q and z downstream
+        :param list_final: list of law values
+        :return: new_list: new list of law values
+        """
         info = self.parent.sort_law(list_final)
         unique, counts = np.unique(info[:, 1], return_counts=True)
         nb_val = max(counts)
@@ -579,19 +623,27 @@ class ClassLaws:
             modif = False
             add_val = []
             for val in list_val:
-                if not (val in tab[:,1]):
+                if not (val in tab[:, 1]):
                     modif = True
-                    zam_f = np.interp(val, tab[:,1], tab[:,2])
+                    zam_f = np.interp(val, tab[:, 1], tab[:, 2])
                     add_val.append([deb, val, zam_f])
             if modif:
                 new_list = new_list + list(tab) + add_val
             else:
                 new_list += list(tab)
 
+        new_list= self.delete_doublon(new_list)
 
         return new_list
 
     def save_list_final(self, list_final, id_config, method):
+        """
+        Save in database the law value
+        :param list_final: list of law values
+        :param id_config:  index of hydraulic structure
+        :param method: mehtod of compute
+        :return: nothing
+        """
         # **********************************************************************************************
         # save
         # *********************************************************************************************
@@ -612,6 +664,11 @@ class ClassLaws:
             self.parent.save_law_st(method, id_config, list_final)
 
     def def_type_kb(self, method):
+        """
+        Compute kb coeficient
+        :param method: compute method
+        :return:
+        """
         if method == 'Bradley 78':
             if self.param_g['TOTALOUV'] > 60 and self.param_g['FORMCUL'] == 1:
                 type_kb = 'Others'
@@ -643,7 +700,15 @@ class ClassLaws:
         return type_kb
 
     def meth_seuil(self, zam, zav, zcret, cf, larg):
-        """ methode seuil"""
+        """
+        Compute threshold law
+        :param zam: z upstream
+        :param zav: z downstream
+        :param zcret: z crest
+        :param larg: wide
+        :param cf: flow rate coeficient for threshold law
+        :return: q : flow rate
+        """
         ct = cf * m.sqrt(2 * self.grav)
         typ_s = 0  # 0 :'thick', 1: thin
 
@@ -676,37 +741,20 @@ class ClassLaws:
 
         return q
 
-    def meth_orif_mas(self, zam, zav, zinf, zsup, larg, cf, cfo, surf):
-        """ methode orifice"""
-        ouv = zsup - zinf
-        h1 = zam - zinf
-        h2 = zav - zinf
-        hav = min(h1, h2)
-        ham = max(h1, h2)
-        ct = cfo * m.sqrt(2 * self.grav)
-
-        if ham < 0:
-            print('erreur loi orifice ham <0')
-            return None
-        if (h1 >= h2):
-            sens_ecoul = 1
-        else:
-            sens_ecoul = -1
-
-        if hav < ouv and ham < ouv + 0.2:
-
-            q = self.meth_seuil(zam, zav, zinf, cf, larg)
-        else:
-            if hav > ouv:
-                q = ct * surf * m.sqrt(ham - hav)
-            else:
-                q = ct * surf * m.sqrt(ham)
-            q = sens_ecoul * q
-
-        return q
-
-    def meth_orif_cano(self, zam, zav, zinf, zsup, zcret, larg, cf, cfo, surf):
-
+    def meth_orif(self, zam, zav, zinf, zsup, zcret, larg, cf, cfo, surf):
+        """
+        Compute orifice law
+        :param zam: z upstream
+        :param zav: z downstream
+        :param zinf: z orifice bottom
+        :param zsup: z orifice top
+        :param zcret: z crest
+        :param larg: wide
+        :param cf: flow rate coeficient for threshold law
+        :param cfo: flow rate coeficient for orifice law
+        :param surf: wet area of orifice
+        :return: q : flow rate
+        """
         ouv = zsup - zinf
         h1 = zam - zinf
         h2 = zav - zinf
@@ -728,11 +776,11 @@ class ClassLaws:
             return 0
         qo = 0
         qs = 0
-        if ham < ouv + epso:
+        if ham < ouv + epso:  # working threshold
+
             qs = self.meth_seuil(zam, zav, zinf, cf, larg)
 
-
-        if ham > ouv:  # ! fonctionnement en orifice
+        if ham > ouv:  # working orifice
             a2 = 0.65
             # a1 = ouv / ham
             # a2 = 0.65
@@ -740,10 +788,10 @@ class ClassLaws:
             #         a2 = 0.5 + 0.268 * a1
             # elif 0.9<= a1 :
             #         a2 = 0.745 + 2.55 * (a1 - 0.9)
-            if (ham - hav) <= epsd:  # traitement linéarisé pour les petits déniveles
+            if (ham - hav) <= epsd:  # linear treatment for the little gap
                 qo = surf * a2 * (ham - hav) / rac_epsd
 
-            else:  # ! traitement normal
+            else:
                 a3 = max(hav, 0.5 * ouv)
                 qo = surf * a2 * m.sqrt(ham - a3)
         qo = ct * qo
@@ -761,7 +809,7 @@ class ClassLaws:
         """
         search the most little max
         :param tmp: list of values
-        :return:
+        :return: max
         """
         list_qmax = []
         for zav in np.unique(tmp[:, 1]):
@@ -778,14 +826,16 @@ class ClassLaws:
     def interpol_list_final_for_new_q(self, list_final, pasq=10):
         """
         Search the  new (q, zav) couple and interpole with new q
-        :param list_final
-        :return:
+        :param list_final: list of law values
+        :param pasq q discretisation
+        :return: list_final: new list of law values
+        :return: q_new: q list of law
         """
         tmp = np.array(list_final)
         qmin = min(tmp[:, 0])
 
         qmax = max(tmp[:, 0])
-        # int(qmin) pour avoir des valeurs rondes
+        # int(qmin) for around value
         q_new = np.arange(int(qmin), qmax, pasq)
         q_new[0] = qmin
         list_final = []
@@ -803,11 +853,19 @@ class ClassLaws:
 
         return list_final, q_new
 
-    def calc_law_borda_q(self, list_final, zav, zcret,ztr):
-        list_borda = []
+    def calc_law_borda(self, list_final, zav, zcret, ztr):
+        """
+        Compute the law with borda method + threshold law
+        :param list_final: list of law values
+        :param zav: z dowstream
+        :param zcret: z Crest
+        :param ztr: z transition stream (threshold)
+        :return: list_final: new list of law values
+        """
         borda_lim = None
         pr_area_wet = self.area_wet_fct(self.poly_p, zav)
-        pr_area_wet_cret = self.area_wet_fct(self.poly_p,  ztr)
+        pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
+
         area_wet = 0
         for poly_trav in self.list_poly_trav:
             area_wet += self.area_wet_fct(poly_trav, zav)
@@ -849,14 +907,8 @@ class ClassLaws:
         if len(idx) > 0:
 
             for zam in self.list_zam[idx[0]:]:
-                # print(zav)
                 if zav != zam:
                     q_seuil = 0
-                    q_ori = 0
-                    # for i, zsup in enumerate(self.param_elem['ZMAXELEM']):
-                    #     q_ori += self.meth_orif_cano(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
-                    #                                  self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
-                    #                                  self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
                     q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam, zav)
                     # print('zam q_ori',zam, q_ori)
                     if zam >= zcret:
@@ -890,112 +942,81 @@ class ClassLaws:
             list_ori = []
         return list_final + list_borda + list_ori
 
-    def calc_law_borda_z(self, list_final, zav, zcret):
-        qmax = self.deb_min  # self.param_g['MINQ']
-        pr_area_wet = self.area_wet_fct(self.poly_p, zav)
-        area_wet = 0
-        for poly_trav in self.list_poly_trav:
-            area_wet += self.area_wet_fct(poly_trav, zav)
-        if pr_area_wet == 0 or area_wet == 0:
-            return None
-        idx = np.where(self.list_zam > zav)[0]
-        if len(idx) > 0:
-            # debut debit mini
-            if self.list_zam[idx[0] - 1] == zav:
-                # attention traitemen peut être différent
-                value = [self.deb_min, zav, self.list_zam[idx[0] - 1]]
-                list_final.append(value)
-
-            for zam in self.list_zam[idx[0]:]:
-                q_seuil = 0
-                q_bor = self.meth_borda_q(pr_area_wet, area_wet, zam, zav)
-
-                # print('q_bor', q_bor, zav, zam, area_wet)
-
-                if zam >= zcret:
-                    q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
-                if q_bor is None:
-                    value = None
-                else:
-                    value = [q_bor + q_seuil, zav, zam]
-                if value is None:
-                    continue
-                else:
-                    if value[0] > qmax:
-                        # print('ori va',value)
-                        list_final.append(value)
-
     def borda(self, id_config, method='Borda', ui=None):
-        """Borda methode for structure"""
-        method = 'Borda'
+        """
+        Borda method for structure
+        :param id_config:  index of hydraulic structure
+        :param method: mehtod of compute
+        :param ui: gui object
+        :return: law list
+        """
 
         self.init_method(id_config)
-        if method == "Borda":
-            list_recup = ['MAXQ', 'MINQ','COEFBOR']
-            param_g_temp = self.parent.get_param_g(list_recup, id_config)
-            self.param_g.update(param_g_temp)
-            self.list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
-            self.list_q.append(self.param_g['MAXQ'])
+
+        list_recup = ['MAXQ', 'MINQ', 'COEFBOR']
+        param_g_temp = self.parent.get_param_g(list_recup, id_config)
+        self.param_g.update(param_g_temp)
+        self.list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
+        self.list_q.append(self.param_g['MAXQ'])
 
         list_final = []
         zcret = self.param_g['ZTOPTAB']
-        ztr = min(self.param_elem['ZMAXELEM'])
-        ztr = zcret
-        # self.list_zav =[3,4,6,7,9]
         val = 75 / len(self.list_zav)
         area_tot = 0.
         for poly_trav in self.list_poly_trav:
             area_tot += poly_trav.area
 
         for zav in self.list_zav:
-            if method == "Borda":
-                list_final = self.calc_law_borda_q(list_final,zav,zcret,ztr)
-            # elif method == "Borda_z":
-            #     list_final = self.calc_law_borda_z(list_final, zav, zcret)
+            list_final = self.calc_law_borda(list_final, zav, zcret, zcret)
+
             if list_final is None:
                 self.mgis.add_info("Problem : a Wet Surface is Null")
             if ui is not None:
                 ui.progress_bar(val)
-        if method == "Borda":
-            # correction of the law
-            #list_final = self.transition_charge(list_final, zcret)
-            list_final = self.complete_law(list_final)
-        # elif method == "Borda_z":
-        #     list_final = self.interpol_list_final_for_new_q(list_final, pasq=10)
+
+        list_final = self.complete_law(list_final)
+
         if ui is not None:
             ui.progress_bar(90)
-        self.test_csv(list_final)
+
+        if self.mgis.DEBUG:
+            self.write_csv(list_final)
 
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
         return list_final
 
-    def test_csv(self, list_final):
-        f = open(
-            r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\toto.csv',
-            'w')
+    def write_csv(self, list_final):
+        """
+        Write CSV to check law
+        :param list_final:
+        :return:
+        """
+
+        f = open(os.path.join(self.mgis.masplugPath, r"mascaret\law_tmp.csv"), 'w')
         f.write('q ;zav ;zam \n')
         for val in list_final:
             f.write('{}; {} ;{} \n'.format(val[0], val[1], val[2]))
         f.close()
 
     def orifice(self, id_config, method='Loi d\'orifice', ui=None):
-        """orifice methode for structure"""
+        """
+        Orifice method for structure
+        :param id_config:  index of hydraulic structure
+        :param method: mehtod of compute
+        :param ui: gui object
+        :return: law list
+        """
+
         self.init_method(id_config)
         list_final = []
         qmax = self.deb_min  # self.param_g['MINQ']
         zcret = self.param_g['ZTOPTAB']
-        # surf = 0
         val = 90 / len(self.list_zav)
-
-        #zinf_vann = self.poly_p.bounds[1]  # z min du profil
-
-        first_trans=True
-        ztransi=[]
-        # formule OK
+        first_trans = True
+        ztransi = []
         for zav in self.list_zav:
-            # qtest = 0
             pr_area_wet = self.area_wet_fct(self.poly_p, zav)
             area_wet = 0
             for poly_trav in self.list_poly_trav:
@@ -1004,22 +1025,20 @@ class ClassLaws:
                 continue
             idx = np.where(self.list_zam > zav)[0]
             if len(idx) > 0:
-                # debut debit mini
+                # debut debit mini attention traitemen peut être différent
                 if self.list_zam[idx[0] - 1] == zav:
-                    # attention traitemen peut être différent
                     value = [self.deb_min, zav, self.list_zam[idx[0] - 1]]
                     list_final.append(value)
 
                 for zam in self.list_zam[idx[0]:]:
                     q_seuil = 0
                     q_ori = 0
-
                     for i, zsup in enumerate(self.param_elem['ZMAXELEM']):
-                        if first_trans :
+                        if first_trans:
                             ztransi.append(zsup)
-                        q_ori += self.meth_orif_cano(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
-                                                     self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
-                                                     self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
+                        q_ori += self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
+                                                self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
+                                                self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
                     first_trans = False
                     if zam >= zcret:
                         q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
@@ -1031,7 +1050,7 @@ class ClassLaws:
                     if value is None:
                         continue
                     else:
-                        if value[0] > qmax  : # and value[0] > qtest:
+                        if value[0] > qmax:  # and value[0] > qtest:
                             # print('ori va',value)
                             list_final.append(value)
                             # # impose debit toujours superieur
@@ -1041,31 +1060,51 @@ class ClassLaws:
                             list_final.append(value)
             if ui is not None:
                 ui.progress_bar(val)
-
+        # treament of law for Mascaret model
         list_final, self.list_q = self.interpol_list_final_for_new_q(list_final, pasq=self.param_g['PASQ'])
-        # list_final = self.complete_law(list_final)
-
-        list_final = self.transition_charge(list_final,ztransi)
+        list_final = self.transition_charge(list_final, ztransi)
         list_final = self.complete_law(list_final)
-        self.test_csv(list_final)
-
+        if self.mgis.DEBUG:
+            self.write_csv(list_final)
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
         return list_final
 
     def meth_borda_q(self, sav, sc, zam, zav):
-        k = (sav / sc - 1) ** 2 + 1/9.
+        """
+        Compute z upstream with borda method
+        :param sav: wet surface dowstream
+        :param sc:  wet surface at the hydraulic structure
+        :param zam: z upstream
+        :param zav: z dowstream
+        :return: q: flow rate
+        """
+        k = (sav / sc - 1) ** 2 + 1 / 9.
         q = m.sqrt((zam - zav) * 2 * self.grav / k) * sav * self.param_g['COEFBOR']
         return q
 
     def meth_borda_z(self, sav, sc, q, zav):
-        k = (sav / sc - 1) ** 2 + 1/9.
-        zam = (q / (sav*self.param_g['COEFBOR'])) ** 2 * k / (2 * self.grav) + zav
+        """
+        Compute z upstream with borda method
+        :param sav: wet surface dowstream
+        :param sc: wet surface at the hydraulic structure
+        :param q: flow rate
+        :param zav: z dowstream
+        :return: zam: z upstream
+        """
+        k = (sav / sc - 1) ** 2 + 1 / 9.
+        zam = (q / (sav * self.param_g['COEFBOR'])) ** 2 * k / (2 * self.grav) + zav
         return zam
 
-    def area_wet_fct(self, poly, zav):
-        poly_wet = self.parent.coup_poly_h(poly, zav)
+    def area_wet_fct(self, poly, zw):
+        """
+        Compute wet surface
+        :param poly: polygone
+        :param zw: water level
+        :return: wet surface
+        """
+        poly_wet = self.parent.coup_poly_h(poly, zw)
         if poly_wet.is_empty:
             return 0
         return poly_wet.area

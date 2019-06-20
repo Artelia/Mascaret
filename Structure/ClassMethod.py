@@ -19,9 +19,9 @@ email                :
 """
 import collections
 import math as m
-import numpy as np
 import os
-import sys
+
+import numpy as np
 import shapely.affinity
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
@@ -30,10 +30,9 @@ from qgis.gui import *
 from shapely import wkt
 from shapely.geometry import *
 
-import time
 from .ClassLaws import ClassLaws
 from .ClassTableStructure import ClassTableStructure
-from scipy import interpolate
+
 
 # TODO
 class ClassMethod:
@@ -45,7 +44,12 @@ class ClassMethod:
         self.tbst = ClassTableStructure()
 
     def get_param_g(self, list_recup, id_config):
-        """get general parameters"""
+        """
+        Get general parameters
+        :param list_recup: list of  value to get
+        :param id_config: index of hydraulic structure
+        :return: dico
+        """
         param_g = {}
         for info in list_recup:
             where = "id_config = {0} AND var = '{1}' ".format(id_config, info)
@@ -59,7 +63,13 @@ class ClassMethod:
         return param_g
 
     def get_param_elem(self, id_elem, list_recup, id_config):
-        """get element parameters"""
+        """
+        Get element parameters
+        :param id_elem: index of element
+        :param list_recup: list of  value to get
+        :param id_config: index of hydraulic structure
+        :return: dico
+        """
         param_elem = {}
         for info in list_recup:
             where = "id_config = {0} AND id_elem= {1} AND var = '{2}' ".format(id_config, id_elem, info)
@@ -74,14 +84,20 @@ class ClassMethod:
         return param_elem
 
     def get_profil(self, id_config):
-        """profil coordonnee"""
+        """
+            Get profil coordonnee
+        :param id_config: index of hydraulic structure
+        """
         where = "id_config = {0}".format(id_config)
         order = "id_order"
         profil = self.mdb.select('profil_struct', where=where, order=order, list_var=['x,z'])
         return profil
 
     def checkprofil(self, id_config):
-        """"check profil if it exists"""
+        """"
+        Check profil if it exists
+        :param id_config: index of hydraulic structure
+        """
         where = "id_config = {0}".format(id_config)
         profil = self.mdb.select('profil_struct', where=where, list_var=['id_order'])
         if profil['id_order']:
@@ -89,8 +105,21 @@ class ClassMethod:
         else:
             return False
 
-    def poly_pont_cadre(self, param_g, param_elem, x0=None, zmin=-99999, ecart=10):
-        """ creation polygone for "pont cadre" """
+    def poly_pont_cadre(self, param_g, param_elem, x0=None, zmin=-99999):
+        """
+        Creation polygone for PC : Frame bridge
+        :param param_g: dico of general parameters
+        :param param_elem: dico of element parameters
+        :param x0: origin abscissa
+        :param zmin: z min
+        :return:  polygon
+        """
+        """
+        Creation polygone for DA : scupper
+        :param param_elem: dico of element parameters
+        :param x0: origin abscissa
+        :return: polygon
+        """
         if x0 is None:
             x0 = param_g['FIRSTWD']  # point depart
         x1 = x0 + param_elem['LARGTRA']
@@ -105,7 +134,12 @@ class ClassMethod:
         return poly_t
 
     def poly_dalot(self, param_elem, x0):
-        """ creation polygone for "pont cadre" """
+        """
+        Creation polygone for DA : scupper
+        :param param_elem: dico of element parameters
+        :param x0: origin abscissa
+        :return: polygon
+        """
         x1 = x0 + param_elem['LARGTRA']
         z = param_elem['COTERAD'] + param_elem['HAUTDAL']  # point haut
         zmin = param_elem['COTERAD']
@@ -118,30 +152,39 @@ class ClassMethod:
         return poly_t
 
     def poly_buse(self, param_elem):
-        """z_rad cote radier
-            x0 x en zero"""
+        """
+        creation polygone for BU : buse
+        :param param_elem: dico of element parameters
+        :return: polygon
+        """
         z_c = param_elem['COTERAD'] + (param_elem['LARGTRA'] / 2)
         x_c = param_elem['ABSBUSE']
         circ = Point([x_c, z_c]).buffer(param_elem['LARGTRA'] / 2)
         return circ
 
-
     def poly_arch(self, param_g, param_elem, x0=None, zmin=-99999):
-        """ creation polygone for "pont arch" """
+        """
+        creation polygone for PA : arch bridge
+        :param param_elem: dico of general parameter
+        :param param_elem: dico of element parameters
+        :param x0: origin abscissa
+        :param zmin: zmin
+        :return: polygon
+        """
         type = param_elem['FORMARC']
         if x0 is None:
             x0 = param_g['FIRSTWD']  # point depart
         x1 = x0 + param_elem['LARG']
         x_c = param_elem['LARG'] / 2. + x0
         z = param_elem['ZMINARC']
-        if type == 2: #ellipse
+        if type == 2:  # ellipse
             zmax = param_elem['ZMAXARC']
             # hyp. zmax-z=b/2
             b = 2 * (zmax - z)
             z_c = zmax - b
             frac = m.pow(x0 - x_c, 2) / (1 - m.pow(z - z_c, 2) / m.pow(b, 2))
             a = m.sqrt(frac)
-        elif type == 1: #circle
+        elif type == 1:  # circle
             b = param_elem['LARG'] / 2.
             a = b
             z_c = z
@@ -177,7 +220,12 @@ class ClassMethod:
         return poly_t
 
     def poly_profil_del(self, profil, zmin=-99999):
-        """ creation profile polygone """
+        """
+        creation profile polygone
+        :param profil:  profil data
+        :param zmin: z min
+        :return: polygon
+        """
         zmin_p = zmin - 20
         x0_p = profil['x'][0] - 1  # -1 est pour évité le cas du 0
         z0_p = profil['z'][0]
@@ -191,7 +239,14 @@ class ClassMethod:
         return poly_p
 
     def poly_pil(self, param_elem, x0, zmin=-99999):
-        """ creation polygone for "pont cadre" """
+        """
+        creation polygone for Frame bridge PC
+        :param param_elem: dico of parameter for an element
+        :param x0: origin abscissa
+        :param zmin: zmin
+        :return: polygon
+        """
+
         x1 = x0 + param_elem['LARG']
         z0 = param_elem['ZMAXELEM']
         z1 = param_elem['ZMAXELEM_P1']  # point haut
@@ -205,7 +260,15 @@ class ClassMethod:
         return poly_t
 
     def create_poly_elem(self, id_config, config_type):
-        # TODO reactualiser variable
+        """
+        Creation of polygone for the differents elements and save in table
+        :param id_config: index of hydraulic structuree
+        :param config_type: type configuration PA :arch bridge
+                                               PC: frame bridge,
+                                               Bu: Buse,
+                                               Da :scupper
+        :return:
+        """
         # get profil
         if self.checkprofil(id_config):
             profil = self.get_profil(id_config)
@@ -236,7 +299,7 @@ class ClassMethod:
             param_g = self.get_param_g(list_recup, id_config)
             recup_trav = ['FORMARC', 'LARGTRA', 'ZMINARC', 'ZMAXARC']
             recup_pil = ['LARGPIL']
-            recup_p1 = ['FORMARC','ZMINARC']
+            recup_p1 = ['FORMARC', 'ZMINARC']
         elif config_type == 'DA':
             list_recup = ['ZTOPTAB', 'FIRSTWD']
             param_g = self.get_param_g(list_recup, id_config)
@@ -268,7 +331,7 @@ class ClassMethod:
                 param_elem = self.get_param_elem(id_elem, recup_pil, id_config)
                 param_elem['LARG'] = param_elem['LARGPIL']
                 if recup_p1:
-                    param_p1 = self.get_param_elem(id_elem+1, recup_p1, id_config)
+                    param_p1 = self.get_param_elem(id_elem + 1, recup_p1, id_config)
             else:
                 param_elem = self.get_param_elem(id_elem, recup_trav, id_config)
                 param_elem['LARG'] = param_elem['LARGTRA']
@@ -300,7 +363,7 @@ class ClassMethod:
                     poly_elem = self.poly_buse(param_elem)
 
             else:
-                #Attention Arc  hauteur different entre droite et gauchs(aproximation  /|  ) pb seul bradley
+                # Attention Arc  hauteur different entre droite et gauchs(aproximation  /|  ) pb seul bradley
                 #                                                                     |_|
                 if config_type == 'PC':
                     param_elem['ZMAXELEM'] = sav_zmaxelem
@@ -309,12 +372,11 @@ class ClassMethod:
                 elif config_type == 'PA':
                     param_elem['ZMAXELEM'] = sav_zmaxelem
                     param_elem['ZMAXELEM_P1'] = param_p1['ZMINARC']
-                    poly_elem = self.poly_pil( param_elem, width, zmin)
+                    poly_elem = self.poly_pil(param_elem, width, zmin)
                 elif config_type == 'DA':
                     param_elem['ZMAXELEM'] = sav_zmaxelem
                     param_elem['ZMAXELEM_P1'] = param_p1['COTERAD'] + param_p1['HAUTDAL']
-                    poly_elem = self.poly_pil( param_elem, width, zmin)
-
+                    poly_elem = self.poly_pil(param_elem, width, zmin)
 
             # final
             if not poly_elem.is_empty:
@@ -330,7 +392,7 @@ class ClassMethod:
                 # self.draw_test(poly_final, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
                 # # stock element
                 if poly_final.geom_type == 'MultiPolygon':
-                    poly_final='Null'
+                    poly_final = 'Null'
                 where = "WHERE id_config = {0}  AND id_elem = {1} ".format(id_config, id_elem)
                 sql = """UPDATE {0}.struct_elem SET polygon ='{1}'  {2}""".format(self.mdb.SCHEMA,
                                                                                   poly_final,
@@ -356,20 +418,26 @@ class ClassMethod:
         #     width_trav)
         # self.mdb.run_query(sql)
 
-    def select_poly(self, table, where='', order='', var='polygon'):
-        """ select polygon
+    def select_poly(self, table, where='', order=''):
+        """
+        Select polygon
         example:
                 where = "id_config = {0} AND id_elem = {1}".format(self.id_config, id_elem)
                 toto=self.select_poly('struct_elem',where)
                 print(toto)
+        :param table: table
+        :param where:  "where" of sql script
+        :param order: "order" of sql script
+
+        :return:
         """
-        list_var=[]
         if where:
             where = " WHERE " + where + " "
         if order:
             order = " ORDER BY " + order
         sql = "SELECT ST_AsText(Polygon)  AS Polygon  FROM {0}.{1} {2} {3};"
-        (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA, table, where, order), fetch=True, namvar=True)
+        (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA, table, where, order), fetch=True,
+                                               namvar=True)
         cols = [col[0] for col in namCol]
         dico = {}
         for col in cols:
@@ -385,7 +453,14 @@ class ClassMethod:
         return dico
 
     def copy_profil(self, gid, id_struct, feature):
-        """Profil copy"""
+        """
+        Copy profile
+        :param gid:
+        :param id_struct:
+        :param feature:
+        :return:
+        """
+
         colonnes = ['id_config', 'id_order', 'x', 'z']
         tab = {'x': [], 'z': []}
 
@@ -419,27 +494,12 @@ class ClassMethod:
         #                           id_config))
 
     def coup_poly_h(self, poly, cote):
-        """fonction si ligne cote es compris entre le xmin et xmax"""
-        msg = None
-        (minx, miny, maxx, maxy) = poly.bounds
-        delpoly = Polygon([[minx - 1, cote], [maxx + 1, cote],
-                           [maxx + 1, maxy + 1], [minx - 1, maxy + 1],
-                           [minx - 1, cote]])
-        if not delpoly.is_empty:
-            polyw = poly.difference(delpoly)
-            if not polyw.is_valid:
-                polyw = GeometryCollection()
-                msg = "Error: Wet polygon creation"
-        else:
-            polyw = GeometryCollection()
-            msg = "Error: delpoly creation in calc_polyw()"
-
-        if self.mgis.DEBUG and msg is not None:
-            print(msg)
-        return polyw
-
-    def coup_poly_h(self, poly, cote):
-        """fonction si ligne cote es compris entre le xmin et xmax"""
+        """
+        Cut the polygone horizontaly
+        :param poly: polygone to cut
+        :param cote: z
+        :return: new polygon
+        """
         msg = None
         (minx, miny, maxx, maxy) = poly.bounds
         delpoly = Polygon([[minx - 1, cote], [maxx + 1, cote],
@@ -459,6 +519,13 @@ class ClassMethod:
         return polyw
 
     def coup_poly_v(self, poly, xo, typ='L'):
+        """
+        Cut the polygone vertically
+        :param poly: polygone to cut
+        :param xo: abscissa of cut
+        :param typ: cut side of polygon
+        :return: new polygon
+        """
         msg = None
         if type(xo) == list:
             typ = 'LR'
@@ -501,7 +568,12 @@ class ClassMethod:
         return polyw
 
     def get_abac(self, list_recup):
-        """get abac"""
+        """
+        Get abacus
+        :param list_recup: list of abacus
+        :return: dico with abacus data
+        """
+
         name_abac = []
         dico_abc = {}
         table = 'struct_abac'
@@ -531,7 +603,11 @@ class ClassMethod:
         return dico_abc
 
     def poly_profil(self, profil):
-        """ creation profile polygone """
+        """
+        creation profile polygone
+        :param profil: profile data
+        :return: polygone of profile
+        """
 
         zmax = max(profil['z'])
         zmax = zmax + self.epsi
@@ -547,7 +623,10 @@ class ClassMethod:
         return poly_p
 
     def get_struct(self):
-        """get struct dico"""
+        """
+            Get struct dico
+            :return dico
+        """
         struct_dico = {}
         list_var = ['id', 'name', 'type', 'active', 'method']
         if list_var is not None:
@@ -569,7 +648,14 @@ class ClassMethod:
         return struct_dico
 
     def create_law(self, dossier, nom, typel, list_final):
-        """creation of law"""
+        """
+        Creation of law for Mascaret
+        :param dossier: repertory
+        :param nom: law name
+        :param typel: type law
+        :param list_final: data law
+        :return:
+        """
 
         if list_final == []:
             return
@@ -585,12 +671,11 @@ class ClassMethod:
                     dico = {'flowrate': val[0], 'z_downstream': val[1], 'z_upstream': val[2]}
                     fich.write(chaine.format(**dico))
 
-
-    def sort_law(self,list_final):
+    def sort_law(self, list_final):
         """
         sort the law
         :param list_final: law data
-
+        :return:
         """
         info = np.array(list_final)
         # trie de la colonne 0 à 2
@@ -599,8 +684,14 @@ class ClassMethod:
         info = info[info[:, 0].argsort(kind='mergesort')]
         return info
 
-
     def save_law_st(self, method, id_config, list_val):
+        """
+        Stock law in database
+        :param method: mehtod of compute
+        :param id_config: index of hydraulic structure
+        :param list_val: value list
+        :return:
+        """
         """ stock law in database"""
         self.mdb.delete('struct_laws', where="id_config = '{}'".format(id_config))
         liste_col = self.mdb.list_columns('struct_laws')
@@ -611,16 +702,21 @@ class ClassMethod:
                 list_insert.append([id_config, j, i, val])
         var = ",".join(liste_col)
 
-        sql=''
+        sql = ''
         for a in list_insert:
-            valeurs=str(tuple(a))
+            valeurs = str(tuple(a))
             sql += "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
-                                                                'struct_laws',
-                                                                var,
-                                                                valeurs)
+                                                                 'struct_laws',
+                                                                 var,
+                                                                 valeurs)
         self.mdb.run_query(sql)
 
     def get_list_law(self, id_config):
+        """
+        Get list law
+        :param id_config: index of hydraulic structure
+        :return: law list
+        """
         liste_f = []
 
         where = "WHERE id_config={}".format(id_config)
@@ -641,41 +737,56 @@ class ClassMethod:
             liste_f.append(list_tmp)
         return liste_f
 
-    def sav_meth(self, id_config, idmethod,ui):
+    def sav_meth(self, id_config, idmethod, ui):
+        """
+        Compute law
+        :param id_config: index of hydraulic structure
+        :param idmethod: index of method
+        :param ui: gui object
+        :return:
+        """
         self.brad = ClassLaws(self)
 
-        if idmethod == 0 or idmethod == 4: # brad
-            self.brad.bradley(id_config, self.tbst.dico_meth_calc[idmethod],ui)
-        elif  idmethod == 1: #borda
+        if idmethod == 0 or idmethod == 4:  # brad
+            self.brad.bradley(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+        elif idmethod == 1:  # borda
             self.brad.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
-        elif idmethod == 3: #orifice
+        elif idmethod == 3:  # orifice
             self.brad.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         else:
             pass
 
     def update_etat_struct_prof(self, id_config, active=True, delete=False):
+        """
+        Update state of of hydraulic structure in table
+        :param id_config: id_config:  index of hydraulic structure
+        :param active: active structure
+        :param delete: delete structure
+        :return:
+        """
         where = "id = {0}".format(id_config)
         prof = self.mdb.select('struct_config', where=where, list_var=['id_prof_ori'])
         gid = prof['id_prof_ori'][0]
         if active:
             tab = {'table': 'profiles',
-                   'schema' : self.mdb.SCHEMA,
+                   'schema': self.mdb.SCHEMA,
                    'gid': gid,
                    'struct': 2}
         elif delete:
             tab = {'table': 'profiles',
-                   'schema' : self.mdb.SCHEMA,
+                   'schema': self.mdb.SCHEMA,
                    'gid': gid,
                    'struct': 0}
         else:
             tab = {'table': 'profiles',
-                   'schema' : self.mdb.SCHEMA,
+                   'schema': self.mdb.SCHEMA,
                    'gid': gid,
                    'struct': 1}
         # self.mdb.update('profiles', tab, var='gid')
 
         sql = "UPDATE {schema}.{table} SET struct={struct}  WHERE gid={gid}".format(**tab)
         self.mdb.run_query(sql)
+
 
 if __name__ == '__main__':
     pass
