@@ -719,6 +719,7 @@ class ClassLaws:
             sens_ecoul = -1
 
         q_denoy = ct * larg * m.pow(ham, 1.5)
+
         if typ_s == 0:
             if r <= 0.8:
                 k = 1
@@ -860,11 +861,35 @@ class ClassLaws:
         pr_area_wet = self.area_wet_fct(self.poly_p, zav)
         pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
 
+
+
         area_wet = 0
         for poly_trav in self.list_poly_trav:
             area_wet += self.area_wet_fct(poly_trav, zav)
+
         if pr_area_wet == 0 or area_wet == 0:
-            return None
+            return list_final
+
+        min_elem = min(self.param_elem['ZMINELEM'])
+
+        # sI AREA_Wet null  alors calcul seuil si zav > min_elem alors
+        # check dernier debit retire list self.list_q
+        # interpol jusqu'au list_q
+        # calcul list_q à partir du prochain
+        # à y réflechir
+        # si zam < min_elem pour zav avec loi seuil
+        # quand Zam calcul debit
+        # idx = np.where(self.list_zam > za)[0]
+        # if len(idx) > 0:
+        #     for zam in self.list_zam[idx[0]:]:
+        #           if zam < min_elem:
+        #              q=0
+        #           else:
+        #               if zav < min_elem:
+        #                   q= method seuil
+        #               else:
+        #                   break
+
         list_borda = []
         for q in self.list_q:
             zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
@@ -935,6 +960,64 @@ class ClassLaws:
         else:
             list_ori = []
         return list_final + list_borda + list_ori
+    # teeest
+    def calc_law_borda_z(self, list_final, zav, zcret, ztr):
+        """
+        Compute the law with borda method + threshold law
+        :param list_final: list of law values
+        :param zav: z dowstream
+        :param zcret: z Crest
+        :param ztr: z transition stream (threshold)
+        :return: list_final: new list of law values
+        """
+        borda_lim = None
+        pr_area_wet = self.area_wet_fct(self.poly_p, zav)
+        pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
+        area_wet = 0
+        for poly_trav in self.list_poly_trav:
+            area_wet += self.area_wet_fct(poly_trav, zav)
+
+        if pr_area_wet == 0 or area_wet == 0:
+            return list_final
+
+        min_elem = min(self.param_elem['ZMINELEM'])
+        list_ori=[]
+        list_borda = []
+        for zam in self.list_zam:
+            if zav != zam:
+                q_seuil = 0
+                q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam, zav)
+                # print('zam q_ori',zam, q_ori)
+                if zam >= zcret:
+                    q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
+                # print('q_seuil',zam, q_seuil)
+                if q_ori == 0 and q_seuil == 0:
+                    value = None
+                else:
+                    value = [q_ori + q_seuil, zav, zam]
+                if value is None:
+                    continue
+                else:
+                    if value[0] > self.param_g['MAXQ']:
+                        list_ori.append(value)
+                        break
+                    list_ori.append(value)
+
+        # interpol q fix
+        if len(list_ori) > 1:
+            idx = np.where(np.array(self.list_q) > list_ori[0][0])[0]
+            if len(idx) > 0:
+                list_q_tmp = self.list_q[idx[0]:]
+            else:
+                list_q_tmp = self.list_q
+            q_tmp = np.array(list_ori)[:, 0]
+            zam_tmp = np.array(list_ori)[:, 2]
+            zam_f = np.interp(list_q_tmp, q_tmp, zam_tmp)
+            interpol_list = [[a, b, c] for a, b, c in zip(list_q_tmp, [zav] * len(zam_f), zam_f)]
+            list_ori = interpol_list
+        else:
+            list_ori = []
+        return list_final + list_borda + list_ori
 
     def borda(self, id_config, method='Borda', ui=None):
         """
@@ -965,6 +1048,7 @@ class ClassLaws:
 
             if list_final is None:
                 self.mgis.add_info("Problem : a Wet Surface is Null")
+
             if ui is not None:
                 ui.progress_bar(val)
 
