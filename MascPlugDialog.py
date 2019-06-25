@@ -803,7 +803,8 @@ Version : {}
 
     def fct_add_wq_tables(self):
         ok = self.box.yes_no_q('Do you want add tracer tables and basins tables ? \n '
-                               'WARNING: if the tables exist then it will be emptied.')
+                               'WARNING: \n \t - if the tables exist then it will be emptied.\n '
+                               '\t - Parameters will be reset by default.')
         if ok:
             self.mdb.add_table_basins(self.dossier_sql)
             self.mdb.add_table_wq(self.dossier_sql)

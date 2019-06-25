@@ -499,6 +499,13 @@ class ClassMasDatabase(object):
                 if list_val[-1] == 'basins':
                     liste_value.append(list_val)
 
+        sql = "DELETE FROM {}.parametres;".format(self.SCHEMA)
+        self.run_query(sql)
+
+        liste_value = []
+        with open(fichparam, 'r') as file:
+            for ligne in file:
+                liste_value.append(ligne.replace('\n', '').split(';'))
         liste_col = self.list_columns('parametres')
         var = ",".join(liste_col)
         valeurs = "("
@@ -506,14 +513,12 @@ class ClassMasDatabase(object):
             valeurs += '%s,'
         valeurs = valeurs[:-1] + ")"
 
-        sql = "INSERT INTO {0}.{1}({2}) VALUES {3} ON CONFLICT DO NOTHING;".format(self.SCHEMA,
-                                                                                   'parametres',
-                                                                                   var,
-                                                                                   valeurs)
-        self.run_query(sql, many=True, list_many=liste_value)
+        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
+                                                            'parametres',
+                                                            var,
+                                                            valeurs)
 
-        sql = """UPDATE {}.parametres SET gui='True' WHERE parametre='presenceCasiers';"""
-        self.run_query(sql.format(self.SCHEMA))
+        self.run_query(sql, many=True, list_many=liste_value)
 
     def add_table_wq(self, dossier):
         """
@@ -551,19 +556,19 @@ class ClassMasDatabase(object):
                 if list_val[-1] == 'tracers':
                     liste_value.append(list_val)
 
-        liste_col = self.list_columns('parametres')
-        var = ",".join(liste_col)
-        valeurs = "("
-        for k in liste_col:
-            valeurs += '%s,'
-        valeurs = valeurs[:-1] + ")"
-
-        sql = "INSERT INTO {0}.{1}({2}) VALUES {3} ON CONFLICT DO NOTHING;".format(self.SCHEMA,
-                                                                                   'parametres',
-                                                                                   var,
-                                                                                   valeurs)
-
-        self.run_query(sql, many=True, list_many=liste_value)
+        # liste_col = self.list_columns('parametres')
+        # var = ",".join(liste_col)
+        # valeurs = "("
+        # for k in liste_col:
+        #     valeurs += '%s,'
+        # valeurs = valeurs[:-1] + ")"
+        #
+        # sql = "INSERT INTO {0}.{1}({2}) VALUES {3} ON CONFLICT DO NOTHING;".format(self.SCHEMA,
+        #                                                                            'parametres',
+        #                                                                            var,
+        #                                                                            valeurs)
+        #
+        # self.run_query(sql, many=True, list_many=liste_value)
 
         # phy parameters
         tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)

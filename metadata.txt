@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=2.18
 qgisMaximumVersion=3.99
 
-version=0.4.0
+version=1.1.0
 
 author=Artelia Eau et Environnement
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,11 +30,15 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    0.4.0 :  Addition of Bradley method for hydraulic structure
+    1.0.0  : Addition of Bradley method for hydraulic structure
              Addition of hydraulic structure GUI
              Addition of hydraulic structure table
+    1.0.0  : First official version
+    0.3.5  : Correction of xcas file for the basins
     0.3.4  : Correction of Ctrl+C Ctrl+V bug for the  table of hydro. results
              Correction of auto-initialisation bug for the basins
+             Correction of next button in graphics
+             Correction of datetime  bug to write csv file
     0.3.3  : Correction of import bug
     0.3.2  : Modification of basins and links result tables
     0.3.1  : Addition of water quality feature
