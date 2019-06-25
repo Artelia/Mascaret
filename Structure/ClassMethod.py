@@ -23,10 +23,6 @@ import os
 
 import numpy as np
 import shapely.affinity
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
 from shapely import wkt
 from shapely.geometry import *
 
@@ -166,7 +162,7 @@ class ClassMethod:
         """
         creation polygone for PA : arch bridge
         :param param_elem: dico of general parameter
-        :param param_elem: dico of element parameters
+        :param param_g: dico of general parameters
         :param x0: origin abscissa
         :param zmin: zmin
         :return: polygon

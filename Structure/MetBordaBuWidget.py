@@ -33,6 +33,7 @@ else:  # qt5
     from qgis.PyQt.QtGui import QIcon
     from qgis.PyQt.QtWidgets import *
 
+
 class MetBordaBuWidget(QWidget):
     def __init__(self, mgis, id_struct=None):
         QWidget.__init__(self)
@@ -51,7 +52,6 @@ class MetBordaBuWidget(QWidget):
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
         self.dsb_q_pas.valueChanged.connect(self.update_min_q_max)
         self.dsb_q_min.valueChanged.connect(self.update_min_q_max)
-
 
         self.dico_ctrl = {'ZTOPTAB': [self.dsb_cote_tab],
                           'PASH': [self.dsb_h_pas],
@@ -76,7 +76,7 @@ class MetBordaBuWidget(QWidget):
         if nb_trav < nrow_trav:
             self.tab_trav.setRowCount(nb_trav)
         else:
-            for t in range (nrow_trav, nb_trav):
+            for t in range(nrow_trav, nb_trav):
                 self.insert_elem(self.tab_trav, t)
 
     def insert_elem(self, tab, row):
@@ -108,9 +108,8 @@ class MetBordaBuWidget(QWidget):
         if itm.data(0) <= 0.:
             itm.setData(0, 1.)
 
-    def progress_bar(self,val):
+    def progress_bar(self, val):
         self.completed += val
-        if self.completed >100:
+        if self.completed > 100:
             self.completed = 100
         self.progress.setValue(self.completed)
-

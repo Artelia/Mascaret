@@ -34,9 +34,9 @@ class GraphStructure(GraphCommon):
         self.mdb = self.mgis.mdb
         self.tmp = ClassMethod(self.mgis)
         self.gui_graph(lay)
-        self.initUI()
+        self.init_ui()
 
-    def initUI(self):
+    def init_ui(self):
         self.axes = self.fig.add_subplot(111)
         self.fig.subplots_adjust(left=0.05, right=0.98, top=0.95, bottom=0.08)
         self.axes.tick_params(axis='both', labelsize=7.)
@@ -57,7 +57,7 @@ class GraphStructure(GraphCommon):
                                              edgecolor='black', alpha=1., hatch=None)
         self.axes.add_patch(self.courbes['ouvrage_poly'])
 
-    def initGraph(self, config):
+    def init_graph(self, config):
         if config is not None:
             for elem in self.courbes['elem']:
                 elem.remove()

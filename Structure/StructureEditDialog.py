@@ -50,6 +50,7 @@ else:  # qt5
     from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QIcon
     from qgis.PyQt.QtWidgets import *
 
+
 class ClassStructureEditDialog(QDialog):
     def __init__(self, mgis, id_struct):
         QDialog.__init__(self)
@@ -116,12 +117,12 @@ class ClassStructureEditDialog(QDialog):
             rows = self.mdb.run_query("SELECT gid FROM {0}.profiles".format(self.mdb.SCHEMA), fetch=True)
 
             list_p = [v[0] for v in rows]
-            if self.id_prof_ori  in list_p :
+            if self.id_prof_ori in list_p:
                 self.b_up_prof.setEnabled(True)
             else:
                 self.b_up_prof.setEnabled(False)
 
-    def update_profil (self):
+    def update_profil(self):
         """
         update zx of profil
         """
@@ -212,12 +213,12 @@ class ClassStructureEditDialog(QDialog):
             active = self.cc_active.isChecked()
             if active:
                 self.clmeth.update_etat_struct_prof(self.id_struct, active=True)
-                self.clmeth.sav_meth(self.id_struct,self.current_meth, self.wgt_met)
+                self.clmeth.sav_meth(self.id_struct, self.current_meth, self.wgt_met)
             else:
                 self.clmeth.update_etat_struct_prof(self.id_struct, active=False)
             self.accept()
-        # else:
-        #     self.reject_page()
+            # else:
+            #     self.reject_page()
 
     def save_struct(self):
         self.current_meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
@@ -290,7 +291,7 @@ class ClassStructureEditDialog(QDialog):
                         else:
                             itm = tab.item(r, c)
                             val = itm.data(0)
-                        if val == None:
+                        if val is None:
                             val = 'Null'
                         sql = "INSERT INTO {0}.struct_elem_param (id_config, id_elem, var, value) " \
                               "VALUES ({1}, {2}, '{3}', {4})".format(self.mdb.SCHEMA, self.id_struct,
@@ -308,7 +309,6 @@ class ClassStructureEditDialog(QDialog):
         if self.mgis.DEBUG:
             self.mgis.add_info("Cancel of Structure")
         self.reject()
-
 
     def verif_pc(self, id_struct):
         valid, msg = True, []
@@ -329,7 +329,6 @@ class ClassStructureEditDialog(QDialog):
             msg.append(m)
 
         return valid, msg
-
 
     def verif_pa(self, id_struct):
         valid, msg = True, []
@@ -366,7 +365,6 @@ class ClassStructureEditDialog(QDialog):
 
         return valid, msg
 
-
     def verif_da(self, id_struct):
         valid, msg = True, []
 
@@ -391,7 +389,6 @@ class ClassStructureEditDialog(QDialog):
             msg.append(m)
 
         return valid, msg
-
 
     def verif_bu(self, id_struct):
         valid, msg = True, []
@@ -418,13 +415,11 @@ class ClassStructureEditDialog(QDialog):
 
         return valid, msg
 
-
     def verif_exist_trav(self):
         if ctrl_get_value(self.wgt_met.dico_ctrl['NBTRAVE'][0]) < 1.:
             return False, "Aucune travee de saisie"
         else:
             return True, None
-
 
     def verif_haut_tablier(self, id_struct):
         sql = "SELECT MIN(z) FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
@@ -437,18 +432,17 @@ class ClassStructureEditDialog(QDialog):
         else:
             return True, None
 
-
     def verif_bas_tablier(self, id_struct):
         sql = "SELECT MIN(z) FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
         rows = self.mdb.run_query(sql, fetch=True)
         profil_z_min = rows[0][0]
 
-        cote_bas_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0]) - ctrl_get_value(self.wgt_met.dico_ctrl['EPAITAB'][0])
+        cote_bas_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0]) - ctrl_get_value(
+            self.wgt_met.dico_ctrl['EPAITAB'][0])
         if cote_bas_tablier <= profil_z_min:
             return False, "La cote du bas du tablier est inferieure à la cote minimum du profil"
         else:
             return True, None
-
 
     def verif_larg_struct(self, id_struct):
         for v, var in enumerate(self.wgt_met.dico_tab[self.wgt_met.tab_trav]['col']):
@@ -478,7 +472,6 @@ class ClassStructureEditDialog(QDialog):
         else:
             return True, None
 
-
     def verif_z_arche(self):
         arche_err = []
         for r in range(self.wgt_met.tab_trav.rowCount()):
@@ -494,7 +487,6 @@ class ClassStructureEditDialog(QDialog):
             return False, "Arche(s) {} : Z haut <= Z bas".format(txt_arche[:-2])
         else:
             return True, None
-
 
     def verif_arche_tab(self):
         arche_err = []
@@ -516,7 +508,6 @@ class ClassStructureEditDialog(QDialog):
         else:
             return True, None
 
-
     def verif_arche_profil(self, id_struct):
         arche_err = []
         x_tmp = ctrl_get_value(self.wgt_met.dico_ctrl['FIRSTWD'][0])
@@ -531,7 +522,8 @@ class ClassStructureEditDialog(QDialog):
                 elif forme_arche == 2:
                     z_top = self.wgt_met.tab_trav.item(r, 3).data(0)
                 sql = "SELECT MAX(z) FROM {0}.profil_struct " \
-                      "WHERE id_config = {1} AND x >= {2} AND x <= {3}".format(self.mdb.SCHEMA, id_struct, x_tmp, larg + x_tmp)
+                      "WHERE id_config = {1} AND x >= {2} AND x <= {3}".format(self.mdb.SCHEMA, id_struct, x_tmp,
+                                                                               larg + x_tmp)
                 rows = self.mdb.run_query(sql, fetch=True)
                 profil_z_max = rows[0][0]
                 if profil_z_max >= z_top:
@@ -545,7 +537,6 @@ class ClassStructureEditDialog(QDialog):
             return False, "Arche(s) {} : Z haut <= Cote max du profil".format(txt_arche[:-2])
         else:
             return True, None
-
 
     def verif_radier_tab(self):
         rad_err = []
@@ -563,7 +554,6 @@ class ClassStructureEditDialog(QDialog):
         else:
             return True, None
 
-
     def verif_buse_tab(self):
         buse_err = []
         cote_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0])
@@ -579,7 +569,6 @@ class ClassStructureEditDialog(QDialog):
             return False, "Buse(s) {} : Z haut >= Cote du haut du tablier".format(txt_buse[:-2])
         else:
             return True, None
-
 
     def verif_buse_intersect(self):
         buse_err = []

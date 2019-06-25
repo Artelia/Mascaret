@@ -30,6 +30,7 @@ from .GraphStructure import GraphStructure
 from .StructureEditDialog import ClassStructureEditDialog
 from .StructureCreateDialog import ClassStructureCreateDialog
 from .ClassMethod import ClassMethod
+
 # from ..Function import data_to_float
 
 if int(qVersion()[0]) < 5:  # qt4
@@ -92,7 +93,7 @@ class ClassStructureDialog(QDialog):
                     ouv_itm.setText(3, 'Deactivated')
                 else:
                     ouv_itm.setText(3, '')
-                if row[3] != None:
+                if row[3] is not None:
                     ouv_itm.setText(2, self.tbst.dico_meth_calc[row[3]])
                 ouv_itm.setText(4, str(row[4]))
 
@@ -113,10 +114,10 @@ class ClassStructureDialog(QDialog):
         if self.tree_struct.selectedItems():
             itm = self.tree_struct.selectedItems()[0]
             struct = itm.data(0, 32)
-            self.graph_struct.initGraph(struct)
+            self.graph_struct.init_graph(struct)
             # print ("drawing struct : ", struct)
         else:
-            self.graph_struct.initGraph(None)
+            self.graph_struct.init_graph(None)
 
     def new_struct(self):
         dlg = ClassStructureCreateDialog(self.mgis, None)
@@ -137,7 +138,7 @@ class ClassStructureDialog(QDialog):
         if self.tree_struct.selectedItems():
             itm = self.tree_struct.selectedItems()[0]
             id_struct = itm.data(0, 32)
-            self.struct.update_etat_struct_prof(id_struct,delete=True)
+            self.struct.update_etat_struct_prof(id_struct, delete=True)
             sql = "DELETE FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
             self.mdb.execute(sql)
             sql = "DELETE FROM {0}.struct_elem_param WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
@@ -151,10 +152,10 @@ class ClassStructureDialog(QDialog):
             self.fill_lst_struct()
 
 
-    # def update_cur_item(self):
-    #     itm = self.tree_struct.selectedItems()[0]
-    #     id_config = itm.data(0, 32)
-    #     sql = "SELECT name, method FROM {0}.struct_config WHERE id = {1} ORDER BY name".format(self.mdb.SCHEMA, id_config)
-    #     row = self.mdb.run_query(sql, fetch=True)[0]
-    #     itm.setText(0, row[0])
-    #     itm.setText(1, self.tbst.dico_meth_calc[row[1]])
+            # def update_cur_item(self):
+            #     itm = self.tree_struct.selectedItems()[0]
+            #     id_config = itm.data(0, 32)
+            #     sql = "SELECT name, method FROM {0}.struct_config WHERE id = {1} ORDER BY name".format(self.mdb.SCHEMA, id_config)
+            #     row = self.mdb.run_query(sql, fetch=True)[0]
+            #     itm.setText(0, row[0])
+            #     itm.setText(1, self.tbst.dico_meth_calc[row[1]])

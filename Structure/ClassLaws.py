@@ -21,12 +21,6 @@ import math as m
 import os
 
 import numpy as np
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-
 
 class ClassLaws:
     """
@@ -387,17 +381,17 @@ class ClassLaws:
         # print("Remous Total", remout)
         return [q, zav, zav + remout]
 
-    def filtre_list(self, liste, valG, valD):
+    def filtre_list(self, liste, val_g, val_d):
         """
         To filter list
         :param liste: list to filter
-        :param valG: left value
-        :param valD:  right value
+        :param val_g: left value
+        :param val_d:  right value
         :return: (list)
         """
-        idx = np.where(valG < liste)[0]
+        idx = np.where(val_g < liste)[0]
         sortie = liste[idx]
-        idx = np.where(sortie < valD)[0]
+        idx = np.where(sortie < val_d)[0]
 
         return list(sortie[idx])
 
@@ -719,7 +713,7 @@ class ClassLaws:
         ham = max(h1, h2)
         hav = min(h1, h2)
         r = hav / ham
-        if (h1 >= h2):
+        if h1 >= h2:
             sens_ecoul = 1
         else:
             sens_ecoul = -1
@@ -764,7 +758,7 @@ class ClassLaws:
         epso = 0  # 0.05 * (zcret - zsup)
         rac_epsd = m.sqrt(0.01)
         ct = cfo * m.sqrt(2 * self.grav)
-        if (h1 >= h2):
+        if h1 >= h2:
             sens_ecoul = 1
         else:
             sens_ecoul = -1
@@ -772,7 +766,7 @@ class ClassLaws:
             print('erreur loi orifice ham <0')
             return None
 
-        if (surf < 0.):
+        if surf < 0.:
             return 0
         qo = 0
         qs = 0

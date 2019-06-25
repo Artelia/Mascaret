@@ -33,6 +33,7 @@ else:  # qt5
     from qgis.PyQt.QtGui import QIcon
     from qgis.PyQt.QtWidgets import *
 
+
 class MetOrificeDaWidget(QWidget):
     def __init__(self, mgis, id_struct=None):
         QWidget.__init__(self)
@@ -79,12 +80,12 @@ class MetOrificeDaWidget(QWidget):
         if nb_trav < nrow_trav:
             self.tab_trav.setRowCount(nb_trav)
         else:
-            for t in range (nrow_trav, nb_trav):
+            for t in range(nrow_trav, nb_trav):
                 self.insert_elem(self.tab_trav, t)
         if nb_pile < nrow_pile:
             self.tab_pile.setRowCount(nb_pile)
         else:
-            for p in range (nrow_pile, nb_pile):
+            for p in range(nrow_pile, nb_pile):
                 self.insert_elem(self.tab_pile, p)
 
     def insert_elem(self, tab, row):
@@ -112,8 +113,8 @@ class MetOrificeDaWidget(QWidget):
             if itm.data(0) <= 0.:
                 itm.setData(0, 1.)
 
-    def progress_bar(self,val):
+    def progress_bar(self, val):
         self.completed += val
-        if self.completed >100:
+        if self.completed > 100:
             self.completed = 100
         self.progress.setValue(self.completed)
