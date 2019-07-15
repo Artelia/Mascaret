@@ -1113,7 +1113,7 @@ class ClassMascaret:
             if type == 1:
                 fich.write('# Temps (S) Debit\n')
                 fich.write(' S\n')
-                chaine = ' {time:.3f} {flowrate:.3f}\n'
+                chaine = ' {time:.6f} {flowrate:.6f}\n'
                 # if self.mgis.DEBUG:
                 #     self.mgis.add_info("\n")
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t Flow Rate :{2}"
@@ -1122,7 +1122,7 @@ class ClassMascaret:
             elif type == 2:
                 fich.write('# Temps (S) Cote\n')
                 fich.write(' S\n')
-                chaine = ' {time:.3f} {z:.3f}\n'
+                chaine = ' {time:.6f} {z:.6f}\n'
                 # if self.mgis.DEBUG:
                 #     self.mgis.add_info("\n")
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t Water Level :{2}"
@@ -1130,28 +1130,28 @@ class ClassMascaret:
             elif type == 3:
                 fich.write('# Temps (S) Cote Debit\n')
                 fich.write(' S\n')
-                chaine = ' {time:.3f} {z:.3f} {flowrate:.3f}\n'
+                chaine = ' {time:.6f} {z:.6f} {flowrate:.6f}\n'
                 # if self.mgis.DEBUG:
                 #     self.mgis.add_info("\n")
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t Water Level :{2}\n \t Flow Rate {3}"
                 #                       .format(nom, tab["temps"],tab["cote"],tab["debit"]))
             elif type == 4:
                 fich.write('# Debit Cote\n')
-                chaine = ' {flowrate:.3f} {z:.3f}\n'
+                chaine = ' {flowrate:.6f} {z:.6f}\n'
                 # if self.mgis.DEBUG:
                 #     self.mgis.add_info("\n")
                 #     self.mgis.add_info("{0} :\n \t Flow Rate {2}\n \t Water Level :{1}"
                 #                       .format(nom, tab["cote"],tab["debit"]))
             elif type == 5:
                 fich.write('# Cote Debit\n')
-                chaine = ' {z:.3f} {flowrate:.3f}\n'
+                chaine = ' {z:.6f} {flowrate:.6f}\n'
                 # if self.mgis.DEBUG:
                 #     self.mgis.add_info("\n")
                 #     self.mgis.add_info("{0} :\n \t Water Level :{1}\n \t Flow Rate {2}"
                 #                       .format(nom, tab["cote"],tab["debit"]))
             elif type == 6:
                 fich.write('# Debit Cote_Aval Cote_Amont\n')
-                chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
+                chaine = ' {flowrate:.6f} {z_downstream:.6f} {z_upstream:.6f}\n'
                 # if self.mgis.DEBUG:
                 #     self.mgis.add_info("\n")
                 #     self.mgis.add_info("{0} :\n \t Upstream Water Level{1}\n \t  Downstream Water Level :{2}"
@@ -1159,7 +1159,7 @@ class ClassMascaret:
             elif type == 7:
                 fich.write('# Temps (s) Cote inférieur Cote supérieur\n')
                 fich.write(' S\n')
-                chaine = ' {time:.3f} {z_lower:.3f} {z_up:.3f}\n'
+                chaine = ' {time:.6f} {z_lower:.6f} {z_up:.6f}\n'
                 # if self.mgis.DEBUG:
                 #     self.mgis.add_info("\n")
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t Upstream Water Level{2}\n \t  "
@@ -1217,7 +1217,8 @@ class ClassMascaret:
                                                 'code, date')
 
                 if not liste_date:
-                    liste_date = map(lambda x: x - dt, obs[cd_hydro]['date'])
+                    #liste_date = map(lambda x: x - dt, obs[cd_hydro]['date'])
+                    liste_date = [x - dt for x in obs[cd_hydro]['date']]
 
             fichier_loi = os.path.join(self.dossierFileMasc, nom + '.loi')
             valeur_init = None
@@ -1694,8 +1695,8 @@ class ClassMascaret:
 
         condition = condition + " AND t=" + str(t_max)
 
-        result = self.mdb.select("resultats", condition, 'id')
-
+        #result = self.mdb.select("resultats", condition, 'id')
+        result = self.mdb.select("resultats", condition, 'pk')
         if not result:
             self.mgis.add('No results for initialisation')
             return
