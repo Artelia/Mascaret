@@ -1047,7 +1047,7 @@ class GraphProfil(GraphCommon):
 
             self.maj_graph()
 
-    def key_press_event(self, event):
+    def keyPressEvent(self, event):
 
         if event.key() == Qt.Key_Delete and self.selected:
 
@@ -2196,7 +2196,7 @@ class GraphHydro(GraphCommon):
             condition += """AND {0}={1}""".format(self.inv, self.position)
 
         # self.mgis.add_info(condition)
-        self.tab = self.mdb.select("resultats", condition, "t")
+        self.tab = self.mdb.select("resultats", condition, self.type )
 
         self.listeTab = [self.tab[self.type]]
         for c in self.columns:
