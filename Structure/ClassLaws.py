@@ -818,7 +818,7 @@ class ClassLaws:
 
         return qmax
 
-    def interpol_list_final_for_new_q(self, list_final, pasq=10):
+    def interpol_list_final_for_new_q(self, list_final, pasq=10, list_q=None):
         """
         Search the  new (q, zav) couple and interpole with new q
         :param list_final: list of law values
@@ -826,13 +826,16 @@ class ClassLaws:
         :return: list_final: new list of law values
         :return: q_new: q list of law
         """
-        tmp = np.array(list_final)
-        qmin = min(tmp[:, 0])
 
-        qmax = max(tmp[:, 0])
-        # int(qmin) for around value
-        q_new = np.arange(int(qmin), qmax, pasq)
-        q_new[0] = qmin
+        tmp = np.array(list_final)
+        if list_q != None:
+            q_new=list_q
+        else:
+            qmin = min(tmp[:, 0])
+            qmax = max(tmp[:, 0])
+            # int(qmin) for around value
+            q_new = np.arange(int(qmin), qmax, pasq)
+            q_new[0] = qmin
         list_final = []
         for zav in np.unique(tmp[:, 1]):
             idx = np.where(tmp[:, 1] == zav)[0]
@@ -848,7 +851,7 @@ class ClassLaws:
 
         return list_final, q_new
 
-    def calc_law_borda(self, list_final, zav, zcret, ztr):
+    def calc_law_borda(self, list_final, zav, zcret, ztr, min_elem):
         """
         Compute the law with borda method + threshold law
         :param list_final: list of law values
@@ -858,10 +861,26 @@ class ClassLaws:
         :return: list_final: new list of law values
         """
         borda_lim = None
+        print("******", zav)
+        if zav <= min_elem:
+            return list_final
+
+        # list_borda = []
+        # for zam in self.list_zam:
+        #     if zav < zam:
+        #         if (zav - min_elem) / (zam -min_elem) <= 0.8:
+        #             q_seuil = self.meth_seuil(zam, zav, min_elem, self.param_g['COEFDS'], self.param_g['TOTALW'])
+        #             list_borda.append([q_seuil, zav, zam])
+        # print(list_borda,zav)
+        # if list_borda != []:
+        #     last_q = list_borda[-1][0]
+        #     idx = np.where(self.list_q > last_q)[0]
+        #     new_list_q = list(np.array(self.list_q)[idx])
+        # else:
+        #     new_list_q = list(self.list_q)
+
         pr_area_wet = self.area_wet_fct(self.poly_p, zav)
         pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
-
-
 
         area_wet = 0
         for poly_trav in self.list_poly_trav:
@@ -870,29 +889,10 @@ class ClassLaws:
         if pr_area_wet == 0 or area_wet == 0:
             return list_final
 
-        min_elem = min(self.param_elem['ZMINELEM'])
-
-        # sI AREA_Wet null  alors calcul seuil si zav > min_elem alors
-        # check dernier debit retire list self.list_q
-        # interpol jusqu'au list_q
-        # calcul list_q à partir du prochain
-        # à y réflechir
-        # si zam < min_elem pour zav avec loi seuil
-        # quand Zam calcul debit
-        # idx = np.where(self.list_zam > za)[0]
-        # if len(idx) > 0:
-        #     for zam in self.list_zam[idx[0]:]:
-        #           if zam < min_elem:
-        #              q=0
-        #           else:
-        #               if zav < min_elem:
-        #                   q= method seuil
-        #               else:
-        #                   break
-
         list_borda = []
-        for q in self.list_q:
+        for q in self.list_q :
             zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
+            print(q, zav, zam)
             # [q, zav, zam]
             if zam > ztr:
                 borda_lim = [q, zav, zam]
@@ -923,16 +923,16 @@ class ClassLaws:
             list_ori.append([qmax, zav, za])
 
         idx = np.where(self.list_zam > za)[0]
-        if len(idx) > 0:
 
+        if len(idx) > 0:
             for zam in self.list_zam[idx[0]:]:
                 if zav != zam:
                     q_seuil = 0
                     q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam, zav)
-                    # print('zam q_ori',zam, q_ori)
+                    print('zam q_ori',zam, q_ori)
                     if zam >= zcret:
                         q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
-                    # print('q_seuil',zam, q_seuil)
+                    print('q_seuil',zam, q_seuil)
                     if q_ori == 0 and q_seuil == 0:
                         value = None
                     else:
@@ -944,7 +944,6 @@ class ClassLaws:
                             list_ori.append(value)
                             break
                         list_ori.append(value)
-
         # interpol q fix
         if len(list_ori) > 1:
             idx = np.where(np.array(self.list_q) > list_ori[0][0])[0]
@@ -984,7 +983,7 @@ class ClassLaws:
         list_ori=[]
         list_borda = []
         for zam in self.list_zam:
-            if zav != zam:
+            if zav < zam:
                 q_seuil = 0
                 q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam, zav)
                 # print('zam q_ori',zam, q_ori)
@@ -1002,8 +1001,6 @@ class ClassLaws:
                         list_ori.append(value)
                         break
                     list_ori.append(value)
-
-        # interpol q fix
         if len(list_ori) > 1:
             idx = np.where(np.array(self.list_q) > list_ori[0][0])[0]
             if len(idx) > 0:
@@ -1017,6 +1014,7 @@ class ClassLaws:
             list_ori = interpol_list
         else:
             list_ori = []
+
         return list_final + list_borda + list_ori
 
     def borda(self, id_config, method='Borda', ui=None):
@@ -1027,6 +1025,7 @@ class ClassLaws:
         :param ui: gui object
         :return: law list
         """
+        methodv="1"
 
         self.init_method(id_config)
 
@@ -1043,8 +1042,13 @@ class ClassLaws:
         for poly_trav in self.list_poly_trav:
             area_tot += poly_trav.area
 
+        min_elem = min(self.param_elem['ZMINELEM'])
         for zav in self.list_zav:
-            list_final = self.calc_law_borda(list_final, zav, zcret, zcret)
+            if methodv == '2':
+                list_final = self.calc_law_borda_z(list_final, zav, zcret, zcret)
+            if methodv == '1':
+                list_final = self.calc_law_borda(list_final, zav, zcret, zcret, min_elem)
+
 
             if list_final is None:
                 self.mgis.add_info("Problem : a Wet Surface is Null")
@@ -1052,7 +1056,12 @@ class ClassLaws:
             if ui is not None:
                 ui.progress_bar(val)
 
-        list_final = self.complete_law(list_final)
+        if methodv=='2':
+            list_final, self.list_q = self.interpol_list_final_for_new_q(list_final, pasq=self.param_g['PASQ'], list_q=self.list_q )
+            list_final = self.transition_charge(list_final, zcret)
+            list_final = self.complete_law(list_final)
+        if methodv=='1':
+            list_final = self.complete_law(list_final)
 
         if ui is not None:
             ui.progress_bar(90)
