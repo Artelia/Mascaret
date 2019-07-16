@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=2.18
 qgisMaximumVersion=3.99
 
-version=1.0.0
+version=1.0.1
 
 author=Artelia Eau et Environnement
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,6 +30,13 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    1.0.1  : Correction of link bug between weirs and law
+             Correction of point delete  bug in profile
+             Correction of graphic  display bug
+             Correction of bug on formulae for the "observation"
+             Modification of laws accurency : 1E-3 => 1E-6
+             Addition of the comments for evenement cases (unsteady, transcritical unsteady)
+             Correction of generation .LIG file bug
     1.0.0  : First official version
     0.3.5  : Correction of xcas file for the basins
     0.3.4  : Correction of Ctrl+C Ctrl+V bug for the  table of hydro. results

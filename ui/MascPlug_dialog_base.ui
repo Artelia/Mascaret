@@ -594,7 +594,7 @@
   <action name="actionAdd_WQ_tables">
    <property name="text">
     <string>Add WQ and Basins tables</string>
- </property>
+   </property>
   </action>
   <action name="actionCreate_Basin">
    <property name="icon">
@@ -621,6 +621,11 @@
    </property>
    <property name="toolTip">
     <string>Basin results</string>
+   </property>
+  </action>
+  <action name="actionUpdate_pk">
+   <property name="text">
+    <string>Update pk</string>
    </property>
   </action>
  </widget>

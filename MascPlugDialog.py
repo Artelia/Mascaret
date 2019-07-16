@@ -164,9 +164,11 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionAbout.triggered.connect(self.about)
         self.ui.actionWebsite.triggered.connect(self.website)
         self.ui.actionWebsite.setEnabled(False)
-        # test
+
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
+        # TODO
+        #self.ui.actionUpdate_pk.triggered.connect(self.update_pk)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -800,3 +802,7 @@ Version : {}
             sql='ALTER TABLE IF EXISTS {0}.scenarios RENAME TO events;'
             self.mdb.run_query(sql.format(self.mdb.SCHEMA))
             self.mdb.load_model()
+
+    # TODO
+    # def update_pk(self):
+    #     pass

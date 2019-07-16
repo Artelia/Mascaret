@@ -361,7 +361,8 @@ class ClassMascaret:
         # try:
         fichier_sortie = os.path.join(self.dossierFileMasc, self.baseName + ".xcas")
         extr_toloi = {0: 6, 1: 1, 2: 2, 3: 4, 4: 5, 5: 4, 8: 3, 6: 6, 7: 7}
-        abaque_toloi = {1: 3, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
+        #abaque_toloi = {1: 3, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
+        abaque_toloi = {1: 6, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
         # création du fichier xml
         fichier_cas = Element("fichier_cas")
 
@@ -1278,6 +1279,16 @@ class ClassMascaret:
                     dict_scen[key] = value
             else:
                 dict_scen = dict_scen_tmp
+            liste_col = self.mdb.list_columns('runs')
+            if 'comments' in liste_col:
+                comments, ok = QInputDialog.getText(QWidget(), 'Comments',
+                                                    'if you want to input a comment :')
+                if not ok:
+                    if self.mgis.DEBUG:
+                        self.mgis.add_info("No comments.")
+                        comments = ''
+            else:
+                comments = ''
         else:
             scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
                                             'Please input a scenario name :')
