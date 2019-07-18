@@ -175,8 +175,8 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
         self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
-        # TODO a supp
-        # self.ui.actionStructures.triggered.connect()
+        # TODO
+        # self.ui.actionUpdate_pk.triggered.connect(self.update_pk)
         # self.ui.actionTest_struct.triggered.connect(self.fct_test)
 
     def add_info(self, text):
@@ -832,3 +832,6 @@ Version : {}
         # list_final =  cl.get_list_law(6)
         # cl.create_law(self.masplugPath,'toto',6,list_final)
         self.mdb.insert_abacus_table(self.dossier_struct)
+    # TODO
+    # def update_pk(self):
+    #     pass

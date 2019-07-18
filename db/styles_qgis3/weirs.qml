@@ -53,18 +53,19 @@
       <widgetv2config fieldEditable="1" UncheckedState="f" constraint="" CheckedState="t" labelOnTop="0" constraintDescription="" notNull="0"/>
     </edittype>
   </edittypes>
-  <renderer-v2 attr="CASE WHEN  &quot;active&quot; = 't'  THEN type ELSE 0 END" forceraster="0" symbollevels="0" type="categorizedSymbol" enableorderby="0">
+  <renderer-v2 attr="CASE WHEN  &quot;active&quot; = 'true'  THEN type ELSE 0 END" forceraster="0" symbollevels="0" type="categorizedSymbol" enableorderby="0">
     <categories>
-      <category render="true" symbol="0" value="1" label="Rating curve weir (Abacuses Zam=f(Q))"/>
-      <category render="true" symbol="1" value="2" label="Rating curve weir (Abacuses Zam/Zav/Q)"/>
+      <category render="true" symbol="0" value="1" label="Rating curve weir (Abacuses Zam/Zav/Q)"/>
+      <category render="true" symbol="1" value="2" label="Rating curve weir (Abacuses Zam=f(Q))"/>
       <category render="true" symbol="2" value="3" label="Geometric weir (Crest profile)"/>
       <category render="true" symbol="3" value="4" label="Weir law"/>
       <category render="true" symbol="4" value="5" label="Limni upstream weir (Abacuses (Zam, t))"/>
-      <category render="true" symbol="5" value="6" label="Upstream rating weir( (Abacuses Q=f(Zam))"/>
+      <category render="true" symbol="5" value="6" label="Upstream rating weir(Abacuses Q=f(Zam))"/>
       <category render="true" symbol="6" value="7" label="Downstream rating curve weir(Abacuses (Q, Zav))"/>
       <category render="true" symbol="7" value="8" label="Floodgate"/>
       <category render="true" symbol="8" value="0" label="inactive"/>
     </categories>
+
     <symbols>
       <symbol alpha="1" clip_to_extent="1" type="marker" name="0">
         <layer pass="0" class="SimpleMarker" locked="0">

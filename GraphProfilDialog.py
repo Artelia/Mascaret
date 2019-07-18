@@ -1069,7 +1069,6 @@ class GraphProfil(GraphCommon):
     def keyPressEvent(self, event):
 
         if event.key() == Qt.Key_Delete and self.selected:
-
             index = []
 
             liste = [self.tab[k] for k in ('x', 'z')]

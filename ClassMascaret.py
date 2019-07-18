@@ -1333,7 +1333,6 @@ class ClassMascaret:
             self.creer_geo_casier()
 
         if par["evenement"] and noyau != "steady":
-            # comments=self.fct_comment()
 
             dict_scen_tmp = self.mdb.select('events', 'run', 'starttime')
             listexclu = []
