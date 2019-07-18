@@ -1113,7 +1113,7 @@ class ClassMascaret:
             if type == 1:
                 fich.write('# Temps (S) Debit\n')
                 fich.write(' S\n')
-                chaine = ' {time:.6f} {flowrate:.6f}\n'
+                chaine = ' {time:.3f} {flowrate:.6f}\n'
                 # if self.mgis.DEBUG:
                 #     self.mgis.add_info("\n")
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t Flow Rate :{2}"
@@ -1122,7 +1122,7 @@ class ClassMascaret:
             elif type == 2:
                 fich.write('# Temps (S) Cote\n')
                 fich.write(' S\n')
-                chaine = ' {time:.6f} {z:.6f}\n'
+                chaine = ' {time:.3f} {z:.6f}\n'
                 # if self.mgis.DEBUG:
                 #     self.mgis.add_info("\n")
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t Water Level :{2}"
@@ -1130,14 +1130,14 @@ class ClassMascaret:
             elif type == 3:
                 fich.write('# Temps (S) Cote Debit\n')
                 fich.write(' S\n')
-                chaine = ' {time:.6f} {z:.6f} {flowrate:.6f}\n'
+                chaine = ' {time:.3f} {z:.6f} {flowrate:.6f}\n'
                 # if self.mgis.DEBUG:
                 #     self.mgis.add_info("\n")
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t Water Level :{2}\n \t Flow Rate {3}"
                 #                       .format(nom, tab["temps"],tab["cote"],tab["debit"]))
             elif type == 4:
                 fich.write('# Debit Cote\n')
-                chaine = ' {flowrate:.6f} {z:.6f}\n'
+                chaine = ' {flowrate:.3f} {z:.6f}\n'
                 # if self.mgis.DEBUG:
                 #     self.mgis.add_info("\n")
                 #     self.mgis.add_info("{0} :\n \t Flow Rate {2}\n \t Water Level :{1}"
@@ -1159,7 +1159,7 @@ class ClassMascaret:
             elif type == 7:
                 fich.write('# Temps (s) Cote inférieur Cote supérieur\n')
                 fich.write(' S\n')
-                chaine = ' {time:.6f} {z_lower:.6f} {z_up:.6f}\n'
+                chaine = ' {time:.3f} {z_lower:.6f} {z_up:.6f}\n'
                 # if self.mgis.DEBUG:
                 #     self.mgis.add_info("\n")
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t Upstream Water Level{2}\n \t  "
@@ -1253,7 +1253,7 @@ class ClassMascaret:
                             valeur_init = resultat
                             somme += resultat
                         tps = (t - date_debut).total_seconds() / 3600
-                        chaine = '  {0:4.3f}   {1:3.3f}\n'
+                        chaine = '  {0:4.3f}   {1:3.6f}\n'
                         fich_sortie.write(chaine.format(tps, resultat))
 
             if valeur_init is not None:
