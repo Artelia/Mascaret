@@ -484,6 +484,7 @@ class ClassLaws:
                     q_seuil = 0
                     q_ori = 0
                     for i, zsup in enumerate(self.param_elem['ZMAXELEM']):
+
                         q_ori += self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
                                                 self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
                                                 self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
@@ -860,10 +861,17 @@ class ClassLaws:
         :param ztr: z transition stream (threshold)
         :return: list_final: new list of law values
         """
+        list_borda = []
         borda_lim = None
         print("******", zav)
-        if zav <= min_elem:
-            return list_final
+        # if zav <= min_elem:
+            #
+            # return list_final
+        # if zav <= min_elem:
+        #     for zam in self.list_zam:
+        #         if zav < zam:
+        #             list_borda.append([0, zav, zam])
+        #     return list_final + list_borda
 
         # list_borda = []
         # for zam in self.list_zam:
@@ -878,21 +886,31 @@ class ClassLaws:
         #     new_list_q = list(np.array(self.list_q)[idx])
         # else:
         #     new_list_q = list(self.list_q)
-
-        pr_area_wet = self.area_wet_fct(self.poly_p, zav)
-        pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
-
-        area_wet = 0
-        for poly_trav in self.list_poly_trav:
-            area_wet += self.area_wet_fct(poly_trav, zav)
-
-        if pr_area_wet == 0 or area_wet == 0:
-            return list_final
-
-        list_borda = []
+        # pr_area_wet = self.area_wet_fct(self.poly_p, zav)
+        # pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
+        #
+        # area_wet = 0
+        # for poly_trav in self.list_poly_trav:
+        #     area_wet += self.area_wet_fct(poly_trav, zav)
+        #
+        # if pr_area_wet == 0 or area_wet == 0:
+        #     return list_final
+        #TODO a ameliore car valide que dans ce cas
+        idx_min=self.param_elem['ZMINELEM'].index(min_elem)
+        ct = self.param_g['COEFDS']* m.sqrt(2 * self.grav)
         for q in self.list_q :
-            zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
-            print(q, zav, zam)
+            if zav <= min_elem:
+                zam=(q/ct*self.param_elem['LARGELEM'][idx_min])*(2/3)
+            else:
+                pr_area_wet = self.area_wet_fct(self.poly_p, zav)
+                pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
+
+                area_wet = 0
+                for poly_trav in self.list_poly_trav:
+                    area_wet += self.area_wet_fct(poly_trav, zav)
+
+                zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
+            # print(q, zav, zam)
             # [q, zav, zam]
             if zam > ztr:
                 borda_lim = [q, zav, zam]
@@ -902,7 +920,7 @@ class ClassLaws:
         list_ori = []
         if len(list_borda) > 0:
             qmax = max(np.array(list_borda)[:, 0])
-            if qmax >= self.param_g['MAXQ']:
+            if qmax >= self.param_g['MAXQ']  or zav <= min_elem:
                 return list_final + list_borda
             # interpol ztrans
             list_ori.append(list_borda[-1])
@@ -929,10 +947,10 @@ class ClassLaws:
                 if zav != zam:
                     q_seuil = 0
                     q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam, zav)
-                    print('zam q_ori',zam, q_ori)
+                    # print('zam q_ori',zam, q_ori)
                     if zam >= zcret:
                         q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
-                    print('q_seuil',zam, q_seuil)
+                    # print('q_seuil',zam, q_seuil)
                     if q_ori == 0 and q_seuil == 0:
                         value = None
                     else:
@@ -1104,12 +1122,12 @@ class ClassLaws:
         first_trans = True
         ztransi = []
         for zav in self.list_zav:
-            pr_area_wet = self.area_wet_fct(self.poly_p, zav)
-            area_wet = 0
-            for poly_trav in self.list_poly_trav:
-                area_wet += self.area_wet_fct(poly_trav, zav)
-            if pr_area_wet == 0 or area_wet == 0:
-                continue
+            # pr_area_wet = self.area_wet_fct(self.poly_p, zav)
+            # area_wet = 0
+            # for poly_trav in self.list_poly_trav:
+            #     area_wet += self.area_wet_fct(poly_trav, zav)
+            # if pr_area_wet == 0 or area_wet == 0:
+            #     continue
             idx = np.where(self.list_zam > zav)[0]
             if len(idx) > 0:
                 # debut debit mini attention traitemen peut être différent
@@ -1123,9 +1141,12 @@ class ClassLaws:
                     for i, zsup in enumerate(self.param_elem['ZMAXELEM']):
                         if first_trans:
                             ztransi.append(zsup)
-                        q_ori += self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
+                        val=self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
                                                 self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
                                                 self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
+                        if val != None:
+                            q_ori += val
+
                     first_trans = False
                     if zam >= zcret:
                         q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
