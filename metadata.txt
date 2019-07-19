@@ -32,6 +32,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 changelog=
     1.0.2  : Correction of weirs layer style bug
              Modification of observation accurency : 1E-3 => 1E-6
+             Ergonomics improvement for layers
     1.0.1  : Correction of link bug between weirs and law
              Correction of point delete  bug in profile
              Correction of graphic  display bug
