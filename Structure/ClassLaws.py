@@ -904,8 +904,8 @@ class ClassLaws:
                 cond_zmin = True
                 # print(q,ct, self.param_elem['LARGELEM'][idx_min])
                 zam=(q/(ct*self.param_elem['LARGELEM'][idx_min])) ** (2/3.)
-                if zam < zav:
-                    zam = zav
+                if zam < min_elem:
+                    zam = min_elem
 
             else:
                 pr_area_wet = self.area_wet_fct(self.poly_p, zav)
@@ -915,11 +915,11 @@ class ClassLaws:
                 for poly_trav in self.list_poly_trav:
                     area_wet += self.area_wet_fct(poly_trav, zav)
                 #TODO ATTENTION TESt
-                if area_wet < 0.05*self.param_elem['SURFELEM'][idx_min]:
+                if area_wet < 0.25*self.param_elem['SURFELEM'][idx_min]:
                     cond_zmin = True
                     zam = (q / (ct * self.param_elem['LARGELEM'][idx_min])) ** (2 / 3.)
-                    if zam < zav:
-                        zam = zav
+                    if zam < min_elem:
+                        zam = min_elem
                 else:
                     zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
                     print("rrrr",q, zav, zam)
@@ -984,6 +984,7 @@ class ClassLaws:
             q_tmp = np.array(list_ori)[:, 0]
             zam_tmp = np.array(list_ori)[:, 2]
             zam_f = np.interp(list_q_tmp, q_tmp, zam_tmp)
+            zam_f[zam_f < min_elem] = min_elem
             interpol_list = [[a, b, c] for a, b, c in zip(list_q_tmp, [zav] * len(zam_f), zam_f)]
             list_ori = interpol_list
         else:
