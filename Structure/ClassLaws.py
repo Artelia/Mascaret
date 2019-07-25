@@ -898,9 +898,15 @@ class ClassLaws:
         #TODO a ameliore car valide que dans ce cas
         idx_min=self.param_elem['ZMINELEM'].index(min_elem)
         ct = self.param_g['COEFDS']* m.sqrt(2 * self.grav)
+        cond_zmin = False
         for q in self.list_q :
             if zav <= min_elem:
-                zam=(q/ct*self.param_elem['LARGELEM'][idx_min])*(2/3)
+                cond_zmin = True
+                # print(q,ct, self.param_elem['LARGELEM'][idx_min])
+                zam=(q/(ct*self.param_elem['LARGELEM'][idx_min])) ** (2/3.)
+                if zam < zav:
+                    zam = zav
+
             else:
                 pr_area_wet = self.area_wet_fct(self.poly_p, zav)
                 pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
@@ -908,9 +914,15 @@ class ClassLaws:
                 area_wet = 0
                 for poly_trav in self.list_poly_trav:
                     area_wet += self.area_wet_fct(poly_trav, zav)
-
-                zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
-            # print(q, zav, zam)
+                #TODO ATTENTION TESt
+                if area_wet < 0.05*self.param_elem['SURFELEM'][idx_min]:
+                    cond_zmin = True
+                    zam = (q / (ct * self.param_elem['LARGELEM'][idx_min])) ** (2 / 3.)
+                    if zam < zav:
+                        zam = zav
+                else:
+                    zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
+                    print("rrrr",q, zav, zam)
             # [q, zav, zam]
             if zam > ztr:
                 borda_lim = [q, zav, zam]
@@ -920,7 +932,7 @@ class ClassLaws:
         list_ori = []
         if len(list_borda) > 0:
             qmax = max(np.array(list_borda)[:, 0])
-            if qmax >= self.param_g['MAXQ']  or zav <= min_elem:
+            if qmax >= self.param_g['MAXQ']  or cond_zmin:
                 return list_final + list_borda
             # interpol ztrans
             list_ori.append(list_borda[-1])
