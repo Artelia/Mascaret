@@ -1791,13 +1791,13 @@ class GraphHydro(GraphCommon):
                     idx = pk_tmp.index(self.position)
                     if run not in self.listeRuns.keys():
                         self.listeRuns[run] = []
-                    self.listeRuns[run].append(scen)
+                    self.listeRuns[run].append(str(scen))
                 except ValueError:
                     pass
             else:
                 if run not in self.listeRuns.keys():
                     self.listeRuns[run] = []
-                self.listeRuns[run].append(scen)
+                self.listeRuns[run].append(str(scen))
 
 
         if self.listeRuns == {}:
@@ -2502,6 +2502,7 @@ class GraphHydro(GraphCommon):
             self.scenario = self.listeRuns[self.run][-1]
         self.comboScen.currentIndexChanged['QString'].disconnect()
         self.comboScen.clear()
+        print(self.listeRuns[self.run])
         self.comboScen.addItems(self.listeRuns[self.run])
         self.comboScen.setCurrentIndex(self.listeRuns[self.run].index(
             self.scenario))

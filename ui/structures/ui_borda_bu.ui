@@ -177,6 +177,9 @@
               <property name="suffix">
                <string> m</string>
               </property>
+              <property name="minimum">
+               <double>0.010000000000000</double>
+              </property>
               <property name="maximum">
                <double>10000.000000000000000</double>
               </property>
@@ -249,6 +252,9 @@
                 <width>80</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="minimum">
+               <double>0.010000000000000</double>
               </property>
               <property name="maximum">
                <double>10000.000000000000000</double>
@@ -355,7 +361,7 @@
              <double>0.100000000000000</double>
             </property>
             <property name="value">
-             <double>0.450000000000000</double>
+             <double>1.000000000000000</double>
             </property>
            </widget>
           </item>

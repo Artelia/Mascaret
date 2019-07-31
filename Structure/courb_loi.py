@@ -3,7 +3,7 @@ import os
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-
+import math as m
 
 def read_loi(path):
     file= open(path)
@@ -48,11 +48,11 @@ def courb(tab):
             i_save =i
         else:
             cmpt += 1
-            # if zav_sav in listX:
-            #     ax.plot(tab[i_old:i_save+1, 1],tab[i_old:i_save+1, 2], label=str(zav_sav),marker='+')
-            #     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., ncol=3)
-            ax.plot(tab[i_old:i_save + 1, 1], tab[i_old:i_save + 1, 2], label=str(zav_sav), marker='+')
-            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., ncol=3)
+            if zav_sav in listX:
+                ax.plot(tab[i_old:i_save+1, 1],tab[i_old:i_save+1, 2], label=str(zav_sav),marker='+')
+                ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., ncol=3)
+            # ax.plot(tab[i_old:i_save + 1, 1], tab[i_old:i_save + 1, 2], label=str(zav_sav), marker='+')
+            # ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., ncol=3)
             zav_sav=zav
             i_old = i
     ax.plot(tab[i_old:i_save+1, 1],tab[i_old:i_save+1, 2], label=str(zav_sav))
@@ -63,6 +63,32 @@ def courb(tab):
 
     plt.title('deb =fct(am) pour un av')
     plt.show()
+
+
+
+def find_zam_circ():
+    """ find zam with weir law"""
+
+    q=20
+    D=6
+    prec = 1E-4  # precision dichotomie
+
+    ct = 0.385 * m.sqrt(2 * 9.81)
+    debut = 0.001
+    fin = 6
+    ecart = fin - debut
+
+    while ecart > prec:
+        zam_tmp = (debut + fin) / 2
+        qnew=ct*(2*(zam_tmp*(D-zam_tmp))**0.5)*(zam_tmp)**1.5
+        if qnew > q:
+            fin = zam_tmp
+        else:
+            debut = zam_tmp
+        ecart = fin - debut
+    return zam_tmp
+
+
 path='../mascaret/test.loi'
 tab=read_loi(path)
 tab=ptrait(tab)
@@ -71,3 +97,4 @@ courb(tab)
 print(tab)
 
 
+# print(find_zam_circ())

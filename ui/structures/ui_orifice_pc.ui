@@ -14,7 +14,16 @@
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="margin">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
     <number>0</number>
    </property>
    <item>
@@ -206,6 +215,9 @@
             </property>
             <property name="suffix">
              <string> m</string>
+            </property>
+            <property name="minimum">
+             <double>0.010000000000000</double>
             </property>
             <property name="maximum">
              <double>10000.000000000000000</double>

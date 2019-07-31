@@ -852,6 +852,79 @@ class ClassLaws:
 
         return list_final, q_new
 
+    def find_zam_dicho(self,min_elem,idx_min,q,zav):
+        """ find zam with weir law"""
+        largmin= 0.1 # largeur mini pour buse circulaire valeur arbitraire
+        epsi_zam = 0.1 # ajout pour le calcul de la largeur buse circulaire  0.1 arbitrair
+        prec = 1E-4 # precision dichotomie
+
+        ct = self.param_g['COEFDS'] * m.sqrt(2 * self.grav)
+        debut = min_elem
+        fin = self.list_zav[-1]
+        ecart = fin - debut
+
+        while ecart > prec:
+            zam_tmp = (debut + fin) / 2
+            qnew = 0
+            for poly in self.list_poly_trav:
+                (minx, miny, maxx, maxy) = poly.bounds
+                z_elem = miny
+                larg = maxx - minx
+                poly_wet = self.parent.coup_poly_h(poly, zam_tmp)
+                if poly_wet.is_empty:
+                    larg = largmin
+                else:
+                    (minx, miny, maxx, maxy) = poly.bounds
+                    larg = maxx - minx
+
+
+                qnew += self.meth_seuil(zam_tmp, zav, z_elem, self.param_g['COEFDS'], larg)
+            # print('zam,qnew',zam_tmp,qnew)
+            if qnew > q:
+                fin = zam_tmp
+            else:
+                debut = zam_tmp
+            ecart = fin - debut
+        return zam_tmp
+
+    def find_zam_dicho(self, min_elem, idx_min, q, zav):
+        """ find zam with weir law"""
+        largmin = 0.1  # largeur mini pour buse circulaire valeur arbitraire
+        epsi_zam = 0.1  # ajout pour le calcul de la largeur buse circulaire  0.1 arbitrair
+        prec = 1E-4  # precision dichotomie
+
+        ct = self.param_g['COEFDS'] * m.sqrt(2 * self.grav)
+        debut = min_elem
+        fin = self.list_zav[-1]
+        ecart = fin - debut
+
+        while ecart > prec:
+            zam_tmp = (debut + fin) / 2
+            qnew = 0
+            for poly in self.list_poly_trav:
+                (minx, miny, maxx, maxy) = poly.bounds
+                z_elem = miny
+                larg = maxx - minx
+                # cas buse circulaire ?
+                # cas ou dalot n'a pas une largeur régulière ?
+
+                # poly_wet = self.parent.coup_poly_h(poly, zam_tmp)
+                # if poly_wet.is_empty:
+                #     larg = largmin
+                # else:
+                #     (minx, miny, maxx, maxy) = poly.bounds
+                #     larg = maxx - minx
+                qnew += self.meth_seuil(zam_tmp, zav, z_elem, self.param_g['COEFDS'], larg)
+            # print('zam,qnew',zam_tmp,qnew)
+            if qnew > q:
+                fin = zam_tmp
+            else:
+                debut = zam_tmp
+            ecart = fin - debut
+        return zam_tmp
+
+
+
     def calc_law_borda(self, list_final, zav, zcret, ztr, min_elem):
         """
         Compute the law with borda method + threshold law
@@ -899,30 +972,40 @@ class ClassLaws:
         idx_min=self.param_elem['ZMINELEM'].index(min_elem)
         ct = self.param_g['COEFDS']* m.sqrt(2 * self.grav)
         cond_zmin = False
+        pr_area_wet = self.area_wet_fct(self.poly_p, zav)
+        pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
+
+        area_wet = 0
+        for poly_trav in self.list_poly_trav:
+            area_wet += self.area_wet_fct(poly_trav, zav)
+
         for q in self.list_q :
+            # print('ùùùùùù',q)
             if zav <= min_elem:
                 cond_zmin = True
-                # print(q,ct, self.param_elem['LARGELEM'][idx_min])
-                zam=(q/(ct*self.param_elem['LARGELEM'][idx_min])) ** (2/3.)
-                if zam < min_elem:
-                    zam = min_elem
+                zam = self.find_zam_dicho(min_elem,idx_min,q,zav)
+                # print('ap',zam,q)
+                # if zav >3 :
+                #     a=1/0.
 
             else:
-                pr_area_wet = self.area_wet_fct(self.poly_p, zav)
-                pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
-
-                area_wet = 0
-                for poly_trav in self.list_poly_trav:
-                    area_wet += self.area_wet_fct(poly_trav, zav)
-                #TODO ATTENTION TESt
-                if area_wet < 0.25*self.param_elem['SURFELEM'][idx_min]:
-                    cond_zmin = True
-                    zam = (q / (ct * self.param_elem['LARGELEM'][idx_min])) ** (2 / 3.)
-                    if zam < min_elem:
-                        zam = min_elem
-                else:
+                zam = self.find_zam_dicho(min_elem, idx_min, q, zav)
+                if zam/zav <2/3.:
                     zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
-                    print("rrrr",q, zav, zam)
+                else:
+                    cond_zmin = True
+
+                # if area_wet/pr_area_wet>0.25:
+                    # print("fff",pr_area_wet,area_wet,zav)
+                #     zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
+                #     # print(zam,q)
+                #     # if zav >5 :
+                #     #     a=1/0.
+                # else:
+                #     cond_zmin = True
+                #     zam = self.find_zam_dicho(min_elem, idx_min, q,zav)
+
+            # print("rrrr",q, zav, zam)
             # [q, zav, zam]
             if zam > ztr:
                 borda_lim = [q, zav, zam]
@@ -932,7 +1015,7 @@ class ClassLaws:
         list_ori = []
         if len(list_borda) > 0:
             qmax = max(np.array(list_borda)[:, 0])
-            if qmax >= self.param_g['MAXQ']  or cond_zmin:
+            if qmax >= self.param_g['MAXQ'] or cond_zmin :
                 return list_final + list_borda
             # interpol ztrans
             list_ori.append(list_borda[-1])
@@ -1007,16 +1090,28 @@ class ClassLaws:
         for poly_trav in self.list_poly_trav:
             area_wet += self.area_wet_fct(poly_trav, zav)
 
-        if pr_area_wet == 0 or area_wet == 0:
-            return list_final
+        # if pr_area_wet == 0 or area_wet == 0:
+        #     return list_final
 
         min_elem = min(self.param_elem['ZMINELEM'])
         list_ori=[]
         list_borda = []
+
         for zam in self.list_zam:
             if zav < zam:
                 q_seuil = 0
-                q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam, zav)
+                q_ori = 0
+                if zam >min_elem:
+                    if area_wet / pr_area_wet > 0.5 :
+                        q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam, zav)
+                    else:
+                        for i, z_elem in enumerate(self.param_elem['ZMINELEM']):
+                            q_ori += self.meth_seuil(zam, zav,z_elem , self.param_g['COEFDS'],self.param_elem['LARGELEM'][i])
+                else:
+                    for i, z_elem in enumerate(self.param_elem['ZMINELEM']):
+                        #attention foireux pour buse car largeur depend
+                        q_ori += self.meth_seuil(zam, zav,z_elem, self.param_g['COEFDS'],self.param_elem['LARGELEM'][i])
+
                 # print('zam q_ori',zam, q_ori)
                 if zam >= zcret:
                     q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
@@ -1134,6 +1229,7 @@ class ClassLaws:
         val = 90 / len(self.list_zav)
         first_trans = True
         ztransi = []
+        largmin=0.1 # buse circulaire
         for zav in self.list_zav:
             # pr_area_wet = self.area_wet_fct(self.poly_p, zav)
             # area_wet = 0
@@ -1141,6 +1237,7 @@ class ClassLaws:
             #     area_wet += self.area_wet_fct(poly_trav, zav)
             # if pr_area_wet == 0 or area_wet == 0:
             #     continue
+
             idx = np.where(self.list_zam > zav)[0]
             if len(idx) > 0:
                 # debut debit mini attention traitemen peut être différent
@@ -1151,9 +1248,11 @@ class ClassLaws:
                 for zam in self.list_zam[idx[0]:]:
                     q_seuil = 0
                     q_ori = 0
+
                     for i, zsup in enumerate(self.param_elem['ZMAXELEM']):
                         if first_trans:
                             ztransi.append(zsup)
+
                         val=self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
                                                 self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
                                                 self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
@@ -1215,6 +1314,9 @@ class ClassLaws:
         :return: zam: z upstream
         """
         k = (sav / sc - 1) ** 2 + 1 / 9.
+        # print(k)
+        # print((q / (sav * self.param_g['COEFBOR'])) ** 2)
+        # print(sav,self.param_g['COEFBOR'])
         zam = (q / (sav * self.param_g['COEFBOR'])) ** 2 * k / (2 * self.grav) + zav
         return zam
 
