@@ -905,38 +905,8 @@ class ClassLaws:
         list_borda = []
         borda_lim = None
         print("******", zav)
-        # if zav <= min_elem:
-            #
-            # return list_final
-        # if zav <= min_elem:
-        #     for zam in self.list_zam:
-        #         if zav < zam:
-        #             list_borda.append([0, zav, zam])
-        #     return list_final + list_borda
 
-        # list_borda = []
-        # for zam in self.list_zam:
-        #     if zav < zam:
-        #         if (zav - min_elem) / (zam -min_elem) <= 0.8:
-        #             q_seuil = self.meth_seuil(zam, zav, min_elem, self.param_g['COEFDS'], self.param_g['TOTALW'])
-        #             list_borda.append([q_seuil, zav, zam])
-        # print(list_borda,zav)
-        # if list_borda != []:
-        #     last_q = list_borda[-1][0]
-        #     idx = np.where(self.list_q > last_q)[0]
-        #     new_list_q = list(np.array(self.list_q)[idx])
-        # else:
-        #     new_list_q = list(self.list_q)
-        # pr_area_wet = self.area_wet_fct(self.poly_p, zav)
-        # pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
-        #
-        # area_wet = 0
-        # for poly_trav in self.list_poly_trav:
-        #     area_wet += self.area_wet_fct(poly_trav, zav)
-        #
-        # if pr_area_wet == 0 or area_wet == 0:
-        #     return list_final
-        #TODO a ameliore car valide que dans ce cas
+
         idx_min=self.param_elem['ZMINELEM'].index(min_elem)
         ct = self.param_g['COEFDS']* m.sqrt(2 * self.grav)
         cond_zmin = False
@@ -954,9 +924,10 @@ class ClassLaws:
                 zam = self.find_zam_dicho(min_elem,idx_min,q,zav)
             else:
                 zam = self.find_zam_dicho(min_elem, idx_min, q, zav)
-                if zav/zam > 2/3. and area_wet/pr_area_wet > 0.25:
+                # 0.25 limitant si coef  borda trop petit (le rapport surface ouvrage et aval superieur à 4)
+                # 2/3 limitant si coef de borda 1
+                if zav / zam > 2 / 3. and area_wet / pr_area_wet > 0.25:
                     zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
-
                     cond_zmin =False
                 else:
                     cond_zmin = True
@@ -1026,75 +997,6 @@ class ClassLaws:
             list_ori = interpol_list
         else:
             list_ori = []
-        return list_final + list_borda + list_ori
-    # teeest
-    def calc_law_borda_z(self, list_final, zav, zcret, ztr):
-        """
-        Compute the law with borda method + threshold law
-        :param list_final: list of law values
-        :param zav: z dowstream
-        :param zcret: z Crest
-        :param ztr: z transition stream (threshold)
-        :return: list_final: new list of law values
-        """
-        borda_lim = None
-        pr_area_wet = self.area_wet_fct(self.poly_p, zav)
-        pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
-        area_wet = 0
-        for poly_trav in self.list_poly_trav:
-            area_wet += self.area_wet_fct(poly_trav, zav)
-
-        # if pr_area_wet == 0 or area_wet == 0:
-        #     return list_final
-
-        min_elem = min(self.param_elem['ZMINELEM'])
-        list_ori=[]
-        list_borda = []
-
-        for zam in self.list_zam:
-            if zav < zam:
-                q_seuil = 0
-                q_ori = 0
-                if zam >min_elem:
-                    if area_wet / pr_area_wet > 0.5 :
-                        q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam, zav)
-                    else:
-                        for i, z_elem in enumerate(self.param_elem['ZMINELEM']):
-                            q_ori += self.meth_seuil(zam, zav,z_elem , self.param_g['COEFDS'],self.param_elem['LARGELEM'][i])
-                else:
-                    for i, z_elem in enumerate(self.param_elem['ZMINELEM']):
-                        #attention foireux pour buse car largeur depend
-                        q_ori += self.meth_seuil(zam, zav,z_elem, self.param_g['COEFDS'],self.param_elem['LARGELEM'][i])
-
-                # print('zam q_ori',zam, q_ori)
-                if zam >= zcret:
-                    q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
-                # print('q_seuil',zam, q_seuil)
-                if q_ori == 0 and q_seuil == 0:
-                    value = None
-                else:
-                    value = [q_ori + q_seuil, zav, zam]
-                if value is None:
-                    continue
-                else:
-                    if value[0] > self.param_g['MAXQ']:
-                        list_ori.append(value)
-                        break
-                    list_ori.append(value)
-        if len(list_ori) > 1:
-            idx = np.where(np.array(self.list_q) > list_ori[0][0])[0]
-            if len(idx) > 0:
-                list_q_tmp = self.list_q[idx[0]:]
-            else:
-                list_q_tmp = self.list_q
-            q_tmp = np.array(list_ori)[:, 0]
-            zam_tmp = np.array(list_ori)[:, 2]
-            zam_f = np.interp(list_q_tmp, q_tmp, zam_tmp)
-            interpol_list = [[a, b, c] for a, b, c in zip(list_q_tmp, [zav] * len(zam_f), zam_f)]
-            list_ori = interpol_list
-        else:
-            list_ori = []
-
         return list_final + list_borda + list_ori
 
     def borda(self, id_config, method='Borda', ui=None):
