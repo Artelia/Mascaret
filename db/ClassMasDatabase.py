@@ -1051,8 +1051,8 @@ $BODY$
                 commande = '"{0}" -p {6} -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.user, file,
                                                                                      self.dbname, self.host, self.port)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
-                p = subprocess.Popen(commande, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                                     , stdin=subprocess.PIPE)
+
+                p = subprocess.Popen(commande, shell=True)
                 p.wait()
                 return True
             else:
@@ -1081,18 +1081,15 @@ $BODY$
                 #                      , stdin=subprocess.PIPE)
                 p = subprocess.Popen(commande, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                                      , stdin=subprocess.PIPE)
-                try:
-                    outs, errs = p.communicate(timeout=15)
-                except TimeoutExpired:
-                    p.kill()
-                    outs, errs = p.communicate()
-                p.wait()
+                outs,err = p.communicate()
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Import File :{0}".format(file))
                     if VERSION_QGIS == 3:
                         self.mgis.add_info("{0}".format(outs.decode('utf-8')))
                     else:
                         self.mgis.add_info("{0}".format(outs))
+                p.wait()
+
                 return True
             else:
                 self.mgis.add_info('Executable file not found. '
