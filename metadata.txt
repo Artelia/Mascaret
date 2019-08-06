@@ -33,7 +33,7 @@ changelog=
     1.1.0  : Addition of Bradley method for hydraulic structure
              Addition of hydraulic structure GUI
              Addition of hydraulic structure table
-    1.0.3  : Correction of shema import bug
+    1.0.3  : Correction of schema import bug
     1.0.2  : Correction of weirs layer style bug
              Modification of observation accurency : 1E-3 => 1E-6
              Ergonomics improvement for layers
