@@ -22,10 +22,12 @@ import os
 
 import numpy as np
 
+
 class ClassLaws:
     """
     Class contain the different methods to create the laws
     """
+
     def __init__(self, parent):
         self.parent = parent
         self.mgis = self.parent.mgis
@@ -484,15 +486,13 @@ class ClassLaws:
                     q_seuil = 0
                     q_ori = 0
                     for i, zsup in enumerate(self.param_elem['ZMAXELEM']):
-
                         q_ori += self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
                                                 self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
                                                 self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
 
-                    # print('zam q_ori',zam, q_ori)
                     if zam >= zcret:
                         q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
-                    # print('q_seuil',zam, q_seuil)
+
                     if q_ori == 0 and q_seuil == 0:
                         value = None
                     else:
@@ -556,19 +556,17 @@ class ClassLaws:
             # cherche position transition
 
             idxz = np.where(info[idxq, 2] < ztransi)[0]
-            # if deb==100:
-            #     print(info[idxq, 1],idxz)
+
             if len(idxz) > 0:
                 idxz = idxq[0] + idxz[-1]
                 tab_tmp = info[idxz, :]
                 tab_tmp1 = info[idxz + 1, :]
-                # print(tab_tmp, tab_tmp1, deb)
-                # print(tab_tmp[1],tab_tmp1[1])
+
                 zmoy = (tab_tmp[1] + tab_tmp1[1]) / 2
                 ecartmoy = (tab_tmp1[2] + tab_tmp[2]) / 2 - zmoy
                 ecart1 = tab_tmp[2] - tab_tmp[1]
                 ecart2 = tab_tmp1[2] - tab_tmp1[1]
-                # print(ecart1, ecart2,ecartmoy,'*****', deb)
+
                 if ecart2 < ecartmoy:
                     ecart2 = ecartmoy
                 if ecart1 > ecartmoy:
@@ -628,7 +626,7 @@ class ClassLaws:
             else:
                 new_list += list(tab)
 
-        new_list= self.delete_doublon(new_list)
+        new_list = self.delete_doublon(new_list)
 
         return new_list
 
@@ -831,7 +829,7 @@ class ClassLaws:
 
         tmp = np.array(list_final)
         if list_q != None:
-            q_new=list_q
+            q_new = list_q
         else:
             qmin = min(tmp[:, 0])
             qmax = max(tmp[:, 0])
@@ -853,8 +851,6 @@ class ClassLaws:
 
         return list_final, q_new
 
-
-
     def find_zam_dicho(self, min_elem, idx_min, q, zav):
         """ find zam with weir law"""
         largmin = 0.1  # largeur mini pour buse circulaire valeur arbitraire
@@ -874,14 +870,6 @@ class ClassLaws:
                 z_elem = miny
                 larg = maxx - minx
                 # cas buse circulaire ?
-                # cas ou dalot n'a pas une largeur régulière ?
-
-                # poly_wet = self.parent.coup_poly_h(poly, zam_tmp)
-                # if poly_wet.is_empty:
-                #     larg = largmin
-                # else:
-                #     (minx, miny, maxx, maxy) = poly.bounds
-                #     larg = maxx - minx
                 qnew += self.meth_seuil(zam_tmp, zav, z_elem, self.param_g['COEFDS'], larg)
             # print('zam,qnew',zam_tmp,qnew)
             if qnew > q:
@@ -890,8 +878,6 @@ class ClassLaws:
                 debut = zam_tmp
             ecart = fin - debut
         return zam_tmp
-
-
 
     def calc_law_borda(self, list_final, zav, zcret, ztr, min_elem):
         """
@@ -904,11 +890,9 @@ class ClassLaws:
         """
         list_borda = []
         borda_lim = None
-        print("******", zav)
-
-
-        idx_min=self.param_elem['ZMINELEM'].index(min_elem)
-        ct = self.param_g['COEFDS']* m.sqrt(2 * self.grav)
+        # print("******", zav)
+        idx_min = self.param_elem['ZMINELEM'].index(min_elem)
+        ct = self.param_g['COEFDS'] * m.sqrt(2 * self.grav)
         cond_zmin = False
         pr_area_wet = self.area_wet_fct(self.poly_p, zav)
         pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
@@ -917,18 +901,21 @@ class ClassLaws:
         for poly_trav in self.list_poly_trav:
             area_wet += self.area_wet_fct(poly_trav, zav)
 
-        for q in self.list_q :
+        for q in self.list_q:
 
             if zav <= min_elem:
                 cond_zmin = True
-                zam = self.find_zam_dicho(min_elem,idx_min,q,zav)
+                zam = self.find_zam_dicho(min_elem, idx_min, q, zav)
             else:
                 zam = self.find_zam_dicho(min_elem, idx_min, q, zav)
+                zams = zam
                 # 0.25 limitant si coef  borda trop petit (le rapport surface ouvrage et aval superieur à 4)
                 # 2/3 limitant si coef de borda 1
-                if zav / zam > 2 / 3. and area_wet / pr_area_wet > 0.25:
+                if zav / zam > 2 / 3. and area_wet / pr_area_wet > 0.5:
                     zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
-                    cond_zmin =False
+                    if zams < zam :
+                        zam = zams
+                    cond_zmin = False
                 else:
                     cond_zmin = True
 
@@ -941,8 +928,8 @@ class ClassLaws:
         list_ori = []
         if len(list_borda) > 0:
             qmax = max(np.array(list_borda)[:, 0])
-            if qmax >= self.param_g['MAXQ'] or cond_zmin :
-                 return list_final + list_borda
+            if qmax >= self.param_g['MAXQ'] or cond_zmin:
+                return list_final + list_borda
             # interpol ztrans
             list_ori.append(list_borda[-1])
             if borda_lim:
@@ -1026,18 +1013,16 @@ class ClassLaws:
         for zav in self.list_zav:
             list_final = self.calc_law_borda(list_final, zav, zcret, zcret, min_elem)
 
-
             if list_final is None:
                 self.mgis.add_info("Problem : creation law")
 
             if ui is not None:
                 ui.progress_bar(val)
 
-
         # list_final, self.list_q = self.interpol_list_final_for_new_q(list_final, pasq=self.param_g['PASQ'],
         #                                                              list_q=self.list_q)
         # self.write_csv(list_final, name =r'mascaret\av_law.csv' )
-        list_final = self.transition_charge(list_final,zcret)
+        list_final = self.transition_charge(list_final, zcret)
         list_final = self.complete_law(list_final)
 
         if ui is not None:
@@ -1051,7 +1036,7 @@ class ClassLaws:
             ui.progress_bar(100)
         return list_final
 
-    def write_csv(self, list_final,name=r"mascaret\law_tmp.csv"):
+    def write_csv(self, list_final, name=r"mascaret\law_tmp.csv"):
         """
         Write CSV to check law
         :param list_final:
@@ -1080,7 +1065,7 @@ class ClassLaws:
         val = 90 / len(self.list_zav)
         first_trans = True
         ztransi = []
-        largmin=0.1 # buse circulaire
+        largmin = 0.1  # buse circulaire
         for zav in self.list_zav:
 
             idx = np.where(self.list_zam > zav)[0]
@@ -1098,9 +1083,9 @@ class ClassLaws:
                         if first_trans:
                             ztransi.append(zsup)
 
-                        val=self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
-                                                self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
-                                                self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
+                        val = self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
+                                             self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
+                                             self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
                         if val != None:
                             q_ori += val
 
@@ -1115,11 +1100,8 @@ class ClassLaws:
                     if value is None:
                         continue
                     else:
-                        if value[0] > qmax:  # and value[0] > qtest:
-                            # print('ori va',value)
+                        if value[0] > qmax:
                             list_final.append(value)
-                            # # impose debit toujours superieur
-                            # qtest = value[0]
                         else:
                             value = [qmax, zav, zam]
                             list_final.append(value)
@@ -1159,9 +1141,6 @@ class ClassLaws:
         :return: zam: z upstream
         """
         k = (sav / sc - 1) ** 2 + 1 / 9.
-        # print(k)
-        # print((q / (sav * self.param_g['COEFBOR'])) ** 2)
-        # print(sav,self.param_g['COEFBOR'])
         zam = (q / (sav * self.param_g['COEFBOR'])) ** 2 * k / (2 * self.grav) + zav
         return zam
 

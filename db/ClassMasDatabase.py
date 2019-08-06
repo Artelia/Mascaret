@@ -1081,10 +1081,18 @@ $BODY$
                 #                      , stdin=subprocess.PIPE)
                 p = subprocess.Popen(commande, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                                      , stdin=subprocess.PIPE)
+                try:
+                    outs, errs = p.communicate(timeout=15)
+                except TimeoutExpired:
+                    p.kill()
+                    outs, errs = p.communicate()
                 p.wait()
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Import File :{0}".format(file))
-                    self.mgis.add_info("{0}".format(p.communicate()[0]))
+                    if VERSION_QGIS == 3:
+                        self.mgis.add_info("{0}".format(outs.decode('utf-8')))
+                    else:
+                        self.mgis.add_info("{0}".format(outs))
                 return True
             else:
                 self.mgis.add_info('Executable file not found. '
