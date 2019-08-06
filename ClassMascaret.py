@@ -808,8 +808,8 @@ class ClassMascaret:
         arbre.write(fichier_sortie)
 
         # ****** XCAS initialisation **********
-        dt_init = 60
-        np_pas_temps_init = int(3600 / 60.)
+        dt_init = 3600
+        np_pas_temps_init = 2
 
         param_cas = fichier_cas.find('parametresCas')
         parametres_generaux = param_cas.find('parametresGeneraux')
