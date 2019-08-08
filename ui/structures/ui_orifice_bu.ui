@@ -248,7 +248,7 @@
         <item>
          <widget class="QLabel" name="label_36">
           <property name="text">
-           <string>DS</string>
+           <string>DSeuil</string>
           </property>
          </widget>
         </item>
@@ -274,7 +274,7 @@
         <item>
          <widget class="QLabel" name="label_37">
           <property name="text">
-           <string>DO</string>
+           <string>DOrifice</string>
           </property>
          </widget>
         </item>
