@@ -755,9 +755,9 @@ class ClassLaws:
         h2 = zav - zinf
         hav = min(h1, h2)
         ham = max(h1, h2)
-        epsd = 0.01
+        epsd = 0.001
         epso = 0  # 0.05 * (zcret - zsup)
-        rac_epsd = m.sqrt(0.01)
+        rac_epsd = m.sqrt(epsd)
         ct = cfo * m.sqrt(2 * self.grav)
         if h1 >= h2:
             sens_ecoul = 1
@@ -913,7 +913,7 @@ class ClassLaws:
                 # 2/3 limitant si coef de borda 1
                 if zav / zam > 2 / 3. and area_wet / pr_area_wet > 0.5:
                     zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
-                    if zams < zam :
+                    if zams < zam : # borda ne pourra jamais dépasser la loi de seuil
                         zam = zams
                     cond_zmin = False
                 else:
