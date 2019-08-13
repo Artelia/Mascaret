@@ -909,12 +909,20 @@ class ClassLaws:
             else:
                 zam = self.find_zam_dicho(min_elem, idx_min, q, zav)
                 zams = zam
-                # 0.25 limitant si coef  borda trop petit (le rapport surface ouvrage et aval superieur à 4)
-                # 2/3 limitant si coef de borda 1
-                if zav / zam > 2 / 3. and area_wet / pr_area_wet > 0.5:
+                area_fr = 0
+                larg = 0
+                for poly in self.list_poly_trav:
+                     poly_wet = self.parent.coup_poly_h(poly, zav)
+                     if not poly_wet.is_empty:
+                         area_fr += poly_wet.area
+                         (minx, miny, maxx, maxy) = poly.bounds
+                         larg += maxx - minx
+
+                froud = q/(area_fr * (self.grav*larg)**0.5)
+
+                if froud< 1:
                     zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
-                    if zams < zam : # borda ne pourra jamais dépasser la loi de seuil
-                        zam = zams
+
                     cond_zmin = False
                 else:
                     cond_zmin = True
