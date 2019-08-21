@@ -144,7 +144,7 @@ class ClassStructureEditDialog(QDialog):
 
         self.mdb.delete('profil_struct', where='id_config = {}'.format(self.id_struct))
         self.mdb.insert_res('profil_struct', values, colonnes)
-        self.clmeth.update_etat_struct_prof(self.id_struct, active=False)
+
 
     def change_met_calc(self, idx):
         if not self.is_loading:

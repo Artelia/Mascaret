@@ -138,7 +138,9 @@ class ClassStructureDialog(QDialog):
         if self.tree_struct.selectedItems():
             itm = self.tree_struct.selectedItems()[0]
             id_struct = itm.data(0, 32)
-            self.struct.update_etat_struct_prof(id_struct, delete=True)
+            # check si autre struct active or not
+            self.check_state(id_struct)
+
             sql = "DELETE FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
             self.mdb.execute(sql)
             sql = "DELETE FROM {0}.struct_elem_param WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
@@ -151,6 +153,22 @@ class ClassStructureDialog(QDialog):
             self.mdb.execute(sql)
             self.fill_lst_struct()
 
+
+
+    def  check_state(self,id_struct):
+        where = "id = {0}".format(id_struct)
+        prof = self.mdb.select('struct_config', where=where, list_var=['id_prof_ori'])['id_prof_ori']
+
+        where = "id_prof_ori = {0}".format(prof[0])
+        active = self.mdb.select('struct_config', where=where, list_var=['active'])['active']
+        print(active)
+        if len(active)>1:
+            if (True in active) :
+                self.struct.update_etat_struct_prof(id_struct, active=True)
+            else:
+                self.struct.update_etat_struct_prof(id_struct, active=False)
+        else:
+            self.struct.update_etat_struct_prof(id_struct, delete=True)
 
             # def update_cur_item(self):
             #     itm = self.tree_struct.selectedItems()[0]

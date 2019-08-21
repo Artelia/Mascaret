@@ -766,16 +766,16 @@ class ClassMethod:
                    'schema': self.mdb.SCHEMA,
                    'gid': gid,
                    'struct': 2}
-        elif delete:
-            tab = {'table': 'profiles',
-                   'schema': self.mdb.SCHEMA,
-                   'gid': gid,
-                   'struct': 0}
         else:
             tab = {'table': 'profiles',
                    'schema': self.mdb.SCHEMA,
                    'gid': gid,
                    'struct': 1}
+        if delete:
+            tab = {'table': 'profiles',
+                   'schema': self.mdb.SCHEMA,
+                   'gid': gid,
+                   'struct': 0}
         # self.mdb.update('profiles', tab, var='gid')
 
         sql = "UPDATE {schema}.{table} SET struct={struct}  WHERE gid={gid}".format(**tab)

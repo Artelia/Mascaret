@@ -581,20 +581,22 @@ class ClassLaws:
                 # cherche position transition
 
                 idxz = np.where(info[idxq, 1] < transi[1])[0]
-
+                lenid = info.shape[0]
                 if len(idxz) > 0:
+
                     idxz = idxq[0] + idxz[-1]
-                    tab_tmp = info[idxz, :]
-                    tab_tmp1 = info[idxz + 1, :]
+                    if lenid > idxz + 1:
+                        tab_tmp = info[idxz, :]
+                        tab_tmp1 = info[idxz + 1, :]
 
-                    zmoy = (tab_tmp[1] + tab_tmp1[1]) / 2
+                        zmoy = (tab_tmp[1] + tab_tmp1[1]) / 2
 
-                    z1 = (tab_tmp[1] + 2 * zmoy) / 3
-                    z2 = (tab_tmp1[1] + 2 * zmoy) / 3
+                        z1 = (tab_tmp[1] + 2 * zmoy) / 3
+                        z2 = (tab_tmp1[1] + 2 * zmoy) / 3
 
-                    list_add.append([deb, z1, tab_tmp[2]])
-                    list_add.append([deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2])
-                    list_add.append([deb, z2, tab_tmp1[2]])
+                        list_add.append([deb, z1, tab_tmp[2]])
+                        list_add.append([deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2])
+                        list_add.append([deb, z2, tab_tmp1[2]])
                 break
 
         return list_add
@@ -617,28 +619,30 @@ class ClassLaws:
             # cherche position transition
 
             idxz = np.where(info[idxq, 2] < ztransi)[0]
+            lenid = info.shape[0]
 
-            if len(idxz) > 0:
+            if len(idxz) > 0  :
                 idxz = idxq[0] + idxz[-1]
-                tab_tmp = info[idxz, :]
-                tab_tmp1 = info[idxz + 1, :]
+                if lenid > idxz + 1:
+                    tab_tmp = info[idxz, :]
+                    tab_tmp1 = info[idxz + 1, :]
 
-                zmoy = (tab_tmp[1] + tab_tmp1[1]) / 2
-                ecartmoy = (tab_tmp1[2] + tab_tmp[2]) / 2 - zmoy
-                ecart1 = tab_tmp[2] - tab_tmp[1]
-                ecart2 = tab_tmp1[2] - tab_tmp1[1]
+                    zmoy = (tab_tmp[1] + tab_tmp1[1]) / 2
+                    ecartmoy = (tab_tmp1[2] + tab_tmp[2]) / 2 - zmoy
+                    ecart1 = tab_tmp[2] - tab_tmp[1]
+                    ecart2 = tab_tmp1[2] - tab_tmp1[1]
 
-                if ecart2 < ecartmoy:
-                    ecart2 = ecartmoy
-                if ecart1 > ecartmoy:
-                    ecart1 = ecartmoy
+                    if ecart2 < ecartmoy:
+                        ecart2 = ecartmoy
+                    if ecart1 > ecartmoy:
+                        ecart1 = ecartmoy
 
-                z1 = (tab_tmp[1] + 2 * zmoy) / 3
-                z2 = (tab_tmp1[1] + 2 * zmoy) / 3
+                    z1 = (tab_tmp[1] + 2 * zmoy) / 3
+                    z2 = (tab_tmp1[1] + 2 * zmoy) / 3
 
-                list_add.append([deb, z1, z1 + ecart1])
-                list_add.append([deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2])
-                list_add.append([deb, z2, z2 + ecart2])
+                    list_add.append([deb, z1, z1 + ecart1])
+                    list_add.append([deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2])
+                    list_add.append([deb, z2, z2 + ecart2])
 
         return list_add
 
@@ -672,6 +676,7 @@ class ClassLaws:
         for val, cpt in zip(unique, counts):
             if cpt != nb_val:
                 list_val.append(val)
+
         for id, deb in enumerate(self.list_q):
             idxq = np.where(info[:, 0] == deb)[0]
             tab = info[idxq, :]
@@ -686,8 +691,8 @@ class ClassLaws:
                 new_list = new_list + list(tab) + add_val
             else:
                 new_list += list(tab)
-
-        new_list = self.delete_doublon(new_list)
+        if len(new_list)>1:
+            new_list = self.delete_doublon(new_list)
 
         return new_list
 
