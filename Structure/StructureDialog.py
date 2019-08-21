@@ -161,7 +161,6 @@ class ClassStructureDialog(QDialog):
 
         where = "id_prof_ori = {0}".format(prof[0])
         active = self.mdb.select('struct_config', where=where, list_var=['active'])['active']
-        print(active)
         if len(active)>1:
             if (True in active) :
                 self.struct.update_etat_struct_prof(id_struct, active=True)
