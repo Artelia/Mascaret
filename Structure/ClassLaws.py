@@ -420,14 +420,15 @@ class ClassLaws:
             if ui is not None:
                 ui.progress_bar(val)
         # correction of the law
-        list_final = self.transition_charge(list_final, ztransi)
+        list_final = self.transition_law(list_final, ztransi)
         list_final = self.complete_law(list_final)
         if ui is not None:
             ui.progress_bar(90)
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
-        self.write_csv(list_final)
+        # if self.mgis.DEBUG:
+        #     self.write_csv(list_final)
 
         return list_final
 
@@ -485,9 +486,17 @@ class ClassLaws:
                 if zav != zam:
                     q_seuil = 0
                     q_ori = 0
-                    for i, zsup in enumerate(self.param_elem['ZMAXELEM']):
-                        q_ori += self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
-                                                self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
+                    for i, poly in enumerate(self.list_poly_trav):
+                        poly_wet = self.parent.coup_poly_h(poly, zam)
+                        if not poly_wet.is_empty:
+                            (minx, miny, maxx, maxy) = poly.bounds
+                            larg = poly_wet.area / min(maxy - miny, zam - miny)
+                        else:
+                            larg = 0
+
+                        q_ori += self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i],
+                                                self.param_elem['ZMAXELEM'][i],
+                                                larg, self.param_g['COEFDS'],
                                                 self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
 
                     if zam >= zcret:
@@ -522,7 +531,7 @@ class ClassLaws:
 
         return list_final + list_brad + list_ori
 
-    def transition_charge(self, list_final, ztransi):
+    def transition_law(self, list_final, ztransi):
         """
         Treatment of transition flow (free surface flow and flow under load)
         :param list_final: list of law values
@@ -539,6 +548,57 @@ class ClassLaws:
         list_final = list_final + list_add
         return list_final
 
+    def transition_law_bord(self, list_final, transi):
+        """
+        Treatment of transition flow (free surface flow and flow under load)
+        :param list_final: list of law values
+        :param transi:  z transition stream
+        :return: new list of law values
+        """
+        list_add = []
+        if transi == []:
+            return list_final
+
+        for tmp in transi:
+            list_add += self.calc_transi_borda(list_final, tmp)
+
+        list_final = list_final + list_add
+        return list_final
+
+    def calc_transi_borda(self, list_final, transi):
+        """
+        :param list_final:
+        :param transi: [q,ztransi]
+        :return:
+        """
+        list_add = []
+        info = self.parent.sort_law(list_final)
+
+        for id, deb in enumerate(self.list_q):
+            if deb == transi[0]:
+                # cherche nb de debi
+                idxq = np.where(info[:, 0] == deb)[0]
+                # cherche position transition
+
+                idxz = np.where(info[idxq, 1] < transi[1])[0]
+
+                if len(idxz) > 0:
+                    idxz = idxq[0] + idxz[-1]
+                    tab_tmp = info[idxz, :]
+                    tab_tmp1 = info[idxz + 1, :]
+
+                    zmoy = (tab_tmp[1] + tab_tmp1[1]) / 2
+
+                    z1 = (tab_tmp[1] + 2 * zmoy) / 3
+                    z2 = (tab_tmp1[1] + 2 * zmoy) / 3
+
+                    list_add.append([deb, z1, tab_tmp[2]])
+                    list_add.append([deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2])
+                    list_add.append([deb, z2, tab_tmp1[2]])
+                break
+
+        return list_add
+
     def calc_transi(self, list_final, ztransi):
         """
         Compute value of transition flow (free surface flow and flow under load)
@@ -550,6 +610,7 @@ class ClassLaws:
 
         info = self.parent.sort_law(list_final)
         # add Z pour  acroite le point d'infexion
+
         for id, deb in enumerate(self.list_q):
             # cherche nb de debi
             idxq = np.where(info[:, 0] == deb)[0]
@@ -736,14 +797,13 @@ class ClassLaws:
 
         return q
 
-    def meth_orif(self, zam, zav, zinf, zsup, zcret, larg, cf, cfo, surf):
+    def meth_orif(self, zam, zav, zinf, zsup,  larg, cf, cfo, surf):
         """
         Compute orifice law
         :param zam: z upstream
         :param zav: z downstream
         :param zinf: z orifice bottom
         :param zsup: z orifice top
-        :param zcret: z crest
         :param larg: wide
         :param cf: flow rate coeficient for threshold law
         :param cfo: flow rate coeficient for orifice law
@@ -823,12 +883,13 @@ class ClassLaws:
         Search the  new (q, zav) couple and interpole with new q
         :param list_final: list of law values
         :param pasq q discretisation
+        :param add q list for interpolation
         :return: list_final: new list of law values
         :return: q_new: q list of law
         """
 
         tmp = np.array(list_final)
-        if list_q != None:
+        if list_q is not None:
             q_new = list_q
         else:
             qmin = min(tmp[:, 0])
@@ -851,13 +912,15 @@ class ClassLaws:
 
         return list_final, q_new
 
-    def find_zam_dicho(self, min_elem, idx_min, q, zav):
-        """ find zam with weir law"""
-        largmin = 0.1  # largeur mini pour buse circulaire valeur arbitraire
-        epsi_zam = 0.1  # ajout pour le calcul de la largeur buse circulaire  0.1 arbitrair
-        prec = 1E-4  # precision dichotomie
-
-        ct = self.param_g['COEFDS'] * m.sqrt(2 * self.grav)
+    def find_zam_dicho(self, min_elem, q, zav):
+        """
+         Find zam with weir law
+        :param min_elem: minimum z of element
+        :param q: Flow rate
+        :param zav: z dowstream
+        :return:
+        """
+        prec = 1E-4  # accurency of dichotomie method
         debut = min_elem
         fin = self.list_zav[-1]
         ecart = fin - debut
@@ -868,10 +931,12 @@ class ClassLaws:
             for poly in self.list_poly_trav:
                 (minx, miny, maxx, maxy) = poly.bounds
                 z_elem = miny
-                larg = maxx - minx
-                # cas buse circulaire ?
+                poly_wet = self.parent.coup_poly_h(poly, zam_tmp)
+                if not poly_wet.is_empty:
+                    larg = poly_wet.area / min(maxy - miny, zam_tmp - miny)
+                else:
+                    larg = 0
                 qnew += self.meth_seuil(zam_tmp, zav, z_elem, self.param_g['COEFDS'], larg)
-            # print('zam,qnew',zam_tmp,qnew)
             if qnew > q:
                 fin = zam_tmp
             else:
@@ -886,46 +951,43 @@ class ClassLaws:
         :param zav: z dowstream
         :param zcret: z Crest
         :param ztr: z transition stream (threshold)
+        :param min_elem : z minimum of bridge element
         :return: list_final: new list of law values
         """
         list_borda = []
         borda_lim = None
-        # print("******", zav)
-        idx_min = self.param_elem['ZMINELEM'].index(min_elem)
-        ct = self.param_g['COEFDS'] * m.sqrt(2 * self.grav)
         cond_zmin = False
         pr_area_wet = self.area_wet_fct(self.poly_p, zav)
         pr_area_wet_cret = self.area_wet_fct(self.poly_p, ztr)
 
         area_wet = 0
-        for poly_trav in self.list_poly_trav:
-            area_wet += self.area_wet_fct(poly_trav, zav)
+        larg = 0
+        for poly in self.list_poly_trav:
+            poly_wet = self.parent.coup_poly_h(poly, zav)
+            if not poly_wet.is_empty:
+                area_wet += poly_wet.area
+                (minx, miny, maxx, maxy) = poly.bounds
+                larg += poly_wet.area / min(maxy - miny, zav - miny)
+            else:
+                area_wet = 0
 
-        for q in self.list_q:
-
+        for i, q in enumerate(self.list_q):
             if zav <= min_elem:
                 cond_zmin = True
-                zam = self.find_zam_dicho(min_elem, idx_min, q, zav)
+                zam = self.find_zam_dicho(min_elem, q, zav)
             else:
-                zam = self.find_zam_dicho(min_elem, idx_min, q, zav)
-                zams = zam
-                area_fr = 0
-                larg = 0
-                for poly in self.list_poly_trav:
-                     poly_wet = self.parent.coup_poly_h(poly, zav)
-                     if not poly_wet.is_empty:
-                         area_fr += poly_wet.area
-                         (minx, miny, maxx, maxy) = poly.bounds
-                         larg += maxx - minx
-
-                froud = q/(area_fr * (self.grav*larg)**0.5)
-
-                if froud< 1:
+                froud = q / (area_wet * (self.grav * larg) ** 0.5)
+                # peut poser probleme debit important
+                if froud < 1:
                     zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
-
                     cond_zmin = False
                 else:
+                    zam = self.find_zam_dicho(min_elem, q, zav)
                     cond_zmin = True
+            # checkdico
+            if cond_zmin == False:
+                if self.dico_tr[q][0] != cond_zmin:
+                    self.dico_tr[q] = [cond_zmin, [zav, zam]]
 
             # [q, zav, zam]
             if zam > ztr:
@@ -963,10 +1025,8 @@ class ClassLaws:
                 if zav != zam:
                     q_seuil = 0
                     q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam, zav)
-                    # print('zam q_ori',zam, q_ori)
                     if zam >= zcret:
                         q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
-                    # print('q_seuil',zam, q_seuil)
                     if q_ori == 0 and q_seuil == 0:
                         value = None
                     else:
@@ -1009,7 +1069,7 @@ class ClassLaws:
         self.param_g.update(param_g_temp)
         self.list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
         self.list_q.append(self.param_g['MAXQ'])
-
+        z_transi_fr = []
         list_final = []
         zcret = self.param_g['ZTOPTAB']
         val = 75 / len(self.list_zav)
@@ -1018,6 +1078,10 @@ class ClassLaws:
             area_tot += poly_trav.area
 
         min_elem = min(self.param_elem['ZMINELEM'])
+        self.dico_tr = {}
+        for q in self.list_q:
+            self.dico_tr[q] = [True, 9999]
+
         for zav in self.list_zav:
             list_final = self.calc_law_borda(list_final, zav, zcret, zcret, min_elem)
 
@@ -1026,18 +1090,19 @@ class ClassLaws:
 
             if ui is not None:
                 ui.progress_bar(val)
+        for q, llist in self.dico_tr.items():
+            if llist[0] == False:
+                z_transi_fr.append([q, llist[1][0]])
 
-        # list_final, self.list_q = self.interpol_list_final_for_new_q(list_final, pasq=self.param_g['PASQ'],
-        #                                                              list_q=self.list_q)
-        # self.write_csv(list_final, name =r'mascaret\av_law.csv' )
-        list_final = self.transition_charge(list_final, zcret)
+        list_final = self.transition_law(list_final, zcret)
+        list_final = self.transition_law_bord(list_final, z_transi_fr)
         list_final = self.complete_law(list_final)
 
         if ui is not None:
             ui.progress_bar(90)
 
-        if self.mgis.DEBUG:
-            self.write_csv(list_final)
+        # if self.mgis.DEBUG:
+        #     self.write_csv(list_final)
 
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
@@ -1047,7 +1112,8 @@ class ClassLaws:
     def write_csv(self, list_final, name=r"mascaret\law_tmp.csv"):
         """
         Write CSV to check law
-        :param list_final:
+        :param name : file name
+        :param list_final: value writing in file
         :return:
         """
 
@@ -1087,20 +1153,25 @@ class ClassLaws:
                     q_seuil = 0
                     q_ori = 0
 
-                    for i, zsup in enumerate(self.param_elem['ZMAXELEM']):
+                    for i, poly in enumerate(self.list_poly_trav):
                         if first_trans:
-                            ztransi.append(zsup)
+                            ztransi.append(self.param_elem['ZMAXELEM'][i])
+                        poly_wet = self.parent.coup_poly_h(poly, zam)
+                        if not poly_wet.is_empty:
+                            (minx, miny, maxx, maxy) = poly.bounds
+                            larg = poly_wet.area / min(maxy - miny, zam - miny)
+                        else:
+                            larg = 0
 
-                        val = self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i], zsup, zcret,
-                                             self.param_elem['LARGELEM'][i], self.param_g['COEFDS'],
+                        val = self.meth_orif(zam, zav, self.param_elem['ZMINELEM'][i], self.param_elem['ZMAXELEM'][i],
+                                             larg, self.param_g['COEFDS'],
                                              self.param_g['COEFDO'], self.param_elem['SURFELEM'][i])
-                        if val != None:
+                        if val is not None:
                             q_ori += val
 
                     first_trans = False
                     if zam >= zcret:
                         q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g['COEFDS'], self.param_g['TOTALW'])
-                        # print('q_seuil', q_seuil,zav,zam)
                     if q_ori is None:
                         value = None
                     else:
@@ -1117,10 +1188,10 @@ class ClassLaws:
                 ui.progress_bar(val)
         # treament of law for Mascaret model
         list_final, self.list_q = self.interpol_list_final_for_new_q(list_final, pasq=self.param_g['PASQ'])
-        list_final = self.transition_charge(list_final, ztransi)
+        list_final = self.transition_law(list_final, ztransi)
         list_final = self.complete_law(list_final)
-        if self.mgis.DEBUG:
-            self.write_csv(list_final)
+        # if self.mgis.DEBUG:
+        #     self.write_csv(list_final)
         self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)

@@ -143,7 +143,6 @@ class ClassMethod:
             poly_t = Polygon([[x0, zmin], [x0, z], [x1, z], [x1, zmin], [x0, zmin]])
         else:
             poly_t = GeometryCollection()
-
             print('Inconsistent Z for the span')
         return poly_t
 
@@ -420,7 +419,6 @@ class ClassMethod:
         example:
                 where = "id_config = {0} AND id_elem = {1}".format(self.id_config, id_elem)
                 toto=self.select_poly('struct_elem',where)
-                print(toto)
         :param table: table
         :param where:  "where" of sql script
         :param order: "order" of sql script

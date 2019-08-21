@@ -810,7 +810,7 @@ $BODY$
 
         return liste_x
 
-    # PRBOLEM DESRIPTION
+
     def select(self, table, where="", order="", list_var=None):
         """ Select variables of table"""
         if where:
@@ -1121,14 +1121,12 @@ $BODY$
 
     def insert_abacus_table(self,dossier):
         list_fich = os.listdir(dossier)
-        # print(list_fich)
         for fich in list_fich:
             fichabac = os.path.join(dossier, fich)
             liste_value = []
             with open(fichabac, 'r') as file:
                 for ligne in file:
                     liste_value.append(ligne.replace('\n', '').split(';'))
-            # print(fichabac, liste_value)
             mehtod = liste_value[0][1]
             name_abc = liste_value[1][1]
             list_var = liste_value[2]
