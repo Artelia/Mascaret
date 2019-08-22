@@ -99,7 +99,7 @@ class ClassStructureEditDialog(QDialog):
 
         if id_struct:
             self.is_loading = True
-            sql = "SELECT name, type, method, active, id_prof_ori FROM {0}.struct_config " \
+            sql = "SELECT name, type, method, active, id_prof_ori,comment FROM {0}.struct_config " \
                   "WHERE id = {1}".format(self.mdb.SCHEMA, self.id_struct)
             rows = self.mdb.run_query(sql, fetch=True)
             self.id_prof_ori = rows[0][4]
@@ -110,6 +110,7 @@ class ClassStructureEditDialog(QDialog):
 
             self.lbl_type.setText(self.tbst.dico_struc_typ[self.typ_struct]['name'])
             self.txt_name.setText(rows[0][0])
+            self.txt_comm.setText(rows[0][5])
             self.cc_active.setChecked(rows[0][3])
             fill_qcombobox(self.cb_met_calc, self.lst_meth_calc, val_def=rows[0][2])
             self.is_loading = False
@@ -235,6 +236,7 @@ class ClassStructureEditDialog(QDialog):
 
         if verif:
             name = str(self.txt_name.text())
+            comm = str(self.txt_comm.toPlainText())
             active = self.cc_active.isChecked()
             if active:
                 sql = "SELECT id_prof_ori FROM {0}.struct_config WHERE id = {1}".format(self.mdb.SCHEMA,
@@ -245,8 +247,8 @@ class ClassStructureEditDialog(QDialog):
                                                                                                    id_profil)
                 self.mdb.execute(sql)
 
-            sql = "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4} WHERE id = {1}" \
-                .format(self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active)
+            sql = "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4}, comment= '{5}' WHERE id = {1}" \
+                .format(self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active, comm)
             self.mdb.execute(sql)
 
             # sql = "DELETE FROM {0}.struct_param WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)

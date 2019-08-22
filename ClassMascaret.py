@@ -1305,7 +1305,7 @@ class ClassMascaret:
                     comments = ''
         else:
             comments = ''
-        return comments.replace("'","''")
+        return comments.replace("'","''").replace('"',' ')
 
     def mascaret(self, noyau, run):
         """creation file and to run mascaret"""
@@ -1354,6 +1354,7 @@ class ClassMascaret:
         else:
             scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
                                             'Please input a scenario name :')
+            scen = scen.replace("'"," ").replace('"',' ')
             if not ok or not self.check_scenar(scen, run):
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Canceled Simulation because of {0} already exists.".format(scen))
