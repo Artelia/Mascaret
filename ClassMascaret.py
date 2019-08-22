@@ -1351,6 +1351,7 @@ class ClassMascaret:
                     dict_scen[key] = value
             else:
                 dict_scen = dict_scen_tmp
+            comments=self.fct_comment()
         else:
             scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
                                             'Please input a scenario name :')
@@ -1429,9 +1430,6 @@ class ClassMascaret:
 
             elif par["evenement"]:
                 # transcritical unsteady evenement
-                if par['presenceTraceurs']:
-                    if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
-                        self.wq.create_filemet()
                 date_debut = dict_scen['starttime'][i]
                 date_fin = dict_scen['endtime'][i]
                 duree = int((date_fin - date_debut).total_seconds()) - 3600
