@@ -2536,7 +2536,6 @@ class GraphHydro(GraphCommon):
             self.scenario = self.listeRuns[self.run][-1]
         self.comboScen.currentIndexChanged['QString'].disconnect()
         self.comboScen.clear()
-        print(self.listeRuns[self.run])
         self.comboScen.addItems(self.listeRuns[self.run])
         self.comboScen.setCurrentIndex(self.listeRuns[self.run].index(
             self.scenario))
