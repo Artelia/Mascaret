@@ -34,6 +34,7 @@ changelog=
              Addition of hydraulic structure GUI
              Addition of hydraulic structure table
     1.0.3  : Correction of schema import bug
+             Addition of the display of comments in graphs
     1.0.2  : Correction of weirs layer style bug
              Modification of observation accurency : 1E-3 => 1E-6
              Ergonomics improvement for layers

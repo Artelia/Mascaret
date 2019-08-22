@@ -251,8 +251,6 @@ class ClassStructureEditDialog(QDialog):
                 .format(self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active, comm)
             self.mdb.execute(sql)
 
-            # sql = "DELETE FROM {0}.struct_param WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
-            # self.mdb.execute(sql)
             sql = "DELETE FROM {0}.struct_elem WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
             self.mdb.execute(sql)
             sql = "DELETE FROM {0}.struct_elem_param WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)

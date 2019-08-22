@@ -169,10 +169,3 @@ class ClassStructureDialog(QDialog):
         else:
             self.struct.update_etat_struct_prof(id_struct, delete=True)
 
-            # def update_cur_item(self):
-            #     itm = self.tree_struct.selectedItems()[0]
-            #     id_config = itm.data(0, 32)
-            #     sql = "SELECT name, method FROM {0}.struct_config WHERE id = {1} ORDER BY name".format(self.mdb.SCHEMA, id_config)
-            #     row = self.mdb.run_query(sql, fetch=True)[0]
-            #     itm.setText(0, row[0])
-            #     itm.setText(1, self.tbst.dico_meth_calc[row[1]])

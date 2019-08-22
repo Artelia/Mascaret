@@ -1431,7 +1431,6 @@ class GraphProfilRes(GraphCommon):
 
     def export_csv(self):
         """Export Table to .CSV file"""
-        # recupe tab export CSV
 
         default_name = self.nom.replace(' ', '_').replace(':', '-')
         if int(qVersion()[0]) < 5:  # qt4

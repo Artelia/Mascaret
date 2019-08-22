@@ -40,7 +40,6 @@ class ClassLaws:
         self.param_g = {}
         self.poly_p = None
         self.qh_j_no_hy = []
-        # valeur pour éviter des débit null et blocker le model
         self.deb_min = 0.0001
 
     def init_method(self, id_config):
@@ -514,7 +513,7 @@ class ClassLaws:
                             break
                         list_ori.append(value)
 
-        # interpol q fix
+
         if len(list_ori) > 1:
             idx = np.where(np.array(self.list_q) > list_ori[0][0])[0]
             if len(idx) > 0:
@@ -704,9 +703,6 @@ class ClassLaws:
         :param method: mehtod of compute
         :return: nothing
         """
-        # **********************************************************************************************
-        # save
-        # *********************************************************************************************
         if list_final == []:
             sql = "SELECT name FROM {0}.{1} WHERE id={2}".format(self.mdb.SCHEMA, 'struct_config', id_config)
 

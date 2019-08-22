@@ -30,7 +30,7 @@ from .ClassLaws import ClassLaws
 from .ClassTableStructure import ClassTableStructure
 
 
-# TODO
+
 class ClassMethod:
     def __init__(self, mgis):
         self.mgis = mgis
@@ -81,7 +81,7 @@ class ClassMethod:
 
     def get_profil(self, id_config):
         """
-            Get profil coordonnee
+        Get profil coordonnee
         :param id_config: index of hydraulic structure
         """
         where = "id_config = {0}".format(id_config)
@@ -193,14 +193,8 @@ class ClassMethod:
 
         zmin_t = zmin - 10
         if zmin < z:
-            # Let create a circle of radius 1 around center point:
             circ = Point([x_c, z_c]).buffer(1)
-            # Let create the ellipse along x and y:
             ell = shapely.affinity.scale(circ, a, b)
-            # # If one need to rotate it clockwise along an upward pointing x axis:
-            # poly_t = shapely.affinity.rotate(ell, 90 - ellipse[2])
-            # # According to the man, a positive value means a anti-clockwise angle,
-            # # and a negative one a clockwise angle.
             poly = Polygon([[x_c - a - 1, z - b * 2], [x_c - a - 1, z], [x_c + a + 1, z], [x_c + a + 1, z - b * 2],
                             [x_c - a - 1, z - b * 2]])
             ell = ell.difference(poly)  # demi circle
@@ -264,7 +258,7 @@ class ClassMethod:
                                                Da :scupper
         :return:
         """
-        # get profil
+
         if self.checkprofil(id_config):
             profil = self.get_profil(id_config)
         else:
@@ -281,7 +275,6 @@ class ClassMethod:
             print(msg)
             return
         if config_type == 'PC':
-            # parametre general
             list_recup = ['EPAITAB', 'ZTOPTAB', 'FIRSTWD']
             param_g = self.get_param_g(list_recup, id_config)
             param_g['ZPC'] = param_g['ZTOPTAB'] - param_g['EPAITAB']
@@ -289,7 +282,6 @@ class ClassMethod:
             recup_pil = ['FORMPIL', 'LARGPIL', 'LONGPIL']
             recup_p1 = []
         elif config_type == 'PA':
-            # parametre general
             list_recup = ['ZTOPTAB', 'FIRSTWD']
             param_g = self.get_param_g(list_recup, id_config)
             recup_trav = ['FORMARC', 'LARGTRA', 'ZMINARC', 'ZMAXARC']
@@ -338,7 +330,7 @@ class ClassMethod:
                 width += width_prec
             width_prec = param_elem['LARG']
             if lid_elem["type"][i] != 1:
-                # # pont Cadre
+                #  pont Cadre
                 if config_type == 'PC':
                     param_elem['ZMAXELEM'] = param_g['ZPC']
                     sav_zmaxelem = param_elem['ZMAXELEM']
@@ -348,7 +340,7 @@ class ClassMethod:
                     param_elem['ZMAXELEM'] = param_elem['ZMINARC']
                     sav_zmaxelem = param_elem['ZMAXELEM']
                     poly_elem = self.poly_arch(param_g, param_elem, width, zmin)
-                # buse
+                # dalot
                 elif config_type == 'DA':
                     param_elem['ZMAXELEM'] = param_elem['COTERAD'] + param_elem['HAUTDAL']
                     sav_zmaxelem = param_elem['ZMAXELEM']
@@ -358,8 +350,6 @@ class ClassMethod:
                     poly_elem = self.poly_buse(param_elem)
 
             else:
-                # Attention Arc  hauteur different entre droite et gauchs(aproximation  /|  ) pb seul bradley
-                #                                                                     |_|
                 if config_type == 'PC':
                     param_elem['ZMAXELEM'] = sav_zmaxelem
                     param_elem['ZMAXELEM_P1'] = param_g['ZPC']
@@ -384,7 +374,6 @@ class ClassMethod:
                 print(msg)
 
             if not poly_final.is_empty:
-                # self.draw_test(poly_final, decal_ax=10, xmin=profil['x'][0], xmax=profil['x'][-1])
                 # # stock element
                 if poly_final.geom_type == 'MultiPolygon':
                     poly_final = 'Null'
@@ -395,23 +384,6 @@ class ClassMethod:
                 self.mdb.run_query(sql)
         width += width_prec
 
-        # sql = "SELECT * FROM {0}.struct_param WHERE id_config = {1} AND var = 'TOTALOUV'" \
-        #     .format(self.mdb.SCHEMA, id_config)
-        # row = self.mdb.run_query(sql, fetch=True)
-        # if len(row) > 0:
-        #     sql = "UPDATE {0}.struct_param SET value = {2} WHERE id_config = {1} AND var = 'TOTALOUV'" \
-        #         .format(self.mdb.SCHEMA, id_config, width_trav)
-        #     self.mdb.execute(sql)
-        # else:
-        #     sql = "INSERT INTO {0}.struct_param (id_config, var, value) VALUES ({1}, 'TOTALOUV', {2})" \
-        #         .format(self.mdb.SCHEMA, id_config, width_trav)
-        #     self.mdb.execute(sql)
-
-        # sql = "INSERT INTO {0}.struct_param(id_config,var,value) VALUES ({1}, 'TOTALOUV', {2});".format(
-        #     self.mdb.SCHEMA,
-        #     id_config,
-        #     width_trav)
-        # self.mdb.run_query(sql)
 
     def select_poly(self, table, where='', order=''):
         """
@@ -479,13 +451,7 @@ class ClassMethod:
                'id_config': id_struct}
         self.mdb.update('struct_config', tab, var='id_config')
 
-        # sql = """UPDATE {0}.{1} SET abscissa='{2}', branchnum={3}  WHERE id_config='{4}'"""
-        #
-        # self.mdb.run_query(sql.format(self.mdb.SCHEMA,
-        #                               'struct_config',
-        #                               feature['abscissa'],
-        #                               feature['branchnum'],
-        #                           id_config))
+
 
     def coup_poly_h(self, poly, cote):
         """
@@ -659,7 +625,6 @@ class ClassMethod:
                 fich.write('# Debit Cote_Aval Cote_Amont\n')
                 chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
                 list_final = list(self.sort_law(list_final))
-                # list_final= self.complete_law(info)
 
                 for val in list_final:
                     dico = {'flowrate': val[0], 'z_downstream': val[1], 'z_upstream': val[2]}
