@@ -1235,6 +1235,19 @@ class ClassMascaret:
                 tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
                 self.creer_loi(nom + '_init', tab, 2)
 
+    def  fct_comment(self):
+        liste_col = self.mdb.list_columns('runs')
+        if 'comments' in liste_col:
+            comments, ok = QInputDialog.getText(QWidget(), 'Comments',
+                                                'if you want to input a comment :')
+            if not ok:
+                if self.mgis.DEBUG:
+                    self.mgis.add_info("No comments.")
+                    comments = ''
+        else:
+            comments = ''
+        return comments.replace("'","''").replace('"',' ')
+
     def mascaret(self, noyau, run):
         """creation file and to run mascaret"""
         comments = ''
@@ -1279,33 +1292,17 @@ class ClassMascaret:
                     dict_scen[key] = value
             else:
                 dict_scen = dict_scen_tmp
-            liste_col = self.mdb.list_columns('runs')
-            if 'comments' in liste_col:
-                comments, ok = QInputDialog.getText(QWidget(), 'Comments',
-                                                    'if you want to input a comment :')
-                if not ok:
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info("No comments.")
-                        comments = ''
-            else:
-                comments = ''
+
+            comments =self.fct_comment()
         else:
             scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
                                             'Please input a scenario name :')
+            scen = scen.replace("'"," ").replace('"',' ')
             if not ok or not self.check_scenar(scen, run):
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Canceled Simulation because of {0} already exists.".format(scen))
                 return
-            liste_col = self.mdb.list_columns('runs')
-            if 'comments' in liste_col:
-                comments, ok = QInputDialog.getText(QWidget(), 'Comments',
-                                                    'if you want to input a comment :')
-                if not ok:
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info("No comments.")
-                        comments = ''
-            else:
-                comments = ''
+            comments=self.fct_comment()
 
             dict_scen = {'name': [scen]}
 

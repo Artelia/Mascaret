@@ -516,6 +516,7 @@ class MascPlugDialog(QMainWindow):
                 self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
             run, ok = QInputDialog.getText(QWidget(), 'Run name',
                                            'Please input a run name :', text=case)
+            run = run.replace("'", " ").replace('"', ' ')
             if ok:
                 clam = ClassMascaret(self)
                 clam.mascaret(self.Klist[self.listeState.index(case)], run)

@@ -935,7 +935,6 @@ class GraphProfil(GraphCommon):
     def maj_graph(self):
         """Updating  graphic"""
         self.ui.label_Title.setText(_translate("ProfilGraph", self.nom, None))
-
         ta = self.tab
         self.courbeProfil.set_data(ta['x'], ta['z'])
 
@@ -1301,15 +1300,18 @@ class GraphProfilRes(GraphCommon):
             # dico = self.mdb.select_distinct("date, run, scenario",
             #                                      "runs",
             #                                      condition)
-            dico_run = self.mdb.select_distinct("date, run, scenario,t", "runs")
+            dico_run = self.mdb.select_distinct("date, run, scenario,t, comments", "runs")
             if not dico_run:
                 self.mgis.add_info("No simulation to show")
                 return False
 
             self.listeRuns = {}
-            for run, scen in zip(dico_run["run"], dico_run["scenario"]):
+            self.liste_comm = {}
+            for run, scen, comm in zip(dico_run["run"], dico_run["scenario"],dico_run["comments"]):
                 if run not in self.listeRuns.keys():
                     self.listeRuns[run] = []
+                    self.liste_comm[run] = {}
+                self.liste_comm[run][scen] = comm
                 self.listeRuns[run].append(scen)
 
             self.run = list(self.listeRuns.keys())[-1]
@@ -1461,7 +1463,18 @@ class GraphProfilRes(GraphCommon):
                 self.axes.patches.remove(patch)
 
         self.title.setText(self.nom)
-
+        try :
+            comm = self.liste_comm[self.run][self.scenario]
+            if comm != '' and comm != None:
+                self.ui.label_comments.show()
+                self.ui.label2.show()
+                self.ui.label_comments.setText(comm)
+            else:
+                self.ui.label_comments.hide()
+                self.ui.label2.hide()
+        except:
+            self.ui.label_comments.hide()
+            self.ui.label2.hide()
         # profile
         self.extrait_profil()
 
@@ -1756,18 +1769,38 @@ class GraphHydro(GraphCommon):
         # dico = self.mdb.select_distinct("date, run, scenario",
         #                                           "runs",
         #                                           condition)
-        dico_run = self.mdb.select_distinct("date, run, scenario",
+        dico_run = self.mdb.select_distinct("date, run, scenario, pk, comments",
                                             "runs")
 
         if not dico_run:
             self.mgis.add_info("No simulation to show")
             return False
-        self.listeRuns = {}
-        for run, scen in zip(dico_run["run"], dico_run["scenario"]):
-            if run not in self.listeRuns.keys():
-                self.listeRuns[run] = []
-            self.listeRuns[run].append(scen)
 
+        self.listeRuns = {}
+        self.liste_comm = {}
+        for run, scen, pk,comm in zip(dico_run["run"], dico_run["scenario"], dico_run['pk'],dico_run["comments"]):
+
+            if self.type == 't':
+                try:
+                    pk_tmp = [round(elem, 2) for elem in pk]
+                    idx = pk_tmp.index(self.position)
+                    if run not in self.listeRuns.keys():
+                        self.listeRuns[run] = []
+                        self.liste_comm[run] = {}
+                    self.listeRuns[run].append(str(scen))
+                    self.liste_comm[run][scen] = comm
+                except ValueError:
+                    pass
+            else:
+                if run not in self.listeRuns.keys():
+                    self.listeRuns[run] = []
+                    self.liste_comm[run] = {}
+                self.listeRuns[run].append(str(scen))
+                self.liste_comm[run][scen] = comm
+
+
+        if self.listeRuns == {}:
+            self.mgis.add_info('No results for this profile. \n')
         self.run = sorted(self.listeRuns.keys())[-1]
 
         self.scenario = self.listeRuns[self.run][-1]
@@ -2215,6 +2248,22 @@ class GraphHydro(GraphCommon):
                 self.tableau.setItem(i, j, QTableWidgetItem(str(v)))
 
     def maj_graph(self):
+        """
+        Update graph function
+        """
+        try :
+            comm = self.liste_comm[self.run][self.scenario]
+            if comm != '' and comm != None:
+                self.ui.label_comments.show()
+                self.ui.label2.show()
+                self.ui.label_comments.setText(comm)
+            else:
+                self.ui.label_comments.hide()
+                self.ui.label2.hide()
+        except:
+            self.ui.label_comments.hide()
+            self.ui.label2.hide()
+
         if self.type == 't':
             fin = 'm (Pk)'
         else:
