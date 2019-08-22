@@ -1482,13 +1482,16 @@ class GraphProfilRes(GraphCommon):
                 self.axes.patches.remove(patch)
 
         self.title.setText(self.nom)
-
-        comm = self.liste_comm[self.run][self.scenario]
-        if comm != '' and comm != None:
-            self.ui.label_comments.show()
-            self.ui.label2.show()
-            self.ui.label_comments.setText(comm)
-        else:
+        try :
+            comm = self.liste_comm[self.run][self.scenario]
+            if comm != '' and comm != None:
+                self.ui.label_comments.show()
+                self.ui.label2.show()
+                self.ui.label_comments.setText(comm)
+            else:
+                self.ui.label_comments.hide()
+                self.ui.label2.hide()
+        except:
             self.ui.label_comments.hide()
             self.ui.label2.hide()
         # profile
@@ -2267,12 +2270,16 @@ class GraphHydro(GraphCommon):
         """
         Update graph function
         """
-        comm = self.liste_comm[self.run][self.scenario]
-        if comm != '' and comm != None:
-            self.ui.label_comments.show()
-            self.ui.label2.show()
-            self.ui.label_comments.setText(comm)
-        else:
+        try :
+            comm = self.liste_comm[self.run][self.scenario]
+            if comm != '' and comm != None:
+                self.ui.label_comments.show()
+                self.ui.label2.show()
+                self.ui.label_comments.setText(comm)
+            else:
+                self.ui.label_comments.hide()
+                self.ui.label2.hide()
+        except:
             self.ui.label_comments.hide()
             self.ui.label2.hide()
 
