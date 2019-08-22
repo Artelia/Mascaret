@@ -1144,7 +1144,6 @@ class ClassLaws:
         val = 90 / len(self.list_zav)
         first_trans = True
         ztransi = []
-        largmin = 0.1  # buse circulaire
         for zav in self.list_zav:
 
             idx = np.where(self.list_zam > zav)[0]
