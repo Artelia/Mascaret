@@ -1628,7 +1628,6 @@ class ClassMascaret:
 
         condition = condition + " AND t=" + str(t_max)
 
-        #result = self.mdb.select("resultats", condition, 'id')
         result = self.mdb.select("resultats", condition, 'pk')
         if not result:
             self.mgis.add('No results for initialisation')
