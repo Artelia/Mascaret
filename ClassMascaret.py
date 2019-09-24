@@ -1353,7 +1353,6 @@ class ClassMascaret:
                 dict_scen = dict_scen_tmp
             comments=self.fct_comment()
 
-            comments =self.fct_comment()
         else:
             scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
                                             'Please input a scenario name :')
