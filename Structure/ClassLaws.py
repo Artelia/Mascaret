@@ -209,7 +209,7 @@ class ClassLaws:
                       'MAXQ', 'MINQ']
         param_g_temp = self.parent.get_param_g(list_recup, id_config)
         self.param_g.update(param_g_temp)
-        self.param_g['BIAIOUV'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
+        self.param_g['BIAIOUVRAD'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
         # only brad
         where = " id_config={} and type=1 ".format(id_config)
         order = "id_elem"
@@ -247,8 +247,8 @@ class ClassLaws:
                 self.list_e.append((key, float(key.split('=')[1])))
         self.list_e = sorted(self.list_e)
 
-        self.coef_cor_biais = (self.param_g['LONGPIL'] * m.sin(self.param_g['BIAIOUV']) +
-                               self.param_g['LARGPIL'] * m.cos(self.param_g['BIAIOUV'])) / self.param_g['LARGPIL']
+        self.coef_cor_biais = (self.param_g['LONGPIL'] * m.sin(self.param_g['BIAIOUVRAD']) +
+                               self.param_g['LARGPIL'] * m.cos(self.param_g['BIAIOUVRAD'])) / self.param_g['LARGPIL']
 
     def meth_brad(self, zav, q, coef_cor_biais, type_kb, list_ph, list_e):
         """
@@ -273,11 +273,13 @@ class ClassLaws:
         umoy = q / area_wet
         for poly_pil in self.list_poly_pil:
             poly_pil = self.parent.coup_poly_h(poly_pil, zav)
-            if self.param_g['BIAIOUV'] != 0:
+            if self.param_g['BIAIPIL'] != 0:
                 area_pil_proj += poly_pil.area * coef_cor_biais
             area_pil += poly_pil.area
-        if area_pil_proj == 0:
+        if area_pil_proj == 0  :
             area_pil_proj = area_pil
+        # print("area_pil_proj",area_pil_proj)
+        # print("area_pil",area_pil)
         left_bank = self.param_g['FIRSTWD'] + self.param_g['TOTALOUV'] + self.param_g['LARGPIL'] * len(
             self.list_poly_pil)
         ssoh = self.parent.coup_poly_v(poly_wet, [self.param_g['FIRSTWD'], left_bank],
@@ -296,6 +298,7 @@ class ClassLaws:
             return [self.deb_min, zav, zav]
             # coefm = 0
 
+        # print('area_pil',area_pil)
         # print('q1,q2,q3',q1,q2,q3)
         # print('area q1, area q2,area q3', ssoh,
         # self.parent.coup_poly_v(poly_wet,self.param_g['FIRSTWD'],typ='R').area,
@@ -312,16 +315,18 @@ class ClassLaws:
         # *************** kb
         list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, "kb_abac", 'M', type_kb)
         kb = np.interp(coefm, list_inter_x, list_inter_y)
+         # print('kb',kb)
 
         # *************** Dkp
         # print(area_pil_proj,ssoh,area_pil)
-        j = area_pil_proj / ssoh
+        j = area_pil_proj / s1
         j = self.check_j(j, int(self.param_g['FORMPIL']), q, zav)
+
+
         # print('j',j)
         list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, 'DKp_abac', 'J',
                                                           str(int(self.param_g['FORMPIL'])))
         dkp = np.interp(j, list_inter_x, list_inter_y)
-
         # print('Dkp', dkp)
         list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, 's_abac', 'M',
                                                           str(int(self.param_g['FORMPIL'])))
@@ -347,7 +352,7 @@ class ClassLaws:
         dke = np.interp(e_calc, list_e_interp, list_m_interp)
         # print('dke', dke)
 
-        if self.param_g['BIAIPIL'] == 0:
+        if self.param_g['BIAICUL'] == 0:
             dks = 0
         else:
             if self.param_g['BIAIOUV'] > 45:
@@ -369,6 +374,7 @@ class ClassLaws:
             else:
                 dks = 0
         # print("dks",dks)
+
         term1 = (kb + dkp + dke + dks) * va ** 2 / (2. * self.grav) * alpha2
         # print("term1 Remout",term1)
         hmon = zav + term1
@@ -378,7 +384,6 @@ class ClassLaws:
             2. * self.grav)
         # print("term2 Remout", term2)
         remout = term1 + term2
-
         # print("Remous Total", remout)
         return [q, zav, zav + remout]
 
