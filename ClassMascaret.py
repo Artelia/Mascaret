@@ -1352,6 +1352,8 @@ class ClassMascaret:
             else:
                 dict_scen = dict_scen_tmp
             comments=self.fct_comment()
+
+            comments =self.fct_comment()
         else:
             scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
                                             'Please input a scenario name :')
@@ -1693,7 +1695,6 @@ class ClassMascaret:
 
         condition = condition + " AND t=" + str(t_max)
 
-        #result = self.mdb.select("resultats", condition, 'id')
         result = self.mdb.select("resultats", condition, 'pk')
         if not result:
             self.mgis.add('No results for initialisation')
