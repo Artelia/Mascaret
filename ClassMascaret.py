@@ -1532,7 +1532,7 @@ class ClassMascaret:
             fichier.write("'" + fichier_cas + "'\n")
         test = sys.platform
 
-        if test == 'linux2' or test == 'cygwin':
+        if 'linux' in test or test == 'cygwin':
             soft = "./mascaret_linux"
         elif test == 'win32':
             soft = "mascaret.exe"
