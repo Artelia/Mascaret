@@ -30,8 +30,10 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    1.0.4  : Correction of execute bug with linux (ubuntu)
-    1.0.3  : Correction of shema import bug
+    1.0.4  : Correction of legends moving bug  into linux platform
+             Correction of run bug  into  linux platform
+             Correction of steady-initialisation bug with tracers
+    1.0.3  : Correction of schema import bug
              Addition of the display of comments in graphs
     1.0.2  : Correction of weirs layer style bug
              Modification of observation accurency : 1E-3 => 1E-6

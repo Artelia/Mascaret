@@ -59,7 +59,7 @@ else:  # qt4
         from matplotlib.backends.backend_qt5agg \
             import NavigationToolbar2QT as NavigationToolbar
 # **************************************************
-
+from ..GraphCommon import DraggableLegend
 
 class GraphCommon(QDialog):
     def __init__(self, mgis=None):
@@ -98,7 +98,8 @@ class GraphCommon(QDialog):
                                     fancybox=False, shadow=False, fontsize=7.)
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
-        self.leg.draggable(True)
+        # self.leg.draggable(True)
+        DraggableLegend(self.leg)
         self.lined = dict()
 
         for legline, courbe in zip(self.leg.get_lines(), self.courbes):
