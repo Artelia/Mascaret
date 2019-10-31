@@ -243,3 +243,11 @@ def del_accent(ligne):
         for accented_char in accented_chars:
             ligne = ligne.replace(accented_char, char)
     return ligne
+
+def del_symbol(ligne):
+    """ supprime les accents du texte source """
+    accents = {u'_': [u'-', u'.']}
+    for (char, accented_chars) in accents.items():
+        for accented_char in accented_chars:
+            ligne = ligne.replace(accented_char, char)
+    return ligne

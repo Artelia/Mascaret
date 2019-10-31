@@ -225,9 +225,7 @@ class ClassMethod:
         liste_poly.append([profil['x'][-1] + 1, profil['z'][-1]])
         liste_poly.append([profil['x'][-1] + 1, zmin_p])
         liste_poly.append([x0_p, zmin_p])
-
         poly_p = Polygon(liste_poly)
-
         return poly_p
 
     def poly_pil(self, param_elem, x0, zmin=-99999):
@@ -301,7 +299,7 @@ class ClassMethod:
             param_g = self.get_param_g(list_recup, id_config)
             param_g['FIRSTWD'] = 0
             recup_trav = ['COTERAD', 'ABSBUSE', 'LARGTRA']
-        #
+
         where = "id_config = {0}".format(id_config)  # type=0 span, =1 bridge peir
         order = "id_elem"
         lid_elem = self.mdb.select('struct_elem', where=where, order=order, list_var=['id_elem', "type"])
@@ -709,7 +707,6 @@ class ClassMethod:
         :param ui: gui object
         :return:
         """
-        pass
         self.brad = ClassLaws(self)
 
         if idmethod == 0 or idmethod == 4:  # brad

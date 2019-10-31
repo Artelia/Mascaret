@@ -28,6 +28,7 @@ if (not os.path.exists(os.path.join(os.environ.get('HOMETEL', ''),
                                     'wrap_api', 'lib', 'api.pyf'))):
     print("  -> telapy not available doing nothing")
     sys.exit(0)
+
 from telapy.api.masc import Mascaret
 from matplotlib import pyplot as plt
 
@@ -40,10 +41,13 @@ class ClassAPI_Mascaret:
         # self.mgis = self.clmas.mgis
         # self.mdb = self.mgis.mdb
         # self.dossierFileMasc = self.clmas.dossierFileMasc
+        # self.DEBUG = self.mgis.DEBUG
         self.dossierFileMasc = r'/home/daoum/.local/share/QGIS/QGIS3/profiles/default/python/plugins/Mascaret/api'
         self.baseName = 'mascaret'
         self.filelig = None
         self.DEBUG = True
+        self.tracer = False
+        self.basin = False
 
         self.masc = Mascaret(log_level='INFO')
         self.masc.create_mascaret(iprint=1)
@@ -57,14 +61,15 @@ class ClassAPI_Mascaret:
         :return:
         """
         study_files = self.init_file(casfile)
+        print(len(study_files[0]), len(study_files[1]))
         if study_files is None:
             return 1
-
         self.masc.import_model(study_files[0], study_files[1])
 
         self.init_hydro()
 
         self.init_crit_stop()
+        print(self.tini)
 
     def init_file(self, casfile):
         """
@@ -73,7 +78,7 @@ class ClassAPI_Mascaret:
         :return: list of type and of file
         """
         initfile = False
-        if '_init' in casfile:
+        if '_init.' in casfile:
             initfile = True
         files_name = []
         files_type = ['xcas']
@@ -85,12 +90,9 @@ class ClassAPI_Mascaret:
         files_name.append(
             os.path.join(self.dossierFileMasc, casfile))
 
+
         for file in os.listdir(self.dossierFileMasc):
-            if '.loi' in file and initfile == self.check_init(file):
-                files_type.append('loi')
-                files_name.append(
-                    os.path.join(self.dossierFileMasc, file))
-            elif '.geo' in file:
+            if '.geo' in file:
                 files_type.append('geo')
                 files_name.append(
                     os.path.join(self.dossierFileMasc, file))
@@ -98,7 +100,36 @@ class ClassAPI_Mascaret:
                 files_type.append('lig')
                 self.filelig = os.path.join(self.dossierFileMasc, file)
                 files_name.append(self.filelig)
-        print([files_name, files_type])
+            elif '.met' in file and initfile == self.check_init(file):
+                self.tracer = True
+                files_type.append('tracer_meteo')
+                self.filelig = os.path.join(self.dossierFileMasc, file)
+                files_name.append(self.filelig)
+            elif '.phy' in file and initfile == self.check_init(file):
+                self.tracer = True
+                files_type.append('tracer_parphy')
+                self.filelig = os.path.join(self.dossierFileMasc, file)
+                files_name.append(self.filelig)
+            elif '.conc' in file and initfile == self.check_init(file):
+                self.tracer = True
+                files_type.append('tracer_conc')
+                self.filelig = os.path.join(self.dossierFileMasc, file)
+                files_name.append(self.filelig)
+            elif '_tra.loi' in file and initfile == self.check_init(file):
+                self.tracer = True
+                files_type.append('tracer_loi')
+                self.filelig = os.path.join(self.dossierFileMasc, file)
+                files_name.append(self.filelig)
+            elif '.loi' in file and initfile == self.check_init(file):
+                files_type.append('loi')
+                files_name.append(
+                    os.path.join(self.dossierFileMasc, file))
+            elif '.casier' in file and initfile == self.check_init(file):
+                self.basin = True
+                files_type.append('casier')
+                files_name.append(
+                    os.path.join(self.dossierFileMasc, file))
+
 
         # listing
         files_type.append('listing')
@@ -106,10 +137,33 @@ class ClassAPI_Mascaret:
         # Resultat
         files_type.append('res')
         files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.opt'))
+
+        if self.tracer:
+            # listing
+            files_type.append('tracer_listing')
+            files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.tra_lis'))
+            # Resultat
+            files_type.append('tracer_res')
+            files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.tra_opt'))
+
+        if self.basin:
+            # listing
+            files_type.append('listing_casier')
+            files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.cas_lis'))
+            # Resultat
+            files_type.append('res_casier')
+            files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.cas_opt'))
+            # listing
+            files_type.append('listing_liaison')
+            files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.liai_lis'))
+            # Resultat
+            files_type.append('res_liaison')
+            files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.liai_opt'))
+
         return [files_name, files_type]
 
     def check_init(self, file):
-        if '_init' in file:
+        if '_init.' in file:
             return True
         return False
 
@@ -126,6 +180,8 @@ class ClassAPI_Mascaret:
             self.masc.init_hydro(zinit, qinit)
         else:
             self.masc.init_hydro_from_file(self.filelig)
+        if self.tracer :
+            self.masc.init_tracer_state()
 
     def init_crit_stop(self):
         """
@@ -220,16 +276,17 @@ class ClassAPI_Mascaret:
 if __name__ == '__main__':
     api = ClassAPI_Mascaret()
     api.initial('mascaret.xcas')
-    wl0 = [api.masc.get('State.Z', i) for i in range(api.npoin)]
+    # wl0 = [api.masc.get('State.Z', i) for i in range(api.npoin)]
     api.compute()
+    print('fin')
     # state seulement état final
-    wl = [api.masc.get('State.Z', i) for i in range(api.npoin)]
-    zf = [api.masc.get('Model.Zbot', i) for i in range(api.npoin)]
-    x = [api.masc.get('Model.X', i) for i in range(api.npoin)]
-
-    plt.plot(x, wl, 'r')
-    plt.plot(x, wl0, 'g')
-    plt.plot(x, zf, 'b')
-    plt.show()
+    # wl = [api.masc.get('State.Z', i) for i in range(api.npoin)]
+    # zf = [api.masc.get('Model.Zbot', i) for i in range(api.npoin)]
+    # x = [api.masc.get('Model.X', i) for i in range(api.npoin)]
+    #
+    # plt.plot(x, wl, 'r')
+    # plt.plot(x, wl0, 'g')
+    # plt.plot(x, zf, 'y')
+    # plt.show()
     del api.masc
     del api

@@ -25,7 +25,7 @@ from shapely import geometry
 
 from .ClassMethod import ClassMethod
 from ..GraphCommon import GraphCommon
-import time
+
 
 class GraphStructure(GraphCommon):
     """class Dialog GraphWaterQ"""
@@ -104,7 +104,6 @@ class GraphStructure(GraphCommon):
                 sql = "SELECT id_elem, type, ST_AsGeoJSON(polygon) FROM {0}.struct_elem WHERE id_config = {1} " \
                       "AND polygon is Not Null ORDER BY id_elem".format(self.mdb.SCHEMA, config)
                 lst_elem = self.mdb.run_query(sql, fetch=True)
-
                 for e, elem in enumerate(lst_elem):
                     if elem[1] == 0:
                         poly = geometry.shape(json.loads(elem[2]))

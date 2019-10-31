@@ -156,6 +156,7 @@ class GraphCommon(QDialog):
         self.fig.autofmt_xdate()
         self.canvas.draw()
 
+
 class DraggableLegend:
     def __init__(self, legend):
         self.legend = legend
