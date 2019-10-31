@@ -34,6 +34,7 @@ changelog=
              Correction of legends deplacement bug  into linux platform
              Correction of run bug  into  linux platform
              Correction of Polygons treatment bug due to Shapely  into linux platform
+             Correction of steady-initialisation bug with tracers
     1.1.0  : Addition of Bradley method for hydraulic structure
              Addition of hydraulic structure GUI
              Addition of hydraulic structure table

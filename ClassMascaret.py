@@ -1504,7 +1504,7 @@ class ClassMascaret:
                     self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, sceninit, noyau))
                     self.lance_mascaret(self.baseName + '_init.xcas')
                     self.lit_opt(run, sceninit, None,
-                                 self.baseName + '_init', comments, par['presenceTraceurs'])
+                                 self.baseName + '_init', comments)
                 else:
                     self.mgis.add_info("No Run initialization.\n"
                                        " The initial boundaries come from {} scenario.".format(sceninit))
