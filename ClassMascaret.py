@@ -1605,7 +1605,8 @@ class ClassMascaret:
             self.mgis.add_info("{0} platform  doesn't allow to run simulation.".format(test))
             return False
 
-        # Linux(2.x and 3.x) ='linux2'
+
+        # Linux(2.x and 3.x) ='linux2' or 'linux'
         # Windows = 'win32'
         # Windows / Cygwin = 'cygwin'
         # MacOSX = 'darwin'
@@ -1613,6 +1614,16 @@ class ClassMascaret:
         # OS / 2  EMX ='os2emx'
         # RiscOS ='riscos'
         # AtheOS= 'atheos
+
+        # TODO
+        # api=ClassAPI_Mascaret(self)
+        # api.initial
+        #
+        # for t in list_t:
+        #     api.time_step()
+        # api.finalisation()
+
+
         p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                              , stdin=subprocess.PIPE)
         p.wait()

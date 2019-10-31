@@ -210,6 +210,7 @@ class ClassStructureEditDialog(QDialog):
     def accept_page(self):
         # save Info
         if self.save_struct():
+
             self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
             active = self.cc_active.isChecked()
             if active:
