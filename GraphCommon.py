@@ -104,7 +104,8 @@ class GraphCommon(QDialog):
                                     fancybox=False, shadow=False, fontsize=7.)
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
-        self.leg.draggable(True)
+        #self.leg.draggable(True)
+        DraggableLegend(self.leg)
         self.lined = dict()
 
         for legline, courbe in zip(self.leg.get_lines(), self.courbes):
@@ -154,3 +155,38 @@ class GraphCommon(QDialog):
 
         self.fig.autofmt_xdate()
         self.canvas.draw()
+
+
+class DraggableLegend:
+    def __init__(self, legend):
+        self.legend = legend
+        self.gotLegend = False
+        legend.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
+        legend.figure.canvas.mpl_connect('pick_event', self.on_pick)
+        legend.figure.canvas.mpl_connect('button_release_event', self.on_release)
+        legend.set_picker(self.my_legend_picker)
+
+    def on_motion(self, evt):
+        if self.gotLegend:
+            dx = evt.x - self.mouse_x
+            dy = evt.y - self.mouse_y
+            loc_in_canvas = self.legend_x + dx, self.legend_y + dy
+            loc_in_norm_axes = self.legend.parent.transAxes.inverted().transform_point(loc_in_canvas)
+            self.legend._loc = tuple(loc_in_norm_axes)
+            self.legend.figure.canvas.draw()
+
+    def my_legend_picker(self, legend, evt):
+        return self.legend.legendPatch.contains(evt)
+
+    def on_pick(self, evt):
+        if evt.artist == self.legend:
+            bbox = self.legend.get_window_extent()
+            self.mouse_x = evt.mouseevent.x
+            self.mouse_y = evt.mouseevent.y
+            self.legend_x = bbox.xmin
+            self.legend_y = bbox.ymin
+            self.gotLegend = 1
+
+    def on_release(self, event):
+        if self.gotLegend:
+            self.gotLegend = False

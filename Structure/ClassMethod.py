@@ -20,6 +20,7 @@ email                :
 import collections
 import math as m
 import os
+import json
 
 import numpy as np
 import shapely.affinity
@@ -377,8 +378,10 @@ class ClassMethod:
                 # # stock element
                 if poly_final.geom_type == 'MultiPolygon':
                     poly_final = 'Null'
+                poly_final=json.dumps(mapping(poly_final))
+
                 where = "WHERE id_config = {0}  AND id_elem = {1} ".format(id_config, id_elem)
-                sql = """UPDATE {0}.struct_elem SET polygon ='{1}'  {2}""".format(self.mdb.SCHEMA,
+                sql = """UPDATE {0}.struct_elem SET polygon =ST_GeomFromGeoJSON('{1}')  {2}""".format(self.mdb.SCHEMA,
                                                                                   poly_final,
                                                                                   where)
                 self.mdb.run_query(sql)
@@ -401,7 +404,7 @@ class ClassMethod:
             where = " WHERE " + where + " "
         if order:
             order = " ORDER BY " + order
-        sql = "SELECT ST_AsText(Polygon)  AS Polygon  FROM {0}.{1} {2} {3};"
+        sql = "SELECT ST_AsGeoJSON(Polygon)  AS Polygon  FROM {0}.{1} {2} {3};"
         (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA, table, where, order), fetch=True,
                                                namvar=True)
         cols = [col[0] for col in namCol]
@@ -412,9 +415,9 @@ class ClassMethod:
             for i, val in enumerate(row):
                 if val is not None:
                     try:
-                        dico[cols[i]].append(wkt.loads(val.strip()))
+                        dico[cols[i]].append(shape(json.loads(val.strip())))
                     except:
-                        dico[cols[i]].append(wkt.loads(val))
+                        dico[cols[i]].append(shape(json.loads(val)))
 
         return dico
 

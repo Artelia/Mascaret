@@ -44,6 +44,7 @@ from qgis.core import *
 from qgis.gui import *
 
 from .Function import isfloat, interpole
+from .GraphCommon import DraggableLegend
 from .Structure.ClassMethod import ClassMethod
 from .Structure.StructureCreateDialog import ClassStructureCreateDialog
 from .WaterQuality.ClassTableWQ import ClassTableWQ
@@ -1702,7 +1703,8 @@ class GraphProfilRes(GraphCommon):
                                     fancybox=False, shadow=False)
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
-        self.leg.draggable(True)
+        # self.leg.draggable(True)
+        DraggableLegend(self.leg)
         self.lined = dict()
 
         for legline, courbe in zip(self.leg.get_lines(), self.courbes):
@@ -2408,7 +2410,8 @@ class GraphHydro(GraphCommon):
                     legline.set_visible(True)
                     courbe.set_visible(False)
         # rend deplacable la legende mais fonctionne mal avec le choix des ligne dans la légende
-        self.leg.draggable(True)
+        # self.leg.draggable(True)
+        DraggableLegend(self.leg)
 
     def maj_limites(self):
         mini_x = min(self.tab[self.type])
@@ -3026,7 +3029,8 @@ class GraphBasin(GraphCommon):
             courbe.set_visible(True)
 
         # rend deplacable la legende mais fonctionne mal avec le choix des ligne dans la légende
-        self.leg.draggable(True)
+        # self.leg.draggable(True)
+        DraggableLegend(self.leg)
 
     def maj_limites(self):
         if self.tab['date']:

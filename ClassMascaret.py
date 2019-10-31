@@ -1598,7 +1598,7 @@ class ClassMascaret:
             fichier.write("'" + fichier_cas + "'\n")
         test = sys.platform
 
-        if test == 'linux2' or test == 'cygwin':
+        if 'linux' in test or test == 'cygwin':
             soft = "./mascaret_linux"
         elif test == 'win32':
             soft = "mascaret.exe"
@@ -1606,7 +1606,7 @@ class ClassMascaret:
             self.mgis.add_info("{0} platform  doesn't allow to run simulation.".format(test))
             return False
 
-        # Linux(2.x and 3.x) ='linux2'
+        # Linux(2.x and 3.x) ='linux2' or 'linux'
         # Windows = 'win32'
         # Windows / Cygwin = 'cygwin'
         # MacOSX = 'darwin'
