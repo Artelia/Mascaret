@@ -1004,7 +1004,7 @@ class ClassMascaret:
                 struct = SubElement(lois, "structureSParametresLoiTraceur")
                 SubElement(struct, "nom").text = name
                 SubElement(struct, "modeEntree").text = '1'
-                SubElement(struct, "fichier").text = '{}.loi'.format(name)
+                SubElement(struct, "fichier").text = '{}.loi'.format(name.lower())
                 SubElement(struct, "uniteTps").text = '-0'
                 SubElement(struct, "nbPoints").text = '-0'
 
