@@ -34,10 +34,11 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .Function import str2bool, del_accent, del_symbol
+from .Function import str2bool, del_accent, del_symbol, replace_all
 from .Structure.ClassMethod import ClassMethod
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
+from .api.ClassAPI_Mascaret import ClassAPI_Mascaret
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -65,6 +66,8 @@ class ClassMascaret:
         self.Klist = ["steady", "unsteady", "transcritical"]
         self.wq = ClassMascWQ(self.mgis, self.dossierFileMasc)
         self.clmeth = ClassMethod(self.mgis)
+
+        self.cond_api = False
 
 
     def creer_geo(self):
@@ -1571,7 +1574,7 @@ class ClassMascaret:
             self.mgis.add_info("========== Run case  =========")
             self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen, noyau))
 
-            finish = self.lance_mascaret(self.baseName + '.xcas')
+            finish = self.lance_mascaret(self.baseName + '.xcas',par['presenceTraceurs'], cond_casier)
             if not finish:
                 self.mgis.add_info("Simulation error")
                 return
@@ -1580,15 +1583,13 @@ class ClassMascaret:
             cond_casier = False
             if par["presenceCasiers"] and noyau == "unsteady":
                 cond_casier = True
-                # self.lit_casiers_opt(run, scen, date_debut, self.baseName, "basin")
-                # self.lit_casiers_opt(run, scen, date_debut, self.baseName, "link")
             self.lit_opt(run, scen, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
 
         self.iface.messageBar().clearWidgets()
         self.mgis.add_info("Simulation finished")
         return
 
-    def lance_mascaret(self, fichier_cas):
+    def lance_mascaret(self, fichier_cas,tracer=False, casier=False):
         """
         Run mascaret
         """
@@ -1596,39 +1597,59 @@ class ClassMascaret:
 
         with open('FichierCas.txt', 'w') as fichier:
             fichier.write("'" + fichier_cas + "'\n")
-        test = sys.platform
-        if 'linux' in test or test == 'cygwin' :
-            soft = "./mascaret_linux"
-        elif test == 'win32':
-            soft = "mascaret.exe"
+
+        if not self.cond_api:
+            test = sys.platform
+            if 'linux' in test or test == 'cygwin' :
+                soft = "./mascaret_linux"
+            elif test == 'win32':
+                soft = "mascaret.exe"
+            else:
+                self.mgis.add_info("{0} platform  doesn't allow to run simulation.".format(test))
+                return False
+
+
+            # Linux(2.x and 3.x) ='linux2' or 'linux'
+            # Windows = 'win32'
+            # Windows / Cygwin = 'cygwin'
+            # MacOSX = 'darwin'
+            # OS / 2 = 'os2'
+            # OS / 2  EMX ='os2emx'
+            # RiscOS ='riscos'
+            # AtheOS= 'atheos
+
+            p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                                 , stdin=subprocess.PIPE)
+            p.wait()
+            self.mgis.add_info("{0}".format(p.communicate()[0].decode("utf-8")))
+            return True
         else:
-            self.mgis.add_info("{0} platform  doesn't allow to run simulation.".format(test))
-            return False
+            # TODO ne foncitonne pas
+            fileenv = os.path.join(self.dossierFileMasc, 'api/envpy3.sh')
+            self.update_env(fileenv)
+            # **********
+            clapi = ClassAPI_Mascaret(self)
+            clapi.main(fichier,tracer,casier)
 
+            return True
 
-        # Linux(2.x and 3.x) ='linux2' or 'linux'
-        # Windows = 'win32'
-        # Windows / Cygwin = 'cygwin'
-        # MacOSX = 'darwin'
-        # OS / 2 = 'os2'
-        # OS / 2  EMX ='os2emx'
-        # RiscOS ='riscos'
-        # AtheOS= 'atheos
+    def update_env(self, script):
+        """
+        update environment
+        :param script:
+        :return:
+        """
+        if os.path.isfile(script):
+            command = ['bash', '-c', 'source {} && env'.format(script)]
+            proc = subprocess.Popen(command, stdout=subprocess.PIPE)
+            dico = {"b\'": "", "\\n\'": ""}
+            for line in proc.stdout:
+                line = replace_all(str(line), dico)
 
-        # TODO
-        # api=ClassAPI_Mascaret(self)
-        # api.initial
-        #
-        # for t in list_t:
-        #     api.time_step()
-        # api.finalisation()
+                (key, _, value) = line.partition("=")
+                # python3
+                os.environ[str(key)] = value.replace('\n', '').strip()
 
-
-        p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                             , stdin=subprocess.PIPE)
-        p.wait()
-        self.mgis.add_info("{0}".format(p.communicate()[0].decode("utf-8")))
-        return True
 
     def lit_opt(self, run, scen, date_debut, base_namefile, comments='', tracer=False, casier=False):
         nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')

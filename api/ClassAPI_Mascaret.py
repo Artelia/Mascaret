@@ -22,35 +22,25 @@ email                :
 import sys
 import os
 
-if (not os.path.exists(os.path.join(os.environ.get('HOMETEL', ''),
-                                    'builds',
-                                    os.environ.get('USETELCFG', ''),
-                                    'wrap_api', 'lib', 'api.pyf'))):
-    print("  -> telapy not available doing nothing")
-    sys.exit(0)
 
-from telapy.api.masc import Mascaret
-from matplotlib import pyplot as plt
 
 
 class ClassAPI_Mascaret:
     """ Class contain  model files creation and run model mascaret"""
 
-    def __init__(self):  # , main):
-        # self.clmas = main
-        # self.mgis = self.clmas.mgis
-        # self.mdb = self.mgis.mdb
-        # self.dossierFileMasc = self.clmas.dossierFileMasc
-        # self.DEBUG = self.mgis.DEBUG
-        self.dossierFileMasc = r'/home/daoum/.local/share/QGIS/QGIS3/profiles/default/python/plugins/Mascaret/api'
-        self.baseName = 'mascaret'
-        self.filelig = None
-        self.DEBUG = True
+    def __init__(self, main):
+        self.clmas = main
+        self.mgis = self.clmas.mgis
+        self.mdb = self.mgis.mdb
+        self.dossierFileMasc = self.clmas.dossierFileMasc
+        self.DEBUG = self.mgis.DEBUG
         self.tracer = False
         self.basin = False
+        # self.dossierFileMasc = r'/home/daoum/.local/share/QGIS/QGIS3/profiles/default/python/plugins/Mascaret/api'
+        # self.baseName = 'mascaret'
+        # self.filelig = None
+        # self.DEBUG = True
 
-        self.masc = Mascaret(log_level='INFO')
-        self.masc.create_mascaret(iprint=1)
         self.npoin = 0
         self.zini = 0
         self.qini = 0
@@ -272,12 +262,32 @@ class ClassAPI_Mascaret:
         t1 += dtp
         return t0, t1, dtp
 
+    def main(self,filename,tracer, basin):
+        if (not os.path.exists(os.path.join(os.environ.get('HOMETEL', ''),
+                                            'builds',
+                                            os.environ.get('USETELCFG', ''),
+                                            'wrap_api', 'lib', 'api.pyf'))):
+            print("  -> telapy not available doing nothing")
+            # sys.exit(0)
+        #TODO trouver comment gerer ca
+
+        from telapy.api.masc import Mascaret
+
+        self.masc = Mascaret(log_level='INFO')
+        self.masc.create_mascaret(iprint=1)
+
+        self.tracer=tracer
+        self.basin=basin
+        self.initial(filename)
+        self.compute()
+        del self.masc
+
+
 
 if __name__ == '__main__':
     api = ClassAPI_Mascaret()
-    api.initial('mascaret.xcas')
+    api.main('mascaret.xcas')
     # wl0 = [api.masc.get('State.Z', i) for i in range(api.npoin)]
-    api.compute()
     print('fin')
     # state seulement état final
     # wl = [api.masc.get('State.Z', i) for i in range(api.npoin)]
@@ -288,5 +298,5 @@ if __name__ == '__main__':
     # plt.plot(x, wl0, 'g')
     # plt.plot(x, zf, 'y')
     # plt.show()
-    del api.masc
+
     del api

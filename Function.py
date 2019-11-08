@@ -251,3 +251,14 @@ def del_symbol(ligne):
         for accented_char in accented_chars:
             ligne = ligne.replace(accented_char, char)
     return ligne
+
+def replace_all( txt, dico):
+    """
+    Replace several items
+    :param txt: text orginal
+    :param dico: de remplacement des variable
+    :return:
+    """
+    for i in dico:
+        txt = txt.replace(i, dico[i])
+    return txt
