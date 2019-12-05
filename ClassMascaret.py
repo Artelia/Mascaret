@@ -66,8 +66,7 @@ class ClassMascaret:
         self.Klist = ["steady", "unsteady", "transcritical"]
         self.wq = ClassMascWQ(self.mgis, self.dossierFileMasc)
         self.clmeth = ClassMethod(self.mgis)
-
-        self.cond_api = False
+        self.cond_api = self.mgis.cond_api
 
 
     def creer_geo(self):
@@ -1573,16 +1572,16 @@ class ClassMascaret:
 
             self.mgis.add_info("========== Run case  =========")
             self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen, noyau))
-
+            cond_casier = False
+            if par["presenceCasiers"] and noyau == "unsteady":
+                cond_casier = True
             finish = self.lance_mascaret(self.baseName + '.xcas',par['presenceTraceurs'], cond_casier)
             if not finish:
                 self.mgis.add_info("Simulation error")
                 return
 
             # Lecture de l'OPT des casiers et liaisons puis ecriture dans la table resultats
-            cond_casier = False
-            if par["presenceCasiers"] and noyau == "unsteady":
-                cond_casier = True
+
             self.lit_opt(run, scen, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
 
         self.iface.messageBar().clearWidgets()
@@ -1625,30 +1624,30 @@ class ClassMascaret:
             return True
         else:
             # TODO ne foncitonne pas
-            fileenv = os.path.join(self.dossierFileMasc, 'api/envpy3.sh')
-            self.update_env(fileenv)
+            #fileenv = os.path.join(self.dossierFileMasc, 'api/envpy3.sh')
+            #self.update_env(fileenv)
             # **********
             clapi = ClassAPI_Mascaret(self)
-            clapi.main(fichier,tracer,casier)
+            clapi.main(fichier_cas,tracer,casier)
 
             return True
 
-    def update_env(self, script):
-        """
-        update environment
-        :param script:
-        :return:
-        """
-        if os.path.isfile(script):
-            command = ['bash', '-c', 'source {} && env'.format(script)]
-            proc = subprocess.Popen(command, stdout=subprocess.PIPE)
-            dico = {"b\'": "", "\\n\'": ""}
-            for line in proc.stdout:
-                line = replace_all(str(line), dico)
-
-                (key, _, value) = line.partition("=")
-                # python3
-                os.environ[str(key)] = value.replace('\n', '').strip()
+    # def update_env(self, script):
+    #     """
+    #     update environment
+    #     :param script:
+    #     :return:
+    #     """
+    #     if os.path.isfile(script):
+    #         command = ['bash', '-c', 'source {} && env'.format(script)]
+    #         proc = subprocess.Popen(command, stdout=subprocess.PIPE)
+    #         dico = {"b\'": "", "\\n\'": ""}
+    #         for line in proc.stdout:
+    #             line = replace_all(str(line), dico)
+    #
+    #             (key, _, value) = line.partition("=")
+    #             # python3
+    #             os.environ[str(key)] = value.replace('\n', '').strip()
 
 
     def lit_opt(self, run, scen, date_debut, base_namefile, comments='', tracer=False, casier=False):

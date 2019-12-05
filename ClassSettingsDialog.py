@@ -19,6 +19,7 @@ email                :
  ***************************************************************************/
 """
 import os
+import sys
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -47,6 +48,13 @@ class ClassSettingsDialog(QDialog):
         # General
         self.ui.open_lastChbox.setChecked(self.mgis.open_last_conn)
         self.ui.open_lastChbox_schema.setChecked(self.mgis.open_last_schema)
+        # api
+        self.ui.apiChbox.setChecked(self.mgis.cond_api)
+        test = sys.platform
+        if test == 'win32':
+            self.mgis.cond_api = False
+            self.ui.apiChbox.hide()
+
 
         self.ui.debugModeChbox.setChecked(self.mgis.DEBUG)
         # DB
@@ -62,6 +70,7 @@ class ClassSettingsDialog(QDialog):
         # General
         self.mgis.open_last_conn = self.ui.open_lastChbox.isChecked()
         self.mgis.open_last_schema = self.ui.open_lastChbox_schema.isChecked()
+        self.mgis.cond_api= self.ui.apiChbox.isChecked()
         self.mgis.DEBUG = self.ui.debugModeChbox.isChecked()
         # Mascaret DB
         self.mgis.mdb.OVERWRITE = True

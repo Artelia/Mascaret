@@ -4,7 +4,8 @@
   "always_on_top": false,
   "open_last_conn": false,
   "open_last_schema": false,
-   "postgres_path": "."
+   "postgres_path": ".",
+  "cond_api": false
   },
 
   "mdb": {
