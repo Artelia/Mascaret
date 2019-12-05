@@ -259,6 +259,9 @@ class ClassAPI_Mascaret:
         t1 = t0 + dtp
         if self.stpcrit == 1:
             while t0 < self.tfin:
+                if t1 > self.tfin and self.conum:
+                    t1=self.tfin
+                    dtp = t1 - t0
                 t0, t1, dtp = self.one_iter(t0, t1, dtp)
 
         elif self.stpcrit == 2:
@@ -273,9 +276,10 @@ class ClassAPI_Mascaret:
 
     def one_iter(self, t0, t1, dtp):
         self.masc.compute(t0, t1, dtp)
-
         if self.conum:
-            dtp = self.masc.get('State.DTRezo')
+            dtp_tmp = self.masc.get('State.DT')
+            if dtp_tmp != 0 :
+                dtp = dtp_tmp
         t0 = t1
         t1 += dtp
         return t0, t1, dtp
