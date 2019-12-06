@@ -175,6 +175,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
         self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
+        self.ui.actionAdd_Structure_temporal_tables.triggered.connect(self.fct_add_floogate_tables)
         # TODO
         # self.ui.actionUpdate_pk.triggered.connect(self.update_pk)
         # self.ui.actionTest_struct.triggered.connect(self.fct_test)
@@ -827,6 +828,12 @@ Version : {}
                                'WARNING: if the tables exist then it will be emptied.')
         if ok:
             self.mdb.add_table_struct(self.dossier_struct)
+    def fct_add_floogate_tables(self):
+
+        ok = self.box.yes_no_q('Do you want add floodgate tables ? \n '
+                               'WARNING: if the tables exist then it will be emptied.')
+        if ok:
+            self.mdb.add_table_struct_temporal(self.dossier_struct)
 
     def fct_test(self):
         # cl=ClassMethod(self)

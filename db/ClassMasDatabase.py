@@ -585,6 +585,7 @@ class ClassMasDatabase(object):
                   Maso.struct_config,Maso.profil_struct,Maso.struct_param,
                   Maso.struct_elem, Maso.struct_elem_param,
                   Maso.struct_abac,Maso.struct_laws
+                  # Maso.struct_temporal
                   # , Maso.struct_elem_geo
                   ]
         tables.sort(key=lambda x: x().order)
@@ -603,6 +604,21 @@ class ClassMasDatabase(object):
         sql += "ALTER TABLE {}.profiles ALTER COLUMN struct SET DEFAULT 0;"
 
         self.run_query(sql.format(self.SCHEMA))
+
+    def add_table_struct_temporal(self, dossier):
+        tables = [
+            Maso.struct_temporal,Maso.struct_temp_val
+        ]
+        tables.sort(key=lambda x: x().order)
+
+        for masobj_class in tables:
+            try:
+                masobj_class.overwrite = True
+                obj = self.process_masobject(masobj_class, 'pg_create_table')
+                if self.mgis.DEBUG:
+                    self.mgis.add_info('  {0} OK'.format(obj.name))
+            except:
+                self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
 
     def create__first_model(self):
         """ 
@@ -823,8 +839,11 @@ $BODY$
             lvar = '*'
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        # print(sql.format(self.SCHEMA, table, where, order,lvar))
+
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order,lvar), fetch=True, namvar=True)
+        if results == None or namCol == None:
+            print(sql.format(self.SCHEMA, table, where, order,lvar))
+            return None
         cols = [col[0] for col in namCol]
         dico = {}
         for col in cols:

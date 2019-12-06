@@ -113,6 +113,10 @@ class ClassTableStructure:
                               'COTERAD': {'name': 'Cote du radier', 'unit': 'm'},
                               'HAUTDAL': {'name': 'Hauteur du dalot', 'unit': 'm'},
                               'ABSBUSE': {'name': 'Abscisse du centre de la buse', 'unit': 'm'}}
+        #floodgate
+        self.dico_fg = {'TIME': {'name': 'Temps de fonctionnement', 'unit': 's'},
+                        'ZFG': {'name': 'Z position de la vanne', 'unit': 'm'},
+                        'CLOSE': {'name': 'Sens de fermeture', 'unit': None}}
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
         self.dico_forme_arche = {1: 'Circulaire', 2: 'Ellipsoïdale'}

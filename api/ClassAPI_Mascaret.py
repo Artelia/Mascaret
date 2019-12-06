@@ -21,8 +21,9 @@ email                :
 
 import os
 from .masc import Mascaret
+from ..Structure.ClassMethod import ClassMethod
 # from masc import Mascaret
-
+import numpy as np
 class ClassAPI_Mascaret:
     """ Class contain  model files creation and run model mascaret"""
 
@@ -45,6 +46,11 @@ class ClassAPI_Mascaret:
         self.npoin = 0
         self.zini = 0
         self.qini = 0
+
+        # floodgat
+
+        self.clmeth = ClassMethod(self.mgis)
+
 
     def initial(self, casfile):
         """
@@ -283,6 +289,10 @@ class ClassAPI_Mascaret:
         t0 = t1
         t1 += dtp
         return t0, t1, dtp
+    def finalize(self):
+        del self.masc
+        #self.clmeth.sav_meth(self.id_struct, self.current_meth, self.wgt_met)
+        # del self.clmeth
 
     def main(self,filename,tracer=False, basin=False):
 
@@ -292,9 +302,103 @@ class ClassAPI_Mascaret:
         self.tracer=tracer
         self.basin=basin
         self.initial(filename)
+        self.init_floogate()
         self.compute()
-        del self.masc
+        self.finalize()
 
+
+
+    def init_floogate(self):
+        self.param_fg, link_name_id = self.clmeth.get_param_fg()
+        # attention init.loi ou pas
+        # connaitrea la relation config et non law
+        nb_loi_sing = self.masc.get_var_size("Model.Weir.Name")[0]
+        print("nb loi", nb_loi_sing)
+
+        for id in range(nb_loi_sing):
+            numgraph = self.masc.get("Model.Weir.GraphNum", i=id) - 1
+            name = self.masc.get("Model.Graph.Name", i=numgraph)
+            if name.replace('_init','') in list(link_name_id.keys()) :
+                id_config = link_name_id[name]
+                self.param_fg[id_config]['NUMGRAPH'] = numgraph
+        print(self.param_fg)
+
+    def temporal_law(self,time):
+        """ modification of law """
+
+        for id_config in self.param_fg.keys():
+            list_final=self.clmeth.update_law(id_config,self.param_fg[id_config], time)
+            tab_final = self.clmeth.sort_law(list_final)
+            list_q, nbq = np.unique(tab_final[:, 0], return_counts=True)
+            list_zav, nbzav = np.unique(tab_final[:, 1], return_counts=True)
+            list_zam=list(tab_final[:, 2])
+            num=self.param_fg[id_config]['NUMGRAPH']
+            dim1, dim2_q, dim3 = self.masc.get_var_size("Model.Graph.Discharge", num)
+            # self.masc.set_var_size("Model.Graph.Discharge", dim1, nbq, num, index=1)
+
+
+        #
+        # print(name, type)
+        # if type == 6:
+        #     list_var = ['Discharge', 'DownLevel', 'UpLevel']
+        #     # recuperation de la taille
+        #     dim1, dim2_q, dim3 = self.masc.get_var_size("Model.Graph.Discharge", 0)
+        #     print(dim1, dim2_q, dim3)
+        #     # # # dim1 nb de loi , Vecteur 1D (dim2: nb val qui sont différente pour q, dim3 n'existe pas)
+        #     # dim1, dim2_zav, dim3 = self.masc.get_var_size("Model.Graph.DownLevel", numgraph)
+        #     # print(dim1, dim2_zav, dim3)
+        #     # # #dim1 nb de loi, Vecteur 1D (dim2: nb val qui sont différente pour Zav, dim3 n'existe pas)
+        #     # print("jjjj",dim2_q, dim2_zav)
+        #     dim1, dim_q, dim_zav = self.masc.get_var_size("Model.Graph.UpLevel", numgraph)
+        #     print(dim1, dim_q, dim_zav)
+        #     # dim1 nb de loi , Vecteur 2D ( dim_q :nb val de q, dim_zav: nb val de Zav)
+        #     q = self.masc.get("Model.Graph.Discharge", i=0, j=49, k=0)
+        #     print(q)
+        #     dict = self.dico_law()
+        #     print(dict)
+        #     self.masc.set_var_size("Model.Graph.Discharge", 3, 51, 0, index=1)
+        #     self.masc.set_var_size("Model.Graph.UpLevel", 3, 51, 41, index=1)
+        #     # self.masc.get_var_size("Model.Graph.DownLevel",)
+        #
+        #     dim1, dim_q, dim_zav = self.masc.get_var_size("Model.Graph.UpLevel", numgraph)
+        #     dict = self.dico_law()
+        #     print(dict)
+        #
+        #     q2 = self.masc.get("Model.Graph.Discharge", i=0, j=50, k=0)
+        #     print(q2)
+        #     self.masc.set("Model.Graph.Discharge", 9999.0, i=0, j=50, k=0)
+        #     q2 = self.masc.get("Model.Graph.Discharge", i=0, j=50, k=0)
+        #
+        #     for a in range(41):
+        #         self.masc.set("Model.Graph.UpLevel", 0.00099, i=0, j=50, k=a)
+        #         zav = self.masc.get("Model.Graph.DownLevel", i=0, j=a, k=0)
+        #         zam = self.masc.get("Model.Graph.UpLevel", i=0, j=50, k=a)
+        #         print(q2, zav, zam, a)
+
+            # self.update_law_mas()
+
+        pass
+
+    # def update_law_mas(self,):
+    #     get_law()
+    #     new_size()
+    #     fill_law()
+    #     pass
+    #
+    # method genral
+        # 1er etape (peut être fait avant):
+            # recuperer info (OK,get_param_fg)
+            # modifier la géométrie (A test, in classLaw , modif_poly_time)
+            # calcul de la nouvelle loi A test
+
+
+        # 2ieme step:
+            # modification size law
+            # modification des values
+                # si suppression case attention décalage tableau il faut mieux tout re-ecrire
+
+        # 3ieme etape fin du calcul remettre la valeur de la loi initial
+        #     self.clmeth.sav_meth(self.id_struct, self.current_meth, self.wgt_met)
 
 
 if __name__ == '__main__':

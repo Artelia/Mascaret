@@ -454,9 +454,7 @@ class ClassMethod:
                'id_config': id_struct}
         self.mdb.update('struct_config', tab, var='id_config')
 
-
-
-    def coup_poly_h(self, poly, cote):
+    def coup_poly_h(self, poly, cote, typ='U'):
         """
         Cut the polygone horizontaly
         :param poly: polygone to cut
@@ -465,9 +463,16 @@ class ClassMethod:
         """
         msg = None
         (minx, miny, maxx, maxy) = poly.bounds
-        delpoly = Polygon([[minx - 1, cote], [maxx + 1, cote],
-                           [maxx + 1, maxy + 1], [minx - 1, maxy + 1],
-                           [minx - 1, cote]])
+        if typ == 'U':
+            delpoly = Polygon([[minx - 1, cote], [maxx + 1, cote],
+                               [maxx + 1, maxy + 1], [minx - 1, maxy + 1],
+                               [minx - 1, cote]])
+        elif typ == 'D':
+            delpoly = Polygon([[minx - 1, miny - 1], [maxx + 1, miny - 1],
+                               [maxx + 1, cote], [minx - 1, cote],
+                               [minx - 1, miny - 1]])
+        else:
+            delpoly = GeometryCollection()
         if not delpoly.is_empty:
             polyw = poly.difference(delpoly)
             if not polyw.is_valid:
@@ -749,6 +754,54 @@ class ClassMethod:
         sql = "UPDATE {schema}.{table} SET struct={struct}  WHERE gid={gid}".format(**tab)
         self.mdb.run_query(sql)
 
+    def get_param_fg(self):
+        """get variable of the floodgate"""
+        id_scen = 0
+        where = "active = TRUE AND id_scen = {0}".format(id_scen)
+        rows = self.mdb.select('struct_temporal', where=where, list_var=['id_config', 'type'])
+        lid_config = rows['id_config']
+        ltype = rows['type']
+        param_fg = {}
+        link_name_id={}
+        for i, id_config in enumerate(lid_config):
+            dict_tmp = {}
+            dict_tmp['CLOSE'] = ltype[i]
+            list_recup = ['TIME', 'ZFG']
+            for info in list_recup:
+                where = "id_config = {0} AND id_scen = {1} AND name_var = '{2}' ".format(id_config, id_scen, info)
+                rows = self.mdb.select('struct_temp_val', where=where, order='id_order', list_var=['value'])
+                dict_tmp[info] = rows['value']
+
+
+            where = "id = {}".format(id_config)
+            rows = self.mdb.select('struct_config', where=where, list_var=['method','name'])
+            dict_tmp['NAME']=rows['name'][0]
+            dict_tmp['METH'] =rows['method'][0]
+            link_name_id[rows['name'][0]]=id_config
+            param_fg[id_config] = dict_tmp
+        return param_fg,link_name_id
+
+    def update_law(self,id_config,param_fg,time):
+        """   Compute new law
+                :param id_config: index of hydraulic structure
+                :return:
+                """
+        idmethod=param_fg['METH']
+        law = ClassLaws(self)
+        law.time = time
+        law.param_fg=param_fg
+
+        if idmethod == 0 or idmethod == 4:  # brad
+            pass
+        elif idmethod == 1:  # borda
+            law.cond_van = True
+            law.borda(id_config, self.tbst.dico_meth_calc[idmethod], None)
+        elif idmethod == 3:  # orifice
+            law.cond_van = True
+            law.orifice(id_config, self.tbst.dico_meth_calc[idmethod], None)
+        else:
+            pass
+        pass
 
 if __name__ == '__main__':
     pass

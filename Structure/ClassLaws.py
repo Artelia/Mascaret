@@ -41,6 +41,10 @@ class ClassLaws:
         self.poly_p = None
         self.qh_j_no_hy = []
         self.deb_min = 0.0001
+        # flooggate variable
+        self.time = 0
+        self.cond_van= False
+        self.param_fg ={}
 
     def init_method(self, id_config):
         """
@@ -82,10 +86,14 @@ class ClassLaws:
 
         self.list_zam = np.array(self.list_zav)
 
+    def init_elem(self,id_config, method):
+        """ get polygon of travers"""
         where = " id_config={} and type=0 ".format(id_config)
         order = "id_elem"
         self.list_poly_trav = self.parent.select_poly('struct_elem', where, order)['polygon']
-
+        if not 'Brad' in method:
+            self.modif_poly_time(self,id_config)
+        # MDU change vanne self.list_poly_trav
         self.param_elem = {'ZMAXELEM': [], 'LARGELEM': [], 'SURFELEM': [], 'ZMINELEM': []}
 
         for poly in self.list_poly_trav:
@@ -94,6 +102,29 @@ class ClassLaws:
             self.param_elem['LARGELEM'].append(maxx - minx)
             self.param_elem['SURFELEM'].append(poly.area)
             self.param_elem['ZMINELEM'].append(miny)
+
+    def modif_poly_time(self,id_config):
+        """ modification  of polygone when ther is vanne"""
+        if self.cond_van and self.time != 0.0:
+            # recuperation des informations Vanne in self.param_fg
+            id_scen = 0
+            key=id_config
+            #modification des polygones
+            if self.time in self.param_fg[key]["TIME"]:
+                id=self.param_fg[key]["TIME"].index(self.time)
+                newz=self.param_fg[key]['ZFG'][id]
+
+                list_poly_trav_tmp = []
+                for poly in self.list_poly_trav:
+                    poly_tmp=self.parent.coup_poly_h(poly,newz,
+                                                     typ=self.param_fg[key]['CLOSE'] )
+                    if not poly_tmp.is_empty:
+                        list_poly_trav_tmp.append(poly_tmp)
+                    else:
+                        self.param_g['NBTRAVE'] -= 1
+                        self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
+        else:
+            pass
 
     def check_listinter(self, dico_abc, name_abc, varx, vary):
         """
@@ -410,6 +441,7 @@ class ClassLaws:
         :return: law list
         """
         self.init_method(id_config)
+        self.init_elem(id_config, method)
         list_final = []
 
         self.init_bradley(method, id_config)
@@ -1069,6 +1101,8 @@ class ClassLaws:
         :return: law list
         """
         self.init_method(id_config)
+        self.init_elem(id_config, method)
+
 
         list_recup = ['MAXQ', 'MINQ', 'COEFBOR']
         param_g_temp = self.parent.get_param_g(list_recup, id_config)
@@ -1139,6 +1173,7 @@ class ClassLaws:
         """
 
         self.init_method(id_config)
+        self.init_elem(id_config, method)
         list_final = []
         qmax = self.deb_min  # self.param_g['MINQ']
         zcret = self.param_g['ZTOPTAB']
