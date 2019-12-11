@@ -30,7 +30,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    1.0.4  : Correction of legends moving bug  into linux platform
+    1.0.4  : Correction of display date bug in graph
+             Correction of legends moving bug  into linux platform
              Correction of run bug  into  linux platform
              Correction of steady-initialisation bug with tracers
     1.0.3  : Correction of schema import bug
