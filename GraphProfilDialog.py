@@ -1656,7 +1656,9 @@ class GraphProfilRes(GraphCommon):
         elif isfloat(text):
             self.posit = float(text)
         else:
-            self.posit = datetime.strptime(text, '%d/%m/%Y %H:%M:%S')
+            # self.posit = datetime.strptime(text, '%d/%m/%Y %H:%M:%S')
+            id = self.comboTime.currentIndex()
+            self.posit = self.listeTime[self.type][id-1]
         self.maj_graph()
 
     def maj_val(self):
@@ -1671,7 +1673,7 @@ class GraphProfilRes(GraphCommon):
         if self.posit == 'Hmax':
             self.zH = self.zmax
         elif isinstance(self.posit, datetime):
-            condition += """ AND date='{:%Y-%m-%d %H:%M:%S}'""".format(
+            condition += """ AND date='{:%Y-%m-%d %H:%M:%S.%f}'""".format(
                 self.posit)
             self.zH = self.mdb.select("resultats", condition, "t")
         else:
@@ -2216,7 +2218,7 @@ class GraphHydro(GraphCommon):
             pos = ss['abs'].index(self.position)
             self.nom = ss['nom'][pos] + ' - ' + str(self.position)
         else:
-            self.nom = str(self.position)
+            self.nom = '{0:%d/%m/%Y %H:%M:%S}'.format(self.position)
         #
         self.comboTimePK.currentIndexChanged['QString'].disconnect()
         self.comboTimePK.clear()
@@ -2225,7 +2227,7 @@ class GraphHydro(GraphCommon):
             if isinstance(self.position, float):
                 self.comboTimePK.addItem(str(x))
             else:
-                self.comboTimePK.addItem('{0:%d/%m/%Y %H:%M}'.format(x))
+                self.comboTimePK.addItem('{0:%d/%m/%Y %H:%M:%S}'.format(x))
         try:
             index = self.liste[self.inv]['abs'].index(self.position)
         except ValueError as e:
@@ -2234,15 +2236,17 @@ class GraphHydro(GraphCommon):
         self.comboTimePK.setCurrentIndex(index)
         self.comboTimePK.currentIndexChanged['QString'].connect(self.combo_time_pk_change)
 
+
+
     def maj_tab(self):
         condition = """run='{0}' AND scenario='{1}' """.format(self.run,
                                                                self.scenario)
 
         if self.type == "pk":
-            condition += """AND branche={}""".format(self.branche)
+            condition += """AND branche={} """.format(self.branche)
 
         if isinstance(self.position, datetime):
-            condition += """AND date='{:%Y-%m-%d %H:%M:%S}'""".format(
+            condition += """AND date='{:%Y-%m-%d %H:%M:%S.%f}'""".format(
                 self.position)
         else:
             condition += """AND {0}={1}""".format(self.inv, self.position)
@@ -2524,8 +2528,20 @@ class GraphHydro(GraphCommon):
     def combo_time_pk_change(self, text):
         if isinstance(self.position, float):
             self.position = float(text)
+            info = self.nom.split('-')
+            if len(info)>1:
+                tmp = info[0]
+                if len(info)>2:
+                    for txt in info[1:-1]:
+                        tmp = tmp + '-' + txt
+                self.nom= tmp +'- '+text
+            else:
+                self.nom = text
         else:
-            self.position = datetime.strptime(text, '%d/%m/%Y %H:%M')
+            id = self.comboTimePK.currentIndex()
+            self.position = self.liste[self.inv]['abs'][id]
+            self.nom = text
+
         self.maj_tab()
         self.maj_graph()
         if self.type != "pk":
