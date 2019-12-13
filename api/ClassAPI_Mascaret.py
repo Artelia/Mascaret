@@ -303,6 +303,7 @@ class ClassAPI_Mascaret:
         self.basin=basin
         self.initial(filename)
         self.init_floogate()
+        self.temporal_law(200.0)
         self.compute()
         self.finalize()
 
@@ -327,15 +328,34 @@ class ClassAPI_Mascaret:
         """ modification of law """
 
         for id_config in self.param_fg.keys():
+            print('rentre', id_config)
             list_final=self.clmeth.update_law(id_config,self.param_fg[id_config], time)
             tab_final = self.clmeth.sort_law(list_final)
-            list_q, nbq = np.unique(tab_final[:, 0], return_counts=True)
-            list_zav, nbzav = np.unique(tab_final[:, 1], return_counts=True)
+            list_q = np.unique(tab_final[:, 0])
+            nbq = len(list_q)
+            list_zav = np.unique(tab_final[:, 1])
+            nbzav = len(list_zav)
             list_zam=list(tab_final[:, 2])
             num=self.param_fg[id_config]['NUMGRAPH']
-            dim1, dim2_q, dim3 = self.masc.get_var_size("Model.Graph.Discharge", num)
-            # self.masc.set_var_size("Model.Graph.Discharge", dim1, nbq, num, index=1)
 
+            dim1, dim2_q, dim3 = self.masc.get_var_size("Model.Graph.Discharge", num)
+            self.masc.set_var_size("Model.Graph.Discharge", dim1, nbq, dim3, index=num + 1)
+            self.masc.set_var_size("Model.Graph.DownLevel", dim1, nbzav, dim3, index=num + 1)
+            self.masc.set_var_size("Model.Graph.UpLevel", dim1, nbq, nbzav, index=num + 1)
+
+            for ii,qq in enumerate(list_q):
+                self.masc.set("Model.Graph.Discharge",qq, i=num, j=ii, k=0)
+                for jj, zav in enumerate(list_zav):
+                    self.masc.set("Model.Graph.DownLevel",zav, i=num, j=jj, k=0)
+                    self.masc.set("Model.Graph.UpLevel", 99 , i=num, j=ii, k=jj)
+                    # list_zam[ii * nbzav + jj]
+                    
+
+    def test_tab(self,nbj,nbk, num):
+        for ii in range(nbj):
+            for jj in range(nbk):
+                    zam = self.masc.get("Model.Graph.UpLevel", i=num, j=ii, k=jj)
+                    print(ii, jj, zam)
 
         #
         # print(name, type)
@@ -377,7 +397,6 @@ class ClassAPI_Mascaret:
 
             # self.update_law_mas()
 
-        pass
 
     # def update_law_mas(self,):
     #     get_law()

@@ -790,18 +790,18 @@ class ClassMethod:
         law = ClassLaws(self)
         law.time = time
         law.param_fg=param_fg
-
+        list_final=None
         if idmethod == 0 or idmethod == 4:  # brad
             pass
         elif idmethod == 1:  # borda
             law.cond_van = True
-            law.borda(id_config, self.tbst.dico_meth_calc[idmethod], None)
+            list_final = law.borda(id_config, self.tbst.dico_meth_calc[idmethod], None)
         elif idmethod == 3:  # orifice
             law.cond_van = True
-            law.orifice(id_config, self.tbst.dico_meth_calc[idmethod], None)
+            list_final = law.orifice(id_config, self.tbst.dico_meth_calc[idmethod], None)
         else:
             pass
-        pass
+        return list_final
 
 if __name__ == '__main__':
     pass

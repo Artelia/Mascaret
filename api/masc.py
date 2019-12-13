@@ -565,8 +565,8 @@ class Mascaret(object):
         self.error = self.libmascaret.C_SET_TAILLE_VAR_MASCARET(
             self.id_masc, var_name_c, index, size1_c,
             size2_c, size3_c)
-        self.logger.debug('size = {} {} {}.'
-                          .format(size1.value, size2.value, size3.value))
+        # self.logger.debug('size = {} {} {}.'
+        #                   .format(size1.value, size2.value, size3.value))
 
     def compute(self, t_0, t_end, time_step):
         """Direct computation of Mascaret

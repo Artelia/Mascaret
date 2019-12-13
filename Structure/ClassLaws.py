@@ -92,7 +92,7 @@ class ClassLaws:
         order = "id_elem"
         self.list_poly_trav = self.parent.select_poly('struct_elem', where, order)['polygon']
         if not 'Brad' in method:
-            self.modif_poly_time(self,id_config)
+            self.modif_poly_time()
         # MDU change vanne self.list_poly_trav
         self.param_elem = {'ZMAXELEM': [], 'LARGELEM': [], 'SURFELEM': [], 'ZMINELEM': []}
 
@@ -103,21 +103,20 @@ class ClassLaws:
             self.param_elem['SURFELEM'].append(poly.area)
             self.param_elem['ZMINELEM'].append(miny)
 
-    def modif_poly_time(self,id_config):
+    def modif_poly_time(self):
         """ modification  of polygone when ther is vanne"""
         if self.cond_van and self.time != 0.0:
             # recuperation des informations Vanne in self.param_fg
             id_scen = 0
-            key=id_config
             #modification des polygones
-            if self.time in self.param_fg[key]["TIME"]:
-                id=self.param_fg[key]["TIME"].index(self.time)
-                newz=self.param_fg[key]['ZFG'][id]
+            if self.time in self.param_fg["TIME"]:
+                id=self.param_fg["TIME"].index(self.time)
+                newz=self.param_fg['ZFG'][id]
 
                 list_poly_trav_tmp = []
                 for poly in self.list_poly_trav:
                     poly_tmp=self.parent.coup_poly_h(poly,newz,
-                                                     typ=self.param_fg[key]['CLOSE'] )
+                                                     typ=self.param_fg['CLOSE'] )
                     if not poly_tmp.is_empty:
                         list_poly_trav_tmp.append(poly_tmp)
                     else:
