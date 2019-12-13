@@ -2200,7 +2200,10 @@ class GraphHydro(GraphCommon):
             pos = ss['abs'].index(self.position)
             self.nom = ss['nom'][pos] + ' - ' + str(self.position)
         else:
-            self.nom = '{0:%d/%m/%Y %H:%M:%S}'.format(self.position)
+            if self.date:
+                self.nom = '{0:%d/%m/%Y %H:%M:%S}'.format(self.position)
+            else:
+                self.nom = str(self.position)
         #
         self.comboTimePK.currentIndexChanged['QString'].disconnect()
         self.comboTimePK.clear()
