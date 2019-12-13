@@ -318,15 +318,16 @@ class ClassAPI_Mascaret:
 
         for id in range(nb_loi_sing):
             numgraph = self.masc.get("Model.Weir.GraphNum", i=id) - 1
-            name = self.masc.get("Model.Graph.Name", i=numgraph)
+            name = self.masc.get("Model.Weir.Name", i=id)
             if name.replace('_init','') in list(link_name_id.keys()) :
                 id_config = link_name_id[name]
-                self.param_fg[id_config]['NUMGRAPH'] = numgraph
+                # self.param_fg[id_config]['NUMGRAPH'] = numgraph
+                self.param_fg[id_config]['NUMGRAPH'] = id
         print(self.param_fg)
 
     def temporal_law(self,time):
         """ modification of law """
-
+        aa=10
         for id_config in self.param_fg.keys():
             print('rentre', id_config)
             list_final=self.clmeth.update_law(id_config,self.param_fg[id_config], time)
@@ -337,19 +338,22 @@ class ClassAPI_Mascaret:
             nbzav = len(list_zav)
             list_zam=list(tab_final[:, 2])
             num=self.param_fg[id_config]['NUMGRAPH']
+            # Model.Weir.PtQ
+            # 'Model.Weir.PtZus' Zam
+            # 'Model.Weir.PtZds'   ZAV
 
-            dim1, dim2_q, dim3 = self.masc.get_var_size("Model.Graph.Discharge", num)
-            self.masc.set_var_size("Model.Graph.Discharge", dim1, nbq, dim3, index=num + 1)
-            self.masc.set_var_size("Model.Graph.DownLevel", dim1, nbzav, dim3, index=num + 1)
-            self.masc.set_var_size("Model.Graph.UpLevel", dim1, nbq, nbzav, index=num + 1)
-
+            dim1, dim2_q, dim3 = self.masc.get_var_size("Model.Weir.PtQ", num)
+            self.masc.set_var_size('Model.Weir.PtQ', dim1, nbq, dim3, index=num + 1)
+            self.masc.set_var_size("Model.Weir.PtZds", dim1, nbzav, dim3, index=num + 1)
+            self.masc.set_var_size("Model.Weir.PtZus", dim1, nbq, nbzav, index=num + 1)
+            #
             for ii,qq in enumerate(list_q):
-                self.masc.set("Model.Graph.Discharge",qq, i=num, j=ii, k=0)
+                self.masc.set("Model.Weir.PtQ",qq, i=num, j=ii, k=0)
                 for jj, zav in enumerate(list_zav):
-                    self.masc.set("Model.Graph.DownLevel",zav, i=num, j=jj, k=0)
-                    self.masc.set("Model.Graph.UpLevel", 99 , i=num, j=ii, k=jj)
+                    self.masc.set("Model.Weir.PtZds",zav, i=num, j=jj, k=0)
+                    self.masc.set("Model.Weir.PtZus",aa, i=num, j=ii, k=jj)
                     # list_zam[ii * nbzav + jj]
-                    
+            aa=20
 
     def test_tab(self,nbj,nbk, num):
         for ii in range(nbj):
