@@ -45,7 +45,7 @@ class ClassAPI_Mascaret:
         self.npoin = 0
         self.zini = 0
         self.qini = 0
-
+        self.mobil_struct = True
     def initial(self, casfile):
         """
         Initialisation mascaret model with
@@ -260,6 +260,7 @@ class ClassAPI_Mascaret:
         t1 = t0 + dtp
         if self.stpcrit == 1:
             while t0 < self.tfin:
+                print(t0)
                 t0, t1, dtp = self.one_iter(t0, t1, dtp)
 
         elif self.stpcrit == 2:
@@ -273,28 +274,140 @@ class ClassAPI_Mascaret:
         self.tfin = self.masc.get('State.PreviousTime')
 
     def one_iter(self, t0, t1, dtp):
-        self.masc.compute(t0, t1, dtp)
 
+        if self.mobil_struct:
+            self.update_law_struct(t1)
+
+        self.masc.compute(t0, t1, dtp)
         if self.conum:
             dtp_tmp = self.masc.get('State.DT')
-            if dtp_tmp != 0 :
+            if dtp_tmp != 0:
                 dtp = dtp_tmp
-
         t0 = t1
         t1 += dtp
         return t0, t1, dtp
 
-    def main(self,filename,tracer=False, basin=False):
+    def finalize(self):
+        del self.masc
+
+
+    def main(self, filename, tracer=False, basin=False):
 
         self.masc = Mascaret(log_level='INFO')
         self.masc.create_mascaret(iprint=1)
 
-        self.tracer=tracer
-        self.basin=basin
+        self.tracer = tracer
+        self.basin = basin
         self.initial(filename)
-        self.test_graph()
-        # self.compute()
-        del self.masc
+        self.compute()
+        self.finalize()
+
+    def update_law_struct(self, time):
+        """ Update structure law """
+        # 2 cas
+        #   o mouvement en fonction du Time : velocity
+        #   o mouvement en fonction de la cote dans le domaine
+        ##******************************
+        # fonctionnement vanne
+        #    o si cote atteint vanne en mouvement avec une vitesse d'incrementation
+        #    o modification polygone
+        ##******************************
+
+        # for id_config in self.param_fg.keys():
+
+            # TODO check modification
+            # compute new law
+            # list_final=self.clmeth.update_law(id_config,self.param_fg[id_config], time)
+            # tab_final = self.clmeth.sort_law(list_final)
+            # list_q = np.unique(tab_final[:, 0])
+            # list_zav = np.unique(tab_final[:, 1])
+            # list_zam=list(tab_final[:, 2]))
+        list_q = []
+        list_zav = []
+        list_zam = []
+        # modification in mascaret model
+        id_config=0
+        if time == 200:
+            self.update_law_mas(id_config, list_q, list_zav, list_zam)
+
+    def update_law_mas(self, id_config, list_q, list_zav, list_zam):
+        """
+         update information model with api
+        :param id_config: index of structure
+        :param list_q: list of flow rate
+        :param list_zav: list of upstream Z
+        :param list_zam: list of downstream Z
+        :return
+        """
+        # nbq = len(list_q)
+        # nbzav = len(list_zav)
+        # num = self.param_fg[id_config]['NUMGRAPH']
+        num = 0
+        nbq=51
+        nbzav=42
+       # list_zam = [10] * (nbq*nbzav)
+        list_zam = []
+        self.write('deb.csv',nbq-1,nbzav-1)
+        list_q=[]
+        list_zav=[]
+        cond = True
+        for ii in range(nbq-1):
+            list_q.append(self.masc.get("Model.Weir.PtQ", i=0, j=ii, k=0))
+
+            for jj in range(nbzav-1):
+                if cond:
+                    list_zav.append(self.masc.get("Model.Weir.PtZds", i=0, j=jj, k=0))
+
+                list_zam.append(self.masc.get("Model.Weir.PtZus", i=0, j=ii, k=jj))
+            cond = False
+            list_zam.append(list_zam[-1] + 1)
+        list_q.append(list_q[-1]+10)
+        list_zav.append(list_zav[-1]+1)
+        for kk in range(nbzav+1):
+            list_zam.append(20)
+
+        dim1, dim2_q, dim3 = self.masc.get_var_size("Model.Weir.PtQ", num)
+        # q = self.masc.get("Model.Weir.PtQ", i=0, j=49, k=0)
+        print(dim1, dim2_q, dim3)
+        self.masc.set_var_size('Model.Weir.PtQ', dim1, nbq, dim3, index=num + 1)
+        # self.masc.set("Model.Weir.PtQ", q+10, i=0, j=50, k=0)
+
+        dim11, dim22_q, dim33 = self.masc.get_var_size("Model.Weir.PtQ", num)
+        print(dim11, dim22_q, dim33)
+        self.masc.set_var_size("Model.Weir.PtZds", dim1, nbzav, dim3, index=num + 1)
+        dim11, dim22_q, dim33 = self.masc.get_var_size("Model.Weir.PtZds", num)
+        print(dim11, dim22_q, dim33)
+        self.masc.set_var_size("Model.Weir.PtZus", dim1, nbq, nbzav, index=num + 1)
+        dim11, dim22_q, dim33 = self.masc.get_var_size("Model.Weir.PtZus", num)
+        print(dim11, dim22_q, dim33)
+        cond = True
+        for ii in range(nbq):
+            self.masc.set("Model.Weir.PtQ", list_q[ii], i=num, j=ii, k=0)
+            for jj in range(nbzav):
+                if cond:
+                    self.masc.set("Model.Weir.PtZds", list_zav[jj], i=num, j=jj, k=0)
+                self.masc.set("Model.Weir.PtZus", list_zam[ii * nbzav + jj], i=num, j=ii, k=jj)
+            cond = False
+        self.write('fin.csv', nbq, nbzav)
+
+    def write(self, name,nbq, nbzav):
+        file= open(name,'w')
+        file.write('q;zav;zam\n')
+        for ii in range(nbq ):
+            q = self.masc.get("Model.Weir.PtQ", i=0, j=ii, k=0)
+            for jj in range(nbzav):
+                zav = self.masc.get("Model.Weir.PtZds", i=0, j=jj, k=0)
+                zam = self.masc.get("Model.Weir.PtZus", i=0, j=ii, k=jj)
+                file.write('{};{};{}\n'.format(q,zav,zam))
+        file.close()
+        #
+        # for ii, qq in enumerate(list_q):
+        #     self.masc.set("Model.Weir.PtQ", qq, i=num, j=ii, k=0)
+        #     for jj, zav in enumerate(list_zav):
+        #         self.masc.set("Model.Weir.PtZds", zav, i=num, j=jj, k=0)
+        #         self.masc.set("Model.Weir.PtZus", list_zam[ii * nbzav + jj], i=num, j=ii, k=jj)
+
+    #
 
     def test_graph(self):
         nb_loi_sing = self.masc.get_var_size("Model.Weir.Name")

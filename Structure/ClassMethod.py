@@ -463,6 +463,7 @@ class ClassMethod:
         """
         msg = None
         (minx, miny, maxx, maxy) = poly.bounds
+
         if typ == 'U':
             delpoly = Polygon([[minx - 1, cote], [maxx + 1, cote],
                                [maxx + 1, maxy + 1], [minx - 1, maxy + 1],
@@ -473,6 +474,7 @@ class ClassMethod:
                                [minx - 1, miny - 1]])
         else:
             delpoly = GeometryCollection()
+
         if not delpoly.is_empty:
             polyw = poly.difference(delpoly)
             if not polyw.is_valid:
@@ -485,6 +487,7 @@ class ClassMethod:
         if self.mgis.DEBUG and msg is not None:
             print(msg)
         return polyw
+
 
     def coup_poly_v(self, poly, xo, typ='L'):
         """
@@ -772,7 +775,6 @@ class ClassMethod:
                 rows = self.mdb.select('struct_temp_val', where=where, order='id_order', list_var=['value'])
                 dict_tmp[info] = rows['value']
 
-
             where = "id = {}".format(id_config)
             rows = self.mdb.select('struct_config', where=where, list_var=['method','name'])
             dict_tmp['NAME']=rows['name'][0]
@@ -790,14 +792,15 @@ class ClassMethod:
         law = ClassLaws(self)
         law.time = time
         law.param_fg=param_fg
+        law.mobil_struct = True
         list_final=None
         if idmethod == 0 or idmethod == 4:  # brad
             pass
         elif idmethod == 1:  # borda
-            law.cond_van = True
+            law.mobil_struct = True
             list_final = law.borda(id_config, self.tbst.dico_meth_calc[idmethod], None)
         elif idmethod == 3:  # orifice
-            law.cond_van = True
+            law.mobil_struct = True
             list_final = law.orifice(id_config, self.tbst.dico_meth_calc[idmethod], None)
         else:
             pass

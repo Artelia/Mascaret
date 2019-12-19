@@ -1623,12 +1623,9 @@ class ClassMascaret:
             self.mgis.add_info("{0}".format(p.communicate()[0].decode("utf-8")))
             return True
         else:
-            # TODO ne foncitonne pas
-            #fileenv = os.path.join(self.dossierFileMasc, 'api/envpy3.sh')
-            #self.update_env(fileenv)
-            # **********
             clapi = ClassAPI_Mascaret(self)
             clapi.main(fichier_cas,tracer,casier)
+            del clapi
 
             return True
 

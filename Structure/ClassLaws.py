@@ -19,7 +19,7 @@ email                :
 """
 import math as m
 import os
-
+from shapely.geometry import *
 import numpy as np
 
 
@@ -43,7 +43,7 @@ class ClassLaws:
         self.deb_min = 0.0001
         # flooggate variable
         self.time = 0
-        self.cond_van= False
+        self.mobil_struct= False
         self.param_fg ={}
 
     def init_method(self, id_config):
@@ -52,7 +52,6 @@ class ClassLaws:
         :param id_config:  index of hydraulic structure
         :return:
         """
-
         if self.parent.checkprofil(id_config):
             profil = self.parent.get_profil(id_config)
         else:
@@ -92,7 +91,7 @@ class ClassLaws:
         order = "id_elem"
         self.list_poly_trav = self.parent.select_poly('struct_elem', where, order)['polygon']
         if not 'Brad' in method:
-            self.modif_poly_time()
+            self.update_poly_mobil_struct()
         # MDU change vanne self.list_poly_trav
         self.param_elem = {'ZMAXELEM': [], 'LARGELEM': [], 'SURFELEM': [], 'ZMINELEM': []}
 
@@ -103,16 +102,28 @@ class ClassLaws:
             self.param_elem['SURFELEM'].append(poly.area)
             self.param_elem['ZMINELEM'].append(miny)
 
-    def modif_poly_time(self):
+    def update_poly_mobil_struct(self):
         """ modification  of polygone when ther is vanne"""
-        if self.cond_van and self.time != 0.0:
+        # 2 cas
+        #   o mouvement en fonction du Time : velocity
+        #   o mouvement en fonction de la cote dans le domaine
+        ##******************************
+        # fonctionnement vanne
+        #    o si cote atteint vanne en mouvement avec une vitesse d'incrementation
+        #    o modification polygone
+        ##******************************
+        # info pour le mouvement:
+        #   o cote final de fermeture
+        #   (le temps utilisé pour l'instant récuper cote de fermeture mais inutil)
+        #   o sens mouvement de bas en haut ou de haut en bas
+        #   o element fermé ou ouvert
+        #TODO a reprendre
+        if self.mobil_struct and self.time != 0.0:
             # recuperation des informations Vanne in self.param_fg
-            id_scen = 0
             #modification des polygones
             if self.time in self.param_fg["TIME"]:
                 id=self.param_fg["TIME"].index(self.time)
                 newz=self.param_fg['ZFG'][id]
-
                 list_poly_trav_tmp = []
                 for poly in self.list_poly_trav:
                     poly_tmp=self.parent.coup_poly_h(poly,newz,
@@ -122,6 +133,7 @@ class ClassLaws:
                     else:
                         self.param_g['NBTRAVE'] -= 1
                         self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
+                self.list_poly_trav = list_poly_trav_tmp
         else:
             pass
 
@@ -862,6 +874,7 @@ class ClassLaws:
             sens_ecoul = -1
         if ham < 0:
             print('erreur loi orifice ham <0')
+            # print(zam,zav,zinf)
             return None
 
         if surf < 0.:
@@ -1102,7 +1115,6 @@ class ClassLaws:
         self.init_method(id_config)
         self.init_elem(id_config, method)
 
-
         list_recup = ['MAXQ', 'MINQ', 'COEFBOR']
         param_g_temp = self.parent.get_param_g(list_recup, id_config)
         self.param_g.update(param_g_temp)
@@ -1142,8 +1154,8 @@ class ClassLaws:
 
         # if self.mgis.DEBUG:
         #     self.write_csv(list_final)
-
-        self.save_list_final(list_final, id_config, method)
+        if not self.mobil_struct:
+            self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
         return list_final
@@ -1172,8 +1184,9 @@ class ClassLaws:
         """
 
         self.init_method(id_config)
-        self.init_elem(id_config, method)
+        a= self.init_elem(id_config, method)
         list_final = []
+
         qmax = self.deb_min  # self.param_g['MINQ']
         zcret = self.param_g['ZTOPTAB']
         val = 90 / len(self.list_zav)
@@ -1231,7 +1244,8 @@ class ClassLaws:
         list_final = self.complete_law(list_final)
         # if self.mgis.DEBUG:
         #     self.write_csv(list_final)
-        self.save_list_final(list_final, id_config, method)
+        if not self.mobil_struct:
+            self.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
         return list_final

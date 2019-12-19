@@ -24,17 +24,19 @@ from .masc import Mascaret
 from ..Structure.ClassMethod import ClassMethod
 # from masc import Mascaret
 import numpy as np
+
+
 class ClassAPI_Mascaret:
     """ Class contain  model files creation and run model mascaret"""
 
     def __init__(self, main):
-    # def __init__(self):
+        # def __init__(self):
         self.clmas = main
         self.mgis = self.clmas.mgis
         self.mdb = self.mgis.mdb
         self.dossierFileMasc = self.clmas.dossierFileMasc
         self.DEBUG = self.mgis.DEBUG
-        self.baseName =self.clmas.baseName
+        self.baseName = self.clmas.baseName
         self.tracer = False
         self.basin = False
         self.filelig = None
@@ -48,9 +50,8 @@ class ClassAPI_Mascaret:
         self.qini = 0
 
         # floodgat
-
+        self.mobil_struct = True
         self.clmeth = ClassMethod(self.mgis)
-
 
     def initial(self, casfile):
         """
@@ -68,7 +69,6 @@ class ClassAPI_Mascaret:
 
         self.init_crit_stop()
 
-
     def init_file(self, casfile):
         """
         Get file for compute
@@ -78,6 +78,7 @@ class ClassAPI_Mascaret:
         initfile = False
         if '_init.' in casfile:
             initfile = True
+            self.mobil_struct = False
         files_name = []
         files_type = ['xcas']
         if not os.path.isfile(casfile):
@@ -118,7 +119,7 @@ class ClassAPI_Mascaret:
                 self.tracer = True
                 law_tr_files.append(file)
             elif '.loi' in file and initfile == self.check_init(file):
-                 law_files.append(file)
+                law_files.append(file)
             elif '.casier' in file and initfile == self.check_init(file):
                 self.basin = True
                 files_type.append('casier')
@@ -133,23 +134,22 @@ class ClassAPI_Mascaret:
         else:
             self.mgis.add_info("The laws are not found.")
 
-        if self.tracer and law_tr_files :
+        if self.tracer and law_tr_files:
             for file in sorted(law_tr_files):
                 files_type.append('tracer_loi')
                 filepath = os.path.join(self.dossierFileMasc, file)
                 files_name.append(filepath)
 
-
         # listing
         files_type.append('listing')
         files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.lis'))
-        if initfile :
+        if initfile:
             post = '_init'
         else:
             post = ''
         # Resultat
         files_type.append('res')
-        files_name.append(os.path.join(self.dossierFileMasc, self.baseName +post+ '.opt'))
+        files_name.append(os.path.join(self.dossierFileMasc, self.baseName + post + '.opt'))
 
         if self.tracer:
             # listing
@@ -193,7 +193,7 @@ class ClassAPI_Mascaret:
             self.masc.init_hydro(zinit, qinit)
         else:
             self.masc.init_hydro_from_file(self.filelig)
-        if self.tracer :
+        if self.tracer:
             self.masc.init_tracer_state()
 
     def init_crit_stop(self):
@@ -266,7 +266,7 @@ class ClassAPI_Mascaret:
         if self.stpcrit == 1:
             while t0 < self.tfin:
                 if t1 > self.tfin and self.conum:
-                    t1=self.tfin
+                    t1 = self.tfin
                     dtp = t1 - t0
                 t0, t1, dtp = self.one_iter(t0, t1, dtp)
 
@@ -281,33 +281,36 @@ class ClassAPI_Mascaret:
         self.tfin = self.masc.get('State.PreviousTime')
 
     def one_iter(self, t0, t1, dtp):
+
+        if self.mobil_struct:
+            if self.check_move(t1):
+                self.update_law_struct(t1)
+
         self.masc.compute(t0, t1, dtp)
         if self.conum:
             dtp_tmp = self.masc.get('State.DT')
-            if dtp_tmp != 0 :
+            if dtp_tmp != 0:
                 dtp = dtp_tmp
         t0 = t1
         t1 += dtp
         return t0, t1, dtp
+
     def finalize(self):
         del self.masc
-        #self.clmeth.sav_meth(self.id_struct, self.current_meth, self.wgt_met)
-        # del self.clmeth
+        del self.clmeth
 
-    def main(self,filename,tracer=False, basin=False):
+    def main(self, filename, tracer=False, basin=False):
 
         self.masc = Mascaret(log_level='INFO')
         self.masc.create_mascaret(iprint=1)
 
-        self.tracer=tracer
-        self.basin=basin
+        self.tracer = tracer
+        self.basin = basin
         self.initial(filename)
-        self.init_floogate()
-        self.temporal_law(200.0)
+        if self.mobil_struct:
+            self.init_floogate()
         self.compute()
         self.finalize()
-
-
 
     def init_floogate(self):
         self.param_fg, link_name_id = self.clmeth.get_param_fg()
@@ -317,111 +320,96 @@ class ClassAPI_Mascaret:
         print("nb loi", nb_loi_sing)
 
         for id in range(nb_loi_sing):
-            numgraph = self.masc.get("Model.Weir.GraphNum", i=id) - 1
+            # numgraph = self.masc.get("Model.Weir.GraphNum", i=id) - 1
             name = self.masc.get("Model.Weir.Name", i=id)
-            if name.replace('_init','') in list(link_name_id.keys()) :
+            if name.replace('_init', '') in list(link_name_id.keys()):
                 id_config = link_name_id[name]
                 # self.param_fg[id_config]['NUMGRAPH'] = numgraph
                 self.param_fg[id_config]['NUMGRAPH'] = id
         print(self.param_fg)
 
-    def temporal_law(self,time):
-        """ modification of law """
-        aa=10
+    def check_move(self, time):
+        # TODO check cote
+        # Time
+        for key in self.param_fg.keys():
+            if time in self.param_fg[key]["TIME"]:
+                return True
+            else:
+                False
+
+    def update_law_struct(self, time):
+        """ Update structure law """
+        # 2 cas
+        #   o mouvement en fonction du Time : velocity
+        #   o mouvement en fonction de la cote dans le domaine
+        ##******************************
+        # fonctionnement vanne
+        #    o si cote atteint vanne en mouvement avec une vitesse d'incrementation
+        #    o modification polygone
+        ##******************************
+
         for id_config in self.param_fg.keys():
             print('rentre', id_config)
+            # TODO check modification
+            # compute new law
             list_final=self.clmeth.update_law(id_config,self.param_fg[id_config], time)
+            print('fin list_final')
             tab_final = self.clmeth.sort_law(list_final)
             list_q = np.unique(tab_final[:, 0])
-            nbq = len(list_q)
             list_zav = np.unique(tab_final[:, 1])
-            nbzav = len(list_zav)
             list_zam=list(tab_final[:, 2])
-            num=self.param_fg[id_config]['NUMGRAPH']
-            # Model.Weir.PtQ
-            # 'Model.Weir.PtZus' Zam
-            # 'Model.Weir.PtZds'   ZAV
 
-            dim1, dim2_q, dim3 = self.masc.get_var_size("Model.Weir.PtQ", num)
-            self.masc.set_var_size('Model.Weir.PtQ', dim1, nbq, dim3, index=num + 1)
-            self.masc.set_var_size("Model.Weir.PtZds", dim1, nbzav, dim3, index=num + 1)
-            self.masc.set_var_size("Model.Weir.PtZus", dim1, nbq, nbzav, index=num + 1)
-            #
-            for ii,qq in enumerate(list_q):
-                self.masc.set("Model.Weir.PtQ",qq, i=num, j=ii, k=0)
-                for jj, zav in enumerate(list_zav):
-                    self.masc.set("Model.Weir.PtZds",zav, i=num, j=jj, k=0)
-                    self.masc.set("Model.Weir.PtZus",aa, i=num, j=ii, k=jj)
-                    # list_zam[ii * nbzav + jj]
-            aa=20
+            # modification in mascaret model
+            # self.update_law_mas(id_config, list_q, list_zav, list_zam)
 
-    def test_tab(self,nbj,nbk, num):
-        for ii in range(nbj):
-            for jj in range(nbk):
-                    zam = self.masc.get("Model.Graph.UpLevel", i=num, j=ii, k=jj)
-                    print(ii, jj, zam)
+    def update_law_mas(self, id_config, list_q, list_zav, list_zam):
+        """
+         update information model with api
+        :param id_config: index of structure
+        :param list_q: list of flow rate
+        :param list_zav: list of upstream Z
+        :param list_zam: list of downstream Z
+        :return
+        """
+        nbq = len(list_q)
+        nbzav = len(list_zav)
+        num = self.param_fg[id_config]['NUMGRAPH']
+        dim1, dim2_q, dim3 = self.masc.get_var_size("Model.Weir.PtQ", num)
+        self.masc.set_var_size('Model.Weir.PtQ', dim1, nbq, dim3, index=num + 1)
+        self.masc.set_var_size("Model.Weir.PtZds", dim1, nbzav, dim3, index=num + 1)
+        self.masc.set_var_size("Model.Weir.PtZus", dim1, nbq, nbzav, index=num + 1)
 
-        #
-        # print(name, type)
-        # if type == 6:
-        #     list_var = ['Discharge', 'DownLevel', 'UpLevel']
-        #     # recuperation de la taille
-        #     dim1, dim2_q, dim3 = self.masc.get_var_size("Model.Graph.Discharge", 0)
-        #     print(dim1, dim2_q, dim3)
-        #     # # # dim1 nb de loi , Vecteur 1D (dim2: nb val qui sont différente pour q, dim3 n'existe pas)
-        #     # dim1, dim2_zav, dim3 = self.masc.get_var_size("Model.Graph.DownLevel", numgraph)
-        #     # print(dim1, dim2_zav, dim3)
-        #     # # #dim1 nb de loi, Vecteur 1D (dim2: nb val qui sont différente pour Zav, dim3 n'existe pas)
-        #     # print("jjjj",dim2_q, dim2_zav)
-        #     dim1, dim_q, dim_zav = self.masc.get_var_size("Model.Graph.UpLevel", numgraph)
-        #     print(dim1, dim_q, dim_zav)
-        #     # dim1 nb de loi , Vecteur 2D ( dim_q :nb val de q, dim_zav: nb val de Zav)
-        #     q = self.masc.get("Model.Graph.Discharge", i=0, j=49, k=0)
-        #     print(q)
-        #     dict = self.dico_law()
-        #     print(dict)
-        #     self.masc.set_var_size("Model.Graph.Discharge", 3, 51, 0, index=1)
-        #     self.masc.set_var_size("Model.Graph.UpLevel", 3, 51, 41, index=1)
-        #     # self.masc.get_var_size("Model.Graph.DownLevel",)
-        #
-        #     dim1, dim_q, dim_zav = self.masc.get_var_size("Model.Graph.UpLevel", numgraph)
-        #     dict = self.dico_law()
-        #     print(dict)
-        #
-        #     q2 = self.masc.get("Model.Graph.Discharge", i=0, j=50, k=0)
-        #     print(q2)
-        #     self.masc.set("Model.Graph.Discharge", 9999.0, i=0, j=50, k=0)
-        #     q2 = self.masc.get("Model.Graph.Discharge", i=0, j=50, k=0)
-        #
-        #     for a in range(41):
-        #         self.masc.set("Model.Graph.UpLevel", 0.00099, i=0, j=50, k=a)
-        #         zav = self.masc.get("Model.Graph.DownLevel", i=0, j=a, k=0)
-        #         zam = self.masc.get("Model.Graph.UpLevel", i=0, j=50, k=a)
-        #         print(q2, zav, zam, a)
+        cond_first = True
+        for ii, qq in enumerate(list_q):
+            self.masc.set("Model.Weir.PtQ", qq, i=num, j=ii, k=0)
+            for jj, zav in enumerate(list_zav):
+                if cond_first:
+                    self.masc.set("Model.Weir.PtZds", zav, i=num, j=jj, k=0)
+                self.masc.set("Model.Weir.PtZus", list_zam[ii * nbzav + jj], i=num, j=ii, k=jj)
+            cond_first = False
 
-            # self.update_law_mas()
+        self.write("fin.csv",nbq, nbzav,num)
 
-
-    # def update_law_mas(self,):
-    #     get_law()
-    #     new_size()
-    #     fill_law()
-    #     pass
-    #
+    def write(self, name,nbq, nbzav,num):
+        file= open(name,'w')
+        file.write('q;zav;zam\n')
+        for ii in range(nbq ):
+            q = self.masc.get("Model.Weir.PtQ", i=num, j=ii, k=0)
+            for jj in range(nbzav):
+                zav = self.masc.get("Model.Weir.PtZds", i=num, j=jj, k=0)
+                zam = self.masc.get("Model.Weir.PtZus", i=num, j=ii, k=jj)
+                file.write('{};{};{}\n'.format(q,zav,zam))
+        file.close()
     # method genral
-        # 1er etape (peut être fait avant):
-            # recuperer info (OK,get_param_fg)
-            # modifier la géométrie (A test, in classLaw , modif_poly_time)
-            # calcul de la nouvelle loi A test
+    # 1er etape (peut être fait avant): => OK
+    # recuperer info (OK,get_param_fg)
+    # modifier la géométrie (A test, in classLaw , modif_poly_time)
+    # calcul de la nouvelle loi A test
 
-
-        # 2ieme step:
-            # modification size law
-            # modification des values
-                # si suppression case attention décalage tableau il faut mieux tout re-ecrire
-
-        # 3ieme etape fin du calcul remettre la valeur de la loi initial
-        #     self.clmeth.sav_meth(self.id_struct, self.current_meth, self.wgt_met)
+    # 2ieme step: => OK
+    # modification size law
+    # modification des values
+    # si suppression case attention décalage tableau il faut mieux tout re-ecrire
 
 
 if __name__ == '__main__':
@@ -433,6 +421,5 @@ if __name__ == '__main__':
     # wl = [api.masc.get('State.Z', i) for i in range(api.npoin)]
     # zf = [api.masc.get('Model.Zbot', i) for i in range(api.npoin)]
     # x = [api.masc.get('Model.X', i) for i in range(api.npoin)]
-
 
     del api
