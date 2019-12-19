@@ -873,8 +873,7 @@ class ClassLaws:
         else:
             sens_ecoul = -1
         if ham < 0:
-            print('erreur loi orifice ham <0')
-            # print(zam,zav,zinf)
+            # print('erreur loi orifice ham <0')
             return None
 
         if surf < 0.:

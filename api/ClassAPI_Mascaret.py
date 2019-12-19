@@ -360,7 +360,7 @@ class ClassAPI_Mascaret:
             list_zam=list(tab_final[:, 2])
 
             # modification in mascaret model
-            # self.update_law_mas(id_config, list_q, list_zav, list_zam)
+            #self.update_law_mas(id_config, list_q, list_zav, list_zam)
 
     def update_law_mas(self, id_config, list_q, list_zav, list_zam):
         """
@@ -388,7 +388,7 @@ class ClassAPI_Mascaret:
                 self.masc.set("Model.Weir.PtZus", list_zam[ii * nbzav + jj], i=num, j=ii, k=jj)
             cond_first = False
 
-        self.write("fin.csv",nbq, nbzav,num)
+        # self.write("fin.csv",nbq, nbzav,num)
 
     def write(self, name,nbq, nbzav,num):
         file= open(name,'w')
