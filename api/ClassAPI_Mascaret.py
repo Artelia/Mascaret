@@ -346,6 +346,21 @@ class ClassAPI_Mascaret:
         # fonctionnement vanne
         #    o si cote atteint vanne en mouvement avec une vitesse d'incrementation
         #    o modification polygone
+        #
+        #  parametrer ouvrage :
+        #    limite de mouvement ouvrage
+        #    partie mobile soit haut soit bas  ( voir plus tard choix element)
+        #    vitesse mouvement = 99 m/s
+        #    increment de mouvement ( bouger de 10 cm)
+        #
+        #  Calcul Régualtion:
+        #     le point à checker dans le modèle
+        #     la cote à maintenir ou débit par defatu control amont
+        #        (si cote amont ouvrage :  ouverture monte,fermeture descent//
+        #          si cote avel ouvrage : fermeture monte, ouverture descent)
+        #      Controle amon avak
+        #      tolérence de la cote ou debit (plage pas de mouvement si variation)
+        #      le pas de temps entre 2 mouvements (autorise mouvement )
         ##******************************
 
         for id_config in self.param_fg.keys():

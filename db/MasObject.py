@@ -1020,6 +1020,8 @@ class struct_fg(MasObject):
                       ('id_scen', 'integer'),
                       ('active', 'boolean'),
                       ('type', 'text'),
+                      ('xpos', 'text'),
+                      ('var_reg', 'text'),
                       ('CONSTRAINT cle_struct_fg', 'PRIMARY KEY (id_config,id_scen)')]
 
 class struct_fg_val(MasObject):

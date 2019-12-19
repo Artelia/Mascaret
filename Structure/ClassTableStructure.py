@@ -114,9 +114,18 @@ class ClassTableStructure:
                               'HAUTDAL': {'name': 'Hauteur du dalot', 'unit': 'm'},
                               'ABSBUSE': {'name': 'Abscisse du centre de la buse', 'unit': 'm'}}
         #floodgate
-        self.dico_fg = {'TIME': {'name': 'Temps de fonctionnement', 'unit': 's'},
-                        'ZFG': {'name': 'Z position de la vanne', 'unit': 'm'},
-                        'CLOSE': {'name': 'Sens de fermeture', 'unit': None}}
+        self.dico_fg = {'VELOFG': {'name': 'Temps de fonctionnement', 'unit': 'm/s'},
+                        'ZMAXFG': {'name': 'Z bute de la vanne', 'unit': 'm'},
+                        'ZINCRFG': {'name': 'Z d''increment de mouvement', 'unit': 'm'},
+                        'DIRFG': {'name': 'Sens de fermeture', 'unit': None},
+                        'DTREG': {'name': 'Pas de temps de régulation', 'unit': 's'},
+                        'VREG': {'name': 'variable de regulation', 'unit': None},
+                        'VALREG': {'name': 'Valeur de variable de regulation', 'unit': None},
+                        'TOLREG': {'name': 'Tolerence de regulation', 'unit': None},
+                        'XPCONT': {'name': 'Abscisse du point de conrole', 'unit': 'm'},
+                        'BIEFCONT': {'name': 'Bief du point de controle', 'unit': 'm'},
+                        'LOCCONT': {'name': 'Localisation du point de controle', 'unit': 'm'}
+                        }
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
         self.dico_forme_arche = {1: 'Circulaire', 2: 'Ellipsoïdale'}

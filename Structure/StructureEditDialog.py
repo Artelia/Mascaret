@@ -30,6 +30,7 @@ from shapely.geometry import Point
 from .ClassMethod import ClassMethod
 from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
 
+
 # Widgets Pont cadre
 from .MetBradleyPcWidget import MetBradleyPcWidget
 from .MetBordaPcWidget import MetBordaPcWidget
@@ -43,6 +44,8 @@ from .MetOrificeDaWidget import MetOrificeDaWidget
 # Widgets Buse
 from .MetBordaBuWidget import MetBordaBuWidget
 from .MetOrificeBuWidget import MetOrificeBuWidget
+#FloodGate
+from .StructureFgDialog import StructureFgDialog
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -123,6 +126,9 @@ class ClassStructureEditDialog(QDialog):
             else:
                 self.b_up_prof.setEnabled(False)
 
+            #floodgate
+            self.init_gui_fg()
+
     def update_profil(self):
         """
         update zx of profil
@@ -154,6 +160,7 @@ class ClassStructureEditDialog(QDialog):
                 self.save_struct()
         self.txt_name.setFocus()
         self.met_calc = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
+        self.display_fg()
         param = self.param_meth_calc[self.typ_struct][self.met_calc]
         self.wgt_met = param['wgt'](*param['wgt_param'])
         self.sw_input.addWidget(self.wgt_met)
@@ -298,6 +305,8 @@ class ClassStructureEditDialog(QDialog):
                               "VALUES ({1}, {2}, '{3}', {4})".format(self.mdb.SCHEMA, self.id_struct,
                                                                      id_elem, var, val)
                         self.mdb.execute(sql)
+            self.accept_fg()
+
             return True
         else:
             msg_txt = "Erreurs lor de la construction de la structure :"
@@ -593,3 +602,64 @@ class ClassStructureEditDialog(QDialog):
             return False, "Intersection(s) detectee(s) : {}".format(txt_buse[:-2])
         else:
             return True, None
+
+    # floodgate
+    def init_gui_fg(self):
+        """initialisation GUI for floodGate"""
+        self.param_fg ={ 'type_fg' :'D'}
+
+        sql = "SELECT active, type FROM {0}.struct_fg " \
+              "WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
+        rows = self.mdb.run_query(sql, fetch=True)
+        if len(rows)>0:
+            self.param_fg['type_fg']=rows[0][1]
+            self.fg_active.setChecked(bool(rows[0][0]))
+
+
+        self.act_active_fg()
+        self.fg_active.stateChanged.connect(self.act_active_fg)
+        self.b_fg.clicked.connect(self.get_param_fg)
+        self.display_fg()
+
+    def act_active_fg(self):
+        if self.fg_active.isChecked():
+            self.b_fg.setEnabled(True)
+        else:
+            self.b_fg.setEnabled(False)
+
+    def display_fg(self):
+        meth= self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
+        if meth == 4 or meth == 0:
+            self.fg_active.setChecked(False)
+            self.fg_active.hide()
+            self.b_fg.hide()
+        else:
+            self.fg_active.show()
+            self.b_fg.show()
+
+    def check_exit_fg(self):
+        """check if id_config is struct_fg table"""
+        if self.id_struct:
+            sql = "SELECT * FROM {0}.struct_fg WHERE id_config = {1} " \
+                .format(self.mdb.SCHEMA, self.id_struct)
+            row = self.mdb.run_query(sql, fetch=True)
+            return (len(row) > 0)
+        else:
+            return False
+
+    def accept_fg(self):
+
+
+        act_val = bool(self.fg_active.isChecked())
+        if self.check_exit_fg():
+            sql = "UPDATE {0}.struct_fg SET active = {2} AND type = '{3}' WHERE id_config = {1} " \
+                .format(self.mdb.SCHEMA, self.id_struct, act_val, self.param_fg['type_fg'])
+            self.mdb.execute(sql)
+        else:
+            sql = "INSERT INTO {0}.struct_fg (id_config, id_scen, active, type) VALUES ({1}, {2}, {3}, '{4}')" \
+                .format(self.mdb.SCHEMA, self.id_struct,0, act_val, self.param_fg['type_fg'])
+            self.mdb.execute(sql)
+
+    def get_param_fg(self):
+        dlg = StructureFgDialog(self.mgis,self.id_struct)
+        dlg.exec_()
