@@ -761,7 +761,7 @@ class ClassMethod:
         """get variable of the floodgate"""
         id_scen = 0
         where = "active = TRUE AND id_scen = {0}".format(id_scen)
-        rows = self.mdb.select('struct_temporal', where=where, list_var=['id_config', 'type'])
+        rows = self.mdb.select('struct_fg', where=where, list_var=['id_config', 'type'])
         lid_config = rows['id_config']
         ltype = rows['type']
         param_fg = {}
@@ -772,7 +772,7 @@ class ClassMethod:
             list_recup = ['TIME', 'ZFG']
             for info in list_recup:
                 where = "id_config = {0} AND id_scen = {1} AND name_var = '{2}' ".format(id_config, id_scen, info)
-                rows = self.mdb.select('struct_temp_val', where=where, order='id_order', list_var=['value'])
+                rows = self.mdb.select('struct_fg_val', where=where, order='id_order', list_var=['value'])
                 dict_tmp[info] = rows['value']
 
             where = "id = {}".format(id_config)
