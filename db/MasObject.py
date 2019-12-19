@@ -1010,22 +1010,22 @@ class struct_laws(MasObject):
                       ('CONSTRAINT cle_struct_laws', 'PRIMARY KEY (id_config, id_var, id_order)')]
 #************************************************************************************
 
-class struct_temporal(MasObject):
+class struct_fg(MasObject):
     # parameter vanne
     def __init__(self):
-        super(struct_temporal, self).__init__()
+        super(struct_fg, self).__init__()
         self.order = 33
         self.geom_type = None
         self.attrs = [('id_config', 'integer'),
                       ('id_scen', 'integer'),
                       ('active', 'boolean'),
                       ('type', 'text'),
-                      ('CONSTRAINT cle_struct_temporal', 'PRIMARY KEY (id_config,id_scen)')]
+                      ('CONSTRAINT cle_struct_fg', 'PRIMARY KEY (id_config,id_scen)')]
 
-class struct_temp_val(MasObject):
+class struct_fg_val(MasObject):
     #valeur des variable float
     def __init__(self):
-        super(struct_temp_val, self).__init__()
+        super(struct_fg_val, self).__init__()
         self.order = 34
         self.geom_type = None
         self.attrs = [('id_config', 'integer'),
@@ -1033,4 +1033,4 @@ class struct_temp_val(MasObject):
                       ('id_order', 'integer'),
                       ('name_var', 'text'),
                       ('value', 'float'),
-                      ('CONSTRAINT cle_struct_temp_val', 'PRIMARY KEY (id_config,id_scen,id_order,name_var)')]
+                      ('CONSTRAINT cle_struct_fg_val', 'PRIMARY KEY (id_config,id_scen,id_order,name_var)')]

@@ -607,7 +607,7 @@ class ClassMasDatabase(object):
 
     def add_table_struct_temporal(self, dossier):
         tables = [
-            Maso.struct_temporal,Maso.struct_temp_val
+            Maso.struct_fg,Maso.struct_fg_val
         ]
         tables.sort(key=lambda x: x().order)
 
