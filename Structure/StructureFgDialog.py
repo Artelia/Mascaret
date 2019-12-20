@@ -67,9 +67,50 @@ class StructureFgDialog(QDialog):
                           'LOCCONT': [self.cb_loc],
                           'TYPE_TIME' :[self.cb_type_t]
                           }
+        self.display_fg_struct()
 
     def accept_page(self):
         # SAVE BD
+        fact_t = float(ctrl_get_value(self.dico_ctrl['TYPE_TIME'][0]))
+
+        for var, ctrls in self.dico_ctrl.items():
+            if var == 'TYPE_TIME' :
+                continue
+            elif var == 'DTREG' :
+                val = float(ctrl_get_value(ctrls[0]))
+                val = val * fact_t
+            elif var == 'LOCCONT' or var == 'DIRFG' or var == 'VREG' :
+                val = ctrl_get_value(ctrls[0])
+            else:
+                val = float(ctrl_get_value(ctrls[0]))
+
+            if var == 'LOCCONT' or var == 'DIRFG' or var == 'VREG' :
+                if var == 'LOCCONT':
+                    var = 'xpos'
+                elif var == 'VREG':
+                    var = 'var_reg'
+                elif var == 'DIRFG':
+                    var = 'type_fg'
+                else:
+                    var = None
+                sql = "UPDATE {0}.struct_fg SET {2} = '{3}'  WHERE id_config = {1} " \
+                    .format(self.mdb.SCHEMA, self.id_struct, var, val)
+                self.mdb.execute(sql)
+            else:
+                sql = "SELECT * FROM {0}.struct_fg_val WHERE id_config = {1} AND  name_var = '{2}' " \
+                    .format(self.mdb.SCHEMA, self.id_struct, var)
+                row = self.mdb.run_query(sql, fetch=True)
+                if len(row) > 0:
+                    sql = "UPDATE {0}.struct_fg_val SET value = {3} WHERE id_config = {1} AND  name_var = '{2}'" \
+                        .format(self.mdb.SCHEMA, self.id_struct, var, val)
+                    self.mdb.execute(sql)
+                else:
+
+                    sql = "INSERT INTO {0}.struct_fg_val (id_config, id_scen, id_order, name_var, value)" \
+                          " VALUES ({1}, {2}, {3},'{4}',{5})" \
+                        .format(self.mdb.SCHEMA, self.id_struct, 0, 0, var, val)
+                    self.mdb.execute(sql)
+
         self.accept()
 
     def reject_page(self):
@@ -79,3 +120,23 @@ class StructureFgDialog(QDialog):
 
     def update_min_zinc_fg_max(self):
         self.zinc_fg.setMaximum(self.cote_max_fg.value())
+
+    def display_fg_struct(self):
+        sql = "SELECT  name_var, value FROM {0}.struct_fg_val " \
+        "WHERE id_config = {1} ".format(self.mdb.SCHEMA, self.id_struct)
+        rows = self.mdb.run_query(sql, fetch=True)
+        for param, val in rows:
+            if param in self.dico_ctrl.keys():
+                ctrls = self.dico_ctrl[param]
+                for ctrl in ctrls:
+                    ctrl_set_value(ctrl, val)
+
+        rows = self.mdb.select('struct_fg', where='id_config = {0}'.format(self.id_struct),
+               list_var = ['type_fg', 'xpos', 'var_reg'])
+        for param, val in rows.items():
+            param = self.tbst.dico_vardb_to_var_fg[param]
+            if param in self.dico_ctrl.keys():
+                ctrls = self.dico_ctrl[param]
+                for ctrl in ctrls:
+                    ctrl_set_value(ctrl, val[0])
+

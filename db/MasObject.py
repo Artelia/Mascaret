@@ -1019,7 +1019,7 @@ class struct_fg(MasObject):
         self.attrs = [('id_config', 'integer'),
                       ('id_scen', 'integer'),
                       ('active', 'boolean'),
-                      ('type', 'text'),
+                      ('type_fg', 'text'),
                       ('xpos', 'text'),
                       ('var_reg', 'text'),
                       ('CONSTRAINT cle_struct_fg', 'PRIMARY KEY (id_config,id_scen)')]

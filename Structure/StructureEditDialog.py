@@ -99,6 +99,7 @@ class ClassStructureEditDialog(QDialog):
         self.b_ok.rejected.connect(self.reject_page)
         self.b_up_prof.clicked.connect(self.update_profil)
         self.b_up_prof.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/update.png')))
+        self.dico_ctrl_fg = None
 
         if id_struct:
             self.is_loading = True
@@ -305,7 +306,6 @@ class ClassStructureEditDialog(QDialog):
                               "VALUES ({1}, {2}, '{3}', {4})".format(self.mdb.SCHEMA, self.id_struct,
                                                                      id_elem, var, val)
                         self.mdb.execute(sql)
-            self.accept_fg()
 
             return True
         else:
@@ -606,15 +606,14 @@ class ClassStructureEditDialog(QDialog):
     # floodgate
     def init_gui_fg(self):
         """initialisation GUI for floodGate"""
-        self.param_fg ={ 'type_fg' :'D'}
 
-        sql = "SELECT active, type FROM {0}.struct_fg " \
+        sql = "SELECT active FROM {0}.struct_fg " \
               "WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
-        rows = self.mdb.run_query(sql, fetch=True)
-        if len(rows)>0:
-            self.param_fg['type_fg']=rows[0][1]
-            self.fg_active.setChecked(bool(rows[0][0]))
 
+        rows = self.mdb.run_query(sql, fetch=True)
+
+        if len(rows)>0:
+            self.fg_active.setChecked(bool(rows[0][0]))
 
         self.act_active_fg()
         self.fg_active.stateChanged.connect(self.act_active_fg)
@@ -622,8 +621,17 @@ class ClassStructureEditDialog(QDialog):
         self.display_fg()
 
     def act_active_fg(self):
-        if self.fg_active.isChecked():
+        act_val = bool(self.fg_active.isChecked())
+        if act_val:
             self.b_fg.setEnabled(True)
+            if self.check_exit_fg():
+                sql = "UPDATE {0}.struct_fg SET active = {2}  WHERE id_config = {1} " \
+                    .format(self.mdb.SCHEMA, self.id_struct, act_val)
+                self.mdb.execute(sql)
+            else:
+                sql = "INSERT INTO {0}.struct_fg (id_config, id_scen, active, type_fg) VALUES ({1}, {2}, {3}, '{4}')" \
+                    .format(self.mdb.SCHEMA, self.id_struct, 0, act_val, 'D')
+                self.mdb.execute(sql)
         else:
             self.b_fg.setEnabled(False)
 
@@ -647,19 +655,11 @@ class ClassStructureEditDialog(QDialog):
         else:
             return False
 
-    def accept_fg(self):
-
-
-        act_val = bool(self.fg_active.isChecked())
-        if self.check_exit_fg():
-            sql = "UPDATE {0}.struct_fg SET active = {2} AND type = '{3}' WHERE id_config = {1} " \
-                .format(self.mdb.SCHEMA, self.id_struct, act_val, self.param_fg['type_fg'])
-            self.mdb.execute(sql)
-        else:
-            sql = "INSERT INTO {0}.struct_fg (id_config, id_scen, active, type) VALUES ({1}, {2}, {3}, '{4}')" \
-                .format(self.mdb.SCHEMA, self.id_struct,0, act_val, self.param_fg['type_fg'])
-            self.mdb.execute(sql)
 
     def get_param_fg(self):
-        dlg = StructureFgDialog(self.mgis,self.id_struct)
-        dlg.exec_()
+        wfg = StructureFgDialog(self.mgis,self.id_struct)
+        if self.dico_ctrl_fg!= None :
+            wfg.dico_ctrl=self.dico_ctrl_fg
+        wfg.exec_()
+        self.dico_ctrl_fg = wfg.dico_ctrl
+

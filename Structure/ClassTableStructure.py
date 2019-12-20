@@ -113,19 +113,7 @@ class ClassTableStructure:
                               'COTERAD': {'name': 'Cote du radier', 'unit': 'm'},
                               'HAUTDAL': {'name': 'Hauteur du dalot', 'unit': 'm'},
                               'ABSBUSE': {'name': 'Abscisse du centre de la buse', 'unit': 'm'}}
-        #floodgate
-        self.dico_fg = {'VELOFG': {'name': 'Temps de fonctionnement', 'unit': 'm/s'},
-                        'ZMAXFG': {'name': 'Z bute de la vanne', 'unit': 'm'},
-                        'ZINCRFG': {'name': 'Z d''increment de mouvement', 'unit': 'm'},
-                        'DIRFG': {'name': 'Sens de fermeture', 'unit': None},
-                        'DTREG': {'name': 'Pas de temps de régulation', 'unit': 's'},
-                        'VREG': {'name': 'variable de regulation', 'unit': None},
-                        'VALREG': {'name': 'Valeur de variable de regulation', 'unit': None},
-                        'TOLREG': {'name': 'Tolerence de regulation', 'unit': None},
-                        'XPCONT': {'name': 'Abscisse du point de conrole', 'unit': 'm'},
-                        'BIEFCONT': {'name': 'Bief du point de controle', 'unit': 'm'},
-                        'LOCCONT': {'name': 'Localisation du point de controle', 'unit': 'm'}
-                        }
+
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
         self.dico_forme_arche = {1: 'Circulaire', 2: 'Ellipsoïdale'}
@@ -141,6 +129,20 @@ class ClassTableStructure:
                 {0: 'flowrate', 1: 'z_downstream', 2: 'z_upstream'}
         }
 
+        #floodgate
+        self.dico_fg = {'VELOFG': {'name': 'Temps de fonctionnement', 'unit': 'm/s'},
+                        'ZMAXFG': {'name': 'Z bute de la vanne', 'unit': 'm'},
+                        'ZINCRFG': {'name': 'Z d''increment de mouvement', 'unit': 'm'},
+                        'DIRFG': {'name': 'Sens de fermeture', 'unit': None},
+                        'DTREG': {'name': 'Pas de temps de régulation', 'unit': 's'},
+                        'VREG': {'name': 'variable de regulation', 'unit': None},
+                        'VALREG': {'name': 'Valeur de variable de regulation', 'unit': None},
+                        'TOLREG': {'name': 'Tolerence de regulation', 'unit': None},
+                        'XPCONT': {'name': 'Abscisse du point de conrole', 'unit': 'm'},
+                        'BIEFCONT': {'name': 'Bief du point de controle', 'unit': 'm'},
+                        'LOCCONT': {'name': 'Localisation du point de controle', 'unit': 'm'}
+                        }
+        self.dico_vardb_to_var_fg = {'type_fg' :'DIRFG', 'xpos':'LOCCONT', 'var_reg':'VREG'}
 
 def ctrl_set_value(ctrl, val):
     if ctrl.metaObject().className() in ('QSpinBox', 'QDoubleSpinBox'):
