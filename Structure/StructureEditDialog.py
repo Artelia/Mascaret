@@ -658,8 +658,7 @@ class ClassStructureEditDialog(QDialog):
 
     def get_param_fg(self):
         wfg = StructureFgDialog(self.mgis,self.id_struct)
-        if self.dico_ctrl_fg!= None :
-            wfg.dico_ctrl=self.dico_ctrl_fg
         wfg.exec_()
-        self.dico_ctrl_fg = wfg.dico_ctrl
+        del wfg
+
 

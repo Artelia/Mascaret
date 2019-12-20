@@ -334,7 +334,7 @@ chaque mouvement : </string>
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Variables de régulation : </string>
+            <string>Valeur de régulation : </string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
