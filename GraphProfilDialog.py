@@ -2199,6 +2199,10 @@ class GraphHydro(GraphCommon):
                     i = ss['abs'].index(x)
                     ss['abs'].pop(i)
                     ss['nom'].pop(i)
+                    if 'code' in ss.keys():
+                        ss['code'].pop(i)
+                    if 'zero' in ss.keys():
+                        ss['zero'].pop(i)
 
             aa = ss['abs']
             ss['nom'] = [ss['nom'][aa.index(a)] for a in sorted(aa)]
