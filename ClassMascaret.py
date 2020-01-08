@@ -34,7 +34,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .Function import str2bool
+from .Function import str2bool,copy_dir_to_dir
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
 
@@ -55,6 +55,7 @@ class ClassMascaret:
         if not os.path.isdir(self.dossierFileMasc):
             os.mkdir(self.dossierFileMasc)
         self.dossierFileMascOri = os.path.join(self.mgis.masplugPath, "mascaret_ori")
+        self.dossierFile_bin = os.path.join(self.mgis.masplugPath, "bin")
         self.baseName = "mascaret"
         self.nomfichGEO = self.baseName + ".geo"
         self.box = ClassWarningBox(self.mgis)
@@ -1710,10 +1711,9 @@ class ClassMascaret:
         files = os.listdir(self.dossierFileMasc)
         for i in range(0, len(files)):
             os.remove(os.path.join(self.dossierFileMasc, files[i]))
-        files = os.listdir(self.dossierFileMascOri)
-        for i in range(0, len(files)):
-            shutil.copy2(os.path.join(self.dossierFileMascOri, files[i]),
-                         os.path.join(self.dossierFileMasc, files[i]))
+        copy_dir_to_dir(self.dossierFileMascOri,self.dossierFileMasc)
+        copy_dir_to_dir(self.dossierFile_bin, self.dossierFileMasc)
+
 
     def clean_res(self):
         """ Clean the run folder and copy the essential files to run mascaret"""

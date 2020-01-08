@@ -21,8 +21,9 @@ comment:
         interpole
 """
 import math
-
+import os
 import dateutil
+from shutil import copy2
 
 
 def data_to_float(txt):
@@ -230,3 +231,11 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
         # liste = glob.glob(nom_fich[:-4]+".*")
         # for fich in liste :
         # os.remove(fich)
+
+
+def copy_dir_to_dir(src,target):
+    """ Copi file in directory"""
+    files = os.listdir(src)
+    for i in range(0, len(files)):
+        copy2(os.path.join(src, files[i]),
+                     os.path.join(target, files[i]))
