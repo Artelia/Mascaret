@@ -216,6 +216,7 @@
       <string>Update Table</string>
      </property>
      <addaction name="actionAdd_WQ_tables"/>
+     <addaction name="action_update_bin"/>
     </widget>
     <addaction name="actionRefresh_Database"/>
     <addaction name="separator"/>
@@ -626,6 +627,11 @@
   <action name="actionUpdate_pk">
    <property name="text">
     <string>Update pk</string>
+   </property>
+  </action>
+  <action name="action_update_bin">
+   <property name="text">
+    <string>Update bin</string>
    </property>
   </action>
  </widget>
