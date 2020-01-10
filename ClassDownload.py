@@ -39,12 +39,18 @@ class ClassDownloadMasc:
     Class allowing to download needed files
     """
 
-    def __init__(self, path_work=None, url_base=None):
+    def __init__(self, path_work=None, url_base=None,parent=None):
         self.masplug_path = None
+
         if url_base is None:
             self.url_base = ''
         else:
             self.url_base = url_base
+        self.parent = parent
+        if parent is None:
+            self.dbg = True
+        else:
+            self.dbg = self.parent.DEBUG
 
         if path_work is None:
             self.masplug_path = ''
@@ -62,13 +68,15 @@ class ClassDownloadMasc:
         :return:
         """
         for rep in dir.keys():
+            self.print_('Downloading executable file in "{}" directory\n'
+                        'Download ...'.format(rep))
             url = posixpath.join(self.url_base, rep)
-            print(self.masplug_path, rep)
             os.makedirs(os.path.join(self.masplug_path, rep), exist_ok=True)
             for filen in dir[rep]:
                 url2 = posixpath.join(url, filen)
                 paht_file = os.path.join(self.masplug_path, rep, filen)
                 self.download_file(url2, paht_file)
+            self.print_('Downloading Done')
 
     def download_file(self, url, path_file):
         """
@@ -88,13 +96,20 @@ class ClassDownloadMasc:
         req = QNetworkRequest(QUrl(url))
         result = self.manager.get(req)
         result.finished.connect(lambda: self.fin_req(loop, result))
-
-        print('fetching request...')
+        self.print_('fetching request...',self.dbg)
         if loop.exec_() == 0:
             timer.stop()
-            print('received: ', result.readAll().count())
+            self.print_('{} is received: {}'.format(os.path.basename(path_file),
+                                                    result.readAll().count()), self.dbg)
         else:
-            print('request timed-out :(')
+            self.print_('request timed-out')
+
+    def print_(self,txt, dbg=True):
+        if self.parent is None and dbg:
+            print(txt)
+        else:
+            if dbg:
+                self.parent.add_info(txt)
 
     def fin_req(self, loop, result):
         """
@@ -104,7 +119,7 @@ class ClassDownloadMasc:
         :return:
         """
         if result.error() != QNetworkReply.NoError:
-            print("Error of request : {}".format(self.url))
+            self.print_("Error of request : {}".format(self.url))
             loop.exit(1)
             return
         loop.exit()

@@ -818,7 +818,7 @@ Version : {}
         branch = 'master'
         url_path = posixpath.join(url_base, branch)
 
-        cl_load = ClassDownloadMasc(self.masplugPath,url_path)
+        cl_load = ClassDownloadMasc(self.masplugPath,url_path,self)
         dico = {'bin':['mascaret.exe',
                      'mascaret_linux']}
 
