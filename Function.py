@@ -233,6 +233,19 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
         # os.remove(fich)
 
 
+def del_accent(ligne):
+    """ supprime les accents du texte source """
+    accents = {u'a': [u'à', u'ã', u'á', u'â'],
+               u'e': [u'é', u'è', u'ê', u'ë'],
+               u'i': [u'î', u'ï'],
+               u'u': [u'ù', u'ü', u'û'],
+               u'o': [u'ô', u'ö']}
+    for (char, accented_chars) in accents.items():
+        for accented_char in accented_chars:
+            ligne = ligne.replace(accented_char, char)
+    return ligne
+
+
 def copy_dir_to_dir(src,target):
     """ Copi file in directory"""
     files = os.listdir(src)
