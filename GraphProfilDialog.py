@@ -396,18 +396,10 @@ class GraphProfil(GraphCommon):
 
     def create_struct(self):
         """ creation of hydraulic structure"""
-        # TODO
-        # self.struct.GUI()
-        # choix pour la création de la config
-        # return
         dlg = ClassStructureCreateDialog(self.mgis, self.gid)
         if dlg.exec_():
             pass
-            # print("create_struct")
-        # if self.feature["x"] and self.feature["z"]:
-        #     self.struct.copy_profil(self.gid)
-        #     print("create_struct")
-        pass
+
 
     def avance(self, val):
         """next or back profiles """
@@ -1432,6 +1424,7 @@ class GraphProfilRes(GraphCommon):
 
     def export_csv(self):
         """Export Table to .CSV file"""
+        # recupe tab export CSV
 
         default_name = self.nom.replace(' ', '_').replace(':', '-')
         if int(qVersion()[0]) < 5:  # qt4
@@ -1705,7 +1698,7 @@ class GraphProfilRes(GraphCommon):
                                     fancybox=False, shadow=False)
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
-        #self.leg.draggable(True)
+        # self.leg.draggable(True)
         DraggableLegend(self.leg)
         self.lined = dict()
 
@@ -2222,7 +2215,7 @@ class GraphHydro(GraphCommon):
             pos = ss['abs'].index(self.position)
             self.nom = ss['nom'][pos] + ' - ' + str(self.position)
         else:
-            if self.date :
+            if self.date:
                 self.nom = '{0:%d/%m/%Y %H:%M:%S}'.format(self.position)
             else:
                 self.nom = str(self.position)
@@ -2421,9 +2414,7 @@ class GraphHydro(GraphCommon):
                     legline.set_visible(True)
                     courbe.set_visible(False)
         # rend deplacable la legende mais fonctionne mal avec le choix des ligne dans la légende
-        # error with avec ubuntu
-        #self.leg.draggable(True)
-        # remplace by class
+        # self.leg.draggable(True)
         DraggableLegend(self.leg)
 
     def maj_limites(self):
@@ -3054,7 +3045,7 @@ class GraphBasin(GraphCommon):
             courbe.set_visible(True)
 
         # rend deplacable la legende mais fonctionne mal avec le choix des ligne dans la légende
-        #self.leg.draggable(True)
+        # self.leg.draggable(True)
         DraggableLegend(self.leg)
 
     def maj_limites(self):

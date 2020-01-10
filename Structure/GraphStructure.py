@@ -18,7 +18,6 @@ email                :
  ***************************************************************************/
 """
 import json
-
 from matplotlib.patches import Polygon as mpoly
 # from shapely.geometry import Polygon as spoly
 from shapely import geometry
