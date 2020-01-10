@@ -29,72 +29,78 @@ class ClassDownloadMasc():
     """
     Class allowing to download needed files
     """
-    def __init__(self, local_install=None):
-        self.masplug_path = local_install
-        self.version = 'master'
-        if self.version == 'experimental':
-            self.branch = 'dev_hyd_struct'
+    def __init__(self, path_work=None, url_base=None):
+        self.masplug_path = None
+        if url_base is None:
+            self.url_base =''
         else:
-            self.branch = 'master'
-        self.url_base = 'https://raw.githubusercontent.com/Artelia/Mascaret/'
+            self.url_base = url_base
 
-    def douwnload_bin_dir(self):
-        """
-        download "bin" represitory
-        :return:
-        """
-
+        if path_work is None:
+            self.masplug_path = ''
+        else:
+            self.masplug_path = path_work
+        self.file_install = None
+        self.url = None
         self.manager = QgsNetworkAccessManager()
         self.manager = self.manager.instance()
 
-        rep = 'bin'
-        file_list = ['mascaret.exe',
-                     'mascaret_linux']
-        url_path = posixpath.join(self.branch, rep)
-        url = posixpath.join(self.url_base, url_path)
-
-        os.makedirs(os.path.join(self.masplug_path, rep), exist_ok=True)
-        for filen in file_list:
-            url2 = posixpath.join(url, filen)
-            paht_file = os.path.join(self.masplug_path, rep, filen)
-            self.download(url2, paht_file)
-
-    def download(self, url, path_file):
+    def download_dir(self,dir):
         """
-        dowload function
+        download dir represitory
+        :param dir (dict): the keys are represitory and the element is list_file
+        :return:
+        """
+        for rep in dir.keys():
+            url = posixpath.join(self.url_base, rep)
+            print(self.masplug_path, rep)
+            os.makedirs(os.path.join(self.masplug_path, rep), exist_ok=True)
+            for filen in dir[rep]:
+                url2 = posixpath.join(url, filen)
+                paht_file = os.path.join(self.masplug_path, rep, filen)
+                self.download_file(url2, paht_file)
+
+
+    def download_file(self, url, path_file):
+        """
+        download function
         :param url: url path of file
         :param path_file: path to save file
         :return:
         """
         self.file_install = path_file
         self.url = url
-        self.loop = QEventLoop()
+        loop = QEventLoop()
         timer = QTimer()
         timer.setSingleShot(True)
-        timer.timeout.connect(lambda: self.loop.exit(1))
+        timer.timeout.connect(lambda: loop.exit(1))
         timer.start(100000)  # 10 second time-out
         # req = QNetworkRequest(QUrl('https://www.python.org/'))
         req = QNetworkRequest(QUrl(url))
-        self.result = self.manager.get(req)
-        self.result.finished.connect(self.fin_req)
+        result = self.manager.get(req)
+        result.finished.connect(lambda: self.fin_req(loop,result))
+
         print('fetching request...')
-        if self.loop.exec_() == 0:
+        if loop.exec_() == 0:
             timer.stop()
-            print('received: ', self.result.readAll().count())
+            print('received: ', result.readAll().count())
         else:
             print('request timed-out :(')
 
-    def fin_req(self):
+    def fin_req(self,loop, result):
         """
         action when received the request
+        :param loop (obj)
+        :param result (obj) reply in request
         :return:
         """
-        if self.result.error() != QNetworkReply.NoError:
-            self.loop.exit()
+        if result.error() != QNetworkReply.NoError:
+            print("Error of request : {}".format(self.url) )
+            loop.exit(1)
             return
-        self.loop.exit()
+        loop.exit()
         # save file
-        self.save_file(self.result.readAll())
+        self.save_file(result.readAll())
 
     def save_file(self, data):
         """
@@ -105,7 +111,3 @@ class ClassDownloadMasc():
         fch = open(self.file_install, 'wb')
         with fch:
             fch.write(data)
-
-
-if __name__ == "__main__":
-    pass

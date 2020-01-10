@@ -20,6 +20,7 @@ email                :
 import json
 import math
 import os
+import posixpath
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
@@ -37,7 +38,7 @@ from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
 from .db.ClassMasDatabase import ClassMasDatabase
 from .ui.custom_control import ClassWarningBox
-from .install.install import ClassDownloadMasc
+from .ClassDownload import ClassDownloadMasc
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -810,6 +811,16 @@ Version : {}
     # def update_pk(self):
     #     pass
     def download_bin(self):
-        cl_load = ClassDownloadMasc(self.masplugPath)
-        cl_load.branch = 'download_exe'
-        cl_load.main()
+        #url git
+        url_base = 'https://raw.githubusercontent.com/Artelia/Mascaret/'
+        # branch_test
+        # branch = 'master'
+        # branch = 'dev_hyd_struct'
+        branch = 'download_exe'
+        url_path = posixpath.join(url_base, branch)
+
+        cl_load = ClassDownloadMasc(self.masplugPath,url_path)
+        dico = {'bin':['mascaret.exe',
+                     'mascaret_linux']}
+
+        cl_load.download_dir(dico)
