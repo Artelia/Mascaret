@@ -20,19 +20,29 @@ email                :
 
 import os
 import posixpath
-from PyQt5.QtCore import QUrl, QEventLoop, QTimer
-from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply
+
 from qgis.core import QgsNetworkAccessManager
+from qgis.PyQt.QtCore import qVersion
+
+if int(qVersion()[0]) < 5:
+    from PyQt4.QtCore import QUrl, QEventLoop, QTimer
+    from PyQt4.QtNetwork import QNetworkRequest, QNetworkReply
+else:
+    from PyQt5.QtCore import QUrl, QEventLoop, QTimer
+    from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply
 
 
-class ClassDownloadMasc():
+
+
+class ClassDownloadMasc:
     """
     Class allowing to download needed files
     """
+
     def __init__(self, path_work=None, url_base=None):
         self.masplug_path = None
         if url_base is None:
-            self.url_base =''
+            self.url_base = ''
         else:
             self.url_base = url_base
 
@@ -45,10 +55,10 @@ class ClassDownloadMasc():
         self.manager = QgsNetworkAccessManager()
         self.manager = self.manager.instance()
 
-    def download_dir(self,dir):
+    def download_dir(self, dir):
         """
         download dir represitory
-        :param dir (dict): the keys are represitory and the element is list_file
+        :param dir : (dict)the keys are represitory and the element is list_file
         :return:
         """
         for rep in dir.keys():
@@ -59,7 +69,6 @@ class ClassDownloadMasc():
                 url2 = posixpath.join(url, filen)
                 paht_file = os.path.join(self.masplug_path, rep, filen)
                 self.download_file(url2, paht_file)
-
 
     def download_file(self, url, path_file):
         """
@@ -78,7 +87,7 @@ class ClassDownloadMasc():
         # req = QNetworkRequest(QUrl('https://www.python.org/'))
         req = QNetworkRequest(QUrl(url))
         result = self.manager.get(req)
-        result.finished.connect(lambda: self.fin_req(loop,result))
+        result.finished.connect(lambda: self.fin_req(loop, result))
 
         print('fetching request...')
         if loop.exec_() == 0:
@@ -87,7 +96,7 @@ class ClassDownloadMasc():
         else:
             print('request timed-out :(')
 
-    def fin_req(self,loop, result):
+    def fin_req(self, loop, result):
         """
         action when received the request
         :param loop (obj)
@@ -95,7 +104,7 @@ class ClassDownloadMasc():
         :return:
         """
         if result.error() != QNetworkReply.NoError:
-            print("Error of request : {}".format(self.url) )
+            print("Error of request : {}".format(self.url))
             loop.exit(1)
             return
         loop.exit()

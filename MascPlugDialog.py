@@ -812,11 +812,10 @@ Version : {}
     #     pass
     def download_bin(self):
         #url git
-        url_base = 'https://raw.githubusercontent.com/Artelia/Mascaret/'
+        url_base = 'https://raw.githubusercontent.com/Artelia/Exe_Mascaret/'
+
         # branch_test
-        # branch = 'master'
-        # branch = 'dev_hyd_struct'
-        branch = 'download_exe'
+        branch = 'master'
         url_path = posixpath.join(url_base, branch)
 
         cl_load = ClassDownloadMasc(self.masplugPath,url_path)

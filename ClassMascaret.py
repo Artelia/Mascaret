@@ -34,7 +34,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .Function import str2bool,copy_dir_to_dir
+from .Function import str2bool, copy_dir_to_dir
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
 
@@ -362,7 +362,7 @@ class ClassMascaret:
         # try:
         fichier_sortie = os.path.join(self.dossierFileMasc, self.baseName + ".xcas")
         extr_toloi = {0: 6, 1: 1, 2: 2, 3: 4, 4: 5, 5: 4, 8: 3, 6: 6, 7: 7}
-        #abaque_toloi = {1: 3, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
+        # abaque_toloi = {1: 3, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
         abaque_toloi = {1: 6, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
         # création du fichier xml
         fichier_cas = Element("fichier_cas")
@@ -892,12 +892,12 @@ class ClassMascaret:
         SubElement(et_liaisons, "coefDebitSeuil").text = self.fmt_sans_none(liaisons["weirdischargecoef"], '-1.0')
         SubElement(et_liaisons, "coefActivation").text = self.fmt_sans_none(liaisons["activationcoef"], '-1.0')
         SubElement(et_liaisons, "coefDebitOrifice").text = self.fmt_sans_none(liaisons["pipedischargecoef"],
-                                                                             '-1.0')
+                                                                              '-1.0')
         SubElement(et_liaisons, "typeOrifice").text = self.fmt_sans_none(liaisons["culverttype"], '-1')
         SubElement(et_liaisons, "numCasierOrigine").text = self.fmt_num_basin(liaisons["basinstart"],
                                                                               self.dico_basinnum, '-1')
         SubElement(et_liaisons, "numCasierFin").text = self.fmt_num_basin(liaisons["basinend"], self.dico_linknum,
-                                                                         '-1')
+                                                                          '-1')
         SubElement(et_liaisons, "numBiefAssocie").text = self.fmt_sans_none(liaisons["branchnum"], '-1')
         SubElement(et_liaisons, "abscBief").text = self.fmt_sans_none(liaisons["abscissa"], '-1.0')
 
@@ -1159,7 +1159,7 @@ class ClassMascaret:
                                                 'code, date')
 
                 if not liste_date:
-                    #liste_date = map(lambda x: x - dt, obs[cd_hydro]['date'])
+                    # liste_date = map(lambda x: x - dt, obs[cd_hydro]['date'])
                     liste_date = [x - dt for x in obs[cd_hydro]['date']]
 
             fichier_loi = os.path.join(self.dossierFileMasc, nom + '.loi')
@@ -1236,7 +1236,7 @@ class ClassMascaret:
                 tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
                 self.creer_loi(nom + '_init', tab, 2)
 
-    def  fct_comment(self):
+    def fct_comment(self):
         liste_col = self.mdb.list_columns('runs')
         if 'comments' in liste_col:
             comments, ok = QInputDialog.getText(QWidget(), 'Comments',
@@ -1247,7 +1247,7 @@ class ClassMascaret:
                     comments = ''
         else:
             comments = ''
-        return comments.replace("'","''").replace('"',' ')
+        return comments.replace("'", "''").replace('"', ' ')
 
     def mascaret(self, noyau, run):
         """creation file and to run mascaret"""
@@ -1294,16 +1294,16 @@ class ClassMascaret:
             else:
                 dict_scen = dict_scen_tmp
 
-            comments =self.fct_comment()
+            comments = self.fct_comment()
         else:
             scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
                                             'Please input a scenario name :')
-            scen = scen.replace("'"," ").replace('"',' ')
+            scen = scen.replace("'", " ").replace('"', ' ')
             if not ok or not self.check_scenar(scen, run):
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Canceled Simulation because of {0} already exists.".format(scen))
                 return
-            comments=self.fct_comment()
+            comments = self.fct_comment()
 
             dict_scen = {'name': [scen]}
 
@@ -1711,9 +1711,28 @@ class ClassMascaret:
         files = os.listdir(self.dossierFileMasc)
         for i in range(0, len(files)):
             os.remove(os.path.join(self.dossierFileMasc, files[i]))
-        copy_dir_to_dir(self.dossierFileMascOri,self.dossierFileMasc)
+        copy_dir_to_dir(self.dossierFileMascOri, self.dossierFileMasc)
+        if not self.check_exe():
+            self.mgis.download_bin()
+
         copy_dir_to_dir(self.dossierFile_bin, self.dossierFileMasc)
 
+    def check_exe(self):
+        """
+        Check if exe file exists
+        :return:
+        """
+        if not os.path.isdir(self.dossierFile_bin):
+            return False
+        test = sys.platform
+        if 'linux' in test or test == 'cygwin':
+            soft = "mascaret_linux"
+        elif test == 'win32':
+            soft = "mascaret.exe"
+        if not os.path.isfile(os.path.join(self.dossierFile_bin, soft)):
+            return False
+
+        return True
 
     def clean_res(self):
         """ Clean the run folder and copy the essential files to run mascaret"""
