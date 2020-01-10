@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=2.18
 qgisMaximumVersion=3.99
 
-version=1.2.1
+version=1.2.0
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,11 +30,11 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    1.2.1  : Correction of  displaying observations bug on graphics
+    1.2.0  : Correction of  displaying observations bug on graphics
              Add README.md file
-             Delete of "bin" represitory
-             Addition of  "bin" represitory downloading (after run)
-             Addition of  "bin" represitory updating in plugin menu
+             Delete of "bin" repository
+             Addition of  "bin" repository downloading (after run)
+             Addition of  "bin" repository updating in plugin menu
     1.1.3  : Correction of  displaying observations bug on graphics
     1.1.2  : Correction of display date bug in graph
     1.1.1  : Correction of  angle of Bradley method
