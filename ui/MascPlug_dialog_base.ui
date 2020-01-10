@@ -218,6 +218,7 @@
      <addaction name="actionAdd_WQ_tables"/>
     </widget>
     <addaction name="actionRefresh_Database"/>
+    <addaction name="action_update_bin"/>
     <addaction name="separator"/>
     <addaction name="actionCreate_New_Model"/>
     <addaction name="actionLoad_Model"/>
@@ -626,6 +627,11 @@
   <action name="actionUpdate_pk">
    <property name="text">
     <string>Update pk</string>
+   </property>
+  </action>
+  <action name="action_update_bin">
+   <property name="text">
+    <string>Update Executable</string>
    </property>
   </action>
  </widget>

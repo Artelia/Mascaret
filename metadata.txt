@@ -21,7 +21,7 @@ qgisMaximumVersion=3.99
 
 version=1.0.5
 
-author=Artelia Eau et Environnement
+author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
 
 # End of mandatory metadata
@@ -32,6 +32,9 @@ email=mehdi-pierre.daou@arteliagroup.com
 changelog=
     1.0.5  : Correction of  displaying observations bug on graphics
              Add README.md file
+             Delete of "bin" represitory
+             Addition of  "bin" represitory downloading (after run)
+             Addition of  "bin" represitory updating in plugin menu
     1.0.4  : Correction of display date bug in graph
              Correction of legends moving bug  into linux platform
              Correction of run bug  into  linux platform
