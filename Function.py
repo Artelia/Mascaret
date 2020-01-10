@@ -252,3 +252,22 @@ def copy_dir_to_dir(src,target):
     for i in range(0, len(files)):
         copy2(os.path.join(src, files[i]),
                      os.path.join(target, files[i]))
+
+def del_symbol(ligne):
+    """ supprime les accents du texte source """
+    accents = {u'_': [u'-', u'.']}
+    for (char, accented_chars) in accents.items():
+        for accented_char in accented_chars:
+            ligne = ligne.replace(accented_char, char)
+    return ligne
+
+def replace_all( txt, dico):
+    """
+    Replace several items
+    :param txt: text orginal
+    :param dico: de remplacement des variable
+    :return:
+    """
+    for i in dico:
+        txt = txt.replace(i, dico[i])
+    return txt

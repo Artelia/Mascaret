@@ -26,7 +26,7 @@ from qgis.gui import *
 from qgis.utils import *
 
 from .ClassTableWQ import ClassTableWQ
-from ..Function import interpole
+from ..Function import interpole, del_symbol
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -115,7 +115,7 @@ class ClassMascWQ:
                     loi_val, col = self.mdb.run_query(sql.format(self.mdb.SCHEMA, 'laws_wq', where, order),
                                                       fetch=True, namvar=True)
                     # write law
-                    fich = open(os.path.join(dossier, name.lower() + '.loi'), 'w')
+                    fich = open(os.path.join(dossier, del_symbol(name.lower()) + '_tra.loi'), 'w')
                     header = '# {}\n'.format(name)
                     header += '# Times (s) '
                     for sigle in list_trac['sigle']:
@@ -139,7 +139,7 @@ class ClassMascWQ:
                     # if init_case:
                     #     # initial_ law with first value
                     #
-                    #     fich = open(os.path.join(dossier, name.lower() + '_init.loi'), 'w')
+                    #     fich = open(os.path.join(dossier, del_symbol(name.lower()) + '_init_tra.loi'), 'w')
                     #     header = '# {}\n'.format(name)
                     #     header += '# Times (s) '
                     #     for sigle in list_trac['sigle']:
