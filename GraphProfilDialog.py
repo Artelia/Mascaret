@@ -396,18 +396,10 @@ class GraphProfil(GraphCommon):
 
     def create_struct(self):
         """ creation of hydraulic structure"""
-        # TODO
-        # self.struct.GUI()
-        # choix pour la création de la config
-        # return
         dlg = ClassStructureCreateDialog(self.mgis, self.gid)
         if dlg.exec_():
             pass
-            # print("create_struct")
-        # if self.feature["x"] and self.feature["z"]:
-        #     self.struct.copy_profil(self.gid)
-        #     print("create_struct")
-        pass
+
 
     def avance(self, val):
         """next or back profiles """
@@ -1432,6 +1424,7 @@ class GraphProfilRes(GraphCommon):
 
     def export_csv(self):
         """Export Table to .CSV file"""
+        # recupe tab export CSV
 
         default_name = self.nom.replace(' ', '_').replace(':', '-')
         if int(qVersion()[0]) < 5:  # qt4

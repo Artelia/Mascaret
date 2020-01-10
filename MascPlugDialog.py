@@ -20,6 +20,7 @@ email                :
 import json
 import math
 import os
+import posixpath
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
@@ -39,6 +40,7 @@ from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
 from .db.ClassMasDatabase import ClassMasDatabase
 from .ui.custom_control import ClassWarningBox
+from .ClassDownload import ClassDownloadMasc
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -66,7 +68,7 @@ class MascPlugDialog(QMainWindow):
 
         self.map_tool = None
 
-        # self.pathPostgres = self.masplugPath
+        # self.pathPostgres = self.masplug_path
         # emplacement objet sql
         self.dossier_sql = os.path.join(os.path.join(self.masplugPath, "db"), "sql")
         # style des couches
@@ -176,8 +178,8 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
         self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
         # TODO
-        # self.ui.actionUpdate_pk.triggered.connect(self.update_pk)
-        # self.ui.actionTest_struct.triggered.connect(self.fct_test)
+        #self.ui.actionUpdate_pk.triggered.connect(self.update_pk)
+        self.ui.action_update_bin.triggered.connect(self.download_bin)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -836,3 +838,16 @@ Version : {}
     # TODO
     # def update_pk(self):
     #     pass
+    def download_bin(self):
+        #url git
+        url_base = 'https://raw.githubusercontent.com/Artelia/Exe_Mascaret/'
+
+        # branch_test
+        branch = 'master'
+        url_path = posixpath.join(url_base, branch)
+
+        cl_load = ClassDownloadMasc(self.masplugPath,url_path,self)
+        dico = {'bin':['mascaret.exe',
+                     'mascaret_linux']}
+
+        cl_load.download_dir(dico)

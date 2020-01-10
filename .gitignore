@@ -1,6 +1,8 @@
 doc/*
 test/*
 mascaret/*
+bin/*
+bin
 *.pyc
 .idea/workspace.xml
 settings.json

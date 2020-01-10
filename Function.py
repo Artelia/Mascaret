@@ -21,8 +21,9 @@ comment:
         interpole
 """
 import math
-
+import os
 import dateutil
+from shutil import copy2
 
 
 def data_to_float(txt):
@@ -243,3 +244,11 @@ def del_accent(ligne):
         for accented_char in accented_chars:
             ligne = ligne.replace(accented_char, char)
     return ligne
+
+
+def copy_dir_to_dir(src,target):
+    """ Copi file in directory"""
+    files = os.listdir(src)
+    for i in range(0, len(files)):
+        copy2(os.path.join(src, files[i]),
+                     os.path.join(target, files[i]))

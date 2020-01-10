@@ -221,6 +221,7 @@
      <addaction name="actionAdd_Structure_tables"/>
     </widget>
     <addaction name="actionRefresh_Database"/>
+    <addaction name="action_update_bin"/>
     <addaction name="separator"/>
     <addaction name="actionCreate_New_Model"/>
     <addaction name="actionLoad_Model"/>
@@ -626,6 +627,16 @@
    </property>
    <property name="toolTip">
     <string>Basin results</string>
+   </property>
+  </action>
+  <action name="actionUpdate_pk">
+   <property name="text">
+    <string>Update pk</string>
+   </property>
+  </action>
+  <action name="action_update_bin">
+   <property name="text">
+    <string>Update Executable</string>
    </property>
   </action>
   <action name="actionAdd_Structure_tables">
