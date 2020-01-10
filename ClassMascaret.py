@@ -35,6 +35,7 @@ from qgis.gui import *
 from qgis.utils import *
 
 from .Function import str2bool, copy_dir_to_dir
+from .Function import del_symbol
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
 
@@ -362,8 +363,8 @@ class ClassMascaret:
         # try:
         fichier_sortie = os.path.join(self.dossierFileMasc, self.baseName + ".xcas")
         extr_toloi = {0: 6, 1: 1, 2: 2, 3: 4, 4: 5, 5: 4, 8: 3, 6: 6, 7: 7}
-        # abaque_toloi = {1: 3, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
         abaque_toloi = {1: 6, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
+
         # création du fichier xml
         fichier_cas = Element("fichier_cas")
 
@@ -774,7 +775,7 @@ class ClassMascaret:
             SubElement(struct, "type").text = str(dict_lois[nom]['type'])
             donnees = SubElement(struct, "donnees")
             SubElement(donnees, "modeEntree").text = '1'
-            SubElement(donnees, "fichier").text = '{}.loi'.format(nom)
+            SubElement(donnees, "fichier").text = '{}.loi'.format(del_symbol(nom))
             SubElement(donnees, "uniteTps").text = '-0'
             SubElement(donnees, "nbPoints").text = '-0'
             SubElement(donnees, "nbDebitsDifferents").text = '-0'
@@ -833,7 +834,7 @@ class ClassMascaret:
                 child.find('type').text = '2'
             donnee = child.find('donnees').find('fichier')
             temp = donnee.text.split('.')
-            donnee.text = '{}_init.loi'.format(temp[0])
+            donnee.text = '{}_init.loi'.format(del_symbol(temp[0]))
 
         initiales = param_cas.find('parametresConditionsInitiales')
         initiales.find('repriseEtude').find('repriseCalcul').text = 'false'
@@ -902,6 +903,7 @@ class ClassMascaret:
         SubElement(et_liaisons, "abscBief").text = self.fmt_sans_none(liaisons["abscissa"], '-1.0')
 
     def add_wq_xcas(self, fichier_cas, noyau, dict_libres):
+        """Modification of xcas for Water Quality"""
         # requête pour récupérer les paramètres
         cas = fichier_cas.find('parametresCas')
         sql = "SELECT parametre, {0}, balise1, balise2 FROM {1}.{2} WHERE gui_type = 'tracers' ORDER BY id;"
@@ -1005,7 +1007,7 @@ class ClassMascaret:
                 struct = SubElement(lois, "structureSParametresLoiTraceur")
                 SubElement(struct, "nom").text = name
                 SubElement(struct, "modeEntree").text = '1'
-                SubElement(struct, "fichier").text = '{}.loi'.format(name.lower())
+                SubElement(struct, "fichier").text = '{}_tra.loi'.format(del_symbol(name.lower()))
                 SubElement(struct, "uniteTps").text = '-0'
                 SubElement(struct, "nbPoints").text = '-0'
 
@@ -1050,7 +1052,7 @@ class ClassMascaret:
             arbre.write(fich_entree)
 
     def creer_loi(self, nom, tab, type):
-        with open(os.path.join(self.dossierFileMasc, nom + '.loi'), 'w') as fich:
+        with open(os.path.join(self.dossierFileMasc, del_symbol(nom) + '.loi'), 'w') as fich:
             fich.write('# ' + nom + '\n')
             if type == 1:
                 fich.write('# Temps (S) Debit\n')
@@ -1162,7 +1164,7 @@ class ClassMascaret:
                     # liste_date = map(lambda x: x - dt, obs[cd_hydro]['date'])
                     liste_date = [x - dt for x in obs[cd_hydro]['date']]
 
-            fichier_loi = os.path.join(self.dossierFileMasc, nom + '.loi')
+            fichier_loi = os.path.join(self.dossierFileMasc, del_symbol(nom) + '.loi')
             valeur_init = None
 
             with open(fichier_loi, 'w') as fich_sortie:
@@ -1293,7 +1295,6 @@ class ClassMascaret:
                     dict_scen[key] = value
             else:
                 dict_scen = dict_scen_tmp
-
             comments = self.fct_comment()
         else:
             scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
@@ -1399,8 +1400,6 @@ class ClassMascaret:
                         self.mgis.add_info(str(e))
                         return
 
-                    # liste = ["cote", "debit", "temps", "cote_amont", "cote_aval",
-                    #          "cote_inf", "cote_sup"]
                     liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
                              "z_lower", "z_up"]
                     tab = {}
@@ -1505,25 +1504,23 @@ class ClassMascaret:
 
             self.mgis.add_info("========== Run case  =========")
             self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen, noyau))
-
-            finish = self.lance_mascaret(self.baseName + '.xcas')
+            cond_casier = False
+            if par["presenceCasiers"] and noyau == "unsteady":
+                cond_casier = True
+            finish = self.lance_mascaret(self.baseName + '.xcas',par['presenceTraceurs'], cond_casier)
             if not finish:
                 self.mgis.add_info("Simulation error")
                 return
 
             # Lecture de l'OPT des casiers et liaisons puis ecriture dans la table resultats
-            cond_casier = False
-            if par["presenceCasiers"] and noyau == "unsteady":
-                cond_casier = True
-                # self.lit_casiers_opt(run, scen, date_debut, self.baseName, "basin")
-                # self.lit_casiers_opt(run, scen, date_debut, self.baseName, "link")
+
             self.lit_opt(run, scen, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
 
         self.iface.messageBar().clearWidgets()
         self.mgis.add_info("Simulation finished")
         return
 
-    def lance_mascaret(self, fichier_cas):
+    def lance_mascaret(self, fichier_cas,tracer=False, casier=False):
         """
         Run mascaret
         """
@@ -1569,7 +1566,7 @@ class ClassMascaret:
             nom_fich_tra = os.path.join(self.dossierFileMasc, base_namefile + '.tra_opt')
 
             if not os.path.isfile(nom_fich_tra):
-                self.mgis.add_info("Simulation Error: there aren't results")
+                self.mgis.add_info("Simulation Error: there aren't results for tracer")
                 return False
             t_tra, pk_tra, col_tra, value_tra = self.read_opt(nom_fich_tra, date_debut, scen, run)
             lind = []
@@ -1581,7 +1578,6 @@ class ClassMascaret:
             for j, lignval in enumerate(value):
                 for i in lind:
                     lignval.append(value_tra[j][i])
-
         maintenant = datetime.datetime.utcnow()
 
         tab = {run: {"scenario": scen,
@@ -1625,8 +1621,10 @@ class ClassMascaret:
     def opt_to_lig(self, run, scen, base_namefiles):
         """Creation of .lig file """
         condition = "run='{0}' AND scenario='{1}'".format(run, scen)
-        t_max = self.mdb.select_max("t", "resultats", condition)
 
+        t_max = self.mdb.select_max("t", "resultats", condition)
+        if t_max is None:
+            self.mgis.add_info("No previous results to create the .lig file.")
         condition = condition + " AND t=" + str(t_max)
 
         result = self.mdb.select("resultats", condition, 'pk')
