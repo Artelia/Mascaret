@@ -18,39 +18,37 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
-
 from shapely.geometry import Point
 
 from .ClassMethod import ClassMethod
 from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
-
-
-# Widgets Pont cadre
-from .MetBradleyPcWidget import MetBradleyPcWidget
-from .MetBordaPcWidget import MetBordaPcWidget
-from .MetOrificePcWidget import MetOrificePcWidget
-# Widgets Pont arche
-from .MetBordaPaWidget import MetBordaPaWidget
-from .MetOrificePaWidget import MetOrificePaWidget
-# Widgets Dalot
-from .MetBordaDaWidget import MetBordaDaWidget
-from .MetOrificeDaWidget import MetOrificeDaWidget
 # Widgets Buse
 from .MetBordaBuWidget import MetBordaBuWidget
+# Widgets Dalot
+from .MetBordaDaWidget import MetBordaDaWidget
+# Widgets Pont arche
+from .MetBordaPaWidget import MetBordaPaWidget
+from .MetBordaPcWidget import MetBordaPcWidget
+# Widgets Pont cadre
+from .MetBradleyPcWidget import MetBradleyPcWidget
 from .MetOrificeBuWidget import MetOrificeBuWidget
-#FloodGate
+from .MetOrificeDaWidget import MetOrificeDaWidget
+from .MetOrificePaWidget import MetOrificePaWidget
+from .MetOrificePcWidget import MetOrificePcWidget
+# FloodGate
 from .StructureFgDialog import StructureFgDialog
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
 else:  # qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QIcon
+    from qgis.PyQt.QtGui import QIcon
     from qgis.PyQt.QtWidgets import *
 
 
@@ -127,7 +125,7 @@ class ClassStructureEditDialog(QDialog):
             else:
                 self.b_up_prof.setEnabled(False)
 
-            #floodgate
+            # floodgate
             self.init_gui_fg()
 
     def update_profil(self):
@@ -152,7 +150,6 @@ class ClassStructureEditDialog(QDialog):
 
         self.mdb.delete('profil_struct', where='id_config = {}'.format(self.id_struct))
         self.mdb.insert_res('profil_struct', values, colonnes)
-
 
     def change_met_calc(self, idx):
         if not self.is_loading:
@@ -612,7 +609,7 @@ class ClassStructureEditDialog(QDialog):
 
         rows = self.mdb.run_query(sql, fetch=True)
 
-        if len(rows)>0:
+        if len(rows) > 0:
             self.fg_active.setChecked(bool(rows[0][0]))
 
         self.act_active_fg()
@@ -634,9 +631,14 @@ class ClassStructureEditDialog(QDialog):
                 self.mdb.execute(sql)
         else:
             self.b_fg.setEnabled(False)
+            if self.check_exit_fg():
+                sql = "UPDATE {0}.struct_fg SET active = {2}  WHERE id_config = {1} " \
+                    .format(self.mdb.SCHEMA, self.id_struct, act_val)
+                self.mdb.execute(sql)
+
 
     def display_fg(self):
-        meth= self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
+        meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
         if meth == 4 or meth == 0:
             self.fg_active.setChecked(False)
             self.fg_active.hide()
@@ -655,10 +657,7 @@ class ClassStructureEditDialog(QDialog):
         else:
             return False
 
-
     def get_param_fg(self):
-        wfg = StructureFgDialog(self.mgis,self.id_struct)
+        wfg = StructureFgDialog(self.mgis, self.id_struct)
         wfg.exec_()
         del wfg
-
-

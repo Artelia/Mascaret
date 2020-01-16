@@ -715,14 +715,14 @@ class ClassMethod:
         :param ui: gui object
         :return:
         """
-        self.brad = ClassLaws(self)
+        self.meth = ClassLaws(self)
 
-        if idmethod == 0 or idmethod == 4:  # brad
-            self.brad.bradley(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+        if idmethod == 0 or idmethod == 4:  # meth
+            self.meth.bradley(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         elif idmethod == 1:  # borda
-            self.brad.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+            self.meth.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         elif idmethod == 3:  # orifice
-            self.brad.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+            self.meth.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         else:
             pass
 
@@ -757,54 +757,30 @@ class ClassMethod:
         sql = "UPDATE {schema}.{table} SET struct={struct}  WHERE gid={gid}".format(**tab)
         self.mdb.run_query(sql)
 
-    def get_param_fg(self):
-        """get variable of the floodgate"""
-        id_scen = 0
-        where = "active = TRUE AND id_scen = {0}".format(id_scen)
-        rows = self.mdb.select('struct_fg', where=where, list_var=['id_config', 'type'])
-        lid_config = rows['id_config']
-        ltype = rows['type']
-        param_fg = {}
-        link_name_id={}
-        for i, id_config in enumerate(lid_config):
-            dict_tmp = {}
-            dict_tmp['CLOSE'] = ltype[i]
-            list_recup = ['TIME', 'ZFG']
-            for info in list_recup:
-                where = "id_config = {0} AND id_scen = {1} AND name_var = '{2}' ".format(id_config, id_scen, info)
-                rows = self.mdb.select('struct_fg_val', where=where, order='id_order', list_var=['value'])
-                dict_tmp[info] = rows['value']
 
-            where = "id = {}".format(id_config)
-            rows = self.mdb.select('struct_config', where=where, list_var=['method','name'])
-            dict_tmp['NAME']=rows['name'][0]
-            dict_tmp['METH'] =rows['method'][0]
-            link_name_id[rows['name'][0]]=id_config
-            param_fg[id_config] = dict_tmp
-        return param_fg,link_name_id
+    def update_law(self, id_config, param_fg, new_z, mobil_struct):
+            """   Compute new law
+                    :param id_config: index of hydraulic structure
+                    :param param_fg : parameters of the floodgate
+                    :param new_z : new position of floodgate
+                    :param mobil_struct :moving structure condition
+                    :return:
+                    """
+            idmethod = param_fg['METH']
+            law = ClassLaws(self)
+            law.init_mobil_param(mobil_struct, param_fg, new_z)
+            list_final = None
+            if idmethod == 0 or idmethod == 4:  # meth
+                pass
+            elif idmethod == 1:  # borda
+                list_final = law.borda(id_config, self.tbst.dico_meth_calc[idmethod], None)
+            elif idmethod == 3:  # orifice
+                list_final = law.orifice(id_config, self.tbst.dico_meth_calc[idmethod], None)
+            else:
+                pass
+            del law
+            return list_final
 
-    def update_law(self,id_config,param_fg,time):
-        """   Compute new law
-                :param id_config: index of hydraulic structure
-                :return:
-                """
-        idmethod=param_fg['METH']
-        law = ClassLaws(self)
-        law.time = time
-        law.param_fg=param_fg
-        law.mobil_struct = True
-        list_final=None
-        if idmethod == 0 or idmethod == 4:  # brad
-            pass
-        elif idmethod == 1:  # borda
-            law.mobil_struct = True
-            list_final = law.borda(id_config, self.tbst.dico_meth_calc[idmethod], None)
-        elif idmethod == 3:  # orifice
-            law.mobil_struct = True
-            list_final = law.orifice(id_config, self.tbst.dico_meth_calc[idmethod], None)
-        else:
-            pass
-        return list_final
 
 if __name__ == '__main__':
     pass

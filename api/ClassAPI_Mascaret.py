@@ -21,9 +21,8 @@ email                :
 
 import os
 from .masc import Mascaret
-from ..Structure.ClassMethod import ClassMethod
 # from masc import Mascaret
-import numpy as np
+from ..Structure.ClassFloodGate import ClassFloodGate
 
 
 class ClassAPI_Mascaret:
@@ -49,9 +48,12 @@ class ClassAPI_Mascaret:
         self.zini = 0
         self.qini = 0
 
+        self.masc = Mascaret(log_level='INFO')
+        self.masc.create_mascaret(iprint=1)
+
         # floodgat
-        self.mobil_struct = True
-        self.clmeth = ClassMethod(self.mgis)
+        self.clfg = ClassFloodGate(self)
+        self.mobil_struct = self.clfg.fg_active()
 
     def initial(self, casfile):
         """
@@ -283,8 +285,7 @@ class ClassAPI_Mascaret:
     def one_iter(self, t0, t1, dtp):
 
         if self.mobil_struct:
-            if self.check_move(t1):
-                self.update_law_struct(t1)
+            self.clfg.iter_fg(t1)
 
         self.masc.compute(t0, t1, dtp)
         if self.conum:
@@ -297,134 +298,19 @@ class ClassAPI_Mascaret:
 
     def finalize(self):
         del self.masc
-        del self.clmeth
+        self.clfg.finalize()
 
     def main(self, filename, tracer=False, basin=False):
-
-        self.masc = Mascaret(log_level='INFO')
-        self.masc.create_mascaret(iprint=1)
 
         self.tracer = tracer
         self.basin = basin
         self.initial(filename)
         if self.mobil_struct:
-            self.init_floogate()
+            self.clfg.init_floogate()
         self.compute()
         self.finalize()
 
-    def init_floogate(self):
-        self.param_fg, link_name_id = self.clmeth.get_param_fg()
-        # attention init.loi ou pas
-        # connaitrea la relation config et non law
-        nb_loi_sing = self.masc.get_var_size("Model.Weir.Name")[0]
-        print("nb loi", nb_loi_sing)
 
-        for id in range(nb_loi_sing):
-            # numgraph = self.masc.get("Model.Weir.GraphNum", i=id) - 1
-            name = self.masc.get("Model.Weir.Name", i=id)
-            if name.replace('_init', '') in list(link_name_id.keys()):
-                id_config = link_name_id[name]
-                # self.param_fg[id_config]['NUMGRAPH'] = numgraph
-                self.param_fg[id_config]['NUMGRAPH'] = id
-        print(self.param_fg)
-
-    def check_move(self, time):
-        # TODO check cote
-        # Time
-        for key in self.param_fg.keys():
-            if time in self.param_fg[key]["TIME"]:
-                return True
-            else:
-                False
-
-    def update_law_struct(self, time):
-        """ Update structure law """
-        # 2 cas
-        #   o mouvement en fonction du Time : velocity
-        #   o mouvement en fonction de la cote dans le domaine
-        ##******************************
-        # fonctionnement vanne
-        #    o si cote atteint vanne en mouvement avec une vitesse d'incrementation
-        #    o modification polygone
-        #
-        #  parametrer ouvrage :
-        #    limite de mouvement ouvrage
-        #    partie mobile soit haut soit bas  ( voir plus tard choix element)
-        #    vitesse mouvement = 99 m/s
-        #    increment de mouvement ( bouger de 10 cm)
-        #
-        #  Calcul Régualtion:
-        #     le point à checker dans le modèle
-        #     la cote à maintenir ou débit par defatu control amont
-        #        (si cote amont ouvrage :  ouverture monte,fermeture descent//
-        #          si cote avel ouvrage : fermeture monte, ouverture descent)
-        #      Controle amon avak
-        #      tolérence de la cote ou debit (plage pas de mouvement si variation)
-        #      le pas de temps entre 2 mouvements (autorise mouvement )
-        ##******************************
-
-        for id_config in self.param_fg.keys():
-            print('rentre', id_config)
-            # TODO check modification
-            # compute new law
-            list_final=self.clmeth.update_law(id_config,self.param_fg[id_config], time)
-            print('fin list_final')
-            tab_final = self.clmeth.sort_law(list_final)
-            list_q = np.unique(tab_final[:, 0])
-            list_zav = np.unique(tab_final[:, 1])
-            list_zam=list(tab_final[:, 2])
-
-            # modification in mascaret model
-            #self.update_law_mas(id_config, list_q, list_zav, list_zam)
-
-    def update_law_mas(self, id_config, list_q, list_zav, list_zam):
-        """
-         update information model with api
-        :param id_config: index of structure
-        :param list_q: list of flow rate
-        :param list_zav: list of upstream Z
-        :param list_zam: list of downstream Z
-        :return
-        """
-        nbq = len(list_q)
-        nbzav = len(list_zav)
-        num = self.param_fg[id_config]['NUMGRAPH']
-        dim1, dim2_q, dim3 = self.masc.get_var_size("Model.Weir.PtQ", num)
-        self.masc.set_var_size('Model.Weir.PtQ', dim1, nbq, dim3, index=num + 1)
-        self.masc.set_var_size("Model.Weir.PtZds", dim1, nbzav, dim3, index=num + 1)
-        self.masc.set_var_size("Model.Weir.PtZus", dim1, nbq, nbzav, index=num + 1)
-
-        cond_first = True
-        for ii, qq in enumerate(list_q):
-            self.masc.set("Model.Weir.PtQ", qq, i=num, j=ii, k=0)
-            for jj, zav in enumerate(list_zav):
-                if cond_first:
-                    self.masc.set("Model.Weir.PtZds", zav, i=num, j=jj, k=0)
-                self.masc.set("Model.Weir.PtZus", list_zam[ii * nbzav + jj], i=num, j=ii, k=jj)
-            cond_first = False
-
-        # self.write("fin.csv",nbq, nbzav,num)
-
-    def write(self, name,nbq, nbzav,num):
-        file= open(name,'w')
-        file.write('q;zav;zam\n')
-        for ii in range(nbq ):
-            q = self.masc.get("Model.Weir.PtQ", i=num, j=ii, k=0)
-            for jj in range(nbzav):
-                zav = self.masc.get("Model.Weir.PtZds", i=num, j=jj, k=0)
-                zam = self.masc.get("Model.Weir.PtZus", i=num, j=ii, k=jj)
-                file.write('{};{};{}\n'.format(q,zav,zam))
-        file.close()
-    # method genral
-    # 1er etape (peut être fait avant): => OK
-    # recuperer info (OK,get_param_fg)
-    # modifier la géométrie (A test, in classLaw , modif_poly_time)
-    # calcul de la nouvelle loi A test
-
-    # 2ieme step: => OK
-    # modification size law
-    # modification des values
-    # si suppression case attention décalage tableau il faut mieux tout re-ecrire
 
 
 if __name__ == '__main__':

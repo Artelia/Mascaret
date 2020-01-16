@@ -2418,10 +2418,13 @@ class GraphHydro(GraphCommon):
         DraggableLegend(self.leg)
 
     def maj_limites(self):
+        self.maj_limites_x()
+        self.maj_limites_y()
+
+    def maj_limites_x(self):
+        #maj x
         mini_x = min(self.tab[self.type])
         maxi_x = max(self.tab[self.type])
-        mini_y = None
-        maxi_y = None
         self.axes.set_xlim(mini_x, maxi_x)
 
         if isinstance(mini_x, datetime):
@@ -2429,7 +2432,10 @@ class GraphHydro(GraphCommon):
         else:
             date = FormatStrFormatter('%d')
         self.axes.xaxis.set_major_formatter(date)
-
+        self.canvas.draw()
+    def maj_limites_y(self):
+        mini_y = None
+        maxi_y = None
         marge = 0.05
 
         col_visibles = []
@@ -2565,7 +2571,8 @@ class GraphHydro(GraphCommon):
         self.maj_laisses()
         self.maj_graph()
         if self.type != "pk":
-            self.maj_limites()
+            self.maj_limites_x()
+        self.maj_limites_y()
             #
 
     def combo_scen_changed(self, text):
@@ -2575,8 +2582,8 @@ class GraphHydro(GraphCommon):
         self.maj_laisses()
         self.maj_graph()
         if self.type != "pk":
-            self.maj_limites()
-            #
+            self.maj_limites_x()
+        self.maj_limites_y()
 
     def combo_var1_changed(self, text):
 
@@ -2597,7 +2604,9 @@ class GraphHydro(GraphCommon):
                     break
         self.maj_legende()
         self.maj_graph()
-        self.maj_limites()
+        if self.type != "pk":
+            self.maj_limites_x()
+        self.maj_limites_y()
 
     def avance(self, val):
         # TODO

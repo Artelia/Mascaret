@@ -42,7 +42,7 @@ class ClassLaws:
         self.qh_j_no_hy = []
         self.deb_min = 0.0001
         # flooggate variable
-        self.time = 0
+        self.new_z = 99
         self.mobil_struct= False
         self.param_fg ={}
 
@@ -102,40 +102,7 @@ class ClassLaws:
             self.param_elem['SURFELEM'].append(poly.area)
             self.param_elem['ZMINELEM'].append(miny)
 
-    def update_poly_mobil_struct(self):
-        """ modification  of polygone when ther is vanne"""
-        # 2 cas
-        #   o mouvement en fonction du Time : velocity
-        #   o mouvement en fonction de la cote dans le domaine
-        ##******************************
-        # fonctionnement vanne
-        #    o si cote atteint vanne en mouvement avec une vitesse d'incrementation
-        #    o modification polygone
-        ##******************************
-        # info pour le mouvement:
-        #   o cote final de fermeture
-        #   (le temps utilisé pour l'instant récuper cote de fermeture mais inutil)
-        #   o sens mouvement de bas en haut ou de haut en bas
-        #   o element fermé ou ouvert
-        #TODO a reprendre
-        if self.mobil_struct and self.time != 0.0:
-            # recuperation des informations Vanne in self.param_fg
-            #modification des polygones
-            if self.time in self.param_fg["TIME"]:
-                id=self.param_fg["TIME"].index(self.time)
-                newz=self.param_fg['ZFG'][id]
-                list_poly_trav_tmp = []
-                for poly in self.list_poly_trav:
-                    poly_tmp=self.parent.coup_poly_h(poly,newz,
-                                                     typ=self.param_fg['CLOSE'] )
-                    if not poly_tmp.is_empty:
-                        list_poly_trav_tmp.append(poly_tmp)
-                    else:
-                        self.param_g['NBTRAVE'] -= 1
-                        self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
-                self.list_poly_trav = list_poly_trav_tmp
-        else:
-            pass
+
 
     def check_listinter(self, dico_abc, name_abc, varx, vary):
         """
@@ -252,7 +219,7 @@ class ClassLaws:
         param_g_temp = self.parent.get_param_g(list_recup, id_config)
         self.param_g.update(param_g_temp)
         self.param_g['BIAIOUVRAD'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
-        # only brad
+        # only meth
         where = " id_config={} and type=1 ".format(id_config)
         order = "id_elem"
         self.list_poly_pil = self.parent.select_poly('struct_elem', where, order)['polygon']
@@ -1286,3 +1253,43 @@ class ClassLaws:
         if poly_wet.is_empty:
             return 0
         return poly_wet.area
+
+    def update_poly_mobil_struct(self):
+        """ modification  of polygone when ther is vanne"""
+        # 2 cas
+        #   o mouvement en fonction du Time : velocity
+        #   o mouvement en fonction de la cote dans le domaine
+        ##******************************
+        # fonctionnement vanne
+        #    o si cote atteint vanne en mouvement avec une vitesse d'incrementation
+        #    o modification polygone
+        ##******************************
+        # info pour le mouvement:
+        #   o cote final de fermeture
+        #   (le temps utilisé pour l'instant récuper cote de fermeture mais inutil)
+        #   o sens mouvement de bas en haut ou de haut en bas
+        #   o element fermé ou ouvert
+        # TODO a reprendre
+        list_poly_trav_tmp = []
+        for poly in self.list_poly_trav:
+            poly_tmp = self.parent.coup_poly_h(poly, self.new_z,
+                                               typ=self.param_fg['DTREG'])
+            if not poly_tmp.is_empty:
+                list_poly_trav_tmp.append(poly_tmp)
+            else:
+                self.param_g['NBTRAVE'] -= 1
+                self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
+
+        self.list_poly_trav = list_poly_trav_tmp
+
+    def init_mobil_param(self,mobil_struct, param_fg, new_z):
+        """
+        initialise parameter of moving structure
+        :param param_fg : parameters of the floodgate
+        :param new_z : new position of floodgate
+        :param mobil_struct :moving structure condition
+        :return:
+        """
+        self.new_z = new_z
+        self.param_fg = param_fg
+        self.mobil_struct = mobil_struct
