@@ -543,7 +543,7 @@ class ClassMethod:
         Get abacus
         :param list_recup: list of abacus
         :return: dico with abacus data
-        """
+        # """
 
         name_abac = []
         dico_abc = {}

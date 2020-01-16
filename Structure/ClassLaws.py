@@ -90,7 +90,7 @@ class ClassLaws:
         where = " id_config={} and type=0 ".format(id_config)
         order = "id_elem"
         self.list_poly_trav = self.parent.select_poly('struct_elem', where, order)['polygon']
-        if not 'Brad' in method:
+        if not 'Brad' in method and self.mobil_struct:
             self.update_poly_mobil_struct()
         # MDU change vanne self.list_poly_trav
         self.param_elem = {'ZMAXELEM': [], 'LARGELEM': [], 'SURFELEM': [], 'ZMINELEM': []}
@@ -1272,13 +1272,18 @@ class ClassLaws:
         # TODO a reprendre
         list_poly_trav_tmp = []
         for poly in self.list_poly_trav:
+            # print('poly decoup',self.new_z,self.param_fg["DIRFG"])
             poly_tmp = self.parent.coup_poly_h(poly, self.new_z,
-                                               typ=self.param_fg['DTREG'])
+                                               typ=self.param_fg["DIRFG"])
+
             if not poly_tmp.is_empty:
+                # print(poly_tmp.bounds)
                 list_poly_trav_tmp.append(poly_tmp)
             else:
                 self.param_g['NBTRAVE'] -= 1
                 self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
+        if self.param_g['NBTRAVE'] <=0:
+            self.mgis.add_info("WARNING, there are not hole in structure.")
 
         self.list_poly_trav = list_poly_trav_tmp
 

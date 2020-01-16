@@ -181,10 +181,10 @@ class ClassFloodGate:
             self.regul(id_config, time,self.param_fg[id_config])
 
     def regul(self,id_config,time, param_fg):
-
         if self.check_time_regul(time,param_fg['DTREG']) :
             # debut regule
             new_z = self.cmpt_znew(param_fg)
+            # print('time modification',time)
             list_final = self.clmeth.update_law(id_config, param_fg, new_z,True)
             if list_final is None:
                 self.mgis.add_info("Error: updating law")
@@ -193,7 +193,8 @@ class ClassFloodGate:
             list_zav = np.unique(tab_final[:, 1])
             list_zam = list(tab_final[:, 2])
             # modification in mascaret model
-            # self.update_law_mas(id_config, list_q, list_zav, list_zam)
+            self.update_law_mas(id_config, list_q, list_zav, list_zam)
+            self.param_fg[id_config]['ZOLD'] = new_z
         else:
             pass
 
@@ -216,7 +217,7 @@ class ClassFloodGate:
         condav = (param_fg['LOCCONT'] =='AV')
         val_min = param_fg['VALREG'] - param_fg['TOLREG']
         val_max = param_fg['VALREG'] + param_fg['TOLREG']
-        if param_fg['VREG'] == 'H':
+        if param_fg['VREG'] == 'Z':
             val_check = self.masc.get('State.Z', param_fg['SECCON'])
         else :
             val_check = self.masc.get('State.Q', param_fg['SECCON'])
