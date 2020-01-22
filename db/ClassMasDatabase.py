@@ -600,10 +600,14 @@ class ClassMasDatabase(object):
                 self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
         self.insert_abacus_table(dossier)
 
-        sql = "ALTER TABLE {}.profiles ADD COLUMN IF NOT EXISTS struct integer;\n"
-        sql += "ALTER TABLE {}.profiles ALTER COLUMN struct SET DEFAULT 0;"
-
+        list_col = self.list_columns('profiles')
+        sql = ''
+        print(list_col)
+        if 'struct' in list_col :
+            sql= "ALTER TABLE {0}.profiles DROP COLUMN IF EXISTS  struct;\n"
+        sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer DEFAULT 0;"
         self.run_query(sql.format(self.SCHEMA))
+
 
     def add_table_struct_temporal(self, dossier):
         tables = [
