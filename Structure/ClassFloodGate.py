@@ -23,12 +23,22 @@ import numpy as np
 from .ClassMethod import ClassMethod
 
 
+def check_time_regul(time, dtreg, param_fg):
+    if time % dtreg == 0 and time >= dtreg:
+        # force regule même si mouvement pas fini
+        param_fg['ZRESI'] = 0
+        return True
+    elif param_fg['ZRESI'] != 0:
+        return True
+    return False
+
+
 class ClassFloodGate:
     """ Class Flood Gate """
 
     def __init__(self, main):
         self.clapi = main
-        self.masc  =self.clapi.masc
+        self.masc = self.clapi.masc
         self.clmas = main.clmas
         self.mgis = self.clmas.mgis
         self.mdb = self.mgis.mdb
@@ -38,6 +48,7 @@ class ClassFloodGate:
         self.clmeth = ClassMethod(self.mgis)
         self.model_size = 0
         self.new_z = 99
+        self.param_fg = {}
 
     def init_floogate(self):
         """ Get information for floodgate"""
@@ -47,25 +58,24 @@ class ClassFloodGate:
         # attention init.loi ou pas
         # connaitrea la relation config et non law
         nb_loi_sing = self.masc.get_var_size("Model.Weir.Name")[0]
-        for id in range(nb_loi_sing):
+        for i in range(nb_loi_sing):
             # numgraph = self.masc.get("Model.Weir.GraphNum", i=id) - 1
-            name = self.masc.get("Model.Weir.Name", i=id)
+            name = self.masc.get("Model.Weir.Name", i=i)
             if name.replace('_init', '') in list(link_name_id.keys()):
                 id_config = link_name_id[name]
                 # self.param_fg[id_config]['NUMGRAPH'] = numgraph
-                self.param_fg[id_config]['NUMGRAPH'] = id
+                self.param_fg[id_config]['NUMGRAPH'] = i
 
         self.search_sec_control()
         self.info_init_poly()
-        print(self.param_fg)
 
     def info_init_poly(self):
         """ Get information of polygones"""
-        for id_config in self.param_fg.keys() :
+        for id_config in self.param_fg.keys():
             where = " id_config={} and type=0 ".format(id_config)
             order = "id_elem"
             list_poly_trav = self.clmeth.select_poly('struct_elem', where, order)['polygon']
-            list_miny=[]
+            list_miny = []
             list_maxy = []
             for poly in list_poly_trav:
                 (_, miny, _, maxy) = poly.bounds
@@ -76,7 +86,7 @@ class ClassFloodGate:
             self.param_fg[id_config]['MINZ0'] = min(list_miny)
             self.param_fg[id_config]['MAXZ0'] = max(list_maxy)
 
-            if self.param_fg[id_config]['DIRFG'] == 'D' :
+            if self.param_fg[id_config]['DIRFG'] == 'D':
                 self.param_fg[id_config]['ZOLD'] = zmin
             elif self.param_fg[id_config]['DIRFG'] == 'U':
                 self.param_fg[id_config]['ZOLD'] = zmax
@@ -109,15 +119,15 @@ class ClassFloodGate:
 
         # self.write("fin.csv",nbq, nbzav,num)
 
-    def write(self, name,nbq, nbzav,num):
-        file= open(name,'w')
+    def write(self, name, nbq, nbzav, num):
+        file = open(name, 'w')
         file.write('q;zav;zam\n')
-        for ii in range(nbq ):
+        for ii in range(nbq):
             q = self.masc.get("Model.Weir.PtQ", i=num, j=ii, k=0)
             for jj in range(nbzav):
                 zav = self.masc.get("Model.Weir.PtZds", i=num, j=jj, k=0)
                 zam = self.masc.get("Model.Weir.PtZus", i=num, j=ii, k=jj)
-                file.write('{};{};{}\n'.format(q,zav,zam))
+                file.write('{};{};{}\n'.format(q, zav, zam))
         file.close()
 
     def finalize(self):
@@ -126,7 +136,7 @@ class ClassFloodGate:
     def fg_active(self):
         """ check if floodgate is active"""
         listid = self.fg_actif()
-        if listid :
+        if listid:
             return True
         return False
 
@@ -141,24 +151,24 @@ class ClassFloodGate:
     def get_param_fg(self):
         """get variable of the floodgate"""
         where = "active AND id_config in (SELECT id FROM {}.struct_config  WHERE active)".format(self.mdb.SCHEMA)
-        dict_par = self.mdb.select('struct_fg', where=where, list_var=['id_config', 'type_fg','var_reg','xpos'])
+        dict_par = self.mdb.select('struct_fg', where=where, list_var=['id_config', 'type_fg', 'var_reg', 'xpos'])
         param_fg = {}
         link_name_id = {}
 
         lid_config = dict_par['id_config']
         for i, id_config in enumerate(lid_config):
-            dict_tmp = {}
-            dict_tmp['DIRFG'] = dict_par['type_fg'][i]
-            dict_tmp['LOCCONT'] = dict_par['xpos'][i]
-            dict_tmp['VREG'] = dict_par['var_reg'][i]
-            list_recup = ['VELOFG', 'ZMAXFG' , 'ZINCRFG',
+            dict_tmp = {'DIRFG': dict_par['type_fg'][i],
+                        'LOCCONT': dict_par['xpos'][i],
+                        'VREG': dict_par['var_reg'][i]}
+
+            list_recup = ['VELOFG', 'ZMAXFG', 'ZINCRFG',
                           'DTREG', 'VALREG', 'TOLREG',
                           'BIEFCONT', 'XPCONT']
 
             for info in list_recup:
                 where = "id_config = {0} AND name_var = '{1}' ".format(id_config, info)
                 rows = self.mdb.select('struct_fg_val', where=where, order='id_order', list_var=['value'])
-                if  rows['value'] :
+                if rows['value']:
                     dict_tmp[info] = rows['value'][0]
                 else:
                     dict_tmp[info] = None
@@ -168,24 +178,29 @@ class ClassFloodGate:
             dict_tmp['NAME'] = rows['name'][0]
             dict_tmp['METH'] = rows['method'][0]
             link_name_id[rows['name'][0]] = id_config
+            # init dict
+            dict_tmp['STATEOLD'] = 0
+            dict_tmp['ZRESI'] = 0
             param_fg[id_config] = dict_tmp
-            
+
         return param_fg, link_name_id
 
-    def iter_fg(self,time):
+    def iter_fg(self, time, dtp):
         """
+        Floodgate treatment during an iteration
+        :param dtp : time step
         :param time: time
-        :return:
+
         """
         for id_config in self.param_fg.keys():
-            self.regul(id_config, time,self.param_fg[id_config])
+            self.regul(id_config, time, self.param_fg[id_config], dtp)
 
-    def regul(self,id_config,time, param_fg):
-        if self.check_time_regul(time,param_fg['DTREG']) :
+    def regul(self, id_config, time, param_fg, dtp):
+        if check_time_regul(time, param_fg['DTREG'], param_fg):
             # debut regule
-            new_z = self.cmpt_znew(param_fg)
-            # print('time modification',time)
-            list_final = self.clmeth.update_law(id_config, param_fg, new_z,True)
+            new_z = self.cmpt_znew(param_fg, dtp)
+            print('time modification', time, new_z)
+            list_final = self.clmeth.update_law(id_config, param_fg, new_z, True)
             if list_final is None:
                 self.mgis.add_info("Error: updating law")
             tab_final = self.clmeth.sort_law(list_final)
@@ -198,11 +213,6 @@ class ClassFloodGate:
         else:
             pass
 
-    def check_time_regul(self,time,dtreg):
-        if time % dtreg == 0:
-            return True
-        return False
-
     def check_regul(self, param_fg):
         """
         :param param_fg:
@@ -214,54 +224,94 @@ class ClassFloodGate:
         # si Qamon < regule or qaval > regule  alors  fermer
         # si Qamon > regule or qaval < regule  alors ouvrir
         condam = (param_fg['LOCCONT'] == 'AM')
-        condav = (param_fg['LOCCONT'] =='AV')
+        condav = (param_fg['LOCCONT'] == 'AV')
         val_min = param_fg['VALREG'] - param_fg['TOLREG']
         val_max = param_fg['VALREG'] + param_fg['TOLREG']
         if param_fg['VREG'] == 'Z':
             val_check = self.masc.get('State.Z', param_fg['SECCON'])
-        else :
+        else:
             val_check = self.masc.get('State.Q', param_fg['SECCON'])
-         #AM amon AV aval
-        if   (val_check < val_min  and condam) or \
-            (val_check > val_max and condav):
+        # AM amon AV aval
+        # print("val_check",val_check)
+        if (val_check < val_min and condam) or \
+                (val_check > val_max and condav):
             return 1
-        elif (val_check < val_min  and condav) or \
-            (val_check > val_max and condam):
+        elif (val_check < val_min and condav) or \
+                (val_check > val_max and condam):
             return 2
         return 0
 
-    def cmpt_znew(self, param_fg):
+    def cmpt_znew(self, param_fg, dtp):
         """
         Compute the new Z position of floodgate
         D =monte pour fermer
         U = descent pour fermer
-        :param param_fg:
-        :param state: 0: rien, 1: close, 2 open
+        :param dtp : time step
+        :param param_fg: floodgate parameters
         :return:
         """
-        state = self.check_regul(param_fg)
+        # state: 0: rien, 1: close, 2 open
+        state, dzf = self.comput_dz_state(param_fg, dtp)
+
         if state != 0:
             # calcul Znew
-            dz_velo = param_fg['VELOFG'] * param_fg['DTREG']
-            dzf = min(param_fg['ZINCRFG'],dz_velo)
+            # dz_velo = param_fg['VELOFG'] * param_fg['DTREG']
+            # dzf = min(param_fg['ZINCRFG'], dz_velo)
+            znew = 99.
             if (param_fg["DIRFG"] == 'D' and state == 1) or \
                     (param_fg["DIRFG"] == 'U' and state == 2):
-                znew =  param_fg['ZOLD'] + dzf
+                znew = param_fg['ZOLD'] + dzf
             elif (param_fg["DIRFG"] == 'D' and state == 2) or \
                     (param_fg["DIRFG"] == 'U' and state == 1):
-                znew =  param_fg['ZOLD'] - dzf
+                znew = param_fg['ZOLD'] - dzf
             # check Znew
-            if znew < param_fg['MINZ0'] :
+            if znew < param_fg['MINZ0']:
                 znew = param_fg['MINZ0']
-            elif znew >  param_fg['MAXZ0'] :
+                param_fg['ZRESI'] = 0
+            elif znew > param_fg['MAXZ0']:
                 znew = param_fg['MAXZ0']
-            if (param_fg["DIRFG"] == 'D' and znew >  param_fg['ZMAXFG']) or \
-                    (param_fg["DIRFG"] == 'U' and znew < param_fg['ZMAXFG']) :
+                param_fg['ZRESI'] = 0
+            if (param_fg["DIRFG"] == 'D' and znew >= param_fg['ZMAXFG']) or \
+                    (param_fg["DIRFG"] == 'U' and znew <= param_fg['ZMAXFG']):
                 znew = param_fg['ZMAXFG']
+                param_fg['ZRESI'] = 0
         else:
             znew = param_fg['ZOLD']
+            param_fg['ZRESI'] = 0
 
+        if param_fg['ZRESI'] != 0:
+            param_fg['STATEOLD'] = state
+        else:
+            param_fg['STATEOLD'] = 0
         return znew
+
+    def comput_dz_state(self, param_fg, dtp):
+        """
+        Compute Z step and state (open/close)
+        :param param_fg: parameter of floodgate
+        :param dtp: time step
+        :return:
+        """
+        dz_velo = param_fg['VELOFG'] * dtp
+        if param_fg['ZRESI'] != 0:
+            state = param_fg['STATEOLD']
+            new_resi = param_fg['ZRESI'] - dz_velo
+            if new_resi <= 0:
+                dzf = param_fg['ZRESI']
+                new_resi = 0
+            else:
+                dzf = dz_velo
+
+            param_fg['ZRESI'] = new_resi
+        else:
+            state = self.check_regul(param_fg)
+            dzf = min(param_fg['ZINCRFG'], dz_velo)
+            if dzf < param_fg['ZINCRFG']:
+                param_fg['ZRESI'] = param_fg['ZINCRFG'] - dzf
+            else:
+                param_fg['ZRESI'] = 0
+
+        return state, dzf
 
     def search_sec_control(self):
         nbbf = self.masc.get_var_size('Model.Connect.FirstNdNum')[0]
@@ -275,14 +325,14 @@ class ClassFloodGate:
         # ibief = [ib+0*i for ib in range(nbbf) for i in range(oribf[ib], endbf[ib])]
         # ibief => connu
         for id_config in self.param_fg.keys():
-            ib=int(self.param_fg[id_config]['BIEFCONT'])
+            ib = int(self.param_fg[id_config]['BIEFCONT'])
             coords = []
             for i in range(oribf[ib], endbf[ib]):
                 coords.append(self.masc.get('Model.X', i))
-            coords=np.array(coords)
+            coords = np.array(coords)
             idx = (np.abs(coords - self.param_fg[id_config]['XPCONT'])).argmin()
             self.param_fg[id_config]['SECCON'] = idx
-
+            del coords
         # # nb  de profil
         # nb_secs, _, _ = self.masc.get_var_size('Model.CrossSection.RelAbs')
         # print('nb_sec',nb_secs)
@@ -301,4 +351,3 @@ class ClassFloodGate:
 
         del oribf
         del endbf
-        del coords

@@ -39,7 +39,7 @@ from .Function import del_symbol, replace_all
 from .Structure.ClassMethod import ClassMethod
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
-from .api.ClassAPI_Mascaret import ClassAPI_Mascaret
+from .api.ClassAPIMascaret import ClassAPIMascaret
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -1624,7 +1624,7 @@ class ClassMascaret:
             self.mgis.add_info("{0}".format(p.communicate()[0].decode("utf-8")))
             return True
         else:
-            clapi = ClassAPI_Mascaret(self)
+            clapi = ClassAPIMascaret(self)
             clapi.main(fichier_cas,tracer,casier)
             del clapi
 

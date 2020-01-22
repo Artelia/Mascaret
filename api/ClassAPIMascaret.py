@@ -20,12 +20,18 @@ email                :
 """
 
 import os
+
 from .masc import Mascaret
-# from masc import Mascaret
 from ..Structure.ClassFloodGate import ClassFloodGate
 
 
-class ClassAPI_Mascaret:
+def check_init(file):
+    if '_init.' in file:
+        return True
+    return False
+
+
+class ClassAPIMascaret:
     """ Class contain  model files creation and run model mascaret"""
 
     def __init__(self, main):
@@ -98,31 +104,31 @@ class ClassAPI_Mascaret:
                 files_type.append('geo')
                 files_name.append(
                     os.path.join(self.dossierFileMasc, file))
-            elif '.lig' in file and initfile == self.check_init(file):
+            elif '.lig' in file and initfile == check_init(file):
                 files_type.append('lig')
                 self.filelig = os.path.join(self.dossierFileMasc, file)
                 files_name.append(self.filelig)
-            elif '.met' in file and initfile == self.check_init(file):
+            elif '.met' in file and initfile == check_init(file):
                 self.tracer = True
                 files_type.append('tracer_meteo')
                 filepath = os.path.join(self.dossierFileMasc, file)
                 files_name.append(filepath)
-            elif '.phy' in file and initfile == self.check_init(file):
+            elif '.phy' in file and initfile == check_init(file):
                 self.tracer = True
                 files_type.append('tracer_parphy')
                 filepath = os.path.join(self.dossierFileMasc, file)
                 files_name.append(filepath)
-            elif '.conc' in file and initfile == self.check_init(file):
+            elif '.conc' in file and initfile == check_init(file):
                 self.tracer = True
                 files_type.append('tracer_conc')
                 filepath = os.path.join(self.dossierFileMasc, file)
                 files_name.append(filepath)
-            elif '_tra.loi' in file and initfile == self.check_init(file):
+            elif '_tra.loi' in file and initfile == check_init(file):
                 self.tracer = True
                 law_tr_files.append(file)
-            elif '.loi' in file and initfile == self.check_init(file):
+            elif '.loi' in file and initfile == check_init(file):
                 law_files.append(file)
-            elif '.casier' in file and initfile == self.check_init(file):
+            elif '.casier' in file and initfile == check_init(file):
                 self.basin = True
                 files_type.append('casier')
                 files_name.append(
@@ -176,11 +182,6 @@ class ClassAPI_Mascaret:
             files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.liai_opt'))
 
         return [files_name, files_type]
-
-    def check_init(self, file):
-        if '_init.' in file:
-            return True
-        return False
 
     def init_hydro(self):
         """
@@ -253,7 +254,7 @@ class ClassAPI_Mascaret:
                               self.tini,
                               self.dt,
                               self.zmax_co,
-                              api.masc.get('Model.X', self.sect_co - 1)))
+                              self.masc.get('Model.X', self.sect_co - 1)))
         else:
             txt += "Criteria {} doesn't exists. \n".format(self.stpcrit)
         txt += '**************************************\n'
@@ -276,16 +277,16 @@ class ClassAPI_Mascaret:
             for cmpt in range(self.tmaxiter):
                 t0, t1, dtp = self.one_iter(t0, t1, dtp)
         elif self.stpcrit == 3:
-            z_arret = api.masc.get('State.Z', self.sect_co - 1)
+            z_arret = self.masc.get('State.Z', self.sect_co - 1)
             while not z_arret > self.zmax_co:
                 t0, t1, dtp = self.one_iter(t0, t1, dtp)
-                z_arret = api.masc.get('State.Z', self.sect_co - 1)
+                z_arret = self.masc.get('State.Z', self.sect_co - 1)
         self.tfin = self.masc.get('State.PreviousTime')
 
     def one_iter(self, t0, t1, dtp):
 
         if self.mobil_struct:
-            self.clfg.iter_fg(t1)
+            self.clfg.iter_fg(t0, dtp)
 
         self.masc.compute(t0, t1, dtp)
         if self.conum:
@@ -311,16 +312,5 @@ class ClassAPI_Mascaret:
         self.finalize()
 
 
-
-
 if __name__ == '__main__':
-    api = ClassAPI_Mascaret()
-    api.main('mascaret_init.xcas')
-    # wl0 = [api.masc.get('State.Z', i) for i in range(api.npoin)]
-    print('fin')
-    # state seulement état final
-    # wl = [api.masc.get('State.Z', i) for i in range(api.npoin)]
-    # zf = [api.masc.get('Model.Zbot', i) for i in range(api.npoin)]
-    # x = [api.masc.get('Model.X', i) for i in range(api.npoin)]
-
-    del api
+    pass
