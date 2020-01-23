@@ -1725,7 +1725,7 @@ class ClassMascaret:
 
         result = self.mdb.select("resultats", condition, 'pk')
         if not result:
-            self.mgis.add('No results for initialisation')
+            self.mgis.add_info('No results for initialisation')
             return
 
         result["X"] = result.pop("pk")
