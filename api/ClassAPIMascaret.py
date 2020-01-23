@@ -94,34 +94,32 @@ class ClassAPIMascaret:
             # print(casfile, ' not found')
             return None
 
-        files_name.append(
-            os.path.join(self.dossierFileMasc, casfile))
+        files_name.append(casfile)
         law_files = []
         law_tr_files = []
 
-        for file in os.listdir(self.dossierFileMasc):
+        for file in os.listdir('.'):
             if '.geo' in file:
                 files_type.append('geo')
-                files_name.append(
-                    os.path.join(self.dossierFileMasc, file))
+                files_name.append( file)
             elif '.lig' in file and initfile == check_init(file):
                 files_type.append('lig')
-                self.filelig = os.path.join(self.dossierFileMasc, file)
+                self.filelig =  file
                 files_name.append(self.filelig)
             elif '.met' in file and initfile == check_init(file):
                 self.tracer = True
                 files_type.append('tracer_meteo')
-                filepath = os.path.join(self.dossierFileMasc, file)
+                filepath =  file
                 files_name.append(filepath)
             elif '.phy' in file and initfile == check_init(file):
                 self.tracer = True
                 files_type.append('tracer_parphy')
-                filepath = os.path.join(self.dossierFileMasc, file)
+                filepath =  file
                 files_name.append(filepath)
             elif '.conc' in file and initfile == check_init(file):
                 self.tracer = True
                 files_type.append('tracer_conc')
-                filepath = os.path.join(self.dossierFileMasc, file)
+                filepath =  file
                 files_name.append(filepath)
             elif '_tra.loi' in file and initfile == check_init(file):
                 self.tracer = True
@@ -131,55 +129,53 @@ class ClassAPIMascaret:
             elif '.casier' in file and initfile == check_init(file):
                 self.basin = True
                 files_type.append('casier')
-                files_name.append(
-                    os.path.join(self.dossierFileMasc, file))
+                files_name.append(file)
         # WARNING, the law order must be the same than xcas file
         if law_files:
             for file in sorted(law_files):
                 files_type.append('loi')
-                files_name.append(
-                    os.path.join(self.dossierFileMasc, file))
+                files_name.append( file)
         else:
             self.mgis.add_info("The laws are not found.")
 
         if self.tracer and law_tr_files:
             for file in sorted(law_tr_files):
                 files_type.append('tracer_loi')
-                filepath = os.path.join(self.dossierFileMasc, file)
+                filepath =  file
                 files_name.append(filepath)
 
         # listing
         files_type.append('listing')
-        files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.lis'))
+        files_name.append( self.baseName + '.lis')
         if initfile:
             post = '_init'
         else:
             post = ''
         # Resultat
         files_type.append('res')
-        files_name.append(os.path.join(self.dossierFileMasc, self.baseName + post + '.opt'))
+        files_name.append( self.baseName + post + '.opt')
 
         if self.tracer:
             # listing
             files_type.append('tracer_listing')
-            files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.tra_lis'))
+            files_name.append(self.baseName + '.tra_lis')
             # Resultat
             files_type.append('tracer_res')
-            files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.tra_opt'))
+            files_name.append(self.baseName + '.tra_opt')
 
         if self.basin:
             # listing
             files_type.append('listing_casier')
-            files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.cas_lis'))
+            files_name.append( self.baseName + '.cas_lis')
             # Resultat
             files_type.append('res_casier')
-            files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.cas_opt'))
+            files_name.append( self.baseName + '.cas_opt')
             # listing
             files_type.append('listing_liaison')
-            files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.liai_lis'))
+            files_name.append(self.baseName + '.liai_lis')
             # Resultat
             files_type.append('res_liaison')
-            files_name.append(os.path.join(self.dossierFileMasc, self.baseName + '.liai_opt'))
+            files_name.append( self.baseName + '.liai_opt')
 
         return [files_name, files_type]
 
@@ -189,7 +185,6 @@ class ClassAPIMascaret:
         :return:
         """
         self.npoin = self.masc.get_var_size('Model.X')[0]
-
         if self.filelig is None:
             qinit = [self.qini] * self.npoin
             zinit = [self.zini] * self.npoin

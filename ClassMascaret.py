@@ -1624,9 +1624,12 @@ class ClassMascaret:
             self.mgis.add_info("{0}".format(p.communicate()[0].decode("utf-8")))
             return True
         else:
+            pwd = os.getcwd()
+            os.chdir(self.dossierFileMasc)
             clapi = ClassAPIMascaret(self)
             clapi.main(fichier_cas,tracer,casier)
             del clapi
+            os.chdir(pwd)
 
             return True
 

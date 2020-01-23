@@ -50,9 +50,9 @@ class ClassSettingsDialog(QDialog):
         self.ui.open_lastChbox_schema.setChecked(self.mgis.open_last_schema)
 
         test = sys.platform
-        if test == 'win32':
-            self.mgis.cond_api = False
-            self.ui.apiChbox.hide()
+        # if test == 'win32':
+        #     self.mgis.cond_api = False
+        #     self.ui.apiChbox.hide()
         # api
         self.ui.apiChbox.setChecked(self.mgis.cond_api)
 

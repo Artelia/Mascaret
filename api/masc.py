@@ -106,7 +106,15 @@ class Mascaret(object):
         # Load the library libmascaret.so
         # MDU modif
         # libmascaret = './libmascaret.so'
-        libmascaret = '../api/libmascaret.so'
+        test = sys.platform
+        if 'linux' in test or test == 'cygwin':
+            libmascaret = '../api/libmascaret.so'
+        elif test == 'win32':
+            libmascaret = '../api/libmascaret.dll'
+        else:
+            print("{0} platform  doesn't allow to run simulation.".format(test))
+            return False
+
         #self.load_mascaret(libmascaret)
         self.libmascaret =  ctypes.CDLL(libmascaret)
         # MDU fin modif
