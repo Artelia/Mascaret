@@ -199,7 +199,7 @@ class ClassFloodGate:
         if check_time_regul(time, param_fg['DTREG'], param_fg):
             # debut regule
             new_z = self.cmpt_znew(param_fg, dtp)
-            print('time modification', time, new_z)
+            # print('time modification', time, new_z)
             list_final = self.clmeth.update_law(id_config, param_fg, new_z, True)
             if list_final is None:
                 self.mgis.add_info("Error: updating law")
@@ -320,34 +320,24 @@ class ClassFloodGate:
                  for i in range(nbbf)]
         endbf = [self.masc.get('Model.Connect.LastNdNum', i)
                  for i in range(nbbf)]
-        # print(endbf)
+
         # Assign the bief number to each section (piecewise constant list)
         # ibief = [ib+0*i for ib in range(nbbf) for i in range(oribf[ib], endbf[ib])]
         # ibief => connu
         for id_config in self.param_fg.keys():
-            ib = int(self.param_fg[id_config]['BIEFCONT'])
+            ib = int(self.param_fg[id_config]['BIEFCONT'])-1
             coords = []
+
             for i in range(oribf[ib], endbf[ib]):
                 coords.append(self.masc.get('Model.X', i))
             coords = np.array(coords)
             idx = (np.abs(coords - self.param_fg[id_config]['XPCONT'])).argmin()
-            self.param_fg[id_config]['SECCON'] = idx
+            if idx :
+                self.param_fg[id_config]['SECCON'] = idx
+            else:
+                self.mgis.add_info("Regulation point not found.")
             del coords
-        # # nb  de profil
-        # nb_secs, _, _ = self.masc.get_var_size('Model.CrossSection.RelAbs')
-        # print('nb_sec',nb_secs)
-        # # nb_pts = []
-        # for sec in range(nb_secs):
-        #     print(self.masc.get('Model.CrossSection.X', sec),
-        #           self.masc.get('Model.CrossSection.RelAbs',sec))
 
-        # self.xcoord = []
-        # for i in range(imax):
-        #     self.xcoord.append(
-        #         self.masc.get('Model.X', i) -
-        #         self.masc.get('Model.X', oribf[ibief[i]]) +
-        #         self.masc.get('Model.CrossSection.RelAbs',
-        #                       self.masc.get('Model.IDT', oribf[ibief[i]]) - 1))
 
         del oribf
         del endbf

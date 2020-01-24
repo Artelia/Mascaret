@@ -171,7 +171,8 @@ class ClassMascaret:
                             cood_axe_x = cood1X + (cood2X - cood1X) / 2.
                             cood_axe_y = cood1Y + (cood2Y - cood1Y) / 2.
 
-                            fich.write('PROFIL Bief_{0} {1} {2} {3} {4} {5} {6} AXE {7} {8}\n'.format(branche, nom, abs,
+                            fich.write('PROFIL Bief_{0} {1} {2} {3} {4} {5} {6} AXE {7} {8}\n'.format(branche, nom,
+                                                                                                      abs,
                                                                                                       cood1X, cood1Y,
                                                                                                       cood2X, cood2Y,
                                                                                                       cood_axe_x,

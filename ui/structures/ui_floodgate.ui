@@ -304,6 +304,9 @@ chaque mouvement : </string>
          </item>
          <item row="5" column="1">
           <widget class="QSpinBox" name="bief_controle_fg">
+           <property name="minimum">
+            <number>1</number>
+           </property>
            <property name="maximum">
             <number>999999999</number>
            </property>
