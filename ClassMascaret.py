@@ -35,7 +35,7 @@ from qgis.gui import *
 from qgis.utils import *
 
 from .Function import str2bool, del_accent, copy_dir_to_dir
-from .Function import del_symbol, replace_all
+from .Function import del_symbol
 from .Structure.ClassMethod import ClassMethod
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
@@ -1113,7 +1113,7 @@ class ClassMascaret:
             arbre.write(fich_entree)
 
     def creer_loi(self, nom, tab, type):
-        with open(os.path.join(self.dossierFileMasc, del_symbol(nom) + '.loi'), 'w') as fich:
+        with open(os.path.join(self.dossierFileMasc, del_symbol(nom)  + '.loi'), 'w') as fich:
             fich.write('# ' + nom + '\n')
             if type == 1:
                 fich.write('# Temps (S) Debit\n')
@@ -1633,23 +1633,6 @@ class ClassMascaret:
             os.chdir(pwd)
 
             return True
-
-    # def update_env(self, script):
-    #     """
-    #     update environment
-    #     :param script:
-    #     :return:
-    #     """
-    #     if os.path.isfile(script):
-    #         command = ['bash', '-c', 'source {} && env'.format(script)]
-    #         proc = subprocess.Popen(command, stdout=subprocess.PIPE)
-    #         dico = {"b\'": "", "\\n\'": ""}
-    #         for line in proc.stdout:
-    #             line = replace_all(str(line), dico)
-    #
-    #             (key, _, value) = line.partition("=")
-    #             # python3
-    #             os.environ[str(key)] = value.replace('\n', '').strip()
 
 
     def lit_opt(self, run, scen, date_debut, base_namefile, comments='', tracer=False, casier=False):
