@@ -66,6 +66,7 @@ except AttributeError:
 from matplotlib.figure import Figure
 import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
+from .WaterQuality.ClassTableWQ import ClassTableWQ
 
 class GraphCommon(QDialog):
     def __init__(self, mgis=None):
@@ -76,14 +77,41 @@ class GraphCommon(QDialog):
         self.dossierProjet = self.mgis.repProject
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
-        self.toolbar = NavigationToolbar(self.canvas, self)
+        # self.toolbar = NavigationToolbar(self.canvas, self)
+        self.tbwq = ClassTableWQ(self.mgis, self.mdb)
 
-    def initui_common_p(self):
+    def init_ui_common_p(self):
+        self.courbes = []
+
+    def init_ui_prof(self, gid):
+        """variables in common for profile graphics"""
+        self.gid = gid
+        self.coucheProfils = self.mgis.coucheProfils
+        # try:
+        self.liste = self.mdb.select("profiles", "", "abscissa")
+        # except:
+        #     self.mgis.add_info("Error Select profils")
+
+        self.position = self.liste["gid"].index(self.gid)
+        self.feature = {k: v[self.position] for k, v in self.liste.items()}
+        self.nom = self.feature['name']
+
         self.courbes = []
 
     def gui_graph(self, lay):
         lay.addWidget(self.canvas)
+        self.toolbar = NavigationToolbar(self.canvas, self)
         lay.addWidget(self.toolbar)
+
+    def gui_graph_res(self, ui):
+        self.verticalLayout_99 = QVBoxLayout(ui.widget_figure)
+        self.verticalLayout_99.setObjectName("verticalLayout_99")
+        self.verticalLayout_99.addWidget(self.canvas)
+
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        self.verticalLayout_98 = QVBoxLayout(ui.widget_toolsbar)
+        self.verticalLayout_98.setObjectName("verticalLayout_98")
+        self.verticalLayout_98.addWidget(self.toolbar)
 
     def onpick(self, event):
         legline = event.artist

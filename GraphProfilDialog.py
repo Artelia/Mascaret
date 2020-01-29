@@ -44,10 +44,10 @@ from qgis.core import *
 from qgis.gui import *
 
 from .Function import isfloat, interpole
-from .GraphCommon import DraggableLegend
+from .GraphCommon import DraggableLegend, GraphCommon
 from .Structure.ClassMethod import ClassMethod
 from .Structure.StructureCreateDialog import ClassStructureCreateDialog
-from .WaterQuality.ClassTableWQ import ClassTableWQ
+
 
 if int(qVersion()[0]) < 5:  # qt4
 
@@ -195,45 +195,6 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 graph_basin_link.show()
         return
 
-
-class GraphCommon(QDialog):
-    def __init__(self, mgis=None):
-        QDialog.__init__(self)
-        self.mgis = mgis
-        self.mdb = self.mgis.mdb
-        self.tbwq = ClassTableWQ(self.mgis, self.mdb)
-
-        self.dossierPlugin = self.mgis.masplugPath
-        self.dossierProjet = self.mgis.repProject
-        self.fig = Figure()
-        self.canvas = FigureCanvas(self.fig)
-
-    def init_ui_common_p(self, gid):
-        """variables in common for profile graphics"""
-        self.gid = gid
-        self.coucheProfils = self.mgis.coucheProfils
-        # try:
-        self.liste = self.mdb.select("profiles", "", "abscissa")
-        # except:
-        #     self.mgis.add_info("Error Select profils")
-
-        self.position = self.liste["gid"].index(self.gid)
-        self.feature = {k: v[self.position] for k, v in self.liste.items()}
-        self.nom = self.feature['name']
-
-        self.courbes = []
-
-    def gui_graph(self, ui):
-        self.verticalLayout_99 = QVBoxLayout(ui.widget_figure)
-        self.verticalLayout_99.setObjectName("verticalLayout_99")
-        self.verticalLayout_99.addWidget(self.canvas)
-
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        self.verticalLayout_98 = QVBoxLayout(ui.widget_toolsbar)
-        self.verticalLayout_98.setObjectName("verticalLayout_98")
-        self.verticalLayout_98.addWidget(self.toolbar)
-
-
 class GraphProfil(GraphCommon):
     """class Dialog graphProfil"""
 
@@ -241,8 +202,8 @@ class GraphProfil(GraphCommon):
         GraphCommon.__init__(self, mgis)
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/graphProfil.ui'), self)
-        self.init_ui_common_p(gid)
-        self.gui_graph(self.ui)
+        self.init_ui_prof(gid)
+        self.gui_graph_res(self.ui)
         self.init_ui()
         self.struct = ClassMethod(self.mgis)
 
@@ -561,7 +522,10 @@ class GraphProfil(GraphCommon):
             for x, z, gid, ordre in zip(t['x'], t['z'], t['gid'], t['ordre']):
                 for f in self.coucheProfils.getFeatures():
                     if f["name"] == self.nom:
-                        p = f.geometry().interpolate(x).asPoint()
+                        interp = f.geometry().interpolate(x)
+                        if interp.isNull() :
+                            self.mgis.add_info("Warning : Check the profil lenght")
+                        p = interp.asPoint()
                         geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(p.x(), p.y(), self.mdb.SRID)
 
                 if gid:
@@ -914,7 +878,6 @@ class GraphProfil(GraphCommon):
             self.topo[self.topoSelect]['x'].insert(i, round(event.xdata, 2))
             self.topo[self.topoSelect]['z'].insert(i, round(event.ydata, 2))
             self.topo[self.topoSelect]['gid'].insert(i, None)
-
             self.maj_graph()
 
     @staticmethod
@@ -1055,7 +1018,6 @@ class GraphProfil(GraphCommon):
             ta['x'] = ta['x'][:i_min] + self.selected['x'] + ta['x'][i_max:]
             ta['z'] = ta['z'][:i_min] + self.selected['z'] + ta['z'][i_max:]
             self.selected = {}
-
             self.maj_graph()
 
     def keyPressEvent(self, event):
@@ -1076,7 +1038,6 @@ class GraphProfil(GraphCommon):
 
             self.tab['x'] = [liste[0][i] for i in index]
             self.tab['z'] = [liste[1][i] for i in index]
-
             self.selected = {}
             self.maj_graph()
 
@@ -1088,7 +1049,6 @@ class GraphProfil(GraphCommon):
 
         if event.key() == Qt.Key_S:
             self.flag = False
-
             self.courbeSelection.set_data([], [])
             self.courbeSelection.set_visible(False)
             self.curseur.visible = False
@@ -1285,8 +1245,8 @@ class GraphProfilRes(GraphCommon):
         GraphCommon.__init__(self, mgis)
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/graphProfilRes.ui'), self)
-        self.init_ui_common_p(gid)
-        self.gui_graph(self.ui)
+        self.init_ui_prof(gid)
+        self.gui_graph_res(self.ui)
         qres = self.init_ui()
 
         if qres:
@@ -1734,7 +1694,7 @@ class GraphHydro(GraphCommon):
         self.comboTimePK = self.ui.comboBox_time
         self.comboVar1 = self.ui.comboBox_var1
         # insert graphic and toolsbars of graphic
-        self.gui_graph(self.ui)
+        self.gui_graph_res(self.ui)
 
         self.init_ui()
 
@@ -2665,7 +2625,7 @@ class GraphBasin(GraphCommon):
         self.combo_time_pk = self.ui.comboBox_time
         self.combo_var1 = self.ui.comboBox_var1
         # insert graphic and toolsbars of graphic
-        self.gui_graph(self.ui)
+        self.gui_graph_res(self.ui)
 
         self.init_ui()
 

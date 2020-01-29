@@ -428,8 +428,10 @@ class ClassMasDatabase(object):
                       # ouvrage
                       Maso.struct_config,Maso.profil_struct,Maso.struct_param,
                       Maso.struct_elem, Maso.struct_elem_param,
-                      Maso.struct_abac, Maso.struct_laws
+                      Maso.struct_abac, Maso.struct_laws,
                       #, Maso.struct_elem_geo
+                      #ouvrage mobile
+                      Maso.struct_fg, Maso.struct_fg_val
                       ]
             tables.sort(key=lambda x: x().order)
 

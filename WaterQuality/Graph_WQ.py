@@ -26,7 +26,7 @@ class GraphWaterQ(GraphCommon):
     def __init__(self, mgis=None, lay=None, mod=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
-        self.initui_common_p()
+        self.init_ui_common_p()
         self.gui_graph(lay)
         self.init_ui(mod)
 
@@ -76,7 +76,7 @@ class GraphMeteo(GraphCommon):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
         self.lst_var = lst_var
-        self.initui_common_p()
+        self.init_ui_common_p()
         self.gui_graph(lay)
         self.init_ui()
 
@@ -120,7 +120,7 @@ class GraphInitConc(GraphCommon):
     def __init__(self, mgis=None, lay=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
-        self.initui_common_p()
+        self.init_ui_common_p()
         self.gui_graph(lay)
         self.init_ui()
 
