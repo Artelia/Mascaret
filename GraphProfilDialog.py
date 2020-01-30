@@ -203,7 +203,8 @@ class GraphProfil(GraphCommon):
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/graphProfil.ui'), self)
         self.init_ui_prof(gid)
-        self.gui_graph_res(self.ui)
+        self.gui_graph(self.ui.widget_figure)
+        self.fig.autofmt_xdate()
         self.init_ui()
         self.struct = ClassMethod(self.mgis)
 
@@ -1246,7 +1247,8 @@ class GraphProfilRes(GraphCommon):
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/graphProfilRes.ui'), self)
         self.init_ui_prof(gid)
-        self.gui_graph_res(self.ui)
+        self.gui_graph(self.ui.widget_figure)
+        self.fig.autofmt_xdate()
         qres = self.init_ui()
 
         if qres:
@@ -1694,7 +1696,9 @@ class GraphHydro(GraphCommon):
         self.comboTimePK = self.ui.comboBox_time
         self.comboVar1 = self.ui.comboBox_var1
         # insert graphic and toolsbars of graphic
-        self.gui_graph_res(self.ui)
+        self.gui_graph(self.ui.widget_figure, self.ui.widget_toolsbar)
+
+
 
         self.init_ui()
 
@@ -1876,7 +1880,9 @@ class GraphHydro(GraphCommon):
         #     self.comboVar1.setCurrentIndex(liste_g.index(self.var1))
 
         # Figure
+        self.fig.autofmt_xdate()
         self.axes = self.fig.add_subplot(111)
+
         if self.type == 'pk':
             self.axes.set_xlabel('Pk (m)')
 
@@ -2393,6 +2399,7 @@ class GraphHydro(GraphCommon):
             date = FormatStrFormatter('%d')
         self.axes.xaxis.set_major_formatter(date)
         self.canvas.draw()
+
     def maj_limites_y(self):
         mini_y = None
         maxi_y = None
@@ -2419,6 +2426,7 @@ class GraphHydro(GraphCommon):
                 maxi_y = max(max(self.obs['valeur']), maxi_y)
 
             diff = maxi_y - mini_y
+
             self.axes.set_ylim(mini_y - diff * marge, maxi_y + diff * marge)
 
         self.canvas.draw()
@@ -2625,7 +2633,9 @@ class GraphBasin(GraphCommon):
         self.combo_time_pk = self.ui.comboBox_time
         self.combo_var1 = self.ui.comboBox_var1
         # insert graphic and toolsbars of graphic
-        self.gui_graph_res(self.ui)
+        self.gui_graph(self.ui.widget_figure, self.ui.widget_toolsbar)
+        self.fig.autofmt_xdate()
+
 
         self.init_ui()
 
@@ -2904,7 +2914,6 @@ class GraphBasin(GraphCommon):
             temp = self.mdb.select_distinct("date", "resultats_basin", condition, 'date')
         else:
             temp = self.mdb.select_distinct("date", "resultats_links", condition, 'date')
-
         self.liste['date']['abs'] = temp["date"]
         self.position_legende = 'upper left'
         self.nom = str(self.position)

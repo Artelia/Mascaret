@@ -77,7 +77,7 @@ class GraphCommon(QDialog):
         self.dossierProjet = self.mgis.repProject
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
-        # self.toolbar = NavigationToolbar(self.canvas, self)
+
         self.tbwq = ClassTableWQ(self.mgis, self.mdb)
 
     def init_ui_common_p(self):
@@ -98,20 +98,13 @@ class GraphCommon(QDialog):
 
         self.courbes = []
 
-    def gui_graph(self, lay):
-        lay.addWidget(self.canvas)
+    def gui_graph(self, lay_graph, lay_toolbar=None):
+        lay_graph.addWidget(self.canvas)
         self.toolbar = NavigationToolbar(self.canvas, self)
-        lay.addWidget(self.toolbar)
-
-    def gui_graph_res(self, ui):
-        self.verticalLayout_99 = QVBoxLayout(ui.widget_figure)
-        self.verticalLayout_99.setObjectName("verticalLayout_99")
-        self.verticalLayout_99.addWidget(self.canvas)
-
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        self.verticalLayout_98 = QVBoxLayout(ui.widget_toolsbar)
-        self.verticalLayout_98.setObjectName("verticalLayout_98")
-        self.verticalLayout_98.addWidget(self.toolbar)
+        if lay_toolbar != None:
+            lay_toolbar.addWidget(self.toolbar)
+        else:
+            lay_graph.addWidget(self.toolbar)
 
     def onpick(self, event):
         legline = event.artist
