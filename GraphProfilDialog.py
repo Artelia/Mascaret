@@ -129,10 +129,13 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             if couche == 'profiles' and flag_profil_r:
                 self.mgis.coucheProfils = results[0].mLayer
                 gid = results[0].mFeature["gid"]
-                graph_res = GraphProfilRes(gid, self.mgis)
-                # graph_res.exec_()
-                graph_res.show()
-
+                prof_a = self.mgis.mdb.select_distinct("name", "profiles", "active")
+                if results[0].mFeature['name'] in prof_a['name']:
+                    graph_res = GraphProfilRes(gid, self.mgis)
+                    # graph_res.exec_()
+                    graph_res.show()
+                else:
+                    self.mgis.add_info('no active profiles')
             # #
             if flag_hydro and couche in ('profiles', 'outputs'):
                 feature = results[0].mFeature
@@ -140,30 +143,38 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
                 field_names = [field.name() for field
                                in results[0].mLayer.fields()]
+                prof_a = self.mgis.mdb.select_distinct("name","profiles", "active")
+                if feature['name'] in prof_a['name']:
+                    if 'code' in field_names:
+                        selection['code'] = []
+                    if 'zero' in field_names:
+                        selection['zero'] = []
+                    for f in results[0].mLayer.getFeatures():
+                        if f['abscissa']:
+                            selection['abs'].append(f['abscissa'])
+                            selection['nom'].append(f['name'])
+                            if 'code' in selection.keys():
+                                selection['code'].append(f['code'])
+                            if 'zero' in selection.keys():
+                                selection['zero'].append(f['zero'])
+                    # self.mgis.add_info('graph {0}'.format(results[0].mFeature))
 
-                if 'code' in field_names:
-                    selection['code'] = []
-                if 'zero' in field_names:
-                    selection['zero'] = []
-                for f in results[0].mLayer.getFeatures():
-                    if f['abscissa']:
-                        selection['abs'].append(f['abscissa'])
-                        selection['nom'].append(f['name'])
-                        if 'code' in selection.keys():
-                            selection['code'].append(f['code'])
-                        if 'zero' in selection.keys():
-                            selection['zero'].append(f['zero'])
-                # self.mgis.add_info('graph {0}'.format(results[0].mFeature))
-                graph_hyd = GraphHydro(feature, self.mgis, selection, feature['abscissa'], 't')
-                # graph_hyd.exec_()
-                graph_hyd.show()
+                    graph_hyd = GraphHydro(feature, self.mgis, selection, feature['abscissa'], 't')
+                    # graph_hyd.exec_()
+                    graph_hyd.show()
+                else:
+                    self.mgis.add_info('no active profiles')
 
             if flag_hydro and couche == 'branchs':
                 feature = results[0].mFeature
                 # chaine='Branche ' + str(feature['branche'])
-                graph_hyd_pk = GraphHydro(feature, self.mgis, {}, '', 'pk')
-                # graph_hyd.exec_()
-                graph_hyd_pk.show()
+                branches = self.mgis.mdb.select_distinct("branch", "branchs", "active")
+                if feature['branch'] in branches['branch']:
+                    graph_hyd_pk = GraphHydro(feature, self.mgis, {}, '', 'pk')
+                    # graph_hyd.exec_()
+                    graph_hyd_pk.show()
+                else:
+                    self.mgis.add_info('no active branch')
 
             if flag_casier_r and couche in ('basins', 'links'):
                 feature = results[0].mFeature

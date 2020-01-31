@@ -604,7 +604,6 @@ class ClassMasDatabase(object):
 
         list_col = self.list_columns('profiles')
         sql = ''
-        print(list_col)
         if 'struct' in list_col :
             sql= "ALTER TABLE {0}.profiles DROP COLUMN IF EXISTS  struct;\n"
         sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer DEFAULT 0;"
