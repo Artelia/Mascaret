@@ -20,9 +20,15 @@ email                :
 """
 
 import os
+try:
+    #Plugin
+    from .masc import Mascaret
+    from ..Structure.ClassFloodGate import ClassFloodGate
+except :
+    # autonome python
+    # pas de vanne mobile possible
+    from masc import Mascaret
 
-from .masc import Mascaret
-from ..Structure.ClassFloodGate import ClassFloodGate
 
 
 def check_init(file):
@@ -34,21 +40,32 @@ def check_init(file):
 class ClassAPIMascaret:
     """ Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, main):
+    def __init__(self, main ):
         # def __init__(self):
-        self.clmas = main
-        self.mgis = self.clmas.mgis
-        self.mdb = self.mgis.mdb
-        self.dossierFileMasc = self.clmas.dossierFileMasc
-        self.DEBUG = self.mgis.DEBUG
-        self.baseName = self.clmas.baseName
+        if isinstance(main, dict):
+            self.clmas =None
+            self.mgis = None
+            self.dossierFileMasc = main["RUN_REP"]
+            os.chdir(main["RUN_REP"])
+            self.DEBUG = main["DEBUG"]
+            self.baseName = main['BASE_NAME']
+            self.clfg =None
+            self.mobil_struct =False
+        else:
+            self.clmas = main
+            self.mgis = self.clmas.mgis
+            self.dossierFileMasc = self.clmas.dossierFileMasc
+            self.DEBUG = self.mgis.DEBUG
+            self.baseName = self.clmas.baseName
+            # floodgat
+            self.clfg = ClassFloodGate(self)
+            self.mobil_struct = self.clfg.fg_active()
+
+
+
         self.tracer = False
         self.basin = False
         self.filelig = None
-
-        # self.dossierFileMasc = r'/home/daoum/.local/share/QGIS/QGIS3/profiles/default/python/plugins/Mascaret/api'
-        # self.DEBUG = True
-        # self.baseName = 'mascaret'
 
         self.npoin = 0
         self.zini = 0
@@ -57,9 +74,7 @@ class ClassAPIMascaret:
         self.masc = Mascaret(log_level='INFO')
         self.masc.create_mascaret(iprint=1)
 
-        # floodgat
-        self.clfg = ClassFloodGate(self)
-        self.mobil_struct = self.clfg.fg_active()
+
 
     def initial(self, casfile):
         """
@@ -76,7 +91,7 @@ class ClassAPIMascaret:
         self.init_hydro()
 
         self.init_crit_stop()
-
+        return 0
     def init_file(self, casfile):
         """
         Get file for compute
@@ -90,8 +105,8 @@ class ClassAPIMascaret:
         files_name = []
         files_type = ['xcas']
         if not os.path.isfile(casfile):
-            self.mgis.add_info('{} not found'.format(casfile))
-            # print(casfile, ' not found')
+            self.add_info('{} not found'.format(casfile))
+
             return None
 
         files_name.append(casfile)
@@ -136,7 +151,7 @@ class ClassAPIMascaret:
                 files_type.append('loi')
                 files_name.append( file)
         else:
-            self.mgis.add_info("The laws are not found.")
+            self.add_info("The laws are not found.")
 
         if self.tracer and law_tr_files:
             for file in sorted(law_tr_files):
@@ -254,7 +269,7 @@ class ClassAPIMascaret:
             txt += "Criteria {} doesn't exists. \n".format(self.stpcrit)
         txt += '**************************************\n'
         # print(txt)
-        self.mgis.add_info(txt)
+        self.add_info(txt)
 
     def compute(self):
         """compute"""
@@ -306,6 +321,19 @@ class ClassAPIMascaret:
         self.compute()
         self.finalize()
 
+    def add_info(self,txt):
+        if self.mgis != None:
+            self.mgis.add_info(txt)
+        else:
+            print(txt)
 
 if __name__ == '__main__':
-    pass
+
+    dico ={
+        "RUN_REP" : r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret',
+    "DEBUG" : True,
+    'BASE_NAME' : 'mascaret' }
+
+    api = ClassAPIMascaret(dico)
+    api.main('mascaret.xcas')
+    print('fin')
