@@ -42,6 +42,9 @@ class ClassAPIMascaret:
 
     def __init__(self, main ):
         # def __init__(self):
+
+        self.masc = Mascaret(log_level='INFO')
+        self.masc.create_mascaret(iprint=1)
         if isinstance(main, dict):
             self.clmas =None
             self.mgis = None
@@ -71,8 +74,7 @@ class ClassAPIMascaret:
         self.zini = 0
         self.qini = 0
 
-        self.masc = Mascaret(log_level='INFO')
-        self.masc.create_mascaret(iprint=1)
+
 
 
 
