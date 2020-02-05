@@ -221,8 +221,8 @@ class ClassFloodGate:
         # demander confirmation
         # si Hamon < regule  or Haval > regule alors fermer
         # si Hamon > regule or Haval < regule alors ouvrir
-        # si Qamon < regule or qaval > regule  alors  fermer
-        # si Qamon > regule or qaval < regule  alors ouvrir
+        # si  qaval > regule  alors  fermer
+        # si  qaval < regule  alors ouvrir
         condam = (param_fg['LOCCONT'] == 'AM')
         condav = (param_fg['LOCCONT'] == 'AV')
         val_min = param_fg['VALREG'] - param_fg['TOLREG']
