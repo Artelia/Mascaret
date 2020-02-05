@@ -309,7 +309,8 @@ class ClassAPIMascaret:
 
     def finalize(self):
         del self.masc
-        self.clfg.finalize()
+        if self.clfg != None:
+            self.clfg.finalize()
 
     def main(self, filename, tracer=False, basin=False):
 
