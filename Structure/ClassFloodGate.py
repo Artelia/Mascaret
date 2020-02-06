@@ -221,7 +221,7 @@ class ClassFloodGate:
         # demander confirmation
         # si Hamon < regule  or Haval > regule alors fermer
         # si Hamon > regule or Haval < regule alors ouvrir
-        # si  qaval > regule  alors  fermer
+        # si qaval > regule  alors  fermer
         # si  qaval < regule  alors ouvrir
         condam = (param_fg['LOCCONT'] == 'AM')
         condav = (param_fg['LOCCONT'] == 'AV')

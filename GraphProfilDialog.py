@@ -2211,8 +2211,6 @@ class GraphHydro(GraphCommon):
         self.comboTimePK.setCurrentIndex(index)
         self.comboTimePK.currentIndexChanged['QString'].connect(self.combo_time_pk_change)
 
-
-
     def maj_tab(self):
         condition = """run='{0}' AND scenario='{1}' """.format(self.run,
                                                                self.scenario)
@@ -2503,7 +2501,7 @@ class GraphHydro(GraphCommon):
                                       fontsize='x-small',
                                       color=c,
                                       textcoords='offset points',clip_on=True)
-        
+
             self.etiquetteLaisses.append(temp)
 
             # except :

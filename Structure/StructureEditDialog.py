@@ -611,11 +611,12 @@ class ClassStructureEditDialog(QDialog):
 
         if len(rows) > 0:
             self.fg_active.setChecked(bool(rows[0][0]))
+        self.display_fg()
 
         self.act_active_fg()
         self.fg_active.stateChanged.connect(self.act_active_fg)
         self.b_fg.clicked.connect(self.get_param_fg)
-        self.display_fg()
+
 
     def act_active_fg(self):
         act_val = bool(self.fg_active.isChecked())
@@ -639,7 +640,7 @@ class ClassStructureEditDialog(QDialog):
 
     def display_fg(self):
         meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
-        if meth == 4 or meth == 0:
+        if meth == 4 or meth == 0 or not self.mgis.cond_api:
             self.fg_active.setChecked(False)
             self.fg_active.hide()
             self.b_fg.hide()
