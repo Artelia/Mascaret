@@ -1709,8 +1709,6 @@ class GraphHydro(GraphCommon):
         # insert graphic and toolsbars of graphic
         self.gui_graph(self.ui.widget_figure, self.ui.widget_toolsbar)
 
-
-
         self.init_ui()
 
         #         # Action
@@ -2443,6 +2441,7 @@ class GraphHydro(GraphCommon):
         self.canvas.draw()
 
     def maj_laisses(self):
+
         self.courbeLaisses.set_visible(False)
         self.courbeLaisses = self.axes.scatter([], [], label="Flood marks")
         for e in self.etiquetteLaisses:
@@ -2503,8 +2502,8 @@ class GraphHydro(GraphCommon):
                                       ha='left', va='bottom',
                                       fontsize='x-small',
                                       color=c,
-                                      textcoords='offset points')
-
+                                      textcoords='offset points',clip_on=True)
+        
             self.etiquetteLaisses.append(temp)
 
             # except :
