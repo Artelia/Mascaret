@@ -144,6 +144,15 @@ class ClassTableStructure:
                         }
         self.dico_vardb_to_var_fg = {'type_fg' :'DIRFG', 'xpos':'LOCCONT', 'var_reg':'VREG'}
 
+        self.dico_weirs_mob = {'ZBAS': {'name': 'cotes basse', 'unit': 'm'},
+                               'ZHAUT': {'name': 'cotes haute', 'unit': 'm'},
+                               'ZREG': {'name': 'cotes d\'exploitation', 'unit': 'm'},
+                               'VDESC': {'name': 'vitesses d\’abaissement', 'unit': 'm/s'},
+                               'VMONT': {'name': 'vitesses de remontée', 'unit': 'm/s'},
+                               'TIME': {'name': 'temps', 'unit': 's'},
+                               'ZVAR': {'name': 'cotes de crêtes', 'unit': 'm'}}
+
+
 def ctrl_set_value(ctrl, val):
     if ctrl.metaObject().className() in ('QSpinBox', 'QDoubleSpinBox'):
         ctrl.setValue(val)

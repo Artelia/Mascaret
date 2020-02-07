@@ -294,6 +294,8 @@ class weirs(MasObject):
             ('wide_floodgate', ' float'),
             ('lawfile', ' text'),
             ('active', ' boolean'),
+            ('active_mob', 'boolean'),
+            ('method_mob', 'text'),
             ('CONSTRAINT weirs_pkey', ' PRIMARY KEY(gid)')]
 
     def pg_create_table(self):
@@ -1036,3 +1038,15 @@ class struct_fg_val(MasObject):
                       ('name_var', 'text'),
                       ('value', 'float'),
                       ('CONSTRAINT cle_struct_fg_val', 'PRIMARY KEY (id_config,id_scen,id_order,name_var)')]
+
+class weirs_mob_val(MasObject):
+    #valeur des variable float
+    def __init__(self):
+        super(weirs_mob_val, self).__init__()
+        self.order = 35
+        self.geom_type = None
+        self.attrs = [('id_weirs', 'integer'),
+                      ('id_order', 'integer'),
+                      ('name_var', 'text'),
+                      ('value', 'float'),
+                      ('CONSTRAINT cle_weirs_mob_val', 'PRIMARY KEY (id_weirs,id_order,name_var)')]

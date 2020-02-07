@@ -34,6 +34,7 @@ from .ClassParameterDialog import ClassParameterDialog
 from .GraphProfilDialog import IdentifyFeatureTool
 # # structures
 from .Structure.StructureDialog import ClassStructureDialog
+from .Structure.MobilSingDialog import ClassMobilSingDialog
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 # # water quality
@@ -172,8 +173,8 @@ class MascPlugDialog(QMainWindow):
 
         # Structures
         self.ui.actionStructures.triggered.connect(self.fct_structures)
-
-        # test
+        self.ui.actionTest_struct.triggered.connect(self.fct_test)
+        #WQ
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
         self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
@@ -838,10 +839,9 @@ Version : {}
             self.mdb.add_table_struct_temporal(self.dossier_struct)
 
     def fct_test(self):
-        # cl=ClassMethod(self)
-        # list_final =  cl.get_list_law(6)
-        # cl.create_law(self.masplugPath,'toto',6,list_final)
-        self.mdb.insert_abacus_table(self.dossier_struct)
+
+        dlg = ClassMobilSingDialog(self)
+        dlg.exec_()
     # TODO
     # def update_pk(self):
     #     pass

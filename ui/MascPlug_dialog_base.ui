@@ -205,7 +205,7 @@
     </property>
     <addaction name="actionCross_section"/>
     <addaction name="actionStructures"/>
-    <!--<addaction name="actionTest_struct"/>-->
+    <addaction name="actionTest_struct"/>
     <addaction name="separator"/>
     <addaction name="action_Extract_MNTfor_profile"/>
    </widget>
@@ -659,11 +659,11 @@
     <string>Structures</string>
    </property>
   </action>
-  <!--<action name="actionTest_struct">-->
-   <!--<property name="text">-->
-    <!--<string>Test_struct</string>-->
-   <!--</property>-->
-  <!--</action>-->
+  <action name="actionTest_struct">
+   <property name="text">
+    <string>Test_struct</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

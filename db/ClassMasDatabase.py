@@ -612,7 +612,8 @@ class ClassMasDatabase(object):
 
     def add_table_struct_temporal(self, dossier):
         tables = [
-            Maso.struct_fg,Maso.struct_fg_val
+            Maso.struct_fg,Maso.struct_fg_val,
+            Maso.weirs_mob_val
         ]
         tables.sort(key=lambda x: x().order)
 
@@ -624,6 +625,16 @@ class ClassMasDatabase(object):
                     self.mgis.add_info('  {0} OK'.format(obj.name))
             except:
                 self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
+
+        list_col = self.list_columns('weirs')
+        sql=''
+        if 'active_mob' in list_col:
+            sql += "ALTER TABLE {0}.weirs DROP COLUMN IF EXISTS active_mob;\n"
+            sql += "ALTER TABLE {0}.weirs DROP COLUMN IF EXISTS method_mob;\n"
+
+        sql += "ALTER TABLE {0}.weirs ADD COLUMN active_mob boolean;\n"
+        sql += "ALTER TABLE {0}.weirs ADD COLUMN method_mob text;"
+        self.run_query(sql.format(self.SCHEMA))
 
     def create__first_model(self):
         """ 
