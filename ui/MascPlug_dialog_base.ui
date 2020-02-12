@@ -205,6 +205,7 @@
     </property>
     <addaction name="actionCross_section"/>
     <addaction name="actionStructures"/>
+    <addaction name="actionStructures_weirs"/>
     <addaction name="actionTest_struct"/>
     <addaction name="separator"/>
     <addaction name="action_Extract_MNTfor_profile"/>
@@ -659,7 +660,12 @@
     <string>Structures</string>
    </property>
   </action>
-  <action name="actionTest_struct">
+  <action name="actionStructures_weirs">
+   <property name="text">
+    <string>Movable Dam</string>
+   </property>
+  </action>
+   <action name="actionTest_struct">
    <property name="text">
     <string>Test_struct</string>
    </property>

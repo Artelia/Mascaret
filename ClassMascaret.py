@@ -1337,6 +1337,9 @@ class ClassMascaret:
         if par["presenceCasiers"] and noyau == "unsteady":
             self.creer_geo_casier()
 
+        if self.check_mobil_gate():
+            self.create_mobil_gate_file()
+
         if par["evenement"] and noyau != "steady":
 
             dict_scen_tmp = self.mdb.select('events', 'run', 'starttime')
@@ -1633,7 +1636,6 @@ class ClassMascaret:
             os.chdir(pwd)
 
             return True
-
 
     def lit_opt(self, run, scen, date_debut, base_namefile, comments='', tracer=False, casier=False):
         nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
@@ -1980,6 +1982,85 @@ class ClassMascaret:
             col.remove("qtot")
 
         return t, pk, col, value
+
+    def create_mobil_gate_file(self):
+        """
+        create the mobile dam file (Fichier_Barrage_Mobile.txt)
+        """
+
+        info = self.mdb.select('weirs', where="active_mob = true",
+                           list_var=['method_mob','gid', 'name'])
+        if info:
+            try:
+                nomfich = os.path.join(self.dossierFileMasc, 'Fichier_Barrage_Mobile.txt')
+
+                if os.path.isfile(nomfich):
+                    os.remove(nomfich)
+
+                with open(nomfich, 'w') as fich:
+                    for i, idw in enumerate(info['gid']):
+                        if info['method_mob'][i] =='1':
+                            rows = self.mdb.select('weirs_mob_val',
+                                                   where="id_weirs= {} AND (name_var='TIME' OR name_var='ZVAR')".format(
+                                                       idw), order='name_var, id_order')
+                            if len(rows['id_weirs']) > 1:
+                                if len(rows['id_weirs']) < 51:
+                                    fich.write("{} {} {}\n".format(i+1, info['name'][i], idw))
+                                    fich.write("methode 1\n")
+                                    fich.write("T(s)\n")
+                                    nbt = max(rows['id_order'])+1
+                                    for i in range(nbt) :
+                                        fich.write('{} '.format(rows['value'][i]))
+                                    fich.write('\n')
+                                    fich.write("Zcrete(ngf)\n")
+                                    for i in range(nbt):
+                                        fich.write('{} '.format(rows['value'][i+nbt]))
+                                    fich.write("\n")
+                                else:
+                                    self.mgis.add_info(
+                                        "Warning: Value number is superior to 50 for {} weirs.\n"
+                                        "The weir is ignored.".format(info['name'][i]))
+                            else:
+                                self.mgis.add_info("Warning: there aren't value in {} weirs".format(info['name'][i]))
+
+                        elif info['method_mob'][i] =='2':
+
+                            rows = self.mdb.select('weirs_mob_val',
+                                                   where="id_weirs= {} AND name_var!='TIME' AND name_var!='ZVAR'".format(idw))
+                            if len(rows['id_weirs']) > 1:
+                                fich.write("{} {} {}\n".format(i+1, info['name'][i], idw))
+                                fich.write("methode 2\n")
+                                fich.write("Zregulation Zbas Zhaut (m ngf)\n")
+                                fich.write("{} {} {}\n".format(rows['value'][rows['name_var'].index('ZREG')],
+                                                             rows['value'][rows['name_var'].index('ZBAS')],
+                                                             rows['value'][rows['name_var'].index('ZHAUT')]))
+                                fich.write("Vabaissement Vrehaussement m/s\n")
+                                fich.write("{} {}\n".format(rows['value'][rows['name_var'].index('VDESC')],
+                                                             rows['value'][rows['name_var'].index('VMONT')]))
+                        else:
+                            self.mgis.add_info("Warning: there aren't value in {} weirs".format(info['name'][i]))
+
+
+
+
+
+                self.mgis.add_info("Creation the dam is done")
+            except Exception as e:
+                self.mgis.add_info("Error: save the dam file")
+                self.mgis.add_info(str(e))
+
+    def check_mobil_gate(self):
+        """
+        check if weirs active
+        :return:
+        """
+        info = self.mdb.select('weirs', where="active_mob = true",
+                               list_var=['method_mob', 'gid', 'name'])
+        if info:
+            if len(info['gid'])>0:
+                return True
+
+        return False
 
     @staticmethod
     def around(x):

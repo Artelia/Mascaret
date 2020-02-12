@@ -45,7 +45,7 @@ class ClassMobilSingDialog(QDialog):
         self.mdb = self.mgis.mdb
         self.dico_meth1 = [{"id": 1, "name": 'TIME'},
                            {"id": 2, "name": 'ZVAR'}]
-
+        self.id = 0
         self.cur_set = None
         self.filling_tab = False
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_mobil_sing.ui'), self)
@@ -84,7 +84,7 @@ class ClassMobilSingDialog(QDialog):
         self.ui.actionB_delLine.triggered.connect(self.delete_time)
 
         self.ui.actionB_import.triggered.connect(self.import_csv)
-        self.ui.actionB_delete.triggered.connect(self.clear_set)
+        self.ui.actionB_delete.triggered.connect(self.clear_tab)
 
         self.ui.tab_sets.sCut_del = QShortcut(QKeySequence("Del"), self)
         self.ui.tab_sets.sCut_del.activated.connect(self.short_cut_row_del)
@@ -111,21 +111,17 @@ class ClassMobilSingDialog(QDialog):
             .format(self.mdb.SCHEMA,val, self.name_cur)
         self.mdb.execute(sql)
 
-
-
-
     def select_list(self,itm):
-        cond = str2bool(self.ui.lst_sets.model().item(itm.row(), 0).text())
         self.name_cur = self.ui.lst_sets.model().item(itm.row(), 1).text()
         self.ui.bt_edit.setDisabled(False)
         self.ui.cb_method.setDisabled(False)
 
 
         rows = self.mdb.select('weirs', where="name = '{0}'".format(self.name_cur),
-                               list_var=['method_mob' ])
+                               list_var=['method_mob','gid' ])
         if rows:
+            self.id = rows['gid'][0]
             ctrl_set_value(self.cb_method,rows['method_mob'][0])
-
 
     def display_page3(self):
         sql = "SELECT  name_var, value FROM {0}.weirs_mob_val" \
@@ -189,7 +185,7 @@ class ClassMobilSingDialog(QDialog):
                     self.mgis.add_info("Import failed ({})".format(listf[0]))
 
     def on_tab_data_change(self, itm):
-        if itm.column() < 3:
+        if itm.column() < 4:
             model = itm.model()
             if itm.data(0) or itm.data(0) == .0:
                 if itm.column() == 0:
@@ -246,7 +242,7 @@ class ClassMobilSingDialog(QDialog):
                 idx = itm.index()
                 self.ui.tab_sets.scrollTo(idx, 0)
                 self.update_courbe("all")
-        elif itm.column() > 3:
+        elif itm.column() == 4:
             if not self.filling_tab:
                 idx = itm.index()
                 self.update_courbe([idx.column() - 4])
@@ -254,11 +250,11 @@ class ClassMobilSingDialog(QDialog):
     def create_tab_model(self):
         """ create table"""
         model = QStandardItemModel()
-        model.insertColumns(0, 1)
+        model.insertColumns(0, 5)
         for c in range(4):
             model.setHeaderData(c, 1, 'time', 0)
 
-        model.setHeaderData(5, 1, "Z", 0)
+        model.setHeaderData(4, 1, "Z", 0)
 
         model.itemChanged.connect(self.on_tab_data_change)
         return model
@@ -267,35 +263,60 @@ class ClassMobilSingDialog(QDialog):
         self.accept()
 
     def accept_page2(self):
-        print('accept page2')
-        pass
+
+        try:
+            recs = []
+
+            for num in range(self.ui.tab_sets.model().rowCount()):
+                    recs.append([self.id, num , 'TIME', self.ui.tab_sets.model().item(num, 0).data(0)])
+                    recs.append([self.id, num , 'ZVAR', self.ui.tab_sets.model().item(num, 4).data(0)])
+
+            rows = self.mdb.select('weirs_mob_val', where="id_weirs = {0}".format(self.id),
+                                   list_var=['name_var' ])
+
+            if rows:
+                if 'ZVAR' in rows['name_var']:
+                    sql = "DELETE FROM {0}.weirs_mob_val " \
+                          "WHERE id_weirs = {1} AND name_var='ZVAR';\n".format(self.mdb.SCHEMA, self.id)
+
+                    sql += "DELETE FROM {0}.weirs_mob_val " \
+                          "WHERE id_weirs = {1} AND name_var='TIME'".format(self.mdb.SCHEMA, self.id)
+
+                    self.mdb.execute(sql)
+
+
+            sql =  "INSERT INTO {0}.weirs_mob_val (id_weirs, id_order, name_var, value) VALUES (%s, %s, %s, %s)".format(
+                    self.mdb.SCHEMA)
+
+            self.mdb.run_query(sql, many=True, list_many=recs)
+
+            self.ui.weirs_pages.setCurrentIndex(0)
+        except :
+            self.reject_page2()
+            self.mgis.add_info("Cancel of gate information")
 
     def accept_page3(self):
-        print('accept page3')
-        rows = self.mdb.select('weirs', where="name = '{0}'".format(self.cur_set),
-                               list_var=['gid'])
-        if  rows:
-            gid = rows['gid'][0]
+        try:
             for var, ctrls in self.dico_ctrl.items():
                 val = float(ctrl_get_value(ctrls[0]))
 
                 sql = "SELECT * FROM {0}.weirs_mob_val WHERE id_weirs= {1} AND  name_var = '{2}' " \
-                    .format(self.mdb.SCHEMA, gid, var)
+                    .format(self.mdb.SCHEMA, self.id, var)
                 row = self.mdb.run_query(sql, fetch=True)
 
                 if len(row) > 0:
                     sql = "UPDATE {0}.weirs_mob_val SET value = {3} WHERE id_weirs = {1} AND  name_var = '{2}'" \
-                        .format(self.mdb.SCHEMA, gid, var, val)
+                        .format(self.mdb.SCHEMA, self.id, var, val)
                     self.mdb.execute(sql)
                 else:
 
                     sql = "INSERT INTO {0}.weirs_mob_val (id_weirs, id_order, name_var, value)" \
                           " VALUES ({1}, {2}, '{3}',{4})" \
-                        .format(self.mdb.SCHEMA, gid, 0, var, val)
+                        .format(self.mdb.SCHEMA, self.id, 0, var, val)
                     self.mdb.execute(sql)
 
-            self.ui.weirs_pages.setCurrentIndex(0)
-        else:
+                self.ui.weirs_pages.setCurrentIndex(0)
+        except :
             self.reject_page3()
             self.mgis.add_info("Cancel of gate information")
 
@@ -305,7 +326,7 @@ class ClassMobilSingDialog(QDialog):
         self.ui.weirs_pages.setCurrentIndex(0)
 
     def reject_page3(self):
-        print('rejet page3')
+
         if self.mgis.DEBUG:
             self.mgis.add_info("Cancel of Weirs tab")
         self.ui.weirs_pages.setCurrentIndex(0)
@@ -327,16 +348,16 @@ class ClassMobilSingDialog(QDialog):
                 self.ui.tab_sets.setColumnHidden(i, False)
             else:
                 self.ui.tab_sets.setColumnHidden(i, True)
+
         if not self.filling_tab:
             self.graph_edit.maj_unit_x(unit[v])
-            self.graph_edit.axes.set_xlabel("time ({})".format(unit))
-            self.graph_edit.axes.xaxis.set_major_formatter(ticker.ScalarFormatter())
-
             self.update_courbe("all")
 
     def new_time(self):
         self.filling_tab = True
+
         model = self.ui.tab_sets.model()
+
         r = model.rowCount()
         model.insertRow(r)
         itm = QStandardItem()
@@ -359,13 +380,10 @@ class ClassMobilSingDialog(QDialog):
         Select configuration
         """
         self.ui.lst_sets.model().blockSignals(True)
-        for r in range(self.ui.lst_sets.model().rowCount()):
-            if r != itm.row():
-                self.ui.lst_sets.model().item(r, 1).setCheckState(0)
         self.ui.lst_sets.model().blockSignals(False)
         # get value lst_sets
         name = str(self.ui.lst_sets.model().item(itm.row(), 1).text())
-        print(itm)
+
         if itm.checkState() == 2:
             sql = "UPDATE {0}.weirs SET active_mob = 't' WHERE name = '{1}'".format(self.mdb.SCHEMA, name)
             self.mdb.run_query(sql)
@@ -376,7 +394,7 @@ class ClassMobilSingDialog(QDialog):
     def init_ui(self):
         """initialisation gui"""
         self.ui.weirs_pages.setCurrentIndex(0)
-        self.graph_edit = GraphMobSing(self.mgis, self.ui.lay_graph_edit, self.dico_meth1)
+        self.graph_edit = GraphMobSing(self.mgis, self.ui.lay_graph_edit, self.id, self.dico_meth1)
         self.fill_lst_conf()
         self.ui.bt_edit.setDisabled(True)
         self.ui.cb_method.setDisabled(True)
@@ -412,26 +430,12 @@ class ClassMobilSingDialog(QDialog):
                     self.ui.lst_sets.setCurrentIndex(self.ui.lst_sets.model().item(r, 1).index())
                     break
 
-    def clear_set(self):
-        # charger les informations
-        # changer de page
-        if self.ui.lst_sets.selectedIndexes():
-            l = self.ui.lst_sets.selectedIndexes()[0].row()
-            id_set = self.ui.lst_sets.model().item(l, 0).text()
-            name_set = self.ui.lst_sets.model().item(l, 1).text()
-            if (QMessageBox.question(self, "Delete {} value ?".format(name_set),
-                                     QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("Deletion of {} ".format(name_set))
-                self.mdb.execute(
-                    "DELETE FROM {0}.weirs_mob_val WHERE id_weirs = {1} AND name_var='ZVAR".format(
-                        self.mdb.SCHEMA, id_set))
-                self.mdb.execute(
-                    "DELETE FROM {0}.weirs_mob_val WHERE id_weirs = {1} AND name_var='TIME".format(
-                        self.mdb.SCHEMA, id_set))
-                # TODO desactive weirs
-
-                self.fill_lst_conf()
+    def clear_tab(self):
+        model = self.ui.tab_sets.model()
+        list_id = sorted(range(model.rowCount()),reverse=True)
+        for num in  list_id:
+            model.removeRow(num)
+        self.update_courbe("all")
 
     def short_cut_row_del(self):
         """
@@ -452,7 +456,6 @@ class ClassMobilSingDialog(QDialog):
         if self.ui.lst_sets.selectedIndexes():
             l = self.ui.lst_sets.selectedIndexes()[0].row()
             self.cur_set = self.ui.lst_sets.model().item(l, 1).text()
-            print('eeee',self.cur_set)
 
             if self.edit_type =='table':
                 self.fill_tab_sets()
@@ -461,20 +464,12 @@ class ClassMobilSingDialog(QDialog):
             else :
                 self.display_method2()
                 self.ui.weirs_pages.setCurrentIndex(2)
-        print('EDIT_bt')
 
     def display_method2(self):
-        rows = self.mdb.select('weirs', where="name = '{0}'".format(self.cur_set),
-                               list_var=['gid'])
-
-        gid = rows['gid'][0]
-        print(gid)
-
         sql = "SELECT  name_var, value FROM {0}.weirs_mob_val " \
-              "WHERE id_weirs = {1} ".format(self.mdb.SCHEMA, gid)
-        print(sql)
+              "WHERE id_weirs = {1} ".format(self.mdb.SCHEMA, self.id)
+
         rows = self.mdb.run_query(sql, fetch=True)
-        print(rows)
         if len(rows)> 0 :
             for param, val in rows:
                 if param in self.dico_ctrl.keys():
@@ -488,46 +483,42 @@ class ClassMobilSingDialog(QDialog):
                     for ctrl in ctrls:
                         ctrl_set_value(ctrl, 0.0)
 
-
     def fill_tab_sets(self):
         """ fill table"""
-        print('fill_tab_sets')
-        # TODO
-        # self.filling_tab = True
-        # self.ui.tab_sets.setModel(self.create_tab_model())
-        # model = self.ui.tab_sets.model()
-        #
-        # if self.cur_set != -1:
-        #     c = 0
-        #     for var in self.list_var:
-        #         sql = "SELECT time, value FROM {0}.laws_meteo WHERE id_config = {1} AND id_var = {2} " \
-        #               "ORDER BY time".format(self.mdb.SCHEMA, self.cur_set, var[0])
-        #         rows = self.mdb.run_query(sql, fetch=True)
-        #
-        #         if c == 0:
-        #             model.insertRows(0, len(rows))
-        #             for r, row in enumerate(rows):
-        #                 itm = QStandardItem()
-        #                 itm.setData(row[0] / 1., 0)
-        #                 model.setItem(r, c, itm)
-        #             c = 5
-        #
-        #         for r, row in enumerate(rows):
-        #             itm = QStandardItem()
-        #             itm.setData(row[1], 0)
-        #             model.setItem(r, c, itm)
-        #
-        #         c += 1
-        #
-        # self.filling_tab = False
-        # self.rb_sec.click()
+        self.filling_tab = True
+        self.ui.tab_sets.setModel(self.create_tab_model())
+        model = self.ui.tab_sets.model()
 
+        if self.cur_set != -1:
+            c = 0
+            for var in self.dico_meth1:
+                sql = "SELECT value FROM {0}.weirs_mob_val " \
+                      "WHERE id_weirs = {1} and name_var = '{2}' " \
+                      "ORDER BY id_order".format(self.mdb.SCHEMA, self.id, var["name"])
+                rows = self.mdb.run_query(sql, fetch=True)
+
+                if var['id'] == 1:
+                    model.insertRows(0, len(rows))
+                    for r, row in enumerate(rows):
+                        itm = QStandardItem()
+                        itm.setData(row[0] / 1., 0)
+                        model.setItem(r, c, itm)
+                    c = 4
+                else:
+                    for r, row in enumerate(rows):
+                        itm = QStandardItem()
+                        itm.setData(row[0], 0)
+                        model.setItem(r, c, itm)
+
+
+
+        self.filling_tab = False
+        self.rb_sec.click()
 
     def update_courbe(self, courbes):
-        #TODO
         data = {}
         if courbes == "all":
-            courbes = range(self.ui.tab_sets.model().columnCount() - 3)
+            courbes = range(self.ui.tab_sets.model().columnCount() - 4)
 
         col_x = self.bg_time.checkedId()
         lx = []
@@ -537,14 +528,10 @@ class ClassMobilSingDialog(QDialog):
 
         ly = []
         for r in range(self.ui.tab_sets.model().rowCount()):
-            ly.append(self.ui.tab_sets.model().item(r,  3).data(0))
+            ly.append(self.ui.tab_sets.model().item(r,  4).data(0))
         data[0] = {"x": lx, "y": ly}
 
         self.graph_edit.maj_courbes(data)
-
-
-
-
 
 
 
@@ -592,9 +579,10 @@ class MySpinBox(QDoubleSpinBox):
 class GraphMobSing(GraphCommon):
     """class Dialog """
 
-    def __init__(self, mgis=None, lay=None, lst_var=None):
+    def __init__(self, mgis=None, lay=None, id_weirs=None, lst_var=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
+        self.id = id_weirs
         self.lst_var = lst_var
         self.init_ui_common_p()
         self.gui_graph(lay)
@@ -611,25 +599,26 @@ class GraphMobSing(GraphCommon):
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
         self.init_legende()
 
-    def init_graph(self, config, all_vis=False):
+    def init_graph(self, all_vis=False):
         self.maj_unit_x("s")
         leglines = self.leg.get_lines()
         lst_graph=[]
         for var in self.lst_var:
-            if config is not None:
-                sql = "SELECT value FROM {0}.weirs_mob_val " \
-                      "WHERE id_weirs = {1} and name_var = {2} " \
-                      "ORDER BY id_order".format(self.mdb.SCHEMA, config, var["id"])
-                rows = self.mdb.run_query(sql, fetch=True)
-                if len(rows) > 0:
-                    print(rows)
-                    lst_graph.append(rows[0])
-        print(lst_graph)
-        v = 0
-        self.courbes.set_data(lst_graph[0], lst_graph[1])
 
-        if all_vis:
-            self.courbes.set_visible(True)
-            leglines.set_alpha(1.0)
+            sql = "SELECT value FROM {0}.weirs_mob_val " \
+                  "WHERE id_weirs = {1} and name_var = '{2}' " \
+                  "ORDER BY id_order".format(self.mdb.SCHEMA,self.id ,var["name"])
 
-        self.maj_limites()
+            rows = self.mdb.run_query(sql, fetch=True)
+
+            if len(rows) > 0:
+                lst_graph.append(rows[0])
+
+        if len(lst_graph) > 1:
+            self.courbes.set_data(lst_graph[0], lst_graph[1])
+
+            if all_vis:
+                self.courbes.set_visible(True)
+                leglines.set_alpha(1.0)
+
+            self.maj_limites()

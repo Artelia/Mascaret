@@ -295,7 +295,7 @@
          <item row="1" column="1">
           <widget class="QLabel" name="label_4">
            <property name="text">
-            <string>Zregulation (ngf)</string>
+            <string>Zregulation (m)</string>
            </property>
           </widget>
          </item>
@@ -308,7 +308,7 @@
          <item row="2" column="1">
           <widget class="QLabel" name="label_5">
            <property name="text">
-            <string>Zbas (ngf)</string>
+            <string>Zbas (m)</string>
            </property>
           </widget>
          </item>
@@ -337,7 +337,7 @@
          <item row="3" column="1">
           <widget class="QLabel" name="label_6">
            <property name="text">
-            <string>Zhaut (ngf)</string>
+            <string>Zhaut (m)</string>
            </property>
           </widget>
          </item>
@@ -526,6 +526,22 @@
     <hint type="sourcelabel">
      <x>654</x>
      <y>57</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>b_delete</sender>
+   <signal>clicked()</signal>
+   <receiver>actionB_delete</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>56</x>
+     <y>379</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>

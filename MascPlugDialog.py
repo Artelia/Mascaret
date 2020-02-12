@@ -174,6 +174,7 @@ class MascPlugDialog(QMainWindow):
         # Structures
         self.ui.actionStructures.triggered.connect(self.fct_structures)
         self.ui.actionTest_struct.triggered.connect(self.fct_test)
+        self.ui.actionStructures_weirs.triggered.connect(self.fct_mv_dam)
         #WQ
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
@@ -838,10 +839,16 @@ Version : {}
         if ok:
             self.mdb.add_table_struct_temporal(self.dossier_struct)
 
-    def fct_test(self):
+    def fct_mv_dam(self):
 
         dlg = ClassMobilSingDialog(self)
         dlg.exec_()
+
+    def fct_test(self):
+        clam = ClassMascaret(self)
+        # clam.create_mobil_gate_file()
+        print(clam.check_mobil_gate())
+
     # TODO
     # def update_pk(self):
     #     pass
