@@ -920,7 +920,7 @@ class struct_config(MasObject):
                       ('CONSTRAINT cle_struct_conf', 'PRIMARY KEY (id)')]
 
 
-# profile modification
+
 class profil_struct(MasObject):
     def __init__(self):
         super(profil_struct, self).__init__()
@@ -933,7 +933,7 @@ class profil_struct(MasObject):
                       ('CONSTRAINT profil_struct_pkey', 'PRIMARY KEY (id_order,id_config)')]
 
 
-# parameters
+
 class struct_param(MasObject):
     def __init__(self):
         super(struct_param, self).__init__()
@@ -945,7 +945,7 @@ class struct_param(MasObject):
                       ('CONSTRAINT cle_struct_param', 'PRIMARY KEY (id_config,var)')]
 
 
-# objet pile de pont/
+
 class struct_elem_param(MasObject):
     def __init__(self):
         super(struct_elem_param, self).__init__()
@@ -969,22 +969,6 @@ class struct_elem(MasObject):
                       ('polygon', 'GEOMETRY'),
                       ('CONSTRAINT cle_struct_elem', 'PRIMARY KEY (id_config,id_elem)')]
 
-
-# class struct_elem_geo(MasObject):
-#     def __init__(self):
-#         super(struct_elem_geo, self).__init__()
-#         self.order = 30
-#         self.geom_type = None
-#         self.attrs = [('id_config', 'integer'),
-#                       ('id_elem', 'integer'),
-#                       ('id_order', 'integer'),
-#                       ('x', 'float'),
-#                       ('z', 'float'),
-#                       ('CONSTRAINT cle_struct_elem_geo', 'PRIMARY KEY (id_config,id_elem,id_order)')]
-    # def pg_create_table(self):
-    #     qry = super(self.__class__, self).pg_create_table()
-    #     qry += '\n'
-    #     qry += self.pg_create_index()
 
 
 class struct_abac(MasObject):
@@ -1050,3 +1034,14 @@ class weirs_mob_val(MasObject):
                       ('name_var', 'text'),
                       ('value', 'float'),
                       ('CONSTRAINT cle_weirs_mob_val', 'PRIMARY KEY (id_weirs,id_order,name_var)')]
+
+class admin_tab(MasObject):
+    #valeur des variable float
+    def __init__(self):
+        super(admin_tab, self).__init__()
+        self.order = 36
+        self.geom_type = None
+        self.attrs = [('id_', 'serial NOT NULL'),
+                      ('table_', 'text'),
+                      ('version_', 'text'),
+                      ('CONSTRAINT cle_admin_tab', 'PRIMARY KEY (id_,table_, version_)')]

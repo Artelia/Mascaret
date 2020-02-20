@@ -15,10 +15,7 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-comment:
-     fct:
-        distance
-        interpole
+
 """
 import math
 import os
@@ -271,3 +268,16 @@ def replace_all( txt, dico):
     for i in dico:
         txt = txt.replace(i, dico[i])
     return txt
+
+def read_version(masplugPath):
+    """
+    read version of plugin
+    :return: (str) version
+    """
+    file = open(os.path.join(masplugPath, 'metadata.txt'), 'r')
+    for ligne in file:
+        if ligne.find("version=") > -1:
+            ligne = ligne.split('=')
+            val = ligne[1].strip()
+            break
+    return val

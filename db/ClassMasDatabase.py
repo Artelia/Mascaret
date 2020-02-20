@@ -28,6 +28,8 @@ from qgis.core import QgsVectorLayer, QgsProject
 from . import MasObject as Maso
 from ..WaterQuality import ClassTableWQ
 from ..ui.custom_control import ClassWarningBox
+from ..Function import read_version
+from .check_tab import CheckTab
 
 try:  # qgis2
     from qgis.core import QgsMapLayerRegistry, QgsDataSourceURI
@@ -417,6 +419,7 @@ class ClassMasDatabase(object):
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
                       Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
                       Maso.observations, Maso.parametres, Maso.resultats, Maso.runs, Maso.laws,
+                      Maso.admin_tab,
                       # bassin
                       Maso.basins, Maso.links, Maso.resultats_basin, Maso.resultats_links,
                       # qualite d'eau
@@ -426,12 +429,13 @@ class ClassMasDatabase(object):
                       # meteo
                       Maso.meteo_config, Maso.laws_meteo,
                       # ouvrage
-                      Maso.struct_config,Maso.profil_struct,Maso.struct_param,
+                      Maso.struct_config, Maso.profil_struct, Maso.struct_param,
                       Maso.struct_elem, Maso.struct_elem_param,
                       Maso.struct_abac, Maso.struct_laws,
-                      #, Maso.struct_elem_geo
-                      #ouvrage mobile
-                      Maso.struct_fg, Maso.struct_fg_val
+                      # , Maso.struct_elem_geo
+                      # ouvrage mobile
+                      Maso.struct_fg, Maso.struct_fg_val,
+                      Maso.weirs_mob_val
                       ]
             tables.sort(key=lambda x: x().order)
 
@@ -468,6 +472,11 @@ class ClassMasDatabase(object):
             tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
             tbwq.default_tab_phy()
 
+            # admin_tab
+            chkt = CheckTab(self.mgis, self)
+            chkt.all_version(self.list_tables(self.SCHEMA),
+                             read_version(self.mgis.masplugPath))
+
             # visualization
             self.load_gis_layer()
 
@@ -475,7 +484,7 @@ class ClassMasDatabase(object):
 
         except Exception as e:
             self.mgis.add_info("Echec of creation model")
-            #self.mgis.add_info(e)
+            self.mgis.add_info(str(e))
 
     def add_table_basins(self, dossier):
         """
@@ -578,23 +587,23 @@ class ClassMasDatabase(object):
         tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
         tbwq.default_tab_phy()
 
-    def add_table_struct(self,dossier):
+    def add_table_struct(self, dossier):
         """
         Add table  for water Quality model
         """
 
         tables = [
-                  Maso.struct_config,Maso.profil_struct,Maso.struct_param,
-                  Maso.struct_elem, Maso.struct_elem_param,
-                  Maso.struct_abac,Maso.struct_laws
-                  # Maso.struct_temporal
-                  # , Maso.struct_elem_geo
-                  ]
+            Maso.struct_config, Maso.profil_struct, Maso.struct_param,
+            Maso.struct_elem, Maso.struct_elem_param,
+            Maso.struct_abac, Maso.struct_laws
+            # Maso.struct_temporal
+            # , Maso.struct_elem_geo
+        ]
         tables.sort(key=lambda x: x().order)
 
         for masobj_class in tables:
             try:
-                masobj_class.overwrite=True
+                masobj_class.overwrite = True
                 obj = self.process_masobject(masobj_class, 'pg_create_table')
                 if self.mgis.DEBUG:
                     self.mgis.add_info('  {0} OK'.format(obj.name))
@@ -604,15 +613,14 @@ class ClassMasDatabase(object):
 
         list_col = self.list_columns('profiles')
         sql = ''
-        if 'struct' in list_col :
-            sql= "ALTER TABLE {0}.profiles DROP COLUMN IF EXISTS  struct;\n"
+        if 'struct' in list_col:
+            sql = "ALTER TABLE {0}.profiles DROP COLUMN IF EXISTS  struct;\n"
         sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer DEFAULT 0;"
         self.run_query(sql.format(self.SCHEMA))
 
-
     def add_table_struct_temporal(self, dossier):
         tables = [
-            Maso.struct_fg,Maso.struct_fg_val,
+            Maso.struct_fg, Maso.struct_fg_val,
             Maso.weirs_mob_val
         ]
         tables.sort(key=lambda x: x().order)
@@ -627,7 +635,7 @@ class ClassMasDatabase(object):
                 self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
 
         list_col = self.list_columns('weirs')
-        sql=''
+        sql = ''
         if 'active_mob' in list_col:
             sql += "ALTER TABLE {0}.weirs DROP COLUMN IF EXISTS active_mob;\n"
             sql += "ALTER TABLE {0}.weirs DROP COLUMN IF EXISTS method_mob;\n"
@@ -729,6 +737,21 @@ class ClassMasDatabase(object):
         else:
             self.mgis.add_info('<br>Model "{0}" deleted.'.format(model_name))
 
+    def drop_table(self, table_name):
+        """
+        Delete tables inside PostgreSQL database.
+
+        Args:
+            table_name (str): Name of the table which will be deleted.
+        """
+        qry = 'DROP TABLE {0}.{1} ;'
+        qry = qry.format(self.SCHEMA, table_name)
+        if self.run_query(qry) is None:
+            return False
+        else:
+            self.mgis.add_info('<br>Table "{0}" deleted.'.format(table_name))
+            return True
+
     def load_gis_layer(self):
         """ layer visualization in qgis"""
         # visualisation
@@ -755,6 +778,7 @@ class ClassMasDatabase(object):
             except:
                 self.mgis.add_info('View failure!<br>{0}'.format(obj))
         self.mgis.iface.mapCanvas().refresh()
+
     #
     def create_spatial_index(self):
         """
@@ -842,7 +866,6 @@ $BODY$
 
         return liste_x
 
-
     def select(self, table, where="", order="", list_var=None):
         """ Select variables of table"""
         if where:
@@ -856,9 +879,9 @@ $BODY$
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
 
-        (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order,lvar), fetch=True, namvar=True)
+        (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order, lvar), fetch=True, namvar=True)
         if results == None or namCol == None:
-            print(sql.format(self.SCHEMA, table, where, order,lvar))
+            print(sql.format(self.SCHEMA, table, where, order, lvar))
             return None
         cols = [col[0] for col in namCol]
         dico = {}
@@ -918,6 +941,7 @@ $BODY$
                 except:
                     dico[cols[i]].append(val)
         return dico
+
     #
     def select_max(self, var, table, where=None):
         """select the max in the table for the "where" variable"""
@@ -1116,7 +1140,7 @@ $BODY$
                 #                      , stdin=subprocess.PIPE)
                 p = subprocess.Popen(commande, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                                      , stdin=subprocess.PIPE)
-                outs,err = p.communicate()
+                outs, err = p.communicate()
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Import File :{0}".format(file))
                     if VERSION_QGIS == 3:
@@ -1154,7 +1178,7 @@ $BODY$
 
         return namesh
 
-    def insert_abacus_table(self,dossier):
+    def insert_abacus_table(self, dossier):
         list_fich = os.listdir(dossier)
         for fich in list_fich:
             fichabac = os.path.join(dossier, fich)
@@ -1165,13 +1189,13 @@ $BODY$
             mehtod = liste_value[0][1]
             name_abc = liste_value[1][1]
             list_var = liste_value[2]
-            if not self.checkabac(mehtod,name_abc):
-                liste_value=np.array(liste_value[3:])
-                list_insert=[]
-                for i,var in enumerate(list_var):
-                    for order,val in enumerate(liste_value[:,i]):
+            if not self.checkabac(mehtod, name_abc):
+                liste_value = np.array(liste_value[3:])
+                list_insert = []
+                for i, var in enumerate(list_var):
+                    for order, val in enumerate(liste_value[:, i]):
                         if val != '':
-                            list_insert.append([mehtod, name_abc, var,order,val])
+                            list_insert.append([mehtod, name_abc, var, order, val])
                 liste_col = self.list_columns('struct_abac')
 
                 var = ",".join(liste_col)
@@ -1187,15 +1211,14 @@ $BODY$
 
                 self.run_query(sql, many=True, list_many=list_insert)
 
-    def checkabac(self,method,abc):
+    def checkabac(self, method, abc):
         """check if abacus doesn't exist"""
-        where="WHERE nam_method='{}' AND nam_abac ='{}'".format(method,abc)
+        where = "WHERE nam_method='{}' AND nam_abac ='{}'".format(method, abc)
         sql = "SELECT * FROM {0}.{1} {2};"
 
         results = self.run_query(sql.format(self.SCHEMA, 'struct_abac', where),
-                                           fetch=True, arraysize=1)
+                                 fetch=True, arraysize=1)
         for row in results:
             if row[0][0] is not None:
-                return  True
+                return True
         return False
-

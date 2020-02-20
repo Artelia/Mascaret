@@ -32,6 +32,7 @@ from .ClassMNT import ClassMNT
 from .ClassMascaret import ClassMascaret
 from .ClassParameterDialog import ClassParameterDialog
 from .GraphProfilDialog import IdentifyFeatureTool
+from .Function import read_version
 # # structures
 from .Structure.StructureDialog import ClassStructureDialog
 from .Structure.MobilSingDialog import ClassMobilSingDialog
@@ -40,6 +41,7 @@ from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 # # water quality
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
 from .db.ClassMasDatabase import ClassMasDatabase
+from .db.check_tab import CheckTab
 from .ui.custom_control import ClassWarningBox
 from .ClassDownload import ClassDownloadMasc
 
@@ -62,6 +64,7 @@ class MascPlugDialog(QMainWindow):
         self.ui = loadUi(os.path.join(self.masplugPath, 'ui/MascPlug_dialog_base.ui'), self)
         # variables
         self.DEBUG = 1
+
         self.curConnName = None
         self.passwd = None
         self.mdb = None
@@ -330,6 +333,7 @@ class MascPlugDialog(QMainWindow):
         settings.endGroup()
         # create a new connection to masPlug database
         self.mdb = ClassMasDatabase(self, self.database, self.host, self.port, self.user, self.passwd)
+        self.chkt = CheckTab(self, self.mdb)
         self.mdb.SRID = int(self.crs.postgisSrid())
         msg = self.mdb.connect_pg()
         self.add_info('Created connection to mascaret database: {0}@{1}'.format(self.mdb.dbname, self.mdb.host))
@@ -376,6 +380,11 @@ class MascPlugDialog(QMainWindow):
                                              liste, 0, False)
         if ok:
             self.mdb.SCHEMA = model
+            try:
+                self.chkt.update_adim()
+            except Exception as e :
+                self.add_info("********* Echec of update table ***********")
+
             self.mdb.load_model()
             self.mdb.last_schema = self.mdb.SCHEMA
             self.enable_all_actions()
@@ -749,12 +758,7 @@ class MascPlugDialog(QMainWindow):
         retval = msg.exec_()
 
     def about(self):
-        file = open(os.path.join(self.masplugPath, 'metadata.txt'), 'r')
-        for ligne in file:
-            if ligne.find("version=") > -1:
-                ligne = ligne.split('=')
-                val = ligne[1]
-                break
+        read_version(self.masplugPath)
         # TODO get "about" info of file
         txt = u"""
 Plugin dedicated to the building and exploitation of Mascaret models.
@@ -832,6 +836,7 @@ Version : {}
                                'WARNING: if the tables exist then it will be emptied.')
         if ok:
             self.mdb.add_table_struct(self.dossier_struct)
+
     def fct_add_floogate_tables(self):
 
         ok = self.box.yes_no_q('Do you want add floodgate tables ? \n '
