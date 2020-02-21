@@ -54,13 +54,24 @@ class ClassMobilSingDialog(QDialog):
                           'ZHAUT': [self.sb_zhaut],
                           'ZREG': [self.sb_zreg],
                           'VDESC': [self.sb_vd],
-                          'VMONT': [self.sb_va]}
+                          'VMONT': [self.sb_va],
+                          'UNITVD':[self.cb_uvb],
+                          'UNITVH':[self.cb_uvh]
+                          }
+        self.unitvd = 0
+        self.unitvh = 0
         self.edit_type = 'table' # 'var'
         self.name_cur = None
 
 
         fill_qcombobox(self.cb_method, [['1', 'Methode 1'], ['2', 'Methode 2']])
         self.cb_method.currentIndexChanged['QString'].connect(self.cb_change_meth)
+
+        fill_qcombobox(self.cb_uvb, [[1, 'm/s'], [60, 'm/min'], [3600, 'm/h']])
+        fill_qcombobox(self.cb_uvh, [[1, 'm/s'], [60, 'm/min'], [3600, 'm/h']])
+
+        self.cb_uvb.currentIndexChanged.connect(self.cb_change_unitvd)
+        self.cb_uvh.currentIndexChanged.connect(self.cb_change_unitvh)
 
         styled_item_delegate = QStyledItemDelegate()
         styled_item_delegate.setItemEditorFactory(ItemEditorFactory())
@@ -96,6 +107,69 @@ class ClassMobilSingDialog(QDialog):
 
         self.init_ui()
 
+    def cb_change_unitvd(self,evt):
+        if evt == 0:
+            if self.unitvd == 1:
+                val = float(ctrl_get_value(self.sb_vd))
+                val = val * 60
+                ctrl_set_value(self.sb_vd, val)
+            elif self.unitvd == 2:
+                val = float(ctrl_get_value(self.sb_vd))
+                val = val * 3600
+                ctrl_set_value(self.sb_vd, val)
+        elif evt == 1:
+            if self.unitvd == 0:
+                val = float(ctrl_get_value(self.sb_vd))
+                val = val / 60.
+                ctrl_set_value(self.sb_vd, val)
+            elif self.unitvd == 2:
+                val = float(ctrl_get_value(self.sb_vd))
+                val = val * 60
+                ctrl_set_value(self.sb_vd, val)
+        elif evt == 2:
+            if self.unitvd == 0:
+                val = float(ctrl_get_value(self.sb_vd))
+                val = val / 3600.
+                ctrl_set_value(self.sb_vd, val)
+            elif self.unitvd == 1:
+                val = float(ctrl_get_value(self.sb_vd))
+                val = val / 60.
+                ctrl_set_value(self.sb_vd, val)
+        else:
+            pass
+        self.unitvd = evt
+
+    def cb_change_unitvh(self, evt):
+        if evt == 0:
+            if self.unitvh == 1:
+                val = float(ctrl_get_value(self.sb_va))
+                val = val * 60
+                ctrl_set_value(self.sb_va, val)
+            elif self.unitvh == 2:
+                val = float(ctrl_get_value(self.sb_va))
+                val = val * 3600
+                ctrl_set_value(self.sb_va, val)
+        elif evt == 1:
+            if self.unitvh == 0:
+                val = float(ctrl_get_value(self.sb_va))
+                val = val / 60.
+                ctrl_set_value(self.sb_va, val)
+            elif self.unitvh == 2:
+                val = float(ctrl_get_value(self.sb_va))
+                val = val * 60
+                ctrl_set_value(self.sb_va, val)
+        elif evt == 2:
+            if self.unitvh == 0:
+                val = float(ctrl_get_value(self.sb_va))
+                val = val / 3600.
+                ctrl_set_value(self.sb_va, val)
+            elif self.unitvh == 1:
+                val = float(ctrl_get_value(self.sb_va))
+                val = val / 60.
+                ctrl_set_value(self.sb_va, val)
+        else:
+            pass
+        self.unitvh = evt
     def cb_change_meth(self, text):
         if text == 'Methode 1':
             self.edit_type = 'table'
@@ -299,6 +373,16 @@ class ClassMobilSingDialog(QDialog):
         try:
             for var, ctrls in self.dico_ctrl.items():
                 val = float(ctrl_get_value(ctrls[0]))
+                if var == 'UNITVD' or var == 'UNITVH':
+                    continue
+                elif var == 'VDESC':
+                    fact_t = int(ctrl_get_value(self.dico_ctrl['UNITVD'][0]))
+                    val = val * fact_t
+                elif var =='VMONT':
+                    fact_t = int(ctrl_get_value(self.dico_ctrl['UNITVH'][0]))
+                    val = val * fact_t
+                else:
+                    val = float(ctrl_get_value(ctrls[0]))
 
                 sql = "SELECT * FROM {0}.weirs_mob_val WHERE id_weirs= {1} AND  name_var = '{2}' " \
                     .format(self.mdb.SCHEMA, self.id, var)
@@ -409,20 +493,21 @@ class ClassMobilSingDialog(QDialog):
         sql = "SELECT active_mob,name FROM {0}.weirs WHERE active='t' ORDER BY name".format(self.mdb.SCHEMA)
         rows = self.mdb.run_query(sql, fetch=True)
 
-        for i, row in enumerate(rows):
-            for j, field in enumerate(row):
-                if j != 2:
-                    new_itm = QStandardItem(str(row[j]))
-                    new_itm.setEditable(False)
-                    if j == 1:
-                        new_itm.setCheckable(True)
-                        if not row[0]:
-                            new_itm.setCheckState(0)
-                        elif row[0]:
-                            new_itm.setCheckState(2)
-                    self.ui.lst_sets.model().setItem(i, j, new_itm)
+        if rows is not None:
+            for i, row in enumerate(rows):
+                for j, field in enumerate(row):
+                    if j != 2:
+                        new_itm = QStandardItem(str(row[j]))
+                        new_itm.setEditable(False)
+                        if j == 1:
+                            new_itm.setCheckable(True)
+                            if not row[0]:
+                                new_itm.setCheckState(0)
+                            elif row[0]:
+                                new_itm.setCheckState(2)
+                        self.ui.lst_sets.model().setItem(i, j, new_itm)
 
-        self.ui.lst_sets.model().itemChanged.connect(self.sel_config_def)
+            self.ui.lst_sets.model().itemChanged.connect(self.sel_config_def)
 
         if id:
             for r in range(self.ui.lst_sets.model().rowCount()):

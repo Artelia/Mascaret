@@ -27,12 +27,49 @@ class CheckTab():
     def __init__(self, mgis, mdb):
         self.mgis = mgis
         self.mdb = mdb
-        # for add table [ ['ADD TAB',[list_table]]
+        # for add table [ 'add_tab': [list_table]]
         # for delete [ ['DEL TAB',[list_table]]
         self.dico_modif = {'2.9.9': {'admin_tab': ["ALTER TABLE {0}.admin_tab ADD COLUMN "
                                                    "IF NOT EXISTS toto double precision;"]},
-                           '3.0.0': {'admin_tab': ["ALTER TABLE {0}.admin_tab DROP COLUMN IF EXISTS toto ;"]}}
-        self.list_hist_version = ['0.0.0', '2.9.9', '3.0.0']
+                           '3.0.0': {'admin_tab': ["ALTER TABLE {0}.admin_tab DROP COLUMN IF EXISTS toto ;"]},
+                           '3.0.1': {'add_tab': [ {'tab': Maso.struct_fg, 'overwrite' :False},
+                                                   {'tab':  Maso.struct_fg_val, 'overwrite': False},
+                                                   {'tab':  Maso.weirs_mob_val, 'overwrite': False},
+                                                   {'tab': Maso.results_int, 'overwrite': False},
+                                                   {'tab': Maso.results_float, 'overwrite': False},
+                                                   {'tab': Maso.results_date, 'overwrite': False}],
+                                     'weirs' : ["ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS active_mob boolean;",
+                                                "ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS method_mob text;"]
+                               }
+                           }
+
+        tables = [
+            Maso.struct_fg, Maso.struct_fg_val,
+            Maso.weirs_mob_val
+        ]
+        tables.sort(key=lambda x: x().order)
+
+        for masobj_class in tables:
+            try:
+                masobj_class.overwrite = True
+                obj = self.process_masobject(masobj_class, 'pg_create_table')
+                if self.mgis.DEBUG:
+                    self.mgis.add_info('  {0} OK'.format(obj.name))
+            except:
+                self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
+
+        list_col = self.list_columns('weirs')
+        sql = ''
+        if 'active_mob' in list_col:
+            sql += "ALTER TABLE {0}.weirs DROP COLUMN IF EXISTS active_mob;\n"
+            sql += "ALTER TABLE {0}.weirs DROP COLUMN IF EXISTS method_mob;\n"
+
+        sql += "ALTER TABLE {0}.weirs ADD COLUMN active_mob boolean;\n"
+        sql += "ALTER TABLE {0}.weirs ADD COLUMN method_mob text;"
+        self.run_query(sql.format(self.SCHEMA))
+
+
+        self.list_hist_version = ['0.0.0', '2.9.9', '3.0.0', '3.0.1']
 
     def update_adim(self):
         """
@@ -138,11 +175,14 @@ class CheckTab():
         plante = True
         sql = ''
         for req in liste:
-            if isinstance(req, list):
-                if req[0] == 'ADD TAB':
-                    plante = self.add_tab(req[1], ver)
-                elif req[0] == 'DEL TAB':
-                    plante = self.del_tab(req[1])
+            if name == 'add_tab':
+                #TODO
+                # 1. reprendre la fonction car j'ai changé en un dico avec l'option overwrite.
+                # 2. test l'ajout  sur un modèle
+                # GUI grpah
+                plante = self.add_tab(req, ver)
+            elif name == 'del_tab':
+                plante = self.del_tab(req)
             else:
                 sql += req.format(self.mdb.SCHEMA) + '\n'
         try:
@@ -152,20 +192,17 @@ class CheckTab():
             self.mgis.add_info('failure! to update the {} table to the {} version '.format(name, ver))
         return plante
 
-    def add_tab(self, tables, version):
+    def add_tab(self, tables, version, overwrite = True):
         """
         Add table
         :param tables: list of tables
         """
-        # tables = [
-        #     Maso.struct_fg, Maso.struct_fg_val,
-        #     Maso.weirs_mob_val
-        # ]
+
         plante = True
         tables.sort(key=lambda x: x().order)
         for masobj_class in tables:
             try:
-                masobj_class.overwrite = True
+                masobj_class.overwrite = overwrite
                 obj = self.mdb.process_masobject(masobj_class, 'pg_create_table')
                 self.updat_num_v(obj.name, version)
                 if self.mgis.DEBUG:

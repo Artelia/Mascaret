@@ -285,7 +285,7 @@
            </property>
           </spacer>
          </item>
-         <item row="7" column="3">
+         <item row="7" column="4">
           <widget class="QDialogButtonBox" name="b_OK_page3">
            <property name="standardButtons">
             <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
@@ -300,10 +300,33 @@
           </widget>
          </item>
          <item row="4" column="2">
-          <widget class="QDoubleSpinBox" name="sb_vd"/>
+          <widget class="QDoubleSpinBox" name="sb_vd">
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <double>1000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="value">
+            <double>99.989999999999995</double>
+           </property>
+          </widget>
          </item>
          <item row="5" column="2">
-          <widget class="QDoubleSpinBox" name="sb_va"/>
+          <widget class="QDoubleSpinBox" name="sb_va">
+           <property name="maximum">
+            <double>1000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="value">
+            <double>99.989999999999995</double>
+           </property>
+          </widget>
          </item>
          <item row="2" column="1">
           <widget class="QLabel" name="label_5">
@@ -313,13 +336,52 @@
           </widget>
          </item>
          <item row="2" column="2">
-          <widget class="QDoubleSpinBox" name="sb_zbas"/>
+          <widget class="QDoubleSpinBox" name="sb_zbas">
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="minimum">
+            <double>-1000000000.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>10000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+          </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QDoubleSpinBox" name="sb_zreg"/>
+          <widget class="QDoubleSpinBox" name="sb_zreg">
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="minimum">
+            <double>-1000000000.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>1000000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+          </widget>
          </item>
          <item row="3" column="2">
-          <widget class="QDoubleSpinBox" name="sb_zhaut"/>
+          <widget class="QDoubleSpinBox" name="sb_zhaut">
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="minimum">
+            <double>-1000000000.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>10000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+          </widget>
          </item>
          <item row="6" column="2">
           <spacer name="verticalSpacer_4">
@@ -348,7 +410,7 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="3">
+         <item row="3" column="4">
           <spacer name="horizontalSpacer_2">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -389,6 +451,12 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item row="4" column="3">
+          <widget class="QComboBox" name="cb_uvb"/>
+         </item>
+         <item row="5" column="3">
+          <widget class="QComboBox" name="cb_uvh"/>
          </item>
         </layout>
        </item>

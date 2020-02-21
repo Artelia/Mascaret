@@ -432,10 +432,12 @@ class ClassMasDatabase(object):
                       Maso.struct_config, Maso.profil_struct, Maso.struct_param,
                       Maso.struct_elem, Maso.struct_elem_param,
                       Maso.struct_abac, Maso.struct_laws,
-                      # , Maso.struct_elem_geo
                       # ouvrage mobile
                       Maso.struct_fg, Maso.struct_fg_val,
-                      Maso.weirs_mob_val
+                      Maso.weirs_mob_val,
+                      # new results
+                      Maso.results_date,
+                      Maso.results_float,Maso.results_int
                       ]
             tables.sort(key=lambda x: x().order)
 
@@ -596,8 +598,6 @@ class ClassMasDatabase(object):
             Maso.struct_config, Maso.profil_struct, Maso.struct_param,
             Maso.struct_elem, Maso.struct_elem_param,
             Maso.struct_abac, Maso.struct_laws
-            # Maso.struct_temporal
-            # , Maso.struct_elem_geo
         ]
         tables.sort(key=lambda x: x().order)
 
@@ -618,31 +618,32 @@ class ClassMasDatabase(object):
         sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer DEFAULT 0;"
         self.run_query(sql.format(self.SCHEMA))
 
-    def add_table_struct_temporal(self, dossier):
-        tables = [
-            Maso.struct_fg, Maso.struct_fg_val,
-            Maso.weirs_mob_val
-        ]
-        tables.sort(key=lambda x: x().order)
-
-        for masobj_class in tables:
-            try:
-                masobj_class.overwrite = True
-                obj = self.process_masobject(masobj_class, 'pg_create_table')
-                if self.mgis.DEBUG:
-                    self.mgis.add_info('  {0} OK'.format(obj.name))
-            except:
-                self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
-
-        list_col = self.list_columns('weirs')
-        sql = ''
-        if 'active_mob' in list_col:
-            sql += "ALTER TABLE {0}.weirs DROP COLUMN IF EXISTS active_mob;\n"
-            sql += "ALTER TABLE {0}.weirs DROP COLUMN IF EXISTS method_mob;\n"
-
-        sql += "ALTER TABLE {0}.weirs ADD COLUMN active_mob boolean;\n"
-        sql += "ALTER TABLE {0}.weirs ADD COLUMN method_mob text;"
-        self.run_query(sql.format(self.SCHEMA))
+    # def add_table_struct_temporal(self, dossier):
+    #     tables = [
+    #         Maso.struct_fg, Maso.struct_fg_val,
+    #         Maso.weirs_mob_val, Maso.results_int,
+    #         Maso.results_date, Maso.results_float
+    #     ]
+    #     tables.sort(key=lambda x: x().order)
+    #
+    #     for masobj_class in tables:
+    #         try:
+    #             masobj_class.overwrite = True
+    #             obj = self.process_masobject(masobj_class, 'pg_create_table')
+    #             if self.mgis.DEBUG:
+    #                 self.mgis.add_info('  {0} OK'.format(obj.name))
+    #         except:
+    #             self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
+    #
+    #     list_col = self.list_columns('weirs')
+    #     sql = ''
+    #     if 'active_mob' in list_col:
+    #         sql += "ALTER TABLE {0}.weirs DROP COLUMN IF EXISTS active_mob;\n"
+    #         sql += "ALTER TABLE {0}.weirs DROP COLUMN IF EXISTS method_mob;\n"
+    #
+    #     sql += "ALTER TABLE {0}.weirs ADD COLUMN active_mob boolean;\n"
+    #     sql += "ALTER TABLE {0}.weirs ADD COLUMN method_mob text;"
+    #     self.run_query(sql.format(self.SCHEMA))
 
     def create__first_model(self):
         """ 

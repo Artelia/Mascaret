@@ -46,7 +46,7 @@ class MasObject(object):
         if self.overwrite is True:
             qry = 'DROP TABLE IF EXISTS {0};\nCREATE TABLE {0}(\n\t{1});\n'.format(schema_name, ',\n\t'.join(attrs))
         else:
-            qry = 'CREATE TABLE {0}\n(\n\t{1}\n)\nWITH(\n\t OIDS=FALSE \n);\n'.format(schema_name, ',\n\t'.join(attrs))
+            qry = 'CREATE TABLE  IF NOT EXISTS {0}\n(\n\t{1}\n)\nWITH(\n\t OIDS=FALSE \n);\n'.format(schema_name, ',\n\t'.join(attrs))
         # if self.spatial_index is True:
         #     qry += 'SELECT "{0}".create_spatial_index(\'{0}\', \'{1}\');'.format(self.schema, self.name)
         # else:
@@ -605,23 +605,6 @@ class resultats_links(MasObject):
                       ('CONSTRAINT res_linkkey', ' PRIMARY KEY (id)')]
 
 
-# TODO: Modifier la table de cette facon
-# class results(MasObject):
-#     def __init__(self):
-#         super(results, self).__init__()
-#         self.order = 14
-#         self.geom_type = None
-#         self.attrs = [('id', ' serial NOT NULL'),
-#                       ('run', ' character varying(30)'),
-#                       ('scenario', ' character varying(30)'),
-#                       ('date', ' timestamp without time zone'),
-#                       ('t', ' float'),
-#                       ('branche', ' integer'),
-#                       ('section', ' integer'),
-#                       ('pk', ' float'),
-#                       ('var', ' text'),
-#                       ('val', ' float'),
-#                       ('CONSTRAINT results_pkey', ' PRIMARY KEY (id)')]
 # *****************************************
 class runs(MasObject):
     def __init__(self):
@@ -1045,3 +1028,37 @@ class admin_tab(MasObject):
                       ('table_', 'text'),
                       ('version_', 'text'),
                       ('CONSTRAINT cle_admin_tab', 'PRIMARY KEY (id_,table_, version_)')]
+
+# new results table
+class results_float(MasObject):
+    def __init__(self):
+        super(results_float, self).__init__()
+        self.order = 37
+        self.geom_type = None
+        self.attrs = [('id_runs', ' serial NOT NULL'),
+                      ('id_order', 'integer'),
+                      ('var', ' text'),
+                      ('val', ' float'),
+                      ('CONSTRAINT results_float_pkey', ' PRIMARY KEY (id_runs,id_order,var)')]
+
+class results_int(MasObject):
+    def __init__(self):
+        super(results_int, self).__init__()
+        self.order = 38
+        self.geom_type = None
+        self.attrs = [('id_runs', ' serial NOT NULL'),
+                      ('id_order', 'integer'),
+                      ('var', ' text'),
+                      ('val', ' integer'),
+                      ('CONSTRAINT results_int_pkey', ' PRIMARY KEY (id_runs,id_order,var)')]
+
+class results_date(MasObject):
+    def __init__(self):
+        super(results_date, self).__init__()
+        self.order = 39
+        self.geom_type = None
+        self.attrs = [('id_runs', ' serial NOT NULL'),
+                      ('id_order', 'integer'),
+                      ('var', 'text'),
+                      ('val', 'timestamp without time zone'),
+                      ('CONSTRAINT results_date_pkey', ' PRIMARY KEY (id_runs,id_order,var)')]
