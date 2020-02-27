@@ -280,4 +280,5 @@ def read_version(masplugPath):
             ligne = ligne.split('=')
             val = ligne[1].strip()
             break
+    file.close()
     return val

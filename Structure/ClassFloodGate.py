@@ -199,7 +199,8 @@ class ClassFloodGate:
         if check_time_regul(time, param_fg['DTREG'], param_fg):
             # debut regule
             new_z = self.cmpt_znew(param_fg, dtp)
-            # print('time modification', time, new_z)
+            print('time modification', time, new_z)
+
             list_final = self.clmeth.update_law(id_config, param_fg, new_z, True)
             if list_final is None:
                 self.mgis.add_info("Error: updating law")
