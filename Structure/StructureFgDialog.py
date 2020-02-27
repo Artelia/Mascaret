@@ -51,6 +51,7 @@ class StructureFgDialog(QDialog):
         fill_qcombobox(self.cb_var, [['Z', 'Cote'], ['Q', 'Debit']])
         # fill_qcombobox(self.cb_loc, [['AV', 'Aval'], ['AM', 'Amont']])
         fill_qcombobox(self.cb_loc, [['AV', 'Aval']])
+
         fill_qcombobox(self.cb_type_t, [[1, 's'], [60, 'min'], [3600, 'h'], [86400, 'jours']])
 
         self.dico_ctrl = {'VELOFG': [self.vel_fg],
@@ -67,7 +68,7 @@ class StructureFgDialog(QDialog):
                           'TYPE_TIME' :[self.cb_type_t]
                           }
         self.display_fg_struct()
-
+        self.cb_var_chang(self.cb_var.currentText())
         self.cb_var.currentIndexChanged['QString'].connect(self.cb_var_chang)
 
     def accept_page(self):
