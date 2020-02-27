@@ -253,7 +253,6 @@ class ClassFloodGate:
         """
         # state: 0: rien, 1: close, 2 open
         state, dzf = self.comput_dz_state(param_fg, dtp)
-
         if state != 0:
             # calcul Znew
             # dz_velo = param_fg['VELOFG'] * param_fg['DTREG']
