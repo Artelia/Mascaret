@@ -49,12 +49,15 @@ class ClassFloodGate:
         self.model_size = 0
         self.new_z = 99
         self.param_fg = {}
+        # resultats du mouvement de la vanne
+        self.results_fg_mv={}
 
     def init_floogate(self):
         """ Get information for floodgate"""
         self.model_size, _, _ = self.masc.get_var_size('Model.X')
 
-        self.param_fg, link_name_id = self.get_param_fg()
+        self.param_fg, link_name_id, self.results_fg_mv = self.get_param_fg()
+
         # attention init.loi ou pas
         # connaitrea la relation config et non law
         nb_loi_sing = self.masc.get_var_size("Model.Weir.Name")[0]
@@ -154,9 +157,10 @@ class ClassFloodGate:
         dict_par = self.mdb.select('struct_fg', where=where, list_var=['id_config', 'type_fg', 'var_reg', 'xpos'])
         param_fg = {}
         link_name_id = {}
-
+        results_fg_reg = {}
         lid_config = dict_par['id_config']
         for i, id_config in enumerate(lid_config):
+            results_fg_reg[id_config]= {'TIME': [],'Z': []}
             dict_tmp = {'DIRFG': dict_par['type_fg'][i],
                         'LOCCONT': dict_par['xpos'][i],
                         'VREG': dict_par['var_reg'][i]}
@@ -183,7 +187,7 @@ class ClassFloodGate:
             dict_tmp['ZRESI'] = 0
             param_fg[id_config] = dict_tmp
 
-        return param_fg, link_name_id
+        return param_fg, link_name_id,  results_fg_reg
 
     def iter_fg(self, time, dtp):
         """
@@ -199,8 +203,7 @@ class ClassFloodGate:
         if check_time_regul(time, param_fg['DTREG'], param_fg):
             # debut regule
             new_z = self.cmpt_znew(param_fg, dtp)
-            print('time modification', time, new_z)
-
+            self.stock_newz(id_config, time, new_z, param_fg['ZOLD'], dtp)
             list_final = self.clmeth.update_law(id_config, param_fg, new_z, True)
             if list_final is None:
                 self.mgis.add_info("Error: updating law")
@@ -341,3 +344,13 @@ class ClassFloodGate:
 
         del oribf
         del endbf
+
+    def stock_newz(self, id_config, time, newz, zold, dt):
+        if zold == newz:
+            self.results_fg_mv[id_config]['TIME'].append(time)
+            self.results_fg_mv[id_config]['Z'].append(newz)
+        else :
+            self.results_fg_mv[id_config]['TIME'].append(time - dt)
+            self.results_fg_mv[id_config]['Z'].append(zold)
+            self.results_fg_mv[id_config]['TIME'].append(time)
+            self.results_fg_mv[id_config]['Z'].append(newz)

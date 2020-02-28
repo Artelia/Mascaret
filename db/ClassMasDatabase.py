@@ -978,9 +978,9 @@ $BODY$
         #     self.mgis.add_info('function delete end')
 
     def insert(self, table, tab, colonnes, delim=" "):
-
-        var = ",".join(colonnes)
-
+        tmp = [colonnes[0]]
+        tmp += sorted(colonnes[1:])
+        var = ",".join(tmp)
         valeurs = ""
         for id in tab.keys():
 
@@ -988,7 +988,6 @@ $BODY$
                 valeurs += "('" + str(id) + "',"
             else:
                 valeurs += "(" + str(id) + ","
-
             for k in sorted(tab[id].keys()):
                 if isinstance(tab[id][k], basestring):
                     valeurs += "'" + tab[id][k] + "',"
@@ -1004,6 +1003,7 @@ $BODY$
                                                             table,
                                                             var,
                                                             valeurs)
+        print(sql)
         self.run_query(sql)
         # if self.mgis.DEBUG:
         #     self.mgis.add_info('function insert end')

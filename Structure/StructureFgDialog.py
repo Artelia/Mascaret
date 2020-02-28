@@ -49,6 +49,7 @@ class StructureFgDialog(QDialog):
 
         fill_qcombobox(self.cb_dir, [['U', 'haut'], ['D', 'bas']])
         fill_qcombobox(self.cb_var, [['Z', 'Cote'], ['Q', 'Debit']])
+        fill_qcombobox(self.cb_loc, [['AV', 'Aval'], ['AM', 'Amont']])
 
         #
 
@@ -68,11 +69,8 @@ class StructureFgDialog(QDialog):
                           'TYPE_TIME' :[self.cb_type_t]
                           }
         self.display_fg_struct()
-
         if self.cb_var.currentText() == 'Debit':
             fill_qcombobox(self.cb_loc, [['AV', 'Aval']])
-        else:
-            fill_qcombobox(self.cb_loc, [['AV', 'Aval'], ['AM', 'Amont']])
         self.cb_var.currentIndexChanged['QString'].connect(self.cb_var_chang)
 
     def accept_page(self):

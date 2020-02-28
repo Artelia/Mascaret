@@ -1507,10 +1507,13 @@ class ClassMascaret:
                 # add if name of init. exist previously
                 sceninit = scen + '_init'
                 if self.check_scenar(sceninit, run):
+
                     self.mgis.add_info("========== Run initialization =========")
                     self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, sceninit, noyau))
-                    self.lance_mascaret(self.baseName + '_init.xcas')
-                    self.lit_opt(run, sceninit, None,
+
+                    id_run = self.insert_id_run(run, sceninit)
+                    self.lance_mascaret(self.baseName + '_init.xcas', id_run)
+                    self.lit_opt(run, sceninit,id_run, None,
                                  self.baseName + '_init', comments)
                 else:
                     self.mgis.add_info("No Run initialization.\n"
@@ -1580,20 +1583,22 @@ class ClassMascaret:
             cond_casier = False
             if par["presenceCasiers"] and noyau == "unsteady":
                 cond_casier = True
-            finish = self.lance_mascaret(self.baseName + '.xcas',par['presenceTraceurs'], cond_casier)
+            id_run = self.insert_id_run(run, scen)
+            finish = self.lance_mascaret(self.baseName + '.xcas',id_run, par['presenceTraceurs'], cond_casier)
             if not finish:
                 self.mgis.add_info("Simulation error")
                 return
 
             # Lecture de l'OPT des casiers et liaisons puis ecriture dans la table resultats
-
-            self.lit_opt(run, scen, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
+            self.lit_opt(run, scen,id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
+            if self.check_mobil_gate():
+                self.read_mobil_gate_res(id_run)
 
         self.iface.messageBar().clearWidgets()
         self.mgis.add_info("Simulation finished")
         return
 
-    def lance_mascaret(self, fichier_cas,tracer=False, casier=False):
+    def lance_mascaret(self, fichier_cas,id_run,tracer=False, casier=False):
         """
         Run mascaret
         """
@@ -1632,18 +1637,73 @@ class ClassMascaret:
             os.chdir(self.dossierFileMasc)
             clapi = ClassAPIMascaret(self)
             clapi.main(fichier_cas,tracer,casier)
+            self.stock_res_api(clapi.results_api, id_run)
             del clapi
             os.chdir(pwd)
 
             return True
 
-    def lit_opt(self, run, scen, date_debut, base_namefile, comments='', tracer=False, casier=False):
+    def  stock_res_api(self, dico, id_run):
+        """ Stock api results """
+        if len(dico) > 0:
+            for key in dico.keys():
+                if key is 'RES_FG':
+                    self.res_fg(dico[key], id_run)
+
+    def res_fg(self,dico,id_run):
+        """stock flood gate results"""
+        type_res = dico['type']
+        dico_res = dico['dico']
+        colonnes = ['id_runs', 'time', 'pk', 'type_res', 'var', 'val']
+        values_int =[]
+        values_f = []
+        for id_config in dico_res.keys():
+            rows = self.mdb.select('struct_config', where='id={}'.format(id_config),
+                                   list_var=['abscissa'])
+            time = dico_res[id_config]['TIME']
+            lpk = [ rows['abscissa'][0] for var in range(len(time))]
+            int_tmp, f_tmp = self.creat_values(id_run, 'Z', type_res, lpk,
+                         time, dico_res[id_config]['Z'])
+            values_int += int_tmp
+            values_f += f_tmp
+        if len(values_int) > 0:
+            self.mdb.insert_res('results_in', values_int, colonnes)
+        elif len(values_f) > 0:
+            self.mdb.insert_res('results_float', values_f, colonnes)
+
+    def creat_values(self,id_run, name, type_res, lpk, ltime, lval):
+        """
+        create values list  for  insert_res function
+        :param id_run: id (run, screnario
+        :param name: variable name
+        :param type_res: results type
+        :param lpk: pk list
+        :param ltime: time list
+        :param lval:  values list
+        :return:
+        """
+        test = lval[0]
+        values_int = []
+        values_f = []
+        if isinstance(test, int):
+            values = values_int
+        elif isinstance(test, float) :
+            values = values_f
+        else:
+            return  None
+        for time, pk, val in zip(ltime, lpk, lval):
+            values.append([id_run,time,pk,type_res, name, val])
+
+        return values_int, values_f
+
+    def lit_opt(self, run, scen, id_run, date_debut, base_namefile, comments='', tracer=False, casier=False):
         nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
         # tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
         if self.mgis.DEBUG:
             self.mgis.add_info("Load data ....")
         if not os.path.isfile(nom_fich):
             self.mgis.add_info("Simulation Error: there aren't results")
+            self.mdb.delete('runs','id={}'.format(id_run))
             return False
 
         t, pk, col, value = self.read_opt(nom_fich, date_debut, scen, run)
@@ -1663,25 +1723,15 @@ class ClassMascaret:
             for j, lignval in enumerate(value):
                 for i in lind:
                     lignval.append(value_tra[j][i])
-        maintenant = datetime.datetime.utcnow()
-
-        tab = {run: {"scenario": scen,
-                     "date": "{:%Y-%m-%d %H:%M}".format(maintenant),
-                     "t": list(t),
-                     "pk": list(pk)}}
-
-        listimport = ["run", "date", "pk", "scenario", "t"]
+        tab = {id_run :
+                   { "t": list(t),
+                    "pk": list(pk)}}
         if comments != '':
-            tab[run]["comments"] = comments
-            listimport.insert(1, "comments")
+            tab["comments"] = comments
         if tracer:
-            tab[run]['wq'] = self.wq.cur_wq_mod
-            listimport.append("wq")
+            tab['wq'] = self.wq.cur_wq_mod
+        self.mdb.update("runs", tab, var='id')
 
-        self.mdb.insert("runs",
-                        tab,
-                        listimport,
-                        ",")
         liste_col = self.mdb.list_columns("resultats")
         for c in col:
             if c.lower() not in liste_col:
@@ -2061,6 +2111,66 @@ class ClassMascaret:
                 return True
 
         return False
+
+    def read_mobil_gate_res(self,id_run):
+        """
+        read result mobil_gate
+        :param id_run: run if
+        :return:
+        """
+
+        nomfich = os.path.join(self.dossierFileMasc, 'Fichier_Crete.csv')
+        if os.path.isfile(nomfich):
+            # Read file
+            dico_res = {}
+            fich = open(nomfich, 'r')
+            for ligne in fich:
+                liste = ligne.split()
+                if len(liste)>1 :
+                    nom = liste[2].strip()
+                    if not(nom in dico_res.keys()):
+                        dico_res[nom] = {'TIME' :[],'Z' :[]}
+                    dico_res[nom]['TIME'].append(float(liste[0].strip()))
+                    dico_res[nom]['Z'].append(float(liste[1].strip()))
+            # Stock information
+            values_int = []
+            values_f = []
+            for name in  dico_res.keys():
+                where = "name = '{}'".format(name)
+                info = self.mdb.select('weirs', where=where, list_var=['gid', 'abscissa'])
+                time=dico_res[name]['TIME']
+                type_res = 'weirs_mob'
+                lpk = [info['abscissa'][0] for i in len(time)]
+                int_tmp, f_tmp = self.creat_values(id_run, 'Z', type_res, lpk,
+                                                   time, dico_res[name]['Z'])
+                values_int += int_tmp
+                values_f += f_tmp
+
+            colonnes = ['id_runs', 'time', 'pk', 'type_res', 'var', 'val']
+            if len(values_int) > 0:
+                self.mdb.insert_res('results_in', values_int, colonnes)
+            elif len(values_f) > 0:
+                self.mdb.insert_res('results_float', values_f, colonnes)
+
+
+    def insert_id_run(self, run, scen):
+
+        maintenant = datetime.datetime.utcnow()
+        tab = {run: {"scenario": scen,
+                     "date": "{:%Y-%m-%d %H:%M}".format(maintenant)}
+               }
+        listimport = ["run", "scenario","date"]
+
+        self.mdb.insert("runs",
+                        tab,
+                        listimport)
+        info = self.mdb.select('runs',
+                               where="run='{}' AND scenario='{}'".format( run, scen),
+                               list_var=['id'])
+
+        id_run = info['id'][0]
+        return id_run
+
 
     @staticmethod
     def around(x):

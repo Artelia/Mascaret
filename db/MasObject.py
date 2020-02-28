@@ -1035,30 +1035,47 @@ class results_float(MasObject):
         super(results_float, self).__init__()
         self.order = 37
         self.geom_type = None
-        self.attrs = [('id_runs', ' serial NOT NULL'),
-                      ('id_order', 'integer'),
+        self.attrs = [('id_runs', 'NOT NULL'),
+                      ('time', 'float'),
+                      ('pk', 'float'),
+                      ('type_res', 'text'),
                       ('var', ' text'),
-                      ('val', ' float'),
-                      ('CONSTRAINT results_float_pkey', ' PRIMARY KEY (id_runs,id_order,var)')]
+                      ('val', 'float'),
+                      ('CONSTRAINT results_float_pkey', ' PRIMARY KEY (id_runs,time,pk,type_res,var)')]
 
 class results_int(MasObject):
     def __init__(self):
         super(results_int, self).__init__()
         self.order = 38
         self.geom_type = None
-        self.attrs = [('id_runs', ' serial NOT NULL'),
-                      ('id_order', 'integer'),
+        self.attrs = [('id_runs', 'NOT NULL'),
+                      ('time', 'float'),
+                      ('pk', 'float'),
+                      ('type_res', 'text'),
                       ('var', ' text'),
                       ('val', ' integer'),
-                      ('CONSTRAINT results_int_pkey', ' PRIMARY KEY (id_runs,id_order,var)')]
+                      ('CONSTRAINT results_int_pkey', ' PRIMARY KEY (id_runs,time,pk,type_res,var)')]
 
-class results_date(MasObject):
+class results_sect(MasObject):
     def __init__(self):
-        super(results_date, self).__init__()
+        super(results_sect, self).__init__()
         self.order = 39
         self.geom_type = None
-        self.attrs = [('id_runs', ' serial NOT NULL'),
-                      ('id_order', 'integer'),
+        self.attrs = [('id_runs', 'NOT NULL'),
+                      ('pk', 'float'),
+                      ('branch', 'integer'),
+                      ('section', 'integer'),
+                      ('CONSTRAINT results_sect_pkey', ' PRIMARY KEY (id_runs,pk,branch)')]
+
+class results_var(MasObject):
+    def __init__(self):
+        super(results_var, self).__init__()
+        self.order = 40
+        self.geom_type = None
+        self.attrs = [('id', ' NOT NULL'),
+                      ('type_res', 'text'),
                       ('var', 'text'),
-                      ('val', 'timestamp without time zone'),
-                      ('CONSTRAINT results_date_pkey', ' PRIMARY KEY (id_runs,id_order,var)')]
+                      ('name', 'text'),
+                      ('type_var', 'text'),
+                      ('CONSTRAINT results_var_pkey', ' PRIMARY KEY (id,type_res,var)')]
+

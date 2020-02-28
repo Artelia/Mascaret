@@ -32,12 +32,15 @@ class CheckTab():
         self.dico_modif = {'2.9.9': {'admin_tab': ["ALTER TABLE {0}.admin_tab ADD COLUMN "
                                                    "IF NOT EXISTS toto double precision;"]},
                            '3.0.0': {'admin_tab': ["ALTER TABLE {0}.admin_tab DROP COLUMN IF EXISTS toto ;"]},
-                           '3.0.1': {'add_tab': [ {'tab': Maso.struct_fg, 'overwrite' :False},
+                           '3.0.1': {
+                               'add_tab': [ {'tab': Maso.struct_fg, 'overwrite' :False},
                                                    {'tab':  Maso.struct_fg_val, 'overwrite': False},
                                                    {'tab':  Maso.weirs_mob_val, 'overwrite': False},
-                                                   {'tab': Maso.results_int, 'overwrite': False},
-                                                   {'tab': Maso.results_float, 'overwrite': False},
-                                                   {'tab': Maso.results_date, 'overwrite': False}],
+                                                   {'tab': Maso.results_int, 'overwrite': True},
+                                                   {'tab': Maso.results_float, 'overwrite': True},
+                                                   {'tab': Maso.results_var, 'overwrite': True},
+                                                   {'tab': Maso.results_sect, 'overwrite': True}
+                                            ],
                                      'weirs' : ["ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS active_mob boolean;",
                                                 "ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS method_mob text;"]
                                }
@@ -55,6 +58,7 @@ class CheckTab():
 
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         version = read_version(self.mgis.masplugPath)
+        # self.all_version(tabs, version)
 
         if not "admin_tab" in tabs:
             try:
@@ -94,6 +98,8 @@ class CheckTab():
                         if key in tabs_no:
                             tabs_no.remove(key)
             if test_gd:
+                if 'add_tab' in tabs_no:
+                    tabs_no.remove('add_tab')
                 self.all_version(tabs_no, ver)
             else:
                 self.mgis.add_info('ERROR: Update table ************')
