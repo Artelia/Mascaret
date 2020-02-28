@@ -203,7 +203,7 @@ class ClassFloodGate:
         if check_time_regul(time, param_fg['DTREG'], param_fg):
             # debut regule
             new_z = self.cmpt_znew(param_fg, dtp)
-            self.stock_newz(id_config, time, new_z, param_fg['ZOLD'], dtp)
+            self.fill_results_fg_mv(id_config, time, new_z, param_fg['ZOLD'], dtp)
             list_final = self.clmeth.update_law(id_config, param_fg, new_z, True)
             if list_final is None:
                 self.mgis.add_info("Error: updating law")
@@ -345,7 +345,16 @@ class ClassFloodGate:
         del oribf
         del endbf
 
-    def stock_newz(self, id_config, time, newz, zold, dt):
+    def fill_results_fg_mv(self, id_config, time, newz, zold, dt):
+        """
+        fill the results_fg_mv dico
+        :param id_config: configuration id
+        :param time: time
+        :param newz:  new Z
+        :param zold: old Z
+        :param dt: step time
+        :return:
+        """
         if zold == newz:
             self.results_fg_mv[id_config]['TIME'].append(time)
             self.results_fg_mv[id_config]['Z'].append(newz)

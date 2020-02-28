@@ -33,21 +33,20 @@ class CheckTab():
                                                    "IF NOT EXISTS toto double precision;"]},
                            '3.0.0': {'admin_tab': ["ALTER TABLE {0}.admin_tab DROP COLUMN IF EXISTS toto ;"]},
                            '3.0.1': {
-                               'add_tab': [ {'tab': Maso.struct_fg, 'overwrite' :False},
-                                                   {'tab':  Maso.struct_fg_val, 'overwrite': False},
-                                                   {'tab':  Maso.weirs_mob_val, 'overwrite': False},
-                                                   {'tab': Maso.results_int, 'overwrite': True},
-                                                   {'tab': Maso.results_float, 'overwrite': True},
-                                                   {'tab': Maso.results_var, 'overwrite': True},
-                                                   {'tab': Maso.results_sect, 'overwrite': True}
-                                            ],
-                                     'weirs' : ["ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS active_mob boolean;",
-                                                "ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS method_mob text;"]
-                               }
+                               'add_tab': [{'tab': Maso.struct_fg, 'overwrite': False},
+                                           {'tab': Maso.struct_fg_val, 'overwrite': False},
+                                           {'tab': Maso.weirs_mob_val, 'overwrite': False}
+                                           ],
+                               'weirs': ["ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS active_mob boolean;",
+                                         "ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS method_mob text;"]
+                           },
+                           '3.0.2': {'add_tab': [{'tab': Maso.results_int, 'overwrite': True},
+                                                 {'tab': Maso.results_float, 'overwrite': True},
+                                                 {'tab': Maso.results_sect, 'overwrite': True}]},
+                           '3.0.3': {'add_tab': [{'tab': Maso.results_var, 'overwrite': True}]}
                            }
 
-
-        self.list_hist_version = ['0.0.0', '2.9.9', '3.0.0', '3.0.1']
+        self.list_hist_version = ['0.0.0', '2.9.9', '3.0.0', '3.0.1', '3.0.2']
 
     def update_adim(self):
         """
@@ -159,21 +158,21 @@ class CheckTab():
         for req in liste:
             if name == 'add_tab':
                 table = req['tab']
-                overw= req['overwrite']
-                plante = self.add_tab(table, ver,overw)
+                overw = req['overwrite']
+                plante = self.add_tab(table, ver, overw)
             elif name == 'del_tab':
                 plante = self.del_tab(req)
             else:
                 sql += req.format(self.mdb.SCHEMA) + '\n'
         try:
-            if sql !='':
+            if sql != '':
                 self.mdb.execute(sql)
         except:
             plante = False
             self.mgis.add_info('failure! to update the {} table to the {} version '.format(name, ver))
         return plante
 
-    def add_tab(self, tables, version, overwrite = True):
+    def add_tab(self, tables, version, overwrite=True):
         """
         Add table
         :param tables: list of tables

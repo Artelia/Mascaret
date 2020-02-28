@@ -2118,7 +2118,6 @@ class ClassMascaret:
         :param id_run: run if
         :return:
         """
-
         nomfich = os.path.join(self.dossierFileMasc, 'Fichier_Crete.csv')
         if os.path.isfile(nomfich):
             # Read file
@@ -2154,7 +2153,6 @@ class ClassMascaret:
 
 
     def insert_id_run(self, run, scen):
-
         maintenant = datetime.datetime.utcnow()
         tab = {run: {"scenario": scen,
                      "date": "{:%Y-%m-%d %H:%M}".format(maintenant)}

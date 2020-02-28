@@ -319,7 +319,6 @@ class ClassAPIMascaret:
             self.clfg.finalize()
 
     def main(self, filename, tracer=False, basin=False):
-
         self.tracer = tracer
         self.basin = basin
         self.initial(filename)
