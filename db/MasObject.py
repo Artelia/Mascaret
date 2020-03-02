@@ -1035,7 +1035,7 @@ class results_float(MasObject):
         super(results_float, self).__init__()
         self.order = 37
         self.geom_type = None
-        self.attrs = [('id_runs', 'NOT NULL'),
+        self.attrs = [('id_runs', 'integer NOT NULL'),
                       ('time', 'float'),
                       ('pk', 'float'),
                       ('type_res', 'text'),
@@ -1048,7 +1048,7 @@ class results_int(MasObject):
         super(results_int, self).__init__()
         self.order = 38
         self.geom_type = None
-        self.attrs = [('id_runs', 'NOT NULL'),
+        self.attrs = [('id_runs', 'integer NOT NULL'),
                       ('time', 'float'),
                       ('pk', 'float'),
                       ('type_res', 'text'),
@@ -1061,7 +1061,7 @@ class results_sect(MasObject):
         super(results_sect, self).__init__()
         self.order = 39
         self.geom_type = None
-        self.attrs = [('id_runs', 'NOT NULL'),
+        self.attrs = [('id_runs', 'integer NOT NULL'),
                       ('pk', 'float'),
                       ('branch', 'integer'),
                       ('section', 'integer'),
@@ -1072,7 +1072,7 @@ class results_var(MasObject):
         super(results_var, self).__init__()
         self.order = 40
         self.geom_type = None
-        self.attrs = [('id', ' NOT NULL'),
+        self.attrs = [('id', ' integer NOT NULL'),
                       ('type_res', 'text'),
                       ('var', 'text'),
                       ('name', 'text'),
