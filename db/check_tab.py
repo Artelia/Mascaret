@@ -39,11 +39,7 @@ class CheckTab():
                                            ],
                                'weirs': ["ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS active_mob boolean;",
                                          "ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS method_mob text;"]
-                           },
-                           '3.0.2': {'add_tab': [{'tab': Maso.results_int, 'overwrite': True},
-                                                 {'tab': Maso.results_float, 'overwrite': True},
-                                                 {'tab': Maso.results_sect, 'overwrite': True}]},
-                           '3.0.3': {'add_tab': [{'tab': Maso.results_var, 'overwrite': True}]}
+                           }
                            }
 
         self.list_hist_version = ['0.0.0', '2.9.9', '3.0.0', '3.0.1', '3.0.2']
