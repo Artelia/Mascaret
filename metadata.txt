@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=2.18
 qgisMaximumVersion=3.99
 
-version=2.0.0
+version=2.1.0
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,6 +30,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    2.1.0  : Correction of casier bug in Qgis3
     2.0.0  : Correction of  displaying observations bug on graphics
              Add README.md file
              Delete of "bin" repository
