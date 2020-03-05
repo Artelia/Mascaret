@@ -1031,52 +1031,38 @@ class admin_tab(MasObject):
                       ('CONSTRAINT cle_admin_tab', 'PRIMARY KEY (id_,table_, version_)')]
 
 # new results table
-class results_float(MasObject):
+class results(MasObject):
     def __init__(self):
-        super(results_float, self).__init__()
+        super(results, self).__init__()
         self.order = 37
         self.geom_type = None
         self.attrs = [('id_runs', 'integer NOT NULL'),
                       ('time', 'float'),
-                      ('pk', 'float'),
-                      ('type_res', 'text'),
-                      ('var', ' text'),
+                      ('pknum', 'float'),
+                      ('var', 'integer'),
                       ('val', 'float'),
-                      ('CONSTRAINT results_float_pkey', ' PRIMARY KEY (id_runs,time,pk,type_res,var)')]
-
-class results_int(MasObject):
-    def __init__(self):
-        super(results_int, self).__init__()
-        self.order = 38
-        self.geom_type = None
-        self.attrs = [('id_runs', 'integer NOT NULL'),
-                      ('time', 'float'),
-                      ('pk', 'float'),
-                      ('type_res', 'text'),
-                      ('var', ' text'),
-                      ('val', ' integer'),
-                      ('CONSTRAINT results_int_pkey', ' PRIMARY KEY (id_runs,time,pk,type_res,var)')]
+                      ('CONSTRAINT results_pkey', ' PRIMARY KEY (id_runs, time, pknum, var)')]
 
 class results_sect(MasObject):
     def __init__(self):
         super(results_sect, self).__init__()
-        self.order = 39
+        self.order = 38
         self.geom_type = None
         self.attrs = [('id_runs', 'integer NOT NULL'),
                       ('pk', 'float'),
                       ('branch', 'integer'),
                       ('section', 'integer'),
-                      ('CONSTRAINT results_sect_pkey', ' PRIMARY KEY (id_runs,pk,branch)')]
+                      ('CONSTRAINT results_sect_pkey', ' PRIMARY KEY (id_runs, pk, branch)')]
 
 class results_var(MasObject):
     def __init__(self):
         super(results_var, self).__init__()
-        self.order = 40
+        self.order = 39
         self.geom_type = None
-        self.attrs = [('id', ' integer NOT NULL'),
+        self.attrs = [('id', 'serial NOT NULL'),
                       ('type_res', 'text'),
                       ('var', 'text'),
                       ('name', 'text'),
                       ('type_var', 'text'),
-                      ('CONSTRAINT results_var_pkey', ' PRIMARY KEY (id,type_res,var)')]
+                      ('CONSTRAINT results_var_pkey', ' PRIMARY KEY (type_res, var)')]
 
