@@ -745,7 +745,7 @@ class ClassMasDatabase(object):
         Args:
             table_name (str): Name of the table which will be deleted.
         """
-        qry = 'DROP TABLE {0}.{1} ;'
+        qry = 'DROP TABLE IF EXISTS {0}.{1} ;'
         qry = qry.format(self.SCHEMA, table_name)
         if self.run_query(qry) is None:
             return False
