@@ -38,7 +38,8 @@ class CheckTab():
                                            {'tab': Maso.weirs_mob_val, 'overwrite': False}
                                            ],
                                'weirs': ["ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS active_mob boolean;",
-                                         "ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS method_mob text;"]
+                                         "ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS method_mob text;"],
+                               'runs': ["ALTER TABLE {0}.runs ADD COLUMN IF NOT EXISTS init_date timestamp without time zone;"]
                            }
                            }
 

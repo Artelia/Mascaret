@@ -1337,8 +1337,7 @@ class ClassMascaret:
         if par["presenceCasiers"] and noyau == "unsteady":
             self.creer_geo_casier()
 
-        if self.check_mobil_gate():
-            self.create_mobil_gate_file()
+
 
         if par["evenement"] and noyau != "steady":
 
@@ -1458,6 +1457,7 @@ class ClassMascaret:
             else:
                 # TODO ATTENTION CREATION LOI STRUCTUR HYdraulic
                 # transcritical unsteady hors evenement
+
                 if par['presenceTraceurs']:
                     if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
                         self.wq.create_filemet()
@@ -1583,6 +1583,8 @@ class ClassMascaret:
             cond_casier = False
             if par["presenceCasiers"] and noyau == "unsteady":
                 cond_casier = True
+            if self.check_mobil_gate()and  noyau == "unsteady":
+                self.create_mobil_gate_file()
             id_run = self.insert_id_run(run, scen)
             finish = self.lance_mascaret(self.baseName + '.xcas',id_run, par['presenceTraceurs'], cond_casier)
             if not finish:
@@ -1726,11 +1728,15 @@ class ClassMascaret:
         tab = {id_run :
                    { "t": list(t),
                     "pk": list(pk)}}
+        if date_debut:
+            tab[id_run]["init_date"] = date_debut
         if comments != '':
-            tab["comments"] = comments
+            tab[id_run]["comments"] = comments
         if tracer:
-            tab['wq'] = self.wq.cur_wq_mod
+            tab[id_run]['wq'] = self.wq.cur_wq_mod
+
         self.mdb.update("runs", tab, var='id')
+
 
         liste_col = self.mdb.list_columns("resultats")
         for c in col:
@@ -2055,7 +2061,7 @@ class ClassMascaret:
                                                        idw), order='name_var, id_order')
                             if len(rows['id_weirs']) > 1:
                                 if len(rows['id_weirs']) < 51:
-                                    fich.write("{} {} {}\n".format(i+1, info['name'][i], idw))
+                                    fich.write("{} {}\n".format(info['name'][i], idw))
                                     fich.write("methode 1\n")
                                     fich.write("T(s)\n")
                                     nbt = max(rows['id_order'])+1
@@ -2078,7 +2084,7 @@ class ClassMascaret:
                             rows = self.mdb.select('weirs_mob_val',
                                                    where="id_weirs= {} AND name_var!='TIME' AND name_var!='ZVAR'".format(idw))
                             if len(rows['id_weirs']) > 1:
-                                fich.write("{} {} {}\n".format(i+1, info['name'][i], idw))
+                                fich.write("{} {}\n".format(info['name'][i], idw))
                                 fich.write("methode 2\n")
                                 fich.write("Zregulation Zbas Zhaut (m ngf)\n")
                                 fich.write("{} {} {}\n".format(rows['value'][rows['name_var'].index('ZREG')],
@@ -2140,16 +2146,14 @@ class ClassMascaret:
                 time=dico_res[name]['TIME']
                 type_res = 'weirs_mob'
                 lpk = [info['abscissa'][0] for i in len(time)]
-                int_tmp, f_tmp = self.creat_values(id_run, 'Z', type_res, lpk,
+                int_tmp, f_tmp = self.creat_values(id_run, 'Z',  lpk,
                                                    time, dico_res[name]['Z'])
-                values_int += int_tmp
                 values_f += f_tmp
 
-            colonnes = ['id_runs', 'time', 'pk', 'type_res', 'var', 'val']
-            if len(values_int) > 0:
-                self.mdb.insert_res('results_in', values_int, colonnes)
-            elif len(values_f) > 0:
-                self.mdb.insert_res('results_float', values_f, colonnes)
+            colonnes = ['id_runs', 'time', 'pk',  'var', 'val']
+            if len(values) > 0:
+                self.mdb.insert_res('results', values, colonnes)
+
 
 
     def insert_id_run(self, run, scen):
