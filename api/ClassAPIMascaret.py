@@ -315,7 +315,7 @@ class ClassAPIMascaret:
         del self.masc
         if self.clfg != None:
             if len(self.clfg.results_fg_mv)>0:
-                self.results_api['RES_FG'] = {'type': 'struct', 'dico' : self.clfg.results_fg_mv}
+                self.results_api['STRUCT_FG'] = self.clfg.results_fg_mv
             self.clfg.finalize()
 
     def main(self, filename, tracer=False, basin=False):

@@ -21,6 +21,7 @@ import json
 import math
 import os
 import posixpath
+import datetime
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
@@ -852,7 +853,13 @@ Version : {}
     def fct_test(self):
         clam = ClassMascaret(self)
         # clam.create_mobil_gate_file()
-        print(clam.check_mobil_gate())
+        # clam.read_mobil_gate_res(48)
+        date_debut = datetime.datetime(2001, 2, 25, 0, 0)
+        # clam.lit_opt('test','Crue2001', 48, date_debut, clam.baseName , comments='', tracer=False, casier=False)
+        # nom_fich = r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\mascaret.opt'
+        # clam.new_read_opt(nom_fich, 48)
+
+        self.chkt.create_var_result()
 
     # TODO
     # def update_pk(self):

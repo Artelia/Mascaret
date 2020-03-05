@@ -1003,7 +1003,7 @@ $BODY$
                                                             table,
                                                             var,
                                                             valeurs)
-        print(sql)
+
         self.run_query(sql)
         # if self.mgis.DEBUG:
         #     self.mgis.add_info('function insert end')

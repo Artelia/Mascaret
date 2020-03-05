@@ -1649,54 +1649,48 @@ class ClassMascaret:
         """ Stock api results """
         if len(dico) > 0:
             for key in dico.keys():
-                if key is 'RES_FG':
+                if key is 'STRUCT_FG':
                     self.res_fg(dico[key], id_run)
 
-    def res_fg(self,dico,id_run):
+    def res_fg(self,dico_res,id_run):
         """stock flood gate results"""
-        type_res = dico['type']
-        dico_res = dico['dico']
-        colonnes = ['id_runs', 'time', 'pk', 'type_res', 'var', 'val']
-        values_int =[]
-        values_f = []
+
+        colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+        values = []
+        var_info = {'var': 'ZSTR',
+                    'type_res': 'Struct',
+                    'name': 'valve movement',
+                    'type_var': 'float'}
+        id_var = self.check_id_var(var_info)
         for id_config in dico_res.keys():
             rows = self.mdb.select('struct_config', where='id={}'.format(id_config),
                                    list_var=['abscissa'])
             time = dico_res[id_config]['TIME']
             lpk = [ rows['abscissa'][0] for var in range(len(time))]
-            int_tmp, f_tmp = self.creat_values(id_run, 'Z', type_res, lpk,
-                         time, dico_res[id_config]['Z'])
-            values_int += int_tmp
-            values_f += f_tmp
-        if len(values_int) > 0:
-            self.mdb.insert_res('results_in', values_int, colonnes)
-        elif len(values_f) > 0:
-            self.mdb.insert_res('results_float', values_f, colonnes)
 
-    def creat_values(self,id_run, name, type_res, lpk, ltime, lval):
+            v_tmp = self.creat_values(id_run, id_var, lpk,
+                                      time, dico_res[id_config]['ZSTR'])
+
+            values += v_tmp
+
+        self.mdb.insert_res('results_float', values, colonnes)
+
+    def creat_values(self,id_run,id_name, lpk, ltime, lval):
         """
         create values list  for  insert_res function
         :param id_run: id (run, screnario
-        :param name: variable name
-        :param type_res: results type
+        :param id name: variable name id
         :param lpk: pk list
         :param ltime: time list
         :param lval:  values list
         :return:
         """
         test = lval[0]
-        values_int = []
-        values_f = []
-        if isinstance(test, int):
-            values = values_int
-        elif isinstance(test, float) :
-            values = values_f
-        else:
-            return  None
+        values = []
         for time, pk, val in zip(ltime, lpk, lval):
-            values.append([id_run,time,pk,type_res, name, val])
+            values.append([id_run,time,pk, id_name, val])
 
-        return values_int, values_f
+        return values
 
     def lit_opt(self, run, scen, id_run, date_debut, base_namefile, comments='', tracer=False, casier=False):
         nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
@@ -1709,6 +1703,7 @@ class ClassMascaret:
             return False
 
         t, pk, col, value = self.read_opt(nom_fich, date_debut, scen, run)
+
         if tracer:
             nom_fich_tra = os.path.join(self.dossierFileMasc, base_namefile + '.tra_opt')
 
@@ -1729,7 +1724,7 @@ class ClassMascaret:
                    { "t": list(t),
                     "pk": list(pk)}}
         if date_debut:
-            tab[id_run]["init_date"] = date_debut
+            tab[id_run]["init_date"] = "{:%Y-%m-%d %H:%M}".format(date_debut)
         if comments != '':
             tab[id_run]["comments"] = comments
         if tracer:
@@ -1743,21 +1738,26 @@ class ClassMascaret:
             if c.lower() not in liste_col:
                 self.mdb.add_columns("resultats", c.lower())
 
-        self.mdb.insert_res("resultats", value, col)
+        # self.mdb.insert_res("resultats", value, col)
+        # new format
+        self.insert_new_format(value, col,id_run)
 
-        if casier:
-            nom_fich_bas = os.path.join(self.dossierFileMasc, base_namefile + '.cas_opt')
-            nom_fich_link = os.path.join(self.dossierFileMasc, base_namefile + '.liai_opt')
 
-            t_bas, pk_bas, col_bas, value_bas = self.read_opt(nom_fich_bas, date_debut, scen, run,
-                                                              init_col=['t', 'bnum'])
-            t_link, pk_link, col_link, value_link = self.read_opt(nom_fich_link, date_debut, scen, run,
-                                                                  init_col=['t', 'lnum'])
+        # if casier:
+        #     nom_fich_bas = os.path.join(self.dossierFileMasc, base_namefile + '.cas_opt')
+        #     nom_fich_link = os.path.join(self.dossierFileMasc, base_namefile + '.liai_opt')
+        #
+        #     t_bas, pk_bas, col_bas, value_bas = self.read_opt(nom_fich_bas, date_debut, scen, run,
+        #                                                       init_col=['t', 'bnum'])
+        #     t_link, pk_link, col_link, value_link = self.read_opt(nom_fich_link, date_debut, scen, run,
+        #                                                           init_col=['t', 'lnum'])
 
-            self.mdb.insert_res("resultats_basin", value_bas, col_bas)
-            self.mdb.insert_res("resultats_links", value_link, col_link)
+            # self.mdb.insert_res("resultats_basin", value_bas, col_bas)
+            # self.mdb.insert_res("resultats_links", value_link, col_link)
 
         return True
+
+
 
     def opt_to_lig(self, run, scen, base_namefiles):
         """Creation of .lig file """
@@ -1990,6 +1990,7 @@ class ClassMascaret:
             value = []
             for ligne in data:
                 if date_debut:
+
                     d = date_debut + datetime.timedelta(
                         seconds=float(ligne["t"]))
                     ligne["date"] = d
@@ -2134,27 +2135,54 @@ class ClassMascaret:
                 if len(liste)>1 :
                     nom = liste[2].strip()
                     if not(nom in dico_res.keys()):
-                        dico_res[nom] = {'TIME' :[],'Z' :[]}
+                        dico_res[nom] = {'TIME' :[],'ZSTR' :[]}
                     dico_res[nom]['TIME'].append(float(liste[0].strip()))
-                    dico_res[nom]['Z'].append(float(liste[1].strip()))
+                    dico_res[nom]['ZSTR'].append(float(liste[1].strip()))
+
+
+            var_info = {'var' :'ZSTR',
+                        'type_res' : 'weirs',
+                        'name':'valve movement',
+                        'type_var': 'float'}
+            id_var = self.check_id_var(var_info)
+
             # Stock information
-            values_int = []
-            values_f = []
+            colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+            values = []
             for name in  dico_res.keys():
                 where = "name = '{}'".format(name)
                 info = self.mdb.select('weirs', where=where, list_var=['gid', 'abscissa'])
-                time=dico_res[name]['TIME']
-                type_res = 'weirs_mob'
-                lpk = [info['abscissa'][0] for i in len(time)]
-                int_tmp, f_tmp = self.creat_values(id_run, 'Z',  lpk,
-                                                   time, dico_res[name]['Z'])
-                values_f += f_tmp
-
-            colonnes = ['id_runs', 'time', 'pk',  'var', 'val']
+                time = dico_res[name]['TIME']
+                lpk = [info['abscissa'][0] for i in range(len(time))]
+                v_tmp = self.creat_values(id_run,  id_var,  lpk,
+                                                   time, dico_res[name]['ZSTR'])
+                values += v_tmp
             if len(values) > 0:
                 self.mdb.insert_res('results', values, colonnes)
 
+    def check_id_var(self, dico):
+        """
+        return varibale id  and  add variable if not exist
+        :param dico: example : {'var': 'ZSTR',
+                    'type_res': 'weirs',
+                    'name': 'Valve movement',
+                    'type_var': 'float'}
+        :return: id_var ; var identifiant number
+        """
+        id_var = None
+        info = self.mdb.select('results_var', where="var = '{var}' AND type_res = '{type_res}'".format(**dico),
+                               list_var=['id'])
+        if info['id'] :
+            id_var = info['id'][0]
+        else:
+            if len(dico)>2:
+                dico['schema'] = self.mdb.SCHEMA
+                id_var = self.mdb.select_max('id','results_var')
+                dico['id'] = id_var+1
+                self.mdb.run_query("INSERT INTO {schema}.results_var (id,type_res, var, name) "
+                                   "VALUES ( {id}, '{type_res}', '{var}', '{name}')".format(**dico))
 
+        return id_var
 
     def insert_id_run(self, run, scen):
         maintenant = datetime.datetime.utcnow()
@@ -2172,6 +2200,84 @@ class ClassMascaret:
 
         id_run = info['id'][0]
         return id_run
+
+    def new_read_opt(self, nom_fich, id_run, type_res = 'Opt'):
+        """ Read opt file"""
+        t = set([])
+        pk = set([])
+        col_tab=['id_runs', 'time', 'pknum', 'var','val']
+        col = []
+
+        with open(nom_fich, 'r') as source:
+            var = source.readline()
+            if var[:2] == '/*':
+                # comment
+                var = source.readline()
+
+            ligne = source.readline()
+
+            while '[resultats]' not in ligne:
+                temp = ligne.replace('"', '').replace('NaN', "'NULL'").split(';')
+                var_info = {'var': temp[1].upper(),
+                            'type_res':  type_res}
+                id_var = self.check_id_var(var_info)
+                if id_var:
+                    col.append(id_var)
+                else:
+                    col.append(temp[1])
+                ligne = source.readline()
+
+        print(col)
+
+        #     data = csv.DictReader(source, delimiter=';', fieldnames=col)
+        #
+        #     value = []
+        #     for ligne in data:
+        #
+        #         t.add(ligne["t"])
+        #         ligne["run"] = run
+        #         ligne["scenario"] = scen
+        #
+        #         if 'pk' in ligne.keys():
+        #             tempo = str(round(float(ligne["pk"]), 2))
+        #             pk.add(tempo)
+        #         if "section" in ligne.keys():
+        #             ligne["section"] = ligne["section"].replace('"', '')
+        #         if "branche" in ligne.keys():
+        #             ligne["branche"] = ligne["branche"].replace('"', '')
+        #
+        #         ligne_list = []
+        #         delcond_qtot = False
+        #
+        #         for k in col:
+        #             if k == 'qtot':
+        #                 delcond_qtot = True
+        #             elif k == 'pk':
+        #                 tempo = str(round(float(ligne[k]), 2))
+        #                 ligne_list.append(tempo)
+        #             elif k == 'bnum':
+        #                 # extrait le numero mascaret de casier
+        #                 numero_masca = re.findall('\d+', ligne[k])[0]
+        #
+        #                 # convertit le numero masca en qgis (different si un casier inactif)
+        #                 numero_qgis = str(self.dico_basinnum[int(numero_masca)])
+        #                 ligne_list.append(numero_qgis)
+        #             elif k == 'lnum':
+        #                 # extrait le numero mascaret de liaison
+        #                 numero_masca = re.findall('\d+', ligne[k])[0]
+        #                 # convertit le numero masca en qgis (different si une liaison inactive)
+        #                 numero_qgis = str(self.dico_linknum[int(numero_masca)])
+        #                 ligne_list.append(numero_qgis)
+        #             else:
+        #                 ligne_list.append(ligne[k])
+        #
+        #         value.append(ligne_list)
+        # # delete 'qtot' because of the same that 'q'
+        # if delcond_qtot:
+        #     col.remove("qtot")
+
+        return 0
+
 
 
     @staticmethod

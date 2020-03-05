@@ -21,6 +21,7 @@ import os
 from . import MasObject as Maso
 from copy import deepcopy
 from ..Function import read_version
+#from ..ClassParameterDialog import ClassParameterDialog
 
 
 class CheckTab():
@@ -39,9 +40,7 @@ class CheckTab():
                                      'alt_tab': [{'tab': 'weirs', 'sql': ["ALTER TABLE {0}.weirs ADD COLUMN IF NOT "
                                                                           "EXISTS active_mob boolean;",
                                                                           "ALTER TABLE {0}.weirs ADD COLUMN IF NOT "
-                                                                          "EXISTS method_mob text;"]},
-                                     {'tab':'runs', 'sql' : ["ALTER TABLE {0}.runs ADD COLUMN IF NOT"
-                                                             " EXISTS init_date timestamp without time zone;"]}]},
+                                                                          "EXISTS method_mob text;"]}]},
                            '3.0.2': {'add_tab': [{'tab': Maso.results, 'overwrite': False},
                                                  {'tab': Maso.results_sect, 'overwrite': False},
                                                  {'tab': Maso.results_var, 'overwrite': False}],
@@ -219,21 +218,47 @@ class CheckTab():
 
 
     def create_var_result(self):
-        from ..ClassParameterDialog import ClassParameterDialog
+
         self.mdb.execute("DELETE FROM {0}.results_var".format(self.mdb.SCHEMA))
-        prm = ClassParameterDialog(self.mgis, "steady")
-        for v, var in enumerate(prm.variables):
-            name = prm.libel_var[v].replace("'", "''")
-            if name[:5] == "Basin":
-                type_res = "Basin"
-            elif name[:4] == "Link":
-                type_res = "Link"
-            else:
-                type_res = "Opt"
-            self.mdb.run_query("INSERT INTO {0}.results_var (id, type_res, var, name) "
-                               "VALUES ({1}, '{2}', '{3}', '{4}')".format(self.mdb.SCHEMA, v + 1, type_res, var, name))
-        self.mdb.run_query("INSERT INTO {0}.results_var (id, type_res, var, name) "
-                           "VALUES ({1}, 'Struct', 'ZSTR', 'Z Structure')".format(self.mdb.SCHEMA, v + 2))
+        # prm = ClassParameterDialog(self.mgis, "steady")
+        # for v, var in enumerate(prm.variables):
+        #     name = prm.libel_var[v].replace("'", "''")
+        #     if name[:5] == "Basin":
+        #         type_res = "Basin"
+        #     elif name[:4] == "Link":
+        #         type_res = "Link"
+        #     else:
+        #         type_res = "Opt"
+        #     self.mdb.run_query("INSERT INTO {0}.results_var (id, type_res, var, name) "
+        #                        "VALUES ({1}, '{2}', '{3}', '{4}')".format(self.mdb.SCHEMA, v + 1, type_res, var, name))
+        # self.mdb.run_query("INSERT INTO {0}.results_var (id, type_res, var, name) "
+        #                    "VALUES ({1}, 'Struct', 'ZSTR', 'Z Structure')".format(self.mdb.SCHEMA, v + 2))
+        dossier = os.path.join(self.mgis.masplugPath,'db','sql')
+        fichparam = os.path.join(dossier, "var.csv")
+        liste_value = []
+        with open(fichparam, 'r') as file:
+            cpt = 0
+            for ligne in file:
+                if cpt > 0 :
+                    liste = ligne.replace('\n', '').split(';')
+                    liste_value.append([int(liste[0])]+liste[1:])
+                cpt+=1
+        liste_col = self.mdb.list_columns('results_var')
+
+        var = ",".join(liste_col)
+        valeurs = "("
+        for k in liste_col:
+            valeurs += '%s,'
+        valeurs = valeurs[:-1] + ")"
+        print(liste_value)
+
+        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
+                                                            'results_var',
+                                                            var,
+                                                            valeurs)
+        print(sql)
+
+        self.mdb.run_query(sql, many=True, list_many=liste_value)
 
 
     def convert_all_result(self):

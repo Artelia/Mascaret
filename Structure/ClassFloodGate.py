@@ -160,7 +160,7 @@ class ClassFloodGate:
         results_fg_reg = {}
         lid_config = dict_par['id_config']
         for i, id_config in enumerate(lid_config):
-            results_fg_reg[id_config]= {'TIME': [],'Z': []}
+            results_fg_reg[id_config]= {'TIME': [],'ZSTR': []}
             dict_tmp = {'DIRFG': dict_par['type_fg'][i],
                         'LOCCONT': dict_par['xpos'][i],
                         'VREG': dict_par['var_reg'][i]}
@@ -357,9 +357,9 @@ class ClassFloodGate:
         """
         if zold == newz:
             self.results_fg_mv[id_config]['TIME'].append(time)
-            self.results_fg_mv[id_config]['Z'].append(newz)
+            self.results_fg_mv[id_config]['ZSTR'].append(newz)
         else :
             self.results_fg_mv[id_config]['TIME'].append(time - dt)
-            self.results_fg_mv[id_config]['Z'].append(zold)
+            self.results_fg_mv[id_config]['ZSTR'].append(zold)
             self.results_fg_mv[id_config]['TIME'].append(time)
-            self.results_fg_mv[id_config]['Z'].append(newz)
+            self.results_fg_mv[id_config]['ZSTR'].append(newz)

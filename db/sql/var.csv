@@ -1,0 +1,52 @@
+id;type_res;var;name;type_var
+1;Opt;ZREF;Bottom elevation;float
+2;Opt;RGC;Left bank water level;float
+3;Opt;RDC;Right bank water level;float
+4;Opt;KMIN;Minor friction coefficient;float
+5;Opt;KMAJ;Major friction coefficient;float
+6;Opt;Z;Water level;float
+7;Opt;QMIN;Flow rate in minor river bed;float
+8;Opt;QMAJ;Flow rate in major river bed;float
+9;Opt;S1;Wetted area of minor river bed;float
+10;Opt;S2;Wetted area of major river bed;float
+11;Opt;FR;Froude number;float
+12;Opt;BETA;Coefficient beta of Debord's formula;float
+13;Opt;B1;Surface width of minor river bed;float
+14;Opt;B2;Surface width of major river bed;float
+15;Opt;BS;Surface width of storage area;float
+16;Opt;P1;Wetted perimeter of minor river bed;float
+17;Opt;P2;Wetted perimeter of major river bed;float
+18;Opt;RH1;Hydaulic radius of minor river bed;float
+19;Opt;RH2;Hydaulic radius of major river bed;float
+20;Opt;VMIN;Velocity of minor river bed;float
+21;Opt;VMAJ;Velocity of major river bed;float
+22;Opt;TAUF;Bottom shear stress;float
+23;Opt;Y;Water depth;float
+24;Opt;HMOY;Average water depth;float
+25;Opt;Q2G;Flow rate in left major river bed;float
+26;Opt;Q2D;Flow rate in right major river bed;float
+27;Opt;SS;Wetted area of storage area;float
+28;Opt;VOL;Cumulative volume of the active river bed;float
+29;Opt;VOLS;Cumulative volume of the storage area;float
+30;Opt;CHAR;Hydraulic head;float
+31;Opt;ZMAX;Maximal water level;float
+32;Opt;TZMA;Date of maximal water level;float
+33;Opt;VZMX;Velocity for the maximal water level;float
+34;Opt;ZMIN;Minimal water level;float
+35;Opt;TZMI;Date of minimal water level;float
+36;Opt;VINF;Minimum minor river bed velocity;float
+37;Opt;VSUP;Maximum minor river bed velocity;float
+38;Opt;BMAX;Maximum surface width;float
+39;Opt;TOND;Arrival time of the floodwave;float
+40;Opt;QMAX;Maximum flow rate;float
+41;Opt;TQMA;Date of maximum flow rate;float
+42;Opt;EMAX;Maximum energy;float
+43;Opt;ATOT;Total wetted area;float
+44;Basin;ZCAS;Basin water level;float
+45;Basin;SURCAS;Basin area;float
+46;Basin;VOLCAS;Basin volume;float
+47;Link;QECH;Link flow rate;float
+48;Link;VECH;Link velocity;float
+49;Opt;Q;Flow rate ;float
+50;Struct;ZSTR;valve movement;float
+51;weirs;ZSTR;valve movement;float
