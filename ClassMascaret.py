@@ -1661,7 +1661,7 @@ class ClassMascaret:
                     'type_res': 'Struct',
                     'name': 'valve movement',
                     'type_var': 'float'}
-        id_var = self.check_id_var(var_info)
+        id_var = self.mdb.check_id_var(var_info)
         for id_config in dico_res.keys():
             rows = self.mdb.select('struct_config', where='id={}'.format(id_config),
                                    list_var=['abscissa'])
@@ -2144,7 +2144,7 @@ class ClassMascaret:
                         'type_res' : 'weirs',
                         'name':'valve movement',
                         'type_var': 'float'}
-            id_var = self.check_id_var(var_info)
+            id_var = self.mdb.check_id_var(var_info)
 
             # Stock information
             colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
@@ -2160,29 +2160,6 @@ class ClassMascaret:
             if len(values) > 0:
                 self.mdb.insert_res('results', values, colonnes)
 
-    def check_id_var(self, dico):
-        """
-        return varibale id  and  add variable if not exist
-        :param dico: example : {'var': 'ZSTR',
-                    'type_res': 'weirs',
-                    'name': 'Valve movement',
-                    'type_var': 'float'}
-        :return: id_var ; var identifiant number
-        """
-        id_var = None
-        info = self.mdb.select('results_var', where="var = '{var}' AND type_res = '{type_res}'".format(**dico),
-                               list_var=['id'])
-        if info['id'] :
-            id_var = info['id'][0]
-        else:
-            if len(dico)>2:
-                dico['schema'] = self.mdb.SCHEMA
-                id_var = self.mdb.select_max('id','results_var') +1
-                dico['id'] = id_var
-                self.mdb.run_query("INSERT INTO {schema}.results_var (id,type_res, var, name) "
-                                   "VALUES ( {id}, '{type_res}', '{var}', '{name}')".format(**dico))
-
-        return id_var
 
     def insert_id_run(self, run, scen):
         maintenant = datetime.datetime.utcnow()
@@ -2201,13 +2178,9 @@ class ClassMascaret:
         id_run = info['id'][0]
         return id_run
 
-    def new_read_opt(self, nom_fich, id_run, type_res = 'Opt'):
+    def new_read_opt(self, nom_fich, type_res, init_col=[]):
         """ Read opt file"""
-        t = set([])
-        pk = set([])
-        col_tab=['id_runs', 'time', 'pknum', 'var','val']
         col = []
-
         with open(nom_fich, 'r') as source:
             var = source.readline()
             if var[:2] == '/*':
@@ -2220,16 +2193,47 @@ class ClassMascaret:
                 temp = ligne.replace('"', '').replace('NaN', "'NULL'").split(';')
                 var_info = {'var': temp[1].upper(),
                             'type_res':  type_res}
-                id_var = self.check_id_var(var_info)
+                id_var = self.mdb.check_id_var(var_info)
                 if id_var:
                     col.append(id_var)
                 else:
                     col.append(temp[1])
                 ligne = source.readline()
 
-        print(col)
+            if not init_col :
+                col_tmp = ['TIME', 'BRANCHE', 'SECTION', 'PK'] + col
+            else :
+                col_tmp = init_col + col
 
-        #     data = csv.DictReader(source, delimiter=';', fieldnames=col)
+            dico_val = {}
+            for key in col_tmp:
+                dico_val[key]= []
+            data = csv.DictReader(source, delimiter=';', fieldnames=col_tmp)
+            int_val = ['BRANCHE','SECTION']
+
+            for ligne in data:
+                for key in dico_val.keys():
+                    val = ligne[key].strip()
+                    if key == 'PK' :
+                        val = round(float(val), 2)
+                    elif key in int_val :
+                        val = int(val)
+                    elif key == 'BNUM':
+                        numero_masca = re.findall('\d+', val)[0]
+                        # convertit le numero masca en qgis (different si un casier inactif)
+                        numero_qgis = str(self.dico_basinnum[int(numero_masca)])
+                        val = float(numero_qgis)
+                    elif key == 'LNUM':
+                        numero_masca = re.findall('\d+', val)[0]
+                        # convertit le numero masca en qgis (different si un link inactif)
+                        numero_qgis = str(self.dico_linknum[int(numero_masca)])
+                        val = float(numero_qgis)
+                    else:
+                        val = float(val)
+
+                    dico_val[key].append(val)
+        return val
+
         #
         #     value = []
         #     for ligne in data:

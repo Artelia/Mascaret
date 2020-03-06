@@ -253,6 +253,23 @@ class CheckTab():
                                                             valeurs)
         self.mdb.run_query(sql, many=True, list_many=liste_value)
 
+        # add tracer variable
+        info = self.mdb.select('tracer_name',list_var=['type', 'text','sigle'])
+        nbv = len(info[type])
+        if nbv > 0 :
+            for i in range(nbv):
+                dico ={'var': info['sigle'][i],
+                       'type_res': 'tracer_{}'.format(info['type'][i]),
+                       'name': info['text'][i],
+                       'type_var': 'float'}
+                self.mdb.check_id_var(dico)
+
+
+
+
+
+
+
 
     def convert_all_result(self):
         rows = self.mdb.run_query("SELECT DISTINCT type_res FROM {0}.results_var".format(self.mdb.SCHEMA), fetch=True)

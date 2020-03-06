@@ -39,12 +39,12 @@ from .Structure.StructureDialog import ClassStructureDialog
 from .Structure.MobilSingDialog import ClassMobilSingDialog
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
-# # water quality
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
 from .db.ClassMasDatabase import ClassMasDatabase
 from .db.check_tab import CheckTab
 from .ui.custom_control import ClassWarningBox
 from .ClassDownload import ClassDownloadMasc
+
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -851,15 +851,25 @@ Version : {}
         dlg.exec_()
 
     def fct_test(self):
+
         clam = ClassMascaret(self)
         # clam.create_mobil_gate_file()
         # clam.read_mobil_gate_res(48)
         date_debut = datetime.datetime(2001, 2, 25, 0, 0)
         # clam.lit_opt('test','Crue2001', 48, date_debut, clam.baseName , comments='', tracer=False, casier=False)
-        # nom_fich = r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\mascaret.opt'
-        # clam.new_read_opt(nom_fich, 48)
+        nom_fich = r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\mascaret.opt'
+        type_res = 'Opt'
+        init_col = ['TIME', 'BRANCHE', 'SECTION', 'PK']
+        if type_res == 'Basin':
+            init_col = ['TIME', 'BNUM']
+        elif type_res == 'Link':
+            init_col = ['TIME', 'LNUM']
 
-        self.chkt.create_var_result()
+
+        col_tab = ['id_runs', 'time', 'pknum', 'var', 'val']
+        clam.new_read_opt(nom_fich, 48, type_res)
+
+
 
     # TODO
     # def update_pk(self):
