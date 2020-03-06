@@ -2177,8 +2177,8 @@ class ClassMascaret:
         else:
             if len(dico)>2:
                 dico['schema'] = self.mdb.SCHEMA
-                id_var = self.mdb.select_max('id','results_var')
-                dico['id'] = id_var+1
+                id_var = self.mdb.select_max('id','results_var') +1
+                dico['id'] = id_var
                 self.mdb.run_query("INSERT INTO {schema}.results_var (id,type_res, var, name) "
                                    "VALUES ( {id}, '{type_res}', '{var}', '{name}')".format(**dico))
 

@@ -21,6 +21,7 @@ import os
 from . import MasObject as Maso
 from copy import deepcopy
 from ..Function import read_version
+from ..ui.custom_control import ClassWarningBox
 #from ..ClassParameterDialog import ClassParameterDialog
 
 
@@ -28,6 +29,7 @@ class CheckTab():
     def __init__(self, mgis, mdb):
         self.mgis = mgis
         self.mdb = mdb
+        self.box = ClassWarningBox(self)
         # for add table [ 'add_tab': [list_table]]
         # for delete [ ['DEL TAB',[list_table]]
         self.dico_modif = {'2.9.9': {'alt_tab': [{'tab': 'admin_tab', 'sql': ["ALTER TABLE {0}.admin_tab ADD COLUMN "
@@ -87,43 +89,50 @@ class CheckTab():
         test_gd = True
         tabs_no = deepcopy(tabs)
 
-        for ver in self.list_hist_version[pos + 1:pos_fin + 1]:
-            if ver in self.dico_modif.keys():
-                modif = self.dico_modif[ver]
-                if len(modif) > 0:
-                    for proc in ['add_tab', 'alt_tab', 'fct', 'del_tab']:
-                        if proc in modif.keys():
-                            if proc != 'fct':
-                                lst_tab = modif[proc]
-                                for tab in lst_tab:
-                                    # print(proc)
-                                    if proc == 'add_tab':
-                                        valid, tab_name = self.add_tab(tab["tab"], tab["overwrite"])
-                                    elif proc == 'alt_tab':
-                                        tab_name = tab["tab"]
-                                        valid = self.alt_tab(tab_name, tab["sql"])
-                                    elif proc == 'del_tab':
-                                        tab_name = tab
-                                        valid = self.del_tab(tab_name)
-                                    # print (proc, tab_name, valid)
-                                    if valid:
-                                        if proc != 'del_tab':
-                                            self.updat_num_v(tab_name, ver)
-                                        else:
-                                            self.del_num_v(tab_name)
-                                    else:
-                                        test_gd = False
-                                    if tab_name in tabs_no:
-                                        tabs_no.remove(tab_name)
-                            else:
-                                lst_fct = modif[proc]
-                                for fct in lst_fct:
-                                    fct()
-            if test_gd:
-                self.all_version(tabs_no, ver)
-            else:
-                self.mgis.add_info('ERROR: Update table ************')
+        if len(self.list_hist_version[pos + 1:pos_fin + 1])> 0:
+            ok = self.box.yes_no_q("WARNING:\n "
+                                   "Do you want update tables for {} schema ?\n"
+                                   "There is a risk of table corruption.\n "
+                                   "Remember to make backup copies if it's important model.".format(self.mdb.SCHEMA))
+            if ok:
 
+                for ver in self.list_hist_version[pos + 1:pos_fin + 1]:
+                    if ver in self.dico_modif.keys():
+                        modif = self.dico_modif[ver]
+                        if len(modif) > 0:
+                            for proc in ['add_tab', 'alt_tab', 'fct', 'del_tab']:
+                                if proc in modif.keys():
+                                    if proc != 'fct':
+                                        lst_tab = modif[proc]
+                                        for tab in lst_tab:
+                                            if proc == 'add_tab':
+                                                valid, tab_name = self.add_tab(tab["tab"], tab["overwrite"])
+                                            elif proc == 'alt_tab':
+                                                tab_name = tab["tab"]
+                                                valid = self.alt_tab(tab_name, tab["sql"])
+                                            elif proc == 'del_tab':
+                                                tab_name = tab
+                                                valid = self.del_tab(tab_name)
+                                            # print (proc, tab_name, valid)
+                                            if valid:
+                                                if proc != 'del_tab':
+                                                    self.updat_num_v(tab_name, ver)
+                                                else:
+                                                    self.del_num_v(tab_name)
+                                            else:
+                                                test_gd = False
+                                            if tab_name in tabs_no:
+                                                tabs_no.remove(tab_name)
+                                    else:
+                                        lst_fct = modif[proc]
+                                        for fct in lst_fct:
+                                            fct()
+                    if test_gd:
+                        self.all_version(tabs_no, ver)
+                    else:
+                        self.mgis.add_info('ERROR: Update table ************')
+            else:
+                self.mgis.add_info("********* Cancel of update table ***********")
 
     def all_version(self, tabs, version=None):
         if not version:
@@ -220,19 +229,6 @@ class CheckTab():
     def create_var_result(self):
 
         self.mdb.execute("DELETE FROM {0}.results_var".format(self.mdb.SCHEMA))
-        # prm = ClassParameterDialog(self.mgis, "steady")
-        # for v, var in enumerate(prm.variables):
-        #     name = prm.libel_var[v].replace("'", "''")
-        #     if name[:5] == "Basin":
-        #         type_res = "Basin"
-        #     elif name[:4] == "Link":
-        #         type_res = "Link"
-        #     else:
-        #         type_res = "Opt"
-        #     self.mdb.run_query("INSERT INTO {0}.results_var (id, type_res, var, name) "
-        #                        "VALUES ({1}, '{2}', '{3}', '{4}')".format(self.mdb.SCHEMA, v + 1, type_res, var, name))
-        # self.mdb.run_query("INSERT INTO {0}.results_var (id, type_res, var, name) "
-        #                    "VALUES ({1}, 'Struct', 'ZSTR', 'Z Structure')".format(self.mdb.SCHEMA, v + 2))
         dossier = os.path.join(self.mgis.masplugPath,'db','sql')
         fichparam = os.path.join(dossier, "var.csv")
         liste_value = []
@@ -250,14 +246,11 @@ class CheckTab():
         for k in liste_col:
             valeurs += '%s,'
         valeurs = valeurs[:-1] + ")"
-        print(liste_value)
 
         sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
                                                             'results_var',
                                                             var,
                                                             valeurs)
-        print(sql)
-
         self.mdb.run_query(sql, many=True, list_many=liste_value)
 
 
