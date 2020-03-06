@@ -856,18 +856,18 @@ Version : {}
         # clam.create_mobil_gate_file()
         # clam.read_mobil_gate_res(48)
         date_debut = datetime.datetime(2001, 2, 25, 0, 0)
-        # clam.lit_opt('test','Crue2001', 48, date_debut, clam.baseName , comments='', tracer=False, casier=False)
-        nom_fich = r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\mascaret.opt'
-        type_res = 'Opt'
-        init_col = ['TIME', 'BRANCHE', 'SECTION', 'PK']
-        if type_res == 'Basin':
-            init_col = ['TIME', 'BNUM']
-        elif type_res == 'Link':
-            init_col = ['TIME', 'LNUM']
+        id_run = 48
+        # clam.lit_opt('test','Crue2001', id_run, date_debut, clam.baseName , comments='', tracer=False, casier=False)
+        nom_fich = r'mascaret'
+
+        a = self.mdb.run_query("SELECT wq FROM rhino_thermic.runs WHERE id = 23",
+                           fetch=True)
+        print(a)
+        # base_namefile = r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret'
+        # self.lit_opt_new(id_run,date_debut,nom_fich, tracer=False, casier=False)
+        # self.dossierFileMasc=r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret'
 
 
-        col_tab = ['id_runs', 'time', 'pknum', 'var', 'val']
-        clam.new_read_opt(nom_fich, 48, type_res)
 
 
 

@@ -287,12 +287,12 @@ class ClassWaterQualityDialog(QDialog):
             indices = table_view.selectedIndexes()
             row_to_del = []
             for index in indices :
-                if index.column() not in row_to_del :
+                if index.row() not in row_to_del :
                     row_to_del.append(index.row())
             row_to_del = sorted(row_to_del,reverse=True)
             for row in row_to_del :
-                    table_view.removeRow(row)
-                    del self.dicoTrac[row]
+                table_view.removeRow(row)
+                del self.dicoTrac[row]
         if objnb_trac:
             objnb_trac.setText('{}'.format(table_view.rowCount()))
 
@@ -317,9 +317,6 @@ class ClassWaterQualityDialog(QDialog):
             if id not in liste_id_cur.keys():
                 self.mdb.delete('tracer_name', "id = {}".format(id))
                 self.mdb.delete('laws_wq', "id_trac = {}".format(id))
-                id_var = self.mdb.check_id_var({'var':  dico_trac['sigle'][dico_trac["id"].index(id)],
-                                                'type_res' : 'tracer_{}'.format('TRANSPORT_PUR')})
-                self.mdb.delete('results_var', " id = {}".format(id_var))
             else:
                 if not id_exist:
                     id_exist = id
@@ -386,14 +383,38 @@ class ClassWaterQualityDialog(QDialog):
                           """.format(self.mdb.SCHEMA, txt_dif, 'diffusionTraceurs')
         self.mdb.execute(sql)
 
-        dico_trac = self.mdb.select('tracer_name', "type='TRANSPORT_PUR'")
+        dico_trac = self.mdb.select('tracer_name', where="type='TRANSPORT_PUR'",order='id')
+
         if dico_trac :
-            for i, sigle in enumerate(dico_trac['sigle']):
-                dico = {'var': sigle,
-                        'type_res': 'tracer_{}'.format('TRANSPORT_PUR'),
-                        'name': dico_trac['text'][i],
-                        'type_var': 'float'}
-                self.mdb.check_id_var(dico)
+            dico_var = self.mdb.select('results_var', where="type_res='tracer_TRANSPORT_PUR'",order='id')
+            nbt = len(dico_trac['id'])
+            for i, id_var in enumerate(dico_var['id']):
+                self.mdb.delete('results_var', " id = {}".format(id_var))
+            if len(dico_var['id'])>0:
+                idx_t =0
+                for i, id_var in enumerate(dico_var['id']):
+                    idx_t = i
+                    if i < nbt :
+                        dico = { 'id': id_var,
+                                'var': dico_trac['id'][i],
+                                'type_res': 'tracer_{}'.format('TRANSPORT_PUR'),
+                                'name': dico_trac['text'][i],
+                                'type_var': 'float',
+                                 'schema': self.mdb.SCHEMA}
+                        self.mdb.run_query("INSERT INTO {schema}.results_var (id ,type_res, var, name,type_var) "
+                                       "VALUES ( {id}, '{type_res}', '{var}', '{name}','{type_var}')".format(**dico))
+                    else:
+                        break
+            else:
+                idx_t = -1
+            if idx_t+1 < nbt:
+                for j, id_trac in enumerate(dico_trac['id'][idx_t+1:]):
+                    idx = idx_t + 1 + j
+                    dico = {'var': id_trac ,
+                            'type_res': 'tracer_{}'.format('TRANSPORT_PUR'),
+                            'name': dico_trac['text'][idx],
+                            'type_var': 'float'}
+                    self.mdb.check_id_var(dico)
 
 
 
