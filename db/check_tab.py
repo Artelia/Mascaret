@@ -22,7 +22,9 @@ from . import MasObject as Maso
 from copy import deepcopy
 from ..Function import read_version
 from ..ui.custom_control import ClassWarningBox
-#from ..ClassParameterDialog import ClassParameterDialog
+
+
+# from ..ClassParameterDialog import ClassParameterDialog
 
 
 class CheckTab():
@@ -51,7 +53,6 @@ class CheckTab():
                            }
 
         self.list_hist_version = ['0.0.0', '2.9.9', '3.0.0', '3.0.1', '3.0.2']
-
 
     def update_adim(self):
         """
@@ -89,7 +90,7 @@ class CheckTab():
         test_gd = True
         tabs_no = deepcopy(tabs)
 
-        if len(self.list_hist_version[pos + 1:pos_fin + 1])> 0:
+        if len(self.list_hist_version[pos + 1:pos_fin + 1]) > 0:
             ok = self.box.yes_no_q("WARNING:\n "
                                    "Do you want update tables for {} schema ?\n"
                                    "There is a risk of table corruption.\n "
@@ -140,7 +141,6 @@ class CheckTab():
         for name_tab in tabs:
             self.updat_num_v(name_tab, version)
 
-
     def updat_num_v(self, name_tab, version):
         """
         updat version number
@@ -160,7 +160,6 @@ class CheckTab():
                   " VALUES ('{1}', '{2}')".format(self.mdb.SCHEMA, name_tab, version)
             self.mdb.execute(sql)
 
-
     def del_num_v(self, name_tab):
         """
         delete table in admin_tab
@@ -175,7 +174,6 @@ class CheckTab():
             sql = "DELETE FROM {0}.admin_tab WHERE table_ = '{1}';" \
                 .format(self.mdb.SCHEMA, name_tab)
             self.mdb.execute(sql)
-
 
     def add_tab(self, tab, overwrite=True):
         """
@@ -196,7 +194,6 @@ class CheckTab():
 
         return valid, obj.name
 
-
     def alt_tab(self, tab, lst_sql):
         valid = True
         txt_sql = ''
@@ -215,7 +212,6 @@ class CheckTab():
 
         return valid
 
-
     def del_tab(self, tab):
         try:
             valid = self.mdb.drop_table(tab)
@@ -225,20 +221,19 @@ class CheckTab():
 
         return valid
 
-
     def create_var_result(self):
 
         self.mdb.execute("DELETE FROM {0}.results_var".format(self.mdb.SCHEMA))
-        dossier = os.path.join(self.mgis.masplugPath,'db','sql')
+        dossier = os.path.join(self.mgis.masplugPath, 'db', 'sql')
         fichparam = os.path.join(dossier, "var.csv")
         liste_value = []
         with open(fichparam, 'r') as file:
             cpt = 0
             for ligne in file:
-                if cpt > 0 :
+                if cpt > 0:
                     liste = ligne.replace('\n', '').split(';')
-                    liste_value.append([int(liste[0])]+liste[1:])
-                cpt+=1
+                    liste_value.append([int(liste[0])] + liste[1:])
+                cpt += 1
         liste_col = self.mdb.list_columns('results_var')
 
         var = ",".join(liste_col)
@@ -254,47 +249,47 @@ class CheckTab():
         self.mdb.run_query(sql, many=True, list_many=liste_value)
 
         # add tracer variable
-        info = self.mdb.select('tracer_name',list_var=['type', 'text','sigle'])
-        nbv = len(info[type])
-        if nbv > 0 :
+        info = self.mdb.select('tracer_name', list_var=['type', 'text', 'sigle'])
+        nbv = len(info['type'])
+        if nbv > 0:
             for i in range(nbv):
-                dico ={'var': info['sigle'][i],
-                       'type_res': 'tracer_{}'.format(info['type'][i]),
-                       'name': info['text'][i],
-                       'type_var': 'float'}
+                dico = {'var': info['sigle'][i],
+                        'type_res': 'tracer_{}'.format(info['type'][i]),
+                        'name': info['text'][i],
+                        'type_var': 'float'}
                 self.mdb.check_id_var(dico)
-
-
-
-
-
-
-
 
     def convert_all_result(self):
         rows = self.mdb.run_query("SELECT DISTINCT type_res FROM {0}.results_var".format(self.mdb.SCHEMA), fetch=True)
         lst_typ_res = [r[0] for r in rows]
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs".format(self.mdb.SCHEMA), fetch=True)
         dict_runs = {r[0]: {"run": r[1], "scen": r[2]} for r in rows}
+        rows = self.mdb.run_query("SELECT DISTINCT id_runs FROM {0}.results".format(self.mdb.SCHEMA), fetch=True)
+        lst_exist = [r[0] for r in rows]
+
         for typ_res in lst_typ_res:
             for run in dict_runs.keys():
-                self.convert_result(run, typ_res)
-
+                if run in lst_exist:
+                    self.convert_result(run, typ_res)
 
     def convert_result(self, run, typ_res):
-        if typ_res == "Opt":
+        if typ_res == "opt":
             tab_src = "resultats"
             col_pknum = "pk"
-        elif typ_res == "Basin":
+        elif typ_res == "basin":
             tab_src = "resultats_basin"
             col_pknum = "bnum"
-        elif typ_res == "Link":
+        elif typ_res == "link":
             tab_src = "resultats_links"
             col_pknum = "lnum"
-        elif typ_res == "Struct":
+        elif typ_res.split('_')[0] == 'tracer':
+            tab_src = "resultats"
+            col_pknum = "pk"
+        elif typ_res in ["struct", "weirs"]:
             return
 
-        row = self.mdb.run_query("SELECT run, scenario FROM {0}.runs WHERE id = {1}".format(self.mdb.SCHEMA, run), fetch=True)
+        row = self.mdb.run_query("SELECT run, scenario FROM {0}.runs WHERE id = {1}".format(self.mdb.SCHEMA, run),
+                                 fetch=True)
         run_run, run_scen = row[0]
 
         rows = self.mdb.run_query("SELECT column_name FROM information_schema.columns WHERE table_schema = '{0}' AND "
@@ -303,8 +298,9 @@ class CheckTab():
                                   "AND column_name = '{2}')".format(self.mdb.SCHEMA, tab_src, col_pknum), fetch=True)
         lst_var_exist = [r[0] for r in rows]
 
-        self.mdb.execute("DELETE FROM {0}.results WHERE results.id_runs = {1} AND results.var IN (SELECT id FROM {0}.results_var "
-                         "WHERE type_res = '{2}')".format(self.mdb.SCHEMA, run, tab_src))
+        self.mdb.execute(
+            "DELETE FROM {0}.results WHERE results.id_runs = {1} AND results.var IN (SELECT id FROM {0}.results_var "
+            "WHERE type_res = '{2}')".format(self.mdb.SCHEMA, run, tab_src))
 
         rows = self.mdb.run_query("SELECT id, var FROM {0}.results_var "
                                   "WHERE type_res = '{2}'".format(self.mdb.SCHEMA, tab_src, typ_res), fetch=True)
@@ -313,6 +309,5 @@ class CheckTab():
                 sql = "INSERT INTO {0}.results (SELECT {5}, {3}.t, {3}.{4}, {1}, {3}.{2} " \
                       "FROM {0}.{3} WHERE {3}.{2} is Not Null AND {3}.run = '{6}' " \
                       "AND {3}.scenario = '{7}')".format(self.mdb.SCHEMA, id_var, nm_var.lower(), tab_src, col_pknum,
-                                                        run, run_run, run_scen)
+                                                         run, run_run, run_scen)
                 self.mdb.execute(sql)
-

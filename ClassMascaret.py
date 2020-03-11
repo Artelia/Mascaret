@@ -1513,20 +1513,18 @@ class ClassMascaret:
 
                     self.lance_mascaret(self.baseName + '_init.xcas', id_run)
 
-
                     # TODO delete in the future
                     self.lit_opt(run, sceninit, id_run, None,
                                  self.baseName + '_init', comments)
                     # ----------
-                    self.lit_opt_new(id_run, None,
-                                     self.baseName + '_init', comments)
+                    # TODO change when change graphic hydro
+                    # self.lit_opt_new(id_run, None,
+                    #                  self.baseName + '_init', comments)
+                    self.mgis.chkt.convert_all_result()
                 else:
                     self.mgis.add_info("No Run initialization.\n"
                                        " The initial boundaries come from {} scenario.".format(sceninit))
                     return
-
-
-
 
                 self.opt_to_lig(run, sceninit, id_run, self.baseName)
                 tab = {"LigEauInit": {'valeur': 'true',
@@ -1578,7 +1576,7 @@ class ClassMascaret:
                         if ok:
                             id_run = self.mdb.run_query("SELECT id FROM {0}.runs "
                                                         "WHERE run = '{1}' "
-                                                        "AND scenario = '{2}'".format(self.mdb.SCHEMA,case, scen2),
+                                                        "AND scenario = '{2}'".format(self.mdb.SCHEMA, case, scen2),
                                                         fetch=True)
                             self.opt_to_lig(case, scen2, id_run, self.baseName)
                         else:
@@ -1607,8 +1605,9 @@ class ClassMascaret:
             # Lecture de l'OPT des casiers et liaisons puis ecriture dans la table resultats
             # TODO delete in the future
             self.lit_opt(run, scen, id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
+            self.mgis.chkt.convert_all_result()
             # ----------
-            self.lit_opt_new(id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
+            # self.lit_opt_new(id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
 
             if self.check_mobil_gate():
                 self.read_mobil_gate_res(id_run)
@@ -1644,9 +1643,6 @@ class ClassMascaret:
             # OS / 2  EMX ='os2emx'
             # RiscOS ='riscos'
             # AtheOS= 'atheos
-            os.popen(soft)
-            os.system('cmd')
-            os.system(soft)
             p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                                  , stdin=subprocess.PIPE)
             p.wait()
@@ -1676,7 +1672,7 @@ class ClassMascaret:
         colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
         values = []
         var_info = {'var': 'ZSTR',
-                    'type_res': 'Struct',
+                    'type_res': 'struct',
                     'name': 'valve movement',
                     'type_var': 'float'}
         id_var = self.mdb.check_id_var(var_info)
@@ -1691,7 +1687,7 @@ class ClassMascaret:
 
             values += v_tmp
 
-        self.mdb.insert_res('results_float', values, colonnes)
+        self.mdb.insert_res('results', values, colonnes)
 
     def creat_values(self, id_run, id_name, lpk, ltime, lval):
         """
@@ -1742,14 +1738,15 @@ class ClassMascaret:
         tab = {id_run:
                    {"t": list(t),
                     "pk": list(pk)}}
-        # if date_debut:
-        #     tab[id_run]["init_date"] = "{:%Y-%m-%d %H:%M}".format(date_debut)
-        # if comments != '':
-        #     tab[id_run]["comments"] = comments
-        # if tracer:
-        #     tab[id_run]['wq'] = self.wq.cur_wq_mod
+        if date_debut:
+            tab[id_run]["init_date"] = "{:%Y-%m-%d %H:%M}".format(date_debut)
+        if comments != '':
+            tab[id_run]["comments"] = comments
+        if tracer:
+            tab[id_run]['wq'] = self.wq.cur_wq_mod
 
-        self.mdb.update("runs", tab, var='id')
+        if tab[id_run]:
+            self.mdb.update("runs", tab, var='id')
 
         liste_col = self.mdb.list_columns("resultats")
         for c in col:
@@ -1767,13 +1764,13 @@ class ClassMascaret:
             t_link, pk_link, col_link, value_link = self.read_opt(nom_fich_link, date_debut, scen, run,
                                                                   init_col=['t', 'lnum'])
 
-        self.mdb.insert_res("resultats_basin", value_bas, col_bas)
-        self.mdb.insert_res("resultats_links", value_link, col_link)
+            self.mdb.insert_res("resultats_basin", value_bas, col_bas)
+            self.mdb.insert_res("resultats_links", value_link, col_link)
 
         return True
 
-    def get_for_lig(self,run,scen):
-        
+    def get_for_lig(self, run, scen):
+
         condition = "run='{0}' AND scenario='{1}'".format(run, scen)
 
         t_max = self.mdb.select_max("t", "resultats", condition)
@@ -1791,16 +1788,14 @@ class ClassMascaret:
         result["Q"] = result.pop("q")
         return result
 
-
     def opt_to_lig(self, run, scen, id_run, base_namefiles):
         """Creation of .lig file """
-
-        result = self.get_for_lig(run, scen)
-        # TODO when use new results table
-        #result = self.get_for_lig_new(id_run)
-
+        # old
+        # result = self.get_for_lig(run, scen)
+        result = self.get_for_lig_new(id_run)
         i1 = {}
         i2 = {}
+        # print(result)
         for section, branche in zip(result["section"], result["branche"]):
             if branche not in i1.keys():
                 i1[branche] = 9999999
@@ -1811,6 +1806,7 @@ class ClassMascaret:
 
         nb_bief = len(set(result['branche']))
         section = sorted(set(result['section']))
+
         imax = len(section)
         i1i2 = []
         for b in sorted(i1.keys()):
@@ -1963,21 +1959,24 @@ class ClassMascaret:
 
                 if ok:
                     # delete case initalization
-                    # TODO condition = "scenario LIKE '{0}' OR AND scenario LIKE '{0}_init' run LIKE '{1}'
-                    # AND kernel LIKE '{2}'".format(nomScen, run,kernel)
                     condition = "(scenario LIKE '{0}' OR  scenario " \
                                 "LIKE '{0}_init') AND run LIKE '{1}' ".format(nom_scen,
                                                                               run)
+
                     id_run = self.mdb.run_query("SELECT id FROM {0}.runs "
                                                 "WHERE run = '{1}' "
-                                                "AND scenario = '{2}'".format(self.mdb.SCHEMA, run, nom_scen),
+                                                "AND (scenario LIKE '{2}' OR  scenario " \
+                                                "LIKE '{2}_init') ".format(self.mdb.SCHEMA, run, nom_scen),
                                                 fetch=True)
+
                     self.mdb.delete('runs', condition)
                     self.mdb.delete('resultats', condition)
                     # new results
-                    condition = "id_runs = {}".format(id_run)
-                    self.mdb.delete('results', condition)
-                    self.mdb.delete('results_sect', condition)
+
+                    if len(id_run) > 0:
+                        condition = "id_runs = {}".format(id_run[0][0])
+                        self.mdb.delete('results', condition)
+                        self.mdb.delete('results_sect', condition)
                     if self.mgis.DEBUG:
                         self.mgis.add_info("Deletion of {0} scenario for {1} is done".format(nom_scen, run))
                     return True
@@ -2365,7 +2364,7 @@ class ClassMascaret:
         if tab[id_run]:
             self.mdb.update("runs", tab, var='id')
 
-        type_res = 'Opt'
+        type_res = 'opt'
         init_col = ['TIME', 'BRANCH', 'SECTION', 'PK']
         val_opt = self.new_read_opt(nom_fich, type_res, init_col)
         key_val_opt = val_opt.keys()
@@ -2378,7 +2377,7 @@ class ClassMascaret:
             if not os.path.isfile(nom_fich_bas):
                 self.mgis.add_info("Simulation Error: there aren't basin results")
             else:
-                type_res = 'Basin'
+                type_res = 'basin'
                 init_col = ['TIME', 'BNUM']
                 val = self.new_read_opt(nom_fich_bas, type_res, init_col)
                 self.save_new_results(val, id_run)
@@ -2388,7 +2387,7 @@ class ClassMascaret:
             if not os.path.isfile(nom_fich_link):
                 self.mgis.add_info("Simulation Error: there aren't link results")
             else:
-                type_res = 'Link'
+                type_res = 'link'
                 init_col = ['TIME', 'BNUM']
                 val = self.new_read_opt(nom_fich_link, type_res, init_col)
                 self.save_new_results(val, id_run)
@@ -2431,17 +2430,23 @@ class ClassMascaret:
                 values += v_tmp
             elif key == 'BRANCH':
                 val_sect = []
+                init_pk = lpk[0]
+                cond = False
                 for pk, bra, sect in zip(lpk, val['BRANCH'], val['SECTION']):
-                    val_sect += [id_run, pk, bra, sect]
+                    if pk == init_pk and cond:
+                        break
+                    val_sect.append((id_run, pk, bra, sect))
+                    cond = True
 
         col_tab = ['id_runs', 'time', 'pknum', 'var', 'val']
         if len(values) > 0:
             self.mdb.insert_res('results', values, col_tab)
         col_sect = ['id_runs', 'pk', 'branch', 'section']
-        if len(values) > 0:
-            self.mdb.insert_res('results', val_sect, col_sect)
-        return True
 
+        if len(val_sect) > 0:
+            self.mdb.insert_res('results_sect', val_sect, col_sect)
+
+        return True
 
     def get_for_lig_new(self, id_run):
         """
@@ -2451,25 +2456,26 @@ class ClassMascaret:
         """
         result = {}
         try:
-            var = self.mdb.select("results_var", "type_res = 'Opt'", 'id', ['id', 'var'])
+            var = self.mdb.select("results_var", "type_res = 'opt'", 'id', ['id', 'var'])
             idz = var['id'][var['var'].index("Z")]
             idq = var['id'][var['var'].index("Q")]
             t_max = self.mdb.select_max("time", "results", "var = {}  AND id_runs = {} ".format(idz, id_run))
             if t_max is None:
                 self.mgis.add_info("No previous results to create the .lig file.")
             value = self.mdb.select("results",
-                                    "var = {} AND id_runs = {}  AND time = {}".format(idq, id_run, t_max),
+                                    "var = {} AND id_runs = {}  AND time = {}".format(idz, id_run, t_max),
                                     'pknum', ['val'])
             result['Z'] = value['val']
             value = self.mdb.select("results",
-                                    "var = {} AND id_runs = {} AND time = {}".format(idq, id_run),
+                                    "var = {} AND id_runs = {} AND time = {}".format(idq, id_run, t_max),
                                     'pknum', ['val'])
             result['Q'] = value['val']
-            value = self.mdb.select("results_sect", "id_runs={}".format(idq, id_run), 'pk',
+            print(id_run)
+            value = self.mdb.select("results_sect", "id_runs = {}".format(id_run), 'pk',
                                     ['pk', 'branch', 'section'])
             result['X'] = value['pk']
-            result["section"] = value['branch']
-            result["branche"] = value['section']
+            result["section"] = value['section']
+            result["branche"] = value['branch']
             del value
         except:
             self.mgis.add_info('No results for initialisation')

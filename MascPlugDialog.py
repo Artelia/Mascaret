@@ -45,7 +45,6 @@ from .db.check_tab import CheckTab
 from .ui.custom_control import ClassWarningBox
 from .ClassDownload import ClassDownloadMasc
 
-
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
 else:  # qt5
@@ -179,13 +178,13 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionStructures.triggered.connect(self.fct_structures)
         self.ui.actionTest_struct.triggered.connect(self.fct_test)
         self.ui.actionStructures_weirs.triggered.connect(self.fct_mv_dam)
-        #WQ
+        # WQ
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
         self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
         self.ui.actionAdd_Structure_temporal_tables.triggered.connect(self.fct_add_floogate_tables)
         # TODO
-        #self.ui.actionUpdate_pk.triggered.connect(self.update_pk)
+        # self.ui.actionUpdate_pk.triggered.connect(self.update_pk)
         self.ui.action_update_bin.triggered.connect(self.download_bin)
 
     def add_info(self, text):
@@ -383,8 +382,9 @@ class MascPlugDialog(QMainWindow):
             self.mdb.SCHEMA = model
             try:
                 self.chkt.update_adim()
-            except Exception as e :
+            except Exception as e:
                 self.add_info("********* Echec of update table ***********")
+                # print(e)
 
             self.mdb.load_model()
             self.mdb.last_schema = self.mdb.SCHEMA
@@ -819,7 +819,7 @@ Version : {}
         if ok:
             self.mdb.add_table_basins(self.dossier_sql)
             self.mdb.add_table_wq(self.dossier_sql)
-            sql='ALTER TABLE IF EXISTS {0}.scenarios RENAME TO events;'
+            sql = 'ALTER TABLE IF EXISTS {0}.scenarios RENAME TO events;'
             self.mdb.run_query(sql.format(self.mdb.SCHEMA))
             self.mdb.load_model()
 
@@ -860,30 +860,24 @@ Version : {}
         # clam.lit_opt('test','Crue2001', id_run, date_debut, clam.baseName , comments='', tracer=False, casier=False)
         nom_fich = r'mascaret'
 
-        a = self.mdb.run_query("SELECT wq FROM rhino_thermic.runs WHERE id = 23",
-                           fetch=True)
-        print(a)
+        clam.opt_to_lig('dede', 'dede_init', 384, 'test.lig')
         # base_namefile = r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret'
         # self.lit_opt_new(id_run,date_debut,nom_fich, tracer=False, casier=False)
         # self.dossierFileMasc=r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret'
-
-
-
-
 
     # TODO
     # def update_pk(self):
     #     pass
     def download_bin(self):
-        #url git
+        # url git
         url_base = 'https://raw.githubusercontent.com/Artelia/Exe_Mascaret/'
 
         # branch_test
         branch = 'master'
         url_path = posixpath.join(url_base, branch)
 
-        cl_load = ClassDownloadMasc(self.masplugPath,url_path,self)
-        dico = {'bin':['mascaret.exe',
-                     'mascaret_linux']}
+        cl_load = ClassDownloadMasc(self.masplugPath, url_path, self)
+        dico = {'bin': ['mascaret.exe',
+                        'mascaret_linux']}
 
         cl_load.download_dir(dico)

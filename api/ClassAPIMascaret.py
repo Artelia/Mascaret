@@ -20,15 +20,15 @@ email                :
 """
 
 import os
+
 try:
-    #Plugin
+    # Plugin
     from .masc import Mascaret
     from ..Structure.ClassFloodGate import ClassFloodGate
-except :
+except:
     # autonome python
     # pas de vanne mobile possible
     from masc import Mascaret
-
 
 
 def check_init(file):
@@ -40,20 +40,20 @@ def check_init(file):
 class ClassAPIMascaret:
     """ Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, main ):
+    def __init__(self, main):
         # def __init__(self):
 
         self.masc = Mascaret(log_level='INFO')
         self.masc.create_mascaret(iprint=1)
         if isinstance(main, dict):
-            self.clmas =None
+            self.clmas = None
             self.mgis = None
             self.dossierFileMasc = main["RUN_REP"]
             os.chdir(main["RUN_REP"])
             self.DEBUG = main["DEBUG"]
             self.baseName = main['BASE_NAME']
-            self.clfg =None
-            self.mobil_struct =False
+            self.clfg = None
+            self.mobil_struct = False
         else:
             self.clmas = main
             self.mgis = self.clmas.mgis
@@ -64,8 +64,6 @@ class ClassAPIMascaret:
             self.clfg = ClassFloodGate(self)
             self.mobil_struct = self.clfg.fg_active()
 
-
-
         self.tracer = False
         self.basin = False
         self.filelig = None
@@ -75,10 +73,6 @@ class ClassAPIMascaret:
         self.qini = 0
 
         self.results_api = {}
-
-
-
-
 
     def initial(self, casfile):
         """
@@ -96,6 +90,7 @@ class ClassAPIMascaret:
 
         self.init_crit_stop()
         return 0
+
     def init_file(self, casfile):
         """
         Get file for compute
@@ -120,25 +115,25 @@ class ClassAPIMascaret:
         for file in os.listdir('.'):
             if '.geo' in file:
                 files_type.append('geo')
-                files_name.append( file)
+                files_name.append(file)
             elif '.lig' in file and initfile == check_init(file):
                 files_type.append('lig')
-                self.filelig =  file
+                self.filelig = file
                 files_name.append(self.filelig)
             elif '.met' in file and initfile == check_init(file):
                 self.tracer = True
                 files_type.append('tracer_meteo')
-                filepath =  file
+                filepath = file
                 files_name.append(filepath)
             elif '.phy' in file and initfile == check_init(file):
                 self.tracer = True
                 files_type.append('tracer_parphy')
-                filepath =  file
+                filepath = file
                 files_name.append(filepath)
             elif '.conc' in file and initfile == check_init(file):
                 self.tracer = True
                 files_type.append('tracer_conc')
-                filepath =  file
+                filepath = file
                 files_name.append(filepath)
             elif '_tra.loi' in file and initfile == check_init(file):
                 self.tracer = True
@@ -153,26 +148,26 @@ class ClassAPIMascaret:
         if law_files:
             for file in sorted(law_files):
                 files_type.append('loi')
-                files_name.append( file)
+                files_name.append(file)
         else:
             self.add_info("The laws are not found.")
 
         if self.tracer and law_tr_files:
             for file in sorted(law_tr_files):
                 files_type.append('tracer_loi')
-                filepath =  file
+                filepath = file
                 files_name.append(filepath)
 
         # listing
         files_type.append('listing')
-        files_name.append( self.baseName + '.lis')
+        files_name.append(self.baseName + '.lis')
         if initfile:
             post = '_init'
         else:
             post = ''
         # Resultat
         files_type.append('res')
-        files_name.append( self.baseName + post + '.opt')
+        files_name.append(self.baseName + post + '.opt')
 
         if self.tracer:
             # listing
@@ -185,16 +180,16 @@ class ClassAPIMascaret:
         if self.basin:
             # listing
             files_type.append('listing_casier')
-            files_name.append( self.baseName + '.cas_lis')
+            files_name.append(self.baseName + '.cas_lis')
             # Resultat
             files_type.append('res_casier')
-            files_name.append( self.baseName + '.cas_opt')
+            files_name.append(self.baseName + '.cas_opt')
             # listing
             files_type.append('listing_liaison')
             files_name.append(self.baseName + '.liai_lis')
             # Resultat
             files_type.append('res_liaison')
-            files_name.append( self.baseName + '.liai_opt')
+            files_name.append(self.baseName + '.liai_opt')
 
         return [files_name, files_type]
 
@@ -314,9 +309,8 @@ class ClassAPIMascaret:
     def finalize(self):
         del self.masc
         if self.clfg != None:
-            if len(self.clfg.results_fg_mv)>0:
-                self.results_api['STRUCT_FG'] = self.clfg.results_fg_mv
-            self.clfg.finalize()
+            self.clfg.finalize(self.tfin)
+            self.results_api['STRUCT_FG'] = self.clfg.results_fg_mv
 
     def main(self, filename, tracer=False, basin=False):
         self.tracer = tracer
@@ -327,18 +321,18 @@ class ClassAPIMascaret:
         self.compute()
         self.finalize()
 
-    def add_info(self,txt):
+    def add_info(self, txt):
         if self.mgis != None:
             self.mgis.add_info(txt)
         else:
             print(txt)
 
-if __name__ == '__main__':
 
-    dico ={
-        "RUN_REP" : r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret',
-    "DEBUG" : True,
-    'BASE_NAME' : 'mascaret' }
+if __name__ == '__main__':
+    dico = {
+        "RUN_REP": r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret',
+        "DEBUG": True,
+        'BASE_NAME': 'mascaret'}
 
     api = ClassAPIMascaret(dico)
     api.main('mascaret.xcas')

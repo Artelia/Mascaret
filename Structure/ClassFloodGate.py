@@ -50,7 +50,7 @@ class ClassFloodGate:
         self.new_z = 99
         self.param_fg = {}
         # resultats du mouvement de la vanne
-        self.results_fg_mv={}
+        self.results_fg_mv = {}
 
     def init_floogate(self):
         """ Get information for floodgate"""
@@ -120,7 +120,7 @@ class ClassFloodGate:
                 self.masc.set("Model.Weir.PtZus", list_zam[ii * nbzav + jj], i=num, j=ii, k=jj)
             cond_first = False
 
-        # self.write("fin.csv",nbq, nbzav,num)
+            # self.write("fin.csv",nbq, nbzav,num)
 
     def write(self, name, nbq, nbzav, num):
         file = open(name, 'w')
@@ -133,7 +133,12 @@ class ClassFloodGate:
                 file.write('{};{};{}\n'.format(q, zav, zam))
         file.close()
 
-    def finalize(self):
+    def finalize(self, tfin):
+        if len(self.results_fg_mv) > 0:
+            for id_config in self.param_fg.keys():
+                self.results_fg_mv[id_config]['TIME'].append(tfin)
+                self.results_fg_mv[id_config]['ZSTR'].append(self.param_fg[id_config]['ZOLD'])
+
         del self.clmeth
 
     def fg_active(self):
@@ -160,7 +165,7 @@ class ClassFloodGate:
         results_fg_reg = {}
         lid_config = dict_par['id_config']
         for i, id_config in enumerate(lid_config):
-            results_fg_reg[id_config]= {'TIME': [],'ZSTR': []}
+            results_fg_reg[id_config] = {'TIME': [], 'ZSTR': []}
             dict_tmp = {'DIRFG': dict_par['type_fg'][i],
                         'LOCCONT': dict_par['xpos'][i],
                         'VREG': dict_par['var_reg'][i]}
@@ -187,7 +192,7 @@ class ClassFloodGate:
             dict_tmp['ZRESI'] = 0
             param_fg[id_config] = dict_tmp
 
-        return param_fg, link_name_id,  results_fg_reg
+        return param_fg, link_name_id, results_fg_reg
 
     def iter_fg(self, time, dtp):
         """
@@ -328,19 +333,18 @@ class ClassFloodGate:
         # ibief = [ib+0*i for ib in range(nbbf) for i in range(oribf[ib], endbf[ib])]
         # ibief => connu
         for id_config in self.param_fg.keys():
-            ib = int(self.param_fg[id_config]['BIEFCONT'])-1
+            ib = int(self.param_fg[id_config]['BIEFCONT']) - 1
             coords = []
 
             for i in range(oribf[ib], endbf[ib]):
                 coords.append(self.masc.get('Model.X', i))
             coords = np.array(coords)
             idx = (np.abs(coords - self.param_fg[id_config]['XPCONT'])).argmin()
-            if idx :
+            if idx:
                 self.param_fg[id_config]['SECCON'] = idx
             else:
                 self.mgis.add_info("Regulation point not found.")
             del coords
-
 
         del oribf
         del endbf
@@ -358,7 +362,7 @@ class ClassFloodGate:
         if zold == newz:
             self.results_fg_mv[id_config]['TIME'].append(time)
             self.results_fg_mv[id_config]['ZSTR'].append(newz)
-        else :
+        else:
             self.results_fg_mv[id_config]['TIME'].append(time - dt)
             self.results_fg_mv[id_config]['ZSTR'].append(zold)
             self.results_fg_mv[id_config]['TIME'].append(time)
