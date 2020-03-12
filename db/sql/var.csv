@@ -47,6 +47,6 @@ id;type_res;var;name;type_var
 46;basin;VOLCAS;Basin volume;float
 47;link;QECH;Link flow rate;float
 48;link;VECH;Link velocity;float
-49;opt;Q;Flow rate ;float
+49;opt;Q;Flow rate;float
 50;struct;ZSTR;valve movement;float
 51;weirs;ZSTR;valve movement;float
