@@ -195,6 +195,12 @@ class CheckTab():
         return valid, obj.name
 
     def alt_tab(self, tab, lst_sql):
+        """
+        Apply sql script
+        :param tab: table name
+        :param lst_sql: sql script list
+        :return:
+        """
         valid = True
         txt_sql = ''
         for sql in lst_sql:
@@ -213,6 +219,11 @@ class CheckTab():
         return valid
 
     def del_tab(self, tab):
+        """
+        delete table
+        :param tab:  table name
+        :return:
+        """
         try:
             valid = self.mdb.drop_table(tab)
         except:
@@ -260,19 +271,33 @@ class CheckTab():
                 self.mdb.check_id_var(dico)
 
     def convert_all_result(self):
+        """ conversion between the previous results table format to the new for all results"""
+
         rows = self.mdb.run_query("SELECT DISTINCT type_res FROM {0}.results_var".format(self.mdb.SCHEMA), fetch=True)
         lst_typ_res = [r[0] for r in rows]
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs".format(self.mdb.SCHEMA), fetch=True)
         dict_runs = {r[0]: {"run": r[1], "scen": r[2]} for r in rows}
         rows = self.mdb.run_query("SELECT DISTINCT id_runs FROM {0}.results".format(self.mdb.SCHEMA), fetch=True)
         lst_exist = [r[0] for r in rows]
-
         for typ_res in lst_typ_res:
             for run in dict_runs.keys():
-                if run in lst_exist:
+                if run not in lst_exist:
                     self.convert_result(run, typ_res)
 
-    def convert_result(self, run, typ_res):
+        rows = self.mdb.run_query("SELECT DISTINCT id_runs FROM {0}.results_sect".format(self.mdb.SCHEMA), fetch=True)
+        lst_exist = [r[0] for r in rows]
+        for run in dict_runs.keys():
+            if run not in lst_exist:
+                self.fill_result_sect(run)
+
+    def convert_result(self, id_run, typ_res):
+        """
+        conversion between the previous results table format to the new
+        :param id_run: run index
+        :param typ_res: result type
+        :return:
+        """
+        print(typ_res)
         if typ_res == "opt":
             tab_src = "resultats"
             col_pknum = "pk"
@@ -288,7 +313,7 @@ class CheckTab():
         elif typ_res in ["struct", "weirs"]:
             return
 
-        row = self.mdb.run_query("SELECT run, scenario FROM {0}.runs WHERE id = {1}".format(self.mdb.SCHEMA, run),
+        row = self.mdb.run_query("SELECT run, scenario FROM {0}.runs WHERE id = {1}".format(self.mdb.SCHEMA, id_run),
                                  fetch=True)
         run_run, run_scen = row[0]
 
@@ -296,11 +321,11 @@ class CheckTab():
                                   "table_name = '{1}' AND ordinal_position > (SELECT ordinal_position "
                                   "FROM information_schema.columns WHERE table_schema = '{0}' AND table_name = '{1}' "
                                   "AND column_name = '{2}')".format(self.mdb.SCHEMA, tab_src, col_pknum), fetch=True)
-        lst_var_exist = [r[0] for r in rows]
 
+        lst_var_exist = [r[0] for r in rows]
         self.mdb.execute(
             "DELETE FROM {0}.results WHERE results.id_runs = {1} AND results.var IN (SELECT id FROM {0}.results_var "
-            "WHERE type_res = '{2}')".format(self.mdb.SCHEMA, run, tab_src))
+            "WHERE type_res = '{2}')".format(self.mdb.SCHEMA, id_run, tab_src))
 
         rows = self.mdb.run_query("SELECT id, var FROM {0}.results_var "
                                   "WHERE type_res = '{2}'".format(self.mdb.SCHEMA, tab_src, typ_res), fetch=True)
@@ -309,5 +334,22 @@ class CheckTab():
                 sql = "INSERT INTO {0}.results (SELECT {5}, {3}.t, {3}.{4}, {1}, {3}.{2} " \
                       "FROM {0}.{3} WHERE {3}.{2} is Not Null AND {3}.run = '{6}' " \
                       "AND {3}.scenario = '{7}')".format(self.mdb.SCHEMA, id_var, nm_var.lower(), tab_src, col_pknum,
-                                                         run, run_run, run_scen)
+                                                         id_run, run_run, run_scen)
                 self.mdb.execute(sql)
+
+    def fill_result_sect(self, id_run):
+        """
+        fill results section table
+        :param id_run: run index
+        :return:
+        """
+        info = self.mdb.select('resultats',
+                               where='(run, scenario) = (SELECT run, scenario '
+                                     'FROM {}.runs WHERE id= {})'.format(self.mdb.SCHEMA, id_run),
+                               order='t',
+                               list_var=['pk', 'branche', 'section'])
+        lst_id = [ id_run for i in range(len(info['pk']))]
+        lst_insert = list(set(zip(lst_id, info['pk'], info['branche'], info['section'])))
+        col_sect = ['id_runs', 'pk', 'branch', 'section']
+        if len(lst_insert) > 0:
+            self.mdb.insert_res('results_sect', lst_insert, col_sect)

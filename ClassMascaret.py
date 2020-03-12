@@ -1516,11 +1516,12 @@ class ClassMascaret:
                     # TODO delete in the future
                     self.lit_opt(run, sceninit, id_run, None,
                                  self.baseName + '_init', comments)
+                    self.mgis.chkt.convert_all_result()
                     # ----------
                     # TODO change when change graphic hydro
                     # self.lit_opt_new(id_run, None,
                     #                  self.baseName + '_init', comments)
-                    self.mgis.chkt.convert_all_result()
+
                 else:
                     self.mgis.add_info("No Run initialization.\n"
                                        " The initial boundaries come from {} scenario.".format(sceninit))
