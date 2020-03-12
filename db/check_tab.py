@@ -63,7 +63,6 @@ class CheckTab():
 
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         version = read_version(self.mgis.masplugPath)
-        # self.all_version(tabs, version)
         # self.all_version(tabs, '3.0.1')
 
         if not "admin_tab" in tabs:
@@ -260,15 +259,15 @@ class CheckTab():
         self.mdb.run_query(sql, many=True, list_many=liste_value)
 
         # add tracer variable
-        info = self.mdb.select('tracer_name', list_var=['type', 'text', 'sigle'])
+        info = self.mdb.select('tracer_name', where="type='TRANSPORT_PUR'", list_var=['type', 'text', 'sigle'])
         nbv = len(info['type'])
         if nbv > 0:
-            for i in range(nbv):
-                dico = {'var': info['sigle'][i],
-                        'type_res': 'tracer_{}'.format(info['type'][i]),
-                        'name': info['text'][i],
-                        'type_var': 'float'}
-                self.mdb.check_id_var(dico)
+            dico = {'var': info['sigle'][0],
+                    'type_res': 'tracer_{}'.format('TRANSPORT_PUR'),
+                    'name': info['text'][0],
+                    'type_var': 'float'}
+            self.mdb.check_id_var(dico)
+
 
     def convert_all_result(self):
         """ conversion between the previous results table format to the new for all results"""
@@ -277,9 +276,12 @@ class CheckTab():
         lst_typ_res = [r[0] for r in rows]
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs".format(self.mdb.SCHEMA), fetch=True)
         dict_runs = {r[0]: {"run": r[1], "scen": r[2]} for r in rows}
-        rows = self.mdb.run_query("SELECT DISTINCT id_runs FROM {0}.results".format(self.mdb.SCHEMA), fetch=True)
-        lst_exist = [r[0] for r in rows]
+
         for typ_res in lst_typ_res:
+            rows = self.mdb.run_query(
+                "SELECT DISTINCT id_runs FROM {0}.results WHERE var in "
+                "(SELECT id FROM {0}.results_var WHERE type_res = '{1}') ".format(self.mdb.SCHEMA,typ_res), fetch=True)
+            lst_exist = [r[0] for r in rows]
             for run in dict_runs.keys():
                 if run not in lst_exist:
                     self.convert_result(run, typ_res)
@@ -297,7 +299,6 @@ class CheckTab():
         :param typ_res: result type
         :return:
         """
-        print(typ_res)
         if typ_res == "opt":
             tab_src = "resultats"
             col_pknum = "pk"
@@ -328,14 +329,21 @@ class CheckTab():
             "WHERE type_res = '{2}')".format(self.mdb.SCHEMA, id_run, tab_src))
 
         rows = self.mdb.run_query("SELECT id, var FROM {0}.results_var "
-                                  "WHERE type_res = '{2}'".format(self.mdb.SCHEMA, tab_src, typ_res), fetch=True)
-        for id_var, nm_var in rows:
+                                  "WHERE type_res = '{2}' ORDER BY id".format(self.mdb.SCHEMA, tab_src, typ_res), fetch=True)
+        if typ_res.split('_')[0] == 'tracer':
+            lst_var=[[row[0],'c{}'.format(r+1)] for r, row in enumerate(rows)]
+        else:
+            lst_var = rows
+
+        for id_var, nm_var in  lst_var:
             if nm_var.lower() in lst_var_exist:
                 sql = "INSERT INTO {0}.results (SELECT {5}, {3}.t, {3}.{4}, {1}, {3}.{2} " \
                       "FROM {0}.{3} WHERE {3}.{2} is Not Null AND {3}.run = '{6}' " \
                       "AND {3}.scenario = '{7}')".format(self.mdb.SCHEMA, id_var, nm_var.lower(), tab_src, col_pknum,
                                                          id_run, run_run, run_scen)
                 self.mdb.execute(sql)
+
+
 
     def fill_result_sect(self, id_run):
         """

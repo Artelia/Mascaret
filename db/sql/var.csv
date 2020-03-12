@@ -48,5 +48,27 @@ id;type_res;var;name;type_var
 47;link;QECH;Link flow rate;float
 48;link;VECH;Link velocity;float
 49;opt;Q;Flow rate;float
-50;struct;ZSTR;valve movement;float
-51;weirs;ZSTR;valve movement;float
+50;tracer_O2;O2;Dissolved oxygen;float
+51;tracer_O2;LOR;Organic load;float
+52;tracer_O2;NH4;Ammonia load;float
+53;tracer_BIOMASS;PHY;Phytoplankton biomass;float
+54;tracer_BIOMASS;PO4;Assimilable mineral phosphorus;float
+55;tracer_BIOMASS;POR;Non-assimilable mineral phosphorus;float
+56;tracer_BIOMASS;NO3;Assimilable mineral nitrogen;float
+57;tracer_BIOMASS;NOR;Non-assimilable mineral nitrogen;float
+58;tracer_EUTRO;PHY;Phytoplankton biomass;float
+59;tracer_EUTRO;PO4;Assimilable mineral phosphorus;float
+60;tracer_EUTRO;POR;Non-assimilable mineral phosphorus;float
+61;tracer_EUTRO;NO3;Assimilable mineral nitrogen;float
+62;tracer_EUTRO;NOR;Non-assimilable mineral nitrogen;float
+63;tracer_EUTRO;NH4;Ammonia load;float
+64;tracer_EUTRO;LOR;Organic load;float
+65;tracer_EUTRO;O2;Dissolved oxygen;float
+66;tracer_THERMIC;TEAU;Water temperature;float
+67;tracer_MICROPOLE;MES;Suspended material;float
+68;tracer_MICROPOLE;SED;Sediments;float
+69;tracer_MICROPOLE;C_EAU;Concentration in water;float
+70;tracer_MICROPOLE;C_MES;Concentration in suspended material;float
+71;tracer_MICROPOLE;C_SED;Concentration in sediments;float
+72;struct;ZSTR;valve movement;float
+73;weirs;ZSTR;valve movement;float

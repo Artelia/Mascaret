@@ -265,16 +265,16 @@ class GraphResult(GraphCommonNew):
 
         self.annot_var = self.axes.annotate("", xy=(0, 0), ha='left', xytext=(10, 0), textcoords='offset points',
                                             va='top', bbox=dict(boxstyle='round, pad=0.5', fc='white', alpha=0.7),
-                                            c='black', visible=False, zorder=200)
+                                            color='black', visible=False, zorder=200)
         self.annotation.append(self.annot_var)
 
         for v, var in enumerate(lst_vars):
             self.list_var.append({"id": v, "name": var, "clr": lst_colors[v]})
-            self.courbe_var, = self.axes.plot([], [], c=lst_colors[v], zorder=100 - v, label=lst_lbls[v])
+            self.courbe_var, = self.axes.plot([], [], color=lst_colors[v], zorder=100 - v, label=lst_lbls[v])
             self.courbes.append(self.courbe_var)
             self.annot_var = self.axes.annotate("", xy=(0, 0), ha='left', xytext=(10, 0), textcoords='offset points',
                                                 va='top', bbox=dict(boxstyle='round, pad=0.5', fc='white', alpha=0.7),
-                                                c=lst_colors[v], visible=False, zorder=199 - v)
+                                                color=lst_colors[v], visible=False, zorder=199 - v)
             self.annotation.append(self.annot_var)
 
         self.axes.tick_params(axis='both', labelsize=7.)

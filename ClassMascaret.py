@@ -1727,6 +1727,16 @@ class ClassMascaret:
                 self.mgis.add_info("Simulation Error: there aren't results for tracer")
                 return False
             t_tra, pk_tra, col_tra, value_tra = self.read_opt(nom_fich_tra, date_debut, scen, run)
+            if self.wq.cur_wq_mod == 'TRANSPORT_PUR':
+                dico_tra = self.mdb.select('tracer_name', where="type ='{}' ".format(self.wq.cur_wq_mod),
+                                           order='id', list_var=['sigle', 'text'])
+
+                for cpt_tra, sigle in enumerate( dico_tra['sigle']):
+                    var_info = {'var': sigle,
+                                'type_res': 'tracer_TRANSPORT_PUR',
+                                'name': dico_tra['text'][cpt_tra],
+                                'type_var': 'float'}
+                    self.mdb.check_id_var(var_info)
             lind = []
             for i, c in enumerate(col_tra):
                 if c not in col:
@@ -1975,7 +1985,16 @@ class ClassMascaret:
                     # new results
 
                     if len(id_run) > 0:
-                        condition = "id_runs = {}".format(id_run[0][0])
+                        id_run = id_run[0][0]
+                        condition = "id_runs = {}".format(id_run)
+                        var = self.mdb.run_query("SELECT DISTINCT var FROM {0}.results "
+                                                 "WHERE {1} ".format(self.mdb.SCHEMA, condition),
+                                                 fetch=True)
+                        list_var = [str(v[0]) for v in var]
+                        self.mdb.run_query("DELETE  FROM {}.results_var "
+                                           "where id in ({}) and "
+                                           "type_res = 'tracer_TRANSPORT_PUR'".format(self.mdb.SCHEMA,
+                                                                                      ','.join(list_var)))
                         self.mdb.delete('results', condition)
                         self.mdb.delete('results_sect', condition)
                     if self.mgis.DEBUG:
@@ -2226,8 +2245,8 @@ class ClassMascaret:
                 var = source.readline()
             ligne = source.readline()
             if type_res.split('_')[0] == 'tracer':
-                dico_tra = self.mdb.select('tracer_name', where="type ='{}".format(self.wq.cur_wq_mod),
-                                           order='id', list_var=['sigle'])
+                dico_tra = self.mdb.select('tracer_name', where="type ='{}'".format(self.wq.cur_wq_mod),
+                                           order='id', list_var=['sigle','text'])
                 cpt_tra = 0
                 while '[resultats]' not in ligne:
                     temp = ligne.replace('"', '').replace('NaN', "'NULL'").split(';')
@@ -2236,8 +2255,10 @@ class ClassMascaret:
                             var_info = {'var': dico_tra['sigle'][cpt_tra],
                                         'type_res': type_res}
                         else:
-                            var_info = {'var': dico_tra['id'][cpt_tra],
-                                        'type_res': type_res}
+                            var_info = {'var': dico_tra['sigle'][cpt_tra],
+                                        'type_res': type_res,
+                                        'name': dico_tra['text'][cpt_tra],
+                                        'type_var': 'float'}
                         cpt_tra += 1
                     else:
                         var_info = {'var': temp[1].upper(),
@@ -2400,6 +2421,7 @@ class ClassMascaret:
             else:
                 init_col = ['TIME', 'BRANCH', 'SECTION', 'PK']
                 type_res = 'tracer_{}'.format(self.wq.cur_wq_mod)
+
                 val = self.new_read_opt(nom_fich_tra, type_res, init_col)
                 key_val_opt.remove('TIME')
                 key_val_opt.remove('PK')
@@ -2407,7 +2429,10 @@ class ClassMascaret:
                 for key in val_key:
                     if key in key_val_opt:
                         del val[key]
+
+
                 self.save_new_results(val, id_run)
+
 
     def save_new_results(self, val, id_run):
         """
@@ -2424,6 +2449,7 @@ class ClassMascaret:
         elif 'LNUM' in val_keys:
             lpk = val['LNUM']
         values = []
+        val_sect = []
         for key in val_keys:
             if isinstance(key, int):
                 v_tmp = self.creat_values(id_run, key, lpk,
@@ -2443,7 +2469,6 @@ class ClassMascaret:
         if len(values) > 0:
             self.mdb.insert_res('results', values, col_tab)
         col_sect = ['id_runs', 'pk', 'branch', 'section']
-
         if len(val_sect) > 0:
             self.mdb.insert_res('results_sect', val_sect, col_sect)
 
