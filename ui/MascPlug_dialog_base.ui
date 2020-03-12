@@ -300,7 +300,6 @@
    </attribute>
    <addaction name="actionCross_section"/>
    <addaction name="actionStructures"/>
-   <!--<addaction name="actionTest_struct"/>-->
    <addaction name="separator"/>
    <addaction name="action_Extract_MNTfor_profile"/>
   </widget>
@@ -338,6 +337,7 @@
    <addaction name="actionHydrogramme"/>
    <addaction name="actionCross_section_results"/>
    <addaction name="actionBasin"/>
+   <addaction name="actionGraphRes"/>
   </widget>
   <widget class="QToolBar" name="WaterQualityToolBar">
    <property name="windowTitle">
@@ -602,7 +602,7 @@
   <action name="actionAdd_WQ_tables">
    <property name="text">
     <string>Add WQ and Basins tables</string>
- </property>
+   </property>
   </action>
   <action name="actionCreate_Basin">
    <property name="icon">
@@ -665,9 +665,20 @@
     <string>Movable Dam</string>
    </property>
   </action>
-   <action name="actionTest_struct">
+  <action name="actionTest_struct">
    <property name="text">
     <string>Test_struct</string>
+   </property>
+  </action>
+  <action name="actionGraphRes">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Res</string>
+   </property>
+   <property name="toolTip">
+    <string>GraphRes</string>
    </property>
   </action>
  </widget>

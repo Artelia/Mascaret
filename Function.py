@@ -282,3 +282,19 @@ def read_version(masplugPath):
             break
     file.close()
     return val
+
+
+def tw_to_txt(tw, range_r, range_c, sep):
+    clipboard = ''
+    for c in range_c:
+        if c != range_c[-1]:
+            clipboard = '{}{}{}'.format(clipboard, tw.horizontalHeaderItem(c).text(), sep)
+        else:
+            clipboard = '{}{}\n'.format(clipboard, tw.horizontalHeaderItem(c).text())
+    for r in range_r:
+        for c in range_c:
+            if c != range_c[-1]:
+                clipboard = '{}{}{}'.format(clipboard, tw.item(r, c).data(0), sep)
+            else:
+                clipboard = '{}{}\n'.format(clipboard, tw.item(r, c).data(0))
+    return clipboard
