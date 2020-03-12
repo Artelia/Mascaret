@@ -123,7 +123,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 self.mgis.coucheProfils = results[0].mLayer
                 gid = results[0].mFeature["abscissa"]
                 sql = "SELECT DISTINCT pknum FROM {0}.results WHERE var IN " \
-                      "(SELECT id FROM {0}.results_var WHERE type_res = 'Struct')".format(self.mgis.mdb.SCHEMA)
+                      "(SELECT id FROM {0}.results_var WHERE type_res = 'struct')".format(self.mgis.mdb.SCHEMA)
                 rows = self.mgis.mdb.run_query(sql, fetch=True)
                 pk_with_res = [r[0] for r in rows]
                 if gid in pk_with_res:

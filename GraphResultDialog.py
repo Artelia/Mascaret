@@ -27,6 +27,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 from .GraphCommon import GraphCommonNew
+from .Function import tw_to_txt
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -48,10 +49,8 @@ class GraphResultDialog(QWidget):
 
         if self.typ_graph == "struct":
             self.typ_res = "struct"
-            self.lst_graph = [{"id": "struct_lev", "name": "Level", "unit": "m", "vars": ["ZSTR"],
-                                                                                 "colors": ["#FF0000"]},
-                              {"id": "test", "name": "Test", "unit": "m²", "vars": ["AAA", "BBB"],
-                                                                           "colors": ["#AAFF00", "#FF00FF"]}]
+            self.lst_graph = [{"id": "gate_move", "name": "Gate movement", "unit": "m",
+                               "vars": ["ZSTR"], "colors": ["blue"]}]
             self.x_var = "time"
             self.sql_where = "results.pknum = {1}"
             self.cur_pknum = id
@@ -245,20 +244,7 @@ class CopySelectedCellsAction(QAction):
             sys_clip.setText(clipboard)
 
 
-def tw_to_txt(tw, range_r, range_c, sep):
-    clipboard = ''
-    for c in range_c:
-        if c != range_c[-1]:
-            clipboard = '{}{}{}'.format(clipboard, tw.horizontalHeaderItem(c).text(), sep)
-        else:
-            clipboard = '{}{}\n'.format(clipboard, tw.horizontalHeaderItem(c).text())
-    for r in range_r:
-        for c in range_c:
-            if c != range_c[-1]:
-                clipboard = '{}{}{}'.format(clipboard, tw.item(r, c).data(0), sep)
-            else:
-                clipboard = '{}{}\n'.format(clipboard, tw.item(r, c).data(0))
-    return clipboard
+
 
 
 class GraphResult(GraphCommonNew):
