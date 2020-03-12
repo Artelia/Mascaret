@@ -47,7 +47,7 @@ class GraphResultDialog(QWidget):
         self.cur_data = dict()
 
         if self.typ_graph == "struct":
-            self.typ_res = "Struct"
+            self.typ_res = "struct"
             self.lst_graph = [{"id": "struct_lev", "name": "Level", "unit": "m", "vars": ["ZSTR"],
                                                                                  "colors": ["#FF0000"]},
                               {"id": "test", "name": "Test", "unit": "m²", "vars": ["AAA", "BBB"],
