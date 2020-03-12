@@ -1003,7 +1003,7 @@ $BODY$
                                                             table,
                                                             var,
                                                             valeurs)
-        print(sql)
+
         self.run_query(sql)
         # if self.mgis.DEBUG:
         #     self.mgis.add_info('function insert end')
@@ -1223,3 +1223,27 @@ $BODY$
             if row[0][0] is not None:
                 return True
         return False
+
+    def check_id_var(self, dico):
+        """
+        return varibale id  and  add variable if not exist
+        :param dico: example : {'var': 'ZSTR',
+                    'type_res': 'weirs',
+                    'name': 'Valve movement',
+                    'type_var': 'float'}
+        :return: id_var ; var identifiant number
+        """
+        id_var = None
+        info = self.select('results_var', where="var = '{var}' AND type_res = '{type_res}'".format(**dico),
+                               list_var=['id'])
+        if info['id'] :
+            id_var = info['id'][0]
+        else:
+            if len(dico)>2:
+                dico['schema'] = self.SCHEMA
+                id_var = self.select_max('id','results_var') +1
+                dico['id'] = id_var
+                self.run_query("INSERT INTO {schema}.results_var (id,type_res, var, name,type_var) "
+                                   "VALUES ( {id}, '{type_res}', '{var}', '{name}','{type_var}')".format(**dico))
+
+        return id_var

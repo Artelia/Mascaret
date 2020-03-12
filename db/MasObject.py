@@ -615,6 +615,7 @@ class runs(MasObject):
                       ('run', 'character varying(30)'),
                       ('scenario', 'character varying(30)'),
                       ('date', ' timestamp without time zone'),
+                      ('init_date', 'timestamp without time zone'),
                       ('t', ' text'),
                       ('pk', ' text'),
                       ('comments', 'text'),

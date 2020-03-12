@@ -60,7 +60,8 @@ class ClassWaterQualityDialog(QDialog):
         self.init_ui()
 
         self.modeleQualiteEau.currentIndexChanged['QString'].connect(self.modele_qualite_eau_changed)
-        self.ui.actionB_delete_lineTabTracer.triggered.connect(self.fct)
+        fct = lambda: self.delete_line(self.table_Tr, self.ui.nbTraceur)
+        self.ui.actionB_delete_lineTabTracer.triggered.connect(fct)
         self.ui.actionB_add_lineTabTracer.triggered.connect(self.add_row_tr)
 
         self.option_convection_changed(self.ui.optionConvection.currentText())
@@ -72,8 +73,6 @@ class ClassWaterQualityDialog(QDialog):
         self.ui.optionCalculDiffusion.currentIndexChanged.connect(self.calcul_diffusion_changed)
         self.ui.presenceConcInit.stateChanged.connect(self.presence_traceurs_changed)
 
-    def fct(self):
-        return lambda: self.delete_line(self.table_Tr, self.ui.nbTraceur)
 
     def presence_traceurs_changed(self):
         """ Enabled/Disenabled in function tracer presence parameter"""
@@ -286,9 +285,14 @@ class ClassWaterQualityDialog(QDialog):
         # self.mgis.add_info('fct delete_line')
         if table_view.rowCount() > 1:
             indices = table_view.selectedIndexes()
-            for index in indices:
-                table_view.removeRow(index.row())
-                del self.dicoTrac[index.row()]
+            row_to_del = []
+            for index in indices :
+                if index.row() not in row_to_del :
+                    row_to_del.append(index.row())
+            row_to_del = sorted(row_to_del,reverse=True)
+            for row in row_to_del :
+                table_view.removeRow(row)
+                del self.dicoTrac[row]
         if objnb_trac:
             objnb_trac.setText('{}'.format(table_view.rowCount()))
 
@@ -378,6 +382,41 @@ class ClassWaterQualityDialog(QDialog):
                                 WHERE parametre='{2}'
                           """.format(self.mdb.SCHEMA, txt_dif, 'diffusionTraceurs')
         self.mdb.execute(sql)
+
+        dico_trac = self.mdb.select('tracer_name', where="type='TRANSPORT_PUR'",order='id')
+
+        if dico_trac :
+            dico_var = self.mdb.select('results_var', where="type_res='tracer_TRANSPORT_PUR'",order='id')
+            nbt = len(dico_trac['id'])
+            for i, id_var in enumerate(dico_var['id']):
+                self.mdb.delete('results_var', " id = {}".format(id_var))
+            if len(dico_var['id'])>0:
+                idx_t =0
+                for i, id_var in enumerate(dico_var['id']):
+                    idx_t = i
+                    if i < nbt :
+                        dico = { 'id': id_var,
+                                'var': dico_trac['id'][i],
+                                'type_res': 'tracer_{}'.format('TRANSPORT_PUR'),
+                                'name': dico_trac['text'][i],
+                                'type_var': 'float',
+                                 'schema': self.mdb.SCHEMA}
+                        self.mdb.run_query("INSERT INTO {schema}.results_var (id ,type_res, var, name,type_var) "
+                                       "VALUES ( {id}, '{type_res}', '{var}', '{name}','{type_var}')".format(**dico))
+                    else:
+                        break
+            else:
+                idx_t = -1
+            if idx_t+1 < nbt:
+                for j, id_trac in enumerate(dico_trac['id'][idx_t+1:]):
+                    idx = idx_t + 1 + j
+                    dico = {'var': id_trac ,
+                            'type_res': 'tracer_{}'.format('TRANSPORT_PUR'),
+                            'name': dico_trac['text'][idx],
+                            'type_var': 'float'}
+                    self.mdb.check_id_var(dico)
+
+
 
     def update_conv_diff(self, table):
         """ updating convection and diffusion parameters in database"""

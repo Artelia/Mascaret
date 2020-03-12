@@ -158,7 +158,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
                 field_names = [field.name() for field
                                in results[0].mLayer.fields()]
-                prof_a = self.mgis.mdb.select_distinct("name","profiles", "active")
+                prof_a = self.mgis.mdb.select_distinct("name", "profiles", "active")
                 if feature['name'] in prof_a['name']:
                     if 'code' in field_names:
                         selection['code'] = []
@@ -220,6 +220,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 graph_basin_link = GraphBasin(feature, self.mgis, selection, feature['name'], couche)
                 graph_basin_link.show()
         return
+
 
 class GraphProfil(GraphCommon):
     """class Dialog graphProfil"""
@@ -388,7 +389,6 @@ class GraphProfil(GraphCommon):
         if dlg.exec_():
             pass
 
-
     def avance(self, val):
         """next or back profiles """
         if self.image:
@@ -550,7 +550,7 @@ class GraphProfil(GraphCommon):
                 for f in self.coucheProfils.getFeatures():
                     if f["name"] == self.nom:
                         interp = f.geometry().interpolate(x)
-                        if interp.isNull() :
+                        if interp.isNull():
                             self.mgis.add_info("Warning : Check the profil lenght")
                         p = interp.asPoint()
                         geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(p.x(), p.y(), self.mdb.SRID)
@@ -1307,7 +1307,7 @@ class GraphProfilRes(GraphCommon):
 
             self.listeRuns = {}
             self.liste_comm = {}
-            for run, scen, comm in zip(dico_run["run"], dico_run["scenario"],dico_run["comments"]):
+            for run, scen, comm in zip(dico_run["run"], dico_run["scenario"], dico_run["comments"]):
                 if run not in self.listeRuns.keys():
                     self.listeRuns[run] = []
                     self.liste_comm[run] = {}
@@ -1463,7 +1463,7 @@ class GraphProfilRes(GraphCommon):
                 self.axes.patches.remove(patch)
 
         self.title.setText(self.nom)
-        try :
+        try:
             comm = self.liste_comm[self.run][self.scenario]
             if comm != '' and comm != None:
                 self.ui.label_comments.show()
@@ -1639,7 +1639,7 @@ class GraphProfilRes(GraphCommon):
         else:
             # self.posit = datetime.strptime(text, '%d/%m/%Y %H:%M:%S')
             id = self.comboTime.currentIndex()
-            self.posit = self.listeTime[self.type][id-1]
+            self.posit = self.listeTime[self.type][id - 1]
         self.maj_graph()
 
     def maj_val(self):
@@ -1781,11 +1781,12 @@ class GraphHydro(GraphCommon):
 
         self.listeRuns = {}
         self.liste_comm = {}
-        for run, scen, pk,comm in zip(dico_run["run"], dico_run["scenario"], dico_run['pk'],dico_run["comments"]):
+        for run, scen, pk, comm in zip(dico_run["run"], dico_run["scenario"], dico_run['pk'], dico_run["comments"]):
 
             if self.type == 't':
                 try:
-                    pk_tmp = [round(elem, 2) for elem in pk]
+                    pk = pk.split()
+                    pk_tmp = [round(float(elem), 2) for elem in pk]
                     idx = pk_tmp.index(self.position)
                     if run not in self.listeRuns.keys():
                         self.listeRuns[run] = []
@@ -1800,7 +1801,6 @@ class GraphHydro(GraphCommon):
                     self.liste_comm[run] = {}
                 self.listeRuns[run].append(str(scen))
                 self.liste_comm[run][scen] = comm
-
 
         if self.listeRuns == {}:
             self.mgis.add_info('No results for this profile. \n')
@@ -2240,7 +2240,7 @@ class GraphHydro(GraphCommon):
             condition += """AND {0}={1}""".format(self.inv, self.position)
 
         # self.mgis.add_info(condition)
-        self.tab = self.mdb.select("resultats", condition, self.type )
+        self.tab = self.mdb.select("resultats", condition, self.type)
 
         self.listeTab = [self.tab[self.type]]
         for c in self.columns:
@@ -2263,7 +2263,7 @@ class GraphHydro(GraphCommon):
         """
         Update graph function
         """
-        try :
+        try:
             comm = self.liste_comm[self.run][self.scenario]
             if comm != '' and comm != None:
                 self.ui.label_comments.show()
@@ -2410,7 +2410,7 @@ class GraphHydro(GraphCommon):
         self.maj_limites_y()
 
     def maj_limites_x(self):
-        #maj x
+        # maj x
         mini_x = min(self.tab[self.type])
         maxi_x = max(self.tab[self.type])
         self.axes.set_xlim(mini_x, maxi_x)
@@ -2515,7 +2515,7 @@ class GraphHydro(GraphCommon):
                                       ha='left', va='bottom',
                                       fontsize='x-small',
                                       color=c,
-                                      textcoords='offset points',clip_on=True)
+                                      textcoords='offset points', clip_on=True)
 
             self.etiquetteLaisses.append(temp)
 
@@ -2526,12 +2526,12 @@ class GraphHydro(GraphCommon):
         if isinstance(self.position, float):
             self.position = float(text)
             info = self.nom.split('-')
-            if len(info)>1:
+            if len(info) > 1:
                 tmp = info[0]
-                if len(info)>2:
+                if len(info) > 2:
                     for txt in info[1:-1]:
                         tmp = tmp + '-' + txt
-                self.nom= tmp +'- '+text
+                self.nom = tmp + '- ' + text
             else:
                 self.nom = text
         else:
@@ -2564,7 +2564,7 @@ class GraphHydro(GraphCommon):
         if self.type != "pk":
             self.maj_limites_x()
         self.maj_limites_y()
-            #
+        #
 
     def combo_scen_changed(self, text):
         self.scenario = text
@@ -2658,7 +2658,6 @@ class GraphBasin(GraphCommon):
         # insert graphic and toolsbars of graphic
         self.gui_graph(self.ui.widget_figure, self.ui.widget_toolsbar)
         self.fig.autofmt_xdate()
-
 
         self.init_ui()
 

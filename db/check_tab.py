@@ -21,12 +21,17 @@ import os
 from . import MasObject as Maso
 from copy import deepcopy
 from ..Function import read_version
+from ..ui.custom_control import ClassWarningBox
+
+
+# from ..ClassParameterDialog import ClassParameterDialog
 
 
 class CheckTab():
     def __init__(self, mgis, mdb):
         self.mgis = mgis
         self.mdb = mdb
+        self.box = ClassWarningBox(self)
         # for add table [ 'add_tab': [list_table]]
         # for delete [ ['DEL TAB',[list_table]]
         self.dico_modif = {'2.9.9': {'alt_tab': [{'tab': 'admin_tab', 'sql': ["ALTER TABLE {0}.admin_tab ADD COLUMN "
@@ -48,7 +53,6 @@ class CheckTab():
                            }
 
         self.list_hist_version = ['0.0.0', '2.9.9', '3.0.0', '3.0.1', '3.0.2']
-
 
     def update_adim(self):
         """
@@ -86,50 +90,56 @@ class CheckTab():
         test_gd = True
         tabs_no = deepcopy(tabs)
 
-        for ver in self.list_hist_version[pos + 1:pos_fin + 1]:
-            if ver in self.dico_modif.keys():
-                modif = self.dico_modif[ver]
-                if len(modif) > 0:
-                    for proc in ['add_tab', 'alt_tab', 'fct', 'del_tab']:
-                        if proc in modif.keys():
-                            if proc != 'fct':
-                                lst_tab = modif[proc]
-                                for tab in lst_tab:
-                                    # print(proc)
-                                    if proc == 'add_tab':
-                                        valid, tab_name = self.add_tab(tab["tab"], tab["overwrite"])
-                                    elif proc == 'alt_tab':
-                                        tab_name = tab["tab"]
-                                        valid = self.alt_tab(tab_name, tab["sql"])
-                                    elif proc == 'del_tab':
-                                        tab_name = tab
-                                        valid = self.del_tab(tab_name)
-                                    # print (proc, tab_name, valid)
-                                    if valid:
-                                        if proc != 'del_tab':
-                                            self.updat_num_v(tab_name, ver)
-                                        else:
-                                            self.del_num_v(tab_name)
-                                    else:
-                                        test_gd = False
-                                    if tab_name in tabs_no:
-                                        tabs_no.remove(tab_name)
-                            else:
-                                lst_fct = modif[proc]
-                                for fct in lst_fct:
-                                    fct()
-            if test_gd:
-                self.all_version(tabs_no, ver)
-            else:
-                self.mgis.add_info('ERROR: Update table ************')
+        if len(self.list_hist_version[pos + 1:pos_fin + 1]) > 0:
+            ok = self.box.yes_no_q("WARNING:\n "
+                                   "Do you want update tables for {} schema ?\n"
+                                   "There is a risk of table corruption.\n "
+                                   "Remember to make backup copies if it's important model.".format(self.mdb.SCHEMA))
+            if ok:
 
+                for ver in self.list_hist_version[pos + 1:pos_fin + 1]:
+                    if ver in self.dico_modif.keys():
+                        modif = self.dico_modif[ver]
+                        if len(modif) > 0:
+                            for proc in ['add_tab', 'alt_tab', 'fct', 'del_tab']:
+                                if proc in modif.keys():
+                                    if proc != 'fct':
+                                        lst_tab = modif[proc]
+                                        for tab in lst_tab:
+                                            if proc == 'add_tab':
+                                                valid, tab_name = self.add_tab(tab["tab"], tab["overwrite"])
+                                            elif proc == 'alt_tab':
+                                                tab_name = tab["tab"]
+                                                valid = self.alt_tab(tab_name, tab["sql"])
+                                            elif proc == 'del_tab':
+                                                tab_name = tab
+                                                valid = self.del_tab(tab_name)
+                                            # print (proc, tab_name, valid)
+                                            if valid:
+                                                if proc != 'del_tab':
+                                                    self.updat_num_v(tab_name, ver)
+                                                else:
+                                                    self.del_num_v(tab_name)
+                                            else:
+                                                test_gd = False
+                                            if tab_name in tabs_no:
+                                                tabs_no.remove(tab_name)
+                                    else:
+                                        lst_fct = modif[proc]
+                                        for fct in lst_fct:
+                                            fct()
+                    if test_gd:
+                        self.all_version(tabs_no, ver)
+                    else:
+                        self.mgis.add_info('ERROR: Update table ************')
+            else:
+                self.mgis.add_info("********* Cancel of update table ***********")
 
     def all_version(self, tabs, version=None):
         if not version:
             version = self.list_hist_version[0]
         for name_tab in tabs:
             self.updat_num_v(name_tab, version)
-
 
     def updat_num_v(self, name_tab, version):
         """
@@ -150,7 +160,6 @@ class CheckTab():
                   " VALUES ('{1}', '{2}')".format(self.mdb.SCHEMA, name_tab, version)
             self.mdb.execute(sql)
 
-
     def del_num_v(self, name_tab):
         """
         delete table in admin_tab
@@ -165,7 +174,6 @@ class CheckTab():
             sql = "DELETE FROM {0}.admin_tab WHERE table_ = '{1}';" \
                 .format(self.mdb.SCHEMA, name_tab)
             self.mdb.execute(sql)
-
 
     def add_tab(self, tab, overwrite=True):
         """
@@ -186,8 +194,13 @@ class CheckTab():
 
         return valid, obj.name
 
-
     def alt_tab(self, tab, lst_sql):
+        """
+        Apply sql script
+        :param tab: table name
+        :param lst_sql: sql script list
+        :return:
+        """
         valid = True
         txt_sql = ''
         for sql in lst_sql:
@@ -205,8 +218,12 @@ class CheckTab():
 
         return valid
 
-
     def del_tab(self, tab):
+        """
+        delete table
+        :param tab:  table name
+        :return:
+        """
         try:
             valid = self.mdb.drop_table(tab)
         except:
@@ -215,59 +232,100 @@ class CheckTab():
 
         return valid
 
-
     def create_var_result(self):
-        from ..ClassParameterDialog import ClassParameterDialog
-        self.mdb.execute("DELETE FROM {0}.results_var".format(self.mdb.SCHEMA))
-        prm = ClassParameterDialog(self.mgis, "steady")
-        for v, var in enumerate(prm.variables):
-            name = prm.libel_var[v].replace("'", "''")
-            if name[:5] == "Basin":
-                type_res = "Basin"
-            elif name[:4] == "Link":
-                type_res = "Link"
-            else:
-                type_res = "Opt"
-            self.mdb.run_query("INSERT INTO {0}.results_var (id, type_res, var, name) "
-                               "VALUES ({1}, '{2}', '{3}', '{4}')".format(self.mdb.SCHEMA, v + 1, type_res, var, name))
-        self.mdb.run_query("INSERT INTO {0}.results_var (id, type_res, var, name) "
-                           "VALUES ({1}, 'Struct', 'ZSTR', 'Z Structure')".format(self.mdb.SCHEMA, v + 2))
 
+        self.mdb.execute("DELETE FROM {0}.results_var".format(self.mdb.SCHEMA))
+        dossier = os.path.join(self.mgis.masplugPath, 'db', 'sql')
+        fichparam = os.path.join(dossier, "var.csv")
+        liste_value = []
+        with open(fichparam, 'r') as file:
+            cpt = 0
+            for ligne in file:
+                if cpt > 0:
+                    liste = ligne.replace('\n', '').split(';')
+                    liste_value.append([int(liste[0])] + liste[1:])
+                cpt += 1
+        liste_col = self.mdb.list_columns('results_var')
+
+        var = ",".join(liste_col)
+        valeurs = "("
+        for k in liste_col:
+            valeurs += '%s,'
+        valeurs = valeurs[:-1] + ")"
+
+        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
+                                                            'results_var',
+                                                            var,
+                                                            valeurs)
+        self.mdb.run_query(sql, many=True, list_many=liste_value)
+
+        # add tracer variable
+        info = self.mdb.select('tracer_name', list_var=['type', 'text', 'sigle'])
+        nbv = len(info['type'])
+        if nbv > 0:
+            for i in range(nbv):
+                dico = {'var': info['sigle'][i],
+                        'type_res': 'tracer_{}'.format(info['type'][i]),
+                        'name': info['text'][i],
+                        'type_var': 'float'}
+                self.mdb.check_id_var(dico)
 
     def convert_all_result(self):
+        """ conversion between the previous results table format to the new for all results"""
+
         rows = self.mdb.run_query("SELECT DISTINCT type_res FROM {0}.results_var".format(self.mdb.SCHEMA), fetch=True)
         lst_typ_res = [r[0] for r in rows]
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs".format(self.mdb.SCHEMA), fetch=True)
         dict_runs = {r[0]: {"run": r[1], "scen": r[2]} for r in rows}
+        rows = self.mdb.run_query("SELECT DISTINCT id_runs FROM {0}.results".format(self.mdb.SCHEMA), fetch=True)
+        lst_exist = [r[0] for r in rows]
         for typ_res in lst_typ_res:
             for run in dict_runs.keys():
-                self.convert_result(run, typ_res)
+                if run not in lst_exist:
+                    self.convert_result(run, typ_res)
 
+        rows = self.mdb.run_query("SELECT DISTINCT id_runs FROM {0}.results_sect".format(self.mdb.SCHEMA), fetch=True)
+        lst_exist = [r[0] for r in rows]
+        for run in dict_runs.keys():
+            if run not in lst_exist:
+                self.fill_result_sect(run)
 
-    def convert_result(self, run, typ_res):
-        if typ_res == "Opt":
+    def convert_result(self, id_run, typ_res):
+        """
+        conversion between the previous results table format to the new
+        :param id_run: run index
+        :param typ_res: result type
+        :return:
+        """
+        print(typ_res)
+        if typ_res == "opt":
             tab_src = "resultats"
             col_pknum = "pk"
-        elif typ_res == "Basin":
+        elif typ_res == "basin":
             tab_src = "resultats_basin"
             col_pknum = "bnum"
-        elif typ_res == "Link":
+        elif typ_res == "link":
             tab_src = "resultats_links"
             col_pknum = "lnum"
-        elif typ_res == "Struct":
+        elif typ_res.split('_')[0] == 'tracer':
+            tab_src = "resultats"
+            col_pknum = "pk"
+        elif typ_res in ["struct", "weirs"]:
             return
 
-        row = self.mdb.run_query("SELECT run, scenario FROM {0}.runs WHERE id = {1}".format(self.mdb.SCHEMA, run), fetch=True)
+        row = self.mdb.run_query("SELECT run, scenario FROM {0}.runs WHERE id = {1}".format(self.mdb.SCHEMA, id_run),
+                                 fetch=True)
         run_run, run_scen = row[0]
 
         rows = self.mdb.run_query("SELECT column_name FROM information_schema.columns WHERE table_schema = '{0}' AND "
                                   "table_name = '{1}' AND ordinal_position > (SELECT ordinal_position "
                                   "FROM information_schema.columns WHERE table_schema = '{0}' AND table_name = '{1}' "
                                   "AND column_name = '{2}')".format(self.mdb.SCHEMA, tab_src, col_pknum), fetch=True)
-        lst_var_exist = [r[0] for r in rows]
 
-        self.mdb.execute("DELETE FROM {0}.results WHERE results.id_runs = {1} AND results.var IN (SELECT id FROM {0}.results_var "
-                         "WHERE type_res = '{2}')".format(self.mdb.SCHEMA, run, tab_src))
+        lst_var_exist = [r[0] for r in rows]
+        self.mdb.execute(
+            "DELETE FROM {0}.results WHERE results.id_runs = {1} AND results.var IN (SELECT id FROM {0}.results_var "
+            "WHERE type_res = '{2}')".format(self.mdb.SCHEMA, id_run, tab_src))
 
         rows = self.mdb.run_query("SELECT id, var FROM {0}.results_var "
                                   "WHERE type_res = '{2}'".format(self.mdb.SCHEMA, tab_src, typ_res), fetch=True)
@@ -276,6 +334,22 @@ class CheckTab():
                 sql = "INSERT INTO {0}.results (SELECT {5}, {3}.t, {3}.{4}, {1}, {3}.{2} " \
                       "FROM {0}.{3} WHERE {3}.{2} is Not Null AND {3}.run = '{6}' " \
                       "AND {3}.scenario = '{7}')".format(self.mdb.SCHEMA, id_var, nm_var.lower(), tab_src, col_pknum,
-                                                        run, run_run, run_scen)
+                                                         id_run, run_run, run_scen)
                 self.mdb.execute(sql)
 
+    def fill_result_sect(self, id_run):
+        """
+        fill results section table
+        :param id_run: run index
+        :return:
+        """
+        info = self.mdb.select('resultats',
+                               where='(run, scenario) = (SELECT run, scenario '
+                                     'FROM {}.runs WHERE id= {})'.format(self.mdb.SCHEMA, id_run),
+                               order='t',
+                               list_var=['pk', 'branche', 'section'])
+        lst_id = [ id_run for i in range(len(info['pk']))]
+        lst_insert = list(set(zip(lst_id, info['pk'], info['branche'], info['section'])))
+        col_sect = ['id_runs', 'pk', 'branch', 'section']
+        if len(lst_insert) > 0:
+            self.mdb.insert_res('results_sect', lst_insert, col_sect)
