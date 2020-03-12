@@ -155,6 +155,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionHydrogramme.triggered.connect(self.main_graph)
         self.ui.actionCross_section_results.triggered.connect(self.main_graph)
         self.ui.actionBasin.triggered.connect(self.main_graph)
+        self.ui.actionGraphRes.triggered.connect(self.main_graph)
 
         # creatoin model
         self.ui.action_Extract_MNTfor_profile.triggered.connect(self.mnt_to_profil)
@@ -705,6 +706,7 @@ class MascPlugDialog(QMainWindow):
         else:
             return True
 
+
     def main_graph(self):
         """ GUI graphique"""
 
@@ -714,30 +716,40 @@ class MascPlugDialog(QMainWindow):
         self.hydrogramme = self.ui.actionHydrogramme.isChecked()
         self.profil_result = self.ui.actionCross_section_results.isChecked()
         self.basin_result = self.ui.actionBasin.isChecked()
+        self.profil_z = self.ui.actionGraphRes.isChecked()
 
         # prevents use of other graphic button
         self.ui.actionHydrogramme.setEnabled(True)
         self.ui.actionCross_section.setEnabled(True)
         self.ui.actionCross_section_results.setEnabled(True)
         self.ui.actionBasin.setEnabled(True)
+        self.ui.actionGraphRes.setEnabled(True)
 
         if self.profil:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section_results.setEnabled(False)
             self.ui.actionBasin.setEnabled(False)
-
+            self.ui.actionGraphRes.setEnabled(False)
         elif self.hydrogramme:
             self.ui.actionCross_section_results.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)
             self.ui.actionBasin.setEnabled(False)
+            self.ui.actionGraphRes.setEnabled(False)
         elif self.profil_result:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)
             self.ui.actionBasin.setEnabled(False)
+            self.ui.actionGraphRes.setEnabled(False)
         elif self.basin_result:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)
             self.ui.actionCross_section_results.setEnabled(False)
+            self.ui.actionGraphRes.setEnabled(False)
+        elif self.profil_z:
+            self.ui.actionHydrogramme.setEnabled(False)
+            self.ui.actionCross_section.setEnabled(False)
+            self.ui.actionCross_section_results.setEnabled(False)
+            self.ui.actionBasin.setEnabled(False)
 
         self.prev_tool = canvas.mapTool()
         self.map_tool = IdentifyFeatureTool(self)

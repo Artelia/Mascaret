@@ -47,7 +47,7 @@ from .Function import isfloat, interpole
 from .GraphCommon import DraggableLegend, GraphCommon
 from .Structure.ClassMethod import ClassMethod
 from .Structure.StructureCreateDialog import ClassStructureCreateDialog
-
+from .GraphResultDialog import GraphResultDialog
 
 if int(qVersion()[0]) < 5:  # qt4
 
@@ -116,8 +116,23 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             flag_profil = self.mgis.profil
             flag_profil_r = self.mgis.profil_result
             flag_casier_r = self.mgis.basin_result
+            flag_profil_z = self.mgis.profil_z
             # self.mgis.add_info("flag_hydro: {0} \n flag_profil: {1} \n flag_profil_r:
             # {2} \n".format(flag_hydro,flag_profil,flag_profil_r))
+            if couche == 'profiles' and flag_profil_z:
+                self.mgis.coucheProfils = results[0].mLayer
+                gid = results[0].mFeature["abscissa"]
+                sql = "SELECT DISTINCT pknum FROM {0}.results WHERE var IN " \
+                      "(SELECT id FROM {0}.results_var WHERE type_res = 'Struct')".format(self.mgis.mdb.SCHEMA)
+                rows = self.mgis.mdb.run_query(sql, fetch=True)
+                pk_with_res = [r[0] for r in rows]
+                if gid in pk_with_res:
+                    graph_res = GraphResultDialog(self.mgis, "struct", gid)
+                    graph_res.show()
+                else:
+                    print ("Erreur")
+                    # a = QMessageBox.Warning(self, 'Error', 'Aucun résultat pour ce profil')
+
             if couche == 'profiles' and flag_profil:
                 self.mgis.coucheProfils = results[0].mLayer
                 gid = results[0].mFeature["gid"]
