@@ -167,10 +167,12 @@ class ClassDeletrunDialog(QDialog):
                 self.mdb.delete("resultats_links", sql)
                 self.mdb.delete("runs", sql)
 
-                if len(lst_idrun) > 0:
+                if len(lst_idrun) > 0 :
+                    print(lst_idrun)
                     var = self.mdb.run_query("SELECT DISTINCT var FROM {0}.results "
                                              "WHERE id_runs IN {1} ".format(self.mdb.SCHEMA, ",".join(lst_idrun)),
                                              fetch=True)
+                    print(var)
                     list_var = [str(v[0]) for v in var]
                     self.mdb.run_query("DELETE  FROM {}.results_var "
                                        "where id in ({}) and "

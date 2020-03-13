@@ -1611,6 +1611,7 @@ class ClassMascaret:
             # self.lit_opt_new(id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
 
             if self.check_mobil_gate():
+                print('rrrrrrrrrrrrrrrr')
                 self.read_mobil_gate_res(id_run)
 
         self.iface.messageBar().clearWidgets()
@@ -2190,7 +2191,7 @@ class ClassMascaret:
                         'name': 'valve movement',
                         'type_var': 'float'}
             id_var = self.mdb.check_id_var(var_info)
-
+            print(id_var)
             # Stock information
             colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
             values = []

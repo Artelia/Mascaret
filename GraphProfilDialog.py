@@ -119,18 +119,25 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             flag_profil_z = self.mgis.profil_z
             # self.mgis.add_info("flag_hydro: {0} \n flag_profil: {1} \n flag_profil_r:
             # {2} \n".format(flag_hydro,flag_profil,flag_profil_r))
-            if couche == 'profiles' and flag_profil_z:
+            if (couche == 'profiles' or couche == 'weirs') and flag_profil_z:
+                if couche == 'profiles':
+                    type_res = 'struct'
+                elif couche == 'weirs':
+                    type_res = 'weirs'
+
                 self.mgis.coucheProfils = results[0].mLayer
                 gid = results[0].mFeature["abscissa"]
                 sql = "SELECT DISTINCT pknum FROM {0}.results WHERE var IN " \
-                      "(SELECT id FROM {0}.results_var WHERE type_res = 'struct')".format(self.mgis.mdb.SCHEMA)
+                      "(SELECT id FROM {0}.results_var WHERE type_res ='{1}' )".format(self.mgis.mdb.SCHEMA,type_res)
+
                 rows = self.mgis.mdb.run_query(sql, fetch=True)
                 pk_with_res = [r[0] for r in rows]
                 if gid in pk_with_res:
-                    graph_res = GraphResultDialog(self.mgis, "struct", gid)
+                    graph_res = GraphResultDialog(self.mgis, type_res, gid)
                     graph_res.show()
                 else:
-                    print ("Erreur")
+                    pass
+                    # print ("Erreur")
                     # a = QMessageBox.Warning(self, 'Error', 'Aucun résultat pour ce profil')
 
             if couche == 'profiles' and flag_profil:
