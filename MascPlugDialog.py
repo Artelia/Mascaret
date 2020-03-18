@@ -871,8 +871,8 @@ Version : {}
         id_run = 48
         # clam.lit_opt('test','Crue2001', id_run, date_debut, clam.baseName , comments='', tracer=False, casier=False)
         nom_fich = r'mascaret'
-
-        clam.opt_to_lig('dede', 'dede_init', 384, 'test.lig')
+        self.chkt.update_setting_json()
+        # clam.opt_to_lig('dede', 'dede_init', 384, 'test.lig')
         # base_namefile = r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret'
         # self.lit_opt_new(id_run,date_debut,nom_fich, tracer=False, casier=False)
         # self.dossierFileMasc=r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret'

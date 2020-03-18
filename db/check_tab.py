@@ -18,10 +18,12 @@ email                :
  ***************************************************************************/
 """
 import os
+import json
 from . import MasObject as Maso
 from copy import deepcopy
 from ..Function import read_version
 from ..ui.custom_control import ClassWarningBox
+
 
 
 # from ..ClassParameterDialog import ClassParameterDialog
@@ -44,7 +46,8 @@ class CheckTab():
                                      'alt_tab': [{'tab': 'weirs', 'sql': ["ALTER TABLE {0}.weirs ADD COLUMN IF NOT "
                                                                           "EXISTS active_mob boolean;",
                                                                           "ALTER TABLE {0}.weirs ADD COLUMN IF NOT "
-                                                                          "EXISTS method_mob text;"]}]},
+                                                                          "EXISTS method_mob text;"]}],
+                                     'fct': [lambda: self.update_setting_json()]},
                            '3.0.2': {'add_tab': [{'tab': Maso.results, 'overwrite': False},
                                                  {'tab': Maso.results_sect, 'overwrite': False},
                                                  {'tab': Maso.results_var, 'overwrite': False}],
@@ -361,3 +364,26 @@ class CheckTab():
         col_sect = ['id_runs', 'pk', 'branch', 'section']
         if len(lst_insert) > 0:
             self.mdb.insert_res('results_sect', lst_insert, col_sect)
+
+
+    def update_setting_json(self):
+        """
+        update setting in json
+        :return:
+        """
+        name_file = os.path.join(self.mgis.masplugPath,'settings.json')
+        modif = False
+        if os.path.isfile(name_file):
+            # read
+            with open(name_file) as file:
+                data = json.load(file)
+            # change
+            if "cond_api" not in data['mgis'].keys():
+                data["cond_api"] = False
+                modif = True
+            # write
+            if modif :
+                with open(name_file,'w') as file:
+                    json.dump(data,file)
+
+
