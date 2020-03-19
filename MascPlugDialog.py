@@ -179,6 +179,11 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionStructures.triggered.connect(self.fct_structures)
         self.ui.actionTest_struct.triggered.connect(self.fct_test)
         self.ui.actionStructures_weirs.triggered.connect(self.fct_mv_dam)
+        if self.cond_api:
+            self.ui.actionStructures_weirs.setEnabled(False)
+        else:
+            self.ui.actionStructures_weirs.setEnabled(True)
+
         # WQ
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
@@ -865,13 +870,13 @@ Version : {}
     def fct_test(self):
 
         clam = ClassMascaret(self)
-        # clam.create_mobil_gate_file()
+        clam.create_mobil_gate_file()
         # clam.read_mobil_gate_res(48)
         date_debut = datetime.datetime(2001, 2, 25, 0, 0)
         id_run = 48
         # clam.lit_opt('test','Crue2001', id_run, date_debut, clam.baseName , comments='', tracer=False, casier=False)
         nom_fich = r'mascaret'
-        self.chkt.update_setting_json()
+
         # clam.opt_to_lig('dede', 'dede_init', 384, 'test.lig')
         # base_namefile = r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret'
         # self.lit_opt_new(id_run,date_debut,nom_fich, tracer=False, casier=False)

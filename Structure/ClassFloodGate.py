@@ -53,10 +53,11 @@ class ClassFloodGate:
         self.results_fg_mv = {}
 
     def init_floogate(self):
-        """ Get information for floodgate"""
+        """ Get information for floodgate
+        """
         self.model_size, _, _ = self.masc.get_var_size('Model.X')
 
-        self.param_fg, link_name_id, self.results_fg_mv = self.get_param_fg()
+        self.param_fg, link_name_id = self.get_param_fg()
 
         # attention init.loi ou pas
         # connaitrea la relation config et non law
@@ -71,6 +72,17 @@ class ClassFloodGate:
 
         self.search_sec_control()
         self.info_init_poly()
+        self.init_res()
+
+    def init_res(self):
+        """ Init. the results dico"""
+        self.results_fg_mv = {}
+        tini = self.masc.get('Model.InitTime')
+        for id_config in self.param_fg.keys():
+            self.results_fg_mv[id_config] = {'TIME': [], 'ZSTR': []}
+            self.results_fg_mv[id_config]['TIME'].append(tini)
+            self.results_fg_mv[id_config]['ZSTR'].append(self.param_fg[id_config]['ZOLD'])
+
 
     def info_init_poly(self):
         """ Get information of polygones"""
@@ -86,13 +98,15 @@ class ClassFloodGate:
                 list_maxy.append(maxy)
             zmin = min(list_miny)
             zmax = max(list_maxy)
-            self.param_fg[id_config]['MINZ0'] = min(list_miny)
-            self.param_fg[id_config]['MAXZ0'] = max(list_maxy)
+            self.param_fg[id_config]['MINZ0'] = zmin
+            self.param_fg[id_config]['MAXZ0'] = zmax
 
             if self.param_fg[id_config]['DIRFG'] == 'D':
                 self.param_fg[id_config]['ZOLD'] = zmin
             elif self.param_fg[id_config]['DIRFG'] == 'U':
                 self.param_fg[id_config]['ZOLD'] = zmax
+
+
 
     def update_law_mas(self, id_config, list_q, list_zav, list_zam):
         """
@@ -162,10 +176,8 @@ class ClassFloodGate:
         dict_par = self.mdb.select('struct_fg', where=where, list_var=['id_config', 'type_fg', 'var_reg', 'xpos'])
         param_fg = {}
         link_name_id = {}
-        results_fg_reg = {}
         lid_config = dict_par['id_config']
         for i, id_config in enumerate(lid_config):
-            results_fg_reg[id_config] = {'TIME': [], 'ZSTR': []}
             dict_tmp = {'DIRFG': dict_par['type_fg'][i],
                         'LOCCONT': dict_par['xpos'][i],
                         'VREG': dict_par['var_reg'][i]}
@@ -192,7 +204,8 @@ class ClassFloodGate:
             dict_tmp['ZRESI'] = 0
             param_fg[id_config] = dict_tmp
 
-        return param_fg, link_name_id, results_fg_reg
+
+        return param_fg, link_name_id
 
     def iter_fg(self, time, dtp):
         """
@@ -359,6 +372,7 @@ class ClassFloodGate:
         :param dt: step time
         :return:
         """
+
         if zold == newz:
             self.results_fg_mv[id_config]['TIME'].append(time)
             self.results_fg_mv[id_config]['ZSTR'].append(newz)

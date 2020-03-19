@@ -1611,7 +1611,6 @@ class ClassMascaret:
             # self.lit_opt_new(id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
 
             if self.check_mobil_gate():
-                print('rrrrrrrrrrrrrrrr')
                 self.read_mobil_gate_res(id_run)
 
         self.iface.messageBar().clearWidgets()
@@ -1645,8 +1644,9 @@ class ClassMascaret:
             # OS / 2  EMX ='os2emx'
             # RiscOS ='riscos'
             # AtheOS= 'atheos
+            # pas d'erreur exe manque lib
             p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                                 , stdin=subprocess.PIPE)
+                                  , stdin=subprocess.PIPE)
             p.wait()
             self.mgis.add_info("{0}".format(p.communicate()[0].decode("utf-8")))
             return True
@@ -1881,6 +1881,7 @@ class ClassMascaret:
         for i in range(0, len(files)):
             os.remove(os.path.join(self.dossierFileMasc, files[i]))
         copy_dir_to_dir(self.dossierFileMascOri, self.dossierFileMasc)
+        print(self.check_exe())
         if not self.check_exe():
             self.mgis.download_bin()
 
@@ -2103,52 +2104,54 @@ class ClassMascaret:
 
                 if os.path.isfile(nomfich):
                     os.remove(nomfich)
+                fich = open(nomfich, 'w')
 
-                with open(nomfich, 'w') as fich:
-                    for i, idw in enumerate(info['gid']):
-                        if info['method_mob'][i] == '1':
-                            rows = self.mdb.select('weirs_mob_val',
-                                                   where="id_weirs= {} AND (name_var='TIME' OR name_var='ZVAR')".format(
-                                                       idw), order='name_var, id_order')
-                            if len(rows['id_weirs']) > 1:
-                                if len(rows['id_weirs']) < 51:
-                                    fich.write("{} {}\n".format(info['name'][i], idw))
-                                    fich.write("methode 1\n")
-                                    fich.write("T(s)\n")
-                                    nbt = max(rows['id_order']) + 1
-                                    for i in range(nbt):
-                                        fich.write('{} '.format(rows['value'][i]))
-                                    fich.write('\n')
-                                    fich.write("Zcrete(ngf)\n")
-                                    for i in range(nbt):
-                                        fich.write('{} '.format(rows['value'][i + nbt]))
-                                    fich.write("\n")
-                                else:
-                                    self.mgis.add_info(
-                                        "Warning: Value number is superior to 50 for {} weirs.\n"
-                                        "The weir is ignored.".format(info['name'][i]))
+                for i, idw in enumerate(info['gid']):
+                    if info['method_mob'][i] == '1':
+                        rows = self.mdb.select('weirs_mob_val',
+                                               where="id_weirs= {} AND (name_var='TIME' OR name_var='ZVAR')".format(
+                                                   idw), order='name_var, id_order')
+                        if len(rows['id_weirs']) > 0:
+                            nbt = max(rows['id_order']) + 1
+                            if nbt < 51:
+                                fich.write("{} {}\n".format(info['name'][i], nbt))
+                                fich.write("methode 1\n")
+                                fich.write("T(s)\n")
+                                for i in range(nbt):
+                                    fich.write('{} '.format(rows['value'][i]))
+                                fich.write('\n')
+                                fich.write("Zcrete(ngf)\n")
+                                for i in range(nbt):
+                                    fich.write('{} '.format(rows['value'][i + nbt]))
+                                fich.write("\n")
                             else:
-                                self.mgis.add_info("Warning: there aren't value in {} weirs".format(info['name'][i]))
-
-                        elif info['method_mob'][i] == '2':
-
-                            rows = self.mdb.select('weirs_mob_val',
-                                                   where="id_weirs= {} AND name_var!='TIME' AND name_var!='ZVAR'".format(
-                                                       idw))
-                            if len(rows['id_weirs']) > 1:
-                                fich.write("{} {}\n".format(info['name'][i], idw))
-                                fich.write("methode 2\n")
-                                fich.write("Zregulation Zbas Zhaut (m ngf)\n")
-                                fich.write("{} {} {}\n".format(rows['value'][rows['name_var'].index('ZREG')],
-                                                               rows['value'][rows['name_var'].index('ZBAS')],
-                                                               rows['value'][rows['name_var'].index('ZHAUT')]))
-                                fich.write("Vabaissement Vrehaussement m/s\n")
-                                fich.write("{} {}\n".format(rows['value'][rows['name_var'].index('VDESC')],
-                                                            rows['value'][rows['name_var'].index('VMONT')]))
+                                self.mgis.add_info(
+                                    "Warning: Value number is superior to 50 for {} weirs.\n"
+                                    "The weir is ignored.".format(info['name'][i]))
                         else:
                             self.mgis.add_info("Warning: there aren't value in {} weirs".format(info['name'][i]))
 
+                    elif info['method_mob'][i] == '2':
+
+                        rows = self.mdb.select('weirs_mob_val',
+                                               where="id_weirs= {} AND name_var!='TIME' AND name_var!='ZVAR'".format(
+                                                   idw))
+                        if len(rows['id_weirs']) > 0:
+                            fich.write("{} {}\n".format(info['name'][i], idw))
+                            fich.write("methode 2\n")
+                            fich.write("Zregulation Zbas Zhaut (m ngf)\n")
+                            fich.write("{} {} {}\n".format(rows['value'][rows['name_var'].index('ZREG')],
+                                                           rows['value'][rows['name_var'].index('ZBAS')],
+                                                           rows['value'][rows['name_var'].index('ZHAUT')]))
+                            fich.write("Vabaissement Vrehaussement m/s\n")
+                            fich.write("{} {}\n".format(rows['value'][rows['name_var'].index('VDESC')],
+                                                        rows['value'][rows['name_var'].index('VMONT')]))
+                    else:
+                        self.mgis.add_info("Warning: there aren't value in {} weirs".format(info['name'][i]))
+
+                fich.close()
                 self.mgis.add_info("Creation the dam is done")
+
             except Exception as e:
                 self.mgis.add_info("Error: save the dam file")
                 self.mgis.add_info(str(e))
@@ -2173,12 +2176,16 @@ class ClassMascaret:
         :return:
         """
         nomfich = os.path.join(self.dossierFileMasc, 'Fichier_Crete.csv')
+        print(nomfich)
+        print(os.path.isfile(nomfich))
         if os.path.isfile(nomfich):
             # Read file
             dico_res = {}
             fich = open(nomfich, 'r')
+
             for ligne in fich:
                 liste = ligne.split()
+                print(liste)
                 if len(liste) > 1:
                     nom = liste[2].strip()
                     if not (nom in dico_res.keys()):

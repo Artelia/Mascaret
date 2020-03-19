@@ -77,7 +77,10 @@ class ClassSettingsDialog(QDialog):
         self.mgis.mdb.OVERWRITE = True
         self.mgis.mdb.LOAD_ALL = True
         # self.mgis.mdb.LOAD_ALL = self.ui.db_loadAllChbox.isChecked()
-
+        if  self.mgis.cond_api:
+            self.mgis.ui.actionStructures_weirs.setEnabled(False)
+        else:
+            self.mgis.ui.actionStructures_weirs.setEnabled(True)
         # write settings to json
         self.mgis.write_settings()
 

@@ -47,8 +47,11 @@ class GraphResultDialog(QWidget):
         self.cur_run, self.cur_graph, self.cur_vars, self.cur_vars_lbl, self.cur_branch, self.cur_pknum, self.cur_t = None, None, None, None, None, None, None
         self.cur_data = dict()
 
-        if self.typ_graph == "struct":
-            self.typ_res = "struct"
+        if self.typ_graph == "struct" or self.typ_graph == "weirs":
+            if self.typ_graph == "weirs":
+                self.typ_res = "weirs"
+            else:
+                self.typ_res = "struct"
             self.lst_graph = [{"id": "gate_move", "name": "Gate movement", "unit": "m",
                                "vars": ["ZSTR"], "colors": ["blue"]}]
             self.x_var = "time"
@@ -103,7 +106,7 @@ class GraphResultDialog(QWidget):
 
     def init_cb_det(self, id):
         self.cb_det.clear()
-        if self.typ_graph == "struct":
+        if self.typ_graph == "struct" or  self.typ_graph == "weirs":
             sql = "SELECT DISTINCT profiles.abscissa, profiles.abscissa || ' : ' || profiles.name FROM {0}.results " \
                   "INNER JOIN {0}.profiles ON results.pknum = profiles.abscissa WHERE id_runs = {2} AND " \
                   "var IN (SELECT id FROM {0}.results_var WHERE type_res = '{1}')".format(self.mgis.mdb.SCHEMA,

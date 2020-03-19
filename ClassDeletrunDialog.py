@@ -160,6 +160,7 @@ class ClassDeletrunDialog(QDialog):
                 id_run = self.mdb.run_query("SELECT id FROM {0}.runs "
                                             "WHERE {1} ".format(self.mdb.SCHEMA, sql),
                                             fetch=True)
+
                 lst_idrun = [str(r[0]) for r in id_run]
 
                 self.mdb.delete("resultats", sql)
@@ -168,16 +169,15 @@ class ClassDeletrunDialog(QDialog):
                 self.mdb.delete("runs", sql)
 
                 if len(lst_idrun) > 0 :
-                    print(lst_idrun)
                     var = self.mdb.run_query("SELECT DISTINCT var FROM {0}.results "
-                                             "WHERE id_runs IN {1} ".format(self.mdb.SCHEMA, ",".join(lst_idrun)),
+                                             "WHERE id_runs IN ({1}) ".format(self.mdb.SCHEMA, ",".join(lst_idrun)),
                                              fetch=True)
-                    print(var)
-                    list_var = [str(v[0]) for v in var]
-                    self.mdb.run_query("DELETE  FROM {}.results_var "
-                                       "where id in ({}) and "
-                                       "type_res = 'tracer_TRANSPORT_PUR'".format(self.mdb.SCHEMA,
-                                                                                  ','.join(list_var)))
+                    if var != None:
+                        list_var = [str(v[0]) for v in var]
+                        self.mdb.run_query("DELETE  FROM {}.results_var "
+                                           "where id in ({}) and "
+                                           "type_res = 'tracer_TRANSPORT_PUR'".format(self.mdb.SCHEMA,
+                                                                                      ','.join(list_var)))
                     sql = "id_runs IN ({})".format(",".join(lst_idrun))
                     self.mdb.delete('results', sql)
                     self.mdb.delete('results_sect', sql)
