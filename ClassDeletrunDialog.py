@@ -154,6 +154,7 @@ class ClassDeletrunDialog(QDialog):
         ok = self.box.yes_no_q('Do you want to delete ?')
 
         if ok:
+            print(selection)
             for i, (run, scenarios) in enumerate(selection.items()):
                 sql = "run = '{0}' AND scenario IN ({1})".format(run,
                                                                  ",".join(scenarios))
@@ -166,7 +167,7 @@ class ClassDeletrunDialog(QDialog):
                 self.mdb.delete("resultats", sql)
                 self.mdb.delete("resultats_basin", sql)
                 self.mdb.delete("resultats_links", sql)
-                self.mdb.delete("runs", sql)
+
 
                 if len(lst_idrun) > 0 :
                     var = self.mdb.run_query("SELECT DISTINCT var FROM {0}.results "
@@ -181,7 +182,10 @@ class ClassDeletrunDialog(QDialog):
                     sql = "id_runs IN ({})".format(",".join(lst_idrun))
                     self.mdb.delete('results', sql)
                     self.mdb.delete('results_sect', sql)
+                sql = "run = '{0}' AND scenario IN ({1})".format(run,
+                                                                 ",".join(scenarios))
 
+                self.mdb.delete("runs", sql)
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Deletion of {0} scenario for {1} is done".format(scenarios, run))
 

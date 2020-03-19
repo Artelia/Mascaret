@@ -1345,6 +1345,7 @@ class ClassMascaret:
                 self.mgis.add_info("Warning: scenario not found")
             for i, scen in enumerate(dict_scen_tmp['name']):
                 # self.mgis.add_info("scen******************* {}".format(scen))
+                scen = scen.strip()
                 if not self.check_scenar(scen, run):
                     self.mgis.add_info("Canceled Simulation because of {0} already exists.".format(scen))
                     listexclu.append(i)
@@ -1360,7 +1361,7 @@ class ClassMascaret:
         else:
             scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
                                             'Please input a scenario name :')
-            scen = scen.replace("'", " ").replace('"', ' ')
+            scen = scen.replace("'", " ").replace('"', ' ').strip()
             if not ok or not self.check_scenar(scen, run):
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Canceled Simulation because of {0} already exists.".format(scen))
