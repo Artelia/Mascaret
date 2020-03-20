@@ -54,8 +54,10 @@ class StructureFgDialog(QDialog):
         #
 
         fill_qcombobox(self.cb_type_t, [[1, 's'], [60, 'min'], [3600, 'h'], [86400, 'jours']])
+        fill_qcombobox(self.cb_type_t_vit, [[1, 'm/s'], [1 / 60, 'm/min'], [1 / 3600, 'm/h']])
 
         self.dico_ctrl = {'VELOFG': [self.vel_fg],
+                          'TYPE_TIME_VELO': [self.cb_type_t_vit],
                           'ZMAXFG': [self.cote_max_fg],
                           'ZINCRFG': [self.zinc_fg],
                           'DIRFG': [self.cb_dir],
@@ -66,7 +68,7 @@ class StructureFgDialog(QDialog):
                           'BIEFCONT': [self.bief_controle_fg],
                           'VREG': [self.cb_var],
                           'LOCCONT': [self.cb_loc],
-                          'TYPE_TIME' :[self.cb_type_t]
+                          'TYPE_TIME': [self.cb_type_t]
                           }
         self.display_fg_struct()
         if self.cb_var.currentText() == 'Debit':
@@ -76,19 +78,23 @@ class StructureFgDialog(QDialog):
     def accept_page(self):
         # SAVE BD
         fact_t = float(ctrl_get_value(self.dico_ctrl['TYPE_TIME'][0]))
+        fact_t_velo = float(ctrl_get_value(self.dico_ctrl['TYPE_TIME_VELO'][0]))
 
         for var, ctrls in self.dico_ctrl.items():
-            if var == 'TYPE_TIME' :
+            if var in ['TYPE_TIME', 'TYPE_TIME_VELO']:
                 continue
-            elif var == 'DTREG' :
+            elif var == 'DTREG':
                 val = float(ctrl_get_value(ctrls[0]))
                 val = val * fact_t
-            elif var == 'LOCCONT' or var == 'DIRFG' or var == 'VREG' :
+            elif var == 'VELOFG':
+                val = float(ctrl_get_value(ctrls[0]))
+                val = val * fact_t_velo
+            elif var == 'LOCCONT' or var == 'DIRFG' or var == 'VREG':
                 val = ctrl_get_value(ctrls[0])
             else:
                 val = float(ctrl_get_value(ctrls[0]))
 
-            if var == 'LOCCONT' or var == 'DIRFG' or var == 'VREG' :
+            if var == 'LOCCONT' or var == 'DIRFG' or var == 'VREG':
                 if var == 'LOCCONT':
                     var = 'xpos'
                 elif var == 'VREG':
@@ -127,7 +133,7 @@ class StructureFgDialog(QDialog):
 
     def display_fg_struct(self):
         sql = "SELECT  name_var, value FROM {0}.struct_fg_val " \
-        "WHERE id_config = {1} ".format(self.mdb.SCHEMA, self.id_struct)
+              "WHERE id_config = {1} ".format(self.mdb.SCHEMA, self.id_struct)
         rows = self.mdb.run_query(sql, fetch=True)
         for param, val in rows:
             if param in self.dico_ctrl.keys():
@@ -136,7 +142,7 @@ class StructureFgDialog(QDialog):
                     ctrl_set_value(ctrl, val)
 
         rows = self.mdb.select('struct_fg', where='id_config = {0}'.format(self.id_struct),
-               list_var = ['type_fg', 'xpos', 'var_reg'])
+                               list_var=['type_fg', 'xpos', 'var_reg'])
         for param, val in rows.items():
             param = self.tbst.dico_vardb_to_var_fg[param]
             if param in self.dico_ctrl.keys():

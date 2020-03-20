@@ -302,7 +302,7 @@
          <item row="4" column="2">
           <widget class="QDoubleSpinBox" name="sb_vd">
            <property name="decimals">
-            <number>2</number>
+            <number>3</number>
            </property>
            <property name="maximum">
             <double>1000000.000000000000000</double>
@@ -311,12 +311,15 @@
             <double>0.010000000000000</double>
            </property>
            <property name="value">
-            <double>99.989999999999995</double>
+            <double>99.998999999999995</double>
            </property>
           </widget>
          </item>
          <item row="5" column="2">
           <widget class="QDoubleSpinBox" name="sb_va">
+           <property name="decimals">
+            <number>3</number>
+           </property>
            <property name="maximum">
             <double>1000000.000000000000000</double>
            </property>
@@ -324,7 +327,7 @@
             <double>0.010000000000000</double>
            </property>
            <property name="value">
-            <double>99.989999999999995</double>
+            <double>99.998999999999995</double>
            </property>
           </widget>
          </item>
@@ -338,7 +341,7 @@
          <item row="2" column="2">
           <widget class="QDoubleSpinBox" name="sb_zbas">
            <property name="decimals">
-            <number>2</number>
+            <number>3</number>
            </property>
            <property name="minimum">
             <double>-1000000000.000000000000000</double>
@@ -354,7 +357,7 @@
          <item row="1" column="2">
           <widget class="QDoubleSpinBox" name="sb_zreg">
            <property name="decimals">
-            <number>2</number>
+            <number>3</number>
            </property>
            <property name="minimum">
             <double>-1000000000.000000000000000</double>
@@ -370,7 +373,7 @@
          <item row="3" column="2">
           <widget class="QDoubleSpinBox" name="sb_zhaut">
            <property name="decimals">
-            <number>2</number>
+            <number>3</number>
            </property>
            <property name="minimum">
             <double>-1000000000.000000000000000</double>

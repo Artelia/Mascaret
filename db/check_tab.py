@@ -25,7 +25,6 @@ from ..Function import read_version
 from ..ui.custom_control import ClassWarningBox
 
 
-
 # from ..ClassParameterDialog import ClassParameterDialog
 
 
@@ -36,10 +35,7 @@ class CheckTab():
         self.box = ClassWarningBox(self)
         # for add table [ 'add_tab': [list_table]]
         # for delete [ ['DEL TAB',[list_table]]
-        self.dico_modif = {'2.9.9': {'alt_tab': [{'tab': 'admin_tab', 'sql': ["ALTER TABLE {0}.admin_tab ADD COLUMN "
-                                                                              "IF NOT EXISTS toto double precision;"]}]},
-                           '3.0.0': {'alt_tab': [{'tab': 'admin_tab', 'sql': ["ALTER TABLE {0}.admin_tab DROP COLUMN "
-                                                                              "IF EXISTS toto;"]}]},
+        self.dico_modif = {'3.0.0': {},
                            '3.0.1': {'add_tab': [{'tab': Maso.struct_fg, 'overwrite': False},
                                                  {'tab': Maso.struct_fg_val, 'overwrite': False},
                                                  {'tab': Maso.weirs_mob_val, 'overwrite': False}],
@@ -55,7 +51,7 @@ class CheckTab():
                                      'del_tab': ['results_float', 'results_int']},
                            }
 
-        self.list_hist_version = ['0.0.0', '2.9.9', '3.0.0', '3.0.1', '3.0.2']
+        self.list_hist_version = ['3.0.0', '3.0.1', '3.0.2']
 
     def update_adim(self):
         """
@@ -271,7 +267,6 @@ class CheckTab():
                     'type_var': 'float'}
             self.mdb.check_id_var(dico)
 
-
     def convert_all_result(self):
         """ conversion between the previous results table format to the new for all results"""
 
@@ -283,7 +278,7 @@ class CheckTab():
         for typ_res in lst_typ_res:
             rows = self.mdb.run_query(
                 "SELECT DISTINCT id_runs FROM {0}.results WHERE var in "
-                "(SELECT id FROM {0}.results_var WHERE type_res = '{1}') ".format(self.mdb.SCHEMA,typ_res), fetch=True)
+                "(SELECT id FROM {0}.results_var WHERE type_res = '{1}') ".format(self.mdb.SCHEMA, typ_res), fetch=True)
             lst_exist = [r[0] for r in rows]
             for run in dict_runs.keys():
                 if run not in lst_exist:
@@ -332,21 +327,20 @@ class CheckTab():
             "WHERE type_res = '{2}')".format(self.mdb.SCHEMA, id_run, tab_src))
 
         rows = self.mdb.run_query("SELECT id, var FROM {0}.results_var "
-                                  "WHERE type_res = '{2}' ORDER BY id".format(self.mdb.SCHEMA, tab_src, typ_res), fetch=True)
+                                  "WHERE type_res = '{2}' ORDER BY id".format(self.mdb.SCHEMA, tab_src, typ_res),
+                                  fetch=True)
         if typ_res.split('_')[0] == 'tracer':
-            lst_var=[[row[0],'c{}'.format(r+1)] for r, row in enumerate(rows)]
+            lst_var = [[row[0], 'c{}'.format(r + 1)] for r, row in enumerate(rows)]
         else:
             lst_var = rows
 
-        for id_var, nm_var in  lst_var:
+        for id_var, nm_var in lst_var:
             if nm_var.lower() in lst_var_exist:
                 sql = "INSERT INTO {0}.results (SELECT {5}, {3}.t, {3}.{4}, {1}, {3}.{2} " \
                       "FROM {0}.{3} WHERE {3}.{2} is Not Null AND {3}.run = '{6}' " \
                       "AND {3}.scenario = '{7}')".format(self.mdb.SCHEMA, id_var, nm_var.lower(), tab_src, col_pknum,
                                                          id_run, run_run, run_scen)
                 self.mdb.execute(sql)
-
-
 
     def fill_result_sect(self, id_run):
         """
@@ -359,19 +353,18 @@ class CheckTab():
                                      'FROM {}.runs WHERE id= {})'.format(self.mdb.SCHEMA, id_run),
                                order='t',
                                list_var=['pk', 'branche', 'section'])
-        lst_id = [ id_run for i in range(len(info['pk']))]
+        lst_id = [id_run for i in range(len(info['pk']))]
         lst_insert = list(set(zip(lst_id, info['pk'], info['branche'], info['section'])))
         col_sect = ['id_runs', 'pk', 'branch', 'section']
         if len(lst_insert) > 0:
             self.mdb.insert_res('results_sect', lst_insert, col_sect)
-
 
     def update_setting_json(self):
         """
         update setting in json
         :return:
         """
-        name_file = os.path.join(self.mgis.masplugPath,'settings.json')
+        name_file = os.path.join(self.mgis.masplugPath, 'settings.json')
         modif = False
         if os.path.isfile(name_file):
             # read
@@ -382,8 +375,6 @@ class CheckTab():
                 data["cond_api"] = False
                 modif = True
             # write
-            if modif :
-                with open(name_file,'w') as file:
-                    json.dump(data,file)
-
-
+            if modif:
+                with open(name_file, 'w') as file:
+                    json.dump(data, file)

@@ -154,38 +154,16 @@ class ClassDeletrunDialog(QDialog):
         ok = self.box.yes_no_q('Do you want to delete ?')
 
         if ok:
-            print(selection)
             for i, (run, scenarios) in enumerate(selection.items()):
                 sql = "run = '{0}' AND scenario IN ({1})".format(run,
                                                                  ",".join(scenarios))
-                id_run = self.mdb.run_query("SELECT id FROM {0}.runs "
-                                            "WHERE {1} ".format(self.mdb.SCHEMA, sql),
-                                            fetch=True)
-
-                lst_idrun = [str(r[0]) for r in id_run]
 
                 self.mdb.delete("resultats", sql)
                 self.mdb.delete("resultats_basin", sql)
                 self.mdb.delete("resultats_links", sql)
-
-
-                if len(lst_idrun) > 0 :
-                    var = self.mdb.run_query("SELECT DISTINCT var FROM {0}.results "
-                                             "WHERE id_runs IN ({1}) ".format(self.mdb.SCHEMA, ",".join(lst_idrun)),
-                                             fetch=True)
-                    if var != None:
-                        list_var = [str(v[0]) for v in var]
-                        self.mdb.run_query("DELETE  FROM {}.results_var "
-                                           "where id in ({}) and "
-                                           "type_res = 'tracer_TRANSPORT_PUR'".format(self.mdb.SCHEMA,
-                                                                                      ','.join(list_var)))
-                    sql = "id_runs IN ({})".format(",".join(lst_idrun))
-                    self.mdb.delete('results', sql)
-                    self.mdb.delete('results_sect', sql)
-                sql = "run = '{0}' AND scenario IN ({1})".format(run,
-                                                                 ",".join(scenarios))
-
                 self.mdb.delete("runs", sql)
+                self.delete_useless_data()
+
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Deletion of {0} scenario for {1} is done".format(scenarios, run))
 
@@ -196,3 +174,25 @@ class ClassDeletrunDialog(QDialog):
     def annule(self):
         """"Cancel """
         self.close()
+
+    def delete_useless_data(self):
+        # delete var transport_pur
+        sql = "DELETE FROM {0}.results_var WHERE id IN(" \
+              "SELECT id FROM {0}.results_var " \
+              "WHERE id  IN (SELECT DISTINCT var FROM {0}.results " \
+              "WHERE id_runs IN (SELECT DISTINCT id_runs FROM {0}.results " \
+              "WHERE id_runs NOT IN (SELECT id FROM {0}.runs ))) " \
+              "and type_res= 'tracer_TRANSPORT_PUR');"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
+        # delete results
+        sql = "DELETE  FROM {0}.results WHERE id_runs IN " \
+              "(SELECT DISTINCT id_runs FROM {0}.results " \
+              "where id_runs not in (SELECT id FROM {0}.runs));"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
+        # delete results_sect
+        sql = "DELETE  FROM {0}.results_sect WHERE id_runs IN " \
+              "(SELECT DISTINCT id_runs FROM {0}.results_sect " \
+              "where id_runs not in (SELECT id FROM {0}.runs));"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))

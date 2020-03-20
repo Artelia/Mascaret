@@ -1647,7 +1647,7 @@ class ClassMascaret:
             # AtheOS= 'atheos
             # pas d'erreur exe manque lib
             p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                                  , stdin=subprocess.PIPE)
+                                 , stdin=subprocess.PIPE)
             p.wait()
             self.mgis.add_info("{0}".format(p.communicate()[0].decode("utf-8")))
             return True
@@ -1689,7 +1689,6 @@ class ClassMascaret:
                                       time, dico_res[id_config]['ZSTR'])
 
             values += v_tmp
-
         self.mdb.insert_res('results', values, colonnes)
 
     def creat_values(self, id_run, id_name, lpk, ltime, lval):
@@ -1733,7 +1732,7 @@ class ClassMascaret:
                 dico_tra = self.mdb.select('tracer_name', where="type ='{}' ".format(self.wq.cur_wq_mod),
                                            order='id', list_var=['sigle', 'text'])
 
-                for cpt_tra, sigle in enumerate( dico_tra['sigle']):
+                for cpt_tra, sigle in enumerate(dico_tra['sigle']):
                     var_info = {'var': sigle,
                                 'type_res': 'tracer_TRANSPORT_PUR',
                                 'name': dico_tra['text'][cpt_tra],
@@ -1808,7 +1807,7 @@ class ClassMascaret:
         result = self.get_for_lig_new(id_run)
         i1 = {}
         i2 = {}
-        # print(result)
+
         for section, branche in zip(result["section"], result["branche"]):
             if branche not in i1.keys():
                 i1[branche] = 9999999
@@ -1882,7 +1881,6 @@ class ClassMascaret:
         for i in range(0, len(files)):
             os.remove(os.path.join(self.dossierFileMasc, files[i]))
         copy_dir_to_dir(self.dossierFileMascOri, self.dossierFileMasc)
-        print(self.check_exe())
         if not self.check_exe():
             self.mgis.download_bin()
 
@@ -2177,8 +2175,6 @@ class ClassMascaret:
         :return:
         """
         nomfich = os.path.join(self.dossierFileMasc, 'Fichier_Crete.csv')
-        print(nomfich)
-        print(os.path.isfile(nomfich))
         if os.path.isfile(nomfich):
             # Read file
             dico_res = {}
@@ -2186,7 +2182,6 @@ class ClassMascaret:
 
             for ligne in fich:
                 liste = ligne.split()
-                print(liste)
                 if len(liste) > 1:
                     nom = liste[2].strip()
                     if not (nom in dico_res.keys()):
@@ -2199,7 +2194,6 @@ class ClassMascaret:
                         'name': 'valve movement',
                         'type_var': 'float'}
             id_var = self.mdb.check_id_var(var_info)
-            print(id_var)
             # Stock information
             colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
             values = []
@@ -2255,7 +2249,7 @@ class ClassMascaret:
             ligne = source.readline()
             if type_res.split('_')[0] == 'tracer':
                 dico_tra = self.mdb.select('tracer_name', where="type ='{}'".format(self.wq.cur_wq_mod),
-                                           order='id', list_var=['sigle','text'])
+                                           order='id', list_var=['sigle', 'text'])
                 cpt_tra = 0
                 while '[resultats]' not in ligne:
                     temp = ligne.replace('"', '').replace('NaN', "'NULL'").split(';')
@@ -2331,7 +2325,6 @@ class ClassMascaret:
                     dico_val[key].append(val)
 
         for id in var_del:
-            print(id)
             del dico_val[id]
         return dico_val
 
@@ -2439,9 +2432,7 @@ class ClassMascaret:
                     if key in key_val_opt:
                         del val[key]
 
-
                 self.save_new_results(val, id_run)
-
 
     def save_new_results(self, val, id_run):
         """
@@ -2505,7 +2496,6 @@ class ClassMascaret:
                                     "var = {} AND id_runs = {} AND time = {}".format(idq, id_run, t_max),
                                     'pknum', ['val'])
             result['Q'] = value['val']
-            print(id_run)
             value = self.mdb.select("results_sect", "id_runs = {}".format(id_run), 'pk',
                                     ['pk', 'branch', 'section'])
             result['X'] = value['pk']

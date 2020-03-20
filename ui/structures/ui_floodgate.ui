@@ -75,7 +75,7 @@
             <string> m</string>
            </property>
            <property name="decimals">
-            <number>2</number>
+            <number>3</number>
            </property>
            <property name="maximum">
             <double>10000.000000000000000</double>
@@ -114,7 +114,7 @@
             <string> m</string>
            </property>
            <property name="decimals">
-            <number>2</number>
+            <number>3</number>
            </property>
            <property name="minimum">
             <double>-1000000000.000000000000000</double>
@@ -151,18 +151,21 @@ chaque mouvement : </string>
          <item row="2" column="1">
           <widget class="QDoubleSpinBox" name="vel_fg">
            <property name="suffix">
-            <string> m/s</string>
+            <string/>
            </property>
            <property name="decimals">
             <number>2</number>
            </property>
            <property name="maximum">
-            <double>340.000000000000000</double>
+            <double>1000000.000000000000000</double>
            </property>
            <property name="value">
             <double>99.000000000000000</double>
            </property>
           </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QComboBox" name="cb_type_t_vit"/>
          </item>
         </layout>
        </item>
@@ -237,7 +240,7 @@ chaque mouvement : </string>
             <string> m</string>
            </property>
            <property name="decimals">
-            <number>1</number>
+            <number>2</number>
            </property>
            <property name="maximum">
             <double>1000000000.000000000000000</double>
@@ -321,7 +324,7 @@ chaque mouvement : </string>
             <string/>
            </property>
            <property name="decimals">
-            <number>1</number>
+            <number>2</number>
            </property>
            <property name="maximum">
             <double>1000000000.000000000000000</double>

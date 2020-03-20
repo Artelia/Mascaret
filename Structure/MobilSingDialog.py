@@ -170,6 +170,7 @@ class ClassMobilSingDialog(QDialog):
         else:
             pass
         self.unitvh = evt
+
     def cb_change_meth(self, text):
         if text == 'Methode 1':
             self.edit_type = 'table'
@@ -477,11 +478,18 @@ class ClassMobilSingDialog(QDialog):
 
     def init_ui(self):
         """initialisation gui"""
+        self.delete_useless_data()
         self.ui.weirs_pages.setCurrentIndex(0)
         self.graph_edit = GraphMobSing(self.mgis, self.ui.lay_graph_edit, self.id, self.dico_meth1)
         self.fill_lst_conf()
         self.ui.bt_edit.setDisabled(True)
         self.ui.cb_method.setDisabled(True)
+
+    def delete_useless_data(self):
+        sql = "DELETE  FROM {0}.weirs_mob_val WHERE id_weirs IN " \
+              "(SELECT DISTINCT id_weirs FROM {0}.weirs_mob_val " \
+              "where id_weirs not in (SELECT gid FROM {0}.weirs));"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
 
     def fill_lst_conf(self, id=None):
         """ fill configuration list"""

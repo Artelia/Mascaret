@@ -83,7 +83,6 @@ class ClassFloodGate:
             self.results_fg_mv[id_config]['TIME'].append(tini)
             self.results_fg_mv[id_config]['ZSTR'].append(self.param_fg[id_config]['ZOLD'])
 
-
     def info_init_poly(self):
         """ Get information of polygones"""
         for id_config in self.param_fg.keys():
@@ -105,8 +104,6 @@ class ClassFloodGate:
                 self.param_fg[id_config]['ZOLD'] = zmin
             elif self.param_fg[id_config]['DIRFG'] == 'U':
                 self.param_fg[id_config]['ZOLD'] = zmax
-
-
 
     def update_law_mas(self, id_config, list_q, list_zav, list_zam):
         """
@@ -203,7 +200,6 @@ class ClassFloodGate:
             dict_tmp['STATEOLD'] = 0
             dict_tmp['ZRESI'] = 0
             param_fg[id_config] = dict_tmp
-
 
         return param_fg, link_name_id
 
@@ -377,7 +373,8 @@ class ClassFloodGate:
             self.results_fg_mv[id_config]['TIME'].append(time)
             self.results_fg_mv[id_config]['ZSTR'].append(newz)
         else:
-            self.results_fg_mv[id_config]['TIME'].append(time - dt)
-            self.results_fg_mv[id_config]['ZSTR'].append(zold)
+            if (time - dt) not in self.results_fg_mv[id_config]['TIME']:
+                self.results_fg_mv[id_config]['TIME'].append(time - dt)
+                self.results_fg_mv[id_config]['ZSTR'].append(zold)
             self.results_fg_mv[id_config]['TIME'].append(time)
             self.results_fg_mv[id_config]['ZSTR'].append(newz)

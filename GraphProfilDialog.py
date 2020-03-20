@@ -1792,7 +1792,8 @@ class GraphHydro(GraphCommon):
 
             if self.type == 't':
                 try:
-                    pk = pk.split()
+                    if isinstance(pk,str):
+                        pk = pk.split()
                     pk_tmp = [round(float(elem), 2) for elem in pk]
                     idx = pk_tmp.index(self.position)
                     if run not in self.listeRuns.keys():
