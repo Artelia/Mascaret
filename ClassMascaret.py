@@ -469,7 +469,8 @@ class ClassMascaret:
 
                 dict_lois[d] = {'type': extr_toloi[type],
                                 'formule': formule,
-                                'valeurperm': libres["firstvalue"][i]}
+                                'valeurperm': libres["firstvalue"][i],
+                                'couche' : 'extremites'}
 
             if libres and f in libres["name"]:
                 i = libres["name"].index(f)
@@ -484,7 +485,8 @@ class ClassMascaret:
                 # TODO add 'formule': formule, 'valeurperm': libres["firstvalue"
                 dict_lois[f] = {'type': extr_toloi[type],
                                 'formule': formule,
-                                'valeurperm': libres["firstvalue"][i]}
+                                'valeurperm': libres["firstvalue"][i],
+                                'couche' : 'extremites'}
         # Zones
         nb_pas = 0
         i = 0
@@ -543,17 +545,19 @@ class ClassMascaret:
 
         for i, type in enumerate(seuils["type"]):
             if type not in (3, 4):
-                dict_lois[seuils["name"][i]] = {'type': abaque_toloi[type]}
+                dict_lois[seuils["name"][i]] = {'type': abaque_toloi[type],
+                                                'couche' : 'seuils'}
 
         for i, nom in enumerate(apports["name"]):
             if nom not in dict_lois.keys():
                 dict_lois[nom] = {'type': 1,
                                   'formule': apports['method'][i],
-                                  'valeurperm': apports["firstvalue"][i]}
+                                  'valeurperm': apports["firstvalue"][i],
+                                  'couche' : 'apports'}
 
         for i, nom in enumerate(deversoirs["name"]):
             if nom not in dict_lois.keys() and deversoirs["type"][i] == 2:
-                dict_lois[nom] = {'type': 4}
+                dict_lois[nom] = {'type': 4, 'couche' : 'deversoirs'}
 
         # Géométrie du réseau
         reseau = cas.find("parametresGeometrieReseau")
@@ -1270,7 +1274,7 @@ class ClassMascaret:
                     self.creer_loi(nom + '_init', tab, 2)
 
         for nom, loi in dict_lois.items():
-            if loi['type'] != 5:
+            if loi['type'] in (1,2) :
                 continue
             condition = """name ='{0}' 
                         AND type = {1}
@@ -1279,25 +1283,31 @@ class ClassMascaret:
                         """.format(nom, loi['type'], date_debut, date_fin)
 
             temp = self.mdb.select_one('laws', condition)
-            # cote = list(map(float, temp['z'].split()))
-            # debit = list(map(float, temp['flowrate'].split()))
-            cote = [float(var) for var in temp['z'].split()]
-            debit = [float(var) for var in temp['flowrate'].split()]
 
-            self.creer_loi(nom, {'z': cote, 'flowrate': debit}, 5)
+            liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
+                             "z_lower", "z_up"]
+            tab = {}
+            for k, v in temp.items():
+                if v and k in liste:
+                    tab[k] = [float(var) for var in v.split()]
+            self.creer_loi(nom, tab, loi['type'])
 
-            for c, d in zip(cote, debit):
-                if debit_prec > 0 and d > somme:
-                    valeur_init = (c - cote_prec) \
-                                  / (d - debit_prec) \
-                                  * (somme - debit_prec) \
-                                  + cote_prec
-                    break
-                else:
-                    cote_prec, debit_prec = c, d
-            if valeur_init is not None:
-                tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
-                self.creer_loi(nom + '_init', tab, 2)
+            if loi['type'] in (4,5) and loi['couche'] == 'extremites' :
+                for c, d in zip(tab["z"], tab["flowrate"]):
+                    if debit_prec > 0 and d > somme:
+                        valeur_init = (c - cote_prec) \
+                                      / (d - debit_prec) \
+                                      * (somme - debit_prec) \
+                                      + cote_prec
+                        break
+                    else:
+                        cote_prec, debit_prec = c, d
+                if valeur_init is not None:
+                    tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
+                    self.creer_loi(nom + '_init', tab, 2)
+
+            else :
+                self.creer_loi(nom + '_init', tab, loi['type'])
 
     def fct_comment(self):
         liste_col = self.mdb.list_columns('runs')
@@ -1427,10 +1437,17 @@ class ClassMascaret:
                         tfinal = 365 * 24 * 3600
                     if l['type'] == 1:
                         tab = {"time": [0, tfinal], 'flowrate': [l["valeurperm"]] * 2}
-                    else:
-                        # In steady case the other type don't exist
-                        l['type'] = 2
+                    elif l['type'] == 2 :
                         tab = {"time": [0, tfinal], 'z': [l["valeurperm"]] * 2}
+                    else :
+                        condition = "name ='{0}' AND type={1}".format(nom, l["type"])
+                        temp = self.mdb.select_one('laws', condition)
+                        liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
+                                 "z_lower", "z_up"]
+                        tab = {}
+                        for k, v in temp.items():
+                            if v and k in liste:
+                                tab[k] = [float(var) for var in v.split()]
 
                     self.creer_loi(nom, tab, l['type'])
 
