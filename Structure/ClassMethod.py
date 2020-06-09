@@ -36,71 +36,10 @@ class ClassMethod:
     def __init__(self, mgis):
         self.mgis = mgis
         self.mdb = mgis.mdb
+        self.DEBUG = self.mgis.DEBUG
         self.grav = 9.81
         self.epsi = 0.0001
         self.tbst = ClassTableStructure()
-
-    def get_param_g(self, list_recup, id_config):
-        """
-        Get general parameters
-        :param list_recup: list of  value to get
-        :param id_config: index of hydraulic structure
-        :return: dico
-        """
-        param_g = {}
-        for info in list_recup:
-            where = "id_config = {0} AND var = '{1}' ".format(id_config, info)
-            rows = self.mdb.select('struct_param', where=where, list_var=['value'])
-            if rows['value']:
-                param_g[info] = rows['value'][0]
-            else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info('{} not specified in struct_param table'.format(info))
-
-        return param_g
-
-    def get_param_elem(self, id_elem, list_recup, id_config):
-        """
-        Get element parameters
-        :param id_elem: index of element
-        :param list_recup: list of  value to get
-        :param id_config: index of hydraulic structure
-        :return: dico
-        """
-        param_elem = {}
-        for info in list_recup:
-            where = "id_config = {0} AND id_elem= {1} AND var = '{2}' ".format(id_config, id_elem, info)
-            rows = self.mdb.select('struct_elem_param', where=where, list_var=['value'])
-
-            if rows['value']:
-                param_elem[info] = rows['value'][0]
-            else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info('{} not specified in struct_elem_param table'.format(info))
-
-        return param_elem
-
-    def get_profil(self, id_config):
-        """
-        Get profil coordonnee
-        :param id_config: index of hydraulic structure
-        """
-        where = "id_config = {0}".format(id_config)
-        order = "id_order"
-        profil = self.mdb.select('profil_struct', where=where, order=order, list_var=['x,z'])
-        return profil
-
-    def checkprofil(self, id_config):
-        """"
-        Check profil if it exists
-        :param id_config: index of hydraulic structure
-        """
-        where = "id_config = {0}".format(id_config)
-        profil = self.mdb.select('profil_struct', where=where, list_var=['id_order'])
-        if profil['id_order']:
-            return True
-        else:
-            return False
 
     def poly_pont_cadre(self, param_g, param_elem, x0=None, zmin=-99999):
         """
@@ -187,8 +126,8 @@ class ClassMethod:
         else:
             poly_t = GeometryCollection()
             msg = 'Unkwnown arch : {}'.format(type)
-            if self.mgis.DEBUG:
-                self.mgis.add_info(msg)
+            if self.DEBUG:
+                self.add_info(msg)
             print(msg)
             return poly_t
 
@@ -204,8 +143,8 @@ class ClassMethod:
         else:
             poly_t = GeometryCollection()
             msg = 'Inconsistent Z for the span'
-            if self.mgis.DEBUG:
-                self.mgis.add_info(msg)
+            if self.DEBUG:
+                self.add_info(msg)
             print(msg)
         return poly_t
 
@@ -264,15 +203,15 @@ class ClassMethod:
             profil = self.get_profil(id_config)
         else:
             msg = "Profile copy isn't found"
-            self.mgis.add_info(msg)
+            self.add_info(msg)
             print(msg)
             return
         zmin = min(profil['z'])
         poly_p = self.poly_profil_del(profil, zmin)
         if poly_p.is_empty:
             msg = 'Profile polygon is empty.'
-            if self.mgis.DEBUG:
-                self.mgis.add_info(msg)
+            if self.DEBUG:
+                self.add_info(msg)
             print(msg)
             return
         if config_type == 'PC':
@@ -300,9 +239,7 @@ class ClassMethod:
             param_g['FIRSTWD'] = 0
             recup_trav = ['COTERAD', 'ABSBUSE', 'LARGTRA']
 
-        where = "id_config = {0}".format(id_config)  # type=0 span, =1 bridge peir
-        order = "id_elem"
-        lid_elem = self.mdb.select('struct_elem', where=where, order=order, list_var=['id_elem', "type"])
+        lid_elem = self.get_id_elem(id_config)
         first = True
 
         width = 0
@@ -370,23 +307,226 @@ class ClassMethod:
             else:
                 poly_final = GeometryCollection()
                 msg = 'Element bridge polygon is empty.'
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(msg)
+                if self.DEBUG:
+                    self.add_info(msg)
                 print(msg)
 
             if not poly_final.is_empty:
                 # # stock element
                 if poly_final.geom_type == 'MultiPolygon':
                     poly_final = 'Null'
-                poly_final=json.dumps(mapping(poly_final))
 
-                where = "WHERE id_config = {0}  AND id_elem = {1} ".format(id_config, id_elem)
-                sql = """UPDATE {0}.struct_elem SET polygon =ST_GeomFromGeoJSON('{1}')  {2}""".format(self.mdb.SCHEMA,
-                                                                                  poly_final,
-                                                                                  where)
-                self.mdb.run_query(sql)
+                self.udpate_polygon_table(poly_final,id_config,id_elem)
+
         width += width_prec
 
+    def coup_poly_h(self, poly, cote, typ='U'):
+        """
+        Cut the polygone horizontaly
+        :param poly: polygone to cut
+        :param cote: z
+        :return: new polygon
+        """
+        msg = None
+        (minx, miny, maxx, maxy) = poly.bounds
+
+        if typ == 'U':
+            delpoly = Polygon([[minx - 1, cote], [maxx + 1, cote],
+                               [maxx + 1, maxy + 1], [minx - 1, maxy + 1],
+                               [minx - 1, cote]])
+        elif typ == 'D':
+            delpoly = Polygon([[minx - 1, miny - 1], [maxx + 1, miny - 1],
+                               [maxx + 1, cote], [minx - 1, cote],
+                               [minx - 1, miny - 1]])
+        else:
+            delpoly = GeometryCollection()
+
+        if not delpoly.is_empty:
+            polyw = poly.difference(delpoly)
+            if not polyw.is_valid:
+                polyw = GeometryCollection()
+                msg = "Error: Wet polygon creation"
+        else:
+            polyw = GeometryCollection()
+            msg = "Error: delpoly creation in calc_polyw()"
+
+        if self.DEBUG and msg is not None:
+            print(msg)
+        return polyw
+
+    def coup_poly_v(self, poly, xo, typ='L'):
+        """
+        Cut the polygone vertically
+        :param poly: polygone to cut
+        :param xo: abscissa of cut
+        :param typ: cut side of polygon
+        :return: new polygon
+        """
+        msg = None
+        if type(xo) == list:
+            typ = 'LR'
+        (minx, miny, maxx, maxy) = poly.bounds
+        if typ == 'L':
+            delpoly = Polygon([[minx - 1, maxy + 1], [xo, maxy + 1],
+                               [xo, miny - 1], [minx - 1, miny - 1],
+                               [minx - 1, maxy + 1]])
+        elif typ == 'R':
+            delpoly = Polygon([[xo, maxy + 1], [maxx + 1, maxy + 1],
+                               [maxx + 1, miny - 1], [xo, miny - 1],
+                               [xo, maxy + 1]])
+        elif typ == 'LR':
+            delpoly = Polygon([[minx - 1, maxy + 1], [xo[0], maxy + 1],
+                               [xo[0], miny - 1], [minx - 1, miny - 1],
+                               [minx - 1, maxy + 1]])
+
+            delpoly_r = Polygon([[xo[1], maxy + 1], [maxx + 1, maxy + 1],
+                                 [maxx + 1, miny - 1], [xo[1], miny - 1],
+                                 [xo[1], maxy + 1]])
+        else:
+            delpoly = GeometryCollection()
+        if not delpoly.is_empty:
+            polyw = poly.difference(delpoly)
+            if not polyw.is_valid:
+                polyw = GeometryCollection()
+                msg = "Error: Wet polygon creation"
+        else:
+            polyw = GeometryCollection()
+            msg = "Error: delpoly creation in calc_polyw()"
+
+        if typ == 'LR' and not polyw.is_empty:
+            polyw = polyw.difference(delpoly_r)
+            if not polyw.is_valid:
+                polyw = GeometryCollection()
+                msg = "Error: Wet polygon creation"
+
+        if self.DEBUG and msg is not None:
+            print(msg)
+        return polyw
+
+    def poly_profil(self, profil):
+        """
+        creation profile polygone
+        :param profil: profile data
+        :return: polygone of profile
+        """
+
+        zmax = max(profil['z'])
+        zmax = zmax + self.epsi
+        x0_p = profil['x'][0]
+        z0_p = profil['z'][0]
+        liste_poly = [[x0_p, zmax], [x0_p, z0_p]]
+        for x, z in list(zip(profil['x'], profil['z'])):
+            liste_poly.append([x, z])
+
+        liste_poly.append([profil['x'][-1], zmax])
+        liste_poly.append([x0_p, zmax])
+        poly_p = Polygon(liste_poly)
+        return poly_p
+
+    def create_law(self, dossier, nom, typel, list_final):
+        """
+        Creation of law for Mascaret
+        :param dossier: repertory
+        :param nom: law name
+        :param typel: type law
+        :param list_final: data law
+        :return:
+        """
+
+        if list_final == []:
+            return
+        with open(os.path.join(dossier, nom + '.loi'), 'w') as fich:
+            fich.write('# ' + nom + '\n')
+            if typel == 6:
+                fich.write('# Debit Cote_Aval Cote_Amont\n')
+                chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
+                list_final = list(self.sort_law(list_final))
+
+                for val in list_final:
+                    dico = {'flowrate': val[0], 'z_downstream': val[1], 'z_upstream': val[2]}
+                    fich.write(chaine.format(**dico))
+
+    def sort_law(self, list_final):
+        """
+        sort the law
+        :param list_final: law data
+        :return:
+        """
+        info = np.array(list_final)
+        # trie de la colonne 0 à 2
+        info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
+        info = info[info[:, 1].argsort(kind='mergesort')]
+        info = info[info[:, 0].argsort(kind='mergesort')]
+        return info
+
+    def sav_meth(self, id_config, idmethod, ui):
+        """
+        Compute law
+        :param id_config: index of hydraulic structure
+        :param idmethod: index of method
+        :param ui: gui object
+        :return:
+        """
+        self.meth = ClassLaws(self)
+
+        if idmethod == 0 or idmethod == 4:  # meth
+            self.meth.bradley(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+        elif idmethod == 1:  # borda
+            self.meth.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+        elif idmethod == 3:  # orifice
+            self.meth.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+        else:
+            pass
+
+    def update_law(self, id_config, param_fg, new_z, mobil_struct):
+        """   Compute new law
+                :param id_config: index of hydraulic structure
+                :param param_fg : parameters of the floodgate
+                :param new_z : new position of floodgate
+                :param mobil_struct :moving structure condition
+                :return:
+                """
+        idmethod = param_fg['METH']
+        law = ClassLaws(self)
+        law.init_mobil_param(mobil_struct, param_fg, new_z)
+        list_final = None
+        if idmethod == 0 or idmethod == 4:  # meth
+            pass
+        elif idmethod == 1:  # borda
+            list_final = law.borda(id_config, self.tbst.dico_meth_calc[idmethod], None)
+        elif idmethod == 3:  # orifice
+            list_final = law.orifice(id_config, self.tbst.dico_meth_calc[idmethod], None)
+        else:
+            pass
+        del law
+        return list_final
+
+# ******************************************************
+#         MGIS depend
+# ******************************************************
+
+    def add_info(self, txt):
+        if self.mgis:
+            self.mgis.add_info(txt)
+        else:
+            print(txt)
+
+#******************************************************
+#         MDB depend
+#******************************************************
+    def udpate_polygon_table(self, poly_final,id_config,id_elem):
+        """
+        update polygone table
+        :param poly_final: polygone
+        :param id_config: config index
+        :param id_elem:  element index
+        """
+        poly_final = json.dumps(mapping(poly_final))
+        where = "WHERE id_config = {0}  AND id_elem = {1} ".format(id_config, id_elem)
+        sql = """UPDATE {0}.struct_elem SET polygon =ST_GeomFromGeoJSON('{1}')  {2}""".format(self.mdb.SCHEMA,
+                                                                                              poly_final,
+                                                                                              where)
+        self.mdb.run_query(sql)
 
     def select_poly(self, table, where='', order=''):
         """
@@ -439,7 +579,7 @@ class ClassMethod:
         tab['z'] = [float(var) for var in feature["z"][0].split()]
 
         if len(tab['x']) == 0 or len(tab['z']) == 0:
-            self.mgis.add_info("Check if the profile is saved.")
+            self.add_info("Check if the profile is saved.")
             return
 
         xz = list(zip(tab['x'], tab['z']))
@@ -454,89 +594,187 @@ class ClassMethod:
                'id_config': id_struct}
         self.mdb.update('struct_config', tab, var='id_config')
 
-    def coup_poly_h(self, poly, cote, typ='U'):
+    def get_id_elem(self, id_config):
         """
-        Cut the polygone horizontaly
-        :param poly: polygone to cut
-        :param cote: z
-        :return: new polygon
+        get id and type of element
+        :param id_config:
+        :return:
         """
-        msg = None
-        (minx, miny, maxx, maxy) = poly.bounds
+        where = "id_config = {0}".format(id_config)  # type=0 span, =1 bridge peir
+        order = "id_elem"
+        lid_elem = self.mdb.select('struct_elem', where=where, order=order, list_var=['id_elem', "type"])
+        return  lid_elem
 
-        if typ == 'U':
-            delpoly = Polygon([[minx - 1, cote], [maxx + 1, cote],
-                               [maxx + 1, maxy + 1], [minx - 1, maxy + 1],
-                               [minx - 1, cote]])
-        elif typ == 'D':
-            delpoly = Polygon([[minx - 1, miny - 1], [maxx + 1, miny - 1],
-                               [maxx + 1, cote], [minx - 1, cote],
-                               [minx - 1, miny - 1]])
-        else:
-            delpoly = GeometryCollection()
-
-        if not delpoly.is_empty:
-            polyw = poly.difference(delpoly)
-            if not polyw.is_valid:
-                polyw = GeometryCollection()
-                msg = "Error: Wet polygon creation"
-        else:
-            polyw = GeometryCollection()
-            msg = "Error: delpoly creation in calc_polyw()"
-
-        if self.mgis.DEBUG and msg is not None:
-            print(msg)
-        return polyw
-
-
-    def coup_poly_v(self, poly, xo, typ='L'):
+    def get_param_g(self, list_recup, id_config):
         """
-        Cut the polygone vertically
-        :param poly: polygone to cut
-        :param xo: abscissa of cut
-        :param typ: cut side of polygon
-        :return: new polygon
+        Get general parameters
+        :param list_recup: list of  value to get
+        :param id_config: index of hydraulic structure
+        :return: dico
         """
-        msg = None
-        if type(xo) == list:
-            typ = 'LR'
-        (minx, miny, maxx, maxy) = poly.bounds
-        if typ == 'L':
-            delpoly = Polygon([[minx - 1, maxy + 1], [xo, maxy + 1],
-                               [xo, miny - 1], [minx - 1, miny - 1],
-                               [minx - 1, maxy + 1]])
-        elif typ == 'R':
-            delpoly = Polygon([[xo, maxy + 1], [maxx + 1, maxy + 1],
-                               [maxx + 1, miny - 1], [xo, miny - 1],
-                               [xo, maxy + 1]])
-        elif typ == 'LR':
-            delpoly = Polygon([[minx - 1, maxy + 1], [xo[0], maxy + 1],
-                               [xo[0], miny - 1], [minx - 1, miny - 1],
-                               [minx - 1, maxy + 1]])
+        param_g = {}
+        for info in list_recup:
+            where = "id_config = {0} AND var = '{1}' ".format(id_config, info)
+            rows = self.mdb.select('struct_param', where=where, list_var=['value'])
+            if rows['value']:
+                param_g[info] = rows['value'][0]
+            else:
+                if self.DEBUG:
+                    self.add_info('{} not specified in struct_param table'.format(info))
 
-            delpoly_r = Polygon([[xo[1], maxy + 1], [maxx + 1, maxy + 1],
-                                 [maxx + 1, miny - 1], [xo[1], miny - 1],
-                                 [xo[1], maxy + 1]])
+        return param_g
+
+    def get_param_elem(self, id_elem, list_recup, id_config):
+        """
+        Get element parameters
+        :param id_elem: index of element
+        :param list_recup: list of  value to get
+        :param id_config: index of hydraulic structure
+        :return: dico
+        """
+        param_elem = {}
+        for info in list_recup:
+            where = "id_config = {0} AND id_elem= {1} AND var = '{2}' ".format(id_config, id_elem, info)
+            rows = self.mdb.select('struct_elem_param', where=where, list_var=['value'])
+
+            if rows['value']:
+                param_elem[info] = rows['value'][0]
+            else:
+                if self.DEBUG:
+                    self.add_info('{} not specified in struct_elem_param table'.format(info))
+
+        return param_elem
+
+    def get_profil(self, id_config):
+        """
+        Get profil coordonnee
+        :param id_config: index of hydraulic structure
+        """
+        where = "id_config = {0}".format(id_config)
+        order = "id_order"
+        profil = self.mdb.select('profil_struct', where=where, order=order, list_var=['x,z'])
+        return profil
+
+    def checkprofil(self, id_config):
+        """"
+        Check profil if it exists
+        :param id_config: index of hydraulic structure
+        """
+        where = "id_config = {0}".format(id_config)
+        profil = self.mdb.select('profil_struct', where=where, list_var=['id_order'])
+        if profil['id_order']:
+            return True
         else:
-            delpoly = GeometryCollection()
-        if not delpoly.is_empty:
-            polyw = poly.difference(delpoly)
-            if not polyw.is_valid:
-                polyw = GeometryCollection()
-                msg = "Error: Wet polygon creation"
+            return False
+
+    def update_etat_struct_prof(self, id_config, active=True, delete=False):
+        """
+        Update state of of hydraulic structure in table
+        :param id_config: id_config:  index of hydraulic structure
+        :param active: active structure
+        :param delete: delete structure
+        :return:
+        """
+        where = "id = {0}".format(id_config)
+        prof = self.mdb.select('struct_config', where=where, list_var=['id_prof_ori'])
+        gid = prof['id_prof_ori'][0]
+        if active:
+            tab = {'table': 'profiles',
+                   'schema': self.mdb.SCHEMA,
+                   'gid': gid,
+                   'struct': 2}
         else:
-            polyw = GeometryCollection()
-            msg = "Error: delpoly creation in calc_polyw()"
+            tab = {'table': 'profiles',
+                   'schema': self.mdb.SCHEMA,
+                   'gid': gid,
+                   'struct': 1}
+        if delete:
+            tab = {'table': 'profiles',
+                   'schema': self.mdb.SCHEMA,
+                   'gid': gid,
+                   'struct': 0}
+        # self.mdb.update('profiles', tab, var='gid')
 
-        if typ == 'LR' and not polyw.is_empty:
-            polyw = polyw.difference(delpoly_r)
-            if not polyw.is_valid:
-                polyw = GeometryCollection()
-                msg = "Error: Wet polygon creation"
+        sql = "UPDATE {schema}.{table} SET struct={struct}  WHERE gid={gid}".format(**tab)
+        self.mdb.run_query(sql)
 
-        if self.mgis.DEBUG and msg is not None:
-            print(msg)
-        return polyw
+    def get_list_law(self, id_config):
+        """
+        Get list law
+        :param id_config: index of hydraulic structure
+        :return: law list
+        """
+        liste_f = []
+
+        where = "WHERE id_config={}".format(id_config)
+        order = "ORDER BY id_var, id_order "
+        sql = "SELECT {4} FROM {0}.{1} {2} {3};"
+        tabval = self.mdb.run_query(sql.format(self.mdb.SCHEMA, "struct_laws", where, order, 'id_var , value'),
+                                    fetch=True)
+        if not tabval:
+            return liste_f
+        tabval = np.array(tabval)
+        nbval = collections.Counter(tabval[:, 0])
+        nb = int(nbval[0])
+
+        for i in range(nb):
+            list_tmp = []
+            for j in nbval.keys():
+                list_tmp.append(tabval[int(j) * nb + i, 1])
+            liste_f.append(list_tmp)
+        return liste_f
+
+    def save_law_st(self, method, id_config, list_val):
+        """
+        Stock law in database
+        :param method: mehtod of compute
+        :param id_config: index of hydraulic structure
+        :param list_val: value list
+        :return:
+        """
+        """ stock law in database"""
+        self.mdb.delete('struct_laws', where="id_config = '{}'".format(id_config))
+        liste_col = self.mdb.list_columns('struct_laws')
+        list_insert = []
+        list_val = np.array(list_val)
+        for j in self.tbst.dico_law_struct[method].keys():
+            for i, val in enumerate(list_val[:, j]):
+                list_insert.append([id_config, j, i, val])
+        var = ",".join(liste_col)
+
+        sql = ''
+        for a in list_insert:
+            valeurs = str(tuple(a))
+            sql += "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
+                                                                 'struct_laws',
+                                                                 var,
+                                                                 valeurs)
+        self.mdb.run_query(sql)
+
+    def get_struct(self):
+        """
+            Get struct dico
+            :return dico
+        """
+        struct_dico = {}
+        list_var = ['id', 'name', 'type', 'active', 'method']
+        if list_var is not None:
+            lvar = ','.join([str(v) for v in list_var])
+        else:
+            lvar = '*'
+        sql = "SELECT {1} FROM {0}.struct_config ORDER BY id;"
+        rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, lvar), fetch=True)
+        if rows is None:
+            if self.DEBUG:
+                self.add_info('struct_config is empty')
+        for row in rows:
+            struct_dico[row[0]] = {'name': row[1],
+                                   'type': row[2],
+                                   'active': row[3],
+                                   'idmethod': row[4],
+                                   'method': self.tbst.dico_meth_calc[row[4]]}
+        #
+        return struct_dico
 
     def get_abac(self, list_recup):
         """
@@ -573,213 +811,29 @@ class ClassMethod:
 
         return dico_abc
 
-    def poly_profil(self, profil):
+    def save_list_final(self, list_final, id_config, method):
         """
-        creation profile polygone
-        :param profil: profile data
-        :return: polygone of profile
-        """
-
-        zmax = max(profil['z'])
-        zmax = zmax + self.epsi
-        x0_p = profil['x'][0]
-        z0_p = profil['z'][0]
-        liste_poly = [[x0_p, zmax], [x0_p, z0_p]]
-        for x, z in list(zip(profil['x'], profil['z'])):
-            liste_poly.append([x, z])
-
-        liste_poly.append([profil['x'][-1], zmax])
-        liste_poly.append([x0_p, zmax])
-        poly_p = Polygon(liste_poly)
-        return poly_p
-
-    def get_struct(self):
-        """
-            Get struct dico
-            :return dico
-        """
-        struct_dico = {}
-        list_var = ['id', 'name', 'type', 'active', 'method']
-        if list_var is not None:
-            lvar = ','.join([str(v) for v in list_var])
-        else:
-            lvar = '*'
-        sql = "SELECT {1} FROM {0}.struct_config ORDER BY id;"
-        rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, lvar), fetch=True)
-        if rows is None:
-            if self.mgis.DEBUG:
-                self.mgis.add_info('struct_config is empty')
-        for row in rows:
-            struct_dico[row[0]] = {'name': row[1],
-                                   'type': row[2],
-                                   'active': row[3],
-                                   'idmethod': row[4],
-                                   'method': self.tbst.dico_meth_calc[row[4]]}
-        #
-        return struct_dico
-
-    def create_law(self, dossier, nom, typel, list_final):
-        """
-        Creation of law for Mascaret
-        :param dossier: repertory
-        :param nom: law name
-        :param typel: type law
-        :param list_final: data law
-        :return:
-        """
-
-        if list_final == []:
-            return
-        with open(os.path.join(dossier, nom + '.loi'), 'w') as fich:
-            fich.write('# ' + nom + '\n')
-            if typel == 6:
-                fich.write('# Debit Cote_Aval Cote_Amont\n')
-                chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
-                list_final = list(self.sort_law(list_final))
-
-                for val in list_final:
-                    dico = {'flowrate': val[0], 'z_downstream': val[1], 'z_upstream': val[2]}
-                    fich.write(chaine.format(**dico))
-
-    def sort_law(self, list_final):
-        """
-        sort the law
-        :param list_final: law data
-        :return:
-        """
-        info = np.array(list_final)
-        # trie de la colonne 0 à 2
-        info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
-        info = info[info[:, 1].argsort(kind='mergesort')]
-        info = info[info[:, 0].argsort(kind='mergesort')]
-        return info
-
-    def save_law_st(self, method, id_config, list_val):
-        """
-        Stock law in database
+        Save in database the law value
+        :param list_final: list of law values
+        :param id_config:  index of hydraulic structure
         :param method: mehtod of compute
-        :param id_config: index of hydraulic structure
-        :param list_val: value list
-        :return:
+        :return: nothing
         """
-        """ stock law in database"""
-        self.mdb.delete('struct_laws', where="id_config = '{}'".format(id_config))
-        liste_col = self.mdb.list_columns('struct_laws')
-        list_insert = []
-        list_val = np.array(list_val)
-        for j in self.tbst.dico_law_struct[method].keys():
-            for i, val in enumerate(list_val[:, j]):
-                list_insert.append([id_config, j, i, val])
-        var = ",".join(liste_col)
+        if list_final == []:
+            sql = "SELECT name FROM {0}.{1} WHERE id={2}".format(self.mdb.SCHEMA, 'struct_config', id_config)
 
-        sql = ''
-        for a in list_insert:
-            valeurs = str(tuple(a))
-            sql += "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
-                                                                 'struct_laws',
-                                                                 var,
-                                                                 valeurs)
-        self.mdb.run_query(sql)
+            name = self.mdb.run_query(sql, fetch=True)
+            name = name[0][0]
 
-    def get_list_law(self, id_config):
-        """
-        Get list law
-        :param id_config: index of hydraulic structure
-        :return: law list
-        """
-        liste_f = []
+            sql = "UPDATE {0}.{1} SET {2}  WHERE id={3};".format(self.mdb.SCHEMA, 'struct_config', 'active=False',
+                                                                 id_config)
+            self.mdb.run_query(sql)
 
-        where = "WHERE id_config={}".format(id_config)
-        order = "ORDER BY id_var, id_order "
-        sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        tabval = self.mdb.run_query(sql.format(self.mdb.SCHEMA, "struct_laws", where, order, 'id_var , value'),
-                                    fetch=True)
-        if not tabval:
-            return liste_f
-        tabval = np.array(tabval)
-        nbval = collections.Counter(tabval[:, 0])
-        nb = int(nbval[0])
-
-        for i in range(nb):
-            list_tmp = []
-            for j in nbval.keys():
-                list_tmp.append(tabval[int(j) * nb + i, 1])
-            liste_f.append(list_tmp)
-        return liste_f
-
-    def sav_meth(self, id_config, idmethod, ui):
-        """
-        Compute law
-        :param id_config: index of hydraulic structure
-        :param idmethod: index of method
-        :param ui: gui object
-        :return:
-        """
-        self.meth = ClassLaws(self)
-
-        if idmethod == 0 or idmethod == 4:  # meth
-            self.meth.bradley(id_config, self.tbst.dico_meth_calc[idmethod], ui)
-        elif idmethod == 1:  # borda
-            self.meth.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
-        elif idmethod == 3:  # orifice
-            self.meth.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+            self.add_info(
+                "No values for the law because the coefficients leave application domain of the method.\n"
+                "The <<{}>> hydraulic structur is deactivated".format(name))
         else:
-            pass
-
-    def update_etat_struct_prof(self, id_config, active=True, delete=False):
-        """
-        Update state of of hydraulic structure in table
-        :param id_config: id_config:  index of hydraulic structure
-        :param active: active structure
-        :param delete: delete structure
-        :return:
-        """
-        where = "id = {0}".format(id_config)
-        prof = self.mdb.select('struct_config', where=where, list_var=['id_prof_ori'])
-        gid = prof['id_prof_ori'][0]
-        if active:
-            tab = {'table': 'profiles',
-                   'schema': self.mdb.SCHEMA,
-                   'gid': gid,
-                   'struct': 2}
-        else:
-            tab = {'table': 'profiles',
-                   'schema': self.mdb.SCHEMA,
-                   'gid': gid,
-                   'struct': 1}
-        if delete:
-            tab = {'table': 'profiles',
-                   'schema': self.mdb.SCHEMA,
-                   'gid': gid,
-                   'struct': 0}
-        # self.mdb.update('profiles', tab, var='gid')
-
-        sql = "UPDATE {schema}.{table} SET struct={struct}  WHERE gid={gid}".format(**tab)
-        self.mdb.run_query(sql)
-
-
-    def update_law(self, id_config, param_fg, new_z, mobil_struct):
-            """   Compute new law
-                    :param id_config: index of hydraulic structure
-                    :param param_fg : parameters of the floodgate
-                    :param new_z : new position of floodgate
-                    :param mobil_struct :moving structure condition
-                    :return:
-                    """
-            idmethod = param_fg['METH']
-            law = ClassLaws(self)
-            law.init_mobil_param(mobil_struct, param_fg, new_z)
-            list_final = None
-            if idmethod == 0 or idmethod == 4:  # meth
-                pass
-            elif idmethod == 1:  # borda
-                list_final = law.borda(id_config, self.tbst.dico_meth_calc[idmethod], None)
-            elif idmethod == 3:  # orifice
-                list_final = law.orifice(id_config, self.tbst.dico_meth_calc[idmethod], None)
-            else:
-                pass
-            del law
-            return list_final
+            self.parent.save_law_st(method, id_config, list_final)
 
 
 if __name__ == '__main__':

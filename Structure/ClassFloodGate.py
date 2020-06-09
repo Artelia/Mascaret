@@ -41,7 +41,6 @@ class ClassFloodGate:
         self.masc = self.clapi.masc
         self.clmas = main.clmas
         self.mgis = self.clmas.mgis
-        self.mdb = self.mgis.mdb
         self.dossierFileMasc = self.clmas.dossierFileMasc
         self.DEBUG = self.mgis.DEBUG
         self.baseName = self.clmas.baseName
@@ -159,49 +158,6 @@ class ClassFloodGate:
             return True
         return False
 
-    def fg_actif(self):
-        where = "active AND id IN (SELECT id_config FROM {}.struct_fg  WHERE active) ".format(self.mdb.SCHEMA)
-        rows = self.mdb.select('struct_config', where=where, list_var=['id'])
-        if rows['id']:
-            return rows['id']
-        else:
-            return None
-
-    def get_param_fg(self):
-        """get variable of the floodgate"""
-        where = "active AND id_config in (SELECT id FROM {}.struct_config  WHERE active)".format(self.mdb.SCHEMA)
-        dict_par = self.mdb.select('struct_fg', where=where, list_var=['id_config', 'type_fg', 'var_reg', 'xpos'])
-        param_fg = {}
-        link_name_id = {}
-        lid_config = dict_par['id_config']
-        for i, id_config in enumerate(lid_config):
-            dict_tmp = {'DIRFG': dict_par['type_fg'][i],
-                        'LOCCONT': dict_par['xpos'][i],
-                        'VREG': dict_par['var_reg'][i]}
-
-            list_recup = ['VELOFG', 'ZMAXFG', 'ZINCRFG',
-                          'DTREG', 'VALREG', 'TOLREG',
-                          'BIEFCONT', 'XPCONT']
-
-            for info in list_recup:
-                where = "id_config = {0} AND name_var = '{1}' ".format(id_config, info)
-                rows = self.mdb.select('struct_fg_val', where=where, order='id_order', list_var=['value'])
-                if rows['value']:
-                    dict_tmp[info] = rows['value'][0]
-                else:
-                    dict_tmp[info] = None
-
-            where = "id = {}".format(id_config)
-            rows = self.mdb.select('struct_config', where=where, list_var=['method', 'name'])
-            dict_tmp['NAME'] = rows['name'][0]
-            dict_tmp['METH'] = rows['method'][0]
-            link_name_id[rows['name'][0]] = id_config
-            # init dict
-            dict_tmp['STATEOLD'] = 0
-            dict_tmp['ZRESI'] = 0
-            param_fg[id_config] = dict_tmp
-
-        return param_fg, link_name_id
 
     def iter_fg(self, time, dtp):
         """
@@ -220,7 +176,7 @@ class ClassFloodGate:
             self.fill_results_fg_mv(id_config, time, new_z, param_fg['ZOLD'], dtp)
             list_final = self.clmeth.update_law(id_config, param_fg, new_z, True)
             if list_final is None:
-                self.mgis.add_info("Error: updating law")
+                self.add_info("Error: updating law")
             tab_final = self.clmeth.sort_law(list_final)
             list_q = np.unique(tab_final[:, 0])
             list_zav = np.unique(tab_final[:, 1])
@@ -352,7 +308,7 @@ class ClassFloodGate:
             if idx:
                 self.param_fg[id_config]['SECCON'] = idx
             else:
-                self.mgis.add_info("Regulation point not found.")
+                self.add_info("Regulation point not found.")
             del coords
 
         del oribf
@@ -378,3 +334,58 @@ class ClassFloodGate:
                 self.results_fg_mv[id_config]['ZSTR'].append(zold)
             self.results_fg_mv[id_config]['TIME'].append(time)
             self.results_fg_mv[id_config]['ZSTR'].append(newz)
+# ******************************************************
+#         MGIS depend
+# ******************************************************
+    def add_info(self,txt):
+        if self.mgis:
+            self.mgis.add_info(txt)
+        else:
+            print(txt)
+#******************************************************
+#         MDB depend
+#******************************************************
+    def fg_actif(self):
+        where = "active AND id IN (SELECT id_config FROM {}.struct_fg  WHERE active) ".format(self.mdb.SCHEMA)
+        rows = self.mdb.select('struct_config', where=where, list_var=['id'])
+        if rows['id']:
+            return rows['id']
+        else:
+            return None
+
+
+    def get_param_fg(self):
+        """get variable of the floodgate"""
+        where = "active AND id_config in (SELECT id FROM {}.struct_config  WHERE active)".format(self.mdb.SCHEMA)
+        dict_par = self.mdb.select('struct_fg', where=where, list_var=['id_config', 'type_fg', 'var_reg', 'xpos'])
+        param_fg = {}
+        link_name_id = {}
+        lid_config = dict_par['id_config']
+        for i, id_config in enumerate(lid_config):
+            dict_tmp = {'DIRFG': dict_par['type_fg'][i],
+                        'LOCCONT': dict_par['xpos'][i],
+                        'VREG': dict_par['var_reg'][i]}
+
+            list_recup = ['VELOFG', 'ZMAXFG', 'ZINCRFG',
+                          'DTREG', 'VALREG', 'TOLREG',
+                          'BIEFCONT', 'XPCONT']
+
+            for info in list_recup:
+                where = "id_config = {0} AND name_var = '{1}' ".format(id_config, info)
+                rows = self.mdb.select('struct_fg_val', where=where, order='id_order', list_var=['value'])
+                if rows['value']:
+                    dict_tmp[info] = rows['value'][0]
+                else:
+                    dict_tmp[info] = None
+
+            where = "id = {}".format(id_config)
+            rows = self.mdb.select('struct_config', where=where, list_var=['method', 'name'])
+            dict_tmp['NAME'] = rows['name'][0]
+            dict_tmp['METH'] = rows['method'][0]
+            link_name_id[rows['name'][0]] = id_config
+            # init dict
+            dict_tmp['STATEOLD'] = 0
+            dict_tmp['ZRESI'] = 0
+            param_fg[id_config] = dict_tmp
+
+        return param_fg, link_name_id

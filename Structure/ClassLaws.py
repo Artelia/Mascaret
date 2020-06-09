@@ -32,10 +32,12 @@ class ClassLaws:
         self.parent = parent
         self.mgis = self.parent.mgis
         self.mdb = self.parent.mdb
-        self.tbst = self.parent.tbst
         self.grav = self.parent.grav
         self.dico_abc = {}
-        self.dossier_file_masc = os.path.join(self.mgis.masplugPath, "mascaret")
+        self.masplugPath =self.mgis.masplugPath
+        self.DEBUG=self.mgis.DEBUG
+
+        self.dossier_file_masc = os.path.join(self.masplugPath, "mascaret")
         self.dico_name_abac = {}
         self.param_g = {}
         self.poly_p = None
@@ -56,7 +58,7 @@ class ClassLaws:
             profil = self.parent.get_profil(id_config)
         else:
             msg = "Profile copy isn't found"
-            self.mgis.add_info(msg)
+            self.add_info(msg)
             return
 
         list_recup = ['FIRSTWD', 'NBTRAVE',
@@ -101,8 +103,6 @@ class ClassLaws:
             self.param_elem['LARGELEM'].append(maxx - minx)
             self.param_elem['SURFELEM'].append(poly.area)
             self.param_elem['ZMINELEM'].append(miny)
-
-
 
     def check_listinter(self, dico_abc, name_abc, varx, vary):
         """
@@ -438,10 +438,10 @@ class ClassLaws:
         list_final = self.complete_law(list_final)
         if ui is not None:
             ui.progress_bar(90)
-        self.save_list_final(list_final, id_config, method)
+        self.parent.save_list_final(list_final, id_config, method)
         if ui is not None:
             ui.progress_bar(100)
-        # if self.mgis.DEBUG:
+        # if self.DEBUG:
         #     self.write_csv(list_final)
 
         return list_final
@@ -709,30 +709,6 @@ class ClassLaws:
             new_list = self.delete_doublon(new_list)
 
         return new_list
-
-    def save_list_final(self, list_final, id_config, method):
-        """
-        Save in database the law value
-        :param list_final: list of law values
-        :param id_config:  index of hydraulic structure
-        :param method: mehtod of compute
-        :return: nothing
-        """
-        if list_final == []:
-            sql = "SELECT name FROM {0}.{1} WHERE id={2}".format(self.mdb.SCHEMA, 'struct_config', id_config)
-
-            name = self.mdb.run_query(sql, fetch=True)
-            name = name[0][0]
-
-            sql = "UPDATE {0}.{1} SET {2}  WHERE id={3};".format(self.mdb.SCHEMA, 'struct_config', 'active=False',
-                                                                 id_config)
-            self.mdb.run_query(sql)
-
-            self.mgis.add_info(
-                "No values for the law because the coefficients leave application domain of the method.\n"
-                "The <<{}>> hydraulic structur is deactivated".format(name))
-        else:
-            self.parent.save_law_st(method, id_config, list_final)
 
     def def_type_kb(self, method):
         """
@@ -1103,7 +1079,7 @@ class ClassLaws:
             list_final = self.calc_law_borda(list_final, zav, zcret, zcret, min_elem)
 
             if list_final is None:
-                self.mgis.add_info("Problem : creation law")
+                self.add_info("Problem : creation law")
 
             if ui is not None:
                 ui.progress_bar(val)
@@ -1118,7 +1094,7 @@ class ClassLaws:
         if ui is not None:
             ui.progress_bar(90)
 
-        # if self.mgis.DEBUG:
+        # if self.DEBUG:
         #     self.write_csv(list_final)
         if not self.mobil_struct:
             self.save_list_final(list_final, id_config, method)
@@ -1134,7 +1110,7 @@ class ClassLaws:
         :return:
         """
 
-        f = open(os.path.join(self.mgis.masplugPath, name), 'w')
+        f = open(os.path.join(self.masplugPath, name), 'w')
         f.write('q ;zav ;zam \n')
         for val in list_final:
             f.write('{}; {} ;{} \n'.format(val[0], val[1], val[2]))
@@ -1208,7 +1184,7 @@ class ClassLaws:
         list_final, self.list_q = self.interpol_list_final_for_new_q(list_final, pasq=self.param_g['PASQ'])
         list_final = self.transition_law(list_final, ztransi)
         list_final = self.complete_law(list_final)
-        # if self.mgis.DEBUG:
+        # if self.DEBUG:
         #     self.write_csv(list_final)
         if not self.mobil_struct:
             self.save_list_final(list_final, id_config, method)
@@ -1256,20 +1232,6 @@ class ClassLaws:
 
     def update_poly_mobil_struct(self):
         """ modification  of polygone when ther is vanne"""
-        # 2 cas
-        #   o mouvement en fonction du Time : velocity
-        #   o mouvement en fonction de la cote dans le domaine
-        ##******************************
-        # fonctionnement vanne
-        #    o si cote atteint vanne en mouvement avec une vitesse d'incrementation
-        #    o modification polygone
-        ##******************************
-        # info pour le mouvement:
-        #   o cote final de fermeture
-        #   (le temps utilisé pour l'instant récuper cote de fermeture mais inutil)
-        #   o sens mouvement de bas en haut ou de haut en bas
-        #   o element fermé ou ouvert
-        # TODO a reprendre
         list_poly_trav_tmp = []
         for poly in self.list_poly_trav:
             # print('poly decoup',self.new_z,self.param_fg["DIRFG"])
@@ -1283,7 +1245,7 @@ class ClassLaws:
                 self.param_g['NBTRAVE'] -= 1
                 self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
         if self.param_g['NBTRAVE'] <=0:
-            self.mgis.add_info("WARNING, there are not hole in structure.")
+            self.add_info("WARNING, there are not hole in structure.")
 
         self.list_poly_trav = list_poly_trav_tmp
 
@@ -1298,3 +1260,18 @@ class ClassLaws:
         self.new_z = new_z
         self.param_fg = param_fg
         self.mobil_struct = mobil_struct
+
+# ******************************************************
+#         MGIS depend
+# ******************************************************
+    def add_info(self, txt):
+        if self.mgis:
+            self.mgis.add_info(txt)
+        else:
+            print(txt)
+
+
+#******************************************************
+#         MDB depend
+#******************************************************
+
