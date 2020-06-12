@@ -52,8 +52,8 @@ class ClassAPIMascaret:
             os.chdir(main["RUN_REP"])
             self.DEBUG = main["DEBUG"]
             self.baseName = main['BASE_NAME']
-            self.clfg = None
-            self.mobil_struct = False
+            self.clfg = ClassFloodGate(self)
+            self.mobil_struct = self.clfg.fg_active()
         else:
             self.clmas = main
             self.mgis = self.clmas.mgis

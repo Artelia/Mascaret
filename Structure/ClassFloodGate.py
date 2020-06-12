@@ -21,6 +21,9 @@ email                :
 import numpy as np
 
 from .ClassMethod import ClassMethod
+from .ClassMethod import sort_law
+from .ClassInitFG import ClassInitFG
+from .ClassTableStructure import ClassTableStructure
 
 
 def check_time_regul(time, dtreg, param_fg):
@@ -38,13 +41,14 @@ class ClassFloodGate:
 
     def __init__(self, main):
         self.clapi = main
-        self.masc = self.clapi.masc
+        self.masc = main.masc
         self.clmas = main.clmas
-        self.mgis = self.clmas.mgis
-        self.dossierFileMasc = self.clmas.dossierFileMasc
-        self.DEBUG = self.mgis.DEBUG
-        self.baseName = self.clmas.baseName
-        self.clmeth = ClassMethod(self.mgis)
+        self.debug = main.DEBUG
+
+        self.init_var = ClassInitFG()
+        self.tbst = ClassTableStructure()
+        #
+
         self.model_size = 0
         self.new_z = 99
         self.param_fg = {}
@@ -87,7 +91,7 @@ class ClassFloodGate:
         for id_config in self.param_fg.keys():
             where = " id_config={} and type=0 ".format(id_config)
             order = "id_elem"
-            list_poly_trav = self.clmeth.select_poly('struct_elem', where, order)['polygon']
+            list_poly_trav = self.init_var.select_poly('struct_elem', where, order)['polygon']
             list_miny = []
             list_maxy = []
             for poly in list_poly_trav:
@@ -148,16 +152,12 @@ class ClassFloodGate:
             for id_config in self.param_fg.keys():
                 self.results_fg_mv[id_config]['TIME'].append(tfin)
                 self.results_fg_mv[id_config]['ZSTR'].append(self.param_fg[id_config]['ZOLD'])
-
-        del self.clmeth
-
     def fg_active(self):
         """ check if floodgate is active"""
         listid = self.fg_actif()
         if listid:
             return True
         return False
-
 
     def iter_fg(self, time, dtp):
         """
@@ -174,10 +174,10 @@ class ClassFloodGate:
             # debut regule
             new_z = self.cmpt_znew(param_fg, dtp)
             self.fill_results_fg_mv(id_config, time, new_z, param_fg['ZOLD'], dtp)
-            list_final = self.clmeth.update_law(id_config, param_fg, new_z, True)
+            list_final = self.update_law(id_config, param_fg, new_z, True)
             if list_final is None:
-                self.add_info("Error: updating law")
-            tab_final = self.clmeth.sort_law(list_final)
+                self.clapi.add_info("Error: updating law")
+            tab_final = sort_law(list_final)
             list_q = np.unique(tab_final[:, 0])
             list_zav = np.unique(tab_final[:, 1])
             list_zam = list(tab_final[:, 2])
@@ -308,7 +308,7 @@ class ClassFloodGate:
             if idx:
                 self.param_fg[id_config]['SECCON'] = idx
             else:
-                self.add_info("Regulation point not found.")
+                self.clapi.add_info("Regulation point not found.")
             del coords
 
         del oribf
@@ -334,58 +334,26 @@ class ClassFloodGate:
                 self.results_fg_mv[id_config]['ZSTR'].append(zold)
             self.results_fg_mv[id_config]['TIME'].append(time)
             self.results_fg_mv[id_config]['ZSTR'].append(newz)
-# ******************************************************
-#         MGIS depend
-# ******************************************************
-    def add_info(self,txt):
-        if self.mgis:
-            self.mgis.add_info(txt)
+
+    def update_law(self, id_config, param_fg, new_z, mobil_struct):
+        """   Compute new law
+                :param id_config: index of hydraulic structure
+                :param param_fg : parameters of the floodgate
+                :param new_z : new position of floodgate
+                :param mobil_struct :moving structure condition
+                :return:
+                """
+        idmethod = param_fg['METH']
+        law = ClassLaws(self.debug)
+        law.init_mobil_param(mobil_struct, param_fg, new_z)
+        list_final = None
+        if idmethod == 0 or idmethod == 4:  # meth
+            pass
+        elif idmethod == 1:  # borda
+            list_final = law.borda(id_config, self.tbst.dico_meth_calc[idmethod], None)
+        elif idmethod == 3:  # orifice
+            list_final = law.orifice(id_config, self.tbst.dico_meth_calc[idmethod], None)
         else:
-            print(txt)
-#******************************************************
-#         MDB depend
-#******************************************************
-    def fg_actif(self):
-        where = "active AND id IN (SELECT id_config FROM {}.struct_fg  WHERE active) ".format(self.mdb.SCHEMA)
-        rows = self.mdb.select('struct_config', where=where, list_var=['id'])
-        if rows['id']:
-            return rows['id']
-        else:
-            return None
-
-
-    def get_param_fg(self):
-        """get variable of the floodgate"""
-        where = "active AND id_config in (SELECT id FROM {}.struct_config  WHERE active)".format(self.mdb.SCHEMA)
-        dict_par = self.mdb.select('struct_fg', where=where, list_var=['id_config', 'type_fg', 'var_reg', 'xpos'])
-        param_fg = {}
-        link_name_id = {}
-        lid_config = dict_par['id_config']
-        for i, id_config in enumerate(lid_config):
-            dict_tmp = {'DIRFG': dict_par['type_fg'][i],
-                        'LOCCONT': dict_par['xpos'][i],
-                        'VREG': dict_par['var_reg'][i]}
-
-            list_recup = ['VELOFG', 'ZMAXFG', 'ZINCRFG',
-                          'DTREG', 'VALREG', 'TOLREG',
-                          'BIEFCONT', 'XPCONT']
-
-            for info in list_recup:
-                where = "id_config = {0} AND name_var = '{1}' ".format(id_config, info)
-                rows = self.mdb.select('struct_fg_val', where=where, order='id_order', list_var=['value'])
-                if rows['value']:
-                    dict_tmp[info] = rows['value'][0]
-                else:
-                    dict_tmp[info] = None
-
-            where = "id = {}".format(id_config)
-            rows = self.mdb.select('struct_config', where=where, list_var=['method', 'name'])
-            dict_tmp['NAME'] = rows['name'][0]
-            dict_tmp['METH'] = rows['method'][0]
-            link_name_id[rows['name'][0]] = id_config
-            # init dict
-            dict_tmp['STATEOLD'] = 0
-            dict_tmp['ZRESI'] = 0
-            param_fg[id_config] = dict_tmp
-
-        return param_fg, link_name_id
+            pass
+        del law
+        return list_final

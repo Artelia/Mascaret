@@ -28,7 +28,8 @@ from qgis.utils import *
 from shapely.geometry import Point
 
 from .ClassMethod import ClassMethod
-from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
+from .ClassTableStructure import ClassTableStructure, update_etat_struct_prof
+from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
 # Widgets Buse
 from .MetBordaBuWidget import MetBordaBuWidget
 # Widgets Dalot
@@ -219,10 +220,10 @@ class ClassStructureEditDialog(QDialog):
             self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
             active = self.cc_active.isChecked()
             if active:
-                self.clmeth.update_etat_struct_prof(self.id_struct, active=True)
+                update_etat_struct_prof(self.mdb,self.id_struct, active=True)
                 self.clmeth.sav_meth(self.id_struct, self.current_meth, self.wgt_met)
             else:
-                self.clmeth.update_etat_struct_prof(self.id_struct, active=False)
+                update_etat_struct_prof(self.mdb,self.id_struct, active=False)
             self.accept()
             # else:
             #     self.reject_page()

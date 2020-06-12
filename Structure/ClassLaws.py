@@ -21,23 +21,23 @@ import math as m
 import os
 from shapely.geometry import *
 import numpy as np
-
+from .ClassMethod import sort_law
+from .ClassPolygone import ClassPolygone
+from .ClassPostPreFG import ClassPostPreFG
 
 class ClassLaws:
     """
     Class contain the different methods to create the laws
     """
 
-    def __init__(self, parent):
-        self.parent = parent
-        self.mgis = self.parent.mgis
-        self.mdb = self.parent.mdb
-        self.grav = self.parent.grav
-        self.dico_abc = {}
-        self.masplugPath =self.mgis.masplugPath
-        self.DEBUG=self.mgis.DEBUG
+    def __init__(self, debug=False, mgis = None, masplugPath =''):
+        self.clpoly = ClassPolygone()
+        self.init_var = ClassPostPreFG()
 
-        self.dossier_file_masc = os.path.join(self.masplugPath, "mascaret")
+        self.grav = 9.81
+        self.debug =debug
+
+        self.dico_abc = {}
         self.dico_name_abac = {}
         self.param_g = {}
         self.poly_p = None
@@ -54,9 +54,9 @@ class ClassLaws:
         :param id_config:  index of hydraulic structure
         :return:
         """
-        if self.parent.checkprofil(id_config):
-            profil = self.parent.get_profil(id_config)
-        else:
+
+        profil = self.init_var.get_profil(id_config)
+        if not profil:
             msg = "Profile copy isn't found"
             self.add_info(msg)
             return
@@ -65,7 +65,7 @@ class ClassLaws:
                       'ZTOPTAB', 'COEFDS', 'COEFDO',
                       # numeric
                       'MAXH', 'MINH', 'PASH', 'PASQ']
-        self.param_g = self.parent.get_param_g(list_recup, id_config)
+        self.param_g = self.init_var.get_param_g(list_recup, id_config)
         list_key = list(self.param_g.keys())
         if not 'COEFDO' in list_key:
             self.param_g['COEFDO'] = 1
@@ -73,9 +73,9 @@ class ClassLaws:
             self.param_g['COEFDS'] = 0.385
 
         self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
-        self.poly_p = self.parent.poly_profil(profil)
+        self.poly_p = self.clpoly.poly_profil(profil)
 
-        poly_tmp = self.parent.coup_poly_h(self.poly_p, self.param_g['ZTOPTAB'])
+        poly_tmp = self.clpoly.coup_poly_h(self.poly_p, self.param_g['ZTOPTAB'])
         (minx, miny, maxx, maxy) = poly_tmp.bounds
         self.param_g['TOTALW'] = maxx - minx
 
@@ -89,9 +89,8 @@ class ClassLaws:
 
     def init_elem(self,id_config, method):
         """ get polygon of travers"""
-        where = " id_config={} and type=0 ".format(id_config)
-        order = "id_elem"
-        self.list_poly_trav = self.parent.select_poly('struct_elem', where, order)['polygon']
+        self.list_poly_trav = self.init_var.select_poly_elem(id_config, 0)
+
         if not 'Brad' in method and self.mobil_struct:
             self.update_poly_mobil_struct()
         # MDU change vanne self.list_poly_trav
@@ -216,22 +215,23 @@ class ClassLaws:
                       'LARGPIL', 'LONGPIL', 'FORMPIL', 'BIAIPIL',
                       # numeric
                       'MAXQ', 'MINQ']
-        param_g_temp = self.parent.get_param_g(list_recup, id_config)
+        param_g_temp = self.init_var.get_param_g(list_recup, id_config)
         self.param_g.update(param_g_temp)
-        self.param_g['BIAIOUVRAD'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
-        # only meth
-        where = " id_config={} and type=1 ".format(id_config)
-        order = "id_elem"
-        self.list_poly_pil = self.parent.select_poly('struct_elem', where, order)['polygon']
-
-        self.list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
-        self.list_q.append(self.param_g['MAXQ'])
-
         self.dico_name_abac = {
             'Bradley 78': {'abac': ['bradley', 'bradley78']},
             'Bradley 72': {'abac': ['bradley', 'bradley72']}
         }
-        self.dico_abc = self.parent.get_abac(self.dico_name_abac[method]['abac'])
+        self.dico_abc = self.init_var.get_abac(self.dico_name_abac[method]['abac'])
+
+
+        self.param_g['BIAIOUVRAD'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
+        # only meth
+        self.list_poly_pil = self.init_var.select_poly_elem(self, id_config, 1)
+
+        self.list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
+        self.list_q.append(self.param_g['MAXQ'])
+
+
         self.param_g['TOTALOUV'] = 0
         for poly in self.list_poly_trav:
             (minx, miny, maxx, maxy) = poly.bounds
@@ -274,14 +274,14 @@ class ClassLaws:
         area_pil = 0
         area_pil_proj = 0
 
-        poly_wet = self.parent.coup_poly_h(self.poly_p, zav)
+        poly_wet = self.clpoly.coup_poly_h(self.poly_p, zav)
         if poly_wet.is_empty:
             return None
         area_wet = poly_wet.area
         # print('area_wet',area_wet)
         umoy = q / area_wet
         for poly_pil in self.list_poly_pil:
-            poly_pil = self.parent.coup_poly_h(poly_pil, zav)
+            poly_pil = self.clpoly.coup_poly_h(poly_pil, zav)
             if self.param_g['BIAIPIL'] != 0:
                 area_pil_proj += poly_pil.area * coef_cor_biais
             area_pil += poly_pil.area
@@ -291,11 +291,11 @@ class ClassLaws:
         # print("area_pil",area_pil)
         left_bank = self.param_g['FIRSTWD'] + self.param_g['TOTALOUV'] + self.param_g['LARGPIL'] * len(
             self.list_poly_pil)
-        ssoh = self.parent.coup_poly_v(poly_wet, [self.param_g['FIRSTWD'], left_bank],
+        ssoh = self.clpoly.coup_poly_v(poly_wet, [self.param_g['FIRSTWD'], left_bank],
                                        typ='LR').area
         q1 = ssoh * umoy
-        q2 = self.parent.coup_poly_v(poly_wet, self.param_g['FIRSTWD'], typ='R').area * umoy
-        q3 = self.parent.coup_poly_v(poly_wet, left_bank, typ='L').area * umoy
+        q2 = self.clpoly.coup_poly_v(poly_wet, self.param_g['FIRSTWD'], typ='R').area * umoy
+        q3 = self.clpoly.coup_poly_v(poly_wet, left_bank, typ='L').area * umoy
         qtot = q1 + q2 + q3
         alpha1 = 1
         alpha2 = 1
@@ -310,8 +310,8 @@ class ClassLaws:
         # print('area_pil',area_pil)
         # print('q1,q2,q3',q1,q2,q3)
         # print('area q1, area q2,area q3', ssoh,
-        # self.parent.coup_poly_v(poly_wet,self.param_g['FIRSTWD'],typ='R').area,
-        #       self.parent.coup_poly_v(poly_wet,left_bank,typ='L' ).area)
+        # self.clpoly.coup_poly_v(poly_wet,self.param_g['FIRSTWD'],typ='R').area,
+        #       self.clpoly.coup_poly_v(poly_wet,left_bank,typ='L' ).area)
         # print(self.param_g['FIRSTWD'],left_bank)
         # print('coefm', coefm)
         if not self.check_coefm(coefm):
@@ -387,7 +387,7 @@ class ClassLaws:
         term1 = (kb + dkp + dke + dks) * va ** 2 / (2. * self.grav) * alpha2
         # print("term1 Remout",term1)
         hmon = zav + term1
-        poly_wet = self.parent.coup_poly_h(self.poly_p, hmon)
+        poly_wet = self.clpoly.coup_poly_h(self.poly_p, hmon)
         area_amont = poly_wet.area
         term2 = alpha1 * ((s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (
             2. * self.grav)
@@ -438,13 +438,10 @@ class ClassLaws:
         list_final = self.complete_law(list_final)
         if ui is not None:
             ui.progress_bar(90)
-        self.parent.save_list_final(list_final, id_config, method)
-        if ui is not None:
-            ui.progress_bar(100)
         # if self.DEBUG:
         #     self.write_csv(list_final)
 
-        return list_final
+        return list_final,id_config, method
 
     def calc_law_brad(self, list_final, zav, ztransi):
         """
@@ -501,7 +498,7 @@ class ClassLaws:
                     q_seuil = 0
                     q_ori = 0
                     for i, poly in enumerate(self.list_poly_trav):
-                        poly_wet = self.parent.coup_poly_h(poly, zam)
+                        poly_wet = self.clpoly.coup_poly_h(poly, zam)
                         if not poly_wet.is_empty:
                             (minx, miny, maxx, maxy) = poly.bounds
                             larg = poly_wet.area / min(maxy - miny, zam - miny)
@@ -586,7 +583,7 @@ class ClassLaws:
         :return:
         """
         list_add = []
-        info = self.parent.sort_law(list_final)
+        info = sort_law(list_final)
 
         for id, deb in enumerate(self.list_q):
             if deb == transi[0]:
@@ -624,7 +621,7 @@ class ClassLaws:
         """
         list_add = []
 
-        info = self.parent.sort_law(list_final)
+        info = sort_law(list_final)
         # add Z pour  acroite le point d'infexion
 
         for id, deb in enumerate(self.list_q):
@@ -682,7 +679,7 @@ class ClassLaws:
         :param list_final: list of law values
         :return: new_list: new list of law values
         """
-        info = self.parent.sort_law(list_final)
+        info = sort_law(list_final)
         unique, counts = np.unique(info[:, 1], return_counts=True)
         nb_val = max(counts)
         list_val = []
@@ -923,7 +920,7 @@ class ClassLaws:
             for poly in self.list_poly_trav:
                 (minx, miny, maxx, maxy) = poly.bounds
                 z_elem = miny
-                poly_wet = self.parent.coup_poly_h(poly, zam_tmp)
+                poly_wet = self.clpoly.coup_poly_h(poly, zam_tmp)
                 if not poly_wet.is_empty:
                     larg = poly_wet.area / min(maxy - miny, zam_tmp - miny)
                 else:
@@ -955,7 +952,7 @@ class ClassLaws:
         area_wet = 0
         larg = 0
         for poly in self.list_poly_trav:
-            poly_wet = self.parent.coup_poly_h(poly, zav)
+            poly_wet = self.clpoly.coup_poly_h(poly, zav)
             if not poly_wet.is_empty:
                 area_wet += poly_wet.area
                 (minx, miny, maxx, maxy) = poly.bounds
@@ -1058,7 +1055,7 @@ class ClassLaws:
         self.init_elem(id_config, method)
 
         list_recup = ['MAXQ', 'MINQ', 'COEFBOR']
-        param_g_temp = self.parent.get_param_g(list_recup, id_config)
+        param_g_temp = self.init_var.get_param_g(list_recup, id_config)
         self.param_g.update(param_g_temp)
         self.list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
         self.list_q.append(self.param_g['MAXQ'])
@@ -1096,25 +1093,8 @@ class ClassLaws:
 
         # if self.DEBUG:
         #     self.write_csv(list_final)
-        if not self.mobil_struct:
-            self.save_list_final(list_final, id_config, method)
-        if ui is not None:
-            ui.progress_bar(100)
+
         return list_final
-
-    def write_csv(self, list_final, name=r"mascaret\law_tmp.csv"):
-        """
-        Write CSV to check law
-        :param name : file name
-        :param list_final: value writing in file
-        :return:
-        """
-
-        f = open(os.path.join(self.masplugPath, name), 'w')
-        f.write('q ;zav ;zam \n')
-        for val in list_final:
-            f.write('{}; {} ;{} \n'.format(val[0], val[1], val[2]))
-        f.close()
 
     def orifice(self, id_config, method='Loi d\'orifice', ui=None):
         """
@@ -1150,7 +1130,7 @@ class ClassLaws:
                     for i, poly in enumerate(self.list_poly_trav):
                         if first_trans:
                             ztransi.append(self.param_elem['ZMAXELEM'][i])
-                        poly_wet = self.parent.coup_poly_h(poly, zam)
+                        poly_wet = self.clpoly.coup_poly_h(poly, zam)
                         if not poly_wet.is_empty:
                             (minx, miny, maxx, maxy) = poly.bounds
                             larg = poly_wet.area / min(maxy - miny, zam - miny)
@@ -1186,10 +1166,6 @@ class ClassLaws:
         list_final = self.complete_law(list_final)
         # if self.DEBUG:
         #     self.write_csv(list_final)
-        if not self.mobil_struct:
-            self.save_list_final(list_final, id_config, method)
-        if ui is not None:
-            ui.progress_bar(100)
         return list_final
 
     def meth_borda_q(self, sav, sc, zam, zav):
@@ -1225,7 +1201,7 @@ class ClassLaws:
         :param zw: water level
         :return: wet surface
         """
-        poly_wet = self.parent.coup_poly_h(poly, zw)
+        poly_wet = self.clpoly.coup_poly_h(poly, zw)
         if poly_wet.is_empty:
             return 0
         return poly_wet.area
@@ -1235,7 +1211,7 @@ class ClassLaws:
         list_poly_trav_tmp = []
         for poly in self.list_poly_trav:
             # print('poly decoup',self.new_z,self.param_fg["DIRFG"])
-            poly_tmp = self.parent.coup_poly_h(poly, self.new_z,
+            poly_tmp = self.clpoly.coup_poly_h(poly, self.new_z,
                                                typ=self.param_fg["DIRFG"])
 
             if not poly_tmp.is_empty:
@@ -1261,17 +1237,19 @@ class ClassLaws:
         self.param_fg = param_fg
         self.mobil_struct = mobil_struct
 
-# ******************************************************
-#         MGIS depend
-# ******************************************************
-    def add_info(self, txt):
-        if self.mgis:
-            self.mgis.add_info(txt)
-        else:
-            print(txt)
+    def add_info(self,txt):
+        self.msg += txt+'\n'
 
+    def write_csv(self,  list_final,masplugPath, name=r"mascaret\law_tmp.csv"):
+        """
+        Write CSV to check law
+        :param name : file name
+        :param list_final: value writing in file
+        :return:
+        """
 
-#******************************************************
-#         MDB depend
-#******************************************************
-
+        f = open(os.path.join(masplugPath, name), 'w')
+        f.write('q ;zav ;zam \n')
+        for val in list_final:
+            f.write('{}; {} ;{} \n'.format(val[0], val[1], val[2]))
+        f.close()

@@ -25,7 +25,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure
+from .ClassTableStructure import ClassTableStructure, update_etat_struct_prof
 from .ClassMethod import ClassMethod
 from .ClassLaws import ClassLaws
 
@@ -101,7 +101,7 @@ class ClassStructureCreateDialog(QDialog):
             values.append([self.id_struct, order, x, z])
         self.mdb.insert_res('profil_struct', values, colonnes)
 
-        self.struct.update_etat_struct_prof(self.id_struct, active=False)
+        update_etat_struct_prof(self.mdb, self.id_struct, active=False)
 
 
         self.accept()

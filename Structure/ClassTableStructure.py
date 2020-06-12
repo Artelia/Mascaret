@@ -203,3 +203,35 @@ def fill_qcombobox(cb, lst, val_def=None, icn=None):
         if lst[0][0] != val_def:
             cb.blockSignals(False)
             cb.setCurrentIndex(cb.findData(val_def))
+
+
+def update_etat_struct_prof(mdb, id_config, active=True, delete=False):
+    """
+    Update state of of hydraulic structure in table
+    :param id_config: id_config:  index of hydraulic structure
+    :param active: active structure
+    :param delete: delete structure
+    :return:
+    """
+    where = "id = {0}".format(id_config)
+    prof = mdb.select('struct_config', where=where, list_var=['id_prof_ori'])
+    gid = prof['id_prof_ori'][0]
+    if active:
+        tab = {'table': 'profiles',
+               'schema': mdb.SCHEMA,
+               'gid': gid,
+               'struct': 2}
+    else:
+        tab = {'table': 'profiles',
+               'schema': mdb.SCHEMA,
+               'gid': gid,
+               'struct': 1}
+    if delete:
+        tab = {'table': 'profiles',
+               'schema': mdb.SCHEMA,
+               'gid': gid,
+               'struct': 0}
+    # self.mdb.update('profiles', tab, var='gid')
+
+    sql = "UPDATE {schema}.{table} SET struct={struct}  WHERE gid={gid}".format(**tab)
+    mdb.run_query(sql)

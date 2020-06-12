@@ -25,7 +25,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure
+from .ClassTableStructure import ClassTableStructure,update_etat_struct_prof
 from .GraphStructure import GraphStructure
 from .StructureEditDialog import ClassStructureEditDialog
 from .StructureCreateDialog import ClassStructureCreateDialog
@@ -163,9 +163,9 @@ class ClassStructureDialog(QDialog):
         active = self.mdb.select('struct_config', where=where, list_var=['active'])['active']
         if len(active)>1:
             if (True in active) :
-                self.struct.update_etat_struct_prof(id_struct, active=True)
+                update_etat_struct_prof(self.mdb,id_struct, active=True)
             else:
-                self.struct.update_etat_struct_prof(id_struct, active=False)
+                update_etat_struct_prof(self.mdb, id_struct, active=False)
         else:
-            self.struct.update_etat_struct_prof(id_struct, delete=True)
+            update_etat_struct_prof(self.mdb, id_struct, delete=True)
 
