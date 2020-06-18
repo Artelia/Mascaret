@@ -17,36 +17,14 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import collections
-import math as m
-import os
+
 import json
-import pickle
 
 import numpy as np
-import shapely.affinity
-from shapely import wkt
 from shapely.geometry import *
 
-from .ClassLaws import ClassLaws
 from .ClassTableStructure import ClassTableStructure
-from .ClassMethod_api import ClassMethod_api
-from .ClassInitFG import ClassInitFG
 from .ClassPolygone import ClassPolygone
-
-
-def sort_law(list_final):
-    """
-    sort the law
-    :param list_final: law data
-    :return:
-    """
-    info = np.array(list_final)
-    # trie de la colonne 0 à 2
-    info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
-    info = info[info[:, 1].argsort(kind='mergesort')]
-    info = info[info[:, 0].argsort(kind='mergesort')]
-    return info
 
 
 class ClassMethod:
@@ -57,11 +35,21 @@ class ClassMethod:
         self.debug = mgis.DEBUG
 
         self.grav = 9.81
-        self.epsi = 0.0001
         self.tbst = ClassTableStructure()
-        self.meth = ClassMethod_api(self.debug)
         self.clpoly = ClassPolygone(self.debug)
 
+    def sort_law(self, list_final):
+        """
+        sort the law
+        :param list_final: law data
+        :return:
+        """
+        info = np.array(list_final)
+        # trie de la colonne 0 à 2
+        info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
+        info = info[info[:, 1].argsort(kind='mergesort')]
+        info = info[info[:, 0].argsort(kind='mergesort')]
+        return info
 
     def create_poly_elem(self, id_config, config_type):
         """
@@ -195,139 +183,31 @@ class ClassMethod:
 
         width += width_prec
 
-    def create_law(self, dossier, nom, typel, list_final):
-        """
-        Creation of law for Mascaret
-        :param dossier: repertory
-        :param nom: law name
-        :param typel: type law
-        :param list_final: data law
-        :return:
-        """
-
-        if list_final == []:
-            return
-        with open(os.path.join(dossier, nom + '.loi'), 'w') as fich:
-            fich.write('# ' + nom + '\n')
-            if typel == 6:
-                fich.write('# Debit Cote_Aval Cote_Amont\n')
-                chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
-                list_final = list(sort_law(list_final))
-
-                for val in list_final:
-                    dico = {'flowrate': val[0], 'z_downstream': val[1], 'z_upstream': val[2]}
-                    fich.write(chaine.format(**dico))
-
-    def sav_meth(self, id_config, idmethod, ui):
-        """
-        Compute law
-        :param id_config: index of hydraulic structure
-        :param idmethod: index of method
-        :param ui: gui object
-        :return:
-        """
-        self.meth = ClassLaws(self, debug=self.debug)
-        if idmethod == 0 or idmethod == 4:  # meth
-            list_final  = self.meth.bradley(id_config, self.tbst.dico_meth_calc[idmethod], ui)
-        elif idmethod == 1:  # borda
-            list_final  = self.meth.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
-        elif idmethod == 3:  # orifice
-            list_final = self.meth.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
-        else:
-            pass
-
-        self.save_list_final(list_final, id_config, self.tbst.dico_meth_calc[idmethod])
-        if ui is not None:
-            ui.progress_bar(100)
-        self.add_info(self.meth.msg)
-
     def add_info(self, txt):
         if self.mgis:
             self.mgis.add_info(txt)
         else:
             print(txt)
 
-#******************************************************
-#         MDB depend
-#******************************************************
+            # ******************************************************
+        #         MDB depend
+        # ******************************************************
 
 
-# modif table
-# ******************************************************
-# use calcul
-
-    def save_list_final(self, list_final, id_config, method):
-        """
-        Save in database the law value
-        :param list_final: list of law values
-        :param id_config:  index of hydraulic structure
-        :param method: mehtod of compute
-        :return: nothing
-        """
-        if list_final == []:
-            sql = "SELECT name FROM {0}.{1} WHERE id={2}".format(self.mdb.SCHEMA, 'struct_config', id_config)
-
-            name = self.mdb.run_query(sql, fetch=True)
-            name = name[0][0]
-
-            sql = "UPDATE {0}.{1} SET {2}  WHERE id={3};".format(self.mdb.SCHEMA, 'struct_config', 'active=False',
-                                                                 id_config)
-            self.mdb.run_query(sql)
-
-            self.add_info(
-                "No values for the law because the coefficients leave application domain of the method.\n"
-                "The <<{}>> hydraulic structur is deactivated".format(name))
-        else:
-            self.save_law_st(method, id_config, list_final)
-
-    def save_law_st(self, method, id_config, list_val):
-        """
-        Stock law in database
-        :param method: mehtod of compute
-        :param id_config: index of hydraulic structure
-        :param list_val: value list
-        :return:
-        """
-        """ stock law in database"""
-        self.mdb.delete('struct_laws', where="id_config = '{}'".format(id_config))
-        liste_col = self.mdb.list_columns('struct_laws')
-        list_insert = []
-        list_val = np.array(list_val)
-        for j in self.tbst.dico_law_struct[method].keys():
-            for i, val in enumerate(list_val[:, j]):
-                list_insert.append([id_config, j, i, val])
-        var = ",".join(liste_col)
-
-        sql = ''
-        for a in list_insert:
-            valeurs = str(tuple(a))
-            sql += "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
-                                                                 'struct_laws',
-                                                                 var,
-                                                                 valeurs)
-        self.mdb.run_query(sql)
-
-# get info
-# table :
-#  struct_elem :  Polygon, id_elem, type, id_config
-#  struct_param : value ,id_config ,var
-#  struct_elem_param : id_config, id_elem, var ,value
-#  profil_struct :  id_config,id_order
-#  struct_config : 'id', 'name', 'type', 'active', 'method'
-#  struct_laws : id_config, id_order, id_var , value
-#  struct_abac : var,value,id_order, nam_method
-# ******************************************************
+        # modif table
+        # ******************************************************
+        # use calcul
 
     def get_id_elem(self, id_config):
-            """
-            get id and type of element
-            :param id_config:
-            :return:
-            """
-            where = "id_config = {0}".format(id_config)  # type=0 span, =1 bridge peir
-            order = "id_elem"
-            lid_elem = self.mdb.select('struct_elem', where=where, order=order, list_var=['id_elem', "type"])
-            return  lid_elem
+        """
+        get id and type of element
+        :param id_config:
+        :return:
+        """
+        where = "id_config = {0}".format(id_config)  # type=0 span, =1 bridge peir
+        order = "id_elem"
+        lid_elem = self.mdb.select('struct_elem', where=where, order=order, list_var=['id_elem', "type"])
+        return lid_elem
 
     def get_param_elem(self, id_elem, list_recup, id_config):
         """
@@ -349,32 +229,6 @@ class ClassMethod:
                     self.add_info('{} not specified in struct_elem_param table'.format(info))
 
         return param_elem
-
-    def get_list_law(self, id_config):
-        """
-        Get list law
-        :param id_config: index of hydraulic structure
-        :return: law list
-        """
-        liste_f = []
-
-        where = "WHERE id_config={}".format(id_config)
-        order = "ORDER BY id_var, id_order "
-        sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        tabval = self.mdb.run_query(sql.format(self.mdb.SCHEMA, "struct_laws", where, order, 'id_var , value'),
-                                    fetch=True)
-        if not tabval:
-            return liste_f
-        tabval = np.array(tabval)
-        nbval = collections.Counter(tabval[:, 0])
-        nb = int(nbval[0])
-
-        for i in range(nb):
-            list_tmp = []
-            for j in nbval.keys():
-                list_tmp.append(tabval[int(j) * nb + i, 1])
-            liste_f.append(list_tmp)
-        return liste_f
 
     def get_struct(self):
         """
@@ -400,7 +254,6 @@ class ClassMethod:
                                    'method': self.tbst.dico_meth_calc[row[4]]}
         #
         return struct_dico
-
 
     def fg_actif(self):
         where = "active AND id IN (SELECT id_config FROM {}.struct_fg  WHERE active) ".format(self.mdb.SCHEMA)
@@ -446,7 +299,6 @@ class ClassMethod:
 
         return param_fg, link_name_id
 
-
     def select_poly(self, table, where='', order=''):
         """
         Select polygon
@@ -480,17 +332,16 @@ class ClassMethod:
 
         return dico
 
-    def select_poly_elem(self,id_config, type_conf):
+    def select_poly_elem(self, id_config, type_conf):
         """
         Get polygone list of hole
         :param id_config: index of hydraulic structure
         :param type_conf: 0: hole, 1:span
         :return:
         """
-        where = " id_config={} and type={} ".format(id_config,type_conf)
+        where = " id_config={} and type={} ".format(id_config, type_conf)
         order = "id_elem"
-        return  self.select_poly('struct_elem', where, order)['polygon']
-
+        return self.select_poly('struct_elem', where, order)['polygon']
 
     def get_profil(self, id_config):
         """
@@ -526,6 +377,7 @@ class ClassMethod:
         if list_recup == 'all':
             sql = "SELECT DISTINCT nam_method FROM {}.{};".format(self.mdb.SCHEMA, table)
             list_recup = self.mdb.run_query(sql, fetch=True, namvar=False)
+            list_recup = [var[0] for var in list_recup]
 
         for metho in list_recup:
             where = "nam_method = '{0}' ".format(metho)
@@ -562,22 +414,28 @@ class ClassMethod:
 
         param_g = {}
         if list_recup == 'all':
-            sql = "SELECT DISTINCT nam_method FROM {}.{} " \
-                  "WHERE id_config = {};".format(self.mdb.SCHEMA, "struct_param" ,id_config)
+            sql = "SELECT DISTINCT var FROM {}.{} " \
+                  "WHERE id_config = {};".format(self.mdb.SCHEMA, "struct_param", id_config)
             list_recup = self.mdb.run_query(sql, fetch=True, namvar=False)
+            list_recup = [var[0] for var in list_recup]
+            print(list_recup)
+        if list_recup:
+            for info in list_recup:
+                where = "id_config = {0} AND var = '{1}' ".format(id_config, info)
+                rows = self.mdb.select('struct_param', where=where, list_var=['value'])
+                if rows['value']:
+                    param_g[info] = rows['value'][0]
+                else:
+                    if self.debug:
+                        self.add_info('{} not specified in struct_param table'.format(info))
 
-        for info in list_recup:
-            where = "id_config = {0} AND var = '{1}' ".format(id_config, info)
-            rows = self.mdb.select('struct_param', where=where, list_var=['value'])
-            if rows['value']:
-                param_g[info] = rows['value'][0]
-            else:
-                if self.debug:
-                    self.add_info('{} not specified in struct_param table'.format(info))
+            return param_g
+        else:
+            print('pb a la liste',list_recup,'eee')
+            return None
 
-        return param_g
 
-#*********************************************************
+# *********************************************************
 
 if __name__ == '__main__':
     pass

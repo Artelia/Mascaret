@@ -19,10 +19,8 @@ email                :
 
 """
 import numpy as np
-
-from .ClassMethod import ClassMethod
-from .ClassMethod import sort_law
-from .ClassInitFG import ClassInitFG
+from .ClassLaws import ClassLaws
+from .ClassPostPreFG import ClassPostPreFG
 from .ClassTableStructure import ClassTableStructure
 
 
@@ -44,8 +42,7 @@ class ClassFloodGate:
         self.masc = main.masc
         self.clmas = main.clmas
         self.debug = main.DEBUG
-
-        self.init_var = ClassInitFG()
+        self.init_var = ClassPostPreFG(main.mgis)
         self.tbst = ClassTableStructure()
         #
 
@@ -152,6 +149,7 @@ class ClassFloodGate:
             for id_config in self.param_fg.keys():
                 self.results_fg_mv[id_config]['TIME'].append(tfin)
                 self.results_fg_mv[id_config]['ZSTR'].append(self.param_fg[id_config]['ZOLD'])
+
     def fg_active(self):
         """ check if floodgate is active"""
         listid = self.fg_actif()
@@ -177,7 +175,7 @@ class ClassFloodGate:
             list_final = self.update_law(id_config, param_fg, new_z, True)
             if list_final is None:
                 self.clapi.add_info("Error: updating law")
-            tab_final = sort_law(list_final)
+            tab_final = self.sort_law(list_final)
             list_q = np.unique(tab_final[:, 0])
             list_zav = np.unique(tab_final[:, 1])
             list_zam = list(tab_final[:, 2])
@@ -186,6 +184,19 @@ class ClassFloodGate:
             self.param_fg[id_config]['ZOLD'] = new_z
         else:
             pass
+
+    def sort_law(list_final):
+        """
+        sort the law
+        :param list_final: law data
+        :return:
+        """
+        info = np.array(list_final)
+        # trie de la colonne 0 à 2
+        info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
+        info = info[info[:, 1].argsort(kind='mergesort')]
+        info = info[info[:, 0].argsort(kind='mergesort')]
+        return info
 
     def check_regul(self, param_fg):
         """
@@ -344,7 +355,7 @@ class ClassFloodGate:
                 :return:
                 """
         idmethod = param_fg['METH']
-        law = ClassLaws(self.debug)
+        law = ClassLaws(self.clapi.mgis)
         law.init_mobil_param(mobil_struct, param_fg, new_z)
         list_final = None
         if idmethod == 0 or idmethod == 4:  # meth
@@ -357,3 +368,6 @@ class ClassFloodGate:
             pass
         del law
         return list_final
+
+    def fg_actif(self):
+        self.init_var.fg_actif()

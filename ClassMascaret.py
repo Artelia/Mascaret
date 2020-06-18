@@ -37,7 +37,9 @@ from qgis.utils import *
 
 from .Function import str2bool, del_accent, copy_dir_to_dir
 from .Function import del_symbol
-from .Structure.ClassMethod import ClassMethod
+
+from .Structure.ClassMascStruct import ClassMascStruct
+from .Structure.ClassPostPreFG import ClassPostPreFG
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
 from .api.ClassAPIMascaret import ClassAPIMascaret
@@ -62,13 +64,13 @@ class ClassMascaret:
         self.dossierFile_bin = os.path.join(self.mgis.masplugPath, "bin")
         self.baseName = "mascaret"
         self.nomfichGEO = self.baseName + ".geo"
-        self.box = ClassWarningBox(self.mgis)
+        self.box = ClassWarningBox()
         # state list
         self.listeState = ['Steady', 'Unsteady', 'Transcritical unsteady']
         # kernel list
         self.Klist = ["steady", "unsteady", "transcritical"]
         self.wq = ClassMascWQ(self.mgis, self.dossierFileMasc)
-        self.clmeth = ClassMethod(self.mgis)
+        self.clmeth = ClassMascStruct(self.mgis)
         self.cond_api = self.mgis.cond_api
 
     def creer_geo(self):
@@ -470,7 +472,7 @@ class ClassMascaret:
                 dict_lois[d] = {'type': extr_toloi[type],
                                 'formule': formule,
                                 'valeurperm': libres["firstvalue"][i],
-                                'couche' : 'extremites'}
+                                'couche': 'extremites'}
 
             if libres and f in libres["name"]:
                 i = libres["name"].index(f)
@@ -486,7 +488,7 @@ class ClassMascaret:
                 dict_lois[f] = {'type': extr_toloi[type],
                                 'formule': formule,
                                 'valeurperm': libres["firstvalue"][i],
-                                'couche' : 'extremites'}
+                                'couche': 'extremites'}
         # Zones
         nb_pas = 0
         i = 0
@@ -546,18 +548,18 @@ class ClassMascaret:
         for i, type in enumerate(seuils["type"]):
             if type not in (3, 4):
                 dict_lois[seuils["name"][i]] = {'type': abaque_toloi[type],
-                                                'couche' : 'seuils'}
+                                                'couche': 'seuils'}
 
         for i, nom in enumerate(apports["name"]):
             if nom not in dict_lois.keys():
                 dict_lois[nom] = {'type': 1,
                                   'formule': apports['method'][i],
                                   'valeurperm': apports["firstvalue"][i],
-                                  'couche' : 'apports'}
+                                  'couche': 'apports'}
 
         for i, nom in enumerate(deversoirs["name"]):
             if nom not in dict_lois.keys() and deversoirs["type"][i] == 2:
-                dict_lois[nom] = {'type': 4, 'couche' : 'deversoirs'}
+                dict_lois[nom] = {'type': 4, 'couche': 'deversoirs'}
 
         # Géométrie du réseau
         reseau = cas.find("parametresGeometrieReseau")
@@ -767,7 +769,6 @@ class ClassMascaret:
         for nom in dict_lois.keys():
             if nom in libres["name"] and (dict_lois[nom]['type'] == 6 or dict_lois[nom]['type'] == 7):
                 # les types sont ceux de
-                # print( dictLois[nom]['type'], nom)
                 if dict_lois[nom]['type'] == 6:  # TODO and noyau!='transcritical'
                     dict_lois[nom]['type'] = 1
                     if self.mgis.DEBUG:
@@ -882,7 +883,7 @@ class ClassMascaret:
                 idx = loi_struct['laws'].index(name)
                 dico_loi_struct[name]['id_config'] = loi_struct['id_config'][idx]
                 del dict_lois[name]
-        # print(dico_loi_struct)
+
         return dict_lois, dico_loi_struct
 
     def add_basin_xcas(self, fichier_cas, casiers, liaisons):
@@ -1274,7 +1275,7 @@ class ClassMascaret:
                     self.creer_loi(nom + '_init', tab, 2)
 
         for nom, loi in dict_lois.items():
-            if loi['type'] in (1,2) :
+            if loi['type'] in (1, 2):
                 continue
             condition = """name ='{0}' 
                         AND type = {1}
@@ -1285,14 +1286,14 @@ class ClassMascaret:
             temp = self.mdb.select_one('laws', condition)
 
             liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
-                             "z_lower", "z_up"]
+                     "z_lower", "z_up"]
             tab = {}
             for k, v in temp.items():
                 if v and k in liste:
                     tab[k] = [float(var) for var in v.split()]
             self.creer_loi(nom, tab, loi['type'])
 
-            if loi['type'] in (4,5) and loi['couche'] == 'extremites' :
+            if loi['type'] in (4, 5) and loi['couche'] == 'extremites':
                 for c, d in zip(tab["z"], tab["flowrate"]):
                     if debit_prec > 0 and d > somme:
                         valeur_init = (c - cote_prec) \
@@ -1306,7 +1307,7 @@ class ClassMascaret:
                     tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
                     self.creer_loi(nom + '_init', tab, 2)
 
-            else :
+            else:
                 self.creer_loi(nom + '_init', tab, loi['type'])
 
     def fct_comment(self):
@@ -1322,8 +1323,14 @@ class ClassMascaret:
             comments = ''
         return comments.replace("'", "''").replace('"', ' ')
 
-    def mascaret(self, noyau, run):
-        """creation file and to run mascaret"""
+    def mascaret_init(self, noyau, run, only_init):
+        """
+        Initial file creation in model
+        :param noyau (str): Mascaret kernel
+        :param run (str): run name
+        :param only_init (bool):  option to write the  model files but it doesn't work with 'evenement'
+        :return:
+        """
         comments = ''
         sql = "SELECT parametre, {0} FROM {1}.{2};"
         rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
@@ -1346,45 +1353,61 @@ class ClassMascaret:
         # Creation du fichier de la geometrie des casiers uniquement en non-permanent et si presence des casiers
         if par["presenceCasiers"] and noyau == "unsteady":
             self.creer_geo_casier()
+        if only_init:
+            if par["evenement"] and noyau != "steady":
+                dict_scen_tmp = self.mdb.select('events', 'run', 'starttime')
+                if len(dict_scen_tmp['name']) == 0:
+                    self.mgis.add_info("Warning: scenario not found")
+                scen2, ok = QInputDialog.getItem(None,
+                                                 'Select Events',
+                                                 'Select Events',
+                                                 dict_scen_tmp['name'], 0, False)
+                if ok:
+                    id = dict_scen_tmp["name"].index(scen2)
+                    dict_scen = {'name': [dict_scen_tmp["name"][id]],
+                                 'starttime': [dict_scen_tmp['starttime'][id]],
+                                 "endtime": [dict_scen_tmp["endtime"][id]],
+                                 'run': [dict_scen_tmp['run'][id]]}
 
-        if par["evenement"] and noyau != "steady":
-
-            dict_scen_tmp = self.mdb.select('events', 'run', 'starttime')
-            listexclu = []
-            if len(dict_scen_tmp['name']) == 0:
-                self.mgis.add_info("Warning: scenario not found")
-            for i, scen in enumerate(dict_scen_tmp['name']):
-                # self.mgis.add_info("scen******************* {}".format(scen))
-                scen = scen.strip()
-                if not self.check_scenar(scen, run):
-                    self.mgis.add_info("Canceled Simulation because of {0} already exists.".format(scen))
-                    listexclu.append(i)
-            if listexclu:
-                dict_scen = {}
-                for key in dict_scen_tmp:
-                    value = dict_scen_tmp[key]
-                    value = [elt for idx, elt in enumerate(value) if not (idx in listexclu)]
-                    dict_scen[key] = value
             else:
-                dict_scen = dict_scen_tmp
-            comments = self.fct_comment()
-        else:
-            scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
-                                            'Please input a scenario name :')
-            scen = scen.replace("'", " ").replace('"', ' ').strip()
-            if not ok or not self.check_scenar(scen, run):
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("Canceled Simulation because of {0} already exists.".format(scen))
-                return
-            comments = self.fct_comment()
+                dict_scen = {'name': ["test_api"]}
 
-            dict_scen = {'name': [scen]}
+        else:
+            if par["evenement"] and noyau != "steady":
+
+                dict_scen_tmp = self.mdb.select('events', 'run', 'starttime')
+                listexclu = []
+                if len(dict_scen_tmp['name']) == 0:
+                    self.mgis.add_info("Warning: scenario not found")
+                for i, scen in enumerate(dict_scen_tmp['name']):
+                    # self.mgis.add_info("scen******************* {}".format(scen))
+                    scen = scen.strip()
+                    if not self.check_scenar(scen, run):
+                        self.mgis.add_info("Canceled Simulation because of {0} already exists.".format(scen))
+                        listexclu.append(i)
+                if listexclu:
+                    dict_scen = {}
+                    for key in dict_scen_tmp:
+                        value = dict_scen_tmp[key]
+                        value = [elt for idx, elt in enumerate(value) if not (idx in listexclu)]
+                        dict_scen[key] = value
+                else:
+                    dict_scen = dict_scen_tmp
+                comments = self.fct_comment()
+            else:
+                scen, ok = QInputDialog.getText(QWidget(), 'Scenario name',
+                                                'Please input a scenario name :')
+                scen = scen.replace("'", " ").replace('"', ' ').strip()
+                if not ok or not self.check_scenar(scen, run):
+                    if self.mgis.DEBUG:
+                        self.mgis.add_info("Canceled Simulation because of {0} already exists.".format(scen))
+                    return
+                comments = self.fct_comment()
+                dict_scen = {'name': [scen]}
 
         # progressMessageBar = self.iface.messageBar().createMessage(
         #     "Run ...")
         # self.iface.messageBar().pushWidget(progressMessageBar, self.iface.messageBar().INFO)
-
-        date_debut = None
 
         dict_lois, dico_loi_struct = self.creer_xcas(noyau)
         if self.mgis.DEBUG:
@@ -1405,120 +1428,219 @@ class ClassMascaret:
         if self.mgis.DEBUG:
             self.mgis.add_info("Tracer files are created.")
 
+        return par, dict_scen, dict_lois, comments
+
+    def init_scen_steady(self, par, dict_lois):
+        """
+         Initial  files creation  for steady scenario
+        :param par (dict): parameters
+        :param dict_lois(dict) : laws
+        :return:
+        """
+
+        if par['presenceTraceurs']:
+            if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
+                self.wq.create_filemet()
+                # steady
+        for nom, l in dict_lois.items():
+            if "valeurperm" not in l.keys():
+                continue
+            if l["valeurperm"] is None:
+                self.mgis.add_info("Error : Add the 'valeurprerm' value in extremities.")
+
+            try:
+                liste_ = ['pasTemps', 'critereArret', 'nbPasTemps', 'tempsMax', 'tempsInit']
+                temp_dic = {}
+                for info in liste_:
+                    condition = "parametre ='{}'".format(info)
+                    dtemp = self.mdb.select_distinct('steady', 'parametres', condition)
+                    temp_dic[info] = dtemp['steady'][0]
+            except Exception as e:
+                self.mgis.add_info(str(e))
+                return
+            if temp_dic['critereArret'] == 1:
+                tfinal = temp_dic['tempsMax']
+            elif temp_dic['critereArret'] == 2:
+                tfinal = temp_dic['tempsInit'] + temp_dic['pasTemps'] * temp_dic['nbPasTemps']
+            elif temp_dic['critereArret'] == 3:
+                tfinal = 365 * 24 * 3600
+            if l['type'] == 1:
+                tab = {"time": [0, tfinal], 'flowrate': [l["valeurperm"]] * 2}
+            elif l['type'] == 2:
+                tab = {"time": [0, tfinal], 'z': [l["valeurperm"]] * 2}
+            else:
+                condition = "name ='{0}' AND type={1}".format(nom, l["type"])
+                temp = self.mdb.select_one('laws', condition)
+                liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
+                         "z_lower", "z_up"]
+                tab = {}
+                for k, v in temp.items():
+                    if v and k in liste:
+                        tab[k] = [float(var) for var in v.split()]
+
+            self.creer_loi(nom, tab, l['type'])
+
+    def init_scen_even(self, par, dict_lois, i, dict_scen):
+        """
+        Initial  files creation  for evenment scenario
+        :param par (dict): parameters
+        :param dict_lois(dict) : laws
+        :param i(int): num scenario
+        :param dict_scen(dict): dictionnay of scenarii
+        :return:
+        """
+        # transcritical unsteady evenement
+        date_debut = dict_scen['starttime'][i]
+        date_fin = dict_scen['endtime'][i]
+        duree = int((date_fin - date_debut).total_seconds()) - 3600
+
+        tab = {"tempsMax": {'valeur': str(duree),
+                            'balise1': 'parametresTemporels'},
+               "titreCalcul": {'valeur': dict_scen['name'][i],
+                               'balise1': 'parametresImpressionResultats'}
+               }
+        self.modif_xcas(tab, self.baseName + '.xcas')
+        self.mgis.add_info("Xcas file is created.")
+        if par['presenceTraceurs']:
+            if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
+                self.wq.create_filemet(typ_time='date', datefirst=date_debut, dateend=date_fin)
+
+        self.obs_to_loi(dict_lois, date_debut, date_fin)
+
+        return date_debut
+
+    def init_scen_trans_unsteady(self, par, dict_lois):
+        """
+        Initial  files creation  for unsteady scenario
+        :param par (dict): parameters
+        :param dict_lois(dict) : laws
+        :return:
+        """
+
+        if par['presenceTraceurs']:
+            if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
+                self.wq.create_filemet()
+
+        for nom, l in dict_lois.items():
+            # dictLois.items() extremities liste
+            condition = "name ='{0}' AND type={1}".format(nom, l["type"])
+            # self.mgis.add_info('{}'.format(condition))
+            try:
+                temp = self.mdb.select_one('laws', condition)
+            except Exception as e:
+                self.mgis.add_info("Error: Please check if law {0} is correct. ".format(nom))
+                self.mgis.add_info(str(e))
+                return
+
+            liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
+                     "z_lower", "z_up"]
+            tab = {}
+            for k, v in temp.items():
+                if v and k in liste:
+                    tab[k] = [float(var) for var in v.split()]
+
+            self.creer_loi(nom, tab, l["type"])
+            if self.mgis.DEBUG:
+                self.mgis.add_info("Laws file is created.")
+
+            if "valeurperm" not in l.keys():
+                continue
+
+            nom = nom + "_init"
+            if l["valeurperm"] is not None:
+                if l['type'] == 1:
+                    tab = {"time": [0, 3600], 'flowrate': [l["valeurperm"]] * 2}
+                    self.creer_loi(nom, tab, 1)
+                elif l['type'] in [2, 4, 5]:
+                    tab = {"time": [0, 3600], 'z': [l["valeurperm"]] * 2}
+                    self.creer_loi(nom, tab, 2)
+                else:
+                    par["initialisationAuto"] = False
+                    self.mgis.add_info("No initialisation")
+            else:
+                par["initialisationAuto"] = False
+                self.mgis.add_info("No initialisation because of no valeurperm for {} condition".format(nom))
+
+        return
+
+    def select_init_run_case(self):
+        """
+        Select initial run case
+        :return:
+        """
+        dico_run = self.mdb.select_distinct("run",
+                                            "runs")
+        if dico_run != {}:
+            liste_run = ['{}'.format(v) for v in dico_run['run']]
+        else:
+            liste_run = []
+        liste_run.append('".lig" File')
+        case, ok = QInputDialog.getItem(None,
+                                        'Initial run case ',
+                                        'Runs',
+                                        liste_run, 0, False)
+
+        if ok:
+            if case == '".lig" File':
+                self.copy_lig()
+            else:
+                condition = "run LIKE '{0}'".format(case)
+                dico_scen = self.mdb.select_distinct("scenario",
+                                                     "runs", condition)
+                liste_scen = ['{}'.format(v) for v in dico_scen["scenario"]]
+
+                scen2, ok = QInputDialog.getItem(None,
+                                                 'Initial Scenario',
+                                                 'Initial Scenario',
+                                                 liste_scen, 0, False)
+
+                if ok:
+                    id_run = self.mdb.run_query("SELECT id FROM {0}.runs "
+                                                "WHERE run = '{1}' "
+                                                "AND scenario = '{2}'".format(self.mdb.SCHEMA, case, scen2),
+                                                fetch=True)
+                    self.opt_to_lig(case, scen2, id_run[0][0], self.baseName)
+                else:
+                    if self.mgis.DEBUG:
+                        self.mgis.add_info("Cancel run")
+            return True
+
+        else:
+            if self.mgis.DEBUG:
+                self.mgis.add_info("Cancel run")
+            return False
+
+    def mascaret(self, noyau, run, only_init=False):
+        """
+        creation file and to run mascaret
+        :param noyau (str): Mascaret kernel
+        :param run (str): run name
+        :param only_init (bool):  option to write the  model files but it doesn't work with 'evenement'
+        :return:
+        """
+        par, dict_scen, dict_lois, comments = self.mascaret_init(noyau, run, only_init)
+
         for i, scen in enumerate(dict_scen['name']):
             if self.mgis.DEBUG:
                 self.mgis.add_info("The current scenario is {}".format(scen))
+
+            # initialise file
+            date_debut = None
             if noyau == "steady":
-                if par['presenceTraceurs']:
-                    if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
-                        self.wq.create_filemet()
-                # steady
-                for nom, l in dict_lois.items():
-                    if "valeurperm" not in l.keys():
-                        continue
-                    if l["valeurperm"] is None:
-                        self.mgis.add_info("Error : Add the 'valeurprerm' value in extremities.")
-
-                    try:
-                        liste_ = ['pasTemps', 'critereArret', 'nbPasTemps', 'tempsMax', 'tempsInit']
-                        temp_dic = {}
-                        for info in liste_:
-                            condition = "parametre ='{}'".format(info)
-                            dtemp = self.mdb.select_distinct('steady', 'parametres', condition)
-                            temp_dic[info] = dtemp['steady'][0]
-                    except Exception as e:
-                        self.mgis.add_info(str(e))
-                        return
-                    if temp_dic['critereArret'] == 1:
-                        tfinal = temp_dic['tempsMax']
-                    elif temp_dic['critereArret'] == 2:
-                        tfinal = temp_dic['tempsInit'] + temp_dic['pasTemps'] * temp_dic['nbPasTemps']
-                    elif temp_dic['critereArret'] == 3:
-                        tfinal = 365 * 24 * 3600
-                    if l['type'] == 1:
-                        tab = {"time": [0, tfinal], 'flowrate': [l["valeurperm"]] * 2}
-                    elif l['type'] == 2 :
-                        tab = {"time": [0, tfinal], 'z': [l["valeurperm"]] * 2}
-                    else :
-                        condition = "name ='{0}' AND type={1}".format(nom, l["type"])
-                        temp = self.mdb.select_one('laws', condition)
-                        liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
-                                 "z_lower", "z_up"]
-                        tab = {}
-                        for k, v in temp.items():
-                            if v and k in liste:
-                                tab[k] = [float(var) for var in v.split()]
-
-                    self.creer_loi(nom, tab, l['type'])
-
+                self.init_scen_steady(par, dict_lois)
             elif par["evenement"]:
-                # transcritical unsteady evenement
-                date_debut = dict_scen['starttime'][i]
-                date_fin = dict_scen['endtime'][i]
-                duree = int((date_fin - date_debut).total_seconds()) - 3600
-
-                tab = {"tempsMax": {'valeur': str(duree),
-                                    'balise1': 'parametresTemporels'},
-                       "titreCalcul": {'valeur': scen,
-                                       'balise1': 'parametresImpressionResultats'}
-                       }
-                self.modif_xcas(tab, self.baseName + '.xcas')
-                self.mgis.add_info("Xcas file is created.")
-                if par['presenceTraceurs']:
-                    if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
-                        self.wq.create_filemet(typ_time='date', datefirst=date_debut, dateend=date_fin)
-
-                self.obs_to_loi(dict_lois, date_debut, date_fin)
-
+                date_debut = self.init_scen_even(par, dict_lois, i, dict_scen)
             else:
-                # TODO ATTENTION CREATION LOI STRUCTUR HYdraulic
                 # transcritical unsteady hors evenement
+                self.init_scen_trans_unsteady(par, dict_lois)
+            if self.check_mobil_gate() and noyau == "unsteady":
+                self.create_mobil_gate_file()
 
-                if par['presenceTraceurs']:
-                    if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
-                        self.wq.create_filemet()
+            if only_init:
+                self.fct_only_init(noyau)
+                return
 
-                for nom, l in dict_lois.items():
-                    # dictLois.items() extremities liste
-                    condition = "name ='{0}' AND type={1}".format(nom, l["type"])
-                    # self.mgis.add_info('{}'.format(condition))
-                    try:
-                        temp = self.mdb.select_one('laws', condition)
-                    except Exception as e:
-                        self.mgis.add_info("Error: Please check if law {0} is correct. ".format(nom))
-                        self.mgis.add_info(str(e))
-                        return
-
-                    liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
-                             "z_lower", "z_up"]
-                    tab = {}
-                    for k, v in temp.items():
-                        if v and k in liste:
-                            tab[k] = [float(var) for var in v.split()]
-
-                    self.creer_loi(nom, tab, l["type"])
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info("Laws file is created.")
-
-                    if "valeurperm" not in l.keys():
-                        continue
-
-                    nom = nom + "_init"
-                    # 3600 To change TODO
-                    if l["valeurperm"] is not None:
-                        if l['type'] == 1:
-                            tab = {"time": [0, 3600], 'flowrate': [l["valeurperm"]] * 2}
-                            self.creer_loi(nom, tab, 1)
-                        elif l['type'] in [2, 4, 5]:
-                            tab = {"time": [0, 3600], 'z': [l["valeurperm"]] * 2}
-                            self.creer_loi(nom, tab, 2)
-                        else:
-                            par["initialisationAuto"] = False
-                            self.mgis.add_info("No initialisation")
-                    else:
-                        par["initialisationAuto"] = False
-                        self.mgis.add_info("No initialisation because of no valeurperm for {} condition".format(nom))
-
+            # RUN Model
             if par["initialisationAuto"] and noyau is not "steady":
                 # add if name of init. exist previously
                 sceninit = scen + '_init'
@@ -1528,7 +1650,6 @@ class ClassMascaret:
                     self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, sceninit, noyau))
 
                     id_run = self.insert_id_run(run, sceninit)
-
                     self.lance_mascaret(self.baseName + '_init.xcas', id_run)
 
                     # TODO delete in the future
@@ -1553,68 +1674,14 @@ class ClassMascaret:
                 self.modif_xcas(tab, self.baseName + '.xcas')
 
             elif par["LigEauInit"] and noyau != "steady":
-                # condition = "run LIKE 'Steady'"
-                # dico_run = self.mdb.select_distinct("scenario",
-                #                                    "runs", condition)
-                # dico_run = self.mdb.select("runs")
-                #
-                # if not dico_run and self.mgis.DEBUG:
-                #     self.mgis.add_info("There aren't scenarii for the Steady case.")
-                #     if self.mgis.DEBUG:
-                #         self.mgis.add_info("Cancel run")
-                #     return
-
-                # liste2=list(dico_run["scenario"])
-
-                dico_run = self.mdb.select_distinct("run",
-                                                    "runs")
-                if dico_run != {}:
-                    liste_run = ['{}'.format(v) for v in dico_run['run']]
-                else:
-                    liste_run = []
-                liste_run.append('".lig" File')
-                case, ok = QInputDialog.getItem(None,
-                                                'Initial run case ',
-                                                'Runs',
-                                                liste_run, 0, False)
-
-                if ok:
-                    if case == '".lig" File':
-                        self.copy_lig()
-                    else:
-                        condition = "run LIKE '{0}'".format(case)
-                        dico_scen = self.mdb.select_distinct("scenario",
-                                                             "runs", condition)
-                        liste_scen = ['{}'.format(v) for v in dico_scen["scenario"]]
-
-                        scen2, ok = QInputDialog.getItem(None,
-                                                         'Initial Scenario',
-                                                         'Initial Scenario',
-                                                         liste_scen, 0, False)
-
-                        if ok:
-                            id_run = self.mdb.run_query("SELECT id FROM {0}.runs "
-                                                        "WHERE run = '{1}' "
-                                                        "AND scenario = '{2}'".format(self.mdb.SCHEMA, case, scen2),
-                                                        fetch=True)
-                            self.opt_to_lig(case, scen2, id_run, self.baseName)
-                        else:
-                            if self.mgis.DEBUG:
-                                self.mgis.add_info("Cancel run")
-                            return
-
-                else:
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info("Cancel run")
-                    return
+                self.select_init_run_case()
 
             self.mgis.add_info("========== Run case  =========")
             self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen, noyau))
             cond_casier = False
             if par["presenceCasiers"] and noyau == "unsteady":
                 cond_casier = True
-            if self.check_mobil_gate() and noyau == "unsteady":
-                self.create_mobil_gate_file()
+
             id_run = self.insert_id_run(run, scen)
             finish = self.lance_mascaret(self.baseName + '.xcas', id_run, par['presenceTraceurs'], cond_casier)
             if not finish:
@@ -1635,9 +1702,72 @@ class ClassMascaret:
         self.mgis.add_info("Simulation finished")
         return
 
+
+
+
+    def import_results(self, run, scen, comments, path, date_debut = None):
+        """
+        import mascaret resultats
+        :param run (str):
+        :param scen (str):
+        :param path(str):
+        :param date_debut(str):
+        :return:
+        """
+
+        lia_cond = False
+        cas_cond = False
+        cond_tra = False
+
+        for file in os.listdir(path):
+            if file.split('.')[-1] == "liai_opt":
+                lia_cond = True
+            elif file.split('.')[-1] == "cas_opt":
+                cas_cond = True
+            elif file.split('.')[-1] == "tra_opt":
+                cond_tra=True
+
+        cond_casier = False
+        if lia_cond and cas_cond:
+            cond_casier = True
+
+        id_run = self.insert_id_run(run, scen)
+        self.lit_opt(run, scen, id_run, date_debut, self.baseName, comments, cond_tra, cond_casier)
+
+        self.mgis.chkt.convert_all_result()
+        if os.path.isfile(os.path.join(path,'Fichier_Crete.csv')):
+            self.read_mobil_gate_res(id_run)
+
+    def fct_only_init(self, noyau):
+        """
+        clean and model file creation
+        :param noyau(str): kernel
+        :return:
+        """
+        # delete "initialisationAuto" file
+        for file in os.listdir(self.dossierFileMasc):
+            if '_init.loi' in file or '_init.xcas' in file:
+                path = os.path.join(self.dossierFileMasc, file)
+                if os.path.isfile(path):
+                    os.remove(path)
+        # select initial case
+        if noyau != "steady":
+            self.select_init_run_case()
+        cl = ClassPostPreFG(self.mgis)
+
+        path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'mascaret'))
+        path = os.path.join(path, 'cli_fg.obj')
+        cl.create_cli_fg(path)
+        del cl
+
     def lance_mascaret(self, fichier_cas, id_run, tracer=False, casier=False):
         """
         Run mascaret
+        :param fichier_cas (str): file name xcas
+        :param id_run (int): run index
+        :param tracer (bool): boolean if there ars tracers
+        :param casier(bool): boolean if there ars basins
+        :return:
         """
         os.chdir(self.dossierFileMasc)
 
@@ -1824,7 +1954,6 @@ class ClassMascaret:
         result = self.get_for_lig_new(id_run)
         i1 = {}
         i2 = {}
-
         for section, branche in zip(result["section"], result["branche"]):
             if branche not in i1.keys():
                 i1[branche] = 9999999

@@ -42,7 +42,7 @@ class ClassDeletshDialog(QDialog):
         self.mdb = self.mgis.mdb
         self.iface = iface
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_delete_sh.ui'), self)
-        self.box = ClassWarningBox(self.mgis)
+        self.box = ClassWarningBox()
         self.liste_model = self.mdb.liste_models()
         self.parent = {}
         self.init_gui()

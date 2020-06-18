@@ -45,7 +45,6 @@ from qgis.gui import *
 
 from .Function import isfloat, interpole
 from .GraphCommon import DraggableLegend, GraphCommon
-from .Structure.ClassMethod import ClassMethod
 from .Structure.StructureCreateDialog import ClassStructureCreateDialog
 from .GraphResultDialog import GraphResultDialog
 
@@ -240,7 +239,6 @@ class GraphProfil(GraphCommon):
         self.gui_graph(self.ui.widget_figure)
         self.fig.autofmt_xdate()
         self.init_ui()
-        self.struct = ClassMethod(self.mgis)
 
         # action
         self.ui.actionBtTools_point_selection.triggered.connect(self.selector_toggled)

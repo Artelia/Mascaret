@@ -82,7 +82,7 @@ class ClassMasDatabase(object):
         self.queries = {}
         self.uris = []
         self.refresh_uris()
-        self.box = ClassWarningBox(self.mgis)
+        self.box = ClassWarningBox()
 
     def connect_pg(self):
         """
@@ -879,7 +879,7 @@ $BODY$
             lvar = '*'
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-
+        #print(sql.format(self.SCHEMA, table, where, order, lvar))
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order, lvar), fetch=True, namvar=True)
         if results == None or namCol == None:
             print(sql.format(self.SCHEMA, table, where, order, lvar))

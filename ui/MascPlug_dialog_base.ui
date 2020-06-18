@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -242,11 +242,13 @@
     <addaction name="actionCreate_Geometry"/>
     <addaction name="actionCreate_xcas"/>
     <addaction name="actionCreate_Basin"/>
+    <addaction name="actionExport_Model_Files"/>
     <addaction name="separator"/>
     <addaction name="actionRun"/>
     <addaction name="separator"/>
     <addaction name="actionExport_Run"/>
     <addaction name="actionDelete_Run"/>
+    <addaction name="actionImport_Results"/>
    </widget>
    <widget class="QMenu" name="menuPost_Treatment">
     <property name="title">
@@ -318,11 +320,13 @@
    <addaction name="actionCreate_Geometry"/>
    <addaction name="actionCreate_xcas"/>
    <addaction name="actionCreate_Basin"/>
+   <addaction name="actionExport_Model_Files"/>
    <addaction name="separator"/>
    <addaction name="actionRun"/>
    <addaction name="separator"/>
    <addaction name="actionExport_Run"/>
    <addaction name="actionDelete_Run"/>
+   <addaction name="actionImport_Results"/>
   </widget>
   <widget class="QToolBar" name="PostTreatmentToolBar">
    <property name="windowTitle">
@@ -334,12 +338,15 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionHydrogramme"/>
    <addaction name="actionCross_section_results"/>
+   <addaction name="actionHydrogramme"/>
    <addaction name="actionBasin"/>
    <addaction name="actionGraphRes"/>
   </widget>
   <widget class="QToolBar" name="WaterQualityToolBar">
+   <property name="acceptDrops">
+    <bool>true</bool>
+   </property>
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -681,12 +688,30 @@
     <string>GraphRes</string>
    </property>
   </action>
+  <action name="actionExport_Model_Files">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/Model.png</normaloff>:/plugins/Mascaret/icones/Model.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export Model Files</string>
+   </property>
+  </action>
+  <action name="actionImport_Results">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/save_res.png</normaloff>:/plugins/Mascaret/icones/save_res.png</iconset>
+   </property>
+   <property name="text">
+    <string>Import Results</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
    <class>QgsProjectionSelectionWidget</class>
    <extends>QWidget</extends>
-   <header>qgis.gui</header>
+   <header>qgsprojectionselectionwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

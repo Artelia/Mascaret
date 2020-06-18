@@ -26,8 +26,6 @@ from qgis.gui import *
 from qgis.utils import *
 
 from .ClassTableStructure import ClassTableStructure, update_etat_struct_prof
-from .ClassMethod import ClassMethod
-from .ClassLaws import ClassLaws
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -41,7 +39,6 @@ class ClassStructureCreateDialog(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.struct = ClassMethod(self.mgis)
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_structure_create.ui'), self)
         self.b_ok.accepted.connect(self.accept_page)

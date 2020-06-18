@@ -32,7 +32,7 @@ class CheckTab():
     def __init__(self, mgis, mdb):
         self.mgis = mgis
         self.mdb = mdb
-        self.box = ClassWarningBox(self)
+        self.box = ClassWarningBox()
         # for add table [ 'add_tab': [list_table]]
         # for delete [ ['DEL TAB',[list_table]]
         self.dico_modif = {'3.0.0': {},

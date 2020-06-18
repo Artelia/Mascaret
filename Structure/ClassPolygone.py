@@ -17,26 +17,19 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import collections
 import math as m
-import os
 import json
 
-import numpy as np
 import shapely.affinity
 from shapely import wkt
 from shapely.geometry import *
 
-from .ClassLaws import ClassLaws
-from .ClassTableStructure import ClassTableStructure
-from .ClassMethod_api import ClassMethod_api
-from .ClassInitFG import ClassInitFG
-
 
 class ClassPolygone:
-    def __init__(self, debug= False):
+    def __init__(self, debug=False):
         self.debug = debug
         self.msg = ''
+        self.epsi = 0.0001
 
     def poly_pont_cadre(self, param_g, param_elem, x0=None, zmin=-99999):
         """
@@ -66,7 +59,6 @@ class ClassPolygone:
             print('Inconsistent Z for the span')
         return poly_t
 
-
     def poly_dalot(self, param_elem, x0):
         """
         Creation polygone for DA : scupper
@@ -84,7 +76,6 @@ class ClassPolygone:
             print('Inconsistent Z for the span')
         return poly_t
 
-
     def poly_buse(self, param_elem):
         """
         creation polygone for BU : buse
@@ -95,7 +86,6 @@ class ClassPolygone:
         x_c = param_elem['ABSBUSE']
         circ = Point([x_c, z_c]).buffer(param_elem['LARGTRA'] / 2)
         return circ
-
 
     def poly_arch(self, param_g, param_elem, x0=None, zmin=-99999):
         """
@@ -148,7 +138,6 @@ class ClassPolygone:
 
         return poly_t
 
-
     def poly_profil_del(self, profil, zmin=-99999):
         """
         creation profile polygone
@@ -167,7 +156,6 @@ class ClassPolygone:
         liste_poly.append([x0_p, zmin_p])
         poly_p = Polygon(liste_poly)
         return poly_p
-
 
     def poly_pil(self, param_elem, x0, zmin=-99999):
         """
@@ -189,7 +177,6 @@ class ClassPolygone:
 
             print('Inconsistent Z for the pier')
         return poly_t
-
 
     def udpate_polygon_table(self, mdb, poly_final, id_config, id_elem):
         """
@@ -308,5 +295,5 @@ class ClassPolygone:
         poly_p = Polygon(liste_poly)
         return poly_p
 
-    def add_info(self,txt):
-        self.msg += txt+'\n'
+    def add_info(self, txt):
+        self.msg += txt + '\n'

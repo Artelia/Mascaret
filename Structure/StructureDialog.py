@@ -29,7 +29,6 @@ from .ClassTableStructure import ClassTableStructure,update_etat_struct_prof
 from .GraphStructure import GraphStructure
 from .StructureEditDialog import ClassStructureEditDialog
 from .StructureCreateDialog import ClassStructureCreateDialog
-from .ClassMethod import ClassMethod
 
 # from ..Function import data_to_float
 
@@ -46,8 +45,6 @@ class ClassStructureDialog(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.struct = ClassMethod(self.mgis)
-        # self.cur_wq_mod = self.tbwq.get_cur_wq_mod()
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_structure.ui'), self)
 

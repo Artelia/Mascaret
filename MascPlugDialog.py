@@ -45,6 +45,8 @@ from .db.check_tab import CheckTab
 from .ui.custom_control import ClassWarningBox
 from .ClassDownload import ClassDownloadMasc
 
+from .ClassImport_res import ClassImportRes
+
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
 else:  # qt5
@@ -80,7 +82,7 @@ class MascPlugDialog(QMainWindow):
         self.dossier_struct = os.path.join(os.path.join(self.masplugPath, "Structure"), 'Abacus')
         self.repProject = None
 
-        self.box = ClassWarningBox(self)
+        self.box = ClassWarningBox()
         # variables liste of results
         self.variables = {}
         with open(os.path.join(self.masplugPath, 'variables.dat'), 'r') as fichier:
@@ -177,7 +179,9 @@ class MascPlugDialog(QMainWindow):
 
         # Structures
         self.ui.actionStructures.triggered.connect(self.fct_structures)
-        self.ui.actionTest_struct.triggered.connect(self.fct_test)
+        #self.ui.actionTest_struct.triggered.connect(self.fct_test)
+        self.ui.actionExport_Model_Files.triggered.connect(self.fct_creat_run)
+        self.ui.actionImport_Results.triggered.connect(self.import_resu_model)
         self.ui.actionStructures_weirs.triggered.connect(self.fct_mv_dam)
         if self.cond_api:
             self.ui.actionStructures_weirs.setEnabled(False)
@@ -867,20 +871,52 @@ Version : {}
         dlg = ClassMobilSingDialog(self)
         dlg.exec_()
 
-    def fct_test(self):
 
+    def fct_creat_run(self):
+        """
+        model creation to run with api
+        :return:
+        """
+        case, ok = QInputDialog.getItem(None,
+                                        'Study case',
+                                        'Kernel',
+                                        self.listeState, 0, False)
+        if ok:
+            if self.DEBUG:
+                self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
+                run = "test"
+                clam = ClassMascaret(self)
+                clam.mascaret(self.Klist[self.listeState.index(case)], run, only_init=True)
+
+    def import_resu_model(self):
+        """
+        import resultats
+        :return:
+        """
         clam = ClassMascaret(self)
-        clam.create_mobil_gate_file()
-        # clam.read_mobil_gate_res(48)
-        date_debut = datetime.datetime(2001, 2, 25, 0, 0)
-        id_run = 48
+        dlg = ClassImportRes(clam)
+        dlg.exec_()
+        if dlg.complet :
+            clam.import_results(dlg.run, dlg.scen, dlg.comments, dlg.path_model, date_debut = dlg.date)
+        del dlg
+        del clam
+
+
+    def fct_test(self):
+        pass
+
+        # clam.create_mobil_gate_file()
+        # # clam.read_mobil_gate_res(48)
+        # date_debut = datetime.datetime(2001, 2, 25, 0, 0)
+        # id_run = 48
         # clam.lit_opt('test','Crue2001', id_run, date_debut, clam.baseName , comments='', tracer=False, casier=False)
-        nom_fich = r'mascaret'
+        #nom_fich = r'mascaret'
 
         # clam.opt_to_lig('dede', 'dede_init', 384, 'test.lig')
         # base_namefile = r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret'
         # self.lit_opt_new(id_run,date_debut,nom_fich, tracer=False, casier=False)
         # self.dossierFileMasc=r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret'
+
 
     # TODO
     # def update_pk(self):

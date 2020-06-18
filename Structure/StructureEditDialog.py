@@ -27,6 +27,7 @@ from qgis.gui import *
 from qgis.utils import *
 from shapely.geometry import Point
 
+from .ClassMascStruct import ClassMascStruct
 from .ClassMethod import ClassMethod
 from .ClassTableStructure import ClassTableStructure, update_etat_struct_prof
 from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
@@ -45,6 +46,8 @@ from .MetOrificePaWidget import MetOrificePaWidget
 from .MetOrificePcWidget import MetOrificePcWidget
 # FloodGate
 from .StructureFgDialog import StructureFgDialog
+from .ClassLaws import ClassLaws
+import numpy as np
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -221,7 +224,7 @@ class ClassStructureEditDialog(QDialog):
             active = self.cc_active.isChecked()
             if active:
                 update_etat_struct_prof(self.mdb,self.id_struct, active=True)
-                self.clmeth.sav_meth(self.id_struct, self.current_meth, self.wgt_met)
+                self.sav_meth(self.id_struct, self.current_meth, self.wgt_met)
             else:
                 update_etat_struct_prof(self.mdb,self.id_struct, active=False)
             self.accept()
@@ -663,3 +666,77 @@ class ClassStructureEditDialog(QDialog):
         wfg = StructureFgDialog(self.mgis, self.id_struct)
         wfg.exec_()
         del wfg
+
+    def sav_meth(self, id_config, idmethod, ui):
+        """
+        Compute law
+        :param id_config: index of hydraulic structure
+        :param idmethod: index of method
+        :param ui: gui object
+        :return:
+        """
+        self.meth = ClassLaws(self.mgis)
+        if idmethod == 0 or idmethod == 4:  # meth
+            list_final = self.meth.bradley(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+        elif idmethod == 1:  # borda
+            list_final = self.meth.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+        elif idmethod == 3:  # orifice
+            list_final = self.meth.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+        else:
+            pass
+
+        self.save_list_final(list_final, id_config, self.tbst.dico_meth_calc[idmethod])
+        if ui is not None:
+            ui.progress_bar(100)
+        self.mgis.add_info(self.meth.msg)
+
+    def save_list_final(self, list_final, id_config, method):
+        """
+        Save in database the law value
+        :param list_final: list of law values
+        :param id_config:  index of hydraulic structure
+        :param method: mehtod of compute
+        :return: nothing
+        """
+        if list_final == []:
+            sql = "SELECT name FROM {0}.{1} WHERE id={2}".format(self.mdb.SCHEMA, 'struct_config', id_config)
+
+            name = self.mdb.run_query(sql, fetch=True)
+            name = name[0][0]
+
+            sql = "UPDATE {0}.{1} SET {2}  WHERE id={3};".format(self.mdb.SCHEMA, 'struct_config', 'active=False',
+                                                                 id_config)
+            self.mdb.run_query(sql)
+
+            self.add_info(
+                "No values for the law because the coefficients leave application domain of the method.\n"
+                "The <<{}>> hydraulic structur is deactivated".format(name))
+        else:
+            self.save_law_st(method, id_config, list_final)
+
+    def save_law_st(self, method, id_config, list_val):
+        """
+        Stock law in database
+        :param method: mehtod of compute
+        :param id_config: index of hydraulic structure
+        :param list_val: value list
+        :return:
+        """
+        """ stock law in database"""
+        self.mdb.delete('struct_laws', where="id_config = '{}'".format(id_config))
+        liste_col = self.mdb.list_columns('struct_laws')
+        list_insert = []
+        list_val = np.array(list_val)
+        for j in self.tbst.dico_law_struct[method].keys():
+            for i, val in enumerate(list_val[:, j]):
+                list_insert.append([id_config, j, i, val])
+        var = ",".join(liste_col)
+
+        sql = ''
+        for a in list_insert:
+            valeurs = str(tuple(a))
+            sql += "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
+                                                                 'struct_laws',
+                                                                 var,
+                                                                 valeurs)
+        self.mdb.run_query(sql)

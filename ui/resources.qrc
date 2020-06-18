@@ -2,7 +2,6 @@
 <RCC>
   <qresource prefix="/plugins/Mascaret" > 
     <file>icones/basinResult.png</file>
-    <file>icones/icon.png</file> 
     <file>icones/icon_base.png</file> 
     <file>icones/dbLoadModel.png</file> 
     <file>icones/dbExtractModel.png</file> 
@@ -27,6 +26,8 @@
     <file>icones/croix.png</file>
     <file>icones/repSav.png</file>
     <file>icones/dbImportModel.png</file>
+    <file>icones/Model.png</file>
+    <file>icones/save_res.png</file>
   </qresource> 
 </RCC>
 

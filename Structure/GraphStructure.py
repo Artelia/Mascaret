@@ -22,7 +22,6 @@ from matplotlib.patches import Polygon as mpoly
 # from shapely.geometry import Polygon as spoly
 from shapely import geometry
 
-from .ClassMethod import ClassMethod
 from ..GraphCommon import GraphCommon
 
 
@@ -32,7 +31,6 @@ class GraphStructure(GraphCommon):
     def __init__(self, mgis=None, lay=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
-        self.tmp = ClassMethod(self.mgis)
         self.gui_graph(lay)
         self.init_ui()
 

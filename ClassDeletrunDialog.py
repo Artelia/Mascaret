@@ -44,7 +44,7 @@ class ClassDeletrunDialog(QDialog):
         self.mdb = self.mgis.mdb
         self.iface = iface
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_delete.ui'), self)
-        self.box = ClassWarningBox(self.mgis)
+        self.box = ClassWarningBox()
         self.listeRuns = []
         self.listeScen = {}
         self.init_gui()

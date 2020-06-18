@@ -18,24 +18,21 @@ email                :
  ***************************************************************************/
 """
 import math as m
-import os
-from shapely.geometry import *
 import numpy as np
-from .ClassMethod import sort_law
 from .ClassPolygone import ClassPolygone
 from .ClassPostPreFG import ClassPostPreFG
+
 
 class ClassLaws:
     """
     Class contain the different methods to create the laws
     """
 
-    def __init__(self, debug=False, mgis = None, masplugPath =''):
+    def __init__(self, mgis):
         self.clpoly = ClassPolygone()
-        self.init_var = ClassPostPreFG()
-
+        self.init_var = ClassPostPreFG(mgis)
+        self.msg =''
         self.grav = 9.81
-        self.debug =debug
 
         self.dico_abc = {}
         self.dico_name_abac = {}
@@ -45,8 +42,8 @@ class ClassLaws:
         self.deb_min = 0.0001
         # flooggate variable
         self.new_z = 99
-        self.mobil_struct= False
-        self.param_fg ={}
+        self.mobil_struct = False
+        self.param_fg = {}
 
     def init_method(self, id_config):
         """
@@ -87,7 +84,7 @@ class ClassLaws:
 
         self.list_zam = np.array(self.list_zav)
 
-    def init_elem(self,id_config, method):
+    def init_elem(self, id_config, method):
         """ get polygon of travers"""
         self.list_poly_trav = self.init_var.select_poly_elem(id_config, 0)
 
@@ -223,14 +220,12 @@ class ClassLaws:
         }
         self.dico_abc = self.init_var.get_abac(self.dico_name_abac[method]['abac'])
 
-
         self.param_g['BIAIOUVRAD'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
         # only meth
         self.list_poly_pil = self.init_var.select_poly_elem(self, id_config, 1)
 
         self.list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
         self.list_q.append(self.param_g['MAXQ'])
-
 
         self.param_g['TOTALOUV'] = 0
         for poly in self.list_poly_trav:
@@ -285,7 +280,7 @@ class ClassLaws:
             if self.param_g['BIAIPIL'] != 0:
                 area_pil_proj += poly_pil.area * coef_cor_biais
             area_pil += poly_pil.area
-        if area_pil_proj == 0  :
+        if area_pil_proj == 0:
             area_pil_proj = area_pil
         # print("area_pil_proj",area_pil_proj)
         # print("area_pil",area_pil)
@@ -324,13 +319,12 @@ class ClassLaws:
         # *************** kb
         list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, "kb_abac", 'M', type_kb)
         kb = np.interp(coefm, list_inter_x, list_inter_y)
-         # print('kb',kb)
+        # print('kb',kb)
 
         # *************** Dkp
         # print(area_pil_proj,ssoh,area_pil)
         j = area_pil_proj / s1
         j = self.check_j(j, int(self.param_g['FORMPIL']), q, zav)
-
 
         # print('j',j)
         list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, 'DKp_abac', 'J',
@@ -438,10 +432,10 @@ class ClassLaws:
         list_final = self.complete_law(list_final)
         if ui is not None:
             ui.progress_bar(90)
-        # if self.DEBUG:
+        # if self.debug:
         #     self.write_csv(list_final)
 
-        return list_final,id_config, method
+        return list_final, id_config, method
 
     def calc_law_brad(self, list_final, zav, ztransi):
         """
@@ -525,7 +519,6 @@ class ClassLaws:
                             break
                         list_ori.append(value)
 
-
         if len(list_ori) > 1:
             idx = np.where(np.array(self.list_q) > list_ori[0][0])[0]
             if len(idx) > 0:
@@ -583,7 +576,7 @@ class ClassLaws:
         :return:
         """
         list_add = []
-        info = sort_law(list_final)
+        info = self.sort_law(list_final)
 
         for id, deb in enumerate(self.list_q):
             if deb == transi[0]:
@@ -621,7 +614,7 @@ class ClassLaws:
         """
         list_add = []
 
-        info = sort_law(list_final)
+        info = self.sort_law(list_final)
         # add Z pour  acroite le point d'infexion
 
         for id, deb in enumerate(self.list_q):
@@ -632,7 +625,7 @@ class ClassLaws:
             idxz = np.where(info[idxq, 2] < ztransi)[0]
             lenid = info.shape[0]
 
-            if len(idxz) > 0  :
+            if len(idxz) > 0:
                 idxz = idxq[0] + idxz[-1]
                 if lenid > idxz + 1:
                     tab_tmp = info[idxz, :]
@@ -679,7 +672,7 @@ class ClassLaws:
         :param list_final: list of law values
         :return: new_list: new list of law values
         """
-        info = sort_law(list_final)
+        info = self.sort_law(list_final)
         unique, counts = np.unique(info[:, 1], return_counts=True)
         nb_val = max(counts)
         list_val = []
@@ -702,7 +695,7 @@ class ClassLaws:
                 new_list = new_list + list(tab) + add_val
             else:
                 new_list += list(tab)
-        if len(new_list)>1:
+        if len(new_list) > 1:
             new_list = self.delete_doublon(new_list)
 
         return new_list
@@ -786,7 +779,7 @@ class ClassLaws:
 
         return q
 
-    def meth_orif(self, zam, zav, zinf, zsup,  larg, cf, cfo, surf):
+    def meth_orif(self, zam, zav, zinf, zsup, larg, cf, cfo, surf):
         """
         Compute orifice law
         :param zam: z upstream
@@ -1091,7 +1084,7 @@ class ClassLaws:
         if ui is not None:
             ui.progress_bar(90)
 
-        # if self.DEBUG:
+        # if self.debug:
         #     self.write_csv(list_final)
 
         return list_final
@@ -1106,7 +1099,7 @@ class ClassLaws:
         """
 
         self.init_method(id_config)
-        a= self.init_elem(id_config, method)
+        a = self.init_elem(id_config, method)
         list_final = []
 
         qmax = self.deb_min  # self.param_g['MINQ']
@@ -1164,7 +1157,7 @@ class ClassLaws:
         list_final, self.list_q = self.interpol_list_final_for_new_q(list_final, pasq=self.param_g['PASQ'])
         list_final = self.transition_law(list_final, ztransi)
         list_final = self.complete_law(list_final)
-        # if self.DEBUG:
+        # if self.debug:
         #     self.write_csv(list_final)
         return list_final
 
@@ -1220,12 +1213,12 @@ class ClassLaws:
             else:
                 self.param_g['NBTRAVE'] -= 1
                 self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
-        if self.param_g['NBTRAVE'] <=0:
+        if self.param_g['NBTRAVE'] <= 0:
             self.add_info("WARNING, there are not hole in structure.")
 
         self.list_poly_trav = list_poly_trav_tmp
 
-    def init_mobil_param(self,mobil_struct, param_fg, new_z):
+    def init_mobil_param(self, mobil_struct, param_fg, new_z):
         """
         initialise parameter of moving structure
         :param param_fg : parameters of the floodgate
@@ -1237,10 +1230,10 @@ class ClassLaws:
         self.param_fg = param_fg
         self.mobil_struct = mobil_struct
 
-    def add_info(self,txt):
-        self.msg += txt+'\n'
+    def add_info(self, txt):
+        self.msg += txt + '\n'
 
-    def write_csv(self,  list_final,masplugPath, name=r"mascaret\law_tmp.csv"):
+    def write_csv(self, list_final, masplugPath, name=r"mascaret\law_tmp.csv"):
         """
         Write CSV to check law
         :param name : file name
@@ -1253,3 +1246,16 @@ class ClassLaws:
         for val in list_final:
             f.write('{}; {} ;{} \n'.format(val[0], val[1], val[2]))
         f.close()
+
+    def sort_law(self, list_final):
+        """
+        sort the law
+        :param list_final: law data
+        :return:
+        """
+        info = np.array(list_final)
+        # trie de la colonne 0 à 2
+        info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
+        info = info[info[:, 1].argsort(kind='mergesort')]
+        info = info[info[:, 0].argsort(kind='mergesort')]
+        return info
