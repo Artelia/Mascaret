@@ -67,6 +67,9 @@ from matplotlib.figure import Figure
 import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
 from .WaterQuality.ClassTableWQ import ClassTableWQ
+from datetime import datetime
+
+
 
 class GraphCommon(QDialog):
     def __init__(self, mgis=None):
@@ -213,10 +216,6 @@ class DraggableLegend:
             self.gotLegend = False
 
 
-
-
-
-
 class GraphCommonNew():
     def __init__(self, lay=None, wgt=None):
         self.fig = Figure()
@@ -232,6 +231,8 @@ class GraphCommonNew():
         self.list_var = []
         self.courbes = []
         self.annotation = []
+        self.courbeLaisses = []
+
         self.fig.canvas.mpl_connect('button_release_event', self.graph_off_click)
         self.fig.canvas.mpl_connect('button_press_event', self.graph_on_click)
         self.fig.canvas.mpl_connect('motion_notify_event', self.graph_on_press)
@@ -361,11 +362,7 @@ class GraphCommonNew():
 
     def maj_limites(self):
         no_data = True
-        miniX = 999999.
-        maxiX = -999999.
-        miniZ = 999999.
-        maxiZ = -999999.
-
+        fst = True
         for courbe in self.courbes:
             if courbe.get_visible():
                 lx, lz = courbe.get_data()
@@ -373,10 +370,17 @@ class GraphCommonNew():
                 lz = [z for z in lz if z is not None]
                 if lx and lz:
                     no_data = False
-                    miniX = min(miniX, min(lx))
-                    maxiX = max(maxiX, max(lx))
-                    miniZ = min(miniZ, min(lz) - 1)
-                    maxiZ = max(maxiZ, max(lz) + 1)
+                    if fst :
+                        fst = False
+                        miniX = min(lx)
+                        maxiX = max(lx)
+                        miniZ = min(lz) - 1
+                        maxiZ = max(lz) + 1
+                    else :
+                        miniX = min(miniX, min(lx))
+                        maxiX = max(maxiX, max(lx))
+                        miniZ = min(miniZ, min(lz) - 1)
+                        maxiZ = max(maxiZ, max(lz) + 1)
 
         if no_data:
             self.axes.set_xlim(0., 1.)
@@ -388,6 +392,33 @@ class GraphCommonNew():
         self.fig.autofmt_xdate()
         self.canvas.draw()
 
+
+    def maj_laisses(self, laisses):
+        """ add flood mark in graph"""
+
+        self.courbeLaisses.set_visible(False)
+        self.courbeLaisses = self.axes.scatter([], [], label="Flood marks")
+        for e in self.etiquetteLaisses:
+            self.axes.texts.remove(e)
+        self.etiquetteLaisses = []
+
+
+        self.courbeLaisses = self.axes.scatter(laisses['x'], laisses['z'],
+                                               color=laisses["couleurs"],
+                                               marker='+',
+                                               label="Flood marks",
+                                               s=80,
+                                               linewidth=laisses['taille'])
+
+        self.courbeLaisses.set_visible(True)
+        for x, z, c in zip(laisses['x'], laisses['z'], laisses["couleurs"]):
+            temp = self.axes.annotate(str(z), xy=(x, z), xytext=(3, 3),
+                                      ha='left', va='bottom',
+                                      fontsize='x-small',
+                                      color=c,
+                                      textcoords='offset points', clip_on=True)
+
+            self.etiquetteLaisses.append(temp)
 
 
 class DraggableLegendNew:

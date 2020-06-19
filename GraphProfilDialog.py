@@ -94,6 +94,8 @@ except AttributeError:
         return QApplication.translate(context, text, disambig)
 
 
+
+
 class IdentifyFeatureTool(QgsMapToolIdentify):
     def __init__(self, main):
         self.mgis = main
@@ -179,10 +181,11 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                             if 'zero' in selection.keys():
                                 selection['zero'].append(f['zero'])
                     # self.mgis.add_info('graph {0}'.format(results[0].mFeature))
-
-                    graph_hyd = GraphHydro(feature, self.mgis, selection, feature['abscissa'], 't')
-                    # graph_hyd.exec_()
+                    graph_hyd = GraphResultDialog(self.mgis, "hydro", feature["gid"])
                     graph_hyd.show()
+                    # graph_hyd = GraphHydro(feature, self.mgis, selection, feature['abscissa'], 't')
+                    # # # graph_hyd.exec_()
+                    # graph_hyd.show()
                 else:
                     self.mgis.add_info('no active profiles')
 
@@ -191,9 +194,11 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 # chaine='Branche ' + str(feature['branche'])
                 branches = self.mgis.mdb.select_distinct("branch", "branchs", "active")
                 if feature['branch'] in branches['branch']:
-                    graph_hyd_pk = GraphHydro(feature, self.mgis, {}, '', 'pk')
-                    # graph_hyd.exec_()
+                    graph_hyd_pk = GraphResultDialog(self.mgis, "hydro_pk", feature["gid"])
                     graph_hyd_pk.show()
+                    # graph_hyd_pk = GraphHydro(feature, self.mgis, {}, '', 'pk')
+                    # # graph_hyd.exec_()
+                    # graph_hyd_pk.show()
                 else:
                     self.mgis.add_info('no active branch')
 

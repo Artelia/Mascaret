@@ -47,8 +47,13 @@ class CheckTab():
                            '3.0.2': {'add_tab': [{'tab': Maso.results, 'overwrite': False},
                                                  {'tab': Maso.results_sect, 'overwrite': False},
                                                  {'tab': Maso.results_var, 'overwrite': False}],
-                                     'fct': [lambda: self.create_var_result(), lambda: self.convert_all_result()],
+                                     'alt_tab': [{'tab': 'runs', 'sql': ["ALTER TABLE {0}.runs ADD COLUMN IF NOT "
+                                                                     "EXISTS init_date timestamp without time zone;"]}],
+                                     'fct': [lambda: self.create_var_result(),
+                                             lambda: self.convert_all_result(),
+                                             lambda: self.fill_init_date_runs()],
                                      'del_tab': ['results_float', 'results_int']},
+
                            }
 
         self.list_hist_version = ['3.0.0', '3.0.1', '3.0.2']
@@ -378,3 +383,23 @@ class CheckTab():
             if modif:
                 with open(name_file, 'w') as file:
                     json.dump(data, file)
+
+
+
+    def fill_init_date_runs(self):
+        info = self.mdb.select('runs',  list_var=["id","t",'init_date'])
+        for i, id in enumerate(info['id']):
+            ltime = info['t'][i]
+            init_date = info['init_date'][i]
+            if not init_date:
+                ltime =ltime.split(",")
+                init_date = ltime[0].strip()
+                try :
+                    date  = datetime.datetime.strptime(init_date, '%Y-%m-%d %H:%M')
+                    init_date = "{:%Y-%m-%d %H:%M:00}".format(date)
+                    sql = "UPDATE {0}.runs SET init_date ='{1}' WHERE id ={2}".format(self.mdb.SCHEMA,
+                                                                                         init_date,
+                                                                                         id)
+                    self.mdb.run_query(sql)
+                except ValueError:
+                    init_date = None

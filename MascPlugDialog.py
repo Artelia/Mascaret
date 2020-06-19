@@ -179,9 +179,7 @@ class MascPlugDialog(QMainWindow):
 
         # Structures
         self.ui.actionStructures.triggered.connect(self.fct_structures)
-        #self.ui.actionTest_struct.triggered.connect(self.fct_test)
         self.ui.actionExport_Model_Files.triggered.connect(self.fct_creat_run)
-        self.ui.actionImport_Results.triggered.connect(self.import_resu_model)
         self.ui.actionStructures_weirs.triggered.connect(self.fct_mv_dam)
         if self.cond_api:
             self.ui.actionStructures_weirs.setEnabled(False)
@@ -193,9 +191,14 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
         self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
         self.ui.actionAdd_Structure_temporal_tables.triggered.connect(self.fct_add_floogate_tables)
-        # TODO
-        # self.ui.actionUpdate_pk.triggered.connect(self.update_pk)
+
         self.ui.action_update_bin.triggered.connect(self.download_bin)
+        # TODO Finaliser
+        # self.ui.actionUpdate_pk.triggered.connect(self.update_pk)
+        self.ui.actionImport_Results.triggered.connect(self.import_resu_model)
+        self.ui.actionImport_Results.setVisible(False)
+        self.ui.actionTest_struct.triggered.connect(self.fct_test)
+        # self.ui.actionTest_struct.setVisible(False)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -901,8 +904,8 @@ Version : {}
         del dlg
         del clam
 
-
     def fct_test(self):
+
         pass
 
         # clam.create_mobil_gate_file()
