@@ -879,10 +879,9 @@ $BODY$
             lvar = '*'
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        #print(sql.format(self.SCHEMA, table, where, order, lvar))
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order, lvar), fetch=True, namvar=True)
         if results == None or namCol == None:
-            print(sql.format(self.SCHEMA, table, where, order, lvar))
+            print("error : ",sql.format(self.SCHEMA, table, where, order, lvar))
             return None
         cols = [col[0] for col in namCol]
         dico = {}
@@ -931,17 +930,20 @@ $BODY$
             where = "WHERE " + where
         sql = "SELECT DISTINCT {0} FROM {1}.{2} {3} ORDER BY {4};"
         (results, namCol) = self.run_query(sql.format(var, self.SCHEMA, table, where, ordre), fetch=True, namvar=True)
-        cols = [col[0] for col in namCol]
-        dico = {}
-        for row in results:
-            for i, val in enumerate(row):
-                if cols[i] not in dico.keys():
-                    dico[cols[i]] = []
-                try:
-                    dico[cols[i]].append(eval(val))
-                except:
-                    dico[cols[i]].append(val)
-        return dico
+        if namCol and results :
+            cols = [col[0] for col in namCol]
+            dico = {}
+            for row in results:
+                for i, val in enumerate(row):
+                    if cols[i] not in dico.keys():
+                        dico[cols[i]] = []
+                    try:
+                        dico[cols[i]].append(eval(val))
+                    except:
+                        dico[cols[i]].append(val)
+            return dico
+        print(sql.format(var, self.SCHEMA, table, where, ordre))
+        return  None
 
     #
     def select_max(self, var, table, where=None):
@@ -952,9 +954,13 @@ $BODY$
             sql = "SELECT MAX({0}) FROM {1}.{2};".format(var, self.SCHEMA, table)
         results = self.run_query(sql, fetch=True, arraysize=1)
         # results obj: generator
-        for row in results:
-            var = row[0][0]
-        return var
+        if results:
+            for row in results:
+                var = row[0][0]
+            return var
+        else:
+             print("error : ", sql.format(self.SCHEMA, table, where, order, lvar))
+             return None
 
     def select_min(self, var, table, where=None):
         """select the max in the table for the "where" variable"""

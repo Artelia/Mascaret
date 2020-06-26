@@ -23,6 +23,7 @@ from . import MasObject as Maso
 from copy import deepcopy
 from ..Function import read_version
 from ..ui.custom_control import ClassWarningBox
+from datetime import datetime
 
 
 # from ..ClassParameterDialog import ClassParameterDialog
@@ -35,7 +36,17 @@ class CheckTab():
         self.box = ClassWarningBox()
         # for add table [ 'add_tab': [list_table]]
         # for delete [ ['DEL TAB',[list_table]]
-        self.dico_modif = {'3.0.0': {},
+        self.dico_modif = {'3.0.0': {'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
+                                                 {'tab': Maso.profil_struct, 'overwrite': False},
+                                                 {'tab': Maso.struct_param, 'overwrite': False},
+                                                 {'tab': Maso.struct_elem, 'overwrite': False},
+                                                 {'tab': Maso.struct_elem_param, 'overwrite': False},
+                                                 {'tab': Maso.struct_abac, 'overwrite': False},
+                                                 {'tab': Maso.struct_laws, 'overwrite': False}],
+                                     'fct': [lambda: self.fill_struct()],
+                                     'alt_tab': [{'tab': 'runs', 'sql': ["ALTER TABLE {0}.runs ADD COLUMN IF NOT "
+                                                                         "EXISTS comments text;"]}],
+                                     },
                            '3.0.1': {'add_tab': [{'tab': Maso.struct_fg, 'overwrite': False},
                                                  {'tab': Maso.struct_fg_val, 'overwrite': False},
                                                  {'tab': Maso.weirs_mob_val, 'overwrite': False}],
@@ -48,7 +59,7 @@ class CheckTab():
                                                  {'tab': Maso.results_sect, 'overwrite': False},
                                                  {'tab': Maso.results_var, 'overwrite': False}],
                                      'alt_tab': [{'tab': 'runs', 'sql': ["ALTER TABLE {0}.runs ADD COLUMN IF NOT "
-                                                                     "EXISTS init_date timestamp without time zone;"]}],
+                                                                         "EXISTS init_date timestamp without time zone;"]}],
                                      'fct': [lambda: self.create_var_result(),
                                              lambda: self.convert_all_result(),
                                              lambda: self.fill_init_date_runs()],
@@ -56,7 +67,7 @@ class CheckTab():
 
                            }
 
-        self.list_hist_version = ['3.0.0', '3.0.1', '3.0.2']
+        self.list_hist_version = ['0.0.0', '3.0.0', '3.0.1', '3.0.2']
 
     def update_adim(self):
         """
@@ -67,7 +78,7 @@ class CheckTab():
 
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         version = read_version(self.mgis.masplugPath)
-        # self.all_version(tabs, '3.0.1')
+        # self.all_version(tabs, '0.0.0')
 
         if not "admin_tab" in tabs:
             try:
@@ -125,6 +136,7 @@ class CheckTab():
                                                     self.del_num_v(tab_name)
                                             else:
                                                 test_gd = False
+                                                tab_false = tab_name
                                             if tab_name in tabs_no:
                                                 tabs_no.remove(tab_name)
                                     else:
@@ -134,7 +146,10 @@ class CheckTab():
                     if test_gd:
                         self.all_version(tabs_no, ver)
                     else:
+
                         self.mgis.add_info('ERROR: Update table ************')
+                        if self.mgis.DEBUG:
+                            self.mgis.add_info('ERROR :{}'.format(tab_name))
             else:
                 self.mgis.add_info("********* Cancel of update table ***********")
 
@@ -384,22 +399,29 @@ class CheckTab():
                 with open(name_file, 'w') as file:
                     json.dump(data, file)
 
-
-
     def fill_init_date_runs(self):
-        info = self.mdb.select('runs',  list_var=["id","t",'init_date'])
+        info = self.mdb.select('runs', list_var=["id", "t", 'init_date'])
         for i, id in enumerate(info['id']):
             ltime = info['t'][i]
             init_date = info['init_date'][i]
             if not init_date:
-                ltime =ltime.split(",")
+                ltime = ltime.split(",")
                 init_date = ltime[0].strip()
-                try :
-                    date  = datetime.datetime.strptime(init_date, '%Y-%m-%d %H:%M')
+                try:
+                    date = datetime.strptime(init_date, '%Y-%m-%d %H:%M')
                     init_date = "{:%Y-%m-%d %H:%M:00}".format(date)
                     sql = "UPDATE {0}.runs SET init_date ='{1}' WHERE id ={2}".format(self.mdb.SCHEMA,
-                                                                                         init_date,
-                                                                                         id)
+                                                                                      init_date,
+                                                                                      id)
                     self.mdb.run_query(sql)
                 except ValueError:
                     init_date = None
+
+    def fill_struct(self):
+        self.mdb.insert_abacus_table(self.mgis.dossier_struct)
+        list_col = self.mdb.list_columns('profiles')
+        sql = ''
+        if 'struct' in list_col:
+            sql = "ALTER TABLE {0}.profiles DROP COLUMN IF EXISTS  struct;\n"
+        sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer DEFAULT 0;"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))

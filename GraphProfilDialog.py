@@ -154,7 +154,8 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 gid = results[0].mFeature["gid"]
                 prof_a = self.mgis.mdb.select_distinct("name", "profiles", "active")
                 if results[0].mFeature['name'] in prof_a['name']:
-                    graph_res = GraphProfilRes(gid, self.mgis)
+                    graph_res = GraphResultDialog(self.mgis, "hydro_profil", results[0].mFeature["abscissa"])
+                   # graph_res = GraphProfilRes(gid, self.mgis)
                     # graph_res.exec_()
                     graph_res.show()
                 else:
@@ -204,6 +205,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
             if flag_casier_r and couche in ('basins', 'links'):
                 feature = results[0].mFeature
+
                 selection_nontrie = {'num': [], 'nom': []}
                 selection = {'num': [], 'nom': []}
 
@@ -226,10 +228,21 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     selection['nom'].append(selection_nontrie['nom'][index])
                     selection['num'].append(selection_nontrie['num'][index])
 
-                # self.mgis.add_info('nom de la couche choisie' +str(couche))
 
-                graph_basin_link = GraphBasin(feature, self.mgis, selection, feature['name'], couche)
-                graph_basin_link.show()
+                print(selection)
+                if couche == 'links':
+                    links = self.mgis.mdb.select_distinct("name", "links", "active")
+                    if feature['name'] in links['name']:
+                        graph_link = GraphResultDialog(self.mgis, "hydro_link", feature["gid"])
+                        graph_link.show()
+                else:
+
+                    basins = self.mgis.mdb.select_distinct("name", "basins", "active")
+                    if feature['name'] in basins['name']:
+                        graph_basin = GraphResultDialog(self.mgis, "hydro_basin", feature["gid"])
+                        graph_basin.show()
+
+
         return
 
 
@@ -1725,7 +1738,7 @@ class GraphHydro(GraphCommon):
 
         self.feature = feature
         self.position = position
-        self.select = select
+        ft = select
         self.type = type
         self.comboRun = self.ui.comboBox_State
         self.comboScen = self.ui.comboBox_Scenar

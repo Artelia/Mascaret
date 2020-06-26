@@ -397,7 +397,7 @@ class MascPlugDialog(QMainWindow):
                 self.chkt.update_adim()
             except Exception as e:
                 self.add_info("********* Echec of update table ***********")
-                # print(e)
+                print(e)
 
             self.mdb.load_model()
             self.mdb.last_schema = self.mdb.SCHEMA

@@ -23,8 +23,9 @@ from qgis.gui import *
 from qgis.PyQt.uic import *
 from qgis.PyQt.QtCore import *
 
-if int(qVersion()[0])<5:   #qt4
+if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
+
     try:
         from matplotlib.backends.backend_qt4agg \
             import FigureCanvasQTAgg as FigureCanvas
@@ -38,8 +39,9 @@ if int(qVersion()[0])<5:   #qt4
     except:
         from matplotlib.backends.backend_qt4agg \
             import NavigationToolbar2QT as NavigationToolbar
-else: #qt4
+else:  # qt4
     from qgis.PyQt.QtWidgets import *
+
     try:
         from matplotlib.backends.backend_qt5agg \
             import FigureCanvasQTAgg as FigureCanvas
@@ -57,6 +59,8 @@ else: #qt4
 
 try:
     _encoding = QApplication.UnicodeUTF8
+
+
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
@@ -65,10 +69,10 @@ except AttributeError:
 
 from matplotlib.figure import Figure
 import matplotlib.dates as mdates
+import matplotlib.lines as mlines
 import matplotlib.ticker as ticker
 from .WaterQuality.ClassTableWQ import ClassTableWQ
 from datetime import datetime
-
 
 
 class GraphCommon(QDialog):
@@ -128,7 +132,7 @@ class GraphCommon(QDialog):
                                     fancybox=False, shadow=False, fontsize=7.)
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
-        #self.leg.draggable(True)
+        # self.leg.draggable(True)
         DraggableLegend(self.leg)
         self.lined = dict()
 
@@ -226,6 +230,8 @@ class GraphCommonNew():
         self.var_x = None
         self.unit_x = "num"
         self.unit_y = None
+        self.flood_mark = False
+        self.obs = False
 
     def init_ui_common_p(self):
         self.list_var = []
@@ -262,8 +268,14 @@ class GraphCommonNew():
                 courbe.set_visible(vis)
                 if vis:
                     art.set_alpha(1.0)
+                    if courbe.get_label() == "Flood marks":
+                        for e in self.etiquetteLaisses:
+                            e.set_visible(True)
                 else:
                     art.set_alpha(0.2)
+                    if courbe.get_label() == "Flood marks":
+                        for e in self.etiquetteLaisses:
+                            e.set_visible(False)
                 self.maj_limites()
 
     def graph_on_click(self, evt):
@@ -331,9 +343,16 @@ class GraphCommonNew():
         self.v_line.set_visible(True)
         self.canvas.draw()
 
-    def init_legende(self):
-        listeNoms = [c.get_label() for c in self.courbes]
-        self.leg = self.axes.legend(self.courbes, listeNoms, loc='upper right',
+    def init_legende(self, handles=None):
+        if handles:
+            handles = handles
+        else:
+            handles = self.courbes
+        listeNoms = []
+        for c in self.courbes:
+            if c.get_visible():
+                listeNoms.append(c.get_label())
+        self.leg = self.axes.legend(handles, listeNoms, loc='upper right',
                                     fancybox=False, shadow=False, fontsize=7.)
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
@@ -365,22 +384,25 @@ class GraphCommonNew():
         fst = True
         for courbe in self.courbes:
             if courbe.get_visible():
-                lx, lz = courbe.get_data()
-                lx = [x for x in lx if x is not None]
-                lz = [z for z in lz if z is not None]
-                if lx and lz:
-                    no_data = False
-                    if fst :
-                        fst = False
-                        miniX = min(lx)
-                        maxiX = max(lx)
-                        miniZ = min(lz) - 1
-                        maxiZ = max(lz) + 1
-                    else :
-                        miniX = min(miniX, min(lx))
-                        maxiX = max(maxiX, max(lx))
-                        miniZ = min(miniZ, min(lz) - 1)
-                        maxiZ = max(maxiZ, max(lz) + 1)
+                try:
+                    lx, lz = courbe.get_data()
+                    lx = [x for x in lx if x is not None]
+                    lz = [z for z in lz if z is not None]
+                    if lx and lz:
+                        no_data = False
+                        if fst:
+                            fst = False
+                            miniX = min(lx)
+                            maxiX = max(lx)
+                            miniZ = min(lz) - 1
+                            maxiZ = max(lz) + 1
+                        else:
+                            miniX = min(miniX, min(lx))
+                            maxiX = max(maxiX, max(lx))
+                            miniZ = min(miniZ, min(lz) - 1)
+                            maxiZ = max(maxiZ, max(lz) + 1)
+                except AttributeError as e:
+                    pass
 
         if no_data:
             self.axes.set_xlim(0., 1.)
@@ -392,16 +414,10 @@ class GraphCommonNew():
         self.fig.autofmt_xdate()
         self.canvas.draw()
 
-
     def maj_laisses(self, laisses):
         """ add flood mark in graph"""
 
-        self.courbeLaisses.set_visible(False)
-        self.courbeLaisses = self.axes.scatter([], [], label="Flood marks")
-        for e in self.etiquetteLaisses:
-            self.axes.texts.remove(e)
-        self.etiquetteLaisses = []
-
+        self.clean_laisse()
 
         self.courbeLaisses = self.axes.scatter(laisses['x'], laisses['z'],
                                                color=laisses["couleurs"],
@@ -419,6 +435,47 @@ class GraphCommonNew():
                                       textcoords='offset points', clip_on=True)
 
             self.etiquetteLaisses.append(temp)
+
+        handles = [c for c in self.courbes]
+        handles.append(mlines.Line2D([], [], color='darkcyan', marker='+',
+                                     linewidth=0,
+                                     markersize=10, label='Flood marks'))
+        self.courbes.append(self.courbeLaisses)
+
+        self.init_legende(handles=handles)
+        self.maj_limites()
+
+    def maj_obs(self, obs):
+        pass
+        #
+        #
+        #         self.courbeObs.set_data(self.obs['date'], self.obs['valeur'])
+        #         self.courbeObs.set_visible(True)
+        #     else:
+        #         self.courbeObs.set_visible(False)
+        #         self.obs = {}
+        #
+        # except:
+        #     self.courbeObs.set_visible(False)
+        #     self.obs = {}
+
+    def clean_laisse(self):
+        """flood mark"""
+        self.courbeLaisses = self.axes.scatter([], [], label="Flood marks",
+                                               marker='+', color='darkcyan')
+        self.courbeLaisses.set_visible(False)
+        for e in self.etiquetteLaisses:
+            self.axes.texts.remove(e)
+        self.etiquetteLaisses = []
+
+    def clean_obs(self):
+        """ clean obs graph"""
+
+        self.courbeObs, = self.axes.plot([], [], color='grey',
+                                         marker='o', markeredgewidth=0,
+                                         zorder=90, label='Observation')
+
+        self.courbeObs.set_visible(False)
 
 
 class DraggableLegendNew:

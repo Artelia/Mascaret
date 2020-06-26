@@ -64,7 +64,9 @@ class GraphStructure(GraphCommon):
             param = {}
             sql = "SELECT x, z FROM {0}.profil_struct WHERE id_config = {1} ORDER BY id_order".format(self.mdb.SCHEMA,
                                                                                                       config)
+
             rows = self.mdb.run_query(sql, fetch=True)
+
             dico_profil = {'x': [r[0] for r in rows], 'z': [r[1] for r in rows]}
             minx, miny, maxx, maxy = min(dico_profil['x']), min(dico_profil['z']) - 1, \
                                      max(dico_profil['x']), max(dico_profil['z'])
