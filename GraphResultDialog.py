@@ -433,11 +433,7 @@ class GraphResultDialog(QWidget):
             self.cur_run = self.cb_scen.itemData(self.cb_scen.currentIndex())
 
             if self.typ_graph == 'hydro_profil':
-
-
                 self.init_cb_det(self.cur_pknum)
-                self.get_profil_data()
-                self.update_data_profil()
             else:
                 self.init_cb_det(self.cur_pknum)
                 self.update_data()
@@ -823,14 +819,14 @@ class GraphResult(GraphCommonNew):
 
     def init_graph_profil(self, data, x_var):
 
-        # TODO      self.courbes[i].set_data(data["x"], data[v])
-         # IndexError: list index out of range ?
+
         self.set_data(data, x_var)
-        var = ['ZREF']
-        print(self.courbes)
-        for i, v in enumerate(var):
-            self.courbes[i].set_data(data["x"], data[v])
-            self.courbes[i].set_visible(True)
+        print("eee",self.courbes)
+        if len(self.courbes)>0:
+            self.courbes[0].set_data(data["x"], data['ZREF'])
+            self.courbes[0].set_visible(True)
+        else:
+            return
 
         for patch in self.aire:
             if patch in self.axes.patches:
