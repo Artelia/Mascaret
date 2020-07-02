@@ -822,11 +822,15 @@ class GraphResult(GraphCommonNew):
         self.maj_limites()
 
     def init_graph_profil(self, data, x_var):
+
+        # TODO      self.courbes[i].set_data(data["x"], data[v])
+         # IndexError: list index out of range ?
         self.set_data(data, x_var)
-        leglines = self.leg.get_lines()
-        self.courbes[0].set_data(data["x"], data['ZREF'])
-        self.courbes[0].set_visible(True)
-        leglines[0].set_alpha(1.0)
+        var = ['ZREF']
+        print(self.courbes)
+        for i, v in enumerate(var):
+            self.courbes[i].set_data(data["x"], data[v])
+            self.courbes[i].set_visible(True)
 
         for patch in self.aire:
             if patch in self.axes.patches:
