@@ -106,7 +106,7 @@ class GraphResultDialog(QWidget):
             elif self.typ_graph == "hydro_basin" or self.typ_graph == "hydro_link":
                 self.x_var = "time"
                 self.cur_pknum = id
-                self.sql_where = "results.time = {1}"
+                self.sql_where =  "results.pknum = {1}"
                 if self.typ_graph == 'hydro_link':
                     self.typ_res = 'link'
                 else:
@@ -265,16 +265,16 @@ class GraphResultDialog(QWidget):
         :param id_run:
         :return:
         """
-        if id_run:
-            sql = "SELECT DISTINCT * FROM {0}.results_var WHERE type_res = '{1}' " \
-                  "AND id in (SELECT DISTINCT var FROM {0}.results WHERE " \
-                  "id_runs={2})".format(self.mdb.SCHEMA,
-                                        typ_res,
-                                        id_run)
-        else:
-            sql = "SELECT DISTINCT * FROM {0}.results_var WHERE type_res = '{1}'".format(self.mdb.SCHEMA,
+        #
+        # if id_run:
+        #     sql = "SELECT DISTINCT * FROM {0}.results_var WHERE type_res = '{1}' " \
+        #           "AND id in (SELECT DISTINCT var FROM {0}.results WHERE " \
+        #           "id_runs={2})".format(self.mdb.SCHEMA,
+        #                                 typ_res,
+        #                                 id_run)
+        # else:
+        sql = "SELECT DISTINCT * FROM {0}.results_var WHERE type_res = '{1}'".format(self.mdb.SCHEMA,
                                                                                          typ_res)
-
         rows = self.mdb.run_query(sql, fetch=True)
 
         liste = []
@@ -449,15 +449,12 @@ class GraphResultDialog(QWidget):
                                                                    self.typ_res,
                                                                    table,
                                                                    num)
-            # sql = "SELECT DISTINCT time FROM  {0}.results" \
-            #       " WHERE pknum = (SELECT linknum FROM  {0}.links WHERE gid ={1} AND active=True )" \
-            #       "AND  var IN (SELECT id FROM {0}.results_var WHERE type_res = '{2}')" \
-            #       "ORDER BY time" .format(self.mgis.mdb.SCHEMA,id,self.typ_res)
 
             rows = self.mdb.run_query(sql, fetch=True)
             for row in rows:
                 self.cb_det.addItem(row[0], row[1])
             self.cb_det.setCurrentIndex(self.cb_det.findData(id))
+            self.sld_det.setMaximum(len(rows) - 1)
 
     def scen_changed(self):
         if self.cb_scen.currentIndex() != -1:
@@ -477,7 +474,9 @@ class GraphResultDialog(QWidget):
             elif self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
                 lst_graph = self.get_lst_graph_opt(self.cur_run)
             elif self.typ_graph == "hydro_basin" or self.typ_graph == "hydro_link":
+
                 lst_graph = self.get_lst_graph_bl(self.typ_res, self.cur_run)
+
             for graph in lst_graph:
                 if graph["id"] == self.cur_graph:
                     self.cur_vars = graph["vars"]
@@ -485,15 +484,6 @@ class GraphResultDialog(QWidget):
                     self.graph_obj.init_mdl(graph["vars"], self.cur_vars_lbl, graph["colors"], graph["unit"],graph['name'] )
                     break
             self.update_data()
-        x_var_ = self.x_var
-        print(x_var_)
-        if self.x_var == 'time':
-            if self.date:
-                x_var_ = 'date'
-
-        self.update_laisse(self.cur_data, x_var_)
-        self.update_obs()
-        # TODO obs
 
     def graph_changed_profil(self):
 
@@ -592,7 +582,6 @@ class GraphResultDialog(QWidget):
                   "ORDER BY {1}".format(self.mgis.mdb.SCHEMA, self.x_var, self.cur_run,
                                         sqlv, sqlw, sql_hyd_pk)
 
-
             rows = self.mdb.run_query(sql, fetch=True)
 
 
@@ -648,6 +637,11 @@ class GraphResultDialog(QWidget):
 
             self.graph_obj.init_graph(self.cur_data, x_var_)
 
+            if self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
+                self.update_laisse(self.cur_data, x_var_)
+                self.update_obs()
+
+
     def update_laisse(self, cur_data, var_x):
         """
         To graph the flood mark
@@ -695,9 +689,8 @@ class GraphResultDialog(QWidget):
                 else:
                     courbe_lais["couleurs"].append("black")
                     courbe_lais["taille"].append(1)
-            print('autre black')
         else:
-            print('black')
+
             courbe_lais["couleurs"] = ["black"] * len(courbe_lais["x"])
             courbe_lais["taille"] = [1] * len(courbe_lais["x"])
 
@@ -718,7 +711,7 @@ class GraphResultDialog(QWidget):
             mini = min(self.cur_data["date"])
             maxi = max(self.cur_data["date"])
 
-            sql = "SELECT code FROM {0}.profiles " \
+            sql = "SELECT code FROM {0}.outputs " \
                   "WHERE active AND abscissa = {1};".format(self.mdb.SCHEMA, self.cur_pknum)
             rows = self.mdb.run_query(sql, fetch=True)
             if rows:
