@@ -346,13 +346,13 @@ class ClassParameterDialog(QDialog):
         else:
             return False
 
-    @staticmethod
-    def selb(obj):
+
+    def selb(self,obj):
         """function selectbox"""
         return lambda: self.selectbox(obj)
 
-    @staticmethod
-    def selectbox(box):
+
+    def selectbox(self,box):
         """ function allow to select  or not for checkBox"""
 
         for checkbox in box.findChildren(QCheckBox):

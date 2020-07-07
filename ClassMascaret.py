@@ -156,6 +156,7 @@ class ClassMascaret:
                         lit_min_d = requete["rightminbed"][i]
                         if lit_min_d is not None and lit_min_g is None:
                             lit_min_g = 0.0
+
                         if branche is not None and abs is not None and temp_x is not None \
                                 and temp_z is not None and lit_min_g is not None and lit_min_d is not None:
                             tab_z = []
@@ -166,7 +167,6 @@ class ClassMascaret:
                                 tab_z.append(self.around(var2))
                             # tab_x = list(map(lambda x: round(float(x), 2), temp_x.split()))
                             # tab_z = list(map(lambda x: round(float(x), 2), tempZ.split()))
-
                             points = geom.asMultiPolyline()[0]
                             (cood1X, cood1Y) = points[0]
                             (cood2X, cood2Y) = points[1]
@@ -202,7 +202,7 @@ class ClassMascaret:
 
             self.mgis.add_info("Creation the geometry is done")
         except Exception as e:
-            self.mgis.add_info("Error: save the geometry")
+            self.mgis.add_info("Error: save the geometry {}-{}".format(branche, nom))
             self.mgis.add_info(str(e))
             # Fonction de creation du fichier .casier avec la loi surface-volume
 
@@ -1401,7 +1401,7 @@ class ClassMascaret:
                 if not ok or not self.check_scenar(scen, run):
                     if self.mgis.DEBUG:
                         self.mgis.add_info("Canceled Simulation because of {0} already exists.".format(scen))
-                    return
+                    return None, None, None, None
                 comments = self.fct_comment()
                 dict_scen = {'name': [scen]}
 
@@ -1619,6 +1619,9 @@ class ClassMascaret:
         :return:
         """
         par, dict_scen, dict_lois, comments = self.mascaret_init(noyau, run, only_init)
+        if not par or not dict_scen or not dict_lois:
+            return
+
 
         for i, scen in enumerate(dict_scen['name']):
             if self.mgis.DEBUG:

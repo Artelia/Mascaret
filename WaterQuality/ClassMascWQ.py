@@ -52,10 +52,14 @@ class ClassMascWQ:
         self.dossierFileMasc = file
 
         sql = "SELECT {} FROM {}.parametres WHERE parametre = 'modeleQualiteEau'".format('steady', self.schema)
+        print(sql)
         result = self.mdb.run_query(sql, fetch=True)
-
-        self.cur_wq_mod = self.tbwq.dico_wq_mod[int(result[0][0])]
-        self.cur_wq_mod_int = int(result[0][0])
+        if not result:
+            val = 1
+        else:
+            val = result[0][0]
+        self.cur_wq_mod = self.tbwq.dico_wq_mod[int(val)]
+        self.cur_wq_mod_int = int(val)
 
     def create_filephy(self, dossier=None):
         """creation .phy file """

@@ -195,11 +195,12 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 # chaine='Branche ' + str(feature['branche'])
                 branches = self.mgis.mdb.select_distinct("branch", "branchs", "active")
                 if feature['branch'] in branches['branch']:
-                    graph_hyd_pk = GraphResultDialog(self.mgis, "hydro_pk", feature["gid"])
+                    print(feature['branch'],feature["gid"])
+                    graph_hyd_pk = GraphResultDialog(self.mgis, "hydro_pk", feature['branch'])
                     graph_hyd_pk.show()
-                    # graph_hyd_pk = GraphHydro(feature, self.mgis, {}, '', 'pk')
+                   # graph_hyd_pk = GraphHydro(feature, self.mgis, {}, '', 'pk')
                     # # graph_hyd.exec_()
-                    # graph_hyd_pk.show()
+                    #graph_hyd_pk.show()
                 else:
                     self.mgis.add_info('no active branch')
 
@@ -1738,7 +1739,7 @@ class GraphHydro(GraphCommon):
 
         self.feature = feature
         self.position = position
-        ft = select
+        self.select = select
         self.type = type
         self.comboRun = self.ui.comboBox_State
         self.comboScen = self.ui.comboBox_Scenar
