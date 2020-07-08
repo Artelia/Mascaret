@@ -32,6 +32,8 @@ from datetime import date, timedelta
 from matplotlib import patches
 import numpy as np
 import re
+import numpy as np
+import matplotlib.lines as mlines
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -51,6 +53,7 @@ class GraphResultDialog(QWidget):
         self.graph_obj = GraphResult(self.lay_graph, self)
         self.cur_run, self.cur_graph, self.cur_vars = None, None, None
         self.cur_vars_lbl, self.cur_branch, self.cur_pknum, self.cur_t = None, None, None, None
+        self.list_var_lai =[]
         self.zmax_save = None
         self.cur_data = dict()
         self.date = None
@@ -129,6 +132,7 @@ class GraphResultDialog(QWidget):
             self.bt_expCsv.clicked.connect(self.export_csv)
 
             self.tw_data.addAction(CopySelectedCellsAction(self.tw_data))
+
             self.init_dico_run()
             self.init_cb_graph()
             self.init_cb_det(self.cur_pknum)
@@ -212,16 +216,19 @@ class GraphResultDialog(QWidget):
                  'ZREF': False, 'Z': False, 'ZMIN': False, 'ZMAX': False}
 
         if id_run:
+            # pb 15 s a optimiser
             sql = "SELECT * FROM {0}.results_var WHERE type_res in {1} " \
-                  "AND id in (SELECT DISTINCT var FROM {0}.results WHERE " \
-                  "id_runs={2})".format(self.mdb.SCHEMA,
+                  "AND id in (SELECT var FROM {0}.results WHERE " \
+                  "id_runs={2} group by var)".format(self.mdb.SCHEMA,
                                         self.list_sql(self.list_typ_res),
                                         id_run)
+
         else:
             sql = "SELECT DISTINCT * FROM {0}.results_var WHERE type_res in {1}".format(self.mdb.SCHEMA,
                                                                                         self.list_sql(
                                                                                             self.list_typ_res))
         rows = self.mdb.run_query(sql, fetch=True)
+
         for rws in rows:
             if not rws[2] in exclu.keys():
                 liste.append({"id": rws[2], "name": rws[3], "unit": "",
@@ -256,7 +263,10 @@ class GraphResultDialog(QWidget):
                 if var.lower() in self.mgis.variables.keys():
                     dico_var["colors"][i] = self.mgis.variables[var.lower()]['couleur']
                     if not var in ['Q', 'QMIN', 'QMAJ', 'QMAX', 'ZREF', 'Z', 'ZMIN', 'ZMAX']:
-                        dico_var['unit'] = r'$'+self.mgis.variables[var.lower()]['unite'].strip()+r'$'
+                        if self.mgis.variables[var.lower()]['unite'].strip() =='':
+                            dico_var['unit'] = ''
+                        else:
+                            dico_var['unit'] = r'$'+self.mgis.variables[var.lower()]['unite'].strip()+r'$'
         return liste_var
 
     def get_lst_graph_bl(self, typ_res, id_run=None):
@@ -307,6 +317,7 @@ class GraphResultDialog(QWidget):
             self.cb_scen.addItem(nm_scen, id_scen)
 
     def init_cb_graph(self):
+
         self.cb_graph.clear()
         lst_graph = None
         if self.cur_run:
@@ -337,15 +348,15 @@ class GraphResultDialog(QWidget):
                 if row[0] in info['abscissa']:
                     txt = str(row[0]) + ' : ' + info['name'][info['abscissa'].index(row[0])]
                     lst_graph.append({"name": txt, 'id': float(row[0])})
-
+            self.lst_graph = lst_graph
             id = -1
             for i, graph in enumerate(lst_graph):
                 self.cb_graph.addItem(graph["name"], graph["id"])
             # self.cb_graph.setCurrentIndex(id)
-            self.cb_graph.setCurrentIndex(self.cb_graph.findData(float(self.cur_pknum)))
+            #self.cb_graph.setCurrentIndex(self.cb_graph.findData(float(self.cur_pknum)))
             return
-
-        for graph in lst_graph:
+        self.lst_graph = lst_graph
+        for graph in self.lst_graph:
             self.cb_graph.addItem(graph["name"], graph["id"])
 
     def init_cb_det(self, id):
@@ -459,30 +470,30 @@ class GraphResultDialog(QWidget):
     def scen_changed(self):
         if self.cb_scen.currentIndex() != -1:
             self.cur_run = self.cb_scen.itemData(self.cb_scen.currentIndex())
-
+            self.init_cb_graph()
+            self.init_cb_det(self.cur_pknum)
             if self.typ_graph == 'hydro_profil':
-                self.init_cb_det(self.cur_pknum)
+                # self.init_cb_det(self.cur_pknum)
+                pass
+            elif self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
+                # self.init_cb_det(self.cur_pknum)
+                self.get_laisses()
             else:
-                self.init_cb_det(self.cur_pknum)
-                self.update_data()
+                pass
+                # self.init_cb_det(self.cur_pknum)
+                # self.update_data()
 
     def graph_changed(self):
         if self.cb_graph.currentIndex() != -1:
             self.cur_graph = self.cb_graph.itemData(self.cb_graph.currentIndex())
-            if self.typ_graph == "struct" or self.typ_graph == "weirs":
-                lst_graph = self.lst_graph
-            elif self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
-                lst_graph = self.get_lst_graph_opt(self.cur_run)
-            elif self.typ_graph == "hydro_basin" or self.typ_graph == "hydro_link":
 
-                lst_graph = self.get_lst_graph_bl(self.typ_res, self.cur_run)
-
-            for graph in lst_graph:
+            for graph in self.lst_graph:
                 if graph["id"] == self.cur_graph:
                     self.cur_vars = graph["vars"]
                     self.cur_vars_lbl = self.find_var_lbl()
                     self.graph_obj.init_mdl(graph["vars"], self.cur_vars_lbl, graph["colors"], graph["unit"],graph['name'] )
                     break
+            self.graph_obj.clean_laisse()
             self.update_data()
 
     def graph_changed_profil(self):
@@ -500,8 +511,6 @@ class GraphResultDialog(QWidget):
                 self.zmax_save = self.mdb.select_max("val", 'results', condition)
             else:
                 self.zmax_save = None
-
-            self.update_data_profil()
 
     def detail_changed(self):
         if self.cb_det.currentIndex() != -1:
@@ -526,47 +535,53 @@ class GraphResultDialog(QWidget):
     #          self.cb_det.setCurrentIndex(self.cb_det.count() - 1)
 
     def update_data_profil(self):
-        self.cur_data = dict(self.val_prof_ref[self.cur_pknum])
+        if not self.initialising:
+            self.cur_data = dict(self.val_prof_ref[self.cur_pknum])
 
-        if self.cur_run:
-            if self.cur_t == 'Zmax':
-                val = self.zmax_save
-            else:
-                where = "id_runs = {0} AND pknum = {1} " \
-                        "AND var ={2} AND time = {3}".format(self.cur_run, self.cur_pknum,
-                                                             self.id_z, self.cur_t)
-                val = self.mgis.mdb.select('results', where=where, list_var=["val"])
-                if val:
-                    val = val['val'][0]
+            if self.cur_run:
+                print(self.cur_t)
+                if self.cur_t == 'Zmax':
+                    val = self.zmax_save
+                else:
+                    where = "id_runs = {0} AND pknum = {1} " \
+                            "AND var ={2} AND time = {3}".format(self.cur_run, self.cur_pknum,
+                                                                 self.id_z, self.cur_t)
+                    val = self.mgis.mdb.select('results', where=where, list_var=["val"])
 
-            self.cur_data['Z'] = [val] * len(self.cur_data['x'])
-            self.label_zmax.setText(str(self.zmax_save))
-            self.cur_vars = ['ZREF', 'Z']
+                    if val:
+                        val = val['val'][0]
 
-            self.cur_vars_lbl = self.find_var_lbl()
-            self.fill_tab(self.x_var, nb_col=3)
-            if self.cur_t == 'Zmax':
-                val_str = None
-                if self.zmax_save:
-                    val_str = round(self.zmax_save, 3)
-                self.graph_obj.axes.title.set_text('Max of water level, {0} m '
-                                                   ''.format(val_str))
-            elif isinstance(self.cur_t, float):
-                try:
-                    self.graph_obj.axes.title.set_text('Water level, {0} m - {1} s'
-                                                       ''.format(self.cur_data['Z'][0],
-                                                                 float(self.cb_det.currentText())))
-                except ValueError:
-                    self.graph_obj.axes.title.set_text('Water level, {0} m - {1}'
-                                                       ''.format(self.cur_data['Z'][0],
-                                                                 self.cb_det.currentText()))
-            self.graph_obj.axes.set_xlabel(r'Distance ($m$)')
-            self.graph_obj.axes.set_ylabel(r'Level ($m$)')
-            self.graph_obj.init_graph_profil(self.cur_data, self.x_var)
+                self.cur_data['Z'] = [val] * len(self.cur_data['x'])
+                self.label_zmax.setText(str(self.zmax_save))
+                self.cur_vars = ['ZREF', 'Z']
+
+                self.cur_vars_lbl = self.find_var_lbl()
+                self.fill_tab(self.x_var, nb_col=3)
+                if self.cur_t == 'Zmax':
+                    val_str = None
+                    if self.zmax_save:
+                        val_str = round(self.zmax_save, 3)
+                    self.graph_obj.axes.title.set_text('Max of water level, {0} m '
+                                                       ''.format(val_str))
+                elif isinstance(self.cur_t, float):
+                    try:
+                        self.graph_obj.axes.title.set_text('Water level, {0} m - {1} s'
+                                                           ''.format(self.cur_data['Z'][0],
+                                                                     float(self.cb_det.currentText())))
+                    except ValueError:
+                        self.graph_obj.axes.title.set_text('Water level, {0} m - {1}'
+                                                           ''.format(self.cur_data['Z'][0],
+                                                                     self.cb_det.currentText()))
+                self.graph_obj.axes.set_xlabel(r'Distance ($m$)')
+                self.graph_obj.axes.set_ylabel(r'Level ($m$)')
+                self.graph_obj.init_graph_profil(self.cur_data, self.x_var)
 
     def update_data(self):
+
         if not self.initialising:
             self.cur_data = dict()
+
+            t0 = time.time()
             sqlv = "('{}')".format("', '".join(self.cur_vars))
             sqlw = self.sql_where.format(self.cur_branch, self.cur_pknum, self.cur_t)
             if self.typ_graph == 'hydro_pk':
@@ -588,18 +603,16 @@ class GraphResultDialog(QWidget):
             sql = "SELECT init_date FROM {0}.runs WHERE id = {1} ".format(self.mgis.mdb.SCHEMA,
                                                                           self.cur_run)
             info = self.mdb.run_query(sql, fetch=True)
-
+            print('get_value_first', time.time() - t0)
             if info:
                 self.date = info[0][0]
                 if self.date :
                     self.cur_data["date"] = [self.date + timedelta(seconds=row[0]) for row in rows]
-                
-
             else:
                 self.date = None
 
             self.cur_data[self.x_var] = [row[0] for row in rows]
-
+            t0 = time.time()
             for var in self.cur_vars:
                 sql = "SELECT {1}, val FROM {0}.results WHERE id_runs = {2} AND " \
                       "var IN (SELECT id FROM {0}.results_var WHERE results_var.var = '{3}') " \
@@ -608,7 +621,7 @@ class GraphResultDialog(QWidget):
                                             var, sqlw, sql_hyd_pk)
                 rows = self.mdb.run_query(sql, fetch=True)
                 self.cur_data[var] = [row[1] for row in rows]
-
+            print('get_value', time.time()-t0)
             x_var_ = self.x_var
             if self.x_var == 'time':
                 if self.date:
@@ -638,64 +651,68 @@ class GraphResultDialog(QWidget):
             self.graph_obj.init_graph(self.cur_data, x_var_)
 
             if self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
-                self.update_laisse(self.cur_data, x_var_)
-                self.update_obs()
+                if 'Z' in self.cur_vars:
+                    self.update_laisse(x_var_)
+               # self.update_obs()
 
-
-    def update_laisse(self, cur_data, var_x):
-        """
-        To graph the flood mark
-        :param cur_data:
-        :param var_x:
-        :return:
-        """
-
+    def get_laisses(self):
+        t0 = time.time()
         info = self.mdb.select('runs', where="id={}".format(self.cur_run), list_var=['scenario'])
         condition = "event = '{}'".format(info["scenario"][0])
         self.laisses = self.mdb.select("flood_marks", condition, "abscissa")
+        if self.laisses:
+            self.laisses['pknum'] = self.laisses['abscissa']
+        print('time laisse',t0-time.time())
 
-        self.laisses['pknum'] = self.laisses['abscissa']
-        lai = self.laisses
 
+    def update_laisse(self,var_x):
+        """
+        To graph the flood mark
+
+        :param var_x:
+        :return:
+        """
+        t0=time.time()
         courbe_lais = {}
-        if var_x not in lai.keys():
-            return
-        courbe_lais["x"] = [v for v in lai[var_x] if v]
-        if not courbe_lais["x"]:
-            return
+        lai = self.laisses
+        if lai:
+            if var_x not in lai.keys():
+                return
 
-        courbe_lais["z"] = [v for i, v in enumerate(lai['z']) if lai[var_x][i]]
-        # if isinstance(courbe_lais["x"][0], date):
-        #     return
-        if 'ZMAX' in self.cur_data.keys():
-            courbe_lais["couleurs"] = []
-            courbe_lais["taille"] = []
-            for x, z in zip(courbe_lais["x"], courbe_lais["z"]):
-                val = interpole(x, cur_data["pknum"], cur_data['ZMAX'])
-                if val:
-                    diff = z - val
-                    if diff < 0:
-                        courbe_lais["couleurs"].append("purple")
-                    else:
-                        courbe_lais["couleurs"].append("green")
+            courbe_lais["x"] = [v for v in lai[var_x] if v]
+            if not courbe_lais["x"]:
+                return
 
-                    if abs(diff) > 0.2:
-                        courbe_lais["taille"].append(3)
-                    elif abs(diff) > 0.1:
-                        courbe_lais["taille"].append(2)
+            courbe_lais["z"] = [v for i, v in enumerate(lai['z']) if lai[var_x][i]]
+            if 'ZMAX' in self.cur_data.keys():
+                courbe_lais["couleurs"] = []
+                courbe_lais["taille"] = []
+                for x, z in zip(courbe_lais["x"], courbe_lais["z"]):
+                    val = interpole(x, self.cur_data["pknum"], self.cur_data['ZMAX'])
+                    if val:
+                        diff = z - val
+                        if diff < 0:
+                            courbe_lais["couleurs"].append("purple")
+                        else:
+                            courbe_lais["couleurs"].append("green")
+
+                        if abs(diff) > 0.2:
+                            courbe_lais["taille"].append(3)
+                        elif abs(diff) > 0.1:
+                            courbe_lais["taille"].append(2)
+                        else:
+                            courbe_lais["taille"].append(1)
+
                     else:
+                        courbe_lais["couleurs"].append("black")
                         courbe_lais["taille"].append(1)
+            else:
 
-                else:
-                    courbe_lais["couleurs"].append("black")
-                    courbe_lais["taille"].append(1)
-        else:
+                courbe_lais["couleurs"] = ["black"] * len(courbe_lais["x"])
+                courbe_lais["taille"] = [1] * len(courbe_lais["x"])
+            self.graph_obj.init_graph_laisse(courbe_lais)
 
-            courbe_lais["couleurs"] = ["black"] * len(courbe_lais["x"])
-            courbe_lais["taille"] = [1] * len(courbe_lais["x"])
-
-
-        self.graph_obj.init_laisse(courbe_lais)
+        print('time update laisse', time.time()-t0)
 
     def update_obs(self):
 
@@ -713,7 +730,9 @@ class GraphResultDialog(QWidget):
 
             sql = "SELECT code FROM {0}.outputs " \
                   "WHERE active AND abscissa = {1};".format(self.mdb.SCHEMA, self.cur_pknum)
+            print(sql)
             rows = self.mdb.run_query(sql, fetch=True)
+            print(rows)
             if rows:
                 code = rows[0]
             else:
@@ -847,18 +866,16 @@ class GraphResult(GraphCommonNew):
                                             va='top', bbox=dict(boxstyle='round, pad=0.5', fc='white', alpha=0.7),
                                             color='black', visible=False, zorder=200)
         self.annotation.append(self.annot_var)
-
-        for v, var in enumerate(lst_vars):
-            self.list_var.append({"id": v, "name": var, "clr": lst_colors[v]})
-            self.courbe_var, = self.axes.plot([], [], color=lst_colors[v], zorder=100 - v, label=lst_lbls[v])
-            self.courbes.append(self.courbe_var)
-            self.annot_var = self.axes.annotate("", xy=(0, 0), ha='left', xytext=(10, 0), textcoords='offset points',
-                                                va='top', bbox=dict(boxstyle='round, pad=0.5', fc='white', alpha=0.7),
-                                                color=lst_colors[v], visible=False, zorder=199 - v)
-            self.annotation.append(self.annot_var)
-
         self.courbeLaisses = []
         self.etiquetteLaisses = []
+        for v, var in enumerate(lst_vars):
+            self.list_var.append({"id": v, "name": var, "clr": lst_colors[v]})
+            courbe_var, = self.axes.plot([], [], color=lst_colors[v], zorder=100 - v, label=lst_lbls[v])
+            self.courbes.append(courbe_var)
+            annot_var = self.axes.annotate("", xy=(0, 0), ha='left', xytext=(10, 0), textcoords='offset points',
+                                                va='top', bbox=dict(boxstyle='round, pad=0.5', fc='white', alpha=0.7),
+                                                color=lst_colors[v], visible=False, zorder=199 - v)
+            self.annotation.append(annot_var)
 
         rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='pink',
                                  alpha=0.5, lw=1, zorder=80)
@@ -964,8 +981,55 @@ class GraphResult(GraphCommonNew):
 
         self.maj_limites()
 
-    def init_laisse(self, laisses):
-        self.maj_laisses(laisses)
+    def clean_laisse(self):
+        """flood mark"""
+        # self.courbeLaisses = self.axes.scatter([], [], label="Flood marks",
+        # #                                        marker='+', color='darkcyan')
+        if self.courbes:
+            tmp= []
+            for i,cb in enumerate(self.courbes):
+                if not  cb in self.courbeLaisses:
+                    tmp.append(cb)
+            self.courbes =list(tmp)
+
+        self.courbeLaisses = []
+        for e in self.etiquetteLaisses:
+            self.axes.texts.remove(e)
+        self.etiquetteLaisses = []
+
+    def init_graph_laisse(self, laisses):
+        """ add flood mark in graph"""
+
+        self.clean_laisse()
+
+        self.courbeLaisses.append(self.axes.scatter(laisses['x'], laisses['z'],
+                                               color=laisses["couleurs"],
+                                               marker='+',
+                                               label="Flood marks",
+                                               s=80,
+                                               linewidth=laisses['taille']))
+
+        self.courbeLaisses[0].set_visible(True)
+        for x, z, c in zip(laisses['x'], laisses['z'], laisses["couleurs"]):
+            temp = self.axes.annotate(str(z), xy=(x, z), xytext=(3, 3),
+                                      ha='left', va='bottom',
+                                      fontsize='x-small',
+                                      color=c,
+                                      textcoords='offset points', clip_on=True)
+
+            self.etiquetteLaisses.append(temp)
+
+        handles = [c for c in self.courbes]
+        handles.append(mlines.Line2D([], [], color='darkcyan', marker='+',
+                                     linewidth=0,
+                                     markersize=10, label='Flood marks'))
+
+
+        self.courbes += self.courbeLaisses
+
+        self.init_legende(handles=handles)
+        self.maj_limites()
+
 
     def init_obs(self, obs):
         self.maj_obs(obs)

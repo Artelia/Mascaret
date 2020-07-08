@@ -69,7 +69,6 @@ except AttributeError:
 
 from matplotlib.figure import Figure
 import matplotlib.dates as mdates
-import matplotlib.lines as mlines
 import matplotlib.ticker as ticker
 from .WaterQuality.ClassTableWQ import ClassTableWQ
 from datetime import datetime
@@ -414,36 +413,6 @@ class GraphCommonNew():
         self.fig.autofmt_xdate()
         self.canvas.draw()
 
-    def maj_laisses(self, laisses):
-        """ add flood mark in graph"""
-
-        self.clean_laisse()
-
-        self.courbeLaisses = self.axes.scatter(laisses['x'], laisses['z'],
-                                               color=laisses["couleurs"],
-                                               marker='+',
-                                               label="Flood marks",
-                                               s=80,
-                                               linewidth=laisses['taille'])
-
-        self.courbeLaisses.set_visible(True)
-        for x, z, c in zip(laisses['x'], laisses['z'], laisses["couleurs"]):
-            temp = self.axes.annotate(str(z), xy=(x, z), xytext=(3, 3),
-                                      ha='left', va='bottom',
-                                      fontsize='x-small',
-                                      color=c,
-                                      textcoords='offset points', clip_on=True)
-
-            self.etiquetteLaisses.append(temp)
-
-        handles = [c for c in self.courbes]
-        handles.append(mlines.Line2D([], [], color='darkcyan', marker='+',
-                                     linewidth=0,
-                                     markersize=10, label='Flood marks'))
-        self.courbes.append(self.courbeLaisses)
-
-        self.init_legende(handles=handles)
-        self.maj_limites()
 
     def maj_obs(self, obs):
         pass
@@ -459,14 +428,7 @@ class GraphCommonNew():
         #     self.courbeObs.set_visible(False)
         #     self.obs = {}
 
-    def clean_laisse(self):
-        """flood mark"""
-        self.courbeLaisses = self.axes.scatter([], [], label="Flood marks",
-                                               marker='+', color='darkcyan')
-        self.courbeLaisses.set_visible(False)
-        for e in self.etiquetteLaisses:
-            self.axes.texts.remove(e)
-        self.etiquetteLaisses = []
+
 
     def clean_obs(self):
         """ clean obs graph"""

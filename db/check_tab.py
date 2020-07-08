@@ -59,11 +59,14 @@ class CheckTab():
                                                  {'tab': Maso.results_sect, 'overwrite': False},
                                                  {'tab': Maso.results_var, 'overwrite': False}],
                                      'alt_tab': [{'tab': 'runs', 'sql': ["ALTER TABLE {0}.runs ADD COLUMN IF NOT "
-                                                                         "EXISTS init_date timestamp without time zone;"]}],
+                                                                         "EXISTS init_date timestamp without time zone;"]},
+                                                 {'tab': 'results', 'sql':["CREATE INDEX IF NOT EXISTS "
+                                                                           "idx_res_var ON {0}.results(id_runs, var) "]},],
                                      'fct': [lambda: self.create_var_result(),
                                              lambda: self.convert_all_result(),
                                              lambda: self.fill_init_date_runs()],
                                      'del_tab': ['results_float', 'results_int']},
+
 
                            }
 
