@@ -472,16 +472,10 @@ class GraphResultDialog(QWidget):
             self.cur_run = self.cb_scen.itemData(self.cb_scen.currentIndex())
             self.init_cb_graph()
             self.init_cb_det(self.cur_pknum)
-            if self.typ_graph == 'hydro_profil':
-                # self.init_cb_det(self.cur_pknum)
-                pass
-            elif self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
-                # self.init_cb_det(self.cur_pknum)
+            if self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
                 self.get_laisses()
-            else:
-                pass
-                # self.init_cb_det(self.cur_pknum)
-                # self.update_data()
+                self
+
 
     def graph_changed(self):
         if self.cb_graph.currentIndex() != -1:
