@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 import sys
+import json
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
@@ -2507,6 +2508,46 @@ class ClassMascaret:
                 return True
         return False
 
+    def save_run_graph(self, val, id_run, typ_res, max=True):
+        """save info for graph"""
+        list_insert =[]
+        list_var = []
+        for id in self.val.keys():
+            if isinstance(id, int):
+                list_var.append(id)
+        list_insert.append([id_run, typ_res, 'var', json.dump(list_var)])
+        list_insert.append([id_run,typ_res,'time', json.dump(val['TIME'])])
+
+        if typ_res =='opt':
+            var_info = {'var': 'Z',
+                        'type_res': 'opt'}
+            id_z = self.mdb.check_id_var(var_info)
+            if id_z in list_var and max:
+                dico_zmax = {}
+                for pknum in val['PK']:
+                    sql = "SELECT MAX(val) FROM {0}.results " \
+                          "WHERE var = {2} " \
+                          "AND id_runs={1} AND pknum ={3};".format(self.mdb.SCHEMA,
+                                                                   id_run,
+                                                                   id_z,
+                                                                   pknum)
+                    rows = self.mdb.run_query(sql, fetch=True)
+                    try:
+                        dico_zmax[pknum] = rows[0][0]
+                    except Exception:
+                        dico_zmax[pknum] = None
+                list_insert.append([id_run, typ_res, 'zmax', json.dumps(dico_zmax)])
+                key_pknum = 'PK'
+        elif typ_res == 'basin':
+            key_pknum = 'BNUM'
+        elif typ_res == 'link':
+            key_pknum = 'LNUM'
+        elif 'tracer_' in typ_res:
+            key_pknum = 'PK'
+
+        list_insert.append([id_run,typ_res,'pknum', json.dump(val[key_pknum])])
+
+
     def lit_opt_new(self, id_run, date_debut, base_namefile, comments='', tracer=False, casier=False):
         """
         Read opt files and save in results table
@@ -2543,6 +2584,8 @@ class ClassMascaret:
         key_val_opt = val_opt.keys()
 
         self.save_new_results(val_opt, id_run)
+        #TODO check
+        self.save_run_graph(val_opt, id_run, type_res)
         del val_opt
 
         if casier:
@@ -2554,6 +2597,8 @@ class ClassMascaret:
                 init_col = ['TIME', 'BNUM']
                 val = self.new_read_opt(nom_fich_bas, type_res, init_col)
                 self.save_new_results(val, id_run)
+                # TODO check
+                self.save_run_graph(val_opt, id_run, type_res)
                 del val
 
             nom_fich_link = os.path.join(self.dossierFileMasc, base_namefile + '.liai_opt')
@@ -2561,9 +2606,11 @@ class ClassMascaret:
                 self.mgis.add_info("Simulation Error: there aren't link results")
             else:
                 type_res = 'link'
-                init_col = ['TIME', 'BNUM']
+                init_col = ['TIME', 'LNUM']
                 val = self.new_read_opt(nom_fich_link, type_res, init_col)
                 self.save_new_results(val, id_run)
+                # TODO check
+                self.save_run_graph(val, id_run, type_res)
                 del val
         if tracer:
             nom_fich_tra = os.path.join(self.dossierFileMasc, base_namefile + '.tra_opt')
@@ -2582,6 +2629,8 @@ class ClassMascaret:
                         del val[key]
 
                 self.save_new_results(val, id_run)
+                # TODO check
+                self.save_run_graph(val, id_run, type_res)
 
     def save_new_results(self, val, id_run):
         """

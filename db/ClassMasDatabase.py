@@ -436,8 +436,8 @@ class ClassMasDatabase(object):
                       Maso.struct_fg, Maso.struct_fg_val,
                       Maso.weirs_mob_val,
                       # new results
-                      Maso.results_date,
-                      Maso.results_float,Maso.results_int
+                      Maso.runs_graph, Maso.results, Maso.results_var,
+                      Maso.results_sect
                       ]
             tables.sort(key=lambda x: x().order)
 
@@ -909,7 +909,9 @@ $BODY$
         # self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order),
                                            fetch=True, arraysize=1, namvar=True)
-
+        if results == None or namCol == None:
+            print("error : ", sql.format(self.SCHEMA, table, where, order))
+            return None
         cols = [col[0] for col in namCol]
         results = [col[0] for col in results]
 
@@ -941,6 +943,7 @@ $BODY$
                         dico[cols[i]].append(eval(val))
                     except:
                         dico[cols[i]].append(val)
+
             return dico
         print(sql.format(var, self.SCHEMA, table, where, ordre))
         return  None

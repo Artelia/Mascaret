@@ -57,16 +57,19 @@ class CheckTab():
                                      'fct': [lambda: self.update_setting_json()]},
                            '3.0.2': {'add_tab': [{'tab': Maso.results, 'overwrite': False},
                                                  {'tab': Maso.results_sect, 'overwrite': False},
-                                                 {'tab': Maso.results_var, 'overwrite': False}],
+                                                 {'tab': Maso.results_var, 'overwrite': False},
+                                                 {'tab': Maso.runs_graph, 'overwrite': False},
+                                                 ],
                                      'alt_tab': [{'tab': 'runs', 'sql': ["ALTER TABLE {0}.runs ADD COLUMN IF NOT "
                                                                          "EXISTS init_date timestamp without time zone;"]},
-                                                 {'tab': 'results', 'sql':["CREATE INDEX IF NOT EXISTS "
-                                                                           "idx_res_var ON {0}.results(id_runs, var) "]},],
+                                                 {'tab': 'outputs', 'sql': ["ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
+                                                                         "EXISTS active boolean;"]},
+                                                 ],
                                      'fct': [lambda: self.create_var_result(),
                                              lambda: self.convert_all_result(),
                                              lambda: self.fill_init_date_runs()],
                                      'del_tab': ['results_float', 'results_int']},
-
+        #'3.0.x': { 'del_tab': ['resultats']},
 
                            }
 
@@ -81,7 +84,7 @@ class CheckTab():
 
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         version = read_version(self.mgis.masplugPath)
-        # self.all_version(tabs, '0.0.0')
+        #self.all_version(tabs, '3.0.1')
 
         if not "admin_tab" in tabs:
             try:
@@ -290,28 +293,118 @@ class CheckTab():
                     'type_var': 'float'}
             self.mdb.check_id_var(dico)
 
+    def list_sql(self, liste):
+        """
+        list to srting for sql script
+        :param liste:
+        :return:
+        """
+        txt = '('
+        for t_res in liste:
+            txt += "'{}',".format(t_res)
+        txt = txt[:-1] + ')'
+        return txt
+
     def convert_all_result(self):
         """ conversion between the previous results table format to the new for all results"""
+        convert = False
+        try:
+            rows = self.mdb.run_query("SELECT DISTINCT type_res FROM {0}.results_var".format(self.mdb.SCHEMA), fetch=True)
+            lst_typ_res = [r[0] for r in rows]
+            rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs".format(self.mdb.SCHEMA), fetch=True)
+            dict_runs = {r[0]: {"run": r[1], "scen": r[2]} for r in rows}
 
-        rows = self.mdb.run_query("SELECT DISTINCT type_res FROM {0}.results_var".format(self.mdb.SCHEMA), fetch=True)
-        lst_typ_res = [r[0] for r in rows]
-        rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs".format(self.mdb.SCHEMA), fetch=True)
-        dict_runs = {r[0]: {"run": r[1], "scen": r[2]} for r in rows}
+            for typ_res in lst_typ_res:
+                rows = self.mdb.run_query(
+                    "SELECT DISTINCT id_runs FROM {0}.results WHERE var in "
+                    "(SELECT id FROM {0}.results_var WHERE type_res = '{1}') ".format(self.mdb.SCHEMA, typ_res), fetch=True)
+                lst_exist = [r[0] for r in rows]
+                for run in dict_runs.keys():
+                    if run not in lst_exist:
+                        self.convert_result(run, typ_res)
 
-        for typ_res in lst_typ_res:
-            rows = self.mdb.run_query(
-                "SELECT DISTINCT id_runs FROM {0}.results WHERE var in "
-                "(SELECT id FROM {0}.results_var WHERE type_res = '{1}') ".format(self.mdb.SCHEMA, typ_res), fetch=True)
+            rows = self.mdb.run_query("SELECT DISTINCT id_runs FROM {0}.results_sect".format(self.mdb.SCHEMA), fetch=True)
             lst_exist = [r[0] for r in rows]
             for run in dict_runs.keys():
                 if run not in lst_exist:
-                    self.convert_result(run, typ_res)
+                    self.fill_result_sect(run)
 
-        rows = self.mdb.run_query("SELECT DISTINCT id_runs FROM {0}.results_sect".format(self.mdb.SCHEMA), fetch=True)
-        lst_exist = [r[0] for r in rows]
-        for run in dict_runs.keys():
-            if run not in lst_exist:
-                self.fill_result_sect(run)
+            # ADD runs_graph
+            for id_runs in dict_runs.keys():
+                if id_runs not in lst_exist:
+
+                    sql = "SELECT DISTINCT var FROM {0}.results WHERE id_runs ={1} ORDER BY var"
+                    rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_runs), fetch=True)
+                    lst_var = [var[0] for var in rows]
+
+                    sql = "SELECT DISTINCT ON (type_res) id, type_res FROM  {0}.results_var WHERE id IN {1} ORDER BY type_res"
+                    rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.list_sql(lst_var)), fetch=True)
+                    lst_typvar = [var[1] for var in rows]
+                    lst_var_select = [var[0] for var in rows]
+                    list_value = []
+                    # comput Zmax if there is Z
+                    sql = "SELECT id FROM  {0}.results_var WHERE var='Z';".format(self.mdb.SCHEMA)
+                    id_z = self.mdb.run_query(sql, fetch=True)
+
+                    for id_var, type_res in enumerate(lst_typvar):
+                        sql = "SELECT id FROM  {0}.results_var WHERE id IN {1} AND type_res = '{2}' " \
+                              "ORDER BY type_res".format(self.mdb.SCHEMA,
+                                                         self.list_sql(lst_var), type_res)
+                        rows = self.mdb.run_query(sql, fetch=True)
+                        lst_var2 = [var[0] for var in rows]
+                        list_value.append([id_runs, type_res, 'var', json.dumps(lst_var2)])
+
+                        sql = "SELECT DISTINCT time FROM {0}.results " \
+                              "WHERE id_runs ={1} " \
+                              "AND var = {2} ORDER BY time".format(self.mdb.SCHEMA,
+                                                                   id_runs,
+                                                                   lst_var_select[id_var])
+                        rows = self.mdb.run_query(sql, fetch=True)
+                        lst_time = [var[0] for var in rows]
+                        list_value.append([id_runs, type_res, 'time', json.dumps(lst_time)])
+
+                        sql = "SELECT DISTINCT pknum FROM {0}.results " \
+                              "WHERE id_runs ={1} " \
+                              "AND var = {2} ORDER BY pknum".format(self.mdb.SCHEMA,
+                                                                    id_runs,
+                                                                    lst_var_select[id_var])
+                        rows = self.mdb.run_query(sql, fetch=True)
+                        lst_pknum = [var[0] for var in rows]
+                        list_value.append([id_runs, type_res, 'pknum', json.dumps(lst_pknum)])
+
+                        if type_res == "opt":
+                            try:
+                                dico_zmax = {}
+                                for pknum in lst_pknum:
+                                    if id_z[0][0] in lst_var:
+                                        sql = "SELECT MAX(val) FROM {0}.results " \
+                                              "WHERE var = {2} " \
+                                              "AND id_runs={1} AND pknum ={3};".format(self.mdb.SCHEMA,
+                                                                                       id_runs,
+                                                                                       id_z[0][0],
+                                                                                       pknum)
+                                        rows = self.mdb.run_query(sql, fetch=True)
+                                        dico_zmax[pknum] = rows[0][0]
+                                list_value.append([id_runs, 'opt', 'zmax', json.dumps(dico_zmax)])
+                            except Exception as e:
+                                pass
+                    sql = "INSERT INTO {0}.runs_graph(id_runs, type_res,var,val) " \
+                          "VALUES (%s,%s,%s, %s); \n".format(self.mdb.SCHEMA)
+
+                    self.mdb.run_query(sql, many=True, list_many=list_value)
+            convert = True
+        except Exception as e:
+            print("Error conversionof resutlats table : ", e)
+
+        if convert:
+            #TODO delete table
+            #self.mdb.drop_table('resutlats')
+            # self.mdb.drop_table('resutlats_basin')
+            #self.mdb.drop_table('resultats_links')
+            pass
+
+
+
 
     def convert_result(self, id_run, typ_res):
         """
@@ -364,6 +457,9 @@ class CheckTab():
                       "AND {3}.scenario = '{7}')".format(self.mdb.SCHEMA, id_var, nm_var.lower(), tab_src, col_pknum,
                                                          id_run, run_run, run_scen)
                 self.mdb.execute(sql)
+
+
+
 
     def fill_result_sect(self, id_run):
         """

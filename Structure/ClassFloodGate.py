@@ -345,7 +345,8 @@ class ClassFloodGate:
                 self.results_fg_mv[id_config]['ZSTR'].append(zold)
             self.results_fg_mv[id_config]['TIME'].append(time)
             self.results_fg_mv[id_config]['ZSTR'].append(newz)
-
+        print(self.results_fg_mv[id_config]['TIME'],self.results_fg_mv[id_config]['ZSTR'])
+        
     def update_law(self, id_config, param_fg, new_z, mobil_struct):
         """   Compute new law
                 :param id_config: index of hydraulic structure

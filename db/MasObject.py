@@ -342,6 +342,7 @@ class outputs(MasObject):
                       ('zero', 'float'),
                       ('branchnum', 'integer'),
                       ('abscissa', 'float'),
+                      ('active', 'boolean'),
                       ('CONSTRAINT outputs_pkey', 'PRIMARY KEY (gid)')]
 
     def pg_create_table(self):
@@ -1043,6 +1044,12 @@ class results(MasObject):
                       ('val', 'float'),
                       ('CONSTRAINT results_pkey', ' PRIMARY KEY (id_runs, time, pknum, var)')]
 
+    # def pg_create_table(self):
+    #     qry = super(self.__class__, self).pg_create_table()
+    #     qry += '\n'
+    #     qry += "CREATE INDEX IF NOT EXISTS idx_res_var ON {0}.results(id_runs);\n".format(self.schema)
+    #     return qry
+
 class results_sect(MasObject):
     def __init__(self):
         super(results_sect, self).__init__()
@@ -1065,4 +1072,16 @@ class results_var(MasObject):
                       ('name', 'text'),
                       ('type_var', 'text'),
                       ('CONSTRAINT results_var_pkey', ' PRIMARY KEY (type_res, var)')]
+
+class runs_graph(MasObject):
+    def __init__(self):
+        super(runs_graph, self).__init__()
+        self.order = 40
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('id_runs', 'integer'),
+                      ('type_res', 'text'),
+                      ('var', 'text'),
+                      ('val', 'json'),
+                      ('CONSTRAINT runs_graph_pkey', ' PRIMARY KEY (id_runs,type_res,var)')]
 

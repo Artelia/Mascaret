@@ -904,10 +904,152 @@ Version : {}
         del dlg
         del clam
 
+    def list_sql(self, liste):
+        """
+        list to srting for sql script
+        :param liste:
+        :return:
+        """
+        txt = '('
+        for t_res in liste:
+            txt += "'{}',".format(t_res)
+        txt = txt[:-1] + ')'
+        return txt
+
     def fct_test(self):
-
         pass
+        # from .db.MasObject import runs_graph
+        # try:
+        #     obj = self.mdb.process_masobject(runs_graph, 'pg_create_table')
+        # except Exception as e:
+        #     print('eerr',e)
+        #     pass
+        # lst_type=["opt","tracer%","basin","links", "struct", "weirs"]
 
+        sql = "SELECT id FROM {0}.runs " \
+              "WHERE id NOT IN (SELECT DISTINCT id_runs FROM {0}.runs_graph );"
+        rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
+        for id_runs in rows:
+            id_runs = id_runs[0]
+            # id_runs =86
+
+            sql = "SELECT DISTINCT var FROM {0}.results WHERE id_runs ={1} ORDER BY var"
+            rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_runs), fetch=True)
+            lst_var = [ var[0] for var in rows]
+
+            sql = "SELECT DISTINCT ON (type_res) id, type_res FROM  {0}.results_var WHERE id IN {1} ORDER BY type_res"
+            rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.list_sql(lst_var)), fetch=True)
+            lst_typvar= [var[1] for var in rows]
+            lst_var_select = [var[0] for var in rows]
+            # list_value = [[id_runs,'all','vars',json.dumps(lst_var)]]
+
+
+            sql = "SELECT id FROM  {0}.results_var WHERE var='Z';".format(self.mdb.SCHEMA)
+            id_z = self.mdb.run_query(sql, fetch=True)
+            list_value = []
+
+            for id_var, type_res in enumerate(lst_typvar):
+                sql = "SELECT id FROM  {0}.results_var WHERE id IN {1} AND type_res = '{2}' " \
+                      "ORDER BY type_res".format(self.mdb.SCHEMA,
+                                                           self.list_sql(lst_var),type_res)
+                rows = self.mdb.run_query(sql, fetch=True)
+                lst_var2 = [var[0] for var in rows]
+
+                sql = "SELECT DISTINCT time FROM {0}.results " \
+                      "WHERE id_runs ={1} " \
+                      "AND var = {2} ORDER BY time".format(self.mdb.SCHEMA,
+                                                           id_runs,
+                                                           lst_var_select[id_var])
+                rows = self.mdb.run_query(sql, fetch=True)
+                lst_time= [ var[0] for var in rows]
+
+                sql = "SELECT DISTINCT pknum FROM {0}.results " \
+                      "WHERE id_runs ={1} " \
+                      "AND var = {2} ORDER BY pknum".format(self.mdb.SCHEMA,
+                                                           id_runs,
+                                                            lst_var_select[id_var])
+                rows = self.mdb.run_query(sql, fetch=True)
+                lst_pknum= [var[0] for var in rows]
+                list_value.append([id_runs, type_res,'time', json.dumps(lst_time)])
+                list_value.append([id_runs, type_res, 'pknum', json.dumps(lst_pknum)])
+                list_value.append([id_runs, type_res, 'var', json.dumps(lst_var2)])
+                if type_res =="opt":
+                    try:
+                        dico_zmax = {}
+                        for pknum in lst_pknum:
+                                if id_z[0][0] in lst_var:
+                                    sql = "SELECT MAX(val) FROM {0}.results " \
+                                          "WHERE var = {2} " \
+                                          "AND id_runs={1} AND pknum ={3};".format(self.mdb.SCHEMA,
+                                                                   id_runs,
+                                                                   id_z[0][0],
+                                                                   pknum)
+                                    rows = self.mdb.run_query(sql, fetch=True)
+                                    dico_zmax[pknum]=rows[0][0]
+                        list_value.append([id_runs, 'opt', 'zmax', json.dumps(dico_zmax)])
+                    except Exception as e:
+                        print(e)
+
+
+
+            sql = "INSERT INTO {0}.runs_graph(id_runs, type_res,var,val) " \
+            "VALUES (%s,%s,%s, %s); \n".format(self.mdb.SCHEMA)
+
+            self.mdb.run_query(sql, many=True, list_many=list_value)
+
+
+
+
+
+        #
+        # # dico ={}
+        # for row in rows:
+        #     if row[]
+        #         row =
+        #
+        # print(rows)
+
+
+
+        #
+        #
+        # dico={}
+        # for id_runs in rows :
+        #     id_runs = id_runs[0]
+        #     dico[id_runs] = {}
+        #     sql = "SELECT DISTINCT time FROM {0}.results WHERE id_runs ={1} AND var =" \
+        #           "(SELECT id FROM {0}.results_var WHERE var = 'Q' and type_res='opt') ORDER BY time"
+        #     rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_runs), fetch=True)
+        #     dico[id_runs]['time_struct'] = [ var[0] for var in rows]
+        #
+        #
+        #     sql = "SELECT DISTINCT time FROM {0}.results WHERE id_runs ={1} AND var =" \
+        #           "(SELECT id FROM {0}.results_var WHERE var = 'ZSTR' and type_res='struct') ORDER BY time"
+        #     rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_runs), fetch=True)
+        #     dico[id_runs]['time'] = [var[0] for var in rows]
+        #
+        #     sql = "SELECT DISTINCT pknum FROM {0}.results WHERE id_runs ={1} AND var =" \
+        #           "(SELECT id FROM {0}.results_var WHERE var = 'Q') ORDER BY pknum"
+        #     rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_runs), fetch=True)
+        #     dico[id_runs]['pk'] = [ var[0] for var in rows]
+        #     sql = "SELECT DISTINCT pknum FROM {0}.results WHERE id_runs ={1} AND var =" \
+        #           "(SELECT id FROM {0}.results_var WHERE var = 'VOLCAS') ORDER BY pknum"
+        #     rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_runs), fetch=True)
+        #     print(rows)
+        #     dico[id_runs]['num_basin'] = [var[0] for var in rows]
+        #     sql = "SELECT DISTINCT pknum FROM {0}.results WHERE id_runs ={1} AND var =" \
+        #           "(SELECT id FROM {0}.results_var WHERE var = 'VOLCAS') ORDER BY pknum"
+        #     rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_runs), fetch=True)
+        #     print(rows)
+        #     dico[id_runs]['num_link'] = [var[0] for var in rows]
+        #
+        #     sql = "SELECT DISTINCT var FROM {0}.results WHERE id_runs ={1} ORDER BY var"
+        #     rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_runs), fetch=True)
+        #     dico[id_runs]['var'] = [ var[0] for var in rows]
+        #     sql = "UPDATE  {0}.runs SET links_res = '{1}' WHERE id = {2}".format(self.mdb.SCHEMA,  json.dumps(dico[id_runs]),id_runs)
+        #     self.mdb.run_query(sql)
+        #     # sql = "INSERT INTO {0}.runs(links_res) VALUES ('{1}');".format(self.mdb.SCHEMA,  json.dumps(dico))
+        # #print(dico)
         # clam.create_mobil_gate_file()
         # # clam.read_mobil_gate_res(48)
         # date_debut = datetime.datetime(2001, 2, 25, 0, 0)

@@ -133,13 +133,14 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
                 rows = self.mgis.mdb.run_query(sql, fetch=True)
                 pk_with_res = [r[0] for r in rows]
-                if gid in pk_with_res:
-                    graph_res = GraphResultDialog(self.mgis, type_res, gid)
-                    graph_res.show()
-                else:
-                    pass
-                    # print ("Erreur")
-                    # a = QMessageBox.Warning(self, 'Error', 'Aucun résultat pour ce profil')
+                # if gid in pk_with_res:
+
+                graph_res = GraphResultDialog(self.mgis, type_res, gid)
+                graph_res.show()
+                # else:
+                #     #pass
+                #     print ("Erreur")
+                #     #a = QMessageBox.Warning(self, 'Error', 'Aucun résultat pour ce profil')
 
             if couche == 'profiles' and flag_profil:
                 self.mgis.coucheProfils = results[0].mLayer
@@ -163,12 +164,15 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             # #
             if flag_hydro and couche in ('profiles', 'outputs'):
                 feature = results[0].mFeature
+
                 selection = {'abs': [], 'nom': []}
 
                 field_names = [field.name() for field
                                in results[0].mLayer.fields()]
-                prof_a = self.mgis.mdb.select_distinct("name", "profiles", "active")
-                if feature['name'] in prof_a['name']:
+
+                prof_a = self.mgis.mdb.select_distinct("name,abscissa", "profiles", "active")
+
+                if feature['name'] in prof_a['name'] or feature['abscissa'] in prof_a['abscissa']:
                     if 'code' in field_names:
                         selection['code'] = []
                     if 'zero' in field_names:
@@ -182,11 +186,12 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                             if 'zero' in selection.keys():
                                 selection['zero'].append(f['zero'])
                     # self.mgis.add_info('graph {0}'.format(results[0].mFeature))
-                    graph_hyd = GraphResultDialog(self.mgis, "hydro", feature["gid"])
+                    graph_hyd = GraphResultDialog(self.mgis, "hydro", feature['abscissa'])
                     graph_hyd.show()
-                    # graph_hyd = GraphHydro(feature, self.mgis, selection, feature['abscissa'], 't')
+                    print(selection)
+                    #graph_hyd = GraphHydro(feature, self.mgis, selection, feature['abscissa'], 't')
                     # # # graph_hyd.exec_()
-                    # graph_hyd.show()
+                    #graph_hyd.show()
                 else:
                     self.mgis.add_info('no active profiles')
 
@@ -229,18 +234,19 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     selection['nom'].append(selection_nontrie['nom'][index])
                     selection['num'].append(selection_nontrie['num'][index])
 
-
+                # graph_basin_link = GraphBasin(feature, self.mgis, selection, feature['name'], couche)
+                # graph_basin_link.show()
                 print(selection)
                 if couche == 'links':
                     links = self.mgis.mdb.select_distinct("name", "links", "active")
                     if feature['name'] in links['name']:
-                        graph_link = GraphResultDialog(self.mgis, "hydro_link", feature["gid"])
+                        graph_link = GraphResultDialog(self.mgis, "hydro_link", feature["linknum"])
                         graph_link.show()
                 else:
 
                     basins = self.mgis.mdb.select_distinct("name", "basins", "active")
                     if feature['name'] in basins['name']:
-                        graph_basin = GraphResultDialog(self.mgis, "hydro_basin", feature["gid"])
+                        graph_basin = GraphResultDialog(self.mgis, "hydro_basin", feature["basinnum"])
                         graph_basin.show()
 
 
@@ -2160,7 +2166,6 @@ class GraphHydro(GraphCommon):
         condition = "run='{0}' AND scenario='{1}'".format(self.run,
                                                           self.scenario)
         temp = self.mdb.select_distinct("date", "resultats", condition, 'date')
-
         if temp["date"][0]:
             self.date = True
             if self.type == 't':
@@ -2170,6 +2175,7 @@ class GraphHydro(GraphCommon):
                 self.type = 't'
 
         self.liste['date']['abs'] = temp["date"]
+
 
         temp = self.mdb.select_distinct("t", "resultats", condition, 't')
         self.liste['t']['abs'] = temp["t"]
@@ -2327,7 +2333,8 @@ class GraphHydro(GraphCommon):
             zero = ss['zero'][i]
             mini = min(self.liste['date']['abs'])
             maxi = max(self.liste['date']['abs'])
-
+            print(mini, maxi)
+            print(self.liste['date']['abs'][0:10])
             if self.var1 in self.coteVar:
                 gg = 'H'
             elif self.var1 in self.debVar:
@@ -2340,7 +2347,7 @@ class GraphHydro(GraphCommon):
                         AND valeur > -99.9""".format(code, mini, maxi, gg)
 
             self.obs = self.mdb.select("observations", condition, "date")
-
+            print(self.obs)
             if self.obs["valeur"]:
                 if self.var1 in self.coteVar:
                     # self.obs['valeur'] = list(map(lambda x: x + zero,

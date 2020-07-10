@@ -414,31 +414,6 @@ class GraphCommonNew():
         self.canvas.draw()
 
 
-    def maj_obs(self, obs):
-        pass
-        #
-        #
-        #         self.courbeObs.set_data(self.obs['date'], self.obs['valeur'])
-        #         self.courbeObs.set_visible(True)
-        #     else:
-        #         self.courbeObs.set_visible(False)
-        #         self.obs = {}
-        #
-        # except:
-        #     self.courbeObs.set_visible(False)
-        #     self.obs = {}
-
-
-
-    def clean_obs(self):
-        """ clean obs graph"""
-
-        self.courbeObs, = self.axes.plot([], [], color='grey',
-                                         marker='o', markeredgewidth=0,
-                                         zorder=90, label='Observation')
-
-        self.courbeObs.set_visible(False)
-
 
 class DraggableLegendNew:
     def __init__(self, legend):
