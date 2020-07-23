@@ -42,13 +42,6 @@ else:  # qt5
 import time
 
 
-# TODO  pour réduire les temps d'accès
-# creation tab relation  id_run var
-# creation tab relation  id_run pknum
-# creation tab relation  id_run time
-# stocker un json  table runs (remplace txt)  accèlère graph
-#  {'id_runs' : {'var' : [1,2,3,4], 'time' : [0,1,2,3,4], 'pknum' : [0,1,2,3,4]}
-
 class GraphResultDialog(QWidget):
     def __init__(self, mgis, typ_graph, id=None):
         QWidget.__init__(self)
@@ -460,24 +453,8 @@ class GraphResultDialog(QWidget):
                     txt = str(pknum)
                 self.cb_det.addItem(txt, pknum)
             self.cb_det.setCurrentIndex(self.cb_det.findData(id))
-
         elif self.typ_graph == "hydro":
 
-            # sql = "SELECT DISTINCT pknum FROM {0}.results WHERE id_runs={1} " \
-            #       "AND var IN (SELECT id FROM {0}.results_var " \
-            #       "WHERE type_res IN {2}) ORDER BY pknum".format(self.mgis.mdb.SCHEMA,
-            #                                                      self.cur_run,
-            #                                                      self.list_sql(self.list_typ_res))
-            #
-            # t1 = time.time()
-            # rows = self.mdb.run_query(sql, fetch=True)
-            # print('req 1 detail_changed', t1 - time.time())
-            # for pknum in rows:
-            #     if row[0] in info['abscissa']:
-            #         txt = str(row[0]) + ' : ' + info['name'][info['abscissa'].index(row[0])]
-            #     else:
-            #         txt = str(row[0])
-            #     self.cb_det.addItem(txt, row[0])
 
             t1 = time.time()
             info = self.mdb.select('profiles', list_var=['abscissa', "name"])
@@ -495,19 +472,6 @@ class GraphResultDialog(QWidget):
 
 
         elif self.typ_graph == "hydro_pk":
-            #
-            # sql = "SELECT DISTINCT time FROM {0}.results WHERE id_runs={1} " \
-            #       "AND var IN (SELECT id FROM {0}.results_var " \
-            #       "WHERE type_res IN {2}) ORDER BY time".format(self.mgis.mdb.SCHEMA,
-            #                                                     self.cur_run,
-            #                                                     self.list_sql(self.list_typ_res))
-
-
-
-
-            # t1 = time.time()
-            # rows = self.mdb.run_query(sql, fetch=True)
-            # print('req 1 detail_changed', t1 - time.time())
 
             sql = "SELECT init_date FROM {0}.runs " \
                   "WHERE id = {1} ".format(self.mgis.mdb.SCHEMA,
@@ -521,13 +485,7 @@ class GraphResultDialog(QWidget):
                 self.date = None
             if self.typ_graph == 'hydro_profil':
                 self.cb_det.addItem("Zmax", "Zmax")
-            # for row in rows:
-            #     if self.date:
-            #         aff = self.date + timedelta(seconds=row[0])
-            #         aff = '{:%d/%m/%Y %H:%M:%S}.{:02.0f}'.format(aff, aff.microsecond / 10000.0)
-            #     else:
-            #         aff = str(row[0])
-            #     self.cb_det.addItem(aff, row[0])
+
             for time_ in self.info_graph[self.typ_res]['time']:
                 if self.date:
                     aff = self.date + timedelta(seconds=time_)
@@ -541,16 +499,6 @@ class GraphResultDialog(QWidget):
 
 
         elif self.typ_graph == 'hydro_profil':
-
-            # sql = "SELECT DISTINCT time FROM {0}.results WHERE id_runs={1} " \
-            #       "AND var ={2} ORDER BY time".format(self.mgis.mdb.SCHEMA,
-            #                                           self.cur_run, self.id_z)
-            #
-            # t1 = time.time()
-            # rows = self.mdb.run_query(sql, fetch=True)
-            # print('req 1 detail_changed', t1 - time.time())
-            # self.sld_det.setMaximum(len(rows) - 1)
-
 
             sql = "SELECT init_date FROM {0}.runs " \
                   "WHERE id = {1} ".format(self.mgis.mdb.SCHEMA,
@@ -585,16 +533,6 @@ class GraphResultDialog(QWidget):
             else:
                 table = "basins"
                 num = "basinnum"
-
-            # sql = "SELECT DISTINCT name,{4},gid FROM  {0}.{3} WHERE {4} IN " \
-            #       "(SELECT DISTINCT pknum FROM {0}.results WHERE id_runs={1} " \
-            #       "AND var IN (SELECT id FROM {0}.results_var " \
-            #       "WHERE type_res = '{2}') ORDER BY pknum)".format(self.mgis.mdb.SCHEMA,
-            #                                                        self.cur_run,
-            #                                                        self.typ_res,
-            #                                                        table,
-            #                                                        num)
-
 
             sql = "SELECT DISTINCT name,{3},gid FROM  {0}.{2} WHERE {3} " \
                   "IN {1} ".format(self.mgis.mdb.SCHEMA,
@@ -674,14 +612,8 @@ class GraphResultDialog(QWidget):
             self.graph_obj.init_mdl(self.cur_vars, self.cur_vars_lbl, lst_colors, 'm')
             self.zmax_save = None
             if self.cur_run:
-                # t1 = time.time()
-                # condition = "id_runs = {0} AND pknum = {1} " \
-                #             "AND var ={2}".format(self.cur_run, self.cur_pknum, self.id_z)
-                # self.zmax_save = self.mdb.select_max("val", 'results', condition)
-                # print('req 1 graph_changed_profil', t1 - time.time())
                 if 'zmax' in self.info_graph[self.typ_res].keys():
                     self.zmax_save = self.info_graph[self.typ_res]['zmax'][str(self.cur_pknum)]
-
 
             if update:
                 self.update_data_profil()
@@ -1146,10 +1078,7 @@ class GraphResult(GraphCommonNew):
         self.courbeObs, = self.axes.plot([], [], color='grey',
                                          marker='o', markeredgewidth=0,
                                          zorder=90, label='Observation')
-        # # annot_obs = self.axes.annotate("", xy=(0, 0), ha='left', xytext=(10, 0), textcoords='offset points',
-        # #                                va='top', bbox=dict(boxstyle='round, pad=0.5', fc='white', alpha=0.7),
-        # #                                color='grey', visible=False, zorder=199 - v)
-        # # self.annotation.append(annot_obs)
+
         self.courbeObs.set_visible(False)
         self.courbes.append(self.courbeObs)
 
