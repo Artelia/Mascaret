@@ -824,8 +824,9 @@ class ClassMascaret:
         arbre.write(fichier_sortie)
 
         # ****** XCAS initialisation **********
-        dt_init = 3600
+        temps_max = 3600
         np_pas_temps_init = 2
+        dt_init = temps_max/np_pas_temps_init
 
         param_cas = fichier_cas.find('parametresCas')
         parametres_generaux = param_cas.find('parametresGeneraux')
@@ -837,6 +838,7 @@ class ClassMascaret:
         parametres_temporels.find('pasTemps').text = '{}'.format(dt_init)
         parametres_temporels.find('critereArret').text = '2'
         parametres_temporels.find('nbPasTemps').text = '{}'.format(np_pas_temps_init)
+        parametres_temporels.find('tempsMax').text = '{}'.format(temps_max)
         parametres_temporels.find('pasTempsVar').text = 'false'
         geom_reseau = param_cas.find('parametresGeometrieReseau')
         type_cond = geom_reseau.find('extrLibres').find('typeCond')
@@ -1657,13 +1659,13 @@ class ClassMascaret:
                     self.lance_mascaret(self.baseName + '_init.xcas', id_run)
 
                     # TODO delete in the future
-                    self.lit_opt(run, sceninit, id_run, None,
-                                 self.baseName + '_init', comments)
-                    self.mgis.chkt.convert_all_result()
+                    #self.lit_opt(run, sceninit, id_run, None,
+                    #             self.baseName + '_init', comments)
+                    #self.mgis.chkt.convert_all_result()
                     # ----------
                     # TODO change when change graphic hydro
-                    # self.lit_opt_new(id_run, None,
-                    #                  self.baseName + '_init', comments)
+                    self.lit_opt_new(id_run, None,
+                                     self.baseName + '_init', comments)
 
                 else:
                     self.mgis.add_info("No Run initialization.\n"
@@ -1694,10 +1696,10 @@ class ClassMascaret:
 
             # Lecture de l'OPT des casiers et liaisons puis ecriture dans la table resultats
             # TODO delete in the future
-            self.lit_opt(run, scen, id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
-            self.mgis.chkt.convert_all_result()
+            #self.lit_opt(run, scen, id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
+            #self.mgis.chkt.convert_all_result()
             # ----------
-            # self.lit_opt_new(id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
+            self.lit_opt_new(id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
 
             if self.check_mobil_gate():
                 self.read_mobil_gate_res(id_run)
@@ -2510,13 +2512,16 @@ class ClassMascaret:
 
     def save_run_graph(self, val, id_run, typ_res, max=True):
         """save info for graph"""
+
         list_insert =[]
         list_var = []
-        for id in self.val.keys():
+        for id in val.keys():
             if isinstance(id, int):
                 list_var.append(id)
-        list_insert.append([id_run, typ_res, 'var', json.dump(list_var)])
-        list_insert.append([id_run,typ_res,'time', json.dump(val['TIME'])])
+        list_var=list(set(list_var))
+        #delete doublon list(set(my_list))
+        list_insert.append([id_run, typ_res, 'var', json.dumps(sorted(list_var))])
+        list_insert.append([id_run,typ_res,'time', json.dumps(sorted(list(set(val['TIME']))))])
 
         if typ_res =='opt':
             var_info = {'var': 'Z',
@@ -2524,7 +2529,7 @@ class ClassMascaret:
             id_z = self.mdb.check_id_var(var_info)
             if id_z in list_var and max:
                 dico_zmax = {}
-                for pknum in val['PK']:
+                for pknum in list(set(val['PK'])):
                     sql = "SELECT MAX(val) FROM {0}.results " \
                           "WHERE var = {2} " \
                           "AND id_runs={1} AND pknum ={3};".format(self.mdb.SCHEMA,
@@ -2545,8 +2550,11 @@ class ClassMascaret:
         elif 'tracer_' in typ_res:
             key_pknum = 'PK'
 
-        list_insert.append([id_run,typ_res,'pknum', json.dump(val[key_pknum])])
+        list_insert.append([id_run,typ_res,'pknum', json.dumps(sorted(list(set(val[key_pknum]))))])
 
+        col_tab = ['id_runs', 'type_res', 'var', 'val']
+        if len(list_insert) > 0:
+            self.mdb.insert_res('runs_graph', list_insert, col_tab)
 
     def lit_opt_new(self, id_run, date_debut, base_namefile, comments='', tracer=False, casier=False):
         """

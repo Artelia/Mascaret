@@ -945,7 +945,7 @@ $BODY$
                         dico[cols[i]].append(val)
 
             return dico
-        print(sql.format(var, self.SCHEMA, table, where, ordre))
+        print('warning',sql.format(var, self.SCHEMA, table, where, ordre))
         return  None
 
     #

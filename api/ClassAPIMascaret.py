@@ -27,7 +27,6 @@ try:
     from ..Structure.ClassFloodGate import ClassFloodGate
 except:
     # autonome python
-    # pas de vanne mobile possible
     from masc import Mascaret
     from Structure.ClassFloodGate import ClassFloodGate
 

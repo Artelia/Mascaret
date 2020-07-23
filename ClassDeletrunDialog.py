@@ -196,3 +196,12 @@ class ClassDeletrunDialog(QDialog):
               "(SELECT DISTINCT id_runs FROM {0}.results_sect " \
               "where id_runs not in (SELECT id FROM {0}.runs));"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
+        # delete run_graph
+        sql = "DELETE  FROM {0}.runs_graph WHERE id_runs IN " \
+              "(SELECT DISTINCT id_runs FROM {0}.runs_graph " \
+              "where id_runs not in (SELECT id FROM {0}.runs));"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
+
+

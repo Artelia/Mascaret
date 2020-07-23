@@ -75,16 +75,15 @@ class CheckTab():
 
         self.list_hist_version = ['0.0.0', '3.0.0', '3.0.1', '3.0.2']
 
+
     def update_adim(self):
         """
         Update admin_tab and check table
 
         :return:
         """
-
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         version = read_version(self.mgis.masplugPath)
-        #self.all_version(tabs, '3.0.1')
 
         if not "admin_tab" in tabs:
             try:
@@ -403,9 +402,6 @@ class CheckTab():
             #self.mdb.drop_table('resultats_links')
             pass
 
-
-
-
     def convert_result(self, id_run, typ_res):
         """
         conversion between the previous results table format to the new
@@ -458,9 +454,6 @@ class CheckTab():
                                                          id_run, run_run, run_scen)
                 self.mdb.execute(sql)
 
-
-
-
     def fill_result_sect(self, id_run):
         """
         fill results section table
@@ -499,6 +492,10 @@ class CheckTab():
                     json.dump(data, file)
 
     def fill_init_date_runs(self):
+        """
+        fill the initial date in runs tab
+        :return:
+        """
         info = self.mdb.select('runs', list_var=["id", "t", 'init_date'])
         for i, id in enumerate(info['id']):
             ltime = info['t'][i]
@@ -517,6 +514,10 @@ class CheckTab():
                     init_date = None
 
     def fill_struct(self):
+        """
+        add and fill struct column in profiles tab
+        :return:
+        """
         self.mdb.insert_abacus_table(self.mgis.dossier_struct)
         list_col = self.mdb.list_columns('profiles')
         sql = ''
@@ -524,3 +525,8 @@ class CheckTab():
             sql = "ALTER TABLE {0}.profiles DROP COLUMN IF EXISTS  struct;\n"
         sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer DEFAULT 0;"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
+    def debug_update_vers_meta(self):
+        tabs = self.mdb.list_tables(self.mdb.SCHEMA)
+        version = read_version(self.mgis.masplugPath)
+        self.all_version(tabs, version)

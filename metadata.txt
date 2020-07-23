@@ -32,6 +32,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 changelog=
     3.0.2  : Modification of results treatment
              Add automatic update for the database
+             New graph for results
+             Add run_graph table
     3.0.1  : Add mobile valve for hydraulic structure
              Add mobile dam
     3.0.0  : Correction of  displaying observations bug on graphics
