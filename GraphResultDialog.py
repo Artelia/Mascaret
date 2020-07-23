@@ -35,9 +35,9 @@ import re
 import numpy as np
 import matplotlib.lines as mlines
 
-if int(qVersion()[0]) < 5:  # qt4
+if int(qVersion()[0]) < 5:
     from qgis.PyQt.QtGui import *
-else:  # qt5
+else:
     from qgis.PyQt.QtWidgets import *
 import time
 
@@ -85,7 +85,6 @@ class GraphResultDialog(QWidget):
                 if self.typ_graph == "hydro_pk":
                     self.x_var = "pknum"
                     self.sql_where = "results.time = {1}"
-                    # id= branch
                     self.cur_branch = id
                     self.cur_t = -1
                 else:
@@ -93,9 +92,6 @@ class GraphResultDialog(QWidget):
                     self.sql_where = "results.pknum = {1}"
                     self.cur_pknum = id
 
-
-
-            #
             elif self.typ_graph == "hydro_profil":
                 self.typ_res = 'opt'
                 self.x_var = 'x'
@@ -118,7 +114,7 @@ class GraphResultDialog(QWidget):
                 else:
                     self.typ_res = 'basin'
 
-            # self.cb_run.currentIndexChanged.connect(self.init_cb_scen)
+
             self.cb_run.currentIndexChanged.connect(self.run_changed)
             self.cb_scen.currentIndexChanged.connect(self.scen_changed)
             if self.typ_graph == 'hydro_profil':
@@ -223,12 +219,6 @@ class GraphResultDialog(QWidget):
                  'ZREF': False, 'Z': False, 'ZMIN': False, 'ZMAX': False}
 
         if id_run:
-            # pb 15 s a optimiser
-            # sql = "SELECT * FROM {0}.results_var WHERE type_res in {1} " \
-            #       "AND id in (SELECT var FROM {0}.results WHERE " \
-            #       "id_runs={2} group by var)".format(self.mdb.SCHEMA,
-            #                             self.list_sql(self.list_typ_res),
-            #                             id_run)
 
             list_tot = []
 
@@ -311,7 +301,6 @@ class GraphResultDialog(QWidget):
         :return:
         """
         liste = []
-        #
         if typ_res  in self.info_graph.keys():
             if id_run:
                 sql = "SELECT  * FROM {0}.results_var WHERE " \
@@ -383,14 +372,6 @@ class GraphResultDialog(QWidget):
             lst_graph = self.get_lst_graph_bl(self.typ_res, self.cur_run)
         elif self.typ_graph == 'hydro_profil':
             lst_graph = []
-            #
-            # sql = "SELECT DISTINCT pknum FROM {0}.results WHERE id_runs={1} " \
-            #       "AND var IN (SELECT id FROM {0}.results_var " \
-            #       "WHERE var ='Z') ORDER BY pknum".format(self.mgis.mdb.SCHEMA,
-            #                                               self.cur_run)
-            # t1 = time.time()
-            # rows = self.mdb.run_query(sql, fetch=True)
-            # print('req 1 graph_changed', t1 - time.time())
             t1 = time.time()
             info = self.mdb.select('profiles', list_var=['abscissa', "name"])
             print('req 2 init_cb_graph', t1 - time.time())
@@ -422,22 +403,6 @@ class GraphResultDialog(QWidget):
         t0 = time.time()
         self.cb_det.clear()
         if self.typ_graph == "struct" or self.typ_graph == "weirs":
-            # TODO improvement
-
-            # sql = "SELECT DISTINCT profiles.abscissa, profiles.abscissa || " \
-            #       "' : ' || profiles.name FROM {0}.results " \
-            #       "INNER JOIN {0}.profiles ON results.pknum = profiles.abscissa " \
-            #       "WHERE id_runs = {2} AND " \
-            #       "var IN (SELECT id FROM {0}.results_var " \
-            #       "WHERE type_res = '{1}')".format(self.mgis.mdb.SCHEMA,self.typ_res, self.cur_run)
-            # t1 = time.time()
-            # print(sql)
-            # rows = self.mdb.run_query(sql, fetch=True)
-            # print(rows)
-            # print('req 1 detail_changed', t1 - time.time())
-            # for row in rows:
-            #     self.cb_det.addItem(row[1], row[0])
-            # self.cb_det.setCurrentIndex(self.cb_det.findData(id))
             lstpk = []
             if self.typ_res in self.info_graph.keys():
                 for id_config in self.info_graph[self.typ_res]['pknum'].keys():
@@ -706,7 +671,7 @@ class GraphResultDialog(QWidget):
                                                                       self.cur_branch)
             else:
                 sql_hyd_pk = ''
-            #
+
             sql = "SELECT DISTINCT {1} FROM {0}.results WHERE id_runs = {2} AND {4} " \
                   "AND var IN (SELECT id FROM {0}.results_var WHERE var in {3}) {5} " \
                   "ORDER BY {1}".format(self.mgis.mdb.SCHEMA, self.x_var, self.cur_run,
@@ -715,13 +680,10 @@ class GraphResultDialog(QWidget):
             if self.x_var == 'time' :
                 if self.typ_graph in ['struct','weirs']:
                     x_val = None
-                    print('entre 2222',self.typ_res,self.info_graph.keys())
                     if self.typ_res in self.info_graph.keys():
                         for id_config in self.info_graph[self.typ_res]['pknum'].keys():
-                            print("eeeeeeeeeee",self.info_graph[self.typ_res]['pknum'][id_config],self.cur_pknum)
                             if self.info_graph[self.typ_res]['pknum'][id_config] == self.cur_pknum:
                                 x_val = self.info_graph[self.typ_res]['time'][id_config]
-                                print('rentre ********')
                     if not x_val :
                         x_val = self.info_graph['opt']['time']
                 else:
@@ -1001,13 +963,13 @@ class GraphResultDialog(QWidget):
 
     def export_csv(self):
         """Export Table to .CSV file"""
-        # recupe tab export CSV
+
         txt = self.cb_graph.currentText()
         default_name = txt.replace(' ', '_').replace(':', '-')
-        if int(qVersion()[0]) < 5:  # qt4
+        if int(qVersion()[0]) < 5:
             file_name_path = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(default_name),
                                                          filter="CSV (*.csv *.)")
-        else:  # qt5
+        else:
             file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile", "{0}.csv".format(default_name),
                                                             filter="CSV (*.csv *.)")
 
