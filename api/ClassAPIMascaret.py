@@ -293,7 +293,6 @@ class ClassAPIMascaret:
         self.tfin = self.masc.get('State.PreviousTime')
 
     def one_iter(self, t0, t1, dtp):
-
         if self.mobil_struct:
             self.clfg.iter_fg(t0, dtp)
 

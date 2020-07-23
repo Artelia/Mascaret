@@ -418,7 +418,7 @@ class ClassMethod:
                   "WHERE id_config = {};".format(self.mdb.SCHEMA, "struct_param", id_config)
             list_recup = self.mdb.run_query(sql, fetch=True, namvar=False)
             list_recup = [var[0] for var in list_recup]
-            print(list_recup)
+
         if list_recup:
             for info in list_recup:
                 where = "id_config = {0} AND var = '{1}' ".format(id_config, info)

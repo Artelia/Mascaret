@@ -1738,9 +1738,10 @@ class ClassMascaret:
             cond_casier = True
 
         id_run = self.insert_id_run(run, scen)
-        self.lit_opt(run, scen, id_run, date_debut, self.baseName, comments, cond_tra, cond_casier)
+        # self.lit_opt(run, scen, id_run, date_debut, self.baseName, comments, cond_tra, cond_casier)
+        # self.mgis.chkt.convert_all_result()
+        self.lit_opt_new(id_run, date_debut, self.baseName, comments, cond_tra, cond_casier)
 
-        self.mgis.chkt.convert_all_result()
         if os.path.isfile(os.path.join(path,'Fichier_Crete.csv')):
             self.read_mobil_gate_res(id_run)
 
@@ -1832,17 +1833,32 @@ class ClassMascaret:
                     'name': 'valve movement',
                     'type_var': 'float'}
         id_var = self.mdb.check_id_var(var_info)
+
+        dico_pk = {}
+        dico_time = {}
         for id_config in dico_res.keys():
             rows = self.mdb.select('struct_config', where='id={}'.format(id_config),
                                    list_var=['abscissa'])
             time = dico_res[id_config]['TIME']
             lpk = [rows['abscissa'][0] for var in range(len(time))]
+            dico_pk[id_config] = rows['abscissa'][0]
+            dico_time[id_config] = list(time)
 
             v_tmp = self.creat_values(id_run, id_var, lpk,
                                       time, dico_res[id_config]['ZSTR'])
 
             values += v_tmp
         self.mdb.insert_res('results', values, colonnes)
+
+        if len(dico_res.keys())>0:
+            list_insert =[]
+            list_insert.append([id_run, 'struct', 'pknum', json.dumps(dico_pk)])
+            list_insert.append([id_run, 'struct', 'time', json.dumps(dico_time)])
+            list_insert.append([id_run, 'struct', 'var', json.dumps([id_var])])
+            col_tab = ['id_runs', 'type_res', 'var', 'val']
+            self.mdb.insert_res('runs_graph', list_insert, col_tab)
+
+
 
     def creat_values(self, id_run, id_name, lpk, ltime, lval):
         """
@@ -1861,7 +1877,7 @@ class ClassMascaret:
 
         return values
 
-    # TODO en cours modif
+
     def lit_opt(self, run, scen, id_run, date_debut, base_namefile, comments='', tracer=False, casier=False):
         nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
         # tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
@@ -2349,16 +2365,29 @@ class ClassMascaret:
             # Stock information
             colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
             values = []
+            dico_pk = {}
+            dico_time = {}
             for name in dico_res.keys():
                 where = "name = '{}'".format(name)
                 info = self.mdb.select('weirs', where=where, list_var=['gid', 'abscissa'])
                 time = dico_res[name]['TIME']
                 lpk = [info['abscissa'][0] for i in range(len(time))]
+                dico_pk[name] = info['abscissa'][0]
+                dico_time[name] = list(time)
                 v_tmp = self.creat_values(id_run, id_var, lpk,
                                           time, dico_res[name]['ZSTR'])
                 values += v_tmp
             if len(values) > 0:
                 self.mdb.insert_res('results', values, colonnes)
+
+
+            if len(dico_res.keys()) > 0:
+                list_insert = []
+                list_insert.append([id_run, 'weirs', 'pknum', json.dumps(dico_pk)])
+                list_insert.append([id_run, 'weirs', 'time', json.dumps(dico_time)])
+                list_insert.append([id_run, 'weirs', 'var', json.dumps([id_var])])
+                col_tab = ['id_runs', 'type_res', 'var', 'val']
+                self.mdb.insert_res('runs_graph', list_insert, col_tab)
 
     def insert_id_run(self, run, scen):
         """
@@ -2549,7 +2578,6 @@ class ClassMascaret:
             key_pknum = 'LNUM'
         elif 'tracer_' in typ_res:
             key_pknum = 'PK'
-
         list_insert.append([id_run,typ_res,'pknum', json.dumps(sorted(list(set(val[key_pknum]))))])
 
         col_tab = ['id_runs', 'type_res', 'var', 'val']

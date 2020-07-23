@@ -309,6 +309,7 @@ class GraphResultDialog(QWidget):
                 self.info_graph[row[0]][row[1]] = row[2]
             else:
                 self.info_graph[row[0]] = {row[1]: row[2]}
+        print("update info_graph")
 
     def get_lst_graph_bl(self, typ_res, id_run=None):
         """
@@ -340,8 +341,6 @@ class GraphResultDialog(QWidget):
                               'type_res': typ_res})
             liste = self.change_lengend_var(liste)
         return liste
-
-
 
     def init_dico_run(self):
         t0 = time.time()
@@ -430,23 +429,38 @@ class GraphResultDialog(QWidget):
         t0 = time.time()
         self.cb_det.clear()
         if self.typ_graph == "struct" or self.typ_graph == "weirs":
-            # TODO **********************************************************************************************************************
-            # sql = "SELECT val FROM {0}.runs_graph WHERE type_res = '{1}' " \
-            #       "AND var = 'pknum'  AND id_runs = {2}".format(self.mdb.SCHEMA, self.typ_res, self.cur_run)
-            sql = "SELECT DISTINCT profiles.abscissa, profiles.abscissa || " \
-                  "' : ' || profiles.name FROM {0}.results " \
-                  "INNER JOIN {0}.profiles ON results.pknum = profiles.abscissa " \
-                  "WHERE id_runs = {2} AND " \
-                  "var IN (SELECT id FROM {0}.results_var " \
-                  "WHERE type_res = '{1}')".format(self.mgis.mdb.SCHEMA,
-                                                                                        self.typ_res, self.cur_run)
+            # TODO improvement
 
+            # sql = "SELECT DISTINCT profiles.abscissa, profiles.abscissa || " \
+            #       "' : ' || profiles.name FROM {0}.results " \
+            #       "INNER JOIN {0}.profiles ON results.pknum = profiles.abscissa " \
+            #       "WHERE id_runs = {2} AND " \
+            #       "var IN (SELECT id FROM {0}.results_var " \
+            #       "WHERE type_res = '{1}')".format(self.mgis.mdb.SCHEMA,self.typ_res, self.cur_run)
+            # t1 = time.time()
+            # print(sql)
+            # rows = self.mdb.run_query(sql, fetch=True)
+            # print(rows)
+            # print('req 1 detail_changed', t1 - time.time())
+            # for row in rows:
+            #     self.cb_det.addItem(row[1], row[0])
+            # self.cb_det.setCurrentIndex(self.cb_det.findData(id))
+            lstpk = []
+            if self.typ_res in self.info_graph.keys():
+                for id_config in self.info_graph[self.typ_res]['pknum'].keys():
+                    lstpk.append(self.info_graph[self.typ_res]['pknum'][id_config])
             t1 = time.time()
-            rows = self.mdb.run_query(sql, fetch=True)
-            print('req 1 detail_changed', t1 - time.time())
-            for row in rows:
-                self.cb_det.addItem(row[1], row[0])
+            info = self.mdb.select('profiles',where='abscissa IN {0}'.format(self.list_sql(lstpk,'float'))
+                                   , list_var=['abscissa', "name"])
+
+            for pknum in lstpk:
+                if pknum in info['abscissa']:
+                    txt = str(pknum) + ' : ' + info['name'][info['abscissa'].index(pknum)]
+                else:
+                    txt = str(pknum)
+                self.cb_det.addItem(txt, pknum)
             self.cb_det.setCurrentIndex(self.cb_det.findData(id))
+
         elif self.typ_graph == "hydro":
 
             # sql = "SELECT DISTINCT pknum FROM {0}.results WHERE id_runs={1} " \
@@ -767,7 +781,19 @@ class GraphResultDialog(QWidget):
                                         sqlv, sqlw, sql_hyd_pk)
 
             if self.x_var == 'time' :
-                x_val = self.info_graph[self.typ_res]['time']
+                if self.typ_graph in ['struct','weirs']:
+                    x_val = None
+                    print('entre 2222',self.typ_res,self.info_graph.keys())
+                    if self.typ_res in self.info_graph.keys():
+                        for id_config in self.info_graph[self.typ_res]['pknum'].keys():
+                            print("eeeeeeeeeee",self.info_graph[self.typ_res]['pknum'][id_config],self.cur_pknum)
+                            if self.info_graph[self.typ_res]['pknum'][id_config] == self.cur_pknum:
+                                x_val = self.info_graph[self.typ_res]['time'][id_config]
+                                print('rentre ********')
+                    if not x_val :
+                        x_val = self.info_graph['opt']['time']
+                else:
+                    x_val = self.info_graph[self.typ_res]['time']
                 sql = "SELECT init_date FROM {0}.runs " \
                       "WHERE id = {1} ".format(self.mgis.mdb.SCHEMA, self.cur_run)
                 t1 = time.time()
@@ -802,6 +828,7 @@ class GraphResultDialog(QWidget):
 
 
             self.cur_data[self.x_var] = x_val
+            print(self.cur_data['time'])
 
 
             for var in self.cur_vars:
@@ -829,6 +856,8 @@ class GraphResultDialog(QWidget):
                 self.graph_obj.axes.set_xlabel(r'Pk ($m$)')
 
             self.update_title()
+            print(x_var_)
+            print(self.cur_data[x_var_])
             self.fill_tab(x_var_)
 
             self.graph_obj.init_graph(self.cur_data, x_var_)

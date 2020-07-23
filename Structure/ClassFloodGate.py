@@ -57,7 +57,7 @@ class ClassFloodGate:
         """
         self.model_size, _, _ = self.masc.get_var_size('Model.X')
 
-        self.param_fg, link_name_id = self.get_param_fg()
+        self.param_fg, link_name_id =self.init_var.get_param_fg()
 
         # attention init.loi ou pas
         # connaitrea la relation config et non law
@@ -86,9 +86,7 @@ class ClassFloodGate:
     def info_init_poly(self):
         """ Get information of polygones"""
         for id_config in self.param_fg.keys():
-            where = " id_config={} and type=0 ".format(id_config)
-            order = "id_elem"
-            list_poly_trav = self.init_var.select_poly('struct_elem', where, order)['polygon']
+            list_poly_trav = self.init_var.select_poly_elem(id_config, 0)
             list_miny = []
             list_maxy = []
             for poly in list_poly_trav:
@@ -169,6 +167,7 @@ class ClassFloodGate:
 
     def regul(self, id_config, time, param_fg, dtp):
         if check_time_regul(time, param_fg['DTREG'], param_fg):
+
             # debut regule
             new_z = self.cmpt_znew(param_fg, dtp)
             self.fill_results_fg_mv(id_config, time, new_z, param_fg['ZOLD'], dtp)
@@ -185,7 +184,7 @@ class ClassFloodGate:
         else:
             pass
 
-    def sort_law(list_final):
+    def sort_law(self,list_final):
         """
         sort the law
         :param list_final: law data
@@ -345,7 +344,7 @@ class ClassFloodGate:
                 self.results_fg_mv[id_config]['ZSTR'].append(zold)
             self.results_fg_mv[id_config]['TIME'].append(time)
             self.results_fg_mv[id_config]['ZSTR'].append(newz)
-        print(self.results_fg_mv[id_config]['TIME'],self.results_fg_mv[id_config]['ZSTR'])
+
         
     def update_law(self, id_config, param_fg, new_z, mobil_struct):
         """   Compute new law
@@ -371,4 +370,4 @@ class ClassFloodGate:
         return list_final
 
     def fg_actif(self):
-        self.init_var.fg_actif()
+        return  self.init_var.fg_actif()
