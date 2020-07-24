@@ -722,8 +722,6 @@ class GraphResultDialog(QWidget):
 
 
             self.cur_data[self.x_var] = x_val
-            print(self.cur_data['time'])
-
 
             for var in self.cur_vars:
                 t1 = time.time()
@@ -750,8 +748,6 @@ class GraphResultDialog(QWidget):
                 self.graph_obj.axes.set_xlabel(r'Pk ($m$)')
 
             self.update_title()
-            print(x_var_)
-            print(self.cur_data[x_var_])
             self.fill_tab(x_var_)
 
             self.graph_obj.init_graph(self.cur_data, x_var_)

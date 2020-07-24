@@ -27,6 +27,8 @@ import shutil
 import subprocess
 import sys
 import json
+import time
+import psycopg2.extras
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
@@ -1740,7 +1742,9 @@ class ClassMascaret:
         id_run = self.insert_id_run(run, scen)
         # self.lit_opt(run, scen, id_run, date_debut, self.baseName, comments, cond_tra, cond_casier)
         # self.mgis.chkt.convert_all_result()
+        t1 = time.time()
         self.lit_opt_new(id_run, date_debut, self.baseName, comments, cond_tra, cond_casier)
+        print('lit_opt_new', t1 - time.time())
 
         if os.path.isfile(os.path.join(path,'Fichier_Crete.csv')):
             self.read_mobil_gate_res(id_run)
@@ -2553,25 +2557,41 @@ class ClassMascaret:
         list_insert.append([id_run,typ_res,'time', json.dumps(sorted(list(set(val['TIME']))))])
 
         if typ_res =='opt':
-            var_info = {'var': 'Z',
+            var_info = {'var': 'ZMAX',
                         'type_res': 'opt'}
-            id_z = self.mdb.check_id_var(var_info)
-            if id_z in list_var and max:
+            id_zmax = self.mdb.check_id_var(var_info)
+            # if zmax exist
+            if  id_zmax in list_var:
                 dico_zmax = {}
-                for pknum in list(set(val['PK'])):
-                    sql = "SELECT MAX(val) FROM {0}.results " \
-                          "WHERE var = {2} " \
-                          "AND id_runs={1} AND pknum ={3};".format(self.mdb.SCHEMA,
-                                                                   id_run,
-                                                                   id_z,
-                                                                   pknum)
-                    rows = self.mdb.run_query(sql, fetch=True)
-                    try:
-                        dico_zmax[pknum] = rows[0][0]
-                    except Exception:
-                        dico_zmax[pknum] = None
+                tmax = val['TIME'][-1]
+                for i in range( len(val['TIME']) - 1, -1, -1):
+                    if val['TIME'][i] == tmax:
+                        dico_zmax[val['PK'][i]] = val[id_zmax][i]
+                    else:
+                      break
+
                 list_insert.append([id_run, typ_res, 'zmax', json.dumps(dico_zmax)])
                 key_pknum = 'PK'
+            else:
+                var_info = {'var': 'Z',
+                            'type_res': 'opt'}
+                id_z = self.mdb.check_id_var(var_info)
+                if id_z in list_var and max:
+                    dico_zmax = {}
+                    for pknum in list(set(val['PK'])):
+                        sql = "SELECT MAX(val) FROM {0}.results " \
+                              "WHERE var = {2} " \
+                              "AND id_runs={1} AND pknum ={3};".format(self.mdb.SCHEMA,
+                                                                       id_run,
+                                                                       id_z,
+                                                                       pknum)
+                        rows = self.mdb.run_query(sql, fetch=True)
+                        try:
+                            dico_zmax[pknum] = rows[0][0]
+                        except Exception:
+                            dico_zmax[pknum] = None
+                    list_insert.append([id_run, typ_res, 'zmax', json.dumps(dico_zmax)])
+                    key_pknum = 'PK'
         elif typ_res == 'basin':
             key_pknum = 'BNUM'
         elif typ_res == 'link':
@@ -2618,10 +2638,13 @@ class ClassMascaret:
         init_col = ['TIME', 'BRANCH', 'SECTION', 'PK']
         val_opt = self.new_read_opt(nom_fich, type_res, init_col)
         key_val_opt = val_opt.keys()
-
+        t1 = time.time()
         self.save_new_results(val_opt, id_run)
-        #TODO check
+        print('save opt', t1 - time.time())
+
+        t1 = time.time()
         self.save_run_graph(val_opt, id_run, type_res)
+        print('save_run_graph opt', t1 - time.time())
         del val_opt
 
         if casier:
@@ -2632,9 +2655,12 @@ class ClassMascaret:
                 type_res = 'basin'
                 init_col = ['TIME', 'BNUM']
                 val = self.new_read_opt(nom_fich_bas, type_res, init_col)
+                t1 = time.time()
                 self.save_new_results(val, id_run)
-                # TODO check
-                self.save_run_graph(val_opt, id_run, type_res)
+                print('save basin', t1 - time.time())
+                t1 = time.time()
+                self.save_run_graph(val, id_run, type_res)
+                print('save_run_graph basin', t1 - time.time())
                 del val
 
             nom_fich_link = os.path.join(self.dossierFileMasc, base_namefile + '.liai_opt')
@@ -2644,9 +2670,12 @@ class ClassMascaret:
                 type_res = 'link'
                 init_col = ['TIME', 'LNUM']
                 val = self.new_read_opt(nom_fich_link, type_res, init_col)
+                t1 = time.time()
                 self.save_new_results(val, id_run)
-                # TODO check
+                print('save link', t1 - time.time())
+                t1 = time.time()
                 self.save_run_graph(val, id_run, type_res)
+                print('save_run_graph link', t1 - time.time())
                 del val
         if tracer:
             nom_fich_tra = os.path.join(self.dossierFileMasc, base_namefile + '.tra_opt')
@@ -2663,10 +2692,12 @@ class ClassMascaret:
                 for key in val_key:
                     if key in key_val_opt:
                         del val[key]
-
+                t1 = time.time()
                 self.save_new_results(val, id_run)
-                # TODO check
+                print('save tracer', t1 - time.time())
+                t1 = time.time()
                 self.save_run_graph(val, id_run, type_res)
+                print('save_run_graph tracer', t1 - time.time())
 
     def save_new_results(self, val, id_run):
         """
@@ -2675,6 +2706,7 @@ class ClassMascaret:
         :param id_run: run index
         :return:
         """
+        print('entre save_new')
         val_keys = val.keys()
         if 'PK' in val_keys:
             lpk = val['PK']
@@ -2700,12 +2732,51 @@ class ClassMascaret:
                     cond = True
 
         col_tab = ['id_runs', 'time', 'pknum', 'var', 'val']
+        nb_stock = 25000
         if len(values) > 0:
-            self.mdb.insert_res('results', values, col_tab)
+            # t1 = time.time()
+            #     # More speed but
+            #     # copy a un problème de premission car Postgres n'a pas accès au repertoir du plugin.
+            #     # 2 possibilité :
+            #     #  - les droit à postgres
+            #     #   - copier le fichier dans un zone possible
+            #     # ces deux possiblités dependent de la machine host
+            #     # il est impossible de pouvoir le gérer.
+            #     namefile = os.path.join(self.dossierFileMasc, 'opt_tmp.csv')
+            #     with  open(namefile, "w") as fout :
+            #         for info in values:
+            #             fout.write('{0}\n'.format(';'.join(map(str,info))))
+            #
+            #     sql = "COPY {0}.results({2}) FROM '{1}' WITH DELIMITER ';' CSV;".format(
+            #         self.mdb.SCHEMA,
+            #         namefile,
+            #         ','.join(col_tab))
+            #     cur = self.mdb.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            #     cur.execute(sql)
+            #     self.mdb.con.commit()
+                # speedest than one insert
+
+            nb = max(int(len(values)/nb_stock),1)
+            if nb == 1:
+                self.mdb.insert_res('results', values, col_tab)
+            else:
+                for i in range(nb-1):
+                    self.mdb.insert_res('results', values[nb_stock * i:nb_stock * (i + 1)], col_tab)
+                self.mdb.insert_res('results', values[nb_stock * (i + 1):], col_tab)
+            #self.mdb.insert_res('results', values, col_tab)
+            # print('insert res', t1 - time.time())
         col_sect = ['id_runs', 'pk', 'branch', 'section']
         if len(val_sect) > 0:
-            self.mdb.insert_res('results_sect', val_sect, col_sect)
-
+            # t1 = time.time()
+            nb = max(int(len(values) / nb_stock), 1)
+            if nb == 1:
+                self.mdb.insert_res('results_sect', val_sect, col_sect)
+            else:
+                for i in range(nb - 1):
+                    self.mdb.insert_res('results_sect', val_sect[nb_stock * i:nb_stock * (i + 1)], col_sect)
+                self.mdb.insert_res('results_sect', val_sect[nb_stock * (i + 1):], col_sect)
+            #self.mdb.insert_res('results_sect', val_sect, col_sect)
+            # print('insert sect', t1 - time.time())
         return True
 
     def get_for_lig_new(self, id_run):
