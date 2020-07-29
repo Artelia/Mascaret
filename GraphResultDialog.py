@@ -407,16 +407,17 @@ class GraphResultDialog(QWidget):
             if self.typ_res in self.info_graph.keys():
                 for id_config in self.info_graph[self.typ_res]['pknum'].keys():
                     lstpk.append(self.info_graph[self.typ_res]['pknum'][id_config])
-            t1 = time.time()
-            info = self.mdb.select('profiles',where='abscissa IN {0}'.format(self.list_sql(lstpk,'float'))
-                                   , list_var=['abscissa', "name"])
+                info = self.mdb.select('profiles',where='abscissa IN {0}'.format(self.list_sql(lstpk,'float'))
+                                       , list_var=['abscissa', "name"])
+                for pknum in lstpk:
+                    if pknum in info['abscissa']:
+                        txt = str(pknum) + ' : ' + info['name'][info['abscissa'].index(pknum)]
+                    else:
+                        txt = str(pknum)
+                    self.cb_det.addItem(txt, pknum)
+            else:
+                pass
 
-            for pknum in lstpk:
-                if pknum in info['abscissa']:
-                    txt = str(pknum) + ' : ' + info['name'][info['abscissa'].index(pknum)]
-                else:
-                    txt = str(pknum)
-                self.cb_det.addItem(txt, pknum)
             self.cb_det.setCurrentIndex(self.cb_det.findData(id))
         elif self.typ_graph == "hydro":
 

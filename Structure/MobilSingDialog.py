@@ -90,6 +90,7 @@ class ClassMobilSingDialog(QDialog):
         self.ui.b_OK_page1.rejected.connect(self.reject)
         self.ui.b_OK_page3.accepted.connect(self.accept_page3)
         self.ui.b_OK_page3.rejected.connect(self.reject_page3)
+        self.ui.actionB_edit.triggered.connect(self.edit_set)
 
         self.ui.actionB_addLine.triggered.connect(self.new_time)
         self.ui.actionB_delLine.triggered.connect(self.delete_time)
@@ -100,7 +101,7 @@ class ClassMobilSingDialog(QDialog):
         self.ui.tab_sets.sCut_del = QShortcut(QKeySequence("Del"), self)
         self.ui.tab_sets.sCut_del.activated.connect(self.short_cut_row_del)
 
-        self.ui.actionB_edit.triggered.connect(self.edit_set)
+
 
 
         self.lst_sets.clicked.connect(self.select_list)
@@ -476,6 +477,7 @@ class ClassMobilSingDialog(QDialog):
             sql = "UPDATE {0}.weirs SET active_mob = 'f' WHERE name = '{1}'".format(self.mdb.SCHEMA, name)
             self.mdb.run_query(sql)
 
+
     def init_ui(self):
         """initialisation gui"""
         self.delete_useless_data()
@@ -546,8 +548,11 @@ class ClassMobilSingDialog(QDialog):
             self.update_courbe(cols)
 
     def edit_set(self):
+        print("eeeee", self.ui.lst_sets.selectedIndexes())
         if self.ui.lst_sets.selectedIndexes():
             l = self.ui.lst_sets.selectedIndexes()[0].row()
+
+            print(self.ui.lst_sets.model().item(l, 1).text())
             self.cur_set = self.ui.lst_sets.model().item(l, 1).text()
 
             if self.edit_type =='table':

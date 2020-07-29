@@ -1749,6 +1749,11 @@ class ClassMascaret:
         if os.path.isfile(os.path.join(path,'Fichier_Crete.csv')):
             self.read_mobil_gate_res(id_run)
 
+        if os.path.isfile(os.path.join(path, 'res_struct.res')):
+            with open(os.path.join(path, 'res_struct.res'), 'r') as filein:
+                dico = json.load(filein)
+            self.stock_res_api(dico,id_run)
+
     def fct_only_init(self, noyau):
         """
         clean and model file creation
@@ -2383,7 +2388,6 @@ class ClassMascaret:
                 values += v_tmp
             if len(values) > 0:
                 self.mdb.insert_res('results', values, colonnes)
-
 
             if len(dico_res.keys()) > 0:
                 list_insert = []

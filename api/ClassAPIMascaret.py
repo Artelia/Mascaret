@@ -20,6 +20,8 @@ email                :
 """
 
 import os
+import sys
+
 
 try:
     # Plugin
@@ -27,6 +29,7 @@ try:
     from ..Structure.ClassFloodGate import ClassFloodGate
 except:
     # autonome python
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from masc import Mascaret
     from Structure.ClassFloodGate import ClassFloodGate
 
@@ -310,6 +313,14 @@ class ClassAPIMascaret:
         if self.clfg != None:
             self.clfg.finalize(self.tfin)
             self.results_api['STRUCT_FG'] = self.clfg.results_fg_mv
+            if self.mgis == None:
+                self.write_res_struct(self.results_api['STRUCT_FG'])
+
+    def write_res_struct(self, res):
+        import json
+        with open(os.path.join(self.dossierFileMasc, "res_struct.res"), 'w') as filein:
+            json.dump(res, filein)
+
 
     def main(self, filename, tracer=False, basin=False):
         self.tracer = tracer
@@ -328,8 +339,9 @@ class ClassAPIMascaret:
 
 
 if __name__ == '__main__':
+    path = os.getcwd()
     dico = {
-        "RUN_REP": r'C:\Users\mehdi-pierre.daou\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret',
+        "RUN_REP": path,
         "DEBUG": True,
         'BASE_NAME': 'mascaret'}
 
