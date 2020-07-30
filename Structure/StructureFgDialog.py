@@ -42,6 +42,7 @@ class StructureFgDialog(QDialog):
         self.tbst = ClassTableStructure()
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_floodgate.ui'), self)
         self.id_struct = id_struct
+        self.unitv =0
         self.b_ok.accepted.connect(self.accept_page)
         self.b_ok.rejected.connect(self.reject_page)
         self.zinc_fg.valueChanged.connect(self.update_min_zinc_fg_max)
@@ -54,7 +55,7 @@ class StructureFgDialog(QDialog):
         #
 
         fill_qcombobox(self.cb_type_t, [[1, 's'], [60, 'min'], [3600, 'h'], [86400, 'jours']])
-        fill_qcombobox(self.cb_type_t_vit, [[1, 'm/s'], [1 / 60, 'm/min'], [1 / 3600, 'm/h']])
+        fill_qcombobox(self.cb_type_t_vit, [[1, 'm/s'], [ 60, 'm/min'], [3600, 'm/h']])
 
         self.dico_ctrl = {'VELOFG': [self.vel_fg],
                           'TYPE_TIME_VELO': [self.cb_type_t_vit],
@@ -74,15 +75,18 @@ class StructureFgDialog(QDialog):
         if self.cb_var.currentText() == 'Debit':
             fill_qcombobox(self.cb_loc, [['AV', 'Aval']])
         self.cb_var.currentIndexChanged['QString'].connect(self.cb_var_chang)
+        self.cb_type_t_vit.currentIndexChanged.connect(self.cb_change_unitv)
 
     def accept_page(self):
         # SAVE BD
         fact_t = float(ctrl_get_value(self.dico_ctrl['TYPE_TIME'][0]))
-        fact_t_velo = float(ctrl_get_value(self.dico_ctrl['TYPE_TIME_VELO'][0]))
+        fact_t_velo = 1/float(ctrl_get_value(self.dico_ctrl['TYPE_TIME_VELO'][0]))
 
         for var, ctrls in self.dico_ctrl.items():
-            if var in ['TYPE_TIME', 'TYPE_TIME_VELO']:
+            if var == 'TYPE_TIME':
                 continue
+            elif var == 'TYPE_TIME_VELO':
+                val = int(ctrl_get_value(ctrls[0]))
             elif var == 'DTREG':
                 val = float(ctrl_get_value(ctrls[0]))
                 val = val * fact_t
@@ -123,6 +127,39 @@ class StructureFgDialog(QDialog):
 
         self.accept()
 
+    def cb_change_unitv(self, evt):
+        if evt == 0:
+            if self.unitv == 1:
+                val = float(ctrl_get_value(self.vel_fg))
+                val = val / 60
+                ctrl_set_value(self.vel_fg, val)
+            elif self.unitv == 2:
+                val = float(ctrl_get_value(self.vel_fg))
+                val = val / 3600
+                ctrl_set_value(self.vel_fg, val)
+        elif evt == 1:
+            if self.unitv == 0:
+                val = float(ctrl_get_value(self.vel_fg))
+                val = val * 60.
+                ctrl_set_value(self.vel_fg, val)
+            elif self.unitv == 2:
+                val = float(ctrl_get_value(self.vel_fg))
+                val = val / 60
+                ctrl_set_value(self.vel_fg, val)
+        elif evt == 2:
+            if self.unitv == 0:
+                val = float(ctrl_get_value(self.vel_fg))
+                val = val * 3600.
+                ctrl_set_value(self.vel_fg, val)
+            elif self.unitv == 1:
+                val = float(ctrl_get_value(self.vel_fg))
+                val = val * 60.
+                ctrl_set_value(self.vel_fg, val)
+        else:
+            pass
+
+        self.unitv = evt
+
     def reject_page(self):
         if self.mgis.DEBUG:
             self.mgis.add_info("Cancel of FloodGate parameters")
@@ -135,11 +172,39 @@ class StructureFgDialog(QDialog):
         sql = "SELECT  name_var, value FROM {0}.struct_fg_val " \
               "WHERE id_config = {1} ".format(self.mdb.SCHEMA, self.id_struct)
         rows = self.mdb.run_query(sql, fetch=True)
-        for param, val in rows:
-            if param in self.dico_ctrl.keys():
-                ctrls = self.dico_ctrl[param]
-                for ctrl in ctrls:
-                    ctrl_set_value(ctrl, val)
+        if len(rows) > 0:
+            dico = {}
+            for param, val in rows:
+                dico[param] = val
+            self.dico_ctrl['TYPE_TIME_VELO'][0].blockSignals(True)
+            for param in dico.keys():
+                if param in self.dico_ctrl.keys():
+                    ctrls = self.dico_ctrl[param]
+                    if param == 'VELOFG':
+                        if 'TYPE_TIME_VELO' in dico.keys():
+                            val = dico[param] * dico['TYPE_TIME_VELO']
+                        else:
+                            val = dico[param]
+                    else:
+                        val = dico[param]
+                    for ctrl in ctrls:
+                        ctrl_set_value(ctrl, val)
+            if 'TYPE_TIME_VELO' in dico.keys():
+                if dico['TYPE_TIME_VELO'] == 3600:
+                    self.unitv = 2
+                elif dico['TYPE_TIME_VELO'] == 60:
+                    self.unitv = 1
+                else:
+                    self.unitv = 0
+            else:
+                self.unitv = 0
+
+            self.dico_ctrl['TYPE_TIME_VELO'][0].blockSignals(False)
+        # for param, val in rows:
+        #     if param in self.dico_ctrl.keys():
+        #         ctrls = self.dico_ctrl[param]
+        #         for ctrl in ctrls:
+        #             ctrl_set_value(ctrl, val)
 
         rows = self.mdb.select('struct_fg', where='id_config = {0}'.format(self.id_struct),
                                list_var=['type_fg', 'xpos', 'var_reg'])
