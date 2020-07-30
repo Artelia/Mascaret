@@ -111,15 +111,13 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
         if len(results) > 0:
             couche = results[0].mLayer.name()
-            # self.mgis.add_info('couche {0}'.format(couche))
 
             flag_hydro = self.mgis.hydrogramme
             flag_profil = self.mgis.profil
             flag_profil_r = self.mgis.profil_result
             flag_casier_r = self.mgis.basin_result
             flag_profil_z = self.mgis.profil_z
-            # self.mgis.add_info("flag_hydro: {0} \n flag_profil: {1} \n flag_profil_r:
-            # {2} \n".format(flag_hydro,flag_profil,flag_profil_r))
+
             if (couche == 'profiles' or couche == 'weirs') and flag_profil_z:
                 if couche == 'profiles':
                     type_res = 'struct'
@@ -132,9 +130,6 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                       "(SELECT id FROM {0}.results_var WHERE type_res ='{1}' )".format(self.mgis.mdb.SCHEMA,type_res)
 
                 rows = self.mgis.mdb.run_query(sql, fetch=True)
-                pk_with_res = [r[0] for r in rows]
-                # if gid in pk_with_res:
-
                 graph_res = GraphResultDialog(self.mgis, type_res, gid)
                 graph_res.show()
                 # else:
@@ -152,12 +147,10 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             #         self.mgis.add_info("Visu_profil: Not layer")
             if couche == 'profiles' and flag_profil_r:
                 self.mgis.coucheProfils = results[0].mLayer
-                gid = results[0].mFeature["gid"]
                 prof_a = self.mgis.mdb.select_distinct("name", "profiles", "active")
                 if results[0].mFeature['name'] in prof_a['name']:
                     graph_res = GraphResultDialog(self.mgis, "hydro_profil", results[0].mFeature["abscissa"])
-                   # graph_res = GraphProfilRes(gid, self.mgis)
-                    # graph_res.exec_()
+
                     graph_res.show()
                 else:
                     self.mgis.add_info('no active profiles')
@@ -165,33 +158,11 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             if flag_hydro and couche in ('profiles', 'outputs'):
                 feature = results[0].mFeature
 
-                selection = {'abs': [], 'nom': []}
-
-                field_names = [field.name() for field
-                               in results[0].mLayer.fields()]
-
                 prof_a = self.mgis.mdb.select_distinct("name,abscissa", "profiles", "active")
 
                 if feature['name'] in prof_a['name'] or feature['abscissa'] in prof_a['abscissa']:
-                    if 'code' in field_names:
-                        selection['code'] = []
-                    if 'zero' in field_names:
-                        selection['zero'] = []
-                    for f in results[0].mLayer.getFeatures():
-                        if f['abscissa']:
-                            selection['abs'].append(f['abscissa'])
-                            selection['nom'].append(f['name'])
-                            if 'code' in selection.keys():
-                                selection['code'].append(f['code'])
-                            if 'zero' in selection.keys():
-                                selection['zero'].append(f['zero'])
-                    # self.mgis.add_info('graph {0}'.format(results[0].mFeature))
                     graph_hyd = GraphResultDialog(self.mgis, "hydro", feature['abscissa'])
                     graph_hyd.show()
-                    print(selection)
-                    #graph_hyd = GraphHydro(feature, self.mgis, selection, feature['abscissa'], 't')
-                    # # # graph_hyd.exec_()
-                    #graph_hyd.show()
                 else:
                     self.mgis.add_info('no active profiles')
 
@@ -200,43 +171,14 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 # chaine='Branche ' + str(feature['branche'])
                 branches = self.mgis.mdb.select_distinct("branch", "branchs", "active")
                 if feature['branch'] in branches['branch']:
-                    print(feature['branch'],feature["gid"])
                     graph_hyd_pk = GraphResultDialog(self.mgis, "hydro_pk", feature['branch'])
                     graph_hyd_pk.show()
-                   # graph_hyd_pk = GraphHydro(feature, self.mgis, {}, '', 'pk')
-                    # # graph_hyd.exec_()
-                    #graph_hyd_pk.show()
                 else:
                     self.mgis.add_info('no active branch')
 
             if flag_casier_r and couche in ('basins', 'links'):
                 feature = results[0].mFeature
 
-                selection_nontrie = {'num': [], 'nom': []}
-                selection = {'num': [], 'nom': []}
-
-                field_names = [field.name() for field
-                               in results[0].mLayer.fields()]
-
-                # Boucle sur les attributs de la couche casier ou liaison clickee
-                for f in results[0].mLayer.getFeatures():
-                    if f['name']:  # si un casier ou une liaison existe
-                        selection_nontrie['nom'].append(f['name'])
-                        if couche == 'links':
-                            selection_nontrie['num'].append(f['linknum'])
-                        else:
-                            selection_nontrie['num'].append(f['basinnum'])
-
-                # Tri sur les noms des objets
-                aa = selection_nontrie['nom']
-                for nom in sorted(aa):
-                    index = aa.index(nom)
-                    selection['nom'].append(selection_nontrie['nom'][index])
-                    selection['num'].append(selection_nontrie['num'][index])
-
-                # graph_basin_link = GraphBasin(feature, self.mgis, selection, feature['name'], couche)
-                # graph_basin_link.show()
-                print(selection)
                 if couche == 'links':
                     links = self.mgis.mdb.select_distinct("name", "links", "active")
                     if feature['name'] in links['name']:
@@ -682,21 +624,27 @@ class GraphProfil(GraphCommon):
                         ordre = 0
                         for ligne in fich:
                             # x, z = list(map(float, ligne.split(sep)))
-                            x, z = [float(var) for var in ligne.split(sep)]
-                            ordre += 1
 
-                            p = f.geometry().interpolate(x).asPoint()
+                            if ligne[0] != '#':
+                                ligne = ligne.replace('\n','')
+                                if len(ligne.split(sep))<1:
+                                    break
+                                x, z = (float(var) for var in ligne.split(sep))
 
-                            # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
+                                ordre += 1
 
-                            geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(p.x(), p.y(), self.mdb.SRID)
+                                p = f.geometry().interpolate(x).asPoint()
 
-                            tab["name"].append("'" + basename + "'")
-                            tab["profile"].append("'" + profil + "'")
-                            tab["order_"].append(ordre)
-                            tab["x"].append(x)
-                            tab["z"].append(z)
-                            tab["geom"].append(geom)
+                                # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
+
+                                geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(p.x(), p.y(), self.mdb.SRID)
+
+                                tab["name"].append("'" + basename + "'")
+                                tab["profile"].append("'" + profil + "'")
+                                tab["order_"].append(ordre)
+                                tab["x"].append(x)
+                                tab["z"].append(z)
+                                tab["geom"].append(geom)
 
                     self.mdb.insert2("topo", tab)
 
@@ -2333,8 +2281,6 @@ class GraphHydro(GraphCommon):
             zero = ss['zero'][i]
             mini = min(self.liste['date']['abs'])
             maxi = max(self.liste['date']['abs'])
-            print(mini, maxi)
-            print(self.liste['date']['abs'][0:10])
             if self.var1 in self.coteVar:
                 gg = 'H'
             elif self.var1 in self.debVar:
@@ -2347,7 +2293,6 @@ class GraphHydro(GraphCommon):
                         AND valeur > -99.9""".format(code, mini, maxi, gg)
 
             self.obs = self.mdb.select("observations", condition, "date")
-            print(self.obs)
             if self.obs["valeur"]:
                 if self.var1 in self.coteVar:
                     # self.obs['valeur'] = list(map(lambda x: x + zero,

@@ -1742,9 +1742,7 @@ class ClassMascaret:
         id_run = self.insert_id_run(run, scen)
         # self.lit_opt(run, scen, id_run, date_debut, self.baseName, comments, cond_tra, cond_casier)
         # self.mgis.chkt.convert_all_result()
-        t1 = time.time()
         self.lit_opt_new(id_run, date_debut, self.baseName, comments, cond_tra, cond_casier)
-        print('lit_opt_new', t1 - time.time())
 
         if os.path.isfile(os.path.join(path,'Fichier_Crete.csv')):
             self.read_mobil_gate_res(id_run)

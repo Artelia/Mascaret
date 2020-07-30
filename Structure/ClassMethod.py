@@ -67,7 +67,7 @@ class ClassMethod:
         else:
             msg = "Profile copy isn't found"
             self.add_info(msg)
-            print(msg)
+
             return
         zmin = min(profil['z'])
         poly_p = self.clpoly.poly_profil_del(profil, zmin)
@@ -75,7 +75,6 @@ class ClassMethod:
             msg = 'Profile polygon is empty.'
             if self.debug:
                 self.add_info(msg)
-            print(msg)
             return
         if config_type == 'PC':
             list_recup = ['EPAITAB', 'ZTOPTAB', 'FIRSTWD']
@@ -111,7 +110,8 @@ class ClassMethod:
         sav_zmaxelem = 0
         if not lid_elem["id_elem"]:
             msg = "Not element in table in create_poly_elem function"
-            print(msg)
+            if self.debug:
+                self.add_info(msg)
         for i, id_elem in enumerate(lid_elem["id_elem"]):
             # parametre element
 
@@ -172,7 +172,7 @@ class ClassMethod:
                 msg = 'Element bridge polygon is empty.'
                 if self.debug:
                     self.add_info(msg)
-                print(msg)
+
 
             if not poly_final.is_empty:
                 # # stock element
@@ -431,7 +431,6 @@ class ClassMethod:
 
             return param_g
         else:
-            print('pb a la liste',list_recup,'eee')
             return None
 
 

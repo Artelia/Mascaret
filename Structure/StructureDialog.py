@@ -25,7 +25,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure,update_etat_struct_prof
+from .ClassTableStructure import ClassTableStructure
 from .GraphStructure import GraphStructure
 from .StructureEditDialog import ClassStructureEditDialog
 from .StructureCreateDialog import ClassStructureCreateDialog
@@ -135,8 +135,6 @@ class ClassStructureDialog(QDialog):
         if self.tree_struct.selectedItems():
             itm = self.tree_struct.selectedItems()[0]
             id_struct = itm.data(0, 32)
-            # check si autre struct active or not
-            self.check_state(id_struct)
 
             sql = "DELETE FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
             self.mdb.execute(sql)
@@ -151,18 +149,4 @@ class ClassStructureDialog(QDialog):
             self.fill_lst_struct()
 
 
-
-    def  check_state(self,id_struct):
-        where = "id = {0}".format(id_struct)
-        prof = self.mdb.select('struct_config', where=where, list_var=['id_prof_ori'])['id_prof_ori']
-
-        where = "id_prof_ori = {0}".format(prof[0])
-        active = self.mdb.select('struct_config', where=where, list_var=['active'])['active']
-        if len(active)>1:
-            if (True in active) :
-                update_etat_struct_prof(self.mdb,id_struct, active=True)
-            else:
-                update_etat_struct_prof(self.mdb, id_struct, active=False)
-        else:
-            update_etat_struct_prof(self.mdb, id_struct, delete=True)
 

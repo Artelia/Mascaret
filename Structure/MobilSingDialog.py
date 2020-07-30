@@ -109,67 +109,71 @@ class ClassMobilSingDialog(QDialog):
         self.init_ui()
 
     def cb_change_unitvd(self,evt):
+        val=0
         if evt == 0:
             if self.unitvd == 1:
                 val = float(ctrl_get_value(self.sb_vd))
-                val = val * 60
+                val = val / 60
                 ctrl_set_value(self.sb_vd, val)
             elif self.unitvd == 2:
                 val = float(ctrl_get_value(self.sb_vd))
-                val = val * 3600
+                val = val / 3600
                 ctrl_set_value(self.sb_vd, val)
         elif evt == 1:
             if self.unitvd == 0:
                 val = float(ctrl_get_value(self.sb_vd))
-                val = val / 60.
+                val = val * 60.
                 ctrl_set_value(self.sb_vd, val)
             elif self.unitvd == 2:
                 val = float(ctrl_get_value(self.sb_vd))
-                val = val * 60
+                val = val / 60
                 ctrl_set_value(self.sb_vd, val)
         elif evt == 2:
             if self.unitvd == 0:
                 val = float(ctrl_get_value(self.sb_vd))
-                val = val / 3600.
+                val = val * 3600.
                 ctrl_set_value(self.sb_vd, val)
             elif self.unitvd == 1:
                 val = float(ctrl_get_value(self.sb_vd))
-                val = val / 60.
+                val = val * 60.
                 ctrl_set_value(self.sb_vd, val)
         else:
             pass
+
+
         self.unitvd = evt
 
     def cb_change_unitvh(self, evt):
         if evt == 0:
             if self.unitvh == 1:
                 val = float(ctrl_get_value(self.sb_va))
-                val = val * 60
+                val = val / 60
                 ctrl_set_value(self.sb_va, val)
             elif self.unitvh == 2:
                 val = float(ctrl_get_value(self.sb_va))
-                val = val * 3600
+                val = val / 3600
                 ctrl_set_value(self.sb_va, val)
         elif evt == 1:
             if self.unitvh == 0:
                 val = float(ctrl_get_value(self.sb_va))
-                val = val / 60.
+                val = val * 60.
                 ctrl_set_value(self.sb_va, val)
             elif self.unitvh == 2:
                 val = float(ctrl_get_value(self.sb_va))
-                val = val * 60
+                val = val / 60
                 ctrl_set_value(self.sb_va, val)
         elif evt == 2:
             if self.unitvh == 0:
                 val = float(ctrl_get_value(self.sb_va))
-                val = val / 3600.
+                val = val * 3600.
                 ctrl_set_value(self.sb_va, val)
             elif self.unitvh == 1:
                 val = float(ctrl_get_value(self.sb_va))
-                val = val / 60.
+                val = val * 60.
                 ctrl_set_value(self.sb_va, val)
         else:
             pass
+
         self.unitvh = evt
 
     def cb_change_meth(self, text):
@@ -199,15 +203,6 @@ class ClassMobilSingDialog(QDialog):
             self.id = rows['gid'][0]
             ctrl_set_value(self.cb_method,rows['method_mob'][0])
 
-    def display_page3(self):
-        sql = "SELECT  name_var, value FROM {0}.weirs_mob_val" \
-              "WHERE id_weirs = {1} AND name_var !='ZVAR' AND name_var!='TIME' ".format(self.mdb.SCHEMA, self.id)
-        rows = self.mdb.run_query(sql, fetch=True)
-        for param, val in rows:
-            if param in self.dico_ctrl.keys():
-                ctrls = self.dico_ctrl[param]
-                for ctrl in ctrls:
-                    ctrl_set_value(ctrl, val)
 
     def import_csv(self):
         """ Import csv file"""
@@ -375,14 +370,16 @@ class ClassMobilSingDialog(QDialog):
         try:
             for var, ctrls in self.dico_ctrl.items():
                 val = float(ctrl_get_value(ctrls[0]))
-                if var == 'UNITVD' or var == 'UNITVH':
-                    continue
+                if var == 'UNITVD' :
+                    val = int(ctrl_get_value(self.dico_ctrl['UNITVD'][0]))
+                elif var == 'UNITVH':
+                    val = int(ctrl_get_value(self.dico_ctrl['UNITVH'][0]))
                 elif var == 'VDESC':
                     fact_t = int(ctrl_get_value(self.dico_ctrl['UNITVD'][0]))
-                    val = val * fact_t
+                    val = val / fact_t
                 elif var =='VMONT':
                     fact_t = int(ctrl_get_value(self.dico_ctrl['UNITVH'][0]))
-                    val = val * fact_t
+                    val = val / fact_t
                 else:
                     val = float(ctrl_get_value(ctrls[0]))
 
@@ -548,11 +545,8 @@ class ClassMobilSingDialog(QDialog):
             self.update_courbe(cols)
 
     def edit_set(self):
-        print("eeeee", self.ui.lst_sets.selectedIndexes())
         if self.ui.lst_sets.selectedIndexes():
             l = self.ui.lst_sets.selectedIndexes()[0].row()
-
-            print(self.ui.lst_sets.model().item(l, 1).text())
             self.cur_set = self.ui.lst_sets.model().item(l, 1).text()
 
             if self.edit_type =='table':
@@ -569,11 +563,41 @@ class ClassMobilSingDialog(QDialog):
 
         rows = self.mdb.run_query(sql, fetch=True)
         if len(rows)> 0 :
+            dico={}
             for param, val in rows:
+                dico[param]=val
+            for ctrl in self.dico_ctrl['UNITVD'] + self.dico_ctrl['UNITVH']:
+               ctrl.blockSignals(True)
+
+            for param in dico.keys():
                 if param in self.dico_ctrl.keys():
                     ctrls = self.dico_ctrl[param]
+                    if param == 'VDESC':
+                        val = dico[param]*dico['UNITVD']
+                    elif param =='VMONT':
+                        val = dico[param]*dico['UNITVH']
+                    else:
+                        val = dico[param]
+
                     for ctrl in ctrls:
-                        ctrl_set_value(ctrl, val)
+                        ctrl_set_value(ctrl, val )
+            for ctrl in self.dico_ctrl['UNITVD']+ self.dico_ctrl['UNITVH']:
+                ctrl.blockSignals(False)
+
+            if dico['UNITVH'] == 3600:
+                self.unitvh = 2
+            elif dico['UNITVH'] == 60:
+                self.unitvh = 1
+            else:
+                self.unitvh = 0
+
+            if dico['UNITVD'] == 3600:
+                self.unitvd = 2
+            elif dico['UNITVD'] == 60:
+                self.unitvd = 1
+            else:
+                self.unitvd = 0
+
         else:
             # default value TODO
             for param in self.dico_ctrl.keys():

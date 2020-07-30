@@ -67,29 +67,30 @@ class ClassPostPreFG:
         """
         list_actif = self.clmeth.fg_actif()
 
-        param_fg, link_name_id = self.clmeth.get_param_fg()
-        # ClassLaws
-        list_poly_trav = {}
-        list_poly_pil = {}
-        profil = {}
-        param_g = {}
+        if list_actif:
+            param_fg, link_name_id = self.clmeth.get_param_fg()
+            # ClassLaws
+            list_poly_trav = {}
+            list_poly_pil = {}
+            profil = {}
+            param_g = {}
 
-        for id_config in list_actif:
-            list_poly_trav[id_config] = self.clmeth.select_poly_elem(id_config, 0)
-            list_poly_pil[id_config] = self.clmeth.select_poly_elem(id_config, 1)
-            profil[id_config] = self.clmeth.get_profil(id_config)
-            param_g[id_config] = self.clmeth.get_param_g('all', id_config)
+            for id_config in list_actif:
+                list_poly_trav[id_config] = self.clmeth.select_poly_elem(id_config, 0)
+                list_poly_pil[id_config] = self.clmeth.select_poly_elem(id_config, 1)
+                profil[id_config] = self.clmeth.get_profil(id_config)
+                param_g[id_config] = self.clmeth.get_param_g('all', id_config)
 
-        dico = {"list_actif": self.clmeth.fg_actif(),
-                "param_fg": param_fg,
-                "link_name_id": link_name_id,
-                "list_poly_trav": list_poly_trav,
-                "list_poly_pil": list_poly_pil,
-                "profil": profil,
-                "param_g": param_g,
-                "abac": self.clmeth.get_abac('all')
-                }
-        self.export_cl(dico, name)
+            dico = {"list_actif": self.clmeth.fg_actif(),
+                    "param_fg": param_fg,
+                    "link_name_id": link_name_id,
+                    "list_poly_trav": list_poly_trav,
+                    "list_poly_pil": list_poly_pil,
+                    "profil": profil,
+                    "param_g": param_g,
+                    "abac": self.clmeth.get_abac('all')
+                    }
+            self.export_cl(dico, name)
 
 
         #self.import_cl(name)
@@ -138,13 +139,15 @@ class ClassPostPreFG:
             dico = self.clmeth.get_param_g('all', id_config)
             new_dico = {}
             for info in list_recup:
-                new_dico[info] = dico[info]
+                if info in dico.keys():
+                    new_dico[info] = dico[info]
             return new_dico
         else:
             dico = self.cli.param_g[id_config]
             new_dico = {}
             for info in list_recup:
-                new_dico[info] = dico[info]
+                if info in dico.keys():
+                    new_dico[info] = dico[info]
             return new_dico
 
     def get_abac(self, liste):

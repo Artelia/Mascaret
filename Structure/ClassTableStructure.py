@@ -207,34 +207,43 @@ def fill_qcombobox(cb, lst, val_def=None, icn=None):
             cb.blockSignals(False)
             cb.setCurrentIndex(cb.findData(val_def))
 
+def update_etat_struct(mdb):
 
-def update_etat_struct_prof(mdb, id_config, active=True, delete=False):
-    """
-    Update state of of hydraulic structure in table
-    :param id_config: id_config:  index of hydraulic structure
-    :param active: active structure
-    :param delete: delete structure
-    :return:
-    """
-    where = "id = {0}".format(id_config)
-    prof = mdb.select('struct_config', where=where, list_var=['id_prof_ori'])
-    gid = prof['id_prof_ori'][0]
-    if active:
-        tab = {'table': 'profiles',
-               'schema': mdb.SCHEMA,
-               'gid': gid,
-               'struct': 2}
-    else:
-        tab = {'table': 'profiles',
-               'schema': mdb.SCHEMA,
-               'gid': gid,
-               'struct': 1}
-    if delete:
-        tab = {'table': 'profiles',
-               'schema': mdb.SCHEMA,
-               'gid': gid,
-               'struct': 0}
-    # self.mdb.update('profiles', tab, var='gid')
+        sql ="SELECT gid FROM {0}.profiles ".format(mdb.SCHEMA)
 
-    sql = "UPDATE {schema}.{table} SET struct={struct}  WHERE gid={gid}".format(**tab)
-    mdb.run_query(sql)
+        rows = mdb.run_query(sql, fetch=True)
+
+        try:
+            lst_prof=[var[0] for var in rows ]
+        except IndexError or TypeError:
+            return
+        sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config WHERE active ".format(mdb.SCHEMA)
+        rows = mdb.run_query(sql, fetch=True)
+
+        try:
+            prof_act = [var[0] for var in rows ]
+        except IndexError or TypeError :
+            prof_act = []
+
+        sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config WHERE active=false".format(mdb.SCHEMA)
+        rows = mdb.run_query(sql, fetch=True)
+        try:
+            prof_d = [var[0] for var in rows ]
+        except IndexError or TypeError:
+            prof_act = []
+
+        list_udpate=[]
+
+        for gid in lst_prof:
+            if gid in prof_act:
+                list_udpate.append((gid,2))
+            elif gid in prof_d:
+                list_udpate.append((gid,1))
+            else:
+                list_udpate.append((gid,0))
+
+        sql = "UPDATE {0}.profiles SET struct= val.state " \
+        "FROM ( values {1}) as val(id,state) " \
+              "WHERE gid = val.id".format(mdb.SCHEMA, ','.join(map(str,list_udpate)))
+
+        mdb.run_query(sql)

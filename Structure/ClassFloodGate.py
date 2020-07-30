@@ -216,7 +216,6 @@ class ClassFloodGate:
         else:
             val_check = self.masc.get('State.Q', param_fg['SECCON'])
         # AM amon AV aval
-        # print("val_check",val_check)
         if (val_check < val_min and condam) or \
                 (val_check > val_max and condav):
             return 1

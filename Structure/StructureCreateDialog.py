@@ -25,7 +25,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, update_etat_struct_prof
+from .ClassTableStructure import ClassTableStructure, update_etat_struct
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -97,10 +97,7 @@ class ClassStructureCreateDialog(QDialog):
         for order, (x, z) in enumerate(xz):
             values.append([self.id_struct, order, x, z])
         self.mdb.insert_res('profil_struct', values, colonnes)
-
-        update_etat_struct_prof(self.mdb, self.id_struct, active=False)
-
-
+        update_etat_struct(self.mdb)
         self.accept()
 
     def reject_page(self):
@@ -108,3 +105,4 @@ class ClassStructureCreateDialog(QDialog):
         if self.mgis.DEBUG:
             self.mgis.add_info("Cancel of Structure")
         self.reject()
+

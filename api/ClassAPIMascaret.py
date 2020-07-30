@@ -270,7 +270,6 @@ class ClassAPIMascaret:
         else:
             txt += "Criteria {} doesn't exists. \n".format(self.stpcrit)
         txt += '**************************************\n'
-        # print(txt)
         self.add_info(txt)
 
     def compute(self):

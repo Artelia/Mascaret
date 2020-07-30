@@ -52,7 +52,7 @@ class ClassMascWQ:
         self.dossierFileMasc = file
 
         sql = "SELECT {} FROM {}.parametres WHERE parametre = 'modeleQualiteEau'".format('steady', self.schema)
-        print(sql)
+
         result = self.mdb.run_query(sql, fetch=True)
         if not result:
             val = 1
@@ -75,7 +75,6 @@ class ClassMascWQ:
             fich.write('{} {}\n'.format(len(self.dico_phy[self.cur_wq_mod]['physic']), entet))
             for i, phy in enumerate(self.dico_phy[self.cur_wq_mod]['physic']):
                 idx = result['sigle'].index(phy['sigle'])
-                # print(result['value'][idx],result['text'][idx])
                 fich.write('{} : {}\n'.format(result['value'][idx], result['text'][idx]))
 
     def law_tracer(self, dossier=None):

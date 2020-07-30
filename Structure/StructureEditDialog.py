@@ -29,7 +29,7 @@ from shapely.geometry import Point
 
 from .ClassMascStruct import ClassMascStruct
 from .ClassMethod import ClassMethod
-from .ClassTableStructure import ClassTableStructure, update_etat_struct_prof
+from .ClassTableStructure import ClassTableStructure,update_etat_struct
 from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
 # Widgets Buse
 from .MetBordaBuWidget import MetBordaBuWidget
@@ -222,11 +222,8 @@ class ClassStructureEditDialog(QDialog):
 
             self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
             active = self.cc_active.isChecked()
-            if active:
-                update_etat_struct_prof(self.mdb,self.id_struct, active=True)
-                self.sav_meth(self.id_struct, self.current_meth, self.wgt_met)
-            else:
-                update_etat_struct_prof(self.mdb,self.id_struct, active=False)
+            update_etat_struct(self.mdb)
+
             self.accept()
             # else:
             #     self.reject_page()
