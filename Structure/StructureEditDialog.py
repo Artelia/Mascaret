@@ -253,8 +253,8 @@ class ClassStructureEditDialog(QDialog):
                                                                                                    id_profil)
                 self.mdb.execute(sql)
 
-            sql = "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4}, comment= '{5}' WHERE id = {1}" \
-                .format(self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active, comm)
+            sql = "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4}, comment= '{5}' " \
+                  "WHERE id = {1}".format(self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active, comm)
             self.mdb.execute(sql)
 
             sql = "DELETE FROM {0}.struct_elem WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
@@ -692,7 +692,7 @@ class ClassStructureEditDialog(QDialog):
         :param method: mehtod of compute
         :return: nothing
         """
-        if list_final == []:
+        if not list_final:
             sql = "SELECT name FROM {0}.{1} WHERE id={2}".format(self.mdb.SCHEMA, 'struct_config', id_config)
 
             name = self.mdb.run_query(sql, fetch=True)

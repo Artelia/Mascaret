@@ -30,7 +30,6 @@ from .GraphCommon import GraphCommonNew
 from .Function import tw_to_txt, interpole
 from datetime import date, timedelta
 from matplotlib import patches
-import numpy as np
 import re
 import numpy as np
 import matplotlib.lines as mlines
@@ -39,7 +38,6 @@ if int(qVersion()[0]) < 5:
     from qgis.PyQt.QtGui import *
 else:
     from qgis.PyQt.QtWidgets import *
-import time
 
 
 class GraphResultDialog(QWidget):
@@ -240,9 +238,8 @@ class GraphResultDialog(QWidget):
             else:
                 exclu[rws[2]] = True
 
-        iterlist = []
-        iterlist.append(zip(list(liste[0]['vars']), list(liste[0]['colors'])))
-        iterlist.append(zip(list(liste[1]['vars']), list(liste[1]['colors'])))
+        iterlist = [zip(list(liste[0]['vars']), list(liste[0]['colors'])),
+                    zip(list(liste[1]['vars']), list(liste[1]['colors']))]
 
         for i, itlist in enumerate(iterlist):
             liste[i]['vars'] = []
@@ -266,7 +263,7 @@ class GraphResultDialog(QWidget):
             for i, var in enumerate(dico_var["vars"]):
                 if var.lower() in self.mgis.variables.keys():
                     dico_var["colors"][i] = self.mgis.variables[var.lower()]['couleur']
-                    if not var in ['Q', 'QMIN', 'QMAJ', 'QMAX', 'ZREF', 'Z', 'ZMIN', 'ZMAX']:
+                    if var not in ['Q', 'QMIN', 'QMAJ', 'QMAX', 'ZREF', 'Z', 'ZMIN', 'ZMAX']:
                         if self.mgis.variables[var.lower()]['unite'].strip() == '':
                             dico_var['unit'] = ''
                         else:
@@ -413,8 +410,6 @@ class GraphResultDialog(QWidget):
 
             self.cb_det.setCurrentIndex(self.cb_det.findData(id))
 
-
-
         elif self.typ_graph == "hydro_pk":
 
             sql = "SELECT init_date FROM {0}.runs " \
@@ -438,7 +433,6 @@ class GraphResultDialog(QWidget):
                 self.cb_det.addItem(aff, time_)
             self.cb_det.setCurrentIndex(self.cb_det.count() - 1)
             self.cur_t = self.cb_det.itemData(self.cb_det.currentIndex())
-
 
         elif self.typ_graph == 'hydro_profil':
 
@@ -1103,7 +1097,7 @@ class GraphResult(GraphCommonNew):
         if self.courbes:
             tmp = []
             for i, cb in enumerate(self.courbes):
-                if not cb in self.courbeLaisses:
+                if cb not in self.courbeLaisses:
                     tmp.append(cb)
             self.courbes = list(tmp)
 

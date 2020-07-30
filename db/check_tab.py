@@ -29,6 +29,19 @@ from datetime import datetime
 # from ..ClassParameterDialog import ClassParameterDialog
 
 
+def list_sql(liste):
+    """
+    list to srting for sql script
+    :param liste:
+    :return:
+    """
+    txt = '('
+    for t_res in liste:
+        txt += "'{}',".format(t_res)
+    txt = txt[:-1] + ')'
+    return txt
+
+
 class CheckTab():
     def __init__(self, mgis, mdb):
         self.mgis = mgis
@@ -61,7 +74,8 @@ class CheckTab():
                                                  {'tab': Maso.runs_graph, 'overwrite': False},
                                                  ],
                                      'alt_tab': [{'tab': 'runs', 'sql': ["ALTER TABLE {0}.runs ADD COLUMN IF NOT "
-                                                                         "EXISTS init_date timestamp without time zone;"]},
+                                                                         "EXISTS init_date timestamp "
+                                                                         "without time zone;"]},
                                                  {'tab': 'outputs', 'sql': ["ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
                                                                             "EXISTS active boolean;"]},
                                                  ],
@@ -84,7 +98,7 @@ class CheckTab():
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         version = read_version(self.mgis.masplugPath)
 
-        if not "admin_tab" in tabs:
+        if "admin_tab" not in tabs:
             try:
                 Maso.admin_tab.overwrite = True
                 obj = self.mdb.process_masobject(Maso.admin_tab, 'pg_create_table')
@@ -132,6 +146,8 @@ class CheckTab():
                                             elif proc == 'del_tab':
                                                 tab_name = tab
                                                 valid = self.del_tab(tab_name)
+                                            else:
+                                                valid =False
                                             # print (proc, tab_name, valid)
                                             if valid:
                                                 if proc != 'del_tab':
@@ -140,7 +156,6 @@ class CheckTab():
                                                     self.del_num_v(tab_name)
                                             else:
                                                 test_gd = False
-                                                tab_false = tab_name
                                             if tab_name in tabs_no:
                                                 tabs_no.remove(tab_name)
                                     else:
@@ -166,7 +181,6 @@ class CheckTab():
     def updat_num_v(self, name_tab, version):
         """
         updat version number
-        :param tabs list of tables
         :return:
         """
 
@@ -185,7 +199,7 @@ class CheckTab():
     def del_num_v(self, name_tab):
         """
         delete table in admin_tab
-        :param tabs list of tables
+        :param name_tab: table name
         :return:
         """
 
@@ -200,7 +214,8 @@ class CheckTab():
     def add_tab(self, tab, overwrite=True):
         """
         Add table
-        :param tables: list of tables
+        :param tab: list of tables
+        :param overwrite : overwrite table
         """
 
         valid = True
@@ -209,12 +224,12 @@ class CheckTab():
             obj = self.mdb.process_masobject(tab, 'pg_create_table')
             if self.mgis.DEBUG:
                 self.mgis.add_info('  {0} OK'.format(obj.name))
-
+            return valid, obj.name
         except:
             valid = False
             self.mgis.add_info('failure!<br>Add table {0}'.format(tab))
 
-        return valid, obj.name
+            return valid, None
 
     def alt_tab(self, tab, lst_sql):
         """
@@ -229,7 +244,7 @@ class CheckTab():
             txt_sql += sql.format(self.mdb.SCHEMA) + '\n'
 
         try:
-            if sql != '':
+            if txt_sql != '':
                 res = self.mdb.run_query(txt_sql)
                 if res is None:
                     valid = False
@@ -291,18 +306,6 @@ class CheckTab():
                     'type_var': 'float'}
             self.mdb.check_id_var(dico)
 
-    def list_sql(self, liste):
-        """
-        list to srting for sql script
-        :param liste:
-        :return:
-        """
-        txt = '('
-        for t_res in liste:
-            txt += "'{}',".format(t_res)
-        txt = txt[:-1] + ')'
-        return txt
-
     def convert_all_result(self):
         """ conversion between the previous results table format to the new for all results"""
         convert = False
@@ -338,8 +341,9 @@ class CheckTab():
                     rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_runs), fetch=True)
                     lst_var = [var[0] for var in rows]
 
-                    sql = "SELECT DISTINCT ON (type_res) id, type_res FROM  {0}.results_var WHERE id IN {1} ORDER BY type_res"
-                    rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.list_sql(lst_var)), fetch=True)
+                    sql = "SELECT DISTINCT ON (type_res) id, type_res FROM  {0}.results_var " \
+                          "WHERE id IN {1} ORDER BY type_res"
+                    rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, list_sql(lst_var)), fetch=True)
                     lst_typvar = [var[1] for var in rows]
                     lst_var_select = [var[0] for var in rows]
                     list_value = []
@@ -350,7 +354,7 @@ class CheckTab():
                     for id_var, type_res in enumerate(lst_typvar):
                         sql = "SELECT id FROM  {0}.results_var WHERE id IN {1} AND type_res = '{2}' " \
                               "ORDER BY type_res".format(self.mdb.SCHEMA,
-                                                         self.list_sql(lst_var), type_res)
+                                                         list_sql(lst_var), type_res)
                         rows = self.mdb.run_query(sql, fetch=True)
                         lst_var2 = [var[0] for var in rows]
                         list_value.append([id_runs, type_res, 'var', json.dumps(lst_var2)])
@@ -411,6 +415,7 @@ class CheckTab():
         :param typ_res: result type
         :return:
         """
+
         if typ_res == "opt":
             tab_src = "resultats"
             col_pknum = "pk"
@@ -425,6 +430,9 @@ class CheckTab():
             col_pknum = "pk"
         elif typ_res in ["struct", "weirs"]:
             return
+        else:
+            tab_src = None
+            col_pknum = None
 
         row = self.mdb.run_query("SELECT run, scenario FROM {0}.runs WHERE id = {1}".format(self.mdb.SCHEMA, id_run),
                                  fetch=True)
@@ -513,7 +521,7 @@ class CheckTab():
                                                                                       id)
                     self.mdb.run_query(sql)
                 except ValueError:
-                    init_date = None
+                    pass
 
     def fill_struct(self):
         """

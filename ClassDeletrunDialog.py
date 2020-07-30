@@ -83,7 +83,6 @@ class ClassDeletrunDialog(QDialog):
                 self.parent[run].setFlags(self.parent[run].flags() |
                                           Qt.ItemIsTristate |
                                           Qt.ItemIsUserCheckable)
-                i = dico['run'].index(run)
 
                 lbl = QLabel('')
                 self.tree.setItemWidget(self.parent[run], 2, lbl)
@@ -202,6 +201,3 @@ class ClassDeletrunDialog(QDialog):
               "(SELECT DISTINCT id_runs FROM {0}.runs_graph " \
               "where id_runs not in (SELECT id FROM {0}.runs));"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-
-
-

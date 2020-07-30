@@ -64,9 +64,9 @@ class ClassLaws:
                       'MAXH', 'MINH', 'PASH', 'PASQ']
         self.param_g = self.init_var.get_param_g(list_recup, id_config)
         list_key = list(self.param_g.keys())
-        if not 'COEFDO' in list_key:
+        if 'COEFDO' not in list_key:
             self.param_g['COEFDO'] = 1
-        if not 'COEFDS' in list_key:
+        if 'COEFDS' not in list_key:
             self.param_g['COEFDS'] = 0.385
 
         self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
@@ -88,7 +88,7 @@ class ClassLaws:
         """ get polygon of travers"""
         self.list_poly_trav = self.init_var.select_poly_elem(id_config, 0)
 
-        if not 'Brad' in method and self.mobil_struct:
+        if 'Brad' not in method and self.mobil_struct:
             self.update_poly_mobil_struct()
         # MDU change vanne self.list_poly_trav
         self.param_elem = {'ZMAXELEM': [], 'LARGELEM': [], 'SURFELEM': [], 'ZMINELEM': []}
@@ -222,7 +222,7 @@ class ClassLaws:
 
         self.param_g['BIAIOUVRAD'] = self.param_g['BIAIOUV'] / 180. * m.pi  # rad
         # only meth
-        self.list_poly_pil = self.init_var.select_poly_elem(self, id_config, 1)
+        self.list_poly_pil = self.init_var.select_poly_elem(id_config, 1)
 
         self.list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'], self.param_g['PASQ']))
         self.list_q.append(self.param_g['MAXQ'])
@@ -474,10 +474,10 @@ class ClassLaws:
                 q_new = np.interp(ztransi, zam_tmp, q_tmp)
                 list_ori = list_ori + [[q_new, zav, ztransi]]
                 # list_final += [[q_new ,zav ,ztransi]]
-                qmax = q_new
+                # qmax = q_new
                 za = ztransi
             else:
-                qmax = max(np.array(list_brad)[:, 0])
+                # qmax = max(np.array(list_brad)[:, 0])
                 za = list_brad[-1][2]
         else:
             qmax = self.deb_min
@@ -560,7 +560,7 @@ class ClassLaws:
         :return: new list of law values
         """
         list_add = []
-        if transi == []:
+        if not transi:
             return list_final
 
         for tmp in transi:
@@ -864,10 +864,11 @@ class ClassLaws:
         """
         Search the  new (q, zav) couple and interpole with new q
         :param list_final: list of law values
-        :param pasq q discretisation
-        :param add q list for interpolation
+        :param pasq q:discretisation
+        :param list_q : q list for interpolation
         :return: list_final: new list of law values
         :return: q_new: q list of law
+
         """
 
         tmp = np.array(list_final)
@@ -967,7 +968,7 @@ class ClassLaws:
                     zam = self.find_zam_dicho(min_elem, q, zav)
                     cond_zmin = True
             # checkdico
-            if cond_zmin == False:
+            if not cond_zmin:
                 if self.dico_tr[q][0] != cond_zmin:
                     self.dico_tr[q] = [cond_zmin, [zav, zam]]
 
@@ -990,10 +991,10 @@ class ClassLaws:
                 zam_tmp = np.array([list_borda[-1][2], borda_lim[2]])
                 q_new = np.interp(zcret, zam_tmp, q_tmp)
                 list_ori = list_ori + [[q_new, zav, ztr]]
-                qmax = q_new
+                # qmax = q_new
                 za = zcret
             else:
-                qmax = max(np.array(list_borda)[:, 0])
+                # qmax = max(np.array(list_borda)[:, 0])
                 za = list_borda[-1][2]
         else:
             qmax = self.deb_min
@@ -1074,7 +1075,7 @@ class ClassLaws:
             if ui is not None:
                 ui.progress_bar(val)
         for q, llist in self.dico_tr.items():
-            if llist[0] == False:
+            if not llist[0]:
                 z_transi_fr.append([q, llist[1][0]])
 
         list_final = self.transition_law(list_final, zcret)
@@ -1099,7 +1100,7 @@ class ClassLaws:
         """
 
         self.init_method(id_config)
-        a = self.init_elem(id_config, method)
+        self.init_elem(id_config, method)
         list_final = []
 
         qmax = self.deb_min  # self.param_g['MINQ']
@@ -1233,15 +1234,16 @@ class ClassLaws:
     def add_info(self, txt):
         self.msg += txt + '\n'
 
-    def write_csv(self, list_final, masplugPath, name=r"mascaret\law_tmp.csv"):
+    def write_csv(self, list_final, masplug_path, name=r"mascaret\law_tmp.csv"):
         """
         Write CSV to check law
         :param name : file name
         :param list_final: value writing in file
+        :param masplug_path: path file
         :return:
         """
 
-        f = open(os.path.join(masplugPath, name), 'w')
+        f = open(os.path.join(masplug_path, name), 'w')
         f.write('q ;zav ;zam \n')
         for val in list_final:
             f.write('{}; {} ;{} \n'.format(val[0], val[1], val[2]))

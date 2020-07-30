@@ -188,17 +188,21 @@ class MascPlugDialog(QMainWindow):
 
         # WQ
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
-        self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
-        self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
-        self.ui.actionAdd_Structure_temporal_tables.triggered.connect(self.fct_add_floogate_tables)
-
         self.ui.action_update_bin.triggered.connect(self.download_bin)
+
         # TODO Finaliser
         # self.ui.actionUpdate_pk.triggered.connect(self.update_pk)
         self.ui.actionImport_Results.triggered.connect(self.import_resu_model)
         self.ui.actionImport_Results.setVisible(False)
         self.ui.actionTest.triggered.connect(self.fct_test)
         self.ui.actionTest.setVisible(False)
+        # delete after
+        self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
+        self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
+        self.ui.actionAdd_Structure_temporal_tables.triggered.connect(self.fct_add_floogate_tables)
+        self.ui.actionAdd_WQ_tables.setVisible(False)
+        self.ui.actionAdd_Structure_tables.setVisible(False)
+        self.ui.actionAdd_Structure_temporal_tables.setVisible(False)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -405,12 +409,6 @@ class MascPlugDialog(QMainWindow):
 
         else:
             self.add_info('Droping Model cancelled.')
-
-
-
-            # **************************************
-            #  Menus Functions
-            # **************************************
 
     def mnt_to_profil(self):
         """

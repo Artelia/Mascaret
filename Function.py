@@ -150,8 +150,8 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
             num = n["numBranche"]
             branche = dico[num]
 
-            mini = 999999999
-            i = 0
+            # mini = 999999999
+            # i = 0
             # recuperation des coordonnees du point
             coord = n.geometry().asPoint()
 
@@ -272,12 +272,12 @@ def replace_all(txt, dico):
     return txt
 
 
-def read_version(masplugPath):
+def read_version(masplug_path):
     """
     read version of plugin
     :return: (str) version
     """
-    file = open(os.path.join(masplugPath, 'metadata.txt'), 'r')
+    file = open(os.path.join(masplug_path, 'metadata.txt'), 'r')
     for ligne in file:
         if ligne.find("version=") > -1:
             ligne = ligne.split('=')

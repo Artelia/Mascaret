@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 /***************************************************************************
 Name                 :  Mascaret
@@ -34,13 +33,14 @@ else:  # qt5
 
 from .ui.custom_control import ClassWarningBox
 
+
 class ClassImportRes(QDialog):
     def __init__(self, clmas=None):
         QDialog.__init__(self)
         self.clmas = clmas
         self.date = None
-        self.comments =''
-        self.path_model = os.path.join(os.path.dirname(__file__),"mascaret")
+        self.comments = ''
+        self.path_model = os.path.join(os.path.dirname(__file__), "mascaret")
         self.run = ''
         self.scen = ''
         self.complet = False
@@ -52,18 +52,16 @@ class ClassImportRes(QDialog):
         self.buttonBox.accepted.connect(self.accept_dialog)
         self.buttonBox.rejected.connect(self.reject)
 
-
         self.checkBox.setChecked(False)
         self.mDateTimeEdit.setEnabled(False)
         self.checkBox.stateChanged.connect(self.act_date)
         # self.mDateTimeEdit.dateChanged.connect(self.change_date)
-        self.txt_path.setText( self.path_model)
+        self.txt_path.setText(self.path_model)
 
         self.bt_path.clicked.connect(self.path_search)
         self.txt_path.textChanged['QString'].connect(self.path_change)
         self.ed_scen.textChanged['QString'].connect(self.change_scenario)
         self.ed_run.textChanged['QString'].connect(self.change_run)
-
 
     def change_run(self):
         run = str(self.ed_run.text())
@@ -84,7 +82,7 @@ class ClassImportRes(QDialog):
 
     def accept_dialog(self):
         """validation dialog function"""
-        if  bool(self.checkBox.isChecked()):
+        if bool(self.checkBox.isChecked()):
             date_time_str = self.mDateTimeEdit.dateTime().toString("yyyy-MM-dd HH:mm:ss.zz")
             self.date = datetime.datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S.%f')
         else:
@@ -92,23 +90,20 @@ class ClassImportRes(QDialog):
         self.comments = str(self.textEdit_com.toPlainText())
 
         if self.scen.strip() == '' or self.run.strip() == '':
-            msg ="Indicate the run and scenario names."
+            msg = "Indicate the run and scenario names."
             self.box.info(msg, "Error")
         else:
             if self.clmas.check_scenar(self.scen, self.run):
                 self.complet = True
                 QDialog.accept(self)
 
-
-
     def path_search(self):
         """search path windows"""
 
-        path = QFileDialog.getExistingDirectory(self, "Choose a folder",  self.path_model)
+        path = QFileDialog.getExistingDirectory(self, "Choose a folder", self.path_model)
         if path:
             self.path_model = path
             self.txt_path.setText(path)
-
 
     def path_change(self, text):
         """ change path"""

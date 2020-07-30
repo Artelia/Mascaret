@@ -38,9 +38,9 @@ class ClassMNT(QObject):
         self.mnt = {}
 
     def run(self):
-        ret = None
+
         # try:
-        total_area = 0.0
+
         features = self.profil.selectedFeatures()
         self.profil.startEditing()
 

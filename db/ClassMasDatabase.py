@@ -125,7 +125,7 @@ class ClassMasDatabase(object):
         cur.execute(sql)
         self.con.commit()
 
-    def run_query(self, qry, fetch=False, arraysize=-1, be_quiet=False, namvar=False, many=False, list_many=[]):
+    def run_query(self, qry, fetch=False, arraysize=-1, be_quiet=False, namvar=False, many=False, list_many=None):
         """
         Running PostgreSQL queries
 
@@ -142,6 +142,8 @@ class ClassMasDatabase(object):
             list/generator/None: Returned value depends on the 'fetch' and 'arraysize' parameters.
         """
 
+        if list_many is None:
+            list_many = []
         result = None
         descr = None
         try:
@@ -880,7 +882,7 @@ $BODY$
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order, lvar), fetch=True, namvar=True)
-        if results == None or namCol == None:
+        if results is None or namCol is None:
             print("error : ", sql.format(self.SCHEMA, table, where, order, lvar))
             return None
         cols = [col[0] for col in namCol]
@@ -909,7 +911,7 @@ $BODY$
         # self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order),
                                            fetch=True, arraysize=1, namvar=True)
-        if results == None or namCol == None:
+        if results is not None or namCol is not None:
             print("error : ", sql.format(self.SCHEMA, table, where, order))
             return None
         cols = [col[0] for col in namCol]
@@ -1171,7 +1173,7 @@ $BODY$
         sql = "SELECT nspname from pg_catalog.pg_namespace;"
         info = self.run_query(sql, fetch=True)
         listf = []
-        if info != None:
+        if info is not None:
             for row in info:
                 listf.append(row[0])
         return listf

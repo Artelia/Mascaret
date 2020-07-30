@@ -810,7 +810,7 @@ class ClassMascaret:
         if noyau == 'steady':
 
             param_cas = fichier_cas.find('parametresCas')
-            parametres_generaux = param_cas.find('parametresGeneraux')
+            # parametres_generaux = param_cas.find('parametresGeneraux')
             geom_reseau = param_cas.find('parametresGeometrieReseau')
             type_cond = geom_reseau.find('extrLibres').find('typeCond')
             type_cond.text = type_cond.text.replace('4', '2')
@@ -1063,9 +1063,7 @@ class ClassMascaret:
 
         liste = ["type", "branchnum", "abscissa", "z_crest", "z_average_crest",
                  "z_break", "flowratecoeff", "wide_floodgate", "thickness"]
-        loi_struct = {}
-        loi_struct['laws'] = []
-        loi_struct['id_config'] = []
+        loi_struct = {'laws': [], 'id_config': []}
         if len(seuil["name"]) == 0:
             seuils = {'name': [], }
             for ls in liste:
@@ -1198,7 +1196,7 @@ class ClassMascaret:
         somme = 0
         debit_prec = 0
         obs = {}
-        duree = int((date_fin - date_debut).total_seconds() / 3600)
+        # duree = int((date_fin - date_debut).total_seconds() / 3600)
 
         # liste_date = [date_debut + datetime.timedelta(hours=x)
         # for x in range(duree)]
@@ -1331,9 +1329,9 @@ class ClassMascaret:
     def mascaret_init(self, noyau, run, only_init):
         """
         Initial file creation in model
-        :param noyau (str): Mascaret kernel
-        :param run (str): run name
-        :param only_init (bool):  option to write the  model files but it doesn't work with 'evenement'
+        :param noyau:(str) Mascaret kernel
+        :param run:(str) run name
+        :param only_init:(bool)  option to write the  model files but it doesn't work with 'evenement'
         :return:
         """
         comments = ''
@@ -1854,10 +1852,9 @@ class ClassMascaret:
         self.mdb.insert_res('results', values, colonnes)
 
         if len(dico_res.keys()) > 0:
-            list_insert = []
-            list_insert.append([id_run, 'struct', 'pknum', json.dumps(dico_pk)])
-            list_insert.append([id_run, 'struct', 'time', json.dumps(dico_time)])
-            list_insert.append([id_run, 'struct', 'var', json.dumps([id_var])])
+            list_insert = [[id_run, 'struct', 'pknum', json.dumps(dico_pk)],
+                           [id_run, 'struct', 'time', json.dumps(dico_time)],
+                           [id_run, 'struct', 'var', json.dumps([id_var])]]
             col_tab = ['id_runs', 'type_res', 'var', 'val']
             self.mdb.insert_res('runs_graph', list_insert, col_tab)
 
@@ -1871,7 +1868,6 @@ class ClassMascaret:
         :param lval:  values list
         :return:
         """
-        test = lval[0]
         values = []
         for time, pk, val in zip(ltime, lpk, lval):
             values.append([id_run, time, pk, id_name, val])
@@ -1916,9 +1912,9 @@ class ClassMascaret:
             for j, lignval in enumerate(value):
                 for i in lind:
                     lignval.append(value_tra[j][i])
-        tab = {id_run:
-                   {"t": list(t),
-                    "pk": list(pk)}}
+        tab = {id_run: {"t": list(t),
+                        "pk": list(pk)}
+               }
         if date_debut:
             tab[id_run]["init_date"] = "{:%Y-%m-%d %H:%M}".format(date_debut)
         if comments != '':
@@ -2177,11 +2173,13 @@ class ClassMascaret:
         else:
             return True
 
-    def read_opt(self, nom_fich, date_debut, scen, run, init_col=[]):
+    def read_opt(self, nom_fich, date_debut, scen, run, init_col=None):
         """ Read opt file"""
+        if init_col is None:
+            init_col = []
         t = set([])
         pk = set([])
-        if init_col == []:
+        if not init_col:
             col = ['t', 'branche', 'section', 'pk']
         else:
             col = init_col
@@ -2284,12 +2282,12 @@ class ClassMascaret:
                                 fich.write("{} {}\n".format(info['name'][i], nbt))
                                 fich.write("methode 1\n")
                                 fich.write("T(s)\n")
-                                for i in range(nbt):
-                                    fich.write('{} '.format(rows['value'][i]))
+                                for j in range(nbt):
+                                    fich.write('{} '.format(rows['value'][j]))
                                 fich.write('\n')
                                 fich.write("Zcrete(ngf)\n")
-                                for i in range(nbt):
-                                    fich.write('{} '.format(rows['value'][i + nbt]))
+                                for j in range(nbt):
+                                    fich.write('{} '.format(rows['value'][j + nbt]))
                                 fich.write("\n")
                             else:
                                 self.mgis.add_info(
@@ -2381,10 +2379,9 @@ class ClassMascaret:
                 self.mdb.insert_res('results', values, colonnes)
 
             if len(dico_res.keys()) > 0:
-                list_insert = []
-                list_insert.append([id_run, 'weirs', 'pknum', json.dumps(dico_pk)])
-                list_insert.append([id_run, 'weirs', 'time', json.dumps(dico_time)])
-                list_insert.append([id_run, 'weirs', 'var', json.dumps([id_var])])
+                list_insert = [[id_run, 'weirs', 'pknum', json.dumps(dico_pk)],
+                               [id_run, 'weirs', 'time', json.dumps(dico_time)],
+                               [id_run, 'weirs', 'var', json.dumps([id_var])]]
                 col_tab = ['id_runs', 'type_res', 'var', 'val']
                 self.mdb.insert_res('runs_graph', list_insert, col_tab)
 
@@ -2411,7 +2408,7 @@ class ClassMascaret:
         id_run = info['id'][0]
         return id_run
 
-    def new_read_opt(self, nom_fich, type_res, init_col=[]):
+    def new_read_opt(self, nom_fich, type_res, init_col=None):
         """
         Read opt file
         :param nom_fich: file name
@@ -2419,6 +2416,8 @@ class ClassMascaret:
         :param init_col: first column
         :return: dictionary of values
         """
+        if init_col is None:
+            init_col = []
         col = []
         var_del = []
         with open(nom_fich, 'r') as source:

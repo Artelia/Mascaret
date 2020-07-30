@@ -39,14 +39,12 @@ class GraphStructure(GraphCommon):
         self.fig.subplots_adjust(left=0.05, right=0.98, top=0.95, bottom=0.08)
         self.axes.tick_params(axis='both', labelsize=7.)
         self.axes.grid(False)
-        self.courbes = {'profil_poly': None,
-                        'ouvrage_poly': None,
+        self.courbes = {'profil_poly': mpoly([(0., 0.), (0., 0.)], zorder=99, facecolor='#C8B4A0',
+                                             edgecolor='#96785A', alpha=1., label='profil'), 'ouvrage_poly': None,
+                        'profil_line': self.axes.plot([], [], zorder=100, c='#96785A', label='profil')[0],
                         'elem': []}
 
         # Dessin du profil
-        self.courbes['profil_line'], = self.axes.plot([], [], zorder=100, c='#96785A', label='profil')
-        self.courbes['profil_poly'] = mpoly([(0., 0.), (0., 0.)], zorder=99, facecolor='#C8B4A0',
-                                            edgecolor='#96785A', alpha=1., label='profil')
         self.axes.add_patch(self.courbes['profil_poly'])
 
         # Dessin de l'ouvrage
@@ -85,7 +83,7 @@ class GraphStructure(GraphCommon):
             sql = "SELECT var, value FROM {0}.struct_param WHERE id_config = {1} " \
                   "AND var IN ('ZTOPTAB', 'EPAITAB', 'FIRSTWD')".format(self.mdb.SCHEMA, config)
             rows = self.mdb.run_query(sql, fetch=True)
-            if rows == []:
+            if not rows:
                 self.courbes['ouvrage_poly'].set_xy([(0., 0.), (0., 0.)])
                 self.update_limites(minx, miny, maxx, maxy)
             else:

@@ -73,7 +73,6 @@ class ClassWaterQualityDialog(QDialog):
         self.ui.optionCalculDiffusion.currentIndexChanged.connect(self.calcul_diffusion_changed)
         self.ui.presenceConcInit.stateChanged.connect(self.presence_traceurs_changed)
 
-
     def presence_traceurs_changed(self):
         """ Enabled/Disenabled in function tracer presence parameter"""
         if self.ui.presenceConcInit.isChecked():
@@ -286,11 +285,11 @@ class ClassWaterQualityDialog(QDialog):
         if table_view.rowCount() > 1:
             indices = table_view.selectedIndexes()
             row_to_del = []
-            for index in indices :
-                if index.row() not in row_to_del :
+            for index in indices:
+                if index.row() not in row_to_del:
                     row_to_del.append(index.row())
-            row_to_del = sorted(row_to_del,reverse=True)
-            for row in row_to_del :
+            row_to_del = sorted(row_to_del, reverse=True)
+            for row in row_to_del:
                 table_view.removeRow(row)
                 del self.dicoTrac[row]
         if objnb_trac:
@@ -382,7 +381,6 @@ class ClassWaterQualityDialog(QDialog):
                                 WHERE parametre='{2}'
                           """.format(self.mdb.SCHEMA, txt_dif, 'diffusionTraceurs')
         self.mdb.execute(sql)
-
 
     def update_conv_diff(self, table):
         """ updating convection and diffusion parameters in database"""

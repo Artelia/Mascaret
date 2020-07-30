@@ -18,10 +18,11 @@ email                :
  ***************************************************************************/
 """
 
-try :
+try:
     from qgis.PyQt.QtCore import *
     from qgis.PyQt.QtWidgets import *
     from qgis.PyQt.uic import *
+
     # from qgis.core import *
     # from qgis.gui import *
     # from qgis.utils import *
@@ -97,9 +98,10 @@ class ClassTableStructure:
                                'NBTRAVE': {'name': 'Nombre de travées', 'unit': None},
                                "TOTALOUV": {'name': 'Largeur ouverture de travées', 'unit': 'm'},
                                # "TOTALW": {'name': 'Largeur du pont', 'unit': 'm'},
-                               'COEFDS': {'name': 'Coeficient de la loi de seuil', 'unit': '','default':0.385},
-                               'COEFDO': {'name': 'Coeficient de la loi de orifice', 'unit': '','default':1},
-                               'COEFBOR': {'name': 'Coeficient de débit pour la méthode de borda', 'unit': '', 'default': 0.45}
+                               'COEFDS': {'name': 'Coeficient de la loi de seuil', 'unit': '', 'default': 0.385},
+                               'COEFDO': {'name': 'Coeficient de la loi de orifice', 'unit': '', 'default': 1},
+                               'COEFBOR': {'name': 'Coeficient de débit pour la méthode de borda', 'unit': '',
+                                           'default': 0.45}
                                }
 
         self.dico_typ_elem = {0: 'Travee',
@@ -117,7 +119,6 @@ class ClassTableStructure:
                               'HAUTDAL': {'name': 'Hauteur du dalot', 'unit': 'm'},
                               'ABSBUSE': {'name': 'Abscisse du centre de la buse', 'unit': 'm'}}
 
-
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
         self.dico_forme_arche = {1: 'Circulaire', 2: 'Ellipsoïdale'}
 
@@ -132,7 +133,7 @@ class ClassTableStructure:
                 {0: 'flowrate', 1: 'z_downstream', 2: 'z_upstream'}
         }
 
-        #floodgate
+        # floodgate
         self.dico_fg = {'VELOFG': {'name': 'Temps de fonctionnement', 'unit': 'm/s'},
                         'ZMAXFG': {'name': 'Z bute de la vanne', 'unit': 'm'},
                         'ZINCRFG': {'name': 'Z d''increment de mouvement', 'unit': 'm'},
@@ -145,7 +146,7 @@ class ClassTableStructure:
                         'BIEFCONT': {'name': 'Bief du point de controle', 'unit': 'm'},
                         'LOCCONT': {'name': 'Localisation du point de controle', 'unit': 'm'}
                         }
-        self.dico_vardb_to_var_fg = {'type_fg' :'DIRFG', 'xpos':'LOCCONT', 'var_reg':'VREG'}
+        self.dico_vardb_to_var_fg = {'type_fg': 'DIRFG', 'xpos': 'LOCCONT', 'var_reg': 'VREG'}
 
         self.dico_weirs_mob = {'ZBAS': {'name': 'cotes basse', 'unit': 'm'},
                                'ZHAUT': {'name': 'cotes haute', 'unit': 'm'},
@@ -207,43 +208,43 @@ def fill_qcombobox(cb, lst, val_def=None, icn=None):
             cb.blockSignals(False)
             cb.setCurrentIndex(cb.findData(val_def))
 
+
 def update_etat_struct(mdb):
+    sql = "SELECT gid FROM {0}.profiles ".format(mdb.SCHEMA)
 
-        sql ="SELECT gid FROM {0}.profiles ".format(mdb.SCHEMA)
+    rows = mdb.run_query(sql, fetch=True)
 
-        rows = mdb.run_query(sql, fetch=True)
+    try:
+        lst_prof = [var[0] for var in rows]
+    except IndexError or TypeError:
+        return
+    sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config WHERE active ".format(mdb.SCHEMA)
+    rows = mdb.run_query(sql, fetch=True)
 
-        try:
-            lst_prof=[var[0] for var in rows ]
-        except IndexError or TypeError:
-            return
-        sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config WHERE active ".format(mdb.SCHEMA)
-        rows = mdb.run_query(sql, fetch=True)
+    try:
+        prof_act = [var[0] for var in rows]
+    except IndexError or TypeError:
+        prof_act = []
 
-        try:
-            prof_act = [var[0] for var in rows ]
-        except IndexError or TypeError :
-            prof_act = []
+    sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config WHERE active=false".format(mdb.SCHEMA)
+    rows = mdb.run_query(sql, fetch=True)
+    try:
+        prof_d = [var[0] for var in rows]
+    except IndexError or TypeError:
+        prof_act = []
 
-        sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config WHERE active=false".format(mdb.SCHEMA)
-        rows = mdb.run_query(sql, fetch=True)
-        try:
-            prof_d = [var[0] for var in rows ]
-        except IndexError or TypeError:
-            prof_act = []
+    list_udpate = []
 
-        list_udpate=[]
+    for gid in lst_prof:
+        if gid in prof_act:
+            list_udpate.append((gid, 2))
+        elif gid in prof_d:
+            list_udpate.append((gid, 1))
+        else:
+            list_udpate.append((gid, 0))
 
-        for gid in lst_prof:
-            if gid in prof_act:
-                list_udpate.append((gid,2))
-            elif gid in prof_d:
-                list_udpate.append((gid,1))
-            else:
-                list_udpate.append((gid,0))
+    sql = "UPDATE {0}.profiles SET struct= val.state " \
+          "FROM ( values {1}) as val(id,state) " \
+          "WHERE gid = val.id".format(mdb.SCHEMA, ','.join(map(str, list_udpate)))
 
-        sql = "UPDATE {0}.profiles SET struct= val.state " \
-        "FROM ( values {1}) as val(id,state) " \
-              "WHERE gid = val.id".format(mdb.SCHEMA, ','.join(map(str,list_udpate)))
-
-        mdb.run_query(sql)
+    mdb.run_query(sql)

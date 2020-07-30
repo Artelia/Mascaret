@@ -20,6 +20,7 @@ email                :
 
 from ..GraphCommon import GraphCommon
 
+
 class GraphWaterQ(GraphCommon):
     """class Dialog GraphWaterQ"""
 

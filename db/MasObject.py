@@ -411,31 +411,6 @@ class lateral_weirs(MasObject):
 class tracer_lateral_inflows(MasObject):
     def __init__(self):
         super(tracer_lateral_inflows, self).__init__()
-        self.order = 12
-        self.geom_type = 'Point'
-        self.attrs = [('gid', ' serial NOT NULL'),
-                      ('name', ' character varying(30)'),
-                      ('branchnum', ' integer'),
-                      ('abscissa', ' float'),
-                      ('length', ' float'),
-                      ('law_wq', ' text'),
-                      ('typeSources', ' integer'),
-                      ('active', ' boolean'),
-                      ('CONSTRAINT tracer_lateral_inflows_pkey', ' PRIMARY KEY (gid)')]
-
-    def pg_create_table(self):
-        qry = super(self.__class__, self).pg_create_table()
-        qry += '\n'
-        qry += self.pg_create_index()
-        qry += '\n'
-        qry += self.pg_create_calcul_abscisse()
-        return qry
-
-
-# *********** Water quality ***************
-class tracer_lateral_inflows(MasObject):
-    def __init__(self):
-        super(tracer_lateral_inflows, self).__init__()
         self.order = 13
         self.geom_type = 'Point'
         self.attrs = [('gid', ' serial NOT NULL'),

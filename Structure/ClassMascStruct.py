@@ -64,7 +64,7 @@ class ClassMascStruct:
         :return:
         """
 
-        if list_final == []:
+        if not list_final:
             return
         with open(os.path.join(dossier, nom + '.loi'), 'w') as fich:
             fich.write('# ' + nom + '\n')

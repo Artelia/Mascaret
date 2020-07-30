@@ -93,15 +93,6 @@ class ClassPostPreFG:
                     }
             self.export_cl(dico, name)
 
-
-            # self.import_cl(name)
-            # if name:
-            #     self.export_cl(cli2, name)
-            # else:
-            #     self.export_cl(cli2)
-            #
-            # self.import_cl(name)
-
     def get_profil(self, id_config):
         """
         Get profil coordonnee

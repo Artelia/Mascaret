@@ -308,10 +308,10 @@ class ClassAPIMascaret:
 
     def finalize(self):
         del self.masc
-        if self.clfg != None:
+        if self.clfg is not None:
             self.clfg.finalize(self.tfin)
             self.results_api['STRUCT_FG'] = self.clfg.results_fg_mv
-            if self.mgis == None:
+            if self.mgis is None:
                 self.write_res_struct(self.results_api['STRUCT_FG'])
 
     def write_res_struct(self, res):
@@ -329,7 +329,7 @@ class ClassAPIMascaret:
         self.finalize()
 
     def add_info(self, txt):
-        if self.mgis != None:
+        if self.mgis is not None:
             self.mgis.add_info(txt)
         else:
             print(txt)

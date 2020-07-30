@@ -107,7 +107,7 @@ class GraphCommon(QDialog):
     def gui_graph(self, lay_graph, lay_toolbar=None):
         lay_graph.addWidget(self.canvas)
         self.toolbar = NavigationToolbar(self.canvas, self)
-        if lay_toolbar != None:
+        if lay_toolbar is not None:
             lay_toolbar.addWidget(self.toolbar)
         else:
             lay_graph.addWidget(self.toolbar)
@@ -126,8 +126,8 @@ class GraphCommon(QDialog):
             self.maj_limites()
 
     def init_legende(self):
-        listeNoms = [c.get_label() for c in self.courbes]
-        self.leg = self.axes.legend(self.courbes, listeNoms, loc='upper right',
+        liste_noms = [c.get_label() for c in self.courbes]
+        self.leg = self.axes.legend(self.courbes, liste_noms, loc='upper right',
                                     fancybox=False, shadow=False, fontsize=7.)
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
@@ -156,10 +156,10 @@ class GraphCommon(QDialog):
 
     def maj_limites(self):
         no_data = True
-        miniX = 999999.
-        maxiX = -999999.
-        miniZ = 999999.
-        maxiZ = -999999.
+        mini_x = 999999.
+        maxi_x = -999999.
+        mini_z = 999999.
+        maxi_z = -999999.
 
         for courbe in self.courbes:
             if courbe.get_visible():
@@ -168,17 +168,17 @@ class GraphCommon(QDialog):
                 lz = [z for z in lz if z is not None]
                 if lx and lz:
                     no_data = False
-                    miniX = min(miniX, min(lx))
-                    maxiX = max(maxiX, max(lx))
-                    miniZ = min(miniZ, min(lz) - 1)
-                    maxiZ = max(maxiZ, max(lz) + 1)
+                    mini_x = min(mini_x, min(lx))
+                    maxi_x = max(maxi_x, max(lx))
+                    mini_z = min(mini_z, min(lz) - 1)
+                    maxi_z = max(maxi_z, max(lz) + 1)
 
         if no_data:
             self.axes.set_xlim(0., 1.)
             self.axes.set_ylim(0., 1.)
         else:
-            self.axes.set_xlim(miniX, maxiX)
-            self.axes.set_ylim(miniZ, maxiZ)
+            self.axes.set_xlim(mini_x, maxi_x)
+            self.axes.set_ylim(mini_z, maxi_z)
 
         self.fig.autofmt_xdate()
         self.canvas.draw()
@@ -246,7 +246,7 @@ class GraphCommonNew():
     def gui_graph(self, wgt, lay_graph, lay_toolbar=None):
         lay_graph.addWidget(self.canvas)
         self.toolbar = NavigationToolbar(self.canvas, wgt)
-        if lay_toolbar != None:
+        if lay_toolbar is not None:
             lay_toolbar.addWidget(self.toolbar)
         else:
             lay_graph.addWidget(self.toolbar)
@@ -278,14 +278,14 @@ class GraphCommonNew():
                 self.maj_limites()
 
     def graph_on_click(self, evt):
-        if (not self.leg_selected) and (self.data):
+        if (not self.leg_selected) and self.data:
             self.flag = True
             if evt.button == 1:
                 self.affiche_cadre(evt)
                 self.fig.canvas.draw()
 
     def graph_off_click(self, event):
-        if (not self.leg_selected) and (self.data):
+        if (not self.leg_selected) and self.data:
             for a in self.annotation:
                 a.set_visible(False)
             self.v_line.set_visible(False)
@@ -294,7 +294,7 @@ class GraphCommonNew():
         self.leg_selected = False
 
     def graph_on_press(self, event):
-        if (not self.leg_selected) and (self.data):
+        if (not self.leg_selected) and self.data:
             if event.button == 1 and self.flag:
                 self.affiche_cadre(event)
 
@@ -347,11 +347,11 @@ class GraphCommonNew():
             handles = handles
         else:
             handles = self.courbes
-        listeNoms = []
+        liste_noms = []
         for c in self.courbes:
             if c.get_visible():
-                listeNoms.append(c.get_label())
-        self.leg = self.axes.legend(handles, listeNoms, loc='upper right',
+                liste_noms.append(c.get_label())
+        self.leg = self.axes.legend(handles, liste_noms, loc='upper right',
                                     fancybox=False, shadow=False, fontsize=7.)
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
@@ -391,15 +391,15 @@ class GraphCommonNew():
                         no_data = False
                         if fst:
                             fst = False
-                            miniX = min(lx)
-                            maxiX = max(lx)
-                            miniZ = min(lz) - 1
-                            maxiZ = max(lz) + 1
+                            mini_x = min(lx)
+                            maxi_x = max(lx)
+                            mini_z = min(lz) - 1
+                            maxi_z = max(lz) + 1
                         else:
-                            miniX = min(miniX, min(lx))
-                            maxiX = max(maxiX, max(lx))
-                            miniZ = min(miniZ, min(lz) - 1)
-                            maxiZ = max(maxiZ, max(lz) + 1)
+                            mini_x = min(mini_x, min(lx))
+                            maxi_x = max(maxi_x, max(lx))
+                            mini_z = min(mini_z, min(lz) - 1)
+                            maxi_z = max(maxi_z, max(lz) + 1)
                 except AttributeError as e:
                     pass
 
@@ -407,8 +407,8 @@ class GraphCommonNew():
             self.axes.set_xlim(0., 1.)
             self.axes.set_ylim(0., 1.)
         else:
-            self.axes.set_xlim(miniX, maxiX)
-            self.axes.set_ylim(miniZ, maxiZ)
+            self.axes.set_xlim(mini_x, maxi_x)
+            self.axes.set_ylim(mini_z, maxi_z)
 
         self.fig.autofmt_xdate()
         self.canvas.draw()

@@ -188,15 +188,6 @@ class ClassMethod:
         else:
             print(txt)
 
-            # ******************************************************
-            #         MDB depend
-            # ******************************************************
-
-
-            # modif table
-            # ******************************************************
-            # use calcul
-
     def get_id_elem(self, id_config):
         """
         get id and type of element
