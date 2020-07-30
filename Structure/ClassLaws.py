@@ -418,7 +418,7 @@ class ClassLaws:
 
         self.init_bradley(method, id_config)
 
-        val = 75 / len(self.list_zav)
+        val_pg = 75 / len(self.list_zav)
 
         # self.list_zav=[9.75,6.25]
         ztransi = min(self.param_elem['ZMAXELEM'])
@@ -426,7 +426,7 @@ class ClassLaws:
         for zav in self.list_zav:
             list_final = self.calc_law_brad(list_final, zav, ztransi)
             if ui is not None:
-                ui.progress_bar(val)
+                ui.progress_bar(val_pg)
         # correction of the law
         list_final = self.transition_law(list_final, ztransi)
         list_final = self.complete_law(list_final)
@@ -1056,7 +1056,7 @@ class ClassLaws:
         z_transi_fr = []
         list_final = []
         zcret = self.param_g['ZTOPTAB']
-        val = 75 / len(self.list_zav)
+        val_pg = 75 / len(self.list_zav)
         area_tot = 0.
         for poly_trav in self.list_poly_trav:
             area_tot += poly_trav.area
@@ -1073,7 +1073,7 @@ class ClassLaws:
                 self.add_info("Problem : creation law")
 
             if ui is not None:
-                ui.progress_bar(val)
+                ui.progress_bar(val_pg)
         for q, llist in self.dico_tr.items():
             if not llist[0]:
                 z_transi_fr.append([q, llist[1][0]])
@@ -1105,7 +1105,7 @@ class ClassLaws:
 
         qmax = self.deb_min  # self.param_g['MINQ']
         zcret = self.param_g['ZTOPTAB']
-        val = 90 / len(self.list_zav)
+        val_pg = 90 / len(self.list_zav)
         first_trans = True
         ztransi = []
         for zav in self.list_zav:
@@ -1153,7 +1153,7 @@ class ClassLaws:
                             value = [qmax, zav, zam]
                             list_final.append(value)
             if ui is not None:
-                ui.progress_bar(val)
+                ui.progress_bar(val_pg)
         # treament of law for Mascaret model
         list_final, self.list_q = self.interpol_list_final_for_new_q(list_final, pasq=self.param_g['PASQ'])
         list_final = self.transition_law(list_final, ztransi)

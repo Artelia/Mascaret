@@ -221,8 +221,9 @@ class ClassStructureEditDialog(QDialog):
         if self.save_struct():
             self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
             active = self.cc_active.isChecked()
+            if active:
+                self.sav_meth(self.id_struct, self.current_meth, self.wgt_met)
             update_etat_struct(self.mdb)
-
             self.accept()
             # else:
             #     self.reject_page()
@@ -678,7 +679,7 @@ class ClassStructureEditDialog(QDialog):
             list_final = self.meth.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         else:
             pass
-
+        print('ffffffffffffffffff', list_final)
         self.save_list_final(list_final, id_config, self.tbst.dico_meth_calc[idmethod])
         if ui is not None:
             ui.progress_bar(100)

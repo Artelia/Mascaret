@@ -1811,6 +1811,7 @@ class ClassMascaret:
             os.chdir(self.dossierFileMasc)
             clapi = ClassAPIMascaret(self)
             clapi.main(fichier_cas, tracer, casier)
+            print('*********************')
             self.stock_res_api(clapi.results_api, id_run)
             del clapi
             os.chdir(pwd)
@@ -2632,13 +2633,10 @@ class ClassMascaret:
         init_col = ['TIME', 'BRANCH', 'SECTION', 'PK']
         val_opt = self.new_read_opt(nom_fich, type_res, init_col)
         key_val_opt = val_opt.keys()
-        t1 = time.time()
-        self.save_new_results(val_opt, id_run)
-        print('save opt', t1 - time.time())
 
-        t1 = time.time()
+        self.save_new_results(val_opt, id_run)
+
         self.save_run_graph(val_opt, id_run, type_res)
-        print('save_run_graph opt', t1 - time.time())
         del val_opt
 
         if casier:
@@ -2649,12 +2647,10 @@ class ClassMascaret:
                 type_res = 'basin'
                 init_col = ['TIME', 'BNUM']
                 val = self.new_read_opt(nom_fich_bas, type_res, init_col)
-                t1 = time.time()
+
                 self.save_new_results(val, id_run)
-                print('save basin', t1 - time.time())
-                t1 = time.time()
                 self.save_run_graph(val, id_run, type_res)
-                print('save_run_graph basin', t1 - time.time())
+
                 del val
 
             nom_fich_link = os.path.join(self.dossierFileMasc, base_namefile + '.liai_opt')
@@ -2664,12 +2660,9 @@ class ClassMascaret:
                 type_res = 'link'
                 init_col = ['TIME', 'LNUM']
                 val = self.new_read_opt(nom_fich_link, type_res, init_col)
-                t1 = time.time()
+
                 self.save_new_results(val, id_run)
-                print('save link', t1 - time.time())
-                t1 = time.time()
                 self.save_run_graph(val, id_run, type_res)
-                print('save_run_graph link', t1 - time.time())
                 del val
         if tracer:
             nom_fich_tra = os.path.join(self.dossierFileMasc, base_namefile + '.tra_opt')
@@ -2686,12 +2679,9 @@ class ClassMascaret:
                 for key in val_key:
                     if key in key_val_opt:
                         del val[key]
-                t1 = time.time()
                 self.save_new_results(val, id_run)
-                print('save tracer', t1 - time.time())
-                t1 = time.time()
                 self.save_run_graph(val, id_run, type_res)
-                print('save_run_graph tracer', t1 - time.time())
+
 
     def save_new_results(self, val, id_run):
         """
@@ -2700,7 +2690,7 @@ class ClassMascaret:
         :param id_run: run index
         :return:
         """
-        print('entre save_new')
+
         val_keys = val.keys()
         if 'PK' in val_keys:
             lpk = val['PK']

@@ -911,7 +911,8 @@ $BODY$
         # self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order),
                                            fetch=True, arraysize=1, namvar=True)
-        if results is not None or namCol is not None:
+
+        if results is  None or namCol is None:
             print("error : ", sql.format(self.SCHEMA, table, where, order))
             return None
         cols = [col[0] for col in namCol]

@@ -48,13 +48,15 @@ class ClassPostPreFG:
             self.clmeth = ClassMethod(self.mgis)
 
     def import_cl(self, name='object.obj'):
+        if os.path.isfile(name):
+            with open(name, 'rb') as file:
+                obj = pickle.load(file)
 
-        with open(name, 'rb') as file:
-            obj = pickle.load(file)
+            for key, val in obj.items():
+                setattr(self.cli, key, val)
 
-        for key, val in obj.items():
-            setattr(self.cli, key, val)
-        return
+        else:
+            pass
 
     def export_cl(self, obj, name='object.obj'):
         with open(name, 'wb') as file:
