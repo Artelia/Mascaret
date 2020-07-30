@@ -173,7 +173,6 @@ class ClassMethod:
                 if self.debug:
                     self.add_info(msg)
 
-
             if not poly_final.is_empty:
                 # # stock element
                 if poly_final.geom_type == 'MultiPolygon':
@@ -190,13 +189,13 @@ class ClassMethod:
             print(txt)
 
             # ******************************************************
-        #         MDB depend
-        # ******************************************************
+            #         MDB depend
+            # ******************************************************
 
 
-        # modif table
-        # ******************************************************
-        # use calcul
+            # modif table
+            # ******************************************************
+            # use calcul
 
     def get_id_elem(self, id_config):
         """

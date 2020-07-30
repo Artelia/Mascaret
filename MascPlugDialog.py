@@ -719,7 +719,6 @@ class MascPlugDialog(QMainWindow):
         else:
             return True
 
-
     def main_graph(self):
         """ GUI graphique"""
 
@@ -874,7 +873,6 @@ Version : {}
         dlg = ClassMobilSingDialog(self)
         dlg.exec_()
 
-
     def fct_creat_run(self):
         """
         model creation to run with api
@@ -899,8 +897,8 @@ Version : {}
         clam = ClassMascaret(self)
         dlg = ClassImportRes(clam)
         dlg.exec_()
-        if dlg.complet :
-            clam.import_results(dlg.run, dlg.scen, dlg.comments, dlg.path_model, date_debut = dlg.date)
+        if dlg.complet:
+            clam.import_results(dlg.run, dlg.scen, dlg.comments, dlg.path_model, date_debut=dlg.date)
         del dlg
         del clam
 

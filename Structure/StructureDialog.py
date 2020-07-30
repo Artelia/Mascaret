@@ -147,6 +147,3 @@ class ClassStructureDialog(QDialog):
             sql = "DELETE FROM {0}.struct_config WHERE id = {1}".format(self.mdb.SCHEMA, id_struct)
             self.mdb.execute(sql)
             self.fill_lst_struct()
-
-
-

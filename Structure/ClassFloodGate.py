@@ -57,7 +57,7 @@ class ClassFloodGate:
         """
         self.model_size, _, _ = self.masc.get_var_size('Model.X')
 
-        self.param_fg, link_name_id =self.init_var.get_param_fg()
+        self.param_fg, link_name_id = self.init_var.get_param_fg()
 
         # attention init.loi ou pas
         # connaitrea la relation config et non law
@@ -184,7 +184,7 @@ class ClassFloodGate:
         else:
             pass
 
-    def sort_law(self,list_final):
+    def sort_law(self, list_final):
         """
         sort the law
         :param list_final: law data
@@ -344,7 +344,6 @@ class ClassFloodGate:
             self.results_fg_mv[id_config]['TIME'].append(time)
             self.results_fg_mv[id_config]['ZSTR'].append(newz)
 
-        
     def update_law(self, id_config, param_fg, new_z, mobil_struct):
         """   Compute new law
                 :param id_config: index of hydraulic structure
@@ -369,4 +368,4 @@ class ClassFloodGate:
         return list_final
 
     def fg_actif(self):
-        return  self.init_var.fg_actif()
+        return self.init_var.fg_actif()

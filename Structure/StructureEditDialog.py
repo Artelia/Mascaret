@@ -29,7 +29,7 @@ from shapely.geometry import Point
 
 from .ClassMascStruct import ClassMascStruct
 from .ClassMethod import ClassMethod
-from .ClassTableStructure import ClassTableStructure,update_etat_struct
+from .ClassTableStructure import ClassTableStructure, update_etat_struct
 from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
 # Widgets Buse
 from .MetBordaBuWidget import MetBordaBuWidget
@@ -219,7 +219,6 @@ class ClassStructureEditDialog(QDialog):
     def accept_page(self):
         # save Info
         if self.save_struct():
-
             self.clmeth.create_poly_elem(self.id_struct, self.typ_struct)
             active = self.cc_active.isChecked()
             update_etat_struct(self.mdb)
@@ -618,7 +617,6 @@ class ClassStructureEditDialog(QDialog):
         self.fg_active.stateChanged.connect(self.act_active_fg)
         self.b_fg.clicked.connect(self.get_param_fg)
 
-
     def act_active_fg(self):
         act_val = bool(self.fg_active.isChecked())
         if act_val:
@@ -637,7 +635,6 @@ class ClassStructureEditDialog(QDialog):
                 sql = "UPDATE {0}.struct_fg SET active = {2}  WHERE id_config = {1} " \
                     .format(self.mdb.SCHEMA, self.id_struct, act_val)
                 self.mdb.execute(sql)
-
 
     def display_fg(self):
         meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())

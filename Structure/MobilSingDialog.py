@@ -28,7 +28,7 @@ from qgis.gui import *
 from qgis.utils import *
 
 from ..GraphCommon import DraggableLegend, GraphCommon
-from ..Function import data_to_float,str2bool
+from ..Function import data_to_float, str2bool
 from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
 
 if int(qVersion()[0]) < 5:  # qt4
@@ -55,14 +55,13 @@ class ClassMobilSingDialog(QDialog):
                           'ZREG': [self.sb_zreg],
                           'VDESC': [self.sb_vd],
                           'VMONT': [self.sb_va],
-                          'UNITVD':[self.cb_uvb],
-                          'UNITVH':[self.cb_uvh]
+                          'UNITVD': [self.cb_uvb],
+                          'UNITVH': [self.cb_uvh]
                           }
         self.unitvd = 0
         self.unitvh = 0
-        self.edit_type = 'table' # 'var'
+        self.edit_type = 'table'  # 'var'
         self.name_cur = None
-
 
         fill_qcombobox(self.cb_method, [['1', 'Methode 1'], ['2', 'Methode 2']])
         self.cb_method.currentIndexChanged['QString'].connect(self.cb_change_meth)
@@ -101,15 +100,12 @@ class ClassMobilSingDialog(QDialog):
         self.ui.tab_sets.sCut_del = QShortcut(QKeySequence("Del"), self)
         self.ui.tab_sets.sCut_del.activated.connect(self.short_cut_row_del)
 
-
-
-
         self.lst_sets.clicked.connect(self.select_list)
 
         self.init_ui()
 
-    def cb_change_unitvd(self,evt):
-        val=0
+    def cb_change_unitvd(self, evt):
+        val = 0
         if evt == 0:
             if self.unitvd == 1:
                 val = float(ctrl_get_value(self.sb_vd))
@@ -139,7 +135,6 @@ class ClassMobilSingDialog(QDialog):
                 ctrl_set_value(self.sb_vd, val)
         else:
             pass
-
 
         self.unitvd = evt
 
@@ -188,21 +183,19 @@ class ClassMobilSingDialog(QDialog):
         val = ctrl_get_value(self.cb_method)
 
         sql = "UPDATE {0}.weirs SET method_mob = '{1}' WHERE name = '{2}'" \
-            .format(self.mdb.SCHEMA,val, self.name_cur)
+            .format(self.mdb.SCHEMA, val, self.name_cur)
         self.mdb.execute(sql)
 
-    def select_list(self,itm):
+    def select_list(self, itm):
         self.name_cur = self.ui.lst_sets.model().item(itm.row(), 1).text()
         self.ui.bt_edit.setDisabled(False)
         self.ui.cb_method.setDisabled(False)
 
-
         rows = self.mdb.select('weirs', where="name = '{0}'".format(self.name_cur),
-                               list_var=['method_mob','gid' ])
+                               list_var=['method_mob', 'gid'])
         if rows:
             self.id = rows['gid'][0]
-            ctrl_set_value(self.cb_method,rows['method_mob'][0])
-
+            ctrl_set_value(self.cb_method, rows['method_mob'][0])
 
     def import_csv(self):
         """ Import csv file"""
@@ -339,11 +332,11 @@ class ClassMobilSingDialog(QDialog):
             recs = []
 
             for num in range(self.ui.tab_sets.model().rowCount()):
-                    recs.append([self.id, num , 'TIME', self.ui.tab_sets.model().item(num, 0).data(0)])
-                    recs.append([self.id, num , 'ZVAR', self.ui.tab_sets.model().item(num, 4).data(0)])
+                recs.append([self.id, num, 'TIME', self.ui.tab_sets.model().item(num, 0).data(0)])
+                recs.append([self.id, num, 'ZVAR', self.ui.tab_sets.model().item(num, 4).data(0)])
 
             rows = self.mdb.select('weirs_mob_val', where="id_weirs = {0}".format(self.id),
-                                   list_var=['name_var' ])
+                                   list_var=['name_var'])
 
             if rows:
                 if 'ZVAR' in rows['name_var']:
@@ -351,18 +344,17 @@ class ClassMobilSingDialog(QDialog):
                           "WHERE id_weirs = {1} AND name_var='ZVAR';\n".format(self.mdb.SCHEMA, self.id)
 
                     sql += "DELETE FROM {0}.weirs_mob_val " \
-                          "WHERE id_weirs = {1} AND name_var='TIME'".format(self.mdb.SCHEMA, self.id)
+                           "WHERE id_weirs = {1} AND name_var='TIME'".format(self.mdb.SCHEMA, self.id)
 
                     self.mdb.execute(sql)
 
-
-            sql =  "INSERT INTO {0}.weirs_mob_val (id_weirs, id_order, name_var, value) VALUES (%s, %s, %s, %s)".format(
-                    self.mdb.SCHEMA)
+            sql = "INSERT INTO {0}.weirs_mob_val (id_weirs, id_order, name_var, value) VALUES (%s, %s, %s, %s)".format(
+                self.mdb.SCHEMA)
 
             self.mdb.run_query(sql, many=True, list_many=recs)
 
             self.ui.weirs_pages.setCurrentIndex(0)
-        except :
+        except:
             self.reject_page2()
             self.mgis.add_info("Cancel of gate information")
 
@@ -370,14 +362,14 @@ class ClassMobilSingDialog(QDialog):
         try:
             for var, ctrls in self.dico_ctrl.items():
                 val = float(ctrl_get_value(ctrls[0]))
-                if var == 'UNITVD' :
+                if var == 'UNITVD':
                     val = int(ctrl_get_value(self.dico_ctrl['UNITVD'][0]))
                 elif var == 'UNITVH':
                     val = int(ctrl_get_value(self.dico_ctrl['UNITVH'][0]))
                 elif var == 'VDESC':
                     fact_t = int(ctrl_get_value(self.dico_ctrl['UNITVD'][0]))
                     val = val / fact_t
-                elif var =='VMONT':
+                elif var == 'VMONT':
                     fact_t = int(ctrl_get_value(self.dico_ctrl['UNITVH'][0]))
                     val = val / fact_t
                 else:
@@ -399,7 +391,7 @@ class ClassMobilSingDialog(QDialog):
                     self.mdb.execute(sql)
 
                 self.ui.weirs_pages.setCurrentIndex(0)
-        except :
+        except:
             self.reject_page3()
             self.mgis.add_info("Cancel of gate information")
 
@@ -470,10 +462,9 @@ class ClassMobilSingDialog(QDialog):
         if itm.checkState() == 2:
             sql = "UPDATE {0}.weirs SET active_mob = 't' WHERE name = '{1}'".format(self.mdb.SCHEMA, name)
             self.mdb.run_query(sql)
-        else :
+        else:
             sql = "UPDATE {0}.weirs SET active_mob = 'f' WHERE name = '{1}'".format(self.mdb.SCHEMA, name)
             self.mdb.run_query(sql)
-
 
     def init_ui(self):
         """initialisation gui"""
@@ -524,8 +515,8 @@ class ClassMobilSingDialog(QDialog):
 
     def clear_tab(self):
         model = self.ui.tab_sets.model()
-        list_id = sorted(range(model.rowCount()),reverse=True)
-        for num in  list_id:
+        list_id = sorted(range(model.rowCount()), reverse=True)
+        for num in list_id:
             model.removeRow(num)
         self.update_courbe("all")
 
@@ -549,11 +540,11 @@ class ClassMobilSingDialog(QDialog):
             l = self.ui.lst_sets.selectedIndexes()[0].row()
             self.cur_set = self.ui.lst_sets.model().item(l, 1).text()
 
-            if self.edit_type =='table':
+            if self.edit_type == 'table':
                 self.fill_tab_sets()
                 self.ui.weirs_pages.setCurrentIndex(1)
                 self.graph_edit.init_graph(self.cur_set)
-            else :
+            else:
                 self.display_method2()
                 self.ui.weirs_pages.setCurrentIndex(2)
 
@@ -562,26 +553,26 @@ class ClassMobilSingDialog(QDialog):
               "WHERE id_weirs = {1} ".format(self.mdb.SCHEMA, self.id)
 
         rows = self.mdb.run_query(sql, fetch=True)
-        if len(rows)> 0 :
-            dico={}
+        if len(rows) > 0:
+            dico = {}
             for param, val in rows:
-                dico[param]=val
+                dico[param] = val
             for ctrl in self.dico_ctrl['UNITVD'] + self.dico_ctrl['UNITVH']:
-               ctrl.blockSignals(True)
+                ctrl.blockSignals(True)
 
             for param in dico.keys():
                 if param in self.dico_ctrl.keys():
                     ctrls = self.dico_ctrl[param]
                     if param == 'VDESC':
-                        val = dico[param]*dico['UNITVD']
-                    elif param =='VMONT':
-                        val = dico[param]*dico['UNITVH']
+                        val = dico[param] * dico['UNITVD']
+                    elif param == 'VMONT':
+                        val = dico[param] * dico['UNITVH']
                     else:
                         val = dico[param]
 
                     for ctrl in ctrls:
-                        ctrl_set_value(ctrl, val )
-            for ctrl in self.dico_ctrl['UNITVD']+ self.dico_ctrl['UNITVH']:
+                        ctrl_set_value(ctrl, val)
+            for ctrl in self.dico_ctrl['UNITVD'] + self.dico_ctrl['UNITVH']:
                 ctrl.blockSignals(False)
 
             if dico['UNITVH'] == 3600:
@@ -601,9 +592,9 @@ class ClassMobilSingDialog(QDialog):
         else:
             # default value TODO
             for param in self.dico_ctrl.keys():
-                    ctrls = self.dico_ctrl[param]
-                    for ctrl in ctrls:
-                        ctrl_set_value(ctrl, 0.0)
+                ctrls = self.dico_ctrl[param]
+                for ctrl in ctrls:
+                    ctrl_set_value(ctrl, 0.0)
 
     def fill_tab_sets(self):
         """ fill table"""
@@ -632,8 +623,6 @@ class ClassMobilSingDialog(QDialog):
                         itm.setData(row[0], 0)
                         model.setItem(r, c, itm)
 
-
-
         self.filling_tab = False
         self.rb_sec.click()
 
@@ -647,14 +636,12 @@ class ClassMobilSingDialog(QDialog):
         for r in range(self.ui.tab_sets.model().rowCount()):
             lx.append(self.ui.tab_sets.model().item(r, col_x).data(0))
 
-
         ly = []
         for r in range(self.ui.tab_sets.model().rowCount()):
-            ly.append(self.ui.tab_sets.model().item(r,  4).data(0))
+            ly.append(self.ui.tab_sets.model().item(r, 4).data(0))
         data[0] = {"x": lx, "y": ly}
 
         self.graph_edit.maj_courbes(data)
-
 
 
 class ItemEditorFactory(QItemEditorFactory):
@@ -724,12 +711,12 @@ class GraphMobSing(GraphCommon):
     def init_graph(self, all_vis=False):
         self.maj_unit_x("s")
         leglines = self.leg.get_lines()
-        lst_graph=[]
+        lst_graph = []
         for var in self.lst_var:
 
             sql = "SELECT value FROM {0}.weirs_mob_val " \
                   "WHERE id_weirs = {1} and name_var = '{2}' " \
-                  "ORDER BY id_order".format(self.mdb.SCHEMA,self.id ,var["name"])
+                  "ORDER BY id_order".format(self.mdb.SCHEMA, self.id, var["name"])
 
             rows = self.mdb.run_query(sql, fetch=True)
 

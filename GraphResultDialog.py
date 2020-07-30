@@ -114,7 +114,6 @@ class GraphResultDialog(QWidget):
                 else:
                     self.typ_res = 'basin'
 
-
             self.cb_run.currentIndexChanged.connect(self.run_changed)
             self.cb_scen.currentIndexChanged.connect(self.scen_changed)
             if self.typ_graph == 'hydro_profil':
@@ -140,6 +139,7 @@ class GraphResultDialog(QWidget):
             else:
                 self.update_data()
             self.initialising = False
+
     def show_hide_com(self, vis=True):
 
         if vis:
@@ -159,7 +159,6 @@ class GraphResultDialog(QWidget):
             return False
 
     def get_profil_data(self):
-
 
         txt = self.mdb.select_distinct("comments", "runs", where='id={}'.format(self.cur_run))
         if txt:
@@ -195,7 +194,7 @@ class GraphResultDialog(QWidget):
         for t_res in liste:
             if typ is 'str':
                 txt += "'{}',".format(t_res)
-            elif  typ == 'int' or typ == 'float':
+            elif typ == 'int' or typ == 'float':
                 txt += "{},".format(t_res)
         txt = txt[:-1] + ')'
         return txt
@@ -296,7 +295,7 @@ class GraphResultDialog(QWidget):
         :return:
         """
         liste = []
-        if typ_res  in self.info_graph.keys():
+        if typ_res in self.info_graph.keys():
             if id_run:
                 sql = "SELECT  * FROM {0}.results_var WHERE " \
                       "id in {1}".format(self.mdb.SCHEMA,
@@ -327,7 +326,6 @@ class GraphResultDialog(QWidget):
                 self.dict_run[row[1]] = dict()
             self.dict_run[row[1]][row[2]] = row[0]
         self.init_cb_run()
-
 
     def init_cb_run(self):
         self.cb_run.clear()
@@ -377,7 +375,7 @@ class GraphResultDialog(QWidget):
         for graph in self.lst_graph:
             self.cb_graph.addItem(graph["name"], graph["id"])
 
-        if  self.cb_graph.count() == 0:
+        if self.cb_graph.count() == 0:
             self.graph_obj.axes.cla()
             self.graph_obj.canvas.draw()
             self.tw_data.clearContents()
@@ -391,7 +389,7 @@ class GraphResultDialog(QWidget):
             if self.typ_res in self.info_graph.keys():
                 for id_config in self.info_graph[self.typ_res]['pknum'].keys():
                     lstpk.append(self.info_graph[self.typ_res]['pknum'][id_config])
-                info = self.mdb.select('profiles',where='abscissa IN {0}'.format(self.list_sql(lstpk,'float'))
+                info = self.mdb.select('profiles', where='abscissa IN {0}'.format(self.list_sql(lstpk, 'float'))
                                        , list_var=['abscissa', "name"])
                 for pknum in lstpk:
                     if pknum in info['abscissa']:
@@ -654,14 +652,14 @@ class GraphResultDialog(QWidget):
                   "ORDER BY {1}".format(self.mgis.mdb.SCHEMA, self.x_var, self.cur_run,
                                         sqlv, sqlw, sql_hyd_pk)
 
-            if self.x_var == 'time' :
-                if self.typ_graph in ['struct','weirs']:
+            if self.x_var == 'time':
+                if self.typ_graph in ['struct', 'weirs']:
                     x_val = None
                     if self.typ_res in self.info_graph.keys():
                         for id_config in self.info_graph[self.typ_res]['pknum'].keys():
                             if self.info_graph[self.typ_res]['pknum'][id_config] == self.cur_pknum:
                                 x_val = self.info_graph[self.typ_res]['time'][id_config]
-                    if not x_val :
+                    if not x_val:
                         x_val = self.info_graph['opt']['time']
                 else:
                     x_val = self.info_graph[self.typ_res]['time']
@@ -676,11 +674,11 @@ class GraphResultDialog(QWidget):
                 else:
                     self.date = None
 
-            elif self.x_var == 'pk' :
+            elif self.x_var == 'pk':
                 if self.typ_graph == 'hydro_pk':
                     sql = "SELECT pk FROM {0}.results_sect WHERE " \
-                             "id_runs = {1} AND branch = {2} ORDER BY pk" \
-                          ";".format(self.mgis.mdb.SCHEMA,self.cur_run, self.cur_branch)
+                          "id_runs = {1} AND branch = {2} ORDER BY pk" \
+                          ";".format(self.mgis.mdb.SCHEMA, self.cur_run, self.cur_branch)
                     rows = self.mdb.run_query(sql, fetch=True)
                     x_val = [row[0] for row in rows]
                 else:
@@ -690,7 +688,6 @@ class GraphResultDialog(QWidget):
                 rows = self.mdb.run_query(sql, fetch=True)
 
                 x_val = [row[0] for row in rows]
-
 
             self.cur_data[self.x_var] = x_val
 
@@ -739,7 +736,6 @@ class GraphResultDialog(QWidget):
 
         if self.laisses:
             self.laisses['pknum'] = self.laisses['abscissa']
-
 
     def get_obs(self):
 
@@ -834,7 +830,6 @@ class GraphResultDialog(QWidget):
                 courbe_lais["couleurs"] = ["black"] * len(courbe_lais["x"])
                 courbe_lais["taille"] = [1] * len(courbe_lais["x"])
             self.graph_obj.init_graph_laisse(courbe_lais)
-
 
     def update_obs(self):
         """ """
