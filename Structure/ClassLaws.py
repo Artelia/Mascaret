@@ -31,7 +31,7 @@ class ClassLaws:
     def __init__(self, mgis):
         self.clpoly = ClassPolygone()
         self.init_var = ClassPostPreFG(mgis)
-        self.msg =''
+        self.msg = ''
         self.grav = 9.81
 
         self.dico_abc = {}

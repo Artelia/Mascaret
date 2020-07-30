@@ -24,6 +24,7 @@ from .MascPlugDialog import MascPlugDialog
 
 if int(qVersion()[0]) < 5:
     from qgis.PyQt.QtGui import QApplication, QAction, QIcon
+
     try:
         from . import resources
     except ImportError:

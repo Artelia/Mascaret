@@ -33,6 +33,7 @@ else:  # qt5
     from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QIcon
     from qgis.PyQt.QtWidgets import *
 
+
 class ClassStructureCreateDialog(QDialog):
     def __init__(self, mgis, id_profil):
         QDialog.__init__(self)
@@ -87,7 +88,9 @@ class ClassStructureCreateDialog(QDialog):
 
         sql = "INSERT INTO {0}.struct_config (name, comment, type, id_prof_ori, active, abscissa, branchnum) " \
               "VALUES ('{1}', '{2}', '{3}', {4}, FALSE,{5} ,{6})".format(self.mdb.SCHEMA, self.name, self.comment,
-                                                                self.type, self.id_profil,feature['abscissa'][0],feature['branchnum'][0])
+                                                                         self.type, self.id_profil,
+                                                                         feature['abscissa'][0],
+                                                                         feature['branchnum'][0])
         self.mdb.run_query(sql)
         self.id_struct = self.mdb.select_max('id', 'struct_config')
 
@@ -105,4 +108,3 @@ class ClassStructureCreateDialog(QDialog):
         if self.mgis.DEBUG:
             self.mgis.add_info("Cancel of Structure")
         self.reject()
-

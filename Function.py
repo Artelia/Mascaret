@@ -243,12 +243,13 @@ def del_accent(ligne):
     return ligne
 
 
-def copy_dir_to_dir(src,target):
+def copy_dir_to_dir(src, target):
     """ Copi file in directory"""
     files = os.listdir(src)
     for i in range(0, len(files)):
         copy2(os.path.join(src, files[i]),
-                     os.path.join(target, files[i]))
+              os.path.join(target, files[i]))
+
 
 def del_symbol(ligne):
     """ supprime les accents du texte source """
@@ -258,7 +259,8 @@ def del_symbol(ligne):
             ligne = ligne.replace(accented_char, char)
     return ligne
 
-def replace_all( txt, dico):
+
+def replace_all(txt, dico):
     """
     Replace several items
     :param txt: text orginal
@@ -268,6 +270,7 @@ def replace_all( txt, dico):
     for i in dico:
         txt = txt.replace(i, dico[i])
     return txt
+
 
 def read_version(masplugPath):
     """

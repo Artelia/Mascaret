@@ -98,7 +98,7 @@ class GraphStructure(GraphCommon):
                                 'z': [miny - 90, param['ZTOPTAB'], param['ZTOPTAB'], miny - 90]}
                 # self.courbes['ouvrage_line'].set_data(dico_ouvrage['x'], dico_ouvrage['z'])
                 self.courbes['ouvrage_poly'].set_xy([(dico_ouvrage['x'][r], dico_ouvrage['z'][r])
-                                                    for r in range(len(dico_ouvrage['x']))])
+                                                     for r in range(len(dico_ouvrage['x']))])
 
                 sql = "SELECT id_elem, type, ST_AsGeoJSON(polygon) FROM {0}.struct_elem WHERE id_config = {1} " \
                       "AND polygon is Not Null ORDER BY id_elem".format(self.mdb.SCHEMA, config)
@@ -108,14 +108,12 @@ class GraphStructure(GraphCommon):
                         poly = geometry.shape(json.loads(elem[2]))
                         poly_coord = [pt for pt in poly.exterior.coords]
                         self.courbes['elem'].append(mpoly(poly_coord,
-                                                          zorder=90-e, facecolor='w', edgecolor='black', alpha=1.))
+                                                          zorder=90 - e, facecolor='w', edgecolor='black', alpha=1.))
                         self.axes.add_patch(self.courbes['elem'][-1])
 
                 self.update_limites(minx, miny, maxx, maxy)
-
 
     def update_limites(self, minx, miny, maxx, maxy):
         self.axes.set_xlim((minx, maxx))
         self.axes.set_ylim((miny, maxy))
         self.canvas.draw()
-

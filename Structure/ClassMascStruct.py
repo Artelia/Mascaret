@@ -21,12 +21,12 @@ import os
 import collections
 import numpy as np
 
+
 class ClassMascStruct:
     def __init__(self, mgis):
         self.mgis = mgis
         self.mdb = mgis.mdb
         self.debug = mgis.DEBUG
-
 
     def get_list_law(self, id_config):
         """
@@ -53,7 +53,6 @@ class ClassMascStruct:
                 list_tmp.append(tabval[int(j) * nb + i, 1])
             liste_f.append(list_tmp)
         return liste_f
-
 
     def create_law(self, dossier, nom, typel, list_final):
         """
@@ -90,4 +89,3 @@ class ClassMascStruct:
         info = info[info[:, 1].argsort(kind='mergesort')]
         info = info[info[:, 0].argsort(kind='mergesort')]
         return info
-
