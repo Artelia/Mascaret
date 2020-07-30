@@ -56,7 +56,6 @@ class ClassSettingsDialog(QDialog):
         # api
         self.ui.apiChbox.setChecked(self.mgis.cond_api)
 
-
         self.ui.debugModeChbox.setChecked(self.mgis.DEBUG)
         # DB
         # self.ui.db_loadAllChbox.setChecked(self.mgis.mdb.LOAD_ALL)
@@ -71,13 +70,13 @@ class ClassSettingsDialog(QDialog):
         # General
         self.mgis.open_last_conn = self.ui.open_lastChbox.isChecked()
         self.mgis.open_last_schema = self.ui.open_lastChbox_schema.isChecked()
-        self.mgis.cond_api= self.ui.apiChbox.isChecked()
+        self.mgis.cond_api = self.ui.apiChbox.isChecked()
         self.mgis.DEBUG = self.ui.debugModeChbox.isChecked()
         # Mascaret DB
         self.mgis.mdb.OVERWRITE = True
         self.mgis.mdb.LOAD_ALL = True
         # self.mgis.mdb.LOAD_ALL = self.ui.db_loadAllChbox.isChecked()
-        if  self.mgis.cond_api:
+        if self.mgis.cond_api:
             self.mgis.ui.actionStructures_weirs.setEnabled(False)
         else:
             self.mgis.ui.actionStructures_weirs.setEnabled(True)

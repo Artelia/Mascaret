@@ -828,7 +828,7 @@ class ClassMascaret:
         # ****** XCAS initialisation **********
         temps_max = 3600
         np_pas_temps_init = 2
-        dt_init = temps_max/np_pas_temps_init
+        dt_init = temps_max / np_pas_temps_init
 
         param_cas = fichier_cas.find('parametresCas')
         parametres_generaux = param_cas.find('parametresGeneraux')
@@ -1627,7 +1627,6 @@ class ClassMascaret:
         if not par or not dict_scen or not dict_lois:
             return
 
-
         for i, scen in enumerate(dict_scen['name']):
             if self.mgis.DEBUG:
                 self.mgis.add_info("The current scenario is {}".format(scen))
@@ -1661,9 +1660,9 @@ class ClassMascaret:
                     self.lance_mascaret(self.baseName + '_init.xcas', id_run)
 
                     # TODO delete in the future
-                    #self.lit_opt(run, sceninit, id_run, None,
+                    # self.lit_opt(run, sceninit, id_run, None,
                     #             self.baseName + '_init', comments)
-                    #self.mgis.chkt.convert_all_result()
+                    # self.mgis.chkt.convert_all_result()
                     # ----------
                     # TODO change when change graphic hydro
                     self.lit_opt_new(id_run, None,
@@ -1698,8 +1697,8 @@ class ClassMascaret:
 
             # Lecture de l'OPT des casiers et liaisons puis ecriture dans la table resultats
             # TODO delete in the future
-            #self.lit_opt(run, scen, id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
-            #self.mgis.chkt.convert_all_result()
+            # self.lit_opt(run, scen, id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
+            # self.mgis.chkt.convert_all_result()
             # ----------
             self.lit_opt_new(id_run, date_debut, self.baseName, comments, par['presenceTraceurs'], cond_casier)
 
@@ -1710,10 +1709,7 @@ class ClassMascaret:
         self.mgis.add_info("Simulation finished")
         return
 
-
-
-
-    def import_results(self, run, scen, comments, path, date_debut = None):
+    def import_results(self, run, scen, comments, path, date_debut=None):
         """
         import mascaret resultats
         :param run (str):
@@ -1733,7 +1729,7 @@ class ClassMascaret:
             elif file.split('.')[-1] == "cas_opt":
                 cas_cond = True
             elif file.split('.')[-1] == "tra_opt":
-                cond_tra=True
+                cond_tra = True
 
         cond_casier = False
         if lia_cond and cas_cond:
@@ -1744,13 +1740,13 @@ class ClassMascaret:
         # self.mgis.chkt.convert_all_result()
         self.lit_opt_new(id_run, date_debut, self.baseName, comments, cond_tra, cond_casier)
 
-        if os.path.isfile(os.path.join(path,'Fichier_Crete.csv')):
+        if os.path.isfile(os.path.join(path, 'Fichier_Crete.csv')):
             self.read_mobil_gate_res(id_run)
 
         if os.path.isfile(os.path.join(path, 'res_struct.res')):
             with open(os.path.join(path, 'res_struct.res'), 'r') as filein:
                 dico = json.load(filein)
-            self.stock_res_api(dico,id_run)
+            self.stock_res_api(dico, id_run)
 
     def fct_only_init(self, noyau):
         """
@@ -1857,15 +1853,13 @@ class ClassMascaret:
             values += v_tmp
         self.mdb.insert_res('results', values, colonnes)
 
-        if len(dico_res.keys())>0:
-            list_insert =[]
+        if len(dico_res.keys()) > 0:
+            list_insert = []
             list_insert.append([id_run, 'struct', 'pknum', json.dumps(dico_pk)])
             list_insert.append([id_run, 'struct', 'time', json.dumps(dico_time)])
             list_insert.append([id_run, 'struct', 'var', json.dumps([id_var])])
             col_tab = ['id_runs', 'type_res', 'var', 'val']
             self.mdb.insert_res('runs_graph', list_insert, col_tab)
-
-
 
     def creat_values(self, id_run, id_name, lpk, ltime, lval):
         """
@@ -1883,7 +1877,6 @@ class ClassMascaret:
             values.append([id_run, time, pk, id_name, val])
 
         return values
-
 
     def lit_opt(self, run, scen, id_run, date_debut, base_namefile, comments='', tracer=False, casier=False):
         nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
@@ -2548,29 +2541,29 @@ class ClassMascaret:
     def save_run_graph(self, val, id_run, typ_res, max=True):
         """save info for graph"""
 
-        list_insert =[]
+        list_insert = []
         list_var = []
         for id in val.keys():
             if isinstance(id, int):
                 list_var.append(id)
-        list_var=list(set(list_var))
-        #delete doublon list(set(my_list))
+        list_var = list(set(list_var))
+        # delete doublon list(set(my_list))
         list_insert.append([id_run, typ_res, 'var', json.dumps(sorted(list_var))])
-        list_insert.append([id_run,typ_res,'time', json.dumps(sorted(list(set(val['TIME']))))])
+        list_insert.append([id_run, typ_res, 'time', json.dumps(sorted(list(set(val['TIME']))))])
 
-        if typ_res =='opt':
+        if typ_res == 'opt':
             var_info = {'var': 'ZMAX',
                         'type_res': 'opt'}
             id_zmax = self.mdb.check_id_var(var_info)
             # if zmax exist
-            if  id_zmax in list_var:
+            if id_zmax in list_var:
                 dico_zmax = {}
                 tmax = val['TIME'][-1]
-                for i in range( len(val['TIME']) - 1, -1, -1):
+                for i in range(len(val['TIME']) - 1, -1, -1):
                     if val['TIME'][i] == tmax:
                         dico_zmax[val['PK'][i]] = val[id_zmax][i]
                     else:
-                      break
+                        break
 
                 list_insert.append([id_run, typ_res, 'zmax', json.dumps(dico_zmax)])
                 key_pknum = 'PK'
@@ -2600,7 +2593,7 @@ class ClassMascaret:
             key_pknum = 'LNUM'
         elif 'tracer_' in typ_res:
             key_pknum = 'PK'
-        list_insert.append([id_run,typ_res,'pknum', json.dumps(sorted(list(set(val[key_pknum]))))])
+        list_insert.append([id_run, typ_res, 'pknum', json.dumps(sorted(list(set(val[key_pknum]))))])
 
         col_tab = ['id_runs', 'type_res', 'var', 'val']
         if len(list_insert) > 0:
@@ -2756,17 +2749,17 @@ class ClassMascaret:
             #     cur = self.mdb.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
             #     cur.execute(sql)
             #     self.mdb.con.commit()
-                # speedest than one insert
+            # speedest than one insert
 
-            nb = max(int(len(values)/nb_stock),1)
+            nb = max(int(len(values) / nb_stock), 1)
             if nb == 1:
                 self.mdb.insert_res('results', values, col_tab)
             else:
-                for i in range(nb-1):
+                for i in range(nb - 1):
                     self.mdb.insert_res('results', values[nb_stock * i:nb_stock * (i + 1)], col_tab)
                 self.mdb.insert_res('results', values[nb_stock * (i + 1):], col_tab)
-            #self.mdb.insert_res('results', values, col_tab)
-            # print('insert res', t1 - time.time())
+                # self.mdb.insert_res('results', values, col_tab)
+                # print('insert res', t1 - time.time())
         col_sect = ['id_runs', 'pk', 'branch', 'section']
         if len(val_sect) > 0:
             # t1 = time.time()
@@ -2777,8 +2770,8 @@ class ClassMascaret:
                 for i in range(nb - 1):
                     self.mdb.insert_res('results_sect', val_sect[nb_stock * i:nb_stock * (i + 1)], col_sect)
                 self.mdb.insert_res('results_sect', val_sect[nb_stock * (i + 1):], col_sect)
-            #self.mdb.insert_res('results_sect', val_sect, col_sect)
-            # print('insert sect', t1 - time.time())
+                # self.mdb.insert_res('results_sect', val_sect, col_sect)
+                # print('insert sect', t1 - time.time())
         return True
 
     def get_for_lig_new(self, id_run):

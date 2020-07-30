@@ -881,7 +881,7 @@ $BODY$
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order, lvar), fetch=True, namvar=True)
         if results == None or namCol == None:
-            print("error : ",sql.format(self.SCHEMA, table, where, order, lvar))
+            print("error : ", sql.format(self.SCHEMA, table, where, order, lvar))
             return None
         cols = [col[0] for col in namCol]
         dico = {}
@@ -932,7 +932,7 @@ $BODY$
             where = "WHERE " + where
         sql = "SELECT DISTINCT {0} FROM {1}.{2} {3} ORDER BY {4};"
         (results, namCol) = self.run_query(sql.format(var, self.SCHEMA, table, where, ordre), fetch=True, namvar=True)
-        if namCol and results :
+        if namCol and results:
             cols = [col[0] for col in namCol]
             dico = {}
             for row in results:
@@ -945,8 +945,8 @@ $BODY$
                         dico[cols[i]].append(val)
 
             return dico
-        print('warning',sql.format(var, self.SCHEMA, table, where, ordre))
-        return  None
+        print('warning', sql.format(var, self.SCHEMA, table, where, ordre))
+        return None
 
     #
     def select_max(self, var, table, where=None):
@@ -962,8 +962,8 @@ $BODY$
                 var = row[0][0]
             return var
         else:
-             print("error : ", sql.format(self.SCHEMA, table, where, order, lvar))
-             return None
+            print("error : ", sql.format(self.SCHEMA, table, where, order, lvar))
+            return None
 
     def select_min(self, var, table, where=None):
         """select the max in the table for the "where" variable"""
@@ -1244,15 +1244,15 @@ $BODY$
         """
         id_var = None
         info = self.select('results_var', where="var = '{var}' AND type_res = '{type_res}'".format(**dico),
-                               list_var=['id'])
-        if info['id'] :
+                           list_var=['id'])
+        if info['id']:
             id_var = info['id'][0]
         else:
-            if len(dico)>2:
+            if len(dico) > 2:
                 dico['schema'] = self.SCHEMA
-                id_var = self.select_max('id','results_var') +1
+                id_var = self.select_max('id', 'results_var') + 1
                 dico['id'] = id_var
                 self.run_query("INSERT INTO {schema}.results_var (id,type_res, var, name,type_var) "
-                                   "VALUES ( {id}, '{type_res}', '{var}', '{name}','{type_var}')".format(**dico))
+                               "VALUES ( {id}, '{type_res}', '{var}', '{name}','{type_var}')".format(**dico))
 
         return id_var

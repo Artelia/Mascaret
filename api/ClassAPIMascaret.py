@@ -22,7 +22,6 @@ email                :
 import os
 import sys
 
-
 try:
     # Plugin
     from .masc import Mascaret
@@ -319,7 +318,6 @@ class ClassAPIMascaret:
         import json
         with open(os.path.join(self.dossierFileMasc, "res_struct.res"), 'w') as filein:
             json.dump(res, filein)
-
 
     def main(self, filename, tracer=False, basin=False):
         self.tracer = tracer

@@ -414,7 +414,6 @@ class GraphCommonNew():
         self.canvas.draw()
 
 
-
 class DraggableLegendNew:
     def __init__(self, legend):
         self.legend = legend

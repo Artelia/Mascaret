@@ -63,18 +63,17 @@ class CheckTab():
                                      'alt_tab': [{'tab': 'runs', 'sql': ["ALTER TABLE {0}.runs ADD COLUMN IF NOT "
                                                                          "EXISTS init_date timestamp without time zone;"]},
                                                  {'tab': 'outputs', 'sql': ["ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
-                                                                         "EXISTS active boolean;"]},
+                                                                            "EXISTS active boolean;"]},
                                                  ],
                                      'fct': [lambda: self.create_var_result(),
                                              lambda: self.convert_all_result(),
                                              lambda: self.fill_init_date_runs()],
                                      'del_tab': ['results_float', 'results_int']},
-        #'3.0.x': { 'del_tab': ['resultats']},
+                           # '3.0.x': { 'del_tab': ['resultats']},
 
                            }
 
         self.list_hist_version = ['0.0.0', '3.0.0', '3.0.1', '3.0.2']
-
 
     def update_adim(self):
         """
@@ -308,7 +307,8 @@ class CheckTab():
         """ conversion between the previous results table format to the new for all results"""
         convert = False
         try:
-            rows = self.mdb.run_query("SELECT DISTINCT type_res FROM {0}.results_var".format(self.mdb.SCHEMA), fetch=True)
+            rows = self.mdb.run_query("SELECT DISTINCT type_res FROM {0}.results_var".format(self.mdb.SCHEMA),
+                                      fetch=True)
             lst_typ_res = [r[0] for r in rows]
             rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs".format(self.mdb.SCHEMA), fetch=True)
             dict_runs = {r[0]: {"run": r[1], "scen": r[2]} for r in rows}
@@ -316,13 +316,15 @@ class CheckTab():
             for typ_res in lst_typ_res:
                 rows = self.mdb.run_query(
                     "SELECT DISTINCT id_runs FROM {0}.results WHERE var in "
-                    "(SELECT id FROM {0}.results_var WHERE type_res = '{1}') ".format(self.mdb.SCHEMA, typ_res), fetch=True)
+                    "(SELECT id FROM {0}.results_var WHERE type_res = '{1}') ".format(self.mdb.SCHEMA, typ_res),
+                    fetch=True)
                 lst_exist = [r[0] for r in rows]
                 for run in dict_runs.keys():
                     if run not in lst_exist:
                         self.convert_result(run, typ_res)
 
-            rows = self.mdb.run_query("SELECT DISTINCT id_runs FROM {0}.results_sect".format(self.mdb.SCHEMA), fetch=True)
+            rows = self.mdb.run_query("SELECT DISTINCT id_runs FROM {0}.results_sect".format(self.mdb.SCHEMA),
+                                      fetch=True)
             lst_exist = [r[0] for r in rows]
             for run in dict_runs.keys():
                 if run not in lst_exist:
@@ -396,10 +398,10 @@ class CheckTab():
             print("Error conversionof resutlats table : ", e)
 
         if convert:
-            #TODO delete table
-            #self.mdb.drop_table('resutlats')
+            # TODO delete table
+            # self.mdb.drop_table('resutlats')
             # self.mdb.drop_table('resutlats_basin')
-            #self.mdb.drop_table('resultats_links')
+            # self.mdb.drop_table('resultats_links')
             pass
 
     def convert_result(self, id_run, typ_res):

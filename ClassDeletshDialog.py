@@ -36,6 +36,7 @@ class ClassDeletshDialog(QDialog):
     """
     Class allow to delete schema
     """
+
     def __init__(self, mgis, iface):
         QDialog.__init__(self)
         self.mgis = mgis

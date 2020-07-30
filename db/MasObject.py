@@ -46,7 +46,9 @@ class MasObject(object):
         if self.overwrite is True:
             qry = 'DROP TABLE IF EXISTS {0};\nCREATE TABLE {0}(\n\t{1});\n'.format(schema_name, ',\n\t'.join(attrs))
         else:
-            qry = 'CREATE TABLE  IF NOT EXISTS {0}\n(\n\t{1}\n)\nWITH(\n\t OIDS=FALSE \n);\n'.format(schema_name, ',\n\t'.join(attrs))
+            qry = 'CREATE TABLE  IF NOT EXISTS {0}\n(\n\t{1}\n)\nWITH(\n\t OIDS=FALSE \n);\n'.format(schema_name,
+                                                                                                     ',\n\t'.join(
+                                                                                                         attrs))
         # if self.spatial_index is True:
         #     qry += 'SELECT "{0}".create_spatial_index(\'{0}\', \'{1}\');'.format(self.schema, self.name)
         # else:
@@ -524,6 +526,7 @@ class links(MasObject):
         qry += self.pg_create_calcul_abscisse()
         return qry
 
+
 # *****************************************
 class observations(MasObject):
     def __init__(self):
@@ -537,6 +540,8 @@ class observations(MasObject):
                       ('valeur', 'float'),
                       ('date', 'timestamp without time zone'),
                       ('CONSTRAINT cle_obs ', 'PRIMARY KEY (id)')]
+
+
 # *******************************************
 # ******************************************
 class resultats(MasObject):
@@ -622,7 +627,6 @@ class runs(MasObject):
                       ('comments', 'text'),
                       ('wq', 'text'),
                       ('CONSTRAINT cle_runs', 'PRIMARY KEY (id)')]
-
 
 
 # *****************************************
@@ -885,9 +889,10 @@ class init_conc_wq(MasObject):
             ('value', 'float'),
             ('CONSTRAINT cle_init_conc_wq', 'PRIMARY KEY (id_config, id_trac, bief,abscissa)')]
 
+
 # *****************************************
 # Hydraulic structur
-#******************************************
+# ******************************************
 class struct_config(MasObject):
     def __init__(self):
         super(struct_config, self).__init__()
@@ -905,7 +910,6 @@ class struct_config(MasObject):
                       ('CONSTRAINT cle_struct_conf', 'PRIMARY KEY (id)')]
 
 
-
 class profil_struct(MasObject):
     def __init__(self):
         super(profil_struct, self).__init__()
@@ -918,7 +922,6 @@ class profil_struct(MasObject):
                       ('CONSTRAINT profil_struct_pkey', 'PRIMARY KEY (id_order,id_config)')]
 
 
-
 class struct_param(MasObject):
     def __init__(self):
         super(struct_param, self).__init__()
@@ -928,7 +931,6 @@ class struct_param(MasObject):
                       ('var', 'text'),
                       ('value', 'float'),
                       ('CONSTRAINT cle_struct_param', 'PRIMARY KEY (id_config,var)')]
-
 
 
 class struct_elem_param(MasObject):
@@ -955,7 +957,6 @@ class struct_elem(MasObject):
                       ('CONSTRAINT cle_struct_elem', 'PRIMARY KEY (id_config,id_elem)')]
 
 
-
 class struct_abac(MasObject):
     def __init__(self):
         super(struct_abac, self).__init__()
@@ -979,7 +980,9 @@ class struct_laws(MasObject):
                       ('id_order', 'integer'),
                       ('value', 'float'),
                       ('CONSTRAINT cle_struct_laws', 'PRIMARY KEY (id_config, id_var, id_order)')]
-#************************************************************************************
+
+
+# ************************************************************************************
 
 class struct_fg(MasObject):
     # parameter vanne
@@ -995,8 +998,9 @@ class struct_fg(MasObject):
                       ('var_reg', 'text'),
                       ('CONSTRAINT cle_struct_fg', 'PRIMARY KEY (id_config,id_scen)')]
 
+
 class struct_fg_val(MasObject):
-    #valeur des variable float
+    # valeur des variable float
     def __init__(self):
         super(struct_fg_val, self).__init__()
         self.order = 34
@@ -1008,8 +1012,9 @@ class struct_fg_val(MasObject):
                       ('value', 'float'),
                       ('CONSTRAINT cle_struct_fg_val', 'PRIMARY KEY (id_config,id_scen,id_order,name_var)')]
 
+
 class weirs_mob_val(MasObject):
-    #valeur des variable float
+    # valeur des variable float
     def __init__(self):
         super(weirs_mob_val, self).__init__()
         self.order = 35
@@ -1020,8 +1025,9 @@ class weirs_mob_val(MasObject):
                       ('value', 'float'),
                       ('CONSTRAINT cle_weirs_mob_val', 'PRIMARY KEY (id_weirs,id_order,name_var)')]
 
+
 class admin_tab(MasObject):
-    #valeur des variable float
+    # valeur des variable float
     def __init__(self):
         super(admin_tab, self).__init__()
         self.order = 36
@@ -1030,6 +1036,7 @@ class admin_tab(MasObject):
                       ('table_', 'text'),
                       ('version_', 'text'),
                       ('CONSTRAINT cle_admin_tab', 'PRIMARY KEY (id_,table_, version_)')]
+
 
 # new results table
 class results(MasObject):
@@ -1044,11 +1051,12 @@ class results(MasObject):
                       ('val', 'float'),
                       ('CONSTRAINT results_pkey', ' PRIMARY KEY (id_runs, time, pknum, var)')]
 
-    # def pg_create_table(self):
-    #     qry = super(self.__class__, self).pg_create_table()
-    #     qry += '\n'
-    #     qry += "CREATE INDEX IF NOT EXISTS idx_res_var ON {0}.results(id_runs);\n".format(self.schema)
-    #     return qry
+        # def pg_create_table(self):
+        #     qry = super(self.__class__, self).pg_create_table()
+        #     qry += '\n'
+        #     qry += "CREATE INDEX IF NOT EXISTS idx_res_var ON {0}.results(id_runs);\n".format(self.schema)
+        #     return qry
+
 
 class results_sect(MasObject):
     def __init__(self):
@@ -1060,6 +1068,7 @@ class results_sect(MasObject):
                       ('branch', 'integer'),
                       ('section', 'integer'),
                       ('CONSTRAINT results_sect_pkey', ' PRIMARY KEY (id_runs, pk, branch)')]
+
 
 class results_var(MasObject):
     def __init__(self):
@@ -1073,6 +1082,7 @@ class results_var(MasObject):
                       ('type_var', 'text'),
                       ('CONSTRAINT results_var_pkey', ' PRIMARY KEY (type_res, var)')]
 
+
 class runs_graph(MasObject):
     def __init__(self):
         super(runs_graph, self).__init__()
@@ -1084,4 +1094,3 @@ class runs_graph(MasObject):
                       ('var', 'text'),
                       ('val', 'json'),
                       ('CONSTRAINT runs_graph_pkey', ' PRIMARY KEY (id_runs,type_res,var)')]
-
