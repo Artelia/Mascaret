@@ -125,7 +125,6 @@ class CheckTab():
 
         pos = self.list_hist_version.index(curent_v_tab)
         pos_fin = self.list_hist_version.index(version)
-        test_gd = True
         tabs_no = deepcopy(tabs)
 
         if len(self.list_hist_version[pos + 1:pos_fin + 1]) > 0:
@@ -134,12 +133,14 @@ class CheckTab():
                                    "There is a risk of table corruption.\n "
                                    "Remember to make backup copies if it's important model.".format(self.mdb.SCHEMA))
             if ok:
-
+                list_test_ver=[]
                 for ver in self.list_hist_version[pos + 1:pos_fin + 1]:
+                    list_test = []
                     if ver in self.dico_modif.keys():
                         modif = self.dico_modif[ver]
                         if len(modif) > 0:
                             for proc in ['add_tab', 'alt_tab', 'fct', 'del_tab']:
+                                test_gd = True
                                 if proc in modif.keys():
                                     if proc != 'fct':
                                         lst_tab = modif[proc]
@@ -167,16 +168,27 @@ class CheckTab():
                                     else:
                                         lst_fct = modif[proc]
                                         for fct in lst_fct:
-                                            fct()
-                    if test_gd:
+                                            test_gd = fct()
+
+                                    list_test.append(test_gd)
+
+                    if False not in list_test:
+                        list_test_ver.append(True)
                         self.all_version(tabs_no, ver)
                     else:
-
+                        list_test_ver.append(False)
                         self.mgis.add_info('ERROR: Update table ************')
-                        if self.mgis.DEBUG:
-                            self.mgis.add_info('ERROR :{}'.format(tab_name))
+                        self.mgis.add_info('ERROR :{}'.format(tab_name))
+                        # if self.mgis.DEBUG:
+                        #     self.mgis.add_info('ERROR :{}'.format(tab_name))
+                if False not in list_test_ver:
+                    tabs = self.mdb.list_tables(self.mdb.SCHEMA)
+                    self.all_version(tabs, ver)
+
             else:
                 self.mgis.add_info("********* Cancel of update table ***********")
+
+
 
     def all_version(self, tabs, version=None):
         if not version:
@@ -276,41 +288,45 @@ class CheckTab():
         return valid
 
     def create_var_result(self):
+        try:
+            self.mdb.execute("DELETE FROM {0}.results_var".format(self.mdb.SCHEMA))
+            dossier = os.path.join(self.mgis.masplugPath, 'db', 'sql')
+            fichparam = os.path.join(dossier, "var.csv")
+            liste_value = []
+            with open(fichparam, 'r') as file:
+                cpt = 0
+                for ligne in file:
+                    if cpt > 0:
+                        liste = ligne.replace('\n', '').split(';')
+                        liste_value.append([int(liste[0])] + liste[1:])
+                    cpt += 1
+            liste_col = self.mdb.list_columns('results_var')
 
-        self.mdb.execute("DELETE FROM {0}.results_var".format(self.mdb.SCHEMA))
-        dossier = os.path.join(self.mgis.masplugPath, 'db', 'sql')
-        fichparam = os.path.join(dossier, "var.csv")
-        liste_value = []
-        with open(fichparam, 'r') as file:
-            cpt = 0
-            for ligne in file:
-                if cpt > 0:
-                    liste = ligne.replace('\n', '').split(';')
-                    liste_value.append([int(liste[0])] + liste[1:])
-                cpt += 1
-        liste_col = self.mdb.list_columns('results_var')
+            var = ",".join(liste_col)
+            valeurs = "("
+            for k in liste_col:
+                valeurs += '%s,'
+            valeurs = valeurs[:-1] + ")"
 
-        var = ",".join(liste_col)
-        valeurs = "("
-        for k in liste_col:
-            valeurs += '%s,'
-        valeurs = valeurs[:-1] + ")"
+            sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
+                                                                'results_var',
+                                                                var,
+                                                                valeurs)
+            self.mdb.run_query(sql, many=True, list_many=liste_value)
 
-        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
-                                                            'results_var',
-                                                            var,
-                                                            valeurs)
-        self.mdb.run_query(sql, many=True, list_many=liste_value)
-
-        # add tracer variable
-        info = self.mdb.select('tracer_name', where="type='TRANSPORT_PUR'", list_var=['type', 'text', 'sigle'])
-        nbv = len(info['type'])
-        if nbv > 0:
-            dico = {'var': info['sigle'][0],
-                    'type_res': 'tracer_{}'.format('TRANSPORT_PUR'),
-                    'name': info['text'][0],
-                    'type_var': 'float'}
-            self.mdb.check_id_var(dico)
+            # add tracer variable
+            info = self.mdb.select('tracer_name', where="type='TRANSPORT_PUR'", list_var=['type', 'text', 'sigle'])
+            nbv = len(info['type'])
+            if nbv > 0:
+                dico = {'var': info['sigle'][0],
+                        'type_res': 'tracer_{}'.format('TRANSPORT_PUR'),
+                        'name': info['text'][0],
+                        'type_var': 'float'}
+                self.mdb.check_id_var(dico)
+            return True
+        except Exception as e:
+            self.mgis.add_info("Error create_var_result: {}".format(str(e)))
+            return False
 
     def convert_all_result(self):
         """ conversion between the previous results table format to the new for all results"""
@@ -405,15 +421,15 @@ class CheckTab():
                     self.mdb.run_query(sql, many=True, list_many=list_value)
             convert = True
         except Exception as e:
-            print("Error conversionof resutlats table : ", e)
-
+            self.mgis.add_info("Error convert_all_result : {}".format(str(e)))
+            return  False
         if convert:
             # TODO delete table
             # self.mdb.drop_table('resutlats')
             # self.mdb.drop_table('resutlats_basin')
             # self.mdb.drop_table('resultats_links')
             pass
-
+        return True
     def convert_result(self, id_run, typ_res):
         """
         conversion between the previous results table format to the new
@@ -506,41 +522,53 @@ class CheckTab():
             if modif:
                 with open(name_file, 'w') as file:
                     json.dump(data, file)
+        return True
 
     def fill_init_date_runs(self):
         """
         fill the initial date in runs tab
         :return:
         """
-        info = self.mdb.select('runs', list_var=["id", "t", 'init_date'])
-        for i, id in enumerate(info['id']):
-            ltime = info['t'][i]
-            init_date = info['init_date'][i]
-            if not init_date:
-                ltime = ltime.split(",")
-                init_date = ltime[0].strip()
-                try:
-                    date = datetime.strptime(init_date, '%Y-%m-%d %H:%M')
-                    init_date = "{:%Y-%m-%d %H:%M:00}".format(date)
-                    sql = "UPDATE {0}.runs SET init_date ='{1}' WHERE id ={2}".format(self.mdb.SCHEMA,
-                                                                                      init_date,
-                                                                                      id)
-                    self.mdb.run_query(sql)
-                except ValueError:
-                    pass
+        try:
+            info = self.mdb.select('runs', list_var=["id", "t", 'init_date'])
+            for i, id in enumerate(info['id']):
+                ltime = info['t'][i]
+                init_date = info['init_date'][i]
+                if not init_date:
+                    ltime = ltime.split(",")
+                    init_date = ltime[0].strip()
+                    try:
+                        date = datetime.strptime(init_date, '%Y-%m-%d %H:%M')
+                        init_date = "{:%Y-%m-%d %H:%M:00}".format(date)
+                        sql = "UPDATE {0}.runs SET init_date ='{1}' WHERE id ={2}".format(self.mdb.SCHEMA,
+                                                                                          init_date,
+                                                                                          id)
+                        self.mdb.run_query(sql)
+                    except ValueError:
+                        pass
+            return True
+        except Exception as e:
+            self.mgis.add_info("Error fill_init_date_runs: {}".format(str(e)))
+            return False
+
 
     def fill_struct(self):
         """
         add and fill struct column in profiles tab
         :return:
         """
-        self.mdb.insert_abacus_table(self.mgis.dossier_struct)
-        list_col = self.mdb.list_columns('profiles')
-        sql = ''
-        if 'struct' in list_col:
-            sql = "ALTER TABLE {0}.profiles DROP COLUMN IF EXISTS  struct;\n"
-        sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer DEFAULT 0;"
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+        try:
+            self.mdb.insert_abacus_table(self.mgis.dossier_struct)
+            list_col = self.mdb.list_columns('profiles')
+            sql = ''
+            if 'struct' in list_col:
+                sql = "ALTER TABLE {0}.profiles DROP COLUMN IF EXISTS  struct;\n"
+            sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer DEFAULT 0;"
+            self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            return True
+        except Exception as e:
+            self.mgis.add_info("Error fill_struct: {}".format(str(e)))
+            return False
 
     def debug_update_vers_meta(self):
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)

@@ -564,9 +564,15 @@ class ClassMobilSingDialog(QDialog):
                 if param in self.dico_ctrl.keys():
                     ctrls = self.dico_ctrl[param]
                     if param == 'VDESC':
-                        val = dico[param] * dico['UNITVD']
+                        if 'UNITVD' in dico.keys():
+                            val = dico[param] * dico['UNITVD']
+                        else:
+                            val = dico[param]
                     elif param == 'VMONT':
-                        val = dico[param] * dico['UNITVH']
+                        if 'UNITVH' in dico.keys():
+                            val = dico[param] * dico['UNITVH']
+                        else:
+                            val = dico[param]
                     else:
                         val = dico[param]
 
@@ -574,20 +580,20 @@ class ClassMobilSingDialog(QDialog):
                         ctrl_set_value(ctrl, val)
             for ctrl in self.dico_ctrl['UNITVD'] + self.dico_ctrl['UNITVH']:
                 ctrl.blockSignals(False)
-
-            if dico['UNITVH'] == 3600:
-                self.unitvh = 2
-            elif dico['UNITVH'] == 60:
-                self.unitvh = 1
-            else:
-                self.unitvh = 0
-
-            if dico['UNITVD'] == 3600:
-                self.unitvd = 2
-            elif dico['UNITVD'] == 60:
-                self.unitvd = 1
-            else:
-                self.unitvd = 0
+            if 'UNITVH' in dico.keys():
+                if dico['UNITVH'] == 3600:
+                    self.unitvh = 2
+                elif dico['UNITVH'] == 60:
+                    self.unitvh = 1
+                else:
+                    self.unitvh = 0
+            if 'UNITVD' in dico.keys():
+                if dico['UNITVD'] == 3600:
+                    self.unitvd = 2
+                elif dico['UNITVD'] == 60:
+                    self.unitvd = 1
+                else:
+                    self.unitvd = 0
 
         else:
             # default value TODO

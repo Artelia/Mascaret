@@ -679,7 +679,6 @@ class ClassStructureEditDialog(QDialog):
             list_final = self.meth.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
         else:
             pass
-        print('ffffffffffffffffff', list_final)
         self.save_list_final(list_final, id_config, self.tbst.dico_meth_calc[idmethod])
         if ui is not None:
             ui.progress_bar(100)
