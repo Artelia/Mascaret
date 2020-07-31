@@ -16,7 +16,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
        Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
        Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek (Many thanks for the work they've done on RiverGis)
 
-qgisMinimumVersion=2.18
+qgisMinimumVersion=3.00
 qgisMaximumVersion=3.99
 
 version=3.0.2
@@ -34,6 +34,7 @@ changelog=
              Add automatic update for the database
              New graph for results
              Add run_graph table
+             Add change for a possible use of  ClassAPIMascaret without  Qgis
     3.0.1  : Add mobile valve for hydraulic structure
              Add mobile dam
     3.0.0  : Correction of  displaying observations bug on graphics

@@ -82,12 +82,18 @@ class CheckTab():
                                      'fct': [lambda: self.create_var_result(),
                                              lambda: self.convert_all_result(),
                                              lambda: self.fill_init_date_runs()],
-                                     'del_tab': ['results_float', 'results_int']},
+                                     #'del_tab': ['results_float', 'results_int'],
+                                     },
                            # '3.0.x': { 'del_tab': ['resultats']},
 
                            }
 
-        self.list_hist_version = ['0.0.0', '3.0.0', '3.0.1', '3.0.2']
+        self.list_hist_version = ['0.0.0',
+                                  '1.1.3',
+                                  '2.0.0 ',
+                                  '3.0.0',
+                                  '3.0.1',
+                                  '3.0.2']
 
     def update_adim(self):
         """
