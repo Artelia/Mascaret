@@ -28,7 +28,7 @@ import subprocess
 import sys
 import json
 import time
-import psycopg2.extras
+
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
@@ -2712,56 +2712,45 @@ class ClassMascaret:
                 for pk, bra, sect in zip(lpk, val['BRANCH'], val['SECTION']):
                     if pk == init_pk and cond:
                         break
-                    val_sect.append((id_run, pk, bra, sect))
+                    val_sect.append((id_run, pk, int(bra), sect))
                     cond = True
 
         col_tab = ['id_runs', 'time', 'pknum', 'var', 'val']
-        nb_stock = 25000
+        nb_stock = 1000000000
         if len(values) > 0:
             # t1 = time.time()
-            #     # More speed but
-            #     # copy a un problème de premission car Postgres n'a pas accès au repertoir du plugin.
-            #     # 2 possibilité :
-            #     #  - les droit à postgres
-            #     #   - copier le fichier dans un zone possible
-            #     # ces deux possiblités dependent de la machine host
-            #     # il est impossible de pouvoir le gérer.
-            #     namefile = os.path.join(self.dossierFileMasc, 'opt_tmp.csv')
-            #     with  open(namefile, "w") as fout :
-            #         for info in values:
-            #             fout.write('{0}\n'.format(';'.join(map(str,info))))
-            #
-            #     sql = "COPY {0}.results({2}) FROM '{1}' WITH DELIMITER ';' CSV;".format(
-            #         self.mdb.SCHEMA,
-            #         namefile,
-            #         ','.join(col_tab))
-            #     cur = self.mdb.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            #     cur.execute(sql)
-            #     self.mdb.con.commit()
-            # speedest than one insert
-
             nb = max(int(len(values) / nb_stock), 1)
             if nb == 1:
-                self.mdb.insert_res('results', values, col_tab)
+                self.mdb.new_insert_res('results',
+                                        values,
+                                        col_tab)
             else:
                 for i in range(nb - 1):
-                    self.mdb.insert_res('results', values[nb_stock * i:nb_stock * (i + 1)], col_tab)
-                self.mdb.insert_res('results', values[nb_stock * (i + 1):], col_tab)
-                # self.mdb.insert_res('results', values, col_tab)
-                # print('insert res', t1 - time.time())
+                    self.mdb.new_insert_res('results',
+                                            values[nb_stock * i:nb_stock * (i + 1)],
+                                            col_tab)
+                if nb_stock * (i + 1)<len(values):
+                    self.mdb.new_insert_res('results',
+                                            values[nb_stock * (i + 1):],
+                                            col_tab)
+
+            # print('insert res', t1 - time.time())
         col_sect = ['id_runs', 'pk', 'branch', 'section']
         if len(val_sect) > 0:
-            # t1 = time.time()
-            nb = max(int(len(values) / nb_stock), 1)
+            #t1 = time.time()
+            nb = max(int(len(val_sect) / nb_stock), 1)
             if nb == 1:
-                self.mdb.insert_res('results_sect', val_sect, col_sect)
+                # self.mdb.insert_res('results_sect', val_sect, col_sect)
+                self.mdb.new_insert_res('results_sect', val_sect, col_sect)
+
             else:
                 for i in range(nb - 1):
-                    self.mdb.insert_res('results_sect', val_sect[nb_stock * i:nb_stock * (i + 1)], col_sect)
-                self.mdb.insert_res('results_sect', val_sect[nb_stock * (i + 1):], col_sect)
-                # self.mdb.insert_res('results_sect', val_sect, col_sect)
-                # print('insert sect', t1 - time.time())
+                    self.mdb.new_insert_res('results_sect', val_sect[nb_stock * i:nb_stock * (i + 1)], col_sect)
+                if nb_stock * (i + 1) < len(val_sect):
+                    self.mdb.new_insert_res('results_sect', val_sect[nb_stock * (i + 1):], col_sect)
+            #print('insert sect', t1 - time.time())
         return True
+
 
     def get_for_lig_new(self, id_run):
         """

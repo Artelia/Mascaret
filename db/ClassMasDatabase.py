@@ -20,6 +20,7 @@ email                :
 import os
 import numpy as np
 import subprocess
+import io
 
 import psycopg2
 import psycopg2.extras
@@ -1049,6 +1050,39 @@ $BODY$
                                                             var,
                                                             valeurs)
         self.run_query(sql, many=True, list_many=liste_value)
+
+    def new_insert_res(self,table,values,col_tab, be_quiet=False):
+        try:
+            if self.con:
+                file = self.buff_file(values)
+                cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
+                cur.copy_from(file, '{0}.{1}'.format(self.SCHEMA,table), columns=col_tab)
+                del file
+
+        except Exception as e:
+            self.con.rollback()
+            if be_quiet is False:
+                txt = u'{}'.format(repr(e))
+                self.mgis.add_info(txt)
+            else:
+                pass
+
+    def buff_file(self, liste):
+        txt = ''
+
+        leng = len(liste[0])
+
+        for x in liste:
+            for i in range(leng):
+                if i==0:
+                    txt += "{}".format(x[i])
+                else:
+                    txt += "\t{}".format(x[i])
+            txt += '\n'
+
+        f = io.StringIO(txt)
+        return f
+
 
     def update_res(self, table, liste_value, colonnes):
 
