@@ -2716,9 +2716,8 @@ class ClassMascaret:
                     cond = True
 
         col_tab = ['id_runs', 'time', 'pknum', 'var', 'val']
-        nb_stock = 1000000000
+        nb_stock = 10000 
         if len(values) > 0:
-            # t1 = time.time()
             nb = max(int(len(values) / nb_stock), 1)
             if nb == 1:
                 self.mdb.new_insert_res('results',
@@ -2734,10 +2733,8 @@ class ClassMascaret:
                                             values[nb_stock * (i + 1):],
                                             col_tab)
 
-            # print('insert res', t1 - time.time())
         col_sect = ['id_runs', 'pk', 'branch', 'section']
         if len(val_sect) > 0:
-            #t1 = time.time()
             nb = max(int(len(val_sect) / nb_stock), 1)
             if nb == 1:
                 # self.mdb.insert_res('results_sect', val_sect, col_sect)
@@ -2748,7 +2745,6 @@ class ClassMascaret:
                     self.mdb.new_insert_res('results_sect', val_sect[nb_stock * i:nb_stock * (i + 1)], col_sect)
                 if nb_stock * (i + 1) < len(val_sect):
                     self.mdb.new_insert_res('results_sect', val_sect[nb_stock * (i + 1):], col_sect)
-            #print('insert sect', t1 - time.time())
         return True
 
 
