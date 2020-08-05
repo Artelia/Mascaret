@@ -157,11 +157,13 @@ class GraphResultDialog(QWidget):
             return False
 
     def get_profil_data(self):
-
-        txt = self.mdb.select_distinct("comments", "runs", where='id={}'.format(self.cur_run))
-        if txt:
-            self.lbl_coment.setText(txt['comments'][0])
-            self.show_hide_com(True)
+        if self.cur_run is not None:
+            txt = self.mdb.select_distinct("comments", "runs", where='id={}'.format(self.cur_run))
+            if txt:
+                self.lbl_coment.setText(txt['comments'][0])
+                self.show_hide_com(True)
+            else:
+                self.show_hide_com(False)
         else:
             self.show_hide_com(False)
         prof = self.mdb.select('profiles', order='abscissa',
