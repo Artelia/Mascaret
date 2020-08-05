@@ -2716,7 +2716,7 @@ class ClassMascaret:
                     cond = True
 
         col_tab = ['id_runs', 'time', 'pknum', 'var', 'val']
-        nb_stock = 10000 
+        nb_stock = 10000
         if len(values) > 0:
             nb = max(int(len(values) / nb_stock), 1)
             if nb == 1:
