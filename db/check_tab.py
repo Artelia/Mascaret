@@ -84,6 +84,7 @@ class CheckTab():
                                              lambda: self.fill_init_date_runs()],
                                      #'del_tab': ['results_float', 'results_int'],
                                      },
+                           '3.0.3' : {},
                            # '3.0.x': { 'del_tab': ['resultats']},
 
                            }
@@ -93,7 +94,8 @@ class CheckTab():
                                   '2.0.0 ',
                                   '3.0.0',
                                   '3.0.1',
-                                  '3.0.2']
+                                  '3.0.2',
+                                  '3.0.3']
 
     def update_adim(self):
         """
@@ -171,6 +173,8 @@ class CheckTab():
                                             test_gd = fct()
 
                                     list_test.append(test_gd)
+                        else:
+                            list_test.append(True)
 
                     if False not in list_test:
                         list_test_ver.append(True)
