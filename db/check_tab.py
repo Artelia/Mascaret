@@ -292,45 +292,10 @@ class CheckTab():
         return valid
 
     def create_var_result(self):
-        try:
             self.mdb.execute("DELETE FROM {0}.results_var".format(self.mdb.SCHEMA))
             dossier = os.path.join(self.mgis.masplugPath, 'db', 'sql')
-            fichparam = os.path.join(dossier, "var.csv")
-            liste_value = []
-            with open(fichparam, 'r') as file:
-                cpt = 0
-                for ligne in file:
-                    if cpt > 0:
-                        liste = ligne.replace('\n', '').split(';')
-                        liste_value.append([int(liste[0])] + liste[1:])
-                    cpt += 1
-            liste_col = self.mdb.list_columns('results_var')
+            self.mdb.insert_var_to_result_var(dossier)
 
-            var = ",".join(liste_col)
-            valeurs = "("
-            for k in liste_col:
-                valeurs += '%s,'
-            valeurs = valeurs[:-1] + ")"
-
-            sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
-                                                                'results_var',
-                                                                var,
-                                                                valeurs)
-            self.mdb.run_query(sql, many=True, list_many=liste_value)
-
-            # add tracer variable
-            info = self.mdb.select('tracer_name', where="type='TRANSPORT_PUR'", list_var=['type', 'text', 'sigle'])
-            nbv = len(info['type'])
-            if nbv > 0:
-                dico = {'var': info['sigle'][0],
-                        'type_res': 'tracer_{}'.format('TRANSPORT_PUR'),
-                        'name': info['text'][0],
-                        'type_var': 'float'}
-                self.mdb.check_id_var(dico)
-            return True
-        except Exception as e:
-            self.mgis.add_info("Error create_var_result: {}".format(str(e)))
-            return False
 
     def convert_all_result(self):
         """ conversion between the previous results table format to the new for all results"""
