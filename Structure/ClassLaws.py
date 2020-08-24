@@ -435,7 +435,7 @@ class ClassLaws:
         # if self.debug:
         #     self.write_csv(list_final)
 
-        return list_final, id_config, method
+        return list_final
 
     def calc_law_brad(self, list_final, zav, ztransi):
         """
