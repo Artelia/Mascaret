@@ -85,6 +85,7 @@ class CheckTab():
                                      #'del_tab': ['results_float', 'results_int'],
                                      },
                            '3.0.3' : {},
+                           '3.0.4': {},
                            # '3.0.x': { 'del_tab': ['resultats']},
 
                            }
@@ -95,7 +96,8 @@ class CheckTab():
                                   '3.0.0',
                                   '3.0.1',
                                   '3.0.2',
-                                  '3.0.3']
+                                  '3.0.3',
+                                  '3.0.4']
 
     def update_adim(self):
         """
