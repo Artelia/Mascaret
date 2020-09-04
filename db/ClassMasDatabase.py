@@ -277,18 +277,18 @@ class ClassMasDatabase(object):
             srid (int): A Spatial Reference System Identifier.
         """
         tabs = self.list_tables(schema)
-
-        for tab in tabs:
-            if tab in dir(hydro_module):
-                hydro_object = getattr(hydro_module, tab)
-                self.setup_hydro_object(hydro_object, schema, srid)
-                obj = hydro_object()
-                self.register_object(obj)
-                if self.mgis.DEBUG:
-                    self.mgis.add_info('{0} registered'.format(obj.name))
-            else:
-                pass
-                #
+        if tabs:
+            for tab in tabs:
+                if tab in dir(hydro_module):
+                    hydro_object = getattr(hydro_module, tab)
+                    self.setup_hydro_object(hydro_object, schema, srid)
+                    obj = hydro_object()
+                    self.register_object(obj)
+                    if self.mgis.DEBUG:
+                        self.mgis.add_info('{0} registered'.format(obj.name))
+                else:
+                    pass
+                    #
 
     def list_tables(self, schema=None):
         """
@@ -305,8 +305,11 @@ class ClassMasDatabase(object):
         else:
             schema_new = schema
         qry = 'SELECT table_name FROM information_schema.tables WHERE table_schema = \'{0}\''.format(schema_new)
-        tabs = [tab[0] for tab in self.run_query(qry, fetch=True)]
-        return tabs
+        try:
+            tabs = [tab[0] for tab in self.run_query(qry, fetch=True)]
+            return tabs
+        except TypeError:
+            return None
 
     #
     def refresh_uris(self):
@@ -656,6 +659,8 @@ class ClassMasDatabase(object):
         """
         try:
             self.run_query("CREATE EXTENSION postgis;")
+            self.run_query("CREATE EXTENSION postgis_topology;")
+
             self.disconnect_pg()
             self.connect_pg()
 

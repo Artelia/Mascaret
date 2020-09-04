@@ -344,6 +344,9 @@ class MascPlugDialog(QMainWindow):
         else:
             self.user = settings.value('username')
             self.passwd = settings.value('password')
+
+        if not self.passwd :
+            self.add_info("Warning: the password is NULL.")
         self.host = settings.value('host')
         self.port = settings.value('port')
         self.database = settings.value('database')
