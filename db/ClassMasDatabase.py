@@ -480,6 +480,9 @@ class ClassMasDatabase(object):
             tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
             tbwq.default_tab_phy()
 
+            self.insert_abacus_table(self.mgis.dossier_struct)
+            self.insert_var_to_result_var(dossier)
+
             # admin_tab
             chkt = CheckTab(self.mgis, self)
             chkt.all_version(self.list_tables(self.SCHEMA),
@@ -1298,3 +1301,43 @@ $BODY$
                                "VALUES ( {id}, '{type_res}', '{var}', '{name}','{type_var}')".format(**dico))
 
         return id_var
+
+    def insert_var_to_result_var(self, dossier):
+        try:
+
+            fichparam = os.path.join(dossier, "var.csv")
+            liste_value = []
+            with open(fichparam, 'r') as file:
+                cpt = 0
+                for ligne in file:
+                    if cpt > 0:
+                        liste = ligne.replace('\n', '').split(';')
+                        liste_value.append([int(liste[0])] + liste[1:])
+                    cpt += 1
+            liste_col = self.list_columns('results_var')
+
+            var = ",".join(liste_col)
+            valeurs = "("
+            for k in liste_col:
+                valeurs += '%s,'
+            valeurs = valeurs[:-1] + ")"
+
+            sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
+                                                                'results_var',
+                                                                var,
+                                                                valeurs)
+            self.run_query(sql, many=True, list_many=liste_value)
+
+            # add tracer variable
+            info = self.select('tracer_name', where="type='TRANSPORT_PUR'", list_var=['type', 'text', 'sigle'])
+            nbv = len(info['type'])
+            if nbv > 0:
+                dico = {'var': info['sigle'][0],
+                        'type_res': 'tracer_{}'.format('TRANSPORT_PUR'),
+                        'name': info['text'][0],
+                        'type_var': 'float'}
+                self.check_id_var(dico)
+            return  True
+        except Exception as e:
+            self.mgis.add_info("Error create_var_result: {}".format(str(e)))
+            return False
