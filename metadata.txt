@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=3.00
 qgisMaximumVersion=3.99
 
-version=3.0.4
+version=3.0.5
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,6 +30,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    3.0.5  : Add warning message when the password is null.
+             Correction of bug about the creation of heigh-volum law
     3.0.4  : Correction of model creation bug for abacus and result_var table
              Correction of bradley method bug
     3.0.3  : Correction linux bug
