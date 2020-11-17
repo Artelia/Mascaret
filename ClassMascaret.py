@@ -1573,7 +1573,8 @@ class ClassMascaret:
         """
         dico_run = self.mdb.select_distinct("run",
                                             "runs")
-        if dico_run != {}:
+
+        if dico_run != {} and dico_run != None:
             liste_run = ['{}'.format(v) for v in dico_run['run']]
         else:
             liste_run = []
