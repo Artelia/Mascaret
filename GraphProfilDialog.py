@@ -140,9 +140,9 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 gid = results[0].mFeature["gid"]
                 graph_p = GraphProfil(gid, self.mgis)
                 graph_p.show()
-            else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("Visu_profil: Not layer")
+            # else:
+            #     if self.mgis.DEBUG:
+            #         self.mgis.add_info("Visu_profil: Not layer")
             if couche == 'profiles' and flag_profil_r:
                 self.mgis.coucheProfils = results[0].mLayer
                 prof_a = self.mgis.mdb.select_distinct("name", "profiles", "active")

@@ -317,7 +317,7 @@ class GraphResultDialog(QWidget):
     def init_dico_run(self):
         self.dict_run = dict()
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
-                                  "ORDER BY run, scenario".format(self.mdb.SCHEMA),
+                                  "ORDER BY date,run, scenario".format(self.mdb.SCHEMA),
                                   fetch=True)
 
         for row in rows:

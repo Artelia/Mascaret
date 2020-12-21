@@ -87,6 +87,8 @@ class CheckTab():
                            '3.0.3' : {},
                            '3.0.4': {},
                            '3.0.5': {},
+                           #'3.0.6': {'fct': [lambda: self.add_geom_ori(),]},
+
                            # '3.0.x': { 'del_tab': ['resultats']},
 
                            }
@@ -99,7 +101,8 @@ class CheckTab():
                                   '3.0.2',
                                   '3.0.3',
                                   '3.0.4',
-                                  '3.0.5']
+                                  '3.0.5',
+                                  '3.0.6']
 
     def update_adim(self):
         """
@@ -547,3 +550,11 @@ class CheckTab():
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         version = read_version(self.mgis.masplugPath)
         self.all_version(tabs, version)
+
+    def add_geom_ori(self):
+        sql = "SELECT Find_SRID('{}', 'flood_marks', 'geom');".format(self.mdb.SCHEMA)
+        sird = self.mdb.run_query(sql,fetch = True)[0][0]
+        sql = "ALTER TABLE {}.flood_marks ADD COLUMN " \
+              "IF NOT EXISTS geom_ori geometry(Point,{});\n".format(self.mdb.SCHEMA,sird)
+        sql += "UPDATE {0}.{1} SET geom_ori= geom;".format(self.mdb.SCHEMA,'flood_marks')
+        self.mdb.run_query(sql)

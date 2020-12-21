@@ -39,10 +39,15 @@ class MasObject(object):
         self.geom_type = None
         self.attrs = None
 
-    def pg_create_table(self):
+    def pg_create_table(self,geo_ori=False):
         schema_name = '{0}.{1}'.format(self.schema, self.name)
         attrs = self.pg_geom_attri()
+        if geo_ori:
+            attrs_ori = self.pg_geom_ori_attri()
+            attrs += [' '.join(attrs_ori)]
         attrs += [' '.join(field) for field in self.attrs]
+
+
         if self.overwrite is True:
             qry = 'DROP TABLE IF EXISTS {0};\nCREATE TABLE {0}(\n\t{1});\n'.format(schema_name, ',\n\t'.join(attrs))
         else:
@@ -53,13 +58,19 @@ class MasObject(object):
         #     qry += 'SELECT "{0}".create_spatial_index(\'{0}\', \'{1}\');'.format(self.schema, self.name)
         # else:
         #     pass
-
         qry += 'ALTER TABLE {0}.{1}\n\tOWNER TO postgres;\n'.format(self.schema, self.name)
         return qry
 
     def pg_geom_attri(self):
         if self.geom_type is not None:
             attrs = ['geom geometry({0}, {1})'.format(self.geom_type, self.srid)]
+        else:
+            attrs = []
+        return attrs
+
+    def pg_geom_ori_attri(self):
+        if self.geom_type is not None:
+            attrs = ['geom_ori geometry({0}, {1})'.format(self.geom_type, self.srid)]
         else:
             attrs = []
         return attrs
@@ -268,7 +279,7 @@ class flood_marks(MasObject):
             ('CONSTRAINT flood_marks_pkey', 'PRIMARY KEY(gid)')]
 
     def pg_create_table(self):
-        qry = super(self.__class__, self).pg_create_table()
+        qry = super(self.__class__, self).pg_create_table(geo_ori=True)
         qry += '\n'
         qry += self.pg_create_index()
         qry += '\n'
