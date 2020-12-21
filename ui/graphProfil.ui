@@ -2,26 +2,32 @@
 <ui version="4.0">
  <class>ProfilGraph</class>
  <widget class="QWidget" name="ProfilGraph">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>984</width>
-    <height>707</height>
+    <width>809</width>
+    <height>810</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>Profile Editor</string>
+  <property name="acceptDrops">
+   <bool>true</bool>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2">
+  <property name="windowTitle">
+   <string>Profile Results</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_6">
    <item row="0" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout_4">
+    <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
+        <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
             <widget class="QPushButton" name="bt_reculTot">
              <property name="sizePolicy">
@@ -80,9 +86,9 @@
           </layout>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout">
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
            <item>
-            <widget class="QLabel" name="label">
+            <widget class="QLabel" name="label_2">
              <property name="font">
               <font>
                <pointsize>12</pointsize>
@@ -112,7 +118,7 @@
             </widget>
            </item>
            <item>
-            <spacer name="horizontalSpacer">
+            <spacer name="horizontalSpacer_2">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
@@ -127,212 +133,6 @@
           </layout>
          </item>
         </layout>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <layout class="QGridLayout" name="gridLayout">
-         <property name="sizeConstraint">
-          <enum>QLayout::SetFixedSize</enum>
-         </property>
-         <item row="2" column="1">
-          <widget class="QPushButton" name="bt_topo_del">
-           <property name="text">
-            <string>Topo. Delete</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QPushButton" name="bt_topo_load">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Topo. Import</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QPushButton" name="bt_profil_filter">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Profil Filter</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QPushButton" name="bt_profil_save">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Profil Save</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="2">
-          <widget class="QPushButton" name="bt_profil_del">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Profil Delete</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="4">
-          <widget class="QPushButton" name="bt_img_load">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Picture Import</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="2">
-          <widget class="QPushButton" name="bt_topo_save">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Topo. Save</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_5">
-       <item>
-        <widget class="QToolButton" name="btTools_point_selection">
-         <property name="text">
-          <string>Point Selection</string>
-         </property>
-         <property name="icon">
-          <iconset>
-           <normaloff>:/plugins/MascPlug/icones/select.png</normaloff>:/plugins/MascPlug/icones/select.png</iconset>
-         </property>
-         <property name="iconSize">
-          <size>
-           <width>24</width>
-           <height>24</height>
-          </size>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="btTools_zone_selection">
-         <property name="text">
-          <string>Zone Selection</string>
-         </property>
-         <property name="icon">
-          <iconset>
-           <normaloff>:/plugins/MascPlug/icones/select_zone.png</normaloff>:/plugins/MascPlug/icones/select_zone.png</iconset>
-         </property>
-         <property name="iconSize">
-          <size>
-           <width>24</width>
-           <height>24</height>
-          </size>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="btTools_profil_translation">
-         <property name="text">
-          <string>Profil Translation</string>
-         </property>
-         <property name="icon">
-          <iconset>
-           <normaloff>:/plugins/MascPlug/icones/deplace_profil.png</normaloff>:/plugins/MascPlug/icones/deplace_profil.png</iconset>
-         </property>
-         <property name="iconSize">
-          <size>
-           <width>24</width>
-           <height>24</height>
-          </size>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_5">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="bt_l_stok">
-         <property name="text">
-          <string>Left Storage Area</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="bt_minor_bed">
-         <property name="text">
-          <string>Minor River Bed</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="bt_r_stok">
-         <property name="text">
-          <string>Right Storage Area</string>
-         </property>
-        </widget>
        </item>
        <item>
         <spacer name="horizontalSpacer_4">
@@ -354,19 +154,382 @@
          </property>
         </widget>
        </item>
+       <item>
+        <spacer name="horizontalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <item>
+          <widget class="QPushButton" name="bt_profil_save">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Profil Save</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="bt_profil_filter">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Profil Filter</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="bt_profil_del">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Profil Delete</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <layout class="QHBoxLayout" name="horizontalLayout_9">
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
-          <layout class="QVBoxLayout" name="widget_figure"/>
+          <layout class="QVBoxLayout" name="widget_figure_old">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item>
+              <widget class="QGroupBox" name="groupBox_2">
+               <property name="font">
+                <font>
+                 <pointsize>11</pointsize>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="title">
+                <string>Profiles importation</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_5">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_4">
+                  <item row="1" column="1">
+                   <widget class="QPushButton" name="bt_topo_del">
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Topo. Delete</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="2">
+                   <widget class="QPushButton" name="bt_topo_save">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Topo. Save</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QPushButton" name="bt_img_load">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Picture Import</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QPushButton" name="bt_topo_load">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Topo. Import</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QToolButton" name="btTools_profil_translation">
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Profil Translation</string>
+                    </property>
+                    <property name="icon">
+                     <iconset>
+                      <normaloff>:/plugins/MascPlug/icones/deplace_profil.png</normaloff>:/plugins/MascPlug/icones/deplace_profil.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>24</width>
+                      <height>24</height>
+                     </size>
+                    </property>
+                    <property name="checkable">
+                     <bool>true</bool>
+                    </property>
+                    <property name="checked">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="groupBox">
+               <property name="font">
+                <font>
+                 <pointsize>11</pointsize>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="title">
+                <string>Zones selection</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_3">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_2">
+                  <item row="1" column="1">
+                   <widget class="QPushButton" name="bt_minor_bed">
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Minor River Bed</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="2">
+                   <widget class="QPushButton" name="bt_r_stok">
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Right Storage Area</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QPushButton" name="bt_l_stok">
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Left Storage Area</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QToolButton" name="btTools_zone_selection">
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Zone Selection</string>
+                    </property>
+                    <property name="icon">
+                     <iconset>
+                      <normaloff>:/plugins/MascPlug/icones/select_zone.png</normaloff>:/plugins/MascPlug/icones/select_zone.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>24</width>
+                      <height>24</height>
+                     </size>
+                    </property>
+                    <property name="checkable">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_6">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::MinimumExpanding</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="widget_figure"/>
+           </item>
+          </layout>
          </item>
         </layout>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_2">
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_10">
+           <item>
+            <widget class="QToolButton" name="btTools_point_selection">
+             <property name="text">
+              <string>Point Selection</string>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>:/plugins/MascPlug/icones/select.png</normaloff>:/plugins/MascPlug/icones/select.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="bt_add_point">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>255</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Add point selection</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_9">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Maximum</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
          <item>
           <widget class="QTableWidget" name="tableWidget">
            <property name="sizePolicy">
@@ -387,23 +550,10 @@
            </column>
           </widget>
          </item>
-         <item>
-          <widget class="QPushButton" name="bt_add_point">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>255</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Add point selection</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
        <item>
-        <spacer name="horizontalSpacer_2">
+        <spacer name="horizontalSpacer_7">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -423,272 +573,24 @@
     </layout>
    </item>
   </layout>
-  <action name="actionBt_add_point">
-   <property name="text">
-    <string>bt_add_point</string>
-   </property>
-  </action>
-  <action name="actionBt_reculTot">
-   <property name="text">
-    <string>bt_reculTot</string>
-   </property>
-  </action>
-  <action name="actionBt_recul">
-   <property name="text">
-    <string>bt_recul</string>
-   </property>
-  </action>
-  <action name="actionBt_av">
-   <property name="text">
-    <string>bt_av</string>
-   </property>
-  </action>
-  <action name="actionBt_avTot">
-   <property name="text">
-    <string>bt_avTot</string>
-   </property>
-  </action>
-  <action name="actionBt_topo_save">
-   <property name="text">
-    <string>bt_topo_save</string>
-   </property>
-  </action>
-  <action name="actionBt_topo_load">
-   <property name="text">
-    <string>bt_topo_load</string>
-   </property>
-  </action>
-  <action name="actionBt_img_load">
-   <property name="text">
-    <string>bt_img_load</string>
-   </property>
-  </action>
-  <action name="actionBt_profil_save">
-   <property name="text">
-    <string>bt_profil_save</string>
-   </property>
-  </action>
-  <action name="actionBt_profil_filter">
-   <property name="text">
-    <string>bt_profil_filter</string>
-   </property>
-  </action>
-  <action name="actionBt_profil_del">
-   <property name="text">
-    <string>bt_profil_del</string>
-   </property>
-  </action>
   <action name="actionBtTools_profil_translation">
    <property name="text">
-    <string>btTools_profil_translation</string>
+    <string>BtTools_profil_translation</string>
    </property>
   </action>
   <action name="actionBtTools_zone_selection">
-   <property name="checkable">
-    <bool>false</bool>
-   </property>
    <property name="text">
-    <string>btTools_zone_selection</string>
+    <string>BtTools_zone_selection</string>
    </property>
   </action>
   <action name="actionBtTools_point_selection">
-   <property name="checkable">
-    <bool>false</bool>
-   </property>
    <property name="text">
-    <string>btTools_point_selection</string>
-   </property>
-  </action>
-  <action name="actionBt_minor_bed">
-   <property name="text">
-    <string>bt_minor_bed</string>
-   </property>
-  </action>
-  <action name="actionBt_r_stok">
-   <property name="text">
-    <string>bt_r_stok</string>
-   </property>
-  </action>
-  <action name="actionBt_l_stok">
-   <property name="text">
-    <string>bt_l_stok</string>
-   </property>
-  </action>
-  <action name="actionBt_topo_del">
-   <property name="text">
-    <string>bt_topo_del</string>
-   </property>
-  </action>
-  <action name="actionBt_ouvrage">
-   <property name="text">
-    <string>bt_ouvrage</string>
+    <string>BtTools_point_selection</string>
    </property>
   </action>
  </widget>
- <resources>
-  <include location="../resources.qrc"/>
- </resources>
+ <resources/>
  <connections>
-  <connection>
-   <sender>bt_add_point</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_add_point</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>892</x>
-     <y>773</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_recul</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_recul</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>141</x>
-     <y>24</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_reculTot</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_reculTot</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>53</x>
-     <y>24</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_av</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_av</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>228</x>
-     <y>24</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_avTot</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_avTot</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>316</x>
-     <y>24</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_topo_load</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_topo_load</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>893</x>
-     <y>23</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_img_load</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_img_load</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1011</x>
-     <y>23</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_profil_filter</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_profil_filter</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>893</x>
-     <y>52</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_profil_del</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_profil_del</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1011</x>
-     <y>52</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_profil_save</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_profil_save</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>776</x>
-     <y>52</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>btTools_profil_translation</sender>
    <signal>toggled(bool)</signal>
@@ -696,8 +598,8 @@
    <slot>trigger()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>100</x>
-     <y>88</y>
+     <x>40</x>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>
@@ -712,8 +614,8 @@
    <slot>trigger()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>28</x>
-     <y>447</y>
+     <x>306</x>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>
@@ -728,104 +630,8 @@
    <slot>trigger()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>28</x>
-     <y>411</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_minor_bed</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_minor_bed</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>820</x>
-     <y>88</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_l_stok</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_l_stok</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1020</x>
-     <y>88</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_r_stok</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_r_stok</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>917</x>
-     <y>88</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_topo_del</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_topo_del</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>937</x>
-     <y>23</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_topo_save</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_topo_save</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>776</x>
-     <y>23</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bt_ouvrage</sender>
-   <signal>clicked()</signal>
-   <receiver>actionBt_ouvrage</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>922</x>
-     <y>88</y>
+     <x>36</x>
+     <y>192</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>

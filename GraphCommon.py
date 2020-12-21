@@ -74,9 +74,9 @@ from .WaterQuality.ClassTableWQ import ClassTableWQ
 from datetime import datetime
 
 
-class GraphCommon(QDialog):
+class GraphCommon(QWidget):
     def __init__(self, mgis=None):
-        QDialog.__init__(self)
+        QWidget.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.dossierPlugin = self.mgis.masplugPath

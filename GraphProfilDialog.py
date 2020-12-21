@@ -139,10 +139,10 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 self.mgis.coucheProfils = results[0].mLayer
                 gid = results[0].mFeature["gid"]
                 graph_p = GraphProfil(gid, self.mgis)
-                graph_p.exec_()
-            # else:
-            #     if self.mgis.DEBUG:
-            #         self.mgis.add_info("Visu_profil: Not layer")
+                graph_p.show()
+            else:
+                if self.mgis.DEBUG:
+                    self.mgis.add_info("Visu_profil: Not layer")
             if couche == 'profiles' and flag_profil_r:
                 self.mgis.coucheProfils = results[0].mLayer
                 prof_a = self.mgis.mdb.select_distinct("name", "profiles", "active")
@@ -207,25 +207,26 @@ class GraphProfil(GraphCommon):
         # action
         self.ui.actionBtTools_point_selection.triggered.connect(self.selector_toggled)
         self.ui.actionBtTools_zone_selection.triggered.connect(self.zone_selector_toggled)
+
         self.ui.actionBtTools_profil_translation.triggered.connect(self.deplace_toggled)
 
-        self.ui.actionBt_add_point.triggered.connect(self.ajout_points)
-        self.ui.actionBt_topo_load.triggered.connect(self.import_topo)
-        self.ui.actionBt_topo_del.triggered.connect(self.del_topo)
-        # self.ui.actionBt_img_load.triggered.connect(self.import_image)
-        self.ui.actionBt_topo_save.triggered.connect(self.sauve_topo)
+        self.ui.bt_add_point.clicked.connect(self.ajout_points)
+        self.ui.bt_topo_load.clicked.connect(self.import_topo)
+        self.ui.bt_topo_del.clicked.connect(self.del_topo)
+        # self.ui.bt_img_load.clicked.connect(self.import_image)
+        self.ui.bt_topo_save.clicked.connect(self.sauve_topo)
 
-        self.ui.actionBt_reculTot.triggered.connect(lambda: self.avance(-10))
-        self.ui.actionBt_recul.triggered.connect(lambda: self.avance(-1))
-        self.ui.actionBt_av.triggered.connect(lambda: self.avance(1))
-        self.ui.actionBt_avTot.triggered.connect(lambda: self.avance(10))
-        self.ui.actionBt_profil_save.triggered.connect(self.sauve_profil)
-        self.ui.actionBt_profil_filter.triggered.connect(self.filtre)
-        self.ui.actionBt_profil_del.triggered.connect(self.efface_profil)
-        self.ui.actionBt_minor_bed.triggered.connect(self.select_lit_mineur)
-        self.ui.actionBt_r_stok.triggered.connect(lambda: self.select_stock("rightstock"))
-        self.ui.actionBt_l_stok.triggered.connect(lambda: self.select_stock("leftstock"))
-        self.ui.actionBt_ouvrage.triggered.connect(self.create_struct)
+        self.ui.bt_reculTot.clicked.connect(lambda: self.avance(-10))
+        self.ui.bt_recul.clicked.connect(lambda: self.avance(-1))
+        self.ui.bt_av.clicked.connect(lambda: self.avance(1))
+        self.ui.bt_avTot.clicked.connect(lambda: self.avance(10))
+        self.ui.bt_profil_save.clicked.connect(self.sauve_profil)
+        self.ui.bt_profil_filter.clicked.connect(self.filtre)
+        self.ui.bt_profil_del.clicked.connect(self.efface_profil)
+        self.ui.bt_minor_bed.clicked.connect(self.select_lit_mineur)
+        self.ui.bt_r_stok.clicked.connect(lambda: self.select_stock("rightstock"))
+        self.ui.bt_l_stok.clicked.connect(lambda: self.select_stock("leftstock"))
+        self.ui.bt_ouvrage.clicked.connect(self.create_struct)
 
     def init_ui(self):
 
@@ -337,7 +338,7 @@ class GraphProfil(GraphCommon):
             self.ui.bt_add_point.setDisabled(True)
             self.RS.set_active(False)
 
-    def zone_selector_toggled(self, checked):
+    def zone_selector_toggled(self):
         """zone selection function"""
         if self.bt_select_z.isChecked():
             self.span.visible = True
@@ -346,7 +347,7 @@ class GraphProfil(GraphCommon):
         else:
             self.span.visible = False
 
-    def deplace_toggled(self, checked):
+    def deplace_toggled(self):
         """Translation function"""
         if self.bt_transla.isChecked():
             self.bt_select.setChecked(False)
