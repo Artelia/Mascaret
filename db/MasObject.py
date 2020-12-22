@@ -235,7 +235,7 @@ class weirs(MasObject):
             ('abscissa', ' float'),
             ('z_crest', ' float'),
             ('z_average_crest', ' float'),
-            ('z_break', ' float DEFAULT 99999'),
+            ('z_break', ' float DEFAULT 10000'),
             ('flowratecoeff', ' float'),
             ('thickness', ' integer'),
             ('wide_floodgate', ' float'),

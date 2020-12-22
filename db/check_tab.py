@@ -103,7 +103,7 @@ class CheckTab():
                                                                          "EXISTS active boolean DEFAULT TRUE;"]},
                                                  {'tab': 'branchs',
                                                   'sql': ["ALTER TABLE {0}.branchs ALTER COLUMN active "
-                                                                           "boolean NOT NULL DEFAULT TRUE;",
+                                                                           "SET DEFAULT TRUE;",
                                                           "ALTER TABLE {0}.branchs ALTER COLUMN branch "
                                                           "SET NOT NULL;",
                                                           "ALTER TABLE {0}.branchs ALTER COLUMN zonenum "
