@@ -1,4 +1,4 @@
-"Hydraulic head";"CHAR";"m";2;"black"
+"Hydraulic head";"CHAR";"m";2;"cyan"
 "Coefficient beta of Debord's formula";"BETA";;2;"black"
 "Major friction coefficient";"KMAJ";"m^{1/3}/s";0;"darkgrey"
 "Minor friction coefficient";"KMIN";"m^{1/3}/s";0;"grey"

@@ -207,13 +207,13 @@ class GraphResultDialog(QWidget):
         """
 
         liste = [{"id": "Z", "name": "Levels", "unit": "$m$",
-                  "vars": ['ZREF', 'Z', 'ZMIN', 'ZMAX'], "colors": ["black", "blue", "green", "red"],
+                  "vars": ['ZREF', 'Z', 'ZMIN', 'ZMAX','CHAR'], "colors": ["black", "blue", "green", "red","cyan"],
                   'type_res': 'opt'},
                  {"id": "Q", "name": "Flow rate", "unit": "$m^3/s$",
                   "vars": ['Q', 'QMIN', 'QMAJ', 'QMAX'], "colors": ["blue", "green", "cyan", "red"], 'type_res': 'opt'}
                  ]
         exclu = {'Q': False, 'QMIN': False, 'QMAJ': False, 'QMAX': False,
-                 'ZREF': False, 'Z': False, 'ZMIN': False, 'ZMAX': False}
+                 'ZREF': False, 'Z': False, 'ZMIN': False, 'ZMAX': False,'CHAR':False}
 
         if id_run:
 
@@ -265,7 +265,7 @@ class GraphResultDialog(QWidget):
             for i, var in enumerate(dico_var["vars"]):
                 if var.lower() in self.mgis.variables.keys():
                     dico_var["colors"][i] = self.mgis.variables[var.lower()]['couleur']
-                    if var not in ['Q', 'QMIN', 'QMAJ', 'QMAX', 'ZREF', 'Z', 'ZMIN', 'ZMAX']:
+                    if var not in ['Q', 'QMIN', 'QMAJ', 'QMAX', 'ZREF', 'Z', 'ZMIN', 'ZMAX','CHAR']:
                         if self.mgis.variables[var.lower()]['unite'].strip() == '':
                             dico_var['unit'] = ''
                         else:

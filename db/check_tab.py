@@ -87,7 +87,11 @@ class CheckTab():
                            '3.0.3' : {},
                            '3.0.4': {},
                            '3.0.5': {},
-                           #'3.0.6': {'fct': [lambda: self.add_geom_ori(),]},
+                           '3.0.6': {'fct': [lambda: self.add_geom_ori(),],
+                                     'alt_tab': [{'tab': 'laws', 'sql': ["ALTER TABLE {0}.laws ADD COLUMN IF NOT "
+                                                                         "EXISTS active boolean;"]},
+                                                 ],
+                                     },
 
                            # '3.0.x': { 'del_tab': ['resultats']},
 

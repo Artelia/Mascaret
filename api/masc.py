@@ -144,7 +144,7 @@ class Mascaret():
             return False
 
         #self.load_mascaret(libmascaret)
-        print(libmascaret)
+
         self.libmascaret =  ctypes.CDLL(libmascaret)
         # MDU fin modif
         self.iprint = 0

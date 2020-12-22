@@ -1444,44 +1444,61 @@ class ClassMascaret:
         if par['presenceTraceurs']:
             if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
                 self.wq.create_filemet()
-                # steady
+
         for nom, l in dict_lois.items():
             if "valeurperm" not in l.keys():
                 continue
             if l["valeurperm"] is None:
-                self.mgis.add_info("Error : Add the 'valeurprerm' value in extremities.")
+                # dictLois.items() extremities liste
+                condition = "name ='{0}' AND type={1} AND active".format(nom, l["type"])
+                # self.mgis.add_info('{}'.format(condition))
+                try:
+                    temp = self.mdb.select_one('laws', condition)
+                except Exception as e:
+                    self.mgis.add_info("Error: Please check if law {0} is correct. ".format(nom))
+                    self.mgis.add_info(str(e))
+                    return
 
-            try:
-                liste_ = ['pasTemps', 'critereArret', 'nbPasTemps', 'tempsMax', 'tempsInit']
-                temp_dic = {}
-                for info in liste_:
-                    condition = "parametre ='{}'".format(info)
-                    dtemp = self.mdb.select_distinct('steady', 'parametres', condition)
-                    temp_dic[info] = dtemp['steady'][0]
-            except Exception as e:
-                self.mgis.add_info(str(e))
-                return
-            if temp_dic['critereArret'] == 1:
-                tfinal = temp_dic['tempsMax']
-            elif temp_dic['critereArret'] == 2:
-                tfinal = temp_dic['tempsInit'] + temp_dic['pasTemps'] * temp_dic['nbPasTemps']
-            elif temp_dic['critereArret'] == 3:
-                tfinal = 365 * 24 * 3600
-            if l['type'] == 1:
-                tab = {"time": [0, tfinal], 'flowrate': [l["valeurperm"]] * 2}
-            elif l['type'] == 2:
-                tab = {"time": [0, tfinal], 'z': [l["valeurperm"]] * 2}
-            else:
-                condition = "name ='{0}' AND type={1}".format(nom, l["type"])
-                temp = self.mdb.select_one('laws', condition)
                 liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
                          "z_lower", "z_up"]
                 tab = {}
                 for k, v in temp.items():
                     if v and k in liste:
                         tab[k] = [float(var) for var in v.split()]
+                self.creer_loi(nom, tab, l["type"])
+                #self.mgis.add_info("Error : Add the 'valeurprerm' value in extremities.")
+            else:
+                try:
+                    liste_ = ['pasTemps', 'critereArret', 'nbPasTemps', 'tempsMax', 'tempsInit']
+                    temp_dic = {}
+                    for info in liste_:
+                        condition = "parametre ='{}'".format(info)
+                        dtemp = self.mdb.select_distinct('steady', 'parametres', condition)
+                        temp_dic[info] = dtemp['steady'][0]
+                except Exception as e:
+                    self.mgis.add_info(str(e))
+                    return
+                if temp_dic['critereArret'] == 1:
+                    tfinal = temp_dic['tempsMax']
+                elif temp_dic['critereArret'] == 2:
+                    tfinal = temp_dic['tempsInit'] + temp_dic['pasTemps'] * temp_dic['nbPasTemps']
+                elif temp_dic['critereArret'] == 3:
+                    tfinal = 365 * 24 * 3600
+                if l['type'] == 1:
+                    tab = {"time": [0, tfinal], 'flowrate': [l["valeurperm"]] * 2}
+                elif l['type'] == 2:
+                    tab = {"time": [0, tfinal], 'z': [l["valeurperm"]] * 2}
+                else:
+                    condition = "name ='{0}' AND type={1} AND active".format(nom, l["type"])
+                    temp = self.mdb.select_one('laws', condition)
+                    liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
+                             "z_lower", "z_up"]
+                    tab = {}
+                    for k, v in temp.items():
+                        if v and k in liste:
+                            tab[k] = [float(var) for var in v.split()]
 
-            self.creer_loi(nom, tab, l['type'])
+                self.creer_loi(nom, tab, l['type'])
 
     def init_scen_even(self, par, dict_lois, i, dict_scen):
         """
@@ -1526,7 +1543,7 @@ class ClassMascaret:
 
         for nom, l in dict_lois.items():
             # dictLois.items() extremities liste
-            condition = "name ='{0}' AND type={1}".format(nom, l["type"])
+            condition = "name ='{0}' AND type={1} AND active".format(nom, l["type"])
             # self.mgis.add_info('{}'.format(condition))
             try:
                 temp = self.mdb.select_one('laws', condition)
