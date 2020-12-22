@@ -118,8 +118,10 @@ class ClassMascaret:
                             fich.write('{0:.2f} {1:.2f} {2}\n'.format(x, z, type))
             self.mgis.add_info("Creation the geometry is done")
         except Exception as e:
-            self.mgis.add_info("Error: save the geometry")
-            self.mgis.add_info(str(e))
+            err = "Error: save the geometry .\n"
+            err += str(e)
+            self.mgis.add_info(err)
+            raise Exception(err)
 
     def creer_geo_ref(self):
         # """creation of gemoetry file"""
@@ -205,8 +207,10 @@ class ClassMascaret:
 
             self.mgis.add_info("Creation the geometry is done")
         except Exception as e:
-            self.mgis.add_info("Error: save the geometry {}-{}".format(branche, nom))
-            self.mgis.add_info(str(e))
+            err = "Error: save the geometry {}-{}".format(branche, nom)
+            err += str(e)
+            self.mgis.add_info(err)
+            raise Exception(err)
             # Fonction de creation du fichier .casier avec la loi surface-volume
 
     def creer_geo_casier(self):
@@ -232,8 +236,11 @@ class ClassMascaret:
 
             self.mgis.add_info("Creation of the basin file is done")
         except Exception as e:
-            self.mgis.add_info("Error: save the basin file")
-            self.mgis.add_info(str(e))
+            err = "Error: save the basin file"
+            err += str(e)
+            self.mgis.add_info(err)
+            raise Exception(err)
+
             # Fonction de remplacement des None de la liste par la valeur remplaceNone
             # cad -1 ou -1.0 pour le moteur Mascaret
 
@@ -517,6 +524,7 @@ class ClassMascaret:
                 diff = max(zz) - min(zz)
             except:
                 self.mgis.add_info("Check the {} profile if it's ok ".format(profils["name"][j]))
+                raise Exception("Check the {} profile if it's ok ".format(profils["name"][j]))
                 return dict_lois
 
             if abs > zones['zoneabsend'][i]:
@@ -882,6 +890,7 @@ class ClassMascaret:
         # add struct before harminization
         dict_lois_tmp = dict_lois.copy()
         dico_loi_struct = {}
+        print("ddd",dict_lois_tmp.keys())
         for name in dict_lois_tmp.keys():
             if name in loi_struct['laws']:
                 dico_loi_struct[name] = dict_lois[name]
@@ -1413,6 +1422,7 @@ class ClassMascaret:
         # self.iface.messageBar().pushWidget(progressMessageBar, self.iface.messageBar().INFO)
 
         dict_lois, dico_loi_struct = self.creer_xcas(noyau)
+
         if self.mgis.DEBUG:
             self.mgis.add_info("Xcas file is created.")
         if par['presenceTraceurs']:
@@ -1455,8 +1465,10 @@ class ClassMascaret:
                 try:
                     temp = self.mdb.select_one('laws', condition)
                 except Exception as e:
-                    self.mgis.add_info("Error: Please check if law {0} is correct. ".format(nom))
-                    self.mgis.add_info(str(e))
+                    err = "Error: Please check if law {0} is correct. \n".format(nom)
+                    err += str(e)
+                    self.mgis.add_info(err)
+                    raise Exception(err)
                     return
 
                 liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
@@ -1548,8 +1560,10 @@ class ClassMascaret:
             try:
                 temp = self.mdb.select_one('laws', condition)
             except Exception as e:
-                self.mgis.add_info("Error: Please check if law {0} is correct. ".format(nom))
-                self.mgis.add_info(str(e))
+                err = "Error: Please check if law {0} is correct. \n".format(nom)
+                err += str(e)
+                self.mgis.add_info(err)
+                raise Exception(err)
                 return
 
             liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
@@ -2337,8 +2351,10 @@ class ClassMascaret:
                 self.mgis.add_info("Creation the dam is done")
 
             except Exception as e:
-                self.mgis.add_info("Error: save the dam file")
-                self.mgis.add_info(str(e))
+                err = "Error: save the dam file"
+                err += str(e)
+                self.mgis.add_info(err)
+                raise Exception(err)
 
     def check_mobil_gate(self):
         """

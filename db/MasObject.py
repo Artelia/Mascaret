@@ -149,7 +149,7 @@ class extremities(MasObject):
                       ('abscissa', 'text'),
                       ('ordinates', 'text'),
                       ('angles', 'text'),
-                      ('active', ' boolean'),
+                      ('active', ' boolean NOT NULL DEFAULT TRUE'),
                       ('tracer_boundary_condition_type', 'integer'),
                       ('law_wq', 'text'),
                       ('CONSTRAINT cle_extremities', ' PRIMARY KEY (gid)'),
@@ -208,6 +208,7 @@ class flood_marks(MasObject):
             ('comment', 'text'),
             ('weir', 'float'),
             ('adress', 'text'),
+            ('active', ' boolean NOT NULL DEFAULT TRUE'),
             ('township', 'character varying(30)'),
             ('CONSTRAINT flood_marks_pkey', 'PRIMARY KEY(gid)')]
 
@@ -239,7 +240,7 @@ class weirs(MasObject):
             ('thickness', ' integer'),
             ('wide_floodgate', ' float'),
             ('lawfile', ' text'),
-            ('active', ' boolean'),
+            ('active', ' boolean NOT NULL DEFAULT TRUE'),
             ('active_mob', 'boolean'),
             ('method_mob', 'text'),
             ('CONSTRAINT weirs_pkey', ' PRIMARY KEY(gid)')]
@@ -264,7 +265,7 @@ class hydraulic_head(MasObject):
                       ('branchnum', 'integer'),
                       ('abscissa', 'float'),
                       ('coeff', 'float'),
-                      ('active', 'boolean'),
+                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('CONSTRAINT hydraulic_head_pkey', 'PRIMARY KEY (gid)')]
 
     def pg_create_table(self):
@@ -288,7 +289,7 @@ class outputs(MasObject):
                       ('zero', 'float'),
                       ('branchnum', 'integer'),
                       ('abscissa', 'float'),
-                      ('active', 'boolean'),
+                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('CONSTRAINT outputs_pkey', 'PRIMARY KEY (gid)')]
 
     def pg_create_table(self):
@@ -313,7 +314,7 @@ class lateral_inflows(MasObject):
                       ('length', ' float'),
                       ('firstvalue', ' float'),
                       ('method', ' text'),
-                      ('active', ' boolean'),
+                      ('active', ' boolean NOT NULL DEFAULT TRUE'),
                       ('CONSTRAINT lateral_inflows_pkey', ' PRIMARY KEY (gid)')]
 
     def pg_create_table(self):
@@ -339,7 +340,7 @@ class lateral_weirs(MasObject):
                       ('length', 'float'),
                       ('z_crest', 'float'),
                       ('flowratecoef', 'float'),
-                      ('active', 'boolean'),
+                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('CONSTRAINT lateral_weir_pkey', 'PRIMARY KEY (gid)')]
 
     def pg_create_table(self):
@@ -364,7 +365,7 @@ class tracer_lateral_inflows(MasObject):
                       ('length', ' float'),
                       ('law_wq', ' text'),
                       ('typeSources', ' integer'),
-                      ('active', ' boolean'),
+                      ('active', ' boolean NOT NULL DEFAULT TRUE'),
                       ('CONSTRAINT tracer_lateral_inflows_pkey', ' PRIMARY KEY (gid)')]
 
     def pg_create_table(self):
@@ -393,7 +394,7 @@ class profiles(MasObject):
                       ('rightstock', 'float'),
                       ('xmnt', 'text'),
                       ('zmnt', 'text'),
-                      ('active', 'boolean'),
+                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('struct', 'integer DEFAULT 0'),
                       ('CONSTRAINT profiles_pkey', 'PRIMARY KEY (gid)'),
                       ('CONSTRAINT profile_unique', 'UNIQUE (name)')]
@@ -419,17 +420,17 @@ class branchs(MasObject):
         self.order = 13
         self.geom_type = 'MultiLineString'
         self.attrs = [('gid', 'serial NOT NULL'),
-                      ('branch', 'integer'),
+                      ('branch', 'serial NOT NULL'),
                       ('startb', 'character varying(30)'),
                       ('endb', 'character varying(30)'),
-                      ('zonenum', 'integer'),
+                      ('zonenum', 'serial NOT NULL'),
                       ('zoneabsstart', 'float'),
                       ('zoneabsend', 'float'),
                       ('minbedcoef', 'float'),
                       ('majbedcoef', 'float'),
                       ('mesh', 'float'),
                       ('planim', 'float'),
-                      ('active', 'boolean'),
+                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('CONSTRAINT branchs_pkey', 'PRIMARY KEY (gid)'),
                       ('CONSTRAINT cle_debut', 'FOREIGN KEY (startb)\n'
                                                '\t   REFERENCES {0}.extremities (name) MATCH SIMPLE \n'
@@ -460,7 +461,7 @@ class links(MasObject):
         self.geom_type = 'MultiLineString'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
-                      ('linknum', 'integer'),
+                      ('linknum', 'serial NOT NULL'),
                       ('type', 'integer'),
                       ('nature', 'integer'),
                       ('level', 'float'),
@@ -477,7 +478,7 @@ class links(MasObject):
                       ('basinend', 'integer'),
                       ('branchnum', 'integer'),
                       ('abscissa', 'float'),
-                      ('active', 'boolean'),
+                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('CONSTRAINT links_pkey', 'PRIMARY KEY (gid)'),
                       ('CONSTRAINT link_name_unique', 'UNIQUE (name)'),
                       ('CONSTRAINT link_num_unique', 'UNIQUE (linknum)')]
@@ -505,12 +506,12 @@ class basins(MasObject):
         self.geom_type = 'MultiPolygon'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
-                      ('basinnum', 'integer'),
+                      ('basinnum', 'serial NOT NULL'),
                       ('initlevel', 'float'),
                       ('level', 'text'),
                       ('area', 'text'),
                       ('volume', 'text'),
-                      ('active', 'boolean'),
+                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('CONSTRAINT basins_pkey', 'PRIMARY KEY (gid)'),
                       ('CONSTRAINT basin_name_unique', 'UNIQUE (name)'),
                       ('CONSTRAINT basin_num_unique', 'UNIQUE (basinnum)')]

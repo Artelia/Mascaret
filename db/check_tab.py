@@ -49,6 +49,16 @@ class CheckTab():
         self.box = ClassWarningBox()
         # for add table [ 'add_tab': [list_table]]
         # for delete [ ['DEL TAB',[list_table]]
+        self.list_hist_version = ['0.0.0',
+                                  '1.1.3',
+                                  '2.0.0 ',
+                                  '3.0.0',
+                                  '3.0.1',
+                                  '3.0.2',
+                                  '3.0.3',
+                                  '3.0.4',
+                                  '3.0.5',
+                                  '3.0.6']
         self.dico_modif = {'3.0.0': {'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
                                                  {'tab': Maso.profil_struct, 'overwrite': False},
                                                  {'tab': Maso.struct_param, 'overwrite': False},
@@ -88,25 +98,63 @@ class CheckTab():
                            '3.0.4': {},
                            '3.0.5': {},
                            '3.0.6': {'fct': [lambda: self.add_geom_ori(),],
-                                     'alt_tab': [{'tab': 'laws', 'sql': ["ALTER TABLE {0}.laws ADD COLUMN IF NOT "
-                                                                         "EXISTS active boolean;"]},
-                                                 ],
+                                     'alt_tab': [{'tab': 'laws',
+                                                  'sql': ["ALTER TABLE {0}.laws ADD COLUMN IF NOT "
+                                                                         "EXISTS active boolean DEFAULT TRUE;"]},
+                                                 {'tab': 'branchs',
+                                                  'sql': ["ALTER TABLE {0}.branchs ALTER COLUMN active "
+                                                                           "boolean NOT NULL DEFAULT TRUE;",
+                                                          "ALTER TABLE {0}.branchs ALTER COLUMN branch "
+                                                          "SET NOT NULL;",
+                                                          "ALTER TABLE {0}.branchs ALTER COLUMN zonenum "
+                                                          "SET NOT NULL;",
+                                                          "ALTER TABLE {0}.branchs ALTER COLUMN branch "
+                                                          "SET DEFAULT 1;",
+                                                          "ALTER TABLE {0}.branchs ALTER COLUMN zonenum "
+                                                          "SET DEFAULT 1;",
+                                                          "ALTER TABLE {0}.branchs ALTER COLUMN active "
+                                                          "SET DEFAULT TRUE;"
+                                                          ]},
+                                                 {'tab': 'links',
+                                                  'sql': ["ALTER TABLE {0}.links ALTER COLUMN active "
+                                                          "SET DEFAULT TRUE;"]},
+                                                 {'tab': 'basins',
+                                                  'sql': ["ALTER TABLE {0}.basins ALTER COLUMN active "
+                                                          "SET DEFAULT TRUE;"]},
+                                                 {'tab': 'flood_marks',
+                                                  'sql': ["ALTER TABLE {0}.flood_marks ADD COLUMN IF NOT "
+                                                          "EXISTS active boolean DEFAULT TRUE;"]},
+                                                 {'tab': 'profiles',
+                                                  'sql': ["ALTER TABLE {0}.profiles ALTER COLUMN active "
+                                                          "SET DEFAULT TRUE;"]},
+                                                 {'tab': 'tracer_lateral_inflows',
+                                                  'sql': ["ALTER TABLE {0}.tracer_lateral_inflows ALTER COLUMN active "
+                                                          "SET DEFAULT TRUE;"]},
+                                                 {'tab': 'lateral_weirs',
+                                                  'sql': ["ALTER TABLE {0}.lateral_weirs ALTER COLUMN active "
+                                                          "SET DEFAULT TRUE;"]},
+                                                 {'tab': 'lateral_inflows',
+                                                  'sql': ["ALTER TABLE {0}.lateral_inflows ALTER COLUMN active "
+                                                          "SET DEFAULT TRUE;"]},
+                                                 {'tab': 'hydraulic_head',
+                                                  'sql': ["ALTER TABLE {0}.hydraulic_head ALTER COLUMN active "
+                                                          "SET DEFAULT TRUE;"]},
+                                                 {'tab': 'weirs',
+                                                  'sql': ["ALTER TABLE {0}.weirs ALTER COLUMN active "
+                                                          "SET DEFAULT TRUE;"]},
+                                                 {'tab': 'extremities',
+                                                  'sql': ["ALTER TABLE {0}.extremities ALTER COLUMN active "
+                                                          "SET DEFAULT TRUE;"]},
+
+                                                ]
+
                                      },
 
                            # '3.0.x': { 'del_tab': ['resultats']},
 
                            }
 
-        self.list_hist_version = ['0.0.0',
-                                  '1.1.3',
-                                  '2.0.0 ',
-                                  '3.0.0',
-                                  '3.0.1',
-                                  '3.0.2',
-                                  '3.0.3',
-                                  '3.0.4',
-                                  '3.0.5',
-                                  '3.0.6']
+
 
     def update_adim(self):
         """
@@ -202,8 +250,6 @@ class CheckTab():
 
             else:
                 self.mgis.add_info("********* Cancel of update table ***********")
-
-
 
     def all_version(self, tabs, version=None):
         if not version:
@@ -307,7 +353,6 @@ class CheckTab():
             dossier = os.path.join(self.mgis.masplugPath, 'db', 'sql')
             self.mdb.insert_var_to_result_var(dossier)
 
-
     def convert_all_result(self):
         """ conversion between the previous results table format to the new for all results"""
         convert = False
@@ -410,6 +455,7 @@ class CheckTab():
             # self.mdb.drop_table('resultats_links')
             pass
         return True
+
     def convert_result(self, id_run, typ_res):
         """
         conversion between the previous results table format to the new
@@ -530,7 +576,6 @@ class CheckTab():
         except Exception as e:
             self.mgis.add_info("Error fill_init_date_runs: {}".format(str(e)))
             return False
-
 
     def fill_struct(self):
         """
