@@ -669,10 +669,13 @@ class ClassMasDatabase(object):
 
             listefct = ['pg_create_calcul_abscisse',
                         'pg_create_calcul_abscisse_profil',
-                        'pg_create_calcul_abscisse_branche']
+                        'pg_create_calcul_abscisse_branche',
+                        'pg_chstate_branch',
+                        'pg_chstate_basin',
+                        ]
             for fct in listefct:
                 try:
-                    obj = self.process_masobject(Maso.calcul_abscisse, fct)
+                    obj = self.process_masobject(Maso.class_fct_psql, fct)
                     if self.mgis.DEBUG:
                         self.mgis.add_info('  {0} OK'.format(fct))
                     else:
@@ -890,6 +893,7 @@ $BODY$
             lvar = '*'
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
+        #print(sql.format(self.SCHEMA, table, where, order, lvar))
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order, lvar), fetch=True, namvar=True)
         if results is None or namCol is None:
             print("error : ", sql.format(self.SCHEMA, table, where, order, lvar))

@@ -97,7 +97,8 @@ class CheckTab():
                            '3.0.3' : {},
                            '3.0.4': {},
                            '3.0.5': {},
-                           '3.0.6': {'fct': [lambda: self.add_geom_ori(),],
+                           '3.0.6': {'fct': [lambda: self.add_geom_ori(),
+                                             lambda : self.add_trigger_update_active(),],
                                      'alt_tab': [{'tab': 'laws',
                                                   'sql': ["ALTER TABLE {0}.laws ADD COLUMN IF NOT "
                                                                          "EXISTS active boolean DEFAULT TRUE;"]},
@@ -607,3 +608,29 @@ class CheckTab():
               "IF NOT EXISTS geom_ori geometry(Point,{});\n".format(self.mdb.SCHEMA,sird)
         sql += "UPDATE {0}.{1} SET geom_ori= geom;".format(self.mdb.SCHEMA,'flood_marks')
         self.mdb.run_query(sql)
+
+    def add_trigger_update_active(self):
+        qry = 'DROP TRIGGER IF EXISTS branch_chstate_active ON {}.branchs;\n'.format(self.mdb.SCHEMA)
+        qry += 'DROP TRIGGER IF EXISTS basin_chstate_active ON {}.basins;\n'.format(self.mdb.SCHEMA)
+        qry += '\n'
+        cl = Maso.class_fct_psql()
+        qry += cl.pg_chstate_branch()
+        qry += '\n'
+        qry += 'CREATE TRIGGER branchs_chstate_active\n' \
+              ' AFTER UPDATE\n  ON {0}.branchs\n'.format(self.mdb.SCHEMA)
+        qry += ' FOR EACH ROW\n' \
+               'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
+               'EXECUTE PROCEDURE chstate_branch();\n'
+        qry += '\n'
+        qry += cl.pg_chstate_basin()
+        qry += '\n'
+        qry += 'CREATE TRIGGER basins_chstate_active\n' \
+              ' AFTER UPDATE\n  ON {0}.basins\n'.format(self.mdb.SCHEMA)
+        qry += ' FOR EACH ROW\n' \
+        'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n'\
+        'EXECUTE PROCEDURE chstate_basin();\n'
+        qry += '\n'
+        self.mdb.run_query(qry)
+
+
+    # DROP TRIGGER IF EXISTS branch_chstate_active ON ouvrage3.branchs

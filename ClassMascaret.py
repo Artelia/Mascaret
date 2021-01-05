@@ -1327,6 +1327,8 @@ class ClassMascaret:
         if 'comments' in liste_col:
             comments, ok = QInputDialog.getText(QWidget(), 'Comments',
                                                 'if you want to input a comment :')
+            if not isinstance(comments,str) :
+                comments= str(comments)
             if not ok:
                 if self.mgis.DEBUG:
                     self.mgis.add_info("No comments.")

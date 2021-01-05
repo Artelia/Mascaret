@@ -162,39 +162,13 @@ class extremities(MasObject):
         #     qry += '\n'
         #     qry += self.pg_create_calcul_abscisse()
         #     return qry
-# *****************************************
-class topo(MasObject):
-    def __init__(self):
-        super(topo, self).__init__()
-        self.order = 4
-        self.geom_type = 'Point'
-        self.attrs = [('gid', 'serial NOT NULL'),
-                      ('name', 'character varying(30)'),
-                      ('profile', 'character varying(30)'),
-                      ('order_', 'integer'),
-                      ('x', 'float'),
-                      ('z', 'float'),
-                      ('CONSTRAINT topo_pkey', 'PRIMARY KEY (gid)')]
-
-    def pg_create_table(self):
-        qry = super(self.__class__, self).pg_create_table()
-        qry += '\n'
-        qry += self.pg_create_index()
-        return qry
-
-        # def pg_geom_attri(self):
-        #     if self.geom_type is not None:
-        #         attrs = ['geom geometry({0})'.format(self.geom_type)]
-        #     else:
-        #         attrs = []
-        #     return attrs
 
 
 # *****************************************
 class flood_marks(MasObject):
     def __init__(self):
         super(flood_marks, self).__init__()
-        self.order = 5
+        self.order = 4
         self.geom_type = 'Point'
         self.attrs = [
             ('gid', 'serial NOT NULL'),
@@ -225,7 +199,7 @@ class flood_marks(MasObject):
 class weirs(MasObject):
     def __init__(self):
         super(weirs, self).__init__()
-        self.order = 6
+        self.order = 5
         self.geom_type = 'Point'
         self.attrs = [
             ('gid', ' serial NOT NULL'),
@@ -258,7 +232,7 @@ class weirs(MasObject):
 class hydraulic_head(MasObject):
     def __init__(self):
         super(hydraulic_head, self).__init__()
-        self.order = 7
+        self.order = 6
         self.geom_type = 'Point'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -276,36 +250,11 @@ class hydraulic_head(MasObject):
         qry += self.pg_create_calcul_abscisse()
         return qry
 
-
-# *****************************************
-class outputs(MasObject):
-    def __init__(self):
-        super(outputs, self).__init__()
-        self.order = 8
-        self.geom_type = 'Point'
-        self.attrs = [('gid', 'serial NOT NULL'),
-                      ('name', 'character varying(30)'),
-                      ('code', 'character varying(30)'),
-                      ('zero', 'float'),
-                      ('branchnum', 'integer'),
-                      ('abscissa', 'float'),
-                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
-                      ('CONSTRAINT outputs_pkey', 'PRIMARY KEY (gid)')]
-
-    def pg_create_table(self):
-        qry = super(self.__class__, self).pg_create_table()
-        qry += '\n'
-        qry += self.pg_create_index()
-        qry += '\n'
-        qry += self.pg_create_calcul_abscisse()
-        return qry
-
-
 # *****************************************
 class lateral_inflows(MasObject):
     def __init__(self):
         super(lateral_inflows, self).__init__()
-        self.order = 9
+        self.order = 7
         self.geom_type = 'Point'
         self.attrs = [('gid', ' serial NOT NULL'),
                       ('name', ' character varying(30)'),
@@ -330,7 +279,7 @@ class lateral_inflows(MasObject):
 class lateral_weirs(MasObject):
     def __init__(self):
         super(lateral_weirs, self).__init__()
-        self.order = 10
+        self.order = 8
         self.geom_type = 'Point'
         self.attrs = [('gid serial', 'NOT NULL'),
                       ('name character', 'varying(30)'),
@@ -356,7 +305,7 @@ class lateral_weirs(MasObject):
 class tracer_lateral_inflows(MasObject):
     def __init__(self):
         super(tracer_lateral_inflows, self).__init__()
-        self.order = 11
+        self.order = 9
         self.geom_type = 'Point'
         self.attrs = [('gid', ' serial NOT NULL'),
                       ('name', ' character varying(30)'),
@@ -375,6 +324,58 @@ class tracer_lateral_inflows(MasObject):
         qry += '\n'
         qry += self.pg_create_calcul_abscisse()
         return qry
+
+# *****************************************
+class outputs(MasObject):
+    def __init__(self):
+        super(outputs, self).__init__()
+        self.order = 10
+        self.geom_type = 'Point'
+        self.attrs = [('gid', 'serial NOT NULL'),
+                      ('name', 'character varying(30)'),
+                      ('code', 'character varying(30)'),
+                      ('zero', 'float'),
+                      ('branchnum', 'integer'),
+                      ('abscissa', 'float'),
+                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
+                      ('CONSTRAINT outputs_pkey', 'PRIMARY KEY (gid)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        qry += '\n'
+        qry += self.pg_create_calcul_abscisse()
+        return qry
+
+
+# *****************************************
+class topo(MasObject):
+    def __init__(self):
+        super(topo, self).__init__()
+        self.order = 11
+        self.geom_type = 'Point'
+        self.attrs = [('gid', 'serial NOT NULL'),
+                      ('name', 'character varying(30)'),
+                      ('profile', 'character varying(30)'),
+                      ('order_', 'integer'),
+                      ('x', 'float'),
+                      ('z', 'float'),
+                      ('CONSTRAINT topo_pkey', 'PRIMARY KEY (gid)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        return qry
+
+        # def pg_geom_attri(self):
+        #     if self.geom_type is not None:
+        #         attrs = ['geom geometry({0})'.format(self.geom_type)]
+        #     else:
+        #         attrs = []
+        #     return attrs
+
 
 # *****************************************
 class profiles(MasObject):
@@ -413,51 +414,12 @@ class profiles(MasObject):
         qry += self.pg_create_calcul_abscisse()
         return qry
 
-# *****************************************
-class branchs(MasObject):
-    def __init__(self):
-        super(branchs, self).__init__()
-        self.order = 13
-        self.geom_type = 'MultiLineString'
-        self.attrs = [('gid', 'serial NOT NULL'),
-                      ('branch', 'serial NOT NULL'),
-                      ('startb', 'character varying(30)'),
-                      ('endb', 'character varying(30)'),
-                      ('zonenum', 'serial NOT NULL'),
-                      ('zoneabsstart', 'float'),
-                      ('zoneabsend', 'float'),
-                      ('minbedcoef', 'float'),
-                      ('majbedcoef', 'float'),
-                      ('mesh', 'float'),
-                      ('planim', 'float'),
-                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
-                      ('CONSTRAINT branchs_pkey', 'PRIMARY KEY (gid)'),
-                      ('CONSTRAINT cle_debut', 'FOREIGN KEY (startb)\n'
-                                               '\t   REFERENCES {0}.extremities (name) MATCH SIMPLE \n'
-                                               '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(self.schema)),
-                      ('CONSTRAINT cle_fin', 'FOREIGN KEY (startb)'
-                                             '\t   REFERENCES {0}.extremities (name) MATCH SIMPLE \n'
-                                             '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(self.schema))]
-
-    def pg_create_calcul_abscisse(self):
-        qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
-              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
-        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_branche();\n'
-        return qry
-
-    def pg_create_table(self):
-        qry = super(self.__class__, self).pg_create_table()
-        qry += '\n'
-        qry += self.pg_create_index()
-        qry += '\n'
-        qry += self.pg_create_calcul_abscisse()
-        return qry
 
 # *****************************************
 class links(MasObject):
     def __init__(self):
         super(links, self).__init__()
-        self.order = 14
+        self.order = 13
         self.geom_type = 'MultiLineString'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -497,6 +459,56 @@ class links(MasObject):
         qry += self.pg_create_calcul_abscisse()
         return qry
 
+# *****************************************
+class branchs(MasObject):
+    def __init__(self):
+        super(branchs, self).__init__()
+        self.order = 14
+        self.geom_type = 'MultiLineString'
+        self.attrs = [('gid', 'serial NOT NULL'),
+                      ('branch', 'serial NOT NULL'),
+                      ('startb', 'character varying(30)'),
+                      ('endb', 'character varying(30)'),
+                      ('zonenum', 'serial NOT NULL'),
+                      ('zoneabsstart', 'float'),
+                      ('zoneabsend', 'float'),
+                      ('minbedcoef', 'float'),
+                      ('majbedcoef', 'float'),
+                      ('mesh', 'float'),
+                      ('planim', 'float'),
+                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
+                      ('CONSTRAINT branchs_pkey', 'PRIMARY KEY (gid)'),
+                      ('CONSTRAINT cle_debut', 'FOREIGN KEY (startb)\n'
+                                               '\t   REFERENCES {0}.extremities (name) MATCH SIMPLE \n'
+                                               '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(self.schema)),
+                      ('CONSTRAINT cle_fin', 'FOREIGN KEY (startb)'
+                                             '\t   REFERENCES {0}.extremities (name) MATCH SIMPLE \n'
+                                             '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(self.schema))]
+
+    def pg_create_calcul_abscisse(self):
+        qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
+              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_branche();\n'
+        return qry
+
+    def pg_updat_actv(self):
+        qry = 'CREATE TRIGGER {1}_chstate_active\n' \
+              ' AFTER UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
+        qry += ' FOR EACH ROW\n' \
+        'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
+        'EXECUTE PROCEDURE chstate_branch();\n'
+        return qry
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        qry += '\n'
+        qry += self.pg_create_calcul_abscisse()
+        qry += '\n'
+        qry += self.pg_updat_actv()
+        return qry
+
 
 # **************** Basins *************************
 class basins(MasObject):
@@ -516,12 +528,22 @@ class basins(MasObject):
                       ('CONSTRAINT basin_name_unique', 'UNIQUE (name)'),
                       ('CONSTRAINT basin_num_unique', 'UNIQUE (basinnum)')]
 
+    def pg_updat_actv(self):
+        qry = 'CREATE TRIGGER {1}_chstate_active\n' \
+              ' AFTER UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
+        qry += ' FOR EACH ROW\n' \
+        'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n'\
+        'EXECUTE PROCEDURE chstate_basin();\n'
+        return qry
+
+
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += self.pg_create_index()
+        qry += '\n'
+        qry += self.pg_updat_actv()
         return qry
-
 
 
 
@@ -634,9 +656,9 @@ class parametres(MasObject):
 
 
 # *****************************************
-class calcul_abscisse(MasObject):
+class class_fct_psql(MasObject):
     def __init__(self):
-        super(calcul_abscisse, self).__init__()
+        super(class_fct_psql, self).__init__()
         self.order = 22
 
     def pg_create_calcul_abscisse(self):
@@ -767,7 +789,34 @@ class calcul_abscisse(MasObject):
 '''
         return qry
 
+    def pg_chstate_branch(self):
+        qry = """
+CREATE  OR REPLACE FUNCTION chstate_branch() RETURNS TRIGGER AS $$
+    BEGIN 
+         EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.profiles SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
+         EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.flood_marks SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
+         EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.weirs SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
+         EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.hydraulic_head SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
+         EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.lateral_inflows SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
+         EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.lateral_weirs SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
+         EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.tracer_lateral_inflows SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
+         EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.outputs SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
+         RETURN NEW;
+    END;
+$$ LANGUAGE plpgsql;"""
+        return qry
 
+        # DROP TRIGGER IF EXISTS branch_chstate_active ON ouvrage3.branchs
+
+    def pg_chstate_basin(self):
+        qry = """
+CREATE  OR REPLACE FUNCTION chstate_basin() RETURNS TRIGGER AS $$
+    BEGIN 
+         EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.links SET active = $2 WHERE (basinstart = $1 OR basinend = $1)' USING NEW.basinnum,NEW.active;
+         RETURN NEW;
+    END;
+$$ LANGUAGE plpgsql;"""
+        return qry
 # *****************************************
 class laws_wq(MasObject):
     def __init__(self):
@@ -1080,3 +1129,8 @@ class runs_graph(MasObject):
                       ('var', 'text'),
                       ('val', 'json'),
                       ('CONSTRAINT runs_graph_pkey', ' PRIMARY KEY (id_runs,type_res,var)')]
+
+#****************************************************************************
+
+
+

@@ -160,6 +160,9 @@ class GraphResultDialog(QWidget):
         if self.cur_run is not None:
             txt = self.mdb.select_distinct("comments", "runs", where='id={}'.format(self.cur_run))
             if txt:
+                txt = txt['comments'][0]
+                if not isinstance(txt,str):
+                    txt=str(txt)
                 self.lbl_coment.setText(txt['comments'][0])
                 self.show_hide_com(True)
             else:
@@ -317,7 +320,7 @@ class GraphResultDialog(QWidget):
     def init_dico_run(self):
         self.dict_run = dict()
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
-                                  "ORDER BY date,run, scenario".format(self.mdb.SCHEMA),
+                                  "ORDER BY date DESC, run ASC, scenario ASC;".format(self.mdb.SCHEMA),
                                   fetch=True)
 
         for row in rows:
@@ -346,7 +349,10 @@ class GraphResultDialog(QWidget):
             txt = self.mdb.select_distinct("comments", "runs",
                                            where='id={}'.format(self.cur_run))
             if txt:
-                self.lbl_coment.setText(txt['comments'][0])
+                txt = txt['comments'][0]
+                if not isinstance(txt, str):
+                    txt = str(txt)
+                self.lbl_coment.setText(txt)
                 self.show_hide_com(True)
             else:
                 self.show_hide_com(False)
@@ -509,8 +515,6 @@ class GraphResultDialog(QWidget):
                 self.graph_changed(False)
             self.init_cb_det(self.cur_pknum)
             self.detail_changed()
-            if self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
-                self.get_laisses()
 
     def graph_changed(self, update=True):
         if self.cb_graph.currentIndex() != -1:
@@ -716,6 +720,7 @@ class GraphResultDialog(QWidget):
 
             if self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
                 if 'Z' in self.cur_vars:
+                    self.get_laisses()
                     self.update_laisse(x_var_)
 
             if self.typ_graph == "hydro":
@@ -723,28 +728,38 @@ class GraphResultDialog(QWidget):
                 self.update_obs()
 
     def get_laisses(self):
-
+        """
+        get flood marks data
+        :return:
+        """
         info = self.mdb.select('runs', where="id={}".format(self.cur_run),
                                list_var=['scenario'])
 
-        condition = "event = '{}'".format(info["scenario"][0])
-        self.laisses = self.mdb.select("flood_marks", condition, "abscissa")
+        condition = "event = '{}' AND active".format(info["scenario"][0])
 
+        self.laisses = self.mdb.select("flood_marks", condition, "abscissa")
         if self.laisses:
             self.laisses['pknum'] = self.laisses['abscissa']
 
     def get_obs(self):
-
+        """
+        get observation data
+        :return:
+        """
         sql = "SELECT name FROM {0}.profiles " \
               "WHERE abscissa={1} ".format(self.mdb.SCHEMA, self.cur_pknum)
+        print(sql)
         rows = self.mdb.run_query(sql, fetch=True)
+
         if rows:
             val = rows[0][0]
+            print(val)
             self.obs = self.mgis.mdb.select('outputs',
                                             where="active AND (abscissa = {0} OR name = '{1}')" \
                                                   "".format(self.cur_pknum, val),
                                             order="abscissa",
                                             list_var=['code', 'zero', 'abscissa', 'name'])
+            print(self.obs)
             if self.obs:
                 if len(self.obs['code']) == 0:
                     self.obs = None
@@ -826,6 +841,7 @@ class GraphResultDialog(QWidget):
                 courbe_lais["couleurs"] = ["black"] * len(courbe_lais["x"])
                 courbe_lais["taille"] = [1] * len(courbe_lais["x"])
             self.graph_obj.init_graph_laisse(courbe_lais)
+
 
     def update_obs(self):
         """ """

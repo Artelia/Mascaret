@@ -1,276 +1,337 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis version="2.18" minimumScale="-4.65661e-10" maximumScale="200000" simplifyDrawingHints="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" simplifyMaxScale="1" hasScaleBasedVisibilityFlag="1" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
-  <edittypes>
-    <edittype widgetv2type="TextEdit" name="gid">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="name">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="event">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="branchnum">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="date">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="abscissa">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="z">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="validate">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="comment">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="weir">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="adress">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="township">
-      <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-    </edittype>
-  </edittypes>
-  <renderer-v2 symbollevels="0" type="singleSymbol">
+<qgis maxScale="-4.65661e-10" minScale="200000" labelsEnabled="0" simplifyAlgorithm="0" readOnly="0" simplifyMaxScale="1" styleCategories="AllStyleCategories" hasScaleBasedVisibilityFlag="1" version="3.10.8-A Coruña" simplifyLocal="1" simplifyDrawingHints="0" simplifyDrawingTol="1">
+  <flags>
+    <Identifiable>1</Identifiable>
+    <Removable>1</Removable>
+    <Searchable>1</Searchable>
+  </flags>
+  <renderer-v2 forceraster="0" enableorderby="0" type="singleSymbol" symbollevels="0">
     <symbols>
-      <symbol alpha="1" type="marker" name="0">
-        <layer pass="0" class="SimpleMarker" locked="0">
-          <prop k="angle" v="0"/>
-          <prop k="color" v="51,160,44,255"/>
-          <prop k="horizontal_anchor_point" v="1"/>
-          <prop k="name" v="cross"/>
-          <prop k="offset" v="0,0"/>
-          <prop k="offset_map_unit_scale" v="0,0"/>
-          <prop k="offset_unit" v="MM"/>
-          <prop k="outline_color" v="51,160,44,255"/>
-          <prop k="outline_style" v="solid"/>
-          <prop k="outline_width" v="0.5"/>
-          <prop k="outline_width_map_unit_scale" v="0,0"/>
-          <prop k="outline_width_unit" v="MM"/>
-          <prop k="scale_method" v="diameter"/>
-          <prop k="size" v="2.5"/>
-          <prop k="size_map_unit_scale" v="0,0"/>
-          <prop k="size_unit" v="MM"/>
-          <prop k="vertical_anchor_point" v="1"/>
+      <symbol alpha="1" force_rhr="0" type="marker" name="0" clip_to_extent="1">
+        <layer pass="0" locked="0" enabled="1" class="SimpleMarker">
+          <prop v="0" k="angle"/>
+          <prop v="51,160,44,255" k="color"/>
+          <prop v="1" k="horizontal_anchor_point"/>
+          <prop v="bevel" k="joinstyle"/>
+          <prop v="cross" k="name"/>
+          <prop v="0,0" k="offset"/>
+          <prop v="3x:0,0,0,0,0,0" k="offset_map_unit_scale"/>
+          <prop v="MM" k="offset_unit"/>
+          <prop v="51,160,44,255" k="outline_color"/>
+          <prop v="solid" k="outline_style"/>
+          <prop v="0.5" k="outline_width"/>
+          <prop v="3x:0,0,0,0,0,0" k="outline_width_map_unit_scale"/>
+          <prop v="MM" k="outline_width_unit"/>
+          <prop v="diameter" k="scale_method"/>
+          <prop v="2.5" k="size"/>
+          <prop v="3x:0,0,0,0,0,0" k="size_map_unit_scale"/>
+          <prop v="MM" k="size_unit"/>
+          <prop v="1" k="vertical_anchor_point"/>
+          <data_defined_properties>
+            <Option type="Map">
+              <Option type="QString" name="name" value=""/>
+              <Option name="properties"/>
+              <Option type="QString" name="type" value="collection"/>
+            </Option>
+          </data_defined_properties>
         </layer>
       </symbol>
     </symbols>
     <rotation/>
-    <sizescale scalemethod="diameter"/>
+    <sizescale/>
   </renderer-v2>
   <customproperties>
-    <property key="labeling" value="pal"/>
-    <property key="labeling/addDirectionSymbol" value="false"/>
-    <property key="labeling/angleOffset" value="0"/>
-    <property key="labeling/blendMode" value="0"/>
-    <property key="labeling/bufferBlendMode" value="0"/>
-    <property key="labeling/bufferColorA" value="255"/>
-    <property key="labeling/bufferColorB" value="255"/>
-    <property key="labeling/bufferColorG" value="255"/>
-    <property key="labeling/bufferColorR" value="255"/>
-    <property key="labeling/bufferDraw" value="false"/>
-    <property key="labeling/bufferJoinStyle" value="64"/>
-    <property key="labeling/bufferNoFill" value="false"/>
-    <property key="labeling/bufferSize" value="1"/>
-    <property key="labeling/bufferSizeInMapUnits" value="false"/>
-    <property key="labeling/bufferSizeMapUnitMaxScale" value="0"/>
-    <property key="labeling/bufferSizeMapUnitMinScale" value="0"/>
-    <property key="labeling/bufferSizeMapUnitScale" value="0,0,0,0,0,0"/>
-    <property key="labeling/bufferTransp" value="0"/>
-    <property key="labeling/centroidInside" value="false"/>
-    <property key="labeling/centroidWhole" value="false"/>
-    <property key="labeling/decimals" value="3"/>
-    <property key="labeling/displayAll" value="false"/>
-    <property key="labeling/dist" value="0"/>
-    <property key="labeling/distInMapUnits" value="false"/>
-    <property key="labeling/distMapUnitMaxScale" value="0"/>
-    <property key="labeling/distMapUnitMinScale" value="0"/>
-    <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
-    <property key="labeling/drawLabels" value="true"/>
-    <property key="labeling/enabled" value="false"/>
-    <property key="labeling/fieldName" value="concat(&quot;abscissa&quot;,' - ', &quot;z&quot; )"/>
-    <property key="labeling/fitInPolygonOnly" value="false"/>
-    <property key="labeling/fontBold" value="false"/>
-    <property key="labeling/fontCapitals" value="0"/>
-    <property key="labeling/fontFamily" value="MS Shell Dlg 2"/>
-    <property key="labeling/fontItalic" value="false"/>
-    <property key="labeling/fontLetterSpacing" value="0"/>
-    <property key="labeling/fontLimitPixelSize" value="false"/>
-    <property key="labeling/fontMaxPixelSize" value="10000"/>
-    <property key="labeling/fontMinPixelSize" value="3"/>
-    <property key="labeling/fontSize" value="8.25"/>
-    <property key="labeling/fontSizeInMapUnits" value="false"/>
-    <property key="labeling/fontSizeMapUnitMaxScale" value="0"/>
-    <property key="labeling/fontSizeMapUnitMinScale" value="0"/>
-    <property key="labeling/fontSizeMapUnitScale" value="0,0,0,0,0,0"/>
-    <property key="labeling/fontStrikeout" value="false"/>
-    <property key="labeling/fontUnderline" value="false"/>
-    <property key="labeling/fontWeight" value="50"/>
-    <property key="labeling/fontWordSpacing" value="0"/>
-    <property key="labeling/formatNumbers" value="false"/>
-    <property key="labeling/isExpression" value="true"/>
-    <property key="labeling/labelOffsetInMapUnits" value="true"/>
-    <property key="labeling/labelOffsetMapUnitMaxScale" value="0"/>
-    <property key="labeling/labelOffsetMapUnitMinScale" value="0"/>
-    <property key="labeling/labelOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-    <property key="labeling/labelPerPart" value="false"/>
-    <property key="labeling/leftDirectionSymbol" value="&lt;"/>
-    <property key="labeling/limitNumLabels" value="false"/>
-    <property key="labeling/maxCurvedCharAngleIn" value="20"/>
-    <property key="labeling/maxCurvedCharAngleOut" value="-20"/>
-    <property key="labeling/maxNumLabels" value="2000"/>
-    <property key="labeling/mergeLines" value="false"/>
-    <property key="labeling/minFeatureSize" value="0"/>
-    <property key="labeling/multilineAlign" value="0"/>
-    <property key="labeling/multilineHeight" value="1"/>
-    <property key="labeling/namedStyle" value="Normal"/>
-    <property key="labeling/obstacle" value="true"/>
-    <property key="labeling/obstacleFactor" value="1"/>
-    <property key="labeling/obstacleType" value="0"/>
-    <property key="labeling/offsetType" value="0"/>
-    <property key="labeling/placeDirectionSymbol" value="0"/>
-    <property key="labeling/placement" value="0"/>
-    <property key="labeling/placementFlags" value="0"/>
-    <property key="labeling/plussign" value="false"/>
-    <property key="labeling/predefinedPositionOrder" value="TR,TL,BR,BL,R,L,TSR,BSR"/>
-    <property key="labeling/preserveRotation" value="true"/>
-    <property key="labeling/previewBkgrdColor" value="#ffffff"/>
-    <property key="labeling/priority" value="5"/>
-    <property key="labeling/quadOffset" value="4"/>
-    <property key="labeling/repeatDistance" value="0"/>
-    <property key="labeling/repeatDistanceMapUnitMaxScale" value="0"/>
-    <property key="labeling/repeatDistanceMapUnitMinScale" value="0"/>
-    <property key="labeling/repeatDistanceMapUnitScale" value="0,0,0,0,0,0"/>
-    <property key="labeling/repeatDistanceUnit" value="1"/>
-    <property key="labeling/reverseDirectionSymbol" value="false"/>
-    <property key="labeling/rightDirectionSymbol" value=">"/>
-    <property key="labeling/scaleMax" value="10000000"/>
-    <property key="labeling/scaleMin" value="1"/>
-    <property key="labeling/scaleVisibility" value="false"/>
-    <property key="labeling/shadowBlendMode" value="6"/>
-    <property key="labeling/shadowColorB" value="0"/>
-    <property key="labeling/shadowColorG" value="0"/>
-    <property key="labeling/shadowColorR" value="0"/>
-    <property key="labeling/shadowDraw" value="false"/>
-    <property key="labeling/shadowOffsetAngle" value="135"/>
-    <property key="labeling/shadowOffsetDist" value="1"/>
-    <property key="labeling/shadowOffsetGlobal" value="true"/>
-    <property key="labeling/shadowOffsetMapUnitMaxScale" value="0"/>
-    <property key="labeling/shadowOffsetMapUnitMinScale" value="0"/>
-    <property key="labeling/shadowOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-    <property key="labeling/shadowOffsetUnits" value="1"/>
-    <property key="labeling/shadowRadius" value="1.5"/>
-    <property key="labeling/shadowRadiusAlphaOnly" value="false"/>
-    <property key="labeling/shadowRadiusMapUnitMaxScale" value="0"/>
-    <property key="labeling/shadowRadiusMapUnitMinScale" value="0"/>
-    <property key="labeling/shadowRadiusMapUnitScale" value="0,0,0,0,0,0"/>
-    <property key="labeling/shadowRadiusUnits" value="1"/>
-    <property key="labeling/shadowScale" value="100"/>
-    <property key="labeling/shadowTransparency" value="30"/>
-    <property key="labeling/shadowUnder" value="0"/>
-    <property key="labeling/shapeBlendMode" value="0"/>
-    <property key="labeling/shapeBorderColorA" value="255"/>
-    <property key="labeling/shapeBorderColorB" value="128"/>
-    <property key="labeling/shapeBorderColorG" value="128"/>
-    <property key="labeling/shapeBorderColorR" value="128"/>
-    <property key="labeling/shapeBorderWidth" value="0"/>
-    <property key="labeling/shapeBorderWidthMapUnitMaxScale" value="0"/>
-    <property key="labeling/shapeBorderWidthMapUnitMinScale" value="0"/>
-    <property key="labeling/shapeBorderWidthMapUnitScale" value="0,0,0,0,0,0"/>
-    <property key="labeling/shapeBorderWidthUnits" value="1"/>
-    <property key="labeling/shapeDraw" value="false"/>
-    <property key="labeling/shapeFillColorA" value="255"/>
-    <property key="labeling/shapeFillColorB" value="255"/>
-    <property key="labeling/shapeFillColorG" value="255"/>
-    <property key="labeling/shapeFillColorR" value="255"/>
-    <property key="labeling/shapeJoinStyle" value="64"/>
-    <property key="labeling/shapeOffsetMapUnitMaxScale" value="0"/>
-    <property key="labeling/shapeOffsetMapUnitMinScale" value="0"/>
-    <property key="labeling/shapeOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-    <property key="labeling/shapeOffsetUnits" value="1"/>
-    <property key="labeling/shapeOffsetX" value="0"/>
-    <property key="labeling/shapeOffsetY" value="0"/>
-    <property key="labeling/shapeRadiiMapUnitMaxScale" value="0"/>
-    <property key="labeling/shapeRadiiMapUnitMinScale" value="0"/>
-    <property key="labeling/shapeRadiiMapUnitScale" value="0,0,0,0,0,0"/>
-    <property key="labeling/shapeRadiiUnits" value="1"/>
-    <property key="labeling/shapeRadiiX" value="0"/>
-    <property key="labeling/shapeRadiiY" value="0"/>
-    <property key="labeling/shapeRotation" value="0"/>
-    <property key="labeling/shapeRotationType" value="0"/>
-    <property key="labeling/shapeSVGFile" value=""/>
-    <property key="labeling/shapeSizeMapUnitMaxScale" value="0"/>
-    <property key="labeling/shapeSizeMapUnitMinScale" value="0"/>
-    <property key="labeling/shapeSizeMapUnitScale" value="0,0,0,0,0,0"/>
-    <property key="labeling/shapeSizeType" value="0"/>
-    <property key="labeling/shapeSizeUnits" value="1"/>
-    <property key="labeling/shapeSizeX" value="0"/>
-    <property key="labeling/shapeSizeY" value="0"/>
-    <property key="labeling/shapeTransparency" value="0"/>
-    <property key="labeling/shapeType" value="0"/>
-    <property key="labeling/textColorA" value="255"/>
-    <property key="labeling/textColorB" value="0"/>
-    <property key="labeling/textColorG" value="0"/>
-    <property key="labeling/textColorR" value="0"/>
-    <property key="labeling/textTransp" value="0"/>
-    <property key="labeling/upsidedownLabels" value="0"/>
-    <property key="labeling/wrapChar" value=""/>
-    <property key="labeling/xOffset" value="0"/>
-    <property key="labeling/yOffset" value="0"/>
-    <property key="labeling/zIndex" value="0"/>
+    <property key="dualview/previewExpressions">
+      <value>"name"</value>
+    </property>
+    <property key="embeddedWidgets/count" value="0"/>
+    <property key="variableNames"/>
+    <property key="variableValues"/>
   </customproperties>
   <blendMode>0</blendMode>
   <featureBlendMode>0</featureBlendMode>
-  <layerTransparency>0</layerTransparency>
-  <displayfield>field_1</displayfield>
-  <label>0</label>
-  <labelattributes>
-    <label fieldname="" text="Label"/>
-    <family fieldname="" name="MS Shell Dlg 2"/>
-    <size fieldname="" units="pt" value="12"/>
-    <bold fieldname="" on="0"/>
-    <italic fieldname="" on="0"/>
-    <underline fieldname="" on="0"/>
-    <strikeout fieldname="" on="0"/>
-    <color fieldname="" red="0" blue="0" green="0"/>
-    <x fieldname=""/>
-    <y fieldname=""/>
-    <offset x="0" y="0" units="pt" yfieldname="" xfieldname=""/>
-    <angle fieldname="" value="0" auto="0"/>
-    <alignment fieldname="" value="center"/>
-    <buffercolor fieldname="" red="255" blue="255" green="255"/>
-    <buffersize fieldname="" units="pt" value="1"/>
-    <bufferenabled fieldname="" on=""/>
-    <multilineenabled fieldname="" on=""/>
-    <selectedonly on=""/>
-  </labelattributes>
-  <LinearlyInterpolatedDiagramRenderer upperValue="0" lowerHeight="0" upperHeight="50" lowerValue="0" diagramType="Histogram" upperWidth="50" classificationAttribute="0" lowerWidth="0">
-    <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="200000" font=",8.25,-1,5,50,0,0,0,0,0" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" height="15" sizeType="MM" minScaleDenominator="100000">
-      <attribute field="" color="#000000"/>
+  <layerOpacity>1</layerOpacity>
+  <LinearlyInterpolatedDiagramRenderer diagramType="Histogram" upperHeight="50" lowerWidth="0" lowerHeight="0" lowerValue="0" attributeLegend="1" upperValue="0" classificationField="gid" upperWidth="50">
+    <DiagramCategory backgroundAlpha="255" scaleDependency="Area" minimumSize="0" rotationOffset="270" minScaleDenominator="100000" sizeScale="3x:0,0,0,0,0,0" maxScaleDenominator="200000" opacity="1" sizeType="MM" labelPlacementMethod="XHeight" penWidth="0" penColor="#000000" barWidth="5" backgroundColor="#ffffff" height="15" width="15" penAlpha="255" lineSizeScale="3x:0,0,0,0,0,0" diagramOrientation="Up" lineSizeType="MM" scaleBasedVisibility="1" enabled="1">
+      <fontProperties description=",8.25,-1,5,50,0,0,0,0,0" style=""/>
+      <attribute label="" color="#000000" field=""/>
     </DiagramCategory>
   </LinearlyInterpolatedDiagramRenderer>
-  <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="0" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0"/>
-  <editform>../../../../PROGRA~2/QGIS_2.6/profil/python/plugins/MascPlug/mascaret</editform>
-  <editforminit></editforminit>
-  <featformsuppress>0</featformsuppress>
-  <annotationform>../../../../PROGRA~2/QGIS_2.6/profil/python/plugins/MascPlug/mascaret</annotationform>
-  <editorlayout>tablayout</editorlayout>
+  <DiagramLayerSettings obstacle="0" priority="0" linePlacementFlags="0" zIndex="0" placement="0" dist="0" showAll="0">
+    <properties>
+      <Option type="Map">
+        <Option type="QString" name="name" value=""/>
+        <Option name="properties"/>
+        <Option type="QString" name="type" value="collection"/>
+      </Option>
+    </properties>
+  </DiagramLayerSettings>
+  <geometryOptions geometryPrecision="0" removeDuplicateNodes="0">
+    <activeChecks/>
+    <checkConfiguration/>
+  </geometryOptions>
+  <fieldConfiguration>
+    <field name="gid">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="name">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="event">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="branchnum">
+      <editWidget type="Range">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="date">
+      <editWidget type="DateTime">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="abscissa">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="z">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="validate">
+      <editWidget type="Range">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="comment">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="weir">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="adress">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="township">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="geom_ori">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field name="active">
+      <editWidget type="CheckBox">
+        <config>
+          <Option type="Map">
+            <Option type="QString" name="CheckedState" value=""/>
+            <Option type="QString" name="UncheckedState" value=""/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+  </fieldConfiguration>
+  <aliases>
+    <alias index="0" name="" field="gid"/>
+    <alias index="1" name="" field="name"/>
+    <alias index="2" name="" field="event"/>
+    <alias index="3" name="" field="branchnum"/>
+    <alias index="4" name="" field="date"/>
+    <alias index="5" name="" field="abscissa"/>
+    <alias index="6" name="" field="z"/>
+    <alias index="7" name="" field="validate"/>
+    <alias index="8" name="" field="comment"/>
+    <alias index="9" name="" field="weir"/>
+    <alias index="10" name="" field="adress"/>
+    <alias index="11" name="" field="township"/>
+    <alias index="12" name="" field="geom_ori"/>
+    <alias index="13" name="" field="active"/>
+  </aliases>
   <excludeAttributesWMS/>
   <excludeAttributesWFS/>
+  <defaults>
+    <default expression="" field="gid" applyOnUpdate="0"/>
+    <default expression="" field="name" applyOnUpdate="0"/>
+    <default expression="" field="event" applyOnUpdate="0"/>
+    <default expression="" field="branchnum" applyOnUpdate="0"/>
+    <default expression="" field="date" applyOnUpdate="0"/>
+    <default expression="" field="abscissa" applyOnUpdate="0"/>
+    <default expression="" field="z" applyOnUpdate="0"/>
+    <default expression="" field="validate" applyOnUpdate="0"/>
+    <default expression="" field="comment" applyOnUpdate="0"/>
+    <default expression="" field="weir" applyOnUpdate="0"/>
+    <default expression="" field="adress" applyOnUpdate="0"/>
+    <default expression="" field="township" applyOnUpdate="0"/>
+    <default expression="" field="geom_ori" applyOnUpdate="0"/>
+    <default expression="" field="active" applyOnUpdate="0"/>
+  </defaults>
+  <constraints>
+    <constraint constraints="3" unique_strength="1" exp_strength="0" notnull_strength="1" field="gid"/>
+    <constraint constraints="0" unique_strength="0" exp_strength="0" notnull_strength="0" field="name"/>
+    <constraint constraints="0" unique_strength="0" exp_strength="0" notnull_strength="0" field="event"/>
+    <constraint constraints="0" unique_strength="0" exp_strength="0" notnull_strength="0" field="branchnum"/>
+    <constraint constraints="0" unique_strength="0" exp_strength="0" notnull_strength="0" field="date"/>
+    <constraint constraints="0" unique_strength="0" exp_strength="0" notnull_strength="0" field="abscissa"/>
+    <constraint constraints="0" unique_strength="0" exp_strength="0" notnull_strength="0" field="z"/>
+    <constraint constraints="0" unique_strength="0" exp_strength="0" notnull_strength="0" field="validate"/>
+    <constraint constraints="0" unique_strength="0" exp_strength="0" notnull_strength="0" field="comment"/>
+    <constraint constraints="0" unique_strength="0" exp_strength="0" notnull_strength="0" field="weir"/>
+    <constraint constraints="0" unique_strength="0" exp_strength="0" notnull_strength="0" field="adress"/>
+    <constraint constraints="0" unique_strength="0" exp_strength="0" notnull_strength="0" field="township"/>
+    <constraint constraints="0" unique_strength="0" exp_strength="0" notnull_strength="0" field="geom_ori"/>
+    <constraint constraints="1" unique_strength="0" exp_strength="0" notnull_strength="2" field="active"/>
+  </constraints>
+  <constraintExpressions>
+    <constraint exp="" field="gid" desc=""/>
+    <constraint exp="" field="name" desc=""/>
+    <constraint exp="" field="event" desc=""/>
+    <constraint exp="" field="branchnum" desc=""/>
+    <constraint exp="" field="date" desc=""/>
+    <constraint exp="" field="abscissa" desc=""/>
+    <constraint exp="" field="z" desc=""/>
+    <constraint exp="" field="validate" desc=""/>
+    <constraint exp="" field="comment" desc=""/>
+    <constraint exp="" field="weir" desc=""/>
+    <constraint exp="" field="adress" desc=""/>
+    <constraint exp="" field="township" desc=""/>
+    <constraint exp="" field="geom_ori" desc=""/>
+    <constraint exp="" field="active" desc=""/>
+  </constraintExpressions>
+  <expressionfields/>
+  <attributeactions>
+    <defaultAction key="Canvas" value="{00000000-0000-0000-0000-000000000000}"/>
+  </attributeactions>
+  <attributetableconfig actionWidgetStyle="dropDown" sortOrder="1" sortExpression="&quot;active&quot;">
+    <columns>
+      <column type="field" name="gid" width="-1" hidden="0"/>
+      <column type="field" name="name" width="-1" hidden="0"/>
+      <column type="field" name="event" width="-1" hidden="0"/>
+      <column type="field" name="branchnum" width="-1" hidden="0"/>
+      <column type="field" name="date" width="-1" hidden="0"/>
+      <column type="field" name="abscissa" width="-1" hidden="0"/>
+      <column type="field" name="z" width="-1" hidden="0"/>
+      <column type="field" name="validate" width="-1" hidden="0"/>
+      <column type="field" name="comment" width="-1" hidden="0"/>
+      <column type="field" name="weir" width="-1" hidden="0"/>
+      <column type="field" name="adress" width="-1" hidden="0"/>
+      <column type="field" name="township" width="-1" hidden="0"/>
+      <column type="field" name="geom_ori" width="-1" hidden="0"/>
+      <column type="field" name="active" width="-1" hidden="0"/>
+      <column type="actions" width="-1" hidden="1"/>
+    </columns>
+  </attributetableconfig>
+  <conditionalstyles>
+    <rowstyles/>
+    <fieldstyles/>
+  </conditionalstyles>
+  <storedexpressions/>
+  <editform tolerant="1"></editform>
+  <editforminit/>
+  <editforminitcodesource>0</editforminitcodesource>
+  <editforminitfilepath></editforminitfilepath>
+  <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
+"""
+Les formulaires QGIS peuvent avoir une fonction Python qui sera appelée à l'ouverture du formulaire.
+
+Utilisez cette fonction pour ajouter plus de fonctionnalités à vos formulaires.
+
+Entrez le nom de la fonction dans le champ "Fonction d'initialisation Python".
+Voici un exemple à suivre:
+"""
+from qgis.PyQt.QtWidgets import QWidget
+
+def my_form_open(dialog, layer, feature):
+    geom = feature.geometry()
+    control = dialog.findChild(QWidget, "MyLineEdit")
+
+]]></editforminitcode>
+  <featformsuppress>0</featformsuppress>
+  <editorlayout>tablayout</editorlayout>
   <attributeEditorForm>
-    <attributeEditorContainer name="infos">
-      <attributeEditorField index="1" name="name"/>
-      <attributeEditorField index="3" name="branchnum"/>
-      <attributeEditorField index="2" name="event"/>
-      <attributeEditorField index="6" name="z"/>
+    <attributeEditorContainer groupBox="0" visibilityExpression="" visibilityExpressionEnabled="0" name="infos" showLabel="1" columnCount="0">
+      <attributeEditorField index="1" name="name" showLabel="1"/>
+      <attributeEditorField index="3" name="branchnum" showLabel="1"/>
+      <attributeEditorField index="2" name="event" showLabel="1"/>
+      <attributeEditorField index="6" name="z" showLabel="1"/>
+      <attributeEditorField index="13" name="active" showLabel="1"/>
     </attributeEditorContainer>
   </attributeEditorForm>
-  <attributeactions/>
+  <editable>
+    <field editable="1" name="abscissa"/>
+    <field editable="1" name="active"/>
+    <field editable="1" name="adress"/>
+    <field editable="1" name="branchnum"/>
+    <field editable="1" name="comment"/>
+    <field editable="1" name="date"/>
+    <field editable="1" name="event"/>
+    <field editable="1" name="geom_ori"/>
+    <field editable="1" name="gid"/>
+    <field editable="1" name="name"/>
+    <field editable="1" name="township"/>
+    <field editable="1" name="validate"/>
+    <field editable="1" name="weir"/>
+    <field editable="1" name="z"/>
+  </editable>
+  <labelOnTop>
+    <field labelOnTop="0" name="abscissa"/>
+    <field labelOnTop="0" name="active"/>
+    <field labelOnTop="0" name="adress"/>
+    <field labelOnTop="0" name="branchnum"/>
+    <field labelOnTop="0" name="comment"/>
+    <field labelOnTop="0" name="date"/>
+    <field labelOnTop="0" name="event"/>
+    <field labelOnTop="0" name="geom_ori"/>
+    <field labelOnTop="0" name="gid"/>
+    <field labelOnTop="0" name="name"/>
+    <field labelOnTop="0" name="township"/>
+    <field labelOnTop="0" name="validate"/>
+    <field labelOnTop="0" name="weir"/>
+    <field labelOnTop="0" name="z"/>
+  </labelOnTop>
+  <widgets/>
+  <previewExpression>name</previewExpression>
+  <mapTip>field_1</mapTip>
+  <layerGeometryType>0</layerGeometryType>
 </qgis>
