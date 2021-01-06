@@ -39,7 +39,6 @@ class ClassObservation:
             for file in data_file:
                 if os.path.isfile(file):
                     with open(file, 'r') as fichier:
-
                         codes = fichier.readline().strip().split(';')[1:]
                         types = fichier.readline().strip().split(';')[1:]
                         nom_stat = fichier.readline().strip().split(';')[1:]

@@ -631,6 +631,12 @@ class CheckTab():
         'EXECUTE PROCEDURE chstate_basin();\n'
         qry += '\n'
         self.mdb.run_query(qry)
+        # add fct for abscisse compute
+        # cl = Maso.class_fct_psql()
+        # lfct = [cl.pg_abscisse_profil()]
+        # for sql in lfct:
+        #     sql = sql.format(self.SCHEMA)
+        #     self.run_query(sql)
 
 
     # DROP TRIGGER IF EXISTS branch_chstate_active ON ouvrage3.branchs

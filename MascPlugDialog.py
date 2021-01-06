@@ -191,7 +191,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.action_update_bin.triggered.connect(self.download_bin)
 
         # TODO Finaliser
-        # self.ui.actionUpdate_pk.triggered.connect(self.update_pk)
+        self.ui.actionUpdate_all_PK.triggered.connect(self.update_pk)
         self.ui.actionImport_Results.triggered.connect(self.import_resu_model)
         self.ui.actionImport_Results.setVisible(False)
         self.ui.actionTest.triggered.connect(self.fct_test)
@@ -659,7 +659,7 @@ class MascPlugDialog(QMainWindow):
                                                              filter="PSQL (*.psql);;File (*)")
         if self.mdb.check_extension():
             self.add_info(" Shema est {}".format(self.mdb.SCHEMA))
-            self.mdb.create__first_model()
+            self.mdb.create_first_model()
 
         for file in file_name_path:
             if os.path.isfile(file):
@@ -920,8 +920,57 @@ Version : {}
         pass
 
     # TODO
-    # def update_pk(self):
-    #     pass
+    def update_pk(self):
+        """
+        update the abscissa
+        :return:
+        """
+        print('update pk')
+        #TODO check profil and finir point
+        if self.mdb.check_fct(["update_abscisse_profil", "abscisse_profil"]):
+            sql = "SELECT public.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
+                  ";".format(self.mdb.SCHEMA,'profiles','branchs')
+            self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+        else:
+            self.mdb.add_fct_for_update_pk()
+            #self.run_query(sql)
+            print('pas de fct')
+            pass
+        #TODO change if check_fct if not add fct
+
+
+
+        # tab_line = ['profiles', 'branchs','links']
+        # tab_point = ["flood_marks",
+        #              "weirs",
+        #              "hydraulic_head",
+        #              "lateral_inflows",
+        #              "lateral_weirs",
+        #              "tracer_lateral_inflows",
+        #              "outputs",
+        #              ]
+        # list_linfo = {}
+        # for tab in tab_line :
+        #     sql = 'SELECT gid FROM {}.{}'.format(self.mdb.SCHEMA,tab)
+        #     rows = self.mdb.run_query(sql, fetch=True)
+        #     list_linfo[tab] = []
+        #     if rows:
+        #         list_linfo[tab] = [row[0] for row in rows]
+        # tab = 'profiles'
+        # l_prof = list_linfo[tab]
+        # for gid in l_prof :
+        #     sql = """
+        #           SELECT {0}.abscisse_profil({1})
+        #           """
+        #     rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, gid), fetch=True)
+        #     abs = None
+        #     if rows:
+        #         abs = rows[0][0]
+        #     sql = "UPDATE {0}.profiles SET abscissa = {1} " \
+        #           "WHERE gid = {2};".format(self.mdb.SCHEMA, abs, gid)
+        #     self.mdb.run_query(sql)
+
+        pass
     def download_bin(self):
         # url git
         url_base = 'https://raw.githubusercontent.com/Artelia/Exe_Mascaret/'

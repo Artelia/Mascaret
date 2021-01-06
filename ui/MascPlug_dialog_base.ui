@@ -206,6 +206,7 @@
     <addaction name="actionCross_section"/>
     <addaction name="actionStructures"/>
     <addaction name="actionStructures_weirs"/>
+    <addaction name="actionUpdate_all_PK"/>
     <addaction name="actionTest"/>
     <addaction name="separator"/>
     <addaction name="action_Extract_MNTfor_profile"/>
@@ -639,11 +640,6 @@
     <string>Basin results</string>
    </property>
   </action>
-  <action name="actionUpdate_pk">
-   <property name="text">
-    <string>Update pk</string>
-   </property>
-  </action>
   <action name="action_update_bin">
    <property name="text">
     <string>Update Executable</string>
@@ -709,6 +705,11 @@
    </property>
    <property name="text">
     <string>Import Results</string>
+   </property>
+  </action>
+  <action name="actionUpdate_all_PK">
+   <property name="text">
+    <string>Update all PK</string>
    </property>
   </action>
  </widget>

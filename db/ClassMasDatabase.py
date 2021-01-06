@@ -410,8 +410,8 @@ class ClassMasDatabase(object):
 
         try:
             if self.check_extension():
-                self.mgis.add_info(" Shema est {}".format(self.SCHEMA))
-                self.create__first_model()
+                self.mgis.add_info(" Shema is {}".format(self.SCHEMA))
+                self.create_first_model()
             else:
                 pass
             chaine = """CREATE SCHEMA {0} AUTHORIZATION postgres;"""
@@ -488,6 +488,17 @@ class ClassMasDatabase(object):
             chkt.all_version(self.list_tables(self.SCHEMA),
                              read_version(self.mgis.masplugPath))
 
+            # add fct
+            cl = Maso.class_fct_psql()
+            lfct = [cl.pg_abscisse_profil(),
+                    cl.pg_all_profil(),
+                    cl.pg_abscisse_point(),
+                    cl.pg_all_point(),
+                    ]
+            for sql in lfct:
+                self.run_query(sql)
+
+
             # visualization
             self.load_gis_layer()
 
@@ -496,6 +507,7 @@ class ClassMasDatabase(object):
         except Exception as e:
             self.mgis.add_info("Echec of creation model")
             self.mgis.add_info(str(e))
+
 
     def add_table_basins(self, dossier):
         """
@@ -654,7 +666,7 @@ class ClassMasDatabase(object):
     #     sql += "ALTER TABLE {0}.weirs ADD COLUMN method_mob text;"
     #     self.run_query(sql.format(self.SCHEMA))
 
-    def create__first_model(self):
+    def create_first_model(self):
         """ 
         To add variable in db for the first model creation
         and to add exemple
@@ -690,6 +702,34 @@ class ClassMasDatabase(object):
         except Exception as e:
             self.disconnect_pg()
             self.mgis.add_info("Echec of creation First Model")
+
+    def check_fct(self,fct_name):
+        cond = True
+        if isinstance(fct_name,list):
+
+            for name in fct_name:
+                sql = " select exists(select * from pg_proc where proname = '{}');".format(name)
+                rows = self.run_query(sql, fetch=True)[0][0]
+                if not rows :
+                    cond = False
+            return cond
+        else:
+            sql = " select exists(select * from pg_proc where proname = '{}');".format(fct_name)
+            rows = self.run_query(sql, fetch=True)[0][0]
+            if not rows:
+                cond = False
+            return cond
+
+    def add_fct_for_update_pk(self):
+        cl = Maso.class_fct_psql()
+        lfct = [cl.pg_abscisse_profil(),
+                cl.pg_all_profil()]
+        qry = ''
+        for sql in lfct:
+            qry += sql
+            qry += '\n'
+        self.run_query(qry)
+
 
     def check_first_model(self):
         """

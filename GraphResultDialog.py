@@ -754,6 +754,8 @@ class GraphResultDialog(QWidget):
         if rows:
             val = rows[0][0]
             print(val)
+            print("where ="+"active AND (abscissa = {0} OR name = '{1}')" \
+                                                  "".format(self.cur_pknum, val))
             self.obs = self.mgis.mdb.select('outputs',
                                             where="active AND (abscissa = {0} OR name = '{1}')" \
                                                   "".format(self.cur_pknum, val),
@@ -864,7 +866,7 @@ class GraphResultDialog(QWidget):
                        AND valeur > -999.9""".format(self.obs['code'][0], mini, maxi, gg)
 
             obs_graph = self.mdb.select("observations", condition, "date")
-
+            print(obs_graph)
             if not obs_graph:
                 self.graph_obj.clear_obs()
                 return
