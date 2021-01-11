@@ -97,8 +97,10 @@ class CheckTab():
                            '3.0.3' : {},
                            '3.0.4': {},
                            '3.0.5': {},
-                           '3.0.6': {'fct': [lambda: self.add_geom_ori(),
+                           '3.0.6': {'fct': [ #lambda: self.add_geom_ori(),
                                              lambda : self.add_trigger_update_active(),],
+                                     # 'add_tab': [{'tab': Maso.flood_marks_visu, 'overwrite': False},],
+
                                      'alt_tab': [{'tab': 'laws',
                                                   'sql': ["ALTER TABLE {0}.laws ADD COLUMN IF NOT "
                                                                          "EXISTS active boolean DEFAULT TRUE;"]},
@@ -601,17 +603,17 @@ class CheckTab():
         version = read_version(self.mgis.masplugPath)
         self.all_version(tabs, version)
 
-    def add_geom_ori(self):
-        sql = "SELECT Find_SRID('{}', 'flood_marks', 'geom');".format(self.mdb.SCHEMA)
-        sird = self.mdb.run_query(sql,fetch = True)[0][0]
-        sql = "ALTER TABLE {}.flood_marks ADD COLUMN " \
-              "IF NOT EXISTS geom_ori geometry(Point,{});\n".format(self.mdb.SCHEMA,sird)
-        sql += "UPDATE {0}.{1} SET geom_ori= geom;".format(self.mdb.SCHEMA,'flood_marks')
-        self.mdb.run_query(sql)
+    # def add_geom_ori(self):
+    #     sql = "SELECT Find_SRID('{}', 'flood_marks', 'geom');".format(self.mdb.SCHEMA)
+    #     sird = self.mdb.run_query(sql,fetch = True)[0][0]
+    #     sql = "ALTER TABLE {}.flood_marks ADD COLUMN " \
+    #           "IF NOT EXISTS geom_ori geometry(Point,{});\n".format(self.mdb.SCHEMA,sird)
+    #     sql += "UPDATE {0}.{1} SET geom_ori= geom;".format(self.mdb.SCHEMA,'flood_marks')
+    #     self.mdb.run_query(sql)
 
     def add_trigger_update_active(self):
-        qry = 'DROP TRIGGER IF EXISTS branch_chstate_active ON {}.branchs;\n'.format(self.mdb.SCHEMA)
-        qry += 'DROP TRIGGER IF EXISTS basin_chstate_active ON {}.basins;\n'.format(self.mdb.SCHEMA)
+        qry = 'DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs;\n'.format(self.mdb.SCHEMA)
+        qry += 'DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;\n'.format(self.mdb.SCHEMA)
         qry += '\n'
         cl = Maso.class_fct_psql()
         qry += cl.pg_chstate_branch()
@@ -631,12 +633,20 @@ class CheckTab():
         'EXECUTE PROCEDURE chstate_basin();\n'
         qry += '\n'
         self.mdb.run_query(qry)
-        # add fct for abscisse compute
-        # cl = Maso.class_fct_psql()
-        # lfct = [cl.pg_abscisse_profil()]
-        # for sql in lfct:
-        #     sql = sql.format(self.SCHEMA)
-        #     self.run_query(sql)
+
+        lst_fct = [
+        "public.update_abscisse_branch(_tbl_branchs regclass)",
+        "public.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)",
+        "public.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)",
+        "public.abscisse_branch(_tbl_branchs regclass, id_branch integer)",
+        "public.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)",
+        "public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)"]
+        qry = ''
+        for fct in lst_fct :
+            qry += "DROP FUNCTION IF EXISTS {};\n".format(fct)
+        self.mdb.run_query(qry)
+
+        self.mdb.add_fct_for_update_pk()
 
 
-    # DROP TRIGGER IF EXISTS branch_chstate_active ON ouvrage3.branchs
+

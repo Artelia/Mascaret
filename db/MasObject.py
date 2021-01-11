@@ -39,12 +39,13 @@ class MasObject(object):
         self.geom_type = None
         self.attrs = None
 
-    def pg_create_table(self, geo_ori=False):
+    # def pg_create_table(self, geo_ori=False):
+    def pg_create_table(self):
         schema_name = '{0}.{1}'.format(self.schema, self.name)
         attrs = self.pg_geom_attri()
-        if geo_ori:
-            attrs_ori = self.pg_geom_ori_attri()
-            attrs += [' '.join(attrs_ori)]
+        # if geo_ori:
+        #     attrs_ori = self.pg_geom_ori_attri()
+        #     attrs += [' '.join(attrs_ori)]
         attrs += [' '.join(field) for field in self.attrs]
 
         if self.overwrite is True:
@@ -582,6 +583,23 @@ class basins(MasObject):
         qry += self.pg_updat_actv()
         return qry
 
+# class flood_marks_visu(MasObject):
+#     def __init__(self):
+#         super(flood_marks_visu, self).__init__()
+#         self.order = 16
+#         self.geom_type = 'MultiLineString'
+#         self.attrs = [
+#             ('id_marks', 'integer'),
+#             ('CONSTRAINT flood_marks_visu_pkey', 'PRIMARY KEY(id_marks)')]
+#
+#     def pg_create_table(self):
+#         qry = super(self.__class__, self).pg_create_table()
+#         qry += '\n'
+#         qry += self.pg_create_index()
+#         qry += '\n'
+#         qry += self.pg_create_calcul_abscisse()
+#         return qry
+
 
 # *******************************************
 # ******************************************
@@ -900,7 +918,7 @@ AS $BODY$
         my_row  integer;     
         abs1 double precision;
      BEGIN
-       FOR my_row IN  EXECUTE 'SELECT gid FROM _tbl'
+       FOR my_row IN  EXECUTE 'SELECT gid FROM ' ||_tbl
        LOOP
           SELECT public.abscisse_profil( _tbl ,_tbl_branchs, my_row ) INTO abs1;
           EXECUTE 'UPDATE  '||_tbl || ' SET abscissa = $1 WHERE gid = $2' USING abs1, my_row;
@@ -970,6 +988,69 @@ $BODY$;"""
             RETURN  ;
          END;
     $BODY$;"""
+        return qry
+
+    def pg_abscisse_branch(self):
+        """
+          SQL function which computes the branch abscissa
+        :return:
+        """
+        qry="""
+CREATE OR REPLACE FUNCTION public.abscisse_branch(
+	_tbl_branchs regclass,
+	id_branch integer)
+    RETURNS TABLE (zoneabsstart float, zoneabsend float) 
+    LANGUAGE 'plpgsql'
+AS $BODY$
+
+    DECLARE
+        long1	float; 
+        long2	float; 
+        geom_b  geometry;
+        branch integer;
+        zonenum integer;      
+    BEGIN 
+        EXECUTE 'SELECT geom,zonenum,branch FROM  ' || _tbl_branchs || ' WHERE gid = $1' USING id_branch INTO geom_b, branch,zonenum;
+        EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || _tbl_branchs || ' WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING branch,zonenum INTO long1; 
+        long2 = (SELECT ST_Length(geom_b)); 
+        IF long1 IS NULL THEN 
+            long1 = 0; 
+        END IF; 
+        zoneabsstart := ROUND(long1::numeric,1);
+        zoneabsend := ROUND((long1+long2)::numeric,1);     
+      	RETURN NEXT ;
+    END;
+                  
+$BODY$;"""
+        return qry
+
+    def pg_all_branch(self):
+        """
+         SQL function which updates abscissa of all branchs of one table
+        :return:
+        """
+        qry = """
+CREATE OR REPLACE FUNCTION public.update_abscisse_branch(
+	_tbl_branchs regclass)
+    RETURNS void
+    LANGUAGE 'plpgsql'
+AS $BODY$
+
+     DECLARE
+        my_row  integer;     
+        abs1 float;
+        abs2 float;
+     BEGIN
+       FOR my_row IN  EXECUTE 'SELECT gid FROM '||_tbl_branchs
+       LOOP
+          SELECT * FROM public.abscisse_branch( _tbl_branchs, my_row ) into abs1,abs2;        
+          EXECUTE 'UPDATE  '||_tbl_branchs || ' SET zoneabsstart = $1, zoneabsend = $2 WHERE gid = $2' 
+          USING  abs1, abs2,my_row;
+        END LOOP;
+        RETURN  ;
+     END;
+
+$BODY$;"""
         return qry
 
 

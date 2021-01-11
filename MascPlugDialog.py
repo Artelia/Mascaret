@@ -919,58 +919,29 @@ Version : {}
         self.chkt.debug_update_vers_meta()
         pass
 
-    # TODO
     def update_pk(self):
         """
         update the abscissa
         :return:
         """
         print('update pk')
-        #TODO check profil and finir point
-        if self.mdb.check_fct(["update_abscisse_profil", "abscisse_profil"]):
-            sql = "SELECT public.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
-                  ";".format(self.mdb.SCHEMA,'profiles','branchs')
-            self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-        else:
+        if not self.mdb.check_fct(["update_abscisse_profil", "abscisse_profil",
+                               "update_abscisse_point", "abscisse_point",]):
             self.mdb.add_fct_for_update_pk()
-            #self.run_query(sql)
-            print('pas de fct')
-            pass
-        #TODO change if check_fct if not add fct
 
+        sql = "SELECT public.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
+              ";".format(self.mdb.SCHEMA, 'profiles', 'branchs')
+        self.mdb.run_query(sql)
 
+        sql = ''
+        lst_tables = ['flood_marks', 'weirs', 'hydraulic_head', 'lateral_inflows',
+                      'lateral_weirs', 'tracer_lateral_inflows', 'outputs', 'links']
+        for table in lst_tables:
+            sql += "SELECT public.update_abscisse_point('{0}.{1}','{0}.{2}')" \
+                   ";\n".format(self.mdb.SCHEMA, table, 'branchs')
 
-        # tab_line = ['profiles', 'branchs','links']
-        # tab_point = ["flood_marks",
-        #              "weirs",
-        #              "hydraulic_head",
-        #              "lateral_inflows",
-        #              "lateral_weirs",
-        #              "tracer_lateral_inflows",
-        #              "outputs",
-        #              ]
-        # list_linfo = {}
-        # for tab in tab_line :
-        #     sql = 'SELECT gid FROM {}.{}'.format(self.mdb.SCHEMA,tab)
-        #     rows = self.mdb.run_query(sql, fetch=True)
-        #     list_linfo[tab] = []
-        #     if rows:
-        #         list_linfo[tab] = [row[0] for row in rows]
-        # tab = 'profiles'
-        # l_prof = list_linfo[tab]
-        # for gid in l_prof :
-        #     sql = """
-        #           SELECT {0}.abscisse_profil({1})
-        #           """
-        #     rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, gid), fetch=True)
-        #     abs = None
-        #     if rows:
-        #         abs = rows[0][0]
-        #     sql = "UPDATE {0}.profiles SET abscissa = {1} " \
-        #           "WHERE gid = {2};".format(self.mdb.SCHEMA, abs, gid)
-        #     self.mdb.run_query(sql)
+        self.mdb.run_query(sql)
 
-        pass
     def download_bin(self):
         # url git
         url_base = 'https://raw.githubusercontent.com/Artelia/Exe_Mascaret/'

@@ -639,32 +639,6 @@ class ClassMasDatabase(object):
         sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer DEFAULT 0;"
         self.run_query(sql.format(self.SCHEMA))
 
-    # def add_table_struct_temporal(self, dossier):
-    #     tables = [
-    #         Maso.struct_fg, Maso.struct_fg_val,
-    #         Maso.weirs_mob_val, Maso.results_int,
-    #         Maso.results_date, Maso.results_float
-    #     ]
-    #     tables.sort(key=lambda x: x().order)
-    #
-    #     for masobj_class in tables:
-    #         try:
-    #             masobj_class.overwrite = True
-    #             obj = self.process_masobject(masobj_class, 'pg_create_table')
-    #             if self.mgis.DEBUG:
-    #                 self.mgis.add_info('  {0} OK'.format(obj.name))
-    #         except:
-    #             self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
-    #
-    #     list_col = self.list_columns('weirs')
-    #     sql = ''
-    #     if 'active_mob' in list_col:
-    #         sql += "ALTER TABLE {0}.weirs DROP COLUMN IF EXISTS active_mob;\n"
-    #         sql += "ALTER TABLE {0}.weirs DROP COLUMN IF EXISTS method_mob;\n"
-    #
-    #     sql += "ALTER TABLE {0}.weirs ADD COLUMN active_mob boolean;\n"
-    #     sql += "ALTER TABLE {0}.weirs ADD COLUMN method_mob text;"
-    #     self.run_query(sql.format(self.SCHEMA))
 
     def create_first_model(self):
         """ 
@@ -721,14 +695,16 @@ class ClassMasDatabase(object):
             return cond
 
     def add_fct_for_update_pk(self):
+        # add fct for abscisse compute
         cl = Maso.class_fct_psql()
-        lfct = [cl.pg_abscisse_profil(),
-                cl.pg_all_profil()]
+        lfct = [cl.pg_abscisse_profil(),cl.pg_all_profil(),
+                cl.pg_abscisse_point(), cl.pg_all_point()]
         qry = ''
         for sql in lfct:
             qry += sql
             qry += '\n'
         self.run_query(qry)
+
 
 
     def check_first_model(self):
@@ -816,8 +792,12 @@ class ClassMasDatabase(object):
         self.group = root.findGroup("Mas_{}".format(self.SCHEMA))
         if not self.group:
             self.group = root.addGroup("Mas_{}".format(self.SCHEMA))
-
+        self.grp_visu = self.group.findGroup("Visualisation")
+        if not self.grp_visu:
+            self.grp_visu = self.group.addGroup("Visualisation")
+    
         tables = list(self.register.items())
+        print(tables)
 
         # tables.sort(key=lambda x: x[1].order, reverse=True)
         tables.sort(key=lambda x: x[1].order)
@@ -832,6 +812,7 @@ class ClassMasDatabase(object):
                     pass
             except:
                 self.mgis.add_info('View failure!<br>{0}'.format(obj))
+
         self.mgis.iface.mapCanvas().refresh()
 
     #
