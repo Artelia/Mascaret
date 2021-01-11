@@ -154,6 +154,8 @@ class GraphCommon(QWidget):
 
         self.maj_limites()
 
+        print("eee")
+
     def maj_limites(self):
         no_data = True
         mini_x = 999999.
