@@ -223,7 +223,7 @@ class flood_marks(MasObject):
             ('CONSTRAINT flood_marks_pkey', 'PRIMARY KEY(gid)')]
 
     def pg_create_table(self):
-        qry = super(self.__class__, self).pg_create_table(geo_ori=True)
+        qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += self.pg_create_index()
         qry += '\n'
@@ -583,22 +583,22 @@ class basins(MasObject):
         qry += self.pg_updat_actv()
         return qry
 
-# class flood_marks_visu(MasObject):
-#     def __init__(self):
-#         super(flood_marks_visu, self).__init__()
-#         self.order = 16
-#         self.geom_type = 'MultiLineString'
-#         self.attrs = [
-#             ('id_marks', 'integer'),
-#             ('CONSTRAINT flood_marks_visu_pkey', 'PRIMARY KEY(id_marks)')]
-#
-#     def pg_create_table(self):
-#         qry = super(self.__class__, self).pg_create_table()
-#         qry += '\n'
-#         qry += self.pg_create_index()
-#         qry += '\n'
-#         qry += self.pg_create_calcul_abscisse()
-#         return qry
+class visu_flood_marks(MasObject):
+    def __init__(self):
+        super(visu_flood_marks, self).__init__()
+        self.order = 16
+        self.geom_type = 'LineString'
+        self.attrs = [
+            ('gid', 'serial NOT NULL'),
+            ('id_marks', 'integer'),
+            ('CONSTRAINT visu_flood_marks_pkey', 'PRIMARY KEY(gid,id_marks)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        qry += '\n'
+        return qry
 
 
 # *******************************************

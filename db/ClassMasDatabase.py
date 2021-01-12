@@ -38,7 +38,6 @@ try:  # qgis2
     VERSION_QGIS = 2
 except:  # qgis3
     from qgis.core import QgsDataSourceUri
-
     VERSION_QGIS = 3
 
 from qgis.gui import QgsMessageBar
@@ -368,6 +367,7 @@ class ClassMasDatabase(object):
                 except:  # qgis3
                     QgsProject.instance().addMapLayer(vlayer, False)
                 self.group.addLayer(vlayer)
+
             else:
                 try:  # qgis2
                     QgsMapLayerRegistry.instance().addMapLayer(vlayer)
@@ -425,7 +425,7 @@ class ClassMasDatabase(object):
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
                       Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
                       Maso.observations, Maso.parametres, Maso.resultats, Maso.runs, Maso.laws,
-                      Maso.admin_tab,
+                      Maso.admin_tab,Maso.visu_flood_marks,
                       # bassin
                       Maso.basins, Maso.links, Maso.resultats_basin, Maso.resultats_links,
                       # qualite d'eau
@@ -792,12 +792,9 @@ class ClassMasDatabase(object):
         self.group = root.findGroup("Mas_{}".format(self.SCHEMA))
         if not self.group:
             self.group = root.addGroup("Mas_{}".format(self.SCHEMA))
-        self.grp_visu = self.group.findGroup("Visualisation")
-        if not self.grp_visu:
-            self.grp_visu = self.group.addGroup("Visualisation")
-    
+        lst_only_visu = ['visu_flood_marks']
+        dict_only_visu = {}
         tables = list(self.register.items())
-        print(tables)
 
         # tables.sort(key=lambda x: x[1].order, reverse=True)
         tables.sort(key=lambda x: x[1].order)
@@ -805,13 +802,33 @@ class ClassMasDatabase(object):
             try:
                 # TODO modif if new geometric table
                 if obj.order < 17:
-                    self.add_to_view(obj)
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info(' View {0} : OK'.format(obj.name))
+                    if name in lst_only_visu:
+                        dict_only_visu[name] = obj
+                    else:
+                        self.add_to_view(obj)
+
+                        if self.mgis.DEBUG:
+                            self.mgis.add_info(' View {0} : OK'.format(obj.name))
                 else:
                     pass
-            except:
+            except Exception as err:
                 self.mgis.add_info('View failure!<br>{0}'.format(obj))
+                self.mgis.add_info('Error : '.format(err))
+
+        # add visualistation layer
+        group_main =self.group
+        self.group = group_main.findGroup("Visualisation".format(self.SCHEMA))
+        if not self.group:
+            self.group = group_main.addGroup("Visualisation".format(self.SCHEMA))
+
+        for name, obj in dict_only_visu.items():
+            try :
+                self.add_to_view(obj)
+                if self.mgis.DEBUG:
+                    self.mgis.add_info(' View {0} : OK'.format(obj.name))
+            except Exception as err:
+                self.mgis.add_info('View failure!<br>{0}'.format(obj))
+                self.mgis.add_info('Error : '.format(err))
 
         self.mgis.iface.mapCanvas().refresh()
 

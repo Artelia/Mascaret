@@ -144,8 +144,10 @@ class MascPlugDialog(QMainWindow):
         self.read_settings()
 
         # set QGIS projection CRS as a default for MasPlug
+        print('rrr',self.iface.mapCanvas().mapSettings().destinationCrs())
         self.ui.crsWidget.setCrs(self.iface.mapCanvas().mapSettings().destinationCrs())
         self.update_default_crs()
+
 
         # # disable some actions until a connection to river database is established
         if not self.mdb:
@@ -400,6 +402,10 @@ class MascPlugDialog(QMainWindow):
                                              liste, 0, False)
         if ok:
             self.mdb.SCHEMA = model
+            sql = """SELECT Find_SRID('{}', 'extremities','geom');"""
+            res = self.mdb.run_query(sql.format(model), fetch=True)
+            if res :
+                self.mdb.SRID = int(res[0][0])
             try:
                 self.chkt.update_adim()
             except Exception as e:
@@ -407,6 +413,10 @@ class MascPlugDialog(QMainWindow):
                 print(e)
 
             self.mdb.load_model()
+            print(self.iface.mapCanvas().mapSettings().destinationCrs())
+            self.ui.crsWidget.setCrs(QgsCoordinateReferenceSystem(self.mdb.SRID))
+            print('jjjj',int(self.crs.postgisSrid()),self.mdb.SRID)
+
             self.mdb.last_schema = self.mdb.SCHEMA
             self.enable_all_actions()
 
@@ -703,6 +713,7 @@ class MascPlugDialog(QMainWindow):
                         self.add_info('Import failed.')
             else:
                 self.add_info('File not found.')
+
         return
 
     def check_newname(self, name, liste):
@@ -916,7 +927,7 @@ Version : {}
         return txt
 
     def fct_test(self):
-        self.chkt.debug_update_vers_meta()
+        self.chkt.debug_update_vers_meta(version='3.0.5')
         pass
 
     def update_pk(self):

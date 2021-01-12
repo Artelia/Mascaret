@@ -99,7 +99,7 @@ class CheckTab():
                            '3.0.5': {},
                            '3.0.6': {'fct': [ #lambda: self.add_geom_ori(),
                                              lambda : self.add_trigger_update_active(),],
-                                     # 'add_tab': [{'tab': Maso.flood_marks_visu, 'overwrite': False},],
+                                     'add_tab': [{'tab': Maso.visu_flood_marks, 'overwrite': False},],
 
                                      'alt_tab': [{'tab': 'laws',
                                                   'sql': ["ALTER TABLE {0}.laws ADD COLUMN IF NOT "
@@ -598,9 +598,10 @@ class CheckTab():
             self.mgis.add_info("Error fill_struct: {}".format(str(e)))
             return False
 
-    def debug_update_vers_meta(self):
+    def debug_update_vers_meta(self,version=None):
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
-        version = read_version(self.mgis.masplugPath)
+        if not version :
+            version = read_version(self.mgis.masplugPath)
         self.all_version(tabs, version)
 
     # def add_geom_ori(self):
