@@ -644,6 +644,12 @@ class CheckTab():
         'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n'\
         'EXECUTE PROCEDURE chstate_basin();\n'
         qry += '\n'
+        cl = Maso.flood_marks()
+        cl.schema = self.mdb.SCHEMA
+        qry += cl.pg_clear_tab()
+        qry += '\n'
+        qry += cl.pg_calcul_abscisse_flood()
+        qry += '\n'
         self.mdb.run_query(qry)
 
         lst_fct = [

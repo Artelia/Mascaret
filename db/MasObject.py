@@ -624,7 +624,6 @@ class visu_flood_marks(MasObject):
         qry += '\n'
         return qry
 
-
 # *******************************************
 # ******************************************
 class resultats(MasObject):
@@ -1136,6 +1135,7 @@ $BODY$;"""
          
                     EXECUTE 'SELECT ST_UNION(geom) FROM  ' || TG_TABLE_SCHEMA || '.branchs WHERE (gid = $1)' USING NEW.branchnum INTO g;
                     geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
+                    NEW.geom = geom_final_p;
                     SELECT ST_SRID(g) INTO srid;                     
                                        
 					EXECUTE 'SELECT ST_AsText( ST_MakeLine($1, $2))' USING geom_final_p,NEW.geom INTO new_line;
@@ -1155,7 +1155,7 @@ $BODY$;"""
                     END IF;
 
                         
-                    IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(geom_final_p,OLD.geom) THEN
+                    IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                        EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2))' USING b,z INTO long1;
                        f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
                        geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
@@ -1175,10 +1175,28 @@ $BODY$;"""
                        END IF;
                         
                        NEW.abscissa = ROUND((long1+long2)::numeric,2);
-
+                    ELSE
+                        IF NOT OLD.branchnum = NEW.branchnum THEN
+                            NEW.branchnum= b ;
+                        END IF;
+                         
+                        IF NOT  OLD.abscissa=  NEW.abscissa THEN
+                                
+                           
+                            geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
+                            
+                            SELECT ST_SRID(g) INTO srid;                     
+                            EXECUTE 'SELECT ST_AsText( ST_MakeLine($1, $2))' USING geom_final_p,NEW.geom INTO new_line;
+                            EXECUTE 'SELECT EXISTS(SELECT 1 from ' || TG_TABLE_SCHEMA || '.visu_flood_marks where  id_marks =$1 )' USING NEW.gid into test ;
+                            IF (test) THEN
+                                EXECUTE 'UPDATE  ' || TG_TABLE_SCHEMA || '.visu_flood_marks  SET geom=ST_SetSRID($1,$2) WHERE id_marks = $3' USING new_line, srid,NEW.gid;
+                            ELSE
+                                EXECUTE 'INSERT INTO ' || TG_TABLE_SCHEMA || '.visu_flood_marks (geom,gid, id_marks) VALUES( ST_SetSRID($1,$2),DEFAULT,$3)' USING new_line, srid,NEW.gid ;
+                            END IF;
+                        END IF;
+                        
                     END IF;
 
-                    
                 END IF;                  
                         
                RETURN NEW;
