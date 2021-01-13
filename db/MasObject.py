@@ -1130,7 +1130,7 @@ $BODY$;"""
                 
              
                 BEGIN 
-                raise Notice ' TG_OP= %',TG_OP;
+              
                 IF NEW.geom IS NULL AND NEW.abscissa IS NOT NULL AND NEW.branchnum IS NOT NULL THEN
          
                     EXECUTE 'SELECT ST_UNION(geom) FROM  ' || TG_TABLE_SCHEMA || '.branchs WHERE (gid = $1)' USING NEW.branchnum INTO g;
@@ -1156,11 +1156,15 @@ $BODY$;"""
 
                         
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
+                        /* projection compute*/
                        EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2))' USING b,z INTO long1;
                        f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
                        geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
+                        /* get srid value*/
                        SELECT ST_SRID(g) INTO srid; 
+                        /* create line*/
                        EXECUTE 'SELECT ST_AsText( ST_MakeLine($1, $2))' USING geom_final_p,NEW.geom INTO new_line;
+                        /* change visu_flood_marks*/
                        EXECUTE 'SELECT EXISTS(SELECT 1 from ' || TG_TABLE_SCHEMA || '.visu_flood_marks where  id_marks =$1 )' USING NEW.gid into test ;
                        IF  test THEN
                            EXECUTE 'UPDATE  ' || TG_TABLE_SCHEMA || '.visu_flood_marks  SET geom=ST_SetSRID($1,$2) WHERE id_marks = $3' USING new_line, srid,NEW.gid ;

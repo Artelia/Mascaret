@@ -412,7 +412,9 @@ class MascPlugDialog(QMainWindow):
             #     print(e)
 
             self.mdb.load_model()
-            self.ui.crsWidget.setCrs(QgsCoordinateReferenceSystem(self.mdb.SRID))
+            crs = QgsCoordinateReferenceSystem("POSTGIS:{}".format(self.mdb.SRID))
+            self.ui.crsWidget.setCrs( crs)
+
 
             self.mdb.last_schema = self.mdb.SCHEMA
             self.enable_all_actions()
