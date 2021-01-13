@@ -98,7 +98,7 @@ class CheckTab():
                            '3.0.4': {},
                            '3.0.5': {},
                            '3.0.6': {'fct': [ #lambda: self.add_geom_ori(),
-                                             lambda : self.add_trigger_update_active(),],
+                                             lambda : self.add_trigger_update_306(),],
                                      'add_tab': [{'tab': Maso.visu_flood_marks, 'overwrite': False},],
 
                                      'alt_tab': [{'tab': 'laws',
@@ -612,9 +612,17 @@ class CheckTab():
     #     sql += "UPDATE {0}.{1} SET geom_ori= geom;".format(self.mdb.SCHEMA,'flood_marks')
     #     self.mdb.run_query(sql)
 
-    def add_trigger_update_active(self):
+    def add_trigger_update_306(self):
+        """
+        add trigger and fct for 3.0.6 version
+        trigger :
+        'pg_delete_visu_flood_marks',
+        'pg_create_calcul_abscisse_point_flood'
+        :return:
+        """
         qry = 'DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs;\n'.format(self.mdb.SCHEMA)
         qry += 'DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;\n'.format(self.mdb.SCHEMA)
+        qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
         qry += '\n'
         cl = Maso.class_fct_psql()
         qry += cl.pg_chstate_branch()
@@ -641,13 +649,18 @@ class CheckTab():
         "public.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)",
         "public.abscisse_branch(_tbl_branchs regclass, id_branch integer)",
         "public.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)",
-        "public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)"]
+        "public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)",
+        "public.calcul_abscisse_point_flood()",
+        "public.delete_point_flood()"
+        ]
         qry = ''
         for fct in lst_fct :
             qry += "DROP FUNCTION IF EXISTS {};\n".format(fct)
         self.mdb.run_query(qry)
 
         self.mdb.add_fct_for_update_pk()
+
+        self.mdb.add_fct_for_visu()
 
 
 

@@ -658,6 +658,9 @@ class ClassMasDatabase(object):
                         'pg_create_calcul_abscisse_branche',
                         'pg_chstate_branch',
                         'pg_chstate_basin',
+                        # visu
+                        'pg_delete_visu_flood_marks',
+                        'pg_create_calcul_abscisse_point_flood',
                         ]
             for fct in listefct:
                 try:
@@ -695,16 +698,27 @@ class ClassMasDatabase(object):
             return cond
 
     def add_fct_for_update_pk(self):
-        # add fct for abscisse compute
+        """add fct psql to compute abscissa"""
         cl = Maso.class_fct_psql()
         lfct = [cl.pg_abscisse_profil(),cl.pg_all_profil(),
-                cl.pg_abscisse_point(), cl.pg_all_point()]
+                cl.pg_abscisse_point(), cl.pg_all_point(),]
         qry = ''
         for sql in lfct:
             qry += sql
             qry += '\n'
         self.run_query(qry)
 
+    def add_fct_for_visu(self):
+        """ add fct psql for the visualisation"""
+        cl = Maso.class_fct_psql()
+        lfct = [cl.pg_delete_visu_flood_marks(),
+                cl.pg_create_calcul_abscisse_point_flood() ]
+        qry = ''
+        for sql in lfct:
+            qry += sql
+            qry += '\n'
+        print(qry)
+        self.run_query(qry)
 
 
     def check_first_model(self):

@@ -144,7 +144,6 @@ class MascPlugDialog(QMainWindow):
         self.read_settings()
 
         # set QGIS projection CRS as a default for MasPlug
-        print('rrr',self.iface.mapCanvas().mapSettings().destinationCrs())
         self.ui.crsWidget.setCrs(self.iface.mapCanvas().mapSettings().destinationCrs())
         self.update_default_crs()
 
@@ -413,9 +412,7 @@ class MascPlugDialog(QMainWindow):
                 print(e)
 
             self.mdb.load_model()
-            print(self.iface.mapCanvas().mapSettings().destinationCrs())
             self.ui.crsWidget.setCrs(QgsCoordinateReferenceSystem(self.mdb.SRID))
-            print('jjjj',int(self.crs.postgisSrid()),self.mdb.SRID)
 
             self.mdb.last_schema = self.mdb.SCHEMA
             self.enable_all_actions()

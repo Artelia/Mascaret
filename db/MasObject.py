@@ -222,12 +222,35 @@ class flood_marks(MasObject):
             ('township', 'character varying(30)'),
             ('CONSTRAINT flood_marks_pkey', 'PRIMARY KEY(gid)')]
 
+    def pg_clear_tab(self):
+        """ create trigger"""
+        qry = """
+            CREATE TRIGGER flood_marks_delete_point_flood
+            AFTER DELETE
+            ON {}.{}
+            FOR EACH ROW
+            EXECUTE PROCEDURE public.delete_point_flood();""".format(self.schema,self.name)
+        return qry
+
+    def pg_calcul_abscisse_flood(self):
+        """ create trigger"""
+        qry = """
+        CREATE TRIGGER {1}_calcul_abscisse_flood
+        BEFORE INSERT OR UPDATE 
+        ON {0}.{1}
+        FOR EACH ROW
+        EXECUTE PROCEDURE public.calcul_abscisse_point_flood();
+        """.format(self.schema,self.name)
+        return qry
+
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += self.pg_create_index()
         qry += '\n'
-        qry += self.pg_create_calcul_abscisse()
+        qry += self.pg_calcul_abscisse_flood()
+        qry += '\n'
+        qry += self.pg_clear_tab()
         return qry
 
 
@@ -592,6 +615,7 @@ class visu_flood_marks(MasObject):
             ('gid', 'serial NOT NULL'),
             ('id_marks', 'integer'),
             ('CONSTRAINT visu_flood_marks_pkey', 'PRIMARY KEY(gid,id_marks)')]
+
 
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
@@ -1053,6 +1077,116 @@ AS $BODY$
 $BODY$;"""
         return qry
 
+    def pg_delete_visu_flood_marks(self):
+        """
+         SQL function which delete visu_flood_marks
+        :return:
+        """
+        qry = """
+        
+        CREATE OR REPLACE FUNCTION public.delete_point_flood()
+            RETURNS trigger
+            LANGUAGE 'plpgsql'
+            COST 100.0
+        
+        AS $BODY$
+         DECLARE 
+         test boolean;
+         BEGIN 
+        
+          EXECUTE 'SELECT EXISTS(SELECT 1 from ' || TG_TABLE_SCHEMA || '.visu_flood_marks where  id_marks =$1 )' USING OLD.gid into test ;     			
+          IF (test) THEN
+            EXECUTE 'DELETE FROM ' || TG_TABLE_SCHEMA || '.visu_flood_marks WHERE id_marks = $1' USING OLD.gid;
+          END IF;
+          RETURN NEW;
+        
+        
+         END
+        $BODY$;
+        """
+        return qry
+
+    def pg_create_calcul_abscisse_point_flood(self):
+        qry = """
+        CREATE OR REPLACE FUNCTION public.calcul_abscisse_point_flood()
+        RETURNS trigger
+        
+        LANGUAGE 'plpgsql'
+        COST 100.0
+        
+        AS $BODY$
+ 
+            DECLARE  
+                long1	double precision; 
+                long2	double precision;  
+                g	geometry; 
+                b	integer; 
+                z	integer; 
+                d	double precision; 
+                f	double precision;
+                test	boolean;       
+                new_line  geometry;
+                geom_final_p geometry;
+                srid integer;
+                
+             
+                BEGIN 
+                raise Notice ' TG_OP= %',TG_OP;
+                IF NEW.geom IS NULL AND NEW.abscissa IS NOT NULL AND NEW.branchnum IS NOT NULL THEN
+         
+                    EXECUTE 'SELECT ST_UNION(geom) FROM  ' || TG_TABLE_SCHEMA || '.branchs WHERE (gid = $1)' USING NEW.branchnum INTO g;
+                    geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
+                    SELECT ST_SRID(g) INTO srid;                     
+                                       
+					EXECUTE 'SELECT ST_AsText( ST_MakeLine($1, $2))' USING geom_final_p,NEW.geom INTO new_line;
+                    EXECUTE 'SELECT EXISTS(SELECT 1 from ' || TG_TABLE_SCHEMA || '.visu_flood_marks where  id_marks =$1 )' USING NEW.gid into test ;
+          			
+  				    IF (test) THEN
+                   		EXECUTE 'UPDATE  ' || TG_TABLE_SCHEMA || '.visu_flood_marks  SET geom=ST_SetSRID($1,$2) WHERE id_marks = $3' USING new_line, srid,NEW.gid;
+                    ELSE
+                    	EXECUTE 'INSERT INTO ' || TG_TABLE_SCHEMA || '.visu_flood_marks (geom,gid, id_marks) VALUES( ST_SetSRID($1,$2),DEFAULT,$3)' USING new_line, srid,NEW.gid ;
+        			END IF;
+                   	
+                ELSE
+                    EXECUTE 'SELECT branch, zonenum, geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 4 LIMIT 1' USING NEW.geom INTO b,z,g,d  ;
+
+                    IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(geom_final_p,OLD.geom) THEN
+                        NEW.branchnum= b ;
+                    END IF;
+
+                        
+                    IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(geom_final_p,OLD.geom) THEN
+                       EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2))' USING b,z INTO long1;
+                       f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
+                       geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
+                       SELECT ST_SRID(g) INTO srid; 
+                       EXECUTE 'SELECT ST_AsText( ST_MakeLine($1, $2))' USING geom_final_p,NEW.geom INTO new_line;
+                       EXECUTE 'SELECT EXISTS(SELECT 1 from ' || TG_TABLE_SCHEMA || '.visu_flood_marks where  id_marks =$1 )' USING NEW.gid into test ;
+                       IF  test THEN
+                           EXECUTE 'UPDATE  ' || TG_TABLE_SCHEMA || '.visu_flood_marks  SET geom=ST_SetSRID($1,$2) WHERE id_marks = $3' USING new_line, srid,NEW.gid ;
+                       ELSE
+                    	   EXECUTE 'INSERT INTO ' || TG_TABLE_SCHEMA || '.visu_flood_marks (geom,gid, id_marks) VALUES( ST_SetSRID($1,$2),DEFAULT,$3)' USING new_line, srid,NEW.gid ;
+        			   END IF;
+                       
+                       long2 = (SELECT (ST_Length(g)*f));
+                        
+                       IF long1 IS NULL THEN
+                           long1 = 0;
+                       END IF;
+                        
+                       NEW.abscissa = ROUND((long1+long2)::numeric,2);
+
+                    END IF;
+
+                    
+                END IF;                  
+                        
+               RETURN NEW;
+
+            END;   
+        $BODY$;
+              """
+        return qry
 
 # *****************************************
 class laws_wq(MasObject):
