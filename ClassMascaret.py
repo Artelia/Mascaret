@@ -2313,7 +2313,7 @@ class ClassMascaret:
                                                    idw), order='name_var, id_order')
                         if len(rows['id_weirs']) > 0:
                             nbt = max(rows['id_order']) + 1
-                            if nbt < 51:
+                            if nbt < 501:
                                 fich.write("{} {}\n".format(info['name'][i], nbt))
                                 fich.write("methode 1\n")
                                 fich.write("T(s)\n")
@@ -2326,7 +2326,7 @@ class ClassMascaret:
                                 fich.write("\n")
                             else:
                                 self.mgis.add_info(
-                                    "Warning: Value number is superior to 50 for {} weirs.\n"
+                                    "Warning: Value number is superior to 500 for {} weirs.\n"
                                     "The weir is ignored.".format(info['name'][i]))
                         else:
                             self.mgis.add_info("Warning: there aren't value in {} weirs".format(info['name'][i]))

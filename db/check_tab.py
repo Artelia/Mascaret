@@ -623,6 +623,9 @@ class CheckTab():
         qry = 'DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs;\n'.format(self.mdb.SCHEMA)
         qry += 'DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;\n'.format(self.mdb.SCHEMA)
         qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
+        qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse ' \
+               'ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
+        qry += 'DROP TRIGGER IF EXISTS flood_marks_delete_point_flood ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
         qry += '\n'
         cl = Maso.class_fct_psql()
         qry += cl.pg_chstate_branch()
@@ -650,8 +653,6 @@ class CheckTab():
         "public.abscisse_branch(_tbl_branchs regclass, id_branch integer)",
         "public.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)",
         "public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)",
-        "public.calcul_abscisse_point_flood()",
-        "public.delete_point_flood()"
         ]
         qry = ''
         for fct in lst_fct :
