@@ -40,6 +40,7 @@ from .Structure.MobilSingDialog import ClassMobilSingDialog
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
+from .WaterQuality.EventObsDialog import ClassEventObsDialog
 from .db.ClassMasDatabase import ClassMasDatabase
 from .db.check_tab import CheckTab
 from .ui.custom_control import ClassWarningBox
@@ -174,6 +175,7 @@ class MascPlugDialog(QMainWindow):
 
         self.ui.actionParameters_Water_Quality.triggered.connect(self.fct_parameters_wq)
         self.ui.actionTracer_Laws.triggered.connect(self.fct_tracer_laws)
+        self.ui.actionObservations.triggered.connect(self.fct_event_obs)
         self.ui.actionAbout.triggered.connect(self.about)
         self.ui.actionWebsite.triggered.connect(self.website)
         self.ui.actionWebsite.setEnabled(False)
@@ -822,8 +824,11 @@ Version : {}
         dlg.exec_()
 
     def fct_parameters_wq(self):
-
         dlg = ClassWaterQualityDialog(self)
+        dlg.exec_()
+
+    def fct_event_obs(self):
+        dlg = ClassEventObsDialog(self)
         dlg.exec_()
 
     def fct_export_tracer_files(self):

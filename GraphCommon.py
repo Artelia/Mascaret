@@ -174,8 +174,12 @@ class GraphCommon(QWidget):
                     maxi_z = max(maxi_z, max(lz) + 1)
 
         if no_data:
-            self.axes.set_xlim(0., 1.)
-            self.axes.set_ylim(0., 1.)
+            if self.unit != 'date':
+                self.axes.set_xlim(0., 1.)
+                self.axes.set_ylim(0., 1.)
+            else:
+                self.axes.set_xlim(1., 2.)
+                self.axes.set_ylim(1., 2.)
         else:
             self.axes.set_xlim(mini_x, maxi_x)
             self.axes.set_ylim(mini_z, maxi_z)
