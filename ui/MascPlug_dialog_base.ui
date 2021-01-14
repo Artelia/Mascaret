@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>859</width>
+    <width>902</width>
     <height>738</height>
    </rect>
   </property>
@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -176,7 +176,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>859</width>
+     <width>902</width>
      <height>21</height>
     </rect>
    </property>
@@ -360,6 +360,7 @@
    </attribute>
    <addaction name="actionParameters_Water_Quality"/>
    <addaction name="actionTracer_Laws"/>
+   <addaction name="actionObservations"/>
   </widget>
   <action name="actionWebsite">
    <property name="icon">
@@ -710,6 +711,14 @@
   <action name="actionUpdate_all_PK">
    <property name="text">
     <string>Update all PK</string>
+   </property>
+  </action>
+  <action name="actionObservations">
+   <property name="text">
+    <string>Obs</string>
+   </property>
+   <property name="toolTip">
+    <string>Observations</string>
    </property>
   </action>
  </widget>
