@@ -156,26 +156,12 @@ class events(MasObject):
                       ('CONSTRAINT cle_events', 'PRIMARY KEY (name)')]
 
 
-# *****************************************
-class observations(MasObject):
-    def __init__(self):
-        super(observations, self).__init__()
-        self.order = 2
-        self.geom_type = None
-        self.attrs = [('id', 'serial NOT NULL'),
-                      ('code', 'character(10)'),
-                      ('type', 'character(1)'),
-                      ('comment', 'character varying(50)'),
-                      ('valeur', 'float'),
-                      ('date', 'timestamp without time zone'),
-                      ('CONSTRAINT cle_obs ', 'PRIMARY KEY (id)')]
-
 
 # *****************************************
 class extremities(MasObject):
     def __init__(self):
         super(extremities, self).__init__()
-        self.order = 3
+        self.order = 2
         self.geom_type = 'Point'
         self.attrs = [('gid serial', 'NOT NULL'),
                       ('name character', 'varying(30)'),
@@ -204,7 +190,7 @@ class extremities(MasObject):
 class flood_marks(MasObject):
     def __init__(self):
         super(flood_marks, self).__init__()
-        self.order = 4
+        self.order = 3
         self.geom_type = 'Point'
         self.attrs = [
             ('gid', 'serial NOT NULL'),
@@ -258,7 +244,7 @@ class flood_marks(MasObject):
 class weirs(MasObject):
     def __init__(self):
         super(weirs, self).__init__()
-        self.order = 5
+        self.order = 4
         self.geom_type = 'Point'
         self.attrs = [
             ('gid', ' serial NOT NULL'),
@@ -291,7 +277,7 @@ class weirs(MasObject):
 class hydraulic_head(MasObject):
     def __init__(self):
         super(hydraulic_head, self).__init__()
-        self.order = 6
+        self.order = 5
         self.geom_type = 'Point'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -314,7 +300,7 @@ class hydraulic_head(MasObject):
 class lateral_inflows(MasObject):
     def __init__(self):
         super(lateral_inflows, self).__init__()
-        self.order = 7
+        self.order = 6
         self.geom_type = 'Point'
         self.attrs = [('gid', ' serial NOT NULL'),
                       ('name', ' character varying(30)'),
@@ -339,7 +325,7 @@ class lateral_inflows(MasObject):
 class lateral_weirs(MasObject):
     def __init__(self):
         super(lateral_weirs, self).__init__()
-        self.order = 8
+        self.order = 7
         self.geom_type = 'Point'
         self.attrs = [('gid serial', 'NOT NULL'),
                       ('name character', 'varying(30)'),
@@ -365,7 +351,7 @@ class lateral_weirs(MasObject):
 class tracer_lateral_inflows(MasObject):
     def __init__(self):
         super(tracer_lateral_inflows, self).__init__()
-        self.order = 9
+        self.order = 8
         self.geom_type = 'Point'
         self.attrs = [('gid', ' serial NOT NULL'),
                       ('name', ' character varying(30)'),
@@ -390,7 +376,7 @@ class tracer_lateral_inflows(MasObject):
 class outputs(MasObject):
     def __init__(self):
         super(outputs, self).__init__()
-        self.order = 10
+        self.order = 9
         self.geom_type = 'Point'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -414,7 +400,7 @@ class outputs(MasObject):
 class topo(MasObject):
     def __init__(self):
         super(topo, self).__init__()
-        self.order = 11
+        self.order = 10
         self.geom_type = 'Point'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -442,7 +428,7 @@ class topo(MasObject):
 class profiles(MasObject):
     def __init__(self):
         super(profiles, self).__init__()
-        self.order = 12
+        self.order = 11
         self.geom_type = 'MultiLineString'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -480,7 +466,7 @@ class profiles(MasObject):
 class links(MasObject):
     def __init__(self):
         super(links, self).__init__()
-        self.order = 13
+        self.order = 12
         self.geom_type = 'MultiLineString'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -525,7 +511,7 @@ class links(MasObject):
 class branchs(MasObject):
     def __init__(self):
         super(branchs, self).__init__()
-        self.order = 14
+        self.order = 13
         self.geom_type = 'MultiLineString'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('branch', 'serial NOT NULL'),
@@ -576,7 +562,7 @@ class branchs(MasObject):
 class basins(MasObject):
     def __init__(self):
         super(basins, self).__init__()
-        self.order = 15
+        self.order = 14
         self.geom_type = 'MultiPolygon'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -609,7 +595,7 @@ class basins(MasObject):
 class visu_flood_marks(MasObject):
     def __init__(self):
         super(visu_flood_marks, self).__init__()
-        self.order = 16
+        self.order = 15
         self.geom_type = 'LineString'
         self.attrs = [
             ('gid', 'serial NOT NULL'),
@@ -626,6 +612,23 @@ class visu_flood_marks(MasObject):
 
 # *******************************************
 # ******************************************
+# *****************************************
+class observations(MasObject):
+    def __init__(self):
+        super(observations, self).__init__()
+        self.order = 16
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('code', 'character(10)'),
+                      ('type', 'character(1)'),
+                      ('comment', 'character varying(50)'),
+                      ('valeur', 'float'),
+                      ('date', 'timestamp without time zone'),
+                      ('CONSTRAINT cle_obs ', 'PRIMARY KEY (id)')]
+
+
+
+
 class resultats(MasObject):
     def __init__(self):
         super(resultats, self).__init__()
@@ -1133,7 +1136,7 @@ $BODY$;"""
               
                 IF NEW.geom IS NULL AND NEW.abscissa IS NOT NULL AND NEW.branchnum IS NOT NULL THEN
          
-                    EXECUTE 'SELECT ST_UNION(geom) FROM  ' || TG_TABLE_SCHEMA || '.branchs WHERE (gid = $1)' USING NEW.branchnum INTO g;
+                    EXECUTE 'SELECT ST_UNION(geom) FROM  ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch = $1)' USING NEW.branchnum INTO g;
                     geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
                     NEW.geom = geom_final_p;
                     SELECT ST_SRID(g) INTO srid;                     
@@ -1185,9 +1188,13 @@ $BODY$;"""
                         END IF;
                          
                         IF NOT  OLD.abscissa=  NEW.abscissa THEN
-                                
+                            EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2))' USING b,z INTO long1;
+                            IF (NEW.abscissa-long1)/ST_Length(g)>1THEN
+                            	RAISE NOTICE 'Branch : %, Zone : %',b,z;
+                            	RAISE NOTICE 'The new abscissa (%) is not between % and % ;', NEW.abscissa, long1, long1+ST_Length(g);
+                            END IF ;    
                            
-                            geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
+                            geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),(NEW.abscissa-long1)/ST_Length(g)));
                             
                             SELECT ST_SRID(g) INTO srid;                     
                             EXECUTE 'SELECT ST_AsText( ST_MakeLine($1, $2))' USING geom_final_p,NEW.geom INTO new_line;

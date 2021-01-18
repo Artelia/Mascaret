@@ -815,7 +815,7 @@ class ClassMasDatabase(object):
         for (name, obj) in tables:
             try:
                 # TODO modif if new geometric table
-                if obj.order < 17:
+                if obj.order < 16:
                     if name in lst_only_visu:
                         dict_only_visu[name] = obj
                     else:

@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -204,12 +204,13 @@
      <string>Tools</string>
     </property>
     <addaction name="actionCross_section"/>
+    <addaction name="actionObservations"/>
     <addaction name="actionStructures"/>
     <addaction name="actionStructures_weirs"/>
-    <addaction name="actionUpdate_all_PK"/>
     <addaction name="actionTest"/>
     <addaction name="separator"/>
     <addaction name="action_Extract_MNTfor_profile"/>
+    <addaction name="actionUpdate_all_PK"/>
    </widget>
    <widget class="QMenu" name="menuDB">
     <property name="title">
@@ -303,6 +304,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionCross_section"/>
+   <addaction name="actionObservations"/>
    <addaction name="actionStructures"/>
    <addaction name="separator"/>
    <addaction name="action_Extract_MNTfor_profile"/>
@@ -360,7 +362,6 @@
    </attribute>
    <addaction name="actionParameters_Water_Quality"/>
    <addaction name="actionTracer_Laws"/>
-   <addaction name="actionObservations"/>
   </widget>
   <action name="actionWebsite">
    <property name="icon">
@@ -714,6 +715,10 @@
    </property>
   </action>
   <action name="actionObservations">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/lawObs.png</normaloff>:/plugins/Mascaret/icones/lawObs.png</iconset>
+   </property>
    <property name="text">
     <string>Obs</string>
    </property>

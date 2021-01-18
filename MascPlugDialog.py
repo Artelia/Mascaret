@@ -40,7 +40,7 @@ from .Structure.MobilSingDialog import ClassMobilSingDialog
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
-from .WaterQuality.EventObsDialog import ClassEventObsDialog
+from .ClassObservation import ClassEventObsDialog
 from .db.ClassMasDatabase import ClassMasDatabase
 from .db.check_tab import CheckTab
 from .ui.custom_control import ClassWarningBox

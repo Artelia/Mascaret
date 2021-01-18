@@ -25,8 +25,6 @@ from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 
-from .ClassObservation import ClassObservation
-
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
 else:  # qt5
@@ -45,8 +43,6 @@ class ClassParameterDialog(QDialog):
 
         self.init_ui()
 
-        self.ui.actionB_delete_law.triggered.connect(self.del_observ)
-        self.ui.actionB_load_law.triggered.connect(self.import_observ)
         self.ui.actionEvenement.triggered.connect(self.ch_event)
         self.ui.actionRadioButton_law.triggered.connect(self.ch_event)
         self.ui.buttonBox_valid.accepted.connect(self.accept_dialog)
@@ -66,7 +62,6 @@ class ClassParameterDialog(QDialog):
 
     def init_ui(self):
         """initialisation GUI"""
-        self.obs = ClassObservation(self.mgis)
         self.combo = {'code': {1: 'Steady',
                                2: 'Unsteady',
                                3: 'Transcritical'},
@@ -283,59 +278,10 @@ class ClassParameterDialog(QDialog):
                             or isinstance(obj, QComboBox):
                         getattr(self.ui, 'label_' + param).hide()
 
-    def import_observ(self):
-        """load observation"""
-        if int(qVersion()[0]) < 5:  # qt4
-            file_name_path = QFileDialog.getOpenFileNames(None,
-                                                          'File Selection',
-                                                          self.mgis.masplugPath,
-                                                          filter="CSV (*.csv);;File (*)")
-        else:  # qt5
-            file_name_path, _ = QFileDialog.getOpenFileNames(None,
-                                                             'File Selection',
-                                                             self.mgis.masplugPath,
-                                                             filter="CSV (*.csv);;File (*)")
-
-        if self.obs.evt_to_obs(file_name_path):
-            self.mgis.add_info('Import is done.')
-        else:
-            self.mgis.add_info('Import failed.')
-
-    def del_observ(self):
-        """delete observation """
-        dico_code = self.mdb.select_distinct("code",
-                                             "Observations")
-        ok = False
-        if dico_code:
-            # self.mgis.add_info("{}".format(dico_code))
-            event, ok = QInputDialog.getItem(None,
-                                             'Event choice',
-                                             'Event',
-                                             dico_code['code'], 0, False)
-
-        if ok:
-            where = "code = '{0}'".format(event)
-            self.mdb.delete("observations", where)
-            if self.mgis.DEBUG:
-                self.mgis.add_info('{} is deleted.'.format(event))
-        else:
-            txt = "There aren't deleted observations ."
-            self.mgis.windinfo(txt)
-            self.mgis.add_info(txt)
 
     def ch_event(self):
         """event change between law and evenment"""
         event = self.ui.evenement.isChecked()
-
-        if event:
-            self.ui.label.setEnabled(True)
-            self.ui.b_delete_law.setEnabled(True)
-            self.ui.b_load_law.setEnabled(True)
-        else:
-            self.ui.label.setDisabled(True)
-            self.ui.b_delete_law.setDisabled(True)
-            self.ui.b_load_law.setDisabled(True)
-
         self.par['evenement']["val"] = event
 
     @staticmethod
