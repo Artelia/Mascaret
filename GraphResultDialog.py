@@ -812,7 +812,8 @@ class GraphResultDialog(QWidget):
                 return
 
             courbe_lais["z"] = [v for i, v in enumerate(lai['z']) if lai[var_x][i]]
-            if 'ZMAX' in self.cur_data.keys():
+
+            if 'ZMAX' in self.cur_data.keys() and "pknum" in self.cur_data.keys():
                 courbe_lais["couleurs"] = []
                 courbe_lais["taille"] = []
                 for x, z in zip(courbe_lais["x"], courbe_lais["z"]):
