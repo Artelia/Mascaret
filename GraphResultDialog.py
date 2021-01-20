@@ -149,7 +149,8 @@ class GraphResultDialog(QWidget):
 
     def checkrun(self):
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
-                                  "ORDER BY run, scenario".format(self.mdb.SCHEMA), fetch=True)
+                                  "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
+                                  "ORDER BY run, scenario ".format(self.mdb.SCHEMA), fetch=True)
         if rows:
             return True
         else:
@@ -320,9 +321,9 @@ class GraphResultDialog(QWidget):
     def init_dico_run(self):
         self.dict_run = dict()
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
+                                  "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
                                   "ORDER BY date DESC, run ASC, scenario ASC;".format(self.mdb.SCHEMA),
                                   fetch=True)
-
         for row in rows:
             if row[1] not in self.dict_run.keys():
                 self.dict_run[row[1]] = dict()
