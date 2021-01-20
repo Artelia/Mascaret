@@ -149,7 +149,8 @@ class GraphResultDialog(QWidget):
 
     def checkrun(self):
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
-                                  "ORDER BY run, scenario".format(self.mdb.SCHEMA), fetch=True)
+                                  "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
+                                  "ORDER BY run, scenario ".format(self.mdb.SCHEMA), fetch=True)
         if rows:
             return True
         else:
@@ -320,9 +321,9 @@ class GraphResultDialog(QWidget):
     def init_dico_run(self):
         self.dict_run = dict()
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
+                                  "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
                                   "ORDER BY date DESC, run ASC, scenario ASC;".format(self.mdb.SCHEMA),
                                   fetch=True)
-
         for row in rows:
             if row[1] not in self.dict_run.keys():
                 self.dict_run[row[1]] = dict()
@@ -748,20 +749,15 @@ class GraphResultDialog(QWidget):
         """
         sql = "SELECT name FROM {0}.profiles " \
               "WHERE abscissa={1} ".format(self.mdb.SCHEMA, self.cur_pknum)
-        print(sql)
         rows = self.mdb.run_query(sql, fetch=True)
 
         if rows:
             val = rows[0][0]
-            print(val)
-            print("where ="+"active AND (abscissa = {0} OR name = '{1}')" \
-                                                  "".format(self.cur_pknum, val))
             self.obs = self.mgis.mdb.select('outputs',
                                             where="active AND (abscissa = {0} OR name = '{1}')" \
                                                   "".format(self.cur_pknum, val),
                                             order="abscissa",
                                             list_var=['code', 'zero', 'abscissa', 'name'])
-            print(self.obs)
             if self.obs:
                 if len(self.obs['code']) == 0:
                     self.obs = None
@@ -866,7 +862,7 @@ class GraphResultDialog(QWidget):
                        AND valeur > -999.9""".format(self.obs['code'][0], mini, maxi, gg)
 
             obs_graph = self.mdb.select("observations", condition, "date")
-            print(obs_graph)
+
             if not obs_graph:
                 self.graph_obj.clear_obs()
                 return
