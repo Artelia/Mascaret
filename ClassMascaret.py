@@ -1651,6 +1651,8 @@ class ClassMascaret:
                 self.mgis.add_info("Cancel run")
             return False
 
+
+    #         return
     def mascaret(self, noyau, run, only_init=False):
         """
         creation file and to run mascaret
@@ -1660,7 +1662,58 @@ class ClassMascaret:
         :return:
         """
         par, dict_scen, dict_lois, comments = self.mascaret_init(noyau, run, only_init)
+
         if not par or not dict_scen or not dict_lois:
+            return
+
+        if only_init:
+            id = 0
+            scen = dict_scen['name'][id]
+            date_debut = None
+            if noyau == "steady":
+                self.init_scen_steady(par, dict_lois)
+            elif par["evenement"]:
+                date_debut = self.init_scen_even(par, dict_lois, id, dict_scen)
+            else:
+                # transcritical unsteady hors evenement
+                self.init_scen_trans_unsteady(par, dict_lois)
+            if self.check_mobil_gate() and noyau == "unsteady":
+                self.create_mobil_gate_file()
+            self.fct_only_init(noyau)
+            return
+
+        self.mgis.task_mas = QgsTask.fromFunction('Run Mascaret', self.task_mascaret,
+                                                         on_finished=self.completed,
+                                             tup =(par, dict_scen, dict_lois, comments,noyau,run))
+        self.mgis.task_mas.taskCompleted.connect(self.del_task_mas)
+        self.mgis.task_mas.taskTerminated.connect(self.del_task_mas)
+        QgsApplication.taskManager().addTask( self.mgis.task_mas)
+
+    def del_task_mas(self):
+        """
+        Clean tastk_mas variable
+        :return:
+        """
+        del self.mgis.task_mas
+        self.mgis.task_mas = None
+
+    def completed(self,exception):
+        """this is called when run is finished. Exception is not None if run
+        raises an exception. Result is the return value of run."""
+        MESSAGE_CATEGORY = 'My tasks from a function'
+        if exception is None:
+                QgsMessageLog.logMessage(
+                    'task completed',
+                    MESSAGE_CATEGORY, Qgis.Info)
+        else:
+            QgsMessageLog.logMessage("Exception: {}".format(exception),
+                                     MESSAGE_CATEGORY, Qgis.Critical)
+            raise exception
+
+    def task_mascaret(self,task, tup= None ):
+        if  tup:
+            par, dict_scen, dict_lois, comments,noyau,run = tup
+        else:
             return
 
         for i, scen in enumerate(dict_scen['name']):
@@ -1679,9 +1732,6 @@ class ClassMascaret:
             if self.check_mobil_gate() and noyau == "unsteady":
                 self.create_mobil_gate_file()
 
-            if only_init:
-                self.fct_only_init(noyau)
-                return
 
             # RUN Model
             if par["initialisationAuto"] and noyau is not "steady":
