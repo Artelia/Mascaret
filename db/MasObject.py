@@ -140,6 +140,7 @@ class laws(MasObject):
             ('z_downstream', 'text'),
             ('z_lower', 'text'),
             ('z_up', 'text'),
+            ('active', ' boolean NOT NULL DEFAULT TRUE'),
             ('CONSTRAINT cle_laws', 'PRIMARY KEY (id)')]
 
 
