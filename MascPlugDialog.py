@@ -53,7 +53,7 @@ if int(qVersion()[0]) < 5:  # qt4
 else:  # qt5
     from qgis.PyQt.QtWidgets import *
 
-MESSAGE_CATEGORY = 'My tasks from a function'
+
 class MascPlugDialog(QMainWindow):
     OPT_GENERAL, OPT_mdb, OPT_DTM = range(3)
 
@@ -82,7 +82,6 @@ class MascPlugDialog(QMainWindow):
         self.dossier_style = os.path.join(os.path.join(self.masplugPath, "db"), "style")
         self.dossier_struct = os.path.join(os.path.join(self.masplugPath, "Structure"), 'Abacus')
         self.repProject = None
-        self.last_compute_rep = None
 
         self.box = ClassWarningBox()
         # variables liste of results
@@ -610,8 +609,6 @@ class MascPlugDialog(QMainWindow):
                     setattr(self, name, self.opts['mgis'][name])
                 elif group == 'mdb' and name in self.opts['mdb'].keys():
                     setattr(self, name, self.opts['mdb'][name])
-                elif group == 'model' and name in self.opts['model'].keys():
-                    setattr(self, name, self.opts['model'][name])
                 else:
                     self.add_info("Options have no key ['{}']['{}']".format(group, name))
 
@@ -628,12 +625,6 @@ class MascPlugDialog(QMainWindow):
                 elif group == 'mdb':
                     try:
                         self.opts['mdb'][name] = getattr(self.mdb, name)
-                    except:
-                        self.add_info("Error: write_settings , group :{0}".format(group))
-                        pass
-                elif group == 'model':
-                    try:
-                        self.opts['model'][name] = getattr(self, name)
                     except:
                         self.add_info("Error: write_settings , group :{0}".format(group))
                         pass
