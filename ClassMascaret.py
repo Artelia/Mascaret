@@ -60,7 +60,7 @@ class ClassMascaret:
         self.mgis = main
         self.mdb = self.mgis.mdb
         self.iface = self.mgis.iface
-        if rep_run:
+        if not rep_run:
             self.dossierFileMasc = os.path.join(self.mgis.masplugPath, "mascaret")
         else:
             self.dossierFileMasc = rep_run
@@ -1801,7 +1801,8 @@ class ClassMascaret:
             self.select_init_run_case()
         cl = ClassPostPreFG(self.mgis)
 
-        path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'mascaret'))
+       # path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'mascaret'))
+        path = self.dossierFileMasc
         path = os.path.join(path, 'cli_fg.obj')
         cl.create_cli_fg(path)
         del cl

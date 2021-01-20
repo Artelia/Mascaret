@@ -12,6 +12,9 @@
     "LOAD_ALL": true,
     "OVERWRITE": true,
     "last_conn": "toto",
-    "last_schema": "start"   
-  }
+    "last_schema": "start"
+  },
+  "model" :{
+    "last_compute_rep": "mascaret"
+  },
 }
