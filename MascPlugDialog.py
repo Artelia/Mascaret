@@ -53,7 +53,7 @@ if int(qVersion()[0]) < 5:  # qt4
 else:  # qt5
     from qgis.PyQt.QtWidgets import *
 
-
+MESSAGE_CATEGORY = 'My tasks from a function'
 class MascPlugDialog(QMainWindow):
     OPT_GENERAL, OPT_mdb, OPT_DTM = range(3)
 
@@ -935,8 +935,90 @@ Version : {}
         return txt
 
     def fct_test(self):
-        self.chkt.debug_update_vers_meta(version='3.0.5')
-        pass
+        #self.chkt.debug_update_vers_meta(version='3.0.5')
+
+
+
+        self.task1 = QgsTask.fromFunction(
+            'waste cpu 1', self.run, on_finished=self.completed, wait_time=10)
+        self.task1.taskCompleted.connect(self.test)
+        self.task1.taskTerminated.connect(self.test)
+        self.task2 = QgsTask.fromFunction(
+            'waste cpu 2', self.run, on_finished=self.completed, wait_time=20)
+        self.task2.taskCompleted.connect(self.test2)
+        self.task2.taskTerminated.connect(self.test2)
+        QgsApplication.taskManager().addTask(self.task1)
+
+        QgsApplication.taskManager().addTask(self.task2)
+
+    def test(self):
+        print('ggggggggggg1')
+        del self.task1
+        self.task1 = None
+    def test2(self):
+        print('ggggggggggg2')
+        del self.task2
+        self.task2 = None
+    def run(self,task, wait_time):
+        """a dumb test function
+        to break the task raise an exception
+        to return a successful result return it. This will be passed together
+        with the exception (None in case of success) to the on_finished method
+        """
+        from time import sleep
+        import random
+
+        QgsMessageLog.logMessage('Started task {}'.format(task.description()),
+                                 MESSAGE_CATEGORY, Qgis.Info)
+        wait_time = wait_time / 100
+        total = 0
+        iterations = 0
+        for i in range(101):
+            sleep(wait_time)
+            # use task.setProgress to report progress
+            task.setProgress(i)
+            total += random.randint(0, 100)
+            iterations += 1
+
+            # check task.isCanceled() to handle cancellation
+            if task.isCanceled():
+                self.stopped(task)
+                return None
+            # raise exceptions to abort task
+            if random.randint(0, 500) == 42:
+                raise Exception('bad value!')
+        return {
+            'total': total, 'iterations': iterations, 'task': task.description()
+        }
+
+    def stopped(self,task):
+        QgsMessageLog.logMessage(
+            'Task "{name}" was cancelled'.format(name=task.description()),
+            MESSAGE_CATEGORY, Qgis.Info)
+
+    def completed(self,exception, result=None):
+        """this is called when run is finished. Exception is not None if run
+        raises an exception. Result is the return value of run."""
+        if exception is None:
+            if result is None:
+                QgsMessageLog.logMessage(
+                    'Completed with no exception and no result ' \
+                    '(probably the task was manually canceled by the user)',
+                    MESSAGE_CATEGORY, Qgis.Warning)
+            else:
+                QgsMessageLog.logMessage(
+                    'Task {name} completed\n'
+                    'Total: {total} ( with {iterations} '
+                    'iterations)'.format(
+                        name=result['task'],
+                        total=result['total'],
+                        iterations=result['iterations']),
+                    MESSAGE_CATEGORY, Qgis.Info)
+        else:
+            QgsMessageLog.logMessage("Exception: {}".format(exception),
+                                     MESSAGE_CATEGORY, Qgis.Critical)
+            raise exception
+
 
     def update_pk(self):
         """
