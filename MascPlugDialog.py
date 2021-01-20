@@ -580,8 +580,9 @@ class MascPlugDialog(QMainWindow):
     #    SETTINGS
     # *******************************
 
-    def export_run(self):
-        clam = ClassMascaret(self)
+    def export_run(self, clam=None):
+        if not clam:
+            clam = ClassMascaret(self)
         folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
         if clam.copy_run_file(folder_name_path):
             self.add_info('Export is done.')
@@ -901,12 +902,14 @@ Version : {}
         if ok:
             self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
             run = "test"
-            clam = ClassMascaret(self)
-            clam.mascaret(self.Klist[self.listeState.index(case)], run, only_init=True)
+            rep_run = os.path.join(self.masplugPath, "mascaret_copy")
+            clam = ClassMascaret(self,rep_run= rep_run)
+            clam.mascaret(self.Klist[self.listeState.index(case)], run,  only_init=True)
 
             with open(os.path.join(clam.dossierFileMasc,'FichierCas.txt'), 'w') as fichier:
                 fichier.write("'mascaret.xcas'\n")
-            self.export_run()
+            self.export_run(clam)
+
 
 
     def import_resu_model(self):
@@ -935,89 +938,90 @@ Version : {}
         return txt
 
     def fct_test(self):
+        pass
         #self.chkt.debug_update_vers_meta(version='3.0.5')
 
 
 
-        self.task1 = QgsTask.fromFunction(
-            'waste cpu 1', self.run, on_finished=self.completed, wait_time=10)
-        self.task1.taskCompleted.connect(self.test)
-        self.task1.taskTerminated.connect(self.test)
-        self.task2 = QgsTask.fromFunction(
-            'waste cpu 2', self.run, on_finished=self.completed, wait_time=20)
-        self.task2.taskCompleted.connect(self.test2)
-        self.task2.taskTerminated.connect(self.test2)
-        QgsApplication.taskManager().addTask(self.task1)
-
-        QgsApplication.taskManager().addTask(self.task2)
-
-    def test(self):
-        print('ggggggggggg1')
-        del self.task1
-        self.task1 = None
-    def test2(self):
-        print('ggggggggggg2')
-        del self.task2
-        self.task2 = None
-    def run(self,task, wait_time):
-        """a dumb test function
-        to break the task raise an exception
-        to return a successful result return it. This will be passed together
-        with the exception (None in case of success) to the on_finished method
-        """
-        from time import sleep
-        import random
-
-        QgsMessageLog.logMessage('Started task {}'.format(task.description()),
-                                 MESSAGE_CATEGORY, Qgis.Info)
-        wait_time = wait_time / 100
-        total = 0
-        iterations = 0
-        for i in range(101):
-            sleep(wait_time)
-            # use task.setProgress to report progress
-            task.setProgress(i)
-            total += random.randint(0, 100)
-            iterations += 1
-
-            # check task.isCanceled() to handle cancellation
-            if task.isCanceled():
-                self.stopped(task)
-                return None
-            # raise exceptions to abort task
-            if random.randint(0, 500) == 42:
-                raise Exception('bad value!')
-        return {
-            'total': total, 'iterations': iterations, 'task': task.description()
-        }
-
-    def stopped(self,task):
-        QgsMessageLog.logMessage(
-            'Task "{name}" was cancelled'.format(name=task.description()),
-            MESSAGE_CATEGORY, Qgis.Info)
-
-    def completed(self,exception, result=None):
-        """this is called when run is finished. Exception is not None if run
-        raises an exception. Result is the return value of run."""
-        if exception is None:
-            if result is None:
-                QgsMessageLog.logMessage(
-                    'Completed with no exception and no result ' \
-                    '(probably the task was manually canceled by the user)',
-                    MESSAGE_CATEGORY, Qgis.Warning)
-            else:
-                QgsMessageLog.logMessage(
-                    'Task {name} completed\n'
-                    'Total: {total} ( with {iterations} '
-                    'iterations)'.format(
-                        name=result['task'],
-                        total=result['total'],
-                        iterations=result['iterations']),
-                    MESSAGE_CATEGORY, Qgis.Info)
-        else:
-            QgsMessageLog.logMessage("Exception: {}".format(exception),
-                                     MESSAGE_CATEGORY, Qgis.Critical)
-            raise exception
+    #     self.task1 = QgsTask.fromFunction(
+    #         'waste cpu 1', self.run, on_finished=self.completed, wait_time=10)
+    #     self.task1.taskCompleted.connect(self.test)
+    #     self.task1.taskTerminated.connect(self.test)
+    #     self.task2 = QgsTask.fromFunction(
+    #         'waste cpu 2', self.run, on_finished=self.completed, wait_time=20)
+    #     self.task2.taskCompleted.connect(self.test2)
+    #     self.task2.taskTerminated.connect(self.test2)
+    #     QgsApplication.taskManager().addTask(self.task1)
+    #
+    #     QgsApplication.taskManager().addTask(self.task2)
+    #
+    # def test(self):
+    #     print('ggggggggggg1')
+    #     del self.task1
+    #     self.task1 = None
+    # def test2(self):
+    #     print('ggggggggggg2')
+    #     del self.task2
+    #     self.task2 = None
+    # def run(self,task, wait_time):
+    #     """a dumb test function
+    #     to break the task raise an exception
+    #     to return a successful result return it. This will be passed together
+    #     with the exception (None in case of success) to the on_finished method
+    #     """
+    #     from time import sleep
+    #     import random
+    #
+    #     QgsMessageLog.logMessage('Started task {}'.format(task.description()),
+    #                              MESSAGE_CATEGORY, Qgis.Info)
+    #     wait_time = wait_time / 100
+    #     total = 0
+    #     iterations = 0
+    #     for i in range(101):
+    #         sleep(wait_time)
+    #         # use task.setProgress to report progress
+    #         task.setProgress(i)
+    #         total += random.randint(0, 100)
+    #         iterations += 1
+    #
+    #         # check task.isCanceled() to handle cancellation
+    #         if task.isCanceled():
+    #             self.stopped(task)
+    #             return None
+    #         # raise exceptions to abort task
+    #         if random.randint(0, 500) == 42:
+    #             raise Exception('bad value!')
+    #     return {
+    #         'total': total, 'iterations': iterations, 'task': task.description()
+    #     }
+    #
+    # def stopped(self,task):
+    #     QgsMessageLog.logMessage(
+    #         'Task "{name}" was cancelled'.format(name=task.description()),
+    #         MESSAGE_CATEGORY, Qgis.Info)
+    #
+    # def completed(self,exception, result=None):
+    #     """this is called when run is finished. Exception is not None if run
+    #     raises an exception. Result is the return value of run."""
+    #     if exception is None:
+    #         if result is None:
+    #             QgsMessageLog.logMessage(
+    #                 'Completed with no exception and no result ' \
+    #                 '(probably the task was manually canceled by the user)',
+    #                 MESSAGE_CATEGORY, Qgis.Warning)
+    #         else:
+    #             QgsMessageLog.logMessage(
+    #                 'Task {name} completed\n'
+    #                 'Total: {total} ( with {iterations} '
+    #                 'iterations)'.format(
+    #                     name=result['task'],
+    #                     total=result['total'],
+    #                     iterations=result['iterations']),
+    #                 MESSAGE_CATEGORY, Qgis.Info)
+    #     else:
+    #         QgsMessageLog.logMessage("Exception: {}".format(exception),
+    #                                  MESSAGE_CATEGORY, Qgis.Critical)
+    #         raise exception
 
 
     def update_pk(self):

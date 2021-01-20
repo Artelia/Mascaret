@@ -56,11 +56,15 @@ else:  # qt5
 class ClassMascaret:
     """ Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, main):
+    def __init__(self, main, rep_run = None):
         self.mgis = main
         self.mdb = self.mgis.mdb
         self.iface = self.mgis.iface
-        self.dossierFileMasc = os.path.join(self.mgis.masplugPath, "mascaret")
+        if rep_run:
+            self.dossierFileMasc = os.path.join(self.mgis.masplugPath, "mascaret")
+        else:
+            self.dossierFileMasc = rep_run
+
         if not os.path.isdir(self.dossierFileMasc):
             os.mkdir(self.dossierFileMasc)
         self.dossierFileMascOri = os.path.join(self.mgis.masplugPath, "mascaret_ori")
