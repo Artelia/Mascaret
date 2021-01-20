@@ -894,7 +894,6 @@ class ClassMascaret:
         # add struct before harminization
         dict_lois_tmp = dict_lois.copy()
         dico_loi_struct = {}
-        print("ddd",dict_lois_tmp.keys())
         for name in dict_lois_tmp.keys():
             if name in loi_struct['laws']:
                 dico_loi_struct[name] = dict_lois[name]
@@ -1900,7 +1899,6 @@ class ClassMascaret:
             os.chdir(self.dossierFileMasc)
             clapi = ClassAPIMascaret(self)
             clapi.main(fichier_cas, tracer, casier)
-            print('*********************')
             self.stock_res_api(clapi.results_api, id_run)
             del clapi
             os.chdir(pwd)
@@ -2043,12 +2041,13 @@ class ClassMascaret:
         t_max = self.mdb.select_max("t", "resultats", condition)
         if t_max is None:
             self.mgis.add_info("No previous results to create the .lig file.")
+            return None
         condition = condition + " AND t=" + str(t_max)
 
         result = self.mdb.select("resultats", condition, 'pk')
         if not result:
             self.mgis.add_info('No results for initialisation')
-            return
+            return None
 
         result["X"] = result.pop("pk")
         result["Z"] = result.pop("z")
@@ -2060,6 +2059,8 @@ class ClassMascaret:
         # old
         # result = self.get_for_lig(run, scen)
         result = self.get_for_lig_new(id_run)
+        if not result:
+            return None
         i1 = {}
         i2 = {}
         for section, branche in zip(result["section"], result["branche"]):
@@ -2168,6 +2169,15 @@ class ClassMascaret:
                 os.remove(os.path.join(self.dossierFileMasc, files[i]))
                 if self.mgis.DEBUG:
                     self.mgis.add_info('delete file {}'.format(files[i]))
+
+    def del_folder_mas(self):
+        """ Delete the copy folder"""
+        try:
+            shutil.rmtree( self.dossierFileMasc)
+        except Exception as e:
+            if self.mgis.DEBUG:
+                print('Failed to delete {}. Reason: {}'.format(file_path, e))
+
 
     def copy_run_file(self, rep):
         """copy run file in "rep" path"""
@@ -2853,6 +2863,7 @@ class ClassMascaret:
             t_max = self.mdb.select_max("time", "results", "var = {}  AND id_runs = {} ".format(idz, id_run))
             if t_max is None:
                 self.mgis.add_info("No previous results to create the .lig file.")
+                return None
             value = self.mdb.select("results",
                                     "var = {} AND id_runs = {}  AND time = {}".format(idz, id_run, t_max),
                                     'pknum', ['val'])

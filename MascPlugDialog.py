@@ -499,7 +499,10 @@ class MascPlugDialog(QMainWindow):
         if ok:
             if self.DEBUG:
                 self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
-            clam = ClassMascaret(self)
+            rep_run = os.path.join(self.masplugPath, "mascaret_copy")
+            clam = ClassMascaret(self, rep_run= rep_run)
+
+
             clam.creer_xcas(self.Klist[self.listeState.index(case)])
             if int(qVersion()[0]) < 5:  # qt4
                 file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
@@ -513,10 +516,12 @@ class MascPlugDialog(QMainWindow):
                                                                 filter="XCAS (*.xcas)")
             if file_name_path:
                 clam.copy_file_model(file_name_path, case='xcas')
+            clam.del_folder_mas()
 
     def fct_create_geo(self):
         """ create Xcas"""
-        clam = ClassMascaret(self)
+        rep_run = os.path.join(self.masplugPath, "mascaret_copy")
+        clam = ClassMascaret(self, rep_run=rep_run)
         clam.creer_geo_ref()
         # clam.creer_geo()
         if int(qVersion()[0]) < 5:  # qt4
@@ -532,14 +537,16 @@ class MascPlugDialog(QMainWindow):
 
         if file_name_path:
             clam.copy_file_model(file_name_path, case='geo')
+        clam.del_folder_mas()
 
     def fct_create_casier(self):
         """ create file .Casier """
         # Mascaret.exe demande un .casier et pas basin d'ou le nom de la fonction
         # Pas de dialog box sur le noyau: les casiers sont uniquement en transitoire
 
-        clam = ClassMascaret(self)
-        # Appel de la fonction creerGEOCasier() d�finie dans Class_Mascaret.py
+        rep_run = os.path.join(self.masplugPath, "mascaret_copy")
+        clam = ClassMascaret(self, rep_run=rep_run)
+        # Appel de la fonction creerGEOCasier() definie dans Class_Mascaret.py
         clam.creer_geo_casier()
         if int(qVersion()[0]) < 5:  # qt4
             file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
@@ -554,10 +561,15 @@ class MascPlugDialog(QMainWindow):
 
         if file_name_path:
             clam.copy_file_model(file_name_path, case='casier')
+        clam.del_folder_mas()
 
     def fct_run(self):
         """ Run Mascaret"""
-
+        if self.task_mas:
+            self.box.info("The simulation is not running,\n"
+                          " because the previous simulation running yet")
+            self.add_info('The simulation is not running\n')
+            return
         case, ok = QInputDialog.getItem(None,
                                         'Study case',
                                         'Kernel',
@@ -897,39 +909,22 @@ Version : {}
         model creation to run with api
         :return:
         """
-        if self.task_mas:
-            self.box.info("The simulation is not running,\n"
-                          " because the previous simulation running yet")
-            self.add_info('The simulation is not running\n')
-            return
+
         case, ok = QInputDialog.getItem(None,
                                         'Study case',
                                         'Kernel',
                                         self.listeState, 0, False)
         if ok:
-            if self.DEBUG:
-                self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
-            run, ok = QInputDialog.getText(QWidget(), 'Run name',
-                                           'Please input a run name :', text=case)
-            run = run.replace("'", " ").replace('"', ' ').strip()
-            if ok:
-                clam = ClassMascaret(self)
-                clam.mascaret(self.Klist[self.listeState.index(case)], run)
-        # case, ok = QInputDialog.getItem(None,
-        #                                 'Study case',
-        #                                 'Kernel',
-        #                                 self.listeState, 0, False)
-        # if ok:
-        #     self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
-        #     run = "test"
-        #     rep_run = os.path.join(self.masplugPath, "mascaret_copy")
-        #     clam = ClassMascaret(self,rep_run= rep_run)
-        #     clam.mascaret(self.Klist[self.listeState.index(case)], run,  only_init=True)
-        #
-        #     with open(os.path.join(clam.dossierFileMasc,'FichierCas.txt'), 'w') as fichier:
-        #         fichier.write("'mascaret.xcas'\n")
-        #     self.export_run(clam)
-        #     self.clam.clean_res()
+            self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
+            run = "test"
+            rep_run = os.path.join(self.masplugPath, "mascaret_copy")
+            clam = ClassMascaret(self,rep_run= rep_run)
+            clam.mascaret(self.Klist[self.listeState.index(case)], run,  only_init=True)
+
+            with open(os.path.join(clam.dossierFileMasc,'FichierCas.txt'), 'w') as fichier:
+                fichier.write("'mascaret.xcas'\n")
+            self.export_run(clam)
+            clam.del_folder_mas()
 
     def import_resu_model(self):
         """
@@ -965,7 +960,6 @@ Version : {}
         update the abscissa
         :return:
         """
-        print('update pk')
         if not self.mdb.check_fct(["update_abscisse_profil", "abscisse_profil",
                                "update_abscisse_point", "abscisse_point",]):
             self.mdb.add_fct_for_update_pk()
