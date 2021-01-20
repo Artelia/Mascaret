@@ -129,6 +129,16 @@
         </config>
       </editWidget>
     </field>
+    <field name="active">
+      <editWidget type="CheckBox">
+        <config>
+          <Option type="Map">
+            <Option type="QString" name="CheckedState" value=""/>
+            <Option type="QString" name="UncheckedState" value=""/>
+          </Option>
+        </config>
+      </editWidget>
+   </field>
   </fieldConfiguration>
   <aliases>
     <alias index="0" name="" field="id"/>
@@ -143,6 +153,7 @@
     <alias index="9" name="" field="z_downstream"/>
     <alias index="10" name="" field="z_lower"/>
     <alias index="11" name="" field="z_up"/>
+    <alias index="12" name="" field="active"/>
   </aliases>
   <excludeAttributesWMS/>
   <excludeAttributesWFS/>
@@ -159,6 +170,7 @@
     <default field="z_downstream" expression="" applyOnUpdate="0"/>
     <default field="z_lower" expression="" applyOnUpdate="0"/>
     <default field="z_up" expression="" applyOnUpdate="0"/>
+    <default expression="" field="active" applyOnUpdate="0"/>
   </defaults>
   <constraints>
     <constraint constraints="3" field="id" exp_strength="0" unique_strength="1" notnull_strength="1"/>
@@ -173,6 +185,7 @@
     <constraint constraints="0" field="z_downstream" exp_strength="0" unique_strength="0" notnull_strength="0"/>
     <constraint constraints="0" field="z_lower" exp_strength="0" unique_strength="0" notnull_strength="0"/>
     <constraint constraints="0" field="z_up" exp_strength="0" unique_strength="0" notnull_strength="0"/>
+    <constraint constraints="1" unique_strength="0" exp_strength="0" notnull_strength="2" field="active"/>
   </constraints>
   <constraintExpressions>
     <constraint desc="" field="id" exp=""/>
@@ -187,6 +200,7 @@
     <constraint desc="" field="z_downstream" exp=""/>
     <constraint desc="" field="z_lower" exp=""/>
     <constraint desc="" field="z_up" exp=""/>
+    <constraint desc="" field="active" exp=""/>
   </constraintExpressions>
   <expressionfields/>
   <attributeactions>
@@ -206,6 +220,7 @@
       <column name="z_downstream" type="field" width="-1" hidden="0"/>
       <column name="z_lower" type="field" width="-1" hidden="0"/>
       <column name="z_up" type="field" width="-1" hidden="0"/>
+      <column name="active" type="field" width="-1" hidden="0"/>
       <column type="actions" width="-1" hidden="1"/>
     </columns>
   </attributetableconfig>
@@ -241,6 +256,7 @@ def my_form_open(dialog, layer, feature):
       <attributeEditorField showLabel="1" index="2" name="starttime"/>
       <attributeEditorField showLabel="1" index="3" name="endtime"/>
       <attributeEditorField showLabel="1" index="5" name="type"/>
+      <attributeEditorField showLabel="1" index="12" name="active"/>
     </attributeEditorContainer>
     <attributeEditorContainer showLabel="1" name="Tarage" groupBox="0" visibilityExpressionEnabled="0" columnCount="0" visibilityExpression="">
       <attributeEditorField showLabel="1" index="4" name="z"/>
@@ -283,6 +299,7 @@ def my_form_open(dialog, layer, feature):
     <field name="z_lower" editable="1"/>
     <field name="z_up" editable="1"/>
     <field name="z_upstream" editable="1"/>
+    <field name="active" editable="1"/>
   </editable>
   <labelOnTop>
     <field name="endtime" labelOnTop="0"/>
@@ -297,6 +314,7 @@ def my_form_open(dialog, layer, feature):
     <field name="z_lower" labelOnTop="0"/>
     <field name="z_up" labelOnTop="0"/>
     <field name="z_upstream" labelOnTop="0"/>
+    <field name="active" labelOnTop="0" />
   </labelOnTop>
   <widgets/>
   <previewExpression>id</previewExpression>
