@@ -756,6 +756,7 @@ class ClassMasDatabase(object):
                          "pg_toast_temp_1",
                          "pg_catalog",
                          "public",
+                         "topology",
                          "information_schema"]
             for row in rows:
                 if row[0] not in exclusion and row[0][:3] != "pg_":
