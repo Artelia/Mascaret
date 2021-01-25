@@ -32,11 +32,20 @@ email=mehdi-pierre.daou@arteliagroup.com
 changelog=
     3.0.6  : Correction of initial compute list bug
              Correction of result accurancy in Mascaret executable
+             Change : the qgis window no longer freezes when the model is running
              Modification of profil graphic GUI
-             Graphic by order date run
+             Results graphic by order date of running
              Force default values
              Automatisation of desactivation of branchs-profiles, basins-links
-             Add of hydraulic head for levels water Graphic
+             Adding of hydraulic head for levels water Graphic
+             Correction of  displaying bug of Flood mark with  cross sections
+             Adding observation menu
+             Adding a button to update the pk
+             Adding the vizualisation of flood mark projection
+             Adding activation or not  of the laws and outputs
+             Adding  button to put in full screen
+             Automatisation of  the Minor bed definition when that is not precised
+             Adding A hydraulic law  which varies in time for a permanent case
     3.0.5  : Add warning message when the password is null.
              Correction of bug about the creation of heigh-volum law
     3.0.4  : Correction of model creation bug for abacus and result_var table
