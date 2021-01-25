@@ -1176,7 +1176,7 @@ $BODY$
         for nom, t in tab.items():
             tab_var = []
             for k, v in tab[nom].items():
-                if not v:
+                if not v and not isinstance(v,float) and not isinstance(v, int):
                     tab_var.append("{0}=NULL".format(k))
                 elif isinstance(v, str):
                     tab_var.append("{0}='{1}'".format(k, v))
@@ -1186,7 +1186,6 @@ $BODY$
                     tab_var.append("{0}={1}".format(k, v))
 
             sql = """UPDATE {0}.{1} SET {2}  WHERE {3}='{4}'"""
-
             self.run_query(sql.format(self.SCHEMA,
                                       table,
                                       ", ".join(tab_var),

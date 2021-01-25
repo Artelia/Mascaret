@@ -506,15 +506,16 @@ class GraphProfil(GraphCommon):
             if isinstance(v, list):
                 self.liste[k][self.position] = " ".join([str(var) for var in v])
             else:
+
                 if k == 'rightminbed' and not v:
                     v = max(self.tab['x'])
+                    self.tab['rightminbed'] = v
 
                 if k == 'leftminbed' and not v:
                     v = min(self.tab['x'])
+                    self.tab['leftminbed'] = v
                 self.liste[k][self.position] = v
-
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
-
         tab = {self.nom: self.tab}
         self.mdb.update("profiles", tab, var="name")
 
