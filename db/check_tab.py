@@ -97,8 +97,7 @@ class CheckTab():
                            '3.0.3' : {},
                            '3.0.4': {},
                            '3.0.5': {},
-                           '3.0.6': {'fct': [ #lambda: self.add_geom_ori(),
-                                             lambda : self.add_trigger_update_306(),],
+                           '3.0.6': {
                                      'add_tab': [{'tab': Maso.visu_flood_marks, 'overwrite': False},],
 
                                      'alt_tab': [{'tab': 'laws',
@@ -117,8 +116,13 @@ class CheckTab():
                                                  {'tab': 'flood_marks',
                                                   'sql': ["ALTER TABLE {0}.flood_marks ADD COLUMN IF NOT "
                                                           "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
+                                                 {'tab': 'outputs',
+                                                  'sql': ["ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
+                                                          "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
 
-                                                ]
+                                                ],
+                                     'fct': [  # lambda: self.add_geom_ori(),
+                                           lambda: self.add_trigger_update_306(), ],
 
                                      },
 
@@ -584,7 +588,7 @@ class CheckTab():
     def update_tab_306(self):
         list_tab=['branchs','profiles','tracer_lateral_inflows','lateral_weirs',
                   'lateral_inflows','hydraulic_head','weirs','extremities',
-                  'outputs','links','basins']
+                  'links','basins','outputs','flood_marks', 'laws']
         txt = ''
         for tab in list_tab:
             txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET DEFAULT TRUE;".format(self.mdb.SCHEMA,tab)
