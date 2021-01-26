@@ -408,11 +408,11 @@ class MascPlugDialog(QMainWindow):
             res = self.mdb.run_query(sql.format(model), fetch=True)
             if res :
                 self.mdb.SRID = int(res[0][0])
-            #try:
-            self.chkt.update_adim()
-            # except Exception as e:
-            #     self.add_info("********* Echec of update table ***********")
-            #     print(e)
+            try:
+                self.chkt.update_adim()
+            except Exception as e:
+                self.add_info("********* Echec of update table ***********")
+                print(e)
 
             self.mdb.load_model()
             crs = QgsCoordinateReferenceSystem("POSTGIS:{}".format(self.mdb.SRID))

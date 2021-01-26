@@ -103,53 +103,20 @@ class CheckTab():
 
                                      'alt_tab': [{'tab': 'laws',
                                                   'sql': ["ALTER TABLE {0}.laws ADD COLUMN IF NOT "
-                                                                         "EXISTS active boolean DEFAULT TRUE;"]},
+                                                                         "EXISTS active boolean NOT NULL DEFAULT TRUE;",
+                                                          ]},
                                                  {'tab': 'branchs',
                                                   'sql': ["UPDATE {0}.branchs SET branch = 1 WHERE branch IS NULL ;",
                                                           "UPDATE {0}.branchs SET zonenum = 1 WHERE zonenum IS NULL;",
-                                                          "ALTER TABLE {0}.branchs ALTER COLUMN active "
-                                                                           "SET DEFAULT TRUE;",
                                                           "ALTER TABLE {0}.branchs ALTER COLUMN branch "
                                                           "SET NOT NULL;",
                                                           "ALTER TABLE {0}.branchs ALTER COLUMN zonenum "
                                                           "SET NOT NULL;",
-                                                          "ALTER TABLE {0}.branchs ALTER COLUMN active "
-                                                          "SET DEFAULT TRUE;"
 
                                                           ]},
-                                                 {'tab': 'links',
-                                                  'sql': ["ALTER TABLE {0}.links ALTER COLUMN active "
-                                                          "SET DEFAULT TRUE;"]},
-                                                 {'tab': 'basins',
-                                                  'sql': ["ALTER TABLE {0}.basins ALTER COLUMN active "
-                                                          "SET DEFAULT TRUE;"]},
                                                  {'tab': 'flood_marks',
                                                   'sql': ["ALTER TABLE {0}.flood_marks ADD COLUMN IF NOT "
-                                                          "EXISTS active boolean DEFAULT TRUE;"]},
-                                                 {'tab': 'profiles',
-                                                  'sql': ["ALTER TABLE {0}.profiles ALTER COLUMN active "
-                                                          "SET DEFAULT TRUE;"]},
-                                                 {'tab': 'tracer_lateral_inflows',
-                                                  'sql': ["ALTER TABLE {0}.tracer_lateral_inflows ALTER COLUMN active "
-                                                          "SET DEFAULT TRUE;"]},
-                                                 {'tab': 'lateral_weirs',
-                                                  'sql': ["ALTER TABLE {0}.lateral_weirs ALTER COLUMN active "
-                                                          "SET DEFAULT TRUE;"]},
-                                                 {'tab': 'lateral_inflows',
-                                                  'sql': ["ALTER TABLE {0}.lateral_inflows ALTER COLUMN active "
-                                                          "SET DEFAULT TRUE;"]},
-                                                 {'tab': 'hydraulic_head',
-                                                  'sql': ["ALTER TABLE {0}.hydraulic_head ALTER COLUMN active "
-                                                          "SET DEFAULT TRUE;"]},
-                                                 {'tab': 'weirs',
-                                                  'sql': ["ALTER TABLE {0}.weirs ALTER COLUMN active "
-                                                          "SET DEFAULT TRUE;"]},
-                                                 {'tab': 'extremities',
-                                                  'sql': ["ALTER TABLE {0}.extremities ALTER COLUMN active "
-                                                          "SET DEFAULT TRUE;"]},
-                                                 {'tab': 'outputs',
-                                                  'sql': ["UPDATE {0}.outputs SET active = TRUE WHERE active IS NULL;"]},
-
+                                                          "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
 
                                                 ]
 
@@ -614,6 +581,20 @@ class CheckTab():
     #     sql += "UPDATE {0}.{1} SET geom_ori= geom;".format(self.mdb.SCHEMA,'flood_marks')
     #     self.mdb.run_query(sql)
 
+    def update_tab_306(self):
+        list_tab=['branchs','profiles','tracer_lateral_inflows','lateral_weirs',
+                  'lateral_inflows','hydraulic_head','weirs','extremities',
+                  'outputs','links','basins']
+        txt = ''
+        for tab in list_tab:
+            txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET DEFAULT TRUE;".format(self.mdb.SCHEMA,tab)
+            txt += '\n'
+            txt += "UPDATE {0}.{1} SET active = TRUE WHERE active IS NULL;".format(self.mdb.SCHEMA,tab)
+            txt += '\n'
+            txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET NOT NULL;".format(self.mdb.SCHEMA,tab)
+            txt += '\n'
+
+
     def add_trigger_update_306(self):
         """
         add trigger and fct for 3.0.6 version
@@ -622,7 +603,25 @@ class CheckTab():
         'pg_create_calcul_abscisse_point_flood'
         :return:
         """
-        qry = 'DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs;\n'.format(self.mdb.SCHEMA)
+        lst_fct = [
+            "public.update_abscisse_branch(_tbl_branchs regclass)",
+            "public.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)",
+            "public.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)",
+            "public.abscisse_branch(_tbl_branchs regclass, id_branch integer)",
+            "public.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)",
+            "public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)",
+        ]
+        qry = ''
+        for fct in lst_fct:
+            qry += "DROP FUNCTION IF EXISTS {};\n".format(fct)
+        self.mdb.run_query(qry)
+
+        self.mdb.add_fct_for_update_pk()
+
+        self.mdb.add_fct_for_visu()
+
+
+        qry =  'DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs;\n'.format(self.mdb.SCHEMA)
         qry += 'DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;\n'.format(self.mdb.SCHEMA)
         qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
         qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood ' \
@@ -654,22 +653,9 @@ class CheckTab():
         qry += '\n'
         self.mdb.run_query(qry)
 
-        lst_fct = [
-        "public.update_abscisse_branch(_tbl_branchs regclass)",
-        "public.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)",
-        "public.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)",
-        "public.abscisse_branch(_tbl_branchs regclass, id_branch integer)",
-        "public.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)",
-        "public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)",
-        ]
-        qry = ''
-        for fct in lst_fct :
-            qry += "DROP FUNCTION IF EXISTS {};\n".format(fct)
-        self.mdb.run_query(qry)
 
-        self.mdb.add_fct_for_update_pk()
 
-        self.mdb.add_fct_for_visu()
+
 
 
 

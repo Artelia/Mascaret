@@ -1118,13 +1118,13 @@ $BODY$;"""
 
     def pg_create_calcul_abscisse_point_flood(self):
         qry = """
-        CREATE OR REPLACE FUNCTION public.calcul_abscisse_point_flood()
-        RETURNS trigger
-        
-        LANGUAGE 'plpgsql'
-        COST 100.0
-        
-        AS $BODY$
+CREATE OR REPLACE FUNCTION public.calcul_abscisse_point_flood()
+    RETURNS trigger
+    LANGUAGE 'plpgsql'
+    COST 100.0
+    VOLATILE NOT LEAKPROOF 
+AS $BODY$
+
  
             DECLARE  
                 long1	double precision; 
@@ -1135,6 +1135,7 @@ $BODY$;"""
                 d	double precision; 
                 f	double precision;
                 test	boolean;       
+                val  double precision;
                 new_line  geometry;
                 geom_final_p geometry;
                 srid integer;
@@ -1160,15 +1161,11 @@ $BODY$;"""
                    	
                 ELSE
                     EXECUTE 'SELECT branch, zonenum, geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 4 LIMIT 1' USING NEW.geom INTO b,z,g,d  ;
-
-                    IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(geom_final_p,OLD.geom) THEN
-                        NEW.branchnum= b ;
-                    END IF;
-
-                        
+                     
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
+                     	NEW.branchnum= b ;
                         /* projection compute*/
-                       EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2))' USING b,z INTO long1;
+                       EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2) )' USING b,z INTO long1;
                        f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
                        geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
                         /* get srid value*/
@@ -1191,19 +1188,22 @@ $BODY$;"""
                         
                        NEW.abscissa = ROUND((long1+long2)::numeric,2);
                     ELSE
-                        IF NOT OLD.branchnum = NEW.branchnum THEN
-                            NEW.branchnum= b ;
-                        END IF;
+                         NEW.branchnum= b ;
                          
                         IF NOT  OLD.abscissa=  NEW.abscissa THEN
-                            EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2))' USING b,z INTO long1;
-                            IF (NEW.abscissa-long1)/ST_Length(g)>1THEN
+                         RAISE NOTICE 'entre 1 ';
+                            EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2) )' USING b,z INTO long1;
+                            IF long1 IS NULL THEN
+                               long1 = 0;
+                            END IF;
+                            /* check if new abscissa is in zone*/
+                            val = (NEW.abscissa-long1)/ST_Length(g);
+                            IF val>1 OR  val<0 THEN
                             	RAISE NOTICE 'Branch : %, Zone : %',b,z;
                             	RAISE NOTICE 'The new abscissa (%) is not between % and % ;', NEW.abscissa, long1, long1+ST_Length(g);
                             END IF ;    
-                           
-                            geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),(NEW.abscissa-long1)/ST_Length(g)));
-                            
+
+                            geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),val));                            
                             SELECT ST_SRID(g) INTO srid;                     
                             EXECUTE 'SELECT ST_AsText( ST_MakeLine($1, $2))' USING geom_final_p,NEW.geom INTO new_line;
                             EXECUTE 'SELECT EXISTS(SELECT 1 from ' || TG_TABLE_SCHEMA || '.visu_flood_marks where  id_marks =$1 )' USING NEW.gid into test ;
@@ -1221,7 +1221,8 @@ $BODY$;"""
                RETURN NEW;
 
             END;   
-        $BODY$;
+        
+$BODY$;
               """
         return qry
 
