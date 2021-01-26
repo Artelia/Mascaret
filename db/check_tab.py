@@ -74,7 +74,7 @@ class CheckTab():
                                                  {'tab': Maso.struct_fg_val, 'overwrite': False},
                                                  {'tab': Maso.weirs_mob_val, 'overwrite': False}],
                                      'alt_tab': [{'tab': 'weirs', 'sql': ["ALTER TABLE {0}.weirs ADD COLUMN IF NOT "
-                                                                          "EXISTS active_mob boolean;",
+                                                                          "EXISTS active_mob boolean DEFAULT FALSE;",
                                                                           "ALTER TABLE {0}.weirs ADD COLUMN IF NOT "
                                                                           "EXISTS method_mob text;"]}],
                                      'fct': [lambda: self.update_setting_json()]},
@@ -87,7 +87,7 @@ class CheckTab():
                                                                          "EXISTS init_date timestamp "
                                                                          "without time zone;"]},
                                                  {'tab': 'outputs', 'sql': ["ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
-                                                                            "EXISTS active boolean;"]},
+                                                                            "EXISTS active boolean DEFAULT TRUE;"]},
                                                  ],
                                      'fct': [lambda: self.create_var_result(),
                                              lambda: self.convert_all_result(),
@@ -105,18 +105,17 @@ class CheckTab():
                                                   'sql': ["ALTER TABLE {0}.laws ADD COLUMN IF NOT "
                                                                          "EXISTS active boolean DEFAULT TRUE;"]},
                                                  {'tab': 'branchs',
-                                                  'sql': ["ALTER TABLE {0}.branchs ALTER COLUMN active "
+                                                  'sql': ["UPDATE {0}.branchs SET branch = 1 WHERE branch IS NULL ;",
+                                                          "UPDATE {0}.branchs SET zonenum = 1 WHERE zonenum IS NULL;",
+                                                          "ALTER TABLE {0}.branchs ALTER COLUMN active "
                                                                            "SET DEFAULT TRUE;",
                                                           "ALTER TABLE {0}.branchs ALTER COLUMN branch "
                                                           "SET NOT NULL;",
                                                           "ALTER TABLE {0}.branchs ALTER COLUMN zonenum "
                                                           "SET NOT NULL;",
-                                                          "ALTER TABLE {0}.branchs ALTER COLUMN branch "
-                                                          "SET DEFAULT 1;",
-                                                          "ALTER TABLE {0}.branchs ALTER COLUMN zonenum "
-                                                          "SET DEFAULT 1;",
                                                           "ALTER TABLE {0}.branchs ALTER COLUMN active "
                                                           "SET DEFAULT TRUE;"
+
                                                           ]},
                                                  {'tab': 'links',
                                                   'sql': ["ALTER TABLE {0}.links ALTER COLUMN active "
@@ -148,6 +147,9 @@ class CheckTab():
                                                  {'tab': 'extremities',
                                                   'sql': ["ALTER TABLE {0}.extremities ALTER COLUMN active "
                                                           "SET DEFAULT TRUE;"]},
+                                                 {'tab': 'outputs',
+                                                  'sql': ["UPDATE {0}.outputs SET active = TRUE WHERE active IS NULL;"]},
+
 
                                                 ]
 
@@ -623,10 +625,10 @@ class CheckTab():
         qry = 'DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs;\n'.format(self.mdb.SCHEMA)
         qry += 'DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;\n'.format(self.mdb.SCHEMA)
         qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
-        # qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood ' \
-        #       'ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
-        # qry += 'DROP TRIGGER IF EXISTS flood_marks_delete_point_flood ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
-        # qry += '\n'
+        qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood ' \
+               'ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
+        qry += 'DROP TRIGGER IF EXISTS flood_marks_delete_point_flood ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
+        qry += '\n'
         cl = Maso.class_fct_psql()
         qry += cl.pg_chstate_branch()
         qry += '\n'

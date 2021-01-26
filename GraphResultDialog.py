@@ -28,7 +28,7 @@ from qgis.gui import *
 from qgis.utils import *
 from .GraphCommon import GraphCommonNew
 from .Function import tw_to_txt, interpole
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from matplotlib import patches
 import re
 import numpy as np
@@ -530,7 +530,7 @@ class GraphResultDialog(QWidget):
                                             graph['name'])
                     break
 
-            self.graph_obj.clear_laisse()
+
             if update:
                 self.update_data()
         else:
@@ -716,31 +716,40 @@ class GraphResultDialog(QWidget):
 
             self.update_title()
             self.fill_tab(x_var_)
-
-            self.graph_obj.init_graph(self.cur_data, x_var_)
-
-            if self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
-                if 'Z' in self.cur_vars:
-                    self.get_laisses()
-                    self.update_laisse(x_var_)
-
+            self.graph_obj.clear_laisse()
+            self.graph_obj.clear_obs()
             if self.typ_graph == "hydro":
                 self.get_obs()
                 self.update_obs()
+            lais_g = False
+            if self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
+                if 'Z' in self.cur_vars:
+                    self.get_laisses()
+                    lais_g = self.update_laisse(x_var_)
+
+            self.graph_obj.init_graph(self.cur_data, x_var_, lais = lais_g )
+
+
+
 
     def get_laisses(self):
         """
         get flood marks data
         :return:
         """
-        info = self.mdb.select('runs', where="id={}".format(self.cur_run),
-                               list_var=['scenario'])
 
-        condition = "event = '{}' AND active".format(info["scenario"][0])
+
+
+        info = self.mdb.select('runs', where="id={} ".format(self.cur_run),
+                               list_var=['scenario'])
+        condition = "event = '{}' AND active AND z is not null ".format(info["scenario"][0])
+        if self.typ_graph == "hydro":
+            condition += "AND abscissa = {} ".format(self.cur_pknum)
 
         self.laisses = self.mdb.select("flood_marks", condition, "abscissa")
         if self.laisses:
             self.laisses['pknum'] = self.laisses['abscissa']
+
 
     def get_obs(self):
         """
@@ -805,19 +814,31 @@ class GraphResultDialog(QWidget):
         lai = self.laisses
         if lai:
             if var_x not in lai.keys():
-                return
+                self.graph_obj.clear_laisse()
+                return False
 
             courbe_lais["x"] = [v for v in lai[var_x] if v]
             if not courbe_lais["x"]:
-                return
+                self.graph_obj.clear_laisse()
+                return False
 
             courbe_lais["z"] = [v for i, v in enumerate(lai['z']) if lai[var_x][i]]
-
-            if 'ZMAX' in self.cur_data.keys() and "pknum" in self.cur_data.keys():
+            if 'ZMAX' in self.cur_data.keys() :
                 courbe_lais["couleurs"] = []
                 courbe_lais["taille"] = []
+                if "pknum" in self.cur_data.keys():
+                    key_val = "pknum"
+                elif "date" in self.cur_data.keys():
+                    key_val = "date"
                 for x, z in zip(courbe_lais["x"], courbe_lais["z"]):
-                    val = interpole(x, self.cur_data["pknum"], self.cur_data['ZMAX'])
+                    if key_val == "date" :
+                        x_cur_data = [datetime.timestamp(t) for t in self.cur_data[key_val]]
+                        x_inter = datetime.timestamp(datetime(*x.timetuple()[:-4]))
+                    else:
+                        x_cur_data = self.cur_data[key_val]
+                        x_inter = x
+                    val = interpole(x_inter, x_cur_data , self.cur_data['ZMAX'])
+
                     if val:
                         diff = z - val
                         if diff < 0:
@@ -836,16 +857,16 @@ class GraphResultDialog(QWidget):
                         courbe_lais["couleurs"].append("black")
                         courbe_lais["taille"].append(1)
             else:
+                    courbe_lais["couleurs"] = ["black"] * len(courbe_lais["x"])
+                    courbe_lais["taille"] = [1] * len(courbe_lais["x"])
 
-                courbe_lais["couleurs"] = ["black"] * len(courbe_lais["x"])
-                courbe_lais["taille"] = [1] * len(courbe_lais["x"])
             self.graph_obj.init_graph_laisse(courbe_lais)
-
+            return  True
+        return False
 
     def update_obs(self):
         """ """
         if self.obs and "date" in self.cur_data.keys():
-
             obs_graph = {}
             if "Z" in self.cur_data.keys():
                 gg = 'H'
@@ -861,10 +882,11 @@ class GraphResultDialog(QWidget):
                        AND date<'{2}'
                        AND type='{3}'
                        AND valeur > -999.9""".format(self.obs['code'][0], mini, maxi, gg)
-
             obs_graph = self.mdb.select("observations", condition, "date")
-
             if not obs_graph:
+                self.graph_obj.clear_obs()
+                return
+            if len(obs_graph['valeur'])==0 :
                 self.graph_obj.clear_obs()
                 return
 
@@ -877,6 +899,7 @@ class GraphResultDialog(QWidget):
             self.graph_obj.init_graph_obs(obs_graph)
         else:
             self.graph_obj.clear_obs()
+
 
     def fill_tab(self, x_var, nb_col=None):
         self.tw_data.setColumnCount(0)
@@ -999,7 +1022,7 @@ class GraphResult(GraphCommonNew):
                                          zorder=90, label='Observation')
 
         self.courbeObs.set_visible(False)
-        self.courbes.append(self.courbeObs)
+
 
         rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='pink',
                                  alpha=0.5, lw=1, zorder=80)
@@ -1028,14 +1051,27 @@ class GraphResult(GraphCommonNew):
         self.v_line = self.axes.axvline(color="black")
         self.init_legende()
 
-    def init_graph(self, data, x_var, all_vis=True):
+    def init_graph(self, data, x_var, all_vis=True, lais=None):
         self.set_data(data, x_var)
+        handles= None
+        if lais:
+            handles = [c for c in self.courbes]
+            handles.append(mlines.Line2D([], [], color='darkcyan', marker='+',
+                                         linewidth=0,
+                                         markersize=10, label='Flood marks'))
+            self.courbes.append(self.courbeLaisses[0])
+
+        self.init_legende(handles)
         leglines = self.leg.get_lines()
         for v, var in enumerate(self.list_var):
             self.courbes[v].set_data(data[x_var], data[var["name"]])
             if all_vis:
                 self.courbes[v].set_visible(True)
                 leglines[v].set_alpha(1.0)
+
+
+
+
         self.maj_limites()
 
     def init_graph_profil(self, data, x_var):
@@ -1110,23 +1146,26 @@ class GraphResult(GraphCommonNew):
 
     def clear_laisse(self):
         """flood mark"""
-
         if self.courbes:
             tmp = []
             for i, cb in enumerate(self.courbes):
                 if cb not in self.courbeLaisses:
                     tmp.append(cb)
+                else:
+                    cb.set_visible(False)
             self.courbes = list(tmp)
 
         self.courbeLaisses = []
         for e in self.etiquetteLaisses:
             self.axes.texts.remove(e)
         self.etiquetteLaisses = []
+       # self.canvas.draw()
 
     def init_graph_laisse(self, laisses):
         """ add flood mark in graph"""
 
         self.clear_laisse()
+
 
         self.courbeLaisses.append(self.axes.scatter(laisses['x'], laisses['z'],
                                                     color=laisses["couleurs"],
@@ -1145,26 +1184,22 @@ class GraphResult(GraphCommonNew):
 
             self.etiquetteLaisses.append(temp)
 
-        handles = [c for c in self.courbes]
-        handles.append(mlines.Line2D([], [], color='darkcyan', marker='+',
-                                     linewidth=0,
-                                     markersize=10, label='Flood marks'))
-
-        self.courbes += self.courbeLaisses
-
-        self.init_legende(handles=handles)
-        self.maj_limites()
 
     def clear_obs(self):
         """ clean obs graph"""
         self.courbeObs.set_data([], [])
         self.courbeObs.set_visible(False)
+        if self.courbes:
+            tmp = []
+            for i, cb in enumerate(self.courbes):
+                if not cb is self.courbeObs:
+                    tmp.append(cb)
+            self.courbes = list(tmp)
         self.init_legende()
-        self.maj_limites()
+
 
     def init_graph_obs(self, obs):
         self.courbeObs.set_data(obs['date'], obs['valeur'])
         self.courbeObs.set_visible(True)
+        self.courbes.append(self.courbeObs)
 
-        self.init_legende()
-        self.maj_limites()

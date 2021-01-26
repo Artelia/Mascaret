@@ -261,7 +261,7 @@ class weirs(MasObject):
             ('wide_floodgate', ' float'),
             ('lawfile', ' text'),
             ('active', ' boolean NOT NULL DEFAULT TRUE'),
-            ('active_mob', 'boolean'),
+            ('active_mob', 'boolean NOT NULL DEFAULT FALSE'),
             ('method_mob', 'text'),
             ('CONSTRAINT weirs_pkey', ' PRIMARY KEY(gid)')]
 
@@ -871,6 +871,8 @@ class class_fct_psql(MasObject):
     def pg_chstate_branch(self):
         qry = """
 CREATE  OR REPLACE FUNCTION public.chstate_branch() RETURNS TRIGGER AS $$
+    DECLARE
+         my_row  integer; 
     BEGIN 
          EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.profiles SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
          EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.flood_marks SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
@@ -880,6 +882,11 @@ CREATE  OR REPLACE FUNCTION public.chstate_branch() RETURNS TRIGGER AS $$
          EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.lateral_weirs SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
          EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.tracer_lateral_inflows SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
          EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.outputs SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
+         EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.branchs SET active = $2 WHERE (branchnum = $1)' USING NEW.branch,NEW.active;
+         FOR my_row IN EXECUTE 'SELECT gid FROM ' || TG_TABLE_SCHEMA || '.branchs  WHERE branch = $1 AND gid !=$2 AND active != $3 ' USING NEW.branch,NEW.gid,NEW.active
+         LOOP 
+            EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.branchs SET active = $2 WHERE (gid = $1)' USING my_row,NEW.active;
+         END LOOP;
          RETURN NEW;
     END;
 $$ LANGUAGE plpgsql;"""

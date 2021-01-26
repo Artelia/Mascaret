@@ -30,7 +30,7 @@ from . import MasObject as Maso
 from ..WaterQuality import ClassTableWQ
 from ..ui.custom_control import ClassWarningBox
 from ..Function import read_version
-from .check_tab import CheckTab
+from .Check_tab import CheckTab
 
 try:  # qgis2
     from qgis.core import QgsMapLayerRegistry, QgsDataSourceURI

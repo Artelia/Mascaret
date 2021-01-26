@@ -42,7 +42,7 @@ from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
 from .ClassObservation import ClassEventObsDialog
 from .db.ClassMasDatabase import ClassMasDatabase
-from .db.check_tab import CheckTab
+from .db.Check_tab import CheckTab
 from .ui.custom_control import ClassWarningBox
 from .ClassDownload import ClassDownloadMasc
 
