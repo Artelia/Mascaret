@@ -81,6 +81,7 @@ class GraphCommon(QWidget):
         self.mdb = self.mgis.mdb
         self.dossierPlugin = self.mgis.masplugPath
         self.dossierProjet = self.mgis.repProject
+        self.unit = 'date'
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
 
