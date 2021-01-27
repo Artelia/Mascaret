@@ -717,7 +717,7 @@ class ClassMasDatabase(object):
         for sql in lfct:
             qry += sql
             qry += '\n'
-        print(qry)
+
         self.run_query(qry)
 
 

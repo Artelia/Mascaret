@@ -103,6 +103,10 @@ class CheckTab():
                                                   'sql': ["ALTER TABLE {0}.laws ADD COLUMN IF NOT "
                                                                          "EXISTS active boolean NOT NULL DEFAULT TRUE;",
                                                           ]},
+                                                 {'tab': 'observations',
+                                                  'sql': ["ALTER TABLE {0}.observations ADD COLUMN IF NOT "
+                                                          "EXISTS comment text;",
+                                                          ]},
                                                  {'tab': 'branchs',
                                                   'sql': ["UPDATE {0}.branchs SET branch = 1 WHERE branch IS NULL ;",
                                                           "UPDATE {0}.branchs SET zonenum = 1 WHERE zonenum IS NULL;",
