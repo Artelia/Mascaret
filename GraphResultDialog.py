@@ -151,6 +151,10 @@ class GraphResultDialog(QWidget):
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
                                   "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
                                   "ORDER BY run, scenario ".format(self.mdb.SCHEMA), fetch=True)
+        print(rows)
+        print("SELECT id, run, scenario FROM {0}.runs "
+                                  "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
+                                  "ORDER BY run, scenario ".format(self.mdb.SCHEMA))
         if rows:
             return True
         else:

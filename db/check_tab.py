@@ -92,7 +92,6 @@ class CheckTab():
                                      'fct': [lambda: self.create_var_result(),
                                              lambda: self.convert_all_result(),
                                              lambda: self.fill_init_date_runs()],
-                                     #'del_tab': ['results_float', 'results_int'],
                                      },
                            '3.0.3' : {},
                            '3.0.4': {},
@@ -121,8 +120,9 @@ class CheckTab():
                                                           "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
 
                                                 ],
-                                     'fct': [  # lambda: self.add_geom_ori(),
-                                           lambda: self.add_trigger_update_306(), ],
+                                     'fct': [  lambda: self.update_tab_306(),
+                                           lambda: self.add_trigger_update_306()
+                                            ],
 
                                      },
 
@@ -157,8 +157,7 @@ class CheckTab():
                     .format(self.mdb.SCHEMA, name_tab, '0.0.0')
                 self.mdb.execute(sql)
 
-        info = self.mdb.select('admin_tab', where="table_ = 'admin_tab'".format(), list_var=['version_'])
-        curent_v_tab = info['version_'][0]
+        curent_v_tab = self.get_version()
 
         pos = self.list_hist_version.index(curent_v_tab)
         pos_fin = self.list_hist_version.index(version)
@@ -226,6 +225,16 @@ class CheckTab():
 
             else:
                 self.mgis.add_info("********* Cancel of update table ***********")
+
+    def get_version(self, table = None):
+        """ get version"""
+        if table:
+            info = self.mdb.select('admin_tab', where="table_ = {}".format(table), list_var=['version_'])
+            curent_v_tab = info['version_'][0]
+        else:
+            min_ver = self.mdb.select_min('version_', 'admin_tab')
+            curent_v_tab = min_ver
+        return  curent_v_tab
 
     def all_version(self, tabs, version=None):
         if not version:
@@ -577,13 +586,6 @@ class CheckTab():
             version = read_version(self.mgis.masplugPath)
         self.all_version(tabs, version)
 
-    # def add_geom_ori(self):
-    #     sql = "SELECT Find_SRID('{}', 'flood_marks', 'geom');".format(self.mdb.SCHEMA)
-    #     sird = self.mdb.run_query(sql,fetch = True)[0][0]
-    #     sql = "ALTER TABLE {}.flood_marks ADD COLUMN " \
-    #           "IF NOT EXISTS geom_ori geometry(Point,{});\n".format(self.mdb.SCHEMA,sird)
-    #     sql += "UPDATE {0}.{1} SET geom_ori= geom;".format(self.mdb.SCHEMA,'flood_marks')
-    #     self.mdb.run_query(sql)
 
     def update_tab_306(self):
         list_tab=['branchs','profiles','tracer_lateral_inflows','lateral_weirs',
