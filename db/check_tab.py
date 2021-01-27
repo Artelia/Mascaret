@@ -93,48 +93,47 @@ class CheckTab():
                                              lambda: self.convert_all_result(),
                                              lambda: self.fill_init_date_runs()],
                                      },
-                           '3.0.3' : {},
+                           '3.0.3': {},
                            '3.0.4': {},
                            '3.0.5': {},
                            '3.0.6': {
-                                     'add_tab': [{'tab': Maso.visu_flood_marks, 'overwrite': False},],
+                               'add_tab': [{'tab': Maso.visu_flood_marks, 'overwrite': False}],
 
-                                     'alt_tab': [{'tab': 'laws',
-                                                  'sql': ["ALTER TABLE {0}.laws ADD COLUMN IF NOT "
-                                                                         "EXISTS active boolean NOT NULL DEFAULT TRUE;",
-                                                          ]},
-                                                 {'tab': 'observations',
-                                                  'sql': ["ALTER TABLE {0}.observations ADD COLUMN IF NOT "
-                                                          "EXISTS comment text;",
-                                                          ]},
-                                                 {'tab': 'branchs',
-                                                  'sql': ["UPDATE {0}.branchs SET branch = 1 WHERE branch IS NULL ;",
-                                                          "UPDATE {0}.branchs SET zonenum = 1 WHERE zonenum IS NULL;",
-                                                          "ALTER TABLE {0}.branchs ALTER COLUMN branch "
-                                                          "SET NOT NULL;",
-                                                          "ALTER TABLE {0}.branchs ALTER COLUMN zonenum "
-                                                          "SET NOT NULL;",
+                               'alt_tab': [{'tab': 'laws',
+                                            'sql': ["ALTER TABLE {0}.laws ADD COLUMN IF NOT "
+                                                    "EXISTS active boolean NOT NULL DEFAULT TRUE;",
+                                                    ]},
+                                           {'tab': 'observations',
+                                            'sql': ["ALTER TABLE {0}.observations ADD COLUMN IF NOT "
+                                                    "EXISTS comment text;",
+                                                    ]},
+                                           {'tab': 'branchs',
+                                            'sql': ["UPDATE {0}.branchs SET branch = 1 WHERE branch IS NULL ;",
+                                                    "UPDATE {0}.branchs SET zonenum = 1 WHERE zonenum IS NULL;",
+                                                    "ALTER TABLE {0}.branchs ALTER COLUMN branch "
+                                                    "SET NOT NULL;",
+                                                    "ALTER TABLE {0}.branchs ALTER COLUMN zonenum "
+                                                    "SET NOT NULL;",
 
-                                                          ]},
-                                                 {'tab': 'flood_marks',
-                                                  'sql': ["ALTER TABLE {0}.flood_marks ADD COLUMN IF NOT "
-                                                          "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
-                                                 {'tab': 'outputs',
-                                                  'sql': ["ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
-                                                          "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
+                                                    ]},
+                                           {'tab': 'flood_marks',
+                                            'sql': ["ALTER TABLE {0}.flood_marks ADD COLUMN IF NOT "
+                                                    "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
+                                           {'tab': 'outputs',
+                                            'sql': ["ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
+                                                    "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
 
-                                                ],
-                                     'fct': [  lambda: self.update_tab_306(),
-                                           lambda: self.add_trigger_update_306()
-                                            ],
+                                           ],
+                               'fct': [
+                                   lambda: self.update_tab_306(),
+                                   lambda: self.add_trigger_update_306()
+                               ],
 
-                                     },
+                           },
 
                            # '3.0.x': { 'del_tab': ['resultats']},
 
                            }
-
-
 
     def update_adim(self):
         """
@@ -173,7 +172,7 @@ class CheckTab():
                                    "There is a risk of table corruption.\n "
                                    "Remember to make backup copies if it's important model.".format(self.mdb.SCHEMA))
             if ok:
-                list_test_ver=[]
+                list_test_ver = []
                 for ver in self.list_hist_version[pos + 1:pos_fin + 1]:
                     list_test = []
                     if ver in self.dico_modif.keys():
@@ -194,7 +193,7 @@ class CheckTab():
                                                 tab_name = tab
                                                 valid = self.del_tab(tab_name)
                                             else:
-                                                valid =False
+                                                valid = False
                                             # print (proc, tab_name, valid)
                                             if valid:
                                                 if proc != 'del_tab':
@@ -230,7 +229,7 @@ class CheckTab():
             else:
                 self.mgis.add_info("********* Cancel of update table ***********")
 
-    def get_version(self, table = None):
+    def get_version(self, table=None):
         """ get version"""
         if table:
             info = self.mdb.select('admin_tab', where="table_ = {}".format(table), list_var=['version_'])
@@ -238,7 +237,7 @@ class CheckTab():
         else:
             min_ver = self.mdb.select_min('version_', 'admin_tab')
             curent_v_tab = min_ver
-        return  curent_v_tab
+        return curent_v_tab
 
     def all_version(self, tabs, version=None):
         if not version:
@@ -338,9 +337,9 @@ class CheckTab():
         return valid
 
     def create_var_result(self):
-            self.mdb.execute("DELETE FROM {0}.results_var".format(self.mdb.SCHEMA))
-            dossier = os.path.join(self.mgis.masplugPath, 'db', 'sql')
-            self.mdb.insert_var_to_result_var(dossier)
+        self.mdb.execute("DELETE FROM {0}.results_var".format(self.mdb.SCHEMA))
+        dossier = os.path.join(self.mgis.masplugPath, 'db', 'sql')
+        self.mdb.insert_var_to_result_var(dossier)
 
     def convert_all_result(self):
         """ conversion between the previous results table format to the new for all results"""
@@ -427,7 +426,7 @@ class CheckTab():
                                         rows = self.mdb.run_query(sql, fetch=True)
                                         dico_zmax[pknum] = rows[0][0]
                                 list_value.append([id_runs, 'opt', 'zmax', json.dumps(dico_zmax)])
-                            except Exception as e:
+                            except Exception:
                                 pass
                     sql = "INSERT INTO {0}.runs_graph(id_runs, type_res,var,val) " \
                           "VALUES (%s,%s,%s, %s); \n".format(self.mdb.SCHEMA)
@@ -436,7 +435,7 @@ class CheckTab():
             convert = True
         except Exception as e:
             self.mgis.add_info("Error convert_all_result : {}".format(str(e)))
-            return  False
+            return False
         if convert:
             # TODO delete table
             # self.mdb.drop_table('resutlats')
@@ -584,26 +583,24 @@ class CheckTab():
             self.mgis.add_info("Error fill_struct: {}".format(str(e)))
             return False
 
-    def debug_update_vers_meta(self,version=None):
+    def debug_update_vers_meta(self, version=None):
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
-        if not version :
+        if not version:
             version = read_version(self.mgis.masplugPath)
         self.all_version(tabs, version)
 
-
     def update_tab_306(self):
-        list_tab=['branchs','profiles','tracer_lateral_inflows','lateral_weirs',
-                  'lateral_inflows','hydraulic_head','weirs','extremities',
-                  'links','basins','outputs','flood_marks', 'laws']
+        list_tab = ['branchs', 'profiles', 'tracer_lateral_inflows', 'lateral_weirs',
+                    'lateral_inflows', 'hydraulic_head', 'weirs', 'extremities',
+                    'links', 'basins', 'outputs', 'flood_marks', 'laws']
         txt = ''
         for tab in list_tab:
-            txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET DEFAULT TRUE;".format(self.mdb.SCHEMA,tab)
+            txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET DEFAULT TRUE;".format(self.mdb.SCHEMA, tab)
             txt += '\n'
-            txt += "UPDATE {0}.{1} SET active = TRUE WHERE active IS NULL;".format(self.mdb.SCHEMA,tab)
+            txt += "UPDATE {0}.{1} SET active = TRUE WHERE active IS NULL;".format(self.mdb.SCHEMA, tab)
             txt += '\n'
-            txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET NOT NULL;".format(self.mdb.SCHEMA,tab)
+            txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET NOT NULL;".format(self.mdb.SCHEMA, tab)
             txt += '\n'
-
 
     def add_trigger_update_306(self):
         """
@@ -630,8 +627,7 @@ class CheckTab():
 
         self.mdb.add_fct_for_visu()
 
-
-        qry =  'DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs;\n'.format(self.mdb.SCHEMA)
+        qry = 'DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs;\n'.format(self.mdb.SCHEMA)
         qry += 'DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;\n'.format(self.mdb.SCHEMA)
         qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
         qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood ' \
@@ -642,7 +638,7 @@ class CheckTab():
         qry += cl.pg_chstate_branch()
         qry += '\n'
         qry += 'CREATE TRIGGER branchs_chstate_active\n' \
-              ' AFTER UPDATE\n  ON {0}.branchs\n'.format(self.mdb.SCHEMA)
+               ' AFTER UPDATE\n  ON {0}.branchs\n'.format(self.mdb.SCHEMA)
         qry += ' FOR EACH ROW\n' \
                'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
                'EXECUTE PROCEDURE chstate_branch();\n'
@@ -650,10 +646,10 @@ class CheckTab():
         qry += cl.pg_chstate_basin()
         qry += '\n'
         qry += 'CREATE TRIGGER basins_chstate_active\n' \
-              ' AFTER UPDATE\n  ON {0}.basins\n'.format(self.mdb.SCHEMA)
+               ' AFTER UPDATE\n  ON {0}.basins\n'.format(self.mdb.SCHEMA)
         qry += ' FOR EACH ROW\n' \
-        'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n'\
-        'EXECUTE PROCEDURE chstate_basin();\n'
+               'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
+               'EXECUTE PROCEDURE chstate_basin();\n'
         qry += '\n'
         cl = Maso.flood_marks()
         cl.schema = self.mdb.SCHEMA
@@ -662,10 +658,3 @@ class CheckTab():
         qry += cl.pg_calcul_abscisse_flood()
         qry += '\n'
         self.mdb.run_query(qry)
-
-
-
-
-
-
-

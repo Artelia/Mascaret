@@ -26,12 +26,12 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
+from .ui.custom_control import ClassWarningBox
+
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
 else:  # qt5
     from qgis.PyQt.QtWidgets import *
-
-from .ui.custom_control import ClassWarningBox
 
 
 class ClassImportRes(QDialog):

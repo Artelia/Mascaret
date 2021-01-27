@@ -59,13 +59,19 @@ class ClassPostPreFG:
             pass
 
     def export_cl(self, obj, name='object.obj'):
+        """
+
+        :param obj: object to dump
+        :param name: name file
+        :return:
+        """
         with open(name, 'wb') as file:
             pickle.dump(obj, file)
 
     def create_cli_fg(self, name=None):
         """
         Creation of ClassInfomParamFG (python object save compte data)
-        :param mgis:
+        :param name: name file for export
         :return:
         """
         list_actif = self.clmeth.fg_actif()
@@ -147,7 +153,7 @@ class ClassPostPreFG:
     def get_abac(self, liste):
         """
         Get abacus
-        :param list_recup: list of abacus
+        :param liste: list of abacus
         :return: dico with abacus data
         """
         if self.mgis:

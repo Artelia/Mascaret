@@ -157,7 +157,6 @@ class events(MasObject):
                       ('CONSTRAINT cle_events', 'PRIMARY KEY (name)')]
 
 
-
 # *****************************************
 class extremities(MasObject):
     def __init__(self):
@@ -216,7 +215,7 @@ class flood_marks(MasObject):
             AFTER DELETE
             ON {}.{}
             FOR EACH ROW
-            EXECUTE PROCEDURE public.delete_point_flood();""".format(self.schema,self.name)
+            EXECUTE PROCEDURE public.delete_point_flood();""".format(self.schema, self.name)
         return qry
 
     def pg_calcul_abscisse_flood(self):
@@ -227,7 +226,7 @@ class flood_marks(MasObject):
         ON {0}.{1}
         FOR EACH ROW
         EXECUTE PROCEDURE public.calcul_abscisse_point_flood();
-        """.format(self.schema,self.name)
+        """.format(self.schema, self.name)
         return qry
 
     def pg_create_table(self):
@@ -593,6 +592,7 @@ class basins(MasObject):
         qry += self.pg_updat_actv()
         return qry
 
+
 class visu_flood_marks(MasObject):
     def __init__(self):
         super(visu_flood_marks, self).__init__()
@@ -603,13 +603,13 @@ class visu_flood_marks(MasObject):
             ('id_marks', 'integer'),
             ('CONSTRAINT visu_flood_marks_pkey', 'PRIMARY KEY(gid,id_marks)')]
 
-
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += self.pg_create_index()
         qry += '\n'
         return qry
+
 
 # *******************************************
 # ******************************************
@@ -626,8 +626,6 @@ class observations(MasObject):
                       ('valeur', 'float'),
                       ('date', 'timestamp without time zone'),
                       ('CONSTRAINT cle_obs ', 'PRIMARY KEY (id)')]
-
-
 
 
 class resultats(MasObject):
@@ -1029,7 +1027,7 @@ $BODY$;"""
           SQL function which computes the branch abscissa
         :return:
         """
-        qry="""
+        qry = """
 CREATE OR REPLACE FUNCTION public.abscisse_branch(
 	_tbl_branchs regclass,
 	id_branch integer)
@@ -1225,6 +1223,7 @@ AS $BODY$
 $BODY$;
               """
         return qry
+
 
 # *****************************************
 class laws_wq(MasObject):

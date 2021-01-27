@@ -13,6 +13,7 @@ import sys
 
 import numpy as np
 
+
 # from execution.mascaret_cas import MascaretCas
 # from utils.exceptions import TelemacException
 
@@ -138,14 +139,14 @@ class Mascaret():
             libmascaret = '../api/libmascaret.so'
         elif test == 'win32':
             libmascaret = '../api/libmascaret.dll'
-            #libmascaret = '../api/libmascaret_old.dll'
+            # libmascaret = '../api/libmascaret_old.dll'
         else:
             print("{0} platform  doesn't allow to run simulation.".format(test))
             return False
 
-        #self.load_mascaret(libmascaret)
+        # self.load_mascaret(libmascaret)
 
-        self.libmascaret =  ctypes.CDLL(libmascaret)
+        self.libmascaret = ctypes.CDLL(libmascaret)
         # MDU fin modif
         self.iprint = 0
         self.id_masc = None
@@ -183,8 +184,8 @@ class Mascaret():
         file_type_c = (ctypes.c_char_p * len_file)(*file_type)
         self.logger.debug('Importing a model...')
         self.error = self.libmascaret.C_IMPORT_MODELE_MASCARET(
-                self.id_masc, file_name_c,
-                file_type_c, len_file, self.iprint)
+            self.id_masc, file_name_c,
+            file_type_c, len_file, self.iprint)
         self.logger.info("Model imported with:\n"
                          + "-> file_name: {}\n-> file_type: {}."
                          .format(file_name, file_type))
@@ -201,7 +202,7 @@ class Mascaret():
         iprint_c = (ctypes.c_int * 1)(self.iprint)
         self.logger.debug('Importing a model...')
         self.error = self.libmascaret.C_IMPORT_MODELE_MASCARET_ONEFILE(
-                id_masc_c, iprint_c, masc_file_c)
+            id_masc_c, iprint_c, masc_file_c)
         self.logger.info("Model imported with:\n"
                          + "-> masc_file: {}\n"
                          .format(masc_file))
@@ -575,17 +576,17 @@ class Mascaret():
         self.logger.debug('Getting the type of {}...'.format(var_name))
 
         self.error = self.libmascaret.C_GET_TYPE_VAR_MASCARET(
-                id_masc_c, var_name_c, ctypes.byref(var_type_c),
-                ctypes.byref(category_c), ctypes.byref(acces_c),
-                ctypes.byref(var_dim_c))
+            id_masc_c, var_name_c, ctypes.byref(var_type_c),
+            ctypes.byref(category_c), ctypes.byref(acces_c),
+            ctypes.byref(var_dim_c))
 
         self.logger.debug('type = {} {} {} {}.'
                           .format(var_type_c[0],
                                   category_c[0],
                                   acces_c.value,
                                   var_dim_c.value))
-        return var_type_c[0], category_c[0],\
-            acces_c.value, var_dim_c.value
+        return var_type_c[0], category_c[0], \
+               acces_c.value, var_dim_c.value
 
     def get_var_size(self, var_name, index=0):
         """Get the size(s) of a Mascaret variable
@@ -599,7 +600,7 @@ class Mascaret():
         """
         var_name_c = (ctypes.c_char_p * 1)(var_name.encode('utf8'))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
-        index = ctypes.c_int(index+1)
+        index = ctypes.c_int(index + 1)
         size1 = ctypes.c_int()
         size2 = ctypes.c_int()
         size3 = ctypes.c_int()
@@ -676,25 +677,25 @@ class Mascaret():
         dt_c = ctypes.c_double(time_step)
         nb_timebc_c = ctypes.c_int(nb_timebc)
 
-        tab_timebc_c = (ctypes.c_double*nb_timebc)()
+        tab_timebc_c = (ctypes.c_double * nb_timebc)()
         for j in range(nb_timebc):
             tab_timebc_c[j] = tab_timebc[j]
-            tab_cl1_c = (ctypes.POINTER(ctypes.c_double)*nb_bc)()
-            tab_cl2_c = (ctypes.POINTER(ctypes.c_double)*nb_bc)()
+            tab_cl1_c = (ctypes.POINTER(ctypes.c_double) * nb_bc)()
+            tab_cl2_c = (ctypes.POINTER(ctypes.c_double) * nb_bc)()
 
         for i in range(nb_bc):
-            tab_cl1_c[i] = (ctypes.c_double*nb_timebc)()
-            tab_cl2_c[i] = (ctypes.c_double*nb_timebc)()
+            tab_cl1_c[i] = (ctypes.c_double * nb_timebc)()
+            tab_cl2_c[i] = (ctypes.c_double * nb_timebc)()
             for j in range(nb_timebc):
                 tab_cl1_c[i][j] = tab_cl1[j][i]
                 tab_cl2_c[i][j] = tab_cl2[j][i]
 
         self.logger.debug('Running Mascaret cl...from {}'.format(t_0))
         self.error = self.libmascaret.C_CALCUL_MASCARET_CONDITION_LIMITE(
-                 self.id_masc, t0_c,
-                 tend_c, dt_c, ctypes.byref(tab_timebc_c),
-                 nb_timebc_c, ctypes.byref(tab_cl1_c), ctypes.byref(tab_cl2_c),
-                 self.iprint)
+            self.id_masc, t0_c,
+            tend_c, dt_c, ctypes.byref(tab_timebc_c),
+            nb_timebc_c, ctypes.byref(tab_cl1_c), ctypes.byref(tab_cl2_c),
+            self.iprint)
         self.logger.debug('Running Mascaret cl...to {}'.format(t_end))
 
     def get_var_desc(self, prefix=''):
@@ -710,7 +711,7 @@ class Mascaret():
         size_c = ctypes.c_int()
 
         self.logger.debug('Get var desc MASCARET...')
-        self.error = self.libmascaret.\
+        self.error = self.libmascaret. \
             C_GET_DESC_VAR_MASCARET(self.id_masc,
                                     ctypes.byref(tab_name_c),
                                     ctypes.byref(tab_desc_c),
@@ -719,10 +720,10 @@ class Mascaret():
 
         var_desc = {}
         for i in range(size_c.value):
-            if str(ctypes.string_at(tab_name_c[i]), 'utf-8')\
+            if str(ctypes.string_at(tab_name_c[i]), 'utf-8') \
                     .startswith(prefix):
                 var_desc[str(ctypes.string_at(tab_name_c[i]), 'utf-8')] = \
-                           str(ctypes.string_at(tab_desc_c[i]), 'utf-8')
+                    str(ctypes.string_at(tab_desc_c[i]), 'utf-8')
         return var_desc
 
     def version(self):
@@ -736,11 +737,11 @@ class Mascaret():
         v_c2 = ctypes.c_int()
         v_c3 = ctypes.c_int()
         error = self.libmascaret.C_VERSION_MASCARET(
-                ctypes.byref(v_c1), ctypes.byref(v_c2), ctypes.byref(v_c3))
+            ctypes.byref(v_c1), ctypes.byref(v_c2), ctypes.byref(v_c3))
         if error != 0:
             return 'Version number could not be retrieved from MASCARET...'
         return 'v' + str(v_c1.value) + 'p' + str(v_c2.value) + \
-            'r' + str(v_c3.value)
+               'r' + str(v_c3.value)
 
     def import_xml(self, file_name, import_model):
         """Import Model or State of Mascaret from xml files
@@ -823,7 +824,7 @@ class Mascaret():
 
         self.logger.debug('Export variable in xml...')
         self.error = self.libmascaret.C_EXPORT_VAR_XML(
-          self.id_masc, unit_c, var_name_c, description_c)
+            self.id_masc, unit_c, var_name_c, description_c)
         self.logger.debug('Export variable in xml done.')
 
     def export_uservar_xml(self, unit, var_name, var_type, description,
@@ -846,8 +847,8 @@ class Mascaret():
 
         self.logger.debug('Export user variable in xml...')
         self.error = self.libmascaret.C_EXPORT_USERVAR_XML(
-          self.id_masc, unit_c, var_name_c, var_type_c,
-          description_c, var_val_c)
+            self.id_masc, unit_c, var_name_c, var_type_c,
+            description_c, var_val_c)
         self.logger.debug('Export user variable in xml done.')
 
     def close_tag_xml(self, unit, anchor):
@@ -863,7 +864,7 @@ class Mascaret():
 
         self.logger.debug('Close xml anchor...')
         self.error = self.libmascaret.C_FERMETURE_BALISE_XML(
-          self.id_masc, unit_c, anchor_c)
+            self.id_masc, unit_c, anchor_c)
         self.logger.debug('Close xml anchor done.')
 
     def get_nb_cl(self):
@@ -952,7 +953,7 @@ class Mascaret():
             value = self.get_bool(varname, index_i, index_j, index_k)
         else:
             raise TelemacException(
-                    "Unknown data type %s for %s" % (vartype, varname))
+                "Unknown data type %s for %s" % (vartype, varname))
 
         return value
 
@@ -1005,14 +1006,17 @@ class Mascaret():
         elif b"BOOL" in vartype:
             self.set_bool(varname, value, index_i, index_j, index_k)
         else:
-            raise TelemacException(\
-                    "Unknown data type %s for %s" % (vartype, varname))
-#MDU modif
+            raise TelemacException(
+                "Unknown data type %s for %s" % (vartype, varname))
+
+
+# MDU modif
 class TelemacException(Exception):
     """ Generic exception class for all of Telemac-Mascaret Exceptions """
     pass
 
+
 class MascaretException(TelemacException):
     """ Generic exception class for all of Telemac-Mascaret Exceptions """
     pass
-#MDU fin modif
+    # MDU fin modif

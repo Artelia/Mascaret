@@ -278,7 +278,6 @@ class ClassParameterDialog(QDialog):
                             or isinstance(obj, QComboBox):
                         getattr(self.ui, 'label_' + param).hide()
 
-
     def ch_event(self):
         """event change between law and evenment"""
         event = self.ui.evenement.isChecked()

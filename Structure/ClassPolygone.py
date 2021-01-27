@@ -181,6 +181,7 @@ class ClassPolygone:
     def udpate_polygon_table(self, mdb, poly_final, id_config, id_elem):
         """
         update polygone table
+        :param mdb: data base class
         :param poly_final: polygone
         :param id_config: config index
         :param id_elem:  element index
@@ -196,6 +197,7 @@ class ClassPolygone:
         """
         Cut the polygone horizontaly
         :param poly: polygone to cut
+        :param typ : cut side of polygon
         :param cote: z
         :return: new polygon
         """

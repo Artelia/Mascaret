@@ -42,7 +42,7 @@ class StructureFgDialog(QDialog):
         self.tbst = ClassTableStructure()
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_floodgate.ui'), self)
         self.id_struct = id_struct
-        self.unitv =0
+        self.unitv = 0
         self.b_ok.accepted.connect(self.accept_page)
         self.b_ok.rejected.connect(self.reject_page)
         self.zinc_fg.valueChanged.connect(self.update_min_zinc_fg_max)
@@ -55,7 +55,7 @@ class StructureFgDialog(QDialog):
         #
 
         fill_qcombobox(self.cb_type_t, [[1, 's'], [60, 'min'], [3600, 'h'], [86400, 'jours']])
-        fill_qcombobox(self.cb_type_t_vit, [[1, 'm/s'], [ 60, 'm/min'], [3600, 'm/h']])
+        fill_qcombobox(self.cb_type_t_vit, [[1, 'm/s'], [60, 'm/min'], [3600, 'm/h']])
 
         self.dico_ctrl = {'VELOFG': [self.vel_fg],
                           'TYPE_TIME_VELO': [self.cb_type_t_vit],
@@ -80,7 +80,7 @@ class StructureFgDialog(QDialog):
     def accept_page(self):
         # SAVE BD
         fact_t = float(ctrl_get_value(self.dico_ctrl['TYPE_TIME'][0]))
-        fact_t_velo = 1/float(ctrl_get_value(self.dico_ctrl['TYPE_TIME_VELO'][0]))
+        fact_t_velo = 1 / float(ctrl_get_value(self.dico_ctrl['TYPE_TIME_VELO'][0]))
 
         for var, ctrls in self.dico_ctrl.items():
             if var == 'TYPE_TIME':

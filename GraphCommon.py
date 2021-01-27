@@ -347,7 +347,7 @@ class GraphCommonNew():
         self.canvas.draw()
 
     def init_legende(self, handles=None):
-        if not  handles:
+        if not handles:
             handles = self.courbes
         liste_noms = []
         for c in self.courbes:

@@ -29,7 +29,6 @@ import sys
 import json
 import time
 
-
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
@@ -56,7 +55,7 @@ else:  # qt5
 class ClassMascaret:
     """ Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, main, rep_run = None):
+    def __init__(self, main, rep_run=None):
         self.mgis = main
         self.mdb = self.mgis.mdb
         self.iface = self.mgis.iface
@@ -1330,8 +1329,8 @@ class ClassMascaret:
         if 'comments' in liste_col:
             comments, ok = QInputDialog.getText(QWidget(), 'Comments',
                                                 'if you want to input a comment :')
-            if not isinstance(comments,str) :
-                comments= str(comments)
+            if not isinstance(comments, str):
+                comments = str(comments)
             if not ok:
                 if self.mgis.DEBUG:
                     self.mgis.add_info("No comments.")
@@ -1451,8 +1450,8 @@ class ClassMascaret:
     def init_scen_steady(self, par, dict_lois):
         """
          Initial  files creation  for steady scenario
-        :param par (dict): parameters
-        :param dict_lois(dict) : laws
+        :param par: (dict) parameters
+        :param dict_lois:  (dict) laws
         :return:
         """
 
@@ -1483,7 +1482,7 @@ class ClassMascaret:
                     if v and k in liste:
                         tab[k] = [float(var) for var in v.split()]
                 self.creer_loi(nom, tab, l["type"])
-                #self.mgis.add_info("Error : Add the 'valeurprerm' value in extremities.")
+                # self.mgis.add_info("Error : Add the 'valeurprerm' value in extremities.")
             else:
                 try:
                     liste_ = ['pasTemps', 'critereArret', 'nbPasTemps', 'tempsMax', 'tempsInit']
@@ -1520,10 +1519,10 @@ class ClassMascaret:
     def init_scen_even(self, par, dict_lois, i, dict_scen):
         """
         Initial  files creation  for evenment scenario
-        :param par (dict): parameters
-        :param dict_lois(dict) : laws
-        :param i(int): num scenario
-        :param dict_scen(dict): dictionnay of scenarii
+        :param par:  (dict) parameters
+        :param dict_lois: (dict) laws
+        :param i: (int) um scenario
+        :param dict_scen: (dict)dictionnay of scenarii
         :return:
         """
         # transcritical unsteady evenement
@@ -1610,7 +1609,7 @@ class ClassMascaret:
         dico_run = self.mdb.select_distinct("run",
                                             "runs")
 
-        if dico_run != {} and dico_run != None:
+        if dico_run != {} and dico_run is not None:
             liste_run = ['{}'.format(v) for v in dico_run['run']]
         else:
             liste_run = []
@@ -1650,8 +1649,7 @@ class ClassMascaret:
                 self.mgis.add_info("Cancel run")
             return False
 
-
-    #         return
+    # return
     def mascaret(self, noyau, run, only_init=False):
         """
         creation file and to run mascaret
@@ -1667,8 +1665,7 @@ class ClassMascaret:
 
         if only_init:
             id = 0
-            scen = dict_scen['name'][id]
-            date_debut = None
+
             if noyau == "steady":
                 self.init_scen_steady(par, dict_lois)
             elif par["evenement"]:
@@ -1682,11 +1679,11 @@ class ClassMascaret:
             return
 
         self.mgis.task_mas = QgsTask.fromFunction('Run Mascaret', self.task_mascaret,
-                                                         on_finished=self.completed,
-                                             tup =(par, dict_scen, dict_lois, comments,noyau,run))
+                                                  on_finished=self.completed,
+                                                  tup=(par, dict_scen, dict_lois, comments, noyau, run))
         self.mgis.task_mas.taskCompleted.connect(self.del_task_mas)
         self.mgis.task_mas.taskTerminated.connect(self.del_task_mas)
-        QgsApplication.taskManager().addTask( self.mgis.task_mas)
+        QgsApplication.taskManager().addTask(self.mgis.task_mas)
 
     def del_task_mas(self):
         """
@@ -1696,22 +1693,22 @@ class ClassMascaret:
         del self.mgis.task_mas
         self.mgis.task_mas = None
 
-    def completed(self,exception):
+    def completed(self, exception):
         """this is called when run is finished. Exception is not None if run
         raises an exception. Result is the return value of run."""
-        MESSAGE_CATEGORY = 'My tasks from a function'
+        message_category = 'My tasks from a function'
         if exception is None:
-                QgsMessageLog.logMessage(
-                    'task completed',
-                    MESSAGE_CATEGORY, Qgis.Info)
+            QgsMessageLog.logMessage(
+                'task completed',
+                message_category, Qgis.Info)
         else:
             QgsMessageLog.logMessage("Exception: {}".format(exception),
-                                     MESSAGE_CATEGORY, Qgis.Critical)
+                                     message_category, Qgis.Critical)
             raise exception
 
-    def task_mascaret(self,task, tup= None ):
-        if  tup:
-            par, dict_scen, dict_lois, comments,noyau,run = tup
+    def task_mascaret(self, task, tup=None):
+        if tup:
+            par, dict_scen, dict_lois, comments, noyau, run = tup
         else:
             return
 
@@ -1730,7 +1727,6 @@ class ClassMascaret:
                 self.init_scen_trans_unsteady(par, dict_lois)
             if self.check_mobil_gate() and noyau == "unsteady":
                 self.create_mobil_gate_file()
-
 
             # RUN Model
             if par["initialisationAuto"] and noyau is not "steady":
@@ -1850,7 +1846,7 @@ class ClassMascaret:
             self.select_init_run_case()
         cl = ClassPostPreFG(self.mgis)
 
-       # path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'mascaret'))
+        # path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'mascaret'))
         path = self.dossierFileMasc
         path = os.path.join(path, 'cli_fg.obj')
         cl.create_cli_fg(path)
@@ -2173,11 +2169,10 @@ class ClassMascaret:
     def del_folder_mas(self):
         """ Delete the copy folder"""
         try:
-            shutil.rmtree( self.dossierFileMasc)
+            shutil.rmtree(self.dossierFileMasc)
         except Exception as e:
             if self.mgis.DEBUG:
                 print('Failed to delete {}. Reason: {}'.format(file_path, e))
-
 
     def copy_run_file(self, rep):
         """copy run file in "rep" path"""
@@ -2241,7 +2236,7 @@ class ClassMascaret:
 
                     id_run = self.mdb.run_query("SELECT id FROM {0}.runs "
                                                 "WHERE run = '{1}' "
-                                                "AND (scenario LIKE '{2}' OR  scenario " \
+                                                "AND (scenario LIKE '{2}' OR  scenario " 
                                                 "LIKE '{2}_init') ".format(self.mdb.SCHEMA, run, nom_scen),
                                                 fetch=True)
 
@@ -2783,7 +2778,6 @@ class ClassMascaret:
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
 
-
     def save_new_results(self, val, id_run):
         """
         Save values in results table
@@ -2829,7 +2823,7 @@ class ClassMascaret:
                     self.mdb.new_insert_res('results',
                                             values[nb_stock * i:nb_stock * (i + 1)],
                                             col_tab)
-                if nb_stock * (i + 1)<len(values):
+                if nb_stock * (i + 1) < len(values):
                     self.mdb.new_insert_res('results',
                                             values[nb_stock * (i + 1):],
                                             col_tab)
@@ -2847,7 +2841,6 @@ class ClassMascaret:
                 if nb_stock * (i + 1) < len(val_sect):
                     self.mdb.new_insert_res('results_sect', val_sect[nb_stock * (i + 1):], col_sect)
         return True
-
 
     def get_for_lig_new(self, id_run):
         """

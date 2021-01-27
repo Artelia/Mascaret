@@ -38,6 +38,7 @@ try:  # qgis2
     VERSION_QGIS = 2
 except:  # qgis3
     from qgis.core import QgsDataSourceUri
+
     VERSION_QGIS = 3
 
 from qgis.gui import QgsMessageBar
@@ -425,7 +426,7 @@ class ClassMasDatabase(object):
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
                       Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
                       Maso.observations, Maso.parametres, Maso.resultats, Maso.runs, Maso.laws,
-                      Maso.admin_tab,Maso.visu_flood_marks,
+                      Maso.admin_tab, Maso.visu_flood_marks,
                       # bassin
                       Maso.basins, Maso.links, Maso.resultats_basin, Maso.resultats_links,
                       # qualite d'eau
@@ -498,7 +499,6 @@ class ClassMasDatabase(object):
             for sql in lfct:
                 self.run_query(sql)
 
-
             # visualization
             self.load_gis_layer()
 
@@ -507,7 +507,6 @@ class ClassMasDatabase(object):
         except Exception as e:
             self.mgis.add_info("Echec of creation model")
             self.mgis.add_info(str(e))
-
 
     def add_table_basins(self, dossier):
         """
@@ -639,7 +638,6 @@ class ClassMasDatabase(object):
         sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer DEFAULT 0;"
         self.run_query(sql.format(self.SCHEMA))
 
-
     def create_first_model(self):
         """ 
         To add variable in db for the first model creation
@@ -680,14 +678,14 @@ class ClassMasDatabase(object):
             self.disconnect_pg()
             self.mgis.add_info("Echec of creation First Model")
 
-    def check_fct(self,fct_name):
+    def check_fct(self, fct_name):
         cond = True
-        if isinstance(fct_name,list):
+        if isinstance(fct_name, list):
 
             for name in fct_name:
                 sql = " select exists(select * from pg_proc where proname = '{}');".format(name)
                 rows = self.run_query(sql, fetch=True)[0][0]
-                if not rows :
+                if not rows:
                     cond = False
             return cond
         else:
@@ -700,8 +698,8 @@ class ClassMasDatabase(object):
     def add_fct_for_update_pk(self):
         """add fct psql to compute abscissa"""
         cl = Maso.class_fct_psql()
-        lfct = [cl.pg_abscisse_profil(),cl.pg_all_profil(),
-                cl.pg_abscisse_point(), cl.pg_all_point(),]
+        lfct = [cl.pg_abscisse_profil(), cl.pg_all_profil(),
+                cl.pg_abscisse_point(), cl.pg_all_point(), ]
         qry = ''
         for sql in lfct:
             qry += sql
@@ -712,14 +710,13 @@ class ClassMasDatabase(object):
         """ add fct psql for the visualisation"""
         cl = Maso.class_fct_psql()
         lfct = [cl.pg_delete_visu_flood_marks(),
-                cl.pg_create_calcul_abscisse_point_flood() ]
+                cl.pg_create_calcul_abscisse_point_flood()]
         qry = ''
         for sql in lfct:
             qry += sql
             qry += '\n'
 
         self.run_query(qry)
-
 
     def check_first_model(self):
         """
@@ -831,13 +828,13 @@ class ClassMasDatabase(object):
                 self.mgis.add_info('Error : '.format(err))
 
         # add visualistation layer
-        group_main =self.group
+        group_main = self.group
         self.group = group_main.findGroup("Visualisation".format(self.SCHEMA))
         if not self.group:
             self.group = group_main.addGroup("Visualisation".format(self.SCHEMA))
 
         for name, obj in dict_only_visu.items():
-            try :
+            try:
                 self.add_to_view(obj)
                 if self.mgis.DEBUG:
                     self.mgis.add_info(' View {0} : OK'.format(obj.name))
@@ -946,7 +943,7 @@ $BODY$
             lvar = '*'
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        #print(sql.format(self.SCHEMA, table, where, order, lvar))
+        # print(sql.format(self.SCHEMA, table, where, order, lvar))
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order, lvar), fetch=True, namvar=True)
         if results is None or namCol is None:
             print("error : ", sql.format(self.SCHEMA, table, where, order, lvar))
@@ -978,7 +975,7 @@ $BODY$
         (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order),
                                            fetch=True, arraysize=1, namvar=True)
 
-        if results is  None or namCol is None:
+        if results is None or namCol is None:
             print("error : ", sql.format(self.SCHEMA, table, where, order))
             return None
         cols = [col[0] for col in namCol]
@@ -1014,7 +1011,7 @@ $BODY$
                         dico[cols[i]].append(val)
 
             return dico
-        #print('warning', sql.format(var, self.SCHEMA, table, where, ordre))
+        # print('warning', sql.format(var, self.SCHEMA, table, where, ordre))
         return None
 
     #
@@ -1116,12 +1113,12 @@ $BODY$
                                                             valeurs)
         self.run_query(sql, many=True, list_many=liste_value)
 
-    def new_insert_res(self,table,values,col_tab, be_quiet=False):
+    def new_insert_res(self, table, values, col_tab, be_quiet=False):
         try:
             if self.con:
                 file = self.buff_file(values)
                 cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-                cur.copy_from(file, '{0}.{1}'.format(self.SCHEMA,table), columns=col_tab)
+                cur.copy_from(file, '{0}.{1}'.format(self.SCHEMA, table), columns=col_tab)
                 del file
 
         except Exception as e:
@@ -1139,7 +1136,7 @@ $BODY$
 
         for x in liste:
             for i in range(leng):
-                if i==0:
+                if i == 0:
                     txt += "{}".format(x[i])
                 else:
                     txt += "\t{}".format(x[i])
@@ -1147,7 +1144,6 @@ $BODY$
 
         f = io.StringIO(txt)
         return f
-
 
     def update_res(self, table, liste_value, colonnes):
 
@@ -1176,7 +1172,7 @@ $BODY$
         for nom, t in tab.items():
             tab_var = []
             for k, v in tab[nom].items():
-                if not v and not isinstance(v,float) and not isinstance(v, int):
+                if not v and not isinstance(v, float) and not isinstance(v, int):
                     tab_var.append("{0}=NULL".format(k))
                 elif isinstance(v, str):
                     tab_var.append("{0}='{1}'".format(k, v))
@@ -1393,7 +1389,7 @@ $BODY$
                         'name': info['text'][0],
                         'type_var': 'float'}
                 self.check_id_var(dico)
-            return  True
+            return True
         except Exception as e:
             self.mgis.add_info("Error create_var_result: {}".format(str(e)))
             return False

@@ -864,7 +864,7 @@ class ClassLaws:
         """
         Search the  new (q, zav) couple and interpole with new q
         :param list_final: list of law values
-        :param pasq q:discretisation
+        :param pasq: discretisation
         :param list_q : q list for interpolation
         :return: list_final: new list of law values
         :return: q_new: q list of law
