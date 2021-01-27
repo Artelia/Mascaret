@@ -154,11 +154,11 @@ class ClassEventObsDialog(QDialog):
             self.graph_home.init_graph(None)
 
 
-    def create_tab_model(self):
+    def create_tab_model(self,cur_var):
         model = QStandardItemModel()
         model.insertColumns(0, 3)
         model.setHeaderData(0, 1, 'Date', 0)
-        model.setHeaderData(1, 1, 'H', 0)
+        model.setHeaderData(1, 1, cur_var, 0)
         model.setHeaderData(2, 1, 'Comment', 0)
         model.itemChanged.connect(self.on_tab_data_change)
         return model
@@ -184,7 +184,7 @@ class ClassEventObsDialog(QDialog):
 
     def fill_tab_values(self, cur_station, cur_var):
         self.filling_tab = True
-        self.ui.tab_values.setModel(self.create_tab_model())
+        self.ui.tab_values.setModel(self.create_tab_model(cur_var))
         self.ui.tab_values.setColumnWidth(0, 120)
         self.ui.tab_values.setColumnWidth(1, 80)
         self.ui.tab_values.setColumnWidth(2, 120)
