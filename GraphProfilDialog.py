@@ -501,7 +501,9 @@ class GraphProfil(GraphCommon):
         self.canvas.draw()
 
     def sauve_profil(self):
-
+        if self.tab['x'] == []:
+            self.mgis.add_info('No data to save profile')
+            return
         for k, v in self.tab.items():
             if isinstance(v, list):
                 self.liste[k][self.position] = " ".join([str(var) for var in v])
