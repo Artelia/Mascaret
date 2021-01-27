@@ -137,7 +137,13 @@ class GraphResultDialog(QWidget):
                 self.label_lbzmax.hide()
                 self.label_zmax.hide()
                 self.cb_graph.currentIndexChanged.connect(lambda: self.graph_changed(True))
-            self.cb_det.currentIndexChanged.connect(self.detail_changed)
+
+            if self.typ_graph == 'hydro_pk':
+                self.cb_det.currentIndexChanged.connect(lambda: self.detail_changed(up_lim=False))
+            else:
+                self.cb_det.currentIndexChanged.connect(lambda: self.detail_changed(up_lim=True))
+
+
 
             # self.bt_reculTot.clicked.connect(lambda: self.avance_detail("start"))
             # self.bt_recul.clicked.connect(lambda: self.avance_detail("prev"))
@@ -510,6 +516,7 @@ class GraphResultDialog(QWidget):
         self.cb_scen.blockSignals(False)
 
     def scen_changed(self):
+        """ change scen"""
         if self.cb_scen.currentIndex() != -1:
             self.cur_run = self.cb_scen.itemData(self.cb_scen.currentIndex())
             self.get_runs_graph()
@@ -523,6 +530,8 @@ class GraphResultDialog(QWidget):
             self.detail_changed()
 
     def graph_changed(self, update=True):
+        """ change graph"""
+        self.graph_obj.update_limites = True
         if self.cb_graph.currentIndex() != -1:
             self.cur_graph = self.cb_graph.itemData(self.cb_graph.currentIndex())
             for graph in self.lst_graph:
@@ -543,7 +552,7 @@ class GraphResultDialog(QWidget):
             self.tw_data.clearContents()
 
     def graph_changed_profil(self, update=True):
-
+        """change graph of profile"""
         if self.cb_graph.currentIndex() != -1:
             self.cur_pknum = self.cb_graph.itemData(self.cb_graph.currentIndex())
             self.cur_vars = ['ZREF']
@@ -563,7 +572,9 @@ class GraphResultDialog(QWidget):
             self.graph_obj.canvas.draw()
             self.tw_data.clear()
 
-    def detail_changed(self):
+    def detail_changed(self,up_lim = True ):
+        """ change pk or data"""
+        self.graph_obj.update_limites = up_lim
         if self.cb_det.currentIndex() != -1:
             if self.typ_graph == 'hydro_profil':
                 self.cur_t = self.cb_det.itemData(self.cb_det.currentIndex())

@@ -236,6 +236,7 @@ class GraphCommonNew():
         self.unit_y = None
         self.flood_mark = False
         self.obs = False
+        self.update_limites = True
 
     def init_ui_common_p(self):
         self.list_var = []
@@ -384,34 +385,35 @@ class GraphCommonNew():
     def maj_limites(self):
         no_data = True
         fst = True
-        for courbe in self.courbes:
-            if courbe.get_visible():
-                try:
-                    lx, lz = courbe.get_data()
-                    lx = [x for x in lx if x is not None]
-                    lz = [z for z in lz if z is not None]
-                    if lx and lz:
-                        no_data = False
-                        if fst:
-                            fst = False
-                            mini_x = min(lx)
-                            maxi_x = max(lx)
-                            mini_z = min(lz) - 1
-                            maxi_z = max(lz) + 1
-                        else:
-                            mini_x = min(mini_x, min(lx))
-                            maxi_x = max(maxi_x, max(lx))
-                            mini_z = min(mini_z, min(lz) - 1)
-                            maxi_z = max(maxi_z, max(lz) + 1)
-                except AttributeError as e:
-                    pass
+        if self.update_limites:
+            for courbe in self.courbes:
+                if courbe.get_visible():
+                    try:
+                        lx, lz = courbe.get_data()
+                        lx = [x for x in lx if x is not None]
+                        lz = [z for z in lz if z is not None]
+                        if lx and lz:
+                            no_data = False
+                            if fst:
+                                fst = False
+                                mini_x = min(lx)
+                                maxi_x = max(lx)
+                                mini_z = min(lz) - 1
+                                maxi_z = max(lz) + 1
+                            else:
+                                mini_x = min(mini_x, min(lx))
+                                maxi_x = max(maxi_x, max(lx))
+                                mini_z = min(mini_z, min(lz) - 1)
+                                maxi_z = max(maxi_z, max(lz) + 1)
+                    except AttributeError as e:
+                        pass
 
-        if no_data:
-            self.axes.set_xlim(0., 1.)
-            self.axes.set_ylim(0., 1.)
-        else:
-            self.axes.set_xlim(mini_x, maxi_x)
-            self.axes.set_ylim(mini_z, maxi_z)
+            if no_data:
+                self.axes.set_xlim(0., 1.)
+                self.axes.set_ylim(0., 1.)
+            else:
+                self.axes.set_xlim(mini_x, maxi_x)
+                self.axes.set_ylim(mini_z, maxi_z)
 
         self.fig.autofmt_xdate()
         self.canvas.draw()
