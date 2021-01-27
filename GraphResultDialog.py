@@ -40,6 +40,23 @@ else:
     from qgis.PyQt.QtWidgets import *
 
 
+def list_sql(liste, typ='str'):
+    """
+    list to srting for sql script
+    :param liste: element list
+    :param typ : element type
+    :return:
+    """
+    txt = '('
+    for t_res in liste:
+        if typ is 'str':
+            txt += "'{}',".format(t_res)
+        elif typ == 'int' or typ == 'float':
+            txt += "{},".format(t_res)
+    txt = txt[:-1] + ')'
+    return txt
+
+
 class GraphResultDialog(QWidget):
     def __init__(self, mgis, typ_graph, id=None):
         QWidget.__init__(self)
@@ -151,10 +168,7 @@ class GraphResultDialog(QWidget):
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
                                   "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
                                   "ORDER BY run, scenario ".format(self.mdb.SCHEMA), fetch=True)
-        print(rows)
-        print("SELECT id, run, scenario FROM {0}.runs "
-                                  "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
-                                  "ORDER BY run, scenario ".format(self.mdb.SCHEMA))
+
         if rows:
             return True
         else:
@@ -162,12 +176,13 @@ class GraphResultDialog(QWidget):
             return False
 
     def get_profil_data(self):
+        """ Get data of a profile"""
         if self.cur_run is not None:
             txt = self.mdb.select_distinct("comments", "runs", where='id={}'.format(self.cur_run))
             if txt:
                 txt = txt['comments'][0]
-                if not isinstance(txt,str):
-                    txt=str(txt)
+                if not isinstance(txt, str):
+                    txt = str(txt)
                 self.lbl_coment.setText(txt['comments'][0])
                 self.show_hide_com(True)
             else:
@@ -192,36 +207,21 @@ class GraphResultDialog(QWidget):
                     except:
                         pass
 
-    def list_sql(self, liste, typ='str'):
-        """
-        list to srting for sql script
-        :param liste:
-        :return:
-        """
-        txt = '('
-        for t_res in liste:
-            if typ is 'str':
-                txt += "'{}',".format(t_res)
-            elif typ == 'int' or typ == 'float':
-                txt += "{},".format(t_res)
-        txt = txt[:-1] + ')'
-        return txt
-
     def get_lst_graph_opt(self, id_run=None):
         """
         Get graphic list
-        :param typ_res: typ_res liste
+        :param id_run: id of model
         :return:
         """
 
         liste = [{"id": "Z", "name": "Levels", "unit": "$m$",
-                  "vars": ['ZREF', 'Z', 'ZMIN', 'ZMAX','CHAR'], "colors": ["black", "blue", "green", "red","cyan"],
+                  "vars": ['ZREF', 'Z', 'ZMIN', 'ZMAX', 'CHAR'], "colors": ["black", "blue", "green", "red", "cyan"],
                   'type_res': 'opt'},
                  {"id": "Q", "name": "Flow rate", "unit": "$m^3/s$",
                   "vars": ['Q', 'QMIN', 'QMAJ', 'QMAX'], "colors": ["blue", "green", "cyan", "red"], 'type_res': 'opt'}
                  ]
         exclu = {'Q': False, 'QMIN': False, 'QMAJ': False, 'QMAX': False,
-                 'ZREF': False, 'Z': False, 'ZMIN': False, 'ZMAX': False,'CHAR':False}
+                 'ZREF': False, 'Z': False, 'ZMIN': False, 'ZMAX': False, 'CHAR': False}
 
         if id_run:
 
@@ -232,11 +232,11 @@ class GraphResultDialog(QWidget):
                     list_tot += self.info_graph[typ_res]['var']
 
             sql = "SELECT  * FROM {0}.results_var WHERE " \
-                  " id in {1}".format(self.mdb.SCHEMA, self.list_sql(list_tot))
+                  " id in {1}".format(self.mdb.SCHEMA, list_sql(list_tot))
 
         else:
             sql = "SELECT DISTINCT * FROM {0}.results_var WHERE type_res in {1}".format(self.mdb.SCHEMA,
-                                                                                        self.list_sql(
+                                                                                        list_sql(
                                                                                             self.list_typ_res))
 
         rows = self.mdb.run_query(sql, fetch=True)
@@ -265,7 +265,7 @@ class GraphResultDialog(QWidget):
 
     def change_lengend_var(self, liste_var):
         """Change unit and color with variables.dat file
-         :param list_var : liste of dict containing graphs informations
+         :param liste_var : liste of dict containing graphs informations
          :return the update list
         """
 
@@ -273,7 +273,7 @@ class GraphResultDialog(QWidget):
             for i, var in enumerate(dico_var["vars"]):
                 if var.lower() in self.mgis.variables.keys():
                     dico_var["colors"][i] = self.mgis.variables[var.lower()]['couleur']
-                    if var not in ['Q', 'QMIN', 'QMAJ', 'QMAX', 'ZREF', 'Z', 'ZMIN', 'ZMAX','CHAR']:
+                    if var not in ['Q', 'QMIN', 'QMAJ', 'QMAX', 'ZREF', 'Z', 'ZMIN', 'ZMAX', 'CHAR']:
                         if self.mgis.variables[var.lower()]['unite'].strip() == '':
                             dico_var['unit'] = ''
                         else:
@@ -298,7 +298,8 @@ class GraphResultDialog(QWidget):
     def get_lst_graph_bl(self, typ_res, id_run=None):
         """
         Get graphic list basin and link
-        :param id_run:
+        :param typ_res: result typ
+        :param id_run: id of model
         :return:
         """
         liste = []
@@ -306,7 +307,7 @@ class GraphResultDialog(QWidget):
             if id_run:
                 sql = "SELECT  * FROM {0}.results_var WHERE " \
                       "id in {1}".format(self.mdb.SCHEMA,
-                                         self.list_sql(self.info_graph[typ_res]['var']))
+                                         list_sql(self.info_graph[typ_res]['var']))
 
             else:
                 sql = "SELECT DISTINCT * FROM {0}.results_var " \
@@ -399,7 +400,7 @@ class GraphResultDialog(QWidget):
             if self.typ_res in self.info_graph.keys():
                 for id_config in self.info_graph[self.typ_res]['pknum'].keys():
                     lstpk.append(self.info_graph[self.typ_res]['pknum'][id_config])
-                info = self.mdb.select('profiles', where='abscissa IN {0}'.format(self.list_sql(lstpk, 'float'))
+                info = self.mdb.select('profiles', where='abscissa IN {0}'.format(list_sql(lstpk, 'float'))
                                        , list_var=['abscissa', "name"])
                 for pknum in lstpk:
                     if pknum in info['abscissa']:
@@ -482,8 +483,8 @@ class GraphResultDialog(QWidget):
 
             sql = "SELECT DISTINCT name,{3},gid FROM  {0}.{2} WHERE {3} " \
                   "IN {1} ".format(self.mgis.mdb.SCHEMA,
-                                   self.list_sql(self.info_graph[self.typ_res]['pknum'],
-                                                 'float'),
+                                   list_sql(self.info_graph[self.typ_res]['pknum'],
+                                            'float'),
                                    table,
                                    num)
 
@@ -533,7 +534,6 @@ class GraphResultDialog(QWidget):
                                             graph["colors"], graph["unit"],
                                             graph['name'])
                     break
-
 
             if update:
                 self.update_data()
@@ -731,18 +731,13 @@ class GraphResultDialog(QWidget):
                     self.get_laisses()
                     lais_g = self.update_laisse(x_var_)
 
-            self.graph_obj.init_graph(self.cur_data, x_var_, lais = lais_g )
-
-
-
+            self.graph_obj.init_graph(self.cur_data, x_var_, lais=lais_g)
 
     def get_laisses(self):
         """
         get flood marks data
         :return:
         """
-
-
 
         info = self.mdb.select('runs', where="id={} ".format(self.cur_run),
                                list_var=['scenario'])
@@ -753,7 +748,6 @@ class GraphResultDialog(QWidget):
         self.laisses = self.mdb.select("flood_marks", condition, "abscissa")
         if self.laisses:
             self.laisses['pknum'] = self.laisses['abscissa']
-
 
     def get_obs(self):
         """
@@ -767,7 +761,7 @@ class GraphResultDialog(QWidget):
         if rows:
             val = rows[0][0]
             self.obs = self.mgis.mdb.select('outputs',
-                                            where="active AND (abscissa = {0} OR name = '{1}')" \
+                                            where="active AND (abscissa = {0} OR name = '{1}')" 
                                                   "".format(self.cur_pknum, val),
                                             order="abscissa",
                                             list_var=['code', 'zero', 'abscissa', 'name'])
@@ -827,7 +821,7 @@ class GraphResultDialog(QWidget):
                 return False
 
             courbe_lais["z"] = [v for i, v in enumerate(lai['z']) if lai[var_x][i]]
-            if 'ZMAX' in self.cur_data.keys() :
+            if 'ZMAX' in self.cur_data.keys():
                 courbe_lais["couleurs"] = []
                 courbe_lais["taille"] = []
                 if "pknum" in self.cur_data.keys():
@@ -835,13 +829,13 @@ class GraphResultDialog(QWidget):
                 elif "date" in self.cur_data.keys():
                     key_val = "date"
                 for x, z in zip(courbe_lais["x"], courbe_lais["z"]):
-                    if key_val == "date" :
+                    if key_val == "date":
                         x_cur_data = [datetime.timestamp(t) for t in self.cur_data[key_val]]
                         x_inter = datetime.timestamp(datetime(*x.timetuple()[:-4]))
                     else:
                         x_cur_data = self.cur_data[key_val]
                         x_inter = x
-                    val = interpole(x_inter, x_cur_data , self.cur_data['ZMAX'])
+                    val = interpole(x_inter, x_cur_data, self.cur_data['ZMAX'])
 
                     if val:
                         diff = z - val
@@ -861,17 +855,16 @@ class GraphResultDialog(QWidget):
                         courbe_lais["couleurs"].append("black")
                         courbe_lais["taille"].append(1)
             else:
-                    courbe_lais["couleurs"] = ["black"] * len(courbe_lais["x"])
-                    courbe_lais["taille"] = [1] * len(courbe_lais["x"])
+                courbe_lais["couleurs"] = ["black"] * len(courbe_lais["x"])
+                courbe_lais["taille"] = [1] * len(courbe_lais["x"])
 
             self.graph_obj.init_graph_laisse(courbe_lais)
-            return  True
+            return True
         return False
 
     def update_obs(self):
         """ """
         if self.obs and "date" in self.cur_data.keys():
-            obs_graph = {}
             if "Z" in self.cur_data.keys():
                 gg = 'H'
             elif "Q" in self.cur_data.keys():
@@ -890,7 +883,7 @@ class GraphResultDialog(QWidget):
             if not obs_graph:
                 self.graph_obj.clear_obs()
                 return
-            if len(obs_graph['valeur'])==0 :
+            if len(obs_graph['valeur']) == 0:
                 self.graph_obj.clear_obs()
                 return
 
@@ -903,7 +896,6 @@ class GraphResultDialog(QWidget):
             self.graph_obj.init_graph_obs(obs_graph)
         else:
             self.graph_obj.clear_obs()
-
 
     def fill_tab(self, x_var, nb_col=None):
         self.tw_data.setColumnCount(0)
@@ -1027,7 +1019,6 @@ class GraphResult(GraphCommonNew):
 
         self.courbeObs.set_visible(False)
 
-
         rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='pink',
                                  alpha=0.5, lw=1, zorder=80)
         self.litMineur = self.axes.add_patch(rect)
@@ -1057,7 +1048,7 @@ class GraphResult(GraphCommonNew):
 
     def init_graph(self, data, x_var, all_vis=True, lais=None):
         self.set_data(data, x_var)
-        handles= None
+        handles = None
         if lais:
             handles = [c for c in self.courbes]
             handles.append(mlines.Line2D([], [], color='darkcyan', marker='+',
@@ -1072,9 +1063,6 @@ class GraphResult(GraphCommonNew):
             if all_vis:
                 self.courbes[v].set_visible(True)
                 leglines[v].set_alpha(1.0)
-
-
-
 
         self.maj_limites()
 
@@ -1163,13 +1151,12 @@ class GraphResult(GraphCommonNew):
         for e in self.etiquetteLaisses:
             self.axes.texts.remove(e)
         self.etiquetteLaisses = []
-       # self.canvas.draw()
+        # self.canvas.draw()
 
     def init_graph_laisse(self, laisses):
         """ add flood mark in graph"""
 
         self.clear_laisse()
-
 
         self.courbeLaisses.append(self.axes.scatter(laisses['x'], laisses['z'],
                                                     color=laisses["couleurs"],
@@ -1188,7 +1175,6 @@ class GraphResult(GraphCommonNew):
 
             self.etiquetteLaisses.append(temp)
 
-
     def clear_obs(self):
         """ clean obs graph"""
         self.courbeObs.set_data([], [])
@@ -1196,14 +1182,12 @@ class GraphResult(GraphCommonNew):
         if self.courbes:
             tmp = []
             for i, cb in enumerate(self.courbes):
-                if not cb is self.courbeObs:
+                if cb is not self.courbeObs:
                     tmp.append(cb)
             self.courbes = list(tmp)
         self.init_legende()
-
 
     def init_graph_obs(self, obs):
         self.courbeObs.set_data(obs['date'], obs['valeur'])
         self.courbeObs.set_visible(True)
         self.courbes.append(self.courbeObs)
-

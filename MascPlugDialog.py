@@ -21,7 +21,6 @@ import json
 import math
 import os
 import posixpath
-import datetime
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
@@ -149,7 +148,6 @@ class MascPlugDialog(QMainWindow):
         self.ui.crsWidget.setCrs(self.iface.mapCanvas().mapSettings().destinationCrs())
         self.update_default_crs()
 
-
         # # disable some actions until a connection to river database is established
         if not self.mdb:
             self.disable_actions_connection()
@@ -204,9 +202,10 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
         self.ui.actionAdd_Structure_tables.triggered.connect(self.fct_add_struct_tables)
         self.ui.actionAdd_Structure_temporal_tables.triggered.connect(self.fct_add_floogate_tables)
-        self.ui.actionAdd_WQ_tables.setVisible(False)
+        self.ui.menuUpate_table.menuAction().setVisible(False)
         self.ui.actionAdd_Structure_tables.setVisible(False)
         self.ui.actionAdd_Structure_temporal_tables.setVisible(False)
+        self.ui.actionAdd_WQ_tables.setVisible(False)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -349,7 +348,7 @@ class MascPlugDialog(QMainWindow):
             self.user = settings.value('username')
             self.passwd = settings.value('password')
 
-        if not self.passwd :
+        if not self.passwd:
             self.add_info("Warning: the password is NULL.")
         self.host = settings.value('host')
         self.port = settings.value('port')
@@ -391,7 +390,7 @@ class MascPlugDialog(QMainWindow):
         try:
             self.repProject = os.path.dirname(
                 QgsProject.instance().fileName())
-        except:
+        except Exception:
             self.repProject = None
 
         if schema_info:
@@ -406,7 +405,7 @@ class MascPlugDialog(QMainWindow):
             self.mdb.SCHEMA = model
             sql = """SELECT Find_SRID('{}', 'extremities','geom');"""
             res = self.mdb.run_query(sql.format(model), fetch=True)
-            if res :
+            if res:
                 self.mdb.SRID = int(res[0][0])
             try:
                 self.chkt.update_adim()
@@ -416,8 +415,7 @@ class MascPlugDialog(QMainWindow):
 
             self.mdb.load_model()
             crs = QgsCoordinateReferenceSystem("POSTGIS:{}".format(self.mdb.SRID))
-            self.ui.crsWidget.setCrs( crs)
-
+            self.ui.crsWidget.setCrs(crs)
 
             self.mdb.last_schema = self.mdb.SCHEMA
             self.enable_all_actions()
@@ -440,8 +438,7 @@ class MascPlugDialog(QMainWindow):
             return
         try:  # qgis2
             tempo = QgsMapLayerRegistry.instance().mapLayers().values()
-
-        except:  # qgis 3
+        except Exception:  # qgis 3
             tempo = QgsProject.instance().mapLayers().values()
         for couche in tempo:
             if couche.name() == "profiles":
@@ -500,8 +497,7 @@ class MascPlugDialog(QMainWindow):
             if self.DEBUG:
                 self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
             rep_run = os.path.join(self.masplugPath, "mascaret_copy")
-            clam = ClassMascaret(self, rep_run= rep_run)
-
+            clam = ClassMascaret(self, rep_run=rep_run)
 
             clam.creer_xcas(self.Klist[self.listeState.index(case)])
             if int(qVersion()[0]) < 5:  # qt4
@@ -632,13 +628,13 @@ class MascPlugDialog(QMainWindow):
                 if group == 'mgis':
                     try:
                         self.opts['mgis'][name] = getattr(self, name)
-                    except:
+                    except Exception:
                         self.add_info("Error: write_settings , group :{0}".format(group))
                         pass
                 elif group == 'mdb':
                     try:
                         self.opts['mdb'][name] = getattr(self.mdb, name)
-                    except:
+                    except Exception:
                         self.add_info("Error: write_settings , group :{0}".format(group))
                         pass
         # self.add_info('{0}'.format(self.opts))
@@ -796,7 +792,7 @@ class MascPlugDialog(QMainWindow):
         try:  # qgis2
             QObject.connect(self.map_tool, SIGNAL('geomIdentified'),
                             self.do_something)
-        except:  # qgis3
+        except Exception:  # qgis3
             self.map_tool.changedRasterResults.connect(self.do_something)
 
         canvas.setMapTool(self.map_tool)
@@ -863,7 +859,7 @@ Version : {}
             cl.law_tracer(dossier=folder_name_path)
 
             self.add_info('Export is done.')
-        except:
+        except Exception:
             self.add_info('Export failed.')
 
     def fct_add_wq_tables(self):
@@ -900,6 +896,7 @@ Version : {}
             self.mdb.add_table_struct_temporal(self.dossier_struct)
 
     def fct_mv_dam(self):
+        """ Running GUI of movable dam"""
 
         dlg = ClassMobilSingDialog(self)
         dlg.exec_()
@@ -918,10 +915,10 @@ Version : {}
             self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
             run = "test"
             rep_run = os.path.join(self.masplugPath, "mascaret_copy")
-            clam = ClassMascaret(self,rep_run= rep_run)
-            clam.mascaret(self.Klist[self.listeState.index(case)], run,  only_init=True)
+            clam = ClassMascaret(self, rep_run=rep_run)
+            clam.mascaret(self.Klist[self.listeState.index(case)], run, only_init=True)
 
-            with open(os.path.join(clam.dossierFileMasc,'FichierCas.txt'), 'w') as fichier:
+            with open(os.path.join(clam.dossierFileMasc, 'FichierCas.txt'), 'w') as fichier:
                 fichier.write("'mascaret.xcas'\n")
             self.export_run(clam)
             clam.del_folder_mas()
@@ -939,19 +936,8 @@ Version : {}
         del dlg
         del clam
 
-    def list_sql(self, liste):
-        """
-        list to srting for sql script
-        :param liste:
-        :return:
-        """
-        txt = '('
-        for t_res in liste:
-            txt += "'{}',".format(t_res)
-        txt = txt[:-1] + ')'
-        return txt
-
     def fct_test(self):
+        """ Test function"""
         self.chkt.debug_update_vers_meta(version='3.0.5')
         pass
 
@@ -961,7 +947,7 @@ Version : {}
         :return:
         """
         if not self.mdb.check_fct(["update_abscisse_profil", "abscisse_profil",
-                               "update_abscisse_point", "abscisse_point",]):
+                                   "update_abscisse_point", "abscisse_point", ]):
             self.mdb.add_fct_for_update_pk()
 
         sql = "SELECT public.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
@@ -978,6 +964,7 @@ Version : {}
         self.mdb.run_query(sql)
 
     def download_bin(self):
+        """ download the Mascaret executable """
         # url git
         url_base = 'https://raw.githubusercontent.com/Artelia/Exe_Mascaret/'
 
