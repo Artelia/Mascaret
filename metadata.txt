@@ -32,19 +32,20 @@ email=mehdi-pierre.daou@arteliagroup.com
 changelog=
     3.0.6  : Correction of initial compute list bug
              Correction of result accurancy in Mascaret executable
-             Change : the qgis window no longer freezes when the model is running
-             Modification of profil graphic GUI
+             No longer freezes the qgis window when the model is running
+             Modification of profiles graphic GUI
+             Correction  of  bug  of profile save button
              Results graphic by order date of running
              Force default values
-             Automatisation of desactivation of branchs-profiles, basins-links
-             Adding of hydraulic head for levels water Graphic
-             Correction of  displaying bug of Flood mark with  cross sections
-             Adding observation menu
-             Adding a button to update the pk
-             Adding the vizualisation of flood mark projection
-             Adding activation or not  of the laws and outputs
-             Adding  button to put in full screen
-             Automatisation of  the Minor bed definition when that is not precised
+             Automation of desactivation of branchs-profiles, basins-links
+             Add of hydraulic head for the levels water graphic when the variable is computed
+             Correction of  displaying bug of the flood marks with  cross sections
+             Add observation menu
+             Add a button to update the pk
+             Add the vizualization of flood mark projection
+             Add activation or not  of the laws and outputs
+             Add  button to put in full screen
+             Automation of  the minor bed definition when that is not precised
              Adding A hydraulic law  which varies in time for a permanent case
     3.0.5  : Add warning message when the password is null.
              Correction of bug about the creation of heigh-volum law
