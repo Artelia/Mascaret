@@ -179,15 +179,17 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
                 if couche == 'links':
                     links = self.mgis.mdb.select_distinct("name", "links", "active")
-                    if feature['name'] in links['name']:
-                        graph_link = GraphResultDialog(self.mgis, "hydro_link", feature["linknum"])
-                        graph_link.show()
+                    if links is not None:
+                        if feature['name'] in links['name']:
+                            graph_link = GraphResultDialog(self.mgis, "hydro_link", feature["linknum"])
+                            graph_link.show()
                 else:
 
                     basins = self.mgis.mdb.select_distinct("name", "basins", "active")
-                    if feature['name'] in basins['name']:
-                        graph_basin = GraphResultDialog(self.mgis, "hydro_basin", feature["basinnum"])
-                        graph_basin.show()
+                    if basins is not None:
+                        if feature['name'] in basins['name']:
+                            graph_basin = GraphResultDialog(self.mgis, "hydro_basin", feature["basinnum"])
+                            graph_basin.show()
 
         return
 

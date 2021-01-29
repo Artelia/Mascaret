@@ -487,16 +487,18 @@ class GraphResultDialog(QWidget):
                 table = "basins"
                 num = "basinnum"
 
-            sql = "SELECT DISTINCT name,{3},gid FROM  {0}.{2} WHERE {3} " \
-                  "IN {1} ".format(self.mgis.mdb.SCHEMA,
-                                   list_sql(self.info_graph[self.typ_res]['pknum'],
-                                            'float'),
-                                   table,
-                                   num)
+            if self.typ_res in self.info_graph.keys():
+                sql = "SELECT DISTINCT name,{3},gid FROM  {0}.{2} WHERE {3} " \
+                      "IN {1} ".format(self.mgis.mdb.SCHEMA,
+                                       list_sql(self.info_graph[self.typ_res]['pknum'],
+                                                'float'),
+                                       table,
+                                       num)
 
-            rows = self.mdb.run_query(sql, fetch=True)
-            for row in rows:
-                self.cb_det.addItem(row[0], row[1])
+
+                rows = self.mdb.run_query(sql, fetch=True)
+                for row in rows:
+                    self.cb_det.addItem(row[0], row[1])
 
             self.cb_det.setCurrentIndex(self.cb_det.findData(id))
             self.sld_det.setValue(self.cb_det.findData(id))
@@ -653,6 +655,12 @@ class GraphResultDialog(QWidget):
         """
         if not self.initialising:
             self.cur_data = dict()
+            if self.cur_vars is None :
+                self.graph_obj.axes.cla()
+                self.graph_obj.canvas.draw()
+                self.tw_data.clear()
+                return
+
             sqlv = "('{}')".format("', '".join(self.cur_vars))
             sqlw = self.sql_where.format(self.cur_branch, self.cur_pknum, self.cur_t)
             if self.typ_graph == 'hydro_pk':
