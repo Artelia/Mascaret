@@ -659,6 +659,7 @@ class GraphResultDialog(QWidget):
                 self.graph_obj.axes.cla()
                 self.graph_obj.canvas.draw()
                 self.tw_data.clear()
+                self.mgis.add_info('No Data')
                 return
 
             sqlv = "('{}')".format("', '".join(self.cur_vars))
