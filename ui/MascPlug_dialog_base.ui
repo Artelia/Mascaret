@@ -711,7 +711,7 @@
   </action>
   <action name="actionUpdate_all_PK">
    <property name="text">
-    <string>Update all PK</string>
+    <string>Update PK</string>
    </property>
   </action>
   <action name="actionObservations">

@@ -84,26 +84,22 @@ class ClassUpdatePk(QDialog):
             self.mdb.add_fct_for_update_pk()
 
         n = len(selection)
-        ok = self.box.yes_no_q('Do you want to Update ?')
 
-        if ok:
+        sql = ''
+        for i, table in enumerate(selection):
+            if table in self.lst_tables_pt:
+                sql += "SELECT public.update_abscisse_point('{0}.{1}','{0}.{2}')" \
+                       ";\n".format(self.mdb.SCHEMA, table, 'branchs')
+            elif table in  self.lst_tables_p:
+                sql += "SELECT public.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
+                      ";\n".format(self.mdb.SCHEMA, table, 'branchs')
 
-            sql = ''
-            for i, table in enumerate(selection):
-                if table in self.lst_tables_pt:
-                    sql += "SELECT public.update_abscisse_point('{0}.{1}','{0}.{2}')" \
-                           ";\n".format(self.mdb.SCHEMA, table, 'branchs')
-                elif table in  self.lst_tables_p:
-                    sql += "SELECT public.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
-                          ";\n".format(self.mdb.SCHEMA, table, 'branchs')
+        self.mdb.run_query(sql)
+        if self.mgis.DEBUG:
+            self.mgis.add_info("Update pk Done")
 
-            if self.mgis.DEBUG:
-                self.mgis.add_info("Update pk")
-            self.mdb.run_query(sql)
       
-        else:
-            if self.mgis.DEBUG:
-                self.mgis.add_info('Update pk cancelled.')
+
 
 
 
