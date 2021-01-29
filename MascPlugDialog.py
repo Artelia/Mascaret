@@ -953,14 +953,16 @@ Version : {}
         sql = "SELECT public.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
               ";".format(self.mdb.SCHEMA, 'profiles', 'branchs')
         self.mdb.run_query(sql)
+        sql = "SELECT public.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
+              ";".format(self.mdb.SCHEMA, 'links', 'branchs')
+        self.mdb.run_query(sql)
 
         sql = ''
         lst_tables = ['flood_marks', 'weirs', 'hydraulic_head', 'lateral_inflows',
-                      'lateral_weirs', 'tracer_lateral_inflows', 'outputs', 'links']
+                      'lateral_weirs', 'tracer_lateral_inflows', 'outputs']
         for table in lst_tables:
             sql += "SELECT public.update_abscisse_point('{0}.{1}','{0}.{2}')" \
                    ";\n".format(self.mdb.SCHEMA, table, 'branchs')
-
         self.mdb.run_query(sql)
 
     def download_bin(self):
