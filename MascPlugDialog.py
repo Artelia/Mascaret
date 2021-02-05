@@ -806,7 +806,7 @@ class MascPlugDialog(QMainWindow):
         retval = msg.exec_()
 
     def about(self):
-        read_version(self.masplugPath)
+        val = read_version(self.masplugPath)
         # TODO get "about" info of file
         txt = u"""
 Plugin dedicated to the building and exploitation of Mascaret models.
