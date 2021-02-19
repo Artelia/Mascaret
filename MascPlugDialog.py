@@ -24,6 +24,7 @@ import posixpath
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
+from qgis.PyQt.QtGui import QIcon
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
@@ -813,7 +814,8 @@ Plugin dedicated to the building and exploitation of Mascaret models.
 
 Requires PostgreSQL and PostGIS.
 
-Developed by Mehdi-Pierre DAOU, Christophe COULET, Aurélien PERRIN (Artelia),
+Developed by Mehdi-Pierre DAOU, Christophe COULET, Aurelien PERRIN (Artelia),
+With contribution of Philippe BAGOT (Cerema) for storage area,
 Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
 Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek 
 (Many thanks for the work they've done on RiverGis).
