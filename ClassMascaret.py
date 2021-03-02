@@ -1203,7 +1203,8 @@ class ClassMascaret:
         :param date_fin:
         :return:
         """
-        pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
+        #pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
+        pattern = re.compile('(\w+)\\[t([+-][0-9]+)?\\]')
         somme = 0
         debit_prec = 0
         obs = {}
@@ -1710,6 +1711,7 @@ class ClassMascaret:
         if tup:
             par, dict_scen, dict_lois, comments, noyau, run = tup
         else:
+            print('no transmitted variable')
             return
 
         for i, scen in enumerate(dict_scen['name']):
