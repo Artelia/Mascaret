@@ -178,6 +178,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionAbout.triggered.connect(self.about)
         self.ui.actionWebsite.triggered.connect(self.website)
         self.ui.actionWebsite.setEnabled(False)
+        self.ui.actionWikisite.triggered.connect(self.wikisite)
 
         # Structures
         self.ui.actionStructures.triggered.connect(self.fct_structures)
@@ -826,6 +827,9 @@ Version : {}
     def website(self):
         pass
         # TODO
+    def wikisite(self):
+        import webbrowser
+        webbrowser.open('https://github.com/Artelia/Mascaret/wiki')
 
     #  *******************************
     #    Water Quality
