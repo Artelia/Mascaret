@@ -237,7 +237,7 @@ class MascPlugDialog(QMainWindow):
         self.actions2Disable = [self.ui.actionCreate_New_Model,
                                 self.ui.actionLoad_Model,
                                 self.ui.actionDeleteModel,
-                                self.ui.actionExport_Model]
+                                self.ui.actionEfl]
         self.ui.menuDB.findChildren(QAction)[0].setEnabled(True)
         for a in self.actions2Disable:
             a.setDisabled(True)

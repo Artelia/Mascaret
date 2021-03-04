@@ -1446,6 +1446,11 @@ class ClassMascaret:
         if self.mgis.DEBUG:
             self.mgis.add_info("Tracer files are created.")
 
+
+        if par["LigEauInit"] and not par["initialisationAuto"] and noyau != "steady":
+            self.select_init_run_case()
+
+
         return par, dict_scen, dict_lois, comments
 
     def init_scen_steady(self, par, dict_lois):
@@ -1763,8 +1768,8 @@ class ClassMascaret:
                        }
                 self.modif_xcas(tab, self.baseName + '.xcas')
 
-            elif par["LigEauInit"] and noyau != "steady":
-                self.select_init_run_case()
+            # elif par["LigEauInit"] and noyau != "steady":
+            #     self.select_init_run_case()
 
             self.mgis.add_info("========== Run case  =========")
             self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen, noyau))
@@ -2125,8 +2130,16 @@ class ClassMascaret:
                                                        'File Selection',
                                                        self.dossierFileMasc,
                                                        "File (*.lig)")
-        fichiers = fichiers[0]
-        shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + '.lig'))
+        try:
+            fichiers = fichiers[0]
+        except IndexError:
+            self.mgis.add_info("Cancel  init file")
+
+        try :
+            shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + '.lig'))
+        except Exception as e:
+            self.mgis.add_info( "Error copying file")
+            self.mgis.add_info("{}",e)
 
     def clean_rep(self):
         """ Clean the run folder and copy the essential files to run mascaret"""
