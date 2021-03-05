@@ -942,7 +942,7 @@ Version : {}
 
     def fct_test(self):
         """ Test function"""
-        self.chkt.debug_update_vers_meta(version='3.0.5')
+        self.chkt.debug_update_vers_meta(version='3.0.6')
         pass
 
     def update_pk(self):

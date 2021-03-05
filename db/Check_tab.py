@@ -58,7 +58,9 @@ class CheckTab():
                                   '3.0.3',
                                   '3.0.4',
                                   '3.0.5',
-                                  '3.0.6']
+                                  '3.0.6',
+                                  '3.0.7'
+                                  ]
         self.dico_modif = {'3.0.0': {'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
                                                  {'tab': Maso.profil_struct, 'overwrite': False},
                                                  {'tab': Maso.struct_param, 'overwrite': False},
@@ -130,6 +132,10 @@ class CheckTab():
                                ],
 
                            },
+                           '3.0.7': {'fct': [
+                                   lambda: self.update_fct_calc_abs(),
+                                        ]
+                                    },
 
                            # '3.0.x': { 'del_tab': ['resultats']},
 
@@ -610,20 +616,7 @@ class CheckTab():
         'pg_create_calcul_abscisse_point_flood'
         :return:
         """
-        lst_fct = [
-            "public.update_abscisse_branch(_tbl_branchs regclass)",
-            "public.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)",
-            "public.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)",
-            "public.abscisse_branch(_tbl_branchs regclass, id_branch integer)",
-            "public.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)",
-            "public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)",
-        ]
-        qry = ''
-        for fct in lst_fct:
-            qry += "DROP FUNCTION IF EXISTS {};\n".format(fct)
-        self.mdb.run_query(qry)
-
-        self.mdb.add_fct_for_update_pk()
+        self.update_fct_calc_abs()
 
         self.mdb.add_fct_for_visu()
 
@@ -658,3 +651,21 @@ class CheckTab():
         qry += cl.pg_calcul_abscisse_flood()
         qry += '\n'
         self.mdb.run_query(qry)
+
+
+    def update_fct_calc_abs(self):
+        lst_fct = [
+            "public.update_abscisse_branch(_tbl_branchs regclass)",
+            "public.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)",
+            "public.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)",
+            "public.abscisse_branch(_tbl_branchs regclass, id_branch integer)",
+            "public.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)",
+            "public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)",
+        ]
+        qry = ''
+        for fct in lst_fct:
+            qry += "DROP FUNCTION IF EXISTS {};\n".format(fct)
+        self.mdb.run_query(qry)
+        self.mdb.add_fct_for_update_pk()
+
+

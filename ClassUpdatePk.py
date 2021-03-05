@@ -96,10 +96,12 @@ class ClassUpdatePk(QDialog):
             elif table in  self.lst_tables_p:
                 sql += "SELECT public.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
                       ";\n".format(self.mdb.SCHEMA, table, 'branchs')
+                print("SELECT public.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
+                      ";\n".format(self.mdb.SCHEMA, table, 'branchs'))
             # elif table in self.lst_tables_b:
             #     sql += "SELECT public.update_abscisse_branch('{0}.{1}')" \
             #            ";\n".format(self.mdb.SCHEMA, table)
-   
+
         self.mdb.run_query(sql)
         if self.mgis.DEBUG:
             self.mgis.add_info("Update pk Done")

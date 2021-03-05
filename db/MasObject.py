@@ -909,7 +909,7 @@ $$ LANGUAGE plpgsql;"""
         """
         qry = """
     CREATE OR REPLACE FUNCTION public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)
-        RETURNS double precision
+        RETURNS TABLE(abscissa double precision, branch integer)
         LANGUAGE 'plpgsql'
     AS $BODY$
          DECLARE
@@ -921,7 +921,6 @@ $$ LANGUAGE plpgsql;"""
             z	integer;
             d	double precision;
             geom_p geometry;
-            abscissa  double precision;
          BEGIN
             EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_prof INTO geom_p;
             EXECUTE 'SELECT branch, zonenum, geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 4 LIMIT 1' USING geom_p INTO b,z,g,d  ;
@@ -931,9 +930,10 @@ $$ LANGUAGE plpgsql;"""
             IF long1 IS NULL THEN
                   long1 = 0;
             END IF;
-            abscissa = ROUND((long1+long2)::numeric,2);
+            abscissa := ROUND((long1+long2)::numeric,2);
+            branch := b;
 
-            RETURN abscissa;
+            RETURN NEXT;
          END;
     $BODY$; """
 
@@ -949,11 +949,12 @@ AS $BODY$
      DECLARE
         my_row  integer;     
         abs1 double precision;
+        b1  integer;   
      BEGIN
        FOR my_row IN  EXECUTE 'SELECT gid FROM ' ||_tbl
        LOOP
-          SELECT public.abscisse_profil( _tbl ,_tbl_branchs, my_row ) INTO abs1;
-          EXECUTE 'UPDATE  '||_tbl || ' SET abscissa = $1 WHERE gid = $2' USING abs1, my_row;
+          SELECT abscissa, branch FROM public.abscisse_profil( _tbl ,_tbl_branchs, my_row ) INTO abs1,b1;
+          EXECUTE 'UPDATE  '||_tbl || ' SET  branchnum = $3, abscissa = $1 WHERE gid = $2' USING abs1, my_row,b1;
         END LOOP;
         RETURN  ;
      END;
@@ -967,7 +968,7 @@ $BODY$;"""
         """
         qry = """
     CREATE OR REPLACE FUNCTION public.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)
-    RETURNS double precision
+    RETURNS TABLE(abscissa double precision, branch integer)
     LANGUAGE 'plpgsql'
 AS $BODY$
  
@@ -978,8 +979,7 @@ AS $BODY$
         b	integer; 
         z	integer; 
         d	double precision; 
-        f	double precision;
-        abscissa double precision;          
+        f	double precision;         
         geom_p  geometry;    
 
      BEGIN
@@ -991,9 +991,9 @@ AS $BODY$
          IF long1 IS NULL THEN
              long1 = 0;
          END IF;
-         abscissa =     ROUND((long1+long2)::numeric,2);        
-                   
-        RETURN abscissa;
+         abscissa :=     ROUND((long1+long2)::numeric,2);        
+         branch := b;          
+        RETURN NEXT;
      END;      
 $BODY$;"""
         return qry
@@ -1011,11 +1011,12 @@ $BODY$;"""
          DECLARE
             my_row  integer;     
             abs1 double precision;
+            b1  integer;     
          BEGIN
           FOR my_row IN  EXECUTE 'SELECT gid FROM ' ||_tbl
            LOOP
-             SELECT public.abscisse_point( _tbl ,_tbl_branchs, my_row ) INTO abs1;
-             EXECUTE 'UPDATE  '||_tbl || ' SET abscissa = $1 WHERE gid = $2' USING abs1, my_row;
+             SELECT abscissa, branch FROM  public.abscisse_point( _tbl ,_tbl_branchs, my_row ) INTO abs1,b1;
+             EXECUTE 'UPDATE  '||_tbl || ' SET  branchnum = $3, abscissa = $1 WHERE gid = $2' USING abs1, my_row,b1;
             END LOOP;
             RETURN  ;
          END;
