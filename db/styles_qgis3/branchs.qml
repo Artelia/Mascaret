@@ -2397,9 +2397,9 @@
       <editWidget type="Range">
         <config>
           <Option type="Map">
-            <Option type="bool" value="true" name="AllowNull"/>
+            <Option type="bool" value="false" name="AllowNull"/>
             <Option type="int" value="2147483647" name="Max"/>
-            <Option type="int" value="-2147483648" name="Min"/>
+            <Option type="int" value="0" name="Min"/>
             <Option type="int" value="0" name="Precision"/>
             <Option type="int" value="1" name="Step"/>
             <Option type="QString" value="SpinBox" name="Style"/>
@@ -2495,7 +2495,7 @@
     <constraint exp_strength="0" constraints="1" notnull_strength="1" unique_strength="0" field="branch"/>
     <constraint exp_strength="0" constraints="0" notnull_strength="0" unique_strength="0" field="startb"/>
     <constraint exp_strength="0" constraints="0" notnull_strength="0" unique_strength="0" field="endb"/>
-    <constraint exp_strength="0" constraints="1" notnull_strength="1" unique_strength="0" field="zonenum"/>
+    <constraint exp_strength="0" constraints="3" notnull_strength="1" unique_strength="2" field="zonenum"/>
     <constraint exp_strength="0" constraints="0" notnull_strength="0" unique_strength="0" field="zoneabsstart"/>
     <constraint exp_strength="0" constraints="0" notnull_strength="0" unique_strength="0" field="zoneabsend"/>
     <constraint exp_strength="0" constraints="0" notnull_strength="0" unique_strength="0" field="minbedcoef"/>
