@@ -1043,7 +1043,7 @@ AS $BODY$
         branch integer;
         zonenum integer;      
     BEGIN 
-        EXECUTE 'SELECT geom,zonenum,branch FROM  ' || _tbl_branchs || ' WHERE gid = $1' USING id_branch INTO geom_b, branch,zonenum;
+        EXECUTE 'SELECT geom,zonenum,branch FROM  ' || _tbl_branchs || ' WHERE gid = $1' USING id_branch INTO geom_b,zonenum, branch;
         EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || _tbl_branchs || ' WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING branch,zonenum INTO long1; 
         long2 = (SELECT ST_Length(geom_b)); 
         IF long1 IS NULL THEN 
@@ -1077,7 +1077,7 @@ AS $BODY$
        FOR my_row IN  EXECUTE 'SELECT gid FROM '||_tbl_branchs
        LOOP
           SELECT * FROM public.abscisse_branch( _tbl_branchs, my_row ) into abs1,abs2;        
-          EXECUTE 'UPDATE  '||_tbl_branchs || ' SET zoneabsstart = $1, zoneabsend = $2 WHERE gid = $2' 
+          EXECUTE 'UPDATE  '||_tbl_branchs || ' SET zoneabsstart = $1, zoneabsend = $2 WHERE gid = $3' 
           USING  abs1, abs2,my_row;
         END LOOP;
         RETURN  ;

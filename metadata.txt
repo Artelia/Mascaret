@@ -34,6 +34,7 @@ changelog=
              Add of wiki site link
              Correction of the display bug on "initial run case" GUI
              Button to update the pk updates too branchnum
+             Change the profile style and  the branch style
     3.0.6  : Correction of initial compute list bug
              Correction of result accurancy in Mascaret executable
              No longer freezes the qgis window when the model is running
