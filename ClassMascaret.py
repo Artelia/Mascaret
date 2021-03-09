@@ -2136,12 +2136,13 @@ class ClassMascaret:
             fichiers = fichiers[0]
         except IndexError:
             self.mgis.add_info("Cancel  init file")
+            return
 
         try :
             shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + '.lig'))
         except Exception as e:
             self.mgis.add_info( "Error copying file")
-            self.mgis.add_info("{}",e)
+            self.mgis.add_info("{}".format(e))
 
     def clean_rep(self):
         """ Clean the run folder and copy the essential files to run mascaret"""
