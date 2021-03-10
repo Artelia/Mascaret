@@ -699,7 +699,9 @@ class ClassMasDatabase(object):
         """add fct psql to compute abscissa"""
         cl = Maso.class_fct_psql()
         lfct = [cl.pg_abscisse_profil(), cl.pg_all_profil(),
-                cl.pg_abscisse_point(), cl.pg_all_point(), ]
+                cl.pg_abscisse_point(), cl.pg_all_point(),
+                cl.pg_abscisse_branch(), cl.pg_all_branch(),
+                ]
         qry = ''
         for sql in lfct:
             qry += sql

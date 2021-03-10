@@ -240,6 +240,7 @@ class GraphProfil(GraphCommon):
         self.flag = False
         self.image = None
         self.topoSelect = None
+        self.order_topo = 0
         self.bt_transla = self.ui.btTools_profil_translation
         self.bt_select = self.ui.btTools_point_selection
         self.bt_select_z = self.ui.btTools_zone_selection
@@ -534,7 +535,6 @@ class GraphProfil(GraphCommon):
                             self.mgis.add_info("Warning : Check the profil lenght")
                         p = interp.asPoint()
                         geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(p.x(), p.y(), self.mdb.SRID)
-
                 if gid:
                     sql = """UPDATE {0}.topo SET x={1}, geom={2}, order_={3}
                           WHERE gid={4}""".format(self.mdb.SCHEMA,
@@ -542,6 +542,7 @@ class GraphProfil(GraphCommon):
                                                   geom,
                                                   ordre,
                                                   gid)
+                    self.mdb.run_query(sql)
                 else:
                     sql = """INSERT INTO {0}.topo
                           (name, profile, order_, x, z, geom)
@@ -554,7 +555,8 @@ class GraphProfil(GraphCommon):
                         x,
                         z,
                         geom)
-                self.mdb.run_query(sql)
+
+                    self.mdb.run_query(sql)
 
         self.extrait_topo()
 
@@ -751,10 +753,8 @@ class GraphProfil(GraphCommon):
             distances = np.hypot(x - xs[event.ind], z - zs[event.ind])
             indmin = distances.argmin()
             dataind = event.ind[indmin]
-
             if self.ordre == -9999:
                 ordre = self.topo[lbl]['ordre'][dataind]
-
                 num, ok = QInputDialog.getInt(self,
                                               "Ordre",
                                               "Entrez l'ordre initial",
@@ -850,11 +850,15 @@ class GraphProfil(GraphCommon):
 
         if self.flag and event.button == 3:
             if self.ordre == -9999:
+                if self.topoSelect:
+                    idx_topo = list(self.topo.keys()).index(self.topoSelect)
+                else:
+                    idx_topo=0
                 item, ok = QInputDialog.getItem(self,
                                                 "Curve",
                                                 "Choice of Curve",
                                                 self.topo.keys(),
-                                                0)
+                                                idx_topo)
 
                 if not ok:
                     return
@@ -862,10 +866,10 @@ class GraphProfil(GraphCommon):
                 num, ok = QInputDialog.getInt(self,
                                               "Order",
                                               "Input the initial order",
-                                              0)
+                                              self.order_topo)
                 if not ok:
                     return
-
+                self.order_topo = num+1
                 self.ordre = num
 
                 self.topoSelect = item

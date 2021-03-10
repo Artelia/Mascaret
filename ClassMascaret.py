@@ -336,33 +336,34 @@ class ClassMascaret:
         return dico
 
     def maillage_select(self):
-        sql = """SELECT MIN(t1.mesh) AS pas, 
+
+        sql = """SELECT MIN(t1.mesh) AS pas,
                                     MIN(t2.nombre),
                                     MAX(t2.nombre)+MIN(diff)+1 AS max
-                             FROM (SELECT branch, mesh, 
-                                          ST_UNION(geom) AS geom, 
-                                          MIN(diff) AS diff 
-                                   FROM  (SELECT branch, 
-                                                 mesh, 
+                             FROM (SELECT branch, mesh,
+                                          ST_UNION(geom) AS geom,
+                                          MIN(diff) AS diff
+                                   FROM  (SELECT branch,
+                                                 mesh,
                                                  geom,
-                                                 row_number() 
-                                                    OVER (PARTITION BY branch,  mesh 
+                                                 row_number()
+                                                    OVER (PARTITION BY branch,  mesh
                                                           ORDER BY zonenum)
                                                     - zonenum AS grp,
-                                                 branch-lead(branch,1,branch+1) 
+                                                 branch-lead(branch,1,branch+1)
                                                     OVER (ORDER BY zonenum) AS diff
                                           FROM   {0}.branchs
                                           WHERE active) x
                                    GROUP  BY branch, mesh, grp) AS t1,
-                                  (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom 
-                                   FROM {0}.profiles 
-                                   WHERE active ) AS t2 
-                             WHERE ST_INTERSECTS(t1.geom,t2.geom) 
+                                  (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom
+                                   FROM {0}.profiles
+                                   WHERE active ) AS t2
+                             WHERE ST_INTERSECTS(t1.geom,t2.geom)
                              GROUP BY t1.geom
                              ORDER BY min;"""
 
         (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True, namvar=True)
-
+        print("eee",results, namCol)
         dico = {}
         colonnes = [col[0] for col in namCol]
         for col in colonnes:
@@ -448,6 +449,7 @@ class ClassMascaret:
         numero = branches["branch"]
         branches["abscdebut"] = []
         branches["abscfin"] = []
+
 
         liste = list(zip(profils["abscissa"], profils["branchnum"]))
         for i, num in enumerate(numero):
@@ -1203,7 +1205,8 @@ class ClassMascaret:
         :param date_fin:
         :return:
         """
-        pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
+        #pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
+        pattern = re.compile('(\w+)\\[t([+-][0-9]+)?\\]')
         somme = 0
         debit_prec = 0
         obs = {}
@@ -1444,6 +1447,11 @@ class ClassMascaret:
 
         if self.mgis.DEBUG:
             self.mgis.add_info("Tracer files are created.")
+
+
+        if par["LigEauInit"] and not par["initialisationAuto"] and noyau != "steady":
+            self.select_init_run_case()
+
 
         return par, dict_scen, dict_lois, comments
 
@@ -1710,6 +1718,7 @@ class ClassMascaret:
         if tup:
             par, dict_scen, dict_lois, comments, noyau, run = tup
         else:
+            print('no transmitted variable')
             return
 
         for i, scen in enumerate(dict_scen['name']):
@@ -1761,8 +1770,8 @@ class ClassMascaret:
                        }
                 self.modif_xcas(tab, self.baseName + '.xcas')
 
-            elif par["LigEauInit"] and noyau != "steady":
-                self.select_init_run_case()
+            # elif par["LigEauInit"] and noyau != "steady":
+            #     self.select_init_run_case()
 
             self.mgis.add_info("========== Run case  =========")
             self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen, noyau))
@@ -2123,8 +2132,17 @@ class ClassMascaret:
                                                        'File Selection',
                                                        self.dossierFileMasc,
                                                        "File (*.lig)")
-        fichiers = fichiers[0]
-        shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + '.lig'))
+        try:
+            fichiers = fichiers[0]
+        except IndexError:
+            self.mgis.add_info("Cancel  init file")
+            return
+
+        try :
+            shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + '.lig'))
+        except Exception as e:
+            self.mgis.add_info( "Error copying file")
+            self.mgis.add_info("{}".format(e))
 
     def clean_rep(self):
         """ Clean the run folder and copy the essential files to run mascaret"""

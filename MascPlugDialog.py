@@ -179,6 +179,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionAbout.triggered.connect(self.about)
         self.ui.actionWebsite.triggered.connect(self.website)
         self.ui.actionWebsite.setEnabled(False)
+        self.ui.actionWikisite.triggered.connect(self.wikisite)
 
         # Structures
         self.ui.actionStructures.triggered.connect(self.fct_structures)
@@ -237,7 +238,7 @@ class MascPlugDialog(QMainWindow):
         self.actions2Disable = [self.ui.actionCreate_New_Model,
                                 self.ui.actionLoad_Model,
                                 self.ui.actionDeleteModel,
-                                self.ui.actionExport_Model]
+                                self.ui.actionEfl]
         self.ui.menuDB.findChildren(QAction)[0].setEnabled(True)
         for a in self.actions2Disable:
             a.setDisabled(True)
@@ -828,6 +829,9 @@ Version : {}
     def website(self):
         pass
         # TODO
+    def wikisite(self):
+        import webbrowser
+        webbrowser.open('https://github.com/Artelia/Mascaret/wiki')
 
     #  *******************************
     #    Water Quality
@@ -940,7 +944,7 @@ Version : {}
 
     def fct_test(self):
         """ Test function"""
-        self.chkt.debug_update_vers_meta(version='3.0.5')
+        self.chkt.debug_update_vers_meta(version='3.0.6')
         pass
 
     def update_pk(self):

@@ -197,6 +197,7 @@
     </widget>
     <addaction name="menuSetting"/>
     <addaction name="actionWebsite"/>
+    <addaction name="actionWikisite"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menu_Tools">
@@ -370,6 +371,15 @@
    </property>
    <property name="text">
     <string>Web site</string>
+   </property>
+  </action>
+  <action name="actionWikisite">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/webSite.png</normaloff>:/plugins/Mascaret/icones/webSite.png</iconset>
+   </property>
+   <property name="text">
+    <string>Wiki site</string>
    </property>
   </action>
   <action name="actionAbout">
@@ -685,7 +695,7 @@
      <normaloff>:/plugins/Mascaret/icones/graph_struct.png</normaloff>:/plugins/Mascaret/icones/graph_struct.png</iconset>
    </property>
    <property name="text">
-    <string>Dispalcement results</string>
+    <string>Displacement results</string>
    </property>
    <property name="toolTip">
     <string>GraphRes</string>

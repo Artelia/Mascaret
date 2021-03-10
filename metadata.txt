@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=3.00
 qgisMaximumVersion=3.99
 
-version=3.0.6
+version=3.0.7
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,6 +30,11 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    3.0.7  : Correction of observation bug
+             Add of wiki site link
+             Correction of the display bug on "initial run case" GUI
+             Button to update the pk updates too branchnum
+             Change the profile style and  the branch style
     3.0.6  : Correction of initial compute list bug
              Correction of result accurancy in Mascaret executable
              No longer freezes the qgis window when the model is running
