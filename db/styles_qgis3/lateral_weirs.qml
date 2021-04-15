@@ -1,120 +1,118 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis hasScaleBasedVisibilityFlag="0" labelsEnabled="0" simplifyAlgorithm="0" version="3.10.8-A Coruña" styleCategories="AllStyleCategories" readOnly="0" simplifyLocal="1" minScale="1e+08" simplifyDrawingHints="0" maxScale="0" simplifyDrawingTol="1" simplifyMaxScale="1">
+<qgis minScale="1e+08" simplifyMaxScale="1" readOnly="0" simplifyDrawingTol="1" version="3.10.8-A Coruña" simplifyLocal="1" styleCategories="AllStyleCategories" labelsEnabled="0" maxScale="0" simplifyDrawingHints="0" hasScaleBasedVisibilityFlag="0" simplifyAlgorithm="0">
   <flags>
     <Identifiable>1</Identifiable>
     <Removable>1</Removable>
     <Searchable>1</Searchable>
   </flags>
-  <renderer-v2 enableorderby="0" forceraster="0" symbollevels="0" attr="active" type="categorizedSymbol">
+  <renderer-v2 type="categorizedSymbol" forceraster="0" attr="active" symbollevels="0" enableorderby="0">
     <categories>
-      <category render="true" value="f" label="inactive" symbol="0"/>
-      <category render="true" value="t" label="active" symbol="1"/>
+      <category label="inactive" symbol="0" render="true" value="false"/>
+      <category label="active" symbol="1" render="true" value="true"/>
     </categories>
     <symbols>
-      <symbol name="0" clip_to_extent="1" force_rhr="0" alpha="1" type="marker">
-        <layer class="SimpleMarker" pass="0" enabled="1" locked="0">
-          <prop v="90" k="angle"/>
-          <prop v="159,159,159,255" k="color"/>
-          <prop v="1" k="horizontal_anchor_point"/>
-          <prop v="bevel" k="joinstyle"/>
-          <prop v="arrow" k="name"/>
-          <prop v="0,-2.5" k="offset"/>
-          <prop v="3x:0,0,0,0,0,0" k="offset_map_unit_scale"/>
-          <prop v="MM" k="offset_unit"/>
-          <prop v="0,0,0,255" k="outline_color"/>
-          <prop v="solid" k="outline_style"/>
-          <prop v="0" k="outline_width"/>
-          <prop v="3x:0,0,0,0,0,0" k="outline_width_map_unit_scale"/>
-          <prop v="MM" k="outline_width_unit"/>
-          <prop v="area" k="scale_method"/>
-          <prop v="5" k="size"/>
-          <prop v="3x:0,0,0,0,0,0" k="size_map_unit_scale"/>
-          <prop v="MM" k="size_unit"/>
-          <prop v="1" k="vertical_anchor_point"/>
+      <symbol type="marker" force_rhr="0" clip_to_extent="1" alpha="1" name="0">
+        <layer class="SimpleMarker" pass="0" locked="0" enabled="1">
+          <prop k="angle" v="90"/>
+          <prop k="color" v="159,159,159,255"/>
+          <prop k="horizontal_anchor_point" v="1"/>
+          <prop k="joinstyle" v="bevel"/>
+          <prop k="name" v="arrow"/>
+          <prop k="offset" v="0,-2.5"/>
+          <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+          <prop k="offset_unit" v="MM"/>
+          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_style" v="solid"/>
+          <prop k="outline_width" v="0"/>
+          <prop k="outline_width_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+          <prop k="outline_width_unit" v="MM"/>
+          <prop k="scale_method" v="area"/>
+          <prop k="size" v="5"/>
+          <prop k="size_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+          <prop k="size_unit" v="MM"/>
+          <prop k="vertical_anchor_point" v="1"/>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" value="" type="QString"/>
+              <Option type="QString" name="name" value=""/>
               <Option name="properties"/>
-              <Option name="type" value="collection" type="QString"/>
+              <Option type="QString" name="type" value="collection"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol name="1" clip_to_extent="1" force_rhr="0" alpha="1" type="marker">
-        <layer class="SimpleMarker" pass="0" enabled="1" locked="0">
-          <prop v="90" k="angle"/>
-          <prop v="227,26,28,255" k="color"/>
-          <prop v="1" k="horizontal_anchor_point"/>
-          <prop v="bevel" k="joinstyle"/>
-          <prop v="arrow" k="name"/>
-          <prop v="0,-2.5" k="offset"/>
-          <prop v="3x:0,0,0,0,0,0" k="offset_map_unit_scale"/>
-          <prop v="MM" k="offset_unit"/>
-          <prop v="0,0,0,255" k="outline_color"/>
-          <prop v="solid" k="outline_style"/>
-          <prop v="0" k="outline_width"/>
-          <prop v="3x:0,0,0,0,0,0" k="outline_width_map_unit_scale"/>
-          <prop v="MM" k="outline_width_unit"/>
-          <prop v="area" k="scale_method"/>
-          <prop v="5" k="size"/>
-          <prop v="3x:0,0,0,0,0,0" k="size_map_unit_scale"/>
-          <prop v="MM" k="size_unit"/>
-          <prop v="1" k="vertical_anchor_point"/>
+      <symbol type="marker" force_rhr="0" clip_to_extent="1" alpha="1" name="1">
+        <layer class="SimpleMarker" pass="0" locked="0" enabled="1">
+          <prop k="angle" v="90"/>
+          <prop k="color" v="227,26,28,255"/>
+          <prop k="horizontal_anchor_point" v="1"/>
+          <prop k="joinstyle" v="bevel"/>
+          <prop k="name" v="arrow"/>
+          <prop k="offset" v="0,-2.5"/>
+          <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+          <prop k="offset_unit" v="MM"/>
+          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_style" v="solid"/>
+          <prop k="outline_width" v="0"/>
+          <prop k="outline_width_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+          <prop k="outline_width_unit" v="MM"/>
+          <prop k="scale_method" v="area"/>
+          <prop k="size" v="5"/>
+          <prop k="size_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+          <prop k="size_unit" v="MM"/>
+          <prop k="vertical_anchor_point" v="1"/>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" value="" type="QString"/>
+              <Option type="QString" name="name" value=""/>
               <Option name="properties"/>
-              <Option name="type" value="collection" type="QString"/>
+              <Option type="QString" name="type" value="collection"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
     </symbols>
     <source-symbol>
-      <symbol name="0" clip_to_extent="1" force_rhr="0" alpha="1" type="marker">
-        <layer class="SimpleMarker" pass="0" enabled="1" locked="0">
-          <prop v="90" k="angle"/>
-          <prop v="227,26,28,255" k="color"/>
-          <prop v="1" k="horizontal_anchor_point"/>
-          <prop v="bevel" k="joinstyle"/>
-          <prop v="arrow" k="name"/>
-          <prop v="0,-2.5" k="offset"/>
-          <prop v="3x:0,0,0,0,0,0" k="offset_map_unit_scale"/>
-          <prop v="MM" k="offset_unit"/>
-          <prop v="0,0,0,255" k="outline_color"/>
-          <prop v="solid" k="outline_style"/>
-          <prop v="0" k="outline_width"/>
-          <prop v="3x:0,0,0,0,0,0" k="outline_width_map_unit_scale"/>
-          <prop v="MM" k="outline_width_unit"/>
-          <prop v="diameter" k="scale_method"/>
-          <prop v="5" k="size"/>
-          <prop v="3x:0,0,0,0,0,0" k="size_map_unit_scale"/>
-          <prop v="MM" k="size_unit"/>
-          <prop v="1" k="vertical_anchor_point"/>
+      <symbol type="marker" force_rhr="0" clip_to_extent="1" alpha="1" name="0">
+        <layer class="SimpleMarker" pass="0" locked="0" enabled="1">
+          <prop k="angle" v="90"/>
+          <prop k="color" v="227,26,28,255"/>
+          <prop k="horizontal_anchor_point" v="1"/>
+          <prop k="joinstyle" v="bevel"/>
+          <prop k="name" v="arrow"/>
+          <prop k="offset" v="0,-2.5"/>
+          <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+          <prop k="offset_unit" v="MM"/>
+          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_style" v="solid"/>
+          <prop k="outline_width" v="0"/>
+          <prop k="outline_width_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+          <prop k="outline_width_unit" v="MM"/>
+          <prop k="scale_method" v="diameter"/>
+          <prop k="size" v="5"/>
+          <prop k="size_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+          <prop k="size_unit" v="MM"/>
+          <prop k="vertical_anchor_point" v="1"/>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" value="" type="QString"/>
+              <Option type="QString" name="name" value=""/>
               <Option name="properties"/>
-              <Option name="type" value="collection" type="QString"/>
+              <Option type="QString" name="type" value="collection"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
     </source-symbol>
-    <colorramp name="[source]" type="gradient">
-      <prop v="247,251,255,255" k="color1"/>
-      <prop v="8,48,107,255" k="color2"/>
-      <prop v="0" k="discrete"/>
-      <prop v="gradient" k="rampType"/>
-      <prop v="0.13;222,235,247,255:0.26;198,219,239,255:0.39;158,202,225,255:0.52;107,174,214,255:0.65;66,146,198,255:0.78;33,113,181,255:0.9;8,81,156,255" k="stops"/>
+    <colorramp type="gradient" name="[source]">
+      <prop k="color1" v="247,251,255,255"/>
+      <prop k="color2" v="8,48,107,255"/>
+      <prop k="discrete" v="0"/>
+      <prop k="rampType" v="gradient"/>
+      <prop k="stops" v="0.13;222,235,247,255:0.26;198,219,239,255:0.39;158,202,225,255:0.52;107,174,214,255:0.65;66,146,198,255:0.78;33,113,181,255:0.9;8,81,156,255"/>
     </colorramp>
     <rotation/>
     <sizescale/>
   </renderer-v2>
   <customproperties>
     <property key="dualview/previewExpressions">
-      <value>name</value>
-      <value>"name"</value>
       <value>name</value>
     </property>
     <property value="0" key="embeddedWidgets/count"/>
@@ -125,21 +123,21 @@
   <featureBlendMode>0</featureBlendMode>
   <layerOpacity>1</layerOpacity>
   <SingleCategoryDiagramRenderer diagramType="Histogram" attributeLegend="1">
-    <DiagramCategory backgroundAlpha="255" enabled="0" minimumSize="0" width="15" minScaleDenominator="1000" penWidth="0" penColor="#000000" diagramOrientation="Up" sizeType="MM" scaleBasedVisibility="0" barWidth="5" lineSizeScale="3x:0,0,0,0,0,0" height="15" backgroundColor="#ffffff" scaleDependency="Area" sizeScale="3x:0,0,0,0,0,0" maxScaleDenominator="1e+08" penAlpha="255" rotationOffset="270" lineSizeType="MM" opacity="1" labelPlacementMethod="XHeight">
+    <DiagramCategory opacity="1" height="15" scaleBasedVisibility="0" scaleDependency="Area" barWidth="5" lineSizeScale="3x:0,0,0,0,0,0" sizeType="MM" minScaleDenominator="1000" penWidth="0" diagramOrientation="Up" sizeScale="3x:0,0,0,0,0,0" penColor="#000000" rotationOffset="270" width="15" maxScaleDenominator="1e+08" minimumSize="0" backgroundColor="#ffffff" backgroundAlpha="255" penAlpha="255" lineSizeType="MM" enabled="0" labelPlacementMethod="XHeight">
       <fontProperties style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0"/>
-      <attribute field="" label="" color="#000000"/>
+      <attribute color="#000000" label="" field=""/>
     </DiagramCategory>
   </SingleCategoryDiagramRenderer>
-  <DiagramLayerSettings obstacle="0" zIndex="0" dist="0" showAll="1" linePlacementFlags="2" priority="0" placement="0">
+  <DiagramLayerSettings dist="0" obstacle="0" priority="0" showAll="1" linePlacementFlags="2" zIndex="0" placement="0">
     <properties>
       <Option type="Map">
-        <Option name="name" value="" type="QString"/>
+        <Option type="QString" name="name" value=""/>
         <Option name="properties"/>
-        <Option name="type" value="collection" type="QString"/>
+        <Option type="QString" name="type" value="collection"/>
       </Option>
     </properties>
   </DiagramLayerSettings>
-  <geometryOptions removeDuplicateNodes="0" geometryPrecision="0">
+  <geometryOptions geometryPrecision="0" removeDuplicateNodes="0">
     <activeChecks/>
     <checkConfiguration/>
   </geometryOptions>
@@ -162,12 +160,12 @@
       <editWidget type="ValueMap">
         <config>
           <Option type="Map">
-            <Option name="map" type="List">
+            <Option type="List" name="map">
               <Option type="Map">
-                <Option name="Rating Law" value="2" type="QString"/>
+                <Option type="QString" name="Rating Law" value="2"/>
               </Option>
               <Option type="Map">
-                <Option name="Z crest, Q coeff" value="1" type="QString"/>
+                <Option type="QString" name="Z crest, Q coeff" value="1"/>
               </Option>
             </Option>
           </Option>
@@ -213,47 +211,47 @@
       <editWidget type="CheckBox">
         <config>
           <Option type="Map">
-            <Option name="CheckedState" value="" type="QString"/>
-            <Option name="UncheckedState" value="" type="QString"/>
+            <Option type="QString" name="CheckedState" value=""/>
+            <Option type="QString" name="UncheckedState" value=""/>
           </Option>
         </config>
       </editWidget>
     </field>
   </fieldConfiguration>
   <aliases>
-    <alias name="" field="gid" index="0"/>
-    <alias name="" field="name" index="1"/>
-    <alias name="" field="type" index="2"/>
-    <alias name="" field="branchnum" index="3"/>
-    <alias name="" field="abscissa" index="4"/>
-    <alias name="" field="length" index="5"/>
-    <alias name="" field="z_crest" index="6"/>
-    <alias name="" field="flowratecoef" index="7"/>
-    <alias name="" field="active" index="8"/>
+    <alias index="0" name="" field="gid"/>
+    <alias index="1" name="" field="name"/>
+    <alias index="2" name="" field="type"/>
+    <alias index="3" name="" field="branchnum"/>
+    <alias index="4" name="" field="abscissa"/>
+    <alias index="5" name="" field="length"/>
+    <alias index="6" name="" field="z_crest"/>
+    <alias index="7" name="" field="flowratecoef"/>
+    <alias index="8" name="" field="active"/>
   </aliases>
   <excludeAttributesWMS/>
   <excludeAttributesWFS/>
   <defaults>
-    <default field="gid" applyOnUpdate="0" expression=""/>
-    <default field="name" applyOnUpdate="0" expression=""/>
-    <default field="type" applyOnUpdate="0" expression=""/>
-    <default field="branchnum" applyOnUpdate="0" expression=""/>
-    <default field="abscissa" applyOnUpdate="0" expression=""/>
-    <default field="length" applyOnUpdate="0" expression=""/>
-    <default field="z_crest" applyOnUpdate="0" expression=""/>
-    <default field="flowratecoef" applyOnUpdate="0" expression=""/>
-    <default field="active" applyOnUpdate="0" expression=""/>
+    <default expression="" applyOnUpdate="0" field="gid"/>
+    <default expression="" applyOnUpdate="0" field="name"/>
+    <default expression="" applyOnUpdate="0" field="type"/>
+    <default expression="" applyOnUpdate="0" field="branchnum"/>
+    <default expression="" applyOnUpdate="0" field="abscissa"/>
+    <default expression="" applyOnUpdate="0" field="length"/>
+    <default expression="" applyOnUpdate="0" field="z_crest"/>
+    <default expression="" applyOnUpdate="0" field="flowratecoef"/>
+    <default expression="" applyOnUpdate="0" field="active"/>
   </defaults>
   <constraints>
-    <constraint unique_strength="1" field="gid" exp_strength="0" constraints="3" notnull_strength="1"/>
-    <constraint unique_strength="0" field="name" exp_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint unique_strength="0" field="type" exp_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint unique_strength="0" field="branchnum" exp_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint unique_strength="0" field="abscissa" exp_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint unique_strength="0" field="length" exp_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint unique_strength="0" field="z_crest" exp_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint unique_strength="0" field="flowratecoef" exp_strength="0" constraints="0" notnull_strength="0"/>
-    <constraint unique_strength="0" field="active" exp_strength="0" constraints="0" notnull_strength="0"/>
+    <constraint constraints="3" unique_strength="1" notnull_strength="1" field="gid" exp_strength="0"/>
+    <constraint constraints="0" unique_strength="0" notnull_strength="0" field="name" exp_strength="0"/>
+    <constraint constraints="0" unique_strength="0" notnull_strength="0" field="type" exp_strength="0"/>
+    <constraint constraints="0" unique_strength="0" notnull_strength="0" field="branchnum" exp_strength="0"/>
+    <constraint constraints="0" unique_strength="0" notnull_strength="0" field="abscissa" exp_strength="0"/>
+    <constraint constraints="0" unique_strength="0" notnull_strength="0" field="length" exp_strength="0"/>
+    <constraint constraints="0" unique_strength="0" notnull_strength="0" field="z_crest" exp_strength="0"/>
+    <constraint constraints="0" unique_strength="0" notnull_strength="0" field="flowratecoef" exp_strength="0"/>
+    <constraint constraints="0" unique_strength="0" notnull_strength="0" field="active" exp_strength="0"/>
   </constraints>
   <constraintExpressions>
     <constraint exp="" desc="" field="gid"/>
@@ -272,16 +270,16 @@
   </attributeactions>
   <attributetableconfig sortOrder="0" actionWidgetStyle="dropDown" sortExpression="">
     <columns>
-      <column name="gid" width="-1" hidden="0" type="field"/>
-      <column name="name" width="-1" hidden="0" type="field"/>
-      <column name="type" width="-1" hidden="0" type="field"/>
-      <column name="branchnum" width="-1" hidden="0" type="field"/>
-      <column name="abscissa" width="-1" hidden="0" type="field"/>
-      <column name="length" width="-1" hidden="0" type="field"/>
-      <column name="z_crest" width="-1" hidden="0" type="field"/>
-      <column name="flowratecoef" width="-1" hidden="0" type="field"/>
-      <column name="active" width="-1" hidden="0" type="field"/>
-      <column width="-1" hidden="1" type="actions"/>
+      <column type="field" width="-1" name="gid" hidden="0"/>
+      <column type="field" width="-1" name="name" hidden="0"/>
+      <column type="field" width="-1" name="type" hidden="0"/>
+      <column type="field" width="-1" name="branchnum" hidden="0"/>
+      <column type="field" width="-1" name="abscissa" hidden="0"/>
+      <column type="field" width="-1" name="length" hidden="0"/>
+      <column type="field" width="-1" name="z_crest" hidden="0"/>
+      <column type="field" width="-1" name="flowratecoef" hidden="0"/>
+      <column type="field" width="-1" name="active" hidden="0"/>
+      <column type="actions" width="-1" hidden="1"/>
     </columns>
   </attributetableconfig>
   <conditionalstyles>
@@ -313,15 +311,15 @@ def my_form_open(dialog, layer, feature):
   <featformsuppress>0</featformsuppress>
   <editorlayout>tablayout</editorlayout>
   <attributeEditorForm>
-    <attributeEditorContainer name="infos" showLabel="1" visibilityExpression="" visibilityExpressionEnabled="0" columnCount="0" groupBox="0">
-      <attributeEditorField name="name" index="1" showLabel="1"/>
-      <attributeEditorField name="type" index="2" showLabel="1"/>
-      <attributeEditorField name="length" index="5" showLabel="1"/>
-      <attributeEditorField name="active" index="8" showLabel="1"/>
+    <attributeEditorContainer visibilityExpressionEnabled="0" columnCount="0" visibilityExpression="" showLabel="1" name="infos" groupBox="0">
+      <attributeEditorField showLabel="1" index="1" name="name"/>
+      <attributeEditorField showLabel="1" index="2" name="type"/>
+      <attributeEditorField showLabel="1" index="5" name="length"/>
+      <attributeEditorField showLabel="1" index="8" name="active"/>
     </attributeEditorContainer>
-    <attributeEditorContainer name="Crest height and flow rate coeff" showLabel="1" visibilityExpression="" visibilityExpressionEnabled="0" columnCount="0" groupBox="0">
-      <attributeEditorField name="z_crest" index="6" showLabel="1"/>
-      <attributeEditorField name="flowratecoef" index="7" showLabel="1"/>
+    <attributeEditorContainer visibilityExpressionEnabled="0" columnCount="0" visibilityExpression="" showLabel="1" name="Crest height and flow rate coeff" groupBox="0">
+      <attributeEditorField showLabel="1" index="6" name="z_crest"/>
+      <attributeEditorField showLabel="1" index="7" name="flowratecoef"/>
     </attributeEditorContainer>
   </attributeEditorForm>
   <editable>
