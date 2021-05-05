@@ -18,5 +18,5 @@ CREATE TABLE layer_styles
 WITH (
   OIDS=FALSE
 );
-/*ALTER TABLE layer_styles
-  OWNER TO postgres;*/
+ALTER TABLE layer_styles
+  OWNER TO postgres;

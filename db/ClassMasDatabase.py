@@ -54,7 +54,6 @@ class ClassMasDatabase(object):
     OVERWRITE = True
     LOAD_ALL = True
     CHECK_URI = True
-    USER = 'postgres'
 
     def __init__(self, mgis, dbname, host, port, user, password):
         """
@@ -202,7 +201,7 @@ class ClassMasDatabase(object):
             yield results
             #
 
-    def setup_hydro_object(self, hydro_object, schema=None, srid=None, puser= None, overwrite=None):
+    def setup_hydro_object(self, hydro_object, schema=None, srid=None, overwrite=None):
         """
         Setting SCHEMA, SRID and OVERWRITE on hydro object.
 
@@ -210,7 +209,6 @@ class ClassMasDatabase(object):
             hydro_object (class): Hydro object class.
             schema (str): Schema where tables will be created or processed.
             srid (int): A Spatial Reference System Identifier.
-            puser(str) : User of postgres
             overwrite (bool): Flag deciding if objects can be overwrite.
         """
         if schema is None:
@@ -225,12 +223,8 @@ class ClassMasDatabase(object):
             hydro_object.OVERWRITE = self.OVERWRITE
         else:
             hydro_object.OVERWRITE = overwrite
-        if overwrite is None:
-            hydro_object.USER= self.USER
-        else:
-            hydro_object.USER = puser
 
-    def process_masobject(self, masobject, pg_method, schema=None, srid=None,  puser= None,overwrite=None, **kwargs):
+    def process_masobject(self, masobject, pg_method, schema=None, srid=None, overwrite=None, **kwargs):
         """
         Creating and processing tables inside PostGIS database.
 
@@ -239,15 +233,13 @@ class ClassMasDatabase(object):
             pg_method (str): String representation of method that will be called on the masobject class.
             schema (str): Schema where tables will be created or processed.
             srid (int): A Spatial Reference System Identifier.
-             puser(str) : User of postgres
             overwrite (bool): Flag deciding if objects can be overwrite.
             **kwargs (dict): Additional keyword arguments passed to pg_method.
 
         Returns:
             obj: Instance of Mascaret class object
         """
-        self.setup_hydro_object(masobject, schema, srid, overwrite,puser)
-        print("user", masobject.user)
+        self.setup_hydro_object(masobject, schema, srid, overwrite)
         obj = masobject()
         method = getattr(obj, pg_method)
         qry = method(**kwargs)
@@ -275,7 +267,7 @@ class ClassMasDatabase(object):
                 self.mgis.add_info('{0} already exists inside MasPlug registry.'.format(key))
                 #
 
-    def register_existing(self, hydro_module, schema=None, srid=None, user= None):
+    def register_existing(self, hydro_module, schema=None, srid=None):
         """
         Registering hydrodynamic model objects which already exists inside schema.
 
@@ -289,7 +281,7 @@ class ClassMasDatabase(object):
             for tab in tabs:
                 if tab in dir(hydro_module):
                     hydro_object = getattr(hydro_module, tab)
-                    self.setup_hydro_object(hydro_object, schema, srid,user=user)
+                    self.setup_hydro_object(hydro_object, schema, srid)
                     obj = hydro_object()
                     self.register_object(obj)
                     if self.mgis.DEBUG:
@@ -354,8 +346,7 @@ class ClassMasDatabase(object):
             uri.setDataSource(vl_schema, vl_name, 'geom')
         else:
             uri.setDataSource(vl_schema, vl_name, None)
-        #vlayer = QgsVectorLayer(uri.uri(), vl_name, 'postgres')
-        vlayer = QgsVectorLayer(uri.uri(), vl_name, self.user)
+        vlayer = QgsVectorLayer(uri.uri(), vl_name, 'postgres')
         return vlayer
 
     #
@@ -424,7 +415,7 @@ class ClassMasDatabase(object):
                 self.create_first_model()
             else:
                 pass
-            chaine = """CREATE SCHEMA {0} ;""" # AUTHORIZATION postgres;"""
+            chaine = """CREATE SCHEMA {0} AUTHORIZATION postgres;"""
             if self.run_query(chaine.format(self.SCHEMA)) is None:
                 return
             else:
@@ -456,17 +447,17 @@ class ClassMasDatabase(object):
                       Maso.results_sect
                       ]
             tables.sort(key=lambda x: x().order)
+
             for masobj_class in tables:
-                # try:
+                try:
                     obj = self.process_masobject(masobj_class, 'pg_create_table')
                     if self.mgis.DEBUG:
                         self.mgis.add_info('  {0} OK'.format(obj.name))
-                # except Exception as err:
-                #     self.mgis.add_info('failure!<br> {0}'.format(masobj_class))
-                #     self.mgis.add_info('Error : {}'.format(err))
-                #     # ajout variable fichier parameter
-                #     # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV HEADER;"""
-                #     # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV;"""
+                except:
+                    self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
+                    # ajout variable fichier parameter
+                    # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV HEADER;"""
+                    # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV;"""
             fichparam = os.path.join(dossier, "parametres.csv")
             # self.run_query(req.format(self.SCHEMA, fichparam))
             liste_value = []
@@ -500,7 +491,6 @@ class ClassMasDatabase(object):
 
             # add fct
             cl = Maso.class_fct_psql()
-            cl.user = self.user
             lfct = [cl.pg_abscisse_profil(),
                     cl.pg_all_profil(),
                     cl.pg_abscisse_point(),
@@ -529,14 +519,11 @@ class ClassMasDatabase(object):
 
         for masobj_class in tables:
             try:
-                masobj_class.user=self.user
                 obj = self.process_masobject(masobj_class, 'pg_create_table')
                 if self.mgis.DEBUG:
                     self.mgis.add_info('  {0} OK'.format(obj.name))
-            except Exception as err:
-
-                self.mgis.add_info('failure!<br> {0}'.format(masobj_class))
-                self.mgis.add_info('Error : {}'.format(err))
+            except:
+                self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
 
         fichparam = os.path.join(dossier, "parametres.csv")
         # self.run_query(req.format(self.SCHEMA, fichparam))
@@ -580,13 +567,11 @@ class ClassMasDatabase(object):
         for masobj_class in tables:
             try:
                 masobj_class.overwrite = True
-                masobj_class.user =self.user
                 obj = self.process_masobject(masobj_class, 'pg_create_table')
                 if self.mgis.DEBUG:
                     self.mgis.add_info('  {0} OK'.format(obj.name))
-            except Exception as err:
-                self.mgis.add_info('failure!<br> {0}'.format(masobj_class))
-                self.mgis.add_info('Error : {}'.format(err))
+            except:
+                self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
 
         sql = """ALTER TABLE {}.runs ADD COLUMN IF NOT EXISTS wq text;"""
         self.run_query(sql.format(self.SCHEMA))
@@ -639,13 +624,11 @@ class ClassMasDatabase(object):
         for masobj_class in tables:
             try:
                 masobj_class.overwrite = True
-                masobj_class.user = self.user
                 obj = self.process_masobject(masobj_class, 'pg_create_table')
                 if self.mgis.DEBUG:
                     self.mgis.add_info('  {0} OK'.format(obj.name))
-            except Exception as err:
-                self.mgis.add_info('failure!<br> {0}'.format(masobj_class))
-                self.mgis.add_info('Error : {}'.format(err))
+            except:
+                self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
         self.insert_abacus_table(dossier)
 
         list_col = self.list_columns('profiles')
@@ -684,11 +667,10 @@ class ClassMasDatabase(object):
                         self.mgis.add_info('  {0} OK'.format(fct))
                     else:
                         pass
-                except Exception as err:
+                except:
                     if self.mgis.DEBUG:
                         self.mgis.add_info('{0}\n'.format(fct))
-                        self.mgis.add_info('failure!<br> {0}'.format(fct))
-                        self.mgis.add_info('Error {}: '.format(err))
+                        self.mgis.add_info('failure!<br>{0}'.format(fct))
                     else:
                         pass
 
@@ -844,9 +826,8 @@ class ClassMasDatabase(object):
                 else:
                     pass
             except Exception as err:
-
-                self.mgis.add_info('View failure!<br> {0}'.format(obj.name))
-                self.mgis.add_info('Error : {}'.format(err))
+                self.mgis.add_info('View failure!<br>{0}'.format(obj))
+                self.mgis.add_info('Error : '.format(err))
 
         # add visualistation layer
         group_main = self.group
@@ -860,8 +841,8 @@ class ClassMasDatabase(object):
                 if self.mgis.DEBUG:
                     self.mgis.add_info(' View {0} : OK'.format(obj.name))
             except Exception as err:
-                self.mgis.add_info('View failure!<br>{0}'.format(obj.name))
-                self.mgis.add_info('Error : {}'.format(err))
+                self.mgis.add_info('View failure!<br>{0}'.format(obj))
+                self.mgis.add_info('Error : '.format(err))
 
         self.mgis.iface.mapCanvas().refresh()
 
@@ -903,7 +884,7 @@ $BODY$
         self.mgis.add_info('Current DB schema is: {0}'.format(self.SCHEMA))
         # crée index spatial si non existant
         self.create_spatial_index()
-        self.register_existing(Maso, self.user)
+        self.register_existing(Maso)
         reg = [self.register[k].name for k in sorted(self.register.keys())]
         if self.mgis.DEBUG:
             self.mgis.add_info('Objects registered in the database:<br>  {0}'.format('<br>  '.join(reg)))
