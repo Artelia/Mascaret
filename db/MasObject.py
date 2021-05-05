@@ -26,6 +26,7 @@ class MasObject(object):
     SCHEMA = None
     SRID = None
     OVERWRITE = None
+    USER = None
 
     def __init__(self):
         self.order = 0
@@ -38,6 +39,7 @@ class MasObject(object):
         self.name = self.__class__.__name__
         self.geom_type = None
         self.attrs = None
+        self.user= self.USER
 
     # def pg_create_table(self, geo_ori=False):
     def pg_create_table(self):
@@ -58,7 +60,7 @@ class MasObject(object):
         #     qry += 'SELECT "{0}".create_spatial_index(\'{0}\', \'{1}\');'.format(self.schema, self.name)
         # else:
         #     pass
-        qry += 'ALTER TABLE {0}.{1}\n\tOWNER TO postgres;\n'.format(self.schema, self.name)
+        qry += 'ALTER TABLE {0}.{1}\n\tOWNER TO {3};\n'.format(self.schema, self.name, self.user)
         return qry
 
     def pg_geom_attri(self):
@@ -788,7 +790,7 @@ class class_fct_psql(MasObject):
               LANGUAGE plpgsql IMMUTABLE 
               COST 100; 
             ALTER FUNCTION {0}() 
-              OWNER TO postgres;"""
+              OWNER TO {1};"""
 
         return qry.format('calcul_abscisse_point')
 
@@ -832,8 +834,8 @@ class class_fct_psql(MasObject):
                 $BODY$
                   LANGUAGE plpgsql IMMUTABLE
                   COST 100;
-                ALTER FUNCTION {0}()
-                  OWNER TO postgres;"""
+               ALTER FUNCTION {0}()
+                  OWNER TO {1};"""
         return qry.format('calcul_abscisse_profil')
 
     def pg_create_calcul_abscisse_branche(self):
@@ -862,7 +864,7 @@ class class_fct_psql(MasObject):
               LANGUAGE plpgsql IMMUTABLE
               COST 100;
             ALTER FUNCTION calcul_abscisse_branche()
-              OWNER TO postgres;
+              OWNER TO {1};
 '''
         return qry
 
