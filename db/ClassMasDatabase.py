@@ -507,8 +507,12 @@ class ClassMasDatabase(object):
                 cl.pg_abscisse_point(),
                 cl.pg_all_point(),
                 ]
-        for sql in lfct:
-            self.run_query(sql)
+        namefct = ['abscisse_profil','update_abscisse_profil',
+                   'abscisse_point','update_abscisse_point']
+
+        for i,sql in enumerate(lfct):
+            if not self.check_fct(namefct[i]) :
+                self.run_query(sql)
 
         # visualization
         self.load_gis_layer()
@@ -660,7 +664,7 @@ class ClassMasDatabase(object):
                     'pg_delete_visu_flood_marks',
                     'pg_create_calcul_abscisse_point_flood',
                     ]
-        print( "self.check_fct(listefct)",  self.check_fct(listefct))
+
         if not self.check_fct(listefct) :
             for fct in listefct:
 
