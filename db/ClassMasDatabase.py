@@ -353,7 +353,7 @@ class ClassMasDatabase(object):
             uri.setDataSource(vl_schema, vl_name, 'geom')
         else:
             uri.setDataSource(vl_schema, vl_name, None)
-        vlayer = QgsVectorLayer(uri.uri(), vl_name, self.USER)# 'postgres')
+        vlayer = QgsVectorLayer(uri.uri(), vl_name, 'postgres')
         return vlayer
 
     #
