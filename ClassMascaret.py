@@ -363,7 +363,7 @@ class ClassMascaret:
                              ORDER BY min;"""
 
         (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True, namvar=True)
-        print("eee",results, namCol)
+
         dico = {}
         colonnes = [col[0] for col in namCol]
         for col in colonnes:
@@ -482,7 +482,6 @@ class ClassMascaret:
                 dict_libres["extrem"].append(n * 2 - 1)
                 dict_libres["typeCond_tr"].append(libres["tracer_boundary_condition_type"][i])
                 dict_libres["law_wq"].append(libres["law_wq"][i])
-                # TODO add 'formule': formule, 'valeurperm': libres["firstvalue"
 
                 dict_lois[d] = {'type': extr_toloi[type],
                                 'formule': formule,
@@ -499,7 +498,6 @@ class ClassMascaret:
                 dict_libres["extrem"].append(n * 2)
                 dict_libres["typeCond_tr"].append(libres["tracer_boundary_condition_type"][i])
                 dict_libres["law_wq"].append(libres["law_wq"][i])
-                # TODO add 'formule': formule, 'valeurperm': libres["firstvalue"
                 dict_lois[f] = {'type': extr_toloi[type],
                                 'formule': formule,
                                 'valeurperm': libres["firstvalue"][i],
@@ -830,8 +828,10 @@ class ClassMascaret:
             lois_hydrauliques = param_cas.find('parametresLoisHydrauliques')
             lois = lois_hydrauliques.find('lois')
             for child in lois:
+                # no possible to use rating curve with steady
                 if child.find('type').text == '5':
                     child.find('type').text = '2'
+
 
         # **********************************
         self.indent(fichier_cas)
@@ -978,7 +978,7 @@ class ClassMascaret:
                     par.text = valeur.lower()
 
         # use dictLibres to have only extremities and not junction
-        # # TODO add 'formule': formule, 'valeurperm': libres["firstvalue"
+
         cas = cas.find('parametresTraceur')
         lateral = self.mdb.select('tracer_lateral_inflows', order='abscissa')
 
@@ -1192,7 +1192,6 @@ class ClassMascaret:
                 #                       "Downstream Water Level :{3}"
                 #                       .format(nom,tab["temps"], tab["cote_amont"], tab["cote_aval"]))
             n = len(list(tab.values())[0])
-
             for i in range(n):
                 dico = {k: v[i] for k, v in tab.items()}
                 fich.write(chaine.format(**dico))
@@ -1510,7 +1509,9 @@ class ClassMascaret:
                     tfinal = 365 * 24 * 3600
                 if l['type'] == 1:
                     tab = {"time": [0, tfinal], 'flowrate': [l["valeurperm"]] * 2}
-                elif l['type'] == 2:
+                # no possible to use rating curve (5) with steady. It's replaced in xcas
+                elif l['type'] == 2 or l['type'] == 5:
+                    l['type'] = 2
                     tab = {"time": [0, tfinal], 'z': [l["valeurperm"]] * 2}
                 else:
                     condition = "name ='{0}' AND type={1} AND active".format(nom, l["type"])
@@ -1729,6 +1730,7 @@ class ClassMascaret:
             date_debut = None
             if noyau == "steady":
                 self.init_scen_steady(par, dict_lois)
+
             elif par["evenement"]:
                 date_debut = self.init_scen_even(par, dict_lois, i, dict_scen)
             else:
@@ -1772,7 +1774,6 @@ class ClassMascaret:
 
             # elif par["LigEauInit"] and noyau != "steady":
             #     self.select_init_run_case()
-
             self.mgis.add_info("========== Run case  =========")
             self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen, noyau))
             cond_casier = False
@@ -1871,7 +1872,6 @@ class ClassMascaret:
         :return:
         """
         os.chdir(self.dossierFileMasc)
-
         with open('FichierCas.txt', 'w') as fichier:
             fichier.write("'" + fichier_cas + "'\n")
 
