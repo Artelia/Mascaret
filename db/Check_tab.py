@@ -133,9 +133,9 @@ class CheckTab():
 
                            },
                            '3.0.7': {'fct': [
-                                   lambda: self.update_fct_calc_abs(),
-                                        ]
-                                    },
+                               lambda: self.update_fct_calc_abs(),
+                           ]
+                           },
 
                            # '3.0.x': { 'del_tab': ['resultats']},
 
@@ -652,7 +652,6 @@ class CheckTab():
         qry += '\n'
         self.mdb.run_query(qry)
 
-
     def update_fct_calc_abs(self):
         lst_fct = [
             "public.update_abscisse_branch(_tbl_branchs regclass)",
@@ -667,5 +666,3 @@ class CheckTab():
             qry += "DROP FUNCTION IF EXISTS {};\n".format(fct)
         self.mdb.run_query(qry)
         self.mdb.add_fct_for_update_pk()
-
-

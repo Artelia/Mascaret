@@ -450,7 +450,6 @@ class ClassMascaret:
         branches["abscdebut"] = []
         branches["abscfin"] = []
 
-
         liste = list(zip(profils["abscissa"], profils["branchnum"]))
         for i, num in enumerate(numero):
             temp = [a for a, n in liste if n == num]
@@ -832,7 +831,6 @@ class ClassMascaret:
                 if child.find('type').text == '5':
                     child.find('type').text = '2'
 
-
         # **********************************
         self.indent(fichier_cas)
         arbre = ElementTree(fichier_cas)
@@ -1204,7 +1202,7 @@ class ClassMascaret:
         :param date_fin:
         :return:
         """
-        #pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
+        # pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
         pattern = re.compile('(\w+)\\[t([+-][0-9]+)?\\]')
         somme = 0
         debit_prec = 0
@@ -1447,10 +1445,8 @@ class ClassMascaret:
         if self.mgis.DEBUG:
             self.mgis.add_info("Tracer files are created.")
 
-
         if par["LigEauInit"] and not par["initialisationAuto"] and noyau != "steady":
             self.select_init_run_case()
-
 
         return par, dict_scen, dict_lois, comments
 
@@ -2138,10 +2134,10 @@ class ClassMascaret:
             self.mgis.add_info("Cancel  init file")
             return
 
-        try :
+        try:
             shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + '.lig'))
         except Exception as e:
-            self.mgis.add_info( "Error copying file")
+            self.mgis.add_info("Error copying file")
             self.mgis.add_info("{}".format(e))
 
     def clean_rep(self):
@@ -2254,7 +2250,7 @@ class ClassMascaret:
 
                     id_run = self.mdb.run_query("SELECT id FROM {0}.runs "
                                                 "WHERE run = '{1}' "
-                                                "AND (scenario LIKE '{2}' OR  scenario " 
+                                                "AND (scenario LIKE '{2}' OR  scenario "
                                                 "LIKE '{2}_init') ".format(self.mdb.SCHEMA, run, nom_scen),
                                                 fetch=True)
 

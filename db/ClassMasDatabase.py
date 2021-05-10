@@ -202,7 +202,7 @@ class ClassMasDatabase(object):
             yield results
             #
 
-    def setup_hydro_object(self, hydro_object, schema=None, srid=None, overwrite=None, puser = None):
+    def setup_hydro_object(self, hydro_object, schema=None, srid=None, overwrite=None, puser=None):
         """
         Setting SCHEMA, SRID and OVERWRITE on hydro object.
 
@@ -225,7 +225,7 @@ class ClassMasDatabase(object):
         else:
             hydro_object.OVERWRITE = overwrite
         if puser is None:
-            hydro_object.USER= self.USER
+            hydro_object.USER = self.USER
         else:
             hydro_object.USER = puser
 
@@ -427,7 +427,7 @@ class ClassMasDatabase(object):
 
         chaine = """CREATE SCHEMA {0} AUTHORIZATION {1};"""
         # postgres;"""
-        if self.run_query(chaine.format(self.SCHEMA,self.USER)) is None:
+        if self.run_query(chaine.format(self.SCHEMA, self.USER)) is None:
             return
         else:
             self.mgis.add_info('<br>Model "{0}" created.'.format(self.SCHEMA))
@@ -461,11 +461,11 @@ class ClassMasDatabase(object):
 
         for masobj_class in tables:
             # try:
-                obj = self.process_masobject(masobj_class, 'pg_create_table')
-                if self.mgis.DEBUG:
-                    self.mgis.add_info('  {0} OK'.format(obj.name))
-            # except:
-            #     self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
+            obj = self.process_masobject(masobj_class, 'pg_create_table')
+            if self.mgis.DEBUG:
+                self.mgis.add_info('  {0} OK'.format(obj.name))
+                # except:
+                #     self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
                 # ajout variable fichier parameter
                 # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV HEADER;"""
                 # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV;"""
@@ -507,11 +507,11 @@ class ClassMasDatabase(object):
                 cl.pg_abscisse_point(),
                 cl.pg_all_point(),
                 ]
-        namefct = ['abscisse_profil','update_abscisse_profil',
-                   'abscisse_point','update_abscisse_point']
+        namefct = ['abscisse_profil', 'update_abscisse_profil',
+                   'abscisse_point', 'update_abscisse_point']
 
-        for i,sql in enumerate(lfct):
-            if not self.check_fct(namefct[i]) :
+        for i, sql in enumerate(lfct):
+            if not self.check_fct(namefct[i]):
                 self.run_query(sql)
 
         # visualization
@@ -665,7 +665,7 @@ class ClassMasDatabase(object):
                     'pg_create_calcul_abscisse_point_flood',
                     ]
 
-        if not self.check_fct(listefct) :
+        if not self.check_fct(listefct):
             for fct in listefct:
 
                 try:
@@ -677,11 +677,10 @@ class ClassMasDatabase(object):
                 except:
 
                     if self.mgis.DEBUG:
-                        #self.mgis.add_info('{0}\n'.format(fct))
+                        # self.mgis.add_info('{0}\n'.format(fct))
                         self.mgis.add_info('failure!{0}'.format(fct))
                     else:
                         pass
-
 
     def create_first_model(self):
         """ 
@@ -699,8 +698,6 @@ class ClassMasDatabase(object):
         except Exception as e:
             self.disconnect_pg()
             self.mgis.add_info("Echec of creation First Model")
-
-
 
     def check_fct(self, fct_name):
         cond = True
