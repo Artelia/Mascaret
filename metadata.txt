@@ -30,6 +30,9 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    3.0.8  : Correction of tables owner
+             Correction of steady model when using the rating curve
+             Correction of  basin law compute
     3.0.7  : Correction of observation bug
              Add of wiki site link
              Correction of the display bug on "initial run case" GUI

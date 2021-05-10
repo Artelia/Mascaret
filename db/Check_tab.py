@@ -59,7 +59,8 @@ class CheckTab():
                                   '3.0.4',
                                   '3.0.5',
                                   '3.0.6',
-                                  '3.0.7'
+                                  '3.0.7',
+                                  '3.0.8'
                                   ]
         self.dico_modif = {'3.0.0': {'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
                                                  {'tab': Maso.profil_struct, 'overwrite': False},
@@ -136,6 +137,7 @@ class CheckTab():
                                lambda: self.update_fct_calc_abs(),
                            ]
                            },
+                           '3.0.8': {},
 
                            # '3.0.x': { 'del_tab': ['resultats']},
 
