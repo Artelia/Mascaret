@@ -48,9 +48,9 @@ class StructureFgDialog(QDialog):
         self.zinc_fg.valueChanged.connect(self.update_min_zinc_fg_max)
         self.cote_max_fg.valueChanged.connect(self.update_min_zinc_fg_max)
 
-        fill_qcombobox(self.cb_dir, [['U', 'haut'], ['D', 'bas']])
-        fill_qcombobox(self.cb_var, [['Z', 'Cote'], ['Q', 'Debit']])
-        fill_qcombobox(self.cb_loc, [['AV', 'Aval'], ['AM', 'Amont']])
+        fill_qcombobox(self.cb_dir, [['U', 'top'], ['D', 'bottom']])
+        fill_qcombobox(self.cb_var, [['Z', 'Water level'], ['Q', 'Flow rate']])
+        fill_qcombobox(self.cb_loc, [['AV', 'Downstream'], ['AM', 'Upstream']])
 
         #
 
@@ -72,8 +72,8 @@ class StructureFgDialog(QDialog):
                           'TYPE_TIME': [self.cb_type_t]
                           }
         self.display_fg_struct()
-        if self.cb_var.currentText() == 'Debit':
-            fill_qcombobox(self.cb_loc, [['AV', 'Aval']])
+        if self.cb_var.currentText() == 'Flow rate':
+            fill_qcombobox(self.cb_loc, [['AV', 'Downstream']])
         self.cb_var.currentIndexChanged['QString'].connect(self.cb_var_chang)
         self.cb_type_t_vit.currentIndexChanged.connect(self.cb_change_unitv)
 
@@ -216,7 +216,7 @@ class StructureFgDialog(QDialog):
                     ctrl_set_value(ctrl, val[0])
 
     def cb_var_chang(self, text):
-        if text.lower() == 'cote':
-            fill_qcombobox(self.cb_loc, [['AV', 'Aval'], ['AM', 'Amont']])
-        elif text.lower() == 'debit':
-            fill_qcombobox(self.cb_loc, [['AV', 'Aval']])
+        if text.lower() == 'Water level':
+            fill_qcombobox(self.cb_loc, [['AV', 'Downstream'], ['AM', 'Upstream']])
+        elif text.lower() == 'Flow rate':
+            fill_qcombobox(self.cb_loc, [['AV', 'Downstream']])

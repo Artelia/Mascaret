@@ -63,7 +63,7 @@ class ClassMobilSingDialog(QDialog):
         self.edit_type = 'table'  # 'var'
         self.name_cur = None
 
-        fill_qcombobox(self.cb_method, [['1', 'Methode 1'], ['2', 'Methode 2']])
+        fill_qcombobox(self.cb_method, [['1', 'Method 1'], ['2', 'Method 2']])
         self.cb_method.currentIndexChanged['QString'].connect(self.cb_change_meth)
 
         fill_qcombobox(self.cb_uvb, [[1, 'm/s'], [60, 'm/min'], [3600, 'm/h']])
@@ -172,10 +172,10 @@ class ClassMobilSingDialog(QDialog):
         self.unitvh = evt
 
     def cb_change_meth(self, text):
-        if text == 'Methode 1':
+        if text == 'Method 1':
             self.edit_type = 'table'
 
-        if text == 'Methode 2':
+        if text == 'Method 2':
             self.edit_type = 'var'
         else:
             self.edit_type = 'table'

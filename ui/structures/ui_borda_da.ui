@@ -60,14 +60,14 @@
      <item row="2" column="0">
       <widget class="QLabel" name="label_6">
        <property name="text">
-        <string>Cote du haut du tablier du pont</string>
+        <string>Level of the top of the bridge deck</string>
        </property>
       </widget>
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_17">
        <property name="text">
-        <string>Abscisse du pied de culée RG</string>
+        <string>Abscissa of the abutment foot (left bank)</string>
        </property>
       </widget>
      </item>
@@ -92,7 +92,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox_5">
      <property name="title">
-      <string>Paramètres</string>
+      <string>Settings</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_18">
       <property name="leftMargin">
@@ -112,14 +112,14 @@
         <item row="1" column="1">
          <widget class="QLabel" name="label_8">
           <property name="text">
-           <string>Pas de discrétisation</string>
+           <string>discretization step</string>
           </property>
          </widget>
         </item>
         <item row="1" column="0">
          <widget class="QLabel" name="label_45">
           <property name="text">
-           <string>Débit pris en compte </string>
+           <string>Flow rate taken into account</string>
           </property>
          </widget>
         </item>
@@ -164,21 +164,21 @@
         <item row="0" column="1">
          <widget class="QLabel" name="label_9">
           <property name="text">
-           <string>Pas de discrétisation</string>
+           <string>discretization step</string>
           </property>
          </widget>
         </item>
         <item row="0" column="3">
          <widget class="QLabel" name="label_46">
           <property name="text">
-           <string>Bornes</string>
+           <string>Limit</string>
           </property>
          </widget>
         </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_47">
           <property name="text">
-           <string>Hauteur d'eau</string>
+           <string>Water level</string>
           </property>
          </widget>
         </item>
@@ -257,7 +257,7 @@
         <item row="1" column="3">
          <widget class="QLabel" name="label_50">
           <property name="text">
-           <string>Bornes</string>
+           <string>Limit</string>
           </property>
          </widget>
         </item>
@@ -331,7 +331,7 @@
         <item>
          <widget class="QLabel" name="label_10">
           <property name="text">
-           <string>Coefficients</string>
+           <string>Coefficients : </string>
           </property>
          </widget>
         </item>
@@ -425,7 +425,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Création de la structure</string>
+        <string>Creation of the hydraulic structure</string>
        </property>
       </widget>
      </item>
@@ -452,7 +452,7 @@
      <item>
       <widget class="QLabel" name="label_18">
        <property name="text">
-        <string>Nombre de travées</string>
+        <string>Number of spans</string>
        </property>
       </widget>
      </item>
@@ -491,7 +491,7 @@
      </property>
      <widget class="QWidget" name="ong_trav">
       <attribute name="title">
-       <string>Travées</string>
+       <string>Spans</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
@@ -510,17 +510,17 @@
          </attribute>
          <column>
           <property name="text">
-           <string>Cote du radier</string>
+           <string>Apron level</string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string>Hauteur</string>
+           <string>Height</string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string>Largeur</string>
+           <string>Width</string>
           </property>
          </column>
         </widget>
@@ -549,7 +549,7 @@
      </widget>
      <widget class="QWidget" name="ong_pile">
       <attribute name="title">
-       <string>Piles</string>
+       <string>Columns</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
@@ -562,7 +562,7 @@
          </attribute>
          <column>
           <property name="text">
-           <string>Largeur</string>
+           <string>Width</string>
           </property>
          </column>
         </widget>

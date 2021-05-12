@@ -137,9 +137,9 @@ class CheckTab():
                                lambda: self.update_fct_calc_abs(),
                            ]
                            },
-                           '3.1.0': {},
+                           '3.1.0': {'del_tab': ['resultats','resultats_basin','resultats_links']},
 
-                           # '3.0.x': { 'del_tab': ['resultats']},
+                           # '3.0.x': { },
 
                            }
 

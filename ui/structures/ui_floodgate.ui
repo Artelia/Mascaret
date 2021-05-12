@@ -35,7 +35,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Parametres de l'ouvrage</string>
+            <string>Parameters of the hydraulic structure</string>
            </property>
           </widget>
          </item>
@@ -62,7 +62,7 @@
          <item row="2" column="0">
           <widget class="QLabel" name="label_5">
            <property name="text">
-            <string>Vitesse : </string>
+            <string>Speed: </string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -101,7 +101,7 @@
          <item row="0" column="0">
           <widget class="QLabel" name="label_3">
            <property name="text">
-            <string>Partie Mobile : </string>
+            <string>Mobile part:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -133,15 +133,15 @@
          <item row="3" column="0">
           <widget class="QLabel" name="label_6">
            <property name="text">
-            <string>L'increment max de
-chaque mouvement : </string>
+            <string>The max increment of 
+ each movement: </string>
            </property>
           </widget>
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_4">
            <property name="text">
-            <string>Butée du mouvement : </string>
+            <string>Movement stop:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -197,7 +197,7 @@ chaque mouvement : </string>
             </font>
            </property>
            <property name="text">
-            <string>Parametres de régulation</string>
+            <string>Regulation parameters</string>
            </property>
            <property name="scaledContents">
             <bool>true</bool>
@@ -259,7 +259,7 @@ chaque mouvement : </string>
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Localisation du point de contrôle</string>
+            <string>Checkpoint location</string>
            </property>
           </widget>
          </item>
@@ -285,7 +285,7 @@ chaque mouvement : </string>
          <item row="5" column="0">
           <widget class="QLabel" name="label_biefControle">
            <property name="text">
-            <string>Bief du point de contrôle</string>
+            <string>Reach of the control point</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -301,7 +301,7 @@ chaque mouvement : </string>
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Pas de temps de la régulation : </string>
+            <string>Regulation time step :</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -346,7 +346,7 @@ chaque mouvement : </string>
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Valeur de régulation : </string>
+            <string>Regulation value:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -375,7 +375,7 @@ chaque mouvement : </string>
          <item row="4" column="0">
           <widget class="QLabel" name="label_7">
            <property name="text">
-            <string>Abscisse du point de conrôle : </string>
+            <string>Abscissa of the control point:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -388,7 +388,7 @@ chaque mouvement : </string>
          <item row="3" column="0">
           <widget class="QLabel" name="label_9">
            <property name="text">
-            <string>Tolérence : </string>
+            <string>Tolerance:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

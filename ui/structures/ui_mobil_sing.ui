@@ -26,7 +26,7 @@
       <bool>false</bool>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="page">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -268,7 +268,7 @@
          <item row="5" column="1">
           <widget class="QLabel" name="label_8">
            <property name="text">
-            <string>Vrehaussement (m/s)</string>
+            <string>Vraising(m/s)</string>
            </property>
           </widget>
          </item>
@@ -334,7 +334,7 @@
          <item row="2" column="1">
           <widget class="QLabel" name="label_5">
            <property name="text">
-            <string>Zbas (m)</string>
+            <string>Zbottom (m)</string>
            </property>
           </widget>
          </item>
@@ -402,14 +402,14 @@
          <item row="3" column="1">
           <widget class="QLabel" name="label_6">
            <property name="text">
-            <string>Zhaut (m)</string>
+            <string>Ztop (m)</string>
            </property>
           </widget>
          </item>
          <item row="4" column="1">
           <widget class="QLabel" name="label_7">
            <property name="text">
-            <string>Vabaissement (m/s)</string>
+            <string>Vlowering (m/s)</string>
            </property>
           </widget>
          </item>

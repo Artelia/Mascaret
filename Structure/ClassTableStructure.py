@@ -43,8 +43,8 @@ class ClassTableStructure:
     def structure_default(self):
         self.dico_meth_calc = {0: 'Bradley 72',
                                1: 'Borda',
-                               2: 'Loi de seuil',
-                               3: 'Loi d\'orifice',
+                               2: 'Weir law',
+                               3: 'Orifice law',
                                4: 'Bradley 78'}
 
         self.dico_meth_draw = {0: 'Method 1',
@@ -53,7 +53,7 @@ class ClassTableStructure:
                                3: 'Method 4',
                                4: 'Method 5'}
 
-        self.dico_struc_typ = {'PC': {'name': 'Pont cadre',
+        self.dico_struc_typ = {'PC': {'name': 'Frame Bridge',
                                       'param': ['FIRSTWD', 'ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'BIAIPIL',
                                                 'FORMCUL', 'ORIENTM', 'PENTTAL', 'FORMPIL', 'METTEST', 'LARGPIL',
                                                 'LONGPIL', 'PASH', 'MINH', 'PASQ',
@@ -61,66 +61,42 @@ class ClassTableStructure:
                                       'meth_calc': [0, 4, 1, 3],
                                       'meth_draw': [[0], [0], [0], [0]]
                                       },
-                               'PA': {'name': 'Pont arche',
+                               'PA': {'name': 'Arch Bridge',
                                       'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
                                       'meth_calc': [1, 3],
                                       'meth_draw': [[0], [0]]
                                       },
-                               'DA': {'name': 'Dalot',
+                               'DA': {'name': 'Rectangular Culvert',
                                       'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
                                       'meth_calc': [1, 3],
                                       'meth_draw': [[0], [0]]
                                       },
-                               'BU': {'name': 'Buse',
+                               'BU': {'name': 'Circular Culvert',
                                       'meth_calc': [1, 3],
                                       'meth_draw': [[0], [0]]
                                       }
                                }
 
-        self.dico_struc_prm = {'FIRSTWD': {'name': 'Abscisse du pied de culée RG', 'unit': 'm'},
-                               'ZTOPTAB': {'name': 'Cote du haut du tablier du pont', 'unit': 'm'},
-                               'EPAITAB': {'name': 'Epaisseur du tablier', 'unit': 'm'},
-                               'BIAIOUV': {'name': 'Biais de l''ouvrage', 'unit': '°'},
-                               'BIAICUL': {'name': 'Biais des culées par rapport à l''axe du pont', 'unit': 'Y/N'},
-                               'BIAIPIL': {'name': 'Biais de la pile par rapport à l''axe du pont', 'unit': 'Y/N'},
-                               'FORMCUL': {'name': 'Forme des culées', 'unit': None},
-                               'FORMPIL': {'name': 'Forme des piles', 'unit': None},
-                               'LARGPIL': {'name': 'Largeur des piles', 'unit': 'm'},
-                               'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'},
-                               'ORIENTM': {'name': 'Orientation des murs en aile', 'unit': '°'},
-                               'PENTTAL': {'name': 'Pente de talus des culées', 'unit': None},
-                               'PASH': {'name': 'Discrétisation de la hauteur pour le calcul de la loi', 'unit': 'm'},
-                               'MINH': {'name': 'Hauteur d\'eau minimum pour le calcul de la loi', 'unit': 'm'},
-                               'MAXH': {'name': 'Hauteur d\'eau maximum pour le calcul de la loi', 'unit': 'm'},
-                               'PASQ': {'name': 'Discrétisation du débit pour le calcul de la loi', 'unit': ''},
-                               'MINQ': {'name': 'Débit minimum pour le calcul de la loi', 'unit': ''},
-                               'MAXQ': {'name': 'Débit maximum pour le calcul de la loi', 'unit': ''},
-                               'NBTRAVE': {'name': 'Nombre de travées', 'unit': None},
-                               "TOTALOUV": {'name': 'Largeur ouverture de travées', 'unit': 'm'},
-                               # "TOTALW": {'name': 'Largeur du pont', 'unit': 'm'},
-                               'COEFDS': {'name': 'Coeficient de la loi de seuil', 'unit': '', 'default': 0.385},
-                               'COEFDO': {'name': 'Coeficient de la loi de orifice', 'unit': '', 'default': 1},
-                               'COEFBOR': {'name': 'Coeficient de débit pour la méthode de borda', 'unit': '',
-                                           'default': 0.45}
-                               }
 
-        self.dico_typ_elem = {0: 'Travee',
-                              1: 'Pile',
-                              2: 'Arche'}
 
-        self.dico_elem_prm = {'LARGTRA': {'name': 'Largeur de la travee', 'unit': 'm'},
-                              'FORMPIL': {'name': 'Forme des piles', 'unit': None},
-                              'LARGPIL': {'name': 'Largeur des piles', 'unit': 'm'},
-                              'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'},
-                              'FORMARC': {'name': 'Forme de l''arche', 'unit': None},
-                              'ZMINARC': {'name': 'Z bas de l''arche', 'unit': 'm'},
-                              'ZMAXARC': {'name': 'Z haut de l''arche', 'unit': 'm'},
-                              'COTERAD': {'name': 'Cote du radier', 'unit': 'm'},
-                              'HAUTDAL': {'name': 'Hauteur du dalot', 'unit': 'm'},
-                              'ABSBUSE': {'name': 'Abscisse du centre de la buse', 'unit': 'm'}}
+
+        self.dico_typ_elem = {0: 'Spans',
+                              1: 'Columns',
+                              2: 'Arch'}
+
+        # self.dico_elem_prm = {'LARGTRA': {'name': 'Largeur de la travee', 'unit': 'm'},
+        #                       'FORMPIL': {'name': 'Forme des piles', 'unit': None},
+        #                       'LARGPIL': {'name': 'Largeur des piles', 'unit': 'm'},
+        #                       'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'},
+        #                       'FORMARC': {'name': 'Forme de l''arche', 'unit': None},
+        #                       'ZMINARC': {'name': 'Z bas de l''arche', 'unit': 'm'},
+        #                       'ZMAXARC': {'name': 'Z haut de l''arche', 'unit': 'm'},
+        #                       'COTERAD': {'name': 'Cote du radier', 'unit': 'm'},
+        #                       'HAUTDAL': {'name': 'Hauteur du dalot', 'unit': 'm'},
+        #                       'ABSBUSE': {'name': 'Abscisse du centre de la buse', 'unit': 'm'}}
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
-        self.dico_forme_arche = {1: 'Circulaire', 2: 'Ellipsoïdale'}
+        self.dico_forme_arche = {1: 'Circular', 2: 'Ellipsoidal'}
 
         self.dico_law_struct = {
             'Bradley 78':
@@ -129,7 +105,7 @@ class ClassTableStructure:
                 {0: 'flowrate', 1: 'z_downstream', 2: 'z_upstream'},
             'Borda':
                 {0: 'flowrate', 1: 'z_downstream', 2: 'z_upstream'},
-            'Loi d\'orifice':
+            'Orifice law':
                 {0: 'flowrate', 1: 'z_downstream', 2: 'z_upstream'}
         }
 
