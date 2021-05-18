@@ -20,13 +20,14 @@ email                :
 
 from ..GraphCommon import GraphCommon
 
+
 class GraphWaterQ(GraphCommon):
     """class Dialog GraphWaterQ"""
 
     def __init__(self, mgis=None, lay=None, mod=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
-        self.initui_common_p()
+        self.init_ui_common_p()
         self.gui_graph(lay)
         self.init_ui(mod)
 
@@ -35,13 +36,15 @@ class GraphWaterQ(GraphCommon):
         self.axes.tick_params(axis='both', labelsize=7.)
         self.axes.grid(True)
 
-        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(self.mdb.SCHEMA, mod)
+        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(
+            self.mdb.SCHEMA, mod)
         rows = self.mdb.run_query(sql, fetch=True)
 
         self.list_trac = []
         for row in rows:
             self.list_trac.append({"id": row[0], "name": row[1]})
-            self.courbeTrac, = self.axes.plot([], [], zorder=100 - row[0], label=row[1])
+            self.courbeTrac, = self.axes.plot([], [], zorder=100 - row[0],
+                                              label=row[1])
             self.courbes.append(self.courbeTrac)
 
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
@@ -55,7 +58,8 @@ class GraphWaterQ(GraphCommon):
             if config is not None:
                 sql = "SELECT time, value FROM {0}.laws_wq " \
                       "WHERE id_config = {1} and id_trac = {2}" \
-                      " ORDER BY time".format(self.mdb.SCHEMA, config, trac["id"])
+                      " ORDER BY time".format(self.mdb.SCHEMA, config,
+                                              trac["id"])
                 rows = self.mdb.run_query(sql, fetch=True)
                 if len(rows) > 0:
                     lst = list(zip(*rows))
@@ -76,7 +80,7 @@ class GraphMeteo(GraphCommon):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
         self.lst_var = lst_var
-        self.initui_common_p()
+        self.init_ui_common_p()
         self.gui_graph(lay)
         self.init_ui()
 
@@ -86,7 +90,8 @@ class GraphMeteo(GraphCommon):
         self.axes.grid(True)
 
         for var in self.lst_var:
-            self.courbeTrac, = self.axes.plot([], [], zorder=100 - var["id"], label=var["name"])
+            self.courbeTrac, = self.axes.plot([], [], zorder=100 - var["id"],
+                                              label=var["name"])
             self.courbes.append(self.courbeTrac)
 
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
@@ -120,7 +125,7 @@ class GraphInitConc(GraphCommon):
     def __init__(self, mgis=None, lay=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
-        self.initui_common_p()
+        self.init_ui_common_p()
         self.gui_graph(lay)
         self.init_ui()
 
@@ -129,7 +134,8 @@ class GraphInitConc(GraphCommon):
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
 
     def init_mdl(self, mod):
-        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(self.mdb.SCHEMA, mod)
+        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(
+            self.mdb.SCHEMA, mod)
         rows = self.mdb.run_query(sql, fetch=True)
 
         self.axes.cla()
@@ -140,7 +146,8 @@ class GraphInitConc(GraphCommon):
         self.courbes = []
         for row in rows:
             self.list_trac.append({"id": row[0], "name": row[1]})
-            self.courbeTrac, = self.axes.plot([], [], zorder=100 - row[0], label=row[1])
+            self.courbeTrac, = self.axes.plot([], [], zorder=100 - row[0],
+                                              label=row[1])
             self.courbes.append(self.courbeTrac)
 
         self.init_legende()
@@ -152,10 +159,11 @@ class GraphInitConc(GraphCommon):
             lst = [[], []]
             if config is not None:
                 sql = "SELECT abscissa, value FROM {0}.init_conc_wq " \
-                      "WHERE id_config = {1} and bief = {2} and id_trac = {3} ORDER BY abscissa".format(self.mdb.SCHEMA,
-                                                                                                        config,
-                                                                                                        bief,
-                                                                                                        trac["id"])
+                      "WHERE id_config = {1} and bief = {2} and id_trac = {3} ORDER BY abscissa".format(
+                    self.mdb.SCHEMA,
+                    config,
+                    bief,
+                    trac["id"])
                 rows = self.mdb.run_query(sql, fetch=True)
                 if len(rows) > 0:
                     lst = list(zip(*rows))

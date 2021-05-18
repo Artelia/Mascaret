@@ -101,6 +101,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="apiChbox">
+        <property name="text">
+         <string>Use Mascaret API</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="debugModeChbox">
         <property name="text">
          <string>Debugging mode</string>

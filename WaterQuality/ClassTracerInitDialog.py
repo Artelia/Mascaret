@@ -50,7 +50,8 @@ class ClassTracerInitDialog:
         self.ui.actionB_edit.triggered.connect(self.edit_law)
         self.ui.actionB_new.triggered.connect(self.new_law)
         self.ui.actionB_delete.triggered.connect(self.delete_law)
-        self.ui.cb_bief_home.currentIndexChanged[int].connect(self.change_bief_home)
+        self.ui.cb_bief_home.currentIndexChanged[int].connect(
+            self.change_bief_home)
         self.init_ui()
 
     def init_ui(self):
@@ -69,9 +70,11 @@ class ClassTracerInitDialog:
         model.setColumnCount(2)
         self.ui.lst_laws.setModel(model)
         self.ui.lst_laws.setModelColumn(1)
-        self.ui.lst_laws.selectionModel().selectionChanged.connect(self.change_cur_law)
-        sql = "SELECT * FROM {0}.init_conc_config WHERE type = {1} ORDER BY name".format(self.mdb.SCHEMA,
-                                                                                         self.cur_wq_mod)
+        self.ui.lst_laws.selectionModel().selectionChanged.connect(
+            self.change_cur_law)
+        sql = "SELECT * FROM {0}.init_conc_config WHERE type = {1} ORDER BY name".format(
+            self.mdb.SCHEMA,
+            self.cur_wq_mod)
         rows = self.mdb.run_query(sql, fetch=True)
 
         for i, row in enumerate(rows):
@@ -92,7 +95,8 @@ class ClassTracerInitDialog:
         if id:
             for r in range(self.ui.lst_laws.model().rowCount()):
                 if str(self.ui.lst_laws.model().item(r, 0).text()) == str(id):
-                    self.ui.lst_laws.setCurrentIndex(self.ui.lst_laws.model().item(r, 1).index())
+                    self.ui.lst_laws.setCurrentIndex(
+                        self.ui.lst_laws.model().item(r, 1).index())
                     break
         else:
             self.display_graph_home()
@@ -109,7 +113,8 @@ class ClassTracerInitDialog:
             lst_bief = self.mdb.run_query(sql, fetch=True)
             if len(lst_bief) > 0:
                 for bief in lst_bief:
-                    self.ui.cb_bief_home.addItem("Bief {}".format(bief[0]), bief[0])
+                    self.ui.cb_bief_home.addItem("Bief {}".format(bief[0]),
+                                                 bief[0])
             else:
                 self.display_graph_home()
 
@@ -120,7 +125,8 @@ class ClassTracerInitDialog:
         if self.ui.lst_laws.selectedIndexes() and self.ui.cb_bief_home.currentIndex() != -1:
             l = self.ui.lst_laws.selectedIndexes()[0].row()
             config = int(self.ui.lst_laws.model().item(l, 0).text())
-            bief = self.ui.cb_bief_home.itemData(self.ui.cb_bief_home.currentIndex())
+            bief = self.ui.cb_bief_home.itemData(
+                self.ui.cb_bief_home.currentIndex())
             self.graph_home.init_graph(config, bief)
         else:
             self.graph_home.init_graph(None, None)
@@ -132,11 +138,13 @@ class ClassTracerInitDialog:
                 self.ui.lst_laws.model().item(r, 1).setCheckState(0)
         self.ui.lst_laws.model().blockSignals(False)
 
-        sql = "UPDATE {0}.init_conc_config SET active = 'f' WHERE type = {1}".format(self.mdb.SCHEMA, self.cur_wq_mod)
+        sql = "UPDATE {0}.init_conc_config SET active = 'f' WHERE type = {1}".format(
+            self.mdb.SCHEMA, self.cur_wq_mod)
         self.mdb.run_query(sql)
         if itm.checkState() == 2:
             id = str(self.ui.lst_laws.model().item(itm.row(), 0).text())
-            sql = "UPDATE {0}.init_conc_config SET active = 't' WHERE id = {1}".format(self.mdb.SCHEMA, id)
+            sql = "UPDATE {0}.init_conc_config SET active = 't' WHERE id = {1}".format(
+                self.mdb.SCHEMA, id)
             self.mdb.run_query(sql)
 
     def new_law(self):
@@ -150,7 +158,8 @@ class ClassTracerInitDialog:
         if self.ui.lst_laws.selectedIndexes():
             l = self.ui.lst_laws.selectedIndexes()[0].row()
             self.cur_wq_law = int(self.ui.lst_laws.model().item(l, 0).text())
-            dlg = InitConcDialog(self.paramTr, self.cur_wq_law, self.ui.lst_laws.model().item(l, 1).text())
+            dlg = InitConcDialog(self.paramTr, self.cur_wq_law,
+                                 self.ui.lst_laws.model().item(l, 1).text())
             dlg.setWindowModality(2)
             if dlg.exec_():
                 self.fill_lst_conf(dlg.cur_wq_law)
@@ -162,10 +171,17 @@ class ClassTracerInitDialog:
             l = self.ui.lst_laws.selectedIndexes()[0].row()
             id_law = self.ui.lst_laws.model().item(l, 0).text()
             name_law = self.ui.lst_laws.model().item(l, 1).text()
-            if (QMessageBox.question(self.paramTr, "Tracer Initial Concentration", "Delete {} ?".format(name_law),
-                                     QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
+            if (
+            QMessageBox.question(self.paramTr, "Tracer Initial Concentration",
+                                 "Delete {} ?".format(name_law),
+                                 QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Deletion of {} Tracer Laws".format(name_law))
-                self.mdb.execute("DELETE FROM {0}.init_conc_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, id_law))
-                self.mdb.execute("DELETE FROM {0}.init_conc_config WHERE id = {1}".format(self.mdb.SCHEMA, id_law))
+                    self.mgis.add_info(
+                        "Deletion of {} Tracer Laws".format(name_law))
+                self.mdb.execute(
+                    "DELETE FROM {0}.init_conc_wq WHERE id_config = {1}".format(
+                        self.mdb.SCHEMA, id_law))
+                self.mdb.execute(
+                    "DELETE FROM {0}.init_conc_config WHERE id = {1}".format(
+                        self.mdb.SCHEMA, id_law))
                 self.fill_lst_conf()

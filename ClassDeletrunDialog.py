@@ -37,13 +37,15 @@ class ClassDeletrunDialog(QDialog):
     """
     Class allow to delete run
     """
+
     def __init__(self, mgis, iface):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.iface = iface
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_delete.ui'), self)
-        self.box = ClassWarningBox(self.mgis)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_delete.ui'),
+                         self)
+        self.box = ClassWarningBox()
         self.listeRuns = []
         self.listeScen = {}
         self.init_gui()
@@ -58,13 +60,16 @@ class ClassDeletrunDialog(QDialog):
         dico = self.mdb.select("runs", "", "date")
 
         if self.cond_com:
-            for run, scen, date, comments in zip(dico["run"], dico["scenario"], dico["date"], dico["comments"]):
+            for run, scen, date, comments in zip(dico["run"], dico["scenario"],
+                                                 dico["date"],
+                                                 dico["comments"]):
                 if run not in self.listeRuns:
                     self.listeRuns.append(run)
                     self.listeScen[run] = []
                 self.listeScen[run].append((scen, date, comments))
         else:
-            for run, scen, date in zip(dico["run"], dico["scenario"], dico["date"]):
+            for run, scen, date in zip(dico["run"], dico["scenario"],
+                                       dico["date"]):
                 if run not in self.listeRuns:
                     self.listeRuns.append(run)
                     self.listeScen[run] = []
@@ -82,7 +87,6 @@ class ClassDeletrunDialog(QDialog):
                 self.parent[run].setFlags(self.parent[run].flags() |
                                           Qt.ItemIsTristate |
                                           Qt.ItemIsUserCheckable)
-                i = dico['run'].index(run)
 
                 lbl = QLabel('')
                 self.tree.setItemWidget(self.parent[run], 2, lbl)
@@ -91,9 +95,11 @@ class ClassDeletrunDialog(QDialog):
                 maxi = datetime(1900, 1, 1, 0, 0)
                 if self.cond_com:
                     for scen, date, comments in self.listeScen[run]:
-                        self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                        self.child[run][scen].setFlags(self.child[run][scen].flags() |
-                                                       Qt.ItemIsUserCheckable)
+                        self.child[run][scen] = QTreeWidgetItem(
+                            self.parent[run])
+                        self.child[run][scen].setFlags(
+                            self.child[run][scen].flags() |
+                            Qt.ItemIsUserCheckable)
                         self.child[run][scen].setText(0, scen)
 
                         self.child[run][scen].setCheckState(0, Qt.Unchecked)
@@ -106,9 +112,11 @@ class ClassDeletrunDialog(QDialog):
                         self.tree.setItemWidget(self.child[run][scen], 2, lbl)
                 else:
                     for scen, date in self.listeScen[run]:
-                        self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                        self.child[run][scen].setFlags(self.child[run][scen].flags() |
-                                                       Qt.ItemIsUserCheckable)
+                        self.child[run][scen] = QTreeWidgetItem(
+                            self.parent[run])
+                        self.child[run][scen].setFlags(
+                            self.child[run][scen].flags() |
+                            Qt.ItemIsUserCheckable)
                         self.child[run][scen].setText(0, scen)
 
                         self.child[run][scen].setCheckState(0, Qt.Unchecked)
@@ -154,14 +162,23 @@ class ClassDeletrunDialog(QDialog):
 
         if ok:
             for i, (run, scenarios) in enumerate(selection.items()):
+
+                lst_tab = self.mdb.list_tables()
                 sql = "run = '{0}' AND scenario IN ({1})".format(run,
-                                                                 ",".join(scenarios))
-                self.mdb.delete("resultats", sql)
-                self.mdb.delete("resultats_basin", sql)
-                self.mdb.delete("resultats_links", sql)
+                                                                 ",".join(
+                                                                     scenarios))
+                if "resultats" in lst_tab:
+                    self.mdb.delete("resultats", sql)
+                    self.mdb.delete("resultats_basin", sql)
+                    self.mdb.delete("resultats_links", sql)
+
                 self.mdb.delete("runs", sql)
+                self.delete_useless_data()
+
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Deletion of {0} scenario for {1} is done".format(scenarios, run))
+                    self.mgis.add_info(
+                        "Deletion of {0} scenario for {1} is done".format(
+                            scenarios, run))
 
                 progress.setValue(i / float(n) * 100)
 
@@ -170,3 +187,31 @@ class ClassDeletrunDialog(QDialog):
     def annule(self):
         """"Cancel """
         self.close()
+
+    def delete_useless_data(self):
+        # delete var transport_pur
+        sql = "DELETE FROM {0}.results_var WHERE id IN(" \
+              "SELECT id FROM {0}.results_var " \
+              "WHERE id  IN (SELECT DISTINCT var FROM {0}.results " \
+              "WHERE id_runs IN (SELECT DISTINCT id_runs FROM {0}.results " \
+              "WHERE id_runs NOT IN (SELECT id FROM {0}.runs ))) " \
+              "and type_res= 'tracer_TRANSPORT_PUR');"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
+        # delete results
+        sql = "DELETE  FROM {0}.results WHERE id_runs IN " \
+              "(SELECT DISTINCT id_runs FROM {0}.results " \
+              "where id_runs not in (SELECT id FROM {0}.runs));"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
+        # delete results_sect
+        sql = "DELETE  FROM {0}.results_sect WHERE id_runs IN " \
+              "(SELECT DISTINCT id_runs FROM {0}.results_sect " \
+              "where id_runs not in (SELECT id FROM {0}.runs));"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
+        # delete run_graph
+        sql = "DELETE  FROM {0}.runs_graph WHERE id_runs IN " \
+              "(SELECT DISTINCT id_runs FROM {0}.runs_graph " \
+              "where id_runs not in (SELECT id FROM {0}.runs));"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>919</width>
-    <height>519</height>
+    <height>571</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -173,14 +173,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QWidget" name="widget_figure" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
+          <layout class="QVBoxLayout" name="widget_figure"/>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -257,14 +250,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QWidget" name="widget_toolsbar" native="true">
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-          </widget>
+          <layout class="QVBoxLayout" name="widget_toolsbar"/>
          </item>
         </layout>
        </item>

@@ -1,6 +1,7 @@
 doc/*
 test/*
 mascaret/*
+mascaret_*/*
 bin/*
 bin
 *.pyc
@@ -12,3 +13,5 @@ toto*
 Class_readResult.py
 icones/Thumbs.db
 *.phy
+Structure/test
+api/test.py

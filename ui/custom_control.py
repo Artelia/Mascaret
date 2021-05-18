@@ -38,12 +38,11 @@ else:  # qt5
 # *******************************************************************************
 #   Class  warningBox
 # *******************************************************************************
-class ClassWarningBox():
+class ClassWarningBox:
     """TODO add all select box """
 
-    def __init__(self, mgis):
-        self.mgis = mgis
-        self.mdb = self.mgis.mdb
+    def __init__(self):
+        pass
 
     def yes_no_q(self, msg, title=''):
         d = QMessageBox()
@@ -59,6 +58,8 @@ class ClassWarningBox():
         else:
             return False
 
+    def info(self, msg, title=''):
+        QMessageBox.warning(None, title, msg)
 
 # *******************************************************************************
 #   Class  ScientificDoubleSpinBox

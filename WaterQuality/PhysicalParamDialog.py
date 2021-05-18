@@ -44,7 +44,9 @@ class ClassPhysicalParamDialog(QDialog):
         self.dico_phy = self.tbwq.dico_phy
         self.cur_wq_mod = mod
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_physical_param.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_physical_param.ui'),
+            self)
         self.ui.btn_val_def.clicked.connect(self.val_def)
 
         styled_item_delegate = QStyledItemDelegate()
@@ -71,7 +73,8 @@ class ClassPhysicalParamDialog(QDialog):
                 itm.setData(val, 0)
                 if c == 3:
                     itm.setData(data_to_float(val), 0)
-                    itm.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsEditable)
+                    itm.setFlags(
+                        Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsEditable)
                     itm.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                 else:
                     itm.setData(val, 0)
@@ -102,8 +105,10 @@ class ItemEditorFactory(QItemEditorFactory):
         if user_type == QVariant.Double or user_type == 0:
             double_spin_box = QDoubleSpinBox(parent)
             double_spin_box.setDecimals(10)
-            double_spin_box.setMinimum(-1000000000.)  # The default maximum value is 99.99.
-            double_spin_box.setMaximum(1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMinimum(
+                -1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMaximum(
+                1000000000.)  # The default maximum value is 99.99.
             return double_spin_box
         else:
             return ItemEditorFactory.createEditor(user_type, parent)

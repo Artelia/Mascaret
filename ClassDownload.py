@@ -32,14 +32,12 @@ else:
     from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply
 
 
-
-
 class ClassDownloadMasc:
     """
     Class allowing to download needed files
     """
 
-    def __init__(self, path_work=None, url_base=None,parent=None):
+    def __init__(self, path_work=None, url_base=None, parent=None):
         self.masplug_path = None
 
         if url_base is None:
@@ -96,15 +94,16 @@ class ClassDownloadMasc:
         req = QNetworkRequest(QUrl(url))
         result = self.manager.get(req)
         result.finished.connect(lambda: self.fin_req(loop, result))
-        self.print_('fetching request...',self.dbg)
+        self.print_('fetching request...', self.dbg)
         if loop.exec_() == 0:
             timer.stop()
             self.print_('{} is received: {}'.format(os.path.basename(path_file),
-                                                    result.readAll().count()), self.dbg)
+                                                    result.readAll().count()),
+                        self.dbg)
         else:
             self.print_('request timed-out')
 
-    def print_(self,txt, dbg=True):
+    def print_(self, txt, dbg=True):
         if self.parent is None and dbg:
             print(txt)
         else:

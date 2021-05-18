@@ -15,10 +15,7 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-comment:
-     fct:
-        distance
-        interpole
+
 """
 import math
 import os
@@ -72,7 +69,8 @@ def interpole(a, l1, l2):
     if i < len(l1) - 1 and a >= x:
         return (l2[i + 1] - l2[i]) / (l1[i + 1] - x) * (a - x) + l2[i]
     elif i > 0 and a <= x:
-        return (l2[i] - l2[i - 1]) / (x - l1[i - 1]) * (a - l1[i - 1]) + l2[i - 1]
+        return (l2[i] - l2[i - 1]) / (x - l1[i - 1]) * (a - l1[i - 1]) + l2[
+            i - 1]
     else:
         return None
 
@@ -115,7 +113,8 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
         if not f["branche"] in longueur_zone.keys():
             longueur_zone[f["branche"]] = []
 
-        longueur_zone[f["branche"]].append((f["numZone"], f.geometry().length()))
+        longueur_zone[f["branche"]].append(
+            (f["numZone"], f.geometry().length()))
 
     for c in liste_couches:
         if c == riviere:
@@ -153,8 +152,8 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
             num = n["numBranche"]
             branche = dico[num]
 
-            mini = 999999999
-            i = 0
+            # mini = 999999999
+            # i = 0
             # recuperation des coordonnees du point
             coord = n.geometry().asPoint()
 
@@ -171,7 +170,8 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
             somme += distance(branche.geometry().vertexAt(v_a), dist)
 
             # calcul de l'abcisse
-            somme_b = sum([long_branche[i] for i in long_branche.keys() if i < num])
+            somme_b = sum(
+                [long_branche[i] for i in long_branche.keys() if i < num])
             if somme < long_branche[num]:
                 n["abscisse"] = somme + somme_b
             else:
@@ -217,12 +217,15 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
             num = f["branche"]
             f["absc_debut"] = absc_debut[num]
             f["absc_fin"] = absc_fin[num]
-            somme_b = sum([long_branche[i] for i in long_branche.keys() if i < num])
+            somme_b = sum(
+                [long_branche[i] for i in long_branche.keys() if i < num])
 
-            list_deb = [long for i, long in longueur_zone[num] if i < f["numZone"]]
+            list_deb = [long for i, long in longueur_zone[num] if
+                        i < f["numZone"]]
             f["absDebZone"] = max(sum(list_deb) + somme_b, absc_debut[num])
 
-            list_fin = [long for i, long in longueur_zone[num] if i <= f["numZone"]]
+            list_fin = [long for i, long in longueur_zone[num] if
+                        i <= f["numZone"]]
             f["absFinZone"] = min(sum(list_fin) + somme_b, absc_fin[num])
             couche_riv.updateFeature(f)
 
@@ -246,12 +249,13 @@ def del_accent(ligne):
     return ligne
 
 
-def copy_dir_to_dir(src,target):
+def copy_dir_to_dir(src, target):
     """ Copi file in directory"""
     files = os.listdir(src)
     for i in range(0, len(files)):
         copy2(os.path.join(src, files[i]),
-                     os.path.join(target, files[i]))
+              os.path.join(target, files[i]))
+
 
 def del_symbol(ligne):
     """ supprime les accents du texte source """
@@ -261,7 +265,8 @@ def del_symbol(ligne):
             ligne = ligne.replace(accented_char, char)
     return ligne
 
-def replace_all( txt, dico):
+
+def replace_all(txt, dico):
     """
     Replace several items
     :param txt: text orginal
@@ -271,3 +276,37 @@ def replace_all( txt, dico):
     for i in dico:
         txt = txt.replace(i, dico[i])
     return txt
+
+
+def read_version(masplug_path):
+    """
+    read version of plugin
+    :return: (str) version
+    """
+    file = open(os.path.join(masplug_path, 'metadata.txt'), 'r')
+    for ligne in file:
+        if ligne.find("version=") > -1:
+            ligne = ligne.split('=')
+            val = ligne[1].strip()
+            break
+    file.close()
+    return val
+
+
+def tw_to_txt(tw, range_r, range_c, sep):
+    clipboard = ''
+    for c in range_c:
+        if c != range_c[-1]:
+            clipboard = '{}{}{}'.format(clipboard,
+                                        tw.horizontalHeaderItem(c).text(), sep)
+        else:
+            clipboard = '{}{}\n'.format(clipboard,
+                                        tw.horizontalHeaderItem(c).text())
+    for r in range_r:
+        for c in range_c:
+            if c != range_c[-1]:
+                clipboard = '{}{}{}'.format(clipboard, tw.item(r, c).data(0),
+                                            sep)
+            else:
+                clipboard = '{}{}\n'.format(clipboard, tw.item(r, c).data(0))
+    return clipboard

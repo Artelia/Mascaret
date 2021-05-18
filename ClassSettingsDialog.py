@@ -19,6 +19,7 @@ email                :
  ***************************************************************************/
 """
 import os
+import sys
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -37,7 +38,8 @@ class ClassSettingsDialog(QDialog):
 
         self.mgis = parent
         self.mdb = parent.mdb
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_settings.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_settings.ui'), self)
         self.ui.txt_path_postgres.setText(self.mgis.postgres_path)
 
         self.ui.buttonBox.accepted.connect(self.accept_dialog)
@@ -48,12 +50,20 @@ class ClassSettingsDialog(QDialog):
         self.ui.open_lastChbox.setChecked(self.mgis.open_last_conn)
         self.ui.open_lastChbox_schema.setChecked(self.mgis.open_last_schema)
 
+        # test = sys.platform
+        # if test == 'win32':
+        #     self.mgis.cond_api = False
+        #     self.ui.apiChbox.hide()
+        # api
+        self.ui.apiChbox.setChecked(self.mgis.cond_api)
+
         self.ui.debugModeChbox.setChecked(self.mgis.DEBUG)
         # DB
         # self.ui.db_loadAllChbox.setChecked(self.mgis.mdb.LOAD_ALL)
         self.ui.actionBt_pathPostgres.triggered.connect(self.path_search)
         # self.ui.actionTxt_path_postgres.triggered.connect(self.path_change)
-        self.ui.txt_path_postgres.textChanged['QString'].connect(self.path_change)
+        self.ui.txt_path_postgres.textChanged['QString'].connect(
+            self.path_change)
 
     def accept_dialog(self):
         """validation dialog function"""
@@ -62,12 +72,16 @@ class ClassSettingsDialog(QDialog):
         # General
         self.mgis.open_last_conn = self.ui.open_lastChbox.isChecked()
         self.mgis.open_last_schema = self.ui.open_lastChbox_schema.isChecked()
+        self.mgis.cond_api = self.ui.apiChbox.isChecked()
         self.mgis.DEBUG = self.ui.debugModeChbox.isChecked()
         # Mascaret DB
         self.mgis.mdb.OVERWRITE = True
         self.mgis.mdb.LOAD_ALL = True
         # self.mgis.mdb.LOAD_ALL = self.ui.db_loadAllChbox.isChecked()
-
+        if self.mgis.cond_api:
+            self.mgis.ui.actionStructures_weirs.setEnabled(False)
+        else:
+            self.mgis.ui.actionStructures_weirs.setEnabled(True)
         # write settings to json
         self.mgis.write_settings()
 
@@ -76,7 +90,8 @@ class ClassSettingsDialog(QDialog):
 
     def path_search(self):
         """search path windows"""
-        path = QFileDialog.getExistingDirectory(self, "Choose a folder", self.mgis.postgres_path)
+        path = QFileDialog.getExistingDirectory(self, "Choose a folder",
+                                                self.mgis.postgres_path)
         if path:
             self.mgis.postgres_path = path
             self.ui.txt_path_postgres.setText(self.mgis.postgres_path)

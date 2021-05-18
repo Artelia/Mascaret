@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>859</width>
+    <width>902</width>
     <height>738</height>
    </rect>
   </property>
@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -176,7 +176,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>859</width>
+     <width>902</width>
      <height>21</height>
     </rect>
    </property>
@@ -197,6 +197,7 @@
     </widget>
     <addaction name="menuSetting"/>
     <addaction name="actionWebsite"/>
+    <addaction name="actionWikisite"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menu_Tools">
@@ -204,8 +205,13 @@
      <string>Tools</string>
     </property>
     <addaction name="actionCross_section"/>
+    <addaction name="actionObservations"/>
+    <addaction name="actionStructures"/>
+    <addaction name="actionStructures_weirs"/>
+    <addaction name="actionTest"/>
     <addaction name="separator"/>
     <addaction name="action_Extract_MNTfor_profile"/>
+    <addaction name="actionUpdate_all_PK"/>
    </widget>
    <widget class="QMenu" name="menuDB">
     <property name="title">
@@ -216,6 +222,8 @@
       <string>Update Table</string>
      </property>
      <addaction name="actionAdd_WQ_tables"/>
+     <addaction name="actionAdd_Structure_tables"/>
+     <addaction name="actionAdd_Structure_temporal_tables"/>
     </widget>
     <addaction name="actionRefresh_Database"/>
     <addaction name="action_update_bin"/>
@@ -237,11 +245,13 @@
     <addaction name="actionCreate_Geometry"/>
     <addaction name="actionCreate_xcas"/>
     <addaction name="actionCreate_Basin"/>
+    <addaction name="actionExport_Model_Files"/>
     <addaction name="separator"/>
     <addaction name="actionRun"/>
     <addaction name="separator"/>
     <addaction name="actionExport_Run"/>
     <addaction name="actionDelete_Run"/>
+    <addaction name="actionImport_Results"/>
    </widget>
    <widget class="QMenu" name="menuPost_Treatment">
     <property name="title">
@@ -250,6 +260,7 @@
     <addaction name="actionHydrogramme"/>
     <addaction name="actionCross_section_results"/>
     <addaction name="actionBasin"/>
+    <addaction name="actionGraphRes"/>
    </widget>
    <widget class="QMenu" name="menuWater_Quality">
     <property name="title">
@@ -294,6 +305,8 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionCross_section"/>
+   <addaction name="actionObservations"/>
+   <addaction name="actionStructures"/>
    <addaction name="separator"/>
    <addaction name="action_Extract_MNTfor_profile"/>
   </widget>
@@ -312,11 +325,13 @@
    <addaction name="actionCreate_Geometry"/>
    <addaction name="actionCreate_xcas"/>
    <addaction name="actionCreate_Basin"/>
+   <addaction name="actionExport_Model_Files"/>
    <addaction name="separator"/>
    <addaction name="actionRun"/>
    <addaction name="separator"/>
    <addaction name="actionExport_Run"/>
    <addaction name="actionDelete_Run"/>
+   <addaction name="actionImport_Results"/>
   </widget>
   <widget class="QToolBar" name="PostTreatmentToolBar">
    <property name="windowTitle">
@@ -328,11 +343,15 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionHydrogramme"/>
    <addaction name="actionCross_section_results"/>
+   <addaction name="actionHydrogramme"/>
    <addaction name="actionBasin"/>
+   <addaction name="actionGraphRes"/>
   </widget>
   <widget class="QToolBar" name="WaterQualityToolBar">
+   <property name="acceptDrops">
+    <bool>true</bool>
+   </property>
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -352,6 +371,15 @@
    </property>
    <property name="text">
     <string>Web site</string>
+   </property>
+  </action>
+  <action name="actionWikisite">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/webSite.png</normaloff>:/plugins/Mascaret/icones/webSite.png</iconset>
+   </property>
+   <property name="text">
+    <string>Wiki site</string>
    </property>
   </action>
   <action name="actionAbout">
@@ -624,14 +652,88 @@
     <string>Basin results</string>
    </property>
   </action>
-  <action name="actionUpdate_pk">
-   <property name="text">
-    <string>Update pk</string>
-   </property>
-  </action>
   <action name="action_update_bin">
    <property name="text">
     <string>Update Executable</string>
+   </property>
+  </action>
+  <action name="actionAdd_Structure_tables">
+   <property name="text">
+    <string>Add Structure tables</string>
+   </property>
+  </action>
+  <action name="actionAdd_Structure_temporal_tables">
+   <property name="text">
+    <string>Add Floodgate tables</string>
+   </property>
+  </action>
+  <action name="actionStructures">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/bridge.png</normaloff>:/plugins/Mascaret/icones/bridge.png</iconset>
+   </property>
+   <property name="text">
+    <string>Structures</string>
+   </property>
+  </action>
+  <action name="actionStructures_weirs">
+   <property name="text">
+    <string>Movable Dam</string>
+   </property>
+  </action>
+  <action name="actionTest">
+   <property name="text">
+    <string>Test</string>
+   </property>
+  </action>
+  <action name="actionGraphRes">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/graph_struct.png</normaloff>:/plugins/Mascaret/icones/graph_struct.png</iconset>
+   </property>
+   <property name="text">
+    <string>Displacement results</string>
+   </property>
+   <property name="toolTip">
+    <string>GraphRes</string>
+   </property>
+  </action>
+  <action name="actionExport_Model_Files">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/Model.png</normaloff>:/plugins/Mascaret/icones/Model.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export Model Files</string>
+   </property>
+  </action>
+  <action name="actionImport_Results">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/save_res.png</normaloff>:/plugins/Mascaret/icones/save_res.png</iconset>
+   </property>
+   <property name="text">
+    <string>Import Results</string>
+   </property>
+  </action>
+  <action name="actionUpdate_all_PK">
+   <property name="text">
+    <string>Update PK</string>
+   </property>
+  </action>
+  <action name="actionObservations">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/lawObs.png</normaloff>:/plugins/Mascaret/icones/lawObs.png</iconset>
+   </property>
+   <property name="text">
+    <string>Obs</string>
+   </property>
+   <property name="toolTip">
+    <string>Observations</string>
    </property>
   </action>
  </widget>
@@ -639,7 +741,7 @@
   <customwidget>
    <class>QgsProjectionSelectionWidget</class>
    <extends>QWidget</extends>
-   <header>qgis.gui</header>
+   <header>qgsprojectionselectionwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

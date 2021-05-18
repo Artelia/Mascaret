@@ -16,10 +16,10 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
        Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
        Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek (Many thanks for the work they've done on RiverGis)
 
-qgisMinimumVersion=2.18
+qgisMinimumVersion=3.00
 qgisMaximumVersion=3.99
 
-version=2.1.0
+version=3.1.0
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,16 +30,60 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    2.1.0  : Correction of casier bug in Qgis3
-    2.0.0  : Correction of  displaying observations bug on graphics
+    3.1.0  : Correction of tables owner
+             Correction of steady model when using the rating curve
+             Correction of  basin law compute
+             Correction of bug on the storage of tracer results
+    3.0.7  : Correction of observation bug
+             Add of wiki site link
+             Correction of the display bug on "initial run case" GUI
+             Button to update the pk updates too branchnum
+             Change the profile style and  the branch style
+    3.0.6  : Correction of initial compute list bug
+             Correction of result accurancy in Mascaret executable
+             No longer freezes the qgis window when the model is running
+             Modification of profiles graphic GUI
+             Correction  of  bug  of profile save button
+             Results graphic by order date of running
+             Force default values
+             Automation of desactivation of branchs-profiles, basins-links
+             Add of hydraulic head for the levels water graphic when the variable is computed
+             Correction of  displaying bug of the flood marks with  cross sections
+             Add observation menu
+             Add a button to update the pk
+             Add the vizualization of flood mark projection
+             Add activation or not  of the laws and outputs
+             Add  button to put in full screen
+             Automation of  the minor bed definition when that is not precised
+             Adding A hydraulic law  which varies in time for a permanent case
+    3.0.5  : Add warning message when the password is null.
+             Correction of bug about the creation of heigh-volum law
+    3.0.4  : Correction of model creation bug for abacus and result_var table
+             Correction of bradley method bug
+    3.0.3  : Correction linux bug
+             Optimization of results save
+    3.0.2  : Modification of results treatment
+             Add automatic update for the database
+             New graph for results
+             Add run_graph table
+             Add change for a possible use of  ClassAPIMascaret without  Qgis
+    3.0.1  : Add mobile valve for hydraulic structure
+             Add mobile dam
+    3.0.0  : Correction of  displaying observations bug on graphics
              Add README.md file
              Delete of "bin" repository
              Addition of  "bin" repository downloading (after run)
              Addition of  "bin" repository updating in plugin menu
-    1.0.4  : Correction of display date bug in graph
-             Correction of legends moving bug  into linux platform
+    1.1.3  : Correction of  displaying observations bug on graphics
+    1.1.2  : Correction of display date bug in graph
+    1.1.1  : Correction of  angle of Bradley method
+             Correction of legends deplacement bug  into linux platform
              Correction of run bug  into  linux platform
+             Correction of Polygons treatment bug due to Shapely  into linux platform
              Correction of steady-initialisation bug with tracers
+    1.1.0  : Addition of Bradley method for hydraulic structure
+             Addition of hydraulic structure GUI
+             Addition of hydraulic structure table
     1.0.3  : Correction of schema import bug
              Addition of the display of comments in graphs
     1.0.2  : Correction of weirs layer style bug
@@ -117,7 +161,7 @@ repository=https://github.com/Artelia/Mascaret
 category=Database
 icon=icones/icon_base.png
 # experimental flag
-experimental=False
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False

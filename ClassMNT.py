@@ -38,9 +38,9 @@ class ClassMNT(QObject):
         self.mnt = {}
 
     def run(self):
-        ret = None
+
         # try:
-        total_area = 0.0
+
         features = self.profil.selectedFeatures()
         self.profil.startEditing()
 
@@ -48,9 +48,11 @@ class ClassMNT(QObject):
             geomcoupe = feature.geometry()
             longueur = geomcoupe.length()
             if longueur < self.res:
-                self.mgis.add_info("Problem {0} between lenght profile : {1} and Raster accurancy : {2}."
-                                   .format(feature["name"], longueur, self.res))
-                self.mgis.add_info("This problem could come from the projection units.")
+                self.mgis.add_info(
+                    "Problem {0} between lenght profile : {1} and Raster accurancy : {2}."
+                    .format(feature["name"], longueur, self.res))
+                self.mgis.add_info(
+                    "This problem could come from the projection units.")
 
             else:
                 nom = feature["name"]
@@ -60,7 +62,8 @@ class ClassMNT(QObject):
 
                 # self.res taille du la résolution du raste
 
-                for dist in np.arange(0.0, round(longueur, 3), round(self.res, 3)):
+                for dist in np.arange(0.0, round(longueur, 3),
+                                      round(self.res, 3)):
 
                     point = geomcoupe.interpolate(dist)
                     ident = self.raster_provider.identify(point.asPoint(),
@@ -72,11 +75,14 @@ class ClassMNT(QObject):
                 self.profil.updateFeature(feature)
 
                 if len(feature["zmnt"]) > 0:
-                    self.mgis.add_info("Extraction of {0} : Ok".format(feature['name']))
+                    self.mgis.add_info(
+                        "Extraction of {0} : Ok".format(feature['name']))
                 else:
-                    self.mgis.add_info("Extraction of {} : Echec".format(feature['name']))
-                    self.mgis.add_info("This problem could come from the different projection"
-                                       " between the raster and the profile")
+                    self.mgis.add_info(
+                        "Extraction of {} : Echec".format(feature['name']))
+                    self.mgis.add_info(
+                        "This problem could come from the different projection"
+                        " between the raster and the profile")
 
         try:  # qgis2
             self.profil.saveEdits()
