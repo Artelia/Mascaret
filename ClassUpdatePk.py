@@ -42,11 +42,14 @@ class ClassUpdatePk(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.iface = iface
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_update_pk.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_update_pk.ui'), self)
         self.box = ClassWarningBox()
         self.lst_tables_p = ['links', 'profiles']
-        self.lst_tables_pt = ['flood_marks', 'weirs', 'hydraulic_head', 'lateral_inflows',
-                              'lateral_weirs', 'tracer_lateral_inflows', 'outputs']
+        self.lst_tables_pt = ['flood_marks', 'weirs', 'hydraulic_head',
+                              'lateral_inflows',
+                              'lateral_weirs', 'tracer_lateral_inflows',
+                              'outputs']
         self.lst_tables_b = ['branchs']
         self.liste_tables = self.lst_tables_b + self.lst_tables_p + self.lst_tables_pt
         # self.liste_tables =  self.lst_tables_p + self.lst_tables_pt
@@ -82,7 +85,8 @@ class ClassUpdatePk(QDialog):
 
         if not self.mdb.check_fct(["update_abscisse_profil", "abscisse_profil",
                                    "update_abscisse_point", "abscisse_point",
-                                   "update_abscisse_branch", "abscisse_branch"]):
+                                   "update_abscisse_branch",
+                                   "abscisse_branch"]):
             self.mdb.add_fct_for_update_pk()
 
         n = len(selection)

@@ -147,7 +147,8 @@ class GraphCommon(QWidget):
         if self.unit != 'date':
             self.axes.xaxis.set_major_formatter(ticker.ScalarFormatter())
         else:
-            self.axes.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+            self.axes.xaxis.set_major_formatter(
+                mdates.DateFormatter('%d-%m-%Y'))
 
     def maj_courbes(self, courbes):
         for c in courbes.keys():
@@ -195,7 +196,8 @@ class DraggableLegend:
         self.gotLegend = False
         legend.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
         legend.figure.canvas.mpl_connect('pick_event', self.on_pick)
-        legend.figure.canvas.mpl_connect('button_release_event', self.on_release)
+        legend.figure.canvas.mpl_connect('button_release_event',
+                                         self.on_release)
         legend.set_picker(self.my_legend_picker)
 
     def on_motion(self, evt):
@@ -203,7 +205,8 @@ class DraggableLegend:
             dx = evt.x - self.mouse_x
             dy = evt.y - self.mouse_y
             loc_in_canvas = self.legend_x + dx, self.legend_y + dy
-            loc_in_norm_axes = self.legend.parent.transAxes.inverted().transform_point(loc_in_canvas)
+            loc_in_norm_axes = self.legend.parent.transAxes.inverted().transform_point(
+                loc_in_canvas)
             self.legend._loc = tuple(loc_in_norm_axes)
             self.legend.figure.canvas.draw()
 
@@ -244,7 +247,8 @@ class GraphCommonNew:
         self.annotation = []
         self.courbeLaisses = []
 
-        self.fig.canvas.mpl_connect('button_release_event', self.graph_off_click)
+        self.fig.canvas.mpl_connect('button_release_event',
+                                    self.graph_off_click)
         self.fig.canvas.mpl_connect('button_press_event', self.graph_on_click)
         self.fig.canvas.mpl_connect('motion_notify_event', self.graph_on_press)
         self.fig.canvas.mpl_connect('pick_event', self.graph_on_pick)
@@ -323,7 +327,8 @@ class GraphCommonNew:
             decal = datetime.utcfromtimestamp(temp)
             absc = min(self.data[self.var_x], key=lambda x: abs(x - decal))
         else:
-            absc = min(self.data[self.var_x], key=lambda x: abs(x - event.xdata))
+            absc = min(self.data[self.var_x],
+                       key=lambda x: abs(x - event.xdata))
         idx = self.data[self.var_x].index(absc)
 
         ymin, ymax = self.axes.get_ylim()
@@ -372,7 +377,8 @@ class GraphCommonNew:
         self.axes.set_xlabel("time ({})".format(unit))
         if self.unit == 'date':
             self.unit_x = 'date'
-            self.axes.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+            self.axes.xaxis.set_major_formatter(
+                mdates.DateFormatter('%d-%m-%Y'))
         else:
             self.unit_x = 'num'
             self.axes.xaxis.set_major_formatter(ticker.ScalarFormatter())
@@ -423,9 +429,11 @@ class DraggableLegendNew:
     def __init__(self, legend):
         self.legend = legend
         self.gotLegend = False
-        legend.figure.canvas.mpl_connect('motion_notify_event', self.lgd_on_motion)
+        legend.figure.canvas.mpl_connect('motion_notify_event',
+                                         self.lgd_on_motion)
         legend.figure.canvas.mpl_connect('pick_event', self.lgd_on_pick)
-        legend.figure.canvas.mpl_connect('button_release_event', self.lgd_on_release)
+        legend.figure.canvas.mpl_connect('button_release_event',
+                                         self.lgd_on_release)
         legend.set_picker(self.my_legend_picker)
 
     def my_legend_picker(self, legend, evt):
@@ -452,6 +460,7 @@ class DraggableLegendNew:
             dx = evt.x - self.mouse_x
             dy = evt.y - self.mouse_y
             loc_in_canvas = self.legend_x + dx, self.legend_y + dy
-            loc_in_norm_axes = self.legend.parent.transAxes.inverted().transform_point(loc_in_canvas)
+            loc_in_norm_axes = self.legend.parent.transAxes.inverted().transform_point(
+                loc_in_canvas)
             self.legend._loc = tuple(loc_in_norm_axes)
             self.legend.figure.canvas.draw()

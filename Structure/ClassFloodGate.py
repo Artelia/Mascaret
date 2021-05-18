@@ -19,6 +19,7 @@ email                :
 
 """
 import numpy as np
+
 from .ClassLaws import ClassLaws
 from .ClassPostPreFG import ClassPostPreFG
 from .ClassTableStructure import ClassTableStructure
@@ -81,7 +82,8 @@ class ClassFloodGate:
         for id_config in self.param_fg.keys():
             self.results_fg_mv[id_config] = {'TIME': [], 'ZSTR': []}
             self.results_fg_mv[id_config]['TIME'].append(tini)
-            self.results_fg_mv[id_config]['ZSTR'].append(self.param_fg[id_config]['ZOLD'])
+            self.results_fg_mv[id_config]['ZSTR'].append(
+                self.param_fg[id_config]['ZOLD'])
 
     def info_init_poly(self):
         """ Get information of polygones"""
@@ -117,8 +119,10 @@ class ClassFloodGate:
         num = self.param_fg[id_config]['NUMGRAPH']
         dim1, dim2_q, dim3 = self.masc.get_var_size("Model.Weir.PtQ", num)
         self.masc.set_var_size('Model.Weir.PtQ', dim1, nbq, dim3, index=num + 1)
-        self.masc.set_var_size("Model.Weir.PtZds", dim1, nbzav, dim3, index=num + 1)
-        self.masc.set_var_size("Model.Weir.PtZus", dim1, nbq, nbzav, index=num + 1)
+        self.masc.set_var_size("Model.Weir.PtZds", dim1, nbzav, dim3,
+                               index=num + 1)
+        self.masc.set_var_size("Model.Weir.PtZus", dim1, nbq, nbzav,
+                               index=num + 1)
 
         cond_first = True
         for ii, qq in enumerate(list_q):
@@ -126,7 +130,8 @@ class ClassFloodGate:
             for jj, zav in enumerate(list_zav):
                 if cond_first:
                     self.masc.set("Model.Weir.PtZds", zav, i=num, j=jj, k=0)
-                self.masc.set("Model.Weir.PtZus", list_zam[ii * nbzav + jj], i=num, j=ii, k=jj)
+                self.masc.set("Model.Weir.PtZus", list_zam[ii * nbzav + jj],
+                              i=num, j=ii, k=jj)
             cond_first = False
 
             # self.write("fin.csv",nbq, nbzav,num)
@@ -146,7 +151,8 @@ class ClassFloodGate:
         if len(self.results_fg_mv) > 0:
             for id_config in self.param_fg.keys():
                 self.results_fg_mv[id_config]['TIME'].append(tfin)
-                self.results_fg_mv[id_config]['ZSTR'].append(self.param_fg[id_config]['ZOLD'])
+                self.results_fg_mv[id_config]['ZSTR'].append(
+                    self.param_fg[id_config]['ZOLD'])
 
     def fg_active(self):
         """ check if floodgate is active"""
@@ -170,7 +176,8 @@ class ClassFloodGate:
 
             # debut regule
             new_z = self.cmpt_znew(param_fg, dtp)
-            self.fill_results_fg_mv(id_config, time, new_z, param_fg['ZOLD'], dtp)
+            self.fill_results_fg_mv(id_config, time, new_z, param_fg['ZOLD'],
+                                    dtp)
             list_final = self.update_law(id_config, param_fg, new_z, True)
             if list_final is None:
                 self.clapi.add_info("Error: updating law")
@@ -192,7 +199,8 @@ class ClassFloodGate:
         """
         info = np.array(list_final)
         # trie de la colonne 0 à 2
-        info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
+        info = info[
+            info[:, 2].argsort()]  # First sort doesn't need to be stable.
         info = info[info[:, 1].argsort(kind='mergesort')]
         info = info[info[:, 0].argsort(kind='mergesort')]
         return info
@@ -359,9 +367,11 @@ class ClassFloodGate:
         if idmethod == 0 or idmethod == 4:  # meth
             pass
         elif idmethod == 1:  # borda
-            list_final = law.borda(id_config, self.tbst.dico_meth_calc[idmethod], None)
+            list_final = law.borda(id_config,
+                                   self.tbst.dico_meth_calc[idmethod], None)
         elif idmethod == 3:  # orifice
-            list_final = law.orifice(id_config, self.tbst.dico_meth_calc[idmethod], None)
+            list_final = law.orifice(id_config,
+                                     self.tbst.dico_meth_calc[idmethod], None)
         else:
             pass
         del law

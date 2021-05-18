@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
@@ -25,7 +26,8 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
+from .ClassTableStructure import ClassTableStructure, ctrl_get_value, \
+    fill_qcombobox
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -40,7 +42,8 @@ class MetBradleyPcWidget(QWidget):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_bradley_pc.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
+                                      'ui/structures/ui_bradley_pc.ui'), self)
         self.id_struct = id_struct
 
         self.completed = 0
@@ -54,11 +57,14 @@ class MetBradleyPcWidget(QWidget):
 
         self.gb_form_cul = QButtonGroup()
         self.gb_form_cul.addButton(self.rb_form_cul0, 0)
-        self.rb_form_cul0.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/culees/culee1.png')))
+        self.rb_form_cul0.setIcon(QIcon(os.path.join(self.mgis.masplugPath,
+                                                     'Structure/images/culees/culee1.png')))
         self.gb_form_cul.addButton(self.rb_form_cul1, 1)
-        self.rb_form_cul1.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/culees/culee2.png')))
+        self.rb_form_cul1.setIcon(QIcon(os.path.join(self.mgis.masplugPath,
+                                                     'Structure/images/culees/culee2.png')))
         self.gb_form_cul.addButton(self.rb_form_cul2, 2)
-        self.rb_form_cul2.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/culees/culee3.png')))
+        self.rb_form_cul2.setIcon(QIcon(os.path.join(self.mgis.masplugPath,
+                                                     'Structure/images/culees/culee3.png')))
 
         self.sb_nb_trav.valueChanged.connect(self.change_ntrav)
         self.cb_form_pil.currentIndexChanged.connect(self.update_piles)
@@ -73,10 +79,14 @@ class MetBradleyPcWidget(QWidget):
         if met == '72':
             self.gb_form_cul.buttonClicked[int].connect(self.change_opt_culee)
 
-        fill_qcombobox(self.cb_form_pil, [[f, 'Forme {}'.format(f[0])] for f in self.dico_pile],
-                       icn=os.path.join(self.mgis.masplugPath, 'Structure/images/piles/pile{}.png'))
-        fill_qcombobox(self.cb_orient_mur, [[30, '30°'], [45, '45°'], [60, '60°']])
-        fill_qcombobox(self.cb_pente_tal, [[0, '1/1'], [1, '1.5/1'], [2, '2/1']])
+        fill_qcombobox(self.cb_form_pil,
+                       [[f, 'Forme {}'.format(f[0])] for f in self.dico_pile],
+                       icn=os.path.join(self.mgis.masplugPath,
+                                        'Structure/images/piles/pile{}.png'))
+        fill_qcombobox(self.cb_orient_mur,
+                       [[30, '30°'], [45, '45°'], [60, '60°']])
+        fill_qcombobox(self.cb_pente_tal,
+                       [[0, '1/1'], [1, '1.5/1'], [2, '2/1']])
 
         self.dico_ctrl = {'FIRSTWD': [self.dsb_abs_cul_rg],
                           'ZTOPTAB': [self.dsb_cote_tab],
@@ -103,14 +113,19 @@ class MetBradleyPcWidget(QWidget):
 
         self.dico_tab = {self.tab_trav: {'type': 0,
                                          'id': '({}*2) + 1',
-                                         'col': [{'fld': 'LARGTRA', 'cb': None, 'valdef': 1.}]},
+                                         'col': [{'fld': 'LARGTRA', 'cb': None,
+                                                  'valdef': 1.}]},
                          self.tab_pile: {'type': 1,
                                          'id': '({}*2) + 2',
                                          'col': [{'fld': 'FORMPIL',
-                                                  'cb': [[f, 'Forme {}'.format(f[0])] for f in self.dico_pile],
+                                                  'cb': [[f, 'Forme {}'.format(
+                                                      f[0])] for f in
+                                                         self.dico_pile],
                                                   'valdef': self.cb_form_pil},
-                                                 {'fld': 'LARGPIL', 'cb': None, 'valdef': self.dsb_larg_pil},
-                                                 {'fld': 'LONGPIL', 'cb': None, 'valdef': self.dsb_long_pil}]}
+                                                 {'fld': 'LARGPIL', 'cb': None,
+                                                  'valdef': self.dsb_larg_pil},
+                                                 {'fld': 'LONGPIL', 'cb': None,
+                                                  'valdef': self.dsb_long_pil}]}
                          }
 
     def change_ntrav(self, nb_trav):
@@ -142,7 +157,8 @@ class MetBradleyPcWidget(QWidget):
     def insert_elem(self, tab, row):
         tab.insertRow(row)
         for c, col in enumerate(self.dico_tab[tab]['col']):
-            if isinstance(col['valdef'], int) or isinstance(col['valdef'], float):
+            if isinstance(col['valdef'], int) or isinstance(col['valdef'],
+                                                            float):
                 val = col['valdef']
             else:
                 val = ctrl_get_value(col['valdef'])
@@ -158,15 +174,18 @@ class MetBradleyPcWidget(QWidget):
 
     def update_piles(self):
         for row in range(self.tab_pile.rowCount()):
-            self.tab_pile.cellWidget(row, 0).setCurrentIndex(self.cb_form_pil.currentIndex())
+            self.tab_pile.cellWidget(row, 0).setCurrentIndex(
+                self.cb_form_pil.currentIndex())
             self.tab_pile.item(row, 1).setData(0, self.dsb_larg_pil.value())
             self.tab_pile.item(row, 2).setData(0, self.dsb_long_pil.value())
 
     def update_min_h_max(self):
-        self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
+        self.dsb_h_max.setMinimum(
+            self.dsb_h_min.value() + self.dsb_h_pas.value())
 
     def update_min_q_max(self):
-        self.dsb_q_max.setMinimum(self.dsb_q_min.value() + self.dsb_q_pas.value())
+        self.dsb_q_max.setMinimum(
+            self.dsb_q_min.value() + self.dsb_q_pas.value())
 
     def verif_larg_trav(self, itm):
         if itm.data(0) <= 0.:

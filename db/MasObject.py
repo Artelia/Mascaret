@@ -51,11 +51,13 @@ class MasObject(object):
         attrs += [' '.join(field) for field in self.attrs]
 
         if self.overwrite is True:
-            qry = 'DROP TABLE IF EXISTS {0};\nCREATE TABLE {0}(\n\t{1});\n'.format(schema_name, ',\n\t'.join(attrs))
+            qry = 'DROP TABLE IF EXISTS {0};\nCREATE TABLE {0}(\n\t{1});\n'.format(
+                schema_name, ',\n\t'.join(attrs))
         else:
-            qry = 'CREATE TABLE  IF NOT EXISTS {0}\n(\n\t{1}\n)\nWITH(\n\t OIDS=FALSE \n);\n'.format(schema_name,
-                                                                                                     ',\n\t'.join(
-                                                                                                         attrs))
+            qry = 'CREATE TABLE  IF NOT EXISTS {0}\n(\n\t{1}\n)\nWITH(\n\t OIDS=FALSE \n);\n'.format(
+                schema_name,
+                ',\n\t'.join(
+                    attrs))
         # if self.spatial_index is True:
         #     qry += 'SELECT "{0}".create_spatial_index(\'{0}\', \'{1}\');'.format(self.schema, self.name)
         # else:
@@ -66,25 +68,29 @@ class MasObject(object):
 
     def pg_geom_attri(self):
         if self.geom_type is not None:
-            attrs = ['geom geometry({0}, {1})'.format(self.geom_type, self.srid)]
+            attrs = [
+                'geom geometry({0}, {1})'.format(self.geom_type, self.srid)]
         else:
             attrs = []
         return attrs
 
     def pg_geom_ori_attri(self):
         if self.geom_type is not None:
-            attrs = ['geom_ori geometry({0}, {1})'.format(self.geom_type, self.srid)]
+            attrs = [
+                'geom_ori geometry({0}, {1})'.format(self.geom_type, self.srid)]
         else:
             attrs = []
         return attrs
 
     def pg_create_index(self):
-        qry = 'CREATE INDEX {1}_geom_idx\n  ON {0}.{1} \n  USING gist \n  (geom);\n'.format(self.schema, self.name)
+        qry = 'CREATE INDEX {1}_geom_idx\n  ON {0}.{1} \n  USING gist \n  (geom);\n'.format(
+            self.schema, self.name)
         return qry
 
     def pg_create_calcul_abscisse(self):
         qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
-              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
+              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
+                                                                 self.name)
         qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_point();\n'
         return qry
 
@@ -218,7 +224,8 @@ class flood_marks(MasObject):
             AFTER DELETE
             ON {}.{}
             FOR EACH ROW
-            EXECUTE PROCEDURE public.delete_point_flood();""".format(self.schema, self.name)
+            EXECUTE PROCEDURE public.delete_point_flood();""".format(
+            self.schema, self.name)
         return qry
 
     def pg_calcul_abscisse_flood(self):
@@ -364,7 +371,8 @@ class tracer_lateral_inflows(MasObject):
                       ('law_wq', ' text'),
                       ('typeSources', ' integer'),
                       ('active', ' boolean NOT NULL DEFAULT TRUE'),
-                      ('CONSTRAINT tracer_lateral_inflows_pkey', ' PRIMARY KEY (gid)')]
+                      ('CONSTRAINT tracer_lateral_inflows_pkey',
+                       ' PRIMARY KEY (gid)')]
 
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
@@ -452,7 +460,8 @@ class profiles(MasObject):
 
     def pg_create_calcul_abscisse(self):
         qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
-              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
+              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
+                                                                 self.name)
         qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_profil();\n'
         return qry
 
@@ -497,7 +506,8 @@ class links(MasObject):
 
     def pg_create_calcul_abscisse(self):
         qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
-              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
+              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
+                                                                 self.name)
         qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_profil();\n'
         return qry
 
@@ -531,14 +541,17 @@ class branchs(MasObject):
                       ('CONSTRAINT branchs_pkey', 'PRIMARY KEY (gid)'),
                       ('CONSTRAINT cle_debut', 'FOREIGN KEY (startb)\n'
                                                '\t   REFERENCES {0}.extremities (name) MATCH SIMPLE \n'
-                                               '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(self.schema)),
+                                               '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(
+                          self.schema)),
                       ('CONSTRAINT cle_fin', 'FOREIGN KEY (startb)'
                                              '\t   REFERENCES {0}.extremities (name) MATCH SIMPLE \n'
-                                             '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(self.schema))]
+                                             '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(
+                          self.schema))]
 
     def pg_create_calcul_abscisse(self):
         qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
-              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
+              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
+                                                                 self.name)
         qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_branche();\n'
         return qry
 
@@ -1235,7 +1248,8 @@ class laws_wq(MasObject):
             ('time', 'float'),
             ('value', 'float'),
             ('active', 'boolean'),
-            ('CONSTRAINT cle_laws_wq', 'PRIMARY KEY (id_config, id_trac, time)')]
+            (
+            'CONSTRAINT cle_laws_wq', 'PRIMARY KEY (id_config, id_trac, time)')]
 
 
 # *****************************************
@@ -1302,7 +1316,8 @@ class laws_meteo(MasObject):
             ('id_var', 'integer'),
             ('time', 'float'),
             ('value', 'float'),
-            ('CONSTRAINT cle_laws_met', 'PRIMARY KEY (id_config, id_var, time)')]
+            (
+            'CONSTRAINT cle_laws_met', 'PRIMARY KEY (id_config, id_var, time)')]
 
 
 class init_conc_config(MasObject):
@@ -1328,7 +1343,8 @@ class init_conc_wq(MasObject):
             ('bief', ' integer'),
             ('abscissa', ' float'),
             ('value', 'float'),
-            ('CONSTRAINT cle_init_conc_wq', 'PRIMARY KEY (id_config, id_trac, bief,abscissa)')]
+            ('CONSTRAINT cle_init_conc_wq',
+             'PRIMARY KEY (id_config, id_trac, bief,abscissa)')]
 
 
 # *****************************************
@@ -1360,7 +1376,8 @@ class profil_struct(MasObject):
                       ('id_order', 'integer'),
                       ('x', 'float'),
                       ('z', 'float'),
-                      ('CONSTRAINT profil_struct_pkey', 'PRIMARY KEY (id_order,id_config)')]
+                      ('CONSTRAINT profil_struct_pkey',
+                       'PRIMARY KEY (id_order,id_config)')]
 
 
 class struct_param(MasObject):
@@ -1371,7 +1388,8 @@ class struct_param(MasObject):
         self.attrs = [('id_config', 'integer'),
                       ('var', 'text'),
                       ('value', 'float'),
-                      ('CONSTRAINT cle_struct_param', 'PRIMARY KEY (id_config,var)')]
+                      ('CONSTRAINT cle_struct_param',
+                       'PRIMARY KEY (id_config,var)')]
 
 
 class struct_elem_param(MasObject):
@@ -1383,7 +1401,8 @@ class struct_elem_param(MasObject):
                       ('id_elem', 'integer'),
                       ('var', 'text'),
                       ('value', 'float'),
-                      ('CONSTRAINT cle_struct_elem_param', 'PRIMARY KEY (id_config,id_elem,var)')]
+                      ('CONSTRAINT cle_struct_elem_param',
+                       'PRIMARY KEY (id_config,id_elem,var)')]
 
 
 class struct_elem(MasObject):
@@ -1395,7 +1414,8 @@ class struct_elem(MasObject):
                       ('id_elem', 'integer'),
                       ('type', 'integer'),
                       ('polygon', 'GEOMETRY'),
-                      ('CONSTRAINT cle_struct_elem', 'PRIMARY KEY (id_config,id_elem)')]
+                      ('CONSTRAINT cle_struct_elem',
+                       'PRIMARY KEY (id_config,id_elem)')]
 
 
 class struct_abac(MasObject):
@@ -1408,7 +1428,8 @@ class struct_abac(MasObject):
                       ('var', 'text'),
                       ('id_order', 'integer'),
                       ('value', 'float'),
-                      ('CONSTRAINT cle_struct_abac', 'PRIMARY KEY (id_order,nam_method,nam_abac,var)')]
+                      ('CONSTRAINT cle_struct_abac',
+                       'PRIMARY KEY (id_order,nam_method,nam_abac,var)')]
 
 
 class struct_laws(MasObject):
@@ -1420,7 +1441,8 @@ class struct_laws(MasObject):
                       ('id_var', 'integer'),
                       ('id_order', 'integer'),
                       ('value', 'float'),
-                      ('CONSTRAINT cle_struct_laws', 'PRIMARY KEY (id_config, id_var, id_order)')]
+                      ('CONSTRAINT cle_struct_laws',
+                       'PRIMARY KEY (id_config, id_var, id_order)')]
 
 
 # ************************************************************************************
@@ -1437,7 +1459,8 @@ class struct_fg(MasObject):
                       ('type_fg', 'text'),
                       ('xpos', 'text'),
                       ('var_reg', 'text'),
-                      ('CONSTRAINT cle_struct_fg', 'PRIMARY KEY (id_config,id_scen)')]
+                      ('CONSTRAINT cle_struct_fg',
+                       'PRIMARY KEY (id_config,id_scen)')]
 
 
 class struct_fg_val(MasObject):
@@ -1451,7 +1474,8 @@ class struct_fg_val(MasObject):
                       ('id_order', 'integer'),
                       ('name_var', 'text'),
                       ('value', 'float'),
-                      ('CONSTRAINT cle_struct_fg_val', 'PRIMARY KEY (id_config,id_scen,id_order,name_var)')]
+                      ('CONSTRAINT cle_struct_fg_val',
+                       'PRIMARY KEY (id_config,id_scen,id_order,name_var)')]
 
 
 class weirs_mob_val(MasObject):
@@ -1464,7 +1488,8 @@ class weirs_mob_val(MasObject):
                       ('id_order', 'integer'),
                       ('name_var', 'text'),
                       ('value', 'float'),
-                      ('CONSTRAINT cle_weirs_mob_val', 'PRIMARY KEY (id_weirs,id_order,name_var)')]
+                      ('CONSTRAINT cle_weirs_mob_val',
+                       'PRIMARY KEY (id_weirs,id_order,name_var)')]
 
 
 class admin_tab(MasObject):
@@ -1476,7 +1501,8 @@ class admin_tab(MasObject):
         self.attrs = [('id_', 'serial NOT NULL'),
                       ('table_', 'text'),
                       ('version_', 'text'),
-                      ('CONSTRAINT cle_admin_tab', 'PRIMARY KEY (id_,table_, version_)')]
+                      ('CONSTRAINT cle_admin_tab',
+                       'PRIMARY KEY (id_,table_, version_)')]
 
 
 # new results table
@@ -1490,7 +1516,8 @@ class results(MasObject):
                       ('pknum', 'float'),
                       ('var', 'integer'),
                       ('val', 'float'),
-                      ('CONSTRAINT results_pkey', ' PRIMARY KEY (id_runs, time, pknum, var)')]
+                      ('CONSTRAINT results_pkey',
+                       ' PRIMARY KEY (id_runs, time, pknum, var)')]
 
         # def pg_create_table(self):
         #     qry = super(self.__class__, self).pg_create_table()
@@ -1508,7 +1535,8 @@ class results_sect(MasObject):
                       ('pk', 'float'),
                       ('branch', 'integer'),
                       ('section', 'integer'),
-                      ('CONSTRAINT results_sect_pkey', ' PRIMARY KEY (id_runs, pk, branch)')]
+                      ('CONSTRAINT results_sect_pkey',
+                       ' PRIMARY KEY (id_runs, pk, branch)')]
 
 
 class results_var(MasObject):
@@ -1521,7 +1549,8 @@ class results_var(MasObject):
                       ('var', 'text'),
                       ('name', 'text'),
                       ('type_var', 'text'),
-                      ('CONSTRAINT results_var_pkey', ' PRIMARY KEY (type_res, var)')]
+                      ('CONSTRAINT results_var_pkey',
+                       ' PRIMARY KEY (type_res, var)')]
 
 
 class runs_graph(MasObject):
@@ -1534,6 +1563,7 @@ class runs_graph(MasObject):
                       ('type_res', 'text'),
                       ('var', 'text'),
                       ('val', 'json'),
-                      ('CONSTRAINT runs_graph_pkey', ' PRIMARY KEY (id_runs,type_res,var)')]
+                      ('CONSTRAINT runs_graph_pkey',
+                       ' PRIMARY KEY (id_runs,type_res,var)')]
 
 # ****************************************************************************

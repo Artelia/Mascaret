@@ -66,13 +66,15 @@ class ClassStructureEditDialog(QDialog):
         self.wgt_met = QWidget()
 
         self.param_meth_calc = {'PC': {0: {'wgt': MetBradleyPcWidget,
-                                           'wgt_param': [self.mgis, '72', id_struct]},
+                                           'wgt_param': [self.mgis, '72',
+                                                         id_struct]},
                                        1: {'wgt': MetBordaPcWidget,
                                            'wgt_param': [self.mgis, id_struct]},
                                        3: {'wgt': MetOrificePcWidget,
                                            'wgt_param': [self.mgis, id_struct]},
                                        4: {'wgt': MetBradleyPcWidget,
-                                           'wgt_param': [self.mgis, '78', id_struct]}
+                                           'wgt_param': [self.mgis, '78',
+                                                         id_struct]}
                                        },
                                 'PA': {1: {'wgt': MetBordaPaWidget,
                                            'wgt_param': [self.mgis, id_struct]},
@@ -94,13 +96,16 @@ class ClassStructureEditDialog(QDialog):
         self.id_struct = id_struct
         self.current_meth = 0
         self.lst_meth_calc = []
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_structure_edit.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_structure_edit.ui'),
+            self)
 
         self.cb_met_calc.currentIndexChanged[int].connect(self.change_met_calc)
         self.b_ok.accepted.connect(self.accept_page)
         self.b_ok.rejected.connect(self.reject_page)
         self.b_up_prof.clicked.connect(self.update_profil)
-        self.b_up_prof.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'Structure/images/update.png')))
+        self.b_up_prof.setIcon(QIcon(
+            os.path.join(self.mgis.masplugPath, 'Structure/images/update.png')))
         self.dico_ctrl_fg = None
 
         if id_struct:
@@ -114,14 +119,18 @@ class ClassStructureEditDialog(QDialog):
             for m in self.tbst.dico_struc_typ[self.typ_struct]['meth_calc']:
                 self.lst_meth_calc.append([m, self.tbst.dico_meth_calc[m]])
 
-            self.lbl_type.setText(self.tbst.dico_struc_typ[self.typ_struct]['name'])
+            self.lbl_type.setText(
+                self.tbst.dico_struc_typ[self.typ_struct]['name'])
             self.txt_name.setText(rows[0][0])
             self.txt_comm.setText(rows[0][5])
             self.cc_active.setChecked(rows[0][3])
-            fill_qcombobox(self.cb_met_calc, self.lst_meth_calc, val_def=rows[0][2])
+            fill_qcombobox(self.cb_met_calc, self.lst_meth_calc,
+                           val_def=rows[0][2])
             self.is_loading = False
 
-            rows = self.mdb.run_query("SELECT gid FROM {0}.profiles".format(self.mdb.SCHEMA), fetch=True)
+            rows = self.mdb.run_query(
+                "SELECT gid FROM {0}.profiles".format(self.mdb.SCHEMA),
+                fetch=True)
 
             list_p = [v[0] for v in rows]
             if self.id_prof_ori in list_p:
@@ -138,7 +147,8 @@ class ClassStructureEditDialog(QDialog):
         """
         tab = {'x': [], 'z': []}
         where = "gid = '{0}' ".format(self.id_prof_ori)
-        feature = self.mdb.select('profiles', where=where, list_var=['x', 'z', 'abscissa', 'branchnum'])
+        feature = self.mdb.select('profiles', where=where,
+                                  list_var=['x', 'z', 'abscissa', 'branchnum'])
         tab['x'] = [float(var) for var in feature["x"][0].split()]
         tab['z'] = [float(var) for var in feature["z"][0].split()]
 
@@ -152,16 +162,19 @@ class ClassStructureEditDialog(QDialog):
         for order, (x, z) in enumerate(xz):
             values.append([self.id_struct, order, x, z])
 
-        self.mdb.delete('profil_struct', where='id_config = {}'.format(self.id_struct))
+        self.mdb.delete('profil_struct',
+                        where='id_config = {}'.format(self.id_struct))
         self.mdb.insert_res('profil_struct', values, colonnes)
 
     def change_met_calc(self, idx):
         if not self.is_loading:
-            if (QMessageBox.question(self, "Warning", "Save current parameters ?",
-                                     QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
+            if (
+            QMessageBox.question(self, "Warning", "Save current parameters ?",
+                                 QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 self.save_struct()
         self.txt_name.setFocus()
-        self.met_calc = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
+        self.met_calc = self.cb_met_calc.itemData(
+            self.cb_met_calc.currentIndex())
         self.display_fg()
         param = self.param_meth_calc[self.typ_struct][self.met_calc]
         self.wgt_met = param['wgt'](*param['wgt_param'])
@@ -186,15 +199,17 @@ class ClassStructureEditDialog(QDialog):
             # tab.setRowCount(0)
             t = param['type']
             sql = "SELECT id_elem FROM {0}.struct_elem " \
-                  "WHERE id_config = {1} AND type = {2} ORDER BY id_elem".format(self.mdb.SCHEMA, self.id_struct, t)
+                  "WHERE id_config = {1} AND type = {2} ORDER BY id_elem".format(
+                self.mdb.SCHEMA, self.id_struct, t)
             elems = self.mdb.run_query(sql, fetch=True)
 
             for r, elem in enumerate(elems):
                 # tab.insertRow(r)
                 for c, col in enumerate(param['col']):
                     sql = "SELECT value FROM {0}.struct_elem_param WHERE id_config = {1} " \
-                          "AND id_elem = {2} and var = '{3}'".format(self.mdb.SCHEMA, self.id_struct,
-                                                                     elem[0], col['fld'])
+                          "AND id_elem = {2} and var = '{3}'".format(
+                        self.mdb.SCHEMA, self.id_struct,
+                        elem[0], col['fld'])
                     row = self.mdb.run_query(sql, fetch=True)
                     if len(row) > 0:
                         val = row[0][0]
@@ -229,7 +244,8 @@ class ClassStructureEditDialog(QDialog):
             #     self.reject_page()
 
     def save_struct(self):
-        self.current_meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
+        self.current_meth = self.cb_met_calc.itemData(
+            self.cb_met_calc.currentIndex())
         if self.typ_struct == 'PC':
             verif, msg = self.verif_pc(self.id_struct)
         elif self.typ_struct == 'PA':
@@ -246,21 +262,26 @@ class ClassStructureEditDialog(QDialog):
             comm = str(self.txt_comm.toPlainText())
             active = self.cc_active.isChecked()
             if active:
-                sql = "SELECT id_prof_ori FROM {0}.struct_config WHERE id = {1}".format(self.mdb.SCHEMA,
-                                                                                        self.id_struct)
+                sql = "SELECT id_prof_ori FROM {0}.struct_config WHERE id = {1}".format(
+                    self.mdb.SCHEMA,
+                    self.id_struct)
                 row = self.mdb.run_query(sql, fetch=True)
                 id_profil = row[0][0]
-                sql = "UPDATE {0}.struct_config SET active = FALSE WHERE id_prof_ori = {1}".format(self.mdb.SCHEMA,
-                                                                                                   id_profil)
+                sql = "UPDATE {0}.struct_config SET active = FALSE WHERE id_prof_ori = {1}".format(
+                    self.mdb.SCHEMA,
+                    id_profil)
                 self.mdb.execute(sql)
 
             sql = "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4}, comment= '{5}' " \
-                  "WHERE id = {1}".format(self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active, comm)
+                  "WHERE id = {1}".format(self.mdb.SCHEMA, self.id_struct, name,
+                                          self.current_meth, active, comm)
             self.mdb.execute(sql)
 
-            sql = "DELETE FROM {0}.struct_elem WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
+            sql = "DELETE FROM {0}.struct_elem WHERE id_config = {1}".format(
+                self.mdb.SCHEMA, self.id_struct)
             self.mdb.execute(sql)
-            sql = "DELETE FROM {0}.struct_elem_param WHERE id_config = {1}".format(self.mdb.SCHEMA, self.id_struct)
+            sql = "DELETE FROM {0}.struct_elem_param WHERE id_config = {1}".format(
+                self.mdb.SCHEMA, self.id_struct)
             self.mdb.execute(sql)
 
             for var, ctrls in self.wgt_met.dico_ctrl.items():
@@ -286,7 +307,8 @@ class ClassStructureEditDialog(QDialog):
                 for r in range(tab.rowCount()):
                     id_elem = eval(param['id'].format(r))
                     sql = "INSERT INTO {0}.struct_elem (id_config, id_elem, type) VALUES ({1}, {2}, {3})" \
-                        .format(self.mdb.SCHEMA, self.id_struct, id_elem, type_elem)
+                        .format(self.mdb.SCHEMA, self.id_struct, id_elem,
+                                type_elem)
                     self.mdb.execute(sql)
                     for c, col in enumerate(param['col']):
                         var = col['fld']
@@ -301,8 +323,9 @@ class ClassStructureEditDialog(QDialog):
                         if val is None:
                             val = 'Null'
                         sql = "INSERT INTO {0}.struct_elem_param (id_config, id_elem, var, value) " \
-                              "VALUES ({1}, {2}, '{3}', {4})".format(self.mdb.SCHEMA, self.id_struct,
-                                                                     id_elem, var, val)
+                              "VALUES ({1}, {2}, '{3}', {4})".format(
+                            self.mdb.SCHEMA, self.id_struct,
+                            id_elem, var, val)
                         self.mdb.execute(sql)
 
             return True
@@ -430,7 +453,8 @@ class ClassStructureEditDialog(QDialog):
             return True, None
 
     def verif_haut_tablier(self, id_struct):
-        sql = "SELECT MIN(z) FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
+        sql = "SELECT MIN(z) FROM {0}.profil_struct WHERE id_config = {1}".format(
+            self.mdb.SCHEMA, id_struct)
         rows = self.mdb.run_query(sql, fetch=True)
         profil_z_min = rows[0][0]
 
@@ -441,11 +465,13 @@ class ClassStructureEditDialog(QDialog):
             return True, None
 
     def verif_bas_tablier(self, id_struct):
-        sql = "SELECT MIN(z) FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
+        sql = "SELECT MIN(z) FROM {0}.profil_struct WHERE id_config = {1}".format(
+            self.mdb.SCHEMA, id_struct)
         rows = self.mdb.run_query(sql, fetch=True)
         profil_z_min = rows[0][0]
 
-        cote_bas_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0]) - ctrl_get_value(
+        cote_bas_tablier = ctrl_get_value(
+            self.wgt_met.dico_ctrl['ZTOPTAB'][0]) - ctrl_get_value(
             self.wgt_met.dico_ctrl['EPAITAB'][0])
         if cote_bas_tablier <= profil_z_min:
             return False, "La cote du bas du tablier est inferieure à la cote minimum du profil"
@@ -453,17 +479,20 @@ class ClassStructureEditDialog(QDialog):
             return True, None
 
     def verif_larg_struct(self, id_struct):
-        for v, var in enumerate(self.wgt_met.dico_tab[self.wgt_met.tab_trav]['col']):
+        for v, var in enumerate(
+                self.wgt_met.dico_tab[self.wgt_met.tab_trav]['col']):
             if var['fld'] == "LARGTRA":
                 col_trav = v
                 break
 
-        for v, var in enumerate(self.wgt_met.dico_tab[self.wgt_met.tab_pile]['col']):
+        for v, var in enumerate(
+                self.wgt_met.dico_tab[self.wgt_met.tab_pile]['col']):
             if var['fld'] == "LARGPIL":
                 col_pile = v
                 break
 
-        sql = "SELECT MAX(x) FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
+        sql = "SELECT MAX(x) FROM {0}.profil_struct WHERE id_config = {1}".format(
+            self.mdb.SCHEMA, id_struct)
         rows = self.mdb.run_query(sql, fetch=True)
         profil_x_max = rows[0][0]
 
@@ -485,7 +514,8 @@ class ClassStructureEditDialog(QDialog):
         for r in range(self.wgt_met.tab_trav.rowCount()):
             forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
             if forme_arche == 2:
-                if self.wgt_met.tab_trav.item(r, 2).data(0) >= self.wgt_met.tab_trav.item(r, 3).data(0):
+                if self.wgt_met.tab_trav.item(r, 2).data(
+                        0) >= self.wgt_met.tab_trav.item(r, 3).data(0):
                     arche_err.append(r + 1)
 
         if len(arche_err) > 0:
@@ -502,7 +532,8 @@ class ClassStructureEditDialog(QDialog):
         for r in range(self.wgt_met.tab_trav.rowCount()):
             forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
             if forme_arche == 1:
-                z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
+                z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (
+                self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
             elif forme_arche == 2:
                 z_top = self.wgt_met.tab_trav.item(r, 3).data(0)
             if z_top >= cote_tablier:
@@ -512,7 +543,8 @@ class ClassStructureEditDialog(QDialog):
             txt_arche = ""
             for arche in arche_err:
                 txt_arche += "{}, ".format(arche)
-            return False, "Arche(s) {} : Z haut >= Cote du haut du tablier".format(txt_arche[:-2])
+            return False, "Arche(s) {} : Z haut >= Cote du haut du tablier".format(
+                txt_arche[:-2])
         else:
             return True, None
 
@@ -524,14 +556,17 @@ class ClassStructureEditDialog(QDialog):
         for r in range(self.wgt_met.tab_trav.rowCount()):
             larg = self.wgt_met.tab_trav.item(r, 1).data(0)
             if r not in [0, nb_arche - 1]:
-                forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
+                forme_arche = ctrl_get_value(
+                    self.wgt_met.tab_trav.cellWidget(r, 0))
                 if forme_arche == 1:
-                    z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
+                    z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (
+                    self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
                 elif forme_arche == 2:
                     z_top = self.wgt_met.tab_trav.item(r, 3).data(0)
                 sql = "SELECT MAX(z) FROM {0}.profil_struct " \
-                      "WHERE id_config = {1} AND x >= {2} AND x <= {3}".format(self.mdb.SCHEMA, id_struct, x_tmp,
-                                                                               larg + x_tmp)
+                      "WHERE id_config = {1} AND x >= {2} AND x <= {3}".format(
+                    self.mdb.SCHEMA, id_struct, x_tmp,
+                    larg + x_tmp)
                 rows = self.mdb.run_query(sql, fetch=True)
                 profil_z_max = rows[0][0]
                 if profil_z_max >= z_top:
@@ -542,7 +577,8 @@ class ClassStructureEditDialog(QDialog):
             txt_arche = ""
             for arche in arche_err:
                 txt_arche += "{}, ".format(arche)
-            return False, "Arche(s) {} : Z haut <= Cote max du profil".format(txt_arche[:-2])
+            return False, "Arche(s) {} : Z haut <= Cote max du profil".format(
+                txt_arche[:-2])
         else:
             return True, None
 
@@ -550,7 +586,8 @@ class ClassStructureEditDialog(QDialog):
         rad_err = []
         cote_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0])
         for r in range(self.wgt_met.tab_trav.rowCount()):
-            z_top = self.wgt_met.tab_trav.item(r, 0).data(0) + self.wgt_met.tab_trav.item(r, 1).data(0)
+            z_top = self.wgt_met.tab_trav.item(r, 0).data(
+                0) + self.wgt_met.tab_trav.item(r, 1).data(0)
             if z_top >= cote_tablier:
                 rad_err.append(r + 1)
 
@@ -558,7 +595,8 @@ class ClassStructureEditDialog(QDialog):
             txt_rad = ""
             for rad in rad_err:
                 txt_rad += "{}, ".format(rad)
-            return False, "Dalot(s) {} : Z haut >= Cote du haut du tablier".format(txt_rad[:-2])
+            return False, "Dalot(s) {} : Z haut >= Cote du haut du tablier".format(
+                txt_rad[:-2])
         else:
             return True, None
 
@@ -566,7 +604,8 @@ class ClassStructureEditDialog(QDialog):
         buse_err = []
         cote_tablier = ctrl_get_value(self.wgt_met.dico_ctrl['ZTOPTAB'][0])
         for r in range(self.wgt_met.tab_trav.rowCount()):
-            z_top = self.wgt_met.tab_trav.item(r, 1).data(0) + self.wgt_met.tab_trav.item(r, 2).data(0)
+            z_top = self.wgt_met.tab_trav.item(r, 1).data(
+                0) + self.wgt_met.tab_trav.item(r, 2).data(0)
             if z_top >= cote_tablier:
                 buse_err.append(r + 1)
 
@@ -574,7 +613,8 @@ class ClassStructureEditDialog(QDialog):
             txt_buse = ""
             for buse in buse_err:
                 txt_buse += "{}, ".format(buse)
-            return False, "Buse(s) {} : Z haut >= Cote du haut du tablier".format(txt_buse[:-2])
+            return False, "Buse(s) {} : Z haut >= Cote du haut du tablier".format(
+                txt_buse[:-2])
         else:
             return True, None
 
@@ -597,7 +637,8 @@ class ClassStructureEditDialog(QDialog):
             txt_buse = ""
             for buse in buse_err:
                 txt_buse += "{}, ".format(buse)
-            return False, "Intersection(s) detectee(s) : {}".format(txt_buse[:-2])
+            return False, "Intersection(s) detectee(s) : {}".format(
+                txt_buse[:-2])
         else:
             return True, None
 
@@ -672,14 +713,20 @@ class ClassStructureEditDialog(QDialog):
         """
         self.meth = ClassLaws(self.mgis)
         if idmethod == 0 or idmethod == 4:  # meth
-            list_final = self.meth.bradley(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+            list_final = self.meth.bradley(id_config,
+                                           self.tbst.dico_meth_calc[idmethod],
+                                           ui)
         elif idmethod == 1:  # borda
-            list_final = self.meth.borda(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+            list_final = self.meth.borda(id_config,
+                                         self.tbst.dico_meth_calc[idmethod], ui)
         elif idmethod == 3:  # orifice
-            list_final = self.meth.orifice(id_config, self.tbst.dico_meth_calc[idmethod], ui)
+            list_final = self.meth.orifice(id_config,
+                                           self.tbst.dico_meth_calc[idmethod],
+                                           ui)
         else:
             pass
-        self.save_list_final(list_final, id_config, self.tbst.dico_meth_calc[idmethod])
+        self.save_list_final(list_final, id_config,
+                             self.tbst.dico_meth_calc[idmethod])
         if ui is not None:
             ui.progress_bar(100)
         self.mgis.add_info(self.meth.msg)
@@ -693,13 +740,15 @@ class ClassStructureEditDialog(QDialog):
         :return: nothing
         """
         if not list_final:
-            sql = "SELECT name FROM {0}.{1} WHERE id={2}".format(self.mdb.SCHEMA, 'struct_config', id_config)
+            sql = "SELECT name FROM {0}.{1} WHERE id={2}".format(
+                self.mdb.SCHEMA, 'struct_config', id_config)
 
             name = self.mdb.run_query(sql, fetch=True)
             name = name[0][0]
 
-            sql = "UPDATE {0}.{1} SET {2}  WHERE id={3};".format(self.mdb.SCHEMA, 'struct_config', 'active=False',
-                                                                 id_config)
+            sql = "UPDATE {0}.{1} SET {2}  WHERE id={3};".format(
+                self.mdb.SCHEMA, 'struct_config', 'active=False',
+                id_config)
             self.mdb.run_query(sql)
 
             self.add_info(
@@ -717,7 +766,8 @@ class ClassStructureEditDialog(QDialog):
         :return:
         """
         """ stock law in database"""
-        self.mdb.delete('struct_laws', where="id_config = '{}'".format(id_config))
+        self.mdb.delete('struct_laws',
+                        where="id_config = '{}'".format(id_config))
         liste_col = self.mdb.list_columns('struct_laws')
         list_insert = []
         list_val = np.array(list_val)
@@ -729,8 +779,9 @@ class ClassStructureEditDialog(QDialog):
         sql = ''
         for a in list_insert:
             valeurs = str(tuple(a))
-            sql += "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
-                                                                 'struct_laws',
-                                                                 var,
-                                                                 valeurs)
+            sql += "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
+                self.mdb.SCHEMA,
+                'struct_laws',
+                var,
+                valeurs)
         self.mdb.run_query(sql)

@@ -43,7 +43,8 @@ class ClassDeletrunDialog(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.iface = iface
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_delete.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_delete.ui'),
+                         self)
         self.box = ClassWarningBox()
         self.listeRuns = []
         self.listeScen = {}
@@ -59,13 +60,16 @@ class ClassDeletrunDialog(QDialog):
         dico = self.mdb.select("runs", "", "date")
 
         if self.cond_com:
-            for run, scen, date, comments in zip(dico["run"], dico["scenario"], dico["date"], dico["comments"]):
+            for run, scen, date, comments in zip(dico["run"], dico["scenario"],
+                                                 dico["date"],
+                                                 dico["comments"]):
                 if run not in self.listeRuns:
                     self.listeRuns.append(run)
                     self.listeScen[run] = []
                 self.listeScen[run].append((scen, date, comments))
         else:
-            for run, scen, date in zip(dico["run"], dico["scenario"], dico["date"]):
+            for run, scen, date in zip(dico["run"], dico["scenario"],
+                                       dico["date"]):
                 if run not in self.listeRuns:
                     self.listeRuns.append(run)
                     self.listeScen[run] = []
@@ -91,9 +95,11 @@ class ClassDeletrunDialog(QDialog):
                 maxi = datetime(1900, 1, 1, 0, 0)
                 if self.cond_com:
                     for scen, date, comments in self.listeScen[run]:
-                        self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                        self.child[run][scen].setFlags(self.child[run][scen].flags() |
-                                                       Qt.ItemIsUserCheckable)
+                        self.child[run][scen] = QTreeWidgetItem(
+                            self.parent[run])
+                        self.child[run][scen].setFlags(
+                            self.child[run][scen].flags() |
+                            Qt.ItemIsUserCheckable)
                         self.child[run][scen].setText(0, scen)
 
                         self.child[run][scen].setCheckState(0, Qt.Unchecked)
@@ -106,9 +112,11 @@ class ClassDeletrunDialog(QDialog):
                         self.tree.setItemWidget(self.child[run][scen], 2, lbl)
                 else:
                     for scen, date in self.listeScen[run]:
-                        self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                        self.child[run][scen].setFlags(self.child[run][scen].flags() |
-                                                       Qt.ItemIsUserCheckable)
+                        self.child[run][scen] = QTreeWidgetItem(
+                            self.parent[run])
+                        self.child[run][scen].setFlags(
+                            self.child[run][scen].flags() |
+                            Qt.ItemIsUserCheckable)
                         self.child[run][scen].setText(0, scen)
 
                         self.child[run][scen].setCheckState(0, Qt.Unchecked)
@@ -157,7 +165,8 @@ class ClassDeletrunDialog(QDialog):
 
                 lst_tab = self.mdb.list_tables()
                 sql = "run = '{0}' AND scenario IN ({1})".format(run,
-                                                                 ",".join(scenarios))
+                                                                 ",".join(
+                                                                     scenarios))
                 if "resultats" in lst_tab:
                     self.mdb.delete("resultats", sql)
                     self.mdb.delete("resultats_basin", sql)
@@ -167,7 +176,9 @@ class ClassDeletrunDialog(QDialog):
                 self.delete_useless_data()
 
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Deletion of {0} scenario for {1} is done".format(scenarios, run))
+                    self.mgis.add_info(
+                        "Deletion of {0} scenario for {1} is done".format(
+                            scenarios, run))
 
                 progress.setValue(i / float(n) * 100)
 

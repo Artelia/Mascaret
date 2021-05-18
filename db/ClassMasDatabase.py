@@ -96,15 +96,18 @@ class ClassMasDatabase(object):
         """
         msg = 'None'
         try:
-            conn_params = 'dbname={0} host={1} port={2} user={3} password={4}'.format(self.dbname, self.host, self.port,
-                                                                                      self.USER, self.password)
+            conn_params = 'dbname={0} host={1} port={2} user={3} password={4}'.format(
+                self.dbname, self.host, self.port,
+                self.USER, self.password)
             self.con = psycopg2.connect(conn_params)
             msg = 'Connection established.'
         except psycopg2.OperationalError as e:
             self.mgis.iface.messageBar().pushMessage("Error",
                                                      'Can\'t connect to PostGIS database. Check connection details!',
-                                                     level=QgsMessageBar.CRITICAL, duration=10)
-            msg = 'Error: Can\'t connect to PostGIS database "{}".'.format(self.dbname)
+                                                     level=QgsMessageBar.CRITICAL,
+                                                     duration=10)
+            msg = 'Error: Can\'t connect to PostGIS database "{}".'.format(
+                self.dbname)
 
         finally:
             self.mgis.add_info(msg)
@@ -120,14 +123,16 @@ class ClassMasDatabase(object):
             self.register.clear()
             self.queries.clear()
         else:
-            self.mgis.add_info('Can not disconnect. There is no opened connection!')
+            self.mgis.add_info(
+                'Can not disconnect. There is no opened connection!')
 
     def execute(self, sql):
         cur = self.con.cursor()
         cur.execute(sql)
         self.con.commit()
 
-    def run_query(self, qry, fetch=False, arraysize=-1, be_quiet=False, namvar=False, many=False, list_many=None):
+    def run_query(self, qry, fetch=False, arraysize=-1, be_quiet=False,
+                  namvar=False, many=False, list_many=None):
         """
         Running PostgreSQL queries
 
@@ -166,7 +171,8 @@ class ClassMasDatabase(object):
                     result = []
                 self.con.commit()
             else:
-                self.mgis.add_info('There is no opened connection! Use "connect_pg" method before running query.')
+                self.mgis.add_info(
+                    'There is no opened connection! Use "connect_pg" method before running query.')
         except Exception as e:
             self.con.rollback()
             if be_quiet is False:
@@ -202,7 +208,8 @@ class ClassMasDatabase(object):
             yield results
             #
 
-    def setup_hydro_object(self, hydro_object, schema=None, srid=None, overwrite=None, puser=None):
+    def setup_hydro_object(self, hydro_object, schema=None, srid=None,
+                           overwrite=None, puser=None):
         """
         Setting SCHEMA, SRID and OVERWRITE on hydro object.
 
@@ -230,7 +237,8 @@ class ClassMasDatabase(object):
         else:
             hydro_object.USER = puser
 
-    def process_masobject(self, masobject, pg_method, schema=None, srid=None, overwrite=None, **kwargs):
+    def process_masobject(self, masobject, pg_method, schema=None, srid=None,
+                          overwrite=None, **kwargs):
         """
         Creating and processing tables inside PostGIS database.
 
@@ -272,7 +280,8 @@ class ClassMasDatabase(object):
             self.register[key] = obj
         else:
             if self.mgis.DEBUG:
-                self.mgis.add_info('{0} already exists inside MasPlug registry.'.format(key))
+                self.mgis.add_info(
+                    '{0} already exists inside MasPlug registry.'.format(key))
                 #
 
     def register_existing(self, hydro_module, schema=None, srid=None):
@@ -312,7 +321,8 @@ class ClassMasDatabase(object):
             schema_new = self.SCHEMA
         else:
             schema_new = schema
-        qry = 'SELECT table_name FROM information_schema.tables WHERE table_schema = \'{0}\''.format(schema_new)
+        qry = 'SELECT table_name FROM information_schema.tables WHERE table_schema = \'{0}\''.format(
+            schema_new)
         try:
             tabs = [tab[0] for tab in self.run_query(qry, fetch=True)]
             return tabs
@@ -325,12 +335,15 @@ class ClassMasDatabase(object):
         Setting layers uris list from QgsProject.
         """
         try:  # qgis2
-            self.uris = [vl.source() for vl in QgsMapLayerRegistry.instance().mapLayers().values()]
+            self.uris = [vl.source() for vl in
+                         QgsMapLayerRegistry.instance().mapLayers().values()]
 
         except:  # qgis3
-            self.uris = [vl.source() for vl in QgsProject.instance().mapLayers().values()]
+            self.uris = [vl.source() for vl in
+                         QgsProject.instance().mapLayers().values()]
         if self.mgis.DEBUG:
-            self.mgis.add_info('Layers sources:\n    {0}'.format('\n    '.join(self.uris)))
+            self.mgis.add_info(
+                'Layers sources:\n    {0}'.format('\n    '.join(self.uris)))
             # *****************************************************************************
 
     def make_vlayer(self, obj):
@@ -349,7 +362,8 @@ class ClassMasDatabase(object):
         except:  # qgis3
             uri = QgsDataSourceUri()
 
-        uri.setConnection(self.host, self.port, self.dbname, self.USER, self.password)
+        uri.setConnection(self.host, self.port, self.dbname, self.USER,
+                          self.password)
         if obj.geom_type is not None:
             uri.setDataSource(vl_schema, vl_name, 'geom')
         else:
@@ -367,9 +381,13 @@ class ClassMasDatabase(object):
         """
         try:
             if VERSION_QGIS == 3:  # qgis3
-                style_file = os.path.join(self.mgis.masplugPath, 'db', 'styles_qgis3', '{0}.qml'.format(vlayer.name()))
+                style_file = os.path.join(self.mgis.masplugPath, 'db',
+                                          'styles_qgis3',
+                                          '{0}.qml'.format(vlayer.name()))
             else:
-                style_file = os.path.join(self.mgis.masplugPath, 'db', 'styles_qgis2', '{0}.qml'.format(vlayer.name()))
+                style_file = os.path.join(self.mgis.masplugPath, 'db',
+                                          'styles_qgis2',
+                                          '{0}.qml'.format(vlayer.name()))
             if self.group:
                 try:  # qgis2
                     QgsMapLayerRegistry.instance().addMapLayer(vlayer, False)
@@ -434,15 +452,19 @@ class ClassMasDatabase(object):
             self.mgis.add_info('<br>Model "{0}" created.'.format(self.SCHEMA))
 
         # table
-        tables = [Maso.events, Maso.lateral_inflows, Maso.lateral_weirs, Maso.extremities,
+        tables = [Maso.events, Maso.lateral_inflows, Maso.lateral_weirs,
+                  Maso.extremities,
                   Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
                   Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
-                  Maso.observations, Maso.parametres, Maso.resultats, Maso.runs, Maso.laws,
+                  Maso.observations, Maso.parametres, Maso.resultats, Maso.runs,
+                  Maso.laws,
                   Maso.admin_tab, Maso.visu_flood_marks,
                   # bassin
-                  Maso.basins, Maso.links, Maso.resultats_basin, Maso.resultats_links,
+                  Maso.basins, Maso.links, Maso.resultats_basin,
+                  Maso.resultats_links,
                   # qualite d'eau
-                  Maso.tracer_lateral_inflows, Maso.tracer_physic, Maso.tracer_name,
+                  Maso.tracer_lateral_inflows, Maso.tracer_physic,
+                  Maso.tracer_name,
                   Maso.tracer_config, Maso.laws_wq,
                   Maso.init_conc_config, Maso.init_conc_wq,
                   # meteo
@@ -575,7 +597,8 @@ class ClassMasDatabase(object):
         """
         Add table  for water Quality model
         """
-        tables = [Maso.tracer_lateral_inflows, Maso.tracer_physic, Maso.tracer_name,
+        tables = [Maso.tracer_lateral_inflows, Maso.tracer_physic,
+                  Maso.tracer_name,
                   Maso.tracer_config, Maso.laws_wq, Maso.init_conc_config,
                   Maso.init_conc_wq, Maso.meteo_config, Maso.laws_meteo]
         tables.sort(key=lambda x: x().order)
@@ -705,13 +728,15 @@ class ClassMasDatabase(object):
         if isinstance(fct_name, list):
 
             for name in fct_name:
-                sql = " select exists(select * from pg_proc where proname = '{}');".format(name)
+                sql = " select exists(select * from pg_proc where proname = '{}');".format(
+                    name)
                 rows = self.run_query(sql, fetch=True)[0][0]
                 if not rows:
                     cond = False
             return cond
         else:
-            sql = " select exists(select * from pg_proc where proname = '{}');".format(fct_name)
+            sql = " select exists(select * from pg_proc where proname = '{}');".format(
+                fct_name)
             rows = self.run_query(sql, fetch=True)[0][0]
             if not rows:
                 cond = False
@@ -844,7 +869,8 @@ class ClassMasDatabase(object):
                         self.add_to_view(obj)
 
                         if self.mgis.DEBUG:
-                            self.mgis.add_info(' View {0} : OK'.format(obj.name))
+                            self.mgis.add_info(
+                                ' View {0} : OK'.format(obj.name))
                 else:
                     pass
             except Exception as err:
@@ -855,7 +881,8 @@ class ClassMasDatabase(object):
         group_main = self.group
         self.group = group_main.findGroup("Visualisation".format(self.SCHEMA))
         if not self.group:
-            self.group = group_main.addGroup("Visualisation".format(self.SCHEMA))
+            self.group = group_main.addGroup(
+                "Visualisation".format(self.SCHEMA))
 
         for name, obj in dict_only_visu.items():
             try:
@@ -909,13 +936,18 @@ $BODY$
         self.register_existing(Maso)
         reg = [self.register[k].name for k in sorted(self.register.keys())]
         if self.mgis.DEBUG:
-            self.mgis.add_info('Objects registered in the database:<br>  {0}'.format('<br>  '.join(reg)))
-            self.mgis.add_info('You can load them now using  Geometry > Load Mascaret Database Tables Into QGIS')
+            self.mgis.add_info(
+                'Objects registered in the database:<br>  {0}'.format(
+                    '<br>  '.join(reg)))
+            self.mgis.add_info(
+                'You can load them now using  Geometry > Load Mascaret Database Tables Into QGIS')
         else:
             if reg:
-                self.mgis.add_info('There are some objects registered in the database.')
+                self.mgis.add_info(
+                    'There are some objects registered in the database.')
             else:
-                self.mgis.add_info('Mascaret database is empty.<br>Create or import your river network data.')
+                self.mgis.add_info(
+                    'Mascaret database is empty.<br>Create or import your river network data.')
         #
         self.load_gis_layer()
 
@@ -968,9 +1000,12 @@ $BODY$
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
         # print(sql.format(self.SCHEMA, table, where, order, lvar))
-        (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order, lvar), fetch=True, namvar=True)
+        (results, namCol) = self.run_query(
+            sql.format(self.SCHEMA, table, where, order, lvar), fetch=True,
+            namvar=True)
         if results is None or namCol is None:
-            print("error : ", sql.format(self.SCHEMA, table, where, order, lvar))
+            print("error : ",
+                  sql.format(self.SCHEMA, table, where, order, lvar))
             return None
         cols = [col[0] for col in namCol]
         dico = {}
@@ -996,8 +1031,9 @@ $BODY$
 
         sql = "SELECT * FROM {0}.{1} {2} {3};"
         # self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
-        (results, namCol) = self.run_query(sql.format(self.SCHEMA, table, where, order),
-                                           fetch=True, arraysize=1, namvar=True)
+        (results, namCol) = self.run_query(
+            sql.format(self.SCHEMA, table, where, order),
+            fetch=True, arraysize=1, namvar=True)
 
         if results is None or namCol is None:
             print("error : ", sql.format(self.SCHEMA, table, where, order))
@@ -1021,7 +1057,9 @@ $BODY$
         if where:
             where = "WHERE " + where
         sql = "SELECT DISTINCT {0} FROM {1}.{2} {3} ORDER BY {4};"
-        (results, namCol) = self.run_query(sql.format(var, self.SCHEMA, table, where, ordre), fetch=True, namvar=True)
+        (results, namCol) = self.run_query(
+            sql.format(var, self.SCHEMA, table, where, ordre), fetch=True,
+            namvar=True)
         if namCol and results:
             cols = [col[0] for col in namCol]
             dico = {}
@@ -1042,9 +1080,12 @@ $BODY$
     def select_max(self, var, table, where=None):
         """select the max in the table for the "where" variable"""
         if where:
-            sql = "SELECT MAX({0}) FROM {1}.{2} WHERE {3};".format(var, self.SCHEMA, table, where)
+            sql = "SELECT MAX({0}) FROM {1}.{2} WHERE {3};".format(var,
+                                                                   self.SCHEMA,
+                                                                   table, where)
         else:
-            sql = "SELECT MAX({0}) FROM {1}.{2};".format(var, self.SCHEMA, table)
+            sql = "SELECT MAX({0}) FROM {1}.{2};".format(var, self.SCHEMA,
+                                                         table)
         results = self.run_query(sql, fetch=True, arraysize=1)
         # results obj: generator
         if results:
@@ -1052,15 +1093,19 @@ $BODY$
                 var = row[0][0]
             return var
         else:
-            print("error : ", sql.format(self.SCHEMA, table, where, order, lvar))
+            print("error : ",
+                  sql.format(self.SCHEMA, table, where, order, lvar))
             return None
 
     def select_min(self, var, table, where=None):
         """select the max in the table for the "where" variable"""
         if where:
-            sql = "SELECT MIN({0}) FROM {1}.{2} WHERE {3};".format(var, self.SCHEMA, table, where)
+            sql = "SELECT MIN({0}) FROM {1}.{2} WHERE {3};".format(var,
+                                                                   self.SCHEMA,
+                                                                   table, where)
         else:
-            sql = "SELECT MIN({0}) FROM {1}.{2};".format(var, self.SCHEMA, table)
+            sql = "SELECT MIN({0}) FROM {1}.{2};".format(var, self.SCHEMA,
+                                                         table)
         results = self.run_query(sql, fetch=True, arraysize=1)
         # results obj: generator
         for row in results:
@@ -1142,7 +1187,8 @@ $BODY$
             if self.con:
                 file = self.buff_file(values)
                 cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-                cur.copy_from(file, '{0}.{1}'.format(self.SCHEMA, table), columns=col_tab)
+                cur.copy_from(file, '{0}.{1}'.format(self.SCHEMA, table),
+                              columns=col_tab)
                 del file
 
         except Exception as e:
@@ -1173,21 +1219,28 @@ $BODY$
 
         sql = ''
         for value in liste_value:
-            condition = """run='{0}' AND scenario='{1}' """.format(value[colonnes.index('run')],
-                                                                   value[colonnes.index('scenario')])
-            condition += """AND branche='{}' """.format(value[colonnes.index('branche')])
+            condition = """run='{0}' AND scenario='{1}' """.format(
+                value[colonnes.index('run')],
+                value[colonnes.index('scenario')])
+            condition += """AND branche='{}' """.format(
+                value[colonnes.index('branche')])
             condition += """AND t='{}' """.format(value[colonnes.index('t')])
-            condition += """AND section='{}' """.format(value[colonnes.index('section')])
+            condition += """AND section='{}' """.format(
+                value[colonnes.index('section')])
             condition += """AND pk='{}' """.format(value[colonnes.index('pk')])
             if "date" in colonnes:
-                condition += """AND date='{:%Y-%m-%d %H:%M:%S}' """.format(value[colonnes.index("date")])
-            list_exclu = ['run', 'scenario', 'date', 't', 'branche', 'section', 'pk']
+                condition += """AND date='{:%Y-%m-%d %H:%M:%S}' """.format(
+                    value[colonnes.index("date")])
+            list_exclu = ['run', 'scenario', 'date', 't', 'branche', 'section',
+                          'pk']
             values = ''
             for i, col in enumerate(colonnes):
                 if col not in list_exclu:
                     values += "{}='{}' ,".format(col, value[i])
             values = values[:-1]
-            sql += "UPDATE  {0}.{1} SET {2} WHERE {3};\n".format(self.SCHEMA, table, values, condition)
+            sql += "UPDATE  {0}.{1} SET {2} WHERE {3};\n".format(self.SCHEMA,
+                                                                 table, values,
+                                                                 condition)
 
         self.run_query(sql)
 
@@ -1196,7 +1249,8 @@ $BODY$
         for nom, t in tab.items():
             tab_var = []
             for k, v in tab[nom].items():
-                if not v and not isinstance(v, float) and not isinstance(v, int):
+                if not v and not isinstance(v, float) and not isinstance(v,
+                                                                         int):
                     tab_var.append("{0}=NULL".format(k))
                 elif isinstance(v, str):
                     tab_var.append("{0}='{1}'".format(k, v))
@@ -1238,8 +1292,9 @@ $BODY$
             exe = os.path.join(self.mgis.postgres_path, 'pg_dump')
 
             if os.path.isfile(exe) or os.path.isfile(exe + '.exe'):
-                commande = '"{0}" -p {6} -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(exe, self.SCHEMA, self.USER, file,
-                                                                                     self.dbname, self.host, self.port)
+                commande = '"{0}" -p {6} -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(
+                    exe, self.SCHEMA, self.USER, file,
+                    self.dbname, self.host, self.port)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
 
                 p = subprocess.Popen(commande, shell=True)
@@ -1264,12 +1319,15 @@ $BODY$
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
                 # for file in Listfile:
 
-                commande = '"{0}" -U {1} -p {2} -f "{3}" -d {4} -h {5}'.format(exe, self.USER, self.port,
-                                                                               file, self.dbname, self.host)
+                commande = '"{0}" -U {1} -p {2} -f "{3}" -d {4} -h {5}'.format(
+                    exe, self.USER, self.port,
+                    file, self.dbname, self.host)
 
                 # p = subprocess.Popen(commande, env=d, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                 #                      , stdin=subprocess.PIPE)
-                p = subprocess.Popen(commande, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                p = subprocess.Popen(commande, shell=True,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE
                                      , stdin=subprocess.PIPE)
                 outs, err = p.communicate()
                 if self.mgis.DEBUG:
@@ -1326,7 +1384,8 @@ $BODY$
                 for i, var in enumerate(list_var):
                     for order, val in enumerate(liste_value[:, i]):
                         if val != '':
-                            list_insert.append([mehtod, name_abc, var, order, val])
+                            list_insert.append(
+                                [mehtod, name_abc, var, order, val])
                 liste_col = self.list_columns('struct_abac')
 
                 var = ",".join(liste_col)
@@ -1364,7 +1423,9 @@ $BODY$
         :return: id_var ; var identifiant number
         """
         id_var = None
-        info = self.select('results_var', where="var = '{var}' AND type_res = '{type_res}'".format(**dico),
+        info = self.select('results_var',
+                           where="var = '{var}' AND type_res = '{type_res}'".format(
+                               **dico),
                            list_var=['id'])
         if info['id']:
             id_var = info['id'][0]
@@ -1373,8 +1434,10 @@ $BODY$
                 dico['schema'] = self.SCHEMA
                 id_var = self.select_max('id', 'results_var') + 1
                 dico['id'] = id_var
-                self.run_query("INSERT INTO {schema}.results_var (id,type_res, var, name,type_var) "
-                               "VALUES ( {id}, '{type_res}', '{var}', '{name}','{type_var}')".format(**dico))
+                self.run_query(
+                    "INSERT INTO {schema}.results_var (id,type_res, var, name,type_var) "
+                    "VALUES ( {id}, '{type_res}', '{var}', '{name}','{type_var}')".format(
+                        **dico))
 
         return id_var
 
@@ -1405,7 +1468,8 @@ $BODY$
             self.run_query(sql, many=True, list_many=liste_value)
 
             # add tracer variable
-            info = self.select('tracer_name', where="type='TRANSPORT_PUR'", list_var=['type', 'text', 'sigle'])
+            info = self.select('tracer_name', where="type='TRANSPORT_PUR'",
+                               list_var=['type', 'text', 'sigle'])
             nbv = len(info['type'])
             if nbv > 0:
                 dico = {'var': info['sigle'][0],

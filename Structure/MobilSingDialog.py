@@ -48,7 +48,8 @@ class ClassMobilSingDialog(QDialog):
         self.id = 0
         self.cur_set = None
         self.filling_tab = False
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_mobil_sing.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
+                                      'ui/structures/ui_mobil_sing.ui'), self)
 
         self.dico_ctrl = {'ZBAS': [self.sb_zbas],
                           'ZHAUT': [self.sb_zhaut],
@@ -64,7 +65,8 @@ class ClassMobilSingDialog(QDialog):
         self.name_cur = None
 
         fill_qcombobox(self.cb_method, [['1', 'Method 1'], ['2', 'Method 2']])
-        self.cb_method.currentIndexChanged['QString'].connect(self.cb_change_meth)
+        self.cb_method.currentIndexChanged['QString'].connect(
+            self.cb_change_meth)
 
         fill_qcombobox(self.cb_uvb, [[1, 'm/s'], [60, 'm/min'], [3600, 'm/h']])
         fill_qcombobox(self.cb_uvh, [[1, 'm/s'], [60, 'm/min'], [3600, 'm/h']])
@@ -191,7 +193,8 @@ class ClassMobilSingDialog(QDialog):
         self.ui.bt_edit.setDisabled(False)
         self.ui.cb_method.setDisabled(False)
 
-        rows = self.mdb.select('weirs', where="name = '{0}'".format(self.name_cur),
+        rows = self.mdb.select('weirs',
+                               where="name = '{0}'".format(self.name_cur),
                                list_var=['method_mob', 'gid'])
         if rows:
             self.id = rows['gid'][0]
@@ -202,11 +205,13 @@ class ClassMobilSingDialog(QDialog):
         nb_col = 2
         first_ligne = True
         if int(qVersion()[0]) < 5:  # qt4
-            listf = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject,
+            listf = QFileDialog.getOpenFileNames(None, 'File Selection',
+                                                 self.mgis.repProject,
                                                  "File (*.txt *.csv )")
 
         else:  # qt5
-            listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject,
+            listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection',
+                                                    self.mgis.repProject,
                                                     "File (*.txt *.csv)")
 
         if listf:
@@ -218,12 +223,14 @@ class ClassMobilSingDialog(QDialog):
             filein = open(listf[0], "r")
             for num_ligne, ligne in enumerate(filein):
                 if ligne[0] != '#':
-                    liste = ligne.replace('\n', '').replace('\t', ' ').split(";")
+                    liste = ligne.replace('\n', '').replace('\t', ' ').split(
+                        ";")
                     if len(liste) == nb_col:
                         if first_ligne:
                             val = data_to_float(liste[0])
                             if val is not None:
-                                self.mgis.add_info("Error the value is not float.")
+                                self.mgis.add_info(
+                                    "Error the value is not float.")
                             first_ligne = False
                         model.insertRow(r)
                         for c, val in enumerate(liste):
@@ -332,19 +339,24 @@ class ClassMobilSingDialog(QDialog):
             recs = []
 
             for num in range(self.ui.tab_sets.model().rowCount()):
-                recs.append([self.id, num, 'TIME', self.ui.tab_sets.model().item(num, 0).data(0)])
-                recs.append([self.id, num, 'ZVAR', self.ui.tab_sets.model().item(num, 4).data(0)])
+                recs.append([self.id, num, 'TIME',
+                             self.ui.tab_sets.model().item(num, 0).data(0)])
+                recs.append([self.id, num, 'ZVAR',
+                             self.ui.tab_sets.model().item(num, 4).data(0)])
 
-            rows = self.mdb.select('weirs_mob_val', where="id_weirs = {0}".format(self.id),
+            rows = self.mdb.select('weirs_mob_val',
+                                   where="id_weirs = {0}".format(self.id),
                                    list_var=['name_var'])
 
             if rows:
                 if 'ZVAR' in rows['name_var']:
                     sql = "DELETE FROM {0}.weirs_mob_val " \
-                          "WHERE id_weirs = {1} AND name_var='ZVAR';\n".format(self.mdb.SCHEMA, self.id)
+                          "WHERE id_weirs = {1} AND name_var='ZVAR';\n".format(
+                        self.mdb.SCHEMA, self.id)
 
                     sql += "DELETE FROM {0}.weirs_mob_val " \
-                           "WHERE id_weirs = {1} AND name_var='TIME'".format(self.mdb.SCHEMA, self.id)
+                           "WHERE id_weirs = {1} AND name_var='TIME'".format(
+                        self.mdb.SCHEMA, self.id)
 
                     self.mdb.execute(sql)
 
@@ -460,17 +472,20 @@ class ClassMobilSingDialog(QDialog):
         name = str(self.ui.lst_sets.model().item(itm.row(), 1).text())
 
         if itm.checkState() == 2:
-            sql = "UPDATE {0}.weirs SET active_mob = 't' WHERE name = '{1}'".format(self.mdb.SCHEMA, name)
+            sql = "UPDATE {0}.weirs SET active_mob = 't' WHERE name = '{1}'".format(
+                self.mdb.SCHEMA, name)
             self.mdb.run_query(sql)
         else:
-            sql = "UPDATE {0}.weirs SET active_mob = 'f' WHERE name = '{1}'".format(self.mdb.SCHEMA, name)
+            sql = "UPDATE {0}.weirs SET active_mob = 'f' WHERE name = '{1}'".format(
+                self.mdb.SCHEMA, name)
             self.mdb.run_query(sql)
 
     def init_ui(self):
         """initialisation gui"""
         self.delete_useless_data()
         self.ui.weirs_pages.setCurrentIndex(0)
-        self.graph_edit = GraphMobSing(self.mgis, self.ui.lay_graph_edit, self.id, self.dico_meth1)
+        self.graph_edit = GraphMobSing(self.mgis, self.ui.lay_graph_edit,
+                                       self.id, self.dico_meth1)
         self.fill_lst_conf()
         self.ui.bt_edit.setDisabled(True)
         self.ui.cb_method.setDisabled(True)
@@ -488,7 +503,8 @@ class ClassMobilSingDialog(QDialog):
         self.ui.lst_sets.setModel(model)
         self.ui.lst_sets.setModelColumn(1)
 
-        sql = "SELECT active_mob,name FROM {0}.weirs WHERE active='t' ORDER BY name".format(self.mdb.SCHEMA)
+        sql = "SELECT active_mob,name FROM {0}.weirs WHERE active='t' ORDER BY name".format(
+            self.mdb.SCHEMA)
         rows = self.mdb.run_query(sql, fetch=True)
 
         if rows is not None:
@@ -510,7 +526,8 @@ class ClassMobilSingDialog(QDialog):
         if id:
             for r in range(self.ui.lst_sets.model().rowCount()):
                 if str(self.ui.lst_sets.model().item(r, 0).text()) == str(id):
-                    self.ui.lst_sets.setCurrentIndex(self.ui.lst_sets.model().item(r, 1).index())
+                    self.ui.lst_sets.setCurrentIndex(
+                        self.ui.lst_sets.model().item(r, 1).index())
                     break
 
     def clear_tab(self):
@@ -613,7 +630,8 @@ class ClassMobilSingDialog(QDialog):
             for var in self.dico_meth1:
                 sql = "SELECT value FROM {0}.weirs_mob_val " \
                       "WHERE id_weirs = {1} and name_var = '{2}' " \
-                      "ORDER BY id_order".format(self.mdb.SCHEMA, self.id, var["name"])
+                      "ORDER BY id_order".format(self.mdb.SCHEMA, self.id,
+                                                 var["name"])
                 rows = self.mdb.run_query(sql, fetch=True)
 
                 if var['id'] == 1:
@@ -662,8 +680,10 @@ class ItemEditorFactory(QItemEditorFactory):
         if user_type == QVariant.Double or user_type == 0:
             double_spin_box = QDoubleSpinBox(parent)
             double_spin_box.setDecimals(10)
-            double_spin_box.setMinimum(-1000000000.)  # The default maximum value is 99.99.
-            double_spin_box.setMaximum(1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMinimum(
+                -1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMaximum(
+                1000000000.)  # The default maximum value is 99.99.
             return double_spin_box
         else:
             return ItemEditorFactory.createEditor(user_type, parent)
@@ -722,7 +742,8 @@ class GraphMobSing(GraphCommon):
 
             sql = "SELECT value FROM {0}.weirs_mob_val " \
                   "WHERE id_weirs = {1} and name_var = '{2}' " \
-                  "ORDER BY id_order".format(self.mdb.SCHEMA, self.id, var["name"])
+                  "ORDER BY id_order".format(self.mdb.SCHEMA, self.id,
+                                             var["name"])
 
             rows = self.mdb.run_query(sql, fetch=True)
 

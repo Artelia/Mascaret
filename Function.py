@@ -69,7 +69,8 @@ def interpole(a, l1, l2):
     if i < len(l1) - 1 and a >= x:
         return (l2[i + 1] - l2[i]) / (l1[i + 1] - x) * (a - x) + l2[i]
     elif i > 0 and a <= x:
-        return (l2[i] - l2[i - 1]) / (x - l1[i - 1]) * (a - l1[i - 1]) + l2[i - 1]
+        return (l2[i] - l2[i - 1]) / (x - l1[i - 1]) * (a - l1[i - 1]) + l2[
+            i - 1]
     else:
         return None
 
@@ -112,7 +113,8 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
         if not f["branche"] in longueur_zone.keys():
             longueur_zone[f["branche"]] = []
 
-        longueur_zone[f["branche"]].append((f["numZone"], f.geometry().length()))
+        longueur_zone[f["branche"]].append(
+            (f["numZone"], f.geometry().length()))
 
     for c in liste_couches:
         if c == riviere:
@@ -168,7 +170,8 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
             somme += distance(branche.geometry().vertexAt(v_a), dist)
 
             # calcul de l'abcisse
-            somme_b = sum([long_branche[i] for i in long_branche.keys() if i < num])
+            somme_b = sum(
+                [long_branche[i] for i in long_branche.keys() if i < num])
             if somme < long_branche[num]:
                 n["abscisse"] = somme + somme_b
             else:
@@ -214,12 +217,15 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
             num = f["branche"]
             f["absc_debut"] = absc_debut[num]
             f["absc_fin"] = absc_fin[num]
-            somme_b = sum([long_branche[i] for i in long_branche.keys() if i < num])
+            somme_b = sum(
+                [long_branche[i] for i in long_branche.keys() if i < num])
 
-            list_deb = [long for i, long in longueur_zone[num] if i < f["numZone"]]
+            list_deb = [long for i, long in longueur_zone[num] if
+                        i < f["numZone"]]
             f["absDebZone"] = max(sum(list_deb) + somme_b, absc_debut[num])
 
-            list_fin = [long for i, long in longueur_zone[num] if i <= f["numZone"]]
+            list_fin = [long for i, long in longueur_zone[num] if
+                        i <= f["numZone"]]
             f["absFinZone"] = min(sum(list_fin) + somme_b, absc_fin[num])
             couche_riv.updateFeature(f)
 
@@ -291,13 +297,16 @@ def tw_to_txt(tw, range_r, range_c, sep):
     clipboard = ''
     for c in range_c:
         if c != range_c[-1]:
-            clipboard = '{}{}{}'.format(clipboard, tw.horizontalHeaderItem(c).text(), sep)
+            clipboard = '{}{}{}'.format(clipboard,
+                                        tw.horizontalHeaderItem(c).text(), sep)
         else:
-            clipboard = '{}{}\n'.format(clipboard, tw.horizontalHeaderItem(c).text())
+            clipboard = '{}{}\n'.format(clipboard,
+                                        tw.horizontalHeaderItem(c).text())
     for r in range_r:
         for c in range_c:
             if c != range_c[-1]:
-                clipboard = '{}{}{}'.format(clipboard, tw.item(r, c).data(0), sep)
+                clipboard = '{}{}{}'.format(clipboard, tw.item(r, c).data(0),
+                                            sep)
             else:
                 clipboard = '{}{}\n'.format(clipboard, tw.item(r, c).data(0))
     return clipboard

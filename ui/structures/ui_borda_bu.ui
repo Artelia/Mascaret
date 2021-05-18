@@ -313,7 +313,7 @@
           <item>
            <widget class="QLabel" name="label_53">
             <property name="text">
-             <string>DSeuil</string>
+             <string>DSill</string>
             </property>
            </widget>
           </item>
@@ -492,7 +492,7 @@
          </column>
          <column>
           <property name="text">
-           <string>Apron level</string>
+           <string>Slab level</string>
           </property>
          </column>
          <column>

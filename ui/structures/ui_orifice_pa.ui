@@ -446,7 +446,7 @@
    <item>
     <widget class="QTabWidget" name="clas_met">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="ong_trav">
       <attribute name="title">
@@ -516,7 +516,7 @@
      </widget>
      <widget class="QWidget" name="ong_pile">
       <attribute name="title">
-       <string>Columns</string>
+       <string notr="true">Columns</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>

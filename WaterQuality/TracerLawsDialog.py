@@ -46,7 +46,8 @@ class ClassTracerLawsDialog(QDialog):
         self.cur_wq_law = None
         self.filling_tab = False
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_tracer_laws.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_tracer_laws.ui'), self)
 
         self.ui.tab_laws.sCut_del = QShortcut(QKeySequence("Del"), self)
         self.ui.tab_laws.sCut_del.activated.connect(self.short_cut_row_del)
@@ -84,8 +85,10 @@ class ClassTracerLawsDialog(QDialog):
 
     def init_ui(self):
         self.ui.Law_pages.setCurrentIndex(0)
-        self.graph_home = GraphWaterQ(self.mgis, self.ui.lay_graph_home, self.tbwq.dico_wq_mod[self.cur_wq_mod])
-        self.graph_edit = GraphWaterQ(self.mgis, self.ui.lay_graph_edit, self.tbwq.dico_wq_mod[self.cur_wq_mod])
+        self.graph_home = GraphWaterQ(self.mgis, self.ui.lay_graph_home,
+                                      self.tbwq.dico_wq_mod[self.cur_wq_mod])
+        self.graph_edit = GraphWaterQ(self.mgis, self.ui.lay_graph_edit,
+                                      self.tbwq.dico_wq_mod[self.cur_wq_mod])
         self.fill_lst_conf()
 
     def fill_lst_conf(self, id=None):
@@ -93,9 +96,11 @@ class ClassTracerLawsDialog(QDialog):
         model.setColumnCount(2)
         self.ui.lst_laws.setModel(model)
         self.ui.lst_laws.setModelColumn(1)
-        self.ui.lst_laws.selectionModel().selectionChanged.connect(self.display_graph_home)
+        self.ui.lst_laws.selectionModel().selectionChanged.connect(
+            self.display_graph_home)
 
-        sql = "SELECT * FROM {0}.tracer_config WHERE type = {1} ORDER BY name".format(self.mdb.SCHEMA, self.cur_wq_mod)
+        sql = "SELECT * FROM {0}.tracer_config WHERE type = {1} ORDER BY name".format(
+            self.mdb.SCHEMA, self.cur_wq_mod)
         rows = self.mdb.run_query(sql, fetch=True)
 
         for i, row in enumerate(rows):
@@ -109,7 +114,8 @@ class ClassTracerLawsDialog(QDialog):
         if id:
             for r in range(self.ui.lst_laws.model().rowCount()):
                 if str(self.ui.lst_laws.model().item(r, 0).text()) == str(id):
-                    self.ui.lst_laws.setCurrentIndex(self.ui.lst_laws.model().item(r, 1).index())
+                    self.ui.lst_laws.setCurrentIndex(
+                        self.ui.lst_laws.model().item(r, 1).index())
                     break
         else:
             self.display_graph_home()
@@ -121,9 +127,10 @@ class ClassTracerLawsDialog(QDialog):
         for c in range(4):
             model.setHeaderData(c, 1, 'time', 0)
 
-        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(self.mdb.SCHEMA,
-                                                                                            self.tbwq.dico_wq_mod[
-                                                                                                self.cur_wq_mod])
+        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(
+            self.mdb.SCHEMA,
+            self.tbwq.dico_wq_mod[
+                self.cur_wq_mod])
         rows = self.mdb.run_query(sql, fetch=True)
         model.insertColumns(4, len(rows))
         for r, row in enumerate(rows):
@@ -154,7 +161,8 @@ class ClassTracerLawsDialog(QDialog):
             c = 0
             for trac in self.list_trac:
                 sql = "SELECT time, value FROM {0}.laws_wq WHERE id_config = {1} AND id_trac = {2} " \
-                      "ORDER BY time".format(self.mdb.SCHEMA, self.cur_wq_law, trac[0])
+                      "ORDER BY time".format(self.mdb.SCHEMA, self.cur_wq_law,
+                                             trac[0])
                 rows = self.mdb.run_query(sql, fetch=True)
 
                 if c == 0:
@@ -179,11 +187,13 @@ class ClassTracerLawsDialog(QDialog):
         """ import CSV file"""
         nb_col = len(self.list_trac) + 1
         if int(qVersion()[0]) < 5:  # qt4
-            listf = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject,
+            listf = QFileDialog.getOpenFileNames(None, 'File Selection',
+                                                 self.mgis.repProject,
                                                  "File (*.txt *.csv *.met)")
 
         else:  # qt5
-            listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject,
+            listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection',
+                                                    self.mgis.repProject,
                                                     "File (*.txt *.csv *.met)")
 
         if listf:
@@ -327,12 +337,18 @@ class ClassTracerLawsDialog(QDialog):
             l = self.ui.lst_laws.selectedIndexes()[0].row()
             id_law = self.ui.lst_laws.model().item(l, 0).text()
             name_law = self.ui.lst_laws.model().item(l, 1).text()
-            if (QMessageBox.question(self, "Tracer Laws", "Delete {} ?".format(name_law),
+            if (QMessageBox.question(self, "Tracer Laws",
+                                     "Delete {} ?".format(name_law),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Deletion of {} Tracer Laws".format(name_law))
-                self.mdb.execute("DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, id_law))
-                self.mdb.execute("DELETE FROM {0}.tracer_config WHERE id = {1}".format(self.mdb.SCHEMA, id_law))
+                    self.mgis.add_info(
+                        "Deletion of {} Tracer Laws".format(name_law))
+                self.mdb.execute(
+                    "DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(
+                        self.mdb.SCHEMA, id_law))
+                self.mdb.execute(
+                    "DELETE FROM {0}.tracer_config WHERE id = {1}".format(
+                        self.mdb.SCHEMA, id_law))
                 self.fill_lst_conf()
 
     def new_time(self):
@@ -384,25 +400,33 @@ class ClassTracerLawsDialog(QDialog):
             name_law = str(self.ui.LawWQ.text())
             if self.cur_wq_law == -1:
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Addition of {} Tracer Laws".format(name_law))
+                    self.mgis.add_info(
+                        "Addition of {} Tracer Laws".format(name_law))
                 self.mdb.execute(
-                    "INSERT INTO {0}.tracer_config (name, type) VALUES ('{1}', {2})".format(self.mdb.SCHEMA, name_law,
-                                                                                            self.cur_wq_mod))
-                res = self.mdb.run_query("SELECT Max(id) FROM {0}.tracer_config".format(self.mdb.SCHEMA), fetch=True)
+                    "INSERT INTO {0}.tracer_config (name, type) VALUES ('{1}', {2})".format(
+                        self.mdb.SCHEMA, name_law,
+                        self.cur_wq_mod))
+                res = self.mdb.run_query(
+                    "SELECT Max(id) FROM {0}.tracer_config".format(
+                        self.mdb.SCHEMA), fetch=True)
                 self.cur_wq_law = res[0][0]
             else:
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Editing of {} Tracer Laws".format(name_law))
+                    self.mgis.add_info(
+                        "Editing of {} Tracer Laws".format(name_law))
                 self.mdb.execute(
-                    "UPDATE {0}.tracer_config SET name = '{1}' WHERE id = {2}".format(self.mdb.SCHEMA, name_law,
-                                                                                      self.cur_wq_law))
+                    "UPDATE {0}.tracer_config SET name = '{1}' WHERE id = {2}".format(
+                        self.mdb.SCHEMA, name_law,
+                        self.cur_wq_law))
                 self.mdb.execute(
-                    "DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, self.cur_wq_law))
+                    "DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(
+                        self.mdb.SCHEMA, self.cur_wq_law))
 
             recs = []
             for r in range(self.ui.tab_laws.model().rowCount()):
                 for c in range(4, self.ui.tab_laws.model().columnCount()):
-                    recs.append([self.cur_wq_law, self.list_trac[c - 4][0], self.ui.tab_laws.model().item(r, 0).data(0),
+                    recs.append([self.cur_wq_law, self.list_trac[c - 4][0],
+                                 self.ui.tab_laws.model().item(r, 0).data(0),
                                  self.ui.tab_laws.model().item(r, c).data(0)])
             self.mdb.run_query(
                 "INSERT INTO {0}.laws_wq (id_config, id_trac, time, value) VALUES (%s, %s, %s, %s)".format(
@@ -433,8 +457,10 @@ class ItemEditorFactory(QItemEditorFactory):
         if user_type == QVariant.Double or user_type == 0:
             double_spin_box = QDoubleSpinBox(parent)
             double_spin_box.setDecimals(10)
-            double_spin_box.setMinimum(-1000000000.)  # The default maximum value is 99.99.
-            double_spin_box.setMaximum(1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMinimum(
+                -1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMaximum(
+                1000000000.)  # The default maximum value is 99.99.
             return double_spin_box
         else:
             return ItemEditorFactory.createEditor(user_type, parent)

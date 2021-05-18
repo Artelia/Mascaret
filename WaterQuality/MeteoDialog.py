@@ -48,7 +48,8 @@ class ClassMeteoDialog(QDialog):
         self.cur_set = None
         self.filling_tab = False
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_meteo.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_meteo.ui'),
+                         self)
         self.ui.de_date.hide()
         self.ui.de_date.setDisplayFormat("dd/MM/yyyy HH:mm:ss")
 
@@ -93,8 +94,10 @@ class ClassMeteoDialog(QDialog):
     def init_ui(self):
         """initialisation gui"""
         self.ui.meteo_pages.setCurrentIndex(0)
-        self.graph_home = GraphMeteo(self.mgis, self.ui.lay_graph_home, self.dico_var)
-        self.graph_edit = GraphMeteo(self.mgis, self.ui.lay_graph_edit, self.dico_var)
+        self.graph_home = GraphMeteo(self.mgis, self.ui.lay_graph_home,
+                                     self.dico_var)
+        self.graph_edit = GraphMeteo(self.mgis, self.ui.lay_graph_edit,
+                                     self.dico_var)
         self.fill_lst_conf()
 
     def fill_lst_conf(self, id=None):
@@ -103,9 +106,11 @@ class ClassMeteoDialog(QDialog):
         model.setColumnCount(2)
         self.ui.lst_sets.setModel(model)
         self.ui.lst_sets.setModelColumn(1)
-        self.ui.lst_sets.selectionModel().selectionChanged.connect(self.display_graph_home)
+        self.ui.lst_sets.selectionModel().selectionChanged.connect(
+            self.display_graph_home)
 
-        sql = "SELECT * FROM {0}.meteo_config ORDER BY name".format(self.mdb.SCHEMA)
+        sql = "SELECT * FROM {0}.meteo_config ORDER BY name".format(
+            self.mdb.SCHEMA)
         rows = self.mdb.run_query(sql, fetch=True)
 
         for i, row in enumerate(rows):
@@ -126,7 +131,8 @@ class ClassMeteoDialog(QDialog):
         if id:
             for r in range(self.ui.lst_sets.model().rowCount()):
                 if str(self.ui.lst_sets.model().item(r, 0).text()) == str(id):
-                    self.ui.lst_sets.setCurrentIndex(self.ui.lst_sets.model().item(r, 1).index())
+                    self.ui.lst_sets.setCurrentIndex(
+                        self.ui.lst_sets.model().item(r, 1).index())
                     break
         else:
             self.display_graph_home()
@@ -145,7 +151,8 @@ class ClassMeteoDialog(QDialog):
         self.mdb.run_query(sql)
         if itm.checkState() == 2:
             id = str(self.ui.lst_sets.model().item(itm.row(), 0).text())
-            sql = "UPDATE {0}.meteo_config SET active = 't' WHERE id = {1}".format(self.mdb.SCHEMA, id)
+            sql = "UPDATE {0}.meteo_config SET active = 't' WHERE id = {1}".format(
+                self.mdb.SCHEMA, id)
             self.mdb.run_query(sql)
 
     def check_date_ref(self, state):
@@ -161,7 +168,8 @@ class ClassMeteoDialog(QDialog):
 
     def change_date_ref(self):
         """ change reference date """
-        date, time = self.ui.de_date.date().toString('dd-MM-yyyy'), self.ui.de_date.time().toString('HH:mm:ss')
+        date, time = self.ui.de_date.date().toString(
+            'dd-MM-yyyy'), self.ui.de_date.time().toString('HH:mm:ss')
         date_str = "'{} {}'".format(date, time)
         self.date_ref = data_to_date(date_str)
         model = self.ui.tab_sets.model()
@@ -171,7 +179,8 @@ class ClassMeteoDialog(QDialog):
                     date_itm = QStandardItem()
                     date_itm.setEditable(False)
                     model.setItem(r, 4, date_itm)
-                date = self.date_ref + timedelta(seconds=model.item(r, 0).data(0))
+                date = self.date_ref + timedelta(
+                    seconds=model.item(r, 0).data(0))
                 model.item(r, 4).setData(str(date), 0)
             if self.bg_time.checkedId() == 4:
                 self.update_courbe("all")
@@ -185,7 +194,8 @@ class ClassMeteoDialog(QDialog):
             model.setHeaderData(c, 1, 'time', 0)
         for c in range(5, 11):
             model.setHeaderData(c, 1, self.dico_var[c - 5]["name"], 0)
-            self.list_var.append([self.dico_var[c - 5]["id"], self.dico_var[c - 5]["name"]])
+            self.list_var.append(
+                [self.dico_var[c - 5]["id"], self.dico_var[c - 5]["name"]])
 
         model.itemChanged.connect(self.on_tab_data_change)
         return model
@@ -215,7 +225,8 @@ class ClassMeteoDialog(QDialog):
             c = 0
             for var in self.list_var:
                 sql = "SELECT time, value FROM {0}.laws_meteo WHERE id_config = {1} AND id_var = {2} " \
-                      "ORDER BY time".format(self.mdb.SCHEMA, self.cur_set, var[0])
+                      "ORDER BY time".format(self.mdb.SCHEMA, self.cur_set,
+                                             var[0])
                 rows = self.mdb.run_query(sql, fetch=True)
 
                 if c == 0:
@@ -242,11 +253,13 @@ class ClassMeteoDialog(QDialog):
         typ_time = ''
         first_ligne = True
         if int(qVersion()[0]) < 5:  # qt4
-            listf = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject,
+            listf = QFileDialog.getOpenFileNames(None, 'File Selection',
+                                                 self.mgis.repProject,
                                                  "File (*.txt *.csv *.met)")
 
         else:  # qt5
-            listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.repProject,
+            listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection',
+                                                    self.mgis.repProject,
                                                     "File (*.txt *.csv *.met)")
 
         if listf:
@@ -258,7 +271,8 @@ class ClassMeteoDialog(QDialog):
             filein = open(listf[0], "r")
             for num_ligne, ligne in enumerate(filein):
                 if ligne[0] != '#':
-                    liste = ligne.replace('\n', '').replace('\t', ' ').split(";")
+                    liste = ligne.replace('\n', '').replace('\t', ' ').split(
+                        ";")
                     if len(liste) == nb_col:
                         if first_ligne:
                             val = data_to_float(liste[0])
@@ -270,9 +284,11 @@ class ClassMeteoDialog(QDialog):
                                     typ_time = 'date'
                                     date_ref = val
                                     self.ui.cb_date.setCheckState(2)
-                                    date_ref_str = datetime.strftime(date_ref, '%Y-%m-%d %H:%M:%S')
+                                    date_ref_str = datetime.strftime(date_ref,
+                                                                     '%Y-%m-%d %H:%M:%S')
                                     self.ui.de_date.setDateTime(
-                                        QDateTime().fromString(date_ref_str, 'yyyy-MM-dd HH:mm:ss'))
+                                        QDateTime().fromString(date_ref_str,
+                                                               'yyyy-MM-dd HH:mm:ss'))
                                 else:
                                     # print('e1')
                                     error = True
@@ -325,7 +341,8 @@ class ClassMeteoDialog(QDialog):
                         date_itm.setEditable(False)
                         model.setItem(itm.row(), 4, date_itm)
                     date = self.date_ref + timedelta(seconds=itm.data(0))
-                    model.item(itm.row(), 4).setData(date.strftime('%d-%m-%Y %H:%M:%S'), 0)
+                    model.item(itm.row(), 4).setData(
+                        date.strftime('%d-%m-%Y %H:%M:%S'), 0)
                     model.blockSignals(False)
                 elif itm.column() == 1:
                     model.blockSignals(True)
@@ -343,7 +360,8 @@ class ClassMeteoDialog(QDialog):
                         date_itm.setEditable(False)
                         model.setItem(itm.row(), 4, date_itm)
                     date = self.date_ref + timedelta(minutes=itm.data(0))
-                    model.item(itm.row(), 4).setData(date.strftime('%d-%m-%Y %H:%M:%S'), 0)
+                    model.item(itm.row(), 4).setData(
+                        date.strftime('%d-%m-%Y %H:%M:%S'), 0)
                     model.blockSignals(False)
                 elif itm.column() == 2:
                     model.blockSignals(True)
@@ -361,7 +379,8 @@ class ClassMeteoDialog(QDialog):
                         date_itm.setEditable(False)
                         model.setItem(itm.row(), 4, date_itm)
                     date = self.date_ref + timedelta(hours=itm.data(0))
-                    model.item(itm.row(), 4).setData(date.strftime('%d-%m-%Y %H:%M:%S'), 0)
+                    model.item(itm.row(), 4).setData(
+                        date.strftime('%d-%m-%Y %H:%M:%S'), 0)
                     model.blockSignals(False)
                 elif itm.column() == 3:
                     model.blockSignals(True)
@@ -379,7 +398,8 @@ class ClassMeteoDialog(QDialog):
                         date_itm.setEditable(False)
                         model.setItem(itm.row(), 4, date_itm)
                     date = self.date_ref + timedelta(days=itm.data(0))
-                    model.item(itm.row(), 4).setData(date.strftime('%d-%m-%Y %H:%M:%S'), 0)
+                    model.item(itm.row(), 4).setData(
+                        date.strftime('%d-%m-%Y %H:%M:%S'), 0)
                     model.blockSignals(False)
 
             if not self.filling_tab:
@@ -403,7 +423,8 @@ class ClassMeteoDialog(QDialog):
             if col_x != 4:
                 lx.append(self.ui.tab_sets.model().item(r, col_x).data(0))
             else:
-                date = self.date_ref + timedelta(seconds=self.ui.tab_sets.model().item(r, 0).data(0))
+                date = self.date_ref + timedelta(
+                    seconds=self.ui.tab_sets.model().item(r, 0).data(0))
                 # lx.append(date)
                 lx.append(date2num(date))
 
@@ -452,12 +473,18 @@ class ClassMeteoDialog(QDialog):
             l = self.ui.lst_sets.selectedIndexes()[0].row()
             id_set = self.ui.lst_sets.model().item(l, 0).text()
             name_set = self.ui.lst_sets.model().item(l, 1).text()
-            if (QMessageBox.question(self, "Meteo Settings", "Delete {} ?".format(name_set),
+            if (QMessageBox.question(self, "Meteo Settings",
+                                     "Delete {} ?".format(name_set),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Deletion of {} Meteo Setting".format(name_set))
-                self.mdb.execute("DELETE FROM {0}.laws_meteo WHERE id_config = {1}".format(self.mdb.SCHEMA, id_set))
-                self.mdb.execute("DELETE FROM {0}.meteo_config WHERE id = {1}".format(self.mdb.SCHEMA, id_set))
+                    self.mgis.add_info(
+                        "Deletion of {} Meteo Setting".format(name_set))
+                self.mdb.execute(
+                    "DELETE FROM {0}.laws_meteo WHERE id_config = {1}".format(
+                        self.mdb.SCHEMA, id_set))
+                self.mdb.execute(
+                    "DELETE FROM {0}.meteo_config WHERE id = {1}".format(
+                        self.mdb.SCHEMA, id_set))
                 self.fill_lst_conf()
 
     def new_time(self):
@@ -507,34 +534,45 @@ class ClassMeteoDialog(QDialog):
         # change de page
         name_set = str(self.ui.txt_name.text())
         if self.ui.cb_date.isChecked():
-            date, time = self.ui.de_date.date().toString('yyyy-MM-dd'), self.ui.de_date.time().toString('HH:mm:ss')
+            date, time = self.ui.de_date.date().toString(
+                'yyyy-MM-dd'), self.ui.de_date.time().toString('HH:mm:ss')
             date_set = "'{} {}'".format(date, time)
         else:
             date_set = 'Null'
         if self.cur_set == -1:
             if self.mgis.DEBUG:
-                self.mgis.add_info("Addition of {} Meteo Setting".format(name_set))
-            self.mdb.execute("INSERT INTO {0}.meteo_config (name, starttime, active) VALUES ('{1}', {2}, 'f')".format(
-                self.mdb.SCHEMA, name_set, date_set))
-            res = self.mdb.run_query("SELECT Max(id) FROM {0}.meteo_config".format(self.mdb.SCHEMA), fetch=True)
+                self.mgis.add_info(
+                    "Addition of {} Meteo Setting".format(name_set))
+            self.mdb.execute(
+                "INSERT INTO {0}.meteo_config (name, starttime, active) VALUES ('{1}', {2}, 'f')".format(
+                    self.mdb.SCHEMA, name_set, date_set))
+            res = self.mdb.run_query(
+                "SELECT Max(id) FROM {0}.meteo_config".format(self.mdb.SCHEMA),
+                fetch=True)
             self.cur_set = res[0][0]
         else:
             if self.mgis.DEBUG:
-                self.mgis.add_info("Editing of {} Meteo Setting".format(name_set))
+                self.mgis.add_info(
+                    "Editing of {} Meteo Setting".format(name_set))
             self.mdb.execute(
-                "UPDATE {0}.meteo_config SET name = '{1}', starttime = {2} WHERE id = {3}".format(self.mdb.SCHEMA,
-                                                                                                  name_set, date_set,
-                                                                                                  self.cur_set))
-            self.mdb.execute("DELETE FROM {0}.laws_meteo WHERE id_config = {1}".format(self.mdb.SCHEMA, self.cur_set))
+                "UPDATE {0}.meteo_config SET name = '{1}', starttime = {2} WHERE id = {3}".format(
+                    self.mdb.SCHEMA,
+                    name_set, date_set,
+                    self.cur_set))
+            self.mdb.execute(
+                "DELETE FROM {0}.laws_meteo WHERE id_config = {1}".format(
+                    self.mdb.SCHEMA, self.cur_set))
 
         recs = []
         for r in range(self.ui.tab_sets.model().rowCount()):
             for c in range(5, self.ui.tab_sets.model().columnCount()):
-                recs.append([self.cur_set, self.list_var[c - 5][0], self.ui.tab_sets.model().item(r, 0).data(0),
+                recs.append([self.cur_set, self.list_var[c - 5][0],
+                             self.ui.tab_sets.model().item(r, 0).data(0),
                              self.ui.tab_sets.model().item(r, c).data(0)])
 
-        self.mdb.run_query("INSERT INTO {0}.laws_meteo (id_config, id_var, time, value) VALUES (%s, %s, %s, %s)".format(
-            self.mdb.SCHEMA), many=True, list_many=recs)
+        self.mdb.run_query(
+            "INSERT INTO {0}.laws_meteo (id_config, id_var, time, value) VALUES (%s, %s, %s, %s)".format(
+                self.mdb.SCHEMA), many=True, list_many=recs)
 
         self.fill_lst_conf(self.cur_set)
         self.ui.meteo_pages.setCurrentIndex(0)
@@ -559,8 +597,10 @@ class ItemEditorFactory(QItemEditorFactory):
         if user_type == QVariant.Double or user_type == 0:
             double_spin_box = QDoubleSpinBox(parent)
             double_spin_box.setDecimals(10)
-            double_spin_box.setMinimum(-1000000000.)  # The default maximum value is 99.99.
-            double_spin_box.setMaximum(1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMinimum(
+                -1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMaximum(
+                1000000000.)  # The default maximum value is 99.99.
             return double_spin_box
         else:
             return ItemEditorFactory.createEditor(user_type, parent)

@@ -98,7 +98,8 @@ class ClassDownloadMasc:
         if loop.exec_() == 0:
             timer.stop()
             self.print_('{} is received: {}'.format(os.path.basename(path_file),
-                                                    result.readAll().count()), self.dbg)
+                                                    result.readAll().count()),
+                        self.dbg)
         else:
             self.print_('request timed-out')
 

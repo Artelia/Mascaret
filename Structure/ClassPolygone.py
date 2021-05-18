@@ -52,7 +52,8 @@ class ClassPolygone:
         z = param_g['ZPC']  # point haut
         zmin_t = zmin - 10
         if zmin < z:
-            poly_t = Polygon([[x0, zmin_t], [x0, z], [x1, z], [x1, zmin_t], [x0, zmin_t]])
+            poly_t = Polygon(
+                [[x0, zmin_t], [x0, z], [x1, z], [x1, zmin_t], [x0, zmin_t]])
         else:
             poly_t = GeometryCollection()
 
@@ -70,7 +71,8 @@ class ClassPolygone:
         z = param_elem['COTERAD'] + param_elem['HAUTDAL']  # point haut
         zmin = param_elem['COTERAD']
         if zmin < z:
-            poly_t = Polygon([[x0, zmin], [x0, z], [x1, z], [x1, zmin], [x0, zmin]])
+            poly_t = Polygon(
+                [[x0, zmin], [x0, z], [x1, z], [x1, zmin], [x0, zmin]])
         else:
             poly_t = GeometryCollection()
             print('Inconsistent Z for the span')
@@ -125,10 +127,13 @@ class ClassPolygone:
         if zmin < z:
             circ = Point([x_c, z_c]).buffer(1)
             ell = shapely.affinity.scale(circ, a, b)
-            poly = Polygon([[x_c - a - 1, z - b * 2], [x_c - a - 1, z], [x_c + a + 1, z], [x_c + a + 1, z - b * 2],
-                            [x_c - a - 1, z - b * 2]])
+            poly = Polygon(
+                [[x_c - a - 1, z - b * 2], [x_c - a - 1, z], [x_c + a + 1, z],
+                 [x_c + a + 1, z - b * 2],
+                 [x_c - a - 1, z - b * 2]])
             ell = ell.difference(poly)  # demi circle
-            poly = Polygon([[x0, zmin_t], [x0, z], [x1, z], [x1, zmin_t], [x0, zmin_t]])
+            poly = Polygon(
+                [[x0, zmin_t], [x0, z], [x1, z], [x1, zmin_t], [x0, zmin_t]])
             poly_t = ell.union(poly)
         else:
             poly_t = GeometryCollection()
@@ -171,7 +176,8 @@ class ClassPolygone:
         z1 = param_elem['ZMAXELEM_P1']  # point haut
         zmin_t = zmin - 10
         if zmin < z1 and zmin < z0:
-            poly_t = Polygon([[x0, zmin_t], [x0, z0], [x1, z1], [x1, zmin_t], [x0, zmin_t]])
+            poly_t = Polygon(
+                [[x0, zmin_t], [x0, z0], [x1, z1], [x1, zmin_t], [x0, zmin_t]])
         else:
             poly_t = GeometryCollection()
 
@@ -187,10 +193,12 @@ class ClassPolygone:
         :param id_elem:  element index
         """
         poly_final = json.dumps(mapping(poly_final))
-        where = "WHERE id_config = {0}  AND id_elem = {1} ".format(id_config, id_elem)
-        sql = """UPDATE {0}.struct_elem SET polygon =ST_GeomFromGeoJSON('{1}')  {2}""".format(mdb.SCHEMA,
-                                                                                              poly_final,
-                                                                                              where)
+        where = "WHERE id_config = {0}  AND id_elem = {1} ".format(id_config,
+                                                                   id_elem)
+        sql = """UPDATE {0}.struct_elem SET polygon =ST_GeomFromGeoJSON('{1}')  {2}""".format(
+            mdb.SCHEMA,
+            poly_final,
+            where)
         mdb.run_query(sql)
 
     def coup_poly_h(self, poly, cote, typ='U'):

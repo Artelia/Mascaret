@@ -53,21 +53,27 @@ class ClassTableStructure:
                                3: 'Method 4',
                                4: 'Method 5'}
 
-        self.dico_struc_typ = {'PC': {'name': 'Frame Bridge',
-                                      'param': ['FIRSTWD', 'ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'BIAIPIL',
-                                                'FORMCUL', 'ORIENTM', 'PENTTAL', 'FORMPIL', 'METTEST', 'LARGPIL',
-                                                'LONGPIL', 'PASH', 'MINH', 'PASQ',
-                                                'MINQ', 'MAXQ', 'NBTRAVE', 'METBR72', 'METBR78'],
+        self.dico_struc_typ = {'PC': {'name': 'Beam Bridge',
+                                      'param': ['FIRSTWD', 'ZTOPTAB', 'EPAITAB',
+                                                'BIAIOUV', 'BIAICUL', 'BIAIPIL',
+                                                'FORMCUL', 'ORIENTM', 'PENTTAL',
+                                                'FORMPIL', 'METTEST', 'LARGPIL',
+                                                'LONGPIL', 'PASH', 'MINH',
+                                                'PASQ',
+                                                'MINQ', 'MAXQ', 'NBTRAVE',
+                                                'METBR72', 'METBR78'],
                                       'meth_calc': [0, 4, 1, 3],
                                       'meth_draw': [[0], [0], [0], [0]]
                                       },
                                'PA': {'name': 'Arch Bridge',
-                                      'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
+                                      'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV',
+                                                'BIAICUL', 'FORMCUL'],
                                       'meth_calc': [1, 3],
                                       'meth_draw': [[0], [0]]
                                       },
                                'DA': {'name': 'Rectangular Culvert',
-                                      'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV', 'BIAICUL', 'FORMCUL'],
+                                      'param': ['ZTOPTAB', 'EPAITAB', 'BIAIOUV',
+                                                'BIAICUL', 'FORMCUL'],
                                       'meth_calc': [1, 3],
                                       'meth_draw': [[0], [0]]
                                       },
@@ -81,16 +87,18 @@ class ClassTableStructure:
                               1: 'Columns',
                               2: 'Arch'}
 
-        # self.dico_elem_prm = {'LARGTRA': {'name': 'Largeur de la travee', 'unit': 'm'},
-        #                       'FORMPIL': {'name': 'Forme des piles', 'unit': None},
-        #                       'LARGPIL': {'name': 'Largeur des piles', 'unit': 'm'},
-        #                       'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'},
-        #                       'FORMARC': {'name': 'Forme de l''arche', 'unit': None},
-        #                       'ZMINARC': {'name': 'Z bas de l''arche', 'unit': 'm'},
-        #                       'ZMAXARC': {'name': 'Z haut de l''arche', 'unit': 'm'},
-        #                       'COTERAD': {'name': 'Cote du radier', 'unit': 'm'},
-        #                       'HAUTDAL': {'name': 'Hauteur du dalot', 'unit': 'm'},
-        #                       'ABSBUSE': {'name': 'Abscisse du centre de la buse', 'unit': 'm'}}
+    # self.dico_elem_prm = {'LARGTRA': {'name': 'Largeur de la travee', 'unit':
+    #                                                                      'm'},
+    #                    'FORMPIL': {'name': 'Forme des piles', 'unit': None},
+    #                    'LARGPIL': {'name': 'Largeur des piles', 'unit': 'm'},
+    #                    'LONGPIL': {'name': 'Longueur des piles', 'unit': 'm'},
+    #                    'FORMARC': {'name': 'Forme de l''arche', 'unit': None},
+    #                    'ZMINARC': {'name': 'Z bas de l''arche', 'unit': 'm'},
+    #                    'ZMAXARC': {'name': 'Z haut de l''arche', 'unit': 'm'},
+    #                    'COTERAD': {'name': 'Cote du radier', 'unit': 'm'},
+    #                    'HAUTDAL': {'name': 'Hauteur du dalot', 'unit': 'm'},
+    #                    'ABSBUSE': {'name': 'Abscisse du centre de la buse',
+    #                                                           'unit': 'm'}}
 
         self.dico_culee_pente_talus = {0: '1/1', 1: '1.5/1', 2: '2/1'}
         self.dico_forme_arche = {1: 'Circular', 2: 'Ellipsoidal'}
@@ -107,25 +115,32 @@ class ClassTableStructure:
         }
 
         # floodgate
-        self.dico_fg = {'VELOFG': {'name': 'Temps de fonctionnement', 'unit': 'm/s'},
-                        'ZMAXFG': {'name': 'Z bute de la vanne', 'unit': 'm'},
-                        'ZINCRFG': {'name': 'Z d''increment de mouvement', 'unit': 'm'},
-                        'DIRFG': {'name': 'Sens de fermeture', 'unit': None},
-                        'DTREG': {'name': 'Pas de temps de régulation', 'unit': 's'},
-                        'VREG': {'name': 'variable de regulation', 'unit': None},
-                        'VALREG': {'name': 'Valeur de variable de regulation', 'unit': None},
-                        'TOLREG': {'name': 'Tolerence de regulation', 'unit': None},
-                        'XPCONT': {'name': 'Abscisse du point de conrole', 'unit': 'm'},
-                        'BIEFCONT': {'name': 'Bief du point de controle', 'unit': 'm'},
-                        'LOCCONT': {'name': 'Localisation du point de controle', 'unit': 'm'}
-                        }
-        self.dico_vardb_to_var_fg = {'type_fg': 'DIRFG', 'xpos': 'LOCCONT', 'var_reg': 'VREG'}
+        self.dico_fg = {
+            'VELOFG': {'name': 'Temps de fonctionnement', 'unit': 'm/s'},
+            'ZMAXFG': {'name': 'Z bute de la vanne', 'unit': 'm'},
+            'ZINCRFG': {'name': 'Z d''increment de mouvement', 'unit': 'm'},
+            'DIRFG': {'name': 'Sens de fermeture', 'unit': None},
+            'DTREG': {'name': 'Pas de temps de régulation', 'unit': 's'},
+            'VREG': {'name': 'variable de regulation', 'unit': None},
+            'VALREG': {'name': 'Valeur de variable de regulation',
+                       'unit': None},
+            'TOLREG': {'name': 'Tolerence de regulation', 'unit': None},
+            'XPCONT': {'name': 'Abscisse du point de conrole', 'unit': 'm'},
+            'BIEFCONT': {'name': 'Bief du point de controle', 'unit': 'm'},
+            'LOCCONT': {'name': 'Localisation du point de controle',
+                        'unit': 'm'}
+            }
+        self.dico_vardb_to_var_fg = {'type_fg': 'DIRFG', 'xpos': 'LOCCONT',
+                                     'var_reg': 'VREG'}
 
         self.dico_weirs_mob = {'ZBAS': {'name': 'cotes basse', 'unit': 'm'},
                                'ZHAUT': {'name': 'cotes haute', 'unit': 'm'},
-                               'ZREG': {'name': 'cotes d\'exploitation', 'unit': 'm'},
-                               'VDESC': {'name': 'vitesses d\’abaissement', 'unit': 'm/s'},
-                               'VMONT': {'name': 'vitesses de remontée', 'unit': 'm/s'},
+                               'ZREG': {'name': 'cotes d\'exploitation',
+                                        'unit': 'm'},
+                               'VDESC': {'name': 'vitesses d\’abaissement',
+                                         'unit': 'm/s'},
+                               'VMONT': {'name': 'vitesses de remontée',
+                                         'unit': 'm/s'},
                                'TIME': {'name': 'temps', 'unit': 's'},
                                'ZVAR': {'name': 'cotes de crêtes', 'unit': 'm'}}
 
@@ -191,7 +206,8 @@ def update_etat_struct(mdb):
         lst_prof = [var[0] for var in rows]
     except IndexError or TypeError:
         return
-    sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config WHERE active ".format(mdb.SCHEMA)
+    sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config " \
+          "WHERE active ".format(mdb.SCHEMA)
     rows = mdb.run_query(sql, fetch=True)
 
     try:
@@ -199,7 +215,9 @@ def update_etat_struct(mdb):
     except IndexError or TypeError:
         prof_act = []
 
-    sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config WHERE active=false".format(mdb.SCHEMA)
+    sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config " \
+          "WHERE active=false".format(
+        mdb.SCHEMA)
     rows = mdb.run_query(sql, fetch=True)
     try:
         prof_d = [var[0] for var in rows]
@@ -218,6 +236,7 @@ def update_etat_struct(mdb):
 
     sql = "UPDATE {0}.profiles SET struct= val.state " \
           "FROM ( values {1}) as val(id,state) " \
-          "WHERE gid = val.id".format(mdb.SCHEMA, ','.join(map(str, list_udpate)))
+          "WHERE gid = val.id".format(mdb.SCHEMA,
+                                      ','.join(map(str, list_udpate)))
 
     mdb.run_query(sql)

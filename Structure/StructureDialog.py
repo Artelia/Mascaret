@@ -46,7 +46,8 @@ class ClassStructureDialog(QDialog):
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_structure.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_structure.ui'), self)
 
         self.tree_struct.setColumnWidth(0, 200)
         self.tree_struct.setColumnWidth(1, 100)
@@ -64,7 +65,9 @@ class ClassStructureDialog(QDialog):
         self.fill_lst_struct()
 
     def fill_lst_struct(self, id=None):
-        rows = self.mdb.run_query("SELECT gid, name FROM {0}.profiles".format(self.mdb.SCHEMA), fetch=True)
+        rows = self.mdb.run_query(
+            "SELECT gid, name FROM {0}.profiles".format(self.mdb.SCHEMA),
+            fetch=True)
         dico_profil = {r[0]: r[1] for r in rows}
         self.tree_struct.clear()
         for id_type, elem in self.tbst.dico_struc_typ.items():
@@ -74,7 +77,8 @@ class ClassStructureDialog(QDialog):
             typ_itm.setText(0, elem['name'])
             self.tree_struct.addTopLevelItem(typ_itm)
             sql = "SELECT id, name, id_prof_ori, method, comment,active FROM {0}.struct_config " \
-                  "WHERE type = '{1}' ORDER BY name".format(self.mdb.SCHEMA, id_type)
+                  "WHERE type = '{1}' ORDER BY name".format(self.mdb.SCHEMA,
+                                                            id_type)
             rows = self.mdb.run_query(sql, fetch=True)
             for row in rows:
                 ouv_itm = QTreeWidgetItem()
@@ -136,14 +140,19 @@ class ClassStructureDialog(QDialog):
             itm = self.tree_struct.selectedItems()[0]
             id_struct = itm.data(0, 32)
 
-            sql = "DELETE FROM {0}.profil_struct WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
+            sql = "DELETE FROM {0}.profil_struct WHERE id_config = {1}".format(
+                self.mdb.SCHEMA, id_struct)
             self.mdb.execute(sql)
-            sql = "DELETE FROM {0}.struct_elem_param WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
+            sql = "DELETE FROM {0}.struct_elem_param WHERE id_config = {1}".format(
+                self.mdb.SCHEMA, id_struct)
             self.mdb.execute(sql)
-            sql = "DELETE FROM {0}.struct_elem WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
+            sql = "DELETE FROM {0}.struct_elem WHERE id_config = {1}".format(
+                self.mdb.SCHEMA, id_struct)
             self.mdb.execute(sql)
-            sql = "DELETE FROM {0}.struct_param WHERE id_config = {1}".format(self.mdb.SCHEMA, id_struct)
+            sql = "DELETE FROM {0}.struct_param WHERE id_config = {1}".format(
+                self.mdb.SCHEMA, id_struct)
             self.mdb.execute(sql)
-            sql = "DELETE FROM {0}.struct_config WHERE id = {1}".format(self.mdb.SCHEMA, id_struct)
+            sql = "DELETE FROM {0}.struct_config WHERE id = {1}".format(
+                self.mdb.SCHEMA, id_struct)
             self.mdb.execute(sql)
             self.fill_lst_struct()

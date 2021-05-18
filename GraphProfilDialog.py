@@ -125,7 +125,8 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 self.mgis.coucheProfils = results[0].mLayer
                 gid = results[0].mFeature["abscissa"]
                 sql = "SELECT DISTINCT pknum FROM {0}.results WHERE var IN " \
-                      "(SELECT id FROM {0}.results_var WHERE type_res ='{1}' )".format(self.mgis.mdb.SCHEMA, type_res)
+                      "(SELECT id FROM {0}.results_var WHERE type_res ='{1}' )".format(
+                    self.mgis.mdb.SCHEMA, type_res)
 
                 rows = self.mgis.mdb.run_query(sql, fetch=True)
                 graph_res = GraphResultDialog(self.mgis, type_res, gid)
@@ -145,9 +146,12 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             #         self.mgis.add_info("Visu_profil: Not layer")
             if couche == 'profiles' and flag_profil_r:
                 self.mgis.coucheProfils = results[0].mLayer
-                prof_a = self.mgis.mdb.select_distinct("name", "profiles", "active")
+                prof_a = self.mgis.mdb.select_distinct("name", "profiles",
+                                                       "active")
                 if results[0].mFeature['name'] in prof_a['name']:
-                    graph_res = GraphResultDialog(self.mgis, "hydro_profil", results[0].mFeature["abscissa"])
+                    graph_res = GraphResultDialog(self.mgis, "hydro_profil",
+                                                  results[0].mFeature[
+                                                      "abscissa"])
 
                     graph_res.show()
                 else:
@@ -156,10 +160,13 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             if flag_hydro and couche in ('profiles', 'outputs'):
                 feature = results[0].mFeature
 
-                prof_a = self.mgis.mdb.select_distinct("name,abscissa", "profiles", "active")
+                prof_a = self.mgis.mdb.select_distinct("name,abscissa",
+                                                       "profiles", "active")
 
-                if feature['name'] in prof_a['name'] or feature['abscissa'] in prof_a['abscissa']:
-                    graph_hyd = GraphResultDialog(self.mgis, "hydro", feature['abscissa'])
+                if feature['name'] in prof_a['name'] or feature['abscissa'] in \
+                        prof_a['abscissa']:
+                    graph_hyd = GraphResultDialog(self.mgis, "hydro",
+                                                  feature['abscissa'])
                     graph_hyd.show()
                 else:
                     self.mgis.add_info('no active profiles')
@@ -167,9 +174,11 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             if flag_hydro and couche == 'branchs':
                 feature = results[0].mFeature
                 # chaine='Branche ' + str(feature['branche'])
-                branches = self.mgis.mdb.select_distinct("branch", "branchs", "active")
+                branches = self.mgis.mdb.select_distinct("branch", "branchs",
+                                                         "active")
                 if feature['branch'] in branches['branch']:
-                    graph_hyd_pk = GraphResultDialog(self.mgis, "hydro_pk", feature['branch'])
+                    graph_hyd_pk = GraphResultDialog(self.mgis, "hydro_pk",
+                                                     feature['branch'])
                     graph_hyd_pk.show()
                 else:
                     self.mgis.add_info('no active branch')
@@ -178,17 +187,23 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 feature = results[0].mFeature
 
                 if couche == 'links':
-                    links = self.mgis.mdb.select_distinct("name", "links", "active")
+                    links = self.mgis.mdb.select_distinct("name", "links",
+                                                          "active")
                     if links is not None:
                         if feature['name'] in links['name']:
-                            graph_link = GraphResultDialog(self.mgis, "hydro_link", feature["linknum"])
+                            graph_link = GraphResultDialog(self.mgis,
+                                                           "hydro_link",
+                                                           feature["linknum"])
                             graph_link.show()
                 else:
 
-                    basins = self.mgis.mdb.select_distinct("name", "basins", "active")
+                    basins = self.mgis.mdb.select_distinct("name", "basins",
+                                                           "active")
                     if basins is not None:
                         if feature['name'] in basins['name']:
-                            graph_basin = GraphResultDialog(self.mgis, "hydro_basin", feature["basinnum"])
+                            graph_basin = GraphResultDialog(self.mgis,
+                                                            "hydro_basin",
+                                                            feature["basinnum"])
                             graph_basin.show()
 
         return
@@ -200,17 +215,21 @@ class GraphProfil(GraphCommon):
     def __init__(self, gid, mgis=None):
         GraphCommon.__init__(self, mgis)
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/graphProfil.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/graphProfil.ui'), self)
         self.init_ui_prof(gid)
         self.gui_graph(self.ui.widget_figure)
         self.fig.autofmt_xdate()
         self.init_ui()
 
         # action
-        self.ui.actionBtTools_point_selection.triggered.connect(self.selector_toggled)
-        self.ui.actionBtTools_zone_selection.triggered.connect(self.zone_selector_toggled)
+        self.ui.actionBtTools_point_selection.triggered.connect(
+            self.selector_toggled)
+        self.ui.actionBtTools_zone_selection.triggered.connect(
+            self.zone_selector_toggled)
 
-        self.ui.actionBtTools_profil_translation.triggered.connect(self.deplace_toggled)
+        self.ui.actionBtTools_profil_translation.triggered.connect(
+            self.deplace_toggled)
 
         self.ui.bt_add_point.clicked.connect(self.ajout_points)
         self.ui.bt_topo_load.clicked.connect(self.import_topo)
@@ -226,8 +245,10 @@ class GraphProfil(GraphCommon):
         self.ui.bt_profil_filter.clicked.connect(self.filtre)
         self.ui.bt_profil_del.clicked.connect(self.efface_profil)
         self.ui.bt_minor_bed.clicked.connect(self.select_lit_mineur)
-        self.ui.bt_r_stok.clicked.connect(lambda: self.select_stock("rightstock"))
-        self.ui.bt_l_stok.clicked.connect(lambda: self.select_stock("leftstock"))
+        self.ui.bt_r_stok.clicked.connect(
+            lambda: self.select_stock("rightstock"))
+        self.ui.bt_l_stok.clicked.connect(
+            lambda: self.select_stock("leftstock"))
         self.ui.bt_ouvrage.clicked.connect(self.create_struct)
 
     def init_ui(self):
@@ -257,7 +278,8 @@ class GraphProfil(GraphCommon):
         # tableau
         self.tableau = self.ui.tableWidget
         self.tableau.itemChanged.connect(self.modifie)
-        self.tableau.selectionModel().selectionChanged.connect(self.select_changed)
+        self.tableau.selectionModel().selectionChanged.connect(
+            self.select_changed)
         self.tableau.addAction(CopySelectedCellsAction(self.tableau))
 
         # figure
@@ -459,7 +481,9 @@ class GraphProfil(GraphCommon):
             self.topo[nom]['ordre'].append(ordre)
 
         for nom in self.topo.keys():
-            self.topo[nom]['x'] = self.mdb.projection(self.nom, self.topo[nom]['x'], self.topo[nom]['gid'])
+            self.topo[nom]['x'] = self.mdb.projection(self.nom,
+                                                      self.topo[nom]['x'],
+                                                      self.topo[nom]['gid'])
 
     def remplir_tab(self, liste):
         """ Fill items in the table"""
@@ -532,9 +556,11 @@ class GraphProfil(GraphCommon):
                     if f["name"] == self.nom:
                         interp = f.geometry().interpolate(x)
                         if interp.isNull():
-                            self.mgis.add_info("Warning : Check the profil lenght")
+                            self.mgis.add_info(
+                                "Warning : Check the profil lenght")
                         p = interp.asPoint()
-                        geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(p.x(), p.y(), self.mdb.SRID)
+                        geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                            p.x(), p.y(), self.mdb.SRID)
                 if gid:
                     sql = """UPDATE {0}.topo SET x={1}, geom={2}, order_={3}
                           WHERE gid={4}""".format(self.mdb.SCHEMA,
@@ -578,7 +604,8 @@ class GraphProfil(GraphCommon):
                                              'Topo',
                                              liste)
         if ok:
-            condition = "name='{0}' AND profile='{1}'".format(name_topo, self.nom)
+            condition = "name='{0}' AND profile='{1}'".format(name_topo,
+                                                              self.nom)
             self.mdb.delete("topo", condition)
 
         self.extrait_topo()
@@ -618,11 +645,13 @@ class GraphProfil(GraphCommon):
                 profil = basename.split(".")[0]
             for f in couche_profil.getFeatures():
                 if f["name"] == profil:
-                    condition = "name='{}' AND profile='{}'".format(basename, profil)
+                    condition = "name='{}' AND profile='{}'".format(basename,
+                                                                    profil)
 
                     self.mdb.delete("topo", condition)
 
-                    tab = {'name': [], 'profile': [], 'order_': [], 'x': [], 'z': [],
+                    tab = {'name': [], 'profile': [], 'order_': [], 'x': [],
+                           'z': [],
                            'geom': []}
                     with open(fichier, "r") as fich:
                         entete = fich.readline()
@@ -647,7 +676,8 @@ class GraphProfil(GraphCommon):
 
                                 # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
 
-                                geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(p.x(), p.y(), self.mdb.SRID)
+                                geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                                    p.x(), p.y(), self.mdb.SRID)
 
                                 tab["name"].append("'" + basename + "'")
                                 tab["profile"].append("'" + profil + "'")
@@ -839,7 +869,8 @@ class GraphProfil(GraphCommon):
             self.canvas.draw()
         else:
             if self.mgis.DEBUG:
-                self.mgis.add_info("The table has {0} elements, please add ".format(n))
+                self.mgis.add_info(
+                    "The table has {0} elements, please add ".format(n))
 
     def onrelease(self, event):
         if self.bt_transla.isChecked():
@@ -946,7 +977,8 @@ class GraphProfil(GraphCommon):
             self.courbeTopo[i].set_data(v['x'], v['z'])
             self.courbeTopo[i].set_label(fichier)
             self.courbes.append(self.courbeTopo[i])
-        if ta['x'] is not None and ta['leftminbed'] is not None and ta['rightminbed'] is not None:
+        if ta['x'] is not None and ta['leftminbed'] is not None and ta[
+            'rightminbed'] is not None:
             self.litMineur.set_x(ta['leftminbed'])
             self.litMineur.set_width(ta['rightminbed'] - ta['leftminbed'])
             self.litMineur.set_visible(True)
@@ -1170,7 +1202,8 @@ class GraphProfil(GraphCommon):
             self.maj_graph()
         else:
             if self.mgis.DEBUG:
-                self.mgis.add_info("The table has {0} elements, please add ".format(n))
+                self.mgis.add_info(
+                    "The table has {0} elements, please add ".format(n))
 
     def select_changed(self):
         # mini_x, maxi_x = self.tableau.selection()

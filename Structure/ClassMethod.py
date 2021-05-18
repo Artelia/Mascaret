@@ -56,7 +56,7 @@ class ClassMethod:
         Creation of polygone for the differents elements and save in table
         :param id_config: index of hydraulic structuree
         :param config_type: type configuration PA :arch bridge
-                                               PC: frame bridge,
+                                               PC: beam bridge,
                                                Bu: Buse,
                                                Da :scupper
         :return:

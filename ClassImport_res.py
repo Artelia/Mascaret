@@ -46,7 +46,9 @@ class ClassImportRes(QDialog):
         self.complet = False
         self.box = ClassWarningBox()
 
-        self.ui = loadUi(os.path.join(os.path.dirname(__file__), 'ui/ui_import_res.ui'), self)
+        self.ui = loadUi(
+            os.path.join(os.path.dirname(__file__), 'ui/ui_import_res.ui'),
+            self)
         self.txt_path.setText(".")
 
         self.buttonBox.accepted.connect(self.accept_dialog)
@@ -83,8 +85,10 @@ class ClassImportRes(QDialog):
     def accept_dialog(self):
         """validation dialog function"""
         if bool(self.checkBox.isChecked()):
-            date_time_str = self.mDateTimeEdit.dateTime().toString("yyyy-MM-dd HH:mm:ss.zz")
-            self.date = datetime.datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S.%f')
+            date_time_str = self.mDateTimeEdit.dateTime().toString(
+                "yyyy-MM-dd HH:mm:ss.zz")
+            self.date = datetime.datetime.strptime(date_time_str,
+                                                   '%Y-%m-%d %H:%M:%S.%f')
         else:
             self.date = None
         self.comments = str(self.textEdit_com.toPlainText())
@@ -100,7 +104,8 @@ class ClassImportRes(QDialog):
     def path_search(self):
         """search path windows"""
 
-        path = QFileDialog.getExistingDirectory(self, "Choose a folder", self.path_model)
+        path = QFileDialog.getExistingDirectory(self, "Choose a folder",
+                                                self.path_model)
         if path:
             self.path_model = path
             self.txt_path.setText(path)

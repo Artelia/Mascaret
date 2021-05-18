@@ -25,7 +25,8 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
+from .ClassTableStructure import ClassTableStructure, ctrl_set_value, \
+    ctrl_get_value, fill_qcombobox
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -40,7 +41,8 @@ class MetOrificePcWidget(QWidget):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_orifice_pc.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
+                                      'ui/structures/ui_orifice_pc.ui'), self)
         self.id_struct = id_struct
 
         self.completed = 0
@@ -68,10 +70,12 @@ class MetOrificePcWidget(QWidget):
 
         self.dico_tab = {self.tab_trav: {'type': 0,
                                          'id': '({}*2) + 1',
-                                         'col': [{'fld': 'LARGTRA', 'cb': None, 'valdef': 1.}]},
+                                         'col': [{'fld': 'LARGTRA', 'cb': None,
+                                                  'valdef': 1.}]},
                          self.tab_pile: {'type': 1,
                                          'id': '({}*2) + 2',
-                                         'col': [{'fld': 'LARGPIL', 'cb': None, 'valdef': self.dsb_larg_pil}]}
+                                         'col': [{'fld': 'LARGPIL', 'cb': None,
+                                                  'valdef': self.dsb_larg_pil}]}
                          }
 
     def change_ntrav(self, nb_trav):
@@ -92,7 +96,8 @@ class MetOrificePcWidget(QWidget):
     def insert_elem(self, tab, row):
         tab.insertRow(row)
         for c, col in enumerate(self.dico_tab[tab]['col']):
-            if isinstance(col['valdef'], int) or isinstance(col['valdef'], float):
+            if isinstance(col['valdef'], int) or isinstance(col['valdef'],
+                                                            float):
                 val = col['valdef']
             else:
                 val = ctrl_get_value(col['valdef'])
@@ -111,7 +116,8 @@ class MetOrificePcWidget(QWidget):
             self.tab_pile.item(row, 0).setData(0, self.dsb_larg_pil.value())
 
     def update_min_h_max(self):
-        self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
+        self.dsb_h_max.setMinimum(
+            self.dsb_h_min.value() + self.dsb_h_pas.value())
 
     def verif_larg_trav(self, itm):
         if itm.data(0) <= 0.:

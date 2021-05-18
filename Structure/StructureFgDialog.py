@@ -25,7 +25,8 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
+from .ClassTableStructure import ClassTableStructure, ctrl_set_value, \
+    ctrl_get_value, fill_qcombobox
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -40,7 +41,8 @@ class StructureFgDialog(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_floodgate.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
+                                      'ui/structures/ui_floodgate.ui'), self)
         self.id_struct = id_struct
         self.unitv = 0
         self.b_ok.accepted.connect(self.accept_page)
@@ -54,8 +56,10 @@ class StructureFgDialog(QDialog):
 
         #
 
-        fill_qcombobox(self.cb_type_t, [[1, 's'], [60, 'min'], [3600, 'h'], [86400, 'jours']])
-        fill_qcombobox(self.cb_type_t_vit, [[1, 'm/s'], [60, 'm/min'], [3600, 'm/h']])
+        fill_qcombobox(self.cb_type_t,
+                       [[1, 's'], [60, 'min'], [3600, 'h'], [86400, 'jours']])
+        fill_qcombobox(self.cb_type_t_vit,
+                       [[1, 'm/s'], [60, 'm/min'], [3600, 'm/h']])
 
         self.dico_ctrl = {'VELOFG': [self.vel_fg],
                           'TYPE_TIME_VELO': [self.cb_type_t_vit],
@@ -80,7 +84,8 @@ class StructureFgDialog(QDialog):
     def accept_page(self):
         # SAVE BD
         fact_t = float(ctrl_get_value(self.dico_ctrl['TYPE_TIME'][0]))
-        fact_t_velo = 1 / float(ctrl_get_value(self.dico_ctrl['TYPE_TIME_VELO'][0]))
+        fact_t_velo = 1 / float(
+            ctrl_get_value(self.dico_ctrl['TYPE_TIME_VELO'][0]))
 
         for var, ctrls in self.dico_ctrl.items():
             if var == 'TYPE_TIME':
@@ -206,7 +211,8 @@ class StructureFgDialog(QDialog):
         #         for ctrl in ctrls:
         #             ctrl_set_value(ctrl, val)
 
-        rows = self.mdb.select('struct_fg', where='id_config = {0}'.format(self.id_struct),
+        rows = self.mdb.select('struct_fg',
+                               where='id_config = {0}'.format(self.id_struct),
                                list_var=['type_fg', 'xpos', 'var_reg'])
         for param, val in rows.items():
             param = self.tbst.dico_vardb_to_var_fg[param]
@@ -217,6 +223,7 @@ class StructureFgDialog(QDialog):
 
     def cb_var_chang(self, text):
         if text.lower() == 'Water level':
-            fill_qcombobox(self.cb_loc, [['AV', 'Downstream'], ['AM', 'Upstream']])
+            fill_qcombobox(self.cb_loc,
+                           [['AV', 'Downstream'], ['AM', 'Upstream']])
         elif text.lower() == 'Flow rate':
             fill_qcombobox(self.cb_loc, [['AV', 'Downstream']])

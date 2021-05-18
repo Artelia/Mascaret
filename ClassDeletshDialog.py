@@ -42,7 +42,8 @@ class ClassDeletshDialog(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.iface = iface
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_delete_sh.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_delete_sh.ui'), self)
         self.box = ClassWarningBox()
         self.liste_model = self.mdb.liste_models()
         self.parent = {}
@@ -87,7 +88,8 @@ class ClassDeletshDialog(QDialog):
             for i, model in enumerate(selection):
                 self.mdb.drop_model(model, cascade=True)
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Deletion of {0} Model is done".format(model))
+                    self.mgis.add_info(
+                        "Deletion of {0} Model is done".format(model))
 
                 progress.setValue(i / float(n) * 100)
         else:

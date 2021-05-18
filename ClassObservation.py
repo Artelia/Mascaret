@@ -46,7 +46,8 @@ class ClassEventObsDialog(QDialog):
         self.cur_station = ""
         self.cur_var = ""
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_event_obs.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_event_obs.ui'), self)
 
         self.ui.tab_values.sCut_del = QShortcut(QKeySequence("Del"), self)
         self.ui.tab_values.sCut_del.activated.connect(self.short_cut_row_del)
@@ -89,7 +90,8 @@ class ClassEventObsDialog(QDialog):
         self.ui.tab_stations.setColumnWidth(0, 140)
         self.ui.tab_stations.setColumnWidth(1, 10)
         self.ui.tab_stations.setColumnWidth(2, 10)
-        self.ui.tab_stations.selectionModel().selectionChanged.connect(self.station_changed)
+        self.ui.tab_stations.selectionModel().selectionChanged.connect(
+            self.station_changed)
 
         sql = "SELECT DISTINCT sta.code, not cnt_h isNull as h, not cnt_q isNull as q " \
               "FROM ({0}.observations as sta LEFT JOIN (SELECT code, count(*) as cnt_h FROM {0}.observations " \
@@ -117,8 +119,10 @@ class ClassEventObsDialog(QDialog):
 
         if id:
             for r in range(self.ui.tab_stations.model().rowCount()):
-                if str(self.ui.tab_stations.model().item(r, 0).text()) == str(id):
-                    self.ui.tab_stations.setCurrentIndex(self.ui.tab_stations.model().item(r, 0).index())
+                if str(self.ui.tab_stations.model().item(r, 0).text()) == str(
+                        id):
+                    self.ui.tab_stations.setCurrentIndex(
+                        self.ui.tab_stations.model().item(r, 0).index())
                     break
         else:
             self.station_changed()
@@ -138,8 +142,9 @@ class ClassEventObsDialog(QDialog):
         self.ui.cb_var.blockSignals(True)
         self.ui.cb_var.clear()
         if self.cur_station:
-            sql = "SELECT DISTINCT type FROM {0}.observations WHERE code = '{1}' ORDER BY type".format(self.mdb.SCHEMA,
-                                                                                                       self.cur_station)
+            sql = "SELECT DISTINCT type FROM {0}.observations WHERE code = '{1}' ORDER BY type".format(
+                self.mdb.SCHEMA,
+                self.cur_station)
             rows = self.mdb.run_query(sql, fetch=True)
             for row in rows:
                 self.ui.cb_var.addItem(row[0])
@@ -227,24 +232,29 @@ class ClassEventObsDialog(QDialog):
 
     def import_csv(self):
         """ import CSV file"""
-        file_name_path, _ = QFileDialog.getOpenFileNames(None, 'File Selection', self.mgis.masplugPath,
+        file_name_path, _ = QFileDialog.getOpenFileNames(None, 'File Selection',
+                                                         self.mgis.masplugPath,
                                                          filter="CSV (*.csv);;File (*)")
         succes, recs = self.read_csv(file_name_path)
         print(succes, len(recs))
 
         if succes:
-            self.mdb.execute("DROP TABLE IF EXISTS {0}.tmp_observations".format(self.mdb.SCHEMA))
+            self.mdb.execute("DROP TABLE IF EXISTS {0}.tmp_observations".format(
+                self.mdb.SCHEMA))
             self.mdb.execute("CREATE TABLE IF NOT EXISTS {0}.tmp_observations "
-                             "AS TABLE {0}.observations WITH NO DATA".format(self.mdb.SCHEMA))
+                             "AS TABLE {0}.observations WITH NO DATA".format(
+                self.mdb.SCHEMA))
             sql = "INSERT INTO {0}.tmp_observations (code, date, type, comment, valeur) " \
                   "VALUES ({1})".format(self.mdb.SCHEMA, "{}, {}, {}, {}, {}")
             for rec in recs:
                 self.mdb.execute(sql.format(*rec))
 
-            dbls = self.mdb.run_query("SELECT DISTINCT code, type FROM {0}.observations As obs WHERE EXISTS "
-                                      "(SELECT 1 FROM {0}.tmp_observations AS tmp WHERE obs.code = tmp.code "
-                                      "AND obs.date = tmp.date AND obs.type = tmp.type)".format(self.mdb.SCHEMA),
-                                      fetch=True)
+            dbls = self.mdb.run_query(
+                "SELECT DISTINCT code, type FROM {0}.observations As obs WHERE EXISTS "
+                "(SELECT 1 FROM {0}.tmp_observations AS tmp WHERE obs.code = tmp.code "
+                "AND obs.date = tmp.date AND obs.type = tmp.type)".format(
+                    self.mdb.SCHEMA),
+                fetch=True)
 
         if dbls:
             txt_sta = ""
@@ -259,20 +269,27 @@ class ClassEventObsDialog(QDialog):
             r = QMessageBox.question(self, "Observations Import", txt_mess,
                                      QMessageBox.Cancel | QMessageBox.No | QMessageBox.Yes)
             if r == QMessageBox.Yes:
-                self.mdb.run_query("DELETE FROM {0}.observations As obs WHERE EXISTS "
-                                   "(SELECT 1 FROM {0}.tmp_observations AS tmp WHERE obs.code = tmp.code "
-                                   "AND obs.date = tmp.date AND obs.type = tmp.type)".format(self.mdb.SCHEMA))
+                self.mdb.run_query(
+                    "DELETE FROM {0}.observations As obs WHERE EXISTS "
+                    "(SELECT 1 FROM {0}.tmp_observations AS tmp WHERE obs.code = tmp.code "
+                    "AND obs.date = tmp.date AND obs.type = tmp.type)".format(
+                        self.mdb.SCHEMA))
             elif r == QMessageBox.No:
-                self.mdb.run_query("DELETE FROM {0}.tmp_observations As tmp WHERE EXISTS "
-                                   "(SELECT 1 FROM {0}.observations AS obs WHERE obs.code = tmp.code "
-                                   "AND obs.date = tmp.date AND obs.type = tmp.type)".format(self.mdb.SCHEMA))
+                self.mdb.run_query(
+                    "DELETE FROM {0}.tmp_observations As tmp WHERE EXISTS "
+                    "(SELECT 1 FROM {0}.observations AS obs WHERE obs.code = tmp.code "
+                    "AND obs.date = tmp.date AND obs.type = tmp.type)".format(
+                        self.mdb.SCHEMA))
             elif r == QMessageBox.Cancel:
                 return
 
-        self.mdb.run_query("INSERT INTO {0}.observations (code, date, type, comment, valeur) "
-                           "SELECT code, date, type, comment, valeur FROM {0}.tmp_observations".format(self.mdb.SCHEMA))
+        self.mdb.run_query(
+            "INSERT INTO {0}.observations (code, date, type, comment, valeur) "
+            "SELECT code, date, type, comment, valeur FROM {0}.tmp_observations".format(
+                self.mdb.SCHEMA))
 
-        self.mdb.execute("DROP TABLE IF EXISTS {0}.tmp_observations".format(self.mdb.SCHEMA))
+        self.mdb.execute(
+            "DROP TABLE IF EXISTS {0}.tmp_observations".format(self.mdb.SCHEMA))
 
         self.fill_lst_stations(self.cur_station)
 
@@ -291,7 +308,8 @@ class ClassEventObsDialog(QDialog):
                                 if float(val) != -99.99:
                                     rec = list()
                                     rec.append("'{}'".format(codes[i]))
-                                    rec.append("'{}'".format(self.fmt_date(temp[0])))
+                                    rec.append(
+                                        "'{}'".format(self.fmt_date(temp[0])))
                                     rec.append("'{}'".format(types[i]))
                                     rec.append("'{}'".format(nom_stat[i]))
                                     rec.append(val)
@@ -321,7 +339,8 @@ class ClassEventObsDialog(QDialog):
         data = {}
         lx, ly = [], []
         for r in range(self.ui.tab_values.model().rowCount()):
-            lx.append(date2num(self.ui.tab_values.model().item(r, 0).data(0).toPyDateTime()))
+            lx.append(date2num(
+                self.ui.tab_values.model().item(r, 0).data(0).toPyDateTime()))
             ly.append(self.ui.tab_values.model().item(r, 1).data(0))
         data[0] = {"x": lx, "y": ly}
         self.graph_edit.maj_courbes(data)
@@ -333,11 +352,14 @@ class ClassEventObsDialog(QDialog):
             new_station = dlg.txt_station.text()
             new_var = dlg.cb_var.currentText()
             if new_station:
-                rows = self.mdb.run_query("SELECT COUNT(*) FROM {0}.observations WHERE code = '{1}' "
-                                          "AND type ='{2}'".format(self.mdb.SCHEMA, new_station, new_var), fetch=True)
+                rows = self.mdb.run_query(
+                    "SELECT COUNT(*) FROM {0}.observations WHERE code = '{1}' "
+                    "AND type ='{2}'".format(self.mdb.SCHEMA, new_station,
+                                             new_var), fetch=True)
                 if rows[0][0]:
                     QMessageBox.critical(self, "Error",
-                                         "{} data set already exists for the {} station".format(new_var, new_station),
+                                         "{} data set already exists for the {} station".format(
+                                             new_var, new_station),
                                          QMessageBox.Ok)
                 else:
                     self.tab_stations.clearSelection()
@@ -358,12 +380,16 @@ class ClassEventObsDialog(QDialog):
         # changer de page
         if self.cur_station:
             if (QMessageBox.question(self, "Observations of Events",
-                                     "Delete {} observations ?".format(str(self.cur_station).strip()),
+                                     "Delete {} observations ?".format(
+                                         str(self.cur_station).strip()),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Deletion of {} Observations of Events".format(self.cur_station))
+                    self.mgis.add_info(
+                        "Deletion of {} Observations of Events".format(
+                            self.cur_station))
                 self.mdb.execute(
-                    "DELETE FROM {0}.observations WHERE code = '{1}'".format(self.mdb.SCHEMA, self.cur_station))
+                    "DELETE FROM {0}.observations WHERE code = '{1}'".format(
+                        self.mdb.SCHEMA, self.cur_station))
                 self.fill_lst_stations()
 
     def delete_var_station(self):
@@ -371,13 +397,18 @@ class ClassEventObsDialog(QDialog):
         # changer de page
         if self.cur_station:
             if (QMessageBox.question(self, "Observations of Events",
-                                     "Delete {0} values for {1} station ?".format(self.cur_var,
-                                                                                  self.cur_station.strip()),
+                                     "Delete {0} values for {1} station ?".format(
+                                         self.cur_var,
+                                         self.cur_station.strip()),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Deletion of {} Observations of Events".format(self.cur_station))
-                self.mdb.execute("DELETE FROM {0}.observations WHERE code = '{1}' "
-                                 "and type = '{2}'".format(self.mdb.SCHEMA, self.cur_station, self.cur_var))
+                    self.mgis.add_info(
+                        "Deletion of {} Observations of Events".format(
+                            self.cur_station))
+                self.mdb.execute(
+                    "DELETE FROM {0}.observations WHERE code = '{1}' "
+                    "and type = '{2}'".format(self.mdb.SCHEMA, self.cur_station,
+                                              self.cur_var))
                 self.fill_lst_stations(self.cur_station)
 
     def new_time(self):
@@ -392,7 +423,8 @@ class ClassEventObsDialog(QDialog):
         elif r == 1:
             v_date = model.item(r - 1, 0).data(0).addDays(1)
         else:
-            d = model.item(r - 2, 0).data(0).addDays(1).secsTo(model.item(r - 1, 0).data(0).addDays(1))
+            d = model.item(r - 2, 0).data(0).addDays(1).secsTo(
+                model.item(r - 1, 0).data(0).addDays(1))
             v_date = model.item(r - 1, 0).data(0).addSecs(d)
 
         itm_date.setData(v_date, 0)
@@ -427,18 +459,24 @@ class ClassEventObsDialog(QDialog):
             name_var = str(self.ui.txt_cur_var.text())
             if self.cur_station == "":
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Addition of {0} Observations for {1}".format(name_var, name_station))
+                    self.mgis.add_info(
+                        "Addition of {0} Observations for {1}".format(name_var,
+                                                                      name_station))
             else:
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Editing of {0} Observations for {1}".format(name_var, name_station))
+                    self.mgis.add_info(
+                        "Editing of {0} Observations for {1}".format(name_var,
+                                                                     name_station))
                 self.mdb.execute(
-                    "DELETE FROM {0}.observations WHERE code = '{1}' AND type = '{2}'".format(self.mdb.SCHEMA,
-                                                                                              name_station, name_var))
+                    "DELETE FROM {0}.observations WHERE code = '{1}' AND type = '{2}'".format(
+                        self.mdb.SCHEMA,
+                        name_station, name_var))
 
             recs = []
             for r in range(self.ui.tab_values.model().rowCount()):
                 recs.append([name_station,
-                             self.ui.tab_values.model().item(r, 0).data(0).toPyDateTime(),
+                             self.ui.tab_values.model().item(r, 0).data(
+                                 0).toPyDateTime(),
                              name_var,
                              self.ui.tab_values.model().item(r, 2).data(0),
                              self.ui.tab_values.model().item(r, 1).data(0)])
@@ -475,8 +513,10 @@ class ItemEditorFactory(QItemEditorFactory):
         if user_type == QVariant.Double or user_type == 0:
             double_spin_box = QDoubleSpinBox(parent)
             double_spin_box.setDecimals(4)
-            double_spin_box.setMinimum(-99999.99)  # The default maximum value is 99.99.
-            double_spin_box.setMaximum(99999.99)  # The default maximum value is 99.99.
+            double_spin_box.setMinimum(
+                -99999.99)  # The default maximum value is 99.99.
+            double_spin_box.setMaximum(
+                99999.99)  # The default maximum value is 99.99.
             return double_spin_box
         else:
             return QItemEditorFactory().createEditor(user_type, parent)

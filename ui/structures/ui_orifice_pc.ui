@@ -329,7 +329,7 @@
         <item>
          <widget class="QLabel" name="label_36">
           <property name="text">
-           <string>DSeuil</string>
+           <string>DSill</string>
           </property>
          </widget>
         </item>
@@ -527,7 +527,7 @@
      </widget>
      <widget class="QWidget" name="ong_pile">
       <attribute name="title">
-       <string>Columns</string>
+       <string notr="true">Columns</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>

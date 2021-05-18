@@ -30,7 +30,8 @@ from .ClassTableStructure import ClassTableStructure, update_etat_struct
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
 else:  # qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QIcon
+    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, \
+        QIcon
     from qgis.PyQt.QtWidgets import *
 
 
@@ -41,11 +42,14 @@ class ClassStructureCreateDialog(QDialog):
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_structure_create.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_structure_create.ui'),
+            self)
         self.b_ok.accepted.connect(self.accept_page)
         self.b_ok.rejected.connect(self.reject_page)
 
-        sql = "SELECT gid, name FROM {0}.profiles ORDER BY gid".format(self.mdb.SCHEMA)
+        sql = "SELECT gid, name FROM {0}.profiles ORDER BY gid".format(
+            self.mdb.SCHEMA)
         rows = self.mdb.run_query(sql, fetch=True)
         for row in rows:
             self.cb_profil.addItem(row[1], row[0])
@@ -74,11 +78,13 @@ class ClassStructureCreateDialog(QDialog):
         self.comment = self.txt_comment.text()
 
         if self.met == 'struct':
-            self.id_profil = self.cb_profil.itemData(self.cb_profil.currentIndex())
+            self.id_profil = self.cb_profil.itemData(
+                self.cb_profil.currentIndex())
 
         tab = {'x': [], 'z': []}
         where = "gid = '{0}' ".format(self.id_profil)
-        feature = self.mdb.select('profiles', where=where, list_var=['x', 'z', 'abscissa', 'branchnum'])
+        feature = self.mdb.select('profiles', where=where,
+                                  list_var=['x', 'z', 'abscissa', 'branchnum'])
         tab['x'] = [float(var) for var in feature["x"][0].split()]
         tab['z'] = [float(var) for var in feature["z"][0].split()]
 
@@ -87,10 +93,11 @@ class ClassStructureCreateDialog(QDialog):
             return
 
         sql = "INSERT INTO {0}.struct_config (name, comment, type, id_prof_ori, active, abscissa, branchnum) " \
-              "VALUES ('{1}', '{2}', '{3}', {4}, FALSE,{5} ,{6})".format(self.mdb.SCHEMA, self.name, self.comment,
-                                                                         self.type, self.id_profil,
-                                                                         feature['abscissa'][0],
-                                                                         feature['branchnum'][0])
+              "VALUES ('{1}', '{2}', '{3}', {4}, FALSE,{5} ,{6})".format(
+            self.mdb.SCHEMA, self.name, self.comment,
+            self.type, self.id_profil,
+            feature['abscissa'][0],
+            feature['branchnum'][0])
         self.mdb.run_query(sql)
         self.id_struct = self.mdb.select_max('id', 'struct_config')
 

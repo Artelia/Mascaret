@@ -41,7 +41,8 @@ class ClassPostPreFG:
         self.cli = ClassInfoParamFG()
 
         if not main:
-            path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../mascaret'))
+            path = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), '../mascaret'))
             path = os.path.join(path, 'cli_fg.obj')
             self.import_cl(path)
         else:
@@ -85,8 +86,10 @@ class ClassPostPreFG:
             param_g = {}
 
             for id_config in list_actif:
-                list_poly_trav[id_config] = self.clmeth.select_poly_elem(id_config, 0)
-                list_poly_pil[id_config] = self.clmeth.select_poly_elem(id_config, 1)
+                list_poly_trav[id_config] = self.clmeth.select_poly_elem(
+                    id_config, 0)
+                list_poly_pil[id_config] = self.clmeth.select_poly_elem(
+                    id_config, 1)
                 profil[id_config] = self.clmeth.get_profil(id_config)
                 param_g[id_config] = self.clmeth.get_param_g('all', id_config)
 

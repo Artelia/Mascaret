@@ -25,7 +25,8 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
+from .ClassTableStructure import ClassTableStructure, ctrl_set_value, \
+    ctrl_get_value, fill_qcombobox
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -40,7 +41,9 @@ class MetBordaBuWidget(QWidget):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/structures/ui_borda_bu.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/structures/ui_borda_bu.ui'),
+            self)
         self.id_struct = id_struct
 
         self.completed = 0
@@ -67,9 +70,12 @@ class MetBordaBuWidget(QWidget):
 
         self.dico_tab = {self.tab_trav: {'type': 0,
                                          'id': '{} + 1',
-                                         'col': [{'fld': 'ABSBUSE', 'cb': None, 'valdef': 1.},
-                                                 {'fld': 'COTERAD', 'cb': None, 'valdef': 0.},
-                                                 {'fld': 'LARGTRA', 'cb': None, 'valdef': 1.}]}}
+                                         'col': [{'fld': 'ABSBUSE', 'cb': None,
+                                                  'valdef': 1.},
+                                                 {'fld': 'COTERAD', 'cb': None,
+                                                  'valdef': 0.},
+                                                 {'fld': 'LARGTRA', 'cb': None,
+                                                  'valdef': 1.}]}}
 
     def change_ntrav(self, nb_trav):
         nrow_trav = self.tab_trav.rowCount()
@@ -82,7 +88,8 @@ class MetBordaBuWidget(QWidget):
     def insert_elem(self, tab, row):
         tab.insertRow(row)
         for c, col in enumerate(self.dico_tab[tab]['col']):
-            if isinstance(col['valdef'], int) or isinstance(col['valdef'], float):
+            if isinstance(col['valdef'], int) or isinstance(col['valdef'],
+                                                            float):
                 val = col['valdef']
             else:
                 val = ctrl_get_value(col['valdef'])
@@ -99,10 +106,12 @@ class MetBordaBuWidget(QWidget):
                 tab.setItem(row, c, itm)
 
     def update_min_h_max(self):
-        self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
+        self.dsb_h_max.setMinimum(
+            self.dsb_h_min.value() + self.dsb_h_pas.value())
 
     def update_min_q_max(self):
-        self.dsb_q_max.setMinimum(self.dsb_q_min.value() + self.dsb_q_pas.value())
+        self.dsb_q_max.setMinimum(
+            self.dsb_q_min.value() + self.dsb_q_pas.value())
 
     def verif_param_trav(self, itm):
         if itm.data(0) <= 0.:
