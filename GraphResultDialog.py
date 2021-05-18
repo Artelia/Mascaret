@@ -266,7 +266,8 @@ class GraphResultDialog(QWidget):
                     self.list_typ_res))
 
         rows = self.mdb.run_query(sql, fetch=True)
-
+        if not rows:
+            self.mgis.add_info('No data')
         for rws in rows:
             if not rws[2] in exclu.keys():
                 liste.append({"id": rws[2], "name": rws[3], "unit": "",
