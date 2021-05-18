@@ -1553,8 +1553,8 @@ class ClassMascaret:
     def init_scen_trans_unsteady(self, par, dict_lois):
         """
         Initial  files creation  for unsteady scenario
-        :param par (dict): parameters
-        :param dict_lois(dict) : laws
+        :param par: dict contains the parameters
+        :param dict_lois: dict contains the law
         :return:
         """
 
@@ -1658,9 +1658,9 @@ class ClassMascaret:
     def mascaret(self, noyau, run, only_init=False):
         """
         creation file and to run mascaret
-        :param noyau (str): Mascaret kernel
-        :param run (str): run name
-        :param only_init (bool):  option to write the  model files but it doesn't work with 'evenement'
+        :param noyau: kernel
+        :param run: name run
+        :param only_init: if only intialisation is true
         :return:
         """
         par, dict_scen, dict_lois, comments = self.mascaret_init(noyau, run, only_init)
@@ -1799,10 +1799,11 @@ class ClassMascaret:
     def import_results(self, run, scen, comments, path, date_debut=None):
         """
         import mascaret resultats
-        :param run (str):
-        :param scen (str):
-        :param path(str):
-        :param date_debut(str):
+        :param run: (str) run name
+        :param scen: (str) scenario name
+        :param comments:(str) comments
+        :param path: (str) path represitory
+        :param date_debut: start time
         :return:
         """
 
@@ -1838,7 +1839,7 @@ class ClassMascaret:
     def fct_only_init(self, noyau):
         """
         clean and model file creation
-        :param noyau(str): kernel
+        :param noyau: (str) kernel
         :return:
         """
         # delete "initialisationAuto" file
@@ -1861,10 +1862,10 @@ class ClassMascaret:
     def lance_mascaret(self, fichier_cas, id_run, tracer=False, casier=False):
         """
         Run mascaret
-        :param fichier_cas (str): file name xcas
-        :param id_run (int): run index
-        :param tracer (bool): boolean if there ars tracers
-        :param casier(bool): boolean if there ars basins
+        :param fichier_cas:
+        :param id_run:
+        :param tracer:
+        :param casier:
         :return:
         """
         os.chdir(self.dossierFileMasc)
@@ -1950,12 +1951,12 @@ class ClassMascaret:
     def creat_values(self, id_run, id_name, lpk, ltime, lval):
         """
         create values list  for  insert_res function
-        :param id_run: id (run, screnario
-        :param id name: variable name id
-        :param lpk: pk list
-        :param ltime: time list
-        :param lval:  values list
-        :return:
+        :param id_name: (int) name index
+        :param id_run: (int) index of (run, screnario) couple
+        :param lpk: (list) pk list
+        :param ltime: (list) time list
+        :param lval:  (list) values list
+        :return: (list) value list
         """
         values = []
         for time, pk, val in zip(ltime, lpk, lval):
@@ -2792,13 +2793,12 @@ class ClassMascaret:
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
 
-
     def save_new_results(self, val, id_run):
         """
         Save values in results table
-        :param val (dict): values dico
+        :param val: (dict) values
         :param id_run: run index
-        :return:
+        :return: True
         """
 
         val_keys = val.keys()

@@ -653,7 +653,7 @@ class ClassStructureEditDialog(QDialog):
             sql = "SELECT * FROM {0}.struct_fg WHERE id_config = {1} " \
                 .format(self.mdb.SCHEMA, self.id_struct)
             row = self.mdb.run_query(sql, fetch=True)
-            return (len(row) > 0)
+            return len(row) > 0
         else:
             return False
 

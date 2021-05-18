@@ -829,6 +829,7 @@ Version : {}
     def website(self):
         pass
         # TODO
+
     def wikisite(self):
         import webbrowser
         webbrowser.open('https://github.com/Artelia/Mascaret/wiki')
@@ -955,8 +956,6 @@ Version : {}
         from .ClassUpdatePk import ClassUpdatePk
         dlg = ClassUpdatePk(self, self.iface)
         dlg.exec_()
-
-
 
     def download_bin(self):
         """ download the Mascaret executable """

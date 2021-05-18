@@ -207,10 +207,11 @@ class ClassMasDatabase(object):
         Setting SCHEMA, SRID and OVERWRITE on hydro object.
 
         Args:
-            hydro_object (class): Hydro object class.
-            schema (str): Schema where tables will be created or processed.
-            srid (int): A Spatial Reference System Identifier.
-            overwrite (bool): Flag deciding if objects can be overwrite.
+        :param hydro_object (class): Hydro object class.
+        :param schema (str): Schema where tables will be created or processed.
+        :param srid (int): A Spatial Reference System Identifier.
+        :param overwrite (bool): Flag deciding if objects can be overwrite.
+        :param puser: (str) postgres user
         """
         if schema is None:
             hydro_object.SCHEMA = self.SCHEMA

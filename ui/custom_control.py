@@ -38,7 +38,7 @@ else:  # qt5
 # *******************************************************************************
 #   Class  warningBox
 # *******************************************************************************
-class ClassWarningBox():
+class ClassWarningBox:
     """TODO add all select box """
 
     def __init__(self):

@@ -77,9 +77,6 @@ class ClassTableStructure:
                                       }
                                }
 
-
-
-
         self.dico_typ_elem = {0: 'Spans',
                               1: 'Columns',
                               2: 'Arch'}

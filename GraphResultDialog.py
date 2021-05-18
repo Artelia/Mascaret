@@ -144,8 +144,6 @@ class GraphResultDialog(QWidget):
             else:
                 self.cb_det.currentIndexChanged.connect(lambda: self.detail_changed(up_lim=True))
 
-
-
             # self.bt_reculTot.clicked.connect(lambda: self.avance_detail("start"))
             # self.bt_recul.clicked.connect(lambda: self.avance_detail("prev"))
             # self.bt_av.clicked.connect(lambda: self.avance_detail("next"))
@@ -496,7 +494,6 @@ class GraphResultDialog(QWidget):
                                        table,
                                        num)
 
-
                 rows = self.mdb.run_query(sql, fetch=True)
                 for row in rows:
                     self.cb_det.addItem(row[0], row[1])
@@ -575,7 +572,7 @@ class GraphResultDialog(QWidget):
             self.graph_obj.canvas.draw()
             self.tw_data.clear()
 
-    def detail_changed(self,up_lim = True ):
+    def detail_changed(self, up_lim=True):
         """ change pk or data"""
         self.graph_obj.update_limites = up_lim
         if self.cb_det.currentIndex() != -1:
@@ -656,7 +653,7 @@ class GraphResultDialog(QWidget):
         """
         if not self.initialising:
             self.cur_data = dict()
-            if self.cur_vars is None :
+            if self.cur_vars is None:
                 self.graph_obj.axes.cla()
                 self.graph_obj.canvas.draw()
                 self.tw_data.clear()
@@ -782,7 +779,7 @@ class GraphResultDialog(QWidget):
         if rows:
             val = rows[0][0]
             self.obs = self.mgis.mdb.select('outputs',
-                                            where="active AND (abscissa = {0} OR name = '{1}')" 
+                                            where="active AND (abscissa = {0} OR name = '{1}')"
                                                   "".format(self.cur_pknum, val),
                                             order="abscissa",
                                             list_var=['code', 'zero', 'abscissa', 'name'])

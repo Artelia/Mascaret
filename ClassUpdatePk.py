@@ -44,12 +44,12 @@ class ClassUpdatePk(QDialog):
         self.iface = iface
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_update_pk.ui'), self)
         self.box = ClassWarningBox()
-        self.lst_tables_p = ['links','profiles']
+        self.lst_tables_p = ['links', 'profiles']
         self.lst_tables_pt = ['flood_marks', 'weirs', 'hydraulic_head', 'lateral_inflows',
-                      'lateral_weirs', 'tracer_lateral_inflows', 'outputs']
+                              'lateral_weirs', 'tracer_lateral_inflows', 'outputs']
         self.lst_tables_b = ['branchs']
         self.liste_tables = self.lst_tables_b + self.lst_tables_p + self.lst_tables_pt
-        #self.liste_tables =  self.lst_tables_p + self.lst_tables_pt
+        # self.liste_tables =  self.lst_tables_p + self.lst_tables_pt
         self.parent = {}
         self.init_gui()
 
@@ -79,11 +79,10 @@ class ClassUpdatePk(QDialog):
             if self.parent[table].checkState(0) > 0:
                 selection.append("{}".format(table))
         self.close()
-        
-        
+
         if not self.mdb.check_fct(["update_abscisse_profil", "abscisse_profil",
                                    "update_abscisse_point", "abscisse_point",
-                                   "update_abscisse_branch","abscisse_branch"]):
+                                   "update_abscisse_branch", "abscisse_branch"]):
             self.mdb.add_fct_for_update_pk()
 
         n = len(selection)
@@ -93,20 +92,15 @@ class ClassUpdatePk(QDialog):
             if table in self.lst_tables_pt:
                 sql += "SELECT public.update_abscisse_point('{0}.{1}','{0}.{2}')" \
                        ";\n".format(self.mdb.SCHEMA, table, 'branchs')
-            elif table in  self.lst_tables_p:
+            elif table in self.lst_tables_p:
                 sql += "SELECT public.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
-                      ";\n".format(self.mdb.SCHEMA, table, 'branchs')
+                       ";\n".format(self.mdb.SCHEMA, table, 'branchs')
             elif table in self.lst_tables_b:
                 sql += "SELECT public.update_abscisse_branch('{0}.{1}')" \
                        ";\n".format(self.mdb.SCHEMA, table)
         self.mdb.run_query(sql)
         if self.mgis.DEBUG:
             self.mgis.add_info("Update pk Done")
-
-      
-
-
-
 
     def annule(self):
         """"Cancel """

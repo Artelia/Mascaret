@@ -48,7 +48,7 @@ class MascPlug:
         self.icon_path = ":/plugins/Mascaret/icones/icon_base.png"
         self.name_plug = 'Mascaret'
 
-    def initGui(self):
+    def init_gui(self):
         """ initialisation GUI"""
         self.action = QAction(QIcon(self.icon_path), QApplication.translate(self.name_plug, self.name_plug),
                               self.iface.mainWindow())

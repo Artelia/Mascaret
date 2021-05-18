@@ -42,7 +42,7 @@ def list_sql(liste):
     return txt
 
 
-class CheckTab():
+class CheckTab:
     def __init__(self, mgis, mdb):
         self.mgis = mgis
         self.mdb = mdb
@@ -137,7 +137,7 @@ class CheckTab():
                                lambda: self.update_fct_calc_abs(),
                            ]
                            },
-                           '3.1.0': {'del_tab': ['resultats','resultats_basin','resultats_links']},
+                           '3.1.0': {'del_tab': ['resultats', 'resultats_basin', 'resultats_links']},
 
                            # '3.0.x': { },
 

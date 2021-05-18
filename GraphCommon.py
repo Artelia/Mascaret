@@ -224,7 +224,7 @@ class DraggableLegend:
             self.gotLegend = False
 
 
-class GraphCommonNew():
+class GraphCommonNew:
     def __init__(self, lay=None, wgt=None):
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)

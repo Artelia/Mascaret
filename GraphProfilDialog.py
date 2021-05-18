@@ -853,7 +853,7 @@ class GraphProfil(GraphCommon):
                 if self.topoSelect:
                     idx_topo = list(self.topo.keys()).index(self.topoSelect)
                 else:
-                    idx_topo=0
+                    idx_topo = 0
                 item, ok = QInputDialog.getItem(self,
                                                 "Curve",
                                                 "Choice of Curve",
@@ -869,7 +869,7 @@ class GraphProfil(GraphCommon):
                                               self.order_topo)
                 if not ok:
                     return
-                self.order_topo = num+1
+                self.order_topo = num + 1
                 self.ordre = num
 
                 self.topoSelect = item

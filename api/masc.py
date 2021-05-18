@@ -46,7 +46,7 @@ import numpy as np
 #     return files_name, files_type
 #
 
-class Mascaret():
+class Mascaret:
     """The Python class for MASCARET APIs"""
     libmascaret = None
     logger = logging.getLogger(__name__)
@@ -340,7 +340,7 @@ class Mascaret():
         nb_trac = self.get('Model.Tracer.Number')
         nb_conc = nb_nodes * nb_trac
         c_np = np.reshape(np.array(c_val, dtype=np.float64),
-                          (nb_conc), order='F')
+                          nb_conc, order='F')
         c_c = (ctypes.c_double * nb_conc)(*c_np)
         self.logger.debug('Initializing Tracer State from Vaues...')
         self.error = self.libmascaret.C_INIT_LIGNE_TRACER(
