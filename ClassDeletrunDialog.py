@@ -154,12 +154,15 @@ class ClassDeletrunDialog(QDialog):
 
         if ok:
             for i, (run, scenarios) in enumerate(selection.items()):
+
+                lst_tab = self.mdb.list_tables()
                 sql = "run = '{0}' AND scenario IN ({1})".format(run,
                                                                  ",".join(scenarios))
+                if "resultats" in lst_tab:
+                    self.mdb.delete("resultats", sql)
+                    self.mdb.delete("resultats_basin", sql)
+                    self.mdb.delete("resultats_links", sql)
 
-                self.mdb.delete("resultats", sql)
-                self.mdb.delete("resultats_basin", sql)
-                self.mdb.delete("resultats_links", sql)
                 self.mdb.delete("runs", sql)
                 self.delete_useless_data()
 

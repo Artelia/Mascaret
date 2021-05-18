@@ -33,6 +33,7 @@ changelog=
     3.1.0  : Correction of tables owner
              Correction of steady model when using the rating curve
              Correction of  basin law compute
+             Correction of bug on the storage of tracer results
     3.0.7  : Correction of observation bug
              Add of wiki site link
              Correction of the display bug on "initial run case" GUI

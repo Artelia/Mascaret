@@ -2613,9 +2613,9 @@ class ClassMascaret:
                         val = float(val)
 
                     dico_val[key].append(val)
-
         for id in var_del:
-            del dico_val[id]
+            if id:
+                del dico_val[id]
         return dico_val
 
     @staticmethod
@@ -2742,7 +2742,7 @@ class ClassMascaret:
         type_res = 'opt'
         init_col = ['TIME', 'BRANCH', 'SECTION', 'PK']
         val_opt = self.new_read_opt(nom_fich, type_res, init_col)
-        key_val_opt = val_opt.keys()
+        key_val_opt = list(val_opt.keys())
 
         self.save_new_results(val_opt, id_run)
 
@@ -2785,12 +2785,13 @@ class ClassMascaret:
                 val = self.new_read_opt(nom_fich_tra, type_res, init_col)
                 key_val_opt.remove('TIME')
                 key_val_opt.remove('PK')
-                val_key = val.keys()
+                val_key = list(val.keys())
                 for key in val_key:
                     if key in key_val_opt:
                         del val[key]
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
+
 
     def save_new_results(self, val, id_run):
         """

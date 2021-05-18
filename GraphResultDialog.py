@@ -95,6 +95,7 @@ class GraphResultDialog(QWidget):
                                      "tracer_EUTRO",
                                      "tracer_O2",
                                      "tracer_BIOMASS",
+                                     "tracer_THERMIC",
                                      "tracer_TRANSPORT_PUR"]
                 self.typ_res = 'opt'
                 if self.typ_graph == "hydro_pk":
