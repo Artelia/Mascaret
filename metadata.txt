@@ -30,6 +30,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    3.1.1  :
     3.1.0  : Correction of tables owner
              Correction of steady model when using the rating curve
              Correction of  basin law compute
@@ -161,7 +162,7 @@ repository=https://github.com/Artelia/Mascaret
 category=Database
 icon=icones/icon_base.png
 # experimental flag
-experimental=False
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
