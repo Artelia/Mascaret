@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>809</width>
+    <width>1038</width>
     <height>810</height>
    </rect>
   </property>
@@ -151,6 +151,13 @@
         <widget class="QPushButton" name="bt_ouvrage">
          <property name="text">
           <string>Hydraulic Structure</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="bt_planim">
+         <property name="text">
+          <string>Planimetrage</string>
          </property>
         </widget>
        </item>
