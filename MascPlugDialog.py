@@ -46,7 +46,10 @@ from .db.Check_tab import CheckTab
 from .ui.custom_control import ClassWarningBox
 from .ClassDownload import ClassDownloadMasc
 
+from .ClassImportExportDialog import ClassImportExportDialog
+
 from .ClassImport_res import ClassImportRes
+
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -691,107 +694,16 @@ class MascPlugDialog(QMainWindow):
         print(feature.attributes())
 
     def export_model(self):
-        # choix du fichier d'exportatoin
-        if int(qVersion()[0]) < 5:  # qt4
-            file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
-                                                         "{0}.psql".format(
-                                                             os.path.join(
-                                                                 self.masplugPath,
-                                                                 self.mdb.dbname + "_" + self.mdb.SCHEMA)),
-                                                         filter="PSQL (*.psql);;File (*)")
-        else:  # qt5
-            file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
-                                                            "{0}.psql".format(
-                                                                os.path.join(
-                                                                    self.masplugPath,
-                                                                    self.mdb.dbname + "_" + self.mdb.SCHEMA)),
-                                                            filter="PSQL (*.psql);;File (*)")
-
-        if self.mdb.export_schema(file_name_path):
-            self.add_info('Export is done.')
-        else:
-            self.add_info('Export failed.')
+       cl = ClassImportExportDialog(self)
+       cl.export_model_old()
+       return
 
     def import_model(self):
-        if int(qVersion()[0]) < 5:  # qt4
-            file_name_path = QFileDialog.getOpenFileNames(None,
-                                                          'File Selection',
-                                                          self.masplugPath,
-                                                          filter="PSQL (*.psql);;File (*)")
-        else:  # qt5
-            file_name_path, _ = QFileDialog.getOpenFileNames(None,
-                                                             'File Selection',
-                                                             self.masplugPath,
-                                                             filter="PSQL (*.psql);;File (*)")
-        if self.mdb.check_extension():
-            self.add_info(" Shema est {}".format(self.mdb.SCHEMA))
-            self.mdb.create_first_model()
-
-        for file in file_name_path:
-            if os.path.isfile(file):
-                namesh = self.mdb.checkschema_import(file)
-                if namesh is not None:
-                    liste = self.mdb.list_schema()
-                    if namesh in liste:
-                        # demande change name
-                        ok = self.box.yes_no_q("The {} shema already exists.\n "
-                                               "Do you want change the schema name befor import?".format(
-                            namesh))
-                        if ok:
-                            newname, ok = QInputDialog.getText(self,
-                                                               'New Model',
-                                                               'New Model name:')
-                            if ok and self.check_newname(newname, liste):
-
-                                sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp".format(
-                                    namesh)
-                                self.mdb.run_query(sql)
-                                sql = ''
-                                if self.mdb.import_schema(file):
-                                    self.add_info('Import is done.')
-                                    sql = "ALTER SCHEMA {0} RENAME TO {1};\n".format(
-                                        namesh, newname)
-                                else:
-                                    self.add_info('Import failed.')
-                                #
-                                sql += "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(
-                                    namesh)
-                                self.mdb.run_query(sql)
-                            else:
-                                self.add_info('Import cancel.')
-                                return
-                        else:
-                            self.add_info('Import cancel.')
-                            return
-                    else:
-                        if self.mdb.import_schema(file):
-                            self.add_info('Import is done.')
-                        else:
-                            self.add_info('Import failed.')
-                else:
-                    if self.mdb.import_schema(file):
-                        self.add_info('Import is done.')
-                    else:
-                        self.add_info('Import failed.')
-            else:
-                self.add_info('File not found.')
-
+        cl = ClassImportExportDialog(self)
+        cl.import_model_old()
         return
 
-    def check_newname(self, name, liste):
-        """Check the new name validation
-            name : test name
-            liste : exclud list"""
-        if name == '':
-            if self.DEBUG:
-                self.add_info('Name is not correct.')
-            return False
-        elif name in liste:
-            if self.DEBUG:
-                self.add_info('<<{}>> schema name already exists'.format(name))
-            return False
-        else:
-            return True
+
 
     def main_graph(self):
         """ GUI graphique"""

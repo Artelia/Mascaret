@@ -1292,9 +1292,14 @@ $BODY$
             exe = os.path.join(self.mgis.postgres_path, 'pg_dump')
 
             if os.path.isfile(exe) or os.path.isfile(exe + '.exe'):
-                commande = '"{0}" -p {6} -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(
+                # commande = '"{0}" -p {6} -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(
+                #     exe, self.SCHEMA, self.USER, file,
+                #     self.dbname, self.host, self.port)
+
+                commande = '"{0}" -p {6} -F c -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(
                     exe, self.SCHEMA, self.USER, file,
                     self.dbname, self.host, self.port)
+
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
 
                 p = subprocess.Popen(commande, shell=True)
@@ -1311,25 +1316,29 @@ $BODY$
     def import_schema(self, file):
         """import schema"""
         try:
-            exe = os.path.join(self.mgis.postgres_path, 'psql')
-            # exe = os.path.join(self.mgis.postgres_path, 'pg_restore')
+            # exe = os.path.join(self.mgis.postgres_path, 'psql')
+            exe = os.path.join(self.mgis.postgres_path, 'pg_restore')
             if os.path.isfile(exe) or os.path.isfile(exe + '.exe'):
                 # d = dict(os.environ)
                 # d["PGPASSWORD"] = "{0}".format(self.password)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
-                # for file in Listfile:
 
-                commande = '"{0}" -U {1} -p {2} -f "{3}" -d {4} -h {5}'.format(
-                    exe, self.USER, self.port,
-                    file, self.dbname, self.host)
+                # commande = '"{0}" -U {1} -p {2} -f "{3}" -d {4} -h {5}'.format(
+                #     exe, self.USER, self.port,
+                #     file, self.dbname, self.host)
 
-                # p = subprocess.Popen(commande, env=d, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                #                      , stdin=subprocess.PIPE)
+                commande = '"{0}" -U {1} --no-owner -F c -p {2}  -d {4} -h {5} ' \
+                           '--create "{3}"'.format(exe, self.user, self.port,
+                                                   file, self.dbname, self.host)
+
                 p = subprocess.Popen(commande, shell=True,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE
                                      , stdin=subprocess.PIPE)
                 outs, err = p.communicate()
+
+
+
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Import File :{0}".format(file))
                     if VERSION_QGIS == 3:

@@ -17,6 +17,13 @@
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
+      <widget class="QCheckBox" name="checkBox">
+       <property name="text">
+        <string>Export</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QTreeWidget" name="treeWidget">
        <property name="autoFillBackground">
         <bool>false</bool>
@@ -47,7 +54,7 @@
        </attribute>
        <column>
         <property name="text">
-         <string>Tables</string>
+         <string>scenarii</string>
         </property>
         <property name="font">
          <font>
@@ -73,9 +80,9 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="b_delete">
+        <widget class="QPushButton" name="b_export">
          <property name="text">
-          <string>Update selection</string>
+          <string>Export</string>
          </property>
         </widget>
        </item>
