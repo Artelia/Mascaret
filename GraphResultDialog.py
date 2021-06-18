@@ -1268,10 +1268,6 @@ class GraphResult(GraphCommonNew):
                         self.axes.add_patch(patch)
                         break
 
-
-                    # break
-
-
         self.axes.collections.remove(aire)
 
         self.maj_limites()
