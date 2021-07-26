@@ -60,7 +60,8 @@ class CheckTab:
                                   '3.0.5',
                                   '3.0.6',
                                   '3.0.7',
-                                  '3.1.0'
+                                  '3.1.0',
+                                  '3.1.1'
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -153,7 +154,7 @@ class CheckTab:
                            },
                            '3.1.0': {'del_tab': ['resultats', 'resultats_basin',
                                                  'resultats_links']},
-
+                           '3.0.1': { },
                            # '3.0.x': { },
 
                            }

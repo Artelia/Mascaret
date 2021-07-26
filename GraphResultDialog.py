@@ -121,6 +121,10 @@ class GraphResultDialog(QWidget):
                     self.mdb.SCHEMA)
                 rows = self.mdb.run_query(sql, fetch=True)
                 self.id_z = rows[0][0]
+                sql = "SELECT id FROM {0}.results_var WHERE var = 'QMAJ'".format(
+                    self.mdb.SCHEMA)
+                rows = self.mdb.run_query(sql, fetch=True)
+                self.id_qmaj = rows[0][0]
                 self.cur_t = "Zmax"
                 self.get_profil_data()
 
@@ -655,6 +659,12 @@ class GraphResultDialog(QWidget):
             if self.cur_run:
                 if self.cur_t == 'Zmax':
                     val = self.zmax_save
+                    where = "id_runs = {0} AND pknum = {1} " \
+                            "AND var ={2} ".format(self.cur_run,
+                                                                 self.cur_pknum,
+                                                                 self.id_qmaj)
+                    qmaj_max = self.mgis.mdb.select_max("val", 'results',
+                                                   where=where)
                 else:
                     where = "id_runs = {0} AND pknum = {1} " \
                             "AND var ={2} AND time = {3}".format(self.cur_run,
@@ -665,6 +675,16 @@ class GraphResultDialog(QWidget):
                                                list_var=["val"])
                     if val:
                         val = val['val'][0]
+
+                    where = "id_runs = {0} AND pknum = {1} " \
+                            "AND var ={2} AND time = {3}".format(self.cur_run,
+                                                                 self.cur_pknum,
+                                                                 self.id_qmaj,
+                                                                 self.cur_t)
+                    qmaj_max = self.mgis.mdb.select_max("val", 'results', where=where)
+
+
+
 
                 self.cur_data['Z'] = [val] * len(self.cur_data['x'])
                 self.label_zmax.setText(str(self.zmax_save))
@@ -692,7 +712,7 @@ class GraphResultDialog(QWidget):
                                       self.cb_det.currentText()))
                 self.graph_obj.axes.set_xlabel(r'Distance ($m$)')
                 self.graph_obj.axes.set_ylabel(r'Level ($m$)')
-                self.graph_obj.init_graph_profil(self.cur_data, self.x_var)
+                self.graph_obj.init_graph_profil(self.cur_data, self.x_var, qmaj_max)
 
     def update_data(self):
         """
@@ -1172,7 +1192,7 @@ class GraphResult(GraphCommonNew):
 
         self.maj_limites()
 
-    def init_graph_profil(self, data, x_var):
+    def init_graph_profil(self, data, x_var, qmaj = 0):
 
         self.set_data(data, x_var)
 
@@ -1211,11 +1231,13 @@ class GraphResult(GraphCommonNew):
             self.stockdroit.set_visible(True)
         else:
             self.stockdroit.set_visible(False)
+
         temp1 = np.array(data['ZREF'])
         temp2 = np.array(data['Z'])
         aire = self.axes.fill_between(data['x'], temp1, temp2,
                                       where=temp2 >= temp1,
                                       interpolate=True)
+
         self.aire = []
 
         for p in aire.get_paths():
@@ -1227,16 +1249,24 @@ class GraphResult(GraphCommonNew):
                 droit = data['rightminbed']
             else:
                 droit = max(p.vertices[:, 0])
-            for x, y in p.vertices:
 
-                if gauch <= x <= droit:
+            for x, y in p.vertices:
+                # trace lit mineur
+
+                if qmaj > 0.001:
                     patch = patches.PathPatch(p,
                                               facecolor='deepskyblue',
                                               lw=0)
                     self.aire.append(patch)
                     self.axes.add_patch(patch)
-
-                    break
+                else:
+                    if gauch <= x <= droit:
+                        patch = patches.PathPatch(p,
+                                                  facecolor='deepskyblue',
+                                                  lw=0)
+                        self.aire.append(patch)
+                        self.axes.add_patch(patch)
+                        break
 
         self.axes.collections.remove(aire)
 
