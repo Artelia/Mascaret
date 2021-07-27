@@ -896,19 +896,20 @@ class ClassMascaret:
             self.add_wq_xcas(fichier_cas, noyau, dict_libres)
 
         # ******** XCAS modiication of type when steady case ********
-        if noyau == 'steady':
-
-            param_cas = fichier_cas.find('parametresCas')
-            # parametres_generaux = param_cas.find('parametresGeneraux')
-            geom_reseau = param_cas.find('parametresGeometrieReseau')
-            type_cond = geom_reseau.find('extrLibres').find('typeCond')
-            type_cond.text = type_cond.text.replace('4', '2')
-            lois_hydrauliques = param_cas.find('parametresLoisHydrauliques')
-            lois = lois_hydrauliques.find('lois')
-            for child in lois:
-                # no possible to use rating curve with steady
-                if child.find('type').text == '5':
-                    child.find('type').text = '2'
+        # only type rating curve 4 => liminigraph et 5 => liminigraph
+        # if noyau == 'steady':
+        #
+        #     param_cas = fichier_cas.find('parametresCas')
+        #     # parametres_generaux = param_cas.find('parametresGeneraux')
+        #     geom_reseau = param_cas.find('parametresGeometrieReseau')
+        #     type_cond = geom_reseau.find('extrLibres').find('typeCond')
+        #     type_cond.text = type_cond.text.replace('4', '2')
+        #     lois_hydrauliques = param_cas.find('parametresLoisHydrauliques')
+        #     lois = lois_hydrauliques.find('lois')
+        #     for child in lois:
+        #         # no possible to use rating curve with steady
+        #         if child.find('type').text == '5':
+        #             child.find('type').text = '2'
 
         # **********************************
         self.indent(fichier_cas)
@@ -935,14 +936,16 @@ class ClassMascaret:
         parametres_temporels.find('pasTempsVar').text = 'false'
         geom_reseau = param_cas.find('parametresGeometrieReseau')
         type_cond = geom_reseau.find('extrLibres').find('typeCond')
-        type_cond.text = type_cond.text.replace('4', '2').replace('6',
-                                                                  '1').replace(
-            '7', '2')
+        # type_cond.text = type_cond.text.replace('4', '2').replace('6',
+        #                                                           '1').replace(
+        #     '7', '2')
+        type_cond.text = type_cond.text.replace('6','1').replace('7', '2')
         lois_hydrauliques = param_cas.find('parametresLoisHydrauliques')
         lois = lois_hydrauliques.find('lois')
         for child in lois:
-            if child.find('type').text == '5':
-                child.find('type').text = '2'
+            # # tarage loi
+            # if child.find('type').text == '5':
+            #     child.find('type').text = '2'
             donnee = child.find('donnees').find('fichier')
             temp = donnee.text.split('.')
             donnee.text = '{}_init.loi'.format(del_symbol(temp[0]))
