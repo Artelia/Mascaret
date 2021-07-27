@@ -34,7 +34,7 @@ else:  # qt4
 
 class ClassUpdatePk(QDialog):
     """
-    Class allow to delete schema
+    Class allow to update pk of the selected tables
     """
 
     def __init__(self, mgis, iface):

@@ -6,18 +6,25 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>357</width>
+    <width>476</width>
     <height>363</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Update abscissa</string>
+   <string>Export Schema</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QTreeWidget" name="treeWidget">
+      <widget class="QCheckBox" name="cb_all_exp_res">
+       <property name="text">
+        <string>Export all Results</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTreeWidget" name="tw_runs">
        <property name="autoFillBackground">
         <bool>false</bool>
        </property>
@@ -47,12 +54,22 @@
        </attribute>
        <column>
         <property name="text">
-         <string>Tables</string>
+         <string>Run</string>
         </property>
         <property name="font">
          <font>
           <pointsize>10</pointsize>
          </font>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Times</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Comments</string>
         </property>
        </column>
       </widget>
@@ -73,9 +90,9 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="b_delete">
+        <widget class="QPushButton" name="b_export">
          <property name="text">
-          <string>Update selection</string>
+          <string>Export</string>
          </property>
         </widget>
        </item>

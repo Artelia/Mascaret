@@ -7,6 +7,127 @@ from qgis.gui import *
 from qgis.utils import *
 
 from qgis.PyQt.QtWidgets import *
+from datetime import datetime
+
+
+class ClassDlgExport(QDialog):
+    """
+    Class allow to export schema
+    """
+
+    def __init__(self, mgis):
+        QDialog.__init__(self)
+        self.mgis = mgis
+        self.mdb = self.mgis.mdb
+        self.iface = iface
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_export.ui'), self)
+
+        self.listeRuns = []
+        self.listeScen = {}
+        self.init_gui()
+
+    def init_gui(self):
+        """
+            initialisation GUI
+        """
+        liste_col = self.mdb.list_columns('runs')
+        self.cond_com = ('comments' in liste_col)
+
+        dico = self.mdb.select("runs", "", "date")
+
+        if self.cond_com:
+            for run, scen, date, comments in zip(dico["run"], dico["scenario"],
+                                                 dico["date"],
+                                                 dico["comments"]):
+                if run not in self.listeRuns:
+                    self.listeRuns.append(run)
+                    self.listeScen[run] = []
+                self.listeScen[run].append((scen, date, comments))
+        else:
+            for run, scen, date in zip(dico["run"], dico["scenario"],
+                                       dico["date"]):
+                if run not in self.listeRuns:
+                    self.listeRuns.append(run)
+                    self.listeScen[run] = []
+                self.listeScen[run].append((scen, date))
+
+        if len(self.listeRuns) > 0:
+            self.parent = {}
+            self.child = {}
+
+            for run in self.listeRuns:
+                self.parent[run] = QTreeWidgetItem(self.tw_runs)
+                self.parent[run].setText(0, run)
+                self.parent[run].setFlags(self.parent[run].flags() |
+                                          Qt.ItemIsTristate |
+                                          Qt.ItemIsUserCheckable)
+
+                lbl = QLabel('')
+                self.tw_runs.setItemWidget(self.parent[run], 2, lbl)
+
+                self.child[run] = {}
+                maxi = datetime(1900, 1, 1, 0, 0)
+                if self.cond_com:
+                    for scen, date, comments in self.listeScen[run]:
+                        self.child[run][scen] = QTreeWidgetItem(
+                            self.parent[run])
+                        self.child[run][scen].setFlags(
+                            self.child[run][scen].flags() |
+                            Qt.ItemIsUserCheckable)
+                        self.child[run][scen].setText(0, scen)
+
+                        self.child[run][scen].setCheckState(0, Qt.Unchecked)
+
+                        lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
+                        self.tw_runs.setItemWidget(self.child[run][scen], 1, lbl)
+
+                        maxi = max(maxi, date)
+                        lbl = QLabel(comments)
+                        self.tw_runs.setItemWidget(self.child[run][scen], 2, lbl)
+                else:
+                    for scen, date in self.listeScen[run]:
+                        self.child[run][scen] = QTreeWidgetItem(
+                            self.parent[run])
+                        self.child[run][scen].setFlags(
+                            self.child[run][scen].flags() |
+                            Qt.ItemIsUserCheckable)
+                        self.child[run][scen].setText(0, scen)
+
+                        self.child[run][scen].setCheckState(0, Qt.Unchecked)
+
+                        lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
+                        self.tw_runs.setItemWidget(self.child[run][scen], 1, lbl)
+
+                        maxi = max(maxi, date)
+
+                lbl = QLabel("{:%d/%m/%Y %H:%M}".format(maxi))
+                self.tw_runs.setItemWidget(self.parent[run], 1, lbl)
+
+
+
+        self.ui.b_export.clicked.connect(self.export)
+        self.ui.b_cancel.clicked.connect(self.annule)
+
+    def export(self):
+        """export results selected"""
+        selection = {}
+        for run in self.listeRuns:
+            if self.parent[run].checkState(0) > 0:
+                selection[run] = []
+                if self.cond_com:
+                    for scen, date, comments in self.listeScen[run]:
+                        if self.child[run][scen].checkState(0) > 1:
+                            selection[run].append("'{}'".format(scen))
+                else:
+                    for scen, date in self.listeScen[run]:
+                        if self.child[run][scen].checkState(0) > 1:
+                            selection[run].append("'{}'".format(scen))
+
+
+    def annule(self):
+        """"Cancel """
+        self.close()
 
 
 class ClassImportExportDialog :
