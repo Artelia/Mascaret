@@ -61,7 +61,8 @@ class CheckTab:
                                   '3.0.6',
                                   '3.0.7',
                                   '3.1.0',
-                                  '3.1.1'
+                                  '3.1.1',
+                                  '4.0.0',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -154,7 +155,11 @@ class CheckTab:
                            },
                            '3.1.0': {'del_tab': ['resultats', 'resultats_basin',
                                                  'resultats_links']},
-                           '3.0.1': { },
+                           '3.1.1': { },
+                           '4.0.0': { 'fct': [
+                               lambda: self.update_400(),
+                           ]
+                           },
                            # '3.0.x': { },
 
                            }
@@ -167,7 +172,7 @@ class CheckTab:
         """
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         version = read_version(self.mgis.masplugPath)
-
+        tab_name = None
         if "admin_tab" not in tabs:
             try:
                 Maso.admin_tab.overwrite = True
@@ -657,21 +662,26 @@ class CheckTab:
         self.all_version(tabs, version)
 
     def update_tab_306(self):
-        list_tab = ['branchs', 'profiles', 'tracer_lateral_inflows',
-                    'lateral_weirs',
-                    'lateral_inflows', 'hydraulic_head', 'weirs', 'extremities',
-                    'links', 'basins', 'outputs', 'flood_marks', 'laws']
-        txt = ''
-        for tab in list_tab:
-            txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET DEFAULT TRUE;".format(
-                self.mdb.SCHEMA, tab)
-            txt += '\n'
-            txt += "UPDATE {0}.{1} SET active = TRUE WHERE active IS NULL;".format(
-                self.mdb.SCHEMA, tab)
-            txt += '\n'
-            txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET NOT NULL;".format(
-                self.mdb.SCHEMA, tab)
-            txt += '\n'
+        try:
+            list_tab = ['branchs', 'profiles', 'tracer_lateral_inflows',
+                        'lateral_weirs',
+                        'lateral_inflows', 'hydraulic_head', 'weirs', 'extremities',
+                        'links', 'basins', 'outputs', 'flood_marks', 'laws']
+            txt = ''
+            for tab in list_tab:
+                txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET DEFAULT TRUE;".format(
+                    self.mdb.SCHEMA, tab)
+                txt += '\n'
+                txt += "UPDATE {0}.{1} SET active = TRUE WHERE active IS NULL;".format(
+                    self.mdb.SCHEMA, tab)
+                txt += '\n'
+                txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET NOT NULL;".format(
+                    self.mdb.SCHEMA, tab)
+                txt += '\n'
+                return True
+        except Exception as e:
+            self.mgis.add_info("Error update_tab_306: {}".format(str(e)))
+            return False
 
     def add_trigger_update_306(self):
         """
@@ -681,57 +691,95 @@ class CheckTab:
         'pg_create_calcul_abscisse_point_flood'
         :return:
         """
-        self.update_fct_calc_abs()
+        try:
+            self.update_fct_calc_abs()
 
-        self.mdb.add_fct_for_visu()
+            self.mdb.add_fct_for_visu()
 
-        qry = 'DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs;\n'.format(
-            self.mdb.SCHEMA)
-        qry += 'DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;\n'.format(
-            self.mdb.SCHEMA)
-        qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse ON {}.flood_marks;\n'.format(
-            self.mdb.SCHEMA)
-        qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood ' \
-               'ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
-        qry += 'DROP TRIGGER IF EXISTS flood_marks_delete_point_flood ON {}.flood_marks;\n'.format(
-            self.mdb.SCHEMA)
-        qry += '\n'
-        cl = Maso.class_fct_psql()
-        qry += cl.pg_chstate_branch()
-        qry += '\n'
-        qry += 'CREATE TRIGGER branchs_chstate_active\n' \
-               ' AFTER UPDATE\n  ON {0}.branchs\n'.format(self.mdb.SCHEMA)
-        qry += ' FOR EACH ROW\n' \
-               'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
-               'EXECUTE PROCEDURE chstate_branch();\n'
-        qry += '\n'
-        qry += cl.pg_chstate_basin()
-        qry += '\n'
-        qry += 'CREATE TRIGGER basins_chstate_active\n' \
-               ' AFTER UPDATE\n  ON {0}.basins\n'.format(self.mdb.SCHEMA)
-        qry += ' FOR EACH ROW\n' \
-               'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
-               'EXECUTE PROCEDURE chstate_basin();\n'
-        qry += '\n'
-        cl = Maso.flood_marks()
-        cl.schema = self.mdb.SCHEMA
-        qry += cl.pg_clear_tab()
-        qry += '\n'
-        qry += cl.pg_calcul_abscisse_flood()
-        qry += '\n'
-        self.mdb.run_query(qry)
+            qry = 'DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs;\n'.format(
+                self.mdb.SCHEMA)
+            qry += 'DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;\n'.format(
+                self.mdb.SCHEMA)
+            qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse ON {}.flood_marks;\n'.format(
+                self.mdb.SCHEMA)
+            qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood ' \
+                   'ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
+            qry += 'DROP TRIGGER IF EXISTS flood_marks_delete_point_flood ON {}.flood_marks;\n'.format(
+                self.mdb.SCHEMA)
+            qry += '\n'
+            cl = Maso.class_fct_psql()
+            qry += cl.pg_chstate_branch()
+            qry += '\n'
+            qry += 'CREATE TRIGGER branchs_chstate_active\n' \
+                   ' AFTER UPDATE\n  ON {0}.branchs\n'.format(self.mdb.SCHEMA)
+            qry += ' FOR EACH ROW\n' \
+                   'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
+                   'EXECUTE PROCEDURE chstate_branch();\n'
+            qry += '\n'
+            qry += cl.pg_chstate_basin()
+            qry += '\n'
+            qry += 'CREATE TRIGGER basins_chstate_active\n' \
+                   ' AFTER UPDATE\n  ON {0}.basins\n'.format(self.mdb.SCHEMA)
+            qry += ' FOR EACH ROW\n' \
+                   'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
+                   'EXECUTE PROCEDURE chstate_basin();\n'
+            qry += '\n'
+            cl = Maso.flood_marks()
+            cl.schema = self.mdb.SCHEMA
+            qry += cl.pg_clear_tab()
+            qry += '\n'
+            qry += cl.pg_calcul_abscisse_flood()
+            qry += '\n'
+            self.mdb.run_query(qry)
+            return True
+        except Exception as e:
+            self.mgis.add_info("Error add_trigger_update_306: {}".format(str(e)))
+            return False
 
     def update_fct_calc_abs(self):
-        lst_fct = [
-            "public.update_abscisse_branch(_tbl_branchs regclass)",
-            "public.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)",
-            "public.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)",
-            "public.abscisse_branch(_tbl_branchs regclass, id_branch integer)",
-            "public.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)",
-            "public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)",
-        ]
-        qry = ''
-        for fct in lst_fct:
-            qry += "DROP FUNCTION IF EXISTS {};\n".format(fct)
-        self.mdb.run_query(qry)
-        self.mdb.add_fct_for_update_pk()
+        try :
+            lst_fct = [
+                "public.update_abscisse_branch(_tbl_branchs regclass)",
+                "public.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)",
+                "public.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)",
+                "public.abscisse_branch(_tbl_branchs regclass, id_branch integer)",
+                "public.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)",
+                "public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)",
+            ]
+            qry = ''
+            for fct in lst_fct:
+                qry += "DROP FUNCTION IF EXISTS {};\n".format(fct)
+            self.mdb.run_query(qry)
+            self.mdb.add_fct_for_update_pk()
+            return True
+        except Exception as e:
+            self.mgis.add_info("Error update_fct_calc_abs: {}".format(str(e)))
+            return False
+
+    def clean_tab_admin(self):
+        """
+        clean tab in admin
+        :return:
+        """
+        sql = "DELETE FROM {0}.admin_tab WHERE NOT(table_ IN ( " \
+              "SELECT table_name FROM information_schema.tables " \
+              "WHERE table_schema = '{0}'))".format(
+            self.mdb.SCHEMA)
+        self.mdb.run_query(sql)
+
+    def update_400(self):
+        """ update 4.0.0 version"""
+        try:
+            self.clean_tab_admin()
+            cl = Maso.class_fct_psql()
+            lfct = [cl.pg_clone_schema()]
+            qry = ''
+            for sql in lfct:
+                qry += sql
+                qry += '\n'
+            self.mdb.run_query(qry)
+
+            return True
+        except Exception as e:
+            self.mgis.add_info("Error  update_400: {}".format(str(e)))
+            return False

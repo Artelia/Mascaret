@@ -8,13 +8,12 @@ from qgis.utils import *
 
 from qgis.PyQt.QtWidgets import *
 from datetime import datetime
-
+from .Function import read_version
 
 class ClassDlgExport(QDialog):
     """
     Class allow to export schema
     """
-
     def __init__(self, mgis):
         QDialog.__init__(self)
         self.mgis = mgis
@@ -104,31 +103,110 @@ class ClassDlgExport(QDialog):
                 lbl = QLabel("{:%d/%m/%Y %H:%M}".format(maxi))
                 self.tw_runs.setItemWidget(self.parent[run], 1, lbl)
 
+        self.b_export.clicked.connect(self.export)
+        self.b_cancel.clicked.connect(self.annule)
+        self.cb_all_exp_res.stateChanged.connect(self.state_changed)
 
+    def state_changed(self):
+        """
 
-        self.ui.b_export.clicked.connect(self.export)
-        self.ui.b_cancel.clicked.connect(self.annule)
+        :return:
+        """
+        if  self.cb_all_exp_res.isChecked():
+            self.tw_runs.setEnabled(False)
+        else:
+            self.tw_runs.setEnabled(True)
 
     def export(self):
         """export results selected"""
         selection = {}
-        for run in self.listeRuns:
-            if self.parent[run].checkState(0) > 0:
+        if self.cb_all_exp_res.isChecked():
+            for run in self.listeRuns:
                 selection[run] = []
-                if self.cond_com:
-                    for scen, date, comments in self.listeScen[run]:
-                        if self.child[run][scen].checkState(0) > 1:
-                            selection[run].append("'{}'".format(scen))
-                else:
-                    for scen, date in self.listeScen[run]:
-                        if self.child[run][scen].checkState(0) > 1:
-                            selection[run].append("'{}'".format(scen))
+                for tple in self.listeScen[run]:
+                    selection[run].append("'{}'".format(tple[0]))
+        else:
+            for run in self.listeRuns:
+                if self.parent[run].checkState(0) > 0:
+                    selection[run] = []
+                    if self.cond_com:
+                        for scen, date, comments in self.listeScen[run]:
+                            if self.child[run][scen].checkState(0) > 1:
+                                selection[run].append("'{}'".format(scen))
+                    else:
+                        for scen, date in self.listeScen[run]:
+                            if self.child[run][scen].checkState(0) > 1:
+                                selection[run].append("'{}'".format(scen))
 
+        file = self.choix_file()
+        #self.mdb.export_model(selection,file)
+        plug_ver = read_version(self.mgis.masplugPath)
+        self.mgis.task_exp = QgsTask.fromFunction('Export Schema',
+                                                  self.task_export,
+                                                  on_finished=self.completed,
+                                                  tup=(selection,file,plug_ver))
+        self.mgis.task_exp.taskCompleted.connect(self.del_task_exp)
+        self.mgis.task_exp.taskTerminated.connect(self.del_task_exp)
+        QgsApplication.taskManager().addTask(self.mgis.task_exp)
 
+        self.accept()
+
+    def del_task_exp(self):
+        """
+        Clean tastk_mas variable
+        :return:
+        """
+        del self.mgis.task_exp
+        self.mgis.task_exp = None
+
+    def completed(self, exception):
+        """this is called when run is finished. Exception is not None if run
+        raises an exception. Result is the return value of run."""
+        message_category = 'My tasks from a function'
+        if exception is None:
+            QgsMessageLog.logMessage(
+                'task completed',
+                message_category, Qgis.Info)
+        else:
+            QgsMessageLog.logMessage("Exception: {}".format(exception),
+                                     message_category, Qgis.Critical)
+            raise exception
+
+    def task_export(self, task, tup=None):
+        if tup:
+            selection, file, plug_ver = tup
+        else:
+            print('no transmitted variable')
+            return
+        self.mdb.export_model(selection, file,plug_ver)
+        return
     def annule(self):
         """"Cancel """
         self.close()
 
+    def choix_file(self):
+        """
+        Database Export function
+        :param self:
+        :return:
+        """
+        # choix du fichier d'exportatoin
+
+        file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
+                                                        os.path.join(QDir.homePath(),self.mdb.SCHEMA),
+                                                        filter="JSON (*.json)")
+        return file_name_path
+
+
+class ClassDlgImport(QDialog):
+    """
+    Class allow to export schema
+    """
+    def __init__(self, mgis):
+        QDialog.__init__(self)
+        self.mgis = mgis
+        self.mdb = self.mgis.mdb
+        self.iface = iface
 
 class ClassImportExportDialog :
     """ class of import and export of database """
@@ -184,7 +262,7 @@ class ClassImportExportDialog :
                     liste = self.mdb.list_schema()
                     if namesh in liste:
                         # demande change name
-                        ok = self.box.yes_no_q("The {} shema already exists.\n "
+                        ok = self.box.yes_no_q("The {} schema already exists.\n "
                                                "Do you want change the schema name befor import?".format(
                             namesh))
                         if ok:

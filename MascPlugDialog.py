@@ -51,10 +51,8 @@ from .ClassImportExportDialog import ClassImportExportDialog,ClassDlgExport
 from .ClassImport_res import ClassImportRes
 
 
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtWidgets import *
+
+from qgis.PyQt.QtWidgets import *
 
 
 class MascPlugDialog(QMainWindow):
@@ -90,6 +88,7 @@ class MascPlugDialog(QMainWindow):
             os.path.join(self.masplugPath, "Structure"), 'Abacus')
         self.repProject = None
         self.task_mas = None
+        self.task_exp = None
 
         self.box = ClassWarningBox()
         # variables liste of results
@@ -526,21 +525,14 @@ class MascPlugDialog(QMainWindow):
             clam = ClassMascaret(self, rep_run=rep_run)
 
             clam.creer_xcas(self.Klist[self.listeState.index(case)])
-            if int(qVersion()[0]) < 5:  # qt4
-                file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
-                                                             "{0}.xcas".format(
-                                                                 os.path.join(
-                                                                     self.masplugPath,
-                                                                     clam.baseName)),
-                                                             filter="XCAS (*.xcas)")
-            else:  # qt5
-                file_name_path, _ = QFileDialog.getSaveFileName(self,
-                                                                "saveFile",
-                                                                "{0}.xcas".format(
-                                                                    os.path.join(
-                                                                        self.masplugPath,
-                                                                        clam.baseName)),
-                                                                filter="XCAS (*.xcas)")
+
+            file_name_path, _ = QFileDialog.getSaveFileName(self,
+                                                            "saveFile",
+                                                            "{0}.xcas".format(
+                                                                os.path.join(
+                                                                    QDir.homePath(),
+                                                                    clam.baseName)),
+                                                            filter="XCAS (*.xcas)")
             if file_name_path:
                 clam.copy_file_model(file_name_path, case='xcas')
             clam.del_folder_mas()
@@ -551,20 +543,13 @@ class MascPlugDialog(QMainWindow):
         clam = ClassMascaret(self, rep_run=rep_run)
         clam.creer_geo_ref()
         # clam.creer_geo()
-        if int(qVersion()[0]) < 5:  # qt4
-            file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
-                                                         "{0}.geo".format(
-                                                             os.path.join(
-                                                                 self.masplugPath,
-                                                                 clam.baseName)),
-                                                         filter="GEO (*.geo)")
-        else:  # qt5
-            file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
-                                                            "{0}.geo".format(
-                                                                os.path.join(
-                                                                    self.masplugPath,
-                                                                    clam.baseName)),
-                                                            filter="GEO (*.geo)")
+
+        file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
+                                                        "{0}.geo".format(
+                                                            os.path.join(
+                                                                QDir.homePath(),
+                                                                clam.baseName)),
+                                                        filter="GEO (*.geo)")
 
         if file_name_path:
             clam.copy_file_model(file_name_path, case='geo')
@@ -579,20 +564,13 @@ class MascPlugDialog(QMainWindow):
         clam = ClassMascaret(self, rep_run=rep_run)
         # Appel de la fonction creerGEOCasier() definie dans Class_Mascaret.py
         clam.creer_geo_casier()
-        if int(qVersion()[0]) < 5:  # qt4
-            file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
-                                                         "{0}.casier".format(
-                                                             os.path.join(
-                                                                 self.masplugPath,
-                                                                 clam.baseName)),
-                                                         filter="CASIER (*.casier)")
-        else:  # qt5
-            file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
-                                                            "{0}.casier".format(
-                                                                os.path.join(
-                                                                    self.masplugPath,
-                                                                    clam.baseName)),
-                                                            filter="CASIER (*.casier)")
+
+        file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
+                                                        "{0}.casier".format(
+                                                            os.path.join(
+                                                                QDir.homePath(),
+                                                                clam.baseName)),
+                                                        filter="CASIER (*.casier)")
 
         if file_name_path:
             clam.copy_file_model(file_name_path, case='casier')
@@ -694,6 +672,11 @@ class MascPlugDialog(QMainWindow):
         print(feature.attributes())
 
     def export_model(self):
+        if self.task_exp:
+            self.box.info("The export is not running,\n"
+                          " because the previous export running yet")
+            self.add_info('The export is not running\n')
+            return
         dlg = ClassDlgExport(self)
         if dlg.exec_():
            pass

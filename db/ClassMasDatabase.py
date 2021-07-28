@@ -21,6 +21,7 @@ import os
 import numpy as np
 import subprocess
 import io
+import json
 
 import psycopg2
 import psycopg2.extras
@@ -529,6 +530,7 @@ class ClassMasDatabase(object):
                 cl.pg_all_profil(),
                 cl.pg_abscisse_point(),
                 cl.pg_all_point(),
+                cl.pg_clone_schema(),
                 ]
         namefct = ['abscisse_profil', 'update_abscisse_profil',
                    'abscisse_point', 'update_abscisse_point']
@@ -1286,20 +1288,18 @@ $BODY$
         sql = """ALTER TABLE {0}.{1} ADD COLUMN {2} double precision;"""
         self.run_query(sql.format(self.SCHEMA, table, colonne))
 
-    def export_schema(self, file):
+    def export_schema(self, file, schem = None):
         """export schema"""
         try:
+            if schem is None :
+                schem = self.SCHEMA
             exe = os.path.join(self.mgis.postgres_path, 'pg_dump')
 
             if os.path.isfile(exe) or os.path.isfile(exe + '.exe'):
-                # commande = '"{0}" -p {6} -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(
-                #     exe, self.SCHEMA, self.USER, file,
-                #     self.dbname, self.host, self.port)
-
                 commande = '"{0}" -p {6} -F c -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(
-                    exe, self.SCHEMA, self.USER, file,
+                    exe, schem, self.USER, file,
                     self.dbname, self.host, self.port)
-
+                print(commande, file)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
 
                 p = subprocess.Popen(commande, shell=True)
@@ -1490,3 +1490,74 @@ $BODY$
         except Exception as e:
             self.mgis.add_info("Error create_var_result: {}".format(str(e)))
             return False
+
+    def version_postgres(self):
+        """ get version postgres """
+        sql = 'SHOW server_version_num;'
+        results = self.run_query(sql, fetch=True)
+        return results[0][0]
+
+    def export_model(self, selection, file,plug_ver):
+        # parcours the selection for insert results
+        js_dict =  {'plugin_version' : plug_ver}
+
+        ver_pgsql = self.version_postgres()
+        js_dict['pgsql_version'] = ver_pgsql
+
+        src = self.SCHEMA
+        js_dict['schema_name'] =  src
+        dest = src + '_ext{}'.format(ver_pgsql)
+        # check  clone name is ok
+        cpt = 0
+        while dest in self.list_schema() and cpt<5:
+            cpt += 1
+            dest = src + '_ext{}_{}'.format(ver_pgsql,cpt)
+        js_dict['export_name'] = dest
+
+        list_tab_res = ['runs','results','results_sect','runs_graph']
+
+        qry = "SELECT clone_schema('{}','{}','{}');".format(src, dest,
+                                                            ','.join(
+                                                                list_tab_res))
+        self.run_query(qry)
+        # add selection
+        lst_run = self.get_id_run(selection)
+        for tab in list_tab_res:
+            if tab =='runs' :
+                sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id IN ({4}) );"""
+            else:
+                sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id_runs IN ({4}) );"""
+            lst_run= ["{}".format(id) for id in lst_run]
+
+            sql = sql.format(dest,tab,src,tab, ','.join(lst_run))
+            self.run_query(sql)
+
+        basename = os.path.basename(file)
+        file_name = os.path.splitext(basename)[0]
+
+        err = self.export_schema(os.path.join(os.path.dirname(file), file_name + '.psql'),
+                                 schem=js_dict['export_name'])
+        if not err :
+            self.mgis.add_info('Error Export file')
+
+        with open(file, "w") as outfile:
+            json.dump(js_dict, outfile, indent=4)
+
+        self.drop_model(dest, cascade=True)
+
+    def get_id_run(self, selection):
+        lst_id = []
+        for key, lst in selection.items() :
+            id_run = self.run_query("SELECT id FROM {0}.runs "
+                                            "WHERE run = '{1}' "
+                                            "AND scenario IN ({2})".format(
+                    self.SCHEMA, key, ','.join(lst)),
+                    fetch=True)
+            if id_run:
+                lst_id += [ id[0] for id in  id_run]
+        return lst_id
+
+
+
+
+

@@ -754,6 +754,38 @@ class class_fct_psql(MasObject):
         super(class_fct_psql, self).__init__()
         self.order = 22
 
+    def pg_clone_schema(self):
+        """
+        clone schema in psql
+        example : SELECT clone_schema('ouvrage3','ouvrage3_ext','runs,results,results_sect,runs_graph');
+        """
+        qry = """
+CREATE OR REPLACE FUNCTION public.clone_schema(source_schema text, dest_schema text, list_tab text ) RETURNS void AS
+$BODY$
+DECLARE 
+  objeto text;
+  buffer text;
+BEGIN
+    EXECUTE 'CREATE SCHEMA ' || dest_schema ;
+
+    FOR objeto IN
+        SELECT table_name::text FROM information_schema.tables WHERE table_schema = source_schema
+    LOOP        
+        buffer := dest_schema || '.' || objeto;
+		
+        EXECUTE 'CREATE TABLE ' || buffer || ' (LIKE ' || source_schema || '.' || objeto || ' INCLUDING CONSTRAINTS INCLUDING INDEXES INCLUDING DEFAULTS)';
+		IF not (objeto IN (SELECT regexp_split_to_table(list_tab,'[,]'))) THEN
+			EXECUTE 'INSERT INTO ' || buffer || '(SELECT * FROM ' || source_schema || '.' || objeto ||  ')';	
+		ELSE
+			RAISE NOTICE '%', objeto;
+		END IF; 
+	END LOOP;
+
+END;
+$BODY$
+LANGUAGE plpgsql VOLATILE;
+"""
+        return qry
     def pg_create_calcul_abscisse(self):
         qry = """CREATE OR REPLACE FUNCTION {0}()  
             RETURNS trigger AS  
