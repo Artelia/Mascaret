@@ -46,7 +46,7 @@ from .db.Check_tab import CheckTab
 from .ui.custom_control import ClassWarningBox
 from .ClassDownload import ClassDownloadMasc
 
-from .ClassImportExportDialog import ClassImportExportDialog,ClassDlgExport
+from .ClassImportExportDialog import ClassImportExportDialog,ClassDlgExport,ClassDlgImport
 
 from .ClassImport_res import ClassImportRes
 
@@ -685,8 +685,11 @@ class MascPlugDialog(QMainWindow):
         return
 
     def import_model(self):
-        cl = ClassImportExportDialog(self)
-        cl.import_model_old()
+        # cl = ClassImportExportDialog(self)
+        # cl.import_model_old()
+        dlg = ClassDlgImport(self)
+        if dlg.exec_():
+           pass
         return
 
 

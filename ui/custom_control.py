@@ -24,15 +24,12 @@ import numpy as np
 import re
 
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtCore import qVersion
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 
-if int(qVersion()[0]) < 5:
-    from qgis.PyQt.QtGui import QMessageBox, QValidator, QDoubleSpinBox
-else:  # qt5
-    from qgis.PyQt.QtGui import QValidator
-    from qgis.PyQt.QtWidgets import QMessageBox, QDoubleSpinBox
+
+from qgis.PyQt.QtGui import QValidator
+from qgis.PyQt.QtWidgets import QMessageBox, QDoubleSpinBox
 
 
 # *******************************************************************************

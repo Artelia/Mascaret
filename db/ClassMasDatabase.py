@@ -22,7 +22,7 @@ import numpy as np
 import subprocess
 import io
 import json
-
+from datetime import datetime
 import psycopg2
 import psycopg2.extras
 from qgis.core import QgsVectorLayer, QgsProject
@@ -439,7 +439,7 @@ class ClassMasDatabase(object):
         # try:
         if self.check_extension():
             self.mgis.add_info(" Shema is {}".format(self.SCHEMA))
-            self.create_first_model()
+            self.add_ext_postgis()
         else:
             pass
 
@@ -530,7 +530,6 @@ class ClassMasDatabase(object):
                 cl.pg_all_profil(),
                 cl.pg_abscisse_point(),
                 cl.pg_all_point(),
-                cl.pg_clone_schema(),
                 ]
         namefct = ['abscisse_profil', 'update_abscisse_profil',
                    'abscisse_point', 'update_abscisse_point']
@@ -689,6 +688,8 @@ class ClassMasDatabase(object):
                     # visu
                     'pg_delete_visu_flood_marks',
                     'pg_create_calcul_abscisse_point_flood',
+                    # export import:
+                    'pg_clone_schema'
                     ]
 
         if not self.check_fct(listefct):
@@ -708,7 +709,7 @@ class ClassMasDatabase(object):
                     else:
                         pass
 
-    def create_first_model(self):
+    def add_ext_postgis(self):
         """ 
         To add variable in db for the first model creation
         and to add exemple
@@ -720,6 +721,7 @@ class ClassMasDatabase(object):
 
             self.disconnect_pg()
             self.connect_pg()
+
 
         except Exception as e:
             self.disconnect_pg()
@@ -1316,19 +1318,13 @@ $BODY$
     def import_schema(self, file):
         """import schema"""
         try:
-            # exe = os.path.join(self.mgis.postgres_path, 'psql')
             exe = os.path.join(self.mgis.postgres_path, 'pg_restore')
             if os.path.isfile(exe) or os.path.isfile(exe + '.exe'):
                 # d = dict(os.environ)
                 # d["PGPASSWORD"] = "{0}".format(self.password)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
-
-                # commande = '"{0}" -U {1} -p {2} -f "{3}" -d {4} -h {5}'.format(
-                #     exe, self.USER, self.port,
-                #     file, self.dbname, self.host)
-
                 commande = '"{0}" -U {1} --no-owner -F c -p {2}  -d {4} -h {5} ' \
-                           '--create "{3}"'.format(exe, self.user, self.port,
+                           '--create "{3}"'.format(exe, self.USER, self.port,
                                                    file, self.dbname, self.host)
 
                 p = subprocess.Popen(commande, shell=True,
@@ -1337,14 +1333,9 @@ $BODY$
                                      , stdin=subprocess.PIPE)
                 outs, err = p.communicate()
 
-
-
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Import File :{0}".format(file))
-                    if VERSION_QGIS == 3:
-                        self.mgis.add_info("{0}".format(outs.decode('utf-8')))
-                    else:
-                        self.mgis.add_info("{0}".format(outs))
+                    self.mgis.add_info("{0}".format(outs.decode('utf-8')))
                 p.wait()
 
                 return True
@@ -1352,7 +1343,8 @@ $BODY$
                 self.mgis.add_info('Executable file not found. '
                                    'Please, insert path in "path postgres" in Help / Setting / Options')
                 return False
-        except:
+        except Exception as e:
+            print(e)
             return False
 
     def list_schema(self):
@@ -1506,12 +1498,16 @@ $BODY$
 
         src = self.SCHEMA
         js_dict['schema_name'] =  src
-        dest = src + '_ext{}'.format(ver_pgsql)
+        date = datetime.now()
+        js_dict['date'] = date.isoformat()
+
+        date = date.strftime("%Y%m%d%H%M")
+        dest = src + '_ext{}'.format(date)
         # check  clone name is ok
         cpt = 0
         while dest in self.list_schema() and cpt<5:
             cpt += 1
-            dest = src + '_ext{}_{}'.format(ver_pgsql,cpt)
+            dest = src + '_ext{}_{}'.format(date,cpt)
         js_dict['export_name'] = dest
 
         list_tab_res = ['runs','results','results_sect','runs_graph']
@@ -1522,15 +1518,16 @@ $BODY$
         self.run_query(qry)
         # add selection
         lst_run = self.get_id_run(selection)
-        for tab in list_tab_res:
-            if tab =='runs' :
-                sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id IN ({4}) );"""
-            else:
-                sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id_runs IN ({4}) );"""
-            lst_run= ["{}".format(id) for id in lst_run]
+        if len(lst_run) >0 :
+            for tab in list_tab_res:
+                if tab =='runs' :
+                    sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id IN ({4}) );"""
+                else:
+                    sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id_runs IN ({4}) );"""
+                lst_run= ["{}".format(id) for id in lst_run]
 
-            sql = sql.format(dest,tab,src,tab, ','.join(lst_run))
-            self.run_query(sql)
+                sql = sql.format(dest,tab,src,tab, ','.join(lst_run))
+                self.run_query(sql)
 
         basename = os.path.basename(file)
         file_name = os.path.splitext(basename)[0]
@@ -1544,6 +1541,46 @@ $BODY$
             json.dump(js_dict, outfile, indent=4)
 
         self.drop_model(dest, cascade=True)
+
+    def import_model(self, metadict):
+        """
+
+        :return:
+        """
+        namesh= metadict["schema_name"]
+        actname = metadict["export_name"]
+
+        dir = os.path.dirname(metadict['jsfile'])
+        file_name = os.path.splitext(os.path.basename(metadict['jsfile']))[0]
+        new_file = os.path.join(dir , file_name + '.psql')
+
+        if self.check_extension():
+            self.mgis.add_info(" Shema est {}".format(self.SCHEMA))
+            self.add_ext_postgis()
+        self.public_fct_sql()
+
+        if actname in self.list_schema():
+            sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp;".format(actname)
+            self.run_query(sql)
+
+
+        # add new
+        err = self.import_schema(new_file)
+        if not err:
+            if actname in self.list_schema():
+                sql = "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(actname)
+                self.run_query(sql)
+            self.mgis.add_info('Error Import.')
+        else :
+            # alter new
+            if namesh in self.list_schema():
+                self.drop_model(namesh, cascade=True)
+            sql = "ALTER SCHEMA {0} RENAME TO {1};\n".format(actname, namesh)
+            self.run_query(sql)
+            if actname in self.list_schema():
+                # l'existant remettre name
+                sql = "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(actname)
+                self.run_query(sql)
 
     def get_id_run(self, selection):
         lst_id = []
