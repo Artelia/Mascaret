@@ -221,9 +221,6 @@
      <property name="title">
       <string>Update Table</string>
      </property>
-     <addaction name="actionAdd_WQ_tables"/>
-     <addaction name="actionAdd_Structure_tables"/>
-     <addaction name="actionAdd_Structure_temporal_tables"/>
     </widget>
     <addaction name="actionRefresh_Database"/>
     <addaction name="action_update_bin"/>

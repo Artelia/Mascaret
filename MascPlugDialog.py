@@ -208,22 +208,15 @@ class MascPlugDialog(QMainWindow):
             self.fct_export_tracer_files)
         self.ui.action_update_bin.triggered.connect(self.download_bin)
 
-        # TODO Finaliser
+
         self.ui.actionUpdate_all_PK.triggered.connect(self.update_pk)
         self.ui.actionImport_Results.triggered.connect(self.import_resu_model)
         self.ui.actionImport_Results.setVisible(False)
+        # TODO Finaliser
         self.ui.actionTest.triggered.connect(self.fct_test)
         self.ui.actionTest.setVisible(False)
         # delete after
-        self.ui.actionAdd_WQ_tables.triggered.connect(self.fct_add_wq_tables)
-        self.ui.actionAdd_Structure_tables.triggered.connect(
-            self.fct_add_struct_tables)
-        self.ui.actionAdd_Structure_temporal_tables.triggered.connect(
-            self.fct_add_floogate_tables)
         self.ui.menuUpate_table.menuAction().setVisible(False)
-        self.ui.actionAdd_Structure_tables.setVisible(False)
-        self.ui.actionAdd_Structure_temporal_tables.setVisible(False)
-        self.ui.actionAdd_WQ_tables.setVisible(False)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -825,17 +818,7 @@ Version : {}
         except Exception:
             self.add_info('Export failed.')
 
-    def fct_add_wq_tables(self):
-        ok = self.box.yes_no_q(
-            'Do you want add tracer tables and basins tables ? \n '
-            'WARNING: \n \t - if the tables exist then it will be emptied.\n '
-            '\t - Parameters will be reset by default.')
-        if ok:
-            self.mdb.add_table_basins(self.dossier_sql)
-            self.mdb.add_table_wq(self.dossier_sql)
-            sql = 'ALTER TABLE IF EXISTS {0}.scenarios RENAME TO events;'
-            self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-            self.mdb.load_model()
+
 
     # *******************************
     #    Structures
@@ -845,20 +828,6 @@ Version : {}
         dlg.setModal(False)
         dlg.exec_()
 
-    def fct_add_struct_tables(self):
-
-        ok = self.box.yes_no_q(
-            'Do you want add hydraulic structure tables ? \n '
-            'WARNING: if the tables exist then it will be emptied.')
-        if ok:
-            self.mdb.add_table_struct(self.dossier_struct)
-
-    def fct_add_floogate_tables(self):
-
-        ok = self.box.yes_no_q('Do you want add floodgate tables ? \n '
-                               'WARNING: if the tables exist then it will be emptied.')
-        if ok:
-            self.mdb.add_table_struct_temporal(self.dossier_struct)
 
     def fct_mv_dam(self):
         """ Running GUI of movable dam"""

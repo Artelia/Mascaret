@@ -437,247 +437,117 @@ class ClassMasDatabase(object):
             self.remove_group__layer("Mas_{}".format(self.last_schema))
         self.mgis.add_info('<br><b>Running Create Layers and Tables...</b>')
 
-        # try:
-        if self.check_extension():
-            self.mgis.add_info(" Shema is {}".format(self.SCHEMA))
-            self.add_ext_postgis()
-        else:
-            pass
+        try:
+            if self.check_extension():
+                self.mgis.add_info(" Shema is {}".format(self.SCHEMA))
+                self.add_ext_postgis()
+            else:
+                pass
 
-        self.public_fct_sql()
+            self.public_fct_sql()
 
-        chaine = """CREATE SCHEMA {0} AUTHORIZATION {1};"""
-        # postgres;"""
-        if self.run_query(chaine.format(self.SCHEMA, self.USER)) is None:
-            return
-        else:
-            self.mgis.add_info('<br>Model "{0}" created.'.format(self.SCHEMA))
+            chaine = """CREATE SCHEMA {0} AUTHORIZATION {1};"""
+            # postgres;"""
+            if self.run_query(chaine.format(self.SCHEMA, self.USER)) is None:
+                return
+            else:
+                self.mgis.add_info('<br>Model "{0}" created.'.format(self.SCHEMA))
 
-        # table
-        tables = [Maso.events, Maso.lateral_inflows, Maso.lateral_weirs,
-                  Maso.extremities,
-                  Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
-                  Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
-                  Maso.observations, Maso.parametres, Maso.resultats, Maso.runs,
-                  Maso.laws,
-                  Maso.admin_tab, Maso.visu_flood_marks,
-                  # bassin
-                  Maso.basins, Maso.links, Maso.resultats_basin,
-                  Maso.resultats_links,
-                  # qualite d'eau
-                  Maso.tracer_lateral_inflows, Maso.tracer_physic,
-                  Maso.tracer_name,
-                  Maso.tracer_config, Maso.laws_wq,
-                  Maso.init_conc_config, Maso.init_conc_wq,
-                  # meteo
-                  Maso.meteo_config, Maso.laws_meteo,
-                  # ouvrage
-                  Maso.struct_config, Maso.profil_struct, Maso.struct_param,
-                  Maso.struct_elem, Maso.struct_elem_param,
-                  Maso.struct_abac, Maso.struct_laws,
-                  # ouvrage mobile
-                  Maso.struct_fg, Maso.struct_fg_val,
-                  Maso.weirs_mob_val,
-                  # new results
-                  Maso.runs_graph, Maso.results, Maso.results_var,
-                  Maso.results_sect
-                  ]
-        tables.sort(key=lambda x: x().order)
+            # table
+            tables = [Maso.events, Maso.lateral_inflows, Maso.lateral_weirs,
+                      Maso.extremities,
+                      Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
+                      Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
+                      Maso.observations, Maso.parametres, Maso.resultats, Maso.runs,
+                      Maso.laws,
+                      Maso.admin_tab, Maso.visu_flood_marks,
+                      # bassin
+                      Maso.basins, Maso.links, Maso.resultats_basin,
+                      Maso.resultats_links,
+                      # qualite d'eau
+                      Maso.tracer_lateral_inflows, Maso.tracer_physic,
+                      Maso.tracer_name,
+                      Maso.tracer_config, Maso.laws_wq,
+                      Maso.init_conc_config, Maso.init_conc_wq,
+                      # meteo
+                      Maso.meteo_config, Maso.laws_meteo,
+                      # ouvrage
+                      Maso.struct_config, Maso.profil_struct, Maso.struct_param,
+                      Maso.struct_elem, Maso.struct_elem_param,
+                      Maso.struct_abac, Maso.struct_laws,
+                      # ouvrage mobile
+                      Maso.struct_fg, Maso.struct_fg_val,
+                      Maso.weirs_mob_val,
+                      # new results
+                      Maso.runs_graph, Maso.results, Maso.results_var,
+                      Maso.results_sect
+                      ]
+            tables.sort(key=lambda x: x().order)
 
-        for masobj_class in tables:
-            # try:
-            obj = self.process_masobject(masobj_class, 'pg_create_table')
-            if self.mgis.DEBUG:
-                self.mgis.add_info('  {0} OK'.format(obj.name))
-                # except:
-                #     self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
-                # ajout variable fichier parameter
-                # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV HEADER;"""
-                # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV;"""
-        fichparam = os.path.join(dossier, "parametres.csv")
-        # self.run_query(req.format(self.SCHEMA, fichparam))
-        liste_value = []
-        with open(fichparam, 'r') as file:
-            for ligne in file:
-                liste_value.append(ligne.replace('\n', '').split(';'))
-        liste_col = self.list_columns('parametres')
-        var = ",".join(liste_col)
-        valeurs = "("
-        for k in liste_col:
-            valeurs += '%s,'
-        valeurs = valeurs[:-1] + ")"
-
-        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
-                                                            'parametres',
-                                                            var,
-                                                            valeurs)
-
-        self.run_query(sql, many=True, list_many=liste_value)
-        # IF WATER QUALITY
-        tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
-        tbwq.default_tab_phy()
-
-        self.insert_abacus_table(self.mgis.dossier_struct)
-        self.insert_var_to_result_var(dossier)
-
-        # admin_tab
-        chkt = CheckTab(self.mgis, self)
-        chkt.all_version(self.list_tables(self.SCHEMA),
-                         read_version(self.mgis.masplugPath))
-
-        # add fct
-        cl = Maso.class_fct_psql()
-        lfct = [cl.pg_abscisse_profil(),
-                cl.pg_all_profil(),
-                cl.pg_abscisse_point(),
-                cl.pg_all_point(),
-                ]
-        namefct = ['abscisse_profil', 'update_abscisse_profil',
-                   'abscisse_point', 'update_abscisse_point']
-
-        for i, sql in enumerate(lfct):
-            if not self.check_fct(namefct[i]):
-                self.run_query(sql)
-
-        # visualization
-        self.load_gis_layer()
-
-        self.mgis.add_info('Model "{0}" completed'.format(self.SCHEMA))
-
-        # except Exception as e:
-        #     self.mgis.add_info("Echec of creation model")
-        #     self.mgis.add_info(str(e))
-
-    def add_table_basins(self, dossier):
-        """
-        Add table  for water Quality model
-        """
-
-        tables = [Maso.basins, Maso.links,
-                  Maso.resultats_basin, Maso.resultats_links]
-        tables.sort(key=lambda x: x().order)
-
-        for masobj_class in tables:
-            try:
+            for masobj_class in tables:
+                # try:
                 obj = self.process_masobject(masobj_class, 'pg_create_table')
                 if self.mgis.DEBUG:
                     self.mgis.add_info('  {0} OK'.format(obj.name))
-            except:
-                self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
+                    # except:
+                    #     self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
+                    # ajout variable fichier parameter
+                    # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV HEADER;"""
+                    # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV;"""
+            fichparam = os.path.join(dossier, "parametres.csv")
+            # self.run_query(req.format(self.SCHEMA, fichparam))
+            liste_value = []
+            with open(fichparam, 'r') as file:
+                for ligne in file:
+                    liste_value.append(ligne.replace('\n', '').split(';'))
+            liste_col = self.list_columns('parametres')
+            var = ",".join(liste_col)
+            valeurs = "("
+            for k in liste_col:
+                valeurs += '%s,'
+            valeurs = valeurs[:-1] + ")"
 
-        fichparam = os.path.join(dossier, "parametres.csv")
-        # self.run_query(req.format(self.SCHEMA, fichparam))
-        liste_value = []
-        with open(fichparam, 'r') as file:
-            for ligne in file:
-                list_val = ligne.replace('\n', '').split(';')
-                if list_val[-1] == 'basins':
-                    liste_value.append(list_val)
+            sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
+                                                                'parametres',
+                                                                var,
+                                                                valeurs)
 
-        sql = "DELETE FROM {}.parametres;".format(self.SCHEMA)
-        self.run_query(sql)
+            self.run_query(sql, many=True, list_many=liste_value)
+            # IF WATER QUALITY
+            tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
+            tbwq.default_tab_phy()
 
-        liste_value = []
-        with open(fichparam, 'r') as file:
-            for ligne in file:
-                liste_value.append(ligne.replace('\n', '').split(';'))
-        liste_col = self.list_columns('parametres')
-        var = ",".join(liste_col)
-        valeurs = "("
-        for k in liste_col:
-            valeurs += '%s,'
-        valeurs = valeurs[:-1] + ")"
+            self.insert_abacus_table(self.mgis.dossier_struct)
+            self.insert_var_to_result_var(dossier)
 
-        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
-                                                            'parametres',
-                                                            var,
-                                                            valeurs)
+            # admin_tab
+            chkt = CheckTab(self.mgis, self)
+            chkt.all_version(self.list_tables(self.SCHEMA),
+                             read_version(self.mgis.masplugPath))
 
-        self.run_query(sql, many=True, list_many=liste_value)
+            # add fct
+            cl = Maso.class_fct_psql()
+            lfct = [cl.pg_abscisse_profil(),
+                    cl.pg_all_profil(),
+                    cl.pg_abscisse_point(),
+                    cl.pg_all_point(),
+                    ]
+            namefct = ['abscisse_profil', 'update_abscisse_profil',
+                       'abscisse_point', 'update_abscisse_point']
 
-    def add_table_wq(self, dossier):
-        """
-        Add table  for water Quality model
-        """
-        tables = [Maso.tracer_lateral_inflows, Maso.tracer_physic,
-                  Maso.tracer_name,
-                  Maso.tracer_config, Maso.laws_wq, Maso.init_conc_config,
-                  Maso.init_conc_wq, Maso.meteo_config, Maso.laws_meteo]
-        tables.sort(key=lambda x: x().order)
+            for i, sql in enumerate(lfct):
+                if not self.check_fct(namefct[i]):
+                    self.run_query(sql)
 
-        for masobj_class in tables:
-            try:
-                masobj_class.overwrite = True
-                obj = self.process_masobject(masobj_class, 'pg_create_table')
-                if self.mgis.DEBUG:
-                    self.mgis.add_info('  {0} OK'.format(obj.name))
-            except:
-                self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
+            # visualization
+            self.load_gis_layer()
 
-        sql = """ALTER TABLE {}.runs ADD COLUMN IF NOT EXISTS wq text;"""
-        self.run_query(sql.format(self.SCHEMA))
-        sql = """ALTER TABLE {}.extremities ADD COLUMN IF NOT EXISTS tracer_boundary_condition_type integer NULL ;"""
-        self.run_query(sql.format(self.SCHEMA))
-        sql = """ALTER TABLE {}.extremities ADD COLUMN IF NOT EXISTS law_wq text;"""
-        self.run_query(sql.format(self.SCHEMA))
-        # add parameters
-        sql = """ALTER TABLE {}.parametres ADD COLUMN IF NOT EXISTS gui_type text DEFAULT 'parameters';"""
-        self.run_query(sql.format(self.SCHEMA))
-        fichparam = os.path.join(dossier, "parametres.csv")
-        # self.run_query(req.format(self.SCHEMA, fichparam))
-        liste_value = []
-        with open(fichparam, 'r') as file:
-            for ligne in file:
-                list_val = ligne.replace('\n', '').split(';')
-                if list_val[-1] == 'tracers':
-                    liste_value.append(list_val)
+            self.mgis.add_info('Model "{0}" completed'.format(self.SCHEMA))
 
-        # liste_col = self.list_columns('parametres')
-        # var = ",".join(liste_col)
-        # valeurs = "("
-        # for k in liste_col:
-        #     valeurs += '%s,'
-        # valeurs = valeurs[:-1] + ")"
-        #
-        # sql = "INSERT INTO {0}.{1}({2}) VALUES {3} ON CONFLICT DO NOTHING;".format(self.SCHEMA,
-        #                                                                            'parametres',
-        #                                                                            var,
-        #                                                                            valeurs)
-        #
-        # self.run_query(sql, many=True, list_many=liste_value)
+        except Exception as e:
+            self.mgis.add_info("Echec of creation model")
+            self.mgis.add_info(str(e))
 
-        # phy parameters
-        tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
-        tbwq.default_tab_phy()
-
-    def add_table_struct(self, dossier):
-        """
-        Add table  for water Quality model
-        """
-
-        tables = [
-            Maso.struct_config, Maso.profil_struct, Maso.struct_param,
-            Maso.struct_elem, Maso.struct_elem_param,
-            Maso.struct_abac, Maso.struct_laws
-        ]
-        tables.sort(key=lambda x: x().order)
-
-        for masobj_class in tables:
-            try:
-                masobj_class.overwrite = True
-                obj = self.process_masobject(masobj_class, 'pg_create_table')
-                if self.mgis.DEBUG:
-                    self.mgis.add_info('  {0} OK'.format(obj.name))
-            except:
-                self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
-        self.insert_abacus_table(dossier)
-
-        list_col = self.list_columns('profiles')
-        sql = ''
-        if 'struct' in list_col:
-            sql = "ALTER TABLE {0}.profiles DROP COLUMN IF EXISTS  struct;\n"
-        sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer DEFAULT 0;"
-        self.run_query(sql.format(self.SCHEMA))
 
     def public_fct_sql(self):
 
