@@ -47,8 +47,6 @@ class CheckTab:
         self.mgis = mgis
         self.mdb = mdb
         self.box = ClassWarningBox()
-        # for add table [ 'add_tab': [list_table]]
-        # for delete [ ['DEL TAB',[list_table]]
         self.list_hist_version = ['0.0.0',
                                   '1.1.3',
                                   '2.0.0 ',

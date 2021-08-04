@@ -46,7 +46,7 @@ from .db.Check_tab import CheckTab
 from .ui.custom_control import ClassWarningBox
 from .ClassDownload import ClassDownloadMasc
 
-from .ClassImportExportDialog import ClassImportExportDialog,ClassDlgExport,ClassDlgImport
+from .ClassImportExportDialog import ClassDlgExport,ClassDlgImport
 
 from .ClassImport_res import ClassImportRes
 
@@ -89,6 +89,7 @@ class MascPlugDialog(QMainWindow):
         self.repProject = None
         self.task_mas = None
         self.task_exp = None
+        self.task_imp = None
 
         self.box = ClassWarningBox()
         # variables liste of results
@@ -181,8 +182,8 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionRun.triggered.connect(self.fct_run)
         self.ui.actionDelete_Run.triggered.connect(self.del_run)
         self.ui.actionExport_Run.triggered.connect(self.export_run)
-        self.ui.actionExport_Model.triggered.connect(self.export_model)
-        self.ui.actionImport_Model.triggered.connect(self.import_model)
+        self.ui.actionExport_Model.triggered.connect(self.export_model_dgl)
+        self.ui.actionImport_Model.triggered.connect(self.import_model_dgl)
 
         self.ui.actionParameters_Water_Quality.triggered.connect(
             self.fct_parameters_wq)
@@ -418,6 +419,7 @@ class MascPlugDialog(QMainWindow):
             (model, ok) = (schema_info, True)
         else:
             liste = self.mdb.liste_models()
+            liste = [v for v in liste if not( v in self.mdb.ignor_schema)]
             model, ok = QInputDialog.getItem(None,
                                              'Model Choice',
                                              'Model',
@@ -671,7 +673,7 @@ class MascPlugDialog(QMainWindow):
     def do_something(self, layer, feature):
         print(feature.attributes())
 
-    def export_model(self):
+    def export_model_dgl(self):
         if self.task_exp:
             self.box.info("The export is not running,\n"
                           " because the previous export running yet")
@@ -680,13 +682,15 @@ class MascPlugDialog(QMainWindow):
         dlg = ClassDlgExport(self)
         if dlg.exec_():
            pass
-       # cl = ClassImportExportDialog(self)
-       # cl.export_model_old()
+
         return
 
-    def import_model(self):
-        # cl = ClassImportExportDialog(self)
-        # cl.import_model_old()
+    def import_model_dgl(self):
+        if self.task_imp:
+            self.box.info("The export is not running,\n"
+                          " because the previous import running yet")
+            self.add_info('The import is not running\n')
+            return
         dlg = ClassDlgImport(self)
         if dlg.exec_():
            pass

@@ -86,6 +86,7 @@ class ClassMasDatabase(object):
         self.uris = []
         self.refresh_uris()
         self.box = ClassWarningBox()
+        self.ignor_schema = list()
 
     def connect_pg(self):
         """
@@ -1356,17 +1357,6 @@ $BODY$
                 listf.append(row[0])
         return listf
 
-    def checkschema_import(self, file):
-        namesh = None
-        with open(file, 'r') as infile:
-            for line in infile:
-                if line.find('CREATE SCHEMA') > -1:
-                    line = line.replace(';', '').replace('\n', '')
-                    liste = line.split()
-                    namesh = liste[2]
-                    break
-
-        return namesh
 
     def insert_abacus_table(self, dossier):
         list_fich = os.listdir(dossier)
@@ -1509,7 +1499,7 @@ $BODY$
             cpt += 1
             dest = src + '_ext{}_{}'.format(date,cpt)
         js_dict['export_name'] = dest
-
+        self.ignor_schema += [dest]
         list_tab_res = ['runs','results','results_sect','runs_graph']
 
         qry = "SELECT clone_schema('{}','{}','{}');".format(src, dest,
@@ -1541,6 +1531,7 @@ $BODY$
             json.dump(js_dict, outfile, indent=4)
 
         self.drop_model(dest, cascade=True)
+        self.ignor_schema = list()
 
     def import_model(self, metadict):
         """
@@ -1549,10 +1540,9 @@ $BODY$
         """
         namesh= metadict["schema_name"]
         actname = metadict["export_name"]
+        new_file = metadict["psqlfile"]
+        self.ignor_schema += [namesh, actname, "{0}_tmp".format(actname)]
 
-        dir = os.path.dirname(metadict['jsfile'])
-        file_name = os.path.splitext(os.path.basename(metadict['jsfile']))[0]
-        new_file = os.path.join(dir , file_name + '.psql')
 
         if self.check_extension():
             self.mgis.add_info(" Shema est {}".format(self.SCHEMA))
@@ -1581,6 +1571,7 @@ $BODY$
                 # l'existant remettre name
                 sql = "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(actname)
                 self.run_query(sql)
+        self.ignor_schema = list()
 
     def get_id_run(self, selection):
         lst_id = []
