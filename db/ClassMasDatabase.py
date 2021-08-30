@@ -1456,6 +1456,57 @@ $BODY$
         return lst_id
 
 
+   def correction_seq(self):
+
+        tables = {
+            'admin_tab' : 'id_',
+            'basins':'basinnum',
+            'basins': 'gid',
+            'branchs': 'branch',
+            'branchs': 'gid',
+            'branchs': 'zonenum',
+            'extremities': 'gid',
+            'flood_marks': 'gid',
+            'hydraulic_head' :'gid',
+            'init_conc_config' : 'id',
+            'lateral_inflows' : 'gid',
+            'lateral_weirs': 'gid',
+            'laws' : 'id',
+            'links' : 'gid',
+            'links' :'linknum',
+            'meteo_config' :'id',
+            'observations' : 'id',
+            'outputs' : 'gid',
+            'parametres' : 'id',
+            'profiles' : 'gid',
+            'results_var' : 'id',
+            'runs_graph' : 'id',
+            'runs' : 'id',
+            'struct_config' : 'id',
+            'tracer_lateral_inflows' : 'gid',
+            'tracer_name': 'id',
+            'tracer_physic': 'id',
+            'visu_flood_marks': 'gid',
+            'weirs' : 'gid'
+                        }
+        for tbl, col in  tables.items():
+            dico ={'my_seq' : '{}.{}_{}_seq'.format(self.SCHEMA,tbl,col),
+                   'table' : '{}.{}'.format(self.SCHEMA,tbl),
+                   'id_name' : col
+                   }
+            sql = """    CREATE SEQUENCE {my_seq}
+                INCREMENT 1
+                START 1
+                MINVALUE 1
+                MAXVALUE 9223372036854775807
+                CACHE 1;
+                select setval('{my_seq}', (SELECT MAX({id_name}) FROM {table}));
+                ALTER SEQUENCE {my_seq}   OWNER TO postgres;
+                ALTER TABLE {table} ALTER COLUMN {id_name} SET DEFAULT nextval('{my_seq}'::regclass);
+                """.format(**dico)
+
+            # print(sql)
+            self.run_query(sql)
 
 
 
