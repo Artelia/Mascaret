@@ -1456,7 +1456,12 @@ $BODY$
         return lst_id
 
 
-   def correction_seq(self):
+
+    def correction_seq(self):
+        """
+        correction of the sequence database
+        :return:
+        """
 
         tables = {
             'admin_tab' : 'id_',
@@ -1488,7 +1493,7 @@ $BODY$
             'tracer_physic': 'id',
             'visu_flood_marks': 'gid',
             'weirs' : 'gid'
-                        }
+                    }
         for tbl, col in  tables.items():
             dico ={'my_seq' : '{}.{}_{}_seq'.format(self.SCHEMA,tbl,col),
                    'table' : '{}.{}'.format(self.SCHEMA,tbl),
