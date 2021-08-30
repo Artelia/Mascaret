@@ -223,13 +223,11 @@ class GraphProfil(GraphCommon):
         self.init_ui()
 
         # action
-        self.ui.actionBtTools_point_selection.triggered.connect(
-            self.selector_toggled)
-        self.ui.actionBtTools_zone_selection.triggered.connect(
-            self.zone_selector_toggled)
+        self.bt_translah.clicked.connect(self.deplace_h_toggled)
+        self.bt_translav.clicked.connect(self.deplace_v_toggled)
+        self.bt_select.clicked.connect(self.selector_toggled)
+        self.bt_select_z.clicked.connect(self.zone_selector_toggled)
 
-        self.ui.actionBtTools_profil_translation.triggered.connect(
-            self.deplace_toggled)
 
         self.ui.bt_add_point.clicked.connect(self.ajout_points)
         self.ui.bt_topo_load.clicked.connect(self.import_topo)
@@ -258,11 +256,13 @@ class GraphProfil(GraphCommon):
         self.selected = {}
         self.mnt = {'x': [], 'z': []}
         self.x0 = None
+        self.y0 = None
         self.flag = False
         self.image = None
         self.topoSelect = None
         self.order_topo = 0
-        self.bt_transla = self.ui.btTools_profil_translation
+        self.bt_translah = self.ui.BtTools_profil_translationH
+        self.bt_translav = self.ui.BtTools_profil_translationV
         self.bt_select = self.ui.btTools_point_selection
         self.bt_select_z = self.ui.btTools_zone_selection
         self.ui.bt_add_point.setDisabled(True)
@@ -357,7 +357,8 @@ class GraphProfil(GraphCommon):
             self.RS.set_active(True)
             self.ui.bt_add_point.setEnabled(True)
             self.bt_select_z.setChecked(False)
-            self.bt_transla.setChecked(False)
+            self.bt_translah.setChecked(False)
+            self.bt_translav.setChecked(False)
 
         else:
             self.ui.bt_add_point.setDisabled(True)
@@ -368,15 +369,24 @@ class GraphProfil(GraphCommon):
         if self.bt_select_z.isChecked():
             self.span.visible = True
             self.bt_select.setChecked(False)
-            self.bt_transla.setChecked(False)
+            self.bt_translah.setChecked(False)
+            self.bt_translav.setChecked(False)
         else:
             self.span.visible = False
 
-    def deplace_toggled(self):
+    def deplace_h_toggled(self):
         """Translation function"""
-        if self.bt_transla.isChecked():
+        if self.bt_translah.isChecked():
             self.bt_select.setChecked(False)
             self.bt_select_z.setChecked(False)
+            self.bt_translav.setChecked(False)
+
+    def deplace_v_toggled(self):
+        """Translation function"""
+        if self.bt_translav.isChecked():
+            self.bt_select.setChecked(False)
+            self.bt_select_z.setChecked(False)
+            self.bt_translah.setChecked(False)
 
     def create_struct(self):
         """ creation of hydraulic structure"""
@@ -760,13 +770,17 @@ class GraphProfil(GraphCommon):
 
     def onpick(self, event):
         legline = event.artist
-        deplace = self.bt_transla.isChecked()
+        deplaceh = self.bt_translah.isChecked()
+        deplacev = self.bt_translav.isChecked()
         selector = self.bt_select.isChecked()
         zone_selector = self.bt_select_z.isChecked()
         bouton = event.mouseevent.button
 
-        if deplace and legline in self.courbeTopo and bouton == 1:
+        if deplaceh and legline in self.courbeTopo and bouton == 1:
             self.x0 = round(event.mouseevent.xdata, 2)
+            self.courbeSelected = legline
+        elif deplacev and legline in self.courbeTopo and bouton == 1:
+            self.y0 = round(event.mouseevent.ydata, 2)
             self.courbeSelected = legline
 
         elif self.flag and bouton == 1 and legline in self.courbeTopo:
@@ -873,8 +887,11 @@ class GraphProfil(GraphCommon):
                     "The table has {0} elements, please add ".format(n))
 
     def onrelease(self, event):
-        if self.bt_transla.isChecked():
+        if self.bt_translah.isChecked():
             self.x0 = None
+        elif  self.bt_translav.isChecked():
+            self.y0 = None
+
         return
 
     def onclick(self, event):
@@ -935,7 +952,7 @@ class GraphProfil(GraphCommon):
 
     def onpress(self, event):
         """ event """
-        if self.bt_transla.isChecked() and self.x0:
+        if self.bt_translah.isChecked() and self.x0:
             f = self.courbeSelected.get_label()
             try:
                 tab_x = self.topo[f]['x']
@@ -953,7 +970,25 @@ class GraphProfil(GraphCommon):
             except:
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Warning:Out of graph")
-            self.fig.canvas.draw()
+
+        elif self.bt_translav.isChecked() and self.y0:
+                f = self.courbeSelected.get_label()
+                try:
+                    tab_z = self.topo[f]['z']
+
+                    tempo = []
+                    for var1 in tab_z:
+                        tempo.append(self.fct2(var1, event.ydata, self.y0))
+                    tab_z = tempo
+
+                    self.topo[f]['z'] = tab_z
+                    self.courbeSelected.set_ydata(tab_z)
+
+                    self.y0 = round(float(event.ydata), 2)
+                except:
+                    if self.mgis.DEBUG:
+                        self.mgis.add_info("Warning:Out of graph")
+        self.fig.canvas.draw()
 
     def maj_graph(self):
         """Updating  graphic"""

@@ -235,7 +235,7 @@
                <layout class="QGridLayout" name="gridLayout_5">
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_4">
-                  <item row="1" column="1">
+                  <item row="1" column="2">
                    <widget class="QPushButton" name="bt_topo_del">
                     <property name="font">
                      <font>
@@ -249,7 +249,7 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="2">
+                  <item row="1" column="3">
                    <widget class="QPushButton" name="bt_topo_save">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -269,7 +269,7 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="2">
+                  <item row="0" column="3">
                    <widget class="QPushButton" name="bt_img_load">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -310,7 +310,7 @@
                    </widget>
                   </item>
                   <item row="0" column="0">
-                   <widget class="QToolButton" name="btTools_profil_translation">
+                   <widget class="QToolButton" name="BtTools_profil_translationH">
                     <property name="font">
                      <font>
                       <pointsize>8</pointsize>
@@ -319,7 +319,7 @@
                      </font>
                     </property>
                     <property name="text">
-                     <string>Profil Translation</string>
+                     <string>Horizontal translation</string>
                     </property>
                     <property name="icon">
                      <iconset>
@@ -336,6 +336,29 @@
                     </property>
                     <property name="checked">
                      <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QToolButton" name="BtTools_profil_translationV">
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Vertical translation</string>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>24</width>
+                      <height>24</height>
+                     </size>
+                    </property>
+                    <property name="checkable">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -573,9 +596,12 @@
     </layout>
    </item>
   </layout>
-  <action name="actionBtTools_profil_translation">
+  <action name="actionBtTools_profil_translationH">
    <property name="text">
-    <string>BtTools_profil_translation</string>
+    <string>BtTools_profil_translationH</string>
+   </property>
+   <property name="toolTip">
+    <string>BtTools_profil_translationH</string>
    </property>
   </action>
   <action name="actionBtTools_zone_selection">
@@ -588,13 +614,21 @@
     <string>BtTools_point_selection</string>
    </property>
   </action>
+  <action name="actionBtTools_profil_translationV">
+   <property name="text">
+    <string>BtTools_profil_translationV</string>
+   </property>
+   <property name="toolTip">
+    <string>BtTools_profil_translationV</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections>
   <connection>
-   <sender>btTools_profil_translation</sender>
+   <sender>BtTools_profil_translationH</sender>
    <signal>toggled(bool)</signal>
-   <receiver>actionBtTools_profil_translation</receiver>
+   <receiver>actionBtTools_profil_translationH</receiver>
    <slot>trigger()</slot>
    <hints>
     <hint type="sourcelabel">
