@@ -11,7 +11,7 @@ name=Mascaret
 description=Pre and Post-processing for Mascaret (http://www.opentelemac.org/).
 about= Plugin dedicated to the building and exploitation of Mascaret models.
        Requires PostgreSQL and PostGIS.
-       Developed by Mehdi-Pierre DAOU, Christophe COULET (Artelia)
+       Developed by Mehdi-Pierre DAOU,  Aurélien Perrin, Christophe COULET (Artelia)
        With contribution of Philippe BAGOT (Cerema) for storage area
        Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
        Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek (Many thanks for the work they've done on RiverGis)
