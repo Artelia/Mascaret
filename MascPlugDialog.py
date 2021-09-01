@@ -45,10 +45,9 @@ from .db.ClassMasDatabase import ClassMasDatabase
 from .db.Check_tab import CheckTab
 from .ui.custom_control import ClassWarningBox
 from .ClassDownload import ClassDownloadMasc
-
 from .ClassImportExportDialog import ClassDlgExport,ClassDlgImport
-
 from .ClassImport_res import ClassImportRes
+from .scores.ClassScoresDialog import ClassScoresDialog
 
 
 
@@ -214,9 +213,11 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionImport_Results.setVisible(False)
         # TODO Finaliser
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(False)
+        self.ui.actionTest.setVisible(True)
         # delete after
         self.ui.menuUpate_table.menuAction().setVisible(False)
+        # scores
+        self.ui.actionScores.triggered.connect(self.fct_scores)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -876,7 +877,9 @@ Version : {}
 
     def fct_test(self):
         """ Test function"""
-        self.chkt.debug_update_vers_meta(version='3.0.6')
+        #self.chkt.debug_update_vers_meta(version='3.0.6')
+
+
         pass
 
     def update_pk(self):
@@ -902,3 +905,8 @@ Version : {}
                         'mascaret_linux']}
 
         cl_load.download_dir(dico)
+
+    def fct_scores(self):
+        dlg = ClassScoresDialog(self)
+        dlg.exec_()
+
