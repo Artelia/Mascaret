@@ -40,10 +40,32 @@ class ScoreParamWidget(QWidget):
 
         self.cl_score = ClassScores()
         self.lst_runs = self.windmain.lst_runs
+        self.init_gui()
 
         self.bt_calcul_scores.clicked.connect(self.cpt_score)
 
 
+    def init_gui(self):
+        """
+        initialize GUI
+        :return:
+        """
+        pass
+        # data = self.mdb.select('runs',
+        #                        where="",
+        #                        list_var=['init_date'])
+        # if any( data['init_date']):
+        #     # au moins 1 valeur
+
+
+
+    # self.ctrl_ref_date.hide()
+    # self.lbl_ref_date.hide()
+
+    # self.ctrl_ref_date # date de référence quand il n'y a pas event pour le modèle
+    # if event :
+    # self.ctrl_ref_date.hide()
+    # self.lbl_ref_date.hide()
 
     def cpt_score(self):
         """
@@ -52,7 +74,7 @@ class ScoreParamWidget(QWidget):
         """
 
         if self.ch_simple_err.isChecked():
-            #compute simple
+            self.cpt_simple_err()
             pass
         if  self.ch_ns_err.isChecked():
             pass
@@ -89,7 +111,7 @@ class ScoreParamWidget(QWidget):
         mean square error :eqm
         :return:
         """
-        # self.get_data(
+        self.get_obs()
 
         # self.cl_score.mean_err( y_obs, y_pred)
         # self.cl_score.mean_abs_err( y_obs, y_pred)
@@ -143,38 +165,28 @@ class ScoreParamWidget(QWidget):
         """
         pass
 
-    def get_data(self):
-        res = {}
-        for id_run in self.lst_runs :
-            res[id_run] = {'time' : [],
-                            'obs' :[],
-                           'model':[]}
-            # get limit time
-            # get observation
-            # get model
-
-            obs = self.mdb
+    # def get_data(self):
+    #     res = {}
+    #     for id_run in self.lst_runs :
+    #         res[id_run] = {'time' : [],
+    #                         'obs' :[],
+    #                        'model':[]}
+    #         # get limit time
+    #         # get observation
+    #         # get model
+    #
+    #         obs = self.mdb
 
     def get_obs(self):
         """
         get observation data
         :return:
         """
-        sql = "SELECT name FROM {0}.profiles " \
-              "WHERE abscissa={1} ".format(self.mdb.SCHEMA, self.cur_pknum)
-        rows = self.mdb.run_query(sql, fetch=True)
+        data = self.mdb.select('outputs',
+                                        where="active ",
+                                        order="abscissa",
+                                        list_var=['code', 'zero',
+                                                  'abscissa', 'name'])
 
-        if rows:
-            val = rows[0][0]
-            self.obs = self.mgis.mdb.select('outputs',
-                                            where="active AND (abscissa = {0} OR name = '{1}')"
-                                                  "".format(self.cur_pknum,
-                                                            val),
-                                            order="abscissa",
-                                            list_var=['code', 'zero',
-                                                      'abscissa', 'name'])
-            if self.obs:
-                if len(self.obs['code']) == 0:
-                    self.obs = None
-        else:
-            self.obs = None
+
+        print(data)

@@ -970,6 +970,7 @@ class GraphResultDialog(QWidget):
 
     def update_obs(self):
         """ """
+        # observation seulement si event
         if self.obs and "date" in self.cur_data.keys():
             if "Z" in self.cur_data.keys():
                 gg = 'H'
