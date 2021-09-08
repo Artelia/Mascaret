@@ -33,6 +33,7 @@ from .ScoreResWidget import ScoreResWidget
 from .ScoreDistWidget import ScoreDistWidget
 
 
+
 class ClassScoresDialog(QDialog):
     """
     GUI Class allow to compute scores
@@ -42,6 +43,9 @@ class ClassScoresDialog(QDialog):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
+
+
+        self.lst_runs =  []
 
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_scores.ui'), self)
@@ -66,8 +70,11 @@ class ClassScoresDialog(QDialog):
         #
 
     def change_tab(self):
-        print(self.tabscores.currentIndex)
+        print(self.tabscores.currentIndex())
+        if self.tabscores.currentIndex() != 0 :
+            self.lst_runs = self.wgt_select.get_selection()
 
+        print( self.lst_runs)
 
 
 

@@ -43,6 +43,17 @@ class SelectWidget(QWidget):
         self.listeRuns = []
         self.listeScen = {}
 
+        self.parent = {}
+        self.child = {}
+
+        self.init_gui()
+
+
+    def init_gui(self):
+        """
+        initialize GUI
+        :return:
+        """
         dico = self.mdb.select("runs", "", "date")
         for run, scen, date, comments in zip(dico["run"], dico["scenario"],
                                              dico["date"],
@@ -53,9 +64,6 @@ class SelectWidget(QWidget):
             self.listeScen[run].append((scen, date, comments))
 
         if len(self.listeRuns) > 0:
-            self.parent = {}
-            self.child = {}
-
             for run in self.listeRuns:
                 self.parent[run] = QTreeWidgetItem(self.tw_runs)
                 self.parent[run].setText(0, run)
