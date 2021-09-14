@@ -163,7 +163,13 @@ class CheckTab:
                                             "ON {0}.results(id_runs, pknum);",
                                             "CREATE INDEX IF NOT EXISTS results_id_runs_time  " \
                                             "ON {0}.results(id_runs, time);",
-                                        ]}],
+                                        ]},
+                                       {'tab': 'observations',
+                                        'sql': [
+                                            "CREATE INDEX IF NOT EXISTS observations_code_typ  " \
+                                            "ON {0}.observations(code, type);",
+                                        ]},
+                                        ]
                            },
                            # '3.0.x': { },
 

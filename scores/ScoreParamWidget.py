@@ -21,6 +21,7 @@ email                :
 import os
 import datetime
 import numpy as np
+from scipy import interpolate
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
@@ -29,9 +30,9 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-
 from .ClassScores import ClassScores
 from ..Function import datum_to_float
+
 
 class ScoreParamWidget(QWidget):
     def __init__(self, windmain):
@@ -44,14 +45,17 @@ class ScoreParamWidget(QWidget):
                          'ui/scores/ui_parametre.ui'), self)
 
         self.cl_score = ClassScores()
-        self.lst_runs =  None
+        self.lst_runs = None
         self.init_dates = None
+        self.all = True
         self.data = {}
         # {id : { h : [],time : [], q :[]}}
+        self.res = {}
+
         self.init_gui()
 
-        # self.bt_calcul_scores.clicked.connect(self.cpt_score)
-        self.bt_calcul_scores.clicked.connect(self.get_test)
+        self.bt_calcul_scores.clicked.connect(self.cpt_score)
+        #self.bt_calcul_scores.clicked.connect(self.get_test)
 
     def init_gui(self):
         """
@@ -109,17 +113,57 @@ class ScoreParamWidget(QWidget):
         mean square error :eqm
         :return:
         """
-        self.get_test()
+        if self.all :
+            self.get_alldata()
+        else:
+            print('get local ')
+            pass
+        for id_run in self.lst_runs:
 
-        # self.cl_score.mean_err( y_obs, y_pred)
-        # self.cl_score.mean_abs_err( y_obs, y_pred)
-        # self.cl_score.mean_r_err( y_obs, y_pred)
-        # self.cl_score.biais( y_obs, y_pred)
-        # self.cl_score.mean_rabs_err( y_obs, y_pred)
-        # self.cl_score.precision( y_obs, y_pred)
-        # self.cl_score.std(y_obs, y_pred)
-        # self.cl_score.eqm( y_obs, y_pred)
+            if self.all:
+                h_obs = np.array([])
+                h_pred = np.array([])
+                q_obs = np.array([])
+                q_pred = np.array([])
+                for code in self.data[id_run].keys():
+                    if code == 'hcompt' or code == 'qcompt':
+                        continue
+                    if self.data[id_run]['hcompt']:
+                        h_obs = np.concatenate(
+                            (h_obs, self.data[id_run][code]['h_obs']), axis=0)
+                        h_pred = np.concatenate(
+                            (h_pred, self.data[id_run][code]['h_mod']), axis=0)
+                    if self.data[id_run]['qcompt']:
+                        q_obs = np.concatenate(
+                            (q_obs, self.data[id_run][code]['q_obs']), axis=0)
+                        q_pred = np.concatenate(
+                            (q_pred, self.data[id_run][code]['q_mod']), axis=0)
 
+            if self.data[id_run]['hcompt'] :
+                print(h_obs, h_pred)
+                self.res[id_run]['H']['simple'] = {
+                'mean_err':self.cl_score.mean_err(h_obs, h_pred),
+                'mean_abs_err': self.cl_score.mean_abs_err( h_obs, h_pred),
+                'mean_r_err':self.cl_score.mean_r_err( h_obs, h_pred),
+                'biais' : self.cl_score.biais( h_obs, h_pred),
+                'mean_rabs_err': self.cl_score.mean_rabs_err( h_obs, h_pred),
+                'precision': self.cl_score.precision( h_obs, h_pred),
+                'std': self.cl_score.std(h_obs, h_pred),
+                'eqm':  self.cl_score.eqm( h_obs, h_pred)
+                }
+
+            if self.data[id_run]['qcompt'] :
+                self.res[id_run]['Q']['simple'] = {
+                'mean_err':self.cl_score.mean_err(q_obs, q_pred),
+                'mean_abs_err': self.cl_score.mean_abs_err( q_obs, q_pred),
+                'mean_r_err':self.cl_score.mean_r_err( q_obs, q_pred),
+                'biais' : self.cl_score.biais( q_obs, q_pred),
+                'mean_rabs_err': self.cl_score.mean_rabs_err( q_obs, q_pred),
+                'precision': self.cl_score.precision( q_obs, q_pred),
+                'std': self.cl_score.std(q_obs, q_pred),
+                'eqm':  self.cl_score.eqm( q_obs, q_pred)
+                }
+        print( self.res[id_run]['H']['simple'])
         pass
 
     def cpt_ns_err(self):
@@ -163,162 +207,177 @@ class ScoreParamWidget(QWidget):
         """
         pass
 
-    # def get_data(self):
-    #     res = {}
-    #     for id_run in self.lst_runs :
-    #         res[id_run] = {'time' : [],
-    #                         'obs' :[],
-    #                        'model':[]}
-    #         # get limit time
-    #         # get observation
-    #         # get model
-    #
-    #         obs = self.mdb
+    def interpol_date(self, obs_time, time_model, var_model):
+        """
+        :param obs_time: array    observation time
+        :param time_model: list(float)   model time
+        :param var_model: array  model variable
+        :return:
+        """
+        fct = interpolate.interp1d(time_model, var_model, kind='linear')
+        model_var = fct(obs_time)
+        return model_var
 
+    def get_pknum(self, code):
+        if self.obs[code]['abscissa']:
+            where = 'abscissa = {1}'.format(self.obs[code]['abscissa'])
+        elif self.obs[code]['name']:
+            where = "name='{0}'".format(self.obs[code]['name'])
+        else:
+            print('No find profile {0}={1} '.format(self.obs[code]['name'],
+                                                    self.obs[code]['abscissa']))
+            return
+        info = self.mdb.select('profiles',
+                               where=where,
+                               list_var=['abscissa'])
 
-    def interpol_date(self, datearray, time_model, var_model):
-        obs_time = datum_to_float(datearray)
-        print(obs_time)
-    def get_model(self,id_run):
+        pknum = info['abscissa'][0]
+        return pknum
+
+    def get_model(self, id_run, code):
         """
         get model data
         :return:
         """
+
         dict_model = self.model[id_run]
         lst_varh = []
-        if 'Y' in dict_model['var'] :
-            lst_varh.append('Y')
-        elif ('ZREF' in dict_model['var'] and 'Z' in dict_model['var']) :
-            lst_varh.append('ZREF')
-            lst_varh.append('Z')
-
         lst_varq = []
-        if 'Q' in dict_model['var'] :
-            lst_varq.append('Q')
-        elif ('QMIN' in dict_model['var'] and 'QMAJ' in dict_model['var']):
-            lst_varq.append('QMIN')
-            lst_varq.append('QMAJ')
-
-        if len(dict_model['lst_obs']) == 0:
-            print('No find observation')
-            return
-        if len(lst_varh) and len(lst_varq)  == 0:
-            print('No find variable Q And H')
-            return
-
-        for code in dict_model['lst_obs']:
-            if self.obs[code]['abscissa']:
-                where = 'abscissa = {1}'.format(self.obs[code]['abscissa'])
-            elif     self.obs[code]['name'] :
-                where = "name='{0}'".format(self.obs[code]['name'])
+        if self.data[id_run]['hcompt']:
+            if 'Z' in dict_model['var']:
+                lst_varh.append('Z')
+            elif 'ZREF' in dict_model['var'] and 'Y' in dict_model['var']:
+                lst_varh.append('ZREF')
+                lst_varh.append('Y')
             else:
-                print('No find profile {0}={1} '.format(self.obs[code]['name'],
-                                                        self.obs[code]['abscissa']))
-                return
-            info = self.mdb.select('profiles',
-                                   where= where,
-                                   list_var=['abscissa'])
+                self.data[id_run]['hcompt'] = False
 
-            pknum = info['abscissa'][0]
-            lst_var = lst_varh + lst_varq
+        if self.data[id_run]['qcompt']:
+            if 'Q' in dict_model['var']:
+                lst_varq.append('Q')
+            elif 'QMIN' in dict_model['var'] and 'QMAJ' in dict_model['var']:
+                lst_varq.append('QMIN')
+                lst_varq.append('QMAJ')
+            else:
+                self.data[id_run]['qcompt'] = False
 
-            tmp = {}
-            for var in lst_var:
-                val = self.mdb.select('results',
-                                where="id_runs={0} AND pknum= {1} " \
-                                      "and var = {2}".format(id_run,
-                                                                pknum,
-                                                             dict_model['var'][var] ),
-                                order = 'time',
-                                list_var=['val'],
-                                      verbose= True)
-                tmp[var] = val['val']
+        pknum = self.get_pknum(code)
+        lst_var = lst_varq + lst_varh
+        tmp = {}
+        for var in lst_var:
+            val = self.mdb.select('results',
+                                  where="id_runs={0} AND pknum= {1} " \
+                                        "and var = {2}".format(id_run,
+                                                               pknum,
+                                                               dict_model[
+                                                                   'var'][var]),
+                                  order='time',
+                                  list_var=['val'],
+                                  verbose=True)
+            tmp[var] = val['val']
 
+        if len(lst_varh) > 0:
+            if len(lst_varh) > 1:
+                zref = np.array(tmp['ZREF'])
+                h = np.array(tmp['Y'])
+                z = h + zref
+            else:
+                #cote d'eau
+                z = np.array(tmp['Z'])
+            # interpolation en fonction des temps des Observation
+            obs_time = np.array(
+                [datum_to_float(vv, self.data[id_run][code]['h_obs_date'][0])
+                 for vv in self.data[id_run][code]['h_obs_date']])
+            print(self.interpol_date(obs_time,self.model[id_run]['times'],z))
+            self.data[id_run][code]['h_mod'] = self.interpol_date(obs_time,
+                                                                  self.model[
+                                                                      id_run][
+                                                                      'times'],
+                                                                  z)
+            self.data[id_run][code]['h_time'] = obs_time
+        else:
+            self.data[id_run]['hcompt'] = False
 
-            if len(lst_varh) > 0:
-                if len(lst_varh) > 1:
-                    zref = np.array(tmp['ZREF'])
-                    z = np.array(tmp['Z'])
-                    h = z - zref
-                else :
-                    h = np.array(tmp['Y'])
-                # TODO interpol en fonction des Observations
-                #print(h)
-                self.interpol_date( self.data[id_run][code]['h_obs_date'],
-                                    self.model[id_run]['times'],
-                                    h)
-                # self.data[id_run][code] = {
-                #     'h_mod': h,
-                #     'h_mod_time': self.model[id_run]['time']}
+        if len(lst_varq) > 0:
+            if len(lst_varq) > 1:
+                qmin = np.array(tmp['QMIN'])
+                qmaj = np.array(tmp['QMAJ'])
+                q = qmin + qmaj
+            else:
+                q = np.array(tmp['Q'])
+            # interpolation en fonction des temps des Observation
+            obs_time = np.array(
+                [datum_to_float(vv, self.data[id_run][code]['q_obs_date'][0])
+                 for vv in self.data[id_run][code]['q_obs_date']])
 
-            if len(lst_varq) > 0:
-                if len(lst_varq) > 1:
-                    qmin = np.array(tmp['QMIN'])
-                    qmaj = np.array(tmp['QMAJ'])
-                    q = qmin + qmaj
-                else:
-                    q = np.array(tmp['Q'])
-                # TODO interpol en fonction de Observation
-                # self.data[id_run][code] = {
-                #     'q_mod': q,
-                #     'q_mod_time': self.model[id_run]['time']}
+            self.data[id_run][code]['q_mod'] = self.interpol_date(obs_time,
+                                                                  self.model[
+                                                                      id_run][
+                                                                      'times'],
+                                                                  q)
+            self.data[id_run][code]['q_time'] = obs_time
+        else:
+            self.data[id_run]['qcompt'] = False
 
-
-
-    def get_obs(self, id_run):
+    def get_obs(self, id_run, code):
         """
         get observation data
         :return:
         """
-        dict_model  = self.model[id_run]
-        # variable
-        lst_var = []
-        if 'Y' in dict_model['var'] or  \
-            ('ZREF' in dict_model['var'] and 'Z' in dict_model['var']):
+        lst_var = []  # TODO
+        if self.data[id_run]['hcompt']:
             lst_var.append('H')
-        if 'Q' in dict_model['var'] or \
-                ('QMIN' in dict_model['var'] and 'QMAJ' in dict_model['var']):
+        if self.data[id_run]['qcompt']:
             lst_var.append('Q')
+        dict_model = self.model[id_run]
+        for gg in lst_var:
+            condition = """code = '{0}'
+                                  AND date>='{1}'
+                                  AND date<='{2}'
+                                  AND type='{3}'
+                                  AND valeur > -999.9""".format(
+                code, dict_model['init_time'],
+                dict_model['final_time'], gg)
+            tmp_dict = self.mdb.select("observations", condition, "date",
+                                       list_var=['date', 'valeur'])
+            if gg == 'H' and len(tmp_dict['valeur']) > 0:
+                z = np.array(tmp_dict['valeur']) + \
+                    np.ones(len(tmp_dict['valeur']))*self.obs[code]['zero']
+                self.data[id_run][code] = {
+                    'h_obs': z,
+                    'h_obs_date': tmp_dict['date']}
 
-        if len(dict_model['lst_obs']) == 0:
-            return
-        if len(lst_var) == 0:
-            return
+            if gg == 'Q' and len(tmp_dict['valeur']) > 0:
+                self.data[id_run][code] = {
+                    'q_obs': np.array(tmp_dict['valeur']),
+                    'q_obs_date': tmp_dict['date']}
+        if  'h_obs_date' not in self.data[id_run][code].keys():
+            self.data[id_run]['hcompt'] = False
+        if 'q_obs_date' not in self.data[id_run][code].keys():
+            self.data[id_run]['qcompt'] = False
 
-
-        for code in dict_model['lst_obs'] :
-            for gg in lst_var:
-                condition = """code = '{0}'
-                                      AND date>'{1}'
-                                      AND date<'{2}'
-                                      AND type='{3}'
-                                      AND valeur > -999.9""".format(
-                    code, dict_model['init_time'],
-                    dict_model['final_time'], gg)
-                tmp_dict = self.mdb.select("observations", condition, "date",
-                                           list_var=['date','valeur'] )
-                if gg == 'H' and len(tmp_dict['valeur'])>0:
-                  self.data[id_run][code] = {'h_obs' : np.array(tmp_dict['valeur']),
-                                            'h_obs_date' : tmp_dict['date']}
-                if gg == 'Q' and len(tmp_dict['valeur'])>0:
-                    self.data[id_run][code] = {'q_obs' : np.array(tmp_dict['valeur']),
-                                            'q_obs_date' : tmp_dict['date']}
-
-
-    def get_test(self):
+    def create_dict_pretraitment(self):
+        """
+        Create  :
+        self.data[id_run]
+        self.obs
+        self.model
+        And get information observation
+        :return:
+        """
         self.obs = {}
         self.model = {}
-
-        # pour chaque run
         for id_run, init_time in zip(self.lst_runs, self.init_dates):
 
-            info = self.mdb.select('runs_graph', where="id_runs={} "
-                                                       "AND type_res='opt'"
-                                                       "AND var in "
-                                                       "('var','time','pknum')".format(id_run),
+            info = self.mdb.select('runs_graph',
+                                   where="id_runs={} "
+                                         "AND type_res='opt'"
+                                         "AND var in "
+                                         "('var','time','pknum')".format(
+                                       id_run),
                                    list_var=['var', 'val']
                                    )
-            if len(info['var'])>0:
+            if len(info['var']) > 0:
                 data_rg = {var: info['val'][i] for i, var in
                            enumerate(info['var'])}
 
@@ -329,32 +388,31 @@ class ScoreParamWidget(QWidget):
                                        where="type_res = 'opt' "
                                              "AND var IN('Y', 'ZREF', 'Z', "
                                              "'Q', 'QMIN', 'QMAJ')",
-                                   list_var=['id','var'])
+                                       list_var=['id', 'var'])
             print(info_var)
-            var_dict = {var : info_var['id'][i] for i,var in enumerate(info_var['var'])}
-
-
+            var_dict = {var: info_var['id'][i] for i, var in
+                        enumerate(info_var['var'])}
 
             where = "active AND code IN (SELECT DISTINCT code FROM {0}.observations " \
                     " WHERE date>'{1}' AND date<'{2}') " \
-                    "AND (name IN (SELECT DISTINCT name  FROM {0}.profiles) "\
-	                "OR abscissa IN (SELECT DISTINCT abscissa " \
+                    "AND (name IN (SELECT DISTINCT name  FROM {0}.profiles) " \
+                    "OR abscissa IN (SELECT DISTINCT abscissa " \
                     "FROM {0}.profiles))".format(self.mdb.SCHEMA,
-                                                init_time,final_time)
+                                                 init_time, final_time)
             rows = self.mdb.select('outputs',
                                    where=where,
                                    order="abscissa",
-                                   list_var=['code', 'abscissa', 'name'])
+                                   list_var=['code', 'abscissa', 'name','zero'])
 
-            if len(rows['code'])==0:
+            if len(rows['code']) == 0:
                 self.mgis.add_info("The id_run={} doesn't obsevation.\n "
                                    "The score isn't computed.")
                 continue
             for i, code in enumerate(rows['code']):
-                if code not in self.obs.keys() :
-                    self.obs[code] =  {'name': rows['name'][i],
-                                       'abscissa': rows['abscissa'][i]}
-
+                if code not in self.obs.keys():
+                    self.obs[code] = {'name': rows['name'][i],
+                                      'abscissa': rows['abscissa'][i],
+                                      'zero' : rows['zero'][i]}
 
             self.model[id_run] = {
                 'init_time': init_time,
@@ -365,16 +423,32 @@ class ScoreParamWidget(QWidget):
                 'lst_obs': rows['code']
             }
             self.data[id_run] = {}
+            self.res[id_run] = {'H' : {} , 'Q' : {}}
 
-        # get info model and get info Obs OK
-        # print( self.model)
-        # print(self.obs)
-        # get value  for comparaison
+    def get_alldata(self):
+        self.create_dict_pretraitment()
         for id_run in self.lst_runs:
-            self.get_obs(id_run)
-            self.get_model(id_run)
+            dict_model = self.model[id_run]
+            self.data[id_run]['hcompt'] = False
+            self.data[id_run]['qcompt'] = False
+            if len(dict_model['lst_obs']) == 0:
+                print('No find observation')
+                return
 
-            #print(self.data[id_run])
+            if  'Z' in dict_model['var'] or \
+                    ('ZREF' in dict_model['var'] and 'Y' in dict_model['var']\
+                                 ):
+                self.data[id_run]['hcompt'] = True
+            if 'Q' in dict_model['var'] or \
+                    ('QMIN' in dict_model['var'] and \
+                                 'QMAJ' in dict_model['var']):
+                self.data[id_run]['qcompt'] = True
+
+            for code in dict_model['lst_obs']:
+                self.get_obs(id_run, code)
+                self.get_model(id_run, code)
+
+            #print(self.data)
 
 
 
@@ -382,16 +456,16 @@ class ScoreParamWidget(QWidget):
 
 
 
-                # récupéré date initial et les liste de  RUns - OK
-                # Pour 1 run :
-                # connaitre pour le run la date final et initial du modèle :
-                # récupérer les data d'observation sur les dates correspondante => abcisse, date, valeur, Q or Z
-                # recouper les dates entre observation et modèle
-                # check si Z et Q existe si ignore
-                # en fonction de la date et de l'abscisse récupéer les valeurs du modèle.
-                # interpolation temporel du modèle pour 1 abscisse
+        # récupéré date initial et les liste de  RUns - OK
+        # Pour 1 run :
+        # connaitre pour le run la date final et initial du modèle :
+        # récupérer les data d'observation sur les dates correspondante => abcisse, date, valeur, Q or Z
+        # recouper les dates entre observation et modèle
+        # check si Z et Q existe si ignore
+        # en fonction de la date et de l'abscisse récupéer les valeurs du modèle.
+        # interpolation temporel du modèle pour 1 abscisse
 
 
-                # {run : {time : [...], Z_data : [...], Q_data: [...],
-                #                 Z_obs[...], Q_obs[...]}
-                # calcul des scores
+        # {run : {time : [...], Z_data : [...], Q_data: [...],
+        #                 Z_obs[...], Q_obs[...]}
+        # calcul des scores

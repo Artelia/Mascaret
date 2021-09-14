@@ -25,7 +25,8 @@ from qgis.gui import *
 from qgis.utils import *
 
 import datetime
-
+import csv
+import io
 from .GraphCommon import GraphCommon
 from matplotlib.dates import date2num
 
@@ -34,6 +35,8 @@ if int(qVersion()[0]) < 5:  # qt4
 else:  # qt5
     from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
     from qgis.PyQt.QtWidgets import *
+    from qgis.PyQt.QtCore import Qt
+
 
 
 class ClassEventObsDialog(QDialog):
@@ -501,6 +504,66 @@ class ClassEventObsDialog(QDialog):
         self.ui.Obs_pages.setCurrentIndex(0)
         self.graph_edit.init_graph(None)
 
+ #   def copier(self):
+        # """copier la zone sélectionnée dans le clipboard
+        # """
+        # # emplacement sélectionné pour copier dans le clipboard
+        # selected = self.ui.tab_values.selectedRanges()
+        #
+        # # construction du texte à copier, ligne par ligne et colonne par colonne
+        # texte = ""
+        # for i in range(selected[0].topRow(), selected[0].bottomRow() + 1):
+        #     for j in range(selected[0].leftColumn(),
+        #                    selected[0].rightColumn() + 1):
+        #         try:
+        #             texte += self.tableWidget.item(i, j).text() + "\t"
+        #         except AttributeError:
+        #             # quand une case n'a jamais été initialisée
+        #             texte += "\t"
+        #     texte = texte[:-1] + "\n"  # le [:-1] élimine le '\t' en trop
+        #
+        # # enregistrement dans le clipboard
+        # QApplication.clipboard().setText(texte)
+
+    def copier(self):
+        selection = self.ui.tab_values.selectedIndexes()
+        if selection:
+            rows = sorted(index.row() for index in selection)
+            columns = sorted(index.column() for index in selection)
+            rowcount = rows[-1] - rows[0] + 1
+            colcount = columns[-1] - columns[0] + 1
+            table = [[''] * colcount for _ in range(rowcount)]
+            for index in selection:
+                row = index.row() - rows[0]
+                column = index.column() - columns[0]
+                if column == 0:
+                    data = index.data().toString("dd/MM/yyyy HH:mm")
+
+                else:
+                    data = index.data()
+                table[row][column] = data
+
+            stream = io.StringIO()
+            csv.writer(stream).writerows(table)
+            qApp.clipboard().setText(stream.getvalue())
+
+    def keyPressEvent(self, event):
+
+        if self.ui.tab_values.hasFocus():
+
+            # ----------------------------------------------------------------
+            # Ctle-C: copier
+            if event.key() == Qt.Key_C and (
+                event.modifiers() & Qt.ControlModifier):
+                self.copier()
+                event.accept()
+            else:
+                event.ignore()
+        else:
+            event.ignore()
+
+
+
 
 class ItemEditorFactory(QItemEditorFactory):
     # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
@@ -594,3 +657,5 @@ class GraphObservation(GraphCommon):
         leglines[0].set_alpha(1.0)
 
         self.maj_limites()
+
+

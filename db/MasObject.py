@@ -643,6 +643,14 @@ class observations(MasObject):
                       ('date', 'timestamp without time zone'),
                       ('CONSTRAINT cle_obs ', 'PRIMARY KEY (id)')]
 
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS observations_code_type " \
+               "ON {}.observations(code, type);".format(self.schema)
+        qry += '\n'
+        return qry
+
 
 # *****************************************
 class runs(MasObject):

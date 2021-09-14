@@ -887,9 +887,7 @@ Version : {}
 
         self.wgt_param.lst_runs = lst_id
         self.wgt_param.init_dates = lst_date
-        self.wgt_param.get_test()
-
-
+        self.wgt_param.get_data()
 
         pass
 

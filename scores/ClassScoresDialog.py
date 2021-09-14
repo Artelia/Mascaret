@@ -75,6 +75,7 @@ class ClassScoresDialog(QDialog):
             self.lst_runs, self.init_dates = self.wgt_select.get_selection()
             self.wgt_param.lst_runs = self.lst_runs
             self.wgt_param.init_dates = self.init_dates
+            self.wgt_param.all =  True
 
         print('lst_id',self.lst_runs)
         print('lst_date',self.init_dates)

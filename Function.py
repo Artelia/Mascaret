@@ -312,10 +312,10 @@ def tw_to_txt(tw, range_r, range_c, sep):
     return clipboard
 
 
-def datum_to_float(d, init=0):
+def datum_to_float(d, init):
     """
     :param d: array of datetime
-    :param epoch:  initial datetime
+    :param init:  initial datetime
     :return: time in second in function of initial datetime
     """
     return (d - init).total_seconds()
