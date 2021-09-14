@@ -156,7 +156,14 @@ class CheckTab:
                            '3.1.1': { },
                            '4.0.0': { 'fct': [
                                lambda: self.update_400(),
-                           ]
+                           ],
+                           'alt_tab': [{'tab': 'results',
+                                        'sql': [
+                                            "CREATE INDEX IF NOT EXISTS results_id_runs_pknum  "\
+                                            "ON {0}.results(id_runs, pknum);",
+                                            "CREATE INDEX IF NOT EXISTS results_id_runs_time  " \
+                                            "ON {0}.results(id_runs, time);",
+                                        ]}],
                            },
                            # '3.0.x': { },
 

@@ -31,13 +31,15 @@ from qgis.PyQt.QtWidgets import *
 
 from datetime import datetime
 
+
 class SelectWidget(QWidget):
     def __init__(self, windmain):
         QWidget.__init__(self)
         self.windmain = windmain.mgis
         self.mdb = self.windmain.mdb
         self.ui = loadUi(
-            os.path.join(self.windmain.masplugPath, 'ui/scores/ui_select.ui'),self)
+            os.path.join(self.windmain.masplugPath, 'ui/scores/ui_select.ui'),
+            self)
 
         self.list_id_select = []
         self.listeRuns = []
@@ -45,9 +47,9 @@ class SelectWidget(QWidget):
 
         self.parent = {}
         self.child = {}
+        self.dateedit = {}
 
         self.init_gui()
-
 
     def init_gui(self):
         """
@@ -55,13 +57,15 @@ class SelectWidget(QWidget):
         :return:
         """
         dico = self.mdb.select("runs", "", "date")
-        for run, scen, date, comments in zip(dico["run"], dico["scenario"],
-                                             dico["date"],
-                                             dico["comments"]):
+        for run, scen, date, init_date, comments in zip(dico["run"],
+                                                        dico["scenario"],
+                                                        dico["date"],
+                                                        dico["init_date"],
+                                                        dico["comments"]):
             if run not in self.listeRuns:
                 self.listeRuns.append(run)
                 self.listeScen[run] = []
-            self.listeScen[run].append((scen, date, comments))
+            self.listeScen[run].append((scen, date, init_date, comments))
 
         if len(self.listeRuns) > 0:
             for run in self.listeRuns:
@@ -72,12 +76,14 @@ class SelectWidget(QWidget):
                                           Qt.ItemIsUserCheckable)
 
                 lbl = QLabel('')
-                self.tw_runs.setItemWidget(self.parent[run], 2, lbl)
-
+                self.tw_runs.setItemWidget(self.parent[run], 3, lbl)
+                self.dateedit[run] = {}
                 self.child[run] = {}
                 maxi = datetime(1900, 1, 1, 0, 0)
+                tmps = datetime.today()
+                self.today = QDateTime(tmps.year, tmps.month, tmps.day, 00, 00, 00)
 
-                for scen, date, comments in self.listeScen[run]:
+                for scen, date, init_date, comments in self.listeScen[run]:
                     self.child[run][scen] = QTreeWidgetItem(
                         self.parent[run])
                     self.child[run][scen].setFlags(
@@ -88,35 +94,68 @@ class SelectWidget(QWidget):
                     self.child[run][scen].setCheckState(0, Qt.Unchecked)
 
                     lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
-                    self.tw_runs.setItemWidget(self.child[run][scen], 1,lbl)
-
+                    self.tw_runs.setItemWidget(self.child[run][scen], 1, lbl)
                     maxi = max(maxi, date)
-                    lbl = QLabel(comments)
-                    self.tw_runs.setItemWidget(self.child[run][scen], 2, lbl)
 
+                    self.dateedit[run][scen] = QDateTimeEdit(self)
+                    self.dateedit[run][scen].setDateTimeRange(
+                        QDateTime(1800, 1, 1, 00, 00, 00),
+                        QDateTime(9999, 1, 1, 00, 00, 00))
+
+                    if isinstance(init_date, datetime):
+
+                        self.dateedit[run][scen].setDateTime(
+                            QDateTime(init_date.year,
+                                      init_date.month,
+                                      init_date.day,
+                                      init_date.hour,
+                                      init_date.minute,
+                                      init_date.second))
+                    else:
+                        # self.dateedit[run][scen].setDateTime(QDateTime(1800, 1, 1,
+                        #                                                00, 00, 00))
+                        self.dateedit[run][scen].setDateTime(self.today)
+                        self.dateedit[run][scen].setStyleSheet('color: red')
+                    self.dateedit[run][scen].setCalendarPopup(True)
+                    self.dateedit[run][scen].setDisplayFormat(
+                        'yyyy. MM.dd hh:mm:ss')
+                    self.dateedit[run][scen].dateChanged.connect(self.ch_date)
+                    self.tw_runs.setItemWidget(self.child[run][scen], 2,
+                                               self.dateedit[run][scen])
+
+                    lbl = QLabel(comments)
+                    self.tw_runs.setItemWidget(self.child[run][scen], 3, lbl)
 
                 lbl = QLabel("{:%d/%m/%Y %H:%M}".format(maxi))
                 self.tw_runs.setItemWidget(self.parent[run], 1, lbl)
 
         self.bt_clean.clicked.connect(self.clean)
 
+    def ch_date(self, newdate):
+        """ change color"""
+        for run in self.listeRuns:
+            for scen, date, init_date, comments in self.listeScen[run]:
+                if self.dateedit[run][scen].dateTime() != self.today:
+                    self.dateedit[run][scen].setStyleSheet('color: Black')
+
     def clean(self):
         """ clean selection"""
         for run in self.listeRuns:
             if self.parent[run].checkState(0) > 0:
-                for scen, date, comments in self.listeScen[run]:
+                for scen, date, init_date, comments in self.listeScen[run]:
                     self.child[run][scen].setCheckState(0, Qt.Unchecked)
 
     def get_selection(self):
         """ get selectioned runs"""
         selection = {}
+        lst_date = []
         for run in self.listeRuns:
             if self.parent[run].checkState(0) > 0:
                 selection[run] = []
-                for scen, date, comments in self.listeScen[run]:
+                for scen, date, init_date, comments in self.listeScen[run]:
                     if self.child[run][scen].checkState(0) > 1:
                         selection[run].append("'{}'".format(scen))
-
+                        tmp = self.dateedit[run][scen].dateTime().toPyDateTime()
+                        lst_date.append(tmp)
         list_id_select = self.mdb.get_id_run(selection)
-        return list_id_select
-
+        return list_id_select, lst_date

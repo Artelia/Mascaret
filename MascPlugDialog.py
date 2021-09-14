@@ -878,6 +878,17 @@ Version : {}
     def fct_test(self):
         """ Test function"""
         #self.chkt.debug_update_vers_meta(version='3.0.6')
+        lst_id = [72]
+        import datetime
+        lst_date = [datetime.datetime(2001, 2, 25, 0, 0)]
+        from .scores.ScoreParamWidget import ScoreParamWidget
+        self.mgis = self
+        self.wgt_param = ScoreParamWidget(self)
+
+        self.wgt_param.lst_runs = lst_id
+        self.wgt_param.init_dates = lst_date
+        self.wgt_param.get_test()
+
 
 
         pass

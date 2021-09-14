@@ -68,7 +68,7 @@
         <bool>true</bool>
        </attribute>
        <attribute name="headerDefaultSectionSize">
-        <number>300</number>
+        <number>150</number>
        </attribute>
        <attribute name="headerHighlightSections">
         <bool>true</bool>
@@ -95,6 +95,11 @@
        <column>
         <property name="text">
          <string>Times</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Reference Time</string>
         </property>
        </column>
        <column>

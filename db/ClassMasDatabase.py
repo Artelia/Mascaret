@@ -458,12 +458,9 @@ class ClassMasDatabase(object):
                       Maso.extremities,
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
                       Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
-                      Maso.observations, Maso.parametres, Maso.resultats, Maso.runs,
+                      Maso.observations, Maso.parametres,  Maso.runs,
                       Maso.laws,
                       Maso.admin_tab, Maso.visu_flood_marks,
-                      # bassin
-                      Maso.basins, Maso.links, Maso.resultats_basin,
-                      Maso.resultats_links,
                       # qualite d'eau
                       Maso.tracer_lateral_inflows, Maso.tracer_physic,
                       Maso.tracer_name,
@@ -862,7 +859,7 @@ $BODY$
 
         return liste_x
 
-    def select(self, table, where="", order="", list_var=None):
+    def select(self, table, where="", order="", list_var=None,  verbose= False):
         """ Select variables of table"""
         if where:
             where = " WHERE " + where + " "
@@ -874,7 +871,8 @@ $BODY$
             lvar = '*'
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        # print(sql.format(self.SCHEMA, table, where, order, lvar))
+        if verbose :
+            print(sql.format(self.SCHEMA, table, where, order, lvar))
         (results, namCol) = self.run_query(
             sql.format(self.SCHEMA, table, where, order, lvar), fetch=True,
             namvar=True)

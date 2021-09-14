@@ -310,3 +310,12 @@ def tw_to_txt(tw, range_r, range_c, sep):
             else:
                 clipboard = '{}{}\n'.format(clipboard, tw.item(r, c).data(0))
     return clipboard
+
+
+def datum_to_float(d, init=0):
+    """
+    :param d: array of datetime
+    :param epoch:  initial datetime
+    :return: time in second in function of initial datetime
+    """
+    return (d - init).total_seconds()
