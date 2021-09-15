@@ -129,7 +129,7 @@ class ClassScores():
         :return:(array) standard deviation
         """
         esp = self.mean_err( y_obs, y_pred)
-        res =  np.sqrt(np.mean((y_obs - y_pred -  esp ) ** 2))
+        res =  np.sqrt(np.mean((y_pred - y_obs -  esp ) ** 2))
         return res
 
     def nash_crit(self, y_obs, y_pred):

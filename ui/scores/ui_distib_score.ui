@@ -14,51 +14,10 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
+   <item row="3" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QTableWidget" name="table_dist">
-       <row>
-        <property name="text">
-         <string>10 %</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>20 %</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>30%</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>40 %</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>ect.</string>
-        </property>
-       </row>
-       <column>
-        <property name="text">
-         <string>Test - test1</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Test - test2</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Test - test3</string>
-        </property>
-       </column>
-      </widget>
+      <widget class="QTableView" name="table_dist"/>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">

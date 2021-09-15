@@ -19,7 +19,7 @@ email                :
  """
 
 import os
-import datetime
+from datetime import datetime, timedelta
 import numpy as np
 from scipy import interpolate
 
@@ -32,10 +32,11 @@ from qgis.utils import *
 
 from .ClassScores import ClassScores
 from ..Function import datum_to_float
+from ..ui.custom_control import datetime2QDateTime
 
 
 class ScoreParamWidget(QWidget):
-    def __init__(self, windmain):
+    def __init__(self, windmain, all=True):
         QWidget.__init__(self)
         self.windmain = windmain
         self.mdb = self.windmain.mgis.mdb
@@ -45,61 +46,277 @@ class ScoreParamWidget(QWidget):
                          'ui/scores/ui_parametre.ui'), self)
 
         self.cl_score = ClassScores()
-        self.lst_runs = None
+        self.lst_runs = []
         self.init_dates = None
-        self.all = True
+        self.date_init = None
+        self.lst_times = None
+        self.all = all
+        if not self.all :
+            if self.cur_pknum == None:
+                print('no find pknum')
+        self.cur_pknum =  None
         self.data = {}
         # {id : { h : [],time : [], q :[]}}
         self.res = {}
+        self.type_res = {
+            'simple' : False,
+            'nash_crit':  False,
+            'quantil' : False,
+        }
 
+        self.widget_d = {}
         self.init_gui()
 
-        self.bt_calcul_scores.clicked.connect(self.cpt_score)
-        #self.bt_calcul_scores.clicked.connect(self.get_test)
+        self.bt_calcul_scores.clicked.connect(self.bt_calcul_fct)
+
 
     def init_gui(self):
         """
         initialize GUI
         :return:
         """
-        pass
+        # default value
+        self.dsp_dist_quantil.setValue(25)
+        print(self.lst_runs)
+        self.lk_wgt_row = {'ref_time' : 0,
+                                 'per_start_t': 1,
+                                 'per_last_t': 2,
+                                 'pt_start_t': 3,
+                                 'pt_last_t': 4,
+                                 'pt_alpha_Q': 5,
+                                 'pt_alpha_H': 6, }
 
-    # self.ctrl_ref_date.hide()
-    # self.lbl_ref_date.hide()
+        for id_run in self.lst_runs:
+            self.widget_d[id_run] = { 'ref_time' : QDateTimeEdit(self),
+                                 'per_start_t': QDateTimeEdit(self),
+                                 'per_last_t': QDateTimeEdit(self),
+                                 'pt_start_t': QDateTimeEdit(self),
+                                 'pt_last_t': QDateTimeEdit(self),
+                                 'pt_alpha_Q': QDoubleSpinBox(self),
+                                 'pt_alpha_H': QDoubleSpinBox(self),  }
 
-    # self.ctrl_ref_date # date de référence quand il n'y a pas event pour le modèle
-    # if event :
-    # self.ctrl_ref_date.hide()
-    # self.lbl_ref_date.hide()
+            # add style widget
+            for ctrl_ in ['per_start_t', 'pt_start_t', 'per_last_t',
+                          'pt_last_t', 'ref_time']:
+                self.widget_d[id_run][ctrl_].setCalendarPopup(True)
+                self.widget_d[id_run][ctrl_].setDisplayFormat(
+                    'yyyy. MM.dd hh:mm:ss')
+
+                self.widget_d[id_run][ctrl_].setDateTimeRange(
+                    QDateTime(1800, 1, 1, 00, 00, 00),
+                    QDateTime(9999, 1, 1, 00, 00, 00))
+
+            for ctrl_ in ['pt_alpha_Q', 'pt_alpha_H']:
+                self.widget_d[id_run][ctrl_].setMinimum(0)
+                self.widget_d[id_run][ctrl_].setSingleStep(0.1)
+                self.widget_d[id_run][ctrl_].setDecimals(2)
+                self.widget_d[id_run][ctrl_].setMaximum(999)
+
+            # add initialisation widget
+            self.date_init, self.lst_times = self.get_times(id_run)
+            final_date = self.date_init + timedelta(seconds=self.lst_times[-1])
+            tmps = datetime.today()
+            self.today = QDateTime(tmps.year, tmps.month, tmps.day, 0, 0, 0)
+            if isinstance(self.date_init, datetime):
+                init_date_crt = datetime2QDateTime(self.date_init)
+            else:
+                init_date_crt = self.today
+                self.widget_d[id_run]['ref_time'].setStyleSheet('color: red')
+            self.widget_d[id_run]['ref_time'].setDateTime(init_date_crt)
+
+            if isinstance(final_date, datetime):
+                last_date_crt = datetime2QDateTime(final_date)
+            else:
+                last_date_crt = QDateTime(tmps.year, tmps.month, tmps.day, 1, 0,
+                                          0)
+            for ctrl_ in ['per_start_t','pt_start_t']:
+                self.widget_d[id_run][ctrl_].setDateTime(init_date_crt)
+            for ctrl_ in ['per_last_t', 'pt_last_t']:
+                self.widget_d[id_run][ctrl_].setDateTime(last_date_crt)
+
+            for ctrl_ in ['pt_alpha_Q', 'pt_alpha_H']:
+                self.widget_d[id_run][ctrl_].setValue(1)
+            # control
+            self.widget_d[id_run]['ref_time'].dateChanged.connect(self.ch_date)
+
+            for ctrl_ in ['per_start_t', 'per_last_t']:
+                self.widget_d[id_run][ctrl_].dateChanged.connect(
+                    self.ch_date_lim_per)
+            for ctrl_ in ['pt_start_t', 'pt_last_t']:
+                self.widget_d[id_run][ctrl_].dateChanged.connect(
+                    self.ch_date_lim_pt)
+
+
+            # fill table
+
+
+
+
+
+
+    def get_times(self, id_run):
+        """
+        Get reference date if exist
+        and time list of model
+        :param id_run: run index
+        :return:
+        """
+        dico = self.mdb.select("runs",
+                               where="id_run={0}".format(id_run))
+        init_time = dico["init_date"][0]
+        info = self.mdb.select('runs_graph',
+                               where="id_runs={} "
+                                     "AND type_res='opt'"
+                                     "AND var='time'".format(id_run),
+                               list_var=['val'])
+        lst_times = info['val'][0]
+        return init_time , lst_times
+
+    def clean_type_res(self):
+        """
+        clean type_res
+        :return:
+        """
+        self.type_res = {
+            'simple' : False,
+            'nash_crit':  False,
+            'quantil' : False,
+        }
+
+    def bt_calcul_fct(self):
+        """
+        action when click on button
+        :return:
+        """
+
+        self.clean_type_res()
+        self.cpt_score()
+
+        tabscores = self.windmain.tabscores
+        id_dist = tabscores.indexOf(self.windmain.wgt_dist)
+        id_res = tabscores.indexOf(self.windmain.wgt_res)
+        cond_enable = {'quantil': False, 'res': False}
+        for key, cond in self.type_res.items():
+            if key in ['quantil'] and cond:
+                cond_enable['quantil'] =  True
+            elif cond:
+                cond_enable['res'] = True
+
+        tabscores.setTabEnabled(id_dist, cond_enable['quantil'])
+        tabscores.setTabEnabled(id_res, cond_enable['res'])
+
+
+    def create_obs_pre(self, id_run, pknum):
+        """
+        create Model data and Observation data with that compute the scores
+        :param id_run: run index
+        :return:
+        """
+        h_obs = np.array([])
+        h_pred = np.array([])
+        q_obs = np.array([])
+        q_pred = np.array([])
+
+        if self.all:
+            # TODO first elem 0 à check
+
+            for code in self.data[id_run].keys():
+                if code == 'hcompt' or code == 'qcompt':
+                    continue
+                if self.data[id_run]['hcompt']:
+                    h_obs = np.concatenate(
+                        (h_obs, self.data[id_run][code]['h_obs']), axis=0)
+                    h_pred = np.concatenate(
+                        (h_pred, self.data[id_run][code]['h_mod']), axis=0)
+                if self.data[id_run]['qcompt']:
+                    q_obs = np.concatenate(
+                        (q_obs, self.data[id_run][code]['q_obs']), axis=0)
+                    q_pred = np.concatenate(
+                        (q_pred, self.data[id_run][code]['q_mod']), axis=0)
+        else:
+            for code in self.data[id_run].keys():
+                if code == 'hcompt' or code == 'qcompt':
+                    continue
+                if self.data[id_run]['hcompt']:
+                    h_obs = np.concatenate(
+                        (h_obs, self.data[id_run][code]['h_obs']), axis=0)
+                    h_pred = np.concatenate(
+                        (h_pred, self.data[id_run][code]['h_mod']), axis=0)
+                if self.data[id_run]['qcompt']:
+                    q_obs = np.concatenate(
+                        (q_obs, self.data[id_run][code]['q_obs']), axis=0)
+                    q_pred = np.concatenate(
+                        (q_pred, self.data[id_run][code]['q_mod']), axis=0)
+
+        return h_obs,h_pred, q_obs,q_pred
+
 
     def cpt_score(self):
         """
         run the scores compute
         :return:
         """
+        self.get_alldata()
 
-        if self.ch_simple_err.isChecked():
-            self.cpt_simple_err()
-            pass
-        if self.ch_ns_err.isChecked():
-            pass
-        if self.ch_vol_err.isChecked():
-            pass
-        if self.ch_quantil_err.isChecked():
-            # self.dsp_dist_quantil
-            pass
-        if self.ch_persistence.isChecked():
-            # self.start_time_persistence
-            # self.last_time_persistence
-            pass
-        if self.ch_pointe_err.isChecked():
-            # self.start_time_point
-            # self.last_time_point
-            # self.alpha_H
-            # self.alpha_Q
-            pass
 
-    def cpt_simple_err(self):
+
+        #TODO demander pour les deltat si variable?
+        # TODO demandé si je fait un croisment ou interpolation linear du modèle ?
+
+
+        for id_run in self.lst_runs:
+
+            h_obs, h_pred, q_obs, q_pred = self.create_obs_pre(id_run, pknum = None)
+
+            if self.ch_simple_err.isChecked():
+                if self.data[id_run]['hcompt']:
+                    self.res[id_run]['H']['simple'] = \
+                        self.cpt_simple_err(h_obs, h_pred)
+                    self.type_res['simple'] =  True
+                if self.data[id_run]['qcompt']:
+                    self.res[id_run]['Q']['simple'] =\
+                        self.cpt_simple_err( q_obs, q_pred)
+                    self.type_res['simple'] = True
+
+            if self.ch_ns_err.isChecked():
+                if self.data[id_run]['hcompt']:
+                    self.res[id_run]['H']['nash_crit'] = \
+                        self.cpt_ns_err( h_obs, h_pred)
+                    self.type_res['nash_crit'] = True
+                if self.data[id_run]['qcompt']:
+                    self.res[id_run]['Q']['nash_crit'] =\
+                        self.cpt_ns_err( q_obs, q_pred)
+                    self.type_res['nash_crit'] = True
+
+            if self.ch_vol_err.isChecked():
+                pass
+
+            if self.ch_quantil_err.isChecked():
+                if self.data[id_run]['hcompt']:
+                    self.res[id_run]['H']['quantil'] = \
+                        self.cpt_quantil_err( h_obs,
+                                               h_pred,
+                                               self.dsp_dist_quantil.value() )
+                    self.type_res['quantil'] = True
+                if self.data[id_run]['qcompt']:
+                    self.res[id_run]['Q']['quantil'] = \
+                        self.cpt_quantil_err( q_obs,
+                                               q_pred,
+                                               self.dsp_dist_quantil.value())
+                    self.type_res['quantil'] = True
+            if self.ch_persistence.isChecked():
+                # self.start_time_persistence
+                # self.last_time_persistence
+                pass
+            if self.ch_pointe_err.isChecked():
+                # self.start_time_point
+                # self.last_time_point
+                # self.alpha_Hcc
+                # self.alpha_Q
+                pass
+        print(self.res[id_run]['H'])
+
+    def cpt_simple_err(self, y_obs, y_pred):
         """
         compute simple scores :
 
@@ -111,87 +328,60 @@ class ScoreParamWidget(QWidget):
         mean relative absolute error in % : precision
         standard deviation : std
         mean square error :eqm
+        :param y_obs: (array)observation
+        :param y_pred: (array) data model
         :return:
         """
-        if self.all :
-            self.get_alldata()
-        else:
-            print('get local ')
-            pass
-        for id_run in self.lst_runs:
 
-            if self.all:
-                h_obs = np.array([])
-                h_pred = np.array([])
-                q_obs = np.array([])
-                q_pred = np.array([])
-                for code in self.data[id_run].keys():
-                    if code == 'hcompt' or code == 'qcompt':
-                        continue
-                    if self.data[id_run]['hcompt']:
-                        h_obs = np.concatenate(
-                            (h_obs, self.data[id_run][code]['h_obs']), axis=0)
-                        h_pred = np.concatenate(
-                            (h_pred, self.data[id_run][code]['h_mod']), axis=0)
-                    if self.data[id_run]['qcompt']:
-                        q_obs = np.concatenate(
-                            (q_obs, self.data[id_run][code]['q_obs']), axis=0)
-                        q_pred = np.concatenate(
-                            (q_pred, self.data[id_run][code]['q_mod']), axis=0)
+        dict_res ={
+        'mean_err':self.cl_score.mean_err(y_obs, y_pred),
+        'mean_abs_err': self.cl_score.mean_abs_err(y_obs, y_pred),
+        'mean_r_err':self.cl_score.mean_r_err(y_obs, y_pred),
+        'biais' : self.cl_score.biais(y_obs, y_pred),
+        'mean_rabs_err': self.cl_score.mean_rabs_err(y_obs, y_pred),
+        'precision': self.cl_score.precision(y_obs, y_pred),
+        'std': self.cl_score.std(y_obs, y_pred),
+        'eqm':  self.cl_score.eqm(y_obs, y_pred)
+        }
+        return dict_res
 
-            if self.data[id_run]['hcompt'] :
-                print(h_obs, h_pred)
-                self.res[id_run]['H']['simple'] = {
-                'mean_err':self.cl_score.mean_err(h_obs, h_pred),
-                'mean_abs_err': self.cl_score.mean_abs_err( h_obs, h_pred),
-                'mean_r_err':self.cl_score.mean_r_err( h_obs, h_pred),
-                'biais' : self.cl_score.biais( h_obs, h_pred),
-                'mean_rabs_err': self.cl_score.mean_rabs_err( h_obs, h_pred),
-                'precision': self.cl_score.precision( h_obs, h_pred),
-                'std': self.cl_score.std(h_obs, h_pred),
-                'eqm':  self.cl_score.eqm( h_obs, h_pred)
-                }
 
-            if self.data[id_run]['qcompt'] :
-                self.res[id_run]['Q']['simple'] = {
-                'mean_err':self.cl_score.mean_err(q_obs, q_pred),
-                'mean_abs_err': self.cl_score.mean_abs_err( q_obs, q_pred),
-                'mean_r_err':self.cl_score.mean_r_err( q_obs, q_pred),
-                'biais' : self.cl_score.biais( q_obs, q_pred),
-                'mean_rabs_err': self.cl_score.mean_rabs_err( q_obs, q_pred),
-                'precision': self.cl_score.precision( q_obs, q_pred),
-                'std': self.cl_score.std(q_obs, q_pred),
-                'eqm':  self.cl_score.eqm( q_obs, q_pred)
-                }
-        print( self.res[id_run]['H']['simple'])
-        pass
-
-    def cpt_ns_err(self):
+    def cpt_ns_err(self,y_obs, y_pred):
         """
         compute Nash-Sutcliffe criterion
+        :param y_obs: (array)observation
+        :param y_pred: (array) data model
         :return:
         """
         # self.cl_score.nash_crit(y_obs, y_pred)
-        pass
+        dict_res = {
+            'ns_err': self.cl_score.nash_crit(y_obs, y_pred)
+        }
+        return dict_res
 
     def cpt_vol_err(self):
         """
         compute Error on volumes
+         :param y_obs: (array)observation
+        :param y_pred: (array) data model
         :return:
         """
         # self.cl_score.vol_err(q_obs, q_pred, deltat)
         pass
 
-    def cpt_quantil_err(self):
+    def cpt_quantil_err(self, y_obs, y_pred, dist_step):
         """
         compute  quantiles:
             error quantiles : dist_err
             absolute error quantiles :  dist_abs_err
+        :param y_obs: (array)observation
+        :param y_pred: (array) data model
+        :param dist_step: distribution step
         :return:
         """
-        # self.cl_score.dist_err(y_obs, y_pred, dist_step = None)
-        # self.cl_score.dist_abs_err(y_obs, y_pred, dist_step = None)
-        pass
+        dict_res = {'dist_err' :self.cl_score.dist_err(y_obs, y_pred,  dist_step),
+                    'dist_abs_err': self.cl_score.dist_err(y_obs, y_pred, dist_step)}
+        return dict_res
 
     def cpt_persistence(self):
         """
@@ -356,7 +546,7 @@ class ScoreParamWidget(QWidget):
         if 'q_obs_date' not in self.data[id_run][code].keys():
             self.data[id_run]['qcompt'] = False
 
-    def create_dict_pretraitment(self):
+    def dict_pretr(self):
         """
         Create  :
         self.data[id_run]
@@ -368,65 +558,99 @@ class ScoreParamWidget(QWidget):
         self.obs = {}
         self.model = {}
         for id_run, init_time in zip(self.lst_runs, self.init_dates):
-
-            info = self.mdb.select('runs_graph',
-                                   where="id_runs={} "
-                                         "AND type_res='opt'"
-                                         "AND var in "
-                                         "('var','time','pknum')".format(
-                                       id_run),
-                                   list_var=['var', 'val']
-                                   )
-            if len(info['var']) > 0:
-                data_rg = {var: info['val'][i] for i, var in
-                           enumerate(info['var'])}
-
-            final_time = init_time + datetime.timedelta(
-                seconds=data_rg['time'][-1])
-
-            info_var = self.mdb.select('results_var',
-                                       where="type_res = 'opt' "
-                                             "AND var IN('Y', 'ZREF', 'Z', "
-                                             "'Q', 'QMIN', 'QMAJ')",
-                                       list_var=['id', 'var'])
-            print(info_var)
-            var_dict = {var: info_var['id'][i] for i, var in
-                        enumerate(info_var['var'])}
-
-            where = "active AND code IN (SELECT DISTINCT code FROM {0}.observations " \
-                    " WHERE date>'{1}' AND date<'{2}') " \
-                    "AND (name IN (SELECT DISTINCT name  FROM {0}.profiles) " \
-                    "OR abscissa IN (SELECT DISTINCT abscissa " \
-                    "FROM {0}.profiles))".format(self.mdb.SCHEMA,
-                                                 init_time, final_time)
-            rows = self.mdb.select('outputs',
-                                   where=where,
-                                   order="abscissa",
-                                   list_var=['code', 'abscissa', 'name','zero'])
-
-            if len(rows['code']) == 0:
-                self.mgis.add_info("The id_run={} doesn't obsevation.\n "
-                                   "The score isn't computed.")
+            self.info_model( id_run, init_time)
+            if not self.info_obs(id_run, init_time):
+                self.model.pop(id_run)
                 continue
-            for i, code in enumerate(rows['code']):
-                if code not in self.obs.keys():
-                    self.obs[code] = {'name': rows['name'][i],
-                                      'abscissa': rows['abscissa'][i],
-                                      'zero' : rows['zero'][i]}
-
-            self.model[id_run] = {
-                'init_time': init_time,
-                'final_time': final_time,
-                'times': data_rg['time'],
-                'var': var_dict,
-                'pknum': data_rg['pknum'],
-                'lst_obs': rows['code']
-            }
             self.data[id_run] = {}
-            self.res[id_run] = {'H' : {} , 'Q' : {}}
+            self.res[id_run] = {'H': {}, 'Q': {}}
+
+    def info_model(self, id_run, init_time ):
+        """
+        Get information of model :
+            'init_time'
+            'final_time'
+            'times'
+            'var'
+            'pknum'
+        :param id_run: run index
+        :param init_time: initial time
+        :return:
+        """
+        info = self.mdb.select('runs_graph',
+                               where="id_runs={} "
+                                     "AND type_res='opt'"
+                                     "AND var in "
+                                     "('var','time','pknum')".format(
+                                   id_run),
+                               list_var=['var', 'val']
+                               )
+        if len(info['var']) > 0:
+            data_rg = {var: info['val'][i] for i, var in
+                       enumerate(info['var'])}
+
+        final_time = init_time + timedelta(
+            seconds=data_rg['time'][-1])
+
+        info_var = self.mdb.select('results_var',
+                                   where="type_res = 'opt' "
+                                         "AND var IN('Y', 'ZREF', 'Z', "
+                                         "'Q', 'QMIN', 'QMAJ')",
+                                   list_var=['id', 'var'])
+        var_dict = {var: info_var['id'][i] for i, var in
+                    enumerate(info_var['var']) if info_var['id'][i] in data_rg['var']}
+        self.model[id_run] = {
+            'init_time': init_time,
+            'final_time': final_time,
+            'times': data_rg['time'],
+            'var': var_dict,
+            'pknum': data_rg['pknum'],
+        }
+
+    def info_obs(self,id_run, init_time):
+        """
+         Get information of obs:
+         self.obs :
+            'name'
+            'abscissa'
+            'zero'
+
+        self.model
+            'lst_obs'
+        :param id_run: run index
+        :param init_time: initial time
+        :return:
+        """
+
+        where = "active AND code IN (SELECT DISTINCT code FROM {0}.observations " \
+                " WHERE date>'{1}' AND date<'{2}') " \
+                "AND (name IN (SELECT DISTINCT name  FROM {0}.profiles) " \
+                "OR abscissa IN (SELECT DISTINCT abscissa " \
+                "FROM {0}.profiles))".format(self.mdb.SCHEMA,
+                                             init_time,
+                                             self.model[id_run]['final_time'])
+        rows = self.mdb.select('outputs',
+                               where=where,
+                               order="abscissa",
+                               list_var=['code', 'abscissa', 'name', 'zero'])
+
+        if len(rows['code']) == 0:
+            self.mgis.add_info("The id_run={} doesn't obsevation.\n "
+                               "The score isn't computed.")
+            return  False
+        for i, code in enumerate(rows['code']):
+            if code not in self.obs.keys():
+                self.obs[code] = {'name': rows['name'][i],
+                                  'abscissa': rows['abscissa'][i],
+                                  'zero': rows['zero'][i]}
+
+        self.model[id_run]['lst_obs'] = rows['code']
+        return True
 
     def get_alldata(self):
-        self.create_dict_pretraitment()
+        # if not all len(lst_run) == 1
+        self.dict_pretr()
+
         for id_run in self.lst_runs:
             dict_model = self.model[id_run]
             self.data[id_run]['hcompt'] = False
@@ -434,7 +658,7 @@ class ScoreParamWidget(QWidget):
             if len(dict_model['lst_obs']) == 0:
                 print('No find observation')
                 return
-
+            print('key',self.model[id_run].keys())
             if  'Z' in dict_model['var'] or \
                     ('ZREF' in dict_model['var'] and 'Y' in dict_model['var']\
                                  ):
@@ -443,12 +667,19 @@ class ScoreParamWidget(QWidget):
                     ('QMIN' in dict_model['var'] and \
                                  'QMAJ' in dict_model['var']):
                 self.data[id_run]['qcompt'] = True
-
+            if not self.all:
+                pass
+                # TODO filtre PKNUM for observation en réduisant
+                # dict_model['lst_obs'] avec le pk en cours
             for code in dict_model['lst_obs']:
                 self.get_obs(id_run, code)
                 self.get_model(id_run, code)
 
-            #print(self.data)
+
+    def ch_date_ref(self, newdate):
+        """ change color and change  parameter limite"""
+        self.ref_time.setStyleSheet('color: Black')
+        self.date_init = newdate.toPyDateTime()
 
 
 
@@ -456,16 +687,78 @@ class ScoreParamWidget(QWidget):
 
 
 
-        # récupéré date initial et les liste de  RUns - OK
-        # Pour 1 run :
-        # connaitre pour le run la date final et initial du modèle :
-        # récupérer les data d'observation sur les dates correspondante => abcisse, date, valeur, Q or Z
-        # recouper les dates entre observation et modèle
-        # check si Z et Q existe si ignore
-        # en fonction de la date et de l'abscisse récupéer les valeurs du modèle.
-        # interpolation temporel du modèle pour 1 abscisse
+        # # TODO a reprendre il peut avoir plusieur Run affiché
+        #
+
+        #
+        # if isinstance(final_date, datetime):
+        #
+        #     last_date_crt = datetime2QDateTime(final_date)
+        # else:
+        #     last_date_crt = QDateTime(tmps.year, tmps.month, tmps.day, 1, 0, 0)
+        #
+        # self.start_time_persistence.setDateTime(init_date_crt)
+        # self.last_time_persistence.setDateTime(last_date_crt)
+        # self.start_time_point.setDateTime(init_date_crt)
+        # self.last_time_point.setDateTime(last_date_crt)
 
 
-        # {run : {time : [...], Z_data : [...], Q_data: [...],
-        #                 Z_obs[...], Q_obs[...]}
-        # calcul des scores
+
+        #         final_date = self.date_init + timedelta(seconds=self.lst_times[-1])
+        #         if not self.all:
+        #             if  self.date_init != old_init:
+        #                 self.start_time_persistence.setDateTime(newdate)
+        #                 self.start_time_point.setDateTime(newdate)
+        #                 self.last_time_persistence.setDateTime(datetime2QDateTime(final_date))
+        #                 self.last_time_point.setDateTime(datetime2QDateTime(final_date))
+        #
+
+        #
+    def ch_date_lim_per(self, newdate):
+        """ check limit"""
+        date_comp = newdate.toPyDateTime()
+        final_date = self.date_init + timedelta(seconds=self.lst_times[-1])
+        if date_comp< self.date_init:
+            self.start_time_persistence.setDateTime(
+                datetime2QDateTime(self.date_init))
+            txt = 'Tips start time is incorrect'
+            QMessageBox.warning(None, 'warning', txt)
+        if date_comp> final_date:
+            self.last_time_persistence.setDateTime(
+                datetime2QDateTime(final_date))
+            txt = 'Tips start last is incorrect'
+            QMessageBox.warning(None, 'warning', txt)
+
+        #
+        #
+    def ch_date_lim_pt(self, newdate):
+        """ check limit"""
+        date_comp = newdate.toPyDateTime()
+        final_date = self.date_init + timedelta(
+            seconds=self.lst_times[-1])
+        if date_comp < self.date_init:
+            self.start_time_point.setDateTime(
+                datetime2QDateTime(self.date_init))
+            txt = 'Tips start time is incorrect'
+            QMessageBox.warning(None, 'warning', txt)
+        if date_comp > final_date:
+            self.last_time_point.setDateTime(
+                datetime2QDateTime(final_date))
+            txt = 'Tips last time is incorrect'
+            QMessageBox.warning(None, 'warning', txt)
+
+
+
+
+        # if not self.all:
+        #     id_run = self.lst_runs[0]
+        #     self.date_init, self.lst_times = self.get_times(id_run)
+        #     final_date = self.date_init + timedelta(seconds=self.lst_times[-1])
+        #     tmps = datetime.today()
+        #     self.today = QDateTime(tmps.year, tmps.month, tmps.day, 0, 0, 0)
+        #     if isinstance(self.date_init, datetime):
+        #         init_date_crt = datetime2QDateTime(self.date_init)
+        #     else:
+        #         init_date_crt = self.today
+        #         self.ref_time.setStyleSheet('color: red')
+        #     self.ref_time.setDateTime(init_date_crt)

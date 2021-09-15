@@ -27,8 +27,6 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from qgis.PyQt.QtWidgets import *
-
 
 class ScoreDistWidget(QWidget):
     def __init__(self, windmain):
@@ -37,6 +35,24 @@ class ScoreDistWidget(QWidget):
         self.mdb = self.windmain.mgis.mdb
         self.ui = loadUi(
             os.path.join(self.windmain.mgis.masplugPath, 'ui/scores/ui_distib_score.ui'),self)
+
+    # self.table_dist
+
+    def fill_tab(self, ):
+
+        self.table_dist.setModel('test')
+        self.table_dist.setColumnWidth(0, 120)
+        self.table_dist.setColumnWidth(1, 80)
+        self.table_dist.setColumnWidth(2, 120)
+        model = self.ui.table_dist.model()
+
+        a = ['toto1', 'toto2']
+        b= ['test1, test2']
+        for r, row in enumerate(a):
+            for c, val in enumerate(b):
+                itm = QStandardItem()
+                itm.setData(val, 0)
+                model.setItem(r, c, itm)
 
 
 

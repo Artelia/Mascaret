@@ -43,7 +43,7 @@ class ClassScoresDialog(QDialog):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-
+        self.all = True
 
         self.lst_runs =  []
         self.init_dates = []
@@ -56,19 +56,20 @@ class ClassScoresDialog(QDialog):
         self.wgt_select = SelectWidget(self)
         self.tab_select = self.tabscores.addTab(self.wgt_select,'scor_select')
 
-        self.wgt_param = ScoreParamWidget(self)
+        self.wgt_param = ScoreParamWidget(self, self.all)
         self.tab_param = self.tabscores.addTab(self.wgt_param, 'scor_param')
 
         self.wgt_res= ScoreResWidget(self)
         self.tab_res = self.tabscores.addTab(self.wgt_res, 'scor_res')
+        id_res = self.tabscores.indexOf(self.wgt_res)
+        self.tabscores.setTabEnabled(id_res, False)
 
         self.wgt_dist = ScoreDistWidget(self)
         self.tab_dist = self.tabscores.addTab(self.wgt_dist, 'scor_dist')
-
+        id_dist = self.tabscores.indexOf(self.wgt_dist)
+        self.tabscores.setTabEnabled(id_dist, False)
 
         self.tabscores.currentChanged.connect(self.change_tab)
-
-        #
 
     def change_tab(self):
         if self.tabscores.currentIndex() != 0 :
@@ -76,10 +77,5 @@ class ClassScoresDialog(QDialog):
             self.wgt_param.lst_runs = self.lst_runs
             self.wgt_param.init_dates = self.init_dates
             self.wgt_param.all =  True
-
-        print('lst_id',self.lst_runs)
-        print('lst_date',self.init_dates)
-
-
 
 

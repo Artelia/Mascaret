@@ -504,28 +504,10 @@ class ClassEventObsDialog(QDialog):
         self.ui.Obs_pages.setCurrentIndex(0)
         self.graph_edit.init_graph(None)
 
- #   def copier(self):
-        # """copier la zone sélectionnée dans le clipboard
-        # """
-        # # emplacement sélectionné pour copier dans le clipboard
-        # selected = self.ui.tab_values.selectedRanges()
-        #
-        # # construction du texte à copier, ligne par ligne et colonne par colonne
-        # texte = ""
-        # for i in range(selected[0].topRow(), selected[0].bottomRow() + 1):
-        #     for j in range(selected[0].leftColumn(),
-        #                    selected[0].rightColumn() + 1):
-        #         try:
-        #             texte += self.tableWidget.item(i, j).text() + "\t"
-        #         except AttributeError:
-        #             # quand une case n'a jamais été initialisée
-        #             texte += "\t"
-        #     texte = texte[:-1] + "\n"  # le [:-1] élimine le '\t' en trop
-        #
-        # # enregistrement dans le clipboard
-        # QApplication.clipboard().setText(texte)
 
     def copier(self):
+        """copier la zone sélectionnée dans le clipboard
+        """
         selection = self.ui.tab_values.selectedIndexes()
         if selection:
             rows = sorted(index.row() for index in selection)

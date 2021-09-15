@@ -22,6 +22,7 @@ email                :
 """
 import numpy as np
 import re
+from  datetime import datetime
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
@@ -117,3 +118,7 @@ def format_float(value):
     string = re.sub("e(-?)0*(\d+)", r"e\1\2", string)
     return string
     # *******************************************************************************
+
+def datetime2QDateTime(date) :
+    return QDateTime(date.year, date.month, date.day,
+                     date.hour, date.minute, date.second)
