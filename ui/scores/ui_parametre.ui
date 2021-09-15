@@ -188,6 +188,9 @@
        </item>
        <item>
         <widget class="QTableWidget" name="tw_param">
+         <attribute name="horizontalHeaderDefaultSectionSize">
+          <number>150</number>
+         </attribute>
          <row>
           <property name="text">
            <string>Reference Time</string>

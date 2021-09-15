@@ -1453,6 +1453,18 @@ $BODY$
                 lst_id += [ id[0] for id in  id_run]
         return lst_id
 
+    def get_scen_name(self, lst_id):
+        dict_name = dict()
+
+        rows= self.run_query("SELECT id, run, scenario FROM {0}.runs "
+                                "WHERE id in ({1}) ".format(self.SCHEMA,
+                                                         ','.join([str(id) for id in lst_id])),
+                    fetch=True)
+        for row in rows:
+            dict_name[row[0]]= {'run':row[1], 'scenario': row[2]}
+
+        return dict_name
+
 
 
     def correction_seq(self):
