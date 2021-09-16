@@ -53,6 +53,7 @@ class ClassScoresDialog(QDialog):
 
         #self.tabscores
         self.bt_close.clicked.connect(self.close)
+        self.bt_close.hide()
         self.wgt_select = SelectWidget(self)
         self.tab_select = self.tabscores.addTab(self.wgt_select,'scor_select')
 
@@ -73,9 +74,8 @@ class ClassScoresDialog(QDialog):
 
     def change_tab(self):
         if self.tabscores.currentIndex() != 0 :
-            self.lst_runs, self.init_dates = self.wgt_select.get_selection()
+            self.lst_runs = self.wgt_select.get_selection()
             self.wgt_param.lst_runs = self.lst_runs
-            self.wgt_param.init_dates = self.init_dates
             self.wgt_param.all =  True
             self.wgt_param.init_gui()
 

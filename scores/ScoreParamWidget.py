@@ -48,8 +48,6 @@ class ScoreParamWidget(QWidget):
         self.cl_score = ClassScores()
         self.lst_runs = []
         self.init_dates = None
-        self.date_init = None
-        self.lst_times = None
         self.all = all
         if not self.all :
             if self.cur_pknum == None:
@@ -63,8 +61,18 @@ class ScoreParamWidget(QWidget):
             'nash_crit':  False,
             'quantil' : False,
         }
-
+        self.lk_wgt_row = {'ref_time': 0,
+                           'per_start_t': 1,
+                           'per_last_t': 2,
+                           'pt_start_t': 3,
+                           'pt_last_t': 4,
+                           'pt_alpha_Q': 5,
+                           'pt_alpha_H': 6, }
+        self.param = {}
         self.widget_d = {}
+
+
+
         self.init_gui()
 
         self.bt_calcul_scores.clicked.connect(self.bt_calcul_fct)
@@ -76,19 +84,11 @@ class ScoreParamWidget(QWidget):
         initialize GUI
         :return:
         """
+
         # default value
         self.dsp_dist_quantil.setValue(25)
-        print(self.lst_runs)
-        self.lk_wgt_row = {      'ref_time' : 0,
-                                 'per_start_t': 1,
-                                 'per_last_t': 2,
-                                 'pt_start_t': 3,
-                                 'pt_last_t': 4,
-                                 'pt_alpha_Q': 5,
-                                 'pt_alpha_H': 6, }
 
         if len(self.lst_runs)>0 :
-            print('rrrrrr')
             dict_name = self.mdb.get_scen_name(self.lst_runs)
 
             self.tw_param.setColumnCount(len(self.lst_runs))
@@ -120,13 +120,13 @@ class ScoreParamWidget(QWidget):
                     self.widget_d[id_run][ctrl_].setMaximum(999)
 
                 # ************ add initialisation widget ************
-                self.date_init, self.lst_times = self.get_times(id_run)
+                date_init, lst_times = self.get_times(id_run)
                 tmps = datetime.today()
-                if isinstance(self.date_init, datetime):
-                    final_date = self.date_init + timedelta(seconds=self.lst_times[-1])
+                if isinstance(date_init, datetime):
+                    final_date= date_init + timedelta(seconds=lst_times[-1])
                 else:
                     # self.today = QDateTime(tmps.year, tmps.month, tmps.day, 0, 0, 0)
-                    self.date_init = datetime(tmps.year,
+                    date_init = datetime(tmps.year,
                                               tmps.month,
                                               tmps.day,
                                               0,0,0)
@@ -137,7 +137,7 @@ class ScoreParamWidget(QWidget):
                     self.widget_d[id_run]['ref_time'].setStyleSheet(
                         'color: red')
 
-                init_date_crt = datetime2QDateTime(self.date_init)
+                init_date_crt = datetime2QDateTime(date_init)
                 last_date_crt = datetime2QDateTime(final_date)
                 self.widget_d[id_run]['ref_time'].setDateTime(init_date_crt)
 
@@ -149,14 +149,15 @@ class ScoreParamWidget(QWidget):
                 for ctrl_ in ['pt_alpha_Q', 'pt_alpha_H']:
                     self.widget_d[id_run][ctrl_].setValue(1)
                 # ******** add control ************
-                self.widget_d[id_run]['ref_time'].dateChanged.connect(self.ch_date_ref)
+                self.widget_d[id_run]['ref_time'].dateTimeChanged.connect(
+                    self.ch_date_ref)
 
-                for ctrl_ in ['per_start_t', 'per_last_t']:
-                    self.widget_d[id_run][ctrl_].dateChanged.connect(
-                        self.ch_date_lim_per)
-                for ctrl_ in ['pt_start_t', 'pt_last_t']:
-                    self.widget_d[id_run][ctrl_].dateChanged.connect(
-                        self.ch_date_lim_pt)
+                for ctrl_ in ['per_start_t', 'pt_start_t']:
+                    self.widget_d[id_run][ctrl_].dateTimeChanged.connect(
+                        self.ch_date_limit)
+                for ctrl_ in ['per_last_t', 'pt_last_t']:
+                    self.widget_d[id_run][ctrl_].dateTimeChanged.connect(
+                        self.ch_date_limit)
                 # ************ fill table ************
                 name_col = '{} - {}'.format(dict_name[id_run]['run'],
                                             dict_name[id_run]['scenario'])
@@ -167,15 +168,24 @@ class ScoreParamWidget(QWidget):
                 for ctrl_, row in self.lk_wgt_row.items():
                     self.tw_param.setCellWidget(row , col,self.widget_d[id_run][ctrl_])
 
-
+                self.param[id_run] = {'lst_times' :lst_times,
+                                      'ref_time': date_init,
+                                      'per_start_t':date_init,
+                                      'per_last_t': final_date,
+                                      'pt_start_t': date_init,
+                                      'pt_last_t': final_date,
+                                      'pt_alpha_Q': 1,
+                                      'pt_alpha_H': 1
+                                      }
     def bt_default_fct(self):
         """
         Relit la based donnee pour mettre à jours la table
         :return:
         """
+        self.init_gui()
         pass
 
-    def get_times(self, id_run):
+    def get_times(self, id_run, only_init=False):
         """
         Get reference date if exist
         and time list of model
@@ -186,6 +196,9 @@ class ScoreParamWidget(QWidget):
                                where="id={0}".format(id_run))
         print(dico)
         init_time = dico["init_date"][0]
+        if only_init_:
+            return init_time
+
         info = self.mdb.select('runs_graph',
                                where="id_runs={} "
                                      "AND type_res='opt'"
@@ -211,6 +224,8 @@ class ScoreParamWidget(QWidget):
         :return:
         """
 
+        self.get_parameter()
+        print(self.param)
         self.clean_type_res()
         self.cpt_score()
 
@@ -279,8 +294,6 @@ class ScoreParamWidget(QWidget):
         :return:
         """
         self.get_alldata()
-
-
 
         #TODO demander pour les deltat si variable?
         # TODO demandé si je fait un croisment ou interpolation linear du modèle ?
@@ -579,7 +592,9 @@ class ScoreParamWidget(QWidget):
         """
         self.obs = {}
         self.model = {}
-        for id_run, init_time in zip(self.lst_runs, self.init_dates):
+
+        for id_run,  in zip(self.lst_runs):
+            init_time = self.get_times(id_run, only_init= True)
             self.info_model( id_run, init_time)
             if not self.info_obs(id_run, init_time):
                 self.model.pop(id_run)
@@ -698,89 +713,69 @@ class ScoreParamWidget(QWidget):
                 self.get_model(id_run, code)
 
 
-    def ch_date_ref(self, newdate):
+    def ch_date_ref(self,  newDate):
         """ change color and change  parameter limite"""
-        self.ref_time.setStyleSheet('color: Black')
-        self.date_init = newdate.toPyDateTime()
+        ctrl = self.sender() # get widget which invok signal
+        ctrl.setStyleSheet('color: Black')
+        self.check_lim()
 
-
-
-
-
-
-
-        # # TODO a reprendre il peut avoir plusieur Run affiché
-        #
-
-        #
-        # if isinstance(final_date, datetime):
-        #
-        #     last_date_crt = datetime2QDateTime(final_date)
-        # else:
-        #     last_date_crt = QDateTime(tmps.year, tmps.month, tmps.day, 1, 0, 0)
-        #
-        # self.start_time_persistence.setDateTime(init_date_crt)
-        # self.last_time_persistence.setDateTime(last_date_crt)
-        # self.start_time_point.setDateTime(init_date_crt)
-        # self.last_time_point.setDateTime(last_date_crt)
-
-
-
-        #         final_date = self.date_init + timedelta(seconds=self.lst_times[-1])
-        #         if not self.all:
-        #             if  self.date_init != old_init:
-        #                 self.start_time_persistence.setDateTime(newdate)
-        #                 self.start_time_point.setDateTime(newdate)
-        #                 self.last_time_persistence.setDateTime(datetime2QDateTime(final_date))
-        #                 self.last_time_point.setDateTime(datetime2QDateTime(final_date))
-        #
-
-        #
-    def ch_date_lim_per(self, newdate):
+    def ch_date_limit(self,  newDate):
         """ check limit"""
-        date_comp = newdate.toPyDateTime()
-        final_date = self.date_init + timedelta(seconds=self.lst_times[-1])
-        if date_comp< self.date_init:
-            self.start_time_persistence.setDateTime(
-                datetime2QDateTime(self.date_init))
-            txt = 'Tips start time is incorrect'
-            QMessageBox.warning(None, 'warning', txt)
-        if date_comp> final_date:
-            self.last_time_persistence.setDateTime(
-                datetime2QDateTime(final_date))
-            txt = 'Tips start last is incorrect'
-            QMessageBox.warning(None, 'warning', txt)
-
-        #
-        #
-    def ch_date_lim_pt(self, newdate):
-        """ check limit"""
-        date_comp = newdate.toPyDateTime()
-        final_date = self.date_init + timedelta(
-            seconds=self.lst_times[-1])
-        if date_comp < self.date_init:
-            self.start_time_point.setDateTime(
-                datetime2QDateTime(self.date_init))
-            txt = 'Tips start time is incorrect'
-            QMessageBox.warning(None, 'warning', txt)
-        if date_comp > final_date:
-            self.last_time_point.setDateTime(
-                datetime2QDateTime(final_date))
-            txt = 'Tips last time is incorrect'
-            QMessageBox.warning(None, 'warning', txt)
+        date_comp = newDate.toPyDateTime()
+        ctrl = self.sender()
+        self.check_lim()
 
 
 
 
-        # if not self.all:
-        #     id_run = self.lst_runs[0]
-        #     self.date_init, self.lst_times = self.get_times(id_run)
-        #     final_date = self.date_init + timedelta(seconds=self.lst_times[-1])
-        #     tmps = datetime.today()
-        #     self.today = QDateTime(tmps.year, tmps.month, tmps.day, 0, 0, 0)
-        #     if isinstance(self.date_init, datetime):
-        #         init_date_crt = datetime2QDateTime(self.date_init)
-        #     else:
-        #         init_date_crt = self.today
-        #         self.ref_time.setStyleSheet('color: red')
-        #     self.ref_time.setDateTime(init_date_crt)
+    def get_parameter(self):
+        """ get parameter runs"""
+        for col, id_run in enumerate(self.lst_runs):
+            for ctrl_ in self.widget_d[id_run].keys():
+                self.param[id_run][ctrl_] = \
+                    ctrl_get_value(self.widget_d[id_run][ctrl_])
+
+
+    def check_lim(self):
+        rows_start = ['per_start_t','pt_start_t']
+        rows_last = ['per_last_t', 'pt_last_t']
+        rows = rows_start+rows_last
+        for col, id_run in enumerate(self.lst_runs):
+            for row in rows:
+                self.widget_d[id_run][row].blockSignals(True)
+
+        for col, id_run in enumerate(self.lst_runs):
+            ref_time =  self.widget_d[id_run]['ref_time'].dateTime().toPyDateTime()
+            old_ref = self.param[id_run]['ref_time']
+
+            final_date = ref_time+ \
+                         timedelta(seconds=self.param[id_run]['lst_times'][-1])
+            final_date_crt = datetime2QDateTime(final_date)
+            init_date_crt = datetime2QDateTime(ref_time)
+            for row in rows  :
+                new_date = self.widget_d[id_run][row].dateTime().toPyDateTime()
+                if ref_time != old_ref :
+                    self.param[id_run]['ref_time'] = ref_time
+                    if row in rows_start:
+                        self.widget_d[id_run][row].setDateTime(init_date_crt)
+                    elif row in rows_last:
+                        self.widget_d[id_run][row].setDateTime(final_date_crt)
+                else:
+                    if new_date < ref_time :
+                        self.widget_d[id_run][row].setDateTime(init_date_crt)
+                    elif new_date > final_date:
+                        self.widget_d[id_run][row].setDateTime(final_date_crt)
+
+        for col, id_run in enumerate(self.lst_runs):
+            for row in rows:
+                self.widget_d[id_run][row].blockSignals(False)
+
+
+def ctrl_get_value(ctrl):
+    val = None
+    if ctrl.metaObject().className() == 'QDateTimeEdit':
+        #val = ctrl.dateTime().toString('yyyy-MM-dd HH:mm:ss')
+        val = ctrl.dateTime().toPyDateTime()
+    elif ctrl.metaObject().className() in ('QSpinBox', 'QDoubleSpinBox'):
+        val = ctrl.value()
+    return val

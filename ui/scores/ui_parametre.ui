@@ -198,12 +198,12 @@
          </row>
          <row>
           <property name="text">
-           <string>Persistence Last Time </string>
+           <string>Persistence Start Time </string>
           </property>
          </row>
          <row>
           <property name="text">
-           <string>Persistence Start Time </string>
+           <string>Persistence Last Time </string>
           </property>
          </row>
          <row>
