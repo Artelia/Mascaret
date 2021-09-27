@@ -18,7 +18,6 @@ email                :
  ***************************************************************************/
  """
 
-import os
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -27,35 +26,26 @@ from qgis.utils import *
 
 from qgis.PyQt.QtWidgets import *
 
-from .SelectWidget import SelectWidget
 from .ScoreParamWidget import ScoreParamWidget
 from .ScoreResWidget import ScoreResWidget
 from .ScoreDistWidget import ScoreDistWidget
 
 
 
-class ClassScoresDialog(QDialog):
+class ClassScoresResDialog():
     """
     GUI Class allow to compute scores
     """
 
-    def __init__(self, mgis):
-        QDialog.__init__(self)
-        self.mgis = mgis
+    def __init__(self, parent):
+        self.prt = parent
+        self.mgis = parent.mgis
         self.mdb = self.mgis.mdb
-        self.all = True
+        self.tabscores = self.prt.tabscores
+        self.all = False
 
         self.lst_runs =  []
         self.init_dates = []
-
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_scores.ui'), self)
-
-        #self.tabscores
-        self.bt_close.clicked.connect(self.close)
-        self.bt_close.hide()
-        self.wgt_select = SelectWidget(self)
-        self.tab_select = self.tabscores.addTab(self.wgt_select,'scor_select')
 
         self.wgt_param = ScoreParamWidget(self, self.all)
         self.tab_param = self.tabscores.addTab(self.wgt_param, 'scor_param')
@@ -73,15 +63,10 @@ class ClassScoresDialog(QDialog):
         self.tabscores.currentChanged.connect(self.change_tab)
 
     def change_tab(self):
-        if self.tabscores.currentIndex() != 0 :
-            self.lst_runs = self.wgt_select.get_selection()
-            self.wgt_param.lst_runs = self.lst_runs
-            self.wgt_param.all =  True
-            self.wgt_param.init_gui()
-        if self.tabscores.currentIndex() ==  3 :
+        if self.tabscores.currentIndex() ==  2 :
             self.wgt_dist.res = self.wgt_param.res
             self.wgt_dist.fill_tab()
-        if self.tabscores.currentIndex() == 2:
+        if self.tabscores.currentIndex() == 1:
             self.wgt_res.res = self.wgt_param.res
             self.wgt_res.fill_tab()
 

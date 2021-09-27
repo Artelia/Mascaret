@@ -1460,8 +1460,9 @@ $BODY$
                                 "WHERE id in ({1}) ".format(self.SCHEMA,
                                                          ','.join([str(id) for id in lst_id])),
                     fetch=True)
-        for row in rows:
-            dict_name[row[0]]= {'run':row[1], 'scenario': row[2]}
+        if rows :
+            for row in rows:
+                dict_name[row[0]]= {'run':row[1], 'scenario': row[2]}
 
         return dict_name
 

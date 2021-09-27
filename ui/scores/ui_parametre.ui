@@ -198,6 +198,11 @@
          </row>
          <row>
           <property name="text">
+           <string>Persistence  Time Step</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
            <string>Persistence Start Time </string>
           </property>
          </row>

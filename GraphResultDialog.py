@@ -28,6 +28,7 @@ from qgis.gui import *
 from qgis.utils import *
 from .GraphCommon import GraphCommonNew
 from .Function import tw_to_txt, interpole
+from .scores.ClassScoresResDialog import ClassScoresResDialog
 from datetime import date, timedelta, datetime
 from matplotlib import patches
 import re
@@ -63,9 +64,10 @@ class GraphResultDialog(QWidget):
         self.initialising = True
         self.mgis = mgis
         self.mdb = self.mgis.mdb
+
         self.typ_graph = typ_graph
         self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/graphResult.ui'), self)
+            os.path.join(self.mgis.masplugPath, 'ui/graphResult_new.ui'), self)
         self.graph_obj = GraphResult(self.lay_graph, self)
         self.cur_run, self.cur_graph, self.cur_vars = None, None, None
         self.cur_vars_lbl, self.cur_branch, self.cur_pknum, self.cur_t = None, None, None, None
@@ -78,7 +80,6 @@ class GraphResultDialog(QWidget):
         self.info_graph = {}
         self.show_hide_com(False)
         if self.checkrun():
-
             if self.typ_graph == "struct" or self.typ_graph == "weirs":
                 if self.typ_graph == "weirs":
                     self.typ_res = "weirs"
@@ -156,13 +157,16 @@ class GraphResultDialog(QWidget):
                 self.cb_det.currentIndexChanged.connect(
                     lambda: self.detail_changed(up_lim=True))
 
-            # self.bt_reculTot.clicked.connect(lambda: self.avance_detail("start"))
-            # self.bt_recul.clicked.connect(lambda: self.avance_detail("prev"))
-            # self.bt_av.clicked.connect(lambda: self.avance_detail("next"))
-            # self.bt_avTot.clicked.connect(lambda: self.avance_detail("end"))
             self.bt_expCsv.clicked.connect(self.export_csv)
-
             self.tw_data.addAction(CopySelectedCellsAction(self.tw_data))
+            self.cc_scores.stateChanged.connect(self.ch_score)
+            self.disenable_score()
+
+            self.lst_runs = []
+            self.stw_res.setCurrentIndex(0)
+            self.cl_scores = ClassScoresResDialog(self)
+
+
             self.init_dico_run()
 
             self.initialising = False
@@ -171,9 +175,14 @@ class GraphResultDialog(QWidget):
             else:
                 self.update_data()
             self.initialising = False
+    def ch_score(self):
+        """ change tab for score"""
+        if  self.cc_scores.isChecked() == True:
+            self.stw_res.setCurrentIndex(1)
+        else:
+            self.stw_res.setCurrentIndex(0)
 
     def show_hide_com(self, vis=True):
-
         if vis:
             self.lbl_coment.show()
             self.label_coment.show()
@@ -978,6 +987,7 @@ class GraphResultDialog(QWidget):
                 gg = 'Q'
             else:
                 self.graph_obj.clear_obs()
+                self.disenable_score()
                 return
             mini = min(self.cur_data["date"])
             maxi = max(self.cur_data["date"])
@@ -990,9 +1000,11 @@ class GraphResultDialog(QWidget):
             obs_graph = self.mdb.select("observations", condition, "date")
             if not obs_graph:
                 self.graph_obj.clear_obs()
+                self.disenable_score()
                 return
             if len(obs_graph['valeur']) == 0:
                 self.graph_obj.clear_obs()
+                self.disenable_score()
                 return
 
             if "Z" in self.cur_data.keys():
@@ -1002,8 +1014,15 @@ class GraphResultDialog(QWidget):
                 obs_graph['valeur'] = tempo
 
             self.graph_obj.init_graph_obs(obs_graph)
+            self.lst_runs = [self.cur_run]
+            self.cc_scores.setEnabled(True)
+            self.cl_scores.wgt_param.cur_pknum = self.cur_pknum
+            self.cl_scores.wgt_param.lst_runs = self.lst_runs
+            self.cl_scores.wgt_param.all = False
+            self.cl_scores.wgt_param.init_gui()
         else:
             self.graph_obj.clear_obs()
+            self.disenable_score()
 
     def fill_tab(self, x_var, nb_col=None):
         self.tw_data.setColumnCount(0)
@@ -1036,6 +1055,11 @@ class GraphResultDialog(QWidget):
         # self.tw_data.resizeColumnsToContents()
         self.tw_data.resizeRowsToContents()
         self.tw_data.setVisible(True)
+
+    def disenable_score(self):
+        """ disenable scores """
+        self.cc_scores.setEnabled(False)
+        self.cc_scores.setChecked(False)
 
     def find_var_lbl(self):
         tmp = []

@@ -157,7 +157,7 @@ class ClassScores():
         nash = 1 - (soma / somb)
         return  nash
 
-    def vol_err(self, q_obs, q_pred, deltat):
+    def vol_err(self, q_obs, q_pred, lst_time_pred,lst_time_obs):
         """
         Error on volumes
         :param q_obs: array)observation
@@ -165,8 +165,25 @@ class ClassScores():
         :param deltat : time step
         :return:(array) Error on volumes
         """
-        return  np.sum(q_pred * deltat) - np.sum(q_obs*deltat)
+        qp = q_pred[1:]
+        deltp = self.generate_deltat(lst_time_pred)
+        qo = q_obs[1:]
+        delto = self.generate_deltat(lst_time_obs)
 
+        return  np.sum(qp * deltp) - np.sum(qo*delto)
+
+
+    def generate_deltat(self,lst_time):
+        """
+        generate deltat array
+        :param lst_time: time list
+        :return:
+        """
+        ltime = lst_time[0]
+        deltat = []
+        for time in lst_time[1:]:
+            deltat.append(time - ltime)
+        return np.array(deltat)
     def calc_dist(self,dist_step = None):
         """
         distribution list

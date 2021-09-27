@@ -36,6 +36,9 @@
        <property name="alternatingRowColors">
         <bool>false</bool>
        </property>
+       <property name="textElideMode">
+        <enum>Qt::ElideRight</enum>
+       </property>
        <property name="verticalScrollMode">
         <enum>QAbstractItemView::ScrollPerItem</enum>
        </property>
@@ -46,58 +49,8 @@
         <bool>true</bool>
        </attribute>
        <attribute name="horizontalHeaderDefaultSectionSize">
-        <number>120</number>
+        <number>200</number>
        </attribute>
-       <row>
-        <property name="text">
-         <string>L’erreur moyenne H</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>L’erreur moyenne Q</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>L'erreur relative moyenne </string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>L'erreur relative moyenne  Q</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>Critère de Nash-Sutcliffe H</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>Critère de Nash-Sutcliffe Q</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>etc.</string>
-        </property>
-       </row>
-       <column>
-        <property name="text">
-         <string>Test - test1</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Test - test2</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Test - test3</string>
-        </property>
-       </column>
       </widget>
      </item>
      <item>
