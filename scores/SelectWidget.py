@@ -58,9 +58,9 @@ class SelectWidget(QWidget):
         """
         dico = self.mdb.select("runs", "", "date")
         for run, scen, date, comments in zip(dico["run"],
-                                                        dico["scenario"],
-                                                        dico["date"],
-                                                        dico["comments"]):
+                                             dico["scenario"],
+                                             dico["date"],
+                                             dico["comments"]):
             if run not in self.listeRuns:
                 self.listeRuns.append(run)
                 self.listeScen[run] = []
@@ -80,9 +80,10 @@ class SelectWidget(QWidget):
                 self.child[run] = {}
                 maxi = datetime(1900, 1, 1, 0, 0)
                 tmps = datetime.today()
-                self.today = QDateTime(tmps.year, tmps.month, tmps.day, 00, 00, 00)
+                self.today = QDateTime(tmps.year, tmps.month, tmps.day, 00, 00,
+                                       00)
 
-                for scen, date,  comments in self.listeScen[run]:
+                for scen, date, comments in self.listeScen[run]:
                     self.child[run][scen] = QTreeWidgetItem(
                         self.parent[run])
                     self.child[run][scen].setFlags(
@@ -115,7 +116,7 @@ class SelectWidget(QWidget):
         """ clean selection"""
         for run in self.listeRuns:
             if self.parent[run].checkState(0) > 0:
-                for scen, date,  comments in self.listeScen[run]:
+                for scen, date, comments in self.listeScen[run]:
                     self.child[run][scen].setCheckState(0, Qt.Unchecked)
 
     def get_selection(self):
@@ -125,7 +126,7 @@ class SelectWidget(QWidget):
         for run in self.listeRuns:
             if self.parent[run].checkState(0) > 0:
                 selection[run] = []
-                for scen, date,  comments in self.listeScen[run]:
+                for scen, date, comments in self.listeScen[run]:
                     if self.child[run][scen].checkState(0) > 1:
                         selection[run].append("'{}'".format(scen))
         list_id_select = self.mdb.get_id_run(selection)

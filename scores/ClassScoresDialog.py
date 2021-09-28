@@ -33,7 +33,6 @@ from .ScoreResWidget import ScoreResWidget
 from .ScoreDistWidget import ScoreDistWidget
 
 
-
 class ClassScoresDialog(QDialog):
     """
     GUI Class allow to compute scores
@@ -45,22 +44,22 @@ class ClassScoresDialog(QDialog):
         self.mdb = self.mgis.mdb
         self.all = True
 
-        self.lst_runs =  []
+        self.lst_runs = []
         self.init_dates = []
 
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_scores.ui'), self)
 
-        #self.tabscores
+        # self.tabscores
         self.bt_close.clicked.connect(self.close)
         self.bt_close.hide()
         self.wgt_select = SelectWidget(self)
-        self.tab_select = self.tabscores.addTab(self.wgt_select,'scor_select')
+        self.tab_select = self.tabscores.addTab(self.wgt_select, 'scor_select')
 
         self.wgt_param = ScoreParamWidget(self, self.all)
         self.tab_param = self.tabscores.addTab(self.wgt_param, 'scor_param')
 
-        self.wgt_res= ScoreResWidget(self)
+        self.wgt_res = ScoreResWidget(self)
         self.tab_res = self.tabscores.addTab(self.wgt_res, 'scor_res')
         id_res = self.tabscores.indexOf(self.wgt_res)
         self.tabscores.setTabEnabled(id_res, False)
@@ -73,17 +72,14 @@ class ClassScoresDialog(QDialog):
         self.tabscores.currentChanged.connect(self.change_tab)
 
     def change_tab(self):
-        if self.tabscores.currentIndex() != 0 :
+        if self.tabscores.currentIndex() != 0:
             self.lst_runs = self.wgt_select.get_selection()
             self.wgt_param.lst_runs = self.lst_runs
-            self.wgt_param.all =  True
+            self.wgt_param.all = True
             self.wgt_param.init_gui()
-        if self.tabscores.currentIndex() ==  3 :
+        if self.tabscores.currentIndex() == 3:
             self.wgt_dist.res = self.wgt_param.res
             self.wgt_dist.fill_tab()
         if self.tabscores.currentIndex() == 2:
             self.wgt_res.res = self.wgt_param.res
             self.wgt_res.fill_tab()
-
-
-

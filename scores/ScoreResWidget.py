@@ -65,23 +65,38 @@ class ScoreResWidget(QWidget):
         self.dict_name = self.mdb.get_scen_name(self.res.keys())
         # table_dist_abs
         tab_fill = {}
+        lst_col = []
 
         for id in self.res.keys():
+            colq = []
+            colh = []
             if 'H' in self.res[id].keys():
                 if len(self.res[id]['H'].keys()) > 0:
                     for key in self.res[id]['H'].keys():
                         if key != 'quantil':
-                            tab_fill.update(self.fill_dico(id, 'H', key))
+                                tmp, colh = self.fill_dico(id, 'H', key)
+                                for kk in tmp.keys() :
+                                    if kk in tab_fill.keys():
+                                        tab_fill[kk].update(tmp[kk])
+                                    else:
+                                        tab_fill[kk] = tmp[kk]
             if 'Q' in self.res[id].keys():
                 if len(self.res[id]['Q'].keys()) > 0:
                     for key in self.res[id]['Q'].keys():
                         if key != 'quantil':
-                            tab_fill.update(self.fill_dico(id, 'Q', key))
+                            tmp, colq = self.fill_dico(id, 'Q', key)
+                            for kk in tmp.keys():
+                                if kk in tab_fill.keys():
+                                    tab_fill[kk].update(tmp[kk])
+                                else:
+                                    tab_fill[kk] = tmp[kk]
+            lst_col = lst_col + colh + colq
 
         if len(tab_fill.keys()) > 0:
+
             err_lst = [v for v in tab_fill.keys()]
             nb_line = len(err_lst)
-            columns = [str(v) for v in tab_fill[err_lst[0]].keys()]
+            columns = list(set(lst_col))
             nb_col = len(columns)
             self.table_res.setRowCount(nb_line)
             self.table_res.setColumnCount(nb_col)
@@ -89,9 +104,14 @@ class ScoreResWidget(QWidget):
                 [self.data_write[v] for v in err_lst])
             self.table_res.setHorizontalHeaderLabels(columns)
             for row, dist in enumerate(err_lst):
-                for col, tmp in enumerate(tab_fill[dist].keys()):
-                    item = QTableWidgetItem('{:.3f}'.format(tab_fill[dist][tmp]))
+                for  tmp in tab_fill[dist].keys():
+                    if dist =='vol_err':
+                        item = QTableWidgetItem(
+                            '{:e}'.format(tab_fill[dist][tmp]))
+                    else:
+                        item = QTableWidgetItem('{:.3f}'.format(tab_fill[dist][tmp]))
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    col = columns.index(tmp)
                     self.table_res.setItem(row, col, item)
             self.bt_export_csv.setEnabled(True)
 
@@ -107,6 +127,7 @@ class ScoreResWidget(QWidget):
         res2 = self.res[id][varhq][var]
         code = None
         oneobs = False
+        lst_col = []
         if not self.all:
             keys = list(res2.keys())
             if len(keys) == 1:
@@ -119,6 +140,7 @@ class ScoreResWidget(QWidget):
                                    varhq)
             for err in res2.keys():
                 tab_fill[err] = {name_col: res2[err]}
+                lst_col.append(name_col)
         else:
             # case if multi observation on the same profil
             # self.res[id][varhq][var][code]
@@ -130,7 +152,8 @@ class ScoreResWidget(QWidget):
 
                 for err in res2[code].keys():
                     tab_fill[err] = {name_col: res2[code][err]}
-        return tab_fill
+                    lst_col.append(name_col)
+        return tab_fill,lst_col
 
     #
     def clear_tab(self):
@@ -181,14 +204,19 @@ class ScoreResWidget(QWidget):
             clipboard = '{}{}{}'.format(clipboard,
                                         tw.verticalHeaderItem(r).text(),
                                         sep)
+
             for c in range_c:
+                if tw.item(r, c):
+                    val = tw.item(r, c).data(0)
+                else:
+                    val = ''
                 if c != range_c[-1]:
                     clipboard = '{}{}{}'.format(clipboard,
-                                                tw.item(r, c).data(0),
+                                                val,
                                                 sep)
                 else:
                     clipboard = '{}{}\n'.format(clipboard,
-                                                tw.item(r, c).data(0))
+                                                val)
 
 
         return clipboard

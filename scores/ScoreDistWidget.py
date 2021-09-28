@@ -19,6 +19,7 @@ email                :
  """
 
 import os
+import numpy as np
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
@@ -56,20 +57,45 @@ class ScoreDistWidget(QWidget):
         # table_dist_abs
         tab_fill = {}
         tab_fill_abs = {}
+        lst_col = []
+        lst_col_abs = []
         for id in self.res.keys():
+            colh = []
+            colh_abs = []
+            colq = []
+            colq_abs = []
             if 'H' in self.res[id].keys():
                 if 'quantil' in self.res[id]['H'].keys():
-                    tab_fill.update(self.fill_dico(id, 'H', 'dist_err'))
-                    tab_fill_abs.update(self.fill_dico(id, 'H', 'dist_abs_err'))
+                    tmp, colh = self.fill_dico(id, 'H', 'dist_err')
+                    tmp_abs, colh_abs = self.fill_dico(id, 'H', 'dist_abs_err')
+                    for kk in tmp.keys():
+                        if kk in tab_fill.keys():
+                            tab_fill[kk].update(tmp[kk])
+                            tab_fill_abs[kk].update(tmp_abs[kk])
+                        else:
+                            tab_fill[kk] = tmp[kk]
+                            tab_fill_abs[kk] = tmp_abs[kk]
+
             if 'Q' in self.res[id].keys():
                 if 'quantil' in self.res[id]['Q'].keys():
-                    tab_fill.update(self.fill_dico(id, 'Q', 'dist_err'))
-                    tab_fill_abs.update(self.fill_dico(id, 'Q', 'dist_abs_err'))
-
+                    tmp, colq = self.fill_dico(id, 'Q', 'dist_err')
+                    tmp_abs, colq_abs = self.fill_dico(id, 'Q', 'dist_abs_err')
+                    for kk in tmp.keys():
+                        if kk in tab_fill.keys():
+                            tab_fill[kk].update(tmp[kk])
+                            tab_fill_abs[kk].update(tmp_abs[kk])
+                        else:
+                            tab_fill[kk] = tmp[kk]
+                            tab_fill_abs[kk] = tmp_abs[kk]
+                            # tab_fill.update(self.fill_dico(id, 'Q', 'dist_err'))
+                            # tab_fill_abs.update(self.fill_dico(id, 'Q', 'dist_abs_err'))
+            lst_col = lst_col + colh + colq
+            lst_col_abs = lst_col_abs + colh_abs + colq_abs
         if len(tab_fill.keys()) > 0:
             dist_lst = [v for v in tab_fill.keys()]
             nb_line = len(dist_lst)
-            columns = [str(v) for v in tab_fill[dist_lst[0]].keys()]
+            # columns = [str(v) for v in tab_fill[dist_lst[0]].keys()]
+            columns = list(set(lst_col))
             nb_col = len(columns)
             self.table_dist.setRowCount(nb_line)
             self.table_dist.setColumnCount(nb_col)
@@ -84,15 +110,17 @@ class ScoreDistWidget(QWidget):
             self.table_dist_abs.setHorizontalHeaderLabels(columns)
 
             for row, dist in enumerate(dist_lst):
-                for col, tmp in enumerate(tab_fill[dist].keys()):
+                for tmp in tab_fill[dist].keys():
                     item = QTableWidgetItem(
                         '{:.3f}'.format(tab_fill[dist][tmp]))
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    col = columns.index(tmp)
                     self.table_dist.setItem(row, col, item)
-                for col, tmp in enumerate(tab_fill_abs[dist].keys()):
+                for tmp in tab_fill_abs[dist].keys():
                     item = QTableWidgetItem(
                         '{:.3f}'.format(tab_fill[dist][tmp]))
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    col = columns.index(tmp)
                     self.table_dist_abs.setItem(row, col, item)
 
             self.bt_export_csv.setEnabled(True)
@@ -107,15 +135,15 @@ class ScoreDistWidget(QWidget):
         """
         tab_fill = {}
         res2 = self.res[id][varhq]['quantil']
-
+        lst_col = []
         code = None
-        oneobs =  False
-        if not self.all :
+        oneobs = False
+        if not self.all:
             keys = list(res2.keys())
-            if len(keys)==1:
-                oneobs= True
-                res2 =  res2[keys[0]]
-        if self.all  or oneobs:
+            if len(keys) == 1:
+                oneobs = True
+                res2 = res2[keys[0]]
+        if self.all or oneobs:
 
             name_row = '{} - {}\n' \
                        '{}'.format(self.dict_name[id]['run'],
@@ -125,17 +153,19 @@ class ScoreDistWidget(QWidget):
             for id, dist in enumerate(dist_lst):
                 tab_fill[dist] = {}
                 tab_fill[dist][name_row] = res2[var][1][id]
+                lst_col.append(name_row)
         else:
             for code in res2.keys():
                 name_row = '{} - {}\n' \
-                                   '{} - {}'.format(self.dict_name[id]['run'],
-                                                    self.dict_name[id]['scenario'],
-                                                    varhq, code)
+                           '{} - {}'.format(self.dict_name[id]['run'],
+                                            self.dict_name[id]['scenario'],
+                                            varhq, code)
                 dist_lst = res2[code]['dist_err'][0]
                 for id, dist in enumerate(dist_lst):
-                    tab_fill[dist] = { name_row : res2[code][var][1][id]}
+                    tab_fill[dist] = {name_row: res2[code][var][1][id]}
+                    lst_col.append(name_row)
 
-        return tab_fill
+        return tab_fill, lst_col
 
     def clear_tab(self):
         """clear table"""
@@ -197,12 +227,16 @@ class ScoreDistWidget(QWidget):
                                         tw.verticalHeaderItem(r).text(),
                                         sep)
             for c in range_c:
+                if tw.item(r, c):
+                    val = tw.item(r, c).data(0)
+                else:
+                    val = ''
                 if c != range_c[-1]:
                     clipboard = '{}{}{}'.format(clipboard,
-                                                tw.item(r, c).data(0),
+                                                val,
                                                 sep)
                 else:
                     clipboard = '{}{}\n'.format(clipboard,
-                                                tw.item(r, c).data(0))
+                                                val)
 
         return clipboard

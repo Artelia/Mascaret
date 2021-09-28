@@ -166,7 +166,6 @@ class GraphResultDialog(QWidget):
             self.stw_res.setCurrentIndex(0)
             self.cl_scores = ClassScoresResDialog(self)
 
-
             self.init_dico_run()
 
             self.initialising = False
@@ -175,9 +174,10 @@ class GraphResultDialog(QWidget):
             else:
                 self.update_data()
             self.initialising = False
+
     def ch_score(self):
         """ change tab for score"""
-        if  self.cc_scores.isChecked() == True:
+        if self.cc_scores.isChecked():
             self.stw_res.setCurrentIndex(1)
         else:
             self.stw_res.setCurrentIndex(0)
@@ -232,13 +232,13 @@ class GraphResultDialog(QWidget):
                         self.val_prof_ref[pk]['ZREF'] = [float(v) for v in
                                                          prof['z'][i].split()]
                         self.val_prof_ref[pk]['leftminbed'] = \
-                        prof['leftminbed'][i]
+                            prof['leftminbed'][i]
                         self.val_prof_ref[pk]['rightminbed'] = \
-                        prof['rightminbed'][i]
+                            prof['rightminbed'][i]
                         self.val_prof_ref[pk]['leftstock'] = prof['leftstock'][
                             i]
                         self.val_prof_ref[pk]['rightstock'] = \
-                        prof['rightstock'][i]
+                            prof['rightstock'][i]
                     except:
                         pass
 
@@ -374,8 +374,7 @@ class GraphResultDialog(QWidget):
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
                                   "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
                                   "ORDER BY date DESC, run ASC, scenario ASC;".format(
-            self.mdb.SCHEMA),
-                                  fetch=True)
+            self.mdb.SCHEMA), fetch=True)
         for row in rows:
             if row[1] not in self.dict_run.keys():
                 self.dict_run[row[1]] = dict()
@@ -670,10 +669,10 @@ class GraphResultDialog(QWidget):
                     val = self.zmax_save
                     where = "id_runs = {0} AND pknum = {1} " \
                             "AND var ={2} ".format(self.cur_run,
-                                                                 self.cur_pknum,
-                                                                 self.id_qmaj)
+                                                   self.cur_pknum,
+                                                   self.id_qmaj)
                     qmaj_max = self.mgis.mdb.select_max("val", 'results',
-                                                   where=where)
+                                                        where=where)
                 else:
                     where = "id_runs = {0} AND pknum = {1} " \
                             "AND var ={2} AND time = {3}".format(self.cur_run,
@@ -690,10 +689,8 @@ class GraphResultDialog(QWidget):
                                                                  self.cur_pknum,
                                                                  self.id_qmaj,
                                                                  self.cur_t)
-                    qmaj_max = self.mgis.mdb.select_max("val", 'results', where=where)
-
-
-
+                    qmaj_max = self.mgis.mdb.select_max("val", 'results',
+                                                        where=where)
 
                 self.cur_data['Z'] = [val] * len(self.cur_data['x'])
                 self.label_zmax.setText(str(self.zmax_save))
@@ -721,7 +718,8 @@ class GraphResultDialog(QWidget):
                                       self.cb_det.currentText()))
                 self.graph_obj.axes.set_xlabel(r'Distance ($m$)')
                 self.graph_obj.axes.set_ylabel(r'Level ($m$)')
-                self.graph_obj.init_graph_profil(self.cur_data, self.x_var, qmaj_max)
+                self.graph_obj.init_graph_profil(self.cur_data, self.x_var,
+                                                 qmaj_max)
 
     def update_data(self):
         """
@@ -743,9 +741,7 @@ class GraphResultDialog(QWidget):
             if self.typ_graph == 'hydro_pk':
                 sql_hyd_pk = "AND pknum IN (SELECT pk FROM {0}.results_sect WHERE " \
                              "id_runs = {1} AND branch = {2})".format(
-                    self.mgis.mdb.SCHEMA,
-                    self.cur_run,
-                    self.cur_branch)
+                    self.mgis.mdb.SCHEMA, self.cur_run, self.cur_branch)
             else:
                 sql_hyd_pk = ''
 
@@ -981,6 +977,7 @@ class GraphResultDialog(QWidget):
         """ """
         # observation seulement si event
         if self.obs and "date" in self.cur_data.keys():
+            print(self.cur_data.keys())
             if "Z" in self.cur_data.keys():
                 gg = 'H'
             elif "Q" in self.cur_data.keys():
@@ -991,17 +988,19 @@ class GraphResultDialog(QWidget):
                 return
             mini = min(self.cur_data["date"])
             maxi = max(self.cur_data["date"])
-            condition = """code = '{0}'
-                       AND date>'{1}'
-                       AND date<'{2}'
-                       AND type='{3}'
-                       AND valeur > -999.9""".format(self.obs['code'][0], mini,
-                                                     maxi, gg)
-            obs_graph = self.mdb.select("observations", condition, "date")
-            if not obs_graph:
-                self.graph_obj.clear_obs()
-                self.disenable_score()
-                return
+            for code in self.obs['code']:
+                condition = """code = '{0}'
+                           AND date>'{1}'
+                           AND date<'{2}'
+                           AND type='{3}'
+                           AND valeur > -999.9""".format(code, mini,
+                                                         maxi, gg)
+
+                obs_graph = self.mdb.select("observations", condition, "date")
+                # print( obs_graph)
+                if len(obs_graph['valeur']) != 0:
+                    break
+
             if len(obs_graph['valeur']) == 0:
                 self.graph_obj.clear_obs()
                 self.disenable_score()
@@ -1067,7 +1066,7 @@ class GraphResultDialog(QWidget):
             rows = self.mdb.run_query("SELECT name FROM {0}.results_var "
                                       "WHERE var = '{1}'".format(
                 self.mgis.mdb.SCHEMA, var),
-                                      fetch=True)
+                fetch=True)
             tmp.append(rows[0][0])
         return tmp
 
@@ -1217,7 +1216,7 @@ class GraphResult(GraphCommonNew):
 
         self.maj_limites()
 
-    def init_graph_profil(self, data, x_var, qmaj = 0):
+    def init_graph_profil(self, data, x_var, qmaj=0):
 
         self.set_data(data, x_var)
 

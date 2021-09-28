@@ -31,7 +31,6 @@ from .ScoreResWidget import ScoreResWidget
 from .ScoreDistWidget import ScoreDistWidget
 
 
-
 class ClassScoresResDialog():
     """
     GUI Class allow to compute scores
@@ -44,13 +43,13 @@ class ClassScoresResDialog():
         self.tabscores = self.prt.tabscores
         self.all = False
 
-        self.lst_runs =  []
+        self.lst_runs = []
         self.init_dates = []
 
         self.wgt_param = ScoreParamWidget(self, self.all)
         self.tab_param = self.tabscores.addTab(self.wgt_param, 'scor_param')
 
-        self.wgt_res= ScoreResWidget(self)
+        self.wgt_res = ScoreResWidget(self)
         self.tab_res = self.tabscores.addTab(self.wgt_res, 'scor_res')
         id_res = self.tabscores.indexOf(self.wgt_res)
         self.tabscores.setTabEnabled(id_res, False)
@@ -63,12 +62,9 @@ class ClassScoresResDialog():
         self.tabscores.currentChanged.connect(self.change_tab)
 
     def change_tab(self):
-        if self.tabscores.currentIndex() ==  2 :
+        if self.tabscores.currentIndex() == 2:
             self.wgt_dist.res = self.wgt_param.res
             self.wgt_dist.fill_tab()
         if self.tabscores.currentIndex() == 1:
             self.wgt_res.res = self.wgt_param.res
             self.wgt_res.fill_tab()
-
-
-
