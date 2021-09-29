@@ -33,7 +33,14 @@ from datetime import datetime
 
 
 class SelectWidget(QWidget):
+    """
+    Class of selection run and scenarion for compute scores
+    """
     def __init__(self, windmain):
+        """
+        Class constructor
+        :param windmain: main windows (parent)
+        """
         QWidget.__init__(self)
         self.windmain = windmain.mgis
         self.mdb = self.windmain.mdb
@@ -109,7 +116,7 @@ class SelectWidget(QWidget):
 
         self.bt_clean.clicked.connect(self.clean)
 
-    def ch_date(self, newdate):
+    def ch_date(self):
         """ change color"""
         for run in self.listeRuns:
             for scen, date, comments in self.listeScen[run]:

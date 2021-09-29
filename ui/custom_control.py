@@ -84,6 +84,9 @@ class FloatValidator(QValidator):
 
 
 class ScientificDoubleSpinBox(QDoubleSpinBox):
+    """
+    Class QDoubleSpinBox with scientific format
+    """
     def __init__(self, *args, **kwargs):
         super(ScientificDoubleSpinBox, self).__init__(*args, **kwargs)
         self.setMinimum(-np.inf)

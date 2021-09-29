@@ -28,6 +28,7 @@ import subprocess
 import sys
 import json
 import time
+import gc
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
@@ -1856,6 +1857,7 @@ class ClassMascaret:
         :return:
         """
         del self.mgis.task_mas
+        gc.collect()
         self.mgis.task_mas = None
 
     def completed(self, exception):
@@ -2068,6 +2070,7 @@ class ClassMascaret:
             clapi.main(fichier_cas, tracer, casier)
             self.stock_res_api(clapi.results_api, id_run)
             del clapi
+
             os.chdir(pwd)
 
             return True

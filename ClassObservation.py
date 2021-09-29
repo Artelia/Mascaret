@@ -326,7 +326,12 @@ class ClassEventObsDialog(QDialog):
 
     @staticmethod
     def fmt_date(date):
-        return datetime.datetime.strptime(date, '%d/%m/%Y %H:%M')
+        ldate = len(date.strip())
+        if ldate ==16:
+            val = datetime.datetime.strptime(date, '%d/%m/%Y %H:%M')
+        elif ldate ==19:
+            val = datetime.datetime.strptime(date, '%d/%m/%Y %H:%M:%S')
+        return val
 
     def on_tab_data_change(self, itm):
         if not self.filling_tab:

@@ -37,7 +37,15 @@ from ..ui.custom_control import ScientificDoubleSpinBox
 
 
 class ScoreParamWidget(QWidget):
+    """
+    Class for Parameter GUI and compute score
+    """
     def __init__(self, windmain, all=True, ):
+        """
+        Class constructor
+        :param windmain: main windows (parent)
+        :param all: True if the all profile process else only one profile
+        """
         QWidget.__init__(self)
         self.windmain = windmain
         self.mdb = self.windmain.mgis.mdb
@@ -166,7 +174,6 @@ class ScoreParamWidget(QWidget):
 
                 for ctrl_ in ['pt_alpha_Q', 'pt_alpha_H']:
                     self.widget_d[id_run][ctrl_].setValue(1)
-                print(deltat)
                 self.widget_d[id_run]['per_step_t'].setValue(deltat)
 
 
@@ -204,12 +211,20 @@ class ScoreParamWidget(QWidget):
                                       }
 
     def fct_chang_valim(self):
+        """
+        Change Enable/DisEnable for self.val_lim
+        :return:
+        """
         if self.ch_limit.isChecked():
             self.val_lim.setEnabled(True)
         else:
             self.val_lim.setEnabled(False)
 
     def fct_chang_ch_lim(self):
+        """
+        Change Enable/DisEnable for self.ch_limit
+        :return:
+        """
         if self.ch_simple_err.isChecked():
             self.ch_limit.setEnabled(True)
         else:
@@ -217,6 +232,10 @@ class ScoreParamWidget(QWidget):
             self.ch_limit.setChecked(False)
 
     def fct_chang_quantil(self):
+        """
+        Change Enable/DisEnable for self.dsp_dist_quantil
+        :return:
+        """
         if self.ch_quantil_err.isChecked():
             self.dsp_dist_quantil.setEnabled(True)
         else:
@@ -224,7 +243,7 @@ class ScoreParamWidget(QWidget):
 
     def bt_default_fct(self):
         """
-        Relit la based donnee pour mettre à jours la table
+        Read the data base to update the default parameters
         :return:
         """
         self.init_gui()
@@ -292,15 +311,11 @@ class ScoreParamWidget(QWidget):
     def cpt_score(self):
         """
         run the scores compute
+        intepolation model linear with observation time
         :return:
         """
         self.txt_err_get = ''
-        self.get_alldata()
-
-
-
-        # TODO persistance  : check time step no variable
-        # TODO intepolation model linear with observation time
+        self.get_data()
         dict_name = self.mdb.get_scen_name(self.model.keys())
         add_txt = ''
         for id_run in self.no_obs:
@@ -330,12 +345,40 @@ class ScoreParamWidget(QWidget):
 
             if self.ch_persistence.isChecked():
                 # check pas de temps régulier
-                if not self.cpt_persistence(id_run):
-                    add_txt += '- Persistance error (Run : {})\n'.format(name_run)
+
+                init_mod = self.model[id_run]['init_time']
+                lst_mod = self.model[id_run]['final_time']
+                last = self.param[id_run]['per_last_t']
+                fst = self.param[id_run]['per_start_t']
+
+                if (init_mod < last <= lst_mod) and (lst_mod > fst >= init_mod):
+                    test,lst_test = self.cpt_persistence(id_run)
+                    if not test:
+                        add_txt += '- Persistance error (Run : {})\n'.format(
+                            name_run)
+                    else:
+                        if len(lst_test)>0:
+                            add_txt += '- Persistance error (Run : {}), Time step' \
+                                       ' no constant : \n'.format(name_run)
+                            for code in lst_test:
+                                       '\t- {} observation)\n'.format(code)
+                else:
+                    add_txt += '- Persistance error, No data in time rang' \
+                               ' (Run : {})\n'.format(name_run)
 
             if self.ch_pointe_err.isChecked():
-                if not self.cpt_pointe_err(id_run):
-                    add_txt += '- Tips error (Run : {})\n'.format(name_run)
+                init_mod = self.model[id_run]['init_time']
+                lst_mod = self.model[id_run]['final_time']
+                last = self.param[id_run]['per_last_t']
+                fst = self.param[id_run]['per_start_t']
+                if (init_mod < last <= lst_mod) and (lst_mod > fst >= init_mod):
+                    if not self.cpt_pointe_err(id_run):
+                        add_txt += '- Tips error (Run : {})\n'.format(name_run)
+                else:
+                    add_txt += '- Tips error, No data in time rang' \
+                               ' (Run : {})\n'.format(name_run)
+
+
         txt =''
         if self.txt_err_get !='':
             txt += self.txt_err_get
@@ -351,9 +394,9 @@ class ScoreParamWidget(QWidget):
 
         :param y_obs: observation data
         :param y_pred: model data
-        :return:
+        :param seuil : threshold value
+        :return: dict contain the simple error
         """
-        print(self.cl_score.mean_err(y_obs, y_pred))
         dict_res = {
             'mean_err': self.cl_score.mean_err(y_obs, y_pred),
             'mean_abs_err': self.cl_score.mean_abs_err(y_obs, y_pred),
@@ -391,7 +434,6 @@ class ScoreParamWidget(QWidget):
         q_obs = np.array([])
         q_pred = np.array([])
         dict_tmp_q = {}
-        print(self.cmpt_var[id_run])
         for code in self.data[id_run].keys():
             if self.cmpt_var[id_run][code]['H']:
                 if self.all:
@@ -441,7 +483,7 @@ class ScoreParamWidget(QWidget):
         """
         compute Nash-Sutcliffe criterion
         :param id_run:  run index
-        :return:
+        :return: out : True if the compute is Ok
         """
         out = False
 
@@ -507,7 +549,7 @@ class ScoreParamWidget(QWidget):
         """
         compute Error on volumes
         :param id_run:  run index
-        :return:
+        :return:out : True if the compute is Ok
         """
         out = False
         err = 0
@@ -544,7 +586,7 @@ class ScoreParamWidget(QWidget):
             error quantiles : dist_err
             absolute error quantiles :  dist_abs_err
         :param id_run:  run index
-        :return:
+        :return: out : True if the compute is Ok
         """
         out = False
         dist_step = self.dsp_dist_quantil.value()
@@ -611,31 +653,36 @@ class ScoreParamWidget(QWidget):
             out = True
 
         return out
+    def check_cst_deltat(self, obs_times, pred_times):
+        """
+        check if detla time is constant
+        :param obs_times: observation time
+        :param pred_times: model time
+        :return:
+        """
+        dt_obs = self.cl_score.generate_deltat(obs_times)
+        dt_pred = self.cl_score.generate_deltat(pred_times)
+        cobs = np.all(dt_obs == dt_obs[0])
+        cpred = np.all(dt_pred == dt_pred[0])
+        if cobs and cpred :
+            return  True
+        else:
+            return False
 
     def cpt_persistence(self, id_run):
         """
         compute persistence
-        Attention model interpolé sur les temps d'obs
-        :return:
+        Warning the model is interpoled on observation time
+        :param id_run : run index
+        :return: out : True if persistance is calculated
         """
-        # check deltat multiple first time step
-        # filtre time en fontion des date
-        # crétation des table
-        # calcul
-        # si tout est ok , ok liste pertinance
-        # si non renvoie du type d'erreur:
-        # deltat non multiple
-        # ou deltat non constant
 
-
-        # res = persistence(self, y_obs, y_pred, tps_obs, deltat)
-        # if res == None:
-        # time step no constnat
         out = False
+        lst_no_cst =[]
         frst_date = self.param[id_run]['per_start_t']
         last_date = self.param[id_run]['per_last_t']
         deltat = self.param[id_run]['per_step_t']
-        #TODO check deltat multiple first time step
+
         ref_time = self.param[id_run]['ref_time']
 
         frst_time = datum_to_float(frst_date, ref_time)
@@ -662,8 +709,14 @@ class ScoreParamWidget(QWidget):
                                      self.data[id_run][code]['h_obs_time'])
                 #
                 if len(new_obs) == 0:
-                    print("No data in time range in tips error. "
-                          "id_run {}, code obs {}".format(id_run, code))
+                    # txterr += "Persistance error : No data in time range : "\
+                    #       "{}".format(code)
+                    continue
+
+                if not self.check_cst_deltat(new_obs_times, new_pred_times) :
+                    lst_no_cst.append(code)
+                    continue
+
 
                 if self.all:
                     per, sum1, sum2 = self.cl_score.persistence(new_obs, new_pred,
@@ -689,8 +742,10 @@ class ScoreParamWidget(QWidget):
                                      self.data[id_run][code]['q_obs_time'])
                 #
                 if len(new_obs) == 0:
-                    print("No data in time range in tips error. "
-                          "id_run {}, code obs {}".format(id_run, code))
+                    continue
+                if not self.check_cst_deltat(new_obs_times, new_pred_times) :
+                    lst_no_cst.append(code)
+                    continue
                 if self.all:
                     per, sum1, sum2 = self.cl_score.persistence(new_obs,
                                                                 new_pred,
@@ -711,7 +766,6 @@ class ScoreParamWidget(QWidget):
 
         if self.cmpt_var[id_run]['H']:
             if self.all:
-                print(sumh_n,sumh_d, sumh_n/sumh_d)
                 self.res[id_run]['H']['persistence'] = \
                     {
                          'per_err': 1 - sumh_n/sumh_d,
@@ -732,7 +786,7 @@ class ScoreParamWidget(QWidget):
                 self.type_res['persistence'] = True
                 out = True
 
-        return out
+        return out,lst_no_cst
 
     def filter_time(self, first, last, data, times):
         """
@@ -756,7 +810,7 @@ class ScoreParamWidget(QWidget):
         compute Errors on the tips (L’erreur sur les pointes sur H et Q)
             Errors on the tips
             Time shift on the tip
-
+        :param id_run : run index
         :return:
         """
         out = False
@@ -886,6 +940,7 @@ class ScoreParamWidget(QWidget):
 
     def interpol_date(self, obs_time, time_model, var_model):
         """
+        Interpolation values
         :param obs_time: array    observation time
         :param time_model: list(float)   model time
         :param var_model: array  model variable
@@ -901,9 +956,10 @@ class ScoreParamWidget(QWidget):
         elif self.obs[code]['name']:
             where = "name='{0}'".format(self.obs[code]['name'])
         else:
-            print('No find profile {0}={1} '.format(self.obs[code]['name'],
-                                                    self.obs[code]['abscissa']))
-            return
+            txt = 'No find profile {0}={1} '.format(self.obs[code]['name'],
+                                                    self.obs[code]['abscissa'])
+            self.txt_err_get += txt
+            return None
         info = self.mdb.select('profiles',
                                where=where,
                                list_var=['abscissa'])
@@ -930,7 +986,6 @@ class ScoreParamWidget(QWidget):
                                             ordre='abscissa')
             if len(info['abscissa']) > 0:
                 abs = info['abscissa'][0]
-        print(info)
         lst_code = []
         for code, dict in self.obs.items():
             if name:
@@ -965,6 +1020,8 @@ class ScoreParamWidget(QWidget):
             lst_varq.append('QMAJ')
 
         pknum = self.get_pknum(code)
+        if not pknum :
+            return
         lst_var = lst_varq + lst_varh
         tmp = {}
         for var in lst_var:
@@ -1004,6 +1061,12 @@ class ScoreParamWidget(QWidget):
                 'times']
 
     def resample_model_h(self, id_run, code):
+        """
+        Resample model time for H
+        :param id_run : run index
+        :param code : observation code
+        :return:
+        """
         # interpolation en fonction des temps des Observation
         # ******* Z  **********
         z = self.data[id_run][code]['h_mod_ori']
@@ -1014,6 +1077,12 @@ class ScoreParamWidget(QWidget):
                                                                   'times'], z)
 
     def resample_model_q(self, id_run, code):
+        """
+        Resample model time for Q
+        :param id_run : run index
+        :param code : observation code
+        :return:
+        """
         # ******* Q  **********
 
         q = self.data[id_run][code]['q_mod_ori']
@@ -1026,6 +1095,8 @@ class ScoreParamWidget(QWidget):
     def get_obs(self, id_run, code):
         """
         get observation data
+        :param id_run : run index
+        :param code : observation code
         :return:
         """
         lst_var = ['H', 'Q']
@@ -1042,6 +1113,8 @@ class ScoreParamWidget(QWidget):
                                        list_var=['date', 'valeur'],
                                        verbose=False)
 
+            if self.obs[code]['zero'] is None :
+                self.obs[code]['zero'] = 0
             if gg == 'H' and len(tmp_dict['valeur']) > 0:
                 z = np.array(tmp_dict['valeur']) + \
                     np.ones(len(tmp_dict['valeur'])) * self.obs[code]['zero']
@@ -1049,6 +1122,7 @@ class ScoreParamWidget(QWidget):
                     [datum_to_float(vv,
                                     tmp_dict['date'][0])
                      for vv in tmp_dict['date']])
+                print(obs_time)
 
                 self.data[id_run][code] = {
                     'h_obs': z,
@@ -1165,10 +1239,6 @@ class ScoreParamWidget(QWidget):
 
         if len(rows['code']) == 0:
             dict_name = self.mdb.get_scen_name([id_run])
-            # txt = "The {} - {} haven't obsevation.\n " \
-            #      "".format(dict_name['run'], dict_name['scenario'])
-                 #"The score isn't computed." \
-            print( dict_name)
             txt = "No find observation for {} - {}\n " \
                       "".format(dict_name[id_run]['run'],
                                 dict_name[id_run]['scenario'])
@@ -1184,7 +1254,11 @@ class ScoreParamWidget(QWidget):
         self.model[id_run]['lst_obs'] = rows['code']
         return True
 
-    def get_alldata(self):
+    def get_data(self):
+        """
+        get all data (model and observation)
+        :return:
+        """
         # if not all len(lst_run) == 1
         self.dict_pretr()
 
@@ -1206,7 +1280,6 @@ class ScoreParamWidget(QWidget):
                       "".format(dict_name[id_run]['run'],
                                 dict_name[id_run]['scenario'])
 
-                # print('No find observation')
                 self.no_obs.append(id_run)
                 continue
 
@@ -1288,6 +1361,10 @@ class ScoreParamWidget(QWidget):
                     ctrl_get_value(self.widget_d[id_run][ctrl_])
 
     def check_lim(self):
+        """
+        Check if date value is right with model time
+        :return:
+        """
         rows_start = ['per_start_t', 'pt_start_t']
         rows_last = ['per_last_t', 'pt_last_t']
         rows = rows_start + rows_last
