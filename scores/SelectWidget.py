@@ -61,6 +61,10 @@ class SelectWidget(QWidget):
                                              dico["scenario"],
                                              dico["date"],
                                              dico["comments"]):
+            # filter initialisation
+            # if len(scen) >5 :
+            #     if scen[-5:] == '_init':
+            #         continue
             if run not in self.listeRuns:
                 self.listeRuns.append(run)
                 self.listeScen[run] = []

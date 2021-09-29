@@ -52,6 +52,9 @@ class ScoreResWidget(QWidget):
             'eqm': 'Mean square error',
             'ns_err': 'Nash - Sutcliffe criterion',
             'vol_err': "Error on volumes",
+            'pts_err': "Errors on the tips",
+            'pts_time_err' : "Time shift on the tip",
+            'per_err' : 'Persistence'
         }
 
         self.bt_export_csv.clicked.connect(self.export_csv)

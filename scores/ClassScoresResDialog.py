@@ -61,10 +61,10 @@ class ClassScoresResDialog():
 
         self.tabscores.currentChanged.connect(self.change_tab)
 
-    def change_tab(self):
-        if self.tabscores.currentIndex() == 2:
+    def change_tab(self, index):
+        if index == 2:
             self.wgt_dist.res = self.wgt_param.res
             self.wgt_dist.fill_tab()
-        if self.tabscores.currentIndex() == 1:
+        if index == 1:
             self.wgt_res.res = self.wgt_param.res
             self.wgt_res.fill_tab()

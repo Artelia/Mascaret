@@ -18,37 +18,6 @@
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="3" column="2">
-        <widget class="QDoubleSpinBox" name="dsp_dist_quantil">
-         <property name="suffix">
-          <string>%</string>
-         </property>
-         <property name="decimals">
-          <number>0</number>
-         </property>
-         <property name="minimum">
-          <double>0.000000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>100.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>5.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="ch_simple_err">
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Simple error scores </string>
-         </property>
-        </widget>
-       </item>
        <item row="3" column="0">
         <widget class="QCheckBox" name="ch_quantil_err">
          <property name="font">
@@ -141,6 +110,47 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="3" column="2">
+        <widget class="QDoubleSpinBox" name="dsp_dist_quantil">
+         <property name="suffix">
+          <string>%</string>
+         </property>
+         <property name="decimals">
+          <number>0</number>
+         </property>
+         <property name="minimum">
+          <double>0.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>5.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="ch_simple_err">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Simple error scores </string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QCheckBox" name="ch_limit">
+         <property name="text">
+          <string>threshold value active</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <layout class="QHBoxLayout" name="lay_lim"/>
        </item>
       </layout>
      </item>

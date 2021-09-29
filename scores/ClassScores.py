@@ -73,7 +73,7 @@ class ClassScores():
         """
         return np.mean(np.abs(y_pred - y_obs))
 
-    def mean_r_err(self, y_obs, y_pred):
+    def mean_r_err(self, y_obs, y_pred, seuil=None):
         """
         mean relative error
         :param y_obs: (array)observation data
@@ -89,37 +89,52 @@ class ClassScores():
         # le paramètre SEUIL_MINIMAL, qui permet d'ignorer
         # les valeurs proches de 0.
 
-        res = np.mean((y_pred - y_obs) / y_obs)
+        if seuil:
+            tmp = np.ma.masked_array(y_obs, mask=((y_obs <= seuil) & (y_obs >= -seuil)))
+            yn_obs = tmp.data
+            yn_pred = y_pred[~tmp.mask]
+        else:
+            yn_obs =  y_obs
+            yn_pred = y_pred
+
+        res = np.mean((yn_pred - yn_obs) / yn_obs)
         return res
 
-    def biais(self, y_obs, y_pred):
+    def biais(self, y_obs, y_pred,seuil=None):
         """
         mean relative error in %
         :param y_obs: (array)observation data
         :param y_pred: (array) model data
         :return:(array)
         """
-        return self.mean_r_err(y_obs, y_pred) * 100
+        return self.mean_r_err(y_obs, y_pred,seuil) * 100
 
-    def mean_rabs_err(self, y_obs, y_pred):
+    def mean_rabs_err(self, y_obs, y_pred, seuil=None):
         """
         mean relative absolute error
         :param y_obs: (array)observation data
         :param y_pred: (array) model data
         :return: (array) mean relative absolute error
         """
-        # TODO SEUIL_MINIMAL for value near 0
-        res = np.mean(np.abs((y_pred - y_obs) / y_obs))
+        if seuil:
+            tmp = np.ma.masked_array(y_obs, mask=(
+            (y_obs <= seuil) & (y_obs >= -seuil)))
+            yn_obs = tmp.data
+            yn_pred = y_pred[~tmp.mask]
+        else:
+            yn_obs = y_obs
+            yn_pred = y_pred
+        res = np.mean(np.abs((yn_pred - yn_obs) / yn_obs))
         return res
 
-    def precision(self, y_obs, y_pred):
+    def precision(self, y_obs, y_pred, seuil =None):
         """
         mean relative absolute error in %
         :param y_obs: (array)observation data
         :param y_pred: (array) model data
         :return: (array) mean relative absolute error in %
         """
-        return self.mean_rabs_err(y_obs, y_pred) * 100
+        return self.mean_rabs_err(y_obs, y_pred, seuil) * 100
 
     def std(self, y_obs, y_pred):
         """
@@ -242,7 +257,7 @@ class ClassScores():
                     break
         return cond, difref
 
-    def persistence(self, y_obs, y_pred, tps_obs, deltat):
+    def persistence(self, y_obs, y_pred, tps_obs, deltat, sumc=False):
         """
         Persistance
         The persistence score is calculated for a given forecast period.
@@ -275,10 +290,14 @@ class ClassScores():
             sum_d = 0
             nb_obs = len(y_obs)
             for i in range(nb_obs):
-                if i < nb_obs + nb_decal:
+                if i+nb_decal< nb_obs:
                     sum_n += (y_pred[i + nb_decal] - y_obs[i + nb_decal]) ** 2
                     sum_d += (y_obs[i] - y_obs[i + nb_decal]) ** 2
-            return 1 - (sum_n / sum_d)
+            res = 1 - (sum_n / sum_d)
+            if sumc :
+                return res, sum_n, sum_d
+            else:
+                return 1 - (sum_n / sum_d)
         else:
             return None
 
@@ -319,7 +338,9 @@ class ClassScores():
         mxobs = np.max(y_obs * alpha)
         idpred = np.where(y_pred == mxpred)[0]
         idobs = np.where(y_obs == mxobs)[0]
+        print(idpred,idpred,'ttttttttt')
         deltatmax = tps_pred[idpred[0]] - tps_obs[idobs[0]]
+        print(deltatmax )
         return deltatmax
 
 
