@@ -906,5 +906,6 @@ Version : {}
 
     def fct_scores(self):
         dlg = ClassScoresDialog(self)
-        dlg.exec_()
+        #dlg.exec_()
+        dlg.show()
 

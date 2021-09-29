@@ -435,6 +435,9 @@ class ScoreParamWidget(QWidget):
         q_pred = np.array([])
         dict_tmp_q = {}
         for code in self.data[id_run].keys():
+            print(code,'cpmth :',
+                  self.cmpt_var[id_run][code]['H'],
+                  'cmptq :', self.cmpt_var[id_run][code]['Q'])
             if self.cmpt_var[id_run][code]['H']:
                 if self.all:
                     h_obs = np.concatenate(
@@ -1122,22 +1125,29 @@ class ScoreParamWidget(QWidget):
                     [datum_to_float(vv,
                                     tmp_dict['date'][0])
                      for vv in tmp_dict['date']])
-                print(obs_time)
-
-                self.data[id_run][code] = {
-                    'h_obs': z,
-                    'h_obs_date': tmp_dict['date'],
-                    'h_obs_time': obs_time}
-
+                dic_tmp = {
+                        'h_obs': z,
+                        'h_obs_date': tmp_dict['date'],
+                        'h_obs_time': obs_time}
+                if code in self.data[id_run].keys() :
+                    self.data[id_run][code].update(dic_tmp)
+                else :
+                    self.data[id_run][code] = dic_tmp
             if gg == 'Q' and len(tmp_dict['valeur']) > 0:
                 obs_time = np.array(
                     [datum_to_float(vv,
                                     tmp_dict['date'][0])
                      for vv in tmp_dict['date']])
-                self.data[id_run][code] = {
+
+                dic_tmp = {
                     'q_obs': np.array(tmp_dict['valeur']),
                     'q_obs_date': tmp_dict['date'],
                     'q_obs_time': obs_time}
+                if code in self.data[id_run].keys():
+                    self.data[id_run][code].update(dic_tmp)
+                else:
+                    self.data[id_run][code] = dic_tmp
+
 
     def dict_pretr(self):
         """
@@ -1317,6 +1327,7 @@ class ScoreParamWidget(QWidget):
         self.cmpt_var[id_run] = {}
         for code in lst_obs:
             self.cmpt_var[id_run][code] = {}
+            print(self.data[id_run][code])
             if 'h_obs' in self.data[id_run][code].keys() and \
                             'h_mod_ori' in self.data[id_run][code].keys():
                 self.cmpt_var[id_run][code]['H'] = True

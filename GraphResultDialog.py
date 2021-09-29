@@ -976,6 +976,7 @@ class GraphResultDialog(QWidget):
     def update_obs(self):
         """ """
         # observation seulement si event
+        print(self.obs)
         if self.obs and "date" in self.cur_data.keys():
             print(self.cur_data.keys())
             if "Z" in self.cur_data.keys():
@@ -1013,6 +1014,15 @@ class GraphResultDialog(QWidget):
                 obs_graph['valeur'] = tempo
 
             self.graph_obj.init_graph_obs(obs_graph)
+            self.lst_runs = [self.cur_run]
+            self.cc_scores.setEnabled(True)
+            self.cl_scores.wgt_param.cur_pknum = self.cur_pknum
+            self.cl_scores.wgt_param.lst_runs = self.lst_runs
+            self.cl_scores.wgt_param.all = False
+            self.cl_scores.wgt_param.init_gui()
+
+        elif  self.obs and not("date" in self.cur_data.keys()):
+            self.graph_obj.clear_obs()
             self.lst_runs = [self.cur_run]
             self.cc_scores.setEnabled(True)
             self.cl_scores.wgt_param.cur_pknum = self.cur_pknum

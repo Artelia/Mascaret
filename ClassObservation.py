@@ -239,7 +239,7 @@ class ClassEventObsDialog(QDialog):
                                                          self.mgis.masplugPath,
                                                          filter="CSV (*.csv);;File (*)")
         succes, recs = self.read_csv(file_name_path)
-        print(succes, len(recs))
+        #print(succes, len(recs))
 
         if succes:
             self.mdb.execute("DROP TABLE IF EXISTS {0}.tmp_observations".format(
