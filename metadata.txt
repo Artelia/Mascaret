@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=3.00
 qgisMaximumVersion=3.99
 
-version=3.1.0
+version=3.1.2
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,6 +30,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    3.1.2  : Reduction of the accurancy (to mm) of the variables cotesCrete and  abscTravCrete in Xcas
+    3.1.1  : Correction of cross section result
     3.1.0  : Correction of tables owner
              Correction of steady model when using the rating curve
              Correction of  basin law compute
