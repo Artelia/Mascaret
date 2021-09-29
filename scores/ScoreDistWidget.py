@@ -35,6 +35,7 @@ class ScoreDistWidget(QWidget):
         self.windmain = windmain
         self.mdb = self.windmain.mgis.mdb
         self.all = self.windmain.all
+        self.res = {}
         self.ui = loadUi(
             os.path.join(self.windmain.mgis.masplugPath,
                          'ui/scores/ui_distib_score.ui'), self)

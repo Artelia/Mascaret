@@ -40,6 +40,7 @@ class ScoreResWidget(QWidget):
             os.path.join(self.windmain.mgis.masplugPath,
                          'ui/scores/ui_results_score.ui'), self)
         self.dict_name = {}
+        self.res = {}
         #
         self.data_write = {
             'mean_err': 'Mean error',

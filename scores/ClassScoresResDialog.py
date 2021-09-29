@@ -68,3 +68,11 @@ class ClassScoresResDialog():
         if index == 1:
             self.wgt_res.res = self.wgt_param.res
             self.wgt_res.fill_tab()
+
+    def clear_scores(self):
+        id_dist = self.tabscores.indexOf(self.wgt_dist)
+        self.tabscores.setTabEnabled(id_dist, False)
+        self.wgt_dist.fill_tab()
+        id_res = self.tabscores.indexOf(self.wgt_res)
+        self.tabscores.setTabEnabled(id_res, False)
+        self.wgt_res.fill_tab()

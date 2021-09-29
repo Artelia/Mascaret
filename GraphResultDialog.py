@@ -160,12 +160,12 @@ class GraphResultDialog(QWidget):
             self.bt_expCsv.clicked.connect(self.export_csv)
             self.tw_data.addAction(CopySelectedCellsAction(self.tw_data))
             self.cc_scores.stateChanged.connect(self.ch_score)
-            self.disenable_score()
+
 
             self.lst_runs = []
             self.stw_res.setCurrentIndex(0)
             self.cl_scores = ClassScoresResDialog(self)
-
+            self.disenable_score()
             self.init_dico_run()
 
             self.initialising = False
@@ -1067,6 +1067,7 @@ class GraphResultDialog(QWidget):
 
     def disenable_score(self):
         """ disenable scores """
+        self.cl_scores.clear_scores()
         self.cc_scores.setEnabled(False)
         self.cc_scores.setChecked(False)
 
