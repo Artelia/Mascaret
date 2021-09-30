@@ -25,7 +25,8 @@ from qgis.gui import *
 from qgis.utils import *
 
 import datetime
-
+import csv
+import io
 from .GraphCommon import GraphCommon
 from matplotlib.dates import date2num
 
@@ -34,6 +35,8 @@ if int(qVersion()[0]) < 5:  # qt4
 else:  # qt5
     from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
     from qgis.PyQt.QtWidgets import *
+    from qgis.PyQt.QtCore import Qt
+
 
 
 class ClassEventObsDialog(QDialog):
@@ -236,7 +239,7 @@ class ClassEventObsDialog(QDialog):
                                                          self.mgis.masplugPath,
                                                          filter="CSV (*.csv);;File (*)")
         succes, recs = self.read_csv(file_name_path)
-        print(succes, len(recs))
+        #print(succes, len(recs))
 
         if succes:
             self.mdb.execute("DROP TABLE IF EXISTS {0}.tmp_observations".format(
@@ -323,7 +326,12 @@ class ClassEventObsDialog(QDialog):
 
     @staticmethod
     def fmt_date(date):
-        return datetime.datetime.strptime(date, '%d/%m/%Y %H:%M')
+        ldate = len(date.strip())
+        if ldate ==16:
+            val = datetime.datetime.strptime(date, '%d/%m/%Y %H:%M')
+        elif ldate ==19:
+            val = datetime.datetime.strptime(date, '%d/%m/%Y %H:%M:%S')
+        return val
 
     def on_tab_data_change(self, itm):
         if not self.filling_tab:
@@ -502,6 +510,48 @@ class ClassEventObsDialog(QDialog):
         self.graph_edit.init_graph(None)
 
 
+    def copier(self):
+        """copier la zone sélectionnée dans le clipboard
+        """
+        selection = self.ui.tab_values.selectedIndexes()
+        if selection:
+            rows = sorted(index.row() for index in selection)
+            columns = sorted(index.column() for index in selection)
+            rowcount = rows[-1] - rows[0] + 1
+            colcount = columns[-1] - columns[0] + 1
+            table = [[''] * colcount for _ in range(rowcount)]
+            for index in selection:
+                row = index.row() - rows[0]
+                column = index.column() - columns[0]
+                if column == 0:
+                    data = index.data().toString("dd/MM/yyyy HH:mm")
+
+                else:
+                    data = index.data()
+                table[row][column] = data
+
+            stream = io.StringIO()
+            csv.writer(stream).writerows(table)
+            qApp.clipboard().setText(stream.getvalue())
+
+    def keyPressEvent(self, event):
+
+        if self.ui.tab_values.hasFocus():
+
+            # ----------------------------------------------------------------
+            # Ctle-C: copier
+            if event.key() == Qt.Key_C and (
+                event.modifiers() & Qt.ControlModifier):
+                self.copier()
+                event.accept()
+            else:
+                event.ignore()
+        else:
+            event.ignore()
+
+
+
+
 class ItemEditorFactory(QItemEditorFactory):
     # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
     # It is possible for a custom delegate to provide editors without the use of an editor item factory.
@@ -594,3 +644,5 @@ class GraphObservation(GraphCommon):
         leglines[0].set_alpha(1.0)
 
         self.maj_limites()
+
+

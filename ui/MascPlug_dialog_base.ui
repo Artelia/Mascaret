@@ -258,6 +258,8 @@
     <addaction name="actionCross_section_results"/>
     <addaction name="actionBasin"/>
     <addaction name="actionGraphRes"/>
+    <addaction name="separator"/>
+    <addaction name="actionScores"/>
    </widget>
    <widget class="QMenu" name="menuWater_Quality">
     <property name="title">
@@ -731,6 +733,11 @@
    </property>
    <property name="toolTip">
     <string>Observations</string>
+   </property>
+  </action>
+  <action name="actionScores">
+   <property name="text">
+    <string>Scores</string>
    </property>
   </action>
  </widget>

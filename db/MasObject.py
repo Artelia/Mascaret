@@ -643,72 +643,13 @@ class observations(MasObject):
                       ('date', 'timestamp without time zone'),
                       ('CONSTRAINT cle_obs ', 'PRIMARY KEY (id)')]
 
-
-class resultats(MasObject):
-    def __init__(self):
-        super(resultats, self).__init__()
-        self.order = 17
-        self.geom_type = None
-        self.attrs = [('id', ' serial NOT NULL'),
-                      ('run', ' character varying(30)'),
-                      ('scenario', ' character varying(30)'),
-                      ('date', ' timestamp without time zone'),
-                      ('t', ' float'),
-                      ('branche', ' integer'),
-                      ('section', ' integer'),
-                      ('pk', ' float'),
-                      ('zref', ' float'),
-                      ('z', ' float'),
-                      ('qmin', ' float'),
-                      ('qmaj', ' float'),
-                      ('kmin', ' float'),
-                      ('kmaj', ' float'),
-                      ('fr', ' float'),
-                      ('y', ' float'),
-                      ('zmax', ' float'),
-                      ('qmax', ' float'),
-                      ('q', ' float'),
-                      ('bnum', ' integer'),
-                      ('zcas', ' float'),
-                      ('surcas', ' float'),
-                      ('volcas', ' float'),
-                      ('lnum', ' integer'),
-                      ('qech', ' float'),
-                      ('vech', ' float'),
-                      ('CONSTRAINT projet_pkey', ' PRIMARY KEY (id)')]
-
-
-class resultats_basin(MasObject):
-    def __init__(self):
-        super(resultats_basin, self).__init__()
-        self.order = 18
-        self.geom_type = None
-        self.attrs = [('id', ' serial NOT NULL'),
-                      ('run', ' character varying(30)'),
-                      ('scenario', ' character varying(30)'),
-                      ('date', ' timestamp without time zone'),
-                      ('t', ' float'),
-                      ('bnum', ' integer'),
-                      ('zcas', ' float'),
-                      ('surcas', ' float'),
-                      ('volcas', ' float'),
-                      ('CONSTRAINT res_basinkey', ' PRIMARY KEY (id)')]
-
-
-class resultats_links(MasObject):
-    def __init__(self):
-        super(resultats_links, self).__init__()
-        self.order = 19
-        self.geom_type = None
-        self.attrs = [('id', ' serial NOT NULL'),
-                      ('run', ' character varying(30)'),
-                      ('scenario', ' character varying(30)'),
-                      ('date', ' timestamp without time zone'),
-                      ('t', ' float'),
-                      ('lnum', ' integer'),
-                      ('qech', ' float'),
-                      ('vech', ' float'),
-                      ('CONSTRAINT res_linkkey', ' PRIMARY KEY (id)')]
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS observations_code_type " \
+               "ON {}.observations(code, type);".format(self.schema)
+        qry += '\n'
+        return qry
 
 
 # *****************************************
@@ -1551,12 +1492,16 @@ class results(MasObject):
                       ('CONSTRAINT results_pkey',
                        ' PRIMARY KEY (id_runs, time, pknum, var)')]
 
-        # def pg_create_table(self):
-        #     qry = super(self.__class__, self).pg_create_table()
-        #     qry += '\n'
-        #     qry += "CREATE INDEX IF NOT EXISTS idx_res_var ON {0}.results(id_runs);\n".format(self.schema)
-        #     return qry
-
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_id_runs_pknum " \
+               "ON {}.results(id_runs, pknum);".format(self.schema)
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_id_runs_time " \
+               "ON {}.results(id_runs, time);".format(self.schema)
+        qry += '\n'
+        return qry
 
 class results_sect(MasObject):
     def __init__(self):
@@ -1570,6 +1515,13 @@ class results_sect(MasObject):
                       ('CONSTRAINT results_sect_pkey',
                        ' PRIMARY KEY (id_runs, pk, branch)')]
 
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_sect_id_runs_pknum " \
+               "ON {}.results_sect(id_runs, pk);".format(self.schema)
+        qry += '\n'
+        return qry
 
 class results_var(MasObject):
     def __init__(self):

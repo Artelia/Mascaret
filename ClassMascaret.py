@@ -28,6 +28,7 @@ import subprocess
 import sys
 import json
 import time
+import gc
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
@@ -1502,7 +1503,7 @@ class ClassMascaret:
             if par["evenement"] and noyau != "steady":
                 dict_scen_tmp = self.mdb.select('events', 'run', 'starttime')
                 if len(dict_scen_tmp['name']) == 0:
-                    self.mgis.add_info("Warning: scenario not found")
+                    self.mgis.add_info("Warning: **** scenario not found  ***")
                 scen2, ok = QInputDialog.getItem(None,
                                                  'Select Events',
                                                  'Select Events',
@@ -1524,7 +1525,7 @@ class ClassMascaret:
                 dict_scen_tmp = self.mdb.select('events', 'run', 'starttime')
                 listexclu = []
                 if len(dict_scen_tmp['name']) == 0:
-                    self.mgis.add_info("Warning: scenario not found")
+                    self.mgis.add_info("Warning: **** scenario not found  ***")
                 for i, scen in enumerate(dict_scen_tmp['name']):
                     # self.mgis.add_info("scen**************** {}".format(scen))
                     scen = scen.strip()
@@ -1822,7 +1823,6 @@ class ClassMascaret:
         """
         par, dict_scen, dict_lois, comments = self.mascaret_init(noyau, run,
                                                                  only_init)
-
         if not par or not dict_scen or not dict_lois:
             return
 
@@ -1857,6 +1857,7 @@ class ClassMascaret:
         :return:
         """
         del self.mgis.task_mas
+        gc.collect()
         self.mgis.task_mas = None
 
     def completed(self, exception):
@@ -1878,7 +1879,6 @@ class ClassMascaret:
         else:
             print('no transmitted variable')
             return
-
         for i, scen in enumerate(dict_scen['name']):
             if self.mgis.DEBUG:
                 self.mgis.add_info("The current scenario is {}".format(scen))
@@ -2036,7 +2036,6 @@ class ClassMascaret:
         os.chdir(self.dossierFileMasc)
         with open('FichierCas.txt', 'w') as fichier:
             fichier.write("'" + fichier_cas + "'\n")
-
         if not self.cond_api:
             test = sys.platform
             if 'linux' in test or test == 'cygwin':
@@ -2071,6 +2070,7 @@ class ClassMascaret:
             clapi.main(fichier_cas, tracer, casier)
             self.stock_res_api(clapi.results_api, id_run)
             del clapi
+
             os.chdir(pwd)
 
             return True
