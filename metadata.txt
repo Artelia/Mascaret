@@ -32,6 +32,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 changelog=
     4.0.0  : Adding Export GUI
              Only qt5
+             Adding the rating curve law using steady kernel
              Adding Scores functionnality
     3.1.1  : Correction of cross section result
     3.1.0  : Correction of tables owner
