@@ -48,39 +48,21 @@ from .GraphCommon import DraggableLegend, GraphCommon
 from .Structure.StructureCreateDialog import ClassStructureCreateDialog
 from .GraphResultDialog import GraphResultDialog
 
-if int(qVersion()[0]) < 5:  # qt4
+from qgis.PyQt.QtWidgets import *
 
-    from qgis.PyQt.QtGui import *
-
-    try:
-        from matplotlib.backends.backend_qt4agg \
-            import FigureCanvasQTAgg as FigureCanvas
-    except:
-        from matplotlib.backends.backend_qt4agg \
-            import FigureCanvasQT as FigureCanvas
-    # ***************************
-    try:
-        from matplotlib.backends.backend_qt4agg \
-            import NavigationToolbar2QTAgg as NavigationToolbar
-    except:
-        from matplotlib.backends.backend_qt4agg \
-            import NavigationToolbar2QT as NavigationToolbar
-else:  # qt4
-    from qgis.PyQt.QtWidgets import *
-
-    try:
-        from matplotlib.backends.backend_qt5agg \
-            import FigureCanvasQTAgg as FigureCanvas
-    except:
-        from matplotlib.backends.backend_qt5agg \
-            import FigureCanvasQT as FigureCanvas
-    # ***************************
-    try:
-        from matplotlib.backends.backend_qt5agg \
-            import NavigationToolbar2QTAgg as NavigationToolbar
-    except:
-        from matplotlib.backends.backend_qt5agg \
-            import NavigationToolbar2QT as NavigationToolbar
+try:
+    from matplotlib.backends.backend_qt5agg \
+        import FigureCanvasQTAgg as FigureCanvas
+except:
+    from matplotlib.backends.backend_qt5agg \
+        import FigureCanvasQT as FigureCanvas
+# ***************************
+try:
+    from matplotlib.backends.backend_qt5agg \
+        import NavigationToolbar2QTAgg as NavigationToolbar
+except:
+    from matplotlib.backends.backend_qt5agg \
+        import NavigationToolbar2QT as NavigationToolbar
 
 # **************************************************
 try:
@@ -225,6 +207,7 @@ class GraphProfil(GraphCommon):
         # action
         self.bt_translah.clicked.connect(self.deplace_h_toggled)
         self.bt_translav.clicked.connect(self.deplace_v_toggled)
+        self.bt_reverse_proftopo.clicked.connect(self.reverse_prof)
         self.bt_select.clicked.connect(self.selector_toggled)
         self.bt_select_z.clicked.connect(self.zone_selector_toggled)
 
@@ -624,16 +607,11 @@ class GraphProfil(GraphCommon):
         self.maj_legende()
 
     def import_topo(self):
-        if int(qVersion()[0]) < 5:  # qt4
-            fichiers = QFileDialog.getOpenFileNames(None,
-                                                    'File Selection',
-                                                    self.dossierProjet,
-                                                    "File (*.txt *.csv)")
-        else:  # qt5
-            fichiers, _ = QFileDialog.getOpenFileNames(None,
-                                                       'File Selection',
-                                                       self.dossierProjet,
-                                                       "File (*.txt *.csv)")
+
+        fichiers, _ = QFileDialog.getOpenFileNames(None,
+                                                   'File Selection',
+                                                   self.dossierProjet,
+                                                   "File (*.txt *.csv)")
 
         if fichiers:
 
@@ -699,13 +677,7 @@ class GraphProfil(GraphCommon):
                     self.mdb.insert2("topo", tab)
 
     def import_image(self):
-        if int(qVersion()[0]) < 5:  # qt4
-            fichier = QFileDialog.getOpenFileName(None,
-                                                  'Sélection des fichiers',
-                                                  self.dossierProjet,
-                                                  "Fichier (*.png *.jpg)")
-        else:  # qt5
-            fichier, _ = QFileDialog.getOpenFileName(None,
+        fichier, _ = QFileDialog.getOpenFileName(None,
                                                      'Sélection des fichiers',
                                                      self.dossierProjet,
                                                      "Fichier (*.png *.jpg)")
@@ -1280,6 +1252,47 @@ class GraphProfil(GraphCommon):
         except:
             pass
 
+    def reverse_prof(self):
+        """
+        Revers profil
+        :return:
+        """
+        # for nom, t in self.topo.items():
+        #     for x, z, gid, ordre in zip(t['x'], t['z'], t['gid'], t['ordre']):
+        #         for f in self.coucheProfils.getFeatures():
+        #             if f["name"] == self.nom:
+        #                 interp = f.geometry().interpolate(x)
+        #                 if interp.isNull():
+        #                     self.mgis.add_info(
+        #                         "Warning : Check the profil lenght")
+        #                 p = interp.asPoint()
+        #                 geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+        #                     p.x(), p.y(), self.mdb.SRID)
+        #         if gid:
+        #             sql = """UPDATE {0}.topo SET x={1}, geom={2}, order_={3}
+        #                   WHERE gid={4}""".format(self.mdb.SCHEMA,
+        #                                           x,
+        #                                           geom,
+        #                                           ordre,
+        #                                           gid)
+        #             self.mdb.run_query(sql)
+        #         else:
+        #             sql = """INSERT INTO {0}.topo
+        #                   (name, profile, order_, x, z, geom)
+        #                   VALUES
+        #                   ('{1}','{2}',{3},{4},{5},{6})""".format(
+        #                 self.mdb.SCHEMA,
+        #                 nom,
+        #                 self.nom,
+        #                 ordre,
+        #                 x,
+        #                 z,
+        #                 geom)
+        #
+        #             self.mdb.run_query(sql)
+        #
+        # self.extrait_topo()
+        pass
 
 class CopySelectedCellsAction(QAction):
     def __init__(self, table_widget):
@@ -1321,3 +1334,4 @@ class CopySelectedCellsAction(QAction):
 
             sys_clip = QApplication.clipboard()
             sys_clip.setText(clipboard)
+
