@@ -291,19 +291,23 @@ class ClassScores():
                 sum_n += (y_pred[i + nb_decal] - y_obs[i + nb_decal]) ** 2
                 sum_d += (y_obs[i] - y_obs[i + nb_decal]) ** 2
                 i += 1
-            if sum_d == 0 and sumc:
-                return None, sum_n, sum_d
-            else:
-                return None
-
-            res = 1 - (sum_n / sum_d)
             if sumc :
+                if sum_d == 0 :
+                    res =  None
+                else :
+                    res = 1 - (sum_n / sum_d)
                 return res, sum_n, sum_d
             else:
-
-                return 1 - (sum_n / sum_d)
+                if sum_d == 0 :
+                    res =  None
+                else :
+                    res = 1 - (sum_n / sum_d)
+                return res
         else:
-            return None
+            if sumc:
+                return None, 0, 0
+            else :
+                return None
 
     def err_point(self, y_obs, y_pred):
         """

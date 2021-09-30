@@ -318,6 +318,7 @@ class ScoreParamWidget(QWidget):
         self.get_data()
         dict_name = self.mdb.get_scen_name(self.model.keys())
         add_txt = ''
+        other_txt = ''
         for id_run in self.no_obs:
             name_run = '{} - {}'.format(dict_name[id_run]['run'],
                                         dict_name[id_run]['scenario'])
@@ -361,7 +362,16 @@ class ScoreParamWidget(QWidget):
                             add_txt += '- Persistance error (Run : {}), Time step' \
                                        ' no constant : \n'.format(name_run)
                             for code in lst_test:
-                                       '\t- {} observation)\n'.format(code)
+                                       '    - {} observation)\n'.format(code)
+
+                    if self.res[id_run]['Q']['persistence']['per_err']  is None:
+                        other_txt += '- Persistance error (Run : {}, variable: Q):\n ' \
+                                   '    The Sum in denominator is null. \n'.format(
+                            name_run)
+                    if self.res[id_run]['H']['persistence']['per_err'] is None:
+                        other_txt += '- Persistance error (Run : {}, variable: H): \n' \
+                                   '    The Sum in denominator is null. \n'.format(name_run)
+                    print(add_txt)
                 else:
                     add_txt += '- Persistance error, No data in time rang' \
                                ' (Run : {})\n'.format(name_run)
@@ -377,14 +387,16 @@ class ScoreParamWidget(QWidget):
                 else:
                     add_txt += '- Tips error, No data in time rang' \
                                ' (Run : {})\n'.format(name_run)
-
-
         txt =''
         if self.txt_err_get !='':
             txt += self.txt_err_get
 
         if add_txt != '' :
             txt += 'No data, to compute : \n {}'.format(add_txt)
+            txt += '-----------\n'
+        if other_txt != '':
+            txt += 'Other errors: \n {}'.format(other_txt)
+            txt += '-----------\n'
         if txt !='' :
             QMessageBox.warning(None, 'Warning',
                                 txt)
@@ -435,9 +447,6 @@ class ScoreParamWidget(QWidget):
         q_pred = np.array([])
         dict_tmp_q = {}
         for code in self.data[id_run].keys():
-            print(code,'cpmth :',
-                  self.cmpt_var[id_run][code]['H'],
-                  'cmptq :', self.cmpt_var[id_run][code]['Q'])
             if self.cmpt_var[id_run][code]['H']:
                 if self.all:
                     h_obs = np.concatenate(
@@ -722,8 +731,9 @@ class ScoreParamWidget(QWidget):
 
 
                 if self.all:
-                    per, sum1, sum2 = self.cl_score.persistence(new_obs, new_pred,
+                    per, sum1, sum2 =self.cl_score.persistence(new_obs, new_pred,
                                               new_obs_times, deltat, sumc= True)
+
                     sumh_n += sum1
                     sumh_d += sum2
 
@@ -769,9 +779,13 @@ class ScoreParamWidget(QWidget):
 
         if self.cmpt_var[id_run]['H']:
             if self.all:
+                if sumh_d != 0:
+                    res =  None
+                else:
+                    res = 1 - sumh_n / sumh_d
                 self.res[id_run]['H']['persistence'] = \
                     {
-                         'per_err': 1 - sumh_n/sumh_d,
+                         'per_err': res,
                     }
             else:
                 self.res[id_run]['H']['persistence'] = dict_tmp_h
@@ -780,8 +794,12 @@ class ScoreParamWidget(QWidget):
 
         if self.cmpt_var[id_run]['Q']:
             if self.all:
+                if sumq_d != 0:
+                    res =  None
+                else:
+                    res = 1 - sumq_n / sumq_d
                 self.res[id_run]['Q']['persistence'] = {
-                     'per_err':1 - sumq_n/sumq_d,
+                     'per_err': res,
                 }
             else:
                 self.res[id_run]['Q']['persistence'] = dict_tmp_q
@@ -850,8 +868,7 @@ class ScoreParamWidget(QWidget):
                                      self.data[id_run][code]['h_mod_ori_time'])
                 #
                 if len(new_obs) == 0:
-                    print("No data in time range in tips error. "
-                          "id_run {}, code obs {}".format(id_run, code))
+                    continue
 
                 if self.all:
                     h_obs = np.concatenate(
@@ -884,8 +901,7 @@ class ScoreParamWidget(QWidget):
                                      self.data[id_run][code]['q_mod_ori_time'])
                 #
                 if len(new_obs) == 0:
-                    print("No data in time range in tips error. "
-                          "id_run {}, code obs {}".format(id_run, code))
+                    continue
                 if self.all:
                     q_obs = np.concatenate(
                         (q_obs, new_obs), axis=0)
@@ -1327,7 +1343,6 @@ class ScoreParamWidget(QWidget):
         self.cmpt_var[id_run] = {}
         for code in lst_obs:
             self.cmpt_var[id_run][code] = {}
-            print(self.data[id_run][code])
             if 'h_obs' in self.data[id_run][code].keys() and \
                             'h_mod_ori' in self.data[id_run][code].keys():
                 self.cmpt_var[id_run][code]['H'] = True
