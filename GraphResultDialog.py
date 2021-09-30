@@ -74,6 +74,7 @@ class GraphResultDialog(QWidget):
         self.list_var_lai = []
         self.zmax_save = None
         self.cur_data = dict()
+        self.old_lst_run_score = []
         self.date = None
         self.obs = None
         self.list_typ_res = None
@@ -569,7 +570,7 @@ class GraphResultDialog(QWidget):
         if self.cb_scen.currentIndex() != -1:
             self.cur_run = self.cb_scen.itemData(self.cb_scen.currentIndex())
             self.get_runs_graph()
-
+            self.clean_score()
             self.init_cb_graph()
             if self.typ_graph == 'hydro_profil':
                 self.graph_changed_profil(False)
@@ -976,7 +977,6 @@ class GraphResultDialog(QWidget):
     def update_obs(self):
         """ """
         # observation seulement si event
-        print(self.obs)
         if self.obs and "date" in self.cur_data.keys():
             print(self.cur_data.keys())
             if "Z" in self.cur_data.keys():
@@ -1018,8 +1018,11 @@ class GraphResultDialog(QWidget):
             self.cc_scores.setEnabled(True)
             self.cl_scores.wgt_param.cur_pknum = self.cur_pknum
             self.cl_scores.wgt_param.lst_runs = self.lst_runs
-            self.cl_scores.wgt_param.all = False
-            self.cl_scores.wgt_param.init_gui()
+            if self.old_lst_run_score != self.lst_runs:
+                self.cl_scores.wgt_param.init_gui()
+                self.old_lst_run_score = self.lst_runs
+            else:
+                self.old_lst_run_score = self.lst_runs
 
         elif  self.obs and not("date" in self.cur_data.keys()):
             self.graph_obj.clear_obs()
@@ -1027,8 +1030,11 @@ class GraphResultDialog(QWidget):
             self.cc_scores.setEnabled(True)
             self.cl_scores.wgt_param.cur_pknum = self.cur_pknum
             self.cl_scores.wgt_param.lst_runs = self.lst_runs
-            self.cl_scores.wgt_param.all = False
-            self.cl_scores.wgt_param.init_gui()
+            if self.old_lst_run_score != self.lst_runs:
+                self.cl_scores.wgt_param.init_gui()
+                self.old_lst_run_score = self.lst_runs
+            else:
+                self.old_lst_run_score = self.lst_runs
         else:
             self.graph_obj.clear_obs()
             self.disenable_score()
@@ -1065,11 +1071,18 @@ class GraphResultDialog(QWidget):
         self.tw_data.resizeRowsToContents()
         self.tw_data.setVisible(True)
 
+    def clean_score(self):
+        """
+        clean scores
+        """
+        self.cl_scores.clear_scores()
+        self.cc_scores.setChecked(False)
+
     def disenable_score(self):
         """ disenable scores """
-        self.cl_scores.clear_scores()
+        self.clean_score()
         self.cc_scores.setEnabled(False)
-        self.cc_scores.setChecked(False)
+
 
     def find_var_lbl(self):
         tmp = []

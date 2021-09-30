@@ -286,14 +286,21 @@ class ClassScores():
             sum_n = 0
             sum_d = 0
             nb_obs = len(y_obs)
-            for i in range(nb_obs):
-                if i+nb_decal< nb_obs:
-                    sum_n += (y_pred[i + nb_decal] - y_obs[i + nb_decal]) ** 2
-                    sum_d += (y_obs[i] - y_obs[i + nb_decal]) ** 2
+            i=0
+            while i+nb_decal< nb_obs:
+                sum_n += (y_pred[i + nb_decal] - y_obs[i + nb_decal]) ** 2
+                sum_d += (y_obs[i] - y_obs[i + nb_decal]) ** 2
+                i += 1
+            if sum_d == 0 and sumc:
+                return None, sum_n, sum_d
+            else:
+                return None
+
             res = 1 - (sum_n / sum_d)
             if sumc :
                 return res, sum_n, sum_d
             else:
+
                 return 1 - (sum_n / sum_d)
         else:
             return None

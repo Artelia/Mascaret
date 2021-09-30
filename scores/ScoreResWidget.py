@@ -109,11 +109,17 @@ class ScoreResWidget(QWidget):
             self.table_res.setHorizontalHeaderLabels(columns)
             for row, dist in enumerate(err_lst):
                 for  tmp in tab_fill[dist].keys():
-                    if dist =='vol_err':
+                    val = tab_fill[dist][tmp]
+                    if val is None:
+                        val = ''
+                    if isinstance(val, str):
                         item = QTableWidgetItem(
-                            '{:e}'.format(tab_fill[dist][tmp]))
+                            '{}'.format(val))
+                    elif dist =='vol_err':
+                        item = QTableWidgetItem(
+                            '{:e}'.format(val))
                     else:
-                        item = QTableWidgetItem('{:.3f}'.format(tab_fill[dist][tmp]))
+                        item = QTableWidgetItem('{:.3f}'.format(val))
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                     col = columns.index(tmp)
                     self.table_res.setItem(row, col, item)
