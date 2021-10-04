@@ -1168,8 +1168,9 @@ $BODY$
 
             if os.path.isfile(exe) or os.path.isfile(exe + '.exe'):
                 commande = '"{0}" -p {6} -F c -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(
-                    exe, schem, self.USER, file,
-                    self.dbname, self.host, self.port)
+                     exe, schem, self.USER, file,
+                     self.dbname, self.host, self.port)
+
                 print(commande, file)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
 
@@ -1192,7 +1193,7 @@ $BODY$
                 # d = dict(os.environ)
                 # d["PGPASSWORD"] = "{0}".format(self.password)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
-                commande = '"{0}" -U {1} --no-owner -F c -p {2}  -d {4} -h {5} ' \
+                commande = '"{0}" -U {1} -O -F c -p {2}  -d {4} -h {5} ' \
                            '--create "{3}"'.format(exe, self.USER, self.port,
                                                    file, self.dbname, self.host)
 
