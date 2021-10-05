@@ -363,14 +363,16 @@ class ScoreParamWidget(QWidget):
                                        ' no constant : \n'.format(name_run)
                             for code in lst_test:
                                        '    - {} observation)\n'.format(code)
-
-                    if self.res[id_run]['Q']['persistence']['per_err']  is None:
-                        other_txt += '- Persistance error (Run : {}, variable: Q):\n ' \
-                                   '    The Sum in denominator is null. \n'.format(
-                            name_run)
-                    if self.res[id_run]['H']['persistence']['per_err'] is None:
-                        other_txt += '- Persistance error (Run : {}, variable: H): \n' \
-                                   '    The Sum in denominator is null. \n'.format(name_run)
+                        if 'per_err' in  self.res[id_run]['Q']['persistence'].keys():
+                            if self.res[id_run]['Q']['persistence']['per_err']  is None:
+                                other_txt += '- Persistance error (Run : {}, variable: Q):\n ' \
+                                           '    The Sum in denominator is null. \n'.format(
+                                    name_run)
+                        if 'per_err' in self.res[id_run]['H'][
+                            'persistence'].keys():
+                            if self.res[id_run]['H']['persistence']['per_err'] is None:
+                                other_txt += '- Persistance error (Run : {}, variable: H): \n' \
+                                           '    The Sum in denominator is null. \n'.format(name_run)
                     print(add_txt)
                 else:
                     add_txt += '- Persistance error, No data in time rang' \
