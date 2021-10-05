@@ -807,7 +807,7 @@ class ScoreParamWidget(QWidget):
 
         if self.cmpt_var[id_run]['H']:
             if self.all:
-                if sumh_d != 0:
+                if sumh_d == 0:
                     res = None
                 else:
                     res = 1 - sumh_n / sumh_d
@@ -822,7 +822,7 @@ class ScoreParamWidget(QWidget):
 
         if self.cmpt_var[id_run]['Q']:
             if self.all:
-                if sumq_d != 0:
+                if sumq_d == 0:
                     res = None
                 else:
                     res = 1 - sumq_n / sumq_d

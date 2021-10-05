@@ -66,8 +66,10 @@ class ScoreResWidget(QWidget):
         """ fill table"""
         self.clear_tab()
         self.lst_runs = []
-
-        self.dict_name = self.mdb.get_scen_name(self.res.keys())
+        if len(self.res.keys())>0 :
+            self.dict_name = self.mdb.get_scen_name(self.res.keys())
+        else:
+            self.dict_name = {}
         # table_dist_abs
         tab_fill = {}
         lst_col = []

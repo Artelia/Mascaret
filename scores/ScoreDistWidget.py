@@ -54,8 +54,11 @@ class ScoreDistWidget(QWidget):
         """ fill table"""
         self.clear_tab()
         self.lst_runs = []
+        if len(self.res.keys())>0 :
+            self.dict_name = self.mdb.get_scen_name(self.res.keys())
+        else:
+            self.dict_name = {}
 
-        self.dict_name = self.mdb.get_scen_name(self.res.keys())
         # table_dist_abs
         tab_fill = {}
         tab_fill_abs = {}
