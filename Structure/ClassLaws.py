@@ -44,6 +44,19 @@ class ClassLaws:
         self.new_z = 99
         self.mobil_struct = False
         self.param_fg = {}
+        self.minz = 9999.99
+        self.list_zav = []
+        self.list_zam = []
+        self.list_poly_trav = []
+        self.param_elem = {}
+        self.list_poly_pil = []
+        self.list_q = []
+        self.type_kb = ''
+        self.abac_dks = ''
+        self.list_ph = []
+        self.list_e = []
+        self.coef_cor_biais = 0
+        self.dico_tr = {}
 
     def init_method(self, id_config):
         """
@@ -295,8 +308,7 @@ class ClassLaws:
         # print("area_pil_proj",area_pil_proj)
         # print("area_pil",area_pil)
         left_bank = self.param_g['FIRSTWD'] + self.param_g['TOTALOUV'] + \
-                    self.param_g['LARGPIL'] * len(
-                        self.list_poly_pil)
+                    self.param_g['LARGPIL'] * len(self.list_poly_pil)
         ssoh = self.clpoly.coup_poly_v(poly_wet,
                                        [self.param_g['FIRSTWD'], left_bank],
                                        typ='LR').area
@@ -409,7 +421,7 @@ class ClassLaws:
         poly_wet = self.clpoly.coup_poly_h(self.poly_p, hmon)
         area_amont = poly_wet.area
         term2 = alpha1 * (
-        (s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (
+            (s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (
                     2. * self.grav)
         # print("term2 Remout", term2)
         remout = term1 + term2
@@ -1237,7 +1249,7 @@ class ClassLaws:
         """
         k = (sav / sc - 1) ** 2 + 1 / 9.
         zam = (q / (sav * self.param_g['COEFBOR'])) ** 2 * k / (
-        2 * self.grav) + zav
+            2 * self.grav) + zav
         return zam
 
     def area_wet_fct(self, poly, zw):

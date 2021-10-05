@@ -953,33 +953,34 @@ $BODY$
 LANGUAGE plpgsql VOLATILE
 COST 100;
 """
-#         qry = """
-# CREATE OR REPLACE FUNCTION public.clone_schema(source_schema text, dest_schema text, list_tab text ) RETURNS void AS
-# $BODY$
-# DECLARE
-#   objeto text;
-#   buffer text;
-# BEGIN
-#     EXECUTE 'CREATE SCHEMA ' || dest_schema ;
-#
-#     FOR objeto IN
-#         SELECT table_name::text FROM information_schema.tables WHERE table_schema = source_schema
-#     LOOP
-#         buffer := dest_schema || '.' || objeto;
-#
-#         EXECUTE 'CREATE TABLE ' || buffer || ' (LIKE ' || source_schema || '.' || objeto || ' INCLUDING CONSTRAINTS INCLUDING INDEXES INCLUDING DEFAULTS)';
-# 		IF not (objeto IN (SELECT regexp_split_to_table(list_tab,'[,]'))) THEN
-# 			EXECUTE 'INSERT INTO ' || buffer || '(SELECT * FROM ' || source_schema || '.' || objeto ||  ')';
-# 		ELSE
-# 			RAISE NOTICE '%', objeto;
-# 		END IF;
-# 	END LOOP;
-#
-# END;
-# $BODY$
-# LANGUAGE plpgsql VOLATILE;
-# """
+        #         qry = """
+        # CREATE OR REPLACE FUNCTION public.clone_schema(source_schema text, dest_schema text, list_tab text ) RETURNS void AS
+        # $BODY$
+        # DECLARE
+        #   objeto text;
+        #   buffer text;
+        # BEGIN
+        #     EXECUTE 'CREATE SCHEMA ' || dest_schema ;
+        #
+        #     FOR objeto IN
+        #         SELECT table_name::text FROM information_schema.tables WHERE table_schema = source_schema
+        #     LOOP
+        #         buffer := dest_schema || '.' || objeto;
+        #
+        #         EXECUTE 'CREATE TABLE ' || buffer || ' (LIKE ' || source_schema || '.' || objeto || ' INCLUDING CONSTRAINTS INCLUDING INDEXES INCLUDING DEFAULTS)';
+        # 		IF not (objeto IN (SELECT regexp_split_to_table(list_tab,'[,]'))) THEN
+        # 			EXECUTE 'INSERT INTO ' || buffer || '(SELECT * FROM ' || source_schema || '.' || objeto ||  ')';
+        # 		ELSE
+        # 			RAISE NOTICE '%', objeto;
+        # 		END IF;
+        # 	END LOOP;
+        #
+        # END;
+        # $BODY$
+        # LANGUAGE plpgsql VOLATILE;
+        # """
         return qry
+
     def pg_create_calcul_abscisse(self):
         qry = """CREATE OR REPLACE FUNCTION {0}()  
             RETURNS trigger AS  
@@ -1475,7 +1476,8 @@ class laws_wq(MasObject):
             ('value', 'float'),
             ('active', 'boolean'),
             (
-            'CONSTRAINT cle_laws_wq', 'PRIMARY KEY (id_config, id_trac, time)')]
+                'CONSTRAINT cle_laws_wq',
+                'PRIMARY KEY (id_config, id_trac, time)')]
 
 
 # *****************************************
@@ -1543,7 +1545,8 @@ class laws_meteo(MasObject):
             ('time', 'float'),
             ('value', 'float'),
             (
-            'CONSTRAINT cle_laws_met', 'PRIMARY KEY (id_config, id_var, time)')]
+                'CONSTRAINT cle_laws_met',
+                'PRIMARY KEY (id_config, id_var, time)')]
 
 
 class init_conc_config(MasObject):
@@ -1756,6 +1759,7 @@ class results(MasObject):
         qry += '\n'
         return qry
 
+
 class results_sect(MasObject):
     def __init__(self):
         super(results_sect, self).__init__()
@@ -1775,6 +1779,7 @@ class results_sect(MasObject):
                "ON {}.results_sect(id_runs, pk);".format(self.schema)
         qry += '\n'
         return qry
+
 
 class results_var(MasObject):
     def __init__(self):

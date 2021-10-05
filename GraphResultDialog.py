@@ -79,6 +79,10 @@ class GraphResultDialog(QWidget):
         self.obs = None
         self.list_typ_res = None
         self.info_graph = {}
+        self.val_prof_ref = {}
+        self.dict_run = dict()
+        self.laisses = {}
+
         self.show_hide_com(False)
         if self.checkrun():
             if self.typ_graph == "struct" or self.typ_graph == "weirs":
@@ -161,7 +165,6 @@ class GraphResultDialog(QWidget):
             self.bt_expCsv.clicked.connect(self.export_csv)
             self.tw_data.addAction(CopySelectedCellsAction(self.tw_data))
             self.cc_scores.stateChanged.connect(self.ch_score)
-
 
             self.lst_runs = []
             self.stw_res.setCurrentIndex(0)
@@ -1024,7 +1027,7 @@ class GraphResultDialog(QWidget):
             else:
                 self.old_lst_run_score = self.lst_runs
 
-        elif  self.obs and not("date" in self.cur_data.keys()):
+        elif self.obs and not ("date" in self.cur_data.keys()):
             self.graph_obj.clear_obs()
             self.lst_runs = [self.cur_run]
             self.cc_scores.setEnabled(True)
@@ -1082,7 +1085,6 @@ class GraphResultDialog(QWidget):
         """ disenable scores """
         self.clean_score()
         self.cc_scores.setEnabled(False)
-
 
     def find_var_lbl(self):
         tmp = []
@@ -1148,6 +1150,20 @@ class CopySelectedCellsAction(QAction):
 class GraphResult(GraphCommonNew):
     def __init__(self, lay=None, wgt=None):
         GraphCommonNew.__init__(self, lay, wgt)
+        self.axes = None
+        self.list_var = []
+        self.courbes = []
+        self.annotation = []
+        self.annot_var = []
+        self.courbeLaisses = []
+        self.etiquetteLaisses = []
+        self.courbeObs = None
+        self.litMineur = None
+        self.stockgauche = None
+        self.stockdroit = None
+        self.aire = []
+        self.v_line = None
+
         self.init_ui()
 
     def init_ui(self):

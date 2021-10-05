@@ -56,6 +56,8 @@ class SelectWidget(QWidget):
         self.child = {}
         self.dateedit = {}
 
+        self.today = None
+
         self.init_gui()
 
     def init_gui(self):

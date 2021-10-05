@@ -47,6 +47,7 @@ class InitConcDialog(QDialog):
         self.cur_wq_law = id
         self.cur_wq_law_name = name
         self.filling_tab = False
+        self.action = None
 
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_init_conc.ui'), self)
@@ -64,8 +65,10 @@ class InitConcDialog(QDialog):
         self.ui.b_OK_page2.accepted.connect(self.accept_page2)
         self.ui.b_OK_page2.rejected.connect(self.reject_page2)
         self.ui.cb_bief.currentIndexChanged[int].connect(self.change_bief)
+        self.graph_edit = None
 
         self.init_ui()
+        self.list_trac = []
 
     def init_ui(self):
         self.ui.LawWQ.setText(self.cur_wq_law_name)

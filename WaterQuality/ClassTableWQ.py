@@ -23,6 +23,11 @@ class ClassTableWQ:
     def __init__(self, mgis, mdb):
         self.mgis = mgis
         self.mdb = mdb
+        self.dico_wq_mod = {}
+        self.dico_mod_wq = {}
+        self.dico_meteo = {}
+        self.dico_phy = {}
+
         self.wq_module_default()
         self.tracer_physic_default()
 

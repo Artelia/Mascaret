@@ -45,11 +45,9 @@ from .db.ClassMasDatabase import ClassMasDatabase
 from .db.Check_tab import CheckTab
 from .ui.custom_control import ClassWarningBox
 from .ClassDownload import ClassDownloadMasc
-from .ClassImportExportDialog import ClassDlgExport,ClassDlgImport
+from .ClassImportExportDialog import ClassDlgExport, ClassDlgImport
 from .ClassImport_res import ClassImportRes
 from .scores.ClassScoresDialog import ClassScoresDialog
-
-
 
 from qgis.PyQt.QtWidgets import *
 
@@ -75,6 +73,27 @@ class MascPlugDialog(QMainWindow):
         self.iface = iface
 
         self.map_tool = None
+
+        self.crs = 0
+        self.list_menu = []
+
+        self.user = ''
+        self.host = ''
+        self.port = ''
+        self.database = ''
+        self.chkt = False
+        self.opts = {}
+
+        self.coucheProfils = None
+        self.profil = None
+        self.hydrogramme = None
+        self.profil_result = None
+        self.basin_result = None
+        self.profil_z = None
+
+        self.prev_tool = None
+
+        self.dossierFileMasc = ''
 
         # self.pathPostgres = self.masplug_path
         # emplacement objet sql
@@ -206,7 +225,6 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionexport_tracer_files.triggered.connect(
             self.fct_export_tracer_files)
         self.ui.action_update_bin.triggered.connect(self.download_bin)
-
 
         self.ui.actionUpdate_all_PK.triggered.connect(self.update_pk)
         self.ui.actionImport_Results.triggered.connect(self.import_resu_model)
@@ -413,7 +431,7 @@ class MascPlugDialog(QMainWindow):
             (model, ok) = (schema_info, True)
         else:
             liste = self.mdb.liste_models()
-            liste = [v for v in liste if not( v in self.mdb.ignor_schema)]
+            liste = [v for v in liste if not (v in self.mdb.ignor_schema)]
             model, ok = QInputDialog.getItem(None,
                                              'Model Choice',
                                              'Model',
@@ -675,7 +693,7 @@ class MascPlugDialog(QMainWindow):
             return
         dlg = ClassDlgExport(self)
         if dlg.exec_():
-           pass
+            pass
 
         return
 
@@ -687,10 +705,8 @@ class MascPlugDialog(QMainWindow):
             return
         dlg = ClassDlgImport(self)
         if dlg.exec_():
-           pass
+            pass
         return
-
-
 
     def main_graph(self):
         """ GUI graphique"""
@@ -819,8 +835,6 @@ Version : {}
         except Exception:
             self.add_info('Export failed.')
 
-
-
     # *******************************
     #    Structures
     # *******************************
@@ -828,7 +842,6 @@ Version : {}
         dlg = ClassStructureDialog(self)
         dlg.setModal(False)
         dlg.exec_()
-
 
     def fct_mv_dam(self):
         """ Running GUI of movable dam"""
@@ -906,6 +919,5 @@ Version : {}
 
     def fct_scores(self):
         dlg = ClassScoresDialog(self)
-        #dlg.exec_()
+        # dlg.exec_()
         dlg.show()
-

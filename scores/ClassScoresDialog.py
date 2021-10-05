@@ -71,7 +71,7 @@ class ClassScoresDialog(QDialog):
 
         self.tabscores.currentChanged.connect(self.change_tab)
 
-    def change_tab(self,index):
+    def change_tab(self, index):
         if index != 0:
             if self.old_index == 0:
                 self.lst_runs = self.wgt_select.get_selection()

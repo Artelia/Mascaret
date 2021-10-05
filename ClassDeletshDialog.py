@@ -47,6 +47,7 @@ class ClassDeletshDialog(QDialog):
         self.box = ClassWarningBox()
         self.liste_model = self.mdb.liste_models()
         self.parent = {}
+        self.tree = None
         self.init_gui()
 
     def init_gui(self):

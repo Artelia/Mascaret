@@ -20,7 +20,7 @@ email                :
 import numpy as np
 
 
-class ClassScores():
+class ClassScores:
     """
     Class allow to computre scores
     """
@@ -82,13 +82,13 @@ class ClassScores():
         :return: (array)  mean relative error
         """
 
-
         if seuil:
-            tmp = np.ma.masked_array(y_obs, mask=((y_obs <= seuil) & (y_obs >= -seuil)))
+            tmp = np.ma.masked_array(y_obs, mask=(
+                (y_obs <= seuil) & (y_obs >= -seuil)))
             yn_obs = tmp.data
             yn_pred = y_pred[~tmp.mask]
         else:
-            yn_obs =  y_obs
+            yn_obs = y_obs
             yn_pred = y_pred
 
         res = np.mean((yn_pred - yn_obs) / yn_obs)
@@ -102,7 +102,7 @@ class ClassScores():
         :param seuil : threshold value
         :return:(array)
         """
-        return self.mean_r_err(y_obs, y_pred,seuil) * 100
+        return self.mean_r_err(y_obs, y_pred, seuil) * 100
 
     def mean_rabs_err(self, y_obs, y_pred, seuil=None):
         """
@@ -114,7 +114,7 @@ class ClassScores():
         """
         if seuil:
             tmp = np.ma.masked_array(y_obs, mask=(
-            (y_obs <= seuil) & (y_obs >= -seuil)))
+                (y_obs <= seuil) & (y_obs >= -seuil)))
             yn_obs = tmp.data
             yn_pred = y_pred[~tmp.mask]
         else:
@@ -123,7 +123,7 @@ class ClassScores():
         res = np.mean(np.abs((yn_pred - yn_obs) / yn_obs))
         return res
 
-    def precision(self, y_obs, y_pred, seuil =None):
+    def precision(self, y_obs, y_pred, seuil=None):
         """
         mean relative absolute error in %
         :param y_obs: (array)observation data
@@ -176,7 +176,6 @@ class ClassScores():
         :param q_pred: (array) flowrate model
         :param lst_time_pred: model times
         :param lst_time_obs : observation times
-        :param deltat : time step
         :return:(array) Error on volumes
         """
         qp = q_pred[1:]
@@ -277,7 +276,7 @@ class ClassScores():
         :param y_pred: (array) model data
         :param deltat : time step
         :param tps_obs:(array)observation times
-        :param tps_pred:(array) model times
+        :param  sumc : (bool)  if true return sum else reture error
         :return: error
         """
         cond, deltatref = self.check_dt_cst(tps_obs)
@@ -286,27 +285,27 @@ class ClassScores():
             sum_n = 0
             sum_d = 0
             nb_obs = len(y_obs)
-            i=0
-            while i+nb_decal< nb_obs:
+            i = 0
+            while i + nb_decal < nb_obs:
                 sum_n += (y_pred[i + nb_decal] - y_obs[i + nb_decal]) ** 2
                 sum_d += (y_obs[i] - y_obs[i + nb_decal]) ** 2
                 i += 1
-            if sumc :
-                if sum_d == 0 :
-                    res =  None
-                else :
+            if sumc:
+                if sum_d == 0:
+                    res = None
+                else:
                     res = 1 - (sum_n / sum_d)
                 return res, sum_n, sum_d
             else:
-                if sum_d == 0 :
-                    res =  None
-                else :
+                if sum_d == 0:
+                    res = None
+                else:
                     res = 1 - (sum_n / sum_d)
                 return res
         else:
             if sumc:
                 return None, 0, 0
-            else :
+            else:
                 return None
 
     def err_point(self, y_obs, y_pred):

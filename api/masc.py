@@ -139,12 +139,12 @@ class Mascaret:
             libmascaret = os.path.join(os.path.dirname(__file__),
                                        'libmascaret.so')
         elif test == 'win32':
-            #libmascaret = '../api/libmascaret.dll'
-            libmascaret = os.path.join(os.path.dirname(__file__),'libmascaret.dll')
+            # libmascaret = '../api/libmascaret.dll'
+            libmascaret = os.path.join(os.path.dirname(__file__),
+                                       'libmascaret.dll')
             # libmascaret = '../api/libmascaret_old.dll'
         else:
             print("{0} platform  doesn't allow to run simulation.".format(test))
-            return False
 
         # self.load_mascaret(libmascaret)
         self.libmascaret = ctypes.CDLL(libmascaret)

@@ -25,7 +25,10 @@ class ClassDlgExport(QDialog):
         self.iface = iface
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_export.ui'), self)
-
+        self.cond_com = None
+        self.parent = {}
+        self.child = {}
+        self.list_ver = []
         self.listeRuns = []
         self.listeScen = {}
         self.init_gui()
@@ -387,7 +390,7 @@ class ClassDlgImport(QDialog):
         if not self.compa_ver(vdb, vpsql):
             self.checkdict['updat_pgsql'] = True
 
-    def conv_ver_psql(sefl, ver):
+    def conv_ver_psql(self, ver):
         """
         Convert psql version in list
         :param ver: format of the psql version

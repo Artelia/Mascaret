@@ -319,3 +319,4 @@ def datum_to_float(d, init):
     :return: time in second in function of initial datetime
     """
     return (d - init).total_seconds()
+

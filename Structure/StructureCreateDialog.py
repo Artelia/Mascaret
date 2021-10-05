@@ -41,6 +41,10 @@ class ClassStructureCreateDialog(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
+        self.type = ''
+        self.name = ''
+        self.comment = ''
+        self.id_struct = -99
 
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_structure_create.ui'),
@@ -94,10 +98,8 @@ class ClassStructureCreateDialog(QDialog):
 
         sql = "INSERT INTO {0}.struct_config (name, comment, type, id_prof_ori, active, abscissa, branchnum) " \
               "VALUES ('{1}', '{2}', '{3}', {4}, FALSE,{5} ,{6})".format(
-            self.mdb.SCHEMA, self.name, self.comment,
-            self.type, self.id_profil,
-            feature['abscissa'][0],
-            feature['branchnum'][0])
+            self.mdb.SCHEMA, self.name, self.comment, self.type, self.id_profil,
+            feature['abscissa'][0], feature['branchnum'][0])
         self.mdb.run_query(sql)
         self.id_struct = self.mdb.select_max('id', 'struct_config')
 

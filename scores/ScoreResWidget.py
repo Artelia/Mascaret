@@ -41,6 +41,7 @@ class ScoreResWidget(QWidget):
                          'ui/scores/ui_results_score.ui'), self)
         self.dict_name = {}
         self.res = {}
+        self.lst_runs = []
         #
         self.data_write = {
             'mean_err': 'Mean error',
@@ -54,8 +55,8 @@ class ScoreResWidget(QWidget):
             'ns_err': 'Nash - Sutcliffe criterion',
             'vol_err': "Error on volumes",
             'pts_err': "Errors on the tips",
-            'pts_time_err' : "Time shift on the tip",
-            'per_err' : 'Persistence'
+            'pts_time_err': "Time shift on the tip",
+            'per_err': 'Persistence'
         }
 
         self.bt_export_csv.clicked.connect(self.export_csv)
@@ -78,12 +79,12 @@ class ScoreResWidget(QWidget):
                 if len(self.res[id]['H'].keys()) > 0:
                     for key in self.res[id]['H'].keys():
                         if key != 'quantil':
-                                tmp, colh = self.fill_dico(id, 'H', key)
-                                for kk in tmp.keys() :
-                                    if kk in tab_fill.keys():
-                                        tab_fill[kk].update(tmp[kk])
-                                    else:
-                                        tab_fill[kk] = tmp[kk]
+                            tmp, colh = self.fill_dico(id, 'H', key)
+                            for kk in tmp.keys():
+                                if kk in tab_fill.keys():
+                                    tab_fill[kk].update(tmp[kk])
+                                else:
+                                    tab_fill[kk] = tmp[kk]
             if 'Q' in self.res[id].keys():
                 if len(self.res[id]['Q'].keys()) > 0:
                     for key in self.res[id]['Q'].keys():
@@ -108,14 +109,14 @@ class ScoreResWidget(QWidget):
                 [self.data_write[v] for v in err_lst])
             self.table_res.setHorizontalHeaderLabels(columns)
             for row, dist in enumerate(err_lst):
-                for  tmp in tab_fill[dist].keys():
+                for tmp in tab_fill[dist].keys():
                     val = tab_fill[dist][tmp]
                     if val is None:
                         val = ''
                     if isinstance(val, str):
                         item = QTableWidgetItem(
                             '{}'.format(val))
-                    elif dist =='vol_err':
+                    elif dist == 'vol_err':
                         item = QTableWidgetItem(
                             '{:e}'.format(val))
                     else:
@@ -154,23 +155,22 @@ class ScoreResWidget(QWidget):
         else:
             # case if multi observation on the same profil
             # self.res[id][varhq][var][code]
-            for code in res2.keys() :
+            for code in res2.keys():
                 name_col = '{} - {}\n' \
                            '{} - {}'.format(self.dict_name[id]['run'],
-                                       self.dict_name[id]['scenario'],
-                                       varhq, code)
+                                            self.dict_name[id]['scenario'],
+                                            varhq, code)
 
                 for err in res2[code].keys():
                     tab_fill[err] = {name_col: res2[code][err]}
                     lst_col.append(name_col)
-        return tab_fill,lst_col
+        return tab_fill, lst_col
 
     #
     def clear_tab(self):
         """clear table"""
         self.table_res.clear()
         self.bt_export_csv.setEnabled(False)
-
 
     def export_csv(self):
         """Export Table to .CSV file"""
@@ -191,7 +191,7 @@ class ScoreResWidget(QWidget):
             file.write(clipboard)
             file.close()
 
-    def tw_to_txt(self,tw, range_r, range_c, sep):
+    def tw_to_txt(self, tw, range_r, range_c, sep):
         """
         change table data to  text data
         :param tw: table object
@@ -204,11 +204,13 @@ class ScoreResWidget(QWidget):
         for c in range_c:
             if c != range_c[-1]:
                 clipboard = '{}{}{}'.format(clipboard,
-                                            tw.horizontalHeaderItem(c).text().replace('\n',' '),
+                                            tw.horizontalHeaderItem(
+                                                c).text().replace('\n', ' '),
                                             sep)
             else:
                 clipboard = '{}{}\n'.format(clipboard,
-                                            tw.horizontalHeaderItem(c).text().replace('\n',' '))
+                                            tw.horizontalHeaderItem(
+                                                c).text().replace('\n', ' '))
 
         for r in range_r:
             clipboard = '{}{}{}'.format(clipboard,
@@ -227,6 +229,5 @@ class ScoreResWidget(QWidget):
                 else:
                     clipboard = '{}{}\n'.format(clipboard,
                                                 val)
-
 
         return clipboard

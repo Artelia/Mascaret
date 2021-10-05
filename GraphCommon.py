@@ -55,6 +55,13 @@ else:  # qt4
     except:
         from matplotlib.backends.backend_qt5agg \
             import NavigationToolbar2QT as NavigationToolbar
+
+from matplotlib.figure import Figure
+import matplotlib.dates as mdates
+import matplotlib.ticker as ticker
+from .WaterQuality.ClassTableWQ import ClassTableWQ
+from datetime import datetime
+
 # **************************************************
 
 try:
@@ -66,12 +73,6 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig)
-
-from matplotlib.figure import Figure
-import matplotlib.dates as mdates
-import matplotlib.ticker as ticker
-from .WaterQuality.ClassTableWQ import ClassTableWQ
-from datetime import datetime
 
 
 class GraphCommon(QWidget):
@@ -86,6 +87,16 @@ class GraphCommon(QWidget):
         self.canvas = FigureCanvas(self.fig)
 
         self.tbwq = ClassTableWQ(self.mgis, self.mdb)
+
+        self.courbes = []
+        self.gid = 0
+        self.coucheProfils = None
+        self.liste = {}
+        self.position = 0
+        self.nom = ''
+        self.toolbar = None
+        self.leg = None
+        self.lined = dict()
 
     def init_ui_common_p(self):
         self.courbes = []
@@ -194,6 +205,10 @@ class DraggableLegend:
     def __init__(self, legend):
         self.legend = legend
         self.gotLegend = False
+        self.mouse_x = None
+        self.mouse_y = None
+        self.legend_x = None
+        self.legend_y = None
         legend.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
         legend.figure.canvas.mpl_connect('pick_event', self.on_pick)
         legend.figure.canvas.mpl_connect('button_release_event',
@@ -240,6 +255,15 @@ class GraphCommonNew:
         self.flood_mark = False
         self.obs = False
         self.update_limites = True
+        self.list_var = []
+        self.courbes = []
+        self.annotation = []
+        self.courbeLaisses = []
+        self.toolbar = None
+        self.flag = False
+        self.leg = None
+        self.lined = dict()
+        self.unit = ''
 
     def init_ui_common_p(self):
         self.list_var = []
@@ -429,6 +453,11 @@ class DraggableLegendNew:
     def __init__(self, legend):
         self.legend = legend
         self.gotLegend = False
+        self.mouse_x = None
+        self.mouse_y = None
+        self.legend_x = None
+        self.legend_y = None
+
         legend.figure.canvas.mpl_connect('motion_notify_event',
                                          self.lgd_on_motion)
         legend.figure.canvas.mpl_connect('pick_event', self.lgd_on_pick)

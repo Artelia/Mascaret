@@ -47,6 +47,10 @@ class ClassMeteoDialog(QDialog):
         self.dico_var = self.tbwq.dico_meteo
         self.cur_set = None
         self.filling_tab = False
+        self.graph_home = None
+        self.graph_edit = None
+        self.date_ref = None
+        self.list_var = []
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_meteo.ui'),
                          self)
