@@ -981,7 +981,7 @@ class GraphResultDialog(QWidget):
         """ """
         # observation seulement si event
         if self.obs and "date" in self.cur_data.keys():
-            print(self.cur_data.keys())
+
             if "Z" in self.cur_data.keys():
                 gg = 'H'
             elif "Q" in self.cur_data.keys():

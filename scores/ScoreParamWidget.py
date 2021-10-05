@@ -213,6 +213,44 @@ class ScoreParamWidget(QWidget):
                                       'pt_alpha_Q': 1,
                                       'pt_alpha_H': 1
                                       }
+                self.fct_chang_persistence()
+                self.fct_chang_point()
+                self.ch_persistence.stateChanged.connect(
+                    self.fct_chang_persistence)
+                self.ch_pointe_err.stateChanged.connect(self.fct_chang_point)
+
+    def fct_chang_persistence(self):
+        """
+        Change Enable/DisEnable for rows table
+        :return:
+        """
+        lst_tmp = ['per_start_t', 'per_last_t', 'per_step_t']
+        if self.ch_persistence.isChecked():
+            for id_run in self.widget_d.keys():
+                for ctrl_ in lst_tmp:
+                    self.widget_d[id_run][ctrl_].setEnabled(True)
+
+        else:
+            for id_run in self.widget_d.keys():
+                for ctrl_ in lst_tmp:
+                    self.widget_d[id_run][ctrl_].setEnabled(False)
+
+    def fct_chang_point(self):
+        """
+        Change Enable/DisEnable for rows table
+        :return:
+        """
+        lst_tmp = ['pt_start_t', 'pt_last_t', 'pt_alpha_Q', 'pt_alpha_H']
+
+        if self.ch_pointe_err.isChecked():
+            for id_run in self.widget_d.keys():
+                for ctrl_ in lst_tmp:
+                    self.widget_d[id_run][ctrl_].setEnabled(True)
+
+        else:
+            for id_run in self.widget_d.keys():
+                for ctrl_ in lst_tmp:
+                    self.widget_d[id_run][ctrl_].setEnabled(False)
 
     def fct_chang_valim(self):
         """
@@ -272,7 +310,11 @@ class ScoreParamWidget(QWidget):
                                      "AND type_res='opt'"
                                      "AND var='time'".format(id_run),
                                list_var=['val'])
-        lst_times = info['val'][0]
+
+        if len(info['val']) > 0:
+            lst_times = info['val'][0]
+        else:
+            lst_times = list()
         return init_time, lst_times
 
     def clean_type_res(self):
@@ -384,7 +426,7 @@ class ScoreParamWidget(QWidget):
                     fst = self.param[id_run]['per_start_t']
 
                     if (init_mod < last <= lst_mod) and (
-                            lst_mod > fst >= init_mod):
+                                    lst_mod > fst >= init_mod):
                         test, lst_test = self.cpt_persistence(id_run)
                         if not test:
                             add_txt += '- Persistance error (Run : {})\n'.format(
@@ -420,7 +462,7 @@ class ScoreParamWidget(QWidget):
                     last = self.param[id_run]['per_last_t']
                     fst = self.param[id_run]['per_start_t']
                     if (init_mod < last <= lst_mod) and (
-                            lst_mod > fst >= init_mod):
+                                    lst_mod > fst >= init_mod):
                         if not self.cpt_pointe_err(id_run):
                             add_txt += '- Tips error (Run : {})\n'.format(
                                 name_run)
@@ -1331,7 +1373,7 @@ class ScoreParamWidget(QWidget):
         """
         # if not all len(lst_run) == 1
 
-        if not(len(self.lst_runs) >0):
+        if not (len(self.lst_runs) > 0):
             self.txt_err_get += 'No model selected \n'
 
         self.dict_pretr()

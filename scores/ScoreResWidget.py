@@ -54,8 +54,8 @@ class ScoreResWidget(QWidget):
             'eqm': 'Mean square error',
             'ns_err': 'Nash - Sutcliffe criterion',
             'vol_err': "Error on volumes",
-            'pts_err': "Errors on the tips",
-            'pts_time_err': "Time shift on the tip",
+            'pts_err': "Errors on the peaks",
+            'pts_time_err': "Time shift on the peaks",
             'per_err': 'Persistence'
         }
 
@@ -66,7 +66,7 @@ class ScoreResWidget(QWidget):
         """ fill table"""
         self.clear_tab()
         self.lst_runs = []
-        if len(self.res.keys())>0 :
+        if len(self.res.keys()) > 0:
             self.dict_name = self.mdb.get_scen_name(self.res.keys())
         else:
             self.dict_name = {}
