@@ -116,12 +116,14 @@ class ScoreDistWidget(QWidget):
                     item = QTableWidgetItem(
                         '{:.3f}'.format(tab_fill[dist][tmp]))
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    item.setFlags(Qt.ItemIsEnabled)
                     col = columns.index(tmp)
                     self.table_dist.setItem(row, col, item)
                 for tmp in tab_fill_abs[dist].keys():
                     item = QTableWidgetItem(
                         '{:.3f}'.format(tab_fill[dist][tmp]))
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    item.setFlags(Qt.ItemIsEnabled)
                     col = columns.index(tmp)
                     self.table_dist_abs.setItem(row, col, item)
 

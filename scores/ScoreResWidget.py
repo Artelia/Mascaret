@@ -122,8 +122,10 @@ class ScoreResWidget(QWidget):
                     else:
                         item = QTableWidgetItem('{:.3f}'.format(val))
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    item.setFlags(Qt.ItemIsEnabled)
                     col = columns.index(tmp)
                     self.table_res.setItem(row, col, item)
+
             self.bt_export_csv.setEnabled(True)
 
     def fill_dico(self, id, varhq, var):
