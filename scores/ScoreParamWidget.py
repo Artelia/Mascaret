@@ -427,12 +427,11 @@ class ScoreParamWidget(QWidget):
                     else:
                         add_txt += '- Tips error, No data in time rang' \
                                    ' (Run : {})\n'.format(name_run)
-        else:
-            other_txt += 'No model selected \n'
+
         txt = ''
         if self.txt_err_get != '':
             txt += self.txt_err_get
-
+            txt += '-----------\n'
         if add_txt != '':
             txt += 'No data, to compute : \n {}'.format(add_txt)
             txt += '-----------\n'
@@ -1331,14 +1330,21 @@ class ScoreParamWidget(QWidget):
         :return:
         """
         # if not all len(lst_run) == 1
+
+        if not(len(self.lst_runs) >0):
+            self.txt_err_get += 'No model selected \n'
+
         self.dict_pretr()
 
         self.no_obs = []
         self.cmpt_var = {}
         txt_nocpt = ''
         txt_nodata = ''
+
         if len(self.model.keys()) > 0:
             dict_name = self.mdb.get_scen_name(list(self.model.keys()))
+        else:
+            dict_name = {}
         for id_run in self.model.keys():
             dict_model = self.model[id_run]
             if self.all:
