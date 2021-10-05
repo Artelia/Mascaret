@@ -326,84 +326,91 @@ class ScoreParamWidget(QWidget):
         :return:
         """
         self.txt_err_get = ''
-        self.get_data()
-        dict_name = self.mdb.get_scen_name(self.model.keys())
         add_txt = ''
         other_txt = ''
-        for id_run in self.no_obs:
-            name_run = '{} - {}'.format(dict_name[id_run]['run'],
-                                        dict_name[id_run]['scenario'])
-            add_txt += '- No observation for the Run : {}\n'.format(name_run)
+        self.get_data()
 
-        for id_run in self.model.keys():
-            name_run = '{} - {}'.format(dict_name[id_run]['run'],
-                                        dict_name[id_run]['scenario'])
-            if self.ch_simple_err.isChecked():
-                if not self.cpt_simple_err(id_run):
-                    add_txt += '- Simple scores (Run : {})\n'.format(name_run)
+        if len(self.model.keys())> 0 :
 
-            if self.ch_ns_err.isChecked():
-                if not self.cpt_ns_err(id_run):
-                    add_txt += '- Nash - Sutcliffe criterion ' \
-                               '(Run : {})\n'.format(name_run)
+            dict_name = self.mdb.get_scen_name(self.model.keys())
 
-            if self.ch_vol_err.isChecked():
-                if not self.cpt_vol_err(id_run):
-                    add_txt += '- Volume error (Run : {})\n'.format(name_run)
 
-            if self.ch_quantil_err.isChecked():
-                if not self.cpt_quantil_err(id_run):
-                    add_txt += '- Quantil error (Run : {})\n'.format(name_run)
+            for id_run in self.no_obs:
+                name_run = '{} - {}'.format(dict_name[id_run]['run'],
+                                            dict_name[id_run]['scenario'])
+                add_txt += '- No observation for the Run : {}\n'.format(name_run)
 
-            if self.ch_persistence.isChecked():
-                # check pas de temps régulier
+            for id_run in self.model.keys():
+                name_run = '{} - {}'.format(dict_name[id_run]['run'],
+                                            dict_name[id_run]['scenario'])
+                if self.ch_simple_err.isChecked():
+                    if not self.cpt_simple_err(id_run):
+                        add_txt += '- Simple scores (Run : {})\n'.format(name_run)
 
-                init_mod = self.model[id_run]['init_time']
-                lst_mod = self.model[id_run]['final_time']
-                last = self.param[id_run]['per_last_t']
-                fst = self.param[id_run]['per_start_t']
+                if self.ch_ns_err.isChecked():
+                    if not self.cpt_ns_err(id_run):
+                        add_txt += '- Nash - Sutcliffe criterion ' \
+                                   '(Run : {})\n'.format(name_run)
 
-                if (init_mod < last <= lst_mod) and (lst_mod > fst >= init_mod):
-                    test, lst_test = self.cpt_persistence(id_run)
-                    if not test:
-                        add_txt += '- Persistance error (Run : {})\n'.format(
-                            name_run)
+                if self.ch_vol_err.isChecked():
+                    if not self.cpt_vol_err(id_run):
+                        add_txt += '- Volume error (Run : {})\n'.format(name_run)
+
+                if self.ch_quantil_err.isChecked():
+                    if not self.cpt_quantil_err(id_run):
+                        add_txt += '- Quantil error (Run : {})\n'.format(name_run)
+
+                if self.ch_persistence.isChecked():
+                    # check pas de temps régulier
+
+                    init_mod = self.model[id_run]['init_time']
+                    lst_mod = self.model[id_run]['final_time']
+                    last = self.param[id_run]['per_last_t']
+                    fst = self.param[id_run]['per_start_t']
+
+                    if (init_mod < last <= lst_mod) and (lst_mod > fst >= init_mod):
+                        test, lst_test = self.cpt_persistence(id_run)
+                        if not test:
+                            add_txt += '- Persistance error (Run : {})\n'.format(
+                                name_run)
+                        else:
+                            if len(lst_test) > 0:
+                                add_txt += '- Persistance error (Run : {}), Time step' \
+                                           ' no constant : \n'.format(name_run)
+                                for code in lst_test:
+                                    '    - {} observation)\n'.format(code)
+                            if 'per_err' in self.res[id_run]['Q'][
+                                'persistence'].keys():
+                                if self.res[id_run]['Q']['persistence'][
+                                    'per_err'] is None:
+                                    other_txt += '- Persistance error (Run : {}, variable: Q):\n ' \
+                                                 '    The Sum in denominator is null. \n'.format(
+                                        name_run)
+                            if 'per_err' in self.res[id_run]['H'][
+                                'persistence'].keys():
+                                if self.res[id_run]['H']['persistence'][
+                                    'per_err'] is None:
+                                    other_txt += '- Persistance error (Run : {}, variable: H): \n' \
+                                                 '    The Sum in denominator is null. \n'.format(
+                                        name_run)
+
                     else:
-                        if len(lst_test) > 0:
-                            add_txt += '- Persistance error (Run : {}), Time step' \
-                                       ' no constant : \n'.format(name_run)
-                            for code in lst_test:
-                                '    - {} observation)\n'.format(code)
-                        if 'per_err' in self.res[id_run]['Q'][
-                            'persistence'].keys():
-                            if self.res[id_run]['Q']['persistence'][
-                                'per_err'] is None:
-                                other_txt += '- Persistance error (Run : {}, variable: Q):\n ' \
-                                             '    The Sum in denominator is null. \n'.format(
-                                    name_run)
-                        if 'per_err' in self.res[id_run]['H'][
-                            'persistence'].keys():
-                            if self.res[id_run]['H']['persistence'][
-                                'per_err'] is None:
-                                other_txt += '- Persistance error (Run : {}, variable: H): \n' \
-                                             '    The Sum in denominator is null. \n'.format(
-                                    name_run)
+                        add_txt += '- Persistance error, No data in time rang' \
+                                   ' (Run : {})\n'.format(name_run)
 
-                else:
-                    add_txt += '- Persistance error, No data in time rang' \
-                               ' (Run : {})\n'.format(name_run)
-
-            if self.ch_pointe_err.isChecked():
-                init_mod = self.model[id_run]['init_time']
-                lst_mod = self.model[id_run]['final_time']
-                last = self.param[id_run]['per_last_t']
-                fst = self.param[id_run]['per_start_t']
-                if (init_mod < last <= lst_mod) and (lst_mod > fst >= init_mod):
-                    if not self.cpt_pointe_err(id_run):
-                        add_txt += '- Tips error (Run : {})\n'.format(name_run)
-                else:
-                    add_txt += '- Tips error, No data in time rang' \
-                               ' (Run : {})\n'.format(name_run)
+                if self.ch_pointe_err.isChecked():
+                    init_mod = self.model[id_run]['init_time']
+                    lst_mod = self.model[id_run]['final_time']
+                    last = self.param[id_run]['per_last_t']
+                    fst = self.param[id_run]['per_start_t']
+                    if (init_mod < last <= lst_mod) and (lst_mod > fst >= init_mod):
+                        if not self.cpt_pointe_err(id_run):
+                            add_txt += '- Tips error (Run : {})\n'.format(name_run)
+                    else:
+                        add_txt += '- Tips error, No data in time rang' \
+                                   ' (Run : {})\n'.format(name_run)
+        else:
+            other_txt += 'No model selected \n'
         txt = ''
         if self.txt_err_get != '':
             txt += self.txt_err_get
@@ -1311,7 +1318,8 @@ class ScoreParamWidget(QWidget):
         self.cmpt_var = {}
         txt_nocpt = ''
         txt_nodata = ''
-        dict_name = self.mdb.get_scen_name(list(self.model.keys()))
+        if len(self.model.keys()) >0 :
+            dict_name = self.mdb.get_scen_name(list(self.model.keys()))
         for id_run in self.model.keys():
             dict_model = self.model[id_run]
             if self.all:
