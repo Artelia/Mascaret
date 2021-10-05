@@ -166,7 +166,10 @@ class ClassScores:
         """
         soma = np.sum((y_obs - y_pred) ** 2)
         somb = np.sum((y_obs - np.mean(y_obs)) ** 2)
-        nash = 1 - (soma / somb)
+        if somb == 0:
+            nash = None
+        else:
+            nash = 1 - (soma / somb)
         return nash
 
     def vol_err(self, q_obs, q_pred, lst_time_pred, lst_time_obs):

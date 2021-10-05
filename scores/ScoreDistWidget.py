@@ -54,7 +54,7 @@ class ScoreDistWidget(QWidget):
         """ fill table"""
         self.clear_tab()
         self.lst_runs = []
-        if len(self.res.keys())>0 :
+        if len(self.res.keys()) > 0:
             self.dict_name = self.mdb.get_scen_name(self.res.keys())
         else:
             self.dict_name = {}
@@ -113,7 +113,6 @@ class ScoreDistWidget(QWidget):
             self.table_dist_abs.setVerticalHeaderLabels(
                 [str(v) for v in dist_lst])
             self.table_dist_abs.setHorizontalHeaderLabels(columns)
-
             for row, dist in enumerate(dist_lst):
                 for tmp in tab_fill[dist].keys():
                     item = QTableWidgetItem(
@@ -124,7 +123,7 @@ class ScoreDistWidget(QWidget):
                     self.table_dist.setItem(row, col, item)
                 for tmp in tab_fill_abs[dist].keys():
                     item = QTableWidgetItem(
-                        '{:.3f}'.format(tab_fill[dist][tmp]))
+                        '{:.3f}'.format(tab_fill_abs[dist][tmp]))
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                     item.setFlags(Qt.ItemIsEnabled)
                     col = columns.index(tmp)
@@ -143,7 +142,6 @@ class ScoreDistWidget(QWidget):
         tab_fill = {}
         res2 = self.res[id][varhq]['quantil']
         lst_col = []
-        code = None
         oneobs = False
         if not self.all:
             keys = list(res2.keys())

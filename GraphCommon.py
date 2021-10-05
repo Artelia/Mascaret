@@ -94,7 +94,6 @@ class GraphCommon(QWidget):
         self.liste = {}
         self.position = 0
         self.nom = ''
-        self.toolbar = None
         self.leg = None
         self.lined = dict()
 
@@ -259,7 +258,6 @@ class GraphCommonNew:
         self.courbes = []
         self.annotation = []
         self.courbeLaisses = []
-        self.toolbar = None
         self.flag = False
         self.leg = None
         self.lined = dict()

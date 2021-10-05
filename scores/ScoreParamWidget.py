@@ -295,11 +295,11 @@ class ScoreParamWidget(QWidget):
         :return:
         """
         ch_err = [self.ch_simple_err.isChecked(),
-                      self.ch_ns_err.isChecked(),
-                      self.ch_vol_err.isChecked(),
-                      self.ch_quantil_err.isChecked(),
-                      self.ch_persistence.isChecked(),
-                      self.ch_pointe_err.isChecked()]
+                  self.ch_ns_err.isChecked(),
+                  self.ch_vol_err.isChecked(),
+                  self.ch_quantil_err.isChecked(),
+                  self.ch_persistence.isChecked(),
+                  self.ch_pointe_err.isChecked()]
         if any(ch_err):
 
             self.get_parameter()
@@ -330,35 +330,50 @@ class ScoreParamWidget(QWidget):
         other_txt = ''
         self.get_data()
 
-        if len(self.model.keys())> 0 :
+        if len(self.model.keys()) > 0:
 
             dict_name = self.mdb.get_scen_name(self.model.keys())
-
 
             for id_run in self.no_obs:
                 name_run = '{} - {}'.format(dict_name[id_run]['run'],
                                             dict_name[id_run]['scenario'])
-                add_txt += '- No observation for the Run : {}\n'.format(name_run)
+                add_txt += '- No observation for the Run : {}\n'.format(
+                    name_run)
 
             for id_run in self.model.keys():
                 name_run = '{} - {}'.format(dict_name[id_run]['run'],
                                             dict_name[id_run]['scenario'])
                 if self.ch_simple_err.isChecked():
                     if not self.cpt_simple_err(id_run):
-                        add_txt += '- Simple scores (Run : {})\n'.format(name_run)
+                        add_txt += '- Simple scores (Run : {})\n'.format(
+                            name_run)
 
                 if self.ch_ns_err.isChecked():
                     if not self.cpt_ns_err(id_run):
                         add_txt += '- Nash - Sutcliffe criterion ' \
                                    '(Run : {})\n'.format(name_run)
+                    if 'ns_err' in self.res[id_run]['Q']['nash_crit'].keys():
+                        if self.res[id_run]['Q']['nash_crit']['ns_err'] is None:
+                            other_txt += '- Nash - Sutcliffe criterion' \
+                                         ' (Run : {}, variable: Q):\n ' \
+                                         '    The Sum in denominator is null.' \
+                                         '\n'.format(name_run)
+                    if 'ns_err' in self.res[id_run]['H']['nash_crit'].keys():
+                        if self.res[id_run]['H']['nash_crit']['ns_err'] is None:
+                            other_txt += '- Nash - Sutcliffe criterion' \
+                                         ' (Run : {}, variable: H):\n ' \
+                                         '    The Sum in denominator is null.' \
+                                         '\n'.format(name_run)
 
                 if self.ch_vol_err.isChecked():
                     if not self.cpt_vol_err(id_run):
-                        add_txt += '- Volume error (Run : {})\n'.format(name_run)
+                        add_txt += '- Volume error (Run : {})\n'.format(
+                            name_run)
 
                 if self.ch_quantil_err.isChecked():
                     if not self.cpt_quantil_err(id_run):
-                        add_txt += '- Quantil error (Run : {})\n'.format(name_run)
+                        add_txt += '- Quantil error (Run : {})\n'.format(
+                            name_run)
 
                 if self.ch_persistence.isChecked():
                     # check pas de temps régulier
@@ -368,7 +383,8 @@ class ScoreParamWidget(QWidget):
                     last = self.param[id_run]['per_last_t']
                     fst = self.param[id_run]['per_start_t']
 
-                    if (init_mod < last <= lst_mod) and (lst_mod > fst >= init_mod):
+                    if (init_mod < last <= lst_mod) and (
+                            lst_mod > fst >= init_mod):
                         test, lst_test = self.cpt_persistence(id_run)
                         if not test:
                             add_txt += '- Persistance error (Run : {})\n'.format(
@@ -403,9 +419,11 @@ class ScoreParamWidget(QWidget):
                     lst_mod = self.model[id_run]['final_time']
                     last = self.param[id_run]['per_last_t']
                     fst = self.param[id_run]['per_start_t']
-                    if (init_mod < last <= lst_mod) and (lst_mod > fst >= init_mod):
+                    if (init_mod < last <= lst_mod) and (
+                            lst_mod > fst >= init_mod):
                         if not self.cpt_pointe_err(id_run):
-                            add_txt += '- Tips error (Run : {})\n'.format(name_run)
+                            add_txt += '- Tips error (Run : {})\n'.format(
+                                name_run)
                     else:
                         add_txt += '- Tips error, No data in time rang' \
                                    ' (Run : {})\n'.format(name_run)
@@ -646,8 +664,9 @@ class ScoreParamWidget(QWidget):
                     dict_tmp_h[code] = \
                         {'dist_err': self.cl_score.dist_err(y_obs, y_pred,
                                                             dist_step),
-                         'dist_abs_err': self.cl_score.dist_err(y_obs, y_pred,
-                                                                dist_step)}
+                         'dist_abs_err': self.cl_score.dist_abs_err(y_obs,
+                                                                    y_pred,
+                                                                    dist_step)}
             if self.cmpt_var[id_run][code]['Q']:
                 if self.all:
                     q_obs = np.concatenate(
@@ -660,17 +679,17 @@ class ScoreParamWidget(QWidget):
                     dict_tmp_q[code] = \
                         {'dist_err': self.cl_score.dist_err(y_obs, y_pred,
                                                             dist_step),
-                         'dist_abs_err': self.cl_score.dist_err(y_obs,
-                                                                y_pred,
-                                                                dist_step)}
+                         'dist_abs_err': self.cl_score.dist_abs_err(y_obs,
+                                                                    y_pred,
+                                                                    dist_step)}
 
         if self.cmpt_var[id_run]['H']:
             if self.all:
                 self.res[id_run]['H']['quantil'] = \
                     {'dist_err': self.cl_score.dist_err(h_obs, h_pred,
                                                         dist_step),
-                     'dist_abs_err': self.cl_score.dist_err(h_obs, h_pred,
-                                                            dist_step)}
+                     'dist_abs_err': self.cl_score.dist_abs_err(h_obs, h_pred,
+                                                                dist_step)}
             else:
                 self.res[id_run]['H']['quantil'] = dict_tmp_h
             self.type_res['quantil'] = True
@@ -681,8 +700,8 @@ class ScoreParamWidget(QWidget):
                 self.res[id_run]['Q']['quantil'] = \
                     {'dist_err': self.cl_score.dist_err(q_obs, q_pred,
                                                         dist_step),
-                     'dist_abs_err': self.cl_score.dist_err(q_obs, q_pred,
-                                                            dist_step)}
+                     'dist_abs_err': self.cl_score.dist_abs_err(q_obs, q_pred,
+                                                                dist_step)}
             else:
                 self.res[id_run]['Q']['quantil'] = dict_tmp_q
             self.type_res['quantil'] = True
@@ -1318,7 +1337,7 @@ class ScoreParamWidget(QWidget):
         self.cmpt_var = {}
         txt_nocpt = ''
         txt_nodata = ''
-        if len(self.model.keys()) >0 :
+        if len(self.model.keys()) > 0:
             dict_name = self.mdb.get_scen_name(list(self.model.keys()))
         for id_run in self.model.keys():
             dict_model = self.model[id_run]
