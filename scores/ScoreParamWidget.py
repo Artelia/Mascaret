@@ -294,23 +294,30 @@ class ScoreParamWidget(QWidget):
         action when click on button
         :return:
         """
+        ch_err = [self.ch_simple_err.isChecked(),
+                      self.ch_ns_err.isChecked(),
+                      self.ch_vol_err.isChecked(),
+                      self.ch_quantil_err.isChecked(),
+                      self.ch_persistence.isChecked(),
+                      self.ch_pointe_err.isChecked()]
+        if any(ch_err):
 
-        self.get_parameter()
-        self.clean_type_res()
-        self.cpt_score()
+            self.get_parameter()
+            self.clean_type_res()
+            self.cpt_score()
 
-        tabscores = self.windmain.tabscores
-        id_dist = tabscores.indexOf(self.windmain.wgt_dist)
-        id_res = tabscores.indexOf(self.windmain.wgt_res)
-        cond_enable = {'quantil': False, 'res': False}
-        for key, cond in self.type_res.items():
-            if key in ['quantil'] and cond:
-                cond_enable['quantil'] = True
-            elif cond:
-                cond_enable['res'] = True
+            tabscores = self.windmain.tabscores
+            id_dist = tabscores.indexOf(self.windmain.wgt_dist)
+            id_res = tabscores.indexOf(self.windmain.wgt_res)
+            cond_enable = {'quantil': False, 'res': False}
+            for key, cond in self.type_res.items():
+                if key in ['quantil'] and cond:
+                    cond_enable['quantil'] = True
+                elif cond:
+                    cond_enable['res'] = True
 
-        tabscores.setTabEnabled(id_dist, cond_enable['quantil'])
-        tabscores.setTabEnabled(id_res, cond_enable['res'])
+            tabscores.setTabEnabled(id_dist, cond_enable['quantil'])
+            tabscores.setTabEnabled(id_res, cond_enable['res'])
 
     def cpt_score(self):
         """
