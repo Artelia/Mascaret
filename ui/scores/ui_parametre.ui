@@ -281,7 +281,7 @@
      <item>
       <widget class="QPushButton" name="bt_calcul_scores">
        <property name="text">
-        <string>Calcul Scores</string>
+        <string>Calculate Scores</string>
        </property>
       </widget>
      </item>

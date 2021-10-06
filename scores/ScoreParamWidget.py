@@ -289,6 +289,12 @@ class ScoreParamWidget(QWidget):
         :return:
         """
         self.init_gui()
+        self.fct_chang_quantil()
+        self.fct_chang_ch_lim()
+        self.fct_chang_valim()
+        self.fct_chang_point()
+        self.fct_chang_persistence()
+
         pass
 
     def get_times(self, id_run, only_init=False):

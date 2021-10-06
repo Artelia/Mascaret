@@ -54,18 +54,18 @@ class ClassScoresDialog(QDialog):
         self.bt_close.clicked.connect(self.close)
         self.bt_close.hide()
         self.wgt_select = SelectWidget(self)
-        self.tab_select = self.tabscores.addTab(self.wgt_select, 'scor_select')
+        self.tab_select = self.tabscores.addTab(self.wgt_select, 'Scores Selection')
 
         self.wgt_param = ScoreParamWidget(self, self.all)
-        self.tab_param = self.tabscores.addTab(self.wgt_param, 'scor_param')
+        self.tab_param = self.tabscores.addTab(self.wgt_param, 'Scores Parameters')
 
         self.wgt_res = ScoreResWidget(self)
-        self.tab_res = self.tabscores.addTab(self.wgt_res, 'scor_res')
+        self.tab_res = self.tabscores.addTab(self.wgt_res, 'Scores Results')
         id_res = self.tabscores.indexOf(self.wgt_res)
         self.tabscores.setTabEnabled(id_res, False)
 
         self.wgt_dist = ScoreDistWidget(self)
-        self.tab_dist = self.tabscores.addTab(self.wgt_dist, 'scor_dist')
+        self.tab_dist = self.tabscores.addTab(self.wgt_dist, 'Scores Distribution')
         id_dist = self.tabscores.indexOf(self.wgt_dist)
         self.tabscores.setTabEnabled(id_dist, False)
 
