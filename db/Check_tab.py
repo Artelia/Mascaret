@@ -60,6 +60,7 @@ class CheckTab:
                                   '3.0.7',
                                   '3.1.0',
                                   '3.1.1',
+                                  '3.1.2',
                                   '4.0.0',
                                   ]
         self.dico_modif = {'3.0.0': {
@@ -154,6 +155,7 @@ class CheckTab:
             '3.1.0': {'del_tab': ['resultats', 'resultats_basin',
                                   'resultats_links']},
             '3.1.1': {},
+            '3.1.2': {},
             '4.0.0': {'fct': [
                 lambda: self.update_400(),
             ],

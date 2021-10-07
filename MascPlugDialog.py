@@ -231,7 +231,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionImport_Results.setVisible(False)
         # TODO Finaliser
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(True)
+        self.ui.actionTest.setVisible(False)
         # delete after
         self.ui.menuUpate_table.menuAction().setVisible(False)
         # scores
