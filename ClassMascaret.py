@@ -756,9 +756,18 @@ class ClassMascaret:
                     i = prof_seuil["name"].index(nom)
                     long = len(prof_seuil['x'][i].split())
                     SubElement(struct, "nbPtLoiSeuil").text = str(long)
-                    SubElement(struct, "abscTravCrete").text = prof_seuil['x'][
-                        i]
-                    SubElement(struct, "cotesCrete").text = prof_seuil['z'][i]
+                    # SubElement(struct, "abscTravCrete").text = prof_seuil['x'][i]
+                    # SubElement(struct, "cotesCrete").text = prof_seuil['z'][i]
+                    # traitment profil because of too many significant number
+                    new_profx = ' '.join([str(round(float(vvv), 3))
+                                          for vvv in
+                                          prof_seuil['x'][i].split()])
+
+                    SubElement(struct, "abscTravCrete").text = new_profx
+                    new_profz = ' '.join([str(round(float(vvv),3))
+                                          for vvv in prof_seuil['z'][i].split()])
+                    SubElement(struct, "cotesCrete").text = new_profz
+
 
                 except:
                     msg = 'Profil de crete introuvable pour {}'
