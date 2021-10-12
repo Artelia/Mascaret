@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>998</width>
+    <width>1028</width>
     <height>810</height>
    </rect>
   </property>
@@ -520,44 +520,55 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_10">
            <item>
-            <widget class="QToolButton" name="btTools_point_selection">
-             <property name="text">
-              <string>Point Selection</string>
-             </property>
-             <property name="icon">
-              <iconset>
-               <normaloff>:/plugins/MascPlug/icones/select.png</normaloff>:/plugins/MascPlug/icones/select.png</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>24</width>
-               <height>24</height>
-              </size>
-             </property>
-             <property name="checkable">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="bt_add_point">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-               <horstretch>255</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Add point selection</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="bt_reverse_prof">
-             <property name="text">
-              <string>Reverse Profil</string>
-             </property>
-            </widget>
+            <layout class="QGridLayout" name="gridLayout">
+             <item row="0" column="0">
+              <widget class="QToolButton" name="btTools_point_selection">
+               <property name="text">
+                <string>Point Selection</string>
+               </property>
+               <property name="icon">
+                <iconset>
+                 <normaloff>:/plugins/MascPlug/icones/select.png</normaloff>:/plugins/MascPlug/icones/select.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>24</width>
+                 <height>24</height>
+                </size>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QPushButton" name="bt_add_point">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <horstretch>255</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Add point selection</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QPushButton" name="bt_reverse_prof">
+               <property name="text">
+                <string>Reverse Profil</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QPushButton" name="bt_check_prof">
+               <property name="text">
+                <string>Check profil</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <spacer name="horizontalSpacer_9">
@@ -674,22 +685,6 @@
     <hint type="sourcelabel">
      <x>306</x>
      <y>120</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>btTools_point_selection</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>actionBtTools_point_selection</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>36</x>
-     <y>192</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>

@@ -46,6 +46,7 @@ from qgis.gui import *
 from .Function import isfloat, interpole
 from .GraphCommon import DraggableLegend, GraphCommon
 from .Structure.StructureCreateDialog import ClassStructureCreateDialog
+from .Structure.ClassPolygone import ClassPolygone
 from .GraphResultDialog import GraphResultDialog
 
 from qgis.PyQt.QtWidgets import *
@@ -217,6 +218,7 @@ class GraphProfil(GraphCommon):
         # self.ui.bt_img_load.clicked.connect(self.import_image)
         self.ui.bt_topo_save.clicked.connect(self.sauve_topo)
         self.ui.bt_amont_aval.clicked.connect(self.topo_amont_aval)
+        self.ui.bt_check_prof.clicked.connect(self.check_prof)
 
         self.ui.bt_reculTot.clicked.connect(lambda: self.avance(-10))
         self.ui.bt_recul.clicked.connect(lambda: self.avance(-1))
@@ -525,6 +527,7 @@ class GraphProfil(GraphCommon):
             self.mgis.add_info('No data to save profile')
             return
         for k, v in self.tab.items():
+            print(v)
             if isinstance(v, list):
                 self.liste[k][self.position] = " ".join([str(var) for var in v])
             else:
@@ -1318,9 +1321,10 @@ class GraphProfil(GraphCommon):
         idam = id - 1
         idav = id + 1
         maj = False
+
         if 0 < idam :
             if self.liste['branchnum'][id] == self.liste['branchnum'][idam]:
-                if self.liste['x'][idam] != '':
+                if self.liste['x'][idam]:
                     xamont = [float(val) for val in
                               self.liste['x'][idam].split()]
                     zamont = [float(val) for val in
@@ -1329,7 +1333,7 @@ class GraphProfil(GraphCommon):
                     maj = True
         if  idav < len(self.liste['branchnum']) :
             if self.liste['branchnum'][id] == self.liste['branchnum'][idav]:
-                if self.liste['x'][idav] != '':
+                if self.liste['x'][idav] :
                     xaval = [float(val) for val in
                                        self.liste['x'][idav].split()]
                     zaval = [float(val) for val in
@@ -1340,6 +1344,50 @@ class GraphProfil(GraphCommon):
             self.extrait_topo()
             self.maj_graph()
             self.maj_legende()
+
+    def check_prof(self):
+        print(self.liste)
+        id = self.liste['name'].index(self.nom)
+
+        if self.liste['x'][id] :
+            clpoly = ClassPolygone()
+            profil = {
+                'x' : [float(val) for val in self.liste['x'][id].split()],
+                'z': [float(val) for val in self.liste['z'][id].split()]
+            }
+            maxz = max( profil['z'])
+            lmin = self.liste['leftminbed'][id]
+            rmin =  self.liste['rightminbed'][id]
+            if not lmin  :
+                lmin = min(profil['x'])
+            if not rmin :
+                rmin = max(profil['x'])
+            print(profil)
+            prof = clpoly.poly_profil(profil)
+            prof = clpoly.coup_poly_h(prof, maxz, typ='U')
+            print(prof)
+
+            poly = clpoly.coup_poly_v(prof,[ lmin,rmin],typ = 'LR')
+            print(poly)
+            print(poly.bounds())
+            minx, minz, maxx, maxz = poly.bounds()
+            spb = poly.area()
+            pt_bas = minz
+            print(poly)
+            print(pt_bas)
+            print(spb)
+
+
+
+
+
+
+
+# •	La section de plein bord du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
+# •	Le point bas du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
+# •	Des cotes de débordement de la rive droite et gauche (profil en cours, aval et amont, soit 6 valeurs)
+#
+
 
 class CopySelectedCellsAction(QAction):
     def __init__(self, table_widget):
