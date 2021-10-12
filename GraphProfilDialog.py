@@ -207,7 +207,7 @@ class GraphProfil(GraphCommon):
         # action
         self.bt_translah.clicked.connect(self.deplace_h_toggled)
         self.bt_translav.clicked.connect(self.deplace_v_toggled)
-        self.bt_reverse_proftopo.clicked.connect(self.reverse_prof)
+        self.bt_reverse_prof.clicked.connect(self.reverse_prof)
         self.bt_select.clicked.connect(self.selector_toggled)
         self.bt_select_z.clicked.connect(self.zone_selector_toggled)
 
@@ -216,6 +216,7 @@ class GraphProfil(GraphCommon):
         self.ui.bt_topo_del.clicked.connect(self.del_topo)
         # self.ui.bt_img_load.clicked.connect(self.import_image)
         self.ui.bt_topo_save.clicked.connect(self.sauve_topo)
+        self.ui.bt_amont_aval.clicked.connect(self.topo_amont_aval)
 
         self.ui.bt_reculTot.clicked.connect(lambda: self.avance(-10))
         self.ui.bt_recul.clicked.connect(lambda: self.avance(-1))
@@ -546,13 +547,19 @@ class GraphProfil(GraphCommon):
             for x, z, gid, ordre in zip(t['x'], t['z'], t['gid'], t['ordre']):
                 for f in self.coucheProfils.getFeatures():
                     if f["name"] == self.nom:
+                        print(f["name"])
+                        print(x)
+
                         interp = f.geometry().interpolate(x)
+                        print(interp)
                         if interp.isNull():
                             self.mgis.add_info(
                                 "Warning : Check the profil lenght")
-                        p = interp.asPoint()
+                        print(interp)
+                        p = f.geometry().interpolate(x).asPoint()
                         geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
                             p.x(), p.y(), self.mdb.SRID)
+
                 if gid:
                     sql = """UPDATE {0}.topo SET x={1}, geom={2}, order_={3}
                           WHERE gid={4}""".format(self.mdb.SCHEMA,
@@ -869,8 +876,8 @@ class GraphProfil(GraphCommon):
 
         if self.flag and event.button == 3:
             if self.ordre == -9999:
-                if self.topoSelect:
-                    idx_topo = list(self.topo.keys()).index(self.topoSelect)
+                if self.topoSelect in self.topo.keys():
+                        idx_topo = list(self.topo.keys()).index(self.topoSelect)
                 else:
                     idx_topo = 0
                 item, ok = QInputDialog.getItem(self,
@@ -1256,43 +1263,129 @@ class GraphProfil(GraphCommon):
         Revers profil
         :return:
         """
-        # for nom, t in self.topo.items():
-        #     for x, z, gid, ordre in zip(t['x'], t['z'], t['gid'], t['ordre']):
-        #         for f in self.coucheProfils.getFeatures():
-        #             if f["name"] == self.nom:
-        #                 interp = f.geometry().interpolate(x)
-        #                 if interp.isNull():
-        #                     self.mgis.add_info(
-        #                         "Warning : Check the profil lenght")
-        #                 p = interp.asPoint()
-        #                 geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
-        #                     p.x(), p.y(), self.mdb.SRID)
-        #         if gid:
-        #             sql = """UPDATE {0}.topo SET x={1}, geom={2}, order_={3}
-        #                   WHERE gid={4}""".format(self.mdb.SCHEMA,
-        #                                           x,
-        #                                           geom,
-        #                                           ordre,
-        #                                           gid)
-        #             self.mdb.run_query(sql)
-        #         else:
-        #             sql = """INSERT INTO {0}.topo
-        #                   (name, profile, order_, x, z, geom)
-        #                   VALUES
-        #                   ('{1}','{2}',{3},{4},{5},{6})""".format(
-        #                 self.mdb.SCHEMA,
-        #                 nom,
-        #                 self.nom,
-        #                 ordre,
-        #                 x,
-        #                 z,
-        #                 geom)
-        #
-        #             self.mdb.run_query(sql)
-        #
-        # self.extrait_topo()
-        pass
+        self.tab['z'].reverse()
+        self.maj_graph()
 
+    def add_topo(self, xval, zval, basename):
+
+            tab = {'name': [], 'profile': [], 'order_': [], 'x': [],
+                                'z': [],
+                                'geom': []}
+            ordre = 0
+            for f in self.coucheProfils.getFeatures():
+                if f["name"] == self.nom:
+                    for x,z in zip(xval,zval):
+
+                        ordre += 1
+
+                        p = f.geometry().interpolate(x).asPoint()
+
+                        # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
+
+                        geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                            p.x(), p.y(), self.mdb.SRID)
+
+                        tab["name"].append("'" + basename + "'")
+                        tab["profile"].append("'" + self.nom + "'")
+                        tab["order_"].append(ordre)
+                        tab["x"].append(x)
+                        tab["z"].append(z)
+                        tab["geom"].append(geom)
+
+            self.mdb.insert2("topo", tab)
+
+    def topo_amont_aval(self):
+        """
+
+        :return:
+        """
+
+        print()
+        print(self.liste)
+        id = self.liste['name'].index(self.nom)
+        idam = id - 1
+        idav = id + 1
+
+        if self.liste['branchnum'][id] == self.liste['branchnum'][idam]:
+            # TODO add amont
+
+            if self.liste['x'][idam] != '':
+                xamont = [float(val) for val in
+                          self.liste['x'][idam].split()]
+                zamont = [float(val) for val in
+                          self.liste['z'][idam].split()]
+                self.add_topo(xamont, zamont, 'downstream')
+
+        if self.liste['branchnum'][id] == self.liste['branchnum'][idav]:
+            if self.liste['x'][idav] != '':
+                xaval = [float(val) for val in
+                                   self.liste['x'][idav].split()]
+                zaval = [float(val) for val in
+                                   self.liste['z'][idav].split()]
+                self.add_topo(xaval, zaval, 'upstream')
+
+        self.extrait_topo()
+        self.maj_graph()
+        self.maj_legende()
+
+
+        #charger_bathy(self, liste, couche_profil, profil=None):
+        #
+        # for fichier in liste:
+        #     basename = os.path.basename(fichier)
+        #     if not profil:
+        #         profil = basename.split(".")[0]
+        #     for f in couche_profil.getFeatures():
+        #         if f["name"] == profil:
+        #             condition = "name='{}' AND profile='{}'".format(basename,
+        #                                                             profil)
+        #
+        #             self.mdb.delete("topo", condition)
+        #
+        #             tab = {'name': [], 'profile': [], 'order_': [], 'x': [],
+        #                    'z': [],
+        #                    'geom': []}
+        #             with open(fichier, "r") as fich:
+        #                 entete = fich.readline()
+        #                 if len(entete.split()) > 1:
+        #                     sep = None
+        #                 else:
+        #                     sep = ";"
+        #
+        #                 ordre = 0
+        #                 for ligne in fich:
+        #                     # x, z = list(map(float, ligne.split(sep)))
+        #
+        #                     if ligne[0] != '#':
+        #                         ligne = ligne.replace('\n', '')
+        #                         if len(ligne.split(sep)) < 1:
+        #                             break
+        #                         x, z = (float(var) for var in ligne.split(sep))
+        #
+        #                         ordre += 1
+        #
+        #                         p = f.geometry().interpolate(x).asPoint()
+        #
+        #                         # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
+        #
+        #                         geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+        #                             p.x(), p.y(), self.mdb.SRID)
+
+            # tab["name"].append("'" + basename + "'")
+            # tab["profile"].append("'" + profil + "'")
+            # tab["order_"].append(ordre)
+            # tab["x"].append(x)
+            # tab["z"].append(z)
+            # tab["geom"].append(geom)
+            #
+
+            # Read profil amont et aval
+            # insert topo
+
+            # self.mdb.insert2("topo", tab)
+
+       # amont self.liste["gid"]-1
+    # aval  self.liste["gid"]+1
 class CopySelectedCellsAction(QAction):
     def __init__(self, table_widget):
         if not isinstance(table_widget, QTableWidget):

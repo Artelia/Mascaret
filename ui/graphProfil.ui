@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>836</width>
+    <width>998</width>
     <height>810</height>
    </rect>
   </property>
@@ -343,7 +343,7 @@
                    </widget>
                   </item>
                   <item row="0" column="3">
-                   <widget class="QPushButton" name="bt_reverse_topo">
+                   <widget class="QPushButton" name="bt_amont_aval">
                     <property name="font">
                      <font>
                       <pointsize>8</pointsize>
@@ -352,7 +352,10 @@
                      </font>
                     </property>
                     <property name="text">
-                     <string>Reverse</string>
+                     <string>Add up/downstream</string>
+                    </property>
+                    <property name="default">
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -546,6 +549,13 @@
              </property>
              <property name="text">
               <string>Add point selection</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="bt_reverse_prof">
+             <property name="text">
+              <string>Reverse Profil</string>
              </property>
             </widget>
            </item>
