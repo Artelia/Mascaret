@@ -211,7 +211,6 @@ class GraphProfil(GraphCommon):
         self.bt_select.clicked.connect(self.selector_toggled)
         self.bt_select_z.clicked.connect(self.zone_selector_toggled)
 
-
         self.ui.bt_add_point.clicked.connect(self.ajout_points)
         self.ui.bt_topo_load.clicked.connect(self.import_topo)
         self.ui.bt_topo_del.clicked.connect(self.del_topo)
@@ -521,7 +520,7 @@ class GraphProfil(GraphCommon):
         self.canvas.draw()
 
     def sauve_profil(self):
-        if self.tab['x'] == []:
+        if not self.tab['x']:
             self.mgis.add_info('No data to save profile')
             return
         for k, v in self.tab.items():
@@ -861,7 +860,7 @@ class GraphProfil(GraphCommon):
     def onrelease(self, event):
         if self.bt_translah.isChecked():
             self.x0 = None
-        elif  self.bt_translav.isChecked():
+        elif self.bt_translav.isChecked():
             self.y0 = None
 
         return
@@ -944,22 +943,22 @@ class GraphProfil(GraphCommon):
                     self.mgis.add_info("Warning:Out of graph")
 
         elif self.bt_translav.isChecked() and self.y0:
-                f = self.courbeSelected.get_label()
-                try:
-                    tab_z = self.topo[f]['z']
+            f = self.courbeSelected.get_label()
+            try:
+                tab_z = self.topo[f]['z']
 
-                    tempo = []
-                    for var1 in tab_z:
-                        tempo.append(self.fct2(var1, event.ydata, self.y0))
-                    tab_z = tempo
+                tempo = []
+                for var1 in tab_z:
+                    tempo.append(self.fct2(var1, event.ydata, self.y0))
+                tab_z = tempo
 
-                    self.topo[f]['z'] = tab_z
-                    self.courbeSelected.set_ydata(tab_z)
+                self.topo[f]['z'] = tab_z
+                self.courbeSelected.set_ydata(tab_z)
 
-                    self.y0 = round(float(event.ydata), 2)
-                except:
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info("Warning:Out of graph")
+                self.y0 = round(float(event.ydata), 2)
+            except:
+                if self.mgis.DEBUG:
+                    self.mgis.add_info("Warning:Out of graph")
         self.fig.canvas.draw()
 
     def maj_graph(self):

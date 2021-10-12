@@ -48,6 +48,8 @@ class ClassMobilSingDialog(QDialog):
         self.id = 0
         self.cur_set = None
         self.filling_tab = False
+        self.graph_edit = None
+
         self.ui = loadUi(os.path.join(self.mgis.masplugPath,
                                       'ui/structures/ui_mobil_sing.ui'), self)
 
@@ -720,6 +722,8 @@ class GraphMobSing(GraphCommon):
         self.id = id_weirs
         self.lst_var = lst_var
         self.init_ui_common_p()
+        self.courbe = {}
+        self.axes = None
         self.gui_graph(lay)
         self.init_ui()
 

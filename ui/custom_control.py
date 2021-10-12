@@ -22,12 +22,10 @@ email                :
 """
 import numpy as np
 import re
-from  datetime import datetime
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
-
 
 from qgis.PyQt.QtGui import QValidator
 from qgis.PyQt.QtWidgets import QMessageBox, QDoubleSpinBox
@@ -59,6 +57,7 @@ class ClassWarningBox:
     def info(self, msg, title=''):
         QMessageBox.warning(None, title, msg)
 
+
 # *******************************************************************************
 #   Class  ScientificDoubleSpinBox
 # *******************************************************************************
@@ -87,6 +86,7 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
     """
     Class QDoubleSpinBox with scientific format
     """
+
     def __init__(self, *args, **kwargs):
         super(ScientificDoubleSpinBox, self).__init__(*args, **kwargs)
         self.setMinimum(-np.inf)
@@ -122,8 +122,7 @@ def format_float(value):
     return string
     # *******************************************************************************
 
-def datetime2QDateTime(date) :
+
+def datetime2QDateTime(date):
     return QDateTime(date.year, date.month, date.day,
                      date.hour, date.minute, date.second)
-
-

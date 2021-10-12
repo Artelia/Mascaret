@@ -48,6 +48,11 @@ class ClassDeletrunDialog(QDialog):
         self.box = ClassWarningBox()
         self.listeRuns = []
         self.listeScen = {}
+        self.cond_com = None
+        self.tree = None
+        self.parent = {}
+        self.child = {}
+
         self.init_gui()
 
     def init_gui(self):

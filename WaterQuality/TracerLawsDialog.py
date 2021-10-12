@@ -45,6 +45,9 @@ class ClassTracerLawsDialog(QDialog):
         self.cur_wq_mod = self.tbwq.get_cur_wq_mod()
         self.cur_wq_law = None
         self.filling_tab = False
+        self.graph_home = None
+        self.graph_edit = None
+        self.list_trac = []
 
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_tracer_laws.ui'), self)

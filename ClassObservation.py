@@ -38,7 +38,6 @@ else:  # qt5
     from qgis.PyQt.QtCore import Qt
 
 
-
 class ClassEventObsDialog(QDialog):
     def __init__(self, mgis):
         QDialog.__init__(self)
@@ -48,6 +47,11 @@ class ClassEventObsDialog(QDialog):
 
         self.cur_station = ""
         self.cur_var = ""
+
+        self.graph_home = None
+        self.graph_edit = None
+        self.axes = None
+        self.courbe = None
 
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_event_obs.ui'), self)
@@ -239,7 +243,6 @@ class ClassEventObsDialog(QDialog):
                                                          self.mgis.masplugPath,
                                                          filter="CSV (*.csv);;File (*)")
         succes, recs = self.read_csv(file_name_path)
-        #print(succes, len(recs))
 
         if succes:
             self.mdb.execute("DROP TABLE IF EXISTS {0}.tmp_observations".format(
@@ -327,9 +330,9 @@ class ClassEventObsDialog(QDialog):
     @staticmethod
     def fmt_date(date):
         ldate = len(date.strip())
-        if ldate ==16:
+        if ldate == 16:
             val = datetime.datetime.strptime(date, '%d/%m/%Y %H:%M')
-        elif ldate ==19:
+        elif ldate == 19:
             val = datetime.datetime.strptime(date, '%d/%m/%Y %H:%M:%S')
         return val
 
@@ -509,7 +512,6 @@ class ClassEventObsDialog(QDialog):
         self.ui.Obs_pages.setCurrentIndex(0)
         self.graph_edit.init_graph(None)
 
-
     def copier(self):
         """copier la zone sélectionnée dans le clipboard
         """
@@ -541,15 +543,13 @@ class ClassEventObsDialog(QDialog):
             # ----------------------------------------------------------------
             # Ctle-C: copier
             if event.key() == Qt.Key_C and (
-                event.modifiers() & Qt.ControlModifier):
+                        event.modifiers() & Qt.ControlModifier):
                 self.copier()
                 event.accept()
             else:
                 event.ignore()
         else:
             event.ignore()
-
-
 
 
 class ItemEditorFactory(QItemEditorFactory):
@@ -644,5 +644,3 @@ class GraphObservation(GraphCommon):
         leglines[0].set_alpha(1.0)
 
         self.maj_limites()
-
-

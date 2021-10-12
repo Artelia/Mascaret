@@ -94,7 +94,7 @@
           </font>
          </property>
          <property name="text">
-          <string>Errors on the tips</string>
+          <string>Errors on the peaks</string>
          </property>
         </widget>
        </item>
@@ -223,22 +223,22 @@
          </row>
          <row>
           <property name="text">
-           <string>Tips Start Time </string>
+           <string>Peaks Start Time </string>
           </property>
          </row>
          <row>
           <property name="text">
-           <string>Tips Last Time </string>
+           <string>Peaks Last Time </string>
           </property>
          </row>
          <row>
           <property name="text">
-           <string>alpha_Q  (Errors on the tips)</string>
+           <string>alpha_Q  (Errors on the peaks)</string>
           </property>
          </row>
          <row>
           <property name="text">
-           <string>alpha_H  (Errors on the tips)</string>
+           <string>alpha_H  (Errors on the peaks)</string>
           </property>
          </row>
         </widget>
@@ -281,7 +281,7 @@
      <item>
       <widget class="QPushButton" name="bt_calcul_scores">
        <property name="text">
-        <string>Calcul Scores</string>
+        <string>Calculate Scores</string>
        </property>
       </widget>
      </item>

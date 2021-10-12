@@ -215,11 +215,10 @@ class ClassMasDatabase(object):
         """
         Setting SCHEMA, SRID and OVERWRITE on hydro object.
 
-        Args:
-        :param hydro_object (class): Hydro object class.
-        :param schema (str): Schema where tables will be created or processed.
-        :param srid (int): A Spatial Reference System Identifier.
-        :param overwrite (bool): Flag deciding if objects can be overwrite.
+        :param hydro_object : (class) Hydro object class.
+        :param schema : (str) Schema where tables will be created or processed.
+        :param srid :(int) A Spatial Reference System Identifier.
+        :param overwrite : (bool) Flag deciding if objects can be overwrite.
         :param puser: (str) postgres user
         """
         if schema is None:
@@ -451,14 +450,15 @@ class ClassMasDatabase(object):
             if self.run_query(chaine.format(self.SCHEMA, self.USER)) is None:
                 return
             else:
-                self.mgis.add_info('<br>Model "{0}" created.'.format(self.SCHEMA))
+                self.mgis.add_info(
+                    '<br>Model "{0}" created.'.format(self.SCHEMA))
 
             # table
             tables = [Maso.events, Maso.lateral_inflows, Maso.lateral_weirs,
                       Maso.extremities,
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
                       Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
-                      Maso.observations, Maso.parametres,  Maso.runs,
+                      Maso.observations, Maso.parametres, Maso.runs,
                       Maso.laws,
                       Maso.admin_tab, Maso.visu_flood_marks,
                       # qualite d'eau
@@ -545,7 +545,6 @@ class ClassMasDatabase(object):
             self.mgis.add_info("Echec of creation model")
             self.mgis.add_info(str(e))
 
-
     def public_fct_sql(self):
 
         listefct = ['pg_create_calcul_abscisse',
@@ -562,7 +561,6 @@ class ClassMasDatabase(object):
 
         if not self.check_fct(listefct):
             for fct in listefct:
-
                 try:
                     obj = self.process_masobject(Maso.class_fct_psql, fct)
                     if self.mgis.DEBUG:
@@ -570,7 +568,6 @@ class ClassMasDatabase(object):
                     else:
                         pass
                 except:
-
                     if self.mgis.DEBUG:
                         # self.mgis.add_info('{0}\n'.format(fct))
                         self.mgis.add_info('failure!{0}'.format(fct))
@@ -589,7 +586,6 @@ class ClassMasDatabase(object):
 
             self.disconnect_pg()
             self.connect_pg()
-
 
         except Exception as e:
             self.disconnect_pg()
@@ -859,7 +855,7 @@ $BODY$
 
         return liste_x
 
-    def select(self, table, where="", order="", list_var=None,  verbose= False):
+    def select(self, table, where="", order="", list_var=None, verbose=False):
         """ Select variables of table"""
         if where:
             where = " WHERE " + where + " "
@@ -871,7 +867,7 @@ $BODY$
             lvar = '*'
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        if verbose :
+        if verbose:
             print(sql.format(self.SCHEMA, table, where, order, lvar))
         (results, namCol) = self.run_query(
             sql.format(self.SCHEMA, table, where, order, lvar), fetch=True,
@@ -967,7 +963,7 @@ $BODY$
             return var
         else:
             print("error : ",
-                  sql.format(self.SCHEMA, table, where, order, lvar))
+                  sql.format(var, self.SCHEMA, table, where))
             return None
 
     def select_min(self, var, table, where=None):
@@ -1159,10 +1155,10 @@ $BODY$
         sql = """ALTER TABLE {0}.{1} ADD COLUMN {2} double precision;"""
         self.run_query(sql.format(self.SCHEMA, table, colonne))
 
-    def export_schema(self, file, schem = None):
+    def export_schema(self, file, schem=None):
         """export schema"""
         try:
-            if schem is None :
+            if schem is None:
                 schem = self.SCHEMA
             exe = os.path.join(self.mgis.postgres_path, 'pg_dump')
 
@@ -1170,7 +1166,8 @@ $BODY$
                 commande = '"{0}" -p {6} -F c -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(
                     exe, schem, self.USER, file,
                     self.dbname, self.host, self.port)
-                print(commande, file)
+
+                # print(commande, file)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
 
                 p = subprocess.Popen(commande, shell=True)
@@ -1192,7 +1189,7 @@ $BODY$
                 # d = dict(os.environ)
                 # d["PGPASSWORD"] = "{0}".format(self.password)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
-                commande = '"{0}" -U {1} --no-owner -F c -p {2}  -d {4} -h {5} ' \
+                commande = '"{0}" -U {1} -O -F c -p {2}  -d {4} -h {5} ' \
                            '--create "{3}"'.format(exe, self.USER, self.port,
                                                    file, self.dbname, self.host)
 
@@ -1224,7 +1221,6 @@ $BODY$
             for row in info:
                 listf.append(row[0])
         return listf
-
 
     def insert_abacus_table(self, dossier):
         list_fich = os.listdir(dossier)
@@ -1347,15 +1343,15 @@ $BODY$
         results = self.run_query(sql, fetch=True)
         return results[0][0]
 
-    def export_model(self, selection, file,plug_ver):
+    def export_model(self, selection, file, plug_ver):
         # parcours the selection for insert results
-        js_dict =  {'plugin_version' : plug_ver}
+        js_dict = {'plugin_version': plug_ver}
 
         ver_pgsql = self.version_postgres()
         js_dict['pgsql_version'] = ver_pgsql
 
         src = self.SCHEMA
-        js_dict['schema_name'] =  src
+        js_dict['schema_name'] = src
         date = datetime.now()
         js_dict['date'] = date.isoformat()
 
@@ -1363,12 +1359,12 @@ $BODY$
         dest = src + '_ext{}'.format(date)
         # check  clone name is ok
         cpt = 0
-        while dest in self.list_schema() and cpt<5:
+        while dest in self.list_schema() and cpt < 5:
             cpt += 1
-            dest = src + '_ext{}_{}'.format(date,cpt)
+            dest = src + '_ext{}_{}'.format(date, cpt)
         js_dict['export_name'] = dest
         self.ignor_schema += [dest]
-        list_tab_res = ['runs','results','results_sect','runs_graph']
+        list_tab_res = ['runs', 'results', 'results_sect', 'runs_graph']
 
         qry = "SELECT clone_schema('{}','{}','{}');".format(src, dest,
                                                             ','.join(
@@ -1376,23 +1372,24 @@ $BODY$
         self.run_query(qry)
         # add selection
         lst_run = self.get_id_run(selection)
-        if len(lst_run) >0 :
+        if len(lst_run) > 0:
             for tab in list_tab_res:
-                if tab =='runs' :
+                if tab == 'runs':
                     sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id IN ({4}) );"""
                 else:
                     sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id_runs IN ({4}) );"""
-                lst_run= ["{}".format(id) for id in lst_run]
+                lst_run = ["{}".format(id) for id in lst_run]
 
-                sql = sql.format(dest,tab,src,tab, ','.join(lst_run))
+                sql = sql.format(dest, tab, src, tab, ','.join(lst_run))
                 self.run_query(sql)
 
         basename = os.path.basename(file)
         file_name = os.path.splitext(basename)[0]
 
-        err = self.export_schema(os.path.join(os.path.dirname(file), file_name + '.psql'),
-                                 schem=js_dict['export_name'])
-        if not err :
+        err = self.export_schema(
+            os.path.join(os.path.dirname(file), file_name + '.psql'),
+            schem=js_dict['export_name'])
+        if not err:
             self.mgis.add_info('Error Export file')
 
         with open(file, "w") as outfile:
@@ -1406,11 +1403,10 @@ $BODY$
 
         :return:
         """
-        namesh= metadict["schema_name"]
+        namesh = metadict["schema_name"]
         actname = metadict["export_name"]
         new_file = metadict["psqlfile"]
         self.ignor_schema += [namesh, actname, "{0}_tmp".format(actname)]
-
 
         if self.check_extension():
             self.mgis.add_info(" Shema est {}".format(self.SCHEMA))
@@ -1421,7 +1417,6 @@ $BODY$
             sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp;".format(actname)
             self.run_query(sql)
 
-
         # add new
         err = self.import_schema(new_file)
         if not err:
@@ -1429,7 +1424,7 @@ $BODY$
                 sql = "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(actname)
                 self.run_query(sql)
             self.mgis.add_info('Error Import.')
-        else :
+        else:
             # alter new
             if namesh in self.list_schema():
                 self.drop_model(namesh, cascade=True)
@@ -1443,30 +1438,30 @@ $BODY$
 
     def get_id_run(self, selection):
         lst_id = []
-        for key, lst in selection.items() :
+        for key, lst in selection.items():
             id_run = self.run_query("SELECT id FROM {0}.runs "
-                                            "WHERE run = '{1}' "
-                                            "AND scenario IN ({2})".format(
-                    self.SCHEMA, key, ','.join(lst)),
-                    fetch=True)
+                                    "WHERE run = '{1}' "
+                                    "AND scenario IN ({2})".format(
+                self.SCHEMA, key, ','.join(lst)),
+                fetch=True)
             if id_run:
-                lst_id += [ id[0] for id in  id_run]
+                lst_id += [id[0] for id in id_run]
         return lst_id
 
     def get_scen_name(self, lst_id):
         dict_name = dict()
 
-        rows= self.run_query("SELECT id, run, scenario FROM {0}.runs "
-                                "WHERE id in ({1}) ".format(self.SCHEMA,
-                                                         ','.join([str(id) for id in lst_id])),
-                    fetch=True)
-        if rows :
+        rows = self.run_query("SELECT id, run, scenario FROM {0}.runs "
+                              "WHERE id in ({1}) ".format(self.SCHEMA,
+                                                          ','.join(
+                                                              [str(id) for id in
+                                                               lst_id])),
+                              fetch=True)
+        if rows:
             for row in rows:
-                dict_name[row[0]]= {'run':row[1], 'scenario': row[2]}
+                dict_name[row[0]] = {'run': row[1], 'scenario': row[2]}
 
         return dict_name
-
-
 
     def correction_seq(self):
         """
@@ -1475,41 +1470,42 @@ $BODY$
         """
 
         tables = {
-            'admin_tab' : 'id_',
-            'basins':'basinnum',
-            'basins': 'gid',
-            'branchs': 'branch',
-            'branchs': 'gid',
-            'branchs': 'zonenum',
+            'admin_tab': 'id_',
+            'basins_0': 'basinnum',
+            'basins_1': 'gid',
+            'branchs_0': 'branch',
+            'branchs_1': 'gid',
+            'branchs_2': 'zonenum',
             'extremities': 'gid',
             'flood_marks': 'gid',
-            'hydraulic_head' :'gid',
-            'init_conc_config' : 'id',
-            'lateral_inflows' : 'gid',
+            'hydraulic_head': 'gid',
+            'init_conc_config': 'id',
+            'lateral_inflows': 'gid',
             'lateral_weirs': 'gid',
-            'laws' : 'id',
-            'links' : 'gid',
-            'links' :'linknum',
-            'meteo_config' :'id',
-            'observations' : 'id',
-            'outputs' : 'gid',
-            'parametres' : 'id',
-            'profiles' : 'gid',
-            'results_var' : 'id',
-            'runs_graph' : 'id',
-            'runs' : 'id',
-            'struct_config' : 'id',
-            'tracer_lateral_inflows' : 'gid',
+            'laws': 'id',
+            'links_0': 'gid',
+            'links_1': 'linknum',
+            'meteo_config': 'id',
+            'observations': 'id',
+            'outputs': 'gid',
+            'parametres': 'id',
+            'profiles': 'gid',
+            'results_var': 'id',
+            'runs_graph': 'id',
+            'runs': 'id',
+            'struct_config': 'id',
+            'tracer_lateral_inflows': 'gid',
             'tracer_name': 'id',
             'tracer_physic': 'id',
             'visu_flood_marks': 'gid',
-            'weirs' : 'gid'
+            'weirs': 'gid'
+        }
+        for tbl, col in tables.items():
+            tbl = tbl.split('_')[0]
+            dico = {'my_seq': '{}.{}_{}_seq'.format(self.SCHEMA, tbl, col),
+                    'table': '{}.{}'.format(self.SCHEMA, tbl),
+                    'id_name': col
                     }
-        for tbl, col in  tables.items():
-            dico ={'my_seq' : '{}.{}_{}_seq'.format(self.SCHEMA,tbl,col),
-                   'table' : '{}.{}'.format(self.SCHEMA,tbl),
-                   'id_name' : col
-                   }
             sql = """    CREATE SEQUENCE {my_seq}
                 INCREMENT 1
                 START 1
@@ -1523,6 +1519,3 @@ $BODY$
 
             # print(sql)
             self.run_query(sql)
-
-
-

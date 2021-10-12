@@ -46,7 +46,8 @@ class ClassMascStruct:
         if not tabval:
             return liste_f
         tabval = np.array(tabval)
-        nbval = collections.Counter(tabval[:, 0])
+        wow = tabval[:, 0]
+        nbval = collections.Counter(wow)
         nb = int(nbval[0])
 
         for i in range(nb):

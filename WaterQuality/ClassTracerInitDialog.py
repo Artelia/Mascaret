@@ -46,6 +46,7 @@ class ClassTracerInitDialog:
         self.cur_wq_mod = self.tbwq.dico_mod_wq[obj.type]
         self.cur_wq_law = None
         self.filling_tab = False
+        self.graph_home = None
 
         self.ui.actionB_edit.triggered.connect(self.edit_law)
         self.ui.actionB_new.triggered.connect(self.new_law)
@@ -172,9 +173,10 @@ class ClassTracerInitDialog:
             id_law = self.ui.lst_laws.model().item(l, 0).text()
             name_law = self.ui.lst_laws.model().item(l, 1).text()
             if (
-            QMessageBox.question(self.paramTr, "Tracer Initial Concentration",
-                                 "Delete {} ?".format(name_law),
-                                 QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
+                    QMessageBox.question(self.paramTr,
+                                         "Tracer Initial Concentration",
+                                         "Delete {} ?".format(name_law),
+                                         QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 if self.mgis.DEBUG:
                     self.mgis.add_info(
                         "Deletion of {} Tracer Laws".format(name_law))

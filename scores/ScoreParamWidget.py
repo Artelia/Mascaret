@@ -40,6 +40,7 @@ class ScoreParamWidget(QWidget):
     """
     Class for Parameter GUI and compute score
     """
+
     def __init__(self, windmain, all=True, ):
         """
         Class constructor
@@ -59,8 +60,14 @@ class ScoreParamWidget(QWidget):
         self.init_dates = None
         self.all = all
         self.cur_pknum = None
+        self.txt_err_get = ''
 
+        self.obs = {}
+        self.model = {}
         self.data = {}
+        self.no_obs = []
+        self.cmpt_var = {}
+
         # {id : { h : [],time : [], q :[]}}
         self.res = {}
         self.type_res = {
@@ -69,7 +76,7 @@ class ScoreParamWidget(QWidget):
             'volume': False,
             'quantil': False,
             'tips_err': False,
-            'persistence' :False
+            'persistence': False
         }
         self.lk_wgt_row = {'ref_time': 0,
                            'per_step_t': 1,
@@ -82,11 +89,9 @@ class ScoreParamWidget(QWidget):
         self.param = {}
         self.widget_d = {}
         self.val_lim = ScientificDoubleSpinBox()
-        self.lay_lim.addWidget(self.val_lim )
+        self.lay_lim.addWidget(self.val_lim)
 
         self.init_gui()
-
-
 
         self.bt_calcul_scores.clicked.connect(self.bt_calcul_fct)
         self.bt_default.clicked.connect(self.bt_default_fct)
@@ -176,7 +181,6 @@ class ScoreParamWidget(QWidget):
                     self.widget_d[id_run][ctrl_].setValue(1)
                 self.widget_d[id_run]['per_step_t'].setValue(deltat)
 
-
                 # ******** add control ************
                 self.widget_d[id_run]['ref_time'].dateTimeChanged.connect(
                     self.ch_date_ref)
@@ -209,6 +213,44 @@ class ScoreParamWidget(QWidget):
                                       'pt_alpha_Q': 1,
                                       'pt_alpha_H': 1
                                       }
+                self.fct_chang_persistence()
+                self.fct_chang_point()
+                self.ch_persistence.stateChanged.connect(
+                    self.fct_chang_persistence)
+                self.ch_pointe_err.stateChanged.connect(self.fct_chang_point)
+
+    def fct_chang_persistence(self):
+        """
+        Change Enable/DisEnable for rows table
+        :return:
+        """
+        lst_tmp = ['per_start_t', 'per_last_t', 'per_step_t']
+        if self.ch_persistence.isChecked():
+            for id_run in self.widget_d.keys():
+                for ctrl_ in lst_tmp:
+                    self.widget_d[id_run][ctrl_].setEnabled(True)
+
+        else:
+            for id_run in self.widget_d.keys():
+                for ctrl_ in lst_tmp:
+                    self.widget_d[id_run][ctrl_].setEnabled(False)
+
+    def fct_chang_point(self):
+        """
+        Change Enable/DisEnable for rows table
+        :return:
+        """
+        lst_tmp = ['pt_start_t', 'pt_last_t', 'pt_alpha_Q', 'pt_alpha_H']
+
+        if self.ch_pointe_err.isChecked():
+            for id_run in self.widget_d.keys():
+                for ctrl_ in lst_tmp:
+                    self.widget_d[id_run][ctrl_].setEnabled(True)
+
+        else:
+            for id_run in self.widget_d.keys():
+                for ctrl_ in lst_tmp:
+                    self.widget_d[id_run][ctrl_].setEnabled(False)
 
     def fct_chang_valim(self):
         """
@@ -247,6 +289,12 @@ class ScoreParamWidget(QWidget):
         :return:
         """
         self.init_gui()
+        self.fct_chang_quantil()
+        self.fct_chang_ch_lim()
+        self.fct_chang_valim()
+        self.fct_chang_point()
+        self.fct_chang_persistence()
+
         pass
 
     def get_times(self, id_run, only_init=False):
@@ -268,7 +316,11 @@ class ScoreParamWidget(QWidget):
                                      "AND type_res='opt'"
                                      "AND var='time'".format(id_run),
                                list_var=['val'])
-        lst_times = info['val'][0]
+
+        if len(info['val']) > 0:
+            lst_times = info['val'][0]
+        else:
+            lst_times = list()
         return init_time, lst_times
 
     def clean_type_res(self):
@@ -282,7 +334,7 @@ class ScoreParamWidget(QWidget):
             'volume': False,
             'quantil': False,
             'tips_err': False,
-            'persistence' :False
+            'persistence': False
         }
 
     def bt_calcul_fct(self):
@@ -290,23 +342,30 @@ class ScoreParamWidget(QWidget):
         action when click on button
         :return:
         """
+        ch_err = [self.ch_simple_err.isChecked(),
+                  self.ch_ns_err.isChecked(),
+                  self.ch_vol_err.isChecked(),
+                  self.ch_quantil_err.isChecked(),
+                  self.ch_persistence.isChecked(),
+                  self.ch_pointe_err.isChecked()]
+        if any(ch_err):
 
-        self.get_parameter()
-        self.clean_type_res()
-        self.cpt_score()
+            self.get_parameter()
+            self.clean_type_res()
+            self.cpt_score()
 
-        tabscores = self.windmain.tabscores
-        id_dist = tabscores.indexOf(self.windmain.wgt_dist)
-        id_res = tabscores.indexOf(self.windmain.wgt_res)
-        cond_enable = {'quantil': False, 'res': False}
-        for key, cond in self.type_res.items():
-            if key in ['quantil'] and cond:
-                cond_enable['quantil'] = True
-            elif cond:
-                cond_enable['res'] = True
+            tabscores = self.windmain.tabscores
+            id_dist = tabscores.indexOf(self.windmain.wgt_dist)
+            id_res = tabscores.indexOf(self.windmain.wgt_res)
+            cond_enable = {'quantil': False, 'res': False}
+            for key, cond in self.type_res.items():
+                if key in ['quantil'] and cond:
+                    cond_enable['quantil'] = True
+                elif cond:
+                    cond_enable['res'] = True
 
-        tabscores.setTabEnabled(id_dist, cond_enable['quantil'])
-        tabscores.setTabEnabled(id_res, cond_enable['res'])
+            tabscores.setTabEnabled(id_dist, cond_enable['quantil'])
+            tabscores.setTabEnabled(id_res, cond_enable['res'])
 
     def cpt_score(self):
         """
@@ -315,93 +374,123 @@ class ScoreParamWidget(QWidget):
         :return:
         """
         self.txt_err_get = ''
-        self.get_data()
-        dict_name = self.mdb.get_scen_name(self.model.keys())
         add_txt = ''
         other_txt = ''
-        for id_run in self.no_obs:
-            name_run = '{} - {}'.format(dict_name[id_run]['run'],
-                                        dict_name[id_run]['scenario'])
-            add_txt += '- No observation for the Run : {}\n'.format(name_run)
+        self.get_data()
 
-        for id_run in self.model.keys():
-            name_run = '{} - {}'.format(dict_name[id_run]['run'],
-                                        dict_name[id_run]['scenario'])
-            if self.ch_simple_err.isChecked():
-                if not self.cpt_simple_err(id_run):
-                    add_txt += '- Simple scores (Run : {})\n'.format(name_run)
+        if len(self.model.keys()) > 0:
 
-            if self.ch_ns_err.isChecked():
-                if not self.cpt_ns_err(id_run):
-                    add_txt += '- Nash - Sutcliffe criterion ' \
-                               '(Run : {})\n'.format(name_run)
+            dict_name = self.mdb.get_scen_name(self.model.keys())
 
-            if self.ch_vol_err.isChecked():
-                if not self.cpt_vol_err(id_run):
-                    add_txt += '- Volume error (Run : {})\n'.format(name_run)
+            for id_run in self.no_obs:
+                name_run = '{} - {}'.format(dict_name[id_run]['run'],
+                                            dict_name[id_run]['scenario'])
+                add_txt += '- No observation for the Run : {}\n'.format(
+                    name_run)
 
-            if self.ch_quantil_err.isChecked():
-                if not self.cpt_quantil_err(id_run):
-                    add_txt += '- Quantil error (Run : {})\n'.format(name_run)
-
-            if self.ch_persistence.isChecked():
-                # check pas de temps régulier
-
-                init_mod = self.model[id_run]['init_time']
-                lst_mod = self.model[id_run]['final_time']
-                last = self.param[id_run]['per_last_t']
-                fst = self.param[id_run]['per_start_t']
-
-                if (init_mod < last <= lst_mod) and (lst_mod > fst >= init_mod):
-                    test,lst_test = self.cpt_persistence(id_run)
-                    if not test:
-                        add_txt += '- Persistance error (Run : {})\n'.format(
+            for id_run in self.model.keys():
+                name_run = '{} - {}'.format(dict_name[id_run]['run'],
+                                            dict_name[id_run]['scenario'])
+                if self.ch_simple_err.isChecked():
+                    if not self.cpt_simple_err(id_run):
+                        add_txt += '- Simple scores (Run : {})\n'.format(
                             name_run)
+
+                if self.ch_ns_err.isChecked():
+                    if not self.cpt_ns_err(id_run):
+                        add_txt += '- Nash - Sutcliffe criterion ' \
+                                   '(Run : {})\n'.format(name_run)
+                    if 'ns_err' in self.res[id_run]['Q']['nash_crit'].keys():
+                        if self.res[id_run]['Q']['nash_crit']['ns_err'] is None:
+                            other_txt += '- Nash - Sutcliffe criterion' \
+                                         ' (Run : {}, variable: Q):\n ' \
+                                         '    The Sum in denominator is null.' \
+                                         '\n'.format(name_run)
+                    if 'ns_err' in self.res[id_run]['H']['nash_crit'].keys():
+                        if self.res[id_run]['H']['nash_crit']['ns_err'] is None:
+                            other_txt += '- Nash - Sutcliffe criterion' \
+                                         ' (Run : {}, variable: H):\n ' \
+                                         '    The Sum in denominator is null.' \
+                                         '\n'.format(name_run)
+
+                if self.ch_vol_err.isChecked():
+                    if not self.cpt_vol_err(id_run):
+                        add_txt += '- Volume error (Run : {})\n'.format(
+                            name_run)
+
+                if self.ch_quantil_err.isChecked():
+                    if not self.cpt_quantil_err(id_run):
+                        add_txt += '- Quantil error (Run : {})\n'.format(
+                            name_run)
+
+                if self.ch_persistence.isChecked():
+                    # check pas de temps régulier
+
+                    init_mod = self.model[id_run]['init_time']
+                    lst_mod = self.model[id_run]['final_time']
+                    last = self.param[id_run]['per_last_t']
+                    fst = self.param[id_run]['per_start_t']
+
+                    if (init_mod < last <= lst_mod) and (
+                                    lst_mod > fst >= init_mod):
+                        test, lst_test = self.cpt_persistence(id_run)
+                        if not test:
+                            add_txt += '- Persistance error (Run : {})\n'.format(
+                                name_run)
+                        else:
+                            if len(lst_test) > 0:
+                                add_txt += '- Persistance error (Run : {}), Time step' \
+                                           ' no constant : \n'.format(name_run)
+                                for code in lst_test:
+                                    '    - {} observation)\n'.format(code)
+                            if 'per_err' in self.res[id_run]['Q'][
+                                'persistence'].keys():
+                                if self.res[id_run]['Q']['persistence'][
+                                    'per_err'] is None:
+                                    other_txt += '- Persistance error (Run : {}, variable: Q):\n ' \
+                                                 '    The Sum in denominator is null. \n'.format(
+                                        name_run)
+                            if 'per_err' in self.res[id_run]['H'][
+                                'persistence'].keys():
+                                if self.res[id_run]['H']['persistence'][
+                                    'per_err'] is None:
+                                    other_txt += '- Persistance error (Run : {}, variable: H): \n' \
+                                                 '    The Sum in denominator is null. \n'.format(
+                                        name_run)
+
                     else:
-                        if len(lst_test)>0:
-                            add_txt += '- Persistance error (Run : {}), Time step' \
-                                       ' no constant : \n'.format(name_run)
-                            for code in lst_test:
-                                       '    - {} observation)\n'.format(code)
+                        add_txt += '- Persistance error, No data in time rang' \
+                                   ' (Run : {})\n'.format(name_run)
 
-                    if self.res[id_run]['Q']['persistence']['per_err']  is None:
-                        other_txt += '- Persistance error (Run : {}, variable: Q):\n ' \
-                                   '    The Sum in denominator is null. \n'.format(
-                            name_run)
-                    if self.res[id_run]['H']['persistence']['per_err'] is None:
-                        other_txt += '- Persistance error (Run : {}, variable: H): \n' \
-                                   '    The Sum in denominator is null. \n'.format(name_run)
-                    print(add_txt)
-                else:
-                    add_txt += '- Persistance error, No data in time rang' \
-                               ' (Run : {})\n'.format(name_run)
+                if self.ch_pointe_err.isChecked():
+                    init_mod = self.model[id_run]['init_time']
+                    lst_mod = self.model[id_run]['final_time']
+                    last = self.param[id_run]['per_last_t']
+                    fst = self.param[id_run]['per_start_t']
+                    if (init_mod < last <= lst_mod) and (
+                                    lst_mod > fst >= init_mod):
+                        if not self.cpt_pointe_err(id_run):
+                            add_txt += '- Tips error (Run : {})\n'.format(
+                                name_run)
+                    else:
+                        add_txt += '- Tips error, No data in time rang' \
+                                   ' (Run : {})\n'.format(name_run)
 
-            if self.ch_pointe_err.isChecked():
-                init_mod = self.model[id_run]['init_time']
-                lst_mod = self.model[id_run]['final_time']
-                last = self.param[id_run]['per_last_t']
-                fst = self.param[id_run]['per_start_t']
-                if (init_mod < last <= lst_mod) and (lst_mod > fst >= init_mod):
-                    if not self.cpt_pointe_err(id_run):
-                        add_txt += '- Tips error (Run : {})\n'.format(name_run)
-                else:
-                    add_txt += '- Tips error, No data in time rang' \
-                               ' (Run : {})\n'.format(name_run)
-        txt =''
-        if self.txt_err_get !='':
+        txt = ''
+        if self.txt_err_get != '':
             txt += self.txt_err_get
-
-        if add_txt != '' :
+            txt += '-----------\n'
+        if add_txt != '':
             txt += 'No data, to compute : \n {}'.format(add_txt)
             txt += '-----------\n'
         if other_txt != '':
             txt += 'Other errors: \n {}'.format(other_txt)
             txt += '-----------\n'
-        if txt !='' :
+        if txt != '':
             QMessageBox.warning(None, 'Warning',
                                 txt)
 
-    def creat_dict_simple(self, y_obs, y_pred,seuil = None):
+    def creat_dict_simple(self, y_obs, y_pred, seuil=None):
         """
 
         :param y_obs: observation data
@@ -412,10 +501,10 @@ class ScoreParamWidget(QWidget):
         dict_res = {
             'mean_err': self.cl_score.mean_err(y_obs, y_pred),
             'mean_abs_err': self.cl_score.mean_abs_err(y_obs, y_pred),
-            'mean_r_err': self.cl_score.mean_r_err(y_obs, y_pred,seuil),
-            'biais': self.cl_score.biais(y_obs, y_pred,seuil),
-            'mean_rabs_err': self.cl_score.mean_rabs_err(y_obs, y_pred,seuil),
-            'precision': self.cl_score.precision(y_obs, y_pred,seuil),
+            'mean_r_err': self.cl_score.mean_r_err(y_obs, y_pred, seuil),
+            'biais': self.cl_score.biais(y_obs, y_pred, seuil),
+            'mean_rabs_err': self.cl_score.mean_rabs_err(y_obs, y_pred, seuil),
+            'precision': self.cl_score.precision(y_obs, y_pred, seuil),
             'std': self.cl_score.std(y_obs, y_pred),
             'eqm': self.cl_score.eqm(y_obs, y_pred)
         }
@@ -456,7 +545,7 @@ class ScoreParamWidget(QWidget):
                 else:
                     dict_tmp_h[code] = self.creat_dict_simple(
                         self.data[id_run][code]['h_obs'],
-                        self.data[id_run][code]['h_mod'],seuil)
+                        self.data[id_run][code]['h_mod'], seuil)
             if self.cmpt_var[id_run][code]['Q']:
                 if self.all:
                     q_obs = np.concatenate(
@@ -466,7 +555,7 @@ class ScoreParamWidget(QWidget):
                 else:
                     dict_tmp_q[code] = self.creat_dict_simple(
                         self.data[id_run][code]['q_obs'],
-                        self.data[id_run][code]['q_mod'],seuil)
+                        self.data[id_run][code]['q_mod'], seuil)
 
         if self.cmpt_var[id_run]['H']:
             if self.all:
@@ -622,8 +711,9 @@ class ScoreParamWidget(QWidget):
                     dict_tmp_h[code] = \
                         {'dist_err': self.cl_score.dist_err(y_obs, y_pred,
                                                             dist_step),
-                         'dist_abs_err': self.cl_score.dist_err(y_obs, y_pred,
-                                                                dist_step)}
+                         'dist_abs_err': self.cl_score.dist_abs_err(y_obs,
+                                                                    y_pred,
+                                                                    dist_step)}
             if self.cmpt_var[id_run][code]['Q']:
                 if self.all:
                     q_obs = np.concatenate(
@@ -636,17 +726,17 @@ class ScoreParamWidget(QWidget):
                     dict_tmp_q[code] = \
                         {'dist_err': self.cl_score.dist_err(y_obs, y_pred,
                                                             dist_step),
-                         'dist_abs_err': self.cl_score.dist_err(y_obs,
-                                                                y_pred,
-                                                                dist_step)}
+                         'dist_abs_err': self.cl_score.dist_abs_err(y_obs,
+                                                                    y_pred,
+                                                                    dist_step)}
 
         if self.cmpt_var[id_run]['H']:
             if self.all:
                 self.res[id_run]['H']['quantil'] = \
                     {'dist_err': self.cl_score.dist_err(h_obs, h_pred,
                                                         dist_step),
-                     'dist_abs_err': self.cl_score.dist_err(h_obs, h_pred,
-                                                            dist_step)}
+                     'dist_abs_err': self.cl_score.dist_abs_err(h_obs, h_pred,
+                                                                dist_step)}
             else:
                 self.res[id_run]['H']['quantil'] = dict_tmp_h
             self.type_res['quantil'] = True
@@ -657,14 +747,15 @@ class ScoreParamWidget(QWidget):
                 self.res[id_run]['Q']['quantil'] = \
                     {'dist_err': self.cl_score.dist_err(q_obs, q_pred,
                                                         dist_step),
-                     'dist_abs_err': self.cl_score.dist_err(q_obs, q_pred,
-                                                            dist_step)}
+                     'dist_abs_err': self.cl_score.dist_abs_err(q_obs, q_pred,
+                                                                dist_step)}
             else:
                 self.res[id_run]['Q']['quantil'] = dict_tmp_q
             self.type_res['quantil'] = True
             out = True
 
         return out
+
     def check_cst_deltat(self, obs_times, pred_times):
         """
         check if detla time is constant
@@ -676,8 +767,8 @@ class ScoreParamWidget(QWidget):
         dt_pred = self.cl_score.generate_deltat(pred_times)
         cobs = np.all(dt_obs == dt_obs[0])
         cpred = np.all(dt_pred == dt_pred[0])
-        if cobs and cpred :
-            return  True
+        if cobs and cpred:
+            return True
         else:
             return False
 
@@ -690,7 +781,7 @@ class ScoreParamWidget(QWidget):
         """
 
         out = False
-        lst_no_cst =[]
+        lst_no_cst = []
         frst_date = self.param[id_run]['per_start_t']
         last_date = self.param[id_run]['per_last_t']
         deltat = self.param[id_run]['per_step_t']
@@ -725,14 +816,16 @@ class ScoreParamWidget(QWidget):
                     #       "{}".format(code)
                     continue
 
-                if not self.check_cst_deltat(new_obs_times, new_pred_times) :
+                if not self.check_cst_deltat(new_obs_times, new_pred_times):
                     lst_no_cst.append(code)
                     continue
 
-
                 if self.all:
-                    per, sum1, sum2 =self.cl_score.persistence(new_obs, new_pred,
-                                              new_obs_times, deltat, sumc= True)
+                    per, sum1, sum2 = self.cl_score.persistence(new_obs,
+                                                                new_pred,
+                                                                new_obs_times,
+                                                                deltat,
+                                                                sumc=True)
 
                     sumh_n += sum1
                     sumh_d += sum2
@@ -742,7 +835,8 @@ class ScoreParamWidget(QWidget):
                         {
                             'per_err':
                                 self.cl_score.persistence(new_obs, new_pred,
-                                                          new_obs_times, deltat),
+                                                          new_obs_times,
+                                                          deltat),
                         }
             if self.cmpt_var[id_run][code]['Q']:
                 new_obs, new_obs_times = \
@@ -756,7 +850,7 @@ class ScoreParamWidget(QWidget):
                 #
                 if len(new_obs) == 0:
                     continue
-                if not self.check_cst_deltat(new_obs_times, new_pred_times) :
+                if not self.check_cst_deltat(new_obs_times, new_pred_times):
                     lst_no_cst.append(code)
                     continue
                 if self.all:
@@ -779,13 +873,13 @@ class ScoreParamWidget(QWidget):
 
         if self.cmpt_var[id_run]['H']:
             if self.all:
-                if sumh_d != 0:
-                    res =  None
+                if sumh_d == 0:
+                    res = None
                 else:
                     res = 1 - sumh_n / sumh_d
                 self.res[id_run]['H']['persistence'] = \
                     {
-                         'per_err': res,
+                        'per_err': res,
                     }
             else:
                 self.res[id_run]['H']['persistence'] = dict_tmp_h
@@ -794,12 +888,12 @@ class ScoreParamWidget(QWidget):
 
         if self.cmpt_var[id_run]['Q']:
             if self.all:
-                if sumq_d != 0:
-                    res =  None
+                if sumq_d == 0:
+                    res = None
                 else:
                     res = 1 - sumq_n / sumq_d
                 self.res[id_run]['Q']['persistence'] = {
-                     'per_err': res,
+                    'per_err': res,
                 }
             else:
                 self.res[id_run]['Q']['persistence'] = dict_tmp_q
@@ -807,7 +901,7 @@ class ScoreParamWidget(QWidget):
                 self.type_res['persistence'] = True
                 out = True
 
-        return out,lst_no_cst
+        return out, lst_no_cst
 
     def filter_time(self, first, last, data, times):
         """
@@ -821,7 +915,7 @@ class ScoreParamWidget(QWidget):
         new_data = []
         new_times = []
         for i, tmp in enumerate(times):
-            if tmp >= first and tmp <= last:
+            if first <= tmp <= last:
                 new_data.append(data[i])
                 new_times.append(tmp)
         return np.array(new_data), np.array(new_times)
@@ -954,7 +1048,6 @@ class ScoreParamWidget(QWidget):
                 self.type_res['tips_err'] = True
                 out = True
 
-
         return out
 
     def interpol_date(self, obs_time, time_model, var_model):
@@ -1039,7 +1132,7 @@ class ScoreParamWidget(QWidget):
             lst_varq.append('QMAJ')
 
         pknum = self.get_pknum(code)
-        if not pknum :
+        if not pknum:
             return
         lst_var = lst_varq + lst_varh
         tmp = {}
@@ -1132,7 +1225,7 @@ class ScoreParamWidget(QWidget):
                                        list_var=['date', 'valeur'],
                                        verbose=False)
 
-            if self.obs[code]['zero'] is None :
+            if self.obs[code]['zero'] is None:
                 self.obs[code]['zero'] = 0
             if gg == 'H' and len(tmp_dict['valeur']) > 0:
                 z = np.array(tmp_dict['valeur']) + \
@@ -1142,12 +1235,12 @@ class ScoreParamWidget(QWidget):
                                     tmp_dict['date'][0])
                      for vv in tmp_dict['date']])
                 dic_tmp = {
-                        'h_obs': z,
-                        'h_obs_date': tmp_dict['date'],
-                        'h_obs_time': obs_time}
-                if code in self.data[id_run].keys() :
+                    'h_obs': z,
+                    'h_obs_date': tmp_dict['date'],
+                    'h_obs_time': obs_time}
+                if code in self.data[id_run].keys():
                     self.data[id_run][code].update(dic_tmp)
-                else :
+                else:
                     self.data[id_run][code] = dic_tmp
             if gg == 'Q' and len(tmp_dict['valeur']) > 0:
                 obs_time = np.array(
@@ -1163,7 +1256,6 @@ class ScoreParamWidget(QWidget):
                     self.data[id_run][code].update(dic_tmp)
                 else:
                     self.data[id_run][code] = dic_tmp
-
 
     def dict_pretr(self):
         """
@@ -1212,8 +1304,8 @@ class ScoreParamWidget(QWidget):
         else:
             dict_name = self.mdb.get_scen_name([id_run])
             txt = "No data model for {} - {}\n " \
-                "".format(dict_name[id_run]['run'],
-                          dict_name[id_run]['scenario'])
+                  "".format(dict_name[id_run]['run'],
+                            dict_name[id_run]['scenario'])
             self.txt_err_get += txt
             return
 
@@ -1266,9 +1358,9 @@ class ScoreParamWidget(QWidget):
         if len(rows['code']) == 0:
             dict_name = self.mdb.get_scen_name([id_run])
             txt = "No find observation for {} - {}\n " \
-                      "".format(dict_name[id_run]['run'],
-                                dict_name[id_run]['scenario'])
-            #self.mgis.add_info(txt)
+                  "".format(dict_name[id_run]['run'],
+                            dict_name[id_run]['scenario'])
+            # self.mgis.add_info(txt)
             self.txt_err_get += txt
             return False
         for i, code in enumerate(rows['code']):
@@ -1286,13 +1378,21 @@ class ScoreParamWidget(QWidget):
         :return:
         """
         # if not all len(lst_run) == 1
+
+        if not (len(self.lst_runs) > 0):
+            self.txt_err_get += 'No model selected \n'
+
         self.dict_pretr()
 
         self.no_obs = []
         self.cmpt_var = {}
         txt_nocpt = ''
         txt_nodata = ''
-        dict_name = self.mdb.get_scen_name(list(self.model.keys()))
+
+        if len(self.model.keys()) > 0:
+            dict_name = self.mdb.get_scen_name(list(self.model.keys()))
+        else:
+            dict_name = {}
         for id_run in self.model.keys():
             dict_model = self.model[id_run]
             if self.all:
@@ -1301,10 +1401,9 @@ class ScoreParamWidget(QWidget):
                 lst_obs = self.pknum2obs(id_run, self.cur_pknum)
 
             if len(lst_obs) == 0:
-
                 txt_nodata += "- {} - {}\n " \
-                      "".format(dict_name[id_run]['run'],
-                                dict_name[id_run]['scenario'])
+                              "".format(dict_name[id_run]['run'],
+                                        dict_name[id_run]['scenario'])
 
                 self.no_obs.append(id_run)
                 continue
@@ -1317,7 +1416,7 @@ class ScoreParamWidget(QWidget):
             self.check_comput_hq(lst_obs, id_run)
 
             if not self.cmpt_var[id_run]['H'] and \
-                not self.cmpt_var[id_run]['Q'] :
+                    not self.cmpt_var[id_run]['Q']:
                 txt = "- {} - {}\n " \
                       "".format(dict_name[id_run]['run'],
                                 dict_name[id_run]['scenario'])
@@ -1331,7 +1430,6 @@ class ScoreParamWidget(QWidget):
             self.txt_err_get += 'No compute scores to :\n'
             self.txt_err_get += txt_nocpt
             self.txt_err_get += '-----------\n'
-
 
     def check_comput_hq(self, lst_obs, id_run):
         """
@@ -1365,7 +1463,6 @@ class ScoreParamWidget(QWidget):
                     self.cmpt_var[id_run]['H'] = True
                 if k['Q']:
                     self.cmpt_var[id_run]['Q'] = True
-
 
     def ch_date_ref(self):
         """ change color and change  parameter limite"""
@@ -1449,4 +1546,3 @@ def ctrl_get_value(ctrl):
     elif ctrl.metaObject().className() in ('QSpinBox', 'QDoubleSpinBox'):
         val = ctrl.value()
     return val
-

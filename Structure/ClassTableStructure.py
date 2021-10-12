@@ -35,9 +35,6 @@ except:
 
 class ClassTableStructure:
     def __init__(self):
-        self.structure_default()
-
-    def structure_default(self):
         self.dico_meth_calc = {0: 'Bradley 72',
                                1: 'Borda',
                                2: 'Weir law',
@@ -213,8 +210,7 @@ def update_etat_struct(mdb):
         prof_act = []
 
     sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config " \
-          "WHERE active=false".format(
-        mdb.SCHEMA)
+          "WHERE active=false".format(mdb.SCHEMA)
     rows = mdb.run_query(sql, fetch=True)
     try:
         prof_d = [var[0] for var in rows]

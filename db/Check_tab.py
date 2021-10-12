@@ -60,6 +60,7 @@ class CheckTab:
                                   '3.0.7',
                                   '3.1.0',
                                   '3.1.1',
+                                  '3.1.2',
                                   '4.0.0',
                                   ]
         self.dico_modif = {'3.0.0': {
@@ -74,106 +75,107 @@ class CheckTab:
             'alt_tab': [{'tab': 'runs',
                          'sql': ["ALTER TABLE {0}.runs ADD COLUMN IF NOT "
                                  "EXISTS comments text;"]}],
+        },
+            '3.0.1': {'add_tab': [
+                {'tab': Maso.struct_fg, 'overwrite': False},
+                {'tab': Maso.struct_fg_val, 'overwrite': False},
+                {'tab': Maso.weirs_mob_val, 'overwrite': False}],
+                'alt_tab': [{'tab': 'weirs', 'sql': [
+                    "ALTER TABLE {0}.weirs ADD COLUMN IF NOT "
+                    "EXISTS active_mob boolean DEFAULT FALSE;",
+                    "ALTER TABLE {0}.weirs ADD COLUMN IF NOT "
+                    "EXISTS method_mob text;"]}],
+                'fct': [
+                    lambda: self.update_setting_json()]},
+            '3.0.2': {'add_tab': [
+                {'tab': Maso.results, 'overwrite': False},
+                {'tab': Maso.results_sect, 'overwrite': False},
+                {'tab': Maso.results_var, 'overwrite': False},
+                {'tab': Maso.runs_graph, 'overwrite': False},
+            ],
+                'alt_tab': [{'tab': 'runs', 'sql': [
+                    "ALTER TABLE {0}.runs ADD COLUMN IF NOT "
+                    "EXISTS init_date timestamp "
+                    "without time zone;"]},
+                            {'tab': 'outputs', 'sql': [
+                                "ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
+                                "EXISTS active boolean DEFAULT TRUE;"]},
+                            ],
+                'fct': [lambda: self.create_var_result(),
+                        lambda: self.convert_all_result(),
+                        lambda: self.fill_init_date_runs()],
             },
-                           '3.0.1': {'add_tab': [
-                               {'tab': Maso.struct_fg, 'overwrite': False},
-                               {'tab': Maso.struct_fg_val, 'overwrite': False},
-                               {'tab': Maso.weirs_mob_val, 'overwrite': False}],
-                                     'alt_tab': [{'tab': 'weirs', 'sql': [
-                                         "ALTER TABLE {0}.weirs ADD COLUMN IF NOT "
-                                         "EXISTS active_mob boolean DEFAULT FALSE;",
-                                         "ALTER TABLE {0}.weirs ADD COLUMN IF NOT "
-                                         "EXISTS method_mob text;"]}],
-                                     'fct': [
-                                         lambda: self.update_setting_json()]},
-                           '3.0.2': {'add_tab': [
-                               {'tab': Maso.results, 'overwrite': False},
-                               {'tab': Maso.results_sect, 'overwrite': False},
-                               {'tab': Maso.results_var, 'overwrite': False},
-                               {'tab': Maso.runs_graph, 'overwrite': False},
-                               ],
-                                     'alt_tab': [{'tab': 'runs', 'sql': [
-                                         "ALTER TABLE {0}.runs ADD COLUMN IF NOT "
-                                         "EXISTS init_date timestamp "
-                                         "without time zone;"]},
-                                                 {'tab': 'outputs', 'sql': [
-                                                     "ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
-                                                     "EXISTS active boolean DEFAULT TRUE;"]},
-                                                 ],
-                                     'fct': [lambda: self.create_var_result(),
-                                             lambda: self.convert_all_result(),
-                                             lambda: self.fill_init_date_runs()],
-                                     },
-                           '3.0.3': {},
-                           '3.0.4': {},
-                           '3.0.5': {},
-                           '3.0.6': {
-                               'add_tab': [{'tab': Maso.visu_flood_marks,
-                                            'overwrite': False}],
+            '3.0.3': {},
+            '3.0.4': {},
+            '3.0.5': {},
+            '3.0.6': {
+                'add_tab': [{'tab': Maso.visu_flood_marks,
+                             'overwrite': False}],
 
-                               'alt_tab': [{'tab': 'laws',
-                                            'sql': [
-                                                "ALTER TABLE {0}.laws ADD COLUMN IF NOT "
-                                                "EXISTS active boolean NOT NULL DEFAULT TRUE;",
-                                                ]},
-                                           {'tab': 'observations',
-                                            'sql': [
-                                                "ALTER TABLE {0}.observations ADD COLUMN IF NOT "
-                                                "EXISTS comment text;",
-                                                ]},
-                                           {'tab': 'branchs',
-                                            'sql': [
-                                                "UPDATE {0}.branchs SET branch = 1 WHERE branch IS NULL ;",
-                                                "UPDATE {0}.branchs SET zonenum = 1 WHERE zonenum IS NULL;",
-                                                "ALTER TABLE {0}.branchs ALTER COLUMN branch "
-                                                "SET NOT NULL;",
-                                                "ALTER TABLE {0}.branchs ALTER COLUMN zonenum "
-                                                "SET NOT NULL;",
+                'alt_tab': [{'tab': 'laws',
+                             'sql': [
+                                 "ALTER TABLE {0}.laws ADD COLUMN IF NOT "
+                                 "EXISTS active boolean NOT NULL DEFAULT TRUE;",
+                             ]},
+                            {'tab': 'observations',
+                             'sql': [
+                                 "ALTER TABLE {0}.observations ADD COLUMN IF NOT "
+                                 "EXISTS comment text;",
+                             ]},
+                            {'tab': 'branchs',
+                             'sql': [
+                                 "UPDATE {0}.branchs SET branch = 1 WHERE branch IS NULL ;",
+                                 "UPDATE {0}.branchs SET zonenum = 1 WHERE zonenum IS NULL;",
+                                 "ALTER TABLE {0}.branchs ALTER COLUMN branch "
+                                 "SET NOT NULL;",
+                                 "ALTER TABLE {0}.branchs ALTER COLUMN zonenum "
+                                 "SET NOT NULL;",
 
-                                                ]},
-                                           {'tab': 'flood_marks',
-                                            'sql': [
-                                                "ALTER TABLE {0}.flood_marks ADD COLUMN IF NOT "
-                                                "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
-                                           {'tab': 'outputs',
-                                            'sql': [
-                                                "ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
-                                                "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
+                             ]},
+                            {'tab': 'flood_marks',
+                             'sql': [
+                                 "ALTER TABLE {0}.flood_marks ADD COLUMN IF NOT "
+                                 "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
+                            {'tab': 'outputs',
+                             'sql': [
+                                 "ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
+                                 "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
 
-                                           ],
-                               'fct': [
-                                   lambda: self.update_tab_306(),
-                                   lambda: self.add_trigger_update_306()
-                               ],
+                            ],
+                'fct': [
+                    lambda: self.update_tab_306(),
+                    lambda: self.add_trigger_update_306()
+                ],
 
-                           },
-                           '3.0.7': {'fct': [
-                               lambda: self.update_fct_calc_abs(),
-                           ]
-                           },
-                           '3.1.0': {'del_tab': ['resultats', 'resultats_basin',
-                                                 'resultats_links']},
-                           '3.1.1': { },
-                           '4.0.0': { 'fct': [
-                               lambda: self.update_400(),
-                           ],
-                           'alt_tab': [{'tab': 'results',
-                                        'sql': [
-                                            "CREATE INDEX IF NOT EXISTS results_id_runs_pknum  "\
-                                            "ON {0}.results(id_runs, pknum);",
-                                            "CREATE INDEX IF NOT EXISTS results_id_runs_time  " \
-                                            "ON {0}.results(id_runs, time);",
-                                        ]},
-                                       {'tab': 'observations',
-                                        'sql': [
-                                            "CREATE INDEX IF NOT EXISTS observations_code_typ  " \
-                                            "ON {0}.observations(code, type);",
-                                        ]},
-                                        ]
-                           },
-                           # '3.0.x': { },
+            },
+            '3.0.7': {'fct': [
+                lambda: self.update_fct_calc_abs(),
+            ]
+            },
+            '3.1.0': {'del_tab': ['resultats', 'resultats_basin',
+                                  'resultats_links']},
+            '3.1.1': {},
+            '3.1.2': {},
+            '4.0.0': {'fct': [
+                lambda: self.update_400(),
+            ],
+                'alt_tab': [{'tab': 'results',
+                             'sql': [
+                                 "CREATE INDEX IF NOT EXISTS results_id_runs_pknum  " \
+                                 "ON {0}.results(id_runs, pknum);",
+                                 "CREATE INDEX IF NOT EXISTS results_id_runs_time  " \
+                                 "ON {0}.results(id_runs, time);",
+                             ]},
+                            {'tab': 'observations',
+                             'sql': [
+                                 "CREATE INDEX IF NOT EXISTS observations_code_typ  " \
+                                 "ON {0}.observations(code, type);",
+                             ]},
+                            ]
+            },
+            # '3.0.x': { },
 
-                           }
+        }
 
     def update_adim(self):
         """
@@ -211,8 +213,8 @@ class CheckTab:
             ok = self.box.yes_no_q("WARNING:\n "
                                    "Do you want update tables for {} schema ?\n"
                                    "There is a risk of table corruption.\n "
-                                   "Remember to make backup copies if it's important model.".format(
-                self.mdb.SCHEMA))
+                                   "Remember to make backup copies if it's "
+                                   "important model.".format(self.mdb.SCHEMA))
             if ok:
                 list_test_ver = []
                 for ver in self.list_hist_version[pos + 1:pos_fin + 1]:
@@ -461,9 +463,7 @@ class CheckTab:
                         sql = "SELECT DISTINCT time FROM {0}.results " \
                               "WHERE id_runs ={1} " \
                               "AND var = {2} ORDER BY time".format(
-                            self.mdb.SCHEMA,
-                            id_runs,
-                            lst_var_select[id_var])
+                            self.mdb.SCHEMA, id_runs, lst_var_select[id_var])
                         rows = self.mdb.run_query(sql, fetch=True)
                         lst_time = [var[0] for var in rows]
                         list_value.append(
@@ -472,9 +472,7 @@ class CheckTab:
                         sql = "SELECT DISTINCT pknum FROM {0}.results " \
                               "WHERE id_runs ={1} " \
                               "AND var = {2} ORDER BY pknum".format(
-                            self.mdb.SCHEMA,
-                            id_runs,
-                            lst_var_select[id_var])
+                            self.mdb.SCHEMA, id_runs, lst_var_select[id_var])
                         rows = self.mdb.run_query(sql, fetch=True)
                         lst_pknum = [var[0] for var in rows]
                         list_value.append(
@@ -488,10 +486,8 @@ class CheckTab:
                                         sql = "SELECT MAX(val) FROM {0}.results " \
                                               "WHERE var = {2} " \
                                               "AND id_runs={1} AND pknum ={3};".format(
-                                            self.mdb.SCHEMA,
-                                            id_runs,
-                                            id_z[0][0],
-                                            pknum)
+                                            self.mdb.SCHEMA, id_runs,
+                                            id_z[0][0], pknum)
                                         rows = self.mdb.run_query(sql,
                                                                   fetch=True)
                                         dico_zmax[pknum] = rows[0][0]
@@ -562,7 +558,7 @@ class CheckTab:
         rows = self.mdb.run_query("SELECT id, var FROM {0}.results_var "
                                   "WHERE type_res = '{2}' ORDER BY id".format(
             self.mdb.SCHEMA, tab_src, typ_res),
-                                  fetch=True)
+            fetch=True)
         if typ_res.split('_')[0] == 'tracer':
             lst_var = [[row[0], 'c{}'.format(r + 1)] for r, row in
                        enumerate(rows)]
@@ -676,7 +672,8 @@ class CheckTab:
         try:
             list_tab = ['branchs', 'profiles', 'tracer_lateral_inflows',
                         'lateral_weirs',
-                        'lateral_inflows', 'hydraulic_head', 'weirs', 'extremities',
+                        'lateral_inflows', 'hydraulic_head', 'weirs',
+                        'extremities',
                         'links', 'basins', 'outputs', 'flood_marks', 'laws']
             txt = ''
             for tab in list_tab:
@@ -744,11 +741,12 @@ class CheckTab:
             self.mdb.run_query(qry)
             return True
         except Exception as e:
-            self.mgis.add_info("Error add_trigger_update_306: {}".format(str(e)))
+            self.mgis.add_info(
+                "Error add_trigger_update_306: {}".format(str(e)))
             return False
 
     def update_fct_calc_abs(self):
-        try :
+        try:
             lst_fct = [
                 "public.update_abscisse_branch(_tbl_branchs regclass)",
                 "public.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)",
@@ -774,8 +772,7 @@ class CheckTab:
         """
         sql = "DELETE FROM {0}.admin_tab WHERE NOT(table_ IN ( " \
               "SELECT table_name FROM information_schema.tables " \
-              "WHERE table_schema = '{0}'))".format(
-            self.mdb.SCHEMA)
+              "WHERE table_schema = '{0}'))".format(self.mdb.SCHEMA)
         self.mdb.run_query(sql)
 
     def update_400(self):

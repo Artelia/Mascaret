@@ -78,6 +78,8 @@ class ClassMascaret:
         self.listeState = ['Steady', 'Unsteady', 'Transcritical unsteady']
         # kernel list
         self.Klist = ["steady", "unsteady", "transcritical"]
+        self.dico_basinnum = {}
+        self.dico_linknum = {}
         self.wq = ClassMascWQ(self.mgis, self.dossierFileMasc)
         self.clmeth = ClassMascStruct(self.mgis)
         self.cond_api = self.mgis.cond_api
@@ -754,9 +756,18 @@ class ClassMascaret:
                     i = prof_seuil["name"].index(nom)
                     long = len(prof_seuil['x'][i].split())
                     SubElement(struct, "nbPtLoiSeuil").text = str(long)
-                    SubElement(struct, "abscTravCrete").text = prof_seuil['x'][
-                        i]
-                    SubElement(struct, "cotesCrete").text = prof_seuil['z'][i]
+                    # SubElement(struct, "abscTravCrete").text = prof_seuil['x'][i]
+                    # SubElement(struct, "cotesCrete").text = prof_seuil['z'][i]
+                    # traitment profil because of too many significant number
+                    new_profx = ' '.join([str(round(float(vvv), 3))
+                                          for vvv in
+                                          prof_seuil['x'][i].split()])
+
+                    SubElement(struct, "abscTravCrete").text = new_profx
+                    new_profz = ' '.join([str(round(float(vvv),3))
+                                          for vvv in prof_seuil['z'][i].split()])
+                    SubElement(struct, "cotesCrete").text = new_profz
+
 
                 except:
                     msg = 'Profil de crete introuvable pour {}'
@@ -855,11 +866,11 @@ class ClassMascaret:
 
         for nom in dict_lois.keys():
             if nom in libres["name"] and (
-                            dict_lois[nom]['type'] == 6 or dict_lois[nom][
-                        'type'] == 7):
+                            dict_lois[nom]['type'] == 6 or \
+                                dict_lois[nom]['type'] == 7):
                 # les types sont ceux de
-                if dict_lois[nom][
-                    'type'] == 6:  # TODO and noyau!='transcritical'
+                if dict_lois[nom]['type'] == 6:
+                    # TODO and noyau!='transcritical'
                     dict_lois[nom]['type'] = 1
                     if self.mgis.DEBUG:
                         self.mgis.add_info(
@@ -940,7 +951,7 @@ class ClassMascaret:
         # type_cond.text = type_cond.text.replace('4', '2').replace('6',
         #                                                           '1').replace(
         #     '7', '2')
-        type_cond.text = type_cond.text.replace('6','1').replace('7', '2')
+        type_cond.text = type_cond.text.replace('6', '1').replace('7', '2')
         lois_hydrauliques = param_cas.find('parametresLoisHydrauliques')
         lois = lois_hydrauliques.find('lois')
         for child in lois:
@@ -1802,8 +1813,7 @@ class ClassMascaret:
                     id_run = self.mdb.run_query("SELECT id FROM {0}.runs "
                                                 "WHERE run = '{1}' "
                                                 "AND scenario = '{2}'".format(
-                        self.mdb.SCHEMA, case, scen2),
-                        fetch=True)
+                        self.mdb.SCHEMA, case, scen2), fetch=True)
                     self.opt_to_lig(case, scen2, id_run[0][0], self.baseName)
                 else:
                     if self.mgis.DEBUG:
@@ -2448,8 +2458,7 @@ class ClassMascaret:
                                                 "AND (scenario LIKE '{2}' "
                                                 "OR  scenario "
                                                 "LIKE '{2}_init') ".format(
-                        self.mdb.SCHEMA, run, nom_scen),
-                        fetch=True)
+                        self.mdb.SCHEMA, run, nom_scen), fetch=True)
 
                     self.mdb.delete('runs', condition)
                     self.mdb.delete('resultats', condition)
@@ -2467,8 +2476,7 @@ class ClassMascaret:
                                            "where id in ({}) and "
                                            "type_res = '"
                                            "tracer_TRANSPORT_PUR'".format(
-                            self.mdb.SCHEMA,
-                            ','.join(list_var)))
+                            self.mdb.SCHEMA, ','.join(list_var)))
                         self.mdb.delete('results', condition)
                         self.mdb.delete('results_sect', condition)
                     if self.mgis.DEBUG:
@@ -2589,9 +2597,7 @@ class ClassMascaret:
                 for i, idw in enumerate(info['gid']):
                     if info['method_mob'][i] == '1':
                         rows = self.mdb.select('weirs_mob_val',
-                                               where="id_weirs= {} AND "
-                                                     "(name_var='TIME' OR "
-                                                     "name_var='ZVAR')".format(
+                                               where="id_weirs= {} AND (name_var='TIME' OR name_var='ZVAR')".format(
                                                    idw),
                                                order='name_var, id_order')
                         if len(rows['id_weirs']) > 0:
@@ -2623,9 +2629,7 @@ class ClassMascaret:
                     elif info['method_mob'][i] == '2':
 
                         rows = self.mdb.select('weirs_mob_val',
-                                               where="id_weirs= {} AND "
-                                                     "name_var!='TIME' AND "
-                                                     "name_var!='ZVAR'".format(
+                                               where="id_weirs= {} AND name_var!='TIME' AND name_var!='ZVAR'".format(
                                                    idw))
                         if len(rows['id_weirs']) > 0:
                             fich.write("{} {}\n".format(info['name'][i], idw))
@@ -2920,10 +2924,7 @@ class ClassMascaret:
                         sql = "SELECT MAX(val) FROM {0}.results " \
                               "WHERE var = {2} " \
                               "AND id_runs={1} AND pknum ={3};".format(
-                            self.mdb.SCHEMA,
-                            id_run,
-                            id_z,
-                            pknum)
+                            self.mdb.SCHEMA, id_run, id_z, pknum)
                         rows = self.mdb.run_query(sql, fetch=True)
                         try:
                             dico_zmax[pknum] = rows[0][0]

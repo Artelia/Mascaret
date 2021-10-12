@@ -34,6 +34,7 @@ changelog=
              Only qt5
              Adding the rating curve law using steady kernel
              Adding Scores functionnality
+    3.1.2  : Reduction of the accurancy (to mm) of the variables cotesCrete and  abscTravCrete in Xcas
     3.1.1  : Correction of cross section result
     3.1.0  : Correction of tables owner
              Correction of steady model when using the rating curve
