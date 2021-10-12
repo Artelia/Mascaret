@@ -276,7 +276,7 @@ class GraphProfil(GraphCommon):
                                          markeredgewidth=0, zorder=90,
                                          label='MNT')
         self.courbeTopo = []
-        for i in range(5):
+        for i in range(10):
             temp, = self.axes.plot([], [], color='green', marker='+', mew=2,
                                    zorder=95, label='Topo', picker=5)
             self.courbeTopo.append(temp)
@@ -472,11 +472,11 @@ class GraphProfil(GraphCommon):
             self.topo[nom]['z'].append(round(z, 2))
             self.topo[nom]['gid'].append(gid)
             self.topo[nom]['ordre'].append(ordre)
-
         for nom in self.topo.keys():
             self.topo[nom]['x'] = self.mdb.projection(self.nom,
                                                       self.topo[nom]['x'],
                                                       self.topo[nom]['gid'])
+
 
     def remplir_tab(self, liste):
         """ Fill items in the table"""
@@ -547,18 +547,20 @@ class GraphProfil(GraphCommon):
             for x, z, gid, ordre in zip(t['x'], t['z'], t['gid'], t['ordre']):
                 for f in self.coucheProfils.getFeatures():
                     if f["name"] == self.nom:
-                        print(f["name"])
-                        print(x)
+                        if x <0 :
+                            geom = 'NULL'
+                        else:
+                            interp = f.geometry().interpolate(x)
+                            if interp.isNull():
+                                geom = 'NULL'
+                            else:
+                                # if interp.isNull():
+                                #     self.mgis.add_info(
+                                #         "Warning : Check the profil lenght")
 
-                        interp = f.geometry().interpolate(x)
-                        print(interp)
-                        if interp.isNull():
-                            self.mgis.add_info(
-                                "Warning : Check the profil lenght")
-                        print(interp)
-                        p = f.geometry().interpolate(x).asPoint()
-                        geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
-                            p.x(), p.y(), self.mdb.SRID)
+                                p = f.geometry().interpolate(x).asPoint()
+                                geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                                    p.x(), p.y(), self.mdb.SRID)
 
                 if gid:
                     sql = """UPDATE {0}.topo SET x={1}, geom={2}, order_={3}
@@ -665,13 +667,16 @@ class GraphProfil(GraphCommon):
                                 x, z = (float(var) for var in ligne.split(sep))
 
                                 ordre += 1
+                                if x < 0:
+                                    geom = 'NULL'
+                                else:
 
-                                p = f.geometry().interpolate(x).asPoint()
+                                    p = f.geometry().interpolate(x).asPoint()
 
-                                # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
+                                    # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
 
-                                geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
-                                    p.x(), p.y(), self.mdb.SRID)
+                                    geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                                        p.x(), p.y(), self.mdb.SRID)
 
                                 tab["name"].append("'" + basename + "'")
                                 tab["profile"].append("'" + profil + "'")
@@ -989,6 +994,13 @@ class GraphProfil(GraphCommon):
 
             self.courbeTopo[i].set_data(v['x'], v['z'])
             self.courbeTopo[i].set_label(fichier)
+            if fichier == 'downstream':
+                self.courbeTopo[i].set_color("purple")
+            elif fichier == 'upstream':
+                self.courbeTopo[i].set_color("brown")
+            else:
+                self.courbeTopo[i].set_color("green")
+
             self.courbes.append(self.courbeTopo[i])
         if ta['x'] is not None and ta['leftminbed'] is not None and ta[
             'rightminbed'] is not None:
@@ -1277,13 +1289,15 @@ class GraphProfil(GraphCommon):
                     for x,z in zip(xval,zval):
 
                         ordre += 1
+                        if x <0 :
+                            geom = 'NULL'
+                        else:
+                            p = f.geometry().interpolate(x).asPoint()
 
-                        p = f.geometry().interpolate(x).asPoint()
+                            # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
 
-                        # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
-
-                        geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
-                            p.x(), p.y(), self.mdb.SRID)
+                            geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                                p.x(), p.y(), self.mdb.SRID)
 
                         tab["name"].append("'" + basename + "'")
                         tab["profile"].append("'" + self.nom + "'")
@@ -1296,96 +1310,37 @@ class GraphProfil(GraphCommon):
 
     def topo_amont_aval(self):
         """
-
+        add in top tab the down/upstream courbe
         :return:
         """
 
-        print()
-        print(self.liste)
         id = self.liste['name'].index(self.nom)
         idam = id - 1
         idav = id + 1
+        maj = False
+        if 0 < idam :
+            if self.liste['branchnum'][id] == self.liste['branchnum'][idam]:
+                if self.liste['x'][idam] != '':
+                    xamont = [float(val) for val in
+                              self.liste['x'][idam].split()]
+                    zamont = [float(val) for val in
+                              self.liste['z'][idam].split()]
+                    self.add_topo(xamont, zamont, 'downstream')
+                    maj = True
+        if  idav < len(self.liste['branchnum']) :
+            if self.liste['branchnum'][id] == self.liste['branchnum'][idav]:
+                if self.liste['x'][idav] != '':
+                    xaval = [float(val) for val in
+                                       self.liste['x'][idav].split()]
+                    zaval = [float(val) for val in
+                                       self.liste['z'][idav].split()]
+                    self.add_topo(xaval, zaval, 'upstream')
+                    maj = True
+        if maj :
+            self.extrait_topo()
+            self.maj_graph()
+            self.maj_legende()
 
-        if self.liste['branchnum'][id] == self.liste['branchnum'][idam]:
-            # TODO add amont
-
-            if self.liste['x'][idam] != '':
-                xamont = [float(val) for val in
-                          self.liste['x'][idam].split()]
-                zamont = [float(val) for val in
-                          self.liste['z'][idam].split()]
-                self.add_topo(xamont, zamont, 'downstream')
-
-        if self.liste['branchnum'][id] == self.liste['branchnum'][idav]:
-            if self.liste['x'][idav] != '':
-                xaval = [float(val) for val in
-                                   self.liste['x'][idav].split()]
-                zaval = [float(val) for val in
-                                   self.liste['z'][idav].split()]
-                self.add_topo(xaval, zaval, 'upstream')
-
-        self.extrait_topo()
-        self.maj_graph()
-        self.maj_legende()
-
-
-        #charger_bathy(self, liste, couche_profil, profil=None):
-        #
-        # for fichier in liste:
-        #     basename = os.path.basename(fichier)
-        #     if not profil:
-        #         profil = basename.split(".")[0]
-        #     for f in couche_profil.getFeatures():
-        #         if f["name"] == profil:
-        #             condition = "name='{}' AND profile='{}'".format(basename,
-        #                                                             profil)
-        #
-        #             self.mdb.delete("topo", condition)
-        #
-        #             tab = {'name': [], 'profile': [], 'order_': [], 'x': [],
-        #                    'z': [],
-        #                    'geom': []}
-        #             with open(fichier, "r") as fich:
-        #                 entete = fich.readline()
-        #                 if len(entete.split()) > 1:
-        #                     sep = None
-        #                 else:
-        #                     sep = ";"
-        #
-        #                 ordre = 0
-        #                 for ligne in fich:
-        #                     # x, z = list(map(float, ligne.split(sep)))
-        #
-        #                     if ligne[0] != '#':
-        #                         ligne = ligne.replace('\n', '')
-        #                         if len(ligne.split(sep)) < 1:
-        #                             break
-        #                         x, z = (float(var) for var in ligne.split(sep))
-        #
-        #                         ordre += 1
-        #
-        #                         p = f.geometry().interpolate(x).asPoint()
-        #
-        #                         # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
-        #
-        #                         geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
-        #                             p.x(), p.y(), self.mdb.SRID)
-
-            # tab["name"].append("'" + basename + "'")
-            # tab["profile"].append("'" + profil + "'")
-            # tab["order_"].append(ordre)
-            # tab["x"].append(x)
-            # tab["z"].append(z)
-            # tab["geom"].append(geom)
-            #
-
-            # Read profil amont et aval
-            # insert topo
-
-            # self.mdb.insert2("topo", tab)
-
-       # amont self.liste["gid"]-1
-    # aval  self.liste["gid"]+1
 class CopySelectedCellsAction(QAction):
     def __init__(self, table_widget):
         if not isinstance(table_widget, QTableWidget):
