@@ -48,8 +48,7 @@ from .GraphCommon import DraggableLegend, GraphCommon
 from .Structure.StructureCreateDialog import ClassStructureCreateDialog
 from .Structure.ClassPolygone import ClassPolygone
 from .GraphResultDialog import GraphResultDialog
-from scipy import interpolate
-from shapely.geometry import *
+
 
 from qgis.PyQt.QtWidgets import *
 
@@ -1366,7 +1365,7 @@ class GraphProfil(GraphCommon):
         # •	Des cotes de débordement
         lmin = self.liste['leftminbed'][id]
         rmin = self.liste['rightminbed'][id]
-        # fct_inter = interpolate.interp1d(profil['x'], profil['z'])
+
         linS = []
         for x, z in zip(profil['x'], profil['z']):
             linS.append((x, z))
