@@ -48,6 +48,8 @@ from .GraphCommon import DraggableLegend, GraphCommon
 from .Structure.StructureCreateDialog import ClassStructureCreateDialog
 from .Structure.ClassPolygone import ClassPolygone
 from .GraphResultDialog import GraphResultDialog
+from scipy import interpolate
+from shapely.geometry import *
 
 from qgis.PyQt.QtWidgets import *
 
@@ -233,6 +235,7 @@ class GraphProfil(GraphCommon):
         self.ui.bt_l_stok.clicked.connect(
             lambda: self.select_stock("leftstock"))
         self.ui.bt_ouvrage.clicked.connect(self.create_struct)
+        self.ui.tab_aff.hide()
 
     def init_ui(self):
 
@@ -402,6 +405,7 @@ class GraphProfil(GraphCommon):
 
         self.extrait_profil()
         self.extrait_topo()
+        self.maj_tab_check()
         self.maj_graph()
         self.maj_limites()
         self.maj_legende()
@@ -479,7 +483,6 @@ class GraphProfil(GraphCommon):
                                                       self.topo[nom]['x'],
                                                       self.topo[nom]['gid'])
 
-
     def remplir_tab(self, liste):
         """ Fill items in the table"""
         # self.tableau.rempit(Liste)
@@ -527,7 +530,7 @@ class GraphProfil(GraphCommon):
             self.mgis.add_info('No data to save profile')
             return
         for k, v in self.tab.items():
-            print(v)
+
             if isinstance(v, list):
                 self.liste[k][self.position] = " ".join([str(var) for var in v])
             else:
@@ -550,7 +553,7 @@ class GraphProfil(GraphCommon):
             for x, z, gid, ordre in zip(t['x'], t['z'], t['gid'], t['ordre']):
                 for f in self.coucheProfils.getFeatures():
                     if f["name"] == self.nom:
-                        if x <0 :
+                        if x < 0:
                             geom = 'NULL'
                         else:
                             interp = f.geometry().interpolate(x)
@@ -692,9 +695,9 @@ class GraphProfil(GraphCommon):
 
     def import_image(self):
         fichier, _ = QFileDialog.getOpenFileName(None,
-                                                     'Sélection des fichiers',
-                                                     self.dossierProjet,
-                                                     "Fichier (*.png *.jpg)")
+                                                 'Sélection des fichiers',
+                                                 self.dossierProjet,
+                                                 "Fichier (*.png *.jpg)")
 
         try:
             fich = open(fichier + "w", "r")
@@ -885,7 +888,7 @@ class GraphProfil(GraphCommon):
         if self.flag and event.button == 3:
             if self.ordre == -9999:
                 if self.topoSelect in self.topo.keys():
-                        idx_topo = list(self.topo.keys()).index(self.topoSelect)
+                    idx_topo = list(self.topo.keys()).index(self.topoSelect)
                 else:
                     idx_topo = 0
                 item, ok = QInputDialog.getItem(self,
@@ -1283,33 +1286,33 @@ class GraphProfil(GraphCommon):
 
     def add_topo(self, xval, zval, basename):
 
-            tab = {'name': [], 'profile': [], 'order_': [], 'x': [],
-                                'z': [],
-                                'geom': []}
-            ordre = 0
-            for f in self.coucheProfils.getFeatures():
-                if f["name"] == self.nom:
-                    for x,z in zip(xval,zval):
+        tab = {'name': [], 'profile': [], 'order_': [], 'x': [],
+               'z': [],
+               'geom': []}
+        ordre = 0
+        for f in self.coucheProfils.getFeatures():
+            if f["name"] == self.nom:
+                for x, z in zip(xval, zval):
 
-                        ordre += 1
-                        if x <0 :
-                            geom = 'NULL'
-                        else:
-                            p = f.geometry().interpolate(x).asPoint()
+                    ordre += 1
+                    if x < 0:
+                        geom = 'NULL'
+                    else:
+                        p = f.geometry().interpolate(x).asPoint()
 
-                            # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
+                        # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
 
-                            geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
-                                p.x(), p.y(), self.mdb.SRID)
+                        geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                            p.x(), p.y(), self.mdb.SRID)
 
-                        tab["name"].append("'" + basename + "'")
-                        tab["profile"].append("'" + self.nom + "'")
-                        tab["order_"].append(ordre)
-                        tab["x"].append(x)
-                        tab["z"].append(z)
-                        tab["geom"].append(geom)
+                    tab["name"].append("'" + basename + "'")
+                    tab["profile"].append("'" + self.nom + "'")
+                    tab["order_"].append(ordre)
+                    tab["x"].append(x)
+                    tab["z"].append(z)
+                    tab["geom"].append(geom)
 
-            self.mdb.insert2("topo", tab)
+        self.mdb.insert2("topo", tab)
 
     def topo_amont_aval(self):
         """
@@ -1322,71 +1325,195 @@ class GraphProfil(GraphCommon):
         idav = id + 1
         maj = False
 
-        if 0 < idam :
+        if 0 < idam:
             if self.liste['branchnum'][id] == self.liste['branchnum'][idam]:
                 if self.liste['x'][idam]:
                     xamont = [float(val) for val in
                               self.liste['x'][idam].split()]
                     zamont = [float(val) for val in
                               self.liste['z'][idam].split()]
-                    self.add_topo(xamont, zamont, 'downstream')
+                    self.add_topo(xamont, zamont, 'upstream')
                     maj = True
-        if  idav < len(self.liste['branchnum']) :
+        if idav < len(self.liste['branchnum']):
             if self.liste['branchnum'][id] == self.liste['branchnum'][idav]:
-                if self.liste['x'][idav] :
+                if self.liste['x'][idav]:
                     xaval = [float(val) for val in
-                                       self.liste['x'][idav].split()]
+                             self.liste['x'][idav].split()]
                     zaval = [float(val) for val in
-                                       self.liste['z'][idav].split()]
-                    self.add_topo(xaval, zaval, 'upstream')
+                             self.liste['z'][idav].split()]
+                    self.add_topo(xaval, zaval, 'downstream')
                     maj = True
-        if maj :
+        if maj:
             self.extrait_topo()
             self.maj_graph()
             self.maj_legende()
 
+    def val_inter_prof(self, id):
+        """
+        Compute value:
+            section minor bed
+            overflow point
+            low point
+        :param id : index of profil
+        :return:
+        """
+        clpoly = ClassPolygone()
+        profil = {
+            'x': [float(val) for val in self.liste['x'][id].split()],
+            'z': [float(val) for val in self.liste['z'][id].split()]
+        }
+
+        # •	Des cotes de débordement
+        lmin = self.liste['leftminbed'][id]
+        rmin = self.liste['rightminbed'][id]
+        # fct_inter = interpolate.interp1d(profil['x'], profil['z'])
+        linS = []
+        for x, z in zip(profil['x'], profil['z']):
+            linS.append((x, z))
+        #
+        if not lmin:
+            # no valeur for minor bed
+            lmin = profil['x'][0]
+        if not rmin:
+            # no valeur for minor bed
+            rmin = profil['x'][0]
+
+        pr_m, _, _, _, _ = decoup_pr(linS, [lmin, rmin], [lmin, rmin])
+        pr_m = np.array(pr_m)
+        lz = pr_m[0][1]
+        rz = pr_m[-1][1]
+        h_pbord = min(lz, rz)
+
+        bool = np.all(pr_m == pr_m[0, :], axis=0)
+        if bool[1]:
+            # print('flat profil')
+            return pr_m[0, 1], None, rz, lz, rmin, lmin
+        poly = clpoly.poly2_profile(pr_m)
+
+        if poly.is_empty:
+            # print('Profil is empty')
+            return np.min(pr_m[:, 1]), None, rz, lz, rmin, lmin
+        poly = clpoly.coup_poly_h(poly, h_pbord, typ='U')
+
+        if poly.is_empty:
+            # print('Profil is empty')
+            return np.min(pr_m[:, 1]), None, rz, lz
+        _, minz, _, _ = poly.bounds
+        return minz, poly.area, rz, lz, rmin, lmin
+
     def check_prof(self):
-        print(self.liste)
+        self.ui.tab_aff.show()
+        self.ui.table_check.show()
         id = self.liste['name'].index(self.nom)
-
-        if self.liste['x'][id] :
-            clpoly = ClassPolygone()
-            profil = {
-                'x' : [float(val) for val in self.liste['x'][id].split()],
-                'z': [float(val) for val in self.liste['z'][id].split()]
-            }
-            maxz = max( profil['z'])
-            lmin = self.liste['leftminbed'][id]
-            rmin =  self.liste['rightminbed'][id]
-            if not lmin  :
-                lmin = min(profil['x'])
-            if not rmin :
-                rmin = max(profil['x'])
-            print(profil)
-            prof = clpoly.poly_profil(profil)
-            prof = clpoly.coup_poly_h(prof, maxz, typ='U')
-            print(prof)
-
-            poly = clpoly.coup_poly_v(prof,[ lmin,rmin],typ = 'LR')
-            print(poly)
-            print(poly.bounds())
-            minx, minz, maxx, maxz = poly.bounds()
-            spb = poly.area()
-            pt_bas = minz
-            print(poly)
-            print(pt_bas)
-            print(spb)
+        self.ch_prof = {}
+        # cas = -1 amont, cas=1 aval
+        dcas = {-1: 'upstream', 0: 'current', 1: 'downstream'}
+        for cas in [-1, 0, 1]:
+            if self.liste['x'][id + cas]:
+                # print(self.liste['name'][id + cas])
+                minz, area, rz, lz, rmin, lmin = self.val_inter_prof(id + cas)
+                self.ch_prof[dcas[cas]] = {'point_bas': minz,
+                                           'sect_plein_bord': area,
+                                           'cote_d': rz,
+                                           'cote_g': lz,
+                                           'x_d': rmin,
+                                           'x_g': lmin}
+            else:
+                self.ch_prof[dcas[cas]] = {'point_bas': None,
+                                           'sect_plein_bord': None,
+                                           'cote_d': None,
+                                           'cote_g': None,
+                                           'x_d': None,
+                                           'x_g': None, }
+        self.fill_table_check()
 
 
+    def fill_table_check(self):
+        # cols = list(self.ch_prof.keys())
+        # lines = list(self.ch_prof['current'].keys())
+        # exclude_line = ['x_d','x_g']
+        # for var in exclude_line :
+        #     lines.remove(var)
 
+        cols = ['current', 'upstream', 'downstream']
+        key_str = {'point_bas': 'bottom point',
+                   'sect_plein_bord': "Section of minor bed",
+                   'cote_d': "Height of the right bank",
+                   'cote_g': "Height of the left bank", }
+        lines = list(key_str.keys())
+        self.ui.table_check.clear()
+        self.ui.table_check.setRowCount(len(lines))
+        self.ui.table_check.setColumnCount(len(cols))
+        self.ui.table_check.setVerticalHeaderLabels(list(key_str.values()))
+        self.ui.table_check.setHorizontalHeaderLabels(cols)
+        for idc, col in enumerate(cols):
+            for idl, line in enumerate(lines):
+                val = self.ch_prof[col][line]
+                if val is None:
+                    val = 'None'
+                if isinstance(val, str):
+                    item = QTableWidgetItem(
+                        '{}'.format(val))
+                else:
+                    item = QTableWidgetItem('{:.3f}'.format(val))
+                item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                item.setFlags(Qt.ItemIsEnabled)
+                self.ui.table_check.setItem(idl, idc, item)
 
-
+    def maj_tab_check(self):
+        self.ch_prof = {}
+        self.ui.tab_aff.hide()
+        self.ui.table_check.clear()
 
 
 # •	La section de plein bord du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
 # •	Le point bas du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
 # •	Des cotes de débordement de la rive droite et gauche (profil en cours, aval et amont, soit 6 valeurs)
 #
+
+
+
+
+def decoup_pr(pr, lminor_x, lmaj_x):
+    pr_g = []
+    pr_d = []
+    pr_m = []
+    pr_st_g = []
+    pr_st_d = []
+    for point in pr:
+        if point[0] < lminor_x[0]:
+            if point[0] < lmaj_x[0]:
+                pr_st_g.append(point)
+            else:
+                pr_g.append(point)
+        elif point[0] > lminor_x[1]:
+            if point[0] > lmaj_x[1]:
+                pr_st_d.append(point)
+            else:
+                pr_d.append(point)
+        else:
+            pr_m.append(point)
+    if pr_m == []:
+        print('Pas de profil lit mineur')
+        return [], [], [], [], []
+    if pr_g == []:
+        pr_g = [pr_m[0], pr_m[0]]
+    else:
+        pr_g = pr_g + [pr_m[0], pr_m[0]]
+    if pr_d == []:
+        pr_d = [pr_m[-1], pr_m[-1]]
+    else:
+        pr_d = [pr_m[-1], pr_m[-1]] + pr_d
+    if pr_st_g == []:
+        pr_st_g = [pr_g[0], pr_g[0]]
+    else:
+        pr_st_g = pr_st_g + [pr_g[0], pr_g[0]]
+    if pr_st_d == []:
+        pr_st_d = [pr_d[-1], pr_d[-1]]
+    else:
+        pr_st_d = [pr_d[-1], pr_d[-1]] + pr_st_d
+
+    return pr_m, pr_g, pr_d, pr_st_g, pr_st_d
 
 
 class CopySelectedCellsAction(QAction):
@@ -1429,4 +1556,3 @@ class CopySelectedCellsAction(QAction):
 
             sys_clip = QApplication.clipboard()
             sys_clip.setText(clipboard)
-
