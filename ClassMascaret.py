@@ -1447,22 +1447,22 @@ class ClassMascaret:
                     tab[k] = [float(var) for var in v.split()]
             self.creer_loi(nom, tab, loi['type'])
 
-            if loi['type'] in (4, 5) and loi['couche'] == 'extremites':
-                for c, d in zip(tab["z"], tab["flowrate"]):
-                    if debit_prec > 0 and d > somme:
-                        valeur_init = (c - cote_prec) \
-                                      / (d - debit_prec) \
-                                      * (somme - debit_prec) \
-                                      + cote_prec
-                        break
-                    else:
-                        cote_prec, debit_prec = c, d
-                if valeur_init is not None:
-                    tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
-                    self.creer_loi(nom + '_init', tab, 2)
-
-            else:
-                self.creer_loi(nom + '_init', tab, loi['type'])
+            # if loi['type'] in (4, 5) and loi['couche'] == 'extremites':
+            #     for c, d in zip(tab["z"], tab["flowrate"]):
+            #         if debit_prec > 0 and d > somme:
+            #             valeur_init = (c - cote_prec) \
+            #                           / (d - debit_prec) \
+            #                           * (somme - debit_prec) \
+            #                           + cote_prec
+            #             break
+            #         else:
+            #             cote_prec, debit_prec = c, d
+            #     if valeur_init is not None:
+            #         tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
+            #         self.creer_loi(nom + '_init', tab, 2)
+            #
+            # else:
+            self.creer_loi(nom + '_init', tab, loi['type'])
 
     def fct_comment(self):
         liste_col = self.mdb.list_columns('runs')
@@ -1763,17 +1763,23 @@ class ClassMascaret:
                 if l['type'] == 1:
                     tab = {"time": [0, 3600], 'flowrate': [l["valeurperm"]] * 2}
                     self.creer_loi(nom, tab, 1)
-                elif l['type'] in [2, 4, 5]:
+                elif l['type'] == 2:
                     tab = {"time": [0, 3600], 'z': [l["valeurperm"]] * 2}
                     self.creer_loi(nom, tab, 2)
+                elif  l['type'] in [ 4, 5]:
+                        self.creer_loi(nom, tab, l['type'])
                 else:
+
                     par["initialisationAuto"] = False
                     self.mgis.add_info("No initialisation")
             else:
-                par["initialisationAuto"] = False
-                self.mgis.add_info(
-                    "No initialisation because of no valeurperm "
-                    "for {} condition".format(nom))
+                if l['type'] in [4, 5]:
+                    self.creer_loi(nom, tab, l['type'])
+                else:
+                    par["initialisationAuto"] = False
+                    self.mgis.add_info(
+                        "No initialisation because of no valeurperm "
+                        "for {} condition".format(nom))
 
         return
 
@@ -1853,7 +1859,9 @@ class ClassMascaret:
                 self.create_mobil_gate_file()
             self.fct_only_init(noyau)
             return
-
+        # self.task_mascaret(None,tup=(
+        #                                               par, dict_scen, dict_lois,
+        #                                               comments, noyau, run))
         self.mgis.task_mas = QgsTask.fromFunction('Run Mascaret',
                                                   self.task_mascaret,
                                                   on_finished=self.completed,
@@ -1925,12 +1933,6 @@ class ClassMascaret:
                     id_run = self.insert_id_run(run, sceninit)
                     self.lance_mascaret(self.baseName + '_init.xcas', id_run)
 
-                    # TODO delete in the future
-                    # self.lit_opt(run, sceninit, id_run, None,
-                    #             self.baseName + '_init', comments)
-                    # self.mgis.chkt.convert_all_result()
-                    # ----------
-                    # TODO change when change graphic hydro
                     self.lit_opt_new(id_run, None,
                                      self.baseName + '_init', comments)
 
