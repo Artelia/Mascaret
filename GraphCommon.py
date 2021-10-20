@@ -242,10 +242,10 @@ class DraggableLegend:
 
 
 class GraphCommonNew:
-    def __init__(self, lay=None, wgt=None):
+    def __init__(self, wgt=None, lay=None, lay_toolbar=None):
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
-        self.gui_graph(wgt, lay)
+        self.gui_graph(wgt, lay, lay_toolbar)
         self.leg_selected = False
         self.data = None
         self.var_x = None
@@ -269,8 +269,7 @@ class GraphCommonNew:
         self.annotation = []
         self.courbeLaisses = []
 
-        self.fig.canvas.mpl_connect('button_release_event',
-                                    self.graph_off_click)
+        self.fig.canvas.mpl_connect('button_release_event', self.graph_off_click)
         self.fig.canvas.mpl_connect('button_press_event', self.graph_on_click)
         self.fig.canvas.mpl_connect('motion_notify_event', self.graph_on_press)
         self.fig.canvas.mpl_connect('pick_event', self.graph_on_pick)

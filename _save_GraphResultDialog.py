@@ -28,7 +28,6 @@ from qgis.gui import *
 from qgis.utils import *
 from .GraphResult import GraphResult
 from .Function import tw_to_txt, interpole
-from .CurveSelector import SlideCurveSelectorWidget
 from .scores.ClassScoresResDialog import ClassScoresResDialog
 from datetime import date, timedelta, datetime
 
@@ -55,6 +54,22 @@ def list_sql(liste, typ='str'):
     return txt
 
 
+class CurveSelectionWidget(QWidget):
+    def __init__(self, mgis, typ_graph):
+        QWidget.__init__(self)
+        self.mgis = mgis
+        self.mdb = self.mgis.mdb
+        self.typ_graph = typ_graph
+
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_curve_selector.ui'), self)
+
+        # self.cb_run.currentIndexChanged.connect(self.run_changed)
+        # self.cb_scen.currentIndexChanged.connect(self.scen_changed)
+        # self.cb_graph.currentIndexChanged.connect(self.graph_changed)
+
+
+
+
 
 class GraphResultDialog(QWidget):
     def __init__(self, mgis, typ_graph, id=None):
@@ -62,19 +77,21 @@ class GraphResultDialog(QWidget):
         self.initialising = True
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-        self.typ_graph = typ_graph
 
+        self.typ_graph = typ_graph
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/graphResult_new.ui'), self)
+        self.curve_selector = CurveSelectionWidget(self.mgis, typ_graph)
+        self.lay_sel_curve.addWidget(self.curve_selector)
         self.graph_obj = GraphResult(self, self.lay_graph, self.lay_graph_tbar)
         self.cur_run, self.cur_graph, self.cur_vars = None, None, None
         self.cur_vars_lbl, self.cur_branch, self.cur_pknum, self.cur_t = None, None, None, None
         self.list_var_lai = []
         self.zmax_save = None
         self.cur_data = dict()
-        self.lst_runs = []
         self.old_lst_run_score = []
         self.date = None
         self.obs = None
+        self.list_typ_res = None
         self.info_graph = {}
         self.val_prof_ref = {}
         self.dict_run = dict()
@@ -82,50 +99,71 @@ class GraphResultDialog(QWidget):
 
         print('Typ graph :', self.typ_graph)
 
+        self.show_hide_com(False)
         if self.checkrun():
-            if self.typ_graph in ["struct", "weirs"]:
-                self.typ_res = self.typ_graph
+            if self.typ_graph == "struct" or self.typ_graph == "weirs":
+                if self.typ_graph == "weirs":
+                    self.typ_res = "weirs"
+                else:
+                    self.typ_res = "struct"
+                self.lst_graph = [
+                    {"id": "gate_move", "name": "Gate movement", "unit": "m",
+                     "vars": ["ZSTR"], "colors": ["blue"],
+                     'type_res': self.typ_res}]
                 self.x_var = "time"
-            elif self.typ_graph in ["hydro", "hydro_pk"]:
-                self.typ_res = "opt"
+                self.sql_where = "results.pknum = {1}"
+                self.cur_pknum = id
+
+            elif self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
+                self.list_typ_res = ["opt",
+                                     "tracer_MICROPOLE",
+                                     "tracer_EUTRO",
+                                     "tracer_O2",
+                                     "tracer_BIOMASS",
+                                     "tracer_THERMIC",
+                                     "tracer_TRANSPORT_PUR"]
+                self.typ_res = 'opt'
                 if self.typ_graph == "hydro_pk":
                     self.x_var = "pknum"
+                    self.sql_where = "results.time = {1}"
+                    self.cur_branch = id
                     self.cur_t = -1
                 else:
                     self.x_var = "time"
-            elif self.typ_graph in ["hydro_basin", "hydro_link"]:
-                self.typ_res = self.typ_graph.replace("hydro_", "")
-                self.x_var = "time"
+                    self.sql_where = "results.pknum = {1}"
+                    self.cur_pknum = id
 
-            if self.x_var == "pknum":
-                self.sql_where = "results.time = {1}"
-                self.cur_branch = id
-            elif self.x_var == "time":
-                self.sql_where = "results.pknum = {1}"
+            elif self.typ_graph == "hydro_basin" or self.typ_graph == "hydro_link":
+                self.x_var = "time"
                 self.cur_pknum = id
+
+                self.sql_where = "results.pknum = {1}"
+                if self.typ_graph == 'hydro_link':
+                    self.typ_res = 'link'
+                else:
+                    self.typ_res = 'basin'
+
+            self.cb_run.currentIndexChanged.connect(self.run_changed)
+            self.cb_scen.currentIndexChanged.connect(self.scen_changed)
+            self.cb_graph.currentIndexChanged.connect(self.graph_changed)
+            if self.typ_graph == 'hydro_pk':
+                self.cb_det.currentIndexChanged.connect(lambda: self.detail_changed(up_lim=False))
+            else:
+                self.cb_det.currentIndexChanged.connect(lambda: self.detail_changed(up_lim=True))
 
             self.bt_expCsv.clicked.connect(self.export_csv)
             self.tw_data.addAction(CopySelectedCellsAction(self.tw_data))
             self.cc_scores.stateChanged.connect(self.ch_score)
 
+            self.lst_runs = []
             self.stw_res.setCurrentIndex(0)
             self.cl_scores = ClassScoresResDialog(self)
-            self.disable_score()
-
+            self.disenable_score()
             self.init_dico_run()
 
-            self.curve_selector = SlideCurveSelectorWidget(self.mgis, self.typ_graph, self.typ_res, self.dict_run,
-                                                           self.cur_pknum, self.cur_branch)
-            self.curve_selector.cur_scen_edited.connect(self.clean_score)
-            self.curve_selector.no_graph_selected.connect(self.clear_results)
-            self.curve_selector.cur_graph_edited.connect(self.update_data)
-            self.curve_selector.init_run()
-            self.lay_sel_curve.addWidget(self.curve_selector)
-
             self.initialising = False
-            self.curve_selector.recup_param_graph()
-            #self.update_data()
-
+            self.update_data()
+            self.initialising = False
 
     def ch_score(self):
         """ change tab for score"""
@@ -134,6 +172,13 @@ class GraphResultDialog(QWidget):
         else:
             self.stw_res.setCurrentIndex(0)
 
+    def show_hide_com(self, vis=True):
+        if vis:
+            self.lbl_coment.show()
+            self.label_coment.show()
+        else:
+            self.lbl_coment.hide()
+            self.label_coment.hide()
 
     def checkrun(self):
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
@@ -147,6 +192,133 @@ class GraphResultDialog(QWidget):
             self.mgis.add_info("No data.")
             return False
 
+    def get_lst_graph_opt(self, id_run=None):
+        """
+        Get graphic list
+        :param id_run: id of model
+        :return:
+        """
+
+        liste = [{"id": "Z", "name": "Levels", "unit": "$m$",
+                  "vars": ['ZREF', 'Z', 'ZMIN', 'ZMAX', 'CHAR'],
+                  "colors": ["black", "blue", "green", "red", "cyan"],
+                  'type_res': 'opt'},
+                 {"id": "Q", "name": "Flow rate", "unit": "$m^3/s$",
+                  "vars": ['Q', 'QMIN', 'QMAJ', 'QMAX'],
+                  "colors": ["blue", "green", "cyan", "red"], 'type_res': 'opt'}
+                 ]
+        exclu = {'Q': False, 'QMIN': False, 'QMAJ': False, 'QMAX': False,
+                 'ZREF': False, 'Z': False, 'ZMIN': False, 'ZMAX': False,
+                 'CHAR': False}
+
+        if id_run:
+
+            list_tot = []
+
+            for typ_res in self.list_typ_res:
+                if typ_res in self.info_graph.keys():
+                    list_tot += self.info_graph[typ_res]['var']
+
+            sql = "SELECT  * FROM {0}.results_var WHERE " \
+                  " id in {1}".format(self.mdb.SCHEMA, list_sql(list_tot))
+
+        else:
+            sql = "SELECT DISTINCT * FROM {0}.results_var WHERE type_res in {1}".format(
+                self.mdb.SCHEMA,
+                list_sql(
+                    self.list_typ_res))
+
+        rows = self.mdb.run_query(sql, fetch=True)
+        if not rows:
+            self.mgis.add_info('No data')
+        for rws in rows:
+            if not rws[2] in exclu.keys():
+                liste.append({"id": rws[2], "name": rws[3], "unit": "",
+                              "vars": [rws[2]], "colors": ["blue"],
+                              'type_res': rws[1]})
+            else:
+                exclu[rws[2]] = True
+
+        iterlist = [zip(list(liste[0]['vars']), list(liste[0]['colors'])),
+                    zip(list(liste[1]['vars']), list(liste[1]['colors']))]
+
+        for i, itlist in enumerate(iterlist):
+            liste[i]['vars'] = []
+            liste[i]['colors'] = []
+            for val, clr in itlist:
+                if exclu[val]:
+                    liste[i]['vars'].append(val)
+                    liste[i]['colors'].append(clr)
+
+        liste = self.change_lengend_var(liste)
+
+        return liste
+
+    def change_lengend_var(self, liste_var):
+        """Change unit and color with variables.dat file
+         :param liste_var : liste of dict containing graphs informations
+         :return the update list
+        """
+
+        for dico_var in liste_var:
+            for i, var in enumerate(dico_var["vars"]):
+                if var.lower() in self.mgis.variables.keys():
+                    dico_var["colors"][i] = self.mgis.variables[var.lower()][
+                        'couleur']
+                    if var not in ['Q', 'QMIN', 'QMAJ', 'QMAX', 'ZREF', 'Z',
+                                   'ZMIN', 'ZMAX', 'CHAR']:
+                        if self.mgis.variables[var.lower()][
+                            'unite'].strip() == '':
+                            dico_var['unit'] = ''
+                        else:
+                            dico_var['unit'] = \
+                                r'$' + self.mgis.variables[var.lower()][
+                                    'unite'].strip() + r'$'
+        return liste_var
+
+    def get_runs_graph(self):
+        sql = "SELECT type_res, var, val FROM {0}.runs_graph WHERE " \
+              "id_runs = {1} ORDER BY id".format(self.mdb.SCHEMA,
+                                                 self.cur_run)
+
+        rows = self.mdb.run_query(sql, fetch=True)
+
+        self.info_graph = {}
+        for i, row in enumerate(rows):
+            if row[0] in self.info_graph.keys():
+                self.info_graph[row[0]][row[1]] = row[2]
+            else:
+                self.info_graph[row[0]] = {row[1]: row[2]}
+        print (self.info_graph)
+
+    def get_lst_graph_bl(self, typ_res, id_run=None):
+        """
+        Get graphic list basin and link
+        :param typ_res: result typ
+        :param id_run: id of model
+        :return:
+        """
+        liste = []
+        if typ_res in self.info_graph.keys():
+            if id_run:
+                sql = "SELECT  * FROM {0}.results_var WHERE " \
+                      "id in {1}".format(self.mdb.SCHEMA,
+                                         list_sql(
+                                             self.info_graph[typ_res]['var']))
+
+            else:
+                sql = "SELECT DISTINCT * FROM {0}.results_var " \
+                      "WHERE type_res = '{1}'".format(self.mdb.SCHEMA,
+                                                      typ_res)
+
+            rows = self.mdb.run_query(sql, fetch=True)
+
+            for rws in rows:
+                liste.append({"id": rws[2], "name": rws[3], "unit": "",
+                              "vars": [rws[2]], "colors": ["blue"],
+                              'type_res': typ_res})
+            liste = self.change_lengend_var(liste)
+        return liste
 
     def init_dico_run(self):
         self.dict_run = dict()
@@ -158,91 +330,214 @@ class GraphResultDialog(QWidget):
             if row[1] not in self.dict_run.keys():
                 self.dict_run[row[1]] = dict()
             self.dict_run[row[1]][row[2]] = row[0]
+        self.init_cb_run()
+
+    def init_cb_run(self):
+        self.cb_run.clear()
+        for run in self.dict_run.keys():
+            self.cb_run.addItem(run, run)
+
+    def init_cb_scen(self):
+        run = self.cb_run.currentText()
+        self.cb_scen.clear()
+        for nm_scen, id_scen in self.dict_run[run].items():
+            self.cb_scen.addItem(nm_scen, id_scen)
+
+    def init_cb_graph(self):
+        self.cb_graph.blockSignals(True)
+        self.cb_graph.clear()
+        lst_graph = None
+        if self.cur_run:
+            # add comment
+            txt = self.mdb.select_distinct("comments", "runs",
+                                           where='id={}'.format(self.cur_run))
+            if txt:
+                txt = txt['comments'][0]
+                if not isinstance(txt, str):
+                    txt = str(txt)
+                self.lbl_coment.setText(txt)
+                self.show_hide_com(True)
+            else:
+                self.show_hide_com(False)
+        if self.typ_graph == "struct" or self.typ_graph == "weirs":
+            lst_graph = self.lst_graph
+        elif self.typ_graph == "hydro" or self.typ_graph == "hydro_pk":
+            lst_graph = self.get_lst_graph_opt(self.cur_run)
+        elif self.typ_graph == "hydro_basin" or self.typ_graph == "hydro_link":
+            lst_graph = self.get_lst_graph_bl(self.typ_res, self.cur_run)
+
+        self.lst_graph = lst_graph
+        for graph in self.lst_graph:
+            self.cb_graph.addItem(graph["name"], graph["id"])
+
+        if self.cb_graph.count() == 0:
+            self.graph_obj.axes.cla()
+            self.graph_obj.canvas.draw()
+            self.tw_data.clearContents()
+        self.cb_graph.blockSignals(False)
+
+    def init_cb_det(self, id):
+        self.cb_det.blockSignals(True)
+        self.cb_det.clear()
+        if self.typ_graph == "struct" or self.typ_graph == "weirs":
+            lstpk = []
+            if self.typ_res in self.info_graph.keys():
+                for id_config in self.info_graph[self.typ_res]['pknum'].keys():
+                    lstpk.append(
+                        self.info_graph[self.typ_res]['pknum'][id_config])
+                info = self.mdb.select('profiles',
+                                       where='abscissa IN {0}'.format(
+                                           list_sql(lstpk, 'float'))
+                                       , list_var=['abscissa', "name"])
+                for pknum in lstpk:
+                    if pknum in info['abscissa']:
+                        txt = str(pknum) + ' : ' + info['name'][
+                            info['abscissa'].index(pknum)]
+                    else:
+                        txt = str(pknum)
+                    self.cb_det.addItem(txt, pknum)
+            else:
+                pass
+
+            self.cb_det.setCurrentIndex(self.cb_det.findData(id))
+        elif self.typ_graph == "hydro":
+            info = self.mdb.select('profiles', list_var=['abscissa', "name"])
+
+            for pknum in self.info_graph['opt']['pknum']:
+                if pknum in info['abscissa']:
+                    txt = str(pknum) + ' : ' + info['name'][
+                        info['abscissa'].index(pknum)]
+                else:
+                    txt = str(pknum)
+                self.cb_det.addItem(txt, pknum)
+
+            self.cb_det.setCurrentIndex(self.cb_det.findData(id))
+
+        elif self.typ_graph == "hydro_pk":
+
+            sql = "SELECT init_date FROM {0}.runs " \
+                  "WHERE id = {1} ".format(self.mgis.mdb.SCHEMA,
+                                           self.cur_run)
+            info = self.mdb.run_query(sql, fetch=True)
+            if info:
+                self.date = info[0][0]
+            else:
+                self.date = None
+
+            for time_ in self.info_graph[self.typ_res]['time']:
+                if self.date:
+                    aff = self.date + timedelta(seconds=time_)
+                    aff = '{:%d/%m/%Y %H:%M:%S}.{:02.0f}'.format(aff,
+                                                                 aff.microsecond / 10000.0)
+                else:
+                    aff = str(time_)
+                self.cb_det.addItem(aff, time_)
+            self.cb_det.setCurrentIndex(self.cb_det.count() - 1)
+            self.cur_t = self.cb_det.itemData(self.cb_det.currentIndex())
+
+        elif self.typ_graph == "hydro_link" or self.typ_graph == "hydro_basin":
+            if self.typ_res == 'link':
+                table = "links"
+                num = "linknum"
+            else:
+                table = "basins"
+                num = "basinnum"
+
+            if self.typ_res in self.info_graph.keys():
+                sql = "SELECT DISTINCT name,{3},gid FROM  {0}.{2} WHERE {3} " \
+                      "IN {1} ".format(self.mgis.mdb.SCHEMA,
+                                       list_sql(self.info_graph[self.typ_res][
+                                                    'pknum'],
+                                                'float'),
+                                       table,
+                                       num)
+
+                rows = self.mdb.run_query(sql, fetch=True)
+                for row in rows:
+                    self.cb_det.addItem(row[0], row[1])
+
+            self.cb_det.setCurrentIndex(self.cb_det.findData(id))
+            self.sld_det.setValue(self.cb_det.findData(id))
+        if self.cb_det.count() == 0:
+            self.graph_obj.axes.cla()
+            self.graph_obj.canvas.draw()
+            self.tw_data.clearContents()
+        else:
+            self.sld_det.setMaximum(self.cb_det.count() - 1)
+        self.cb_det.blockSignals(False)
+
+    def run_changed(self):
+        """ change fct for cb_run"""
+        self.cb_scen.blockSignals(True)
+        self.init_cb_scen()
+        self.scen_changed()
+        self.cb_scen.blockSignals(False)
+
+    def scen_changed(self):
+        """ change scen"""
+        if self.cb_scen.currentIndex() != -1:
+            self.cur_run = self.cb_scen.itemData(self.cb_scen.currentIndex())
+            self.get_runs_graph()
+            self.clean_score()
+            self.init_cb_graph()
+            self.graph_changed(False)
+            self.init_cb_det(self.cur_pknum)
+            self.detail_changed()
+
+    def graph_changed(self, update=True):
+        """ change graph"""
+        self.graph_obj.update_limites = True
+        if self.cb_graph.currentIndex() != -1:
+            self.cur_graph = self.cb_graph.itemData(
+                self.cb_graph.currentIndex())
+            for graph in self.lst_graph:
+                if graph["id"] == self.cur_graph:
+                    self.typ_res = graph['type_res']
+                    self.cur_vars = graph["vars"]
+                    self.cur_vars_lbl = self.find_var_lbl()
+                    self.graph_obj.init_mdl(graph["vars"], self.cur_vars_lbl,
+                                            graph["colors"], graph["unit"],
+                                            graph['name'])
+                    break
+
+            if update:
+                self.update_data()
+        else:
+            self.graph_obj.axes.cla()
+            self.graph_obj.canvas.draw()
+            self.tw_data.clearContents()
+
+    def detail_changed(self, up_lim=True):
+        """ change pk or data"""
+        self.graph_obj.update_limites = up_lim
+        if self.cb_det.currentIndex() != -1:
+            self.cur_pknum = self.cb_det.itemData(
+                self.cb_det.currentIndex())
+            self.sld_det.setValue(self.cb_det.currentIndex())
+            self.update_data()
+        else:
+            self.graph_obj.axes.cla()
+            self.graph_obj.canvas.draw()
+            self.tw_data.clear()
+
+    # def avance_detail(self, meth):
+    #     idx = self.cb_det.currentIndex()
+    #     if meth == "start":
+    #         self.cb_det.setCurrentIndex(0)
+    #     elif meth == "prev":
+    #         if idx != 0:
+    #             self.cb_det.setCurrentIndex(idx - 1)
+    #     elif meth == "next":
+    #         if idx != (self.cb_det.count() - 1):
+    #             self.cb_det.setCurrentIndex(idx + 1)
+    #     elif meth == "end":
+    #          self.cb_det.setCurrentIndex(self.cb_det.count() - 1)
 
 
-    def clear_results(self):
-        print ("Nettoyage !!!!!!!!!!")
-        self.graph_obj.axes.cla()
-        self.graph_obj.canvas.draw()
-        self.tw_data.clear()
-
-
-    def update_data(self, param):
+    def update_data(self):
         """
         update data graph
         :return:
-        """
-
-        if not self.initialising:
-            self.cur_data = dict()
-            if param["cur_vars"] is None:
-                self.clear_results()
-                self.mgis.add_info('No Data')
-                return
-
-            sqlv = "('{}')".format("', '".join(param["cur_vars"]))
-            sqlw = self.sql_where.format(param["cur_branch"], param["cur_pknum"], param["cur_t"])
-            if self.typ_graph == 'hydro_pk':
-                sql_hyd_pk = "AND pknum IN (SELECT pk FROM {0}.results_sect " \
-                             "WHERE id_runs = {1} AND branch = {2})".format(self.mgis.mdb.SCHEMA, param["cur_run"], param["cur_branch"])
-            else:
-                sql_hyd_pk = ''
-
-            sql = "SELECT DISTINCT {1} FROM {0}.results WHERE id_runs = {2} AND {4} AND var IN " \
-                  "(SELECT id FROM {0}.results_var WHERE var in {3}) {5} ORDER BY {1}".format(self.mgis.mdb.SCHEMA,
-                                                                                              self.x_var, param["cur_run"],
-                                                                                              sqlv, sqlw, sql_hyd_pk)
-            print(sql)
-
-            if self.x_var == 'time':
-                if self.typ_graph in ['struct', 'weirs']:
-                    x_val = None
-                    if self.typ_res in param["info_graph"].keys():
-                        for id_config in param["info_graph"][self.typ_res]['pknum'].keys():
-                            if param["info_graph"][self.typ_res]['pknum'][id_config] == param["cur_pknum"]:
-                                x_val = param["info_graph"][self.typ_res]['time'][id_config]
-                    if not x_val:
-                        x_val = param["info_graph"]['opt']['time']
-                else:
-                    x_val = param["info_graph"][self.typ_res]['time']
-
-                sql = "SELECT init_date FROM {0}.runs WHERE id = {1} ".format(self.mgis.mdb.SCHEMA, param["cur_run"])
-                info = self.mdb.run_query(sql, fetch=True)
-                if info:
-                    self.date = info[0][0]
-                    if self.date:
-                        self.cur_data["date"] = [self.date + timedelta(seconds=row) for row in x_val]
-                else:
-                    self.date = None
-
-            elif self.x_var == 'pk':
-                if self.typ_graph == 'hydro_pk':
-                    sql = "SELECT pk FROM {0}.results_sect WHERE id_runs = {1} AND branch = {2} " \
-                          "ORDER BY pk".format(self.mgis.mdb.SCHEMA, param["cur_run"], param["cur_branch"])
-                    rows = self.mdb.run_query(sql, fetch=True)
-                    x_val = [row[0] for row in rows]
-                else:
-                    x_val = param["info_graph"][self.typ_res]['pknum']
-
-            else:
-                rows = self.mdb.run_query(sql, fetch=True)
-                x_val = [row[0] for row in rows]
-
-            self.cur_data[self.x_var] = x_val
-
-            for var in param["cur_vars"]:
-                sql = "SELECT {1}, val FROM {0}.results WHERE id_runs = {2} AND " \
-                      "var IN (SELECT id FROM {0}.results_var WHERE results_var.var = '{3}') AND {4} {5} " \
-                      "ORDER BY {1}".format(self.mgis.mdb.SCHEMA, self.x_var, param["cur_run"], var, sqlw, sql_hyd_pk)
-                rows = self.mdb.run_query(sql, fetch=True)
-                self.cur_data[var] = [row[1] for row in rows]
-
-            print (self.cur_data.keys())
-        else:
-            print ("initialising")
-
-
-
         """
         if not self.initialising:
             self.cur_data = dict()
@@ -350,8 +645,6 @@ class GraphResultDialog(QWidget):
                     lais_g = self.update_laisse(x_var_)
 
             self.graph_obj.init_graph(self.cur_data, x_var_, lais=lais_g)
-        """
-
 
     def get_laisses(self):
         """
@@ -504,7 +797,7 @@ class GraphResultDialog(QWidget):
                 gg = 'Q'
             else:
                 self.graph_obj.clear_obs()
-                self.disable_score()
+                self.disenable_score()
                 return
             mini = min(self.cur_data["date"])
             maxi = max(self.cur_data["date"])
@@ -523,7 +816,7 @@ class GraphResultDialog(QWidget):
 
             if len(obs_graph['valeur']) == 0:
                 self.graph_obj.clear_obs()
-                self.disable_score()
+                self.disenable_score()
                 return
 
             if "Z" in self.cur_data.keys():
@@ -556,7 +849,7 @@ class GraphResultDialog(QWidget):
                 self.old_lst_run_score = self.lst_runs
         else:
             self.graph_obj.clear_obs()
-            self.disable_score()
+            self.disenable_score()
 
     def fill_tab(self, x_var, nb_col=None):
         self.tw_data.setColumnCount(0)
@@ -598,10 +891,20 @@ class GraphResultDialog(QWidget):
         self.cl_scores.clear_scores()
         self.cc_scores.setChecked(False)
 
-    def disable_score(self):
-        """ disable scores """
+    def disenable_score(self):
+        """ disenable scores """
         self.clean_score()
         self.cc_scores.setEnabled(False)
+
+    def find_var_lbl(self):
+        tmp = []
+        for var in self.cur_vars:
+            rows = self.mdb.run_query("SELECT name FROM {0}.results_var "
+                                      "WHERE var = '{1}'".format(
+                self.mgis.mdb.SCHEMA, var),
+                fetch=True)
+            tmp.append(rows[0][0])
+        return tmp
 
     def export_csv(self):
         """Export Table to .CSV file"""
