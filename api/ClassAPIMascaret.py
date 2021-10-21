@@ -241,7 +241,7 @@ class ClassAPIMascaret:
             self.mess_crit_stop()
 
     def mess_crit_stop(self):
-        """Print the crieria information"""
+        """Print the criteria information"""
         txt = '**************************************\n'
 
         if self.stpcrit == 1:
