@@ -282,7 +282,7 @@ class GraphProfil(GraphCommon):
         self.courbeTopo = []
         for i in range(10):
             temp, = self.axes.plot([], [], color='green', marker='+', mew=2,
-                                   zorder=95, label='Topo', picker=5)
+                                   zorder=95, label='Topo')#, picker=5)
             self.courbeTopo.append(temp)
 
         self.etiquetteTopo = []
@@ -817,10 +817,13 @@ class GraphProfil(GraphCommon):
 
             self.maj_graph()
         elif not zone_selector and bouton == 1:
+            print('dddddddddddddddddddd')
+            print(legline)
+            print( self.lined)
             courbe = self.lined[legline.get_label()]
             # efface en cliquand sur la legende
             vis = not courbe.get_visible()
-
+            print(vis)
             courbe.set_visible(vis)
             if vis:
                 legline.set_alpha(1.0)
@@ -1056,7 +1059,7 @@ class GraphProfil(GraphCommon):
         liste_noms = [c.get_label() for c in self.courbes]
         self.leg = self.axes.legend(self.courbes, liste_noms, loc='upper right',
                                     fancybox=False, shadow=False)
-        self.leg.get_frame().set_alpha(0.4)
+        #self.leg.get_frame().set_alpha(0.4)
         self.lined = dict()
 
         for legline, courbe in zip(self.leg.get_lines(), self.courbes):
