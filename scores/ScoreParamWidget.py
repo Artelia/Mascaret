@@ -147,6 +147,7 @@ class ScoreParamWidget(QWidget):
 
                 # ************ add initialisation widget ************
                 date_init, lst_times = self.get_times(id_run)
+                print(id_run,"dddddddv",date_init, lst_times)
                 tmps = datetime.today()
                 if len(lst_times) > 1:
                     deltat = lst_times[1] - lst_times[0]
@@ -352,6 +353,7 @@ class ScoreParamWidget(QWidget):
 
             self.get_parameter()
             self.clean_type_res()
+            self.res={}
             self.cpt_score()
 
             tabscores = self.windmain.tabscores
@@ -400,18 +402,21 @@ class ScoreParamWidget(QWidget):
                     if not self.cpt_ns_err(id_run):
                         add_txt += '- Nash - Sutcliffe criterion ' \
                                    '(Run : {})\n'.format(name_run)
-                    if 'ns_err' in self.res[id_run]['Q']['nash_crit'].keys():
-                        if self.res[id_run]['Q']['nash_crit']['ns_err'] is None:
-                            other_txt += '- Nash - Sutcliffe criterion' \
-                                         ' (Run : {}, variable: Q):\n ' \
-                                         '    The Sum in denominator is null.' \
-                                         '\n'.format(name_run)
-                    if 'ns_err' in self.res[id_run]['H']['nash_crit'].keys():
-                        if self.res[id_run]['H']['nash_crit']['ns_err'] is None:
-                            other_txt += '- Nash - Sutcliffe criterion' \
-                                         ' (Run : {}, variable: H):\n ' \
-                                         '    The Sum in denominator is null.' \
-                                         '\n'.format(name_run)
+                    else:
+                        for code,tmp in self.res['nash_crit'][id_run].items():
+                            if 'Q' in tmp.keys():
+                                if tmp['Q']['ns_err'] is None:
+                                    other_txt += '- Nash - Sutcliffe criterion' \
+                                                 ' (Run : {}, variable: Q, obs : {}):\n ' \
+                                                 '    The Sum in denominator is null.' \
+                                                 '\n'.format(name_run, code)
+                            if 'H' in tmp.keys():
+                                if tmp['H']['ns_err'] is None:
+                                    other_txt += '- Nash - Sutcliffe criterion' \
+                                                 ' (Run : {}, variable: H, obs : {}):\n ' \
+                                                 '    The Sum in denominator is null.' \
+                                                 '\n'.format(name_run, code)
+
 
                 if self.ch_vol_err.isChecked():
                     if not self.cpt_vol_err(id_run):
@@ -443,21 +448,18 @@ class ScoreParamWidget(QWidget):
                                            ' no constant : \n'.format(name_run)
                                 for code in lst_test:
                                     '    - {} observation)\n'.format(code)
-                            if 'per_err' in self.res[id_run]['Q'][
-                                'persistence'].keys():
-                                if self.res[id_run]['Q']['persistence'][
-                                    'per_err'] is None:
-                                    other_txt += '- Persistance error (Run : {}, variable: Q):\n ' \
-                                                 '    The Sum in denominator is null. \n'.format(
-                                        name_run)
-                            if 'per_err' in self.res[id_run]['H'][
-                                'persistence'].keys():
-                                if self.res[id_run]['H']['persistence'][
-                                    'per_err'] is None:
-                                    other_txt += '- Persistance error (Run : {}, variable: H): \n' \
-                                                 '    The Sum in denominator is null. \n'.format(
-                                        name_run)
 
+                    if 'persistence'in self.res.keys() :
+                        for code,tmp in self.res['persistence'][id_run].items():
+                            if 'Q' in tmp.keys():
+                                if tmp['Q']['per_err'] is None:
+                                    other_txt += '- Persistance error (Run : {}, variable: Q , obs : {}):\n ' \
+                                                 '    The Sum in denominator is null. \n'.format(name_run, code)
+                            if 'H' in tmp.keys():
+                                if tmp['H']['per_err'] is None:
+                                    other_txt += '- Persistance error (Run : {}, variable: H, obs : {}): \n' \
+                                                 '    The Sum in denominator is null. \n'.format(
+                                    name_run,code)
                     else:
                         add_txt += '- Persistance error, No data in time rang' \
                                    ' (Run : {})\n'.format(name_run)
@@ -510,6 +512,26 @@ class ScoreParamWidget(QWidget):
         }
         return dict_res
 
+    def add_res_dict(self, err, id_run, code):
+        """
+        add element dict
+        :param err : error type
+        :param id_run : run index
+        :param code : observation code
+        :return:
+        """
+        if err in self.res.keys():
+            if  id_run in self.res[err].keys():
+                if code in self.res[err][id_run].keys():
+                    return
+                else:
+                    self.res[err][id_run][code] =  {}
+            else:
+                self.res[err][id_run] = {code: {}}
+        else:
+            self.res[err] = {id_run :{code: {}}}
+        return
+
     def cpt_simple_err(self, id_run):
         """
         compute simple scores :
@@ -529,54 +551,21 @@ class ScoreParamWidget(QWidget):
         seuil = None
         if self.ch_limit.isChecked():
             seuil = self.val_lim.value()
-        h_obs = np.array([])
-        h_pred = np.array([])
-        dict_tmp_h = {}
-        q_obs = np.array([])
-        q_pred = np.array([])
-        dict_tmp_q = {}
         for code in self.data[id_run].keys():
             if self.cmpt_var[id_run][code]['H']:
-                if self.all:
-                    h_obs = np.concatenate(
-                        (h_obs, self.data[id_run][code]['h_obs']), axis=0)
-                    h_pred = np.concatenate(
-                        (h_pred, self.data[id_run][code]['h_mod']), axis=0)
-                else:
-                    dict_tmp_h[code] = self.creat_dict_simple(
-                        self.data[id_run][code]['h_obs'],
-                        self.data[id_run][code]['h_mod'], seuil)
+                self.add_res_dict('simple', id_run, code)
+                self.res['simple'][id_run][code]['H'] = self.creat_dict_simple(
+                    self.data[id_run][code]['h_obs'],
+                    self.data[id_run][code]['h_mod'], seuil)
+                self.type_res['simple'] = True
+                out = True
             if self.cmpt_var[id_run][code]['Q']:
-                if self.all:
-                    q_obs = np.concatenate(
-                        (q_obs, self.data[id_run][code]['q_obs']), axis=0)
-                    q_pred = np.concatenate(
-                        (q_pred, self.data[id_run][code]['q_mod']), axis=0)
-                else:
-                    dict_tmp_q[code] = self.creat_dict_simple(
-                        self.data[id_run][code]['q_obs'],
-                        self.data[id_run][code]['q_mod'], seuil)
-
-        if self.cmpt_var[id_run]['H']:
-            if self.all:
-                self.res[id_run]['H']['simple'] = self.creat_dict_simple(h_obs,
-                                                                         h_pred,
-                                                                         seuil)
-            else:
-                self.res[id_run]['H']['simple'] = dict_tmp_h
-            self.type_res['simple'] = True
-            out = True
-
-        if self.cmpt_var[id_run]['Q']:
-            if self.all:
-                self.res[id_run]['Q']['simple'] = self.creat_dict_simple(
-                    q_obs,
-                    q_pred,
-                    seuil)
-            else:
-                self.res[id_run]['Q']['simple'] = dict_tmp_q
-            self.type_res['simple'] = True
-            out = True
+                self.add_res_dict('simple', id_run, code)
+                self.res['simple'][id_run][code]['Q'] = self.creat_dict_simple(
+                    self.data[id_run][code]['q_obs'],
+                    self.data[id_run][code]['q_mod'], seuil)
+                self.type_res['simple'] = True
+                out = True
 
         return out
 
@@ -587,63 +576,26 @@ class ScoreParamWidget(QWidget):
         :return: out : True if the compute is Ok
         """
         out = False
-
-        h_obs = np.array([])
-        h_pred = np.array([])
-        dict_tmp_h = {}
-        q_obs = np.array([])
-        q_pred = np.array([])
-        dict_tmp_q = {}
         for code in self.data[id_run].keys():
-
             if self.cmpt_var[id_run][code]['H']:
-                if self.all:
-                    h_obs = np.concatenate(
-                        (h_obs, self.data[id_run][code]['h_obs']), axis=0)
-                    h_pred = np.concatenate(
-                        (h_pred, self.data[id_run][code]['h_mod']), axis=0)
-                else:
-                    dict_tmp_h[code] = \
-                        {
-                            'ns_err': self.cl_score.nash_crit(
-                                self.data[id_run][code]['h_obs'],
-                                self.data[id_run][code]['h_mod'])
-                        }
-            if self.cmpt_var[id_run][code]['Q']:
-                if self.all:
-                    q_obs = np.concatenate(
-                        (q_obs, self.data[id_run][code]['q_obs']), axis=0)
-                    q_pred = np.concatenate(
-                        (q_pred, self.data[id_run][code]['q_mod']), axis=0)
-                else:
-                    dict_tmp_q[code] = {
-                        'ns_err': self.cl_score.nash_crit(
-                            self.data[id_run][code]['q_obs'],
-                            self.data[id_run][code]['q_mod'])
-                    }
-
-        if self.cmpt_var[id_run]['H']:
-            if self.all:
-                self.res[id_run]['H']['nash_crit'] = \
+                self.add_res_dict('nash_crit', id_run, code)
+                self.res['nash_crit'][id_run][code]['H'] = \
                     {
-                        'ns_err': self.cl_score.nash_crit(h_obs, h_pred)
+                        'ns_err': self.cl_score.nash_crit(
+                            self.data[id_run][code]['h_obs'],
+                            self.data[id_run][code]['h_mod'])
                     }
-            else:
-                self.res[id_run]['H']['nash_crit'] = dict_tmp_h
-            self.type_res['nash_crit'] = True
-            out = True
-
-        if self.cmpt_var[id_run]['Q']:
-            if self.all:
-                self.res[id_run]['Q']['nash_crit'] = {
-                    'ns_err': self.cl_score.nash_crit(q_obs, q_pred)
+                self.type_res['nash_crit'] = True
+                out = True
+            if self.cmpt_var[id_run][code]['Q']:
+                self.add_res_dict('nash_crit', id_run, code)
+                self.res['nash_crit'][id_run][code]['Q'] = {
+                    'ns_err': self.cl_score.nash_crit(
+                        self.data[id_run][code]['q_obs'],
+                        self.data[id_run][code]['q_mod'])
                 }
-            else:
-                self.res[id_run]['Q']['nash_crit'] = dict_tmp_q
-
-            self.type_res['nash_crit'] = True
-            out = True
-
+                self.type_res['nash_crit'] = True
+                out = True
         return out
 
     def cpt_vol_err(self, id_run):
@@ -653,8 +605,7 @@ class ScoreParamWidget(QWidget):
         :return:out : True if the compute is Ok
         """
         out = False
-        err = 0
-        dict_tmp = {}
+
         if self.cmpt_var[id_run]['Q']:
             for code in self.data[id_run].keys():
                 if self.cmpt_var[id_run][code]['Q']:
@@ -663,22 +614,14 @@ class ScoreParamWidget(QWidget):
                     # the same because model is sample on the observations
                     lst_time_pred = self.data[id_run][code]['q_obs_time']
                     lst_time_obs = self.data[id_run][code]['q_obs_time']
-                    if self.all:
-                        err += self.cl_score.vol_err(q_obs, q_pred,
-                                                     lst_time_pred,
-                                                     lst_time_obs)
-                    else:
-                        dict_tmp[code] = {
-                            'vol_err': self.cl_score.vol_err(q_obs, q_pred,
-                                                             lst_time_pred,
-                                                             lst_time_obs)}
+                    self.add_res_dict('volume', id_run, code)
+                    self.res['volume'][id_run][code]['Q'] = {
+                        'vol_err': self.cl_score.vol_err(q_obs, q_pred,
+                                                         lst_time_pred,
+                                                         lst_time_obs)}
+                    self.type_res['volume'] = True
+                    out = True
 
-            if self.all:
-                self.res[id_run]['Q']['volume'] = {'vol_err': err}
-            else:
-                self.res[id_run]['Q']['volume'] = dict_tmp
-            self.type_res['volume'] = True
-            out = True
         return out
 
     def cpt_quantil_err(self, id_run):
@@ -692,67 +635,33 @@ class ScoreParamWidget(QWidget):
         out = False
         dist_step = self.dsp_dist_quantil.value()
 
-        h_obs = np.array([])
-        h_pred = np.array([])
-        q_obs = np.array([])
-        q_pred = np.array([])
-        dict_tmp_h = {}
-        dict_tmp_q = {}
         for code in self.data[id_run].keys():
             if self.cmpt_var[id_run][code]['H']:
-                if self.all:
-                    h_obs = np.concatenate(
-                        (h_obs, self.data[id_run][code]['h_obs']), axis=0)
-                    h_pred = np.concatenate(
-                        (h_pred, self.data[id_run][code]['h_mod']), axis=0)
-                else:
-                    y_obs = self.data[id_run][code]['h_obs']
-                    y_pred = self.data[id_run][code]['h_mod']
-                    dict_tmp_h[code] = \
-                        {'dist_err': self.cl_score.dist_err(y_obs, y_pred,
-                                                            dist_step),
-                         'dist_abs_err': self.cl_score.dist_abs_err(y_obs,
-                                                                    y_pred,
-                                                                    dist_step)}
+                y_obs = self.data[id_run][code]['h_obs']
+                y_pred = self.data[id_run][code]['h_mod']
+                self.add_res_dict('quantil', id_run, code)
+                self.res['quantil'][id_run][code]['H'] = \
+                    {'dist_err': self.cl_score.dist_err(y_obs, y_pred,
+                                                        dist_step),
+                     'dist_abs_err': self.cl_score.dist_abs_err(y_obs,
+                                                                y_pred,
+                                                                dist_step)}
+                self.type_res['quantil'] = True
+                out = True
             if self.cmpt_var[id_run][code]['Q']:
-                if self.all:
-                    q_obs = np.concatenate(
-                        (q_obs, self.data[id_run][code]['q_obs']), axis=0)
-                    q_pred = np.concatenate(
-                        (q_pred, self.data[id_run][code]['q_mod']), axis=0)
-                else:
-                    y_obs = self.data[id_run][code]['q_obs']
-                    y_pred = self.data[id_run][code]['q_mod']
-                    dict_tmp_q[code] = \
-                        {'dist_err': self.cl_score.dist_err(y_obs, y_pred,
-                                                            dist_step),
-                         'dist_abs_err': self.cl_score.dist_abs_err(y_obs,
-                                                                    y_pred,
-                                                                    dist_step)}
 
-        if self.cmpt_var[id_run]['H']:
-            if self.all:
-                self.res[id_run]['H']['quantil'] = \
-                    {'dist_err': self.cl_score.dist_err(h_obs, h_pred,
+                y_obs = self.data[id_run][code]['q_obs']
+                y_pred = self.data[id_run][code]['q_mod']
+                self.add_res_dict('quantil', id_run, code)
+                self.res['quantil'][id_run][code]['Q'] = \
+                    {'dist_err': self.cl_score.dist_err(y_obs, y_pred,
                                                         dist_step),
-                     'dist_abs_err': self.cl_score.dist_abs_err(h_obs, h_pred,
+                     'dist_abs_err': self.cl_score.dist_abs_err(y_obs,
+                                                                y_pred,
                                                                 dist_step)}
-            else:
-                self.res[id_run]['H']['quantil'] = dict_tmp_h
-            self.type_res['quantil'] = True
-            out = True
+                self.type_res['quantil'] = True
+                out = True
 
-        if self.cmpt_var[id_run]['Q']:
-            if self.all:
-                self.res[id_run]['Q']['quantil'] = \
-                    {'dist_err': self.cl_score.dist_err(q_obs, q_pred,
-                                                        dist_step),
-                     'dist_abs_err': self.cl_score.dist_abs_err(q_obs, q_pred,
-                                                                dist_step)}
-            else:
-                self.res[id_run]['Q']['quantil'] = dict_tmp_q
-            self.type_res['quantil'] = True
-            out = True
 
         return out
 
@@ -791,13 +700,6 @@ class ScoreParamWidget(QWidget):
         frst_time = datum_to_float(frst_date, ref_time)
         last_time = datum_to_float(last_date, ref_time)
 
-        dict_tmp_h = {}
-
-        dict_tmp_q = {}
-        sumh_n = 0
-        sumh_d = 0
-        sumq_n = 0
-        sumq_d = 0
         for code in self.data[id_run].keys():
 
             if self.cmpt_var[id_run][code]['H']:
@@ -819,25 +721,17 @@ class ScoreParamWidget(QWidget):
                 if not self.check_cst_deltat(new_obs_times, new_pred_times):
                     lst_no_cst.append(code)
                     continue
+                self.add_res_dict('persistence', id_run, code)
+                self.res['persistence'][id_run][code]['H'] = \
+                    {
+                        'per_err':
+                            self.cl_score.persistence(new_obs, new_pred,
+                                                      new_obs_times,
+                                                      deltat),
+                    }
+                self.type_res['persistence'] = True
+                out = True
 
-                if self.all:
-                    per, sum1, sum2 = self.cl_score.persistence(new_obs,
-                                                                new_pred,
-                                                                new_obs_times,
-                                                                deltat,
-                                                                sumc=True)
-
-                    sumh_n += sum1
-                    sumh_d += sum2
-
-                else:
-                    dict_tmp_h[code] = \
-                        {
-                            'per_err':
-                                self.cl_score.persistence(new_obs, new_pred,
-                                                          new_obs_times,
-                                                          deltat),
-                        }
             if self.cmpt_var[id_run][code]['Q']:
                 new_obs, new_obs_times = \
                     self.filter_time(frst_time, last_time,
@@ -853,53 +747,17 @@ class ScoreParamWidget(QWidget):
                 if not self.check_cst_deltat(new_obs_times, new_pred_times):
                     lst_no_cst.append(code)
                     continue
-                if self.all:
-                    per, sum1, sum2 = self.cl_score.persistence(new_obs,
-                                                                new_pred,
-                                                                new_obs_times,
-                                                                deltat,
-                                                                sumc=True)
-                    sumq_n += sum1
-                    sumq_d += sum2
-
-                else:
-                    dict_tmp_q[code] = \
-                        {
-                            'per_err':
-                                self.cl_score.persistence(new_obs, new_pred,
-                                                          new_obs_times,
-                                                          deltat),
-                        }
-
-        if self.cmpt_var[id_run]['H']:
-            if self.all:
-                if sumh_d == 0:
-                    res = None
-                else:
-                    res = 1 - sumh_n / sumh_d
-                self.res[id_run]['H']['persistence'] = \
+                self.add_res_dict('persistence', id_run, code)
+                self.res['persistence'][id_run][code]['Q'] = \
                     {
-                        'per_err': res,
+                        'per_err':
+                            self.cl_score.persistence(new_obs, new_pred,
+                                                      new_obs_times,
+                                                      deltat),
                     }
-            else:
-                self.res[id_run]['H']['persistence'] = dict_tmp_h
-            self.type_res['persistence'] = True
-            out = True
-
-        if self.cmpt_var[id_run]['Q']:
-            if self.all:
-                if sumq_d == 0:
-                    res = None
-                else:
-                    res = 1 - sumq_n / sumq_d
-                self.res[id_run]['Q']['persistence'] = {
-                    'per_err': res,
-                }
-            else:
-                self.res[id_run]['Q']['persistence'] = dict_tmp_q
-
                 self.type_res['persistence'] = True
                 out = True
+
 
         return out, lst_no_cst
 
@@ -938,16 +796,6 @@ class ScoreParamWidget(QWidget):
         frst_time = datum_to_float(frst_date, ref_time)
         last_time = datum_to_float(last_date, ref_time)
 
-        h_obs = np.array([])
-        h_pred = np.array([])
-        h_obs_time = np.array([])
-        h_pred_time = np.array([])
-        dict_tmp_h = {}
-        q_obs = np.array([])
-        q_pred = np.array([])
-        q_obs_time = np.array([])
-        q_pred_time = np.array([])
-        dict_tmp_q = {}
         for code in self.data[id_run].keys():
 
             if self.cmpt_var[id_run][code]['H']:
@@ -963,27 +811,20 @@ class ScoreParamWidget(QWidget):
                 #
                 if len(new_obs) == 0:
                     continue
+                self.add_res_dict('tips_err', id_run, code)
+                self.res['tips_err'][id_run][code]['H'] = \
+                    {
+                        'pts_err':
+                            self.cl_score.err_point(new_obs, new_pred),
+                        'pts_time_err':
+                            self.cl_score.err_temps_point(new_obs, new_pred,
+                                                          new_obs_times,
+                                                          new_pred_times,
+                                                          alphah)
+                    }
+                self.type_res['tips_err'] = True
+                out = True
 
-                if self.all:
-                    h_obs = np.concatenate(
-                        (h_obs, new_obs), axis=0)
-                    h_pred = np.concatenate(
-                        (h_pred, new_pred), axis=0)
-                    h_obs_time = np.concatenate(
-                        (h_obs_time, new_obs_times), axis=0)
-                    h_pred_time = np.concatenate(
-                        (h_pred_time, new_pred_times), axis=0)
-                else:
-                    dict_tmp_h[code] = \
-                        {
-                            'pts_err':
-                                self.cl_score.err_point(new_obs, new_pred),
-                            'pts_time_err':
-                                self.cl_score.err_temps_point(new_obs, new_pred,
-                                                              new_obs_times,
-                                                              new_pred_times,
-                                                              alphah)
-                        }
             if self.cmpt_var[id_run][code]['Q']:
                 new_obs, new_obs_times = \
                     self.filter_time(frst_time, last_time,
@@ -996,58 +837,18 @@ class ScoreParamWidget(QWidget):
                 #
                 if len(new_obs) == 0:
                     continue
-                if self.all:
-                    q_obs = np.concatenate(
-                        (q_obs, new_obs), axis=0)
-                    q_pred = np.concatenate(
-                        (q_pred, new_pred), axis=0)
-                    q_obs_time = np.concatenate(
-                        (q_obs_time, new_obs_times), axis=0)
-                    q_pred_time = np.concatenate(
-                        (q_pred_time, new_pred_times), axis=0)
-                else:
-                    dict_tmp_q[code] = {
-                        'pts_err':
-                            self.cl_score.err_point(new_obs, new_pred),
-                        'pts_time_err':
-                            self.cl_score.err_temps_point(new_obs, new_pred,
-                                                          new_obs_times,
-                                                          new_pred_times,
-                                                          alphaq)
-                    }
-
-        if self.cmpt_var[id_run]['H']:
-            if self.all:
-                self.res[id_run]['H']['tips_err'] = \
-                    {
-                        'pts_err': self.cl_score.err_point(h_obs, h_pred),
-                        'pts_time_err': self.cl_score.err_temps_point(h_obs,
-                                                                      h_pred,
-                                                                      h_obs_time,
-                                                                      h_pred_time,
-                                                                      alphah)
-                    }
-            else:
-                self.res[id_run]['H']['tips_err'] = dict_tmp_h
-            self.type_res['tips_err'] = True
-            out = True
-
-        if self.cmpt_var[id_run]['Q']:
-            if self.all:
-                self.res[id_run]['Q']['tips_err'] = {
-                    'pts_err': self.cl_score.err_point(q_obs, q_pred),
-                    'pts_time_err': self.cl_score.err_temps_point(q_obs,
-                                                                  q_pred,
-                                                                  q_obs_time,
-                                                                  q_pred_time,
-                                                                  alphaq)
+                self.add_res_dict('tips_err', id_run, code)
+                self.res['tips_err'][id_run][code]['Q'] = {
+                    'pts_err':
+                        self.cl_score.err_point(new_obs, new_pred),
+                    'pts_time_err':
+                        self.cl_score.err_temps_point(new_obs, new_pred,
+                                                      new_obs_times,
+                                                      new_pred_times,
+                                                      alphaq)
                 }
-            else:
-                self.res[id_run]['Q']['tips_err'] = dict_tmp_q
-
                 self.type_res['tips_err'] = True
                 out = True
-
         return out
 
     def interpol_date(self, obs_time, time_model, var_model):
@@ -1276,7 +1077,7 @@ class ScoreParamWidget(QWidget):
                 self.model.pop(id_run)
                 continue
             self.data[id_run] = {}
-            self.res[id_run] = {'H': {}, 'Q': {}}
+
 
     def info_model(self, id_run, init_time):
         """

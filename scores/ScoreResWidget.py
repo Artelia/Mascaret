@@ -41,7 +41,6 @@ class ScoreResWidget(QWidget):
                          'ui/scores/ui_results_score.ui'), self)
         self.dict_name = {}
         self.res = {}
-        self.lst_runs = []
         #
         self.data_write = {
             'mean_err': 'Mean error',
@@ -65,39 +64,35 @@ class ScoreResWidget(QWidget):
     def fill_tab(self):
         """ fill table"""
         self.clear_tab()
-        self.lst_runs = []
-        if len(self.res.keys()) > 0:
-            self.dict_name = self.mdb.get_scen_name(self.res.keys())
+        err_typ_lst = [err  for err in self.res.keys() if err != 'quantil']
+        id_lst = []
+        for err in  err_typ_lst:
+           for idrun in self.res[err].keys():
+               id_lst.append(idrun)
+        id_lst  = list(set(id_lst))
+
+        if len(id_lst) >0:
+            self.dict_name = self.mdb.get_scen_name(id_lst)
         else:
             self.dict_name = {}
-        # table_dist_abs
-        tab_fill = {}
-        lst_col = []
 
-        for id in self.res.keys():
-            colq = []
-            colh = []
-            if 'H' in self.res[id].keys():
-                if len(self.res[id]['H'].keys()) > 0:
-                    for key in self.res[id]['H'].keys():
-                        if key != 'quantil':
-                            tmp, colh = self.fill_dico(id, 'H', key)
-                            for kk in tmp.keys():
-                                if kk in tab_fill.keys():
-                                    tab_fill[kk].update(tmp[kk])
-                                else:
-                                    tab_fill[kk] = tmp[kk]
-            if 'Q' in self.res[id].keys():
-                if len(self.res[id]['Q'].keys()) > 0:
-                    for key in self.res[id]['Q'].keys():
-                        if key != 'quantil':
-                            tmp, colq = self.fill_dico(id, 'Q', key)
-                            for kk in tmp.keys():
-                                if kk in tab_fill.keys():
-                                    tab_fill[kk].update(tmp[kk])
-                                else:
-                                    tab_fill[kk] = tmp[kk]
-            lst_col = lst_col + colh + colq
+        lst_col = []
+        tab_fill = {}
+        for err_typ in err_typ_lst  :
+            for idrun, dict_id in self.res[err_typ].items():
+                for code, dict_code in dict_id.items():
+                    for varq, tmp_var in  dict_code.items() :
+                        name_col = '{} - {}\n' \
+                                   '{} - {}'.format(self.dict_name[idrun]['run'],
+                                               self.dict_name[idrun]['scenario'],
+                                                    code,
+                                                    varq)
+                        lst_col.append(name_col)
+                        for  err, tmp in tmp_var.items():
+                            if err in tab_fill.keys():
+                                tab_fill[err][name_col] = tmp
+                            else:
+                                tab_fill[err] = {name_col: tmp}
 
         if len(tab_fill.keys()) > 0:
 
@@ -130,47 +125,6 @@ class ScoreResWidget(QWidget):
 
             self.bt_export_csv.setEnabled(True)
 
-    def fill_dico(self, id, varhq, var):
-        """
-         change results shape to fill table
-        :param id: run index
-        :param varhq: variable (H or Q)
-        :param var:
-        :return:
-        """
-        tab_fill = {}
-        res2 = self.res[id][varhq][var]
-        code = None
-        oneobs = False
-        lst_col = []
-        if not self.all:
-            keys = list(res2.keys())
-            if len(keys) == 1:
-                oneobs = True
-                res2 = res2[keys[0]]
-        if self.all or oneobs:
-            name_col = '{} - {}\n' \
-                       '{}'.format(self.dict_name[id]['run'],
-                                   self.dict_name[id]['scenario'],
-                                   varhq)
-            for err in res2.keys():
-                tab_fill[err] = {name_col: res2[err]}
-                lst_col.append(name_col)
-        else:
-            # case if multi observation on the same profil
-            # self.res[id][varhq][var][code]
-            for code in res2.keys():
-                name_col = '{} - {}\n' \
-                           '{} - {}'.format(self.dict_name[id]['run'],
-                                            self.dict_name[id]['scenario'],
-                                            varhq, code)
-
-                for err in res2[code].keys():
-                    tab_fill[err] = {name_col: res2[code][err]}
-                    lst_col.append(name_col)
-        return tab_fill, lst_col
-
-    #
     def clear_tab(self):
         """clear table"""
         self.table_res.clear()
