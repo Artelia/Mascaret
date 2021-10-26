@@ -65,11 +65,11 @@ class ScoreResallWidget(QWidget):
             'tips_err': "Errors on the peaks",
             'persistence': "Persistence score"
         }
-
+        self.bt_export_csv.clicked.connect(self.export_csv)
 
     def add_dict(self,err_typ,err,name_line,code, tmp):
         """
-
+        add in dictionnary
         :return:
         """
 
@@ -104,7 +104,7 @@ class ScoreResallWidget(QWidget):
         else:
             self.dict_name = {}
 
-        lst_col = []
+
         self.tab_fill = {}
         # tab_fill[tab][sstab][line][col]= val
         for err_typ in err_typ_lst:
@@ -117,7 +117,7 @@ class ScoreResallWidget(QWidget):
                         name_col = '{} - {}'.format(code, varq)
                         for err, tmp in tmp_var.items():
                             self.add_dict(err_typ,err,name_line,name_col, tmp)
-                            # tab_fill[err_typ][err][name_line] = {code : tmp}
+
 
     def add_gui(self):
         """GUI gestion"""
@@ -134,6 +134,10 @@ class ScoreResallWidget(QWidget):
                                                 self.data_write[err])
 
     def fill_table(self):
+        """
+        fill table
+        :return:
+        """
         if len(self.tab_fill.keys()) > 0:
             for err_typ,tab_err_typ  in self.tab_fill.items():
                 for err, tab_err in tab_err_typ.items():
@@ -177,88 +181,72 @@ class ScoreResallWidget(QWidget):
 
     def export_csv(self):
         """Export Table to .CSV file"""
-    #               erreur 1         erreur 2
-    #  ligne run    observations    observations
-
-
-        txt = 'Scores_results.csv
-        # default_name = txt.replace(' ', '_').replace(':', '-')
+        clipboard = self.clipboard_fill()
+        txt = 'Scores_results.csv'
+        default_name = txt.replace(' ', '_').replace(':', '-')
         file_name_path, _ = QFileDialog.getSaveFileName(self,
                                                         "saveFile",
                                                         "{0}.csv".format(
                                                             default_name),
                                                         filter="CSV (*.csv *.)")
         if file_name_path:
+
             file = open(file_name_path, 'w')
             file.write(clipboard)
             file.close()
 
 
     def clipboard_fill(self,sep = ';'):
-        # txt =  ''
-        #
-        # for err_typ, tab_err_typ in self.tab_fill.items():
-        #     for err, tab_err in tab_err_typ.items():
-        # liste tout les line possible
-        # liste toute les clones et doublons
-        #  completer les ligne et colonne du fichier
-        #         for name_line, tab_line  in tab_err.items():
-        #             line = '{} {}'.format(name_line, sep)
-        #             for col, tmp in tab_line.items():
-        #                 line+= '{} {}'.format(tmp, sep)
-        #
-        #         {}
+        """
+        Creation text in CSV
+        :param sep: separateur
+        :return:
+        """
+        txt =  ''
+        first_line = 'Errors {} '.format(sep)
+        second_line = 'Runs\\ observations {} '.format(sep)
 
-                {name_line}{sep}{err1/obs1}{sep}{err1/obs2}{sep}{err2/obs1}{sep}{err2/obs2}
-        # self.tab_fill[err_typ][err][name_line] = {code: tmp}
+        list_line = []
+        list_col1 = []
+        list_col2 = []
+        for err_typ, tab_err_typ in self.tab_fill.items():
+            for err, tab_err in tab_err_typ.items():
+                list_col1.append((err_typ,err))
+                for name_line, tab_line in tab_err.items():
+                    list_line.append(name_line)
+                    for col, tmp in tab_line.items():
+                        list_col2.append(col)
+        list_col1 = list(set(list_col1))
+        list_col2 = list(set(list_col2))
+        list_line = list(set(list_line))
+
+        first = True
+        for line in list_line:
+            txt += '{} {} '.format(line, sep)
+            for err_typ, err in list_col1:
+                for  obs in list_col2:
+                    if first :
+                        first_line += '{} {} '.format(self.data_write[err], sep)
+                        second_line += '{} {} '.format(obs ,sep)
+                    try:
+                        val = self.tab_fill[err_typ][err][line][obs]
+                    except KeyError :
+                        val = ''
+
+                    txt += '{} {} '.format(val ,sep)
+
+            if first :
+                second_line += '\n'
+                first_line += '\n'
+                first = False
+            txt += '\n'
+
+        clipboard = 'Scores Results {} \n'.format(sep)
+        clipboard += first_line
+        clipboard += second_line
+        clipboard += txt
+        return clipboard
 
 
 
-        #    cur_tw = self.table_res
-        #     range_r = range(0, cur_tw.rowCount())
-        #     range_c = range(0, cur_tw.columnCount())
-        #     clipboard = self.tw_to_txt(cur_tw, range_r, range_c, ';')
-        #     file = open(file_name_path, 'w')
-        #     file.write(clipboard)
-        #     file.close()
-    #
-    # def tw_to_txt(self, tw, range_r, range_c, sep):
-    #     """
-    #     change table data to  text data
-    #     :param tw: table object
-    #     :param range_r: range of row
-    #     :param range_c:range of column
-    #     :param sep: separator
-    #     :return:
-    #     """
-    #     clipboard = '{}'.format(sep)
-    #     for c in range_c:
-    #         if c != range_c[-1]:
-    #             clipboard = '{}{}{}'.format(clipboard,
-    #                                         tw.horizontalHeaderItem(
-    #                                             c).text().replace('\n', ' '),
-    #                                         sep)
-    #         else:
-    #             clipboard = '{}{}\n'.format(clipboard,
-    #                                         tw.horizontalHeaderItem(
-    #                                             c).text().replace('\n', ' '))
-    #
-    #     for r in range_r:
-    #         clipboard = '{}{}{}'.format(clipboard,
-    #                                     tw.verticalHeaderItem(r).text(),
-    #                                     sep)
-    #
-    #         for c in range_c:
-    #             if tw.item(r, c):
-    #                 val = tw.item(r, c).data(0)
-    #             else:
-    #                 val = ''
-    #             if c != range_c[-1]:
-    #                 clipboard = '{}{}{}'.format(clipboard,
-    #                                             val,
-    #                                             sep)
-    #             else:
-    #                 clipboard = '{}{}\n'.format(clipboard,
-    #                                             val)
-    #
-    #     return clipboard
+

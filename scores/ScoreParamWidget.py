@@ -147,7 +147,7 @@ class ScoreParamWidget(QWidget):
 
                 # ************ add initialisation widget ************
                 date_init, lst_times = self.get_times(id_run)
-                print(id_run,"dddddddv",date_init, lst_times)
+
                 tmps = datetime.today()
                 if len(lst_times) > 1:
                     deltat = lst_times[1] - lst_times[0]
