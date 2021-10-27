@@ -48,6 +48,7 @@ from .GraphCommon import DraggableLegend, GraphCommon
 from .Structure.StructureCreateDialog import ClassStructureCreateDialog
 from .Structure.ClassPolygone import ClassPolygone
 from .GraphResultDialog import GraphResultDialog
+from .ClassProfInterpDialog import ClassProfInterpDialog
 
 
 from qgis.PyQt.QtWidgets import *
@@ -234,6 +235,8 @@ class GraphProfil(GraphCommon):
         self.ui.bt_l_stok.clicked.connect(
             lambda: self.select_stock("leftstock"))
         self.ui.bt_ouvrage.clicked.connect(self.create_struct)
+        self.ui.bt_interp.clicked.connect(self.bt_interpol_profile)
+
         self.ui.tab_aff.hide()
 
     def init_ui(self):
@@ -1355,33 +1358,16 @@ class GraphProfil(GraphCommon):
         Compute value:
             section minor bed
             overflow point
-            low point
+            bottom point
         :param id : index of profil
         :return:
         """
+
+
         clpoly = ClassPolygone()
-        profil = {
-            'x': [float(val) for val in self.liste['x'][id].split()],
-            'z': [float(val) for val in self.liste['z'][id].split()]
-        }
 
-        # •	Des cotes de débordement
-        lmin = self.liste['leftminbed'][id]
-        rmin = self.liste['rightminbed'][id]
+        pr_m, rmin, lmin = self.get_minor_pr(id)
 
-        linS = []
-        for x, z in zip(profil['x'], profil['z']):
-            linS.append((x, z))
-        #
-        if not lmin:
-            # no valeur for minor bed
-            lmin = profil['x'][0]
-        if not rmin:
-            # no valeur for minor bed
-            rmin = profil['x'][0]
-
-        pr_m, _, _, _, _ = decoup_pr(linS, [lmin, rmin], [lmin, rmin])
-        pr_m = np.array(pr_m)
         lz = pr_m[0][1]
         rz = pr_m[-1][1]
         h_pbord = min(lz, rz)
@@ -1404,33 +1390,42 @@ class GraphProfil(GraphCommon):
         return minz, poly.area, rz, lz, rmin, lmin
 
     def check_prof(self):
+
         self.ui.tab_aff.show()
         self.ui.table_check.show()
         id = self.liste['name'].index(self.nom)
         self.ch_prof = {}
         # cas = -1 amont, cas=1 aval
         dcas = {-1: 'upstream', 0: 'current', 1: 'downstream'}
+        nofind = {'point_bas': None,
+               'sect_plein_bord': None,
+               'cote_d': None,
+               'cote_g': None,
+               'x_d': None,
+               'x_g': None, }
         for cas in [-1, 0, 1]:
-            if self.liste['x'][id + cas]:
-                # print(self.liste['name'][id + cas])
-                minz, area, rz, lz, rmin, lmin = self.val_inter_prof(id + cas)
-                self.ch_prof[dcas[cas]] = {'point_bas': minz,
-                                           'sect_plein_bord': area,
-                                           'cote_d': rz,
-                                           'cote_g': lz,
-                                           'x_d': rmin,
-                                           'x_g': lmin}
+            if id + cas >=0 and id + cas < len(self.liste['x']):
+                if self.liste['x'][id + cas]:
+                    # print(self.liste['name'][id + cas])
+                    minz, area, rz, lz, rmin, lmin = self.val_inter_prof(id + cas)
+                    self.ch_prof[dcas[cas]] = {'point_bas': minz,
+                                               'sect_plein_bord': area,
+                                               'cote_d': rz,
+                                               'cote_g': lz,
+                                               'x_d': rmin,
+                                               'x_g': lmin}
+                else:
+                    self.ch_prof[dcas[cas]] = nofind
             else:
-                self.ch_prof[dcas[cas]] = {'point_bas': None,
-                                           'sect_plein_bord': None,
-                                           'cote_d': None,
-                                           'cote_g': None,
-                                           'x_d': None,
-                                           'x_g': None, }
+                self.ch_prof[dcas[cas]] = nofind
         self.fill_table_check()
 
 
     def fill_table_check(self):
+        """
+        Fill table for 'check profile'
+        :return:
+        """
         # cols = list(self.ch_prof.keys())
         # lines = list(self.ch_prof['current'].keys())
         # exclude_line = ['x_d','x_g']
@@ -1462,18 +1457,255 @@ class GraphProfil(GraphCommon):
                 item.setFlags(Qt.ItemIsEnabled)
                 self.ui.table_check.setItem(idl, idc, item)
 
+    # •	La section de plein bord du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
+    # •	Le point bas du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
+    # •	Des cotes de débordement de la rive droite et gauche (profil en cours, aval et amont, soit 6 valeurs)
+    #
     def maj_tab_check(self):
         self.ch_prof = {}
         self.ui.tab_aff.hide()
         self.ui.table_check.clear()
 
+    def bt_interpol_profile(self):
+        """
+        Interpolate profile
+        :return:
+        """
+        err = {}
+        msgerr,id, idam, idav = self.find_pr_inter()
+        if msgerr != '':
+            err['iderr'] = msgerr
+        self.gui_interpol(id, idam, idav, err)
 
-# •	La section de plein bord du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
-# •	Le point bas du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
-# •	Des cotes de débordement de la rive droite et gauche (profil en cours, aval et amont, soit 6 valeurs)
-#
+
+    def gui_interpol(self,id, idam, idav, err):
+
+        if id :
+            plani = self.get_plani(self.liste['abscissa'][id],
+                                   self.liste['branchnum'][id] )
+        else:
+            plani = None
+        nplan = 100
+        if plani is None or idam is None or idav is None:
+            err['plani'] = 'Planim not found'
+            err['nplan'] = 'No compute discretization'
+        else:
+            nplan = self.get_nplan(idam, idav, plani)
+            if  nplan == 0:
+                err['nplan'] = 'No compute discretization'
+
+        dict_interp = {}
+        if idam and idav :
+            dict_interp['up'] = self.get_pr(idam)
+            dict_interp['down'] = self.get_pr(idav)
+
+        dlg = ClassProfInterpDialog(self.mgis)
+        dlg.init_gui(nplan,plani,dict_interp,
+                           self.liste['abscissa'][id], err)
+        if dlg.exec_():
+            pass
 
 
+        #self.add_topo(xaval, zaval, 'downstream')
+
+
+
+    def get_nplan(self,  idam, idav, plani):
+        """
+        get nplan:
+            The higher number of planes between the minor bed of the upstream
+            profile and that of the downstream profile
+        :param idam: upstream profile index
+        :param idav: downstream profile  index
+        :param plani: planimetry value
+        :return:
+        """
+        nplan_lst = []
+        nplan =  0
+        for id in [idam,idav] :
+            pr_m, rmin, lmin = self.get_minor_pr(id)
+            lz = pr_m[0][1]
+            rz = pr_m[-1][1]
+            bottom =  np.min(pr_m)
+            nplan_l = (lz-bottom)/plani
+            nplan_r = (rz-bottom)/plani
+            nplan_lst.append(max(nplan_l,nplan_r))
+        nplan = max( nplan, max(nplan_lst))
+        return nplan
+
+    def get_pr(self, id):
+        """
+        get profil id
+        :param id:
+        :return:
+        """
+
+
+        x_pr = [float(val) for val in self.liste['x'][id].split()]
+        z_pr = [float(val) for val in self.liste['z'][id].split()]
+        lmin = self.liste['leftminbed'][id]
+        rmin = self.liste['rightminbed'][id]
+        lmaj = self.liste['leftstock'][id]
+        rmaj = self.liste['rightstock'][id]
+
+        linS = []
+        for x, z in zip(x_pr, z_pr):
+            linS.append((x, z))
+
+        if not lmin:
+            # no valeur for minor bed
+            lmin = x_pr[0]
+        if not rmin:
+            # no valeur for minor bed
+            rmin = x_pr[-1]
+
+        if not lmaj:
+            # no valeur for major bed
+            lmaj = lmin
+        if not rmaj:
+            # no valeur for major bed
+            rmaj = rmin
+
+        dico = {
+            'name' : self.liste['name'][id],
+            'id' : self.liste['gid'][id],
+            'branch' : self.liste['branchnum'][id],
+            'prof': linS,
+            'pk': self.liste['abscissa'][id],
+            'minor': [lmin, rmin],
+            'major': [lmaj, rmaj],
+        }
+        return dico
+
+
+    def get_minor_pr(self, id):
+        """
+        Get minor bed
+        :param id : index profil
+        :return:
+        """
+        x_pr = [float(val) for val in self.liste['x'][id].split()]
+        z_pr = [float(val) for val in self.liste['z'][id].split()]
+        lmin = self.liste['leftminbed'][id]
+        rmin = self.liste['rightminbed'][id]
+
+        linS = []
+        for x, z in zip(x_pr, z_pr):
+            linS.append((x, z))
+        #
+        if not lmin:
+            # no valeur for minor bed
+            lmin = x_pr[0]
+        if not rmin:
+            # no valeur for minor bed
+            rmin = x_pr[-1]
+        pr_m, _, _, _, _ = decoup_pr(linS, [lmin, rmin], [lmin, rmin])
+        pr_m = np.array(pr_m)
+        return pr_m, rmin, lmin
+
+    def get_plani(self,pk,branch):
+        """
+        Get planimetry value
+        :param pk: abscissa of the profile
+        :param branch: branch number
+        :return: plani
+        """
+        plani = None
+
+        rows = self.mdb.select('branchs',
+                               where="branch='{}'".format(branch),
+                               order="zoneabsstart",
+                               list_var=['zonenum', 'zoneabsstart',
+                                         'zoneabsend', 'planim','active'])
+
+        if rows:
+
+            for i, zone in enumerate(rows['zonenum']):
+                if rows['zoneabsstart'][i]<= pk <=rows['zoneabsend'][i]:
+                    plani = rows['planim'][i]
+                    if rows['active'][i] :
+                        break
+
+        print('plani', plani)
+        return  plani
+
+    def find_pr_inter(self):
+        msgerr =  ''
+        idam = None
+        idav = None
+        id = self.liste['name'].index(self.nom)
+        idmax = len(self.liste["name"])-1
+        if id ==0:
+            msgerr += 'No finds upstream profile'
+            return msgerr,id,idam,idav
+        elif id == idmax :
+            msgerr += 'No finds downstream profile'
+            return msgerr,id,idam,idav
+
+        # upstream
+        idf = id
+        while idf !=0:
+            idf -= 1
+            if self.liste['x'][idf] != None:
+                idam = idf
+                break
+        # downstream
+        idf = id
+        while idf != idmax-1:
+            idf += 1
+            if self.liste['x'][idf] != None:
+                idav = idf
+                break
+        # check val
+        if idam is None:
+            msgerr += 'No finds upstream profile'
+        elif idav is None:
+            msgerr += 'No finds downstream profile'
+        return msgerr, id, idam, idav
+
+
+
+
+
+
+
+
+        #
+        # idam =
+        #
+        # idav =
+        # self.liste['x'][id + cas]
+
+        # cas = -1 amont, cas=1 aval
+        # dcas = {-1: 'upstream', 0: 'current', 1: 'downstream'}
+        # for cas in [-1, 0, 1]:
+        #     if self.liste['x'][id + cas]:
+        #         # print(self.liste['name'][id + cas])
+        #         minz, area, rz, lz, rmin, lmin = self.val_inter_prof(id + cas)
+        #
+        #
+        #     'x': [float(val) for val in self.liste['x'][id].split()],
+        #     'z': [float(val) for val in self.liste['z'][id].split()]
+        # }
+        # linS = []
+        # for x, z in zip(profil['x'], profil['z']):
+        #     linS.append((x, z))
+        #
+        # # overflow point
+        # lmin = self.liste['leftminbed'][id]
+        # rmin = self.liste['rightminbed'][id]
+        #
+        #
+        #
+        # #
+        # if not lmin:
+        #     # no valeur for minor bed
+        #     lmin = profil['x'][0]
+        # if not rmin:
+        #     # no valeur for minor bed
+        #     rmin = profil['x'][0]
+        #
+        # pr_m, _, _, _, _ = decoup_pr(linS, [lmin, rmin], [lmin, rmin])
 
 
 def decoup_pr(pr, lminor_x, lmaj_x):
@@ -1558,3 +1790,5 @@ class CopySelectedCellsAction(QAction):
 
             sys_clip = QApplication.clipboard()
             sys_clip.setText(clipboard)
+
+
