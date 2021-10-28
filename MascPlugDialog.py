@@ -232,10 +232,11 @@ class MascPlugDialog(QMainWindow):
         # TODO Finaliser
         self.ui.actionTest.triggered.connect(self.fct_test)
         self.ui.actionTest.setVisible(False)
-        # delete after
-        self.ui.menuUpate_table.menuAction().setVisible(False)
         # scores
         self.ui.actionScores.triggered.connect(self.fct_scores)
+        #TODO DELETE AFTER
+        self.ui.actionImport_Old_Model.triggered.connect(self.import_old_model_dgl)
+        self.ui.menuUpate_table.menuAction().setVisible(False)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -707,6 +708,78 @@ class MascPlugDialog(QMainWindow):
         if dlg.exec_():
             pass
         return
+
+    def import_old_model_dgl(self):
+        """
+        Import old format result
+        :return:
+        """
+        if self.task_imp:
+            self.box.info("The export is not running,\n"
+                          " because the previous import running yet")
+            self.add_info('The import is not running\n')
+
+            return
+
+        file_name_path, _ = QFileDialog.getOpenFileNames(None,
+                                                         'File Selection',
+                                                         self.masplugPath,
+                                                         filter="PSQL (*.psql);;File (*)")
+        if self.mdb.check_extension():
+            self.add_info(" Shema est {}".format(self.mdb.SCHEMA))
+            self.mdb.create_first_model()
+
+        for file in file_name_path:
+            if os.path.isfile(file):
+                namesh = self.mdb.checkschema_import(file)
+                if namesh is not None:
+                    liste = self.mdb.list_schema()
+                    if namesh in liste:
+                        # demande change name
+                        ok = self.box.yes_no_q("The {} shema already exists.\n "
+                                               "Do you want change the schema name befor import?".format(
+                            namesh))
+                        if ok:
+                            newname, ok = QInputDialog.getText(self,
+                                                               'New Model',
+                                                               'New Model name:')
+                            if ok and self.check_newname(newname, liste):
+
+                                sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp".format(
+                                    namesh)
+                                self.mdb.run_query(sql)
+                                sql = ''
+                                if self.mdb.import_schema(file, old=True):
+                                    self.add_info('Import is done.')
+                                    sql = "ALTER SCHEMA {0} RENAME TO {1};\n".format(
+                                        namesh, newname)
+                                else:
+                                    self.add_info('Import failed.')
+                                #
+                                sql += "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(
+                                    namesh)
+                                self.mdb.run_query(sql)
+                            else:
+                                self.add_info('Import cancel.')
+                                return
+                        else:
+                            self.add_info('Import cancel.')
+                            return
+                    else:
+                        if self.mdb.import_schema(file, old=True):
+                            self.add_info('Import is done.')
+                        else:
+                            self.add_info('Import failed.')
+                else:
+                    if self.mdb.import_schema(file, old=True):
+                        self.add_info('Import is done.')
+                    else:
+                        self.add_info('Import failed.')
+            else:
+                self.add_info('File not found.')
+
+        return
+
 
     def main_graph(self):
         """ GUI graphique"""

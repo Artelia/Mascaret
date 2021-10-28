@@ -232,6 +232,7 @@
     <addaction name="separator"/>
     <addaction name="actionExport_Model"/>
     <addaction name="actionImport_Model"/>
+    <addaction name="actionImport_Old_Model"/>
    </widget>
    <widget class="QMenu" name="menuRun">
     <property name="title">
@@ -738,6 +739,11 @@
   <action name="actionScores">
    <property name="text">
     <string>Scores</string>
+   </property>
+  </action>
+  <action name="actionImport_Old_Model">
+   <property name="text">
+    <string>Import Old Model</string>
    </property>
   </action>
  </widget>
