@@ -65,6 +65,8 @@ class ClassProfInterp():
         self.dz = None
         self.nplan = nplan
         self.plani = plani
+        self.msg = ''
+        self.err = True
         if self.plani != None:
             self.typ_disc = 'autoplan'
 
@@ -76,7 +78,7 @@ class ClassProfInterp():
         """
         dico = {}
         if id == -1:
-            dico = self.data['interp']['prof']
+            dico = self.data['interp']
         else:
             dico = self.prf_loc[id]
         tmp = []
@@ -111,8 +113,11 @@ class ClassProfInterp():
         """
         if len(pr_am_tmp) <= 2 and len(pr_av_tmp) <= 2:
             print("{} profile doesn't existe".format(id_pr))
+            self.msg += "{} profile doesn't existe\n".format(id_pr)
             if id_pr == 0:
                 print("Minor bed doesn't existe")
+                self.msg += "Minor bed doesn't existe\n"
+                self.err = False
                 return 'break'
             else:
                 if not id_pr in self.prf_loc.keys():
@@ -211,8 +216,9 @@ class ClassProfInterp():
             cond_pas_z = False
         else:
             print('Non-existent discretization type')
+            self.msg += 'Non-existent discretization type\n'
+            self.err = False
             return
-        print('dessssssssssssssssssssssssssssss')
         am_g = self.discret_pr_lg(pr_am,
                                   x_am_fond, zmin_am,
                                   pas=pas,
@@ -318,7 +324,6 @@ class ClassProfInterp():
 
         zmax = max(pr[id_g, 1], pr[id_d, 1])
 
-        print(id_g, id_d)
         if id_g == id_d:
             return []
         if id_d == -1:
@@ -359,6 +364,7 @@ class ClassProfInterp():
             line = LineString(line)
             geom = line.intersection(poly)
             if geom.is_empty:
+                self.msg += 'Pas d intersection : {}  {} \n'.format(line, poly)
                 print('Pas d intersection :', line, poly)
             elif geom.geom_type == 'MultiLineString' \
                     or geom.geom_type == 'GeometryCollection':
@@ -383,6 +389,7 @@ class ClassProfInterp():
                 lst_line_disc.append(geom)
             else:
                 print('Geometry type no treatment :', geom.geom_type)
+                self.msg += 'Geometry type no treatment : {} \n'.format(geom.geom_type)
         return lst_line_disc
 
     def decoup_pr(self, pr, lminor_x, lmaj_x):
@@ -406,6 +413,8 @@ class ClassProfInterp():
                 pr_m.append(point)
         if pr_m == []:
             print('No profil for the minor bed')
+            self.msg += 'No profil for the minor bed \n'
+            self.err = False
             return [], [], [], [], []
         if pr_g == []:
             pr_g = [pr_m[0], pr_m[0]]
@@ -428,33 +437,54 @@ class ClassProfInterp():
 
     def __call__(self):
 
+
         pr_am_m, pr_am_g, pr_am_d, \
         pr_am_st_g, pr_am_st_d = self.decoup_pr(self.data['up']['prof'],
                                                 self.data['up']['minor'],
                                                 self.data['up']['major'])
+
         pr_av_m, pr_av_g, pr_av_d, \
         pr_av_st_g, pr_av_st_d = self.decoup_pr(self.data['down']['prof'],
                                                 self.data['down']['minor'],
                                                 self.data['down']['major'])
+
+        # TODO pr_am_m pr_av_m
+        # verifier si ce n'est pas seulement une ligne horizontal
+        # car si nn interpolation non fonctionnel
+        zmin_am = min(np.array(pr_am_m)[:, 1])
+        zmin_av = min(np.array(pr_av_m)[:, 1])
+        zmax_am = max(np.array(pr_am_m)[:, 1])
+        zmax_av = max(np.array(pr_av_m)[:, 1])
+        if zmax_am == zmin_am:
+            print('Upstream profile is plate')
+            self.msg += 'Upstream profile is flat\n'
+            self.err = False
+            return
+        if zmax_av == zmin_av:
+            print('Downstream profile is plate')
+            self.msg += 'Downstream profile is flat\n'
+            self.err = False
+            return
 
         lst_pr = [(0, pr_am_m, pr_av_m),
                   (1, pr_am_g, pr_av_g),
                   (2, pr_am_d, pr_av_d),
                   (3, pr_am_st_g, pr_av_st_g),
                   (4, pr_am_st_d, pr_av_st_d)]
-
+        self.data['interp']['prof'] = []
         for id, pr_am_tmp, pr_av_tmp in lst_pr:
-            print('*************** type : {}'.format(id))
+            # print('*************** type : {}'.format(id))
             self.calc_profil(pr_am_tmp, pr_av_tmp, id)
-            print('fin')
+            # print('fin')
         prof_final = self.merge_prof('prof')
-        print(prof_final, type(prof_final))
+
         #prof_final = LineString(prof_final)
         # export csv:
         # df = pd.DataFrame(np.array(prof_final))
         # df.to_csv('test', sep=';')
 
-        return prof_final
+        self.data['interp']['prof'] = list(prof_final.coords)
+        return
 
 
 

@@ -1009,6 +1009,8 @@ class GraphProfil(GraphCommon):
                 self.courbeTopo[i].set_color("purple")
             elif fichier == 'upstream':
                 self.courbeTopo[i].set_color("brown")
+            elif fichier == 'interpolation':
+                self.courbeTopo[i].set_color("orange")
             else:
                 self.courbeTopo[i].set_color("green")
 
@@ -1505,9 +1507,16 @@ class GraphProfil(GraphCommon):
         if dlg.exec_():
             pass
 
-
-        #self.add_topo(xaval, zaval, 'downstream')
-
+        if dlg.interpol_prof:
+            new_prof = np.array(dlg.interpol_prof['prof'])
+            condition = "name='{0}' AND profile='{1}'".format('interpolation',
+                                                              self.nom)
+            self.mdb.delete("topo", condition)
+            self.add_topo(new_prof[:,0], new_prof[:,1], 'interpolation')
+            self.extrait_topo()
+            self.maj_graph()
+            self.maj_legende()
+            self.maj_limites()
 
 
     def get_nplan(self,  idam, idav, plani):

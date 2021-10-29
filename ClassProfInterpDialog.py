@@ -42,11 +42,12 @@ class ClassProfInterpDialog(QDialog):
         self.plani = None
         self.pk_int = None
         self.data = {}
-        self.interpol_prof = {}
+        self.interpol_prof = None
         self.compute = True
 
         self.b_ok.accepted.connect(self.accept_page)
         self.b_ok.rejected.connect(self.reject_page)
+        self.ch_autdisc.setChecked(False)
         self.fct_autdisc()
         self.ch_autdisc.stateChanged.connect(self.fct_autdisc)
 
@@ -64,7 +65,7 @@ class ClassProfInterpDialog(QDialog):
             for key, msg  in err.items():
                 msg_lbl += '  - {}\n'.format(msg)
                 if key =='plani':
-                    self.ch_autdisc.setChecked(False)
+
                     self.ch_autdisc.setEnabled(False)
                 if key =='iderr':
                     self.compute = False
@@ -115,10 +116,11 @@ class ClassProfInterpDialog(QDialog):
                                         nplan=nplan_s,plani=plani_s)
 
             cl_interp()
-
-            self.interpol_prof = cl_interp.data['interp']
-
-
+            if cl_interp.msg != '':
+                cl_interp.msg += 'No interpolation.'
+                self.mgis.add_info(cl_interp.msg)
+            if cl_interp.err :
+                self.interpol_prof = cl_interp.data['interp']
 
 
         self.accept()
@@ -126,3 +128,4 @@ class ClassProfInterpDialog(QDialog):
     def reject_page(self):
         # print('cancel')
         self.reject()
+
