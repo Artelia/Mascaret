@@ -1181,17 +1181,25 @@ $BODY$
         except:
             return False
 
-    def import_schema(self, file):
+    def import_schema(self, file, old=False):
         """import schema"""
         try:
-            exe = os.path.join(self.mgis.postgres_path, 'pg_restore')
+            if old:
+                exe = os.path.join(self.mgis.postgres_path, 'psql')
+            else :
+                exe = os.path.join(self.mgis.postgres_path, 'pg_restore')
             if os.path.isfile(exe) or os.path.isfile(exe + '.exe'):
                 # d = dict(os.environ)
                 # d["PGPASSWORD"] = "{0}".format(self.password)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
-                commande = '"{0}" -U {1} -O -F c -p {2}  -d {4} -h {5} ' \
-                           '--create "{3}"'.format(exe, self.USER, self.port,
-                                                   file, self.dbname, self.host)
+                if old:
+                    commande = '"{0}" -U {1} -p {2} -f "{3}" -d {4} -h {5}'.format(
+                        exe, self.USER, self.port,
+                        file, self.dbname, self.host)
+                else:
+                    commande = '"{0}" -U {1} -O -F c -p {2}  -d {4} -h {5} ' \
+                               '--create "{3}"'.format(exe, self.USER, self.port,
+                                                       file, self.dbname, self.host)
 
                 p = subprocess.Popen(commande, shell=True,
                                      stdout=subprocess.PIPE,
@@ -1519,3 +1527,16 @@ $BODY$
 
             # print(sql)
             self.run_query(sql)
+
+    # TODO OLD AFTER
+    def checkschema_import(self, file):
+        namesh = None
+        with open(file, 'r') as infile:
+            for line in infile:
+                if line.find('CREATE SCHEMA') > -1:
+                    line = line.replace(';', '').replace('\n', '')
+                    liste = line.split()
+                    namesh = liste[2]
+                    break
+
+        return namesh
