@@ -30,7 +30,7 @@ class ClassProfInterp():
 
     """
 
-    def __init__(self, data, pk_int, nplan=100, plani=None):
+    def __init__(self, data, pk_int, nplan=100, plani=None, debug=False):
         """
 
         :param data: dict containing the interpolation data
@@ -67,6 +67,7 @@ class ClassProfInterp():
         self.plani = plani
         self.msg = ''
         self.err = True
+        self.debug =debug
         if self.plani != None:
             self.typ_disc = 'autoplan'
 
@@ -111,15 +112,21 @@ class ClassProfInterp():
         :param id_pr: id profile
         :return:
         """
+        cas_prt = {0: 'minor profile' ,
+                  1: 'left major profile',
+                  2: 'right major profile',
+                  3: 'left stockage zone',
+                  4: 'right stockage zone', }
         if len(pr_am_tmp) <= 2 and len(pr_av_tmp) <= 2:
-            print("{} profile doesn't existe".format(id_pr))
-            self.msg += "{} profile doesn't existe\n".format(id_pr)
+            # print("{} profile doesn't existe".format(id_pr))
             if id_pr == 0:
-                print("Minor bed doesn't existe")
+                # print("Minor bed doesn't existe")
                 self.msg += "Minor bed doesn't existe\n"
                 self.err = False
                 return 'break'
             else:
+                if self.debug :
+                    self.msg += "{}  doesn't existe\n".format(cas_prt[id_pr])
                 if not id_pr in self.prf_loc.keys():
                     self.prf_loc[id_pr] = {'prof': []}
                 self.prf_loc[id_pr]['prof'].append(None)
@@ -215,7 +222,7 @@ class ClassProfInterp():
             pas = max(nplan_am,nplan_av)
             cond_pas_z = False
         else:
-            print('Non-existent discretization type')
+            # print('Non-existent discretization type')
             self.msg += 'Non-existent discretization type\n'
             self.err = False
             return
@@ -365,7 +372,7 @@ class ClassProfInterp():
             geom = line.intersection(poly)
             if geom.is_empty:
                 self.msg += 'Pas d intersection : {}  {} \n'.format(line, poly)
-                print('Pas d intersection :', line, poly)
+                # print('Pas d intersection :', line, poly)
             elif geom.geom_type == 'MultiLineString' \
                     or geom.geom_type == 'GeometryCollection':
                 if id_d == -1:
@@ -388,7 +395,7 @@ class ClassProfInterp():
             elif geom.geom_type == 'LineString':
                 lst_line_disc.append(geom)
             else:
-                print('Geometry type no treatment :', geom.geom_type)
+                # print('Geometry type no treatment :', geom.geom_type)
                 self.msg += 'Geometry type no treatment : {} \n'.format(geom.geom_type)
         return lst_line_disc
 
@@ -412,7 +419,7 @@ class ClassProfInterp():
             else:
                 pr_m.append(point)
         if pr_m == []:
-            print('No profil for the minor bed')
+            # print('No profil for the minor bed')
             self.msg += 'No profil for the minor bed \n'
             self.err = False
             return [], [], [], [], []
@@ -448,21 +455,30 @@ class ClassProfInterp():
                                                 self.data['down']['minor'],
                                                 self.data['down']['major'])
 
-        # TODO pr_am_m pr_av_m
-        # verifier si ce n'est pas seulement une ligne horizontal
-        # car si nn interpolation non fonctionnel
-        zmin_am = min(np.array(pr_am_m)[:, 1])
-        zmin_av = min(np.array(pr_av_m)[:, 1])
-        zmax_am = max(np.array(pr_am_m)[:, 1])
-        zmax_av = max(np.array(pr_av_m)[:, 1])
+        np_pr_am = np.array(pr_am_m)
+        np_pr_av =  np.array(pr_av_m)
+        zmin_am = min(np_pr_am[:, 1])
+        zmin_av = min(np_pr_av[:, 1])
+        zmax_am = max(np_pr_am[:, 1])
+        zmax_av = max(np_pr_av[:, 1])
         if zmax_am == zmin_am:
-            print('Upstream profile is plate')
+            #print('Upstream profile is plate')
             self.msg += 'Upstream profile is flat\n'
+            self.msg += '   x1,z1 : ({},{}) , ' \
+                        'xn, zn : ({},{})\n'.format(np_pr_am[0,0],
+                                                    np_pr_am[0,1],
+                                                    np_pr_am[-1, 0],
+                                                    np_pr_am[-1, 1])
             self.err = False
             return
         if zmax_av == zmin_av:
-            print('Downstream profile is plate')
+            #print('Downstream profile is plate')
             self.msg += 'Downstream profile is flat\n'
+            self.msg += '   x1,z1 : ({},{}) , ' \
+                        'xn, zn : ({},{})\n'.format(np_pr_av[0, 0],
+                                                    np_pr_av[0, 1],
+                                                    np_pr_av[-1, 0],
+                                                    np_pr_av[-1, 1])
             self.err = False
             return
 

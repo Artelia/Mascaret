@@ -820,13 +820,9 @@ class GraphProfil(GraphCommon):
 
             self.maj_graph()
         elif not zone_selector and bouton == 1:
-            print('dddddddddddddddddddd')
-            print(legline)
-            print( self.lined)
             courbe = self.lined[legline.get_label()]
             # efface en cliquand sur la legende
             vis = not courbe.get_visible()
-            print(vis)
             courbe.set_visible(vis)
             if vis:
                 legline.set_alpha(1.0)
@@ -1305,12 +1301,15 @@ class GraphProfil(GraphCommon):
                     if x < 0:
                         geom = 'NULL'
                     else:
-                        p = f.geometry().interpolate(x).asPoint()
 
-                        # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
-
-                        geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
-                            p.x(), p.y(), self.mdb.SRID)
+                        geo_tmp = f.geometry().interpolate(x)
+                        if not geo_tmp.isNull :
+                            p = geo_tmp.asPoint()
+                            # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
+                            geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                                p.x(), p.y(), self.mdb.SRID)
+                        else:
+                            geom = 'NULL'
 
                     tab["name"].append("'" + basename + "'")
                     tab["profile"].append("'" + self.nom + "'")
@@ -1635,7 +1634,7 @@ class GraphProfil(GraphCommon):
                     if rows['active'][i] :
                         break
 
-        print('plani', plani)
+        #print('plani', plani)
         return  plani
 
     def find_pr_inter(self):

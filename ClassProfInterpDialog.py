@@ -113,11 +113,13 @@ class ClassProfInterpDialog(QDialog):
             else:
                 plani_s = None
             cl_interp = ClassProfInterp(self.data, self.pk_int,
-                                        nplan=nplan_s,plani=plani_s)
+                                        nplan=nplan_s,plani=plani_s,
+                                        debug=self.mgis.DEBUG)
 
             cl_interp()
             if cl_interp.msg != '':
-                cl_interp.msg += 'No interpolation.'
+                if not cl_interp.err:
+                    cl_interp.msg += 'No interpolation.'
                 self.mgis.add_info(cl_interp.msg)
             if cl_interp.err :
                 self.interpol_prof = cl_interp.data['interp']
