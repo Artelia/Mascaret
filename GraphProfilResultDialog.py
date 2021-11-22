@@ -302,8 +302,7 @@ class GraphProfilResultDialog(QWidget):
             lst_colors = ['black']
             self.cur_vars_lbl = self.find_var_lbl()
 
-            self.graph_obj.init_mdl(self.cur_vars, self.cur_vars_lbl,
-                                    lst_colors, 'm')
+            self.graph_obj.init_mdl(self.cur_vars, self.cur_vars_lbl, lst_colors, [0], 'm')
             self.zmax_save = None
             if self.cur_run:
                 if 'zmax' in self.info_graph[self.typ_res].keys():

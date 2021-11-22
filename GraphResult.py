@@ -23,6 +23,8 @@ from matplotlib import patches
 import numpy as np
 import matplotlib.lines as mlines
 
+MPL_LINE_STYLE = {0: '-', 1: ':', 2: '--', 3: '-.'}
+
 class GraphResult(GraphCommonNew):
     def __init__(self, wgt=None, lay=None, lay_toolbar=None):
         GraphCommonNew.__init__(self, wgt, lay, lay_toolbar)
@@ -46,55 +48,38 @@ class GraphResult(GraphCommonNew):
         self.axes = self.fig.add_subplot(111)
         self.init_ui_common_p()
 
-    def init_mdl(self, lst_vars, lst_lbls, lst_colors, unit_y, name=None):
+    def init_mdl(self, lst_vars, lst_lbls, lst_colors, lst_line_style, unit_y, name=None):
         self.axes.cla()
         self.list_var = []
         self.courbes = []
         self.annotation = []
         self.unit_y = unit_y
 
-        self.annot_var = self.axes.annotate("", xy=(0, 0), ha='left',
-                                            xytext=(10, 0),
-                                            textcoords='offset points',
-                                            va='top',
-                                            bbox=dict(boxstyle='round, pad=0.5',
-                                                      fc='white', alpha=0.7),
-                                            color='black', visible=False,
-                                            zorder=200)
+        self.annot_var = self.axes.annotate("", xy=(0, 0), ha='left', xytext=(10, 0), textcoords='offset points', va='top',
+                                            bbox=dict(boxstyle='round, pad=0.5', fc='white', alpha=0.7),
+                                            color='black', visible=False, zorder=200)
         self.annotation.append(self.annot_var)
         self.courbeLaisses = []
         self.etiquetteLaisses = []
         for v, var in enumerate(lst_vars):
             self.list_var.append({"id": v, "name": var, "clr": lst_colors[v]})
-            courbe_var, = self.axes.plot([], [], color=lst_colors[v],
-                                         zorder=100 - v, label=lst_lbls[v])
+            courbe_var, = self.axes.plot([], [], color=lst_colors[v], linestyle=MPL_LINE_STYLE[lst_line_style[v]], zorder=100 - v, label=lst_lbls[v])
             self.courbes.append(courbe_var)
-            annot_var = self.axes.annotate("", xy=(0, 0), ha='left',
-                                           xytext=(10, 0),
-                                           textcoords='offset points',
-                                           va='top',
-                                           bbox=dict(boxstyle='round, pad=0.5',
-                                                     fc='white', alpha=0.7),
-                                           color=lst_colors[v], visible=False,
-                                           zorder=199 - v)
+            annot_var = self.axes.annotate("", xy=(0, 0), ha='left', xytext=(10, 0), textcoords='offset points', va='top',
+                                           bbox=dict(boxstyle='round, pad=0.5', fc='white', alpha=0.7),
+                                           color=lst_colors[v], visible=False, zorder=199 - v)
             self.annotation.append(annot_var)
 
-        self.courbeObs, = self.axes.plot([], [], color='grey',
-                                         marker='o', markeredgewidth=0,
-                                         zorder=90, label='Observation')
-
+        self.courbeObs, = self.axes.plot([], [], color='grey', marker='o', markeredgewidth=0, zorder=90, label='Observation')
         self.courbeObs.set_visible(False)
 
-        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='pink',
-                                 alpha=0.5, lw=1, zorder=80)
+        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='pink', alpha=0.5, lw=1, zorder=80)
         self.litMineur = self.axes.add_patch(rect)
 
-        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green',
-                                 alpha=0.3, lw=1, zorder=80)
+        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green', alpha=0.3, lw=1, zorder=80)
         self.stockgauche = self.axes.add_patch(rect)
 
-        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green',
-                                 alpha=0.3, lw=1, zorder=80)
+        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green', alpha=0.3, lw=1, zorder=80)
         self.stockdroit = self.axes.add_patch(rect)
 
         self.aire = []
@@ -110,32 +95,39 @@ class GraphResult(GraphCommonNew):
 
         self.axes.grid(True)
         self.v_line = self.axes.axvline(color="black")
-        self.init_legende()
+        #self.init_legende()
 
-    def init_graph(self, data, x_var, all_vis=True, lais=None):
-        self.set_data(data, x_var)
-        handles = None
+    def init_graph(self, lst_data, x_var, all_vis=True, lais=None):
+        self.init_legende()
+        #self.set_data(data, x_var)
+        #handles = None
         if lais:
             handles = [c for c in self.courbes]
-            handles.append(mlines.Line2D([], [], color='darkcyan', marker='+',
-                                         linewidth=0,
-                                         markersize=10, label='Flood marks'))
+            handles.append(mlines.Line2D([], [], color='darkcyan', marker='+', linewidth=0, markersize=10, label='Flood marks'))
             self.courbes.append(self.courbeLaisses[0])
+            self.init_legende(handles)
 
-        self.init_legende(handles)
         leglines = self.leg.get_lines()
-        for v, var in enumerate(self.list_var):
-            self.courbes[v].set_data(data[x_var], data[var["name"]])
-            if all_vis:
-                self.courbes[v].set_visible(True)
-                leglines[v].set_alpha(1.0)
+        idx = 0
+        for data in lst_data:
+            for var in data["y_var"]:
+                self.courbes[idx].set_data(data[data["x_var"]], data[var])
+                if all_vis:
+                    self.courbes[idx].set_visible(True)
+                    leglines[idx].set_alpha(1.0)
+                idx += 1
+
+        # for v, var in enumerate(self.list_var):
+        #     self.courbes[v].set_data(data[x_var], data[var["name"]])
+        #     if all_vis:
+        #         self.courbes[v].set_visible(True)
+        #         leglines[v].set_alpha(1.0)
 
         self.maj_limites()
 
     def init_graph_profil(self, data, x_var, qmaj=0):
-
+        self.init_legende()
         self.set_data(data, x_var)
-
         if len(self.courbes) > 0:
             for i, cb in enumerate(self.courbes):
                 if i == 0:
@@ -209,6 +201,23 @@ class GraphResult(GraphCommonNew):
                         break
 
         self.axes.collections.remove(aire)
+
+        self.maj_limites()
+
+    def insert_obs_curves(self, dict_obs):
+        v = self.list_var[-1]["id"] + 1
+        idx = 0
+        for (id_obs, var), param_obs in dict_obs.items():
+            self.list_var.append({"id": v, "name": var, "clr": "grey"})
+            courbe_obs, = self.axes.plot([], [], color="grey", marker='o', markeredgewidth=0, zorder=100 - v,
+                                         linestyle=MPL_LINE_STYLE[idx], label="Obs {0} - {1}".format(id_obs, var))
+            self.courbes.append(courbe_obs)
+            annot_var = self.axes.annotate("", xy=(0, 0), ha='left', xytext=(10, 0), textcoords='offset points', va='top',
+                                           bbox=dict(boxstyle='round, pad=0.5', fc='white', alpha=0.7),
+                                           color="grey", visible=False, zorder=199 - v)
+            self.annotation.append(annot_var)
+            idx += 1
+            v += 1
 
         self.maj_limites()
 

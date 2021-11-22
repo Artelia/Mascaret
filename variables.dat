@@ -47,3 +47,4 @@
 "Basin volume";"VOLCAS";"x1000 m^3";0;"green"
 "Link flow rate";"QECH";"m^3/s";3;"blue"
 "Link velocity";"VECH";"m/s";0;"red"
+"Gate movement";"ZSTR";"m";0;"blue"

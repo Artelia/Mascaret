@@ -241,6 +241,9 @@ class DraggableLegend:
             self.gotLegend = False
 
 
+
+
+
 class GraphCommonNew:
     def __init__(self, wgt=None, lay=None, lay_toolbar=None):
         self.fig = Figure()
@@ -377,17 +380,18 @@ class GraphCommonNew:
     def init_legende(self, handles=None):
         if not handles:
             handles = self.courbes
+
         liste_noms = []
         for c in self.courbes:
             if c.get_visible():
                 liste_noms.append(c.get_label())
-        self.leg = self.axes.legend(handles, liste_noms, loc='upper right',
+        self.leg = self.axes.legend(handles, liste_noms, loc='upper left',
                                     fancybox=False, shadow=False, fontsize=7.)
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
         DraggableLegendNew(self.leg)
-        self.lined = dict()
 
+        self.lined = dict()
         for legline, courbe in zip(self.leg.get_lines(), self.courbes):
             legline.set_picker(5)
             legline.set_linewidth(3)
@@ -446,6 +450,9 @@ class GraphCommonNew:
         self.canvas.draw()
 
 
+
+
+
 class DraggableLegendNew:
     def __init__(self, legend):
         self.legend = legend
@@ -455,11 +462,9 @@ class DraggableLegendNew:
         self.legend_x = None
         self.legend_y = None
 
-        legend.figure.canvas.mpl_connect('motion_notify_event',
-                                         self.lgd_on_motion)
+        legend.figure.canvas.mpl_connect('motion_notify_event', self.lgd_on_motion)
         legend.figure.canvas.mpl_connect('pick_event', self.lgd_on_pick)
-        legend.figure.canvas.mpl_connect('button_release_event',
-                                         self.lgd_on_release)
+        legend.figure.canvas.mpl_connect('button_release_event', self.lgd_on_release)
         legend.set_picker(self.my_legend_picker)
 
     def my_legend_picker(self, legend, evt):
