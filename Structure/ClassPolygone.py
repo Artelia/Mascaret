@@ -224,6 +224,9 @@ class ClassPolygone:
             delpoly = GeometryCollection()
 
         if not delpoly.is_empty:
+            if not poly.is_valid :
+                # Polygone => multiPolygone
+                poly = poly.buffer(0)
             polyw = poly.difference(delpoly)
             if not polyw.is_valid:
                 polyw = GeometryCollection()

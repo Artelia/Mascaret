@@ -60,7 +60,7 @@ class ClassMNT(QObject):
                 feature["xmnt"] = ""
                 feature["zmnt"] = ""
 
-                # self.res taille du la résolution du raste
+                # self.res taille du la résolution du raster
 
                 for dist in np.arange(0.0, round(longueur, 3),
                                       round(self.res, 3)):

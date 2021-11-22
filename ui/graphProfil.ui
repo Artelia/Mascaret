@@ -684,6 +684,59 @@
              </item>
             </layout>
            </widget>
+           <widget class="QWidget" name="tab_2">
+            <attribute name="title">
+             <string>Interpolation profile</string>
+            </attribute>
+            <layout class="QGridLayout" name="gridLayout_9">
+             <item row="0" column="0">
+              <widget class="QTableWidget" name="table_check_interp">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="autoScroll">
+                <bool>true</bool>
+               </property>
+               <property name="gridStyle">
+                <enum>Qt::DashLine</enum>
+               </property>
+               <property name="rowCount">
+                <number>3</number>
+               </property>
+               <property name="columnCount">
+                <number>3</number>
+               </property>
+               <attribute name="horizontalHeaderCascadingSectionResizes">
+                <bool>false</bool>
+               </attribute>
+               <attribute name="horizontalHeaderDefaultSectionSize">
+                <number>75</number>
+               </attribute>
+               <row/>
+               <row/>
+               <row/>
+               <column>
+                <property name="text">
+                 <string>downstream</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>interpolation</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>upstream</string>
+                </property>
+               </column>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </item>
         </layout>

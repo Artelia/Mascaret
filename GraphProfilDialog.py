@@ -78,7 +78,6 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig)
 
-
 class IdentifyFeatureTool(QgsMapToolIdentify):
     def __init__(self, main):
         self.mgis = main
@@ -220,7 +219,7 @@ class GraphProfil(GraphCommon):
         # self.ui.bt_img_load.clicked.connect(self.import_image)
         self.ui.bt_topo_save.clicked.connect(self.sauve_topo)
         self.ui.bt_amont_aval.clicked.connect(self.topo_amont_aval)
-        self.ui.bt_check_prof.clicked.connect(self.check_prof)
+        self.ui.bt_check_prof.clicked.connect(self.check_prof_diag)
 
         self.ui.bt_reculTot.clicked.connect(lambda: self.avance(-10))
         self.ui.bt_recul.clicked.connect(lambda: self.avance(-1))
@@ -285,7 +284,7 @@ class GraphProfil(GraphCommon):
         self.courbeTopo = []
         for i in range(10):
             temp, = self.axes.plot([], [], color='green', marker='+', mew=2,
-                                   zorder=95, label='Topo')#, picker=5)
+                                   zorder=95, label='Topo', picker=5)
             self.courbeTopo.append(temp)
 
         self.etiquetteTopo = []
@@ -1354,7 +1353,7 @@ class GraphProfil(GraphCommon):
             self.maj_graph()
             self.maj_legende()
 
-    def val_inter_prof(self, id):
+    def val_prof(self, id):
         """
         Compute value:
             section minor bed
@@ -1363,8 +1362,6 @@ class GraphProfil(GraphCommon):
         :param id : index of profil
         :return:
         """
-
-
         clpoly = ClassPolygone()
 
         pr_m, rmin, lmin = self.get_minor_pr(id)
@@ -1378,11 +1375,11 @@ class GraphProfil(GraphCommon):
             # print('flat profil')
             return pr_m[0, 1], None, rz, lz, rmin, lmin
         poly = clpoly.poly2_profile(pr_m)
-
         if poly.is_empty:
             # print('Profil is empty')
             return np.min(pr_m[:, 1]), None, rz, lz, rmin, lmin
         poly = clpoly.coup_poly_h(poly, h_pbord, typ='U')
+
 
         if poly.is_empty:
             # print('Profil is empty')
@@ -1390,25 +1387,60 @@ class GraphProfil(GraphCommon):
         _, minz, _, _ = poly.bounds
         return minz, poly.area, rz, lz, rmin, lmin
 
+    def val_inter_prof(self, id):
+        """
+        Compute value interpolation topo:
+            section minor bed
+            overflow point
+            bottom point
+        :param id : index of profil if  -1 get topo interpolation
+        :return:
+        """
+        clpoly = ClassPolygone()
+        if id == -1 :
+            nom = 'interpolation'
+            prof = np.zeros(shape=(len(self.topo[nom]['x']), 2))
+
+            for i,order in enumerate(self.topo[nom]['ordre']):
+                prof[order-1,0] = self.topo[nom]['x'][i]
+                prof[order-1,1] = self.topo[nom]['z'][i]
+        else:
+            x_pr = [float(val) for val in self.liste['x'][id].split()]
+            z_pr = [float(val) for val in self.liste['z'][id].split()]
+            linS = []
+            for x, z in zip(x_pr, z_pr):
+                linS.append((x, z))
+            prof = np.array(linS)
+
+        bool = np.all(prof == prof[0, :], axis=0)
+        if bool[1]:
+            # print('flat profil')
+            return prof[0, 1], None
+        poly = clpoly.poly2_profile(prof)
+        if poly.is_empty:
+            # print('Profil is empty')
+            return np.min(prof[:, 1]), None
+        _, minz, _, _ = poly.bounds
+        return minz, poly.area
+
     def check_prof(self):
 
-        self.ui.tab_aff.show()
-        self.ui.table_check.show()
         id = self.liste['name'].index(self.nom)
         self.ch_prof = {}
         # cas = -1 amont, cas=1 aval
         dcas = {-1: 'upstream', 0: 'current', 1: 'downstream'}
         nofind = {'point_bas': None,
-               'sect_plein_bord': None,
-               'cote_d': None,
-               'cote_g': None,
-               'x_d': None,
-               'x_g': None, }
+                  'sect_plein_bord': None,
+                  'cote_d': None,
+                  'cote_g': None,
+                  'x_d': None,
+                  'x_g': None, }
         for cas in [-1, 0, 1]:
-            if id + cas >=0 and id + cas < len(self.liste['x']):
+            if id + cas >= 0 and id + cas < len(self.liste['x']):
                 if self.liste['x'][id + cas]:
                     # print(self.liste['name'][id + cas])
-                    minz, area, rz, lz, rmin, lmin = self.val_inter_prof(id + cas)
+                    minz, area, rz, lz, rmin, lmin = self.val_prof(
+                        id + cas)
                     self.ch_prof[dcas[cas]] = {'point_bas': minz,
                                                'sect_plein_bord': area,
                                                'cote_d': rz,
@@ -1419,8 +1451,85 @@ class GraphProfil(GraphCommon):
                     self.ch_prof[dcas[cas]] = nofind
             else:
                 self.ch_prof[dcas[cas]] = nofind
+
+    def check_prof_interp(self):
+        # TODO interpolation is all profile
+
+        id = self.liste['name'].index(self.nom)
+        self.ch_prof_inter = {}
+        # cas = -1 amont, cas=1 aval
+        dcas = {-1: 'upstream', 0: 'interpolation', 1: 'downstream'}
+        nofind = {'point_bas': None,
+                  'sect_plein_bord': None }
+        for cas in [-1, 0, 1]:
+            if cas == 0 :
+                if 'interpolation' in self.topo.keys() :
+                    minz, area = self.val_inter_prof(-1)
+                    self.ch_prof_inter[dcas[cas]] = {'point_bas': minz,
+                                                     'sect_plein_bord': area,
+                                                     }
+                else:
+                    self.ch_prof_inter[dcas[cas]] = nofind
+            elif id + cas >= 0 and id + cas < len(self.liste['x']):
+                if self.liste['x'][id + cas]:
+                    # print(self.liste['name'][id + cas])
+
+                    minz, area = self.val_inter_prof(id + cas)
+                    self.ch_prof_inter[dcas[cas]] = {'point_bas': minz,
+                                               'sect_plein_bord': area,
+                                                     }
+                else:
+                    self.ch_prof_inter[dcas[cas]] = nofind
+            else:
+                self.ch_prof_inter[dcas[cas]] = nofind
+
+    def check_prof_diag(self):
+
+        self.ui.tab_aff.show()
+
+        self.ui.table_check.show()
+        self.check_prof()
         self.fill_table_check()
 
+        self.ui.table_check_interp.show()
+        self.check_prof_interp()
+        self.fill_table_check_interp()
+
+
+    def fill_table_check_interp(self):
+        """
+        Fill table for 'check profile'
+        :return:
+        """
+        # cols = list(self.ch_prof.keys())
+        # lines = list(self.ch_prof['current'].keys())
+        # exclude_line = ['x_d','x_g']
+        # for var in exclude_line :
+        #     lines.remove(var)
+
+        cols = ['interpolation', 'upstream', 'downstream']#, 'interpolation']
+        key_str = {'point_bas': 'bottom point',
+                   'sect_plein_bord': "Section", }
+        lines = list(key_str.keys())
+        self.ui.table_check_interp.clear()
+        self.ui.table_check_interp.setRowCount(len(lines))
+        self.ui.table_check_interp.setColumnCount(len(cols))
+        self.ui.table_check_interp.setVerticalHeaderLabels(list(key_str.values()))
+        self.ui.table_check_interp.setHorizontalHeaderLabels(cols)
+        print(self.ch_prof_inter,"rrrrrrrdd")
+        for idc, col in enumerate(cols):
+            for idl, line in enumerate(lines):
+                val = self.ch_prof_inter[col][line]
+                if val is None:
+                    val = 'None'
+                if isinstance(val, str):
+                    item = QTableWidgetItem(
+                        '{}'.format(val))
+                else:
+                    item = QTableWidgetItem('{:.3f}'.format(val))
+                item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                item.setFlags(Qt.ItemIsEnabled)
+                self.ui.table_check_interp.setItem(idl, idc, item)
 
     def fill_table_check(self):
         """
@@ -1433,7 +1542,7 @@ class GraphProfil(GraphCommon):
         # for var in exclude_line :
         #     lines.remove(var)
 
-        cols = ['current', 'upstream', 'downstream']
+        cols = ['current', 'upstream', 'downstream']#, 'interpolation']
         key_str = {'point_bas': 'bottom point',
                    'sect_plein_bord': "Section of minor bed",
                    'cote_d': "Height of the right bank",
@@ -1670,14 +1779,6 @@ class GraphProfil(GraphCommon):
         elif idav is None:
             msgerr += 'No finds downstream profile'
         return msgerr, id, idam, idav
-
-
-
-
-
-
-
-
         #
         # idam =
         #
