@@ -36,7 +36,6 @@ class ScoreDistWidget(QWidget):
         self.mdb = self.windmain.mgis.mdb
         self.all = self.windmain.all
         self.res = {}
-        self.lst_runs = []
         self.ui = loadUi(
             os.path.join(self.windmain.mgis.masplugPath,
                          'ui/scores/ui_distib_score.ui'), self)
@@ -53,49 +52,49 @@ class ScoreDistWidget(QWidget):
     def fill_tab(self):
         """ fill table"""
         self.clear_tab()
-        self.lst_runs = []
-        if len(self.res.keys()) > 0:
-            self.dict_name = self.mdb.get_scen_name(self.res.keys())
+        if not('quantil' in self.res.keys()):
+            return
+        err_typ_lst = ['quantil']
+        id_lst = []
+
+        for err in err_typ_lst:
+            for idrun in self.res[err].keys():
+                id_lst.append(idrun)
+        id_lst = list(set(id_lst))
+
+        if len(id_lst) > 0:
+            self.dict_name = self.mdb.get_scen_name(id_lst)
         else:
             self.dict_name = {}
 
-        # table_dist_abs
+        lst_col = []
         tab_fill = {}
         tab_fill_abs = {}
-        lst_col = []
-        lst_col_abs = []
-        for id in self.res.keys():
-            colh = []
-            colh_abs = []
-            colq = []
-            colq_abs = []
-            if 'H' in self.res[id].keys():
-                if 'quantil' in self.res[id]['H'].keys():
-                    tmp, colh = self.fill_dico(id, 'H', 'dist_err')
-                    tmp_abs, colh_abs = self.fill_dico(id, 'H', 'dist_abs_err')
-                    for kk in tmp.keys():
-                        if kk in tab_fill.keys():
-                            tab_fill[kk].update(tmp[kk])
-                            tab_fill_abs[kk].update(tmp_abs[kk])
-                        else:
-                            tab_fill[kk] = tmp[kk]
-                            tab_fill_abs[kk] = tmp_abs[kk]
+        for err_typ in err_typ_lst:
+            for idrun, dict_id in self.res[err_typ].items():
+                for code, dict_code in dict_id.items():
+                    for varq, tmp_var in dict_code.items():
+                        name_col = '{} - {}\n' \
+                                   '{} - {}'.format(
+                            self.dict_name[idrun]['run'],
+                            self.dict_name[idrun]['scenario'],
+                            code,
+                            varq)
+                        lst_col.append(name_col)
+                        for err, tmp in tmp_var.items():
+                            dist_lst = tmp[0]
+                            for id, dist in enumerate(dist_lst):
+                                if err == 'dist_err':
+                                    if dist in  tab_fill.keys():
+                                        tab_fill[dist][name_col] =  tmp[1][id]
+                                    else:
+                                        tab_fill[dist] = {name_col: tmp[1][id]}
+                                elif err == 'dist_abs_err':
+                                    if dist in tab_fill_abs.keys():
+                                        tab_fill_abs[dist][name_col] = tmp[1][id]
+                                    else:
+                                        tab_fill_abs[dist] = {name_col: tmp[1][id]}
 
-            if 'Q' in self.res[id].keys():
-                if 'quantil' in self.res[id]['Q'].keys():
-                    tmp, colq = self.fill_dico(id, 'Q', 'dist_err')
-                    tmp_abs, colq_abs = self.fill_dico(id, 'Q', 'dist_abs_err')
-                    for kk in tmp.keys():
-                        if kk in tab_fill.keys():
-                            tab_fill[kk].update(tmp[kk])
-                            tab_fill_abs[kk].update(tmp_abs[kk])
-                        else:
-                            tab_fill[kk] = tmp[kk]
-                            tab_fill_abs[kk] = tmp_abs[kk]
-                            # tab_fill.update(self.fill_dico(id, 'Q', 'dist_err'))
-                            # tab_fill_abs.update(self.fill_dico(id, 'Q', 'dist_abs_err'))
-            lst_col = lst_col + colh + colq
-            lst_col_abs = lst_col_abs + colh_abs + colq_abs
         if len(tab_fill.keys()) > 0:
             dist_lst = [v for v in tab_fill.keys()]
             nb_line = len(dist_lst)
@@ -131,46 +130,6 @@ class ScoreDistWidget(QWidget):
 
             self.bt_export_csv.setEnabled(True)
 
-    def fill_dico(self, id, varhq, var):
-        """
-         change results shape to fill table
-        :param id: run index
-        :param varhq: variable (H or Q)
-        :param var: erreur type 'dist_err' or 'dist_abs_err'
-        :return:
-        """
-        tab_fill = {}
-        res2 = self.res[id][varhq]['quantil']
-        lst_col = []
-        oneobs = False
-        if not self.all:
-            keys = list(res2.keys())
-            if len(keys) == 1:
-                oneobs = True
-                res2 = res2[keys[0]]
-        if self.all or oneobs:
-
-            name_row = '{} - {}\n' \
-                       '{}'.format(self.dict_name[id]['run'],
-                                   self.dict_name[id]['scenario'],
-                                   varhq)
-            dist_lst = res2['dist_err'][0]
-            for id, dist in enumerate(dist_lst):
-                tab_fill[dist] = {}
-                tab_fill[dist][name_row] = res2[var][1][id]
-                lst_col.append(name_row)
-        else:
-            for code in res2.keys():
-                name_row = '{} - {}\n' \
-                           '{} - {}'.format(self.dict_name[id]['run'],
-                                            self.dict_name[id]['scenario'],
-                                            varhq, code)
-                dist_lst = res2[code]['dist_err'][0]
-                for id, dist in enumerate(dist_lst):
-                    tab_fill[dist] = {name_row: res2[code][var][1][id]}
-                    lst_col.append(name_row)
-
-        return tab_fill, lst_col
 
     def clear_tab(self):
         """clear table"""

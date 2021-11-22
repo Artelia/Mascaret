@@ -29,7 +29,7 @@ from qgis.PyQt.QtWidgets import *
 
 from .SelectWidget import SelectWidget
 from .ScoreParamWidget import ScoreParamWidget
-from .ScoreResWidget import ScoreResWidget
+from .ScoreResallWidget import ScoreResallWidget
 from .ScoreDistWidget import ScoreDistWidget
 
 
@@ -59,7 +59,7 @@ class ClassScoresDialog(QDialog):
         self.wgt_param = ScoreParamWidget(self, self.all)
         self.tab_param = self.tabscores.addTab(self.wgt_param, 'Scores Parameters')
 
-        self.wgt_res = ScoreResWidget(self)
+        self.wgt_res = ScoreResallWidget(self)
         self.tab_res = self.tabscores.addTab(self.wgt_res, 'Scores Results')
         id_res = self.tabscores.indexOf(self.wgt_res)
         self.tabscores.setTabEnabled(id_res, False)
@@ -84,4 +84,5 @@ class ClassScoresDialog(QDialog):
         if index == 2:
             self.wgt_res.res = self.wgt_param.res
             self.wgt_res.fill_tab()
+
         self.old_index = index
