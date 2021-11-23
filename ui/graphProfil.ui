@@ -210,7 +210,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Interpolated Profile</string>
+            <string>Interpolate Profile</string>
            </property>
           </widget>
          </item>
@@ -576,7 +576,7 @@
              <item row="0" column="2">
               <widget class="QPushButton" name="bt_reverse_prof">
                <property name="text">
-                <string>Reverse Profile</string>
+                <string>Reversible Profile</string>
                </property>
               </widget>
              </item>
@@ -629,7 +629,7 @@
             </sizepolicy>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <widget class="QWidget" name="tab">
             <attribute name="title">
@@ -686,7 +686,7 @@
            </widget>
            <widget class="QWidget" name="tab_2">
             <attribute name="title">
-             <string>Interpolation profile</string>
+             <string>Checking interpolation profile</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_9">
              <item row="0" column="0">

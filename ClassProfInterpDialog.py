@@ -124,7 +124,6 @@ class ClassProfInterpDialog(QDialog):
             if cl_interp.err :
                 self.interpol_prof = cl_interp.data['interp']
 
-
         self.accept()
 
     def reject_page(self):

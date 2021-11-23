@@ -48,7 +48,6 @@ class ClassProfInterp():
         :param nplan:  int, number of discretization plan
         """
         self.prf_loc = {}
-        self.dict_prf = {'prof': []}
 
         self.data = data
         self.data['interp'] = {
@@ -137,6 +136,8 @@ class ClassProfInterp():
         self.prf_loc[id_pr]['prof'].append(prof_min)
         self.prf_loc[id_pr]['limitx'] = limx
         self.data['interp']['prof'] += self.prf_loc[id_pr]['prof']
+
+
         return 'ok'
 
     def interpol_fct_lg(self, pr_am, pr_av):
@@ -488,10 +489,24 @@ class ClassProfInterp():
                   (3, pr_am_st_g, pr_av_st_g),
                   (4, pr_am_st_d, pr_av_st_d)]
         self.data['interp']['prof'] = []
+        self.data['interp']['minor'] = [None, None]
+        self.data['interp']['major'] = [None, None]
+        g_lim = None
+        d_lim = None
         for id, pr_am_tmp, pr_av_tmp in lst_pr:
             # print('*************** type : {}'.format(id))
             self.calc_profil(pr_am_tmp, pr_av_tmp, id)
-            # print('fin')
+            if 'limitx' in self.prf_loc[id].keys() :
+                if id == 0:
+                    self.data['interp']['minor'] = self.prf_loc[id]['limitx']
+                if id == 3:
+                    g_lim = self.prf_loc[id]['limitx'][0]
+                if id ==4  :
+                    d_lim = self.prf_loc[id]['limitx'][1]
+
+        if g_lim and d_lim :
+            self.data['interp']['major']= [g_lim, d_lim]
+
         prof_final = self.merge_prof('prof')
 
         #prof_final = LineString(prof_final)

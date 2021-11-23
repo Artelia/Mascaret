@@ -408,7 +408,7 @@ class GraphProfil(GraphCommon):
         self.extrait_profil()
         self.extrait_topo()
         self.maj_tab_check()
-        self.maj_graph()
+        self.maj_graph(allvis=True)
         self.maj_limites()
         self.maj_legende()
 
@@ -980,7 +980,7 @@ class GraphProfil(GraphCommon):
                     self.mgis.add_info("Warning:Out of graph")
         self.fig.canvas.draw()
 
-    def maj_graph(self):
+    def maj_graph(self, allvis=False):
         """Updating  graphic"""
         self.ui.label_Title.setText(_translate("ProfilGraph", self.nom, None))
         ta = self.tab
@@ -989,7 +989,6 @@ class GraphProfil(GraphCommon):
         self.remplir_tab([ta['x'], ta['z']])
 
         self.courbeMNT.set_data(self.mnt['x'], self.mnt['z'])
-
         self.courbes = [self.courbeProfil, self.courbeMNT]
 
         for c in self.courbeTopo:
@@ -1009,8 +1008,10 @@ class GraphProfil(GraphCommon):
                 self.courbeTopo[i].set_color("orange")
             else:
                 self.courbeTopo[i].set_color("green")
-
             self.courbes.append(self.courbeTopo[i])
+        if allvis:
+            for cb in self.courbes :
+                cb.set_visible(True)
         if ta['x'] is not None and ta['leftminbed'] is not None and ta[
             'rightminbed'] is not None:
             self.litMineur.set_x(ta['leftminbed'])
@@ -1284,17 +1285,22 @@ class GraphProfil(GraphCommon):
         Revers profil
         :return:
         """
-        # TODO reverse  zone
-        id = self.liste['name'].index(self.nom)
-        lmin = self.liste['leftminbed'][id]
-        rmin = self.liste['rightminbed'][id]
-        lmaj = self.liste['leftstock'][id]
-        rmaj = self.liste['rightstock'][id]
-        xo = oldx[0]
-
-
         self.tab['z'].reverse()
         oldx = self.tab['x'].copy()
+
+
+        lmin =  self.tab['leftminbed']
+        rmin =  self.tab['rightminbed']
+        lmaj =  self.tab['leftstock']
+        rmaj =  self.tab['rightstock']
+        xo = oldx[0]
+        if lmin and rmin :
+            self.tab['leftminbed'] = oldx[-1] - (lmin - xo)
+            self.tab['rightminbed'] = oldx[-1] - (rmin - xo)
+        if lmaj and rmaj :
+            self.tab['leftstock'] = oldx[-1] - (lmaj - xo)
+            self.tab['rightstock'] = oldx[-1] - (rmaj - xo)
+
 
         dist_x = []
         for i,x in  enumerate(oldx) :
@@ -1644,11 +1650,22 @@ class GraphProfil(GraphCommon):
 
         if dlg.interpol_prof:
             new_prof = np.array(dlg.interpol_prof['prof'])
+
             condition = "name='{0}' AND profile='{1}'".format('interpolation',
                                                               self.nom)
             self.mdb.delete("topo", condition)
             self.add_topo(new_prof[:,0], new_prof[:,1], 'interpolation')
             self.extrait_topo()
+            # temporaire zone
+            if dlg.interpol_prof['minor'][1]:
+                self.tab['rightminbed'] = dlg.interpol_prof['minor'][1]
+            if dlg.interpol_prof['minor'][0]:
+                self.tab['leftminbed'] = dlg.interpol_prof['minor'][0]
+            if dlg.interpol_prof['major'][1]:
+                self.tab['rightstock']= dlg.interpol_prof['major'][1]
+            if dlg.interpol_prof['major'][0]:
+                self.tab['leftstock'] = dlg.interpol_prof['major'][0]
+
             self.maj_graph()
             self.maj_legende()
             self.maj_limites()
