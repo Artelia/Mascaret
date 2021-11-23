@@ -47,6 +47,7 @@ from .Function import isfloat, interpole
 from .GraphCommon import DraggableLegend, GraphCommon
 from .Structure.StructureCreateDialog import ClassStructureCreateDialog
 from .Structure.ClassPolygone import ClassPolygone
+from .GraphProfilResultDialog import GraphProfilResultDialog
 from .GraphResultDialog import GraphResultDialog
 from .ClassProfInterpDialog import ClassProfInterpDialog
 
@@ -133,7 +134,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 prof_a = self.mgis.mdb.select_distinct("name", "profiles",
                                                        "active")
                 if results[0].mFeature['name'] in prof_a['name']:
-                    graph_res = GraphResultDialog(self.mgis, "hydro_profil",
+                    graph_res = GraphProfilResultDialog(self.mgis, "hydro_profil",
                                                   results[0].mFeature[
                                                       "abscissa"])
 
