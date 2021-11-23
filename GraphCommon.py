@@ -490,56 +490,56 @@ class GraphCommonNew:
 
 
 
-class DraggableLegendNew:
-    def __init__(self, axes):
-        self.legend = dict()
-        for ax in axes.values():
-            if ax["legend"]:
-                self.legend[ax["legend"]] = {"gotLegend": False, "mouse_x": None, "mouse_y": None,
-                                             "legend_x": None, "legend_y": None}
-        # self.legend = legend
-        # self.gotLegend = False
-        # self.mouse_x = None
-        # self.mouse_y = None
-        # self.legend_x = None
-        # self.legend_y = None
-
-        fst = True
-        for leg in self.legend.keys():
-            if fst:
-                fst = False
-                leg.figure.canvas.mpl_connect('motion_notify_event', self.lgd_on_motion)
-                leg.figure.canvas.mpl_connect('pick_event', self.lgd_on_pick)
-                leg.figure.canvas.mpl_connect('button_release_event', self.lgd_on_release)
-                leg.set_picker(self.my_legend_picker)
-
-    def my_legend_picker(self, legend, evt):
-        return legend.legendPatch.contains(evt)
-
-    def lgd_on_pick(self, evt):
-        btn = evt.mouseevent.button
-        if btn == 1:
-            art = evt.artist
-            if art in self.legend.keys():
-                bbox = art.get_window_extent()
-                param_leg = self.legend[art]
-                param_leg["mouse_x"] = evt.mouseevent.x
-                param_leg["mouse_y"] = evt.mouseevent.y
-                param_leg["legend_x"] = bbox.xmin
-                param_leg["legend_y"] = bbox.ymin
-                param_leg["gotLegend"] = 1
-
-    def lgd_on_release(self, evt):
-        for leg, param in self.legend.items():
-            if param["gotLegend"]:
-                param["gotLegend"] = False
-
-    def lgd_on_motion(self, evt):
-        for leg, param in self.legend.items():
-            if param["gotLegend"]:
-                dx = evt.x - param["mouse_x"]
-                dy = evt.y - param["mouse_y"]
-                loc_in_canvas = param["legend_x"] + dx, param["legend_y"] + dy
-                loc_in_norm_axes = leg.parent.transAxes.inverted().transform_point(loc_in_canvas)
-                leg._loc = tuple(loc_in_norm_axes)
-                leg.figure.canvas.draw()
+# class DraggableLegendNew:
+#     def __init__(self, axes):
+#         self.legend = dict()
+#         for ax in axes.values():
+#             if ax["legend"]:
+#                 self.legend[ax["legend"]] = {"gotLegend": False, "mouse_x": None, "mouse_y": None,
+#                                              "legend_x": None, "legend_y": None}
+#         # self.legend = legend
+#         # self.gotLegend = False
+#         # self.mouse_x = None
+#         # self.mouse_y = None
+#         # self.legend_x = None
+#         # self.legend_y = None
+#
+#         fst = True
+#         for leg in self.legend.keys():
+#             if fst:
+#                 fst = False
+#                 leg.figure.canvas.mpl_connect('motion_notify_event', self.lgd_on_motion)
+#                 leg.figure.canvas.mpl_connect('pick_event', self.lgd_on_pick)
+#                 leg.figure.canvas.mpl_connect('button_release_event', self.lgd_on_release)
+#                 leg.set_picker(self.my_legend_picker)
+#
+#     def my_legend_picker(self, legend, evt):
+#         return legend.legendPatch.contains(evt)
+#
+#     def lgd_on_pick(self, evt):
+#         btn = evt.mouseevent.button
+#         if btn == 1:
+#             art = evt.artist
+#             if art in self.legend.keys():
+#                 bbox = art.get_window_extent()
+#                 param_leg = self.legend[art]
+#                 param_leg["mouse_x"] = evt.mouseevent.x
+#                 param_leg["mouse_y"] = evt.mouseevent.y
+#                 param_leg["legend_x"] = bbox.xmin
+#                 param_leg["legend_y"] = bbox.ymin
+#                 param_leg["gotLegend"] = 1
+# 
+#     def lgd_on_release(self, evt):
+#         for leg, param in self.legend.items():
+#             if param["gotLegend"]:
+#                 param["gotLegend"] = False
+#
+#     def lgd_on_motion(self, evt):
+#         for leg, param in self.legend.items():
+#             if param["gotLegend"]:
+#                 dx = evt.x - param["mouse_x"]
+#                 dy = evt.y - param["mouse_y"]
+#                 loc_in_canvas = param["legend_x"] + dx, param["legend_y"] + dy
+#                 loc_in_norm_axes = leg.parent.transAxes.inverted().transform_point(loc_in_canvas)
+#                 leg._loc = tuple(loc_in_norm_axes)
+#                 leg.figure.canvas.draw()
