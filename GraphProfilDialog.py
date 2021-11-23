@@ -1283,7 +1283,33 @@ class GraphProfil(GraphCommon):
         Revers profil
         :return:
         """
+        # TODO reverse  zone
+        id = self.liste['name'].index(self.nom)
+        lmin = self.liste['leftminbed'][id]
+        rmin = self.liste['rightminbed'][id]
+        lmaj = self.liste['leftstock'][id]
+        rmaj = self.liste['rightstock'][id]
+        xo = oldx[0]
+
+
         self.tab['z'].reverse()
+        oldx = self.tab['x'].copy()
+
+        dist_x = []
+        for i,x in  enumerate(oldx) :
+            if i !=0:
+                dist_x.append(round(x-xo,6))
+                xo = x
+        dist_x.reverse()
+        xf = oldx[0]
+        new_x = [xf]
+        for dist  in dist_x:
+            xf = round(xf + dist,6)
+            new_x.append(xf)
+        self.tab['x'] = new_x
+
+
+
         self.maj_graph()
 
     def add_topo(self, xval, zval, basename):
