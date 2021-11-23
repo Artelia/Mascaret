@@ -84,11 +84,12 @@ class CurveSelectorWidget(QWidget):
            self.cb_det.currentIndexChanged.connect(lambda: self.detail_changed(up_lim=True))
 
 
-
     def init_run(self, param_init=None, param_date=None):
         ini_run, ini_scen, ini_graph, ini_det = None, None, None, None
         if param_init:
+            self.cb_axe.blockSignals(True)
             self.cb_axe.setCurrentIndex(self.cb_axe.findData(param_init["axe"]))
+            self.cb_axe.blockSignals(False)
             ini_run = param_init["run"]
             ini_scen = param_init["scen"]
             ini_graph = param_init["graph"]["id"]
@@ -103,14 +104,10 @@ class CurveSelectorWidget(QWidget):
                 else:
                     self.show_init_date(param_date["need"], param_date["init"], False)
 
-
-
-
         self.cb_run.blockSignals(True)
         self.init_cb_run(ini_run)
         self.cb_run.blockSignals(False)
         self.run_changed(None, ini_scen, ini_graph, ini_det)
-
 
 
     def init_cb_run(self, ini_run=None):
@@ -119,7 +116,6 @@ class CurveSelectorWidget(QWidget):
             self.cb_run.addItem(run, run)
         if ini_run:
             self.cb_run.setCurrentIndex(self.cb_run.findData(ini_run))
-
 
     def run_changed(self, v, ini_scen=None, ini_graph=None, ini_det=None):
         self.cur_run = self.cb_run.currentData()
@@ -138,7 +134,6 @@ class CurveSelectorWidget(QWidget):
         if ini_scen:
             self.cb_scen.setCurrentIndex(self.cb_scen.findData(ini_scen))
 
-
     def scen_changed(self, v, ini_graph=None, ini_det=None):
         if self.cb_scen.currentIndex() != -1:
             self.cur_scen_edited.emit()
@@ -154,7 +149,6 @@ class CurveSelectorWidget(QWidget):
             self.init_cb_det(ini_det)
             self.cb_det.blockSignals(False)
             self.detail_changed()
-
 
 
     def init_cb_graph(self, ini_graph=None):
@@ -174,15 +168,12 @@ class CurveSelectorWidget(QWidget):
             if ini_graph:
                 self.cb_graph.setCurrentIndex(self.cb_graph.findData(ini_graph))
 
-
     def graph_changed(self, v=None, update=True):
         if self.cb_graph.currentIndex() != -1:
             self.cur_graph = self.cb_graph.currentData()
-
         if update:
             self.update_param_graph()
             self.graph_parameters_edited.emit(self.row, self.param_graph)
-
 
 
     def init_cb_det(self, ini_det=None):
@@ -246,8 +237,6 @@ class CurveSelectorWidget(QWidget):
             else:
                 self.cb_det.setCurrentIndex(self.cb_det.findData(self.cur_pknum))
 
-
-
     def detail_changed(self, up_lim=True):
         #self.graph_obj.update_limites = up_lim TODO
         if self.cb_det.currentIndex() != -1:
@@ -257,7 +246,6 @@ class CurveSelectorWidget(QWidget):
                 self.cur_pknum = self.cb_det.itemData(self.cb_det.currentIndex())
         self.update_param_graph()
         self.graph_parameters_edited.emit(self.row, self.param_graph)
-
 
 
     def update_param_graph(self):
@@ -276,8 +264,6 @@ class CurveSelectorWidget(QWidget):
                     break
 
 
-
-
     def update_graph_infos(self):
         sql = "SELECT type_res, var, val FROM {0}.runs_graph WHERE " \
               "id_runs = {1} ORDER BY id".format(self.mdb.SCHEMA, self.cur_scen)
@@ -288,7 +274,6 @@ class CurveSelectorWidget(QWidget):
                 self.info_graph[row[0]][row[1]] = row[2]
             else:
                 self.info_graph[row[0]] = {row[1]: row[2]}
-        #print ("graph info keys : ", self.info_graph.keys())
 
 
     def get_lst_graph_opt(self):
@@ -358,34 +343,6 @@ class CurveSelectorWidget(QWidget):
                         graph["unit"] = r"${}$".format(self.mgis.variables[var]['unite'])
 
 
-    # def change_legend_var(self, liste_var):
-    #     """Change unit and color with variables.dat file
-    #      :param liste_var : liste of dict containing graphs informations
-    #      :return the update list
-    #     """
-    #     for dico_var in liste_var:
-    #         for i, var in enumerate(dico_var["vars"]):
-    #             if var.lower() in self.mgis.variables.keys():
-    #                 dico_var["colors"][i] = self.mgis.variables[var.lower()]['couleur']
-    #                 if var not in ['Q', 'QMIN', 'QMAJ', 'QMAX', 'ZREF', 'Z', 'ZMIN', 'ZMAX', 'CHAR']:
-    #                     if self.mgis.variables[var.lower()]['unite'].strip() == '':
-    #                         dico_var['unit'] = ''
-    #                     else:
-    #                         dico_var['unit'] = r'$' + self.mgis.variables[var.lower()]['unite'].strip() + r'$'
-    #     return liste_var
-    #
-    #
-    # def find_var_lbl(self, vars):
-    #     tmp = []
-    #     for var in vars:
-    #         rows = self.mdb.run_query("SELECT name FROM {0}.results_var "
-    #                                   "WHERE var = '{1}'".format(self.mgis.mdb.SCHEMA, var), fetch=True)
-    #         tmp.append(rows[0][0])
-    #     return tmp
-
-
-
-
 
 class SlideCurveSelectorWidget(CurveSelectorWidget):
     def __init__(self, mgis=None, row=None, typ_graph=None, typ_res=None, x_var=None, dict_run=None, cur_pknum=None, cur_branch=None):
@@ -441,7 +398,15 @@ class CompareCurveSelectorWidget(CurveSelectorWidget):
             self.lbl_det.setText("Date")
 
         self.cb_axe.currentIndexChanged.connect(self.axe_changed)
+        self.ctrl_date_init.dateTimeChanged.connect(self.date_changed)
 
+    def date_changed(self):
+        self.update_param_graph()
+        self.graph_parameters_edited.emit(self.row, self.param_graph)
+
+    def axe_changed(self):
+        self.update_param_graph()
+        self.graph_parameters_edited.emit(self.row, self.param_graph)
 
     def update_param_graph(self):
         CurveSelectorWidget.update_param_graph(self)
@@ -449,11 +414,6 @@ class CompareCurveSelectorWidget(CurveSelectorWidget):
             self.param_graph["axe"] = self.cb_axe.currentData()
             if self.init_date_needed:
                 self.param_graph["init_date"] = self.ctrl_date_init.dateTime().toPyDateTime()
-
-
-    def axe_changed(self):
-        self.update_param_graph()
-        self.graph_parameters_edited.emit(self.row, self.param_graph)
 
     def show_init_date(self, needed=False, value=None, update=True):
         self.lbl_date_init.show()

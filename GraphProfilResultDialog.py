@@ -269,7 +269,7 @@ class GraphProfilResultDialog(QWidget):
         self.cur_t = self.cb_det.itemData(self.cb_det.currentIndex())
 
         if self.cb_det.count() == 0:
-            self.graph_obj.axes.cla()
+            self.graph_obj.main_axe.cla()
             self.graph_obj.canvas.draw()
             self.tw_data.clearContents()
         else:
@@ -302,7 +302,7 @@ class GraphProfilResultDialog(QWidget):
             lst_colors = ['black']
             self.cur_vars_lbl = self.find_var_lbl()
 
-            self.graph_obj.init_mdl(self.cur_vars, self.cur_vars_lbl, lst_colors, [0], 'm')
+            self.graph_obj.init_mdl(self.cur_vars, self.cur_vars_lbl, lst_colors, [0], [1], 'm')
             self.zmax_save = None
             if self.cur_run:
                 if 'zmax' in self.info_graph[self.typ_res].keys():
@@ -312,7 +312,7 @@ class GraphProfilResultDialog(QWidget):
             if update:
                 self.update_data_profil()
         else:
-            self.graph_obj.axes.cla()
+            self.graph_obj.main_axe.cla()
             self.graph_obj.canvas.draw()
             self.tw_data.clear()
 
@@ -324,7 +324,7 @@ class GraphProfilResultDialog(QWidget):
             self.sld_det.setValue(self.cb_det.currentIndex())
             self.update_data_profil()
         else:
-            self.graph_obj.axes.cla()
+            self.graph_obj.main_axe.cla()
             self.graph_obj.canvas.draw()
             self.tw_data.clear()
 
@@ -375,24 +375,24 @@ class GraphProfilResultDialog(QWidget):
                     val_str = None
                     if self.zmax_save:
                         val_str = round(self.zmax_save, 3)
-                    self.graph_obj.axes.title.set_text(
+                    self.graph_obj.main_axe.title.set_text(
                         'Max of water level, {0} m '
                         ''.format(val_str))
                 elif isinstance(self.cur_t, float):
                     try:
-                        self.graph_obj.axes.title.set_text(
+                        self.graph_obj.main_axe.title.set_text(
                             'Water level, {0} m - {1} s'
                             ''.format(self.cur_data['Z'][0],
                                       float(self.cb_det.currentText())))
                     except ValueError:
-                        self.graph_obj.axes.title.set_text(
+                        self.graph_obj.main_axe.title.set_text(
                             'Water level, {0} m - {1}'
                             ''.format(self.cur_data['Z'][0],
                                       self.cb_det.currentText()))
-                self.graph_obj.axes.set_xlabel(r'Distance ($m$)')
-                self.graph_obj.axes.set_ylabel(r'Level ($m$)')
-                self.graph_obj.init_graph_profil(self.cur_data, self.x_var,
-                                                 qmaj_max)
+                self.graph_obj.main_axe.set_xlabel(r'Distance ($m$)')
+                self.graph_obj.main_axe.set_ylabel(r'Level ($m$)')
+
+                self.graph_obj.init_graph_profil(self.cur_data, self.x_var, qmaj_max)
 
 
     def fill_tab(self, x_var, nb_col=None):

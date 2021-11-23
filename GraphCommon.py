@@ -56,6 +56,7 @@ else:  # qt4
         from matplotlib.backends.backend_qt5agg \
             import NavigationToolbar2QT as NavigationToolbar
 
+from matplotlib import pyplot
 from matplotlib.figure import Figure
 import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
@@ -266,6 +267,7 @@ class GraphCommonNew:
         self.lined = dict()
         self.unit = ''
 
+
     def init_ui_common_p(self):
         self.list_var = []
         self.courbes = []
@@ -290,13 +292,20 @@ class GraphCommonNew:
         self.var_x = var_x
 
     def graph_on_pick(self, evt):
+        lst_leg = list()
+        d_lined = dict()
+        for ax in self.ax.values():
+            lst_leg.append(ax["legend"])
+            for l, c in ax["lined"].items():
+                d_lined[l] = c
+
         art = evt.artist
-        if art == self.leg:
+        if art in lst_leg:
             self.leg_selected = True
-        elif art in self.lined.keys():
+        elif art in d_lined.keys():
             btn = evt.mouseevent.button
             if btn == 1:
-                courbe = self.lined[art]
+                courbe = d_lined[art]
                 vis = not courbe.get_visible()
                 courbe.set_visible(vis)
                 if vis:
@@ -355,7 +364,7 @@ class GraphCommonNew:
                        key=lambda x: abs(x - event.xdata))
         idx = self.data[self.var_x].index(absc)
 
-        ymin, ymax = self.axes.get_ylim()
+        ymin, ymax = self.ax[1]["axe"].get_ylim()
         annot = self.annotation[0]
         annot.set_text("{}".format(absc))
         annot.xytext = (10, 20)
@@ -377,74 +386,102 @@ class GraphCommonNew:
         self.v_line.set_visible(True)
         self.canvas.draw()
 
+
     def init_legende(self, handles=None):
-        if not handles:
-            handles = self.courbes
+        all_handles, all_noms, all_curves = list(), list(), list()
 
-        liste_noms = []
-        for c in self.courbes:
-            if c.get_visible():
-                liste_noms.append(c.get_label())
-        self.leg = self.axes.legend(handles, liste_noms, loc='upper left',
-                                    fancybox=False, shadow=False, fontsize=7.)
-        self.leg.get_frame().set_alpha(0.4)
-        self.leg.set_zorder(110)
-        DraggableLegendNew(self.leg)
+        ax_max = 0
+        for id_ax, ax in self.ax.items():
+            if ax["axe"]:
+                ax_max = id_ax
+                if id_ax == 1:
+                    if not handles:
+                        handles = ax["curves"]
+                else:
+                    handles = ax["curves"]
+                all_handles.extend(handles)
 
-        self.lined = dict()
-        for legline, courbe in zip(self.leg.get_lines(), self.courbes):
+                liste_noms = []
+                for c in ax["curves"]:
+                    if c.get_visible():
+                        liste_noms.append(c.get_label())
+                all_noms.extend(liste_noms)
+
+                all_curves.extend(ax["curves"])
+
+        ax = self.ax[ax_max]
+        ax["legend"] = ax["axe"].legend(all_handles, all_noms, loc='upper right', fancybox=False, shadow=False, fontsize=7.)
+        ax["legend"].get_frame().set_alpha(0.4)
+        ax["legend"].set_zorder(111 - id_ax)
+        ax["legend"].set_draggable(True)
+
+        ax["lined"].clear()
+        for legline, courbe in zip(ax["legend"].get_lines(), all_curves):
             legline.set_picker(5)
             legline.set_linewidth(3)
-            self.lined[legline] = courbe
+            ax["lined"][legline] = courbe
+
 
     def maj_unit_x(self, unit):
         self.unit = unit
-        self.axes.set_xlabel("time ({})".format(unit))
+        self.main_axe.set_xlabel("time ({})".format(unit))
         if self.unit == 'date':
             self.unit_x = 'date'
-            self.axes.xaxis.set_major_formatter(
+            self.main_axe.xaxis.set_major_formatter(
                 mdates.DateFormatter('%d-%m-%Y'))
         else:
             self.unit_x = 'num'
-            self.axes.xaxis.set_major_formatter(ticker.ScalarFormatter())
+            self.main_axe.xaxis.set_major_formatter(ticker.ScalarFormatter())
+
 
     def maj_courbes(self, courbes):
         for c in courbes.keys():
             self.courbes[c].set_data(courbes[c]["x"], courbes[c]["y"])
         self.maj_limites()
 
+
     def maj_limites(self):
-        no_data = True
-        fst = True
         if self.update_limites:
-            for courbe in self.courbes:
-                if courbe.get_visible():
-                    try:
-                        lx, lz = courbe.get_data()
-                        lx = [x for x in lx if x is not None]
-                        lz = [z for z in lz if z is not None]
-                        if lx and lz:
-                            no_data = False
-                            if fst:
-                                fst = False
-                                mini_x = min(lx)
-                                maxi_x = max(lx)
-                                mini_z = min(lz) - 1
-                                maxi_z = max(lz) + 1
-                            else:
-                                mini_x = min(mini_x, min(lx))
-                                maxi_x = max(maxi_x, max(lx))
-                                mini_z = min(mini_z, min(lz) - 1)
-                                maxi_z = max(maxi_z, max(lz) + 1)
-                    except AttributeError as e:
-                        pass
+            fst_x = True
+            no_data = True
+            for id_ax, ax in self.ax.items():
+                if ax["axe"]:
+                    fst_z = True
+                    for courbe in ax["curves"]:
+                        if courbe.get_visible():
+                            try:
+                                lx, lz = courbe.get_data()
+                                lx = [x for x in lx if x is not None]
+                                lz = [z for z in lz if z is not None]
+                                if lx and lz:
+                                    no_data = False
+                                    if fst_x:
+                                        fst_x = False
+                                        mini_x = min(lx)
+                                        maxi_x = max(lx)
+                                    else:
+                                        mini_x = min(mini_x, min(lx))
+                                        maxi_x = max(maxi_x, max(lx))
+
+                                    if fst_z:
+                                        fst_z = False
+                                        mini_z = min(lz) - 1
+                                        maxi_z = max(lz) + 1
+                                    else:
+                                        mini_z = min(mini_z, min(lz) - 1)
+                                        maxi_z = max(maxi_z, max(lz) + 1)
+                            except AttributeError as e:
+                                pass
+
+                    if no_data:
+                        ax["axe"].set_ylim(0., 1.)
+                    else:
+                        ax["axe"].set_ylim(mini_z, maxi_z)
 
             if no_data:
-                self.axes.set_xlim(0., 1.)
-                self.axes.set_ylim(0., 1.)
+                self.main_axe.set_xlim(0., 1.)
             else:
-                self.axes.set_xlim(mini_x, maxi_x)
-                self.axes.set_ylim(mini_z, maxi_z)
+                self.main_axe.set_xlim(mini_x, maxi_x)
 
         self.fig.autofmt_xdate()
         self.canvas.draw()
@@ -454,44 +491,55 @@ class GraphCommonNew:
 
 
 class DraggableLegendNew:
-    def __init__(self, legend):
-        self.legend = legend
-        self.gotLegend = False
-        self.mouse_x = None
-        self.mouse_y = None
-        self.legend_x = None
-        self.legend_y = None
+    def __init__(self, axes):
+        self.legend = dict()
+        for ax in axes.values():
+            if ax["legend"]:
+                self.legend[ax["legend"]] = {"gotLegend": False, "mouse_x": None, "mouse_y": None,
+                                             "legend_x": None, "legend_y": None}
+        # self.legend = legend
+        # self.gotLegend = False
+        # self.mouse_x = None
+        # self.mouse_y = None
+        # self.legend_x = None
+        # self.legend_y = None
 
-        legend.figure.canvas.mpl_connect('motion_notify_event', self.lgd_on_motion)
-        legend.figure.canvas.mpl_connect('pick_event', self.lgd_on_pick)
-        legend.figure.canvas.mpl_connect('button_release_event', self.lgd_on_release)
-        legend.set_picker(self.my_legend_picker)
+        fst = True
+        for leg in self.legend.keys():
+            if fst:
+                fst = False
+                leg.figure.canvas.mpl_connect('motion_notify_event', self.lgd_on_motion)
+                leg.figure.canvas.mpl_connect('pick_event', self.lgd_on_pick)
+                leg.figure.canvas.mpl_connect('button_release_event', self.lgd_on_release)
+                leg.set_picker(self.my_legend_picker)
 
     def my_legend_picker(self, legend, evt):
-        return self.legend.legendPatch.contains(evt)
+        return legend.legendPatch.contains(evt)
 
     def lgd_on_pick(self, evt):
         btn = evt.mouseevent.button
         if btn == 1:
             art = evt.artist
-            if art == self.legend:
-                bbox = self.legend.get_window_extent()
-                self.mouse_x = evt.mouseevent.x
-                self.mouse_y = evt.mouseevent.y
-                self.legend_x = bbox.xmin
-                self.legend_y = bbox.ymin
-                self.gotLegend = 1
+            if art in self.legend.keys():
+                bbox = art.get_window_extent()
+                param_leg = self.legend[art]
+                param_leg["mouse_x"] = evt.mouseevent.x
+                param_leg["mouse_y"] = evt.mouseevent.y
+                param_leg["legend_x"] = bbox.xmin
+                param_leg["legend_y"] = bbox.ymin
+                param_leg["gotLegend"] = 1
 
     def lgd_on_release(self, evt):
-        if self.gotLegend:
-            self.gotLegend = False
+        for leg, param in self.legend.items():
+            if param["gotLegend"]:
+                param["gotLegend"] = False
 
     def lgd_on_motion(self, evt):
-        if self.gotLegend:
-            dx = evt.x - self.mouse_x
-            dy = evt.y - self.mouse_y
-            loc_in_canvas = self.legend_x + dx, self.legend_y + dy
-            loc_in_norm_axes = self.legend.parent.transAxes.inverted().transform_point(
-                loc_in_canvas)
-            self.legend._loc = tuple(loc_in_norm_axes)
-            self.legend.figure.canvas.draw()
+        for leg, param in self.legend.items():
+            if param["gotLegend"]:
+                dx = evt.x - param["mouse_x"]
+                dy = evt.y - param["mouse_y"]
+                loc_in_canvas = param["legend_x"] + dx, param["legend_y"] + dy
+                loc_in_norm_axes = leg.parent.transAxes.inverted().transform_point(loc_in_canvas)
+                leg._loc = tuple(loc_in_norm_axes)
+                leg.figure.canvas.draw()
