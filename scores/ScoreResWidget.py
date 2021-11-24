@@ -80,19 +80,22 @@ class ScoreResWidget(QWidget):
         tab_fill = {}
         for err_typ in err_typ_lst  :
             for idrun, dict_id in self.res[err_typ].items():
-                for code, dict_code in dict_id.items():
-                    for varq, tmp_var in  dict_code.items() :
-                        name_col = '{} - {}\n' \
-                                   '{} - {}'.format(self.dict_name[idrun]['run'],
-                                               self.dict_name[idrun]['scenario'],
-                                                    code,
-                                                    varq)
-                        lst_col.append(name_col)
-                        for  err, tmp in tmp_var.items():
-                            if err in tab_fill.keys():
-                                tab_fill[err][name_col] = tmp
-                            else:
-                                tab_fill[err] = {name_col: tmp}
+                for pk, dict_pk in dict_id.items():
+                    for code, dict_code in dict_pk.items():
+                        for varq, tmp_var in  dict_code.items() :
+                            name_col = '{} - {}\n' \
+                                       '{}\n' \
+                                       '{} - {}'.format(self.dict_name[idrun]['run'],
+                                                   self.dict_name[idrun]['scenario'],
+                                                        pk,
+                                                        code,
+                                                        varq)
+                            lst_col.append(name_col)
+                            for  err, tmp in tmp_var.items():
+                                if err in tab_fill.keys():
+                                    tab_fill[err][name_col] = tmp
+                                else:
+                                    tab_fill[err] = {name_col: tmp}
 
         if len(tab_fill.keys()) > 0:
 

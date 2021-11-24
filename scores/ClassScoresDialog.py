@@ -75,7 +75,7 @@ class ClassScoresDialog(QDialog):
         if index != 0:
             if self.old_index == 0:
                 self.lst_runs = self.wgt_select.get_selection()
-                self.wgt_param.lst_runs = self.lst_runs
+                self.wgt_param.ch_lst_run(self.lst_runs)
                 self.wgt_param.all = True
                 self.wgt_param.init_gui()
         if index == 3:

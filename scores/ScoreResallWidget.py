@@ -67,7 +67,7 @@ class ScoreResallWidget(QWidget):
         }
         self.bt_export_csv.clicked.connect(self.export_csv)
 
-    def add_dict(self,err_typ,err,name_line,code, tmp):
+    def add_dict(self, err_typ, err, name_line, code, tmp):
         """
         add in dictionnary
         :return:
@@ -82,7 +82,7 @@ class ScoreResallWidget(QWidget):
             else:
                 self.tab_fill[err_typ][err] = {name_line: {code: tmp}}
         else:
-            self.tab_fill[err_typ] = {err :{name_line : {code: tmp}}}
+            self.tab_fill[err_typ] = {err: {name_line: {code: tmp}}}
 
     def fill_tab(self):
         self.clear_tab()
@@ -104,30 +104,34 @@ class ScoreResallWidget(QWidget):
         else:
             self.dict_name = {}
 
-
         self.tab_fill = {}
         # tab_fill[tab][sstab][line][col]= val
         for err_typ in err_typ_lst:
             for idrun, dict_id in self.res[err_typ].items():
-                for code, dict_code in dict_id.items():
-                    for varq, tmp_var in dict_code.items():
-                        name_line = '{} - {}'.format(
-                            self.dict_name[idrun]['run'],
-                            self.dict_name[idrun]['scenario'])
-                        name_col = '{} - {}'.format(code, varq)
-                        for err, tmp in tmp_var.items():
-                            self.add_dict(err_typ,err,name_line,name_col, tmp)
+                for pk, dict_pk in dict_id.items():
+                    for code, dict_code in dict_pk.items():
 
+                        for varq, tmp_var in dict_code.items():
+                            name_line = '{} - {}\n' \
+                                        '{}'.format(
+                                self.dict_name[idrun]['run'],
+                                self.dict_name[idrun]['scenario'],
+                                pk)
+                            name_col = '{} - {}'.format(code, varq)
+                            for err, tmp in tmp_var.items():
+                                self.add_dict(err_typ, err, name_line, name_col,
+                                              tmp)
 
     def add_gui(self):
         """GUI gestion"""
         self.parent = {}
         self.child = {}
         if len(self.tab_fill.keys()) > 0:
-            for err_typ,tab_err_typ  in self.tab_fill.items():
-                self.parent[err_typ] =  QTabWidget()
+            for err_typ, tab_err_typ in self.tab_fill.items():
+                self.parent[err_typ] = QTabWidget()
                 self.child[err_typ] = {}
-                self.tabWidget.addTab(self.parent[err_typ], self.data_err[err_typ])
+                self.tabWidget.addTab(self.parent[err_typ],
+                                      self.data_err[err_typ])
                 for err, tab_err in tab_err_typ.items():
                     self.child[err_typ][err] = QTableWidget()
                     self.parent[err_typ].addTab(self.child[err_typ][err],
@@ -139,10 +143,10 @@ class ScoreResallWidget(QWidget):
         :return:
         """
         if len(self.tab_fill.keys()) > 0:
-            for err_typ,tab_err_typ  in self.tab_fill.items():
+            for err_typ, tab_err_typ in self.tab_fill.items():
                 for err, tab_err in tab_err_typ.items():
                     # self.tab_fill[err_typ][err][name_line] = {code: tmp}
-                    line_lst= [v for v in tab_err.keys()]
+                    line_lst = [v for v in tab_err.keys()]
                     lst_col = []
                     for line in line_lst:
                         lst_col += list(tab_err[line].keys())
@@ -166,10 +170,12 @@ class ScoreResallWidget(QWidget):
                                     '{:e}'.format(val))
                             else:
                                 item = QTableWidgetItem('{:.3f}'.format(val))
-                            item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                            item.setTextAlignment(
+                                Qt.AlignHCenter | Qt.AlignVCenter)
                             item.setFlags(Qt.ItemIsEnabled)
                             col = columns.index(tmp)
                             self.child[err_typ][err].setItem(row, col, item)
+
     #
     def clear_tab(self):
         """clear table"""
@@ -190,19 +196,17 @@ class ScoreResallWidget(QWidget):
                                                             default_name),
                                                         filter="CSV (*.csv *.)")
         if file_name_path:
-
             file = open(file_name_path, 'w')
             file.write(clipboard)
             file.close()
 
-
-    def clipboard_fill(self,sep = ';'):
+    def clipboard_fill(self, sep=';'):
         """
         Creation text in CSV
         :param sep: separateur
         :return:
         """
-        txt =  ''
+        txt = ''
         first_line = 'Errors {} '.format(sep)
         second_line = 'Runs\\ observations {} '.format(sep)
 
@@ -211,7 +215,7 @@ class ScoreResallWidget(QWidget):
         list_col2 = []
         for err_typ, tab_err_typ in self.tab_fill.items():
             for err, tab_err in tab_err_typ.items():
-                list_col1.append((err_typ,err))
+                list_col1.append((err_typ, err))
                 for name_line, tab_line in tab_err.items():
                     list_line.append(name_line)
                     for col, tmp in tab_line.items():
@@ -224,18 +228,18 @@ class ScoreResallWidget(QWidget):
         for line in list_line:
             txt += '{} {} '.format(line, sep)
             for err_typ, err in list_col1:
-                for  obs in list_col2:
-                    if first :
+                for obs in list_col2:
+                    if first:
                         first_line += '{} {} '.format(self.data_write[err], sep)
-                        second_line += '{} {} '.format(obs ,sep)
+                        second_line += '{} {} '.format(obs, sep)
                     try:
                         val = self.tab_fill[err_typ][err][line][obs]
-                    except KeyError :
+                    except KeyError:
                         val = ''
 
-                    txt += '{} {} '.format(val ,sep)
+                    txt += '{} {} '.format(val, sep)
 
-            if first :
+            if first:
                 second_line += '\n'
                 first_line += '\n'
                 first = False
@@ -246,7 +250,3 @@ class ScoreResallWidget(QWidget):
         clipboard += second_line
         clipboard += txt
         return clipboard
-
-
-
-

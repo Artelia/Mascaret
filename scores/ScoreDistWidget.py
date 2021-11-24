@@ -72,28 +72,31 @@ class ScoreDistWidget(QWidget):
         tab_fill_abs = {}
         for err_typ in err_typ_lst:
             for idrun, dict_id in self.res[err_typ].items():
-                for code, dict_code in dict_id.items():
-                    for varq, tmp_var in dict_code.items():
-                        name_col = '{} - {}\n' \
-                                   '{} - {}'.format(
-                            self.dict_name[idrun]['run'],
-                            self.dict_name[idrun]['scenario'],
-                            code,
-                            varq)
-                        lst_col.append(name_col)
-                        for err, tmp in tmp_var.items():
-                            dist_lst = tmp[0]
-                            for id, dist in enumerate(dist_lst):
-                                if err == 'dist_err':
-                                    if dist in  tab_fill.keys():
-                                        tab_fill[dist][name_col] =  tmp[1][id]
-                                    else:
-                                        tab_fill[dist] = {name_col: tmp[1][id]}
-                                elif err == 'dist_abs_err':
-                                    if dist in tab_fill_abs.keys():
-                                        tab_fill_abs[dist][name_col] = tmp[1][id]
-                                    else:
-                                        tab_fill_abs[dist] = {name_col: tmp[1][id]}
+                for pk, dict_pk in dict_id.items():
+                    for code, dict_code in dict_pk.items():
+                        for varq, tmp_var in dict_code.items():
+                            name_col = '{} - {}\n' \
+                                        '{}\n'\
+                                       '{} - {}'.format(
+                                self.dict_name[idrun]['run'],
+                                self.dict_name[idrun]['scenario'],
+                                pk,
+                                code,
+                                varq)
+                            lst_col.append(name_col)
+                            for err, tmp in tmp_var.items():
+                                dist_lst = tmp[0]
+                                for id, dist in enumerate(dist_lst):
+                                    if err == 'dist_err':
+                                        if dist in  tab_fill.keys():
+                                            tab_fill[dist][name_col] =  tmp[1][id]
+                                        else:
+                                            tab_fill[dist] = {name_col: tmp[1][id]}
+                                    elif err == 'dist_abs_err':
+                                        if dist in tab_fill_abs.keys():
+                                            tab_fill_abs[dist][name_col] = tmp[1][id]
+                                        else:
+                                            tab_fill_abs[dist] = {name_col: tmp[1][id]}
 
         if len(tab_fill.keys()) > 0:
             dist_lst = [v for v in tab_fill.keys()]

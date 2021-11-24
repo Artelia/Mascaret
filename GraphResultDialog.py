@@ -128,7 +128,7 @@ class GraphResultDialog(QWidget):
 
 
     def add_wgt_compare(self):
-        param_init, param_date = None, None
+        param_init, param_date = dict(), dict()
         idx = len(self.lst_comp_wgt)
         if idx:
             param_init = self.lst_comp_wgt[-1].param_graph
@@ -136,6 +136,10 @@ class GraphResultDialog(QWidget):
                           "need": self.lst_comp_wgt[-1].init_date_needed,
                           "init": self.lst_comp_wgt[-1].ctrl_date_init.dateTime()}
 
+        if not 'graph' in param_init.keys() and idx>0:
+            QMessageBox.warning(None, 'Error',
+                                'Last chart is empty.')
+            return
         itm = QListWidgetItem()
         itm.setSizeHint(QSize(itm.sizeHint().width(), 20))
         self.lw_graph.addItem(itm)
@@ -171,6 +175,9 @@ class GraphResultDialog(QWidget):
             if self.x_var == "time":
                 self.compar_graph_verif_date()
             self.update_graph()
+        else :
+            QMessageBox.warning(None, 'warning',
+                                'No chart selected.')
 
         if len(self.lst_comp_graph) == 4:
             self.btn_add_graph.setEnabled(False)
@@ -239,9 +246,9 @@ class GraphResultDialog(QWidget):
             lst_graph = self.lst_slid_graph
         else:
             lst_graph = self.lst_comp_graph
-        self.lst_graph = [graph for graph in lst_graph if graph]
+        self.lst_graph = [graph for graph in lst_graph if "graph" in graph.keys()]
 
-        self.lst_runs = list(set([g["run"] for g in self.lst_graph]))
+        self.lst_runs = list(set([g["scen"] for g in self.lst_graph]))
 
         lst_unit, lst_name = {1: list(), 2: list()}, {1: list(), 2: list()}
         lst_var, lst_lbl, lst_col, lst_lin, lst_axe = list(), list(), list(), list(), list()
@@ -465,6 +472,7 @@ class GraphResultDialog(QWidget):
 
 
     def update_obs(self):
+
         dict_pk_obs = dict()
         for g, param in enumerate(self.lst_graph):
             pk, vars = param["pknum"], param["graph"]["vars"]
@@ -508,6 +516,9 @@ class GraphResultDialog(QWidget):
                                                         "date_max": dict_pk_obs[(pk, var)]["max"]}
 
         self.lst_obs.clear()
+        if not dict_obs:
+            self.disable_score()
+
         for (id_obs, var), param_obs in dict_obs.items():
             condition = """code = '{0}' AND date>'{1}' AND date<'{2}' AND type='{3}' 
             AND valeur > -999.9""".format(id_obs, param_obs["date_min"], param_obs["date_max"], var)
@@ -526,7 +537,21 @@ class GraphResultDialog(QWidget):
                 else:
                     tmp_data[var] = obs_graph['valeur']
                 self.cur_data.append(tmp_data)
+            self.score()
 
+    def score(self):
+
+            self.cc_scores.setEnabled(True)
+            # self.lst_runs = list(set([g["run"] for g in self.lst_graph]))
+            pks = {id: [] for id in self.lst_runs}
+            print(self.lst_runs)
+            for param in self.lst_graph:
+                pks[param["scen"]].append(param["pknum"])
+
+            if pks !=  self.cl_scores.wgt_param.dict_pk:
+                self.cl_scores.wgt_param.ch_lst_run(self.lst_runs)
+                self.cl_scores.wgt_param.ch_dict_pk(pks)
+                self.cl_scores.wgt_param.init_gui()
 
     def fill_tab(self):
         self.clas_data.clear()

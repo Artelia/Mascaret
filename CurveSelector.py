@@ -250,14 +250,14 @@ class CurveSelectorWidget(QWidget):
 
     def update_param_graph(self):
         self.param_graph.clear()
+        self.param_graph["run"] = self.cur_run
+        self.param_graph["scen"] = self.cur_scen
+        self.param_graph["init_date"] = None
+        self.param_graph["info_graph"] = self.info_graph
+        self.param_graph["branch"] = self.cur_branch
+        self.param_graph["pknum"] = self.cur_pknum
+        self.param_graph["t"] = self.cur_t
         if (self.cb_graph.currentIndex() != -1) and (self.cb_det.currentIndex() != -1):
-            self.param_graph["run"] = self.cur_run
-            self.param_graph["scen"] = self.cur_scen
-            self.param_graph["init_date"] = None
-            self.param_graph["info_graph"] = self.info_graph
-            self.param_graph["branch"] = self.cur_branch
-            self.param_graph["pknum"] = self.cur_pknum
-            self.param_graph["t"] = self.cur_t
             for graph in self.lst_graph:
                 if graph["id"] == self.cur_graph:
                     self.param_graph["graph"] = graph
@@ -377,8 +377,7 @@ class SlideCurveSelectorWidget(CurveSelectorWidget):
 
     def update_param_graph(self):
         CurveSelectorWidget.update_param_graph(self)
-        if self.param_graph:
-            self.param_graph["axe"] = 1
+        self.param_graph["axe"] = 1
 
 
 
@@ -410,10 +409,9 @@ class CompareCurveSelectorWidget(CurveSelectorWidget):
 
     def update_param_graph(self):
         CurveSelectorWidget.update_param_graph(self)
-        if self.param_graph:
-            self.param_graph["axe"] = self.cb_axe.currentData()
-            if self.init_date_needed:
-                self.param_graph["init_date"] = self.ctrl_date_init.dateTime().toPyDateTime()
+        self.param_graph["axe"] = self.cb_axe.currentData()
+        if self.init_date_needed:
+            self.param_graph["init_date"] = self.ctrl_date_init.dateTime().toPyDateTime()
 
     def show_init_date(self, needed=False, value=None, update=True):
         self.lbl_date_init.show()
