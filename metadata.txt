@@ -36,7 +36,8 @@ changelog=
              Adding the  profile interpolation function
              Adding the check Profile function
              Correction the bug on basin when compute with API
-             Change of scores
+             Change of scores functionnality
+             Addition of multigraphic
     4.0.0  : Adding Export GUI
              Only qt5
              Adding the rating curve law using steady kernel
