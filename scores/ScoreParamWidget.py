@@ -112,19 +112,23 @@ class ScoreParamWidget(QWidget):
         clean control
         :return:
         """
+
         self.ch_limit.disconnect()
         self.ch_simple_err.disconnect()
         self.ch_quantil_err.disconnect()
 
-        self.ch_persistence.disconnect()
-        self.ch_pointe_err.disconnect()
+        try :
+            self.ch_persistence.disconnect()
+            self.ch_pointe_err.disconnect()
 
-        for id_run in self.lst_runs_old:
-            self.widget_d[id_run]['ref_time'].disconnect()
-            for ctrl_ in ['per_start_t', 'pt_start_t']:
-                self.widget_d[id_run][ctrl_].disconnect()
-            for ctrl_ in ['per_last_t', 'pt_last_t']:
-                self.widget_d[id_run][ctrl_].disconnect()
+            for id_run in self.lst_runs_old:
+                self.widget_d[id_run]['ref_time'].disconnect()
+                for ctrl_ in ['per_start_t', 'pt_start_t']:
+                    self.widget_d[id_run][ctrl_].disconnect()
+                for ctrl_ in ['per_last_t', 'pt_last_t']:
+                    self.widget_d[id_run][ctrl_].disconnect()
+        except TypeError:
+            pass
 
     def clean_widget_d(self):
         """
@@ -158,16 +162,6 @@ class ScoreParamWidget(QWidget):
         else:
             self.exe = True
         self.control_no_change()
-        # default value
-        self.dsp_dist_quantil.setValue(25)
-        self.val_lim.setValue(1e-6)
-        self.dsp_dist_quantil.setEnabled(False)
-        self.ch_limit.setEnabled(False)
-        self.ch_limit.setChecked(False)
-        self.val_lim.setEnabled(False)
-        self.ch_limit.stateChanged.connect(self.fct_chang_valim)
-        self.ch_simple_err.stateChanged.connect(self.fct_chang_ch_lim)
-        self.ch_quantil_err.stateChanged.connect(self.fct_chang_quantil)
 
         if len(self.lst_runs) > 0:
             dict_name = self.mdb.get_scen_name(self.lst_runs)
@@ -508,9 +502,8 @@ class ScoreParamWidget(QWidget):
                                     '    - {} observation)\n'.format(code)
 
                     if 'persistence' in self.res.keys():
-                        for pk, tmp1 in self.res['persistence'][
-                            id_run].items():
-                            for code, tmp in tmp1.items:
+                        for pk, tmp1 in self.res['persistence'][id_run].items():
+                            for code, tmp in tmp1.items():
                                 if 'Q' in tmp.keys():
                                     if tmp['Q']['per_err'] is None:
                                         other_txt += '- Persistance error (Run : {}, variable: Q , obs : {}):\n ' \
@@ -982,26 +975,22 @@ class ScoreParamWidget(QWidget):
         info = self.mdb.select('profiles',
                                where=where,
                                list_var=['gid', 'name', 'abscissa'])
+        print(info)
         name = None
         abs = None
         if len(info['abscissa']) > 0:
             name = info['name'][0]
             abs = info['abscissa'][0]
-
         else:
-            where = ' id_runs={0} AND pk = {1}'.format(id_run, pk)
-            info = self.mdb.select_distinct('abscissa', 'results',
-                                            where=where,
-                                            ordre='abscissa')
-            if len(info['abscissa']) > 0:
-                abs = info['abscissa'][0]
+            abs = pk
+
         lst_code = []
         for code, dict in self.obs.items():
             if name:
-                if dict['name'] == name:
+                if  name in dict['name'] :
                     lst_code.append(code)
             elif abs:
-                if abs == dict['abscissa']:
+                if abs in dict['abscissa']:
                     lst_code.append(code)
 
         return lst_code
@@ -1318,13 +1307,14 @@ class ScoreParamWidget(QWidget):
                 if id_run in self.dict_pk.keys():
                     for pk in self.dict_pk[id_run]:
                         lobs = self.pk2obs(id_run, pk)
+                        print(lobs, pk, id_run)
                         lst_obs.extend(lobs)
                         for code in lobs:
                             if pk in self.data[id_run].keys():
                                 self.data[id_run][pk][code] = {}
                             else:
                                 self.data[id_run][pk] = {code: {}}
-
+            print(lst_obs)
             if len(lst_obs) == 0:
                 txt_nodata += "- {} - {}\n " \
                               "".format(dict_name[id_run]['run'],

@@ -919,7 +919,7 @@ $BODY$
         return dico
 
     #
-    def select_distinct(self, var, table, where="", ordre=None):
+    def select_distinct(self, var, table, where="", ordre=None, verbose=False):
         """select the "where" variable which is multiple"""
         if ordre is None:
             ordre = var
@@ -929,6 +929,8 @@ $BODY$
         (results, namCol) = self.run_query(
             sql.format(var, self.SCHEMA, table, where, ordre), fetch=True,
             namvar=True)
+        if verbose :
+            print(sql.format(var, self.SCHEMA, table, where, ordre))
         if namCol and results:
             cols = [col[0] for col in namCol]
             dico = {}
