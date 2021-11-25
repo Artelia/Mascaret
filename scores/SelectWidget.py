@@ -36,6 +36,7 @@ class SelectWidget(QWidget):
     """
     Class of selection run and scenarion for compute scores
     """
+
     def __init__(self, windmain):
         """
         Class constructor

@@ -64,34 +64,35 @@ class ScoreResWidget(QWidget):
     def fill_tab(self):
         """ fill table"""
         self.clear_tab()
-        err_typ_lst = [err  for err in self.res.keys() if err != 'quantil']
+        err_typ_lst = [err for err in self.res.keys() if err != 'quantil']
         id_lst = []
-        for err in  err_typ_lst:
-           for idrun in self.res[err].keys():
-               id_lst.append(idrun)
-        id_lst  = list(set(id_lst))
+        for err in err_typ_lst:
+            for idrun in self.res[err].keys():
+                id_lst.append(idrun)
+        id_lst = list(set(id_lst))
 
-        if len(id_lst) >0:
+        if len(id_lst) > 0:
             self.dict_name = self.mdb.get_scen_name(id_lst)
         else:
             self.dict_name = {}
 
         lst_col = []
         tab_fill = {}
-        for err_typ in err_typ_lst  :
+        for err_typ in err_typ_lst:
             for idrun, dict_id in self.res[err_typ].items():
                 for pk, dict_pk in dict_id.items():
                     for code, dict_code in dict_pk.items():
-                        for varq, tmp_var in  dict_code.items() :
+                        for varq, tmp_var in dict_code.items():
                             name_col = '{} - {}\n' \
                                        '{}\n' \
-                                       '{} - {}'.format(self.dict_name[idrun]['run'],
-                                                   self.dict_name[idrun]['scenario'],
-                                                        pk,
-                                                        code,
-                                                        varq)
+                                       '{} - {}'.format(
+                                self.dict_name[idrun]['run'],
+                                self.dict_name[idrun]['scenario'],
+                                pk,
+                                code,
+                                varq)
                             lst_col.append(name_col)
-                            for  err, tmp in tmp_var.items():
+                            for err, tmp in tmp_var.items():
                                 if err in tab_fill.keys():
                                     tab_fill[err][name_col] = tmp
                                 else:

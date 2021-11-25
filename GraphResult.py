@@ -25,6 +25,7 @@ import matplotlib.lines as mlines
 
 MPL_LINE_STYLE = {0: '-', 1: ':', 2: '--', 3: '-.'}
 
+
 class GraphResult(GraphCommonNew):
     def __init__(self, wgt=None, lay=None, lay_toolbar=None):
         GraphCommonNew.__init__(self, wgt, lay, lay_toolbar)
@@ -45,13 +46,16 @@ class GraphResult(GraphCommonNew):
     def init_ui(self):
         self.init_ui_common_p()
 
-    def init_mdl(self, lst_vars, lst_lbls, lst_colors, lst_line_style, lst_axe, unit_y, title_y=None):
+    def init_mdl(self, lst_vars, lst_lbls, lst_colors, lst_line_style, lst_axe,
+                 unit_y, title_y=None):
         self.list_var.clear()
         self.annotation.clear()
         self.data_to_curve.clear()
 
-        self.ax = {1: {"axe": None, "curves": [], "labels": [], "lined": {}, "legend": None},
-                   2: {"axe": None, "curves": [], "labels": [], "lined": {}, "legend": None}}
+        self.ax = {1: {"axe": None, "curves": [], "labels": [], "lined": {},
+                       "legend": None},
+                   2: {"axe": None, "curves": [], "labels": [], "lined": {},
+                       "legend": None}}
 
         self.fig.clf()
         self.ax[1]["axe"] = self.fig.add_subplot(111)
@@ -60,31 +64,53 @@ class GraphResult(GraphCommonNew):
             if max(lst_axe) == 2:
                 self.ax[2]["axe"] = self.ax[1]["axe"].twinx()
 
-        self.annot_var = self.main_axe.annotate("", xy=(0, 0), ha='left', xytext=(10, 0), textcoords='offset points', va='top',
-                                                  bbox=dict(boxstyle='round, pad=0.5', fc='white', alpha=0.7),
-                                                  color='black', visible=False, zorder=200)
+        self.annot_var = self.main_axe.annotate("", xy=(0, 0), ha='left',
+                                                xytext=(10, 0),
+                                                textcoords='offset points',
+                                                va='top',
+                                                bbox=dict(
+                                                    boxstyle='round, pad=0.5',
+                                                    fc='white', alpha=0.7),
+                                                color='black', visible=False,
+                                                zorder=200)
         self.annotation.append(self.annot_var)
         self.courbeLaisses = []
         self.etiquetteLaisses = []
         for v, var in enumerate(lst_vars):
             self.list_var.append({"id": v, "name": var, "clr": lst_colors[v]})
-            courbe_var, = self.ax[lst_axe[v]]["axe"].plot([], [], color=lst_colors[v], linestyle=MPL_LINE_STYLE[lst_line_style[v]],
-                                                          zorder=100 - v, label=lst_lbls[v])
+            courbe_var, = self.ax[lst_axe[v]]["axe"].plot([], [],
+                                                          color=lst_colors[v],
+                                                          linestyle=
+                                                          MPL_LINE_STYLE[
+                                                              lst_line_style[
+                                                                  v]],
+                                                          zorder=100 - v,
+                                                          label=lst_lbls[v])
             self.ax[lst_axe[v]]["curves"].append(courbe_var)
-            self.data_to_curve[v] = (lst_axe[v], len(self.ax[lst_axe[v]]["curves"]) - 1)
+            self.data_to_curve[v] = (
+            lst_axe[v], len(self.ax[lst_axe[v]]["curves"]) - 1)
 
-            annot_var = self.ax[lst_axe[v]]["axe"].annotate("", xy=(0, 0), ha='left', xytext=(10, 0), textcoords='offset points',
-                                                            va='top', bbox=dict(boxstyle='round, pad=0.5', fc='white', alpha=0.7),
-                                                            color=lst_colors[v], visible=False, zorder=199 - v)
+            annot_var = self.ax[lst_axe[v]]["axe"].annotate("", xy=(0, 0),
+                                                            ha='left',
+                                                            xytext=(10, 0),
+                                                            textcoords='offset points',
+                                                            va='top', bbox=dict(
+                    boxstyle='round, pad=0.5', fc='white', alpha=0.7),
+                                                            color=lst_colors[v],
+                                                            visible=False,
+                                                            zorder=199 - v)
             self.annotation.append(annot_var)
 
-        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='pink', alpha=0.5, lw=1, zorder=80)
+        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='pink',
+                                 alpha=0.5, lw=1, zorder=80)
         self.litMineur = self.main_axe.add_patch(rect)
 
-        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green', alpha=0.3, lw=1, zorder=80)
+        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green',
+                                 alpha=0.3, lw=1, zorder=80)
         self.stockgauche = self.main_axe.add_patch(rect)
 
-        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green', alpha=0.3, lw=1, zorder=80)
+        rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='green',
+                                 alpha=0.3, lw=1, zorder=80)
         self.stockdroit = self.main_axe.add_patch(rect)
 
         self.aire = []
@@ -106,14 +132,15 @@ class GraphResult(GraphCommonNew):
 
         self.v_line = self.main_axe.axvline(color="black")
 
-
     def init_graph(self, lst_data, x_var, all_vis=True, lais=None):
         self.init_legende()
-        #self.set_data(data, x_var)
+        # self.set_data(data, x_var)
 
         if lais:
             handles = [c for c in self.ax[1]["curves"]]
-            handles.append(mlines.Line2D([], [], color='darkcyan', marker='+', linewidth=0, markersize=10, label='Flood marks'))
+            handles.append(
+                mlines.Line2D([], [], color='darkcyan', marker='+', linewidth=0,
+                              markersize=10, label='Flood marks'))
             self.ax[1]["curves"].append(self.courbeLaisses[0])
             self.init_legende(handles)
 
@@ -134,10 +161,9 @@ class GraphResult(GraphCommonNew):
 
         self.maj_limites()
 
-
     def init_graph_profil(self, data, x_var, qmaj=0):
         self.init_legende()
-        #self.set_data(data, x_var)
+        # self.set_data(data, x_var)
 
         if len(self.ax[1]["curves"]) > 0:
             for i, cb in enumerate(self.ax[1]["curves"]):
@@ -177,7 +203,9 @@ class GraphResult(GraphCommonNew):
 
         temp1 = np.array(data['ZREF'])
         temp2 = np.array(data['Z'])
-        aire = self.main_axe.fill_between(data['x'], temp1, temp2, where=temp2 >= temp1, interpolate=True)
+        aire = self.main_axe.fill_between(data['x'], temp1, temp2,
+                                          where=temp2 >= temp1,
+                                          interpolate=True)
 
         self.aire = []
 
@@ -213,28 +241,45 @@ class GraphResult(GraphCommonNew):
 
         self.maj_limites()
 
-
     def insert_obs_curves(self, dict_obs):
         v = self.list_var[-1]["id"] + 1
         idx = 0
         for (id_obs, var), param_obs in dict_obs.items():
             self.list_var.append({"id": v, "name": var, "clr": "grey"})
-            courbe_obs, = self.ax[param_obs["axe"]]["axe"].plot([], [], color="grey", marker='o', markeredgewidth=0, zorder=100 - v,
-                                                                linestyle=MPL_LINE_STYLE[idx], label="Obs {0} - {1}".format(id_obs, var))
+            courbe_obs, = self.ax[param_obs["axe"]]["axe"].plot([], [],
+                                                                color="grey",
+                                                                marker='o',
+                                                                markeredgewidth=0,
+                                                                zorder=100 - v,
+                                                                linestyle=
+                                                                MPL_LINE_STYLE[
+                                                                    idx],
+                                                                label="Obs {0} - {1}".format(
+                                                                    id_obs,
+                                                                    var))
 
             self.ax[param_obs["axe"]]["curves"].append(courbe_obs)
-            self.data_to_curve[v] = (param_obs["axe"], len(self.ax[param_obs["axe"]]["curves"]) - 1)
+            self.data_to_curve[v] = (
+            param_obs["axe"], len(self.ax[param_obs["axe"]]["curves"]) - 1)
 
-            annot_var = self.ax[param_obs["axe"]]["axe"].annotate("", xy=(0, 0), ha='left', xytext=(10, 0),
-                                                                  textcoords='offset points', va='top',
-                                                                  bbox=dict(boxstyle='round, pad=0.5', fc='white', alpha=0.7),
-                                                                  color="grey", visible=False, zorder=199 - v)
+            annot_var = self.ax[param_obs["axe"]]["axe"].annotate("", xy=(0, 0),
+                                                                  ha='left',
+                                                                  xytext=(
+                                                                  10, 0),
+                                                                  textcoords='offset points',
+                                                                  va='top',
+                                                                  bbox=dict(
+                                                                      boxstyle='round, pad=0.5',
+                                                                      fc='white',
+                                                                      alpha=0.7),
+                                                                  color="grey",
+                                                                  visible=False,
+                                                                  zorder=199 - v)
             self.annotation.append(annot_var)
             idx += 1
             v += 1
 
         self.maj_limites()
-
 
     def clear_laisse(self):
         """flood mark"""
@@ -253,26 +298,27 @@ class GraphResult(GraphCommonNew):
         self.etiquetteLaisses = []
         # self.canvas.draw()
 
-
     def init_graph_laisse(self, laisses):
         """ add flood mark in graph"""
 
         self.clear_laisse()
 
-        self.courbeLaisses.append(self.main_axe.scatter(laisses['x'], laisses['z'],
-                                                    color=laisses["couleurs"],
-                                                    marker='+',
-                                                    label="Flood marks",
-                                                    s=80,
-                                                    linewidth=laisses[
-                                                        'taille']))
+        self.courbeLaisses.append(
+            self.main_axe.scatter(laisses['x'], laisses['z'],
+                                  color=laisses["couleurs"],
+                                  marker='+',
+                                  label="Flood marks",
+                                  s=80,
+                                  linewidth=laisses[
+                                      'taille']))
 
         self.courbeLaisses[0].set_visible(True)
         for x, z, c in zip(laisses['x'], laisses['z'], laisses["couleurs"]):
             temp = self.main_axe.annotate(str(z), xy=(x, z), xytext=(3, 3),
-                                      ha='left', va='bottom',
-                                      fontsize='x-small',
-                                      color=c,
-                                      textcoords='offset points', clip_on=True)
+                                          ha='left', va='bottom',
+                                          fontsize='x-small',
+                                          color=c,
+                                          textcoords='offset points',
+                                          clip_on=True)
 
             self.etiquetteLaisses.append(temp)

@@ -62,7 +62,8 @@ class GraphProfilResultDialog(QWidget):
 
         self.typ_graph = typ_graph
         self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/graphProfilResult.ui'), self)
+            os.path.join(self.mgis.masplugPath, 'ui/graphProfilResult.ui'),
+            self)
         self.graph_obj = GraphResult(self, self.lay_graph)
         self.cur_run, self.cur_graph, self.cur_vars = None, None, None
         self.cur_vars_lbl, self.cur_branch, self.cur_pknum, self.cur_t = None, None, None, None
@@ -97,8 +98,10 @@ class GraphProfilResultDialog(QWidget):
 
             self.cb_run.currentIndexChanged.connect(self.run_changed)
             self.cb_scen.currentIndexChanged.connect(self.scen_changed)
-            self.cb_graph.currentIndexChanged.connect(lambda: self.graph_changed_profil(True))
-            self.cb_det.currentIndexChanged.connect(lambda: self.detail_changed(up_lim=True))
+            self.cb_graph.currentIndexChanged.connect(
+                lambda: self.graph_changed_profil(True))
+            self.cb_det.currentIndexChanged.connect(
+                lambda: self.detail_changed(up_lim=True))
 
             self.bt_expCsv.clicked.connect(self.export_csv)
             self.tw_data.addAction(CopySelectedCellsAction(self.tw_data))
@@ -170,7 +173,6 @@ class GraphProfilResultDialog(QWidget):
                     except:
                         pass
 
-
     def get_runs_graph(self):
         sql = "SELECT type_res,var,val FROM {0}.runs_graph WHERE " \
               "id_runs = {1} ORDER BY id".format(self.mdb.SCHEMA,
@@ -184,7 +186,6 @@ class GraphProfilResultDialog(QWidget):
                 self.info_graph[row[0]][row[1]] = row[2]
             else:
                 self.info_graph[row[0]] = {row[1]: row[2]}
-
 
     def init_dico_run(self):
         self.dict_run = dict()
@@ -239,7 +240,6 @@ class GraphProfilResultDialog(QWidget):
         self.cb_graph.setCurrentIndex(
             self.cb_graph.findData(self.cur_pknum))
         self.cb_graph.blockSignals(False)
-
 
     def init_cb_det(self, id):
         self.cb_det.blockSignals(True)
@@ -302,7 +302,8 @@ class GraphProfilResultDialog(QWidget):
             lst_colors = ['black']
             self.cur_vars_lbl = self.find_var_lbl()
 
-            self.graph_obj.init_mdl(self.cur_vars, self.cur_vars_lbl, lst_colors, [0], [1], 'm')
+            self.graph_obj.init_mdl(self.cur_vars, self.cur_vars_lbl,
+                                    lst_colors, [0], [1], 'm')
             self.zmax_save = None
             if self.cur_run:
                 if 'zmax' in self.info_graph[self.typ_res].keys():
@@ -327,7 +328,6 @@ class GraphProfilResultDialog(QWidget):
             self.graph_obj.main_axe.cla()
             self.graph_obj.canvas.draw()
             self.tw_data.clear()
-
 
     def update_data_profil(self):
         """
@@ -392,8 +392,8 @@ class GraphProfilResultDialog(QWidget):
                 self.graph_obj.main_axe.set_xlabel(r'Distance ($m$)')
                 self.graph_obj.main_axe.set_ylabel(r'Level ($m$)')
 
-                self.graph_obj.init_graph_profil(self.cur_data, self.x_var, qmaj_max)
-
+                self.graph_obj.init_graph_profil(self.cur_data, self.x_var,
+                                                 qmaj_max)
 
     def fill_tab(self, x_var, nb_col=None):
         self.tw_data.setColumnCount(0)

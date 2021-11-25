@@ -162,12 +162,12 @@ class ScoreParamWidget(QWidget):
         else:
             self.exe = True
         self.control_no_change()
-
         if len(self.lst_runs) > 0:
             dict_name = self.mdb.get_scen_name(self.lst_runs)
 
             self.tw_param.setColumnCount(len(self.lst_runs))
             for col, id_run in enumerate(self.lst_runs):
+
                 self.widget_d[id_run] = {
                     'ref_time': QDateTimeEdit(self),
                     'per_step_t': QDoubleSpinBox(self),
@@ -975,7 +975,7 @@ class ScoreParamWidget(QWidget):
         info = self.mdb.select('profiles',
                                where=where,
                                list_var=['gid', 'name', 'abscissa'])
-        print(info)
+
         name = None
         abs = None
         if len(info['abscissa']) > 0:
@@ -1235,7 +1235,7 @@ class ScoreParamWidget(QWidget):
         self.obs = {}
 
         where = "active AND code IN (SELECT DISTINCT code FROM {0}.observations " \
-                " WHERE date>'{1}' AND date<'{2}') " \
+                " WHERE date>='{1}' AND date<='{2}') " \
                 "AND (name IN (SELECT DISTINCT name  FROM {0}.profiles) " \
                 "OR abscissa IN (SELECT DISTINCT abscissa " \
                 "FROM {0}.profiles))".format(self.mdb.SCHEMA,
@@ -1307,14 +1307,12 @@ class ScoreParamWidget(QWidget):
                 if id_run in self.dict_pk.keys():
                     for pk in self.dict_pk[id_run]:
                         lobs = self.pk2obs(id_run, pk)
-                        print(lobs, pk, id_run)
                         lst_obs.extend(lobs)
                         for code in lobs:
                             if pk in self.data[id_run].keys():
                                 self.data[id_run][pk][code] = {}
                             else:
                                 self.data[id_run][pk] = {code: {}}
-            print(lst_obs)
             if len(lst_obs) == 0:
                 txt_nodata += "- {} - {}\n " \
                               "".format(dict_name[id_run]['run'],

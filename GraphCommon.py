@@ -242,9 +242,6 @@ class DraggableLegend:
             self.gotLegend = False
 
 
-
-
-
 class GraphCommonNew:
     def __init__(self, wgt=None, lay=None, lay_toolbar=None):
         self.fig = Figure()
@@ -267,14 +264,14 @@ class GraphCommonNew:
         self.lined = dict()
         self.unit = ''
 
-
     def init_ui_common_p(self):
         self.list_var = []
         self.courbes = []
         self.annotation = []
         self.courbeLaisses = []
 
-        self.fig.canvas.mpl_connect('button_release_event', self.graph_off_click)
+        self.fig.canvas.mpl_connect('button_release_event',
+                                    self.graph_off_click)
         self.fig.canvas.mpl_connect('button_press_event', self.graph_on_click)
         self.fig.canvas.mpl_connect('motion_notify_event', self.graph_on_press)
         self.fig.canvas.mpl_connect('pick_event', self.graph_on_pick)
@@ -386,7 +383,6 @@ class GraphCommonNew:
         self.v_line.set_visible(True)
         self.canvas.draw()
 
-
     def init_legende(self, handles=None):
         all_handles, all_noms, all_curves = list(), list(), list()
 
@@ -410,7 +406,9 @@ class GraphCommonNew:
                 all_curves.extend(ax["curves"])
 
         ax = self.ax[ax_max]
-        ax["legend"] = ax["axe"].legend(all_handles, all_noms, loc='upper right', fancybox=False, shadow=False, fontsize=7.)
+        ax["legend"] = ax["axe"].legend(all_handles, all_noms,
+                                        loc='upper right', fancybox=False,
+                                        shadow=False, fontsize=7.)
         ax["legend"].get_frame().set_alpha(0.4)
         ax["legend"].set_zorder(111 - id_ax)
         ax["legend"].set_draggable(True)
@@ -420,7 +418,6 @@ class GraphCommonNew:
             legline.set_picker(5)
             legline.set_linewidth(3)
             ax["lined"][legline] = courbe
-
 
     def maj_unit_x(self, unit):
         self.unit = unit
@@ -433,12 +430,10 @@ class GraphCommonNew:
             self.unit_x = 'num'
             self.main_axe.xaxis.set_major_formatter(ticker.ScalarFormatter())
 
-
     def maj_courbes(self, courbes):
         for c in courbes.keys():
             self.courbes[c].set_data(courbes[c]["x"], courbes[c]["y"])
         self.maj_limites()
-
 
     def maj_limites(self):
         if self.update_limites:
@@ -485,10 +480,6 @@ class GraphCommonNew:
 
         self.fig.autofmt_xdate()
         self.canvas.draw()
-
-
-
-
 
 # class DraggableLegendNew:
 #     def __init__(self, axes):

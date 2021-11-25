@@ -52,7 +52,7 @@ class ScoreDistWidget(QWidget):
     def fill_tab(self):
         """ fill table"""
         self.clear_tab()
-        if not('quantil' in self.res.keys()):
+        if not ('quantil' in self.res.keys()):
             return
         err_typ_lst = ['quantil']
         id_lst = []
@@ -76,7 +76,7 @@ class ScoreDistWidget(QWidget):
                     for code, dict_code in dict_pk.items():
                         for varq, tmp_var in dict_code.items():
                             name_col = '{} - {}\n' \
-                                        '{}\n'\
+                                       '{}\n' \
                                        '{} - {}'.format(
                                 self.dict_name[idrun]['run'],
                                 self.dict_name[idrun]['scenario'],
@@ -88,15 +88,19 @@ class ScoreDistWidget(QWidget):
                                 dist_lst = tmp[0]
                                 for id, dist in enumerate(dist_lst):
                                     if err == 'dist_err':
-                                        if dist in  tab_fill.keys():
-                                            tab_fill[dist][name_col] =  tmp[1][id]
+                                        if dist in tab_fill.keys():
+                                            tab_fill[dist][name_col] = tmp[1][
+                                                id]
                                         else:
-                                            tab_fill[dist] = {name_col: tmp[1][id]}
+                                            tab_fill[dist] = {
+                                                name_col: tmp[1][id]}
                                     elif err == 'dist_abs_err':
                                         if dist in tab_fill_abs.keys():
-                                            tab_fill_abs[dist][name_col] = tmp[1][id]
+                                            tab_fill_abs[dist][name_col] = \
+                                            tmp[1][id]
                                         else:
-                                            tab_fill_abs[dist] = {name_col: tmp[1][id]}
+                                            tab_fill_abs[dist] = {
+                                                name_col: tmp[1][id]}
 
         if len(tab_fill.keys()) > 0:
             dist_lst = [v for v in tab_fill.keys()]
@@ -132,7 +136,6 @@ class ScoreDistWidget(QWidget):
                     self.table_dist_abs.setItem(row, col, item)
 
             self.bt_export_csv.setEnabled(True)
-
 
     def clear_tab(self):
         """clear table"""

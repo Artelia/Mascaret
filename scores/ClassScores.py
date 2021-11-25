@@ -348,8 +348,8 @@ class ClassScores:
         mxobs = np.max(y_obs * alpha)
         idpred = np.where(y_pred == mxpred)[0]
         idobs = np.where(y_obs == mxobs)[0]
-        print(idpred,idobs)
-        if idpred.size == 0 or  idpred.size == 0:
+        print(idpred, idobs)
+        if idpred.size == 0 or idpred.size == 0:
             deltatmax = 'No found peaks'
         else:
             deltatmax = tps_pred[idpred[0]] - tps_obs[idobs[0]]

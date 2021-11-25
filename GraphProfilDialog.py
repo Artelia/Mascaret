@@ -51,7 +51,6 @@ from .GraphProfilResultDialog import GraphProfilResultDialog
 from .GraphResultDialog import GraphResultDialog
 from .ClassProfInterpDialog import ClassProfInterpDialog
 
-
 from qgis.PyQt.QtWidgets import *
 
 try:
@@ -78,6 +77,7 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig)
+
 
 class IdentifyFeatureTool(QgsMapToolIdentify):
     def __init__(self, main):
@@ -134,9 +134,10 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 prof_a = self.mgis.mdb.select_distinct("name", "profiles",
                                                        "active")
                 if results[0].mFeature['name'] in prof_a['name']:
-                    graph_res = GraphProfilResultDialog(self.mgis, "hydro_profil",
-                                                  results[0].mFeature[
-                                                      "abscissa"])
+                    graph_res = GraphProfilResultDialog(self.mgis,
+                                                        "hydro_profil",
+                                                        results[0].mFeature[
+                                                            "abscissa"])
 
                     graph_res.show()
                 else:
@@ -1010,7 +1011,7 @@ class GraphProfil(GraphCommon):
                 self.courbeTopo[i].set_color("green")
             self.courbes.append(self.courbeTopo[i])
         if allvis:
-            for cb in self.courbes :
+            for cb in self.courbes:
                 cb.set_visible(True)
         if ta['x'] is not None and ta['leftminbed'] is not None and ta[
             'rightminbed'] is not None:
@@ -1061,7 +1062,7 @@ class GraphProfil(GraphCommon):
         liste_noms = [c.get_label() for c in self.courbes]
         self.leg = self.axes.legend(self.courbes, liste_noms, loc='upper right',
                                     fancybox=False, shadow=False)
-        #self.leg.get_frame().set_alpha(0.4)
+        # self.leg.get_frame().set_alpha(0.4)
         self.lined = dict()
 
         for legline, courbe in zip(self.leg.get_lines(), self.courbes):
@@ -1288,34 +1289,30 @@ class GraphProfil(GraphCommon):
         self.tab['z'].reverse()
         oldx = self.tab['x'].copy()
 
-
-        lmin =  self.tab['leftminbed']
-        rmin =  self.tab['rightminbed']
-        lmaj =  self.tab['leftstock']
-        rmaj =  self.tab['rightstock']
+        lmin = self.tab['leftminbed']
+        rmin = self.tab['rightminbed']
+        lmaj = self.tab['leftstock']
+        rmaj = self.tab['rightstock']
         xo = oldx[0]
-        if lmin and rmin :
+        if lmin and rmin:
             self.tab['leftminbed'] = oldx[-1] - (lmin - xo)
             self.tab['rightminbed'] = oldx[-1] - (rmin - xo)
-        if lmaj and rmaj :
+        if lmaj and rmaj:
             self.tab['leftstock'] = oldx[-1] - (lmaj - xo)
             self.tab['rightstock'] = oldx[-1] - (rmaj - xo)
 
-
         dist_x = []
-        for i,x in  enumerate(oldx) :
-            if i !=0:
-                dist_x.append(round(x-xo,6))
+        for i, x in enumerate(oldx):
+            if i != 0:
+                dist_x.append(round(x - xo, 6))
                 xo = x
         dist_x.reverse()
         xf = oldx[0]
         new_x = [xf]
-        for dist  in dist_x:
-            xf = round(xf + dist,6)
+        for dist in dist_x:
+            xf = round(xf + dist, 6)
             new_x.append(xf)
         self.tab['x'] = new_x
-
-
 
         self.maj_graph()
 
@@ -1335,7 +1332,7 @@ class GraphProfil(GraphCommon):
                     else:
 
                         geo_tmp = f.geometry().interpolate(x)
-                        if not geo_tmp.isNull :
+                        if not geo_tmp.isNull:
                             p = geo_tmp.asPoint()
                             # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
                             geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
@@ -1413,7 +1410,6 @@ class GraphProfil(GraphCommon):
             return np.min(pr_m[:, 1]), None, rz, lz, rmin, lmin
         poly = clpoly.coup_poly_h(poly, h_pbord, typ='U')
 
-
         if poly.is_empty:
             # print('Profil is empty')
             return np.min(pr_m[:, 1]), None, rz, lz
@@ -1430,13 +1426,13 @@ class GraphProfil(GraphCommon):
         :return:
         """
         clpoly = ClassPolygone()
-        if id == -1 :
+        if id == -1:
             nom = 'interpolation'
             prof = np.zeros(shape=(len(self.topo[nom]['x']), 2))
 
-            for i,order in enumerate(self.topo[nom]['ordre']):
-                prof[order-1,0] = self.topo[nom]['x'][i]
-                prof[order-1,1] = self.topo[nom]['z'][i]
+            for i, order in enumerate(self.topo[nom]['ordre']):
+                prof[order - 1, 0] = self.topo[nom]['x'][i]
+                prof[order - 1, 1] = self.topo[nom]['z'][i]
         else:
             x_pr = [float(val) for val in self.liste['x'][id].split()]
             z_pr = [float(val) for val in self.liste['z'][id].split()]
@@ -1493,10 +1489,10 @@ class GraphProfil(GraphCommon):
         # cas = -1 amont, cas=1 aval
         dcas = {-1: 'upstream', 0: 'interpolation', 1: 'downstream'}
         nofind = {'point_bas': None,
-                  'sect_plein_bord': None }
+                  'sect_plein_bord': None}
         for cas in [-1, 0, 1]:
-            if cas == 0 :
-                if 'interpolation' in self.topo.keys() :
+            if cas == 0:
+                if 'interpolation' in self.topo.keys():
                     minz, area = self.val_inter_prof(-1)
                     self.ch_prof_inter[dcas[cas]] = {'point_bas': minz,
                                                      'sect_plein_bord': area,
@@ -1509,7 +1505,7 @@ class GraphProfil(GraphCommon):
 
                     minz, area = self.val_inter_prof(id + cas)
                     self.ch_prof_inter[dcas[cas]] = {'point_bas': minz,
-                                               'sect_plein_bord': area,
+                                                     'sect_plein_bord': area,
                                                      }
                 else:
                     self.ch_prof_inter[dcas[cas]] = nofind
@@ -1528,7 +1524,6 @@ class GraphProfil(GraphCommon):
         self.check_prof_interp()
         self.fill_table_check_interp()
 
-
     def fill_table_check_interp(self):
         """
         Fill table for 'check profile'
@@ -1540,16 +1535,17 @@ class GraphProfil(GraphCommon):
         # for var in exclude_line :
         #     lines.remove(var)
 
-        cols = ['interpolation', 'upstream', 'downstream']#, 'interpolation']
+        cols = ['interpolation', 'upstream', 'downstream']  # , 'interpolation']
         key_str = {'point_bas': 'bottom point',
                    'sect_plein_bord': "Section", }
         lines = list(key_str.keys())
         self.ui.table_check_interp.clear()
         self.ui.table_check_interp.setRowCount(len(lines))
         self.ui.table_check_interp.setColumnCount(len(cols))
-        self.ui.table_check_interp.setVerticalHeaderLabels(list(key_str.values()))
+        self.ui.table_check_interp.setVerticalHeaderLabels(
+            list(key_str.values()))
         self.ui.table_check_interp.setHorizontalHeaderLabels(cols)
-        print(self.ch_prof_inter,"rrrrrrrdd")
+        print(self.ch_prof_inter, "rrrrrrrdd")
         for idc, col in enumerate(cols):
             for idl, line in enumerate(lines):
                 val = self.ch_prof_inter[col][line]
@@ -1575,7 +1571,7 @@ class GraphProfil(GraphCommon):
         # for var in exclude_line :
         #     lines.remove(var)
 
-        cols = ['current', 'upstream', 'downstream']#, 'interpolation']
+        cols = ['current', 'upstream', 'downstream']  # , 'interpolation']
         key_str = {'point_bas': 'bottom point',
                    'sect_plein_bord': "Section of minor bed",
                    'cote_d': "Height of the right bank",
@@ -1615,17 +1611,16 @@ class GraphProfil(GraphCommon):
         :return:
         """
         err = {}
-        msgerr,id, idam, idav = self.find_pr_inter()
+        msgerr, id, idam, idav = self.find_pr_inter()
         if msgerr != '':
             err['iderr'] = msgerr
         self.gui_interpol(id, idam, idav, err)
 
+    def gui_interpol(self, id, idam, idav, err):
 
-    def gui_interpol(self,id, idam, idav, err):
-
-        if id :
+        if id:
             plani = self.get_plani(self.liste['abscissa'][id],
-                                   self.liste['branchnum'][id] )
+                                   self.liste['branchnum'][id])
         else:
             plani = None
         nplan = 100
@@ -1634,17 +1629,17 @@ class GraphProfil(GraphCommon):
             err['nplan'] = 'No compute discretization'
         else:
             nplan = self.get_nplan(idam, idav, plani)
-            if  nplan == 0:
+            if nplan == 0:
                 err['nplan'] = 'No compute discretization'
 
         dict_interp = {}
-        if idam and idav :
+        if idam and idav:
             dict_interp['up'] = self.get_pr(idam)
             dict_interp['down'] = self.get_pr(idav)
 
         dlg = ClassProfInterpDialog(self.mgis)
-        dlg.init_gui(nplan,plani,dict_interp,
-                           self.liste['abscissa'][id], err)
+        dlg.init_gui(nplan, plani, dict_interp,
+                     self.liste['abscissa'][id], err)
         if dlg.exec_():
             pass
 
@@ -1654,7 +1649,7 @@ class GraphProfil(GraphCommon):
             condition = "name='{0}' AND profile='{1}'".format('interpolation',
                                                               self.nom)
             self.mdb.delete("topo", condition)
-            self.add_topo(new_prof[:,0], new_prof[:,1], 'interpolation')
+            self.add_topo(new_prof[:, 0], new_prof[:, 1], 'interpolation')
             self.extrait_topo()
             # temporaire zone
             if dlg.interpol_prof['minor'][1]:
@@ -1662,7 +1657,7 @@ class GraphProfil(GraphCommon):
             if dlg.interpol_prof['minor'][0]:
                 self.tab['leftminbed'] = dlg.interpol_prof['minor'][0]
             if dlg.interpol_prof['major'][1]:
-                self.tab['rightstock']= dlg.interpol_prof['major'][1]
+                self.tab['rightstock'] = dlg.interpol_prof['major'][1]
             if dlg.interpol_prof['major'][0]:
                 self.tab['leftstock'] = dlg.interpol_prof['major'][0]
 
@@ -1670,8 +1665,7 @@ class GraphProfil(GraphCommon):
             self.maj_legende()
             self.maj_limites()
 
-
-    def get_nplan(self,  idam, idav, plani):
+    def get_nplan(self, idam, idav, plani):
         """
         get nplan:
             The higher number of planes between the minor bed of the upstream
@@ -1682,16 +1676,16 @@ class GraphProfil(GraphCommon):
         :return:
         """
         nplan_lst = []
-        nplan =  0
-        for id in [idam,idav] :
+        nplan = 0
+        for id in [idam, idav]:
             pr_m, rmin, lmin = self.get_minor_pr(id)
             lz = pr_m[0][1]
             rz = pr_m[-1][1]
-            bottom =  np.min(pr_m)
-            nplan_l = (lz-bottom)/plani
-            nplan_r = (rz-bottom)/plani
-            nplan_lst.append(max(nplan_l,nplan_r))
-        nplan = max( nplan, max(nplan_lst))
+            bottom = np.min(pr_m)
+            nplan_l = (lz - bottom) / plani
+            nplan_r = (rz - bottom) / plani
+            nplan_lst.append(max(nplan_l, nplan_r))
+        nplan = max(nplan, max(nplan_lst))
         return nplan
 
     def get_pr(self, id):
@@ -1700,7 +1694,6 @@ class GraphProfil(GraphCommon):
         :param id:
         :return:
         """
-
 
         x_pr = [float(val) for val in self.liste['x'][id].split()]
         z_pr = [float(val) for val in self.liste['z'][id].split()]
@@ -1728,16 +1721,15 @@ class GraphProfil(GraphCommon):
             rmaj = rmin
 
         dico = {
-            'name' : self.liste['name'][id],
-            'id' : self.liste['gid'][id],
-            'branch' : self.liste['branchnum'][id],
+            'name': self.liste['name'][id],
+            'id': self.liste['gid'][id],
+            'branch': self.liste['branchnum'][id],
             'prof': linS,
             'pk': self.liste['abscissa'][id],
             'minor': [lmin, rmin],
             'major': [lmaj, rmaj],
         }
         return dico
-
 
     def get_minor_pr(self, id):
         """
@@ -1764,7 +1756,7 @@ class GraphProfil(GraphCommon):
         pr_m = np.array(pr_m)
         return pr_m, rmin, lmin
 
-    def get_plani(self,pk,branch):
+    def get_plani(self, pk, branch):
         """
         Get planimetry value
         :param pk: abscissa of the profile
@@ -1777,42 +1769,42 @@ class GraphProfil(GraphCommon):
                                where="branch='{}'".format(branch),
                                order="zoneabsstart",
                                list_var=['zonenum', 'zoneabsstart',
-                                         'zoneabsend', 'planim','active'])
+                                         'zoneabsend', 'planim', 'active'])
 
         if rows:
 
             for i, zone in enumerate(rows['zonenum']):
-                if rows['zoneabsstart'][i]<= pk <=rows['zoneabsend'][i]:
+                if rows['zoneabsstart'][i] <= pk <= rows['zoneabsend'][i]:
                     plani = rows['planim'][i]
-                    if rows['active'][i] :
+                    if rows['active'][i]:
                         break
 
-        #print('plani', plani)
-        return  plani
+        # print('plani', plani)
+        return plani
 
     def find_pr_inter(self):
-        msgerr =  ''
+        msgerr = ''
         idam = None
         idav = None
         id = self.liste['name'].index(self.nom)
-        idmax = len(self.liste["name"])-1
-        if id ==0:
+        idmax = len(self.liste["name"]) - 1
+        if id == 0:
             msgerr += 'No finds upstream profile'
-            return msgerr,id,idam,idav
-        elif id == idmax :
+            return msgerr, id, idam, idav
+        elif id == idmax:
             msgerr += 'No finds downstream profile'
-            return msgerr,id,idam,idav
+            return msgerr, id, idam, idav
 
         # upstream
         idf = id
-        while idf !=0:
+        while idf != 0:
             idf -= 1
             if self.liste['x'][idf] != None:
                 idam = idf
                 break
         # downstream
         idf = id
-        while idf != idmax-1:
+        while idf != idmax - 1:
             idf += 1
             if self.liste['x'][idf] != None:
                 idav = idf
@@ -1943,5 +1935,3 @@ class CopySelectedCellsAction(QAction):
 
             sys_clip = QApplication.clipboard()
             sys_clip.setText(clipboard)
-
-
