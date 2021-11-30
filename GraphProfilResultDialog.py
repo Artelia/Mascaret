@@ -234,6 +234,8 @@ class GraphProfilResultDialog(QWidget):
                 txt = str(pknum) + ' : ' + info['name'][
                     info['abscissa'].index(pknum)]
                 lst_graph.append({"name": txt, 'id': float(pknum)})
+            # else:
+            #     lst_graph.append({"name": str(pknum), 'id': float(pknum)})
         self.lst_graph = lst_graph
         for i, graph in enumerate(lst_graph):
             self.cb_graph.addItem(graph["name"], graph["id"])
