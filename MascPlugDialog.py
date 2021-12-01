@@ -231,7 +231,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionImport_Results.setVisible(False)
         # TODO Finaliser
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(False)
+        self.ui.actionTest.setVisible(True)
         # scores
         self.ui.actionScores.triggered.connect(self.fct_scores)
         #TODO DELETE AFTER
@@ -963,7 +963,7 @@ Version : {}
 
     def fct_test(self):
         """ Test function"""
-        self.chkt.debug_update_vers_meta(version='3.0.6')
+        self.chkt.debug_update_vers_meta(version='4.0.1')
         pass
 
     def update_pk(self):

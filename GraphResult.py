@@ -241,6 +241,48 @@ class GraphResult(GraphCommonNew):
 
         self.maj_limites()
 
+    def insert_debord_curves(self, dict_debord):
+        v = self.list_var[-1]["id"] + 1
+        idx = 0
+        print(dict_debord)
+        for (id_debord, var), param_debord in dict_debord.items():
+            print((id_debord, var), param_debord)
+            self.list_var.append({"id": v, "name": var, "clr": "grey"})
+            courbe_debord, = self.ax[param_debord["axe"]]["axe"].plot([], [],
+                                                                color="grey",
+                                                                marker='o',
+                                                                markeredgewidth=0,
+                                                                zorder=100 - v,
+                                                                linestyle=
+                                                                MPL_LINE_STYLE[
+                                                                    idx+1],
+                                                                label="overflow level - {0} ".format(
+                                                                    id_debord))
+
+            self.ax[param_debord["axe"]]["curves"].append(courbe_debord)
+            self.data_to_curve[v] = (
+                param_debord["axe"], len(self.ax[param_debord["axe"]]["curves"]) - 1)
+            print(v, self.data_to_curve[v])
+
+            annot_var = self.ax[param_debord["axe"]]["axe"].annotate("", xy=(0, 0),
+                                                                  ha='left',
+                                                                  xytext=(
+                                                                      10, 0),
+                                                                  textcoords='offset points',
+                                                                  va='top',
+                                                                  bbox=dict(
+                                                                      boxstyle='round, pad=0.5',
+                                                                      fc='white',
+                                                                      alpha=0.7),
+                                                                  color="grey",
+                                                                  visible=False,
+                                                                  zorder=199 - v)
+            self.annotation.append(annot_var)
+            idx += 1
+            v += 1
+
+        self.maj_limites()
+
     def insert_obs_curves(self, dict_obs):
         v = self.list_var[-1]["id"] + 1
         idx = 0

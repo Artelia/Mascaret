@@ -21,9 +21,10 @@ import os
 import json
 from . import MasObject as Maso
 from copy import deepcopy
-from ..Function import read_version
+from ..Function import read_version, fill_zminbed
 from ..ui.custom_control import ClassWarningBox
 from datetime import datetime
+
 
 
 # from ..ClassParameterDialog import ClassParameterDialog
@@ -63,6 +64,7 @@ class CheckTab:
                                   '3.1.2',
                                   '4.0.0',
                                   '4.0.1',
+                                  '4.0.2',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -175,6 +177,19 @@ class CheckTab:
                             ]
             },
             '4.0.1': {},
+            '4.0.2': {
+
+                'alt_tab': [{'tab': 'profiles',
+                             'sql': [
+                                 "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
+                                 "EXISTS  zleftminbed FLOAT;",
+                                 "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
+                                 "EXISTS  zrightminbed FLOAT;",
+                             ]},],
+                'fct': [
+                    lambda: fill_zminbed(self.mdb),
+                ],
+            },
             # '3.0.x': { },
 
         }
@@ -793,3 +808,4 @@ class CheckTab:
         except Exception as e:
             self.mgis.add_info("Error  update_400: {}".format(str(e)))
             return False
+

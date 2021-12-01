@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=3.00
 qgisMaximumVersion=3.99
 
-version=4.0.1
+version=4.0.2
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com

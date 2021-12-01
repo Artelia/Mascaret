@@ -455,6 +455,8 @@ class profiles(MasObject):
                       ('zmnt', 'text'),
                       ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('struct', 'integer DEFAULT 0'),
+                      ('zleftminbed', 'float'),
+                      ('zrightminbed', 'float'),
                       ('CONSTRAINT profiles_pkey', 'PRIMARY KEY (gid)'),
                       ('CONSTRAINT profile_unique', 'UNIQUE (name)')]
 

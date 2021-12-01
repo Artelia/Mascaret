@@ -408,7 +408,8 @@ class GraphCommonNew:
         ax = self.ax[ax_max]
         ax["legend"] = ax["axe"].legend(all_handles, all_noms,
                                         loc='upper right', fancybox=False,
-                                        shadow=False, fontsize=7.)
+                                        shadow=False, fontsize=7.,
+                                        handlelength=4)
         ax["legend"].get_frame().set_alpha(0.4)
         ax["legend"].set_zorder(111 - id_ax)
         ax["legend"].set_draggable(True)

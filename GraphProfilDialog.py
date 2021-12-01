@@ -528,10 +528,14 @@ class GraphProfil(GraphCommon):
         self.courbeProfil.set_ydata(self.tab['z'])
         self.canvas.draw()
 
+
     def sauve_profil(self):
         if not self.tab['x']:
             self.mgis.add_info('No data to save profile')
             return
+        self.tab['zrightminbed'] = None
+        self.tab['zleftminbed'] = None
+
         for k, v in self.tab.items():
 
             if isinstance(v, list):
@@ -541,10 +545,25 @@ class GraphProfil(GraphCommon):
                 if k == 'rightminbed' and not v:
                     v = max(self.tab['x'])
                     self.tab['rightminbed'] = v
+                    self.tab['zrightminbed'] = self.tab['z'][-1]
 
                 if k == 'leftminbed' and not v:
                     v = min(self.tab['x'])
                     self.tab['leftminbed'] = v
+                    self.tab['zleftminbed'] = self.tab['z'][0]
+                if not  self.tab['zrightminbed'] or self.tab['zleftminbed']:
+                    lstz_minor = []
+                    for x, z in zip(self.tab['x'], self.tab['z']):
+                        if x >= self.tab['leftminbed'] and \
+                                        x <= self.tab['rightminbed']:
+                            lstz_minor.append(z)
+
+                if k == 'zrightminbed' and not v:
+                    self.tab['zrightminbed'] = lstz_minor[-1]
+
+                if k == 'zleftminbed' and not v:
+                    self.tab['zleftminbed'] = lstz_minor[0]
+                print(k,self.position)
                 self.liste[k][self.position] = v
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
         tab = {self.nom: self.tab}
@@ -1301,6 +1320,8 @@ class GraphProfil(GraphCommon):
             self.tab['leftstock'] = oldx[-1] - (lmaj - xo)
             self.tab['rightstock'] = oldx[-1] - (rmaj - xo)
 
+
+
         dist_x = []
         for i, x in enumerate(oldx):
             if i != 0:
@@ -1313,6 +1334,7 @@ class GraphProfil(GraphCommon):
             xf = round(xf + dist, 6)
             new_x.append(xf)
         self.tab['x'] = new_x
+
 
         self.maj_graph()
 

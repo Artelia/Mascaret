@@ -27,7 +27,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 from .GraphResult import GraphResult
-from .Function import tw_to_txt, interpole
+from .Function import tw_to_txt, interpole, fill_zminbed
 from datetime import date, timedelta, datetime
 
 if int(qVersion()[0]) < 5:
@@ -77,7 +77,7 @@ class GraphProfilResultDialog(QWidget):
         self.val_prof_ref = {}
         self.dict_run = dict()
         self.laisses = {}
-
+        fill_zminbed(self.mdb)
         self.show_hide_com(False)
         if self.checkrun():
             self.typ_res = 'opt'
@@ -151,7 +151,8 @@ class GraphProfilResultDialog(QWidget):
         prof = self.mdb.select('profiles', order='abscissa',
                                list_var=['abscissa', 'x', 'z', 'leftminbed',
                                          'rightminbed', 'leftstock',
-                                         'rightstock'])
+                                         'rightstock','zleftminbed',
+                                         'zrightminbed'])
         self.val_prof_ref = {}
         if prof:
             for i, pk in enumerate(prof['abscissa']):
@@ -170,6 +171,10 @@ class GraphProfilResultDialog(QWidget):
                             i]
                         self.val_prof_ref[pk]['rightstock'] = \
                             prof['rightstock'][i]
+                        self.val_prof_ref[pk]['zleftminbed'] = \
+                            prof['zleftminbed'][i]
+                        self.val_prof_ref[pk]['zrightminbed'] = \
+                            prof['zrightminbed'][i]
                     except:
                         pass
 

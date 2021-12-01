@@ -27,7 +27,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 from .GraphResult import GraphResult
-from .Function import tw_to_txt, interpole
+from .Function import tw_to_txt, interpole,fill_zminbed
 from .CurveSelector import SlideCurveSelectorWidget, CompareCurveSelectorWidget
 from .scores.ClassScoresResDialog import ClassScoresResDialog
 from datetime import date, timedelta, datetime
@@ -75,6 +75,7 @@ class GraphResultDialog(QWidget):
         self.lst_runs = list()
         self.lst_graph = list()
         self.lst_obs = dict()
+        self.lst_debord = dict()
         self.cur_data = dict()
 
         self.old_lst_run_score = list()
@@ -448,6 +449,10 @@ class GraphResultDialog(QWidget):
                 if self.lst_obs:
                     self.graph_obj.insert_obs_curves(self.lst_obs)
 
+            if (self.typ_graph == "hydro_pk"):
+                self.update_debord(x_var_)
+                if self.lst_debord:
+                    self.graph_obj.insert_debord_curves(self.lst_debord)
             self.update_title()
             self.fill_tab()
 
@@ -500,6 +505,54 @@ class GraphResultDialog(QWidget):
                     r'Link - {0}'.format(txt_title))
         else:
             self.graph_obj.main_axe.title.set_text(r"")
+
+    def update_debord(self, x_var_):
+
+        for g, param in enumerate(self.lst_graph):
+            vars = param["graph"]["vars"]
+            var = None
+            axe = None
+            if "Z" in vars:
+                var = 'H'
+                axe = param["axe"]
+                break
+        self.lst_debord.clear()
+        if x_var_ == 'pknum' and var:
+            fill_zminbed(self.mdb)
+            id_branch = self.lst_graph[0]["branch"]
+            dict_data = self.mdb.select('profiles',
+                                        where='zleftminbed IS NOT NULL '
+                                              'AND zrightminbed IS NOT NULL AND active AND '
+                                              'branchnum = {}'.format(
+                                            id_branch),
+                                        order='abscissa',
+                                        list_var=['gid', 'name', 'abscissa',
+                                                  'zleftminbed',
+                                                  'zrightminbed'])
+
+            curve = {}
+            if dict_data:
+                curve['x'] = []
+                curve['y'] = {'left': [], 'right': []}
+
+                for idx, gid in enumerate(dict_data['gid']):
+                    curve['x'].append(dict_data['abscissa'][idx])
+                    curve['y']['left'].append(dict_data['zleftminbed'][idx])
+                    curve['y']['right'].append(dict_data['zrightminbed'][idx])
+
+                for cote in ['left', 'right'] :
+                    tmp_data = dict()
+                    tmp_data["x_var"] = 'pknum'
+                    tmp_data["y_var"] = [var]
+                    tmp_data["is_obs"] = True
+                    tmp_data["name"] = "overflow level - {0} ".format(cote)
+                    tmp_data["pknum"] = curve['x']
+                    tmp_data[var] = curve['y'][cote]
+                    self.lst_debord[(cote, var)] = {"axe": axe,
+                                                      "name": cote}
+                    self.cur_data.append(tmp_data)
+
+
 
     def update_obs(self, x_var_):
 

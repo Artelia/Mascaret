@@ -320,3 +320,44 @@ def datum_to_float(d, init):
     """
     return (d - init).total_seconds()
 
+
+def fill_zminbed(mdb):
+    """
+    fill zleftminbed zrightminbed variables for profiles table
+    :param mdb: classMasDatabase
+    :return:
+    """
+    info = mdb.select('profiles',
+                           where='X IS NOT NULL AND (zleftminbed IS NULL '
+                                 'OR zrightminbed IS NULL)',
+                           list_var=['gid', 'x','z',
+                                     'leftminbed','zleftminbed',
+                                     'rightminbed', 'zrightminbed'])
+    if not info :
+        return
+    if len(info['gid'])<=1:
+        return
+
+    update_dico ={}
+    for i, gid in enumerate(info['gid']):
+        update_dico[gid] = {}
+        x = [float(v) for v in info['x'][i].split()]
+        z = [float(v) for v in info['z'][i].split()]
+        if not info['rightminbed'][i]:
+            update_dico[gid]['rightminbed'] = x[-1]
+            update_dico[gid]['zrightminbed'] = z[-1]
+
+        if not info['leftminbed'][i]:
+            update_dico[gid]['leftminbed'] = x[0]
+            update_dico[gid]['zleftminbed'] = z[0]
+
+        if not info['zrightminbed'][i] or not info['zleftminbed'][i]:
+            lstz_minor = []
+            for xx, zz in zip(x, z):
+                if xx >= info['leftminbed'][i] and \
+                                xx <= info['rightminbed'][i]:
+                    lstz_minor.append(zz)
+            update_dico[gid]['zrightminbed'] = lstz_minor[-1]
+            update_dico[gid]['zleftminbed'] = lstz_minor[0]
+
+    mdb.update("profiles", update_dico, var="gid")
