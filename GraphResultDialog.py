@@ -68,7 +68,7 @@ class GraphResultDialog(QWidget):
         self.lst_slid_graph, self.lst_comp_graph = list(), list()
 
         self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/graphResult_new.ui'), self)
+            os.path.join(self.mgis.masplugPath, 'ui/graphResult.ui'), self)
         self.graph_obj = GraphResult(self, self.lay_graph, self.lay_graph_tbar)
         self.id_branch, self.id_pknum = None, None
 

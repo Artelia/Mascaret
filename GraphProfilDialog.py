@@ -23,8 +23,6 @@ Comment:
         GraphCommon
         GraphProfil
         CopySelectedCellsAction
-        GraphProfilRes
-        GraphHydro
 """
 
 import os
