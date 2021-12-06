@@ -363,7 +363,7 @@ class ClassProfInterp():
 
         z_level = zmin
 
-        while z_level <= zmax:
+        while z_level+pasz <= zmax:
             # line creation for cut
             z_level = z_level + pasz
             line = [(pr[id_g, 0] - 1, z_level),
