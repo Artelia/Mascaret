@@ -28,7 +28,7 @@ class ClassGeoProfil():
 
     """
 
-    def __init__(self,prof, min_bed, maj_bed, debug=False):
+    def __init__(self,prof, min_bed, maj_bed,plani, debug=False):
 
         self.cas_prt = {0: 'minor profile',
                    1: 'left major profile',
@@ -36,7 +36,7 @@ class ClassGeoProfil():
                    3: 'left stockage zone',
                    4: 'right stockage zone', }
         self.dico_res = {}
-
+        self.plani = plani
         self.prof = prof
         self.min_bed = min_bed
         self.maj_bed = maj_bed
@@ -49,30 +49,28 @@ class ClassGeoProfil():
                   (3, pr_st_g),
                   (4, pr_st_d)]
 
-
-
-
-
-    def plot_p(self, ax, poly, color='black', label='line',
-               style='solid', marker=''):
-        x, y = poly.exterior.xy
-        ax.plot(x, y, color=color, linestyle=style, marker=marker)
-
-
-    def plot_coords3D(self,ax, ob, pk, color='grey', label='line',
-                      style='solid', marker=''):
-        x, z = ob.xy
-        y = [pk for i in range(len(x))]
-        ax.plot(x, y, z, 'o-', color=color, zorder=1,
-                label=label, linestyle=style, marker=marker)
-
-
-    def plot_coords(self, ax, ob, color='grey', label='line',
-                    style='solid', marker=''):
-        x, y = ob.xy
-        ax.plot(x, y, 'o-', color=color,
-                linestyle=style, marker=marker,
-                zorder=1, label=label)
+    #
+    #
+    # def plot_p(self, ax, poly, color='black', label='line',
+    #            style='solid', marker=''):
+    #     x, y = poly.exterior.xy
+    #     ax.plot(x, y, color=color, linestyle=style, marker=marker)
+    #
+    #
+    # def plot_coords3D(self,ax, ob, pk, color='grey', label='line',
+    #                   style='solid', marker=''):
+    #     x, z = ob.xy
+    #     y = [pk for i in range(len(x))]
+    #     ax.plot(x, y, z, 'o-', color=color, zorder=1,
+    #             label=label, linestyle=style, marker=marker)
+    #
+    #
+    # def plot_coords(self, ax, ob, color='grey', label='line',
+    #                 style='solid', marker=''):
+    #     x, y = ob.xy
+    #     ax.plot(x, y, 'o-', color=color,
+    #             linestyle=style, marker=marker,
+    #             zorder=1, label=label)
 
     def decoup_pr(self, pr, lminor_x, lmaj_x):
         pr_g = []
@@ -264,7 +262,7 @@ class ClassGeoProfil():
             id_g = 0
             id_d = -1
             if (prof[id_g] == prof[id_d]).all():
-                print('No profile')
+                #print('No profile')
                 continue
             x_g, z_g = (prof[id_g, 0], prof[id_g, 1])
             x_d, z_d = (prof[id_d, 0], prof[id_d, 1])
@@ -284,16 +282,18 @@ class ClassGeoProfil():
 
             zmax = max(z_g, z_d)
 
-            line_disc, poly = self.discret_pr_lg(prof, x_fond, minz, zmax, pas=plani,
-                                            id_g=0, id_d=-1,
-                                            cond_pas_z=True)
-            self.dico_res[num]['lines'] = line_disc
+            line_disc, poly = self.discret_pr_lg(prof, x_fond, minz, zmax,
+                                                 pas=self.plani,
+                                                 id_g=0, id_d=-1,
+                                                 cond_pas_z=True)
+            self.dico_res[num]['F'] = line_disc
             lst_poly = self.get_poly_disc(line_disc, pt_bas)
             self.dico_res[num]['poly'] = []
             self.dico_res[num]['area'] = []
             self.dico_res[num]['perimeter'] = []
             self.dico_res[num]['width'] = []
             self.dico_res[num]['z'] = []
+            self.dico_res[num]['debitance'] = []
 
             last_poly = None
             for id, poly in enumerate(lst_poly) :
@@ -304,7 +304,8 @@ class ClassGeoProfil():
                     self.dico_res[num]['perimeter'].append(poly.length)
                     (minx, minz, maxx, maxz) = poly.bounds
                     self.dico_res[num]['z'].append(maxz)
-                    self.dico_res[num]['width'].append(maxx - minx)
+                    self.dico_res[num]['width'].append(line_disc[id].length)
+                    self.dico_res[num]['debitance'].append(0.0)
                 else:
                     new_poly = cascaded_union([last_poly,poly])
                     # Plot each polygon shape directly
@@ -325,7 +326,8 @@ class ClassGeoProfil():
                         self.dico_res[num]['perimeter'].append(new_poly.length)
                         (minx, minz, maxx, maxz) = new_poly.bounds
                         self.dico_res[num]['z'].append(maxz)
-                        self.dico_res[num]['width'].append(maxx-minx)
+                        self.dico_res[num]['width'].append(line_disc[id].length)
+                        self.dico_res[num]['debitance'].append(0.0)
                         last_poly = new_poly
 
             self.dico_res[num]['pr_poly'] = self.dico_res[num]['poly'][-1]
@@ -333,45 +335,47 @@ class ClassGeoProfil():
             self.dico_res[num]['pr_perimeter'] = self.dico_res[num]['perimeter'][-1]
             self.dico_res[num]['pr_width'] = self.dico_res[num]['width'][-1]
             self.dico_res[num]['pr_z'] = self.dico_res[num]['z'][-1]
+            self.dico_res[num]['pr_debitance'] = 0.0
 
-            fig2 = plt.figure(figsize=(6, 8))
-            ax2 = fig2.add_subplot(111)
-
-            for line_pr in line_disc:
-                self.plot_coords(ax2, line_pr)
-            ax2.plot(prof[:, 0], prof[:, 1], 'red')
-            ax2.set_title(self.cas_prt[num])
-            plt.show()
+            # fig2 = plt.figure(figsize=(6, 8))
+            # ax2 = fig2.add_subplot(111)
+            #
+            # for line_pr in line_disc:
+            #     self.plot_coords(ax2, line_pr)
+            # ax2.plot(prof[:, 0], prof[:, 1], 'red')
+            # ax2.set_title(self.cas_prt[num])
+            # plt.show()
 
 
 if __name__ == '__main__':
+    pass
     # **************************************************************
     # **************************************************************
 
-    min_bed = [300, 520]
-    # maj_bed = [250,570]
-    maj_bed = [300, 520]
-    plani = 1
-    file_av = r'C:\Users\mehdi-pierre.daou\Desktop\ana_schapi\test_visu\31546.45_-_pont_trevoux.csv'
-    with open(file_av) as file:
-        lp = []
-        cpt = 0
-        for line in file:
-            if cpt != 0:
-                lst = line.replace('\n', '').split(';')
-                lp.append((float(lst[0]), float(lst[1])))
-            cpt += 1
-    pr = lp.copy()
-
-    pr_av = np.array(pr)
-    fig2 = plt.figure(figsize=(6, 8))
-    ax2 = fig2.add_subplot(111)
-    ax2.plot(pr_av[:, 0], pr_av[:, 1])
-    plt.show()
-
-    cl_geo = ClassGeoProfil(pr, min_bed ,maj_bed)
-    cl_geo.main()
-    cl_geo.print_val()
+    # min_bed = [300, 520]
+    # # maj_bed = [250,570]
+    # maj_bed = [300, 520]
+    # plani = 1
+    # file_av = r'C:\Users\mehdi-pierre.daou\Desktop\ana_schapi\test_visu\31546.45_-_pont_trevoux.csv'
+    # with open(file_av) as file:
+    #     lp = []
+    #     cpt = 0
+    #     for line in file:
+    #         if cpt != 0:
+    #             lst = line.replace('\n', '').split(';')
+    #             lp.append((float(lst[0]), float(lst[1])))
+    #         cpt += 1
+    # pr = lp.copy()
+    #
+    # pr_av = np.array(pr)
+    # fig2 = plt.figure(figsize=(6, 8))
+    # ax2 = fig2.add_subplot(111)
+    # ax2.plot(pr_av[:, 0], pr_av[:, 1])
+    # plt.show()
+    #
+    # cl_geo = ClassGeoProfil(pr, min_bed ,maj_bed)
+    # cl_geo.main()
+    # cl_geo.print_val()
 
 
 

@@ -29,6 +29,7 @@ from qgis.utils import *
 from .GraphResult import GraphResult
 from .Function import tw_to_txt, interpole, fill_zminbed
 from datetime import date, timedelta, datetime
+from .ClassGeoProfil import ClassGeoProfil
 
 if int(qVersion()[0]) < 5:
     from qgis.PyQt.QtGui import *
@@ -62,19 +63,19 @@ class GraphProfilResultDialog(QWidget):
 
         self.typ_graph = typ_graph
         self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/graphProfilResult.ui'),
+            os.path.join(self.mgis.masplugPath, 'ui/graphProfilResult_new.ui'),
             self)
         self.graph_obj = GraphResult(self, self.lay_graph)
         self.cur_run, self.cur_graph, self.cur_vars = None, None, None
         self.cur_vars_lbl, self.cur_branch, self.cur_pknum, self.cur_t = None, None, None, None
         self.list_var_lai = []
         self.zmax_save = None
-        self.cur_data = dict()
         self.date = None
         self.obs = None
         self.list_typ_res = None
         self.info_graph = {}
         self.val_prof_ref = {}
+        self.plani_graph = {}
         self.dict_run = dict()
         self.laisses = {}
         fill_zminbed(self.mdb)
@@ -103,13 +104,22 @@ class GraphProfilResultDialog(QWidget):
             self.cb_det.currentIndexChanged.connect(
                 lambda: self.detail_changed(up_lim=True))
 
-            self.bt_expCsv.clicked.connect(self.export_csv)
-            self.tw_data.addAction(CopySelectedCellsAction(self.tw_data))
+            self.name_tab = {'prof' : {'name':'Graph Results',
+                                       'lst_vars':['ZREF', 'Z']},
+                            }
+            self.curent_data = {'prof': {},
+                                }
+            # self.tw_data = QTableWidget()
+            # self.tw_data.addAction(CopySelectedCellsAction(self.tw_data))
+            # self.clas_data.addTab(self.tw_data, param["name"])
+            # self.bt_expCsv.clicked.connect(self.export_csv)
+
 
             self.lst_runs = []
             self.init_dico_run()
 
             self.initialising = False
+
             self.update_data_profil()
             self.initialising = False
 
@@ -151,32 +161,63 @@ class GraphProfilResultDialog(QWidget):
         prof = self.mdb.select('profiles', order='abscissa',
                                list_var=['abscissa', 'x', 'z', 'leftminbed',
                                          'rightminbed', 'leftstock',
-                                         'rightstock','zleftminbed',
-                                         'zrightminbed'])
+                                         'rightstock', 'zleftminbed',
+                                         'zrightminbed','branchnum'])
         self.val_prof_ref = {}
+        self.plani_graph = {}
         if prof:
-            for i, pk in enumerate(prof['abscissa']):
+            for id, pk in enumerate(prof['abscissa']):
                 if pk:
                     try:
                         self.val_prof_ref[pk] = {}
                         self.val_prof_ref[pk]['x'] = [float(v) for v in
-                                                      prof['x'][i].split()]
+                                                      prof['x'][id].split()]
                         self.val_prof_ref[pk]['ZREF'] = [float(v) for v in
-                                                         prof['z'][i].split()]
+                                                         prof['z'][id].split()]
                         self.val_prof_ref[pk]['leftminbed'] = \
-                            prof['leftminbed'][i]
+                            prof['leftminbed'][id]
                         self.val_prof_ref[pk]['rightminbed'] = \
-                            prof['rightminbed'][i]
+                            prof['rightminbed'][id]
                         self.val_prof_ref[pk]['leftstock'] = prof['leftstock'][
-                            i]
+                            id]
                         self.val_prof_ref[pk]['rightstock'] = \
-                            prof['rightstock'][i]
+                            prof['rightstock'][id]
                         self.val_prof_ref[pk]['zleftminbed'] = \
-                            prof['zleftminbed'][i]
+                            prof['zleftminbed'][id]
                         self.val_prof_ref[pk]['zrightminbed'] = \
-                            prof['zrightminbed'][i]
+                            prof['zrightminbed'][id]
+                        self.val_prof_ref[pk]['branch'] = prof['branchnum'][id]
+                        plani = self.get_plani(pk, prof['branchnum'][id])
+                        self.val_prof_ref[pk]['plani'] = plani
+
+                        cond =True
                     except:
+                        cond = False
                         pass
+
+                    if cond :
+                        # **********************************************************
+                        x = [float(v) for v in prof['x'][id].split()]
+                        z = [float(v) for v in prof['z'][id].split()]
+                        profil = list(zip(x,z))
+
+                        min_bed = [ prof['leftminbed'][id],
+                                   prof['rightminbed'][id]]
+                        if prof['leftstock'][id] and \
+                                prof['rightstock'][id]:
+                            maj_bed = [prof['leftstock'][id],
+                                       prof['rightstock'][id]]
+                        else:
+                            maj_bed = [x[0],
+                                       x[-1]]
+
+                        cl_geo = ClassGeoProfil(profil, min_bed, maj_bed, plani)
+                        cl_geo.main()
+                        self.plani_graph[pk] = {}
+                        for id, name in cl_geo.cas_prt.items():
+                            self.plani_graph[pk][name] = dict(
+                                cl_geo.dico_res[id])
+
 
     def get_runs_graph(self):
         sql = "SELECT type_res,var,val FROM {0}.runs_graph WHERE " \
@@ -239,8 +280,8 @@ class GraphProfilResultDialog(QWidget):
                 txt = str(pknum) + ' : ' + info['name'][
                     info['abscissa'].index(pknum)]
                 lst_graph.append({"name": txt, 'id': float(pknum)})
-            # else:
-            #     lst_graph.append({"name": str(pknum), 'id': float(pknum)})
+                # else:
+                #     lst_graph.append({"name": str(pknum), 'id': float(pknum)})
         self.lst_graph = lst_graph
         for i, graph in enumerate(lst_graph):
             self.cb_graph.addItem(graph["name"], graph["id"])
@@ -341,8 +382,12 @@ class GraphProfilResultDialog(QWidget):
         update graph data for profile
         :return:
         """
+
         if not self.initialising:
-            self.cur_data = dict(self.val_prof_ref[self.cur_pknum])
+            self.curent_data['prof'] = dict(self.val_prof_ref[self.cur_pknum])
+            #print(self.val_prof_ref[self.cur_pknum].keys())
+            #print(self.plani_graph.keys())
+            self.curent_data.update(dict(self.plani_graph[self.cur_pknum]))
 
             if self.cur_run:
                 if self.cur_t == 'Zmax':
@@ -372,12 +417,15 @@ class GraphProfilResultDialog(QWidget):
                     qmaj_max = self.mgis.mdb.select_max("val", 'results',
                                                         where=where)
 
-                self.cur_data['Z'] = [val] * len(self.cur_data['x'])
+                self.curent_data['prof']['Z'] = [val] * len(
+                    self.curent_data['prof']['x'])
+
                 self.label_zmax.setText(str(self.zmax_save))
                 self.cur_vars = ['ZREF', 'Z']
 
                 self.cur_vars_lbl = self.find_var_lbl()
-                self.fill_tab(self.x_var, nb_col=3)
+
+
                 if self.cur_t == 'Zmax':
                     val_str = None
                     if self.zmax_save:
@@ -389,51 +437,113 @@ class GraphProfilResultDialog(QWidget):
                     try:
                         self.graph_obj.main_axe.title.set_text(
                             'Water level, {0} m - {1} s'
-                            ''.format(self.cur_data['Z'][0],
+                            ''.format(self.curent_data['prof']['Z'][0],
                                       float(self.cb_det.currentText())))
                     except ValueError:
                         self.graph_obj.main_axe.title.set_text(
                             'Water level, {0} m - {1}'
-                            ''.format(self.cur_data['Z'][0],
+                            ''.format(self.curent_data['prof']['Z'][0],
                                       self.cb_det.currentText()))
                 self.graph_obj.main_axe.set_xlabel(r'Distance ($m$)')
                 self.graph_obj.main_axe.set_ylabel(r'Level ($m$)')
 
-                self.graph_obj.init_graph_profil(self.cur_data, self.x_var,
+                self.graph_obj.init_graph_profil(self.curent_data['prof'], self.x_var,
                                                  qmaj_max)
+                # *******************************
 
-    def fill_tab(self, x_var, nb_col=None):
-        self.tw_data.setColumnCount(0)
-        if nb_col:
-            nbcol = nb_col
-        elif 'date' in self.cur_data.keys():
-            nbcol = len(self.cur_data) - 1
+                #self.graph_obj.insert_plani_curves(plani_graph)
+                # ********************************************
+                self.fill_tab()
+    def get_plani(self, pk, branch):
+        """
+        Get planimetry value
+        :param pk: abscissa of the profile
+        :param branch: branch number
+        :return: plani
+        """
+        plani = None
+
+        rows = self.mdb.select('branchs',
+                               where="branch='{}'".format(branch),
+                               order="zoneabsstart",
+                               list_var=['zonenum', 'zoneabsstart',
+                                         'zoneabsend', 'planim', 'active'])
+
+        if rows:
+
+            for i, zone in enumerate(rows['zonenum']):
+                if rows['zoneabsstart'][i] <= pk <= rows['zoneabsend'][i]:
+                    plani = rows['planim'][i]
+                    if rows['active'][i]:
+                        break
+
+        return plani
+
+
+    def get_var_info(self, var):
+        """
+        Get variables name and color
+        :param var: variable sigle
+        :return:
+        """
+        if var.lower() in self.mgis.variables.keys():
+            return self.mgis.variables[var.lower()]['nom'], \
+                   self.mgis.variables[var.lower()]['couleur']
         else:
-            nbcol = len(self.cur_data)
+            return "", "blue"
 
-        self.tw_data.setColumnCount(nbcol)
-        self.tw_data.setRowCount(0)
-        self.tw_data.setRowCount(len(self.cur_data[x_var]))
-        lst_vars = [x_var]
-        lst_vars.extend(self.cur_vars)
-        lst_lbls = [x_var]
-        lst_lbls.extend(self.cur_vars_lbl)
-        for c, var in enumerate(lst_vars):
-            self.tw_data.setHorizontalHeaderItem(c,
-                                                 QTableWidgetItem(lst_lbls[c]))
-            for r, val in enumerate(self.cur_data[var]):
-                if var == "date":
-                    val = '{:%d/%m/%Y %H:%M:%S}.{:02.0f}'.format(val,
-                                                                 val.microsecond / 10000.0)
-                itm = QTableWidgetItem()
-                itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                itm.setData(0, val)
-                self.tw_data.setItem(r, c, itm)
+    def fill_tab(self):
+        self.clas_data.clear()
+        for idx, wow in enumerate(self.curent_data.items()):
+            name, param = wow
+            if not param:
+                continue
+            tw = QTableWidget()
+            tw.addAction(CopySelectedCellsAction(tw))
+            if name == 'prof':
+                x_var = 'x'
+                self.clas_data.addTab(tw, self.name_tab[name]['name'])
+                lst_vars = [x_var]
+                lst_vars.extend(self.name_tab[name]['lst_vars'])
+                lst_lbls = []
+                for var in lst_vars:
+                    if var == 'x':
+                        lbl = 'Abscisa'
+                    else:
+                        lbl, _ = self.get_var_info(var)
+                    lst_lbls.append(lbl)
+            else:
+                x_var = 'z'
+                self.clas_data.addTab(tw, name)
+                lst_vars = [x_var]
+                lst_vars.extend(['width','area','debitance'])
+                lst_lbls = []
+                for var in lst_vars:
+                    if var == 'z':
+                        lbl = 'Altitude'
+                    else:
+                        lbl = var
+                    lst_lbls.append(lbl)
 
-        self.tw_data.setVisible(False)
-        self.tw_data.resizeColumnsToContents()
-        self.tw_data.resizeRowsToContents()
-        self.tw_data.setVisible(True)
+            tw.setColumnCount(0)
+            nbcol = len(lst_vars)
+            tw.setColumnCount(nbcol)
+            tw.setRowCount(0)
+            tw.setRowCount(len(param[x_var]))
+            for c, var in enumerate(lst_vars):
+                tw.setHorizontalHeaderItem(c, QTableWidgetItem(lst_lbls[c]))
+                for r, val in enumerate(param[var]):
+                    itm = QTableWidgetItem()
+                    itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    itm.setData(0, val)
+                    tw.setItem(r, c, itm)
+
+            tw.setVisible(False)
+            tw.resizeColumnsToContents()
+            tw.resizeRowsToContents()
+            tw.setVisible(True)
+
+
 
     def find_var_lbl(self):
         tmp = []
