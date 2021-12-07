@@ -23,12 +23,17 @@ from shapely.ops import cascaded_union
 import matplotlib.pyplot as plt
 import numpy as np
 
-class ClassGeoProfil():
+class ClassResProfil():
     """
 
     """
 
-    def __init__(self,prof, min_bed, maj_bed,plani, debug=False):
+    def __init__(self,pk, prof, branch, min_bed, maj_bed,
+                 database=None,
+                 plani = None,
+                 ksmaj = None,
+                 ksmin = None
+                 ,debug=False):
 
         self.cas_prt = {0: 'minor profile',
                    1: 'left major profile',
@@ -36,11 +41,19 @@ class ClassGeoProfil():
                    3: 'left stockage zone',
                    4: 'right stockage zone', }
         self.dico_res = {}
-        self.plani = plani
+
+        self.pk = pk
+        self.debug = debug
+        self.branch = branch
         self.prof = prof
         self.min_bed = min_bed
         self.maj_bed = maj_bed
-
+        self.warning_message = ''
+        if database :
+            self.mdb = database
+            self.plani, self.ksmaj , self.ksmin = self.get_plani_ks()
+        else:
+            self.plani, self.ksmaj, self.ksmin = plani, ksmaj,ksmin
         pr_m, pr_g, pr_d, pr_st_g, pr_st_d = self.decoup_pr(prof, min_bed,
                                                             maj_bed)
         self.lst_pr = [(0, pr_m),
@@ -49,30 +62,49 @@ class ClassGeoProfil():
                   (3, pr_st_g),
                   (4, pr_st_d)]
 
-    #
-    #
-    # def plot_p(self, ax, poly, color='black', label='line',
-    #            style='solid', marker=''):
-    #     x, y = poly.exterior.xy
-    #     ax.plot(x, y, color=color, linestyle=style, marker=marker)
-    #
-    #
-    # def plot_coords3D(self,ax, ob, pk, color='grey', label='line',
-    #                   style='solid', marker=''):
-    #     x, z = ob.xy
-    #     y = [pk for i in range(len(x))]
-    #     ax.plot(x, y, z, 'o-', color=color, zorder=1,
-    #             label=label, linestyle=style, marker=marker)
-    #
-    #
-    # def plot_coords(self, ax, ob, color='grey', label='line',
-    #                 style='solid', marker=''):
-    #     x, y = ob.xy
-    #     ax.plot(x, y, 'o-', color=color,
-    #             linestyle=style, marker=marker,
-    #             zorder=1, label=label)
+
+
+    def get_plani_ks(self):
+        """
+        Get planimetry value and Strickler coefficient
+        :return: plani, ksmaj, ksmin
+        """
+        plani = None
+
+        rows = self.mdb.select('branchs',
+                               where="branch='{}'".format(self.branch),
+                               order="zoneabsstart",
+                               list_var=['zonenum', 'zoneabsstart',
+                                         'zoneabsend', 'planim', 'minbedcoef',
+                                         'majbedcoef','active'])
+
+        if rows:
+
+            for i, zone in enumerate(rows['zonenum']):
+                if rows['zoneabsstart'][i] <= self.pk <= rows['zoneabsend'][i]:
+                    plani = rows['planim'][i]
+                    ksmaj =  rows['minbedcoef'][i]
+                    ksmin =  rows['majbedcoef'][i]
+                    if rows['active'][i]:
+                        break
+
+        return plani,ksmaj ,ksmin
+
+
 
     def decoup_pr(self, pr, lminor_x, lmaj_x):
+        """
+        Split profile in :
+            minor profile,
+            left major profile
+            right major profile
+            left stockage profile
+            right stockage  profile
+        :param pr: profile
+        :param lminor_x: minor bed zone
+        :param lmaj_x: major bed zone
+        :return:
+        """
         pr_g = []
         pr_d = []
         pr_m = []
@@ -92,7 +124,11 @@ class ClassGeoProfil():
             else:
                 pr_m.append(point)
         if pr_m == []:
-            print('Pas de profil lit mineur')
+            txt = 'Pas de profil lit mineur'
+            if self.debug :
+                print(txt)
+            self.warning_message += txt
+            self.warning_message += '\n'
             return [], [], [], [], []
         if pr_g == []:
             pr_g = [pr_m[0], pr_m[0]]
@@ -114,11 +150,23 @@ class ClassGeoProfil():
         return pr_m, pr_g, pr_d, pr_st_g, pr_st_d
 
     def creat_line_width(self, poly, line, x_fond, z_level):
+        """
+        Creation linestring with sum of width when MultiLineString
+        :param poly: polygone
+        :param line: line
+        :param x_fond: bottom x
+        :param z_level: line level
+        :return:
+        """
 
         line = LineString(line)
         geom = line.intersection(poly)
         if geom.is_empty:
-            print('Pas d intersection :', line, poly)
+            txt = 'Pas d intersection : {}  {}'.format(line, poly)
+            if self.debug :
+                print(txt)
+            self.warning_message += txt
+            self.warning_message += '\n'
             line_disc = None
         elif geom.geom_type == 'MultiLineString' \
                 or geom.geom_type == 'GeometryCollection':
@@ -143,7 +191,11 @@ class ClassGeoProfil():
         elif geom.geom_type == 'LineString':
             line_disc = geom
         else:
-            print('Geo type non traite :', geom.geom_type)
+            txt = 'Geo type non traite : {}'.format(geom.geom_type)
+            if self.debug :
+                print(txt)
+            self.warning_message += txt
+            self.warning_message += '\n'
             line_disc = None
 
         return line_disc
@@ -151,15 +203,16 @@ class ClassGeoProfil():
     def discret_pr_lg(self, pr, x_fond, zmin, zmax, pas=0.1, id_g=0, id_d=-1,
                       cond_pas_z=True):
         """
-        descritisation vertical
-        pas = dz en m ou nb de plan
-        cond_pas_z = True si descritisation en m ou false en plan
-        id_g = id_am_g id point g
-        id_d = id_am_d id point d
-        pr =  profile
-        zmin = point bas du profikl
+        vertical descritization
+        :param pas : dz in m or nb of plan
+        :param cond_pas_z : True si descritization in m or false in plan
+        :param id_g : id_am_g id point left
+        :param id_d : id_am_d id point right
+        :param pr : profile
+        :param zmin : bottom point of the profile
+        :param zmax : max level of the profile
+
         """
-        # ***********
 
         if id_g == id_d:
             return []
@@ -186,7 +239,6 @@ class ClassGeoProfil():
             return lst_line_disc
 
         if cond_pas_z:
-            # si descritisation en cm
             pasz = pas
         else:
             pasz = (zmax - zmin) / (pas)
@@ -213,6 +265,10 @@ class ClassGeoProfil():
         return lst_line_disc, poly
 
     def print_val(self):
+        """
+        Print val to check
+        :return:
+        """
 
         for key in self.dico_res.keys():
             print('************************')
@@ -222,7 +278,12 @@ class ClassGeoProfil():
                     print('{} , {}'.format(elem, val))
 
     def  get_poly_disc(self, line_disc, pt_bas) :
-
+        """
+        Generate polygone list of a profile
+        :param line_disc: discritzation line
+        :param pt_bas: bottom point
+        :return:
+        """
         # construit plus bas au plus haut
         first_line = list(line_disc[0].coords)
         last_line = list(first_line)
@@ -238,24 +299,28 @@ class ClassGeoProfil():
             lst_poly.append(poly_tmp)
             last_line = first_line
 
-
-        # fig2 = plt.figure(figsize=(6, 8))
-        # ax2 = fig2.add_subplot(111)
-        # color = ['r','b','k','g']
-        # idc = 0
-        # for poly in lst_poly :
-        #     self.plot_p(ax2, poly, color=color[idc])
-        #     if idc ==3:
-        #         idc = 0
-        #     else:
-        #         idc += 1
-        #
-        # plt.show()
         return lst_poly
 
-    def main(self):
+
+    def get_results(self):
+        """
+        get result of "cross section result" :
+            mirror width
+            wet section
+            wet perimeter
+            bottom point
+            debitance
+            discratization level
+        :return:
+        """
 
         for num, prof_tmp in self.lst_pr:
+            if num == 0:
+                ks = self.ksmin
+            elif num ==1 or num ==2:
+                ks = self.ksmaj
+            else:
+                ks =0.0
             self.dico_res[num] = {}
             prof = np.array(prof_tmp)
             # ***************
@@ -294,40 +359,34 @@ class ClassGeoProfil():
             self.dico_res[num]['width'] = []
             self.dico_res[num]['z'] = []
             self.dico_res[num]['debitance'] = []
-
             last_poly = None
             for id, poly in enumerate(lst_poly) :
                 if id == 0:
+                    perimeter = poly.length
+                    area = poly.area
                     last_poly = poly
                     self.dico_res[num]['poly'].append(poly)
-                    self.dico_res[num]['area'].append(poly.area)
-                    self.dico_res[num]['perimeter'].append(poly.length)
+                    self.dico_res[num]['area'].append(area)
+                    self.dico_res[num]['perimeter'].append(perimeter)
                     (minx, minz, maxx, maxz) = poly.bounds
                     self.dico_res[num]['z'].append(maxz)
                     self.dico_res[num]['width'].append(line_disc[id].length)
-                    self.dico_res[num]['debitance'].append(0.0)
+                    self.dico_res[num]['debitance'].append(
+                        self.debitance(num, ks, perimeter, area))
                 else:
                     new_poly = cascaded_union([last_poly,poly])
-                    # Plot each polygon shape directly
-                    # if new_poly.geom_type == 'MultiPolygon':
-                    #     print('MultiPoly Error mege')
-                    # elif new_poly.geom_type == 'Polygon':
-                    # geom = new_poly
-                    # fig2 = plt.figure(figsize=(6, 8))
-                    # ax2 = fig2.add_subplot(111)
-                    # ax2.plot(*geom.exterior.xy)
-                    # ax2.set_ylim([155.29200009155272, 205.1879980773926])
-                    # ax2.set_xlim([0.3999999999999986, 695.6])
-                    # plt.show()
-
                     if new_poly.is_valid :
+                        perimeter = new_poly.length
+                        area = new_poly.area
                         self.dico_res[num]['poly'].append(new_poly)
-                        self.dico_res[num]['area'].append(new_poly.area)
-                        self.dico_res[num]['perimeter'].append(new_poly.length)
+                        self.dico_res[num]['area'].append(area)
+                        self.dico_res[num]['perimeter'].append(perimeter)
                         (minx, minz, maxx, maxz) = new_poly.bounds
                         self.dico_res[num]['z'].append(maxz)
                         self.dico_res[num]['width'].append(line_disc[id].length)
-                        self.dico_res[num]['debitance'].append(0.0)
+
+                        self.dico_res[num]['debitance'].append(
+                            self.debitance(num,ks, perimeter, area))
                         last_poly = new_poly
 
             self.dico_res[num]['pr_poly'] = self.dico_res[num]['poly'][-1]
@@ -335,16 +394,33 @@ class ClassGeoProfil():
             self.dico_res[num]['pr_perimeter'] = self.dico_res[num]['perimeter'][-1]
             self.dico_res[num]['pr_width'] = self.dico_res[num]['width'][-1]
             self.dico_res[num]['pr_z'] = self.dico_res[num]['z'][-1]
-            self.dico_res[num]['pr_debitance'] = 0.0
 
-            # fig2 = plt.figure(figsize=(6, 8))
-            # ax2 = fig2.add_subplot(111)
-            #
-            # for line_pr in line_disc:
-            #     self.plot_coords(ax2, line_pr)
-            # ax2.plot(prof[:, 0], prof[:, 1], 'red')
-            # ax2.set_title(self.cas_prt[num])
-            # plt.show()
+            self.dico_res[num]['pr_debitance'] =  \
+                self.debitance(num, ks, self.dico_res[num]['perimeter'][-1],
+                               self.dico_res[num]['area'][-1])
+
+
+    def debitance(self,num, ks, perimeter, area):
+        """
+         D = K.S.R^2/3
+         with K the Strickler coeficient,
+         S the wet section and R hydraulic radius
+         which is the wet section divided by wet perimeter
+        :param num: (int) type  of profile zone
+        :param ks: (float) Strickler coeficient
+        :param perimeter: (float)wet perimeter
+        :param area: (float) wet section
+        :return: debitance (float
+        """
+        if num ==3 or num ==4:
+            # No debitance when stockage zone
+            return None
+        if perimeter > 0:
+            debitance = ks * area * (area / perimeter) ** (2 / 3)
+        else:
+            debitance = 0.0
+        return  debitance
+
 
 
 if __name__ == '__main__':

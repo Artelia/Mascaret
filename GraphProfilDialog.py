@@ -417,8 +417,6 @@ class GraphProfil(GraphCommon):
         condition = "idprofil={0}".format(self.gid)
         requete = self.mdb.select("mnt", condition)
         if "x" in requete.keys() and "z" in requete.keys():
-            # self.mnt['x'] = list(map(float, requete["x"][0].split()))
-            # self.mnt['z'] = list(map(float, requete["z"][0].split()))
             self.mnt['x'] = [float(var) for var in requete["x"][0].split()]
             self.mnt['z'] = [float(var) for var in requete["z"][0].split()]
 
@@ -435,8 +433,6 @@ class GraphProfil(GraphCommon):
         self.mnt = {'x': [], 'z': []}
 
         if self.feature["x"] and self.feature["z"]:
-            # self.tab['x'] = list(map(float, self.feature["x"].split()))
-            # self.tab['z'] = list(map(float, self.feature["z"].split()))
             self.tab['x'] = [float(var) for var in self.feature["x"].split()]
             self.tab['z'] = [float(var) for var in self.feature["z"].split()]
 
@@ -450,8 +446,6 @@ class GraphProfil(GraphCommon):
         if self.feature["xmnt"] and self.feature["zmnt"]:
             self.mnt['x'] = [float(var) for var in self.feature["xmnt"].split()]
             self.mnt['z'] = [float(var) for var in self.feature["zmnt"].split()]
-            # self.mnt['x'] = list(map(float, self.feature["xmnt"].split()))
-            # self.mnt['z'] = list(map(float, self.feature["zmnt"].split()))
 
     def extrait_topo(self):
 
@@ -684,7 +678,6 @@ class GraphProfil(GraphCommon):
 
                         ordre = 0
                         for ligne in fich:
-                            # x, z = list(map(float, ligne.split(sep)))
 
                             if ligne[0] != '#':
                                 ligne = ligne.replace('\n', '')
@@ -964,7 +957,7 @@ class GraphProfil(GraphCommon):
             f = self.courbeSelected.get_label()
             try:
                 tab_x = self.topo[f]['x']
-                # tab_x = list(map(lambda x: x + round(event.xdata, 2) - self.x0, tab_x))
+
                 tempo = []
                 # fct2 = lambda x: x + round(float(event.xdata), 2) - self.x0
                 for var1 in tab_x:
@@ -1097,7 +1090,7 @@ class GraphProfil(GraphCommon):
         """ add points"""
         if self.selected:
             self.courbeSelection.set_visible(False)
-            # self.selected['x'] = list(map(lambda x: round(x, 2), self.selected['x']))
+
             tempo = []
             for var1 in self.selected['x']:
                 tempo.append(self.fct1(var1))
@@ -1735,10 +1728,10 @@ class GraphProfil(GraphCommon):
 
         if not lmaj:
             # no valeur for major bed
-            lmaj = lmin
+            lmaj =  x_pr[0]
         if not rmaj:
             # no valeur for major bed
-            rmaj = rmin
+            rmaj = x_pr[-1]
 
         dico = {
             'name': self.liste['name'][id],
@@ -1775,32 +1768,6 @@ class GraphProfil(GraphCommon):
         pr_m, _, _, _, _ = decoup_pr(linS, [lmin, rmin], [lmin, rmin])
         pr_m = np.array(pr_m)
         return pr_m, rmin, lmin
-
-    def get_plani(self, pk, branch):
-        """
-        Get planimetry value
-        :param pk: abscissa of the profile
-        :param branch: branch number
-        :return: plani
-        """
-        plani = None
-
-        rows = self.mdb.select('branchs',
-                               where="branch='{}'".format(branch),
-                               order="zoneabsstart",
-                               list_var=['zonenum', 'zoneabsstart',
-                                         'zoneabsend', 'planim', 'active'])
-
-        if rows:
-
-            for i, zone in enumerate(rows['zonenum']):
-                if rows['zoneabsstart'][i] <= pk <= rows['zoneabsend'][i]:
-                    plani = rows['planim'][i]
-                    if rows['active'][i]:
-                        break
-
-        # print('plani', plani)
-        return plani
 
     def find_pr_inter(self):
         msgerr = ''

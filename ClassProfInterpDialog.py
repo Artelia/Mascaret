@@ -53,6 +53,7 @@ class ClassProfInterpDialog(QDialog):
 
 
     def init_gui(self, nplan,plani,dict_interp, pk_int, err):
+        """initialize GUI"""
         self.pk_int = pk_int
         self.data = dict_interp
         self.plani = plani
@@ -95,6 +96,7 @@ class ClassProfInterpDialog(QDialog):
 
 
     def fct_autdisc(self):
+        """ enable if auto discretization"""
         if self.ch_autdisc.isChecked():
             self.lb_disc.setEnabled(False)
             self.sp_nbplan.setEnabled(False)
@@ -103,7 +105,11 @@ class ClassProfInterpDialog(QDialog):
             self.sp_nbplan.setEnabled(True)
 
     def accept_page(self):
-        # save Info
+        """
+        run the profile interpolation
+        :return:
+        """
+
 
 
         if self.compute :

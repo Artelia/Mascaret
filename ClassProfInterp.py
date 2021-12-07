@@ -320,15 +320,16 @@ class ClassProfInterp():
     def discret_pr_lg(self, pr, x_fond, zmin, pas=0.1, id_g=0, id_d=-1,
                       cond_pas_z=True):
         """
-        vertical discretization
-        :param pas : dz en m ou nb de plan
-        :param cond_pas_z : True if discretization in m or false in plan
-        :param id_g = id_am_g id point g
-        :param id_d = id_am_d id point d
-        :param pr =  profile
-        :param zmin : bottom profile point
+                vertical descritization
+                :param pas : dz in m or nb of plan
+                :param cond_pas_z : True si descritization in m or false in plan
+                :param id_g : id_am_g id point left
+                :param id_d : id_am_d id point right
+                :param pr : profile
+                :param zmin : bottom point of the profile
+                :param zmax : max level of the profile
+
         """
-        # ***********
 
         zmax = max(pr[id_g, 1], pr[id_d, 1])
 
@@ -401,6 +402,18 @@ class ClassProfInterp():
         return lst_line_disc
 
     def decoup_pr(self, pr, lminor_x, lmaj_x):
+        """
+        Split profile in :
+            minor profile,
+            left major profile
+            right major profile
+            left stockage profile
+            right stockage  profile
+        :param pr: profile
+        :param lminor_x: minor bed zone
+        :param lmaj_x: major bed zone
+        :return:
+        """
         pr_g = []
         pr_d = []
         pr_m = []

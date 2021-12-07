@@ -29,7 +29,7 @@ from qgis.utils import *
 from .GraphResult import GraphResult
 from .Function import tw_to_txt, interpole, fill_zminbed
 from datetime import date, timedelta, datetime
-from .ClassGeoProfil import ClassGeoProfil
+from .ClassResProfil import ClassResProfil
 
 if int(qVersion()[0]) < 5:
     from qgis.PyQt.QtGui import *
@@ -187,8 +187,6 @@ class GraphProfilResultDialog(QWidget):
                         self.val_prof_ref[pk]['zrightminbed'] = \
                             prof['zrightminbed'][id]
                         self.val_prof_ref[pk]['branch'] = prof['branchnum'][id]
-                        plani = self.get_plani(pk, prof['branchnum'][id])
-                        self.val_prof_ref[pk]['plani'] = plani
 
                         cond =True
                     except:
@@ -211,8 +209,12 @@ class GraphProfilResultDialog(QWidget):
                             maj_bed = [x[0],
                                        x[-1]]
 
-                        cl_geo = ClassGeoProfil(profil, min_bed, maj_bed, plani)
-                        cl_geo.main()
+                        cl_geo = ClassResProfil(pk, profil,
+                                                prof['branchnum'][id],
+                                                min_bed, maj_bed,
+                                                database = self.mdb )
+                        cl_geo.get_results()
+
                         self.plani_graph[pk] = {}
                         for id, name in cl_geo.cas_prt.items():
                             self.plani_graph[pk][name] = dict(
@@ -454,30 +456,7 @@ class GraphProfilResultDialog(QWidget):
                 #self.graph_obj.insert_plani_curves(plani_graph)
                 # ********************************************
                 self.fill_tab()
-    def get_plani(self, pk, branch):
-        """
-        Get planimetry value
-        :param pk: abscissa of the profile
-        :param branch: branch number
-        :return: plani
-        """
-        plani = None
 
-        rows = self.mdb.select('branchs',
-                               where="branch='{}'".format(branch),
-                               order="zoneabsstart",
-                               list_var=['zonenum', 'zoneabsstart',
-                                         'zoneabsend', 'planim', 'active'])
-
-        if rows:
-
-            for i, zone in enumerate(rows['zonenum']):
-                if rows['zoneabsstart'][i] <= pk <= rows['zoneabsend'][i]:
-                    plani = rows['planim'][i]
-                    if rows['active'][i]:
-                        break
-
-        return plani
 
 
     def get_var_info(self, var):
