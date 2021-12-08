@@ -195,8 +195,9 @@ class GraphProfilResultDialog(QWidget):
                         pass
 
     def get_profil_plani(self):
-
+        self.plani_graph = {}
         for pk, info in self.val_prof_ref.items():
+           # print(info.keys(),pk)
             if info :
                 x = info['x']
                 z = info['ZREF']
@@ -212,36 +213,84 @@ class GraphProfilResultDialog(QWidget):
                     maj_bed = [x[0],
                                x[-1]]
 
-                if 'pt_bas' in self.info_graph['opt'].keys():
-                    if str(pk) in self.info_graph['opt']['pt_bas'].keys():
-                       pt_bas = self.info_graph['opt']['pt_bas'][str(pk)]
-
-                else:
+                cond_plani, dico_plani = self.check_run_plani()
+                if cond_plani:
                     cl_geo = ClassResProfil()
-                    cl_geo.plani_stock(self.info_graph[self.typ_res]['zmax'],
-                                       self.cur_run)
+                    cl_geo.init_cl(pk, profil,
+                                   info['branch'],
+                                   min_bed, maj_bed, self.cur_run,
+                                   zmax=self.zmax_save,
+                                   dico_plani = dico_plani,
+                                   database=self.mdb)
+
+                    cl_geo.get_results()
+
+                    self.plani_graph[pk] = {}
+                    print(cl_geo.dico_res.keys(), 'yyy')
+                    if cl_geo.dico_res :
+
+                        for id, name in cl_geo.cas_prt.items():
+                            self.plani_graph[pk][name] = dict(
+                                cl_geo.dico_res[id])
+
                     del cl_geo
 
-                cl_geo = ClassResProfil()
-                cl_geo.init_cl(pk, profil,
-                               info['branch'],
-                               min_bed, maj_bed, self.cur_run,
-                               zmax=self.zmax_save,
-                               pt_bas=pt_bas,
-                               database=self.mdb)
+    def get_run_plani(self, get_bas=False):
+        where = 'id_runs = {} AND pknum = {}'.format(self.cur_run, self.pk)
+        elem_plani = self.mdb.select('runs_plani', order='id_type,id_order',
+                               where=where,
+                               list_var=['id_type', 'id_order', 'line'])
+        if get_bas :
+            where = "id_runs = {0} AND var = 'pt_bas' AND type_res = 'opt'".format(self.cur_run)
 
-                cl_geo.get_results()
+            elem = self.mdb.select('runs_graph', order='id',
+                                   where=where,
+                                   list_var=['val'])
+            if len(elem['val'])>0:
+                self.info_graph['opt']['pt_bas'] = elem['val']
 
-                self.plani_graph[pk] = {}
-                if cl_geo.dico_res :
-                    print(cl_geo.dico_res)
-                    for id, name in cl_geo.cas_prt.items():
-                        self.plani_graph[pk][name] = dict(
-                            cl_geo.dico_res[id])
+        return elem_plani
 
-                del cl_geo
+    def create_dico_plani(self, elem, pt_bas):
+        dico_plani = {}
+        for id, id_type in enumerate(elem['id_type']):
+            if not id_type in self.dico_res.keys():
+                dico_plani[id_type] = {'pt_bas': pt_bas[id_type],
+                                            'line': []}
+            dico_plani[id_type]['line'].append(elem['line'][id])
+        return dico_plani
+
+    def check_run_plani(self,pk):
+
+        pt_bas = None
+        if 'pt_bas' in self.info_graph['opt'].keys():
+            if str(pk) in self.info_graph['opt']['pt_bas'].keys():
+                pt_bas = self.info_graph['opt']['pt_bas'][str(pk)]
+
+        elem = self.get_run_plani()
+        if len(elem['id_type'])> 0 and  pt_bas:
+            dico_plani = self.create_dico_plani(elem, pt_bas)
+        else:
+            # creation pt_bas and dico_plani
+            cl_geo = ClassResProfil()
+            cl_geo.plani_stock(self.info_graph[self.typ_res]['zmax'],
+                               self.cur_run)
+            del cl_geo
+
+            elem = self.get_run_plani(get_bas=True)
+            pt_bas = None
+            if 'pt_bas' in self.info_graph['opt'].keys():
+                if str(pk) in self.info_graph['opt']['pt_bas'].keys():
+                    pt_bas = self.info_graph['opt']['pt_bas'][str(pk)]
+
+            if len(elem['id_type']) > 0 and pt_bas:
+                dico_plani = self.create_dico_plani(elem, pt_bas[str])
+            else:
+                # Pas de valeur pk
+                return False, None
 
 
+        return  True, dico_plani
 
 
     def get_runs_graph(self):
@@ -476,7 +525,10 @@ class GraphProfilResultDialog(QWidget):
                                                  qmaj_max)
                 # *******************************
                 self.get_profil_plani()
+                #print(self.curent_data.keys())
+                #print(self.plani_graph[self.cur_pknum].keys())
                 self.curent_data.update(dict(self.plani_graph[self.cur_pknum]))
+                print(self.curent_data.keys())
                 #self.graph_obj.insert_plani_curves(plani_graph)
                 # ********************************************
                 self.fill_tab()

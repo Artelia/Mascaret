@@ -56,21 +56,20 @@ class ClassResProfil():
                 ksmaj=None,
                 ksmin=None,
                 zmax=None,
-                pt_bas=None,
+                dico_plani = {},
                 ):
 
         self.pk = pk
         self.id_run = id_run
         self.branch = branch
         self.prof = prof
-        self.dico_plani = {}
+        self.dico_plani = dico_plani
         self.min_bed = min_bed
         self.maj_bed = maj_bed
         self.warning_message = ''
         self.dico_res = {}
         self.lst_pr = []
         self.zmax = zmax
-        self.pt_bas = pt_bas
 
         if database:
             self.mdb = database
@@ -356,21 +355,6 @@ class ClassResProfil():
             self.dico_plani[num]['lines'] = line_disc
         return self.dico_plani
 
-    def get_line_plani(self, id_run):
-
-        self.dico_plani = {}
-        where = 'id_runs = {} AND pknum = {}'.format(id_run, self.pk)
-        elem = self.mdb.select('runs_plani', order='id_type,id_order',
-                               where=where,
-                               list_var=['id_type', 'id_order', 'line'])
-        if elem and  self.pt_bas:
-            for id, id_type in enumerate(elem['id_type']):
-                if not id_type in self.dico_res.keys():
-                    self.dico_plani[id_type] = {'pt_bas': self.pt_bas[id_type],
-                                              'line': []}
-                self.dico_plani[id_type]['line'].append(elem['line'][id])
-
-
     def plani_stock(self, dico_zmax, id_run):
         prof = self.mdb.select('profiles', order='abscissa',
                                list_var=['abscissa', 'x', 'z', 'leftminbed',
@@ -443,8 +427,9 @@ class ClassResProfil():
             discratization level
         :return:
         """
-        self.get_line_plani(self.id_run)
+
         self.dico_res = dict( self.dico_plani)
+        print(self.dico_res.keys(),"aaaa")
         for num, dico in self.dico_res.items():
             if not dico:
                 continue
