@@ -477,7 +477,8 @@ class ClassMasDatabase(object):
                       Maso.weirs_mob_val,
                       # new results
                       Maso.runs_graph, Maso.results, Maso.results_var,
-                      Maso.results_sect
+                      Maso.results_sect, Maso.runs_plani,
+
                       ]
             tables.sort(key=lambda x: x().order)
 
@@ -1374,7 +1375,8 @@ $BODY$
             dest = src + '_ext{}_{}'.format(date, cpt)
         js_dict['export_name'] = dest
         self.ignor_schema += [dest]
-        list_tab_res = ['runs', 'results', 'results_sect', 'runs_graph']
+        list_tab_res = ['runs', 'results', 'results_sect',
+                        'runs_graph', 'runs_plani']
 
         qry = "SELECT clone_schema('{}','{}','{}');".format(src, dest,
                                                             ','.join(
@@ -1502,6 +1504,7 @@ $BODY$
             'profiles': 'gid',
             'results_var': 'id',
             'runs_graph': 'id',
+            'runs_plani':'id',
             'runs': 'id',
             'struct_config': 'id',
             'tracer_lateral_inflows': 'gid',

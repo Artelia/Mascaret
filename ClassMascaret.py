@@ -46,6 +46,7 @@ from .Structure.ClassPostPreFG import ClassPostPreFG
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
 from .api.ClassAPIMascaret import ClassAPIMascaret
+from .ClassResProfil import ClassResProfil
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -2932,9 +2933,16 @@ class ClassMascaret:
                             dico_zmax[pknum] = rows[0][0]
                         except Exception:
                             dico_zmax[pknum] = None
+
                     list_insert.append(
                         [id_run, typ_res, 'zmax', json.dumps(dico_zmax)])
                     key_pknum = 'PK'
+            # add stockage plani
+            # TODO Test
+            if dico_zmax :
+                cl_geo = ClassResProfil()
+                cl_geo.plani_stock( dico_zmax,id_run)
+                del cl_geo
         elif typ_res == 'basin':
             key_pknum = 'BNUM'
         elif typ_res == 'link':
@@ -2947,6 +2955,9 @@ class ClassMascaret:
         col_tab = ['id_runs', 'type_res', 'var', 'val']
         if len(list_insert) > 0:
             self.mdb.insert_res('runs_graph', list_insert, col_tab)
+
+
+
 
     def lit_opt_new(self, id_run, date_debut, base_namefile, comments='',
                     tracer=False, casier=False):

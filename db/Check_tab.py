@@ -65,6 +65,7 @@ class CheckTab:
                                   '4.0.0',
                                   '4.0.1',
                                   '4.0.2',
+                                  '4.0.3',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -189,6 +190,11 @@ class CheckTab:
                 'fct': [
                     lambda: fill_zminbed(self.mdb),
                 ],
+            },
+            '4.0.3': {
+
+             'add_tab': [
+                    {'tab': Maso.runs_plani, 'overwrite': False},],
             },
             # '3.0.x': { },
 

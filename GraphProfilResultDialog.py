@@ -78,6 +78,7 @@ class GraphProfilResultDialog(QWidget):
         self.plani_graph = {}
         self.dict_run = dict()
         self.laisses = {}
+
         fill_zminbed(self.mdb)
         self.show_hide_com(False)
         if self.checkrun():
@@ -193,32 +194,54 @@ class GraphProfilResultDialog(QWidget):
                         cond = False
                         pass
 
-                    if cond :
-                        # **********************************************************
-                        x = [float(v) for v in prof['x'][id].split()]
-                        z = [float(v) for v in prof['z'][id].split()]
-                        profil = list(zip(x,z))
+    def get_profil_plani(self):
 
-                        min_bed = [ prof['leftminbed'][id],
-                                   prof['rightminbed'][id]]
-                        if prof['leftstock'][id] and \
-                                prof['rightstock'][id]:
-                            maj_bed = [prof['leftstock'][id],
-                                       prof['rightstock'][id]]
-                        else:
-                            maj_bed = [x[0],
-                                       x[-1]]
+        for pk, info in self.val_prof_ref.items():
+            if info :
+                x = info['x']
+                z = info['ZREF']
+                profil = list(zip(x, z))
 
-                        cl_geo = ClassResProfil(pk, profil,
-                                                prof['branchnum'][id],
-                                                min_bed, maj_bed,
-                                                database = self.mdb )
-                        cl_geo.get_results()
+                min_bed = [info['leftminbed'],
+                           info['rightminbed']]
+                if info['leftstock'] and \
+                        info['rightstock']:
+                    maj_bed = [info['leftstock'],
+                                    info['rightstock']]
+                else:
+                    maj_bed = [x[0],
+                               x[-1]]
 
-                        self.plani_graph[pk] = {}
-                        for id, name in cl_geo.cas_prt.items():
-                            self.plani_graph[pk][name] = dict(
-                                cl_geo.dico_res[id])
+                if 'pt_bas' in self.info_graph['opt'].keys():
+                    if str(pk) in self.info_graph['opt']['pt_bas'].keys():
+                       pt_bas = self.info_graph['opt']['pt_bas'][str(pk)]
+
+                else:
+                    cl_geo = ClassResProfil()
+                    cl_geo.plani_stock(self.info_graph[self.typ_res]['zmax'],
+                                       self.cur_run)
+                    del cl_geo
+
+                cl_geo = ClassResProfil()
+                cl_geo.init_cl(pk, profil,
+                               info['branch'],
+                               min_bed, maj_bed, self.cur_run,
+                               zmax=self.zmax_save,
+                               pt_bas=pt_bas,
+                               database=self.mdb)
+
+                cl_geo.get_results()
+
+                self.plani_graph[pk] = {}
+                if cl_geo.dico_res :
+                    print(cl_geo.dico_res)
+                    for id, name in cl_geo.cas_prt.items():
+                        self.plani_graph[pk][name] = dict(
+                            cl_geo.dico_res[id])
+
+                del cl_geo
+
+
 
 
     def get_runs_graph(self):
@@ -389,7 +412,7 @@ class GraphProfilResultDialog(QWidget):
             self.curent_data['prof'] = dict(self.val_prof_ref[self.cur_pknum])
             #print(self.val_prof_ref[self.cur_pknum].keys())
             #print(self.plani_graph.keys())
-            self.curent_data.update(dict(self.plani_graph[self.cur_pknum]))
+
 
             if self.cur_run:
                 if self.cur_t == 'Zmax':
@@ -452,7 +475,8 @@ class GraphProfilResultDialog(QWidget):
                 self.graph_obj.init_graph_profil(self.curent_data['prof'], self.x_var,
                                                  qmaj_max)
                 # *******************************
-
+                self.get_profil_plani()
+                self.curent_data.update(dict(self.plani_graph[self.cur_pknum]))
                 #self.graph_obj.insert_plani_curves(plani_graph)
                 # ********************************************
                 self.fill_tab()

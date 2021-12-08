@@ -1810,4 +1810,18 @@ class runs_graph(MasObject):
                       ('CONSTRAINT runs_graph_pkey',
                        ' PRIMARY KEY (id_runs,type_res,var)')]
 
+class runs_plani(MasObject):
+    def __init__(self):
+        super(runs_plani, self).__init__()
+        self.order = 41
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('id_runs', 'integer'),
+                      ('pknum', 'float'),
+                      ('id_type', 'integer'),
+                      ('id_order', 'integer'),
+                      ('line', 'GEOMETRY'),
+                      ('CONSTRAINT runs_plani_pkey',
+                       ' PRIMARY KEY (id_runs,pknum,id_type)')]
+
 # ****************************************************************************
