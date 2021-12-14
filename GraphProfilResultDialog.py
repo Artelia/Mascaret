@@ -589,7 +589,6 @@ class GraphProfilResultDialog(QWidget):
                     self.graph_obj.init_graph_plani(self.plani_graph[self.cur_pknum])
                     for key,ctrl_ in self.ctrl_label.items():
                         val_d = self.val_zmax_save[key]
-                        print(val_d,ctrl_, key )
                         if val_d:
                             val_d = str(round(val_d, 2))
                         ctrl_.setText(val_d)
