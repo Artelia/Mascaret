@@ -75,6 +75,7 @@ class GraphResult(GraphCommonNew):
                                                 zorder=200)
         self.annotation.append(self.annot_var)
         self.courbeLaisses = []
+        self.courbePlani = []
         self.etiquetteLaisses = []
         for v, var in enumerate(lst_vars):
             self.list_var.append({"id": v, "name": var, "clr": lst_colors[v]})
@@ -161,15 +162,21 @@ class GraphResult(GraphCommonNew):
 
         self.maj_limites()
 
-    def init_graph_profil(self, data, x_var, qmaj=0):
+    def init_graph_profil(self, data, x_var, qmaj=0, plani=None):
         self.init_legende()
         # self.set_data(data, x_var)
+        if plani:
+            self.ax[1]["curves"].append(self.courbePlani[0])
+            self.init_legende()
 
         if len(self.ax[1]["curves"]) > 0:
             for i, cb in enumerate(self.ax[1]["curves"]):
                 if i == 0:
                     cb.set_data(data["x"], data['ZREF'])
                     cb.set_visible(True)
+                elif i == 1:
+                    # plani visible or not
+                    cb.set_visible(False)
                 else:
                     cb.set_visible(False)
         else:
@@ -322,64 +329,45 @@ class GraphResult(GraphCommonNew):
 
         self.maj_limites()
 
+    def init_graph_plani(self, dict_plani):
+        """ add flood mark in graph"""
 
-    def insert_plani_curves(self, dict_plani):
-        #TODO A REPRENDRE
-        #v = self.list_var[-1]["id"] + 1
-        idx = 0
+        self.clear_plani()
+        xfinal = []
+        yfinal = []
         for name, param_plani in dict_plani.items():
-           # self.list_var.append({"id": v, "name": 'plani', "clr": "grey"})
-            if param_plani :
-                for  line in  param_plani['lines']:
-                    x, y  = line.coords.xy
-                    self.main_axe.plot(x, y,
-                                    color="grey",
-                                    marker='',
-                                    markeredgewidth=0,
-                                    zorder=100 - self.list_var[-1]["id"] + 1,
-                                    linestyle=MPL_LINE_STYLE[1],
-                                    label="plani")
+            if param_plani:
+                for line in param_plani['line']:
+                    x, y = line.coords.xy
+                    xfinal.extend(x)
+                    yfinal.extend(y)
+                    xfinal.append(None)
+                    yfinal.append(None)
 
+        cb,  = self.main_axe.plot(xfinal, yfinal,
+                                   color="grey",
+                                   marker='',
+                                   markeredgewidth=0,
+                                   zorder=100 - self.list_var[-1]["id"] + 1,
+                                   linestyle=MPL_LINE_STYLE[0],
+                                   alpha=0.5,
+                                   label="planimetry")
+        self.courbePlani.append(cb)
+        self.courbePlani[0].set_visible(True)
 
+        self.maj_limites()
 
+    def clear_plani(self):
+        if self.ax[1]["curves"]:
+            tmp = []
+            for i, cb in enumerate(self.ax[1]["curves"]):
+                if cb not in self.courbePlani:
+                    tmp.append(cb)
+                else:
+                    cb.set_visible(False)
+            self.ax[1]["curves"] = list(tmp)
 
-
-        # for (id_obs, var), param_obs in dict_obs.items():
-        #     self.list_var.append({"id": v, "name": var, "clr": "grey"})
-        #     courbe_obs, = self.ax[param_obs["axe"]]["axe"].plot([], [],
-        #                                                         color="grey",
-        #                                                         marker='o',
-        #                                                         markeredgewidth=0,
-        #                                                         zorder=100 - v,
-        #                                                         linestyle=
-        #                                                         MPL_LINE_STYLE[
-        #                                                             idx],
-        #                                                         label="Obs {0} - {1}".format(
-        #                                                             id_obs,
-        #                                                             var))
-        #
-        #     self.ax[param_obs["axe"]]["curves"].append(courbe_obs)
-        #     self.data_to_curve[v] = (
-        #     param_obs["axe"], len(self.ax[param_obs["axe"]]["curves"]) - 1)
-        #
-        #     annot_var = self.ax[param_obs["axe"]]["axe"].annotate("", xy=(0, 0),
-        #                                                           ha='left',
-        #                                                           xytext=(
-        #                                                           10, 0),
-        #                                                           textcoords='offset points',
-        #                                                           va='top',
-        #                                                           bbox=dict(
-        #                                                               boxstyle='round, pad=0.5',
-        #                                                               fc='white',
-        #                                                               alpha=0.7),
-        #                                                           color="grey",
-        #                                                           visible=False,
-        #                                                           zorder=199 - v)
-        #     self.annotation.append(annot_var)
-        #     idx += 1
-        #     v += 1
-        #
-        # self.maj_limites()
+        self.courbePlani = []
 
     def clear_laisse(self):
         """flood mark"""

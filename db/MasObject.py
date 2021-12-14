@@ -1822,6 +1822,6 @@ class runs_plani(MasObject):
                       ('id_order', 'integer'),
                       ('line', 'GEOMETRY'),
                       ('CONSTRAINT runs_plani_pkey',
-                       ' PRIMARY KEY (id_runs,pknum,id_type)')]
+                       ' PRIMARY KEY (id_runs,pknum,id_type,id_order)')]
 
 # ****************************************************************************

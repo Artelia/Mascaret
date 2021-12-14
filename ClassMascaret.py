@@ -2941,7 +2941,8 @@ class ClassMascaret:
             # TODO Test
             if dico_zmax :
                 cl_geo = ClassResProfil()
-                cl_geo.plani_stock( dico_zmax,id_run)
+                cl_geo.plani_stock( dico_zmax,id_run,self.mdb)
+
                 del cl_geo
         elif typ_res == 'basin':
             key_pknum = 'BNUM'

@@ -219,6 +219,7 @@ class GraphProfil(GraphCommon):
         # self.ui.bt_img_load.clicked.connect(self.import_image)
         self.ui.bt_topo_save.clicked.connect(self.sauve_topo)
         self.ui.bt_amont_aval.clicked.connect(self.topo_amont_aval)
+        self.ui.bt_del_amont_aval.clicked.connect(self.del_amont_aval)
         self.ui.bt_check_prof.clicked.connect(self.check_prof_diag)
 
         self.ui.bt_reculTot.clicked.connect(lambda: self.avance(-10))
@@ -1362,6 +1363,35 @@ class GraphProfil(GraphCommon):
 
         self.mdb.insert2("topo", tab)
 
+
+    def del_amont_aval(self):
+        """
+        delet in top tab the down/upstream courbe
+        :return:
+        """
+        reply = QMessageBox.question(self, 'Message',
+        'Do you want to delete the upstream / downstream topo profiles?',
+        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+
+            condition = "name='{0}' AND profile='{1}'".format('upstream',
+                                                              self.nom)
+            self.mdb.delete("topo", condition)
+
+            condition = "name='{0}' AND profile='{1}'".format('downstream',
+                                                              self.nom)
+            self.mdb.delete("topo", condition)
+
+            self.extrait_topo()
+            self.maj_graph()
+            self.maj_limites()
+            self.maj_legende()
+
+
+
+
+
     def topo_amont_aval(self):
         """
         add in top tab the down/upstream courbe
@@ -1394,6 +1424,7 @@ class GraphProfil(GraphCommon):
         if maj:
             self.extrait_topo()
             self.maj_graph()
+            self.maj_limites()
             self.maj_legende()
 
     def val_prof(self, id):

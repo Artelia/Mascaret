@@ -344,10 +344,14 @@ def fill_zminbed(mdb):
         x = [float(v) for v in info['x'][i].split()]
         z = [float(v) for v in info['z'][i].split()]
         if not info['rightminbed'][i]:
+            info['rightminbed'][i] =x[-1]
+            info['zrightminbed'][i] =  z[-1]
             update_dico[gid]['rightminbed'] = x[-1]
             update_dico[gid]['zrightminbed'] = z[-1]
 
         if not info['leftminbed'][i]:
+            info['leftminbed'][i] = x[0]
+            info['zleftminbed'][i] = z[0]
             update_dico[gid]['leftminbed'] = x[0]
             update_dico[gid]['zleftminbed'] = z[0]
 

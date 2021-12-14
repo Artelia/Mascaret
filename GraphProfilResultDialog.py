@@ -20,6 +20,7 @@ email                :
 """
 
 import os
+import json
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
@@ -30,6 +31,8 @@ from .GraphResult import GraphResult
 from .Function import tw_to_txt, interpole, fill_zminbed
 from datetime import date, timedelta, datetime
 from .ClassResProfil import ClassResProfil
+from shapely.geometry import shape
+
 
 if int(qVersion()[0]) < 5:
     from qgis.PyQt.QtGui import *
@@ -194,7 +197,7 @@ class GraphProfilResultDialog(QWidget):
                         cond = False
                         pass
 
-    def get_profil_plani(self):
+    def get_profil_plani(self, zlevel=None):
         self.plani_graph = {}
         for pk, info in self.val_prof_ref.items():
            # print(info.keys(),pk)
@@ -213,7 +216,8 @@ class GraphProfilResultDialog(QWidget):
                     maj_bed = [x[0],
                                x[-1]]
 
-                cond_plani, dico_plani = self.check_run_plani()
+                cond_plani, dico_plani = self.check_run_plani(pk)
+                #cond_plani  = False
                 if cond_plani:
                     cl_geo = ClassResProfil()
                     cl_geo.init_cl(pk, profil,
@@ -226,38 +230,69 @@ class GraphProfilResultDialog(QWidget):
                     cl_geo.get_results()
 
                     self.plani_graph[pk] = {}
-                    print(cl_geo.dico_res.keys(), 'yyy')
+                    self.test = {}
                     if cl_geo.dico_res :
-
+                        cl_geo.get_valeurs(zlevel)
+                        larg_mirror = 0.
+                        wet_area = 0.
+                        debitance= 0.
                         for id, name in cl_geo.cas_prt.items():
-                            self.plani_graph[pk][name] = dict(
-                                cl_geo.dico_res[id])
+                            if id in cl_geo.dico_res.keys():
+                                self.plani_graph[pk][name] = dict(
+                                    cl_geo.dico_res[id])
 
+                                # TODO
+                                # liste 2
+                                # check zlevel
+                                # 2 méthode possible
+                                # prendre l'aire directement et le permiétre ainsi que la largeur
+                                # prendre l'aire des polygone  permir largeur(Mineur, majeur)
+                                #
+                                larg_mirror += cl_geo.dico_res[id]['pr_width']
+                                wet_area += cl_geo.dico_res[id]['pr_area']
+                                #debitance += cl_geo.dico_res[id]['pr_debitance']
+                                # TODO permimeter wet fusion ?
+                                # faire droite gauche
+
+                        larg_mirror = round(larg_mirror, 3)
+                        wet_area = round(wet_area, 3)
+                        self.label_wmirror.setText(str(larg_mirror))
+                        self.label_warea.setText(str(wet_area))
                     del cl_geo
 
-    def get_run_plani(self, get_bas=False):
-        where = 'id_runs = {} AND pknum = {}'.format(self.cur_run, self.pk)
+
+
+    def get_run_plani(self,pk, get_bas=False):
+        where = 'id_runs = {} AND pknum = {}'.format(self.cur_run, pk)
         elem_plani = self.mdb.select('runs_plani', order='id_type,id_order',
                                where=where,
-                               list_var=['id_type', 'id_order', 'line'])
+                               list_var=['id_type', 'id_order', 'ST_AsGeoJSON(line)'])
+
         if get_bas :
             where = "id_runs = {0} AND var = 'pt_bas' AND type_res = 'opt'".format(self.cur_run)
 
             elem = self.mdb.select('runs_graph', order='id',
                                    where=where,
-                                   list_var=['val'])
+                                   list_var=['val'],
+                                   verbose=True)
+
             if len(elem['val'])>0:
-                self.info_graph['opt']['pt_bas'] = elem['val']
+                self.info_graph['opt']['pt_bas'] = elem['val'][0]
+            else:
+                self.info_graph['opt']['pt_bas'] = {}
 
         return elem_plani
 
     def create_dico_plani(self, elem, pt_bas):
+
         dico_plani = {}
         for id, id_type in enumerate(elem['id_type']):
-            if not id_type in self.dico_res.keys():
-                dico_plani[id_type] = {'pt_bas': pt_bas[id_type],
+            if not id_type in dico_plani.keys():
+                dico_plani[id_type] = {'pt_bas': pt_bas[str(id_type)],
                                             'line': []}
-            dico_plani[id_type]['line'].append(elem['line'][id])
+                #st_asgeojson eqv. line
+            dico_plani[id_type]['line'].append(shape(json.loads(elem['st_asgeojson'][id])))
+
         return dico_plani
 
     def check_run_plani(self,pk):
@@ -267,26 +302,43 @@ class GraphProfilResultDialog(QWidget):
             if str(pk) in self.info_graph['opt']['pt_bas'].keys():
                 pt_bas = self.info_graph['opt']['pt_bas'][str(pk)]
 
-        elem = self.get_run_plani()
+        elem = self.get_run_plani(pk)
         if len(elem['id_type'])> 0 and  pt_bas:
             dico_plani = self.create_dico_plani(elem, pt_bas)
         else:
-            # creation pt_bas and dico_plani
-            cl_geo = ClassResProfil()
-            cl_geo.plani_stock(self.info_graph[self.typ_res]['zmax'],
-                               self.cur_run)
-            del cl_geo
 
-            elem = self.get_run_plani(get_bas=True)
-            pt_bas = None
-            if 'pt_bas' in self.info_graph['opt'].keys():
-                if str(pk) in self.info_graph['opt']['pt_bas'].keys():
-                    pt_bas = self.info_graph['opt']['pt_bas'][str(pk)]
-
-            if len(elem['id_type']) > 0 and pt_bas:
-                dico_plani = self.create_dico_plani(elem, pt_bas[str])
+            if not 'pt_bas' in self.info_graph['opt'].keys():
+                # if pt_bas not existe => update table
+                cond = True
             else:
-                # Pas de valeur pk
+                if len(self.info_graph['opt']['pt_bas'].keys()) < 1:
+                    # if  no itmes => update table
+                    cond = True
+                else:
+                    # no need to update  table because of the items are not able to existe
+                    cond = False
+
+            if cond:
+                # creation Complete table si information n'existat pour le run
+                cl_geo = ClassResProfil()
+                cl_geo.plani_stock(self.info_graph[self.typ_res]['zmax'],
+                                   self.cur_run, self.mdb)
+                del cl_geo
+
+                elem = self.get_run_plani(pk, get_bas=True)
+                pt_bas = None
+
+                if str(pk) in self.info_graph['opt']['pt_bas'].keys():
+                    if str(pk) in self.info_graph['opt']['pt_bas'].keys():
+                        pt_bas = self.info_graph['opt']['pt_bas'][str(pk)]
+
+                if len(elem['id_type']) > 0 and pt_bas:
+                    dico_plani = self.create_dico_plani(elem, pt_bas)
+                else:
+                    # Pas de valeur pour le pk
+                    return False, None
+            else:
+                # Pas de valeur pour le pk en cours
                 return False, None
 
 
@@ -459,9 +511,6 @@ class GraphProfilResultDialog(QWidget):
 
         if not self.initialising:
             self.curent_data['prof'] = dict(self.val_prof_ref[self.cur_pknum])
-            #print(self.val_prof_ref[self.cur_pknum].keys())
-            #print(self.plani_graph.keys())
-
 
             if self.cur_run:
                 if self.cur_t == 'Zmax':
@@ -501,13 +550,16 @@ class GraphProfilResultDialog(QWidget):
 
 
                 if self.cur_t == 'Zmax':
+                    zlevel = self.zmax_save
                     val_str = None
                     if self.zmax_save:
                         val_str = round(self.zmax_save, 3)
                     self.graph_obj.main_axe.title.set_text(
                         'Max of water level, {0} m '
                         ''.format(val_str))
+
                 elif isinstance(self.cur_t, float):
+                    zlevel = self.curent_data['prof']['Z'][0]
                     try:
                         self.graph_obj.main_axe.title.set_text(
                             'Water level, {0} m - {1} s'
@@ -521,17 +573,20 @@ class GraphProfilResultDialog(QWidget):
                 self.graph_obj.main_axe.set_xlabel(r'Distance ($m$)')
                 self.graph_obj.main_axe.set_ylabel(r'Level ($m$)')
 
-                self.graph_obj.init_graph_profil(self.curent_data['prof'], self.x_var,
-                                                 qmaj_max)
+
                 # *******************************
-                self.get_profil_plani()
-                #print(self.curent_data.keys())
-                #print(self.plani_graph[self.cur_pknum].keys())
-                self.curent_data.update(dict(self.plani_graph[self.cur_pknum]))
-                print(self.curent_data.keys())
-                #self.graph_obj.insert_plani_curves(plani_graph)
+                self.get_profil_plani(zlevel)
+                plani =  False
+                if self.plani_graph :
+                    self.curent_data.update(dict(self.plani_graph[self.cur_pknum]))
+                    self.graph_obj.init_graph_plani(self.plani_graph[self.cur_pknum])
+                    plani = True
                 # ********************************************
                 self.fill_tab()
+                self.graph_obj.init_graph_profil(self.curent_data['prof'],
+                                                 self.x_var,
+                                                 qmaj_max,
+                                                 plani=plani)
 
 
 
