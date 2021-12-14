@@ -28,11 +28,13 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 from .GraphResult import GraphResult
-from .Function import tw_to_txt, interpole, fill_zminbed
-from datetime import date, timedelta, datetime
-from .ClassResProfil import ClassResProfil
+from .Function import tw_to_txt,  fill_zminbed
+from datetime import timedelta
+from .ClassResProfil import ClassResProfil,get_valeurs
 from shapely.geometry import shape
-
+from .WidgetProfResultDialog import  WidgetProfResultDialog
+from shapely.ops import cascaded_union
+from shapely.geometry import GeometryCollection
 
 if int(qVersion()[0]) < 5:
     from qgis.PyQt.QtGui import *
@@ -73,14 +75,20 @@ class GraphProfilResultDialog(QWidget):
         self.cur_vars_lbl, self.cur_branch, self.cur_pknum, self.cur_t = None, None, None, None
         self.list_var_lai = []
         self.zmax_save = None
+        self.val_zmax_save = None
         self.date = None
         self.obs = None
         self.list_typ_res = None
         self.info_graph = {}
         self.val_prof_ref = {}
         self.plani_graph = {}
+        self.cmpl_info = {}
         self.dict_run = dict()
         self.laisses = {}
+        self.ctrl_label = {'area': self.label_warea,
+                           'perimeter': self.label_wpermi,
+                           'width': self.label_wmirror,
+                           }
 
         fill_zminbed(self.mdb)
         self.show_hide_com(False)
@@ -192,12 +200,12 @@ class GraphProfilResultDialog(QWidget):
                             prof['zrightminbed'][id]
                         self.val_prof_ref[pk]['branch'] = prof['branchnum'][id]
 
-                        cond =True
+
                     except:
-                        cond = False
                         pass
 
-    def get_profil_plani(self, zlevel=None):
+
+    def get_profil_plani(self):
         self.plani_graph = {}
         for pk, info in self.val_prof_ref.items():
            # print(info.keys(),pk)
@@ -230,37 +238,13 @@ class GraphProfilResultDialog(QWidget):
                     cl_geo.get_results()
 
                     self.plani_graph[pk] = {}
-                    self.test = {}
                     if cl_geo.dico_res :
-                        cl_geo.get_valeurs(zlevel)
-                        larg_mirror = 0.
-                        wet_area = 0.
-                        debitance= 0.
                         for id, name in cl_geo.cas_prt.items():
                             if id in cl_geo.dico_res.keys():
                                 self.plani_graph[pk][name] = dict(
                                     cl_geo.dico_res[id])
 
-                                # TODO
-                                # liste 2
-                                # check zlevel
-                                # 2 méthode possible
-                                # prendre l'aire directement et le permiétre ainsi que la largeur
-                                # prendre l'aire des polygone  permir largeur(Mineur, majeur)
-                                #
-                                larg_mirror += cl_geo.dico_res[id]['pr_width']
-                                wet_area += cl_geo.dico_res[id]['pr_area']
-                                #debitance += cl_geo.dico_res[id]['pr_debitance']
-                                # TODO permimeter wet fusion ?
-                                # faire droite gauche
-
-                        larg_mirror = round(larg_mirror, 3)
-                        wet_area = round(wet_area, 3)
-                        self.label_wmirror.setText(str(larg_mirror))
-                        self.label_warea.setText(str(wet_area))
                     del cl_geo
-
-
 
     def get_run_plani(self,pk, get_bas=False):
         where = 'id_runs = {} AND pknum = {}'.format(self.cur_run, pk)
@@ -298,11 +282,13 @@ class GraphProfilResultDialog(QWidget):
     def check_run_plani(self,pk):
 
         pt_bas = None
+        elem = self.get_run_plani(pk)
+
         if 'pt_bas' in self.info_graph['opt'].keys():
             if str(pk) in self.info_graph['opt']['pt_bas'].keys():
                 pt_bas = self.info_graph['opt']['pt_bas'][str(pk)]
 
-        elem = self.get_run_plani(pk)
+
         if len(elem['id_type'])> 0 and  pt_bas:
             dico_plani = self.create_dico_plani(elem, pt_bas)
         else:
@@ -343,7 +329,6 @@ class GraphProfilResultDialog(QWidget):
 
 
         return  True, dico_plani
-
 
     def get_runs_graph(self):
         sql = "SELECT type_res,var,val FROM {0}.runs_graph WHERE " \
@@ -462,6 +447,7 @@ class GraphProfilResultDialog(QWidget):
         if self.cb_scen.currentIndex() != -1:
             self.cur_run = self.cb_scen.itemData(self.cb_scen.currentIndex())
             self.get_runs_graph()
+            self.get_profil_plani()
             self.init_cb_graph()
             self.graph_changed_profil(False)
             self.init_cb_det(self.cur_pknum)
@@ -483,6 +469,27 @@ class GraphProfilResultDialog(QWidget):
                 if 'zmax' in self.info_graph[self.typ_res].keys():
                     self.zmax_save = self.info_graph[self.typ_res]['zmax'][
                         str(self.cur_pknum)]
+                    new_poly =  GeometryCollection()
+                    for i, key in enumerate(self.plani_graph[self.cur_pknum].keys()):
+                        if i ==0:
+                            new_poly = self.plani_graph[self.cur_pknum][key]['pr_poly']
+                            if new_poly.is_valid and not new_poly.is_empty:
+                                last_poly =  new_poly
+                        else:
+                            new_poly = cascaded_union([last_poly,
+                                                       self.plani_graph[
+                                                           self.cur_pknum][key][
+                                                           'pr_poly']])
+                            if new_poly.is_valid and not new_poly.is_empty:
+                                last_poly =  new_poly
+
+                    self.val_zmax_save = get_valeurs(self.zmax_save, new_poly )
+                    # TODO
+                    # liste 2
+                    # 2 méthode possible
+                    # prendre l'aire directement et le permiétre ainsi que la largeur
+                    # prendre l'aire des polygone  permir largeur(Mineur, majeur)
+
 
             if update:
                 self.update_data_profil()
@@ -575,14 +582,22 @@ class GraphProfilResultDialog(QWidget):
 
 
                 # *******************************
-                self.get_profil_plani(zlevel)
+                # self.get_profil_plani()
                 plani =  False
                 if self.plani_graph :
                     self.curent_data.update(dict(self.plani_graph[self.cur_pknum]))
                     self.graph_obj.init_graph_plani(self.plani_graph[self.cur_pknum])
+                    for key,ctrl_ in self.ctrl_label.items():
+                        val_d = self.val_zmax_save[key]
+                        print(val_d,ctrl_, key )
+                        if val_d:
+                            val_d = str(round(val_d, 2))
+                        ctrl_.setText(val_d)
+
+
                     plani = True
                 # ********************************************
-                self.fill_tab()
+                self.fill_tab(zlevel)
                 self.graph_obj.init_graph_profil(self.curent_data['prof'],
                                                  self.x_var,
                                                  qmaj_max,
@@ -602,15 +617,16 @@ class GraphProfilResultDialog(QWidget):
         else:
             return "", "blue"
 
-    def fill_tab(self):
+    def fill_tab(self, zlevel):
         self.clas_data.clear()
         for idx, wow in enumerate(self.curent_data.items()):
             name, param = wow
             if not param:
                 continue
-            tw = QTableWidget()
-            tw.addAction(CopySelectedCellsAction(tw))
+
             if name == 'prof':
+                tw = QTableWidget()
+                tw.addAction(CopySelectedCellsAction(tw))
                 x_var = 'x'
                 self.clas_data.addTab(tw, self.name_tab[name]['name'])
                 lst_vars = [x_var]
@@ -624,7 +640,14 @@ class GraphProfilResultDialog(QWidget):
                     lst_lbls.append(lbl)
             else:
                 x_var = 'z'
-                self.clas_data.addTab(tw, name)
+                cl_res = WidgetProfResultDialog(self)
+                tw = cl_res.tw
+                tw.addAction(CopySelectedCellsAction(tw))
+                self.clas_data.addTab(cl_res, name)
+
+                dico_tmp  = get_valeurs(zlevel, param['pr_poly'])
+                cl_res.change_label(dico_tmp)
+
                 lst_vars = [x_var]
                 lst_vars.extend(['width','area','debitance'])
                 lst_lbls = []
@@ -652,6 +675,8 @@ class GraphProfilResultDialog(QWidget):
             tw.resizeColumnsToContents()
             tw.resizeRowsToContents()
             tw.setVisible(True)
+
+
 
 
 

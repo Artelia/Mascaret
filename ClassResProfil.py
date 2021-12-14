@@ -508,9 +508,9 @@ class ClassResProfil():
                 #dico['pr_perimeter'] = dico['perimeter'][-1]
                 dico['pr_width'] = dico['width'][-1]
                 dico['pr_z'] = dico['z'][-1]
-
+                perimeter =  dico['poly'][-1].length
                 dico['pr_debitance'] = \
-                    self.debitance(num, ks, dico['perimeter'][-1],
+                    self.debitance(num, ks, perimeter,
                                    dico['area'][-1])
             else:
                 dico['pr_poly'] = None
@@ -520,32 +520,6 @@ class ClassResProfil():
                 dico['pr_z'] = 0.
 
                 dico['pr_debitance'] = 0.
-
-    def get_valeurs(self, z_level):
-        res = {}
-        for num, dico in self.dico_res.items() :
-            res[num] = {}
-            poly=  dico['pr_poly']
-            if poly :
-                (minx, miny, maxx, maxy) = poly.bounds
-                delpoly = Polygon([[minx - 1, z_level], [maxx + 1, z_level],
-                                   [maxx + 1, maxy + 1], [minx - 1, maxy + 1],
-                                   [minx - 1, z_level]])
-                if not delpoly.is_empty:
-                    if not poly.is_valid:
-                        # Polygone => multiPolygone
-                        poly = poly.buffer(0)
-                    polyw = poly.difference(delpoly)
-                    if not polyw.is_valid:
-                        polyw = GeometryCollection()
-                else:
-                    polyw = GeometryCollection()
-
-                (minx, miny, maxx, maxy) = polyw.bounds
-                res[num]['area'] = polyw.area
-                res[num]['perimeter'] = polyw.length
-                res[num]['width'] = maxx - minx
-
 
     def debitance(self, num, ks, perimeter, area):
         """
@@ -568,6 +542,47 @@ class ClassResProfil():
             debitance = 0.0
         return debitance
 
+
+def get_valeurs(z_level, poly):
+    res = {}
+    if  poly.is_valid and not poly.is_empty:
+        (minx, miny, maxx, maxy) = poly.bounds
+
+        if z_level <miny :
+            res['z'] = z_level
+            res['area'] = None
+            res['perimeter'] = None
+            res['width'] = None
+        else :
+            delpoly = Polygon([[minx - 1, z_level], [maxx + 1, z_level],
+                               [maxx + 1, max(z_level+1,maxy + 1)], [minx - 1,  max(z_level+1,maxy + 1)],
+                               [minx - 1, z_level]])
+            if not delpoly.is_empty:
+                if not poly.is_valid:
+                    # Polygone => multiPolygone
+                    poly = poly.buffer(0)
+                polyw = poly.difference(delpoly)
+                if not polyw.is_valid:
+                    polyw = GeometryCollection()
+            else:
+                polyw = GeometryCollection()
+            if not polyw.is_empty :
+                (minx, miny, maxx, maxy) = polyw.bounds
+                res['z'] = z_level
+                res['area'] = polyw.area
+                res['perimeter'] = polyw.length
+                res['width'] = maxx - minx
+            else:
+                res['z'] = z_level
+                res['area'] = None
+                res['perimeter'] = None
+                res['width'] = None
+    else:
+        res['z'] = z_level
+        res['area'] = None
+        res['perimeter'] = None
+        res['width'] = None
+    return res
 
 if __name__ == '__main__':
     pass
