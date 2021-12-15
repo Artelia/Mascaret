@@ -150,6 +150,7 @@ class ClassDlgExport(QDialog):
 
         file = self.choix_file()
         if file != '':
+            self.mgis.add_info('**** Run Export ****')
             # self.mdb.export_model(selection,file)
             plug_ver = read_version(self.mgis.masplugPath)
             self.mgis.task_exp = QgsTask.fromFunction('Export Schema',

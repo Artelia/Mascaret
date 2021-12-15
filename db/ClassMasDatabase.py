@@ -683,7 +683,7 @@ class ClassMasDatabase(object):
 
         return liste
 
-    def drop_model(self, model_name, cascade=False):
+    def drop_model(self, model_name, cascade=False, verbose=True):
         """
         Delete model inside PostgreSQL database.
 
@@ -694,9 +694,11 @@ class ClassMasDatabase(object):
         qry = '''DROP SCHEMA "{0}" CASCADE;''' if cascade is True else '''DROP SCHEMA "{0}";'''
         qry = qry.format(model_name)
         if self.run_query(qry) is None:
-            return
+            return False
         else:
-            self.mgis.add_info('<br>Model "{0}" deleted.'.format(model_name))
+            if verbose:
+                self.mgis.add_info('<br>Model "{0}" deleted.'.format(model_name))
+            return True
 
     def drop_table(self, table_name):
         """
@@ -1382,6 +1384,8 @@ $BODY$
                                                             ','.join(
                                                                 list_tab_res))
         self.run_query(qry)
+        if self.mgis.DEBUG :
+            self.mgis.add_info('Creation of the temporary table :{} '.format(dest))
         # add selection
         lst_run = self.get_id_run(selection)
         if len(lst_run) > 0:
@@ -1407,7 +1411,10 @@ $BODY$
         with open(file, "w") as outfile:
             json.dump(js_dict, outfile, indent=4)
 
-        self.drop_model(dest, cascade=True)
+        cond = self.drop_model(dest, cascade=True, verbose=False)
+        if cond and self.mgis.DEBUG:
+            self.mgis.add_info('<br>Model "{0}" deleted.'.format(dest))
+
         self.ignor_schema = list()
 
     def import_model(self, metadict):
@@ -1447,6 +1454,8 @@ $BODY$
                 sql = "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(actname)
                 self.run_query(sql)
         self.ignor_schema = list()
+
+        self.mgis.add_info('Import is done.')
 
     def get_id_run(self, selection):
         lst_id = []

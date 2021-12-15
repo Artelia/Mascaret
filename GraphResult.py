@@ -245,7 +245,6 @@ class GraphResult(GraphCommonNew):
                         break
 
         self.main_axe.collections.remove(aire)
-
         self.maj_limites()
 
     def insert_debord_curves(self, dict_debord):
@@ -355,7 +354,7 @@ class GraphResult(GraphCommonNew):
         self.courbePlani.append(cb)
         self.courbePlani[0].set_visible(True)
 
-        self.maj_limites()
+
 
     def clear_plani(self):
         if self.ax[1]["curves"]:

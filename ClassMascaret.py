@@ -1896,14 +1896,14 @@ class ClassMascaret:
             raise exception
 
     def task_mascaret(self, task, tup=None):
+
         if tup:
             par, dict_scen, dict_lois, comments, noyau, run = tup
         else:
             print('no transmitted variable')
             return
         for i, scen in enumerate(dict_scen['name']):
-            if self.mgis.DEBUG:
-                self.mgis.add_info("The current scenario is {}".format(scen))
+            self.mgis.add_info("The current scenario is {}".format(scen))
 
             # initialise file
             date_debut = None
@@ -1936,6 +1936,8 @@ class ClassMascaret:
 
                     self.lit_opt_new(id_run, None,
                                      self.baseName + '_init', comments)
+                    if self.mgis.DEBUG :
+                        self.mgis.add_info("Auto-initialization Run is done")
 
                 else:
                     self.mgis.add_info("No Run initialization.\n"

@@ -79,6 +79,7 @@ class GraphProfilResultDialog(QWidget):
         self.date = None
         self.obs = None
         self.list_typ_res = None
+        self.recadre = True
         self.info_graph = {}
         self.val_prof_ref = {}
         self.plani_graph = {}
@@ -114,7 +115,7 @@ class GraphProfilResultDialog(QWidget):
             self.cb_graph.currentIndexChanged.connect(
                 lambda: self.graph_changed_profil(True))
             self.cb_det.currentIndexChanged.connect(
-                lambda: self.detail_changed(up_lim=True))
+                lambda: self.detail_changed(up_lim=False))
 
             self.name_tab = {'prof' : {'name':'Graph Results',
                                        'lst_vars':['ZREF', 'Z']},
@@ -123,7 +124,7 @@ class GraphProfilResultDialog(QWidget):
                                 }
 
             #TODO Export
-            # self.bt_expCsv.clicked.connect(self.export_csv)
+            self.bt_expCsv.clicked.connect(self.export_csv)
 
 
             self.lst_runs = []
@@ -436,6 +437,7 @@ class GraphProfilResultDialog(QWidget):
 
     def run_changed(self):
         """ change fct for cb_run"""
+        self.recadre = True
         self.cb_scen.blockSignals(True)
         self.init_cb_scen()
         self.scen_changed()
@@ -443,6 +445,7 @@ class GraphProfilResultDialog(QWidget):
 
     def scen_changed(self):
         """ change scen"""
+
         if self.cb_scen.currentIndex() != -1:
             self.cur_run = self.cb_scen.itemData(self.cb_scen.currentIndex())
             self.get_runs_graph()
@@ -454,6 +457,7 @@ class GraphProfilResultDialog(QWidget):
 
     def graph_changed_profil(self, update=True):
         """change graph of profile"""
+        self.recadre = True
         if self.cb_graph.currentIndex() != -1:
             self.cur_pknum = self.cb_graph.itemData(
                 self.cb_graph.currentIndex())
@@ -591,8 +595,6 @@ class GraphProfilResultDialog(QWidget):
                         if val_d:
                             val_d = str(round(val_d, 2))
                         ctrl_.setText(val_d)
-
-
                     plani = True
                 # ********************************************
                 self.fill_tab(zlevel)
@@ -690,22 +692,26 @@ class GraphProfilResultDialog(QWidget):
 
     def export_csv(self):
         """Export Table to .CSV file"""
-
         txt = self.cb_graph.currentText()
+        idx = self.clas_data.currentIndex()
+        name = self.clas_data.tabText(idx)
+        txt = txt+' '+ name
+
         default_name = txt.replace(' ', '_').replace(':', '-')
-        if int(qVersion()[0]) < 5:
-            file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
-                                                         "{0}.csv".format(
-                                                             default_name),
-                                                         filter="CSV (*.csv *.)")
-        else:
-            file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
-                                                            "{0}.csv".format(
-                                                                default_name),
-                                                            filter="CSV (*.csv *.)")
+
+        file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
+                                                        "{0}.csv".format(
+                                                            default_name),
+                                                        filter="CSV (*.csv *.)")
 
         if file_name_path:
-            cur_tw = self.tw_data
+            wdget = self.clas_data.currentWidget()
+            select = wdget.findChildren(QTableWidget)
+            if select:
+                # one table
+                cur_tw = select[0]
+            else:
+                cur_tw = wdget
             range_r = range(0, cur_tw.rowCount())
             range_c = range(0, cur_tw.columnCount())
             clipboard = tw_to_txt(cur_tw, range_r, range_c, ';')
