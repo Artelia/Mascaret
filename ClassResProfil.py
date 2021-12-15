@@ -545,44 +545,51 @@ class ClassResProfil():
 
 def get_valeurs(z_level, poly):
     res = {}
-    if  poly.is_valid and not poly.is_empty:
-        (minx, miny, maxx, maxy) = poly.bounds
+    if poly :
+        if  poly.is_valid and not poly.is_empty:
+            (minx, miny, maxx, maxy) = poly.bounds
 
-        if z_level <miny :
-            res['z'] = z_level
-            res['area'] = None
-            res['perimeter'] = None
-            res['width'] = None
-        else :
-            delpoly = Polygon([[minx - 1, z_level], [maxx + 1, z_level],
-                               [maxx + 1, max(z_level+1,maxy + 1)], [minx - 1,  max(z_level+1,maxy + 1)],
-                               [minx - 1, z_level]])
-            if not delpoly.is_empty:
-                if not poly.is_valid:
-                    # Polygone => multiPolygone
-                    poly = poly.buffer(0)
-                polyw = poly.difference(delpoly)
-                if not polyw.is_valid:
-                    polyw = GeometryCollection()
-            else:
-                polyw = GeometryCollection()
-            if not polyw.is_empty :
-                (minx, miny, maxx, maxy) = polyw.bounds
-                res['z'] = z_level
-                res['area'] = polyw.area
-                res['perimeter'] = polyw.length
-                res['width'] = maxx - minx
-            else:
+            if z_level <miny :
                 res['z'] = z_level
                 res['area'] = None
                 res['perimeter'] = None
                 res['width'] = None
+            else :
+                delpoly = Polygon([[minx - 1, z_level], [maxx + 1, z_level],
+                                   [maxx + 1, max(z_level+1,maxy + 1)], [minx - 1,  max(z_level+1,maxy + 1)],
+                                   [minx - 1, z_level]])
+                if not delpoly.is_empty:
+                    if not poly.is_valid:
+                        # Polygone => multiPolygone
+                        poly = poly.buffer(0)
+                    polyw = poly.difference(delpoly)
+                    if not polyw.is_valid:
+                        polyw = GeometryCollection()
+                else:
+                    polyw = GeometryCollection()
+                if not polyw.is_empty :
+                    (minx, miny, maxx, maxy) = polyw.bounds
+                    res['z'] = z_level
+                    res['area'] = polyw.area
+                    res['perimeter'] = polyw.length
+                    res['width'] = maxx - minx
+                else:
+                    res['z'] = z_level
+                    res['area'] = None
+                    res['perimeter'] = None
+                    res['width'] = None
+        else:
+            res['z'] = z_level
+            res['area'] = None
+            res['perimeter'] = None
+            res['width'] = None
     else:
         res['z'] = z_level
         res['area'] = None
         res['perimeter'] = None
         res['width'] = None
     return res
+
 
 if __name__ == '__main__':
     pass
