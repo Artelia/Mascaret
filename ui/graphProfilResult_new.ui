@@ -411,7 +411,7 @@
   <connection>
    <sender>cc_data</sender>
    <signal>clicked(bool)</signal>
-   <receiver>frm_data</receiver>
+   <receiver>clas_data</receiver>
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -420,7 +420,7 @@
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
-     <y>440</y>
+     <y>762</y>
     </hint>
    </hints>
   </connection>

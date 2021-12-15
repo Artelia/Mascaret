@@ -121,9 +121,8 @@ class GraphProfilResultDialog(QWidget):
                             }
             self.curent_data = {'prof': {},
                                 }
-            # self.tw_data = QTableWidget()
-            # self.tw_data.addAction(CopySelectedCellsAction(self.tw_data))
-            # self.clas_data.addTab(self.tw_data, param["name"])
+
+            #TODO Export
             # self.bt_expCsv.clicked.connect(self.export_csv)
 
 
