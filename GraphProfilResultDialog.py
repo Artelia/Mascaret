@@ -594,10 +594,9 @@ class GraphProfilResultDialog(QWidget):
 
 
                 # *******************************
-                # self.get_profil_plani()
+
                 plani =  False
                 if self.plani_graph :
-
                     self.clear_plani_to_current_data()
                     self.curent_data.update(dict(self.plani_graph[self.cur_pknum]))
                     self.graph_obj.init_graph_plani(self.plani_graph[self.cur_pknum])
@@ -618,7 +617,7 @@ class GraphProfilResultDialog(QWidget):
         for num, key in self.cas_prt.items():
             if key in self.curent_data.keys():
                 del self.curent_data[key]
-                
+
     def get_var_info(self, var):
         """
         Get variables name and color
