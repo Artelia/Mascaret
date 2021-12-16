@@ -20,18 +20,20 @@ email                :
 """
 
 import os
+from datetime import timedelta, datetime
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
-from .GraphResult import GraphResult
-from ..Function import tw_to_txt, interpole,fill_zminbed
-from ..CurveSelector import SlideCurveSelectorWidget, CompareCurveSelectorWidget
-from ..scores.ClassScoresResDialog import ClassScoresResDialog
-from datetime import date, timedelta, datetime
 
+from .CurveSelector import SlideCurveSelectorWidget, \
+    CompareCurveSelectorWidget
+from .GraphResult import GraphResult
+from ..Function import tw_to_txt, interpole, fill_zminbed
+from ..scores.ClassScoresResDialog import ClassScoresResDialog
 
 
 def list_sql(liste, typ='str'):
