@@ -27,7 +27,7 @@ from qgis.utils import *
 import datetime
 import csv
 import io
-from .GraphCommon import GraphCommon
+from .Graphic.GraphCommon import GraphCommon
 from matplotlib.dates import date2num
 
 if int(qVersion()[0]) < 5:  # qt4

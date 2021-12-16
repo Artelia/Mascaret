@@ -32,7 +32,7 @@ from qgis.utils import *
 from .ClassMNT import ClassMNT
 from .ClassMascaret import ClassMascaret
 from .ClassParameterDialog import ClassParameterDialog
-from .GraphProfilDialog import IdentifyFeatureTool
+from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .Function import read_version
 # # structures
 from .Structure.StructureDialog import ClassStructureDialog

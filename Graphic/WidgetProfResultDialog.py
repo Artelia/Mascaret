@@ -20,13 +20,8 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
-
+from qgis.PyQt.QtWidgets import QWidget
+from qgis.PyQt.uic import loadUi
 
 
 class WidgetProfResultDialog(QWidget):
@@ -38,18 +33,23 @@ class WidgetProfResultDialog(QWidget):
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_wdgt_profRes.ui'), self)
 
-        self.ctrl_label = {'z' :  self.label_z,
-                      'area' :  self.label_warea_l,
-                      'perimeter': self.label_wpermi_l,
-                     'width' : self.label_wmirror_l,
-                    }
+        self.ctrl_label = {'z': self.label_z,
+                           'area': self.label_warea_l,
+                           'perimeter': self.label_wpermi_l,
+                           'width': self.label_wmirror_l,
+                           }
         for key, ctrl_ in self.ctrl_label.items():
             ctrl_.setText('None')
 
     def change_label(self, dico):
+        """
+        Change label in ui_wdgt_profRe
+        :param dico: (dict) values
+        :return:
+        """
         for key, val in dico.items():
-            if val :
+            if val:
                 val_d = str(round(val, 2))
             else:
-                val_d =  None
+                val_d = None
             self.ctrl_label[key].setText(val_d)

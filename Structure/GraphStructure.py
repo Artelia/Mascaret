@@ -22,7 +22,7 @@ from matplotlib.patches import Polygon as mpoly
 # from shapely.geometry import Polygon as spoly
 from shapely import geometry
 
-from ..GraphCommon import GraphCommon
+from ..Graphic.GraphCommon import GraphCommon
 
 
 class GraphStructure(GraphCommon):

@@ -18,7 +18,7 @@ email                :
  ***************************************************************************/
 """
 
-from ..GraphCommon import GraphCommon
+from ..Graphic.GraphCommon import GraphCommon
 
 
 class GraphWaterQ(GraphCommon):

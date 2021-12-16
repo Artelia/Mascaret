@@ -19,23 +19,21 @@ email                :
 """
 import os
 
-import matplotlib.ticker as ticker
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from ..GraphCommon import DraggableLegend, GraphCommon
+from ..Graphic.GraphCommon import DraggableLegend, GraphCommon
 from ..Function import data_to_float, str2bool
 from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
 
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-    from qgis.PyQt.QtWidgets import *
+
+
+
 
 
 class ClassMobilSingDialog(QDialog):

@@ -23,44 +23,27 @@ from qgis.gui import *
 from qgis.PyQt.uic import *
 from qgis.PyQt.QtCore import *
 
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 
-    try:
-        from matplotlib.backends.backend_qt4agg \
-            import FigureCanvasQTAgg as FigureCanvas
-    except:
-        from matplotlib.backends.backend_qt4agg \
-            import FigureCanvasQT as FigureCanvas
-    # ***************************
-    try:
-        from matplotlib.backends.backend_qt4agg \
-            import NavigationToolbar2QTAgg as NavigationToolbar
-    except:
-        from matplotlib.backends.backend_qt4agg \
-            import NavigationToolbar2QT as NavigationToolbar
-else:  # qt4
-    from qgis.PyQt.QtWidgets import *
-
-    try:
-        from matplotlib.backends.backend_qt5agg \
-            import FigureCanvasQTAgg as FigureCanvas
-    except:
-        from matplotlib.backends.backend_qt5agg \
-            import FigureCanvasQT as FigureCanvas
-    # ***************************
-    try:
-        from matplotlib.backends.backend_qt5agg \
-            import NavigationToolbar2QTAgg as NavigationToolbar
-    except:
-        from matplotlib.backends.backend_qt5agg \
-            import NavigationToolbar2QT as NavigationToolbar
+try:
+    from matplotlib.backends.backend_qt5agg \
+        import FigureCanvasQTAgg as FigureCanvas
+except:
+    from matplotlib.backends.backend_qt5agg \
+        import FigureCanvasQT as FigureCanvas
+# ***************************
+try:
+    from matplotlib.backends.backend_qt5agg \
+        import NavigationToolbar2QTAgg as NavigationToolbar
+except:
+    from matplotlib.backends.backend_qt5agg \
+        import NavigationToolbar2QT as NavigationToolbar
 
 from matplotlib import pyplot
 from matplotlib.figure import Figure
 import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
-from .WaterQuality.ClassTableWQ import ClassTableWQ
+from ..WaterQuality.ClassTableWQ import ClassTableWQ
 from datetime import datetime
 
 # **************************************************

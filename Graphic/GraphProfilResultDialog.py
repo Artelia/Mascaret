@@ -28,18 +28,13 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 from .GraphResult import GraphResult
-from .Function import tw_to_txt,  fill_zminbed
+from ..Function import tw_to_txt,  fill_zminbed
 from datetime import timedelta
 from .ClassResProfil import ClassResProfil,get_valeurs
 from shapely.geometry import shape
 from .WidgetProfResultDialog import  WidgetProfResultDialog
 from shapely.ops import cascaded_union
 from shapely.geometry import GeometryCollection
-
-if int(qVersion()[0]) < 5:
-    from qgis.PyQt.QtGui import *
-else:
-    from qgis.PyQt.QtWidgets import *
 
 
 def list_sql(liste, typ='str'):

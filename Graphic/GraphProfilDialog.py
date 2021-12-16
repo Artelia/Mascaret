@@ -26,30 +26,24 @@ Comment:
 """
 
 import os
-from datetime import datetime, date
-
-import matplotlib.dates as mdates
 import matplotlib.image as mpimg
-import matplotlib.lines as mlines
 import numpy as np
-from matplotlib import patches, colors
-from matplotlib.figure import Figure
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib import patches
 from matplotlib.widgets import RectangleSelector, SpanSelector, Cursor
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
 
-from .Function import isfloat, interpole
-from .GraphCommon import DraggableLegend, GraphCommon
-from .Structure.StructureCreateDialog import ClassStructureCreateDialog
-from .Structure.ClassPolygone import ClassPolygone
+from .GraphCommon import  GraphCommon
+from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
+from ..Structure.ClassPolygone import ClassPolygone
 from .GraphProfilResultDialog import GraphProfilResultDialog
 from .GraphResultDialog import GraphResultDialog
 from .ClassProfInterpDialog import ClassProfInterpDialog
 
-from qgis.PyQt.QtWidgets import *
+
 
 try:
     from matplotlib.backends.backend_qt5agg \

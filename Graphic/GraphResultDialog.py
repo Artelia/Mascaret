@@ -27,15 +27,11 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 from .GraphResult import GraphResult
-from .Function import tw_to_txt, interpole,fill_zminbed
-from .CurveSelector import SlideCurveSelectorWidget, CompareCurveSelectorWidget
-from .scores.ClassScoresResDialog import ClassScoresResDialog
+from ..Function import tw_to_txt, interpole,fill_zminbed
+from ..CurveSelector import SlideCurveSelectorWidget, CompareCurveSelectorWidget
+from ..scores.ClassScoresResDialog import ClassScoresResDialog
 from datetime import date, timedelta, datetime
 
-if int(qVersion()[0]) < 5:
-    from qgis.PyQt.QtGui import *
-else:
-    from qgis.PyQt.QtWidgets import *
 
 
 def list_sql(liste, typ='str'):

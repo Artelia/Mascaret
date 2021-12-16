@@ -46,7 +46,7 @@ from .Structure.ClassPostPreFG import ClassPostPreFG
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
 from .api.ClassAPIMascaret import ClassAPIMascaret
-from .ClassResProfil import ClassResProfil
+from .Graphic.ClassResProfil import ClassResProfil
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
