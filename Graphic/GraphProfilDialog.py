@@ -1702,6 +1702,32 @@ class GraphProfil(GraphCommon):
             self.maj_graph()
             self.maj_legende()
             self.maj_limites()
+            
+    def get_plani(self, pk, branch):
+        """
+        Get planimetry value
+        :param pk: abscissa of the profile
+        :param branch: branch number
+        :return: plani
+        """
+        plani = None
+
+        rows = self.mdb.select('branchs',
+                               where="branch='{}'".format(branch),
+                               order="zoneabsstart",
+                               list_var=['zonenum', 'zoneabsstart',
+                                         'zoneabsend', 'planim', 'active'])
+
+        if rows:
+
+            for i, zone in enumerate(rows['zonenum']):
+                if rows['zoneabsstart'][i] <= pk <= rows['zoneabsend'][i]:
+                    plani = rows['planim'][i]
+                    if rows['active'][i]:
+                        break
+
+        # print('plani', plani)
+        return plani
 
     def get_nplan(self, idam, idav, plani):
         """
