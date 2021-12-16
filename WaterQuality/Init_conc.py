@@ -44,6 +44,7 @@ class InitConcDialog(QDialog):
         self.mdb = self.mgis.mdb
         self.tbwq = ClassTableWQ(self.mgis, self.mdb)
         self.cur_wq_mod = self.tbwq.dico_mod_wq[obj.type]
+        self.list_trac = []
         self.cur_wq_law = id
         self.cur_wq_law_name = name
         self.filling_tab = False
@@ -68,7 +69,7 @@ class InitConcDialog(QDialog):
         self.graph_edit = None
 
         self.init_ui()
-        self.list_trac = []
+
 
     def init_ui(self):
         self.ui.LawWQ.setText(self.cur_wq_law_name)
@@ -88,11 +89,14 @@ class InitConcDialog(QDialog):
             self.mdb.SCHEMA,
             self.tbwq.dico_wq_mod[
                 self.cur_wq_mod])
+
         rows = self.mdb.run_query(sql, fetch=True)
         model.insertColumns(2, len(rows))
+
         for r, row in enumerate(rows):
             model.setHeaderData(r + 2, 1, row[1], 0)
             self.list_trac.append([row[0], row[1]])
+
 
         model.itemChanged.connect(self.on_tab_data_change)
         return model
@@ -356,6 +360,7 @@ class InitConcDialog(QDialog):
             recs = []
             for r in range(self.ui.tab_laws.model().rowCount()):
                 for c in range(2, self.ui.tab_laws.model().columnCount()):
+
                     recs.append([self.cur_wq_law, self.list_trac[c - 2][0],
                                  self.ui.tab_laws.model().item(r, 0).data(0),
                                  self.ui.tab_laws.model().item(r, 1).data(0),
