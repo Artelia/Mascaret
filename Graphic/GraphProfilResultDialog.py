@@ -63,7 +63,7 @@ class GraphProfilResultDialog(QWidget):
 
         self.typ_graph = typ_graph
         self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/graphProfilResult_new.ui'),
+            os.path.join(self.mgis.masplugPath, 'ui/graphProfilResult.ui'),
             self)
         self.graph_obj = GraphResult(self, self.lay_graph)
         self.cur_run, self.cur_graph, self.cur_vars = None, None, None
