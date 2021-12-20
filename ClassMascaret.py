@@ -3175,18 +3175,21 @@ class ClassMascaret:
         :param date_fin:
         :return:
         """
-        if obs and date_deb is not None and date_fin is not None:
-            condition = """name_obj ='{0}' 
-                             AND type = {1}
-                             AND starttime <= '{2:%Y-%m-%d %H:%M}' 
-                             AND endtime >= '{3:%Y-%m-%d %H:%M}'
-                             """.format(name_obj, typ_law, date_deb, date_fin)
-        else:
-            condition = "name_obj ='{0}' AND type={1} AND active".format(
-                name_obj,
-                typ_law)
-        # self.mgis.add_info('{}'.format(condition))
+
         try:
+            if obs and date_deb is not None and date_fin is not None:
+                condition = """name_obj ='{0}' 
+                                 AND type = {1}
+                                 AND starttime <= '{2:%Y-%m-%d %H:%M}' 
+                                 AND endtime >= '{3:%Y-%m-%d %H:%M}'
+                                 """.format(name_obj, typ_law, date_deb,
+                                            date_fin)
+            else:
+                condition = "name_obj ='{0}' AND type={1} AND active".format(
+                    name_obj,
+                    typ_law)
+            # self.mgis.add_info('{}'.format(condition))
+
             config = self.mdb.select_one('laws_config', condition, verbose=True)
             print(config)
             dico_type_var = {1: ['time', 'flowrate'],
