@@ -963,7 +963,10 @@ Version : {}
 
     def fct_test(self):
         """ Test function"""
-        self.chkt.debug_update_vers_meta(version='4.0.1')
+        # get_laws
+        #self.chkt.debug_update_vers_meta(version='4.0.1')
+        clam = ClassMascaret(self)
+        clam.get_laws('aval', 2)
         pass
 
     def update_pk(self):

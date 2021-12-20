@@ -893,7 +893,7 @@ $BODY$
         return dico
 
     #
-    def select_one(self, table, where="", order=""):
+    def select_one(self, table, where="", order="", verbose=False):
         """select one variable"""
 
         if where:
@@ -902,6 +902,8 @@ $BODY$
             order = " ORDER BY " + order
 
         sql = "SELECT * FROM {0}.{1} {2} {3};"
+        if verbose:
+            print(sql.format(self.SCHEMA, table, where, order))
         # self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
         (results, namCol) = self.run_query(
             sql.format(self.SCHEMA, table, where, order),

@@ -765,8 +765,9 @@ class ClassMascaret:
                                           prof_seuil['x'][i].split()])
 
                     SubElement(struct, "abscTravCrete").text = new_profx
-                    new_profz = ' '.join([str(round(float(vvv),3))
-                                          for vvv in prof_seuil['z'][i].split()])
+                    new_profz = ' '.join([str(round(float(vvv), 3))
+                                          for vvv in
+                                          prof_seuil['z'][i].split()])
                     SubElement(struct, "cotesCrete").text = new_profz
 
 
@@ -1767,8 +1768,8 @@ class ClassMascaret:
                 elif l['type'] == 2:
                     tab = {"time": [0, 3600], 'z': [l["valeurperm"]] * 2}
                     self.creer_loi(nom, tab, 2)
-                elif  l['type'] in [ 4, 5]:
-                        self.creer_loi(nom, tab, l['type'])
+                elif l['type'] in [4, 5]:
+                    self.creer_loi(nom, tab, l['type'])
                 else:
 
                     par["initialisationAuto"] = False
@@ -1936,7 +1937,7 @@ class ClassMascaret:
 
                     self.lit_opt_new(id_run, None,
                                      self.baseName + '_init', comments)
-                    if self.mgis.DEBUG :
+                    if self.mgis.DEBUG:
                         self.mgis.add_info("Auto-initialization Run is done")
 
                 else:
@@ -2941,9 +2942,9 @@ class ClassMascaret:
                     key_pknum = 'PK'
             # add stockage plani
             # TODO Test
-            if dico_zmax :
+            if dico_zmax:
                 cl_geo = ClassResProfil()
-                cl_geo.plani_stock( dico_zmax,id_run,self.mdb)
+                cl_geo.plani_stock(dico_zmax, id_run, self.mdb)
 
                 del cl_geo
         elif typ_res == 'basin':
@@ -2958,9 +2959,6 @@ class ClassMascaret:
         col_tab = ['id_runs', 'type_res', 'var', 'val']
         if len(list_insert) > 0:
             self.mdb.insert_res('runs_graph', list_insert, col_tab)
-
-
-
 
     def lit_opt_new(self, id_run, date_debut, base_namefile, comments='',
                     tracer=False, casier=False):
@@ -3165,3 +3163,64 @@ class ClassMascaret:
             return None
 
         return result
+
+    def get_laws(self, name_obj, typ_law, obs=False, date_deb=None,
+                 date_fin=None):
+        """
+        Get law
+        :param name_obj:
+        :param typ_law:
+        :param obs:
+        :param date_deb:
+        :param date_fin:
+        :return:
+        """
+        if obs and date_deb is not None and date_fin is not None:
+            condition = """name_obj ='{0}' 
+                             AND type = {1}
+                             AND starttime <= '{2:%Y-%m-%d %H:%M}' 
+                             AND endtime >= '{3:%Y-%m-%d %H:%M}'
+                             """.format(name_obj, typ_law, date_deb, date_fin)
+        else:
+            condition = "name_obj ='{0}' AND type={1} AND active".format(
+                name_obj,
+                typ_law)
+        # self.mgis.add_info('{}'.format(condition))
+        try:
+            config = self.mdb.select_one('laws_config', condition, verbose=True)
+            print(config)
+            dico_type_var = {1: ['time', 'flowrate'],
+                         2: ['time', 'z'],
+                         3: ['time', 'z', 'flowrate'],
+                         4: ['flowrate', 'z'],
+                         5: ['z', 'flowrate'],
+                         6: ['flowrate', 'z_downstream', 'z_upstream'],
+                         7: ['time', 'z_lower', 'z_up'],
+                         }
+            dico_var = { 0 : 'time' ,
+                        1: 'flowrate',
+                        2: 'z' ,
+                        3: 'z_downstream',
+                        4: 'z_upstream',
+                        3: 'z_lower',
+                        4: 'z_up',
+                         }
+            values = self.mdb.select("laws_values",
+                                    order='id_var, id_order',
+                                    list_var=['id_var',
+                                              'id_order',
+                                              'value'])
+            lst_var = dico_type_var[typ_law]
+            tab = {key : [] for key in  lst_var}
+
+            for value, id_var in  zip( values['value'], values['id_var']):
+                tab[dico_var[id_var]].append(float(value))
+
+            return tab
+
+        except Exception as e:
+            err = "Error: Please check if law {0} is correct. \n".format(name_obj)
+            err += str(e)
+            self.mgis.add_info(err)
+            raise Exception(err)
+            return None
