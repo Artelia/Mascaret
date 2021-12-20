@@ -665,6 +665,7 @@ class GraphResultDialog(QWidget):
         for idx, param in enumerate(self.cur_data):
             tw = QTableWidget()
             tw.addAction(CopySelectedCellsAction(tw))
+
             if len(self.lst_graph) == 1:
                 self.clas_data.addTab(tw, param["name"])
             else:
@@ -705,6 +706,9 @@ class GraphResultDialog(QWidget):
             tw.resizeColumnsToContents()
             tw.resizeRowsToContents()
             tw.setVisible(True)
+            self.clas_data.setCurrentIndex(idx)
+        self.clas_data.setCurrentIndex(0)
+
 
     def get_laisses(self, param):
         """
@@ -824,27 +828,58 @@ class GraphResultDialog(QWidget):
             file.write(clipboard)
             file.close()
 
+            # =======================================================================
+
+    def copier(self,tw):
+        """copier la zone sélectionnée dans le clipboard
+        """
+        # emplacement sélectionné pour copier dans le clipboard
+        selected = tw.selectedRanges()
+
+        # construction du texte à copier, ligne par ligne et colonne par colonne
+        texte = ""
+        for i in range(selected[0].topRow(), selected[0].bottomRow() + 1):
+            for j in range(selected[0].leftColumn(),
+                           selected[0].rightColumn() + 1):
+                try:
+                    texte += tw.item(i, j).text() + "\t"
+                except AttributeError:
+                    # quand une case n'a jamais été initialisée
+                    texte += "\t"
+            texte = texte[:-1] + "\n"  # le [:-1] élimine le '\t' en trop
+
+        # enregistrement dans le clipboard
+        QtGui.QApplication.clipboard().setText(texte)
+
+
+
 
 class CopySelectedCellsAction(QAction):
-    def __init__(self, cur_tw):
-        if not isinstance(cur_tw, QTableWidget):
+    def __init__(self, table_widget):
+        if not isinstance(table_widget, QTableWidget):
             chaine = """CopySelectedCellsAction must be initialised with
                      a QTableWidget. A {0} was given."""
-            raise ValueError(chaine.format(type(cur_tw)))
+            raise ValueError(chaine.format(type(table_widget)))
 
-        super(CopySelectedCellsAction, self).__init__('Copy', cur_tw)
+        super(CopySelectedCellsAction, self).__init__('Copy', table_widget)
         self.setShortcut('Ctrl+C')
         self.triggered.connect(self.copy_cells_to_clipboard)
-        self.cur_tw = cur_tw
+        self.table_widget = table_widget
+        print('sortie init')
 
     def copy_cells_to_clipboard(self):
-        if len(self.cur_tw.selectionModel().selectedIndexes()) > 0:
+        print('entreeeeeeeee')
+        if len(self.table_widget.selectionModel().selectedIndexes()) > 0:
+
             lst_r = [idx.row() for idx in
-                     self.cur_tw.selectionModel().selectedIndexes()]
+                     self.table_widget.selectionModel().selectedIndexes()]
             lst_c = [idx.column() for idx in
-                     self.cur_tw.selectionModel().selectedIndexes()]
+                     self.table_widget.selectionModel().selectedIndexes()]
             range_r = range(min(lst_r), max(lst_r) + 1)
             range_c = range(min(lst_c), max(lst_c) + 1)
-            clipboard = tw_to_txt(self.cur_tw, range_r, range_c, '\t')
+            clipboard = tw_to_txt(self.table_widget, range_r, range_c, '\t')
+
             sys_clip = QApplication.clipboard()
             sys_clip.setText(clipboard)
+
+
