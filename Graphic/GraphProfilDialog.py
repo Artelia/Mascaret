@@ -42,7 +42,7 @@ from ..Structure.ClassPolygone import ClassPolygone
 from .GraphProfilResultDialog import GraphProfilResultDialog
 from .GraphResultDialog import GraphResultDialog
 from .ClassProfInterpDialog import ClassProfInterpDialog
-
+from ..Function import tw_to_txt
 
 
 try:
@@ -264,7 +264,9 @@ class GraphProfil(GraphCommon):
         self.tableau.itemChanged.connect(self.modifie)
         self.tableau.selectionModel().selectionChanged.connect(
             self.select_changed)
+        self.tableau.setSelectionMode(QAbstractItemView.ContiguousSelection)
         self.tableau.addAction(CopySelectedCellsAction(self.tableau))
+
 
         # figure
 
@@ -1947,29 +1949,14 @@ class CopySelectedCellsAction(QAction):
 
     def copy_cells_to_clipboard(self):
         if len(self.table_widget.selectionModel().selectedIndexes()) > 0:
-            previous = self.table_widget.selectionModel().selectedIndexes()[0]
-            col = previous.column()
-            columns = []
-            rows = [self.table_widget.horizontalHeaderItem(col).text()]
-            for index in self.table_widget.selectionModel().selectedIndexes():
-                if col != index.column():
-                    columns.append(rows)
-                    col = index.column()
-                    rows = [self.table_widget.horizontalHeaderItem(col).text()]
-                rows.append(index.data())
-                col = index.column()
 
-            columns.append(rows)
-            clipboard = ''
-            nrows = len(columns[0])
-            ncols = len(columns)
-            for r in range(nrows):
-                for c in range(ncols):
-                    clipboard += columns[c][r]
-                    if c != ncols - 1:
-                        clipboard += '\t'
-
-                clipboard += '\n'
+            lst_r = [idx.row() for idx in
+                     self.table_widget.selectionModel().selectedIndexes()]
+            lst_c = [idx.column() for idx in
+                     self.table_widget.selectionModel().selectedIndexes()]
+            range_r = range(min(lst_r), max(lst_r) + 1)
+            range_c = range(min(lst_c), max(lst_c) + 1)
+            clipboard = tw_to_txt(self.table_widget, range_r, range_c, '\t')
 
             sys_clip = QApplication.clipboard()
             sys_clip.setText(clipboard)
