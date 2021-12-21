@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/plugins/Mascaret">
+    <file>icones/lawHydro.png</file>
     <file>icones/basinResult.png</file>
     <file>icones/bridge.png</file>
     <file>icones/icon_base.png</file>

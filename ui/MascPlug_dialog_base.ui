@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -204,6 +204,7 @@
     <property name="title">
      <string>Tools</string>
     </property>
+    <addaction name="actionHydro_Laws"/>
     <addaction name="actionCross_section"/>
     <addaction name="actionObservations"/>
     <addaction name="actionStructures"/>
@@ -304,6 +305,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionHydro_Laws"/>
    <addaction name="actionCross_section"/>
    <addaction name="actionObservations"/>
    <addaction name="actionStructures"/>
@@ -744,6 +746,18 @@
   <action name="actionImport_Old_Model">
    <property name="text">
     <string>Import Old Model</string>
+   </property>
+  </action>
+  <action name="actionHydro_Laws">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/lawHydro.png</normaloff>:/plugins/Mascaret/icones/lawHydro.png</iconset>
+   </property>
+   <property name="text">
+    <string>Hydro Laws</string>
+   </property>
+   <property name="toolTip">
+    <string>Hydro Laws</string>
    </property>
   </action>
  </widget>
