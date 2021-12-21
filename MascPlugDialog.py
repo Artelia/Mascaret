@@ -49,6 +49,8 @@ from .ClassImportExportDialog import ClassDlgExport, ClassDlgImport
 from .ClassImport_res import ClassImportRes
 from .scores.ClassScoresDialog import ClassScoresDialog
 
+from .HydroLawsDialog import ClassHydroLawsDialog
+
 from qgis.PyQt.QtWidgets import *
 
 
@@ -237,6 +239,8 @@ class MascPlugDialog(QMainWindow):
         #TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(self.import_old_model_dgl)
         self.ui.menuUpate_table.menuAction().setVisible(False)
+
+        self.ui.actionHydro_Laws.triggered.connect(self.fct_hydro_laws)
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -994,3 +998,9 @@ Version : {}
         dlg = ClassScoresDialog(self)
         # dlg.exec_()
         dlg.show()
+
+
+
+    def fct_hydro_laws(self):
+        dlg = ClassHydroLawsDialog(self)
+        dlg.exec_()
