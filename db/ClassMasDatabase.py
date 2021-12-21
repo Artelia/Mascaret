@@ -478,7 +478,8 @@ class ClassMasDatabase(object):
                       # new results
                       Maso.runs_graph, Maso.results, Maso.results_var,
                       Maso.results_sect, Maso.runs_plani,
-
+                      # hydro laws
+                      Maso.law_config, Maso.law_values,
                       ]
             tables.sort(key=lambda x: x().order)
 

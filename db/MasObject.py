@@ -1824,4 +1824,31 @@ class runs_plani(MasObject):
                       ('CONSTRAINT runs_plani_pkey',
                        ' PRIMARY KEY (id_runs,pknum,id_type,id_order)')]
 
+class law_config(MasObject):
+    def __init__(self):
+        super(law_config, self).__init__()
+        self.order = 42
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('name', 'text'),
+                      ('geom_obj', 'text'),
+                      ('starttime', 'timestamp without time zone'),
+                      ('endtime', 'timestamp without time zone'),
+                      ('id_law_type', 'integer'),
+                      ('active', ' boolean NOT NULL DEFAULT FALSE'),
+                      ('comment', 'text'),
+                      ('CONSTRAINT law_config_pkey', 'PRIMARY KEY (id)')]
+
+
+class law_values(MasObject):
+    def __init__(self):
+        super(law_values, self).__init__()
+        self.order = 43
+        self.geom_type = None
+        self.attrs = [('id_law', 'integer'),
+                      ('id_var', 'integer'),
+                      ('id_order', 'integer'),
+                      ('value', 'float'),
+                      ('CONSTRAINT law_values_pkey', 'PRIMARY KEY (id_law, id_var, id_order)')]
+
 # ****************************************************************************
