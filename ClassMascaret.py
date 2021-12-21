@@ -188,10 +188,6 @@ class ClassMascaret:
                                                   temp_z.split()):
                                 tab_x.append(self.around(var1))
                                 tab_z.append(self.around(var2))
-                            # tab_x = list(map(lambda x: round(float(x), 2),
-                            #  temp_x.split()))
-                            # tab_z = list(map(lambda x: round(float(x), 2),
-                            # tempZ.split()))
                             points = geom.asMultiPolyline()[0]
                             (cood1X, cood1Y) = points[0]
                             (cood2X, cood2Y) = points[1]

@@ -1585,7 +1585,6 @@ class GraphProfil(GraphCommon):
         self.ui.table_check_interp.setVerticalHeaderLabels(
             list(key_str.values()))
         self.ui.table_check_interp.setHorizontalHeaderLabels(cols)
-        print(self.ch_prof_inter, "rrrrrrrdd")
         for idc, col in enumerate(cols):
             for idl, line in enumerate(lines):
                 val = self.ch_prof_inter[col][line]
