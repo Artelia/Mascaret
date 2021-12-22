@@ -33,6 +33,7 @@ import gc
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
+
 from qgis.PyQt.QtCore import qVersion
 from qgis.core import *
 from qgis.gui import *
@@ -47,7 +48,7 @@ from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .ui.custom_control import ClassWarningBox
 from .api.ClassAPIMascaret import ClassAPIMascaret
 from .Graphic.ClassResProfil import ClassResProfil
-from .HydroLawsDialog import *
+from .HydroLawsDialog import dico_typ_law
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -420,6 +421,18 @@ class ClassMascaret:
 
         return dico
 
+    def geom_obj_toname(self, nom,type_):
+        """ get name law"""
+        condition = "geom_obj='{0}' AND " \
+                    "id_law_type={1} AND active".format(nom, type_)
+
+        inf_law = self.mdb.select_one('law_config', condition, verbose= True)
+        if inf_law:
+            if 'name' in inf_law.keys():
+                return inf_law['name']
+
+        return nom
+
     def creer_xcas(self, noyau):
         """To create xcas file"""
         dict_lois = {}
@@ -491,10 +504,6 @@ class ClassMascaret:
         seuils, loi_struct = self.modif_seuil(seuils, dico_str)
         casiers = self.mdb.select("basins", "active ORDER BY basinnum ")
         liaisons = self.mdb.select("links", "active ORDER BY linknum ")
-        inf_law = self.mdb.select('law_config', 'active',
-                                  list_var=['name', 'geom_obj'])
-        geom_obj_toname = {inf_law['name'] for i, name in
-                           enumerate(inf_law['name'])}
 
         # Extrémités
         numero = branches["branch"]
@@ -897,7 +906,7 @@ class ClassMascaret:
             donnees = SubElement(struct, "donnees")
             SubElement(donnees, "modeEntree").text = '1'
             SubElement(donnees, "fichier").text = '{}.loi'.format(
-                del_symbol(geom_obj_toname[nom]))
+                del_symbol(self.geom_obj_toname(nom,dict_lois[nom]['type'])))
             SubElement(donnees, "uniteTps").text = '-0'
             SubElement(donnees, "nbPoints").text = '-0'
             SubElement(donnees, "nbDebitsDifferents").text = '-0'
@@ -965,8 +974,9 @@ class ClassMascaret:
             #     child.find('type').text = '2'
             donnee = child.find('donnees').find('fichier')
             temp = donnee.text.split('.')
+
             donnee.text = '{}_init.loi'.format(
-                del_symbol(geom_obj_toname(temp[0])))
+                del_symbol(temp[0]))
 
         initiales = param_cas.find('parametresConditionsInitiales')
         initiales.find('repriseEtude').find('repriseCalcul').text = 'false'
@@ -1264,12 +1274,14 @@ class ClassMascaret:
         else:
             arbre.write(fich_entree)
 
-    def creer_loi(self, nom, tab, type):
-
+    def creer_loi(self, nom, tab, type_,  init=False):
+        nom = self.geom_obj_toname(nom, type_)
+        if init :
+            nom = nom + '_init'
         with open(os.path.join(self.dossierFileMasc, del_symbol(nom) + '.loi'),
                   'w') as fich:
             fich.write('# ' + nom + '\n')
-            if type == 1:
+            if type_ == 1:
                 fich.write('# Temps (S) Debit\n')
                 fich.write(' S\n')
                 chaine = ' {time:.3f} {flowrate:.6f}\n'
@@ -1279,7 +1291,7 @@ class ClassMascaret:
                 #                       Flow Rate :{2}"
                 #                       .format(nom, tab["temps"], tab["debit"]))
 
-            elif type == 2:
+            elif type_ == 2:
                 fich.write('# Temps (S) Cote\n')
                 fich.write(' S\n')
                 chaine = ' {time:.3f} {z:.6f}\n'
@@ -1288,7 +1300,7 @@ class ClassMascaret:
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t
                 #                       Water Level :{2}"
                 #                       .format(nom, tab["temps"],tab["cote"]))
-            elif type == 3:
+            elif type_ == 3:
                 fich.write('# Temps (S) Cote Debit\n')
                 fich.write(' S\n')
                 chaine = ' {time:.3f} {z:.6f} {flowrate:.6f}\n'
@@ -1298,7 +1310,7 @@ class ClassMascaret:
                 #                   Water Level :{2}\n \t Flow Rate {3}"
                 #                       .format(nom, tab["temps"],
                 # tab["cote"],tab["debit"]))
-            elif type == 4:
+            elif type_ == 4:
                 fich.write('# Debit Cote\n')
                 chaine = ' {flowrate:.3f} {z:.6f}\n'
                 # if self.mgis.DEBUG:
@@ -1306,7 +1318,7 @@ class ClassMascaret:
                 #     self.mgis.add_info("{0} :\n \t Flow Rate {2}\n
                 #                       \t Water Level :{1}"
                 #                       .format(nom, tab["cote"],tab["debit"]))
-            elif type == 5:
+            elif type_ == 5:
                 fich.write('# Cote Debit\n')
                 chaine = ' {z:.6f} {flowrate:.6f}\n'
                 # if self.mgis.DEBUG:
@@ -1314,7 +1326,7 @@ class ClassMascaret:
                 #     self.mgis.add_info("{0} :\n \t Water Level :{1}\n
                 #                       \t Flow Rate {2}"
                 #                       .format(nom, tab["cote"],tab["debit"]))
-            elif type == 6:
+            elif type_ == 6:
                 fich.write('# Debit Cote_Aval Cote_Amont\n')
                 chaine = ' {flowrate:.6f} {z_downstream:.6f} {z_upstream:.6f}\n'
                 # if self.mgis.DEBUG:
@@ -1323,7 +1335,7 @@ class ClassMascaret:
                 #                          \t  Downstream Water Level :{2}"
                 #                       .format(nom, tab["cote_amont"],
                 #                       tab["cote_aval"]))
-            elif type == 7:
+            elif type_ == 7:
                 fich.write('# Temps (s) Cote inférieur Cote supérieur\n')
                 fich.write(' S\n')
                 chaine = ' {time:.3f} {z_lower:.6f} {z_up:.6f}\n'
@@ -1430,34 +1442,20 @@ class ClassMascaret:
                 if type == "Q":
                     tab = {'time': [0, 3600],
                            'flowrate': [valeur_init, valeur_init]}
-                    self.creer_loi(nom + '_init', tab, 1)
+                    self.creer_loi(nom , tab, 1, init= True)
                 else:
                     tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
-                    self.creer_loi(nom + '_init', tab, 2)
+                    self.creer_loi(nom , tab, 2, init= True)
 
         for nom, loi in dict_lois.items():
             if loi['type'] in (1, 2):
                 continue
-            # condition = """name ='{0}'
-            #             AND type = {1}
-            #             AND starttime <= '{2:%Y-%m-%d %H:%M}'
-            #             AND endtime >= '{3:%Y-%m-%d %H:%M}'
-            #             """.format(nom, loi['type'], date_debut, date_fin)
-            #
-            # temp = self.mdb.select_one('laws', condition)
-            #
-            # liste = ["z", "flowrate", "time", "z_upstream", "z_downstream",
-            #          "z_lower", "z_up"]
-            # tab = {}
-            # for k, v in temp.items():
-            #     if v and k in liste:
-            #         tab[k] = [float(var) for var in v.split()]
-            tab, loi_name = self.get_laws(nom, loi['type'],
+            tab = self.get_laws(nom, loi['type'],
                                           obs=True, date_deb=date_debut,
                                           date_fin=date_fin)
 
             if tab:
-                self.creer_loi(loi_name, tab, loi['type'])
+                self.creer_loi(nom, tab, loi['type'])
             else:
                 self.mgis.add_info('The law for {} is not create.'.format(nom))
 
@@ -1476,7 +1474,7 @@ class ClassMascaret:
             #         self.creer_loi(nom + '_init', tab, 2)
             #
             # else:
-            self.creer_loi(nom + '_init', tab, loi['type'])
+            #self.creer_loi(nom + '_init', tab, loi['type'])
 
     def fct_comment(self):
         liste_col = self.mdb.list_columns('runs')
@@ -1638,9 +1636,9 @@ class ClassMascaret:
             if l["valeurperm"] is None:
                 # dictLois.items() extremities liste
 
-                tab, loi_name = self.get_laws(nom, l["type"])
+                tab = self.get_laws(nom, l["type"])
                 if tab:
-                    self.creer_loi(loi_name, tab, l["type"])
+                    self.creer_loi(nom, tab, l["type"])
                 else:
                     self.mgis.add_info(
                         'The law for {} is not create.'.format(nom))
@@ -1658,6 +1656,7 @@ class ClassMascaret:
                 except Exception as e:
                     self.mgis.add_info(str(e))
                     return
+                # self.mgis.add_info('{}'.format(condition))
                 if temp_dic['critereArret'] == 1:
                     tfinal = temp_dic['tempsMax']
                 elif temp_dic['critereArret'] == 2:
@@ -1665,22 +1664,22 @@ class ClassMascaret:
                                                      temp_dic['nbPasTemps']
                 elif temp_dic['critereArret'] == 3:
                     tfinal = 365 * 24 * 3600
+
+                condition = "geom_obj='{0}' AND id_law_type={1} AND active".format(
+                    nom,l['type'])
                 if l['type'] == 1:
                     tab = {"time": [0, tfinal],
                            'flowrate': [l["valeurperm"]] * 2}
-                    loi_name = nom
                 # no possible to use rating curve (5) with steady.
                 #   It's replaced in xcas
                 elif l['type'] == 2 or l['type'] == 5:
                     l['type'] = 2
                     tab = {"time": [0, tfinal], 'z': [l["valeurperm"]] * 2}
-                    loi_name = nom
                 else:
-
-                    tab, loi_name = self.get_laws(nom, l["type"])
+                    tab= self.get_laws(nom, l["type"])
 
                 if tab:
-                    self.creer_loi(loi_name, tab, l["type"])
+                    self.creer_loi(nom, tab, l["type"])
                 else:
                     self.mgis.add_info(
                         'The law for {} is not create.'.format(nom))
@@ -1730,9 +1729,9 @@ class ClassMascaret:
         for nom, l in dict_lois.items():
             # dictLois.items() extremities liste
 
-            tab, loi_name = self.get_laws(nom, l["type"])
+            tab= self.get_laws(nom, l["type"])
             if tab:
-                self.creer_loi(loi_name, tab, l["type"])
+                self.creer_loi(nom, tab, l["type"])
             else:
                 self.mgis.add_info(
                     'The law for {} is not create.'.format(nom))
@@ -1742,23 +1741,23 @@ class ClassMascaret:
             if "valeurperm" not in l.keys():
                 continue
 
-            nom = nom + "_init"
+            #nom = nom + "_init"
             if l["valeurperm"] is not None:
                 if l['type'] == 1:
                     tab = {"time": [0, 3600], 'flowrate': [l["valeurperm"]] * 2}
-                    self.creer_loi(nom, tab, 1)
+                    self.creer_loi(nom, tab, 1, init=True)
                 elif l['type'] == 2:
                     tab = {"time": [0, 3600], 'z': [l["valeurperm"]] * 2}
-                    self.creer_loi(nom, tab, 2)
+                    self.creer_loi(nom, tab, 2, init=True)
                 elif l['type'] in [4, 5]:
-                    self.creer_loi(nom, tab, l['type'])
+                    self.creer_loi(nom, tab, l['type'], init=True)
                 else:
 
                     par["initialisationAuto"] = False
                     self.mgis.add_info("No initialisation")
             else:
                 if l['type'] in [4, 5]:
-                    self.creer_loi(nom, tab, l['type'])
+                    self.creer_loi(nom, tab, l['type'], init=True)
                 else:
                     par["initialisationAuto"] = False
                     self.mgis.add_info(
@@ -3176,7 +3175,6 @@ class ClassMascaret:
                                          verbose=True)
 
             if config:
-                loi_name = config['name']
                 values = self.mdb.select("law_values",
                                          where='id_law={}'.format(config['id']),
                                          order='id_var, id_order',
@@ -3194,14 +3192,14 @@ class ClassMascaret:
                 for value, id_var in zip(values['value'], values['id_var']):
                     tab[conv_idvar[id_var]].append(float(value))
 
-                return tab, loi_name
+                return tab
             else:
                 err = "Error: Please check if law for {0} object " \
                       "is correct. \n".format(
                     name_obj)
                 self.mgis.add_info(err)
                 raise Exception(err)
-                return None, None
+                return None
 
         except Exception as e:
             err = "Error: Please check if law for {0} object " \
@@ -3209,4 +3207,4 @@ class ClassMascaret:
             err += str(e)
             self.mgis.add_info(err)
             raise Exception(err)
-            return None, None
+            return None

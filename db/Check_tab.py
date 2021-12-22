@@ -24,7 +24,7 @@ from copy import deepcopy
 from ..Function import read_version, fill_zminbed
 from ..ui.custom_control import ClassWarningBox
 from datetime import datetime
-from ..HydroLawsDialog import *
+from ..HydroLawsDialog import dico_typ_law
 
 
 

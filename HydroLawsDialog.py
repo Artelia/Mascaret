@@ -76,8 +76,9 @@ dico_typ_law = {1: {'name': 'Hydrograph Q(t)',
                     'xIsTime': False},
                 6: {'name': 'Weir Zam = f(Q, Zav)',
                     'var': [{'name': 'flowrate', 'code': 'flowrate'},
+                            {'name': 'downstream level', 'code': 'z_downstream'},
                             {'name': 'upstream level', 'code': 'z_upstream'},
-                            {'name': 'downstream level', 'code': 'z_downstream'}],
+                            ],
                     'geom':{'extremities': [0, 6], 'weirs': [1], 'lateral_inflows': False, 'lateral_weirs': False},
                     'graph': None,
                     'xIsTime': False},
@@ -234,7 +235,7 @@ class ClassHydroLawsDialog(QDialog):
             if (QMessageBox.question(self, "Law Settings", "Delete {} ?".format(name_law),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Deletion of {} Hydro Law".format(name_set))
+                    self.mgis.add_info("Deletion of {} Hydro Law".format(name_set))
                 self.mdb.execute("DELETE FROM {0}.law_values WHERE id_law = {1}".format(self.mdb.SCHEMA, id_law))
                 self.mdb.execute("DELETE FROM {0}.law_config WHERE id = {1}".format(self.mdb.SCHEMA, id_law))
                 self.fill_tree_laws()
@@ -590,7 +591,7 @@ class ClassHydroLawsDialog(QDialog):
                 self.update_courbe("all")
             else:
                 if self.mgis.DEBUG:
-                    self.mgis.addInfo("Import failed ({})".format(file))
+                    self.mgis.add_info("Import failed ({})".format(file))
 
 
     ######################################################################
@@ -719,7 +720,7 @@ class ClassHydroLawsDialog(QDialog):
 
         if self.cur_law == -1:
             if self.mgis.DEBUG:
-                self.mgis.addInfo("Addition of {} Hydro Law".format(name_law))
+                self.mgis.add_info("Addition of {} Hydro Law".format(name_law))
             self.mdb.execute(
                 "INSERT INTO {0}.law_config (name, geom_obj, starttime, endtime, id_law_type, active, comment) "
                 "VALUES ({1}, {2}, {3}, {4}, {5}, {6}, {7})".format(self.mdb.SCHEMA, name_law, geom_obj, date_start,
@@ -728,7 +729,7 @@ class ClassHydroLawsDialog(QDialog):
             self.cur_law = res[0][0]
         else:
             if self.mgis.DEBUG:
-                self.mgis.addInfo("Editing of {} Meteo Setting".format(name_law))
+                self.mgis.add_info("Editing of {} ".format(name_law))
             self.mdb.execute(
                 "UPDATE {0}.law_config SET name = {1}, geom_obj = {2}, starttime = {3}, endtime = {4}, "
                 "active = {5}, comment = {6} WHERE id = {7}".format(self.mdb.SCHEMA, name_law, geom_obj, date_start,
@@ -755,7 +756,7 @@ class ClassHydroLawsDialog(QDialog):
 
     def reject_page2(self):
         if self.mgis.DEBUG:
-            self.mgis.addInfo("Cancel of Hydro Law Setting")
+            self.mgis.add_info("Cancel of Hydro Law Setting")
         self.ui.laws_pages.setCurrentIndex(0)
         self.graph_edit.initCurv()
         self.tree_laws.setFocus()
