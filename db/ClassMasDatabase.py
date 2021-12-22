@@ -1515,7 +1515,7 @@ $BODY$
             'init_conc_config': 'id',
             'lateral_inflows': 'gid',
             'lateral_weirs': 'gid',
-            'laws': 'id',
+            'law_config': 'id',
             'links_0': 'gid',
             'links_1': 'linknum',
             'meteo_config': 'id',

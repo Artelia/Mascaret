@@ -823,15 +823,18 @@ class CheckTab:
         """ add new table law and convert"""
         try:
             lst_tab = self.mdb.list_tables()
-            info = self.mdb.select('laws')
-            conv_dict = {'time': 'time',
-                         'Q': 'flowrate',
-                         'Z': 'z',
-                         'Zup': 'z_upstream',
-                         'Zdown': 'z_downstream',
-                         'Zlow': 'z_lower',
-                         'Zupp': 'z_up',
-                         }
+            if 'laws' in lst_tab:
+                info = self.mdb.select('laws')
+            else:
+                info = {}
+            # conv_dict = {'time': 'time',
+            #              'Q': 'flowrate',
+            #              'Z': 'z',
+            #              'Zup': 'z_upstream',
+            #              'Zdown': 'z_downstream',
+            #              'Zlow': 'z_lower',
+            #              'Zupp': 'z_up',
+            #              }
 
 
             if not "law_config" in lst_tab:
@@ -886,7 +889,8 @@ class CheckTab:
                         lst_var = [ tmp['code'] for tmp in dico_typ_law[id_type]['var'] ]
 
                         for id_var, var in enumerate(lst_var):
-                            lst_val = info[conv_dict[var]][id_loi].split()
+                            #lst_val = info[conv_dict[var]][id_loi].split()
+                            lst_val = info[var][id_loi].split()
                             for id_val , val in enumerate(lst_val):
                                 valinsert["id_law"].append(id_loi)
                                 valinsert["id_var"].append( id_var)
