@@ -426,7 +426,7 @@ class ClassMascaret:
         condition = "geom_obj='{0}' AND " \
                     "id_law_type={1} AND active".format(nom, type_)
 
-        inf_law = self.mdb.select_one('law_config', condition, verbose= True)
+        inf_law = self.mdb.select_one('law_config', condition)
         if inf_law:
             if 'name' in inf_law.keys():
                 return inf_law['name']
@@ -3171,8 +3171,7 @@ class ClassMascaret:
                     typ_law)
             # self.mgis.add_info('{}'.format(condition))
 
-            config = self.mdb.select_one('law_config', condition,
-                                         verbose=True)
+            config = self.mdb.select_one('law_config', condition)
 
             if config:
                 values = self.mdb.select("law_values",
