@@ -26,7 +26,7 @@
       <bool>false</bool>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="page">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -204,46 +204,15 @@
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
           <layout class="QGridLayout" name="gridLayout_3">
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_LawWQ">
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_5">
              <property name="text">
-              <string>Law Name :</string>
+              <string>Comments :</string>
              </property>
             </widget>
            </item>
-           <item row="3" column="1">
-            <layout class="QHBoxLayout" name="horizontalLayout">
-             <item>
-              <widget class="QLineEdit" name="txt_geom"/>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="cc_act">
-               <property name="minimumSize">
-                <size>
-                 <width>55</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Active</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_4">
-             <property name="text">
-              <string>Type :</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_LawWQ_2">
-             <property name="text">
-              <string>Object Name :</string>
-             </property>
-            </widget>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="txt_name"/>
            </item>
            <item row="0" column="1">
             <widget class="QLabel" name="lbl_type">
@@ -252,20 +221,7 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
-            <widget class="QLineEdit" name="txt_name"/>
-           </item>
-           <item row="5" column="0">
-            <widget class="QLabel" name="label_5">
-             <property name="text">
-              <string>Comments :</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="1">
-            <widget class="QLineEdit" name="txt_comm"/>
-           </item>
-           <item row="4" column="1">
+           <item row="3" column="1">
             <widget class="QFrame" name="frm_date">
              <property name="enabled">
               <bool>false</bool>
@@ -339,7 +295,14 @@
              </layout>
             </widget>
            </item>
-           <item row="4" column="0">
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_LawWQ">
+             <property name="text">
+              <string>Law Name :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
             <widget class="QFrame" name="frm_ref_date">
              <layout class="QVBoxLayout" name="verticalLayout_5">
               <property name="leftMargin">
@@ -379,6 +342,49 @@
               </item>
              </layout>
             </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="txt_comm"/>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_LawWQ_2">
+             <property name="text">
+              <string>Object Name :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>Type :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QComboBox" name="cb_geom"/>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="cc_act">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>55</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Active</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </item>
@@ -645,6 +651,22 @@
     <hint type="destinationlabel">
      <x>-1</x>
      <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cc_date_ref</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>frm_date</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>155</x>
+     <y>101</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>364</x>
+     <y>117</y>
     </hint>
    </hints>
   </connection>
