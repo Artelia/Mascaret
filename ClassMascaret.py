@@ -140,6 +140,7 @@ class ClassMascaret:
     def creer_geo_ref(self):
         # """creation of gemoetry file"""
         try:
+            branche, nom =  None, None
             nomfich = os.path.join(self.dossierFileMasc, self.baseName + '.geo')
 
             if os.path.isfile(nomfich):
