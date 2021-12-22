@@ -150,7 +150,7 @@ class GraphCommon(QWidget):
 
         self.maj_limites()
 
-    def maj_limites(self):
+    def maj_limites(self, marge=0.05):
         no_data = True
         mini_x = 999999.
         maxi_x = -999999.
@@ -166,8 +166,12 @@ class GraphCommon(QWidget):
                     no_data = False
                     mini_x = min(mini_x, min(lx))
                     maxi_x = max(maxi_x, max(lx))
-                    mini_z = min(mini_z, min(lz) - 1)
-                    maxi_z = max(maxi_z, max(lz) + 1)
+                    mini_z = min(mini_z, min(lz))
+                    maxi_z = max(maxi_z, max(lz))
+
+            d = max(abs(mini_z), abs(maxi_z)) * marge
+            mini_z -= d
+            maxi_z += d
 
         if no_data:
             if self.unit != 'date':
