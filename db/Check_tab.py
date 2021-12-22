@@ -67,6 +67,7 @@ class CheckTab:
                                   '4.0.1',
                                   '4.0.2',
                                   '4.0.3',
+                                  '4.0.4',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -196,6 +197,9 @@ class CheckTab:
 
              'add_tab': [
                     {'tab': Maso.runs_plani, 'overwrite': False},],
+            },
+
+            '4.0.4': {
                 'fct': [
                     lambda: self.laws_to_new(),
                 ],
@@ -845,6 +849,7 @@ class CheckTab:
                 if 'id' in info.keys():
                     # law_config
                     tab = {id: {'comment': ''} for id in range(len(info['name']))}
+                    cmpt=1
                     for key, item in info.items():
                         if key in ["z", "flowrate", "time",
                                    "z_upstream", "z_downstream",
@@ -861,7 +866,12 @@ class CheckTab:
                                 tab[id][key] = val
                         elif key == 'name':
                             for id, val in enumerate(item):
-                                tab[id]["name"] = val
+                                if val in [tmp['name'] for tmp in tab.values()
+                                           if 'name' is tmp.keys()]:
+                                    tab[id]["name"] = val+'{}'.format(cmpt)
+                                    cmpt+=1
+                                else:
+                                    tab[id]["name"] = val
                                 tab[id]['geom_obj'] = val
                         elif key == 'type':
                             for id, val in enumerate(item):
