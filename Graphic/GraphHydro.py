@@ -19,27 +19,8 @@ email                :
 """
 
 from .GraphCommon import GraphCommon
-
-# dico_typ_law = {1: {'name': 'Hydrograph Q(t)',
-#                     'var': [{'name': 'time', 'leg': 'time', 'unit': 's'},
-#                             {'name': 'flowrate', 'leg': 'Q', 'unit': 'm3/s'}],
-#                     'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
-#                               'y': {'var': [1], 'tit': 'Q', 'unit': 'm3/s'}},
-#                     'xIsTime': True},
-#                 2: {'name': 'Rating Curve Z = f(Q)',
-#                     'var': [{'name': 'flowrate', 'leg': 'Q', 'unit': 'm3/s'},
-#                             {'name': 'z', 'leg': 'z', 'unit': 'm'}],
-#                     'graph': {'x': {'var': 0, 'tit': 'Q', 'unit': 'm3/s'},
-#                               'y': {'var': [1], 'tit': 'z', 'unit': 'm'}},
-#                     'xIsTime': False},
-#                 3: {'name': 'Limnihydrograph Z,Q(t)',
-#                     'var': [{'name': 'time', 'leg': 'time', 'unit': 's'},
-#                             {'name': 'z', 'leg': 'z', 'unit': 'm'},
-#                             {'name': 'flowrate', 'leg': 'Q', 'unit': 'm3/s'}],
-#                     'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
-#                               'y': {'var': [1, 2], 't it': None, 'unit': None}},
-#                     'xIsTime': False}
-#                 }
+import matplotlib.dates as mdates
+import matplotlib.ticker as ticker
 
 class GraphHydroLaw(GraphCommon):
     """class Dialog GraphLaw"""
@@ -83,7 +64,7 @@ class GraphHydroLaw(GraphCommon):
 
             self.init_legende()
 
-            self.axes.set_xlabel("{} ({})".format(param_law['graph']['x']['tit'], param_law['graph']['x']['unit']))
+            self.maj_lbl_x(param_law['graph']['x']['tit'], param_law['graph']['x']['unit'])
             self.axes.set_ylabel("{} ({})".format(param_law['graph']['y']['tit'], param_law['graph']['y']['unit']))
 
         self.canvas.draw()
@@ -111,5 +92,16 @@ class GraphHydroLaw(GraphCommon):
 
         self.maj_limites()
 
+    def maj_lbl_x(self, var, unit):
+        if unit == "date":
+            self.axes.set_xlabel("date")
+        else:
+            self.axes.set_xlabel("{} ({})".format(var, unit))
+        #self.unit = unit
+
+        if unit == 'date':
+            self.axes.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+        else:
+            self.axes.xaxis.set_major_formatter(ticker.ScalarFormatter())
 
 
