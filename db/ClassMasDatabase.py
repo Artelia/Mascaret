@@ -254,6 +254,8 @@ class ClassMasDatabase(object):
         Returns:
             obj: Instance of Mascaret class object
         """
+        if masobject.overwrite :
+            overwrite = masobject.overwrite
         self.setup_hydro_object(masobject, schema, srid, overwrite)
         obj = masobject()
         method = getattr(obj, pg_method)
@@ -459,7 +461,7 @@ class ClassMasDatabase(object):
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
                       Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
                       Maso.observations, Maso.parametres, Maso.runs,
-                      Maso.laws,
+                      #Maso.laws,
                       Maso.admin_tab, Maso.visu_flood_marks,
                       # qualite d'eau
                       Maso.tracer_lateral_inflows, Maso.tracer_physic,
@@ -998,7 +1000,7 @@ $BODY$
         # if self.mgis.DEBUG:
         #     self.mgis.add_info('function delete end')
 
-    def insert(self, table, tab, colonnes, delim=" "):
+    def insert(self, table, tab, colonnes, delim=" ",verbose=False):
         tmp = [colonnes[0]]
         tmp += sorted(colonnes[1:])
         var = ",".join(tmp)
@@ -1015,7 +1017,10 @@ $BODY$
                 elif isinstance(tab[id][k], list):
                     valeurs += "'" + delim.join(tab[id][k]) + "',"
                 else:
-                    valeurs += str(tab[id][k]) + ","
+                    if tab[id][k]:
+                        valeurs += str(tab[id][k]) + ","
+                    else:
+                        valeurs += "NULL,"
             valeurs = valeurs[:-1] + "),"
 
         valeurs = valeurs[:-1]
@@ -1024,12 +1029,14 @@ $BODY$
                                                             table,
                                                             var,
                                                             valeurs)
-
+        if verbose:
+            print(sql)
         self.run_query(sql)
+
         # if self.mgis.DEBUG:
         #     self.mgis.add_info('function insert end')
 
-    def insert2(self, table, tab):
+    def insert2(self, table, tab, verbose= False):
         """ insert table in tableSQl"""
         colonnes = sorted(tab.keys())
         var = ','.join(colonnes)
@@ -1044,6 +1051,8 @@ $BODY$
                                                             table,
                                                             var,
                                                             ",".join(valeurs))
+        if verbose:
+            print(sql)
         self.run_query(sql)
 
     def insert_res(self, table, liste_value, colonnes):

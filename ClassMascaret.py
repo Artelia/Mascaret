@@ -3205,6 +3205,7 @@ class ClassMascaret:
                         4: 'z_up',
                          }
             values = self.mdb.select("laws_values",
+                                    where = 'id_law={}'.format(config['id'][0]),
                                     order='id_var, id_order',
                                     list_var=['id_var',
                                               'id_order',

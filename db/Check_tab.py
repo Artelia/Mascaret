@@ -24,6 +24,7 @@ from copy import deepcopy
 from ..Function import read_version, fill_zminbed
 from ..ui.custom_control import ClassWarningBox
 from datetime import datetime
+from ..HydroLawsDialog import *
 
 
 
@@ -195,6 +196,9 @@ class CheckTab:
 
              'add_tab': [
                     {'tab': Maso.runs_plani, 'overwrite': False},],
+                'fct': [
+                    lambda: self.laws_to_new(),
+                ],
             },
             # '3.0.x': { },
 
@@ -815,3 +819,84 @@ class CheckTab:
             self.mgis.add_info("Error  update_400: {}".format(str(e)))
             return False
 
+    def laws_to_new(self):
+        """ add new table law and convert"""
+        try:
+            lst_tab = self.mdb.list_tables()
+            info = self.mdb.select('laws')
+            conv_dict = {'time': 'time',
+                         'Q': 'flowrate',
+                         'Z': 'z',
+                         'Zup': 'z_upstream',
+                         'Zdown': 'z_downstream',
+                         'Zlow': 'z_lower',
+                         'Zupp': 'z_up',
+                         }
+
+
+            if not "law_config" in lst_tab:
+                vconf, _ = self.add_tab(Maso.law_config, False)
+                if not (vconf):
+                    self.mgis.add_info("Error  add table: law_config")
+                    return False
+                if 'id' in info.keys():
+                    # law_config
+                    tab = {id: {'comment': ''} for id in range(len(info['name']))}
+                    for key, item in info.items():
+                        if key in ["z", "flowrate", "time",
+                                   "z_upstream", "z_downstream",
+                                   "z_lower", "z_up"]:
+                            pass
+                        elif key in ['starttime', 'endtime']:
+                            for id, val in enumerate(item):
+                                if val:
+                                    tab[id][key] = val.strftime("%Y-%m-%d %H:%M:%S")
+                                else:
+                                    tab[id][key] = None
+                        elif key in ['active']:
+                            for id, val in enumerate(item):
+                                tab[id][key] = val
+                        elif key == 'name':
+                            for id, val in enumerate(item):
+                                tab[id]["name"] = val
+                                tab[id]['geom_obj'] = val
+                        elif key == 'type':
+                            for id, val in enumerate(item):
+                                tab[id]['id_law_type'] = val
+
+                    listimport = ['id', 'name', 'geom_obj', 'starttime', 'endtime',
+                                  'id_law_type', 'active', 'comment']
+
+                    self.mdb.insert("law_config",
+                                    tab,
+                                    listimport)
+            if not "law_config" in lst_tab:
+                vval, _ = self.add_tab(Maso.law_values, False)
+                if not vval:
+                    self.mgis.add_info("Error  add table: law_values")
+                    return False
+
+                if 'id' in info.keys():
+                    # law_value
+                    valinsert = {
+                        "id_law": [], "id_var": [], "id_order": [], "value": []
+                    }
+                    for id_loi in range(len(info['name'])):
+                        id_type = info['type'][id_loi]
+                        lst_var = [ tmp['code'] for tmp in dico_typ_law[id_type]['var'] ]
+
+                        for id_var, var in enumerate(lst_var):
+                            lst_val = info[conv_dict[var]][id_loi].split()
+                            for id_val , val in enumerate(lst_val):
+                                valinsert["id_law"].append(id_loi)
+                                valinsert["id_var"].append( id_var)
+                                valinsert["id_order"].append(id_val)
+                                valinsert["value"].append(float(val))
+
+                    self.mdb.insert2("law_values",  valinsert)
+
+
+            return True
+        except Exception as e:
+            self.mgis.add_info("Error  update_400: {}".format(str(e)))
+            return False
