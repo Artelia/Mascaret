@@ -30,7 +30,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassScores import ClassScores
+from .FunctionScores import *
 from ..Function import datum_to_float
 from ..ui.custom_control import datetime2QDateTime
 from ..ui.custom_control import ScientificDoubleSpinBox
@@ -56,7 +56,6 @@ class ScoreParamWidget(QWidget):
             os.path.join(self.windmain.mgis.masplugPath,
                          'ui/scores/ui_parametre.ui'), self)
 
-        self.cl_score = ClassScores()
         self.lst_runs = []
         self.lst_runs_old = []
         self.init_dates = None
@@ -555,14 +554,14 @@ class ScoreParamWidget(QWidget):
         :return: dict contain the simple error
         """
         dict_res = {
-            'mean_err': self.cl_score.mean_err(y_obs, y_pred),
-            'mean_abs_err': self.cl_score.mean_abs_err(y_obs, y_pred),
-            'mean_r_err': self.cl_score.mean_r_err(y_obs, y_pred, seuil),
-            'biais': self.cl_score.biais(y_obs, y_pred, seuil),
-            'mean_rabs_err': self.cl_score.mean_rabs_err(y_obs, y_pred, seuil),
-            'precision': self.cl_score.precision(y_obs, y_pred, seuil),
-            'std': self.cl_score.std(y_obs, y_pred),
-            'eqm': self.cl_score.eqm(y_obs, y_pred)
+            'mean_err': mean_err(y_obs, y_pred),
+            'mean_abs_err': mean_abs_err(y_obs, y_pred),
+            'mean_r_err': mean_r_err(y_obs, y_pred, seuil),
+            'biais': biais(y_obs, y_pred, seuil),
+            'mean_rabs_err': mean_rabs_err(y_obs, y_pred, seuil),
+            'precision': precision(y_obs, y_pred, seuil),
+            'std': std(y_obs, y_pred),
+            'eqm': eqm(y_obs, y_pred)
         }
         return dict_res
 
@@ -644,7 +643,7 @@ class ScoreParamWidget(QWidget):
                     self.add_res_dict('nash_crit', id_run, pk, code)
                     self.res['nash_crit'][id_run][pk][code]['H'] = \
                         {
-                            'ns_err': self.cl_score.nash_crit(
+                            'ns_err': nash_crit(
                                 self.data[id_run][pk][code]['h_obs'],
                                 self.data[id_run][pk][code]['h_mod'])
                         }
@@ -653,7 +652,7 @@ class ScoreParamWidget(QWidget):
                 if self.cmpt_var[id_run][pk][code]['Q']:
                     self.add_res_dict('nash_crit', id_run, pk, code)
                     self.res['nash_crit'][id_run][pk][code]['Q'] = {
-                        'ns_err': self.cl_score.nash_crit(
+                        'ns_err': nash_crit(
                             self.data[id_run][pk][code]['q_obs'],
                             self.data[id_run][pk][code]['q_mod'])
                     }
@@ -681,7 +680,7 @@ class ScoreParamWidget(QWidget):
                         lst_time_obs = self.data[id_run][pk][code]['q_obs_time']
                         self.add_res_dict('volume', id_run, pk, code)
                         self.res['volume'][id_run][pk][code]['Q'] = {
-                            'vol_err': self.cl_score.vol_err(q_obs, q_pred,
+                            'vol_err': vol_err(q_obs, q_pred,
                                                              lst_time_pred,
                                                              lst_time_obs)}
                         self.type_res['volume'] = True
@@ -707,9 +706,9 @@ class ScoreParamWidget(QWidget):
                     y_pred = self.data[id_run][pk][code]['h_mod']
                     self.add_res_dict('quantil', id_run, pk, code)
                     self.res['quantil'][id_run][pk][code]['H'] = \
-                        {'dist_err': self.cl_score.dist_err(y_obs, y_pred,
+                        {'dist_err': dist_err(y_obs, y_pred,
                                                             dist_step),
-                         'dist_abs_err': self.cl_score.dist_abs_err(y_obs,
+                         'dist_abs_err': dist_abs_err(y_obs,
                                                                     y_pred,
                                                                     dist_step)}
                     self.type_res['quantil'] = True
@@ -719,9 +718,9 @@ class ScoreParamWidget(QWidget):
                     y_pred = self.data[id_run][pk][code]['q_mod']
                     self.add_res_dict('quantil', id_run, pk, code)
                     self.res['quantil'][id_run][pk][code]['Q'] = \
-                        {'dist_err': self.cl_score.dist_err(y_obs, y_pred,
+                        {'dist_err': dist_err(y_obs, y_pred,
                                                             dist_step),
-                         'dist_abs_err': self.cl_score.dist_abs_err(y_obs,
+                         'dist_abs_err': dist_abs_err(y_obs,
                                                                     y_pred,
                                                                     dist_step)}
                     self.type_res['quantil'] = True
@@ -736,8 +735,8 @@ class ScoreParamWidget(QWidget):
         :param pred_times: model time
         :return:
         """
-        dt_obs = self.cl_score.generate_deltat(obs_times)
-        dt_pred = self.cl_score.generate_deltat(pred_times)
+        dt_obs = generate_deltat(obs_times)
+        dt_pred = generate_deltat(pred_times)
         cobs = np.all(dt_obs == dt_obs[0])
         cpred = np.all(dt_pred == dt_pred[0])
         if cobs and cpred:
@@ -792,7 +791,7 @@ class ScoreParamWidget(QWidget):
                     self.res['persistence'][id_run][pk][code]['H'] = \
                         {
                             'per_err':
-                                self.cl_score.persistence(new_obs, new_pred,
+                                persistence(new_obs, new_pred,
                                                           new_obs_times,
                                                           deltat),
                         }
@@ -820,7 +819,7 @@ class ScoreParamWidget(QWidget):
                     self.res['persistence'][id_run][pk][code]['Q'] = \
                         {
                             'per_err':
-                                self.cl_score.persistence(new_obs, new_pred,
+                                persistence(new_obs, new_pred,
                                                           new_obs_times,
                                                           deltat),
                         }
@@ -887,9 +886,9 @@ class ScoreParamWidget(QWidget):
                     self.res['tips_err'][id_run][pk][code]['H'] = \
                         {
                             'pts_err':
-                                self.cl_score.err_point(new_obs, new_pred),
+                                err_point(new_obs, new_pred),
                             'pts_time_err':
-                                self.cl_score.err_temps_point(new_obs, new_pred,
+                                err_temps_point(new_obs, new_pred,
                                                               new_obs_times,
                                                               new_pred_times,
                                                               alphah)
@@ -915,9 +914,9 @@ class ScoreParamWidget(QWidget):
                     self.add_res_dict('tips_err', id_run, pk, code)
                     self.res['tips_err'][id_run][pk][code]['Q'] = {
                         'pts_err':
-                            self.cl_score.err_point(new_obs, new_pred),
+                            err_point(new_obs, new_pred),
                         'pts_time_err':
-                            self.cl_score.err_temps_point(new_obs, new_pred,
+                            err_temps_point(new_obs, new_pred,
                                                           new_obs_times,
                                                           new_pred_times,
                                                           alphaq)

@@ -41,6 +41,9 @@ def list_sql(liste):
 
 
 class CheckTab:
+    """
+    Class update table
+    """
     def __init__(self, mgis, mdb):
         self.mgis = mgis
         self.mdb = mdb
@@ -73,7 +76,7 @@ class CheckTab:
                         {'tab': Maso.struct_elem_param, 'overwrite': False},
                         {'tab': Maso.struct_abac, 'overwrite': False},
                         {'tab': Maso.struct_laws, 'overwrite': False}],
-            'fct': [lambda: self.fill_struct()],
+            'fct': [self.fill_struct()],
             'alt_tab': [{'tab': 'runs',
                          'sql': ["ALTER TABLE {0}.runs ADD COLUMN IF NOT "
                                  "EXISTS comments text;"]}],
@@ -87,8 +90,7 @@ class CheckTab:
                     "EXISTS active_mob boolean DEFAULT FALSE;",
                     "ALTER TABLE {0}.weirs ADD COLUMN IF NOT "
                     "EXISTS method_mob text;"]}],
-                'fct': [
-                    lambda: self.update_setting_json()]},
+                'fct': [self.update_setting_json()]},
             '3.0.2': {'add_tab': [
                 {'tab': Maso.results, 'overwrite': False},
                 {'tab': Maso.results_sect, 'overwrite': False},
@@ -103,9 +105,9 @@ class CheckTab:
                                 "ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
                                 "EXISTS active boolean DEFAULT TRUE;"]},
                             ],
-                'fct': [lambda: self.create_var_result(),
-                        lambda: self.convert_all_result(),
-                        lambda: self.fill_init_date_runs()],
+                'fct': [self.create_var_result(),
+                        self.convert_all_result(),
+                        self.fill_init_date_runs()],
             },
             '3.0.3': {},
             '3.0.4': {},
@@ -121,13 +123,15 @@ class CheckTab:
                              ]},
                             {'tab': 'observations',
                              'sql': [
-                                 "ALTER TABLE {0}.observations ADD COLUMN IF NOT "
-                                 "EXISTS comment text;",
+                                 "ALTER TABLE {0}.observations ADD COLUMN IF "
+                                 "NOT EXISTS comment text;",
                              ]},
                             {'tab': 'branchs',
                              'sql': [
-                                 "UPDATE {0}.branchs SET branch = 1 WHERE branch IS NULL ;",
-                                 "UPDATE {0}.branchs SET zonenum = 1 WHERE zonenum IS NULL;",
+                                 "UPDATE {0}.branchs SET branch = 1 "
+                                 "WHERE branch IS NULL ;",
+                                 "UPDATE {0}.branchs SET zonenum = 1 "
+                                 "WHERE zonenum IS NULL;",
                                  "ALTER TABLE {0}.branchs ALTER COLUMN branch "
                                  "SET NOT NULL;",
                                  "ALTER TABLE {0}.branchs ALTER COLUMN zonenum "
@@ -136,22 +140,23 @@ class CheckTab:
                              ]},
                             {'tab': 'flood_marks',
                              'sql': [
-                                 "ALTER TABLE {0}.flood_marks ADD COLUMN IF NOT "
-                                 "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
+                                 "ALTER TABLE {0}.flood_marks ADD COLUMN IF "
+                                 "NOT EXISTS active boolean NOT NULL "
+                                 "DEFAULT TRUE;"]},
                             {'tab': 'outputs',
                              'sql': [
                                  "ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
-                                 "EXISTS active boolean NOT NULL DEFAULT TRUE;"]},
+                                 "EXISTS active boolean NOT NULL "
+                                 "DEFAULT TRUE;"]},
 
                             ],
-                'fct': [
-                    lambda: self.update_tab_306(),
-                    lambda: self.add_trigger_update_306()
+                'fct': [self.update_tab_306(),
+                        self.add_trigger_update_306()
                 ],
 
             },
             '3.0.7': {'fct': [
-                lambda: self.update_fct_calc_abs(),
+                self.update_fct_calc_abs(),
             ]
             },
             '3.1.0': {'del_tab': ['resultats', 'resultats_basin',
@@ -159,18 +164,21 @@ class CheckTab:
             '3.1.1': {},
             '3.1.2': {},
             '4.0.0': {'fct': [
-                lambda: self.update_400(),
+                self.update_400(),
             ],
                 'alt_tab': [{'tab': 'results',
                              'sql': [
-                                 "CREATE INDEX IF NOT EXISTS results_id_runs_pknum  " \
+                                 "CREATE INDEX IF NOT EXISTS "
+                                 "results_id_runs_pknum "
                                  "ON {0}.results(id_runs, pknum);",
-                                 "CREATE INDEX IF NOT EXISTS results_id_runs_time  " \
+                                 "CREATE INDEX IF NOT EXISTS "
+                                 "results_id_runs_time  "
                                  "ON {0}.results(id_runs, time);",
                              ]},
                             {'tab': 'observations',
                              'sql': [
-                                 "CREATE INDEX IF NOT EXISTS observations_code_typ  " \
+                                 "CREATE INDEX IF NOT EXISTS "
+                                 "observations_code_typ  " 
                                  "ON {0}.observations(code, type);",
                              ]},
                             ]
@@ -186,7 +194,7 @@ class CheckTab:
                                  "EXISTS  zrightminbed FLOAT;",
                              ]}, ],
                 'fct': [
-                    lambda: fill_zminbed(self.mdb),
+                    fill_zminbed(self.mdb),
                 ],
             },
             '4.0.3': {
@@ -197,7 +205,7 @@ class CheckTab:
 
             '4.0.4': {
                 'fct': [
-                    lambda: self.laws_to_new(),
+                    self.laws_to_new(),
                 ],
             },
             # '3.0.x': { },
@@ -334,7 +342,8 @@ class CheckTab:
             .format(self.mdb.SCHEMA, name_tab)
         row = self.mdb.run_query(sql, fetch=True)
         if len(row) > 0:
-            sql = "UPDATE {0}.admin_tab SET version_  = '{1}' WHERE table_ = '{2}';" \
+            sql = "UPDATE {0}.admin_tab SET version_  = '{1}' " \
+                  "WHERE table_ = '{2}';" \
                 .format(self.mdb.SCHEMA, version, name_tab)
             self.mdb.execute(sql)
         else:
@@ -422,7 +431,10 @@ class CheckTab:
         self.mdb.insert_var_to_result_var(dossier)
 
     def convert_all_result(self):
-        """ conversion between the previous results table format to the new for all results"""
+        """
+        conversion between the previous results
+        table format to the new for all results
+        """
         convert = False
         try:
             rows = self.mdb.run_query(
@@ -438,8 +450,8 @@ class CheckTab:
             for typ_res in lst_typ_res:
                 rows = self.mdb.run_query(
                     "SELECT DISTINCT id_runs FROM {0}.results WHERE var in "
-                    "(SELECT id FROM {0}.results_var WHERE type_res = '{1}') ".format(
-                        self.mdb.SCHEMA, typ_res),
+                    "(SELECT id FROM {0}.results_var WHERE type_res = '{1}') "
+                    "".format(self.mdb.SCHEMA, typ_res),
                     fetch=True)
                 lst_exist = [r[0] for r in rows]
                 for run in dict_runs.keys():
@@ -459,12 +471,14 @@ class CheckTab:
             for id_runs in dict_runs.keys():
                 if id_runs not in lst_exist:
 
-                    sql = "SELECT DISTINCT var FROM {0}.results WHERE id_runs ={1} ORDER BY var"
+                    sql = "SELECT DISTINCT var FROM {0}.results WHERE " \
+                          "id_runs ={1} ORDER BY var"
                     rows = self.mdb.run_query(
                         sql.format(self.mdb.SCHEMA, id_runs), fetch=True)
                     lst_var = [var[0] for var in rows]
 
-                    sql = "SELECT DISTINCT ON (type_res) id, type_res FROM  {0}.results_var " \
+                    sql = "SELECT DISTINCT ON (type_res) id, type_res FROM  " \
+                          "{0}.results_var " \
                           "WHERE id IN {1} ORDER BY type_res"
                     rows = self.mdb.run_query(
                         sql.format(self.mdb.SCHEMA, list_sql(lst_var)),
@@ -473,12 +487,13 @@ class CheckTab:
                     lst_var_select = [var[0] for var in rows]
                     list_value = []
                     # comput Zmax if there is Z
-                    sql = "SELECT id FROM  {0}.results_var WHERE var='Z';".format(
-                        self.mdb.SCHEMA)
+                    sql = "SELECT id FROM  {0}.results_var WHERE var='Z';" \
+                          "".format(self.mdb.SCHEMA)
                     id_z = self.mdb.run_query(sql, fetch=True)
 
                     for id_var, type_res in enumerate(lst_typvar):
-                        sql = "SELECT id FROM  {0}.results_var WHERE id IN {1} AND type_res = '{2}' " \
+                        sql = "SELECT id FROM  {0}.results_var WHERE id " \
+                              "IN {1} AND type_res = '{2}' " \
                               "ORDER BY type_res".format(self.mdb.SCHEMA,
                                                          list_sql(lst_var),
                                                          type_res)
@@ -489,8 +504,9 @@ class CheckTab:
 
                         sql = "SELECT DISTINCT time FROM {0}.results " \
                               "WHERE id_runs ={1} " \
-                              "AND var = {2} ORDER BY time".format(
-                            self.mdb.SCHEMA, id_runs, lst_var_select[id_var])
+                              "AND var = {2} ORDER BY time" \
+                              "".format(self.mdb.SCHEMA, id_runs,
+                                        lst_var_select[id_var])
                         rows = self.mdb.run_query(sql, fetch=True)
                         lst_time = [var[0] for var in rows]
                         list_value.append(
@@ -498,8 +514,9 @@ class CheckTab:
 
                         sql = "SELECT DISTINCT pknum FROM {0}.results " \
                               "WHERE id_runs ={1} " \
-                              "AND var = {2} ORDER BY pknum".format(
-                            self.mdb.SCHEMA, id_runs, lst_var_select[id_var])
+                              "AND var = {2} ORDER BY pknum" \
+                              "".format(self.mdb.SCHEMA, id_runs,
+                                        lst_var_select[id_var])
                         rows = self.mdb.run_query(sql, fetch=True)
                         lst_pknum = [var[0] for var in rows]
                         list_value.append(
@@ -510,9 +527,11 @@ class CheckTab:
                                 dico_zmax = {}
                                 for pknum in lst_pknum:
                                     if id_z[0][0] in lst_var:
-                                        sql = "SELECT MAX(val) FROM {0}.results " \
+                                        sql = "SELECT MAX(val) FROM " \
+                                              "{0}.results " \
                                               "WHERE var = {2} " \
-                                              "AND id_runs={1} AND pknum ={3};".format(
+                                              "AND id_runs={1} AND " \
+                                              "pknum ={3};".format(
                                             self.mdb.SCHEMA, id_runs,
                                             id_z[0][0], pknum)
                                         rows = self.mdb.run_query(sql,
@@ -522,7 +541,8 @@ class CheckTab:
                                                    json.dumps(dico_zmax)])
                             except Exception:
                                 pass
-                    sql = "INSERT INTO {0}.runs_graph(id_runs, type_res,var,val) " \
+                    sql = "INSERT INTO " \
+                          "{0}.runs_graph(id_runs, type_res,var,val) " \
                           "VALUES (%s,%s,%s, %s); \n".format(self.mdb.SCHEMA)
 
                     self.mdb.run_query(sql, many=True, list_many=list_value)
@@ -571,15 +591,18 @@ class CheckTab:
         run_run, run_scen = row[0]
 
         rows = self.mdb.run_query(
-            "SELECT column_name FROM information_schema.columns WHERE table_schema = '{0}' AND "
-            "table_name = '{1}' AND ordinal_position > (SELECT ordinal_position "
-            "FROM information_schema.columns WHERE table_schema = '{0}' AND table_name = '{1}' "
+            "SELECT column_name FROM information_schema.columns WHERE "
+            "table_schema = '{0}' AND table_name = '{1}' "
+            "AND ordinal_position > ("
+            "SELECT ordinal_position FROM information_schema.columns "
+            "WHERE table_schema = '{0}' AND table_name = '{1}' "
             "AND column_name = '{2}')".format(self.mdb.SCHEMA, tab_src,
                                               col_pknum), fetch=True)
 
         lst_var_exist = [r[0] for r in rows]
         self.mdb.execute(
-            "DELETE FROM {0}.results WHERE results.id_runs = {1} AND results.var IN (SELECT id FROM {0}.results_var "
+            "DELETE FROM {0}.results WHERE results.id_runs = {1} AND "
+            "results.var IN (SELECT id FROM {0}.results_var "
             "WHERE type_res = '{2}')".format(self.mdb.SCHEMA, id_run, tab_src))
 
         rows = self.mdb.run_query("SELECT id, var FROM {0}.results_var "
@@ -594,8 +617,10 @@ class CheckTab:
 
         for id_var, nm_var in lst_var:
             if nm_var.lower() in lst_var_exist:
-                sql = "INSERT INTO {0}.results (SELECT {5}, {3}.t, {3}.{4}, {1}, {3}.{2} " \
-                      "FROM {0}.{3} WHERE {3}.{2} is Not Null AND {3}.run = '{6}' " \
+                sql = "INSERT INTO {0}.results (" \
+                      "SELECT {5}, {3}.t, {3}.{4}, {1}, {3}.{2} " \
+                      "FROM {0}.{3} WHERE " \
+                      "{3}.{2} is Not Null AND {3}.run = '{6}' " \
                       "AND {3}.scenario = '{7}')".format(self.mdb.SCHEMA,
                                                          id_var, nm_var.lower(),
                                                          tab_src, col_pknum,
@@ -659,10 +684,10 @@ class CheckTab:
                     try:
                         date = datetime.strptime(init_date, '%Y-%m-%d %H:%M')
                         init_date = "{:%Y-%m-%d %H:%M:00}".format(date)
-                        sql = "UPDATE {0}.runs SET init_date ='{1}' WHERE id ={2}".format(
-                            self.mdb.SCHEMA,
-                            init_date,
-                            id)
+                        sql = "UPDATE {0}.runs SET init_date ='{1}' " \
+                              "WHERE id ={2}".format(self.mdb.SCHEMA,
+                                                     init_date,
+                                                     id)
                         self.mdb.run_query(sql)
                     except ValueError:
                         pass
@@ -681,8 +706,10 @@ class CheckTab:
             list_col = self.mdb.list_columns('profiles')
             sql = ''
             if 'struct' in list_col:
-                sql = "ALTER TABLE {0}.profiles DROP COLUMN IF EXISTS  struct;\n"
-            sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer DEFAULT 0;"
+                sql = "ALTER TABLE {0}.profiles DROP COLUMN " \
+                      "IF EXISTS  struct;\n"
+            sql += "ALTER TABLE {0}.profiles ADD COLUMN struct integer " \
+                   "DEFAULT 0;"
             self.mdb.run_query(sql.format(self.mdb.SCHEMA))
             return True
         except Exception as e:
@@ -704,14 +731,14 @@ class CheckTab:
                         'links', 'basins', 'outputs', 'flood_marks', 'laws']
             txt = ''
             for tab in list_tab:
-                txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET DEFAULT TRUE;".format(
-                    self.mdb.SCHEMA, tab)
+                txt += "ALTER TABLE {0}.{1} ALTER COLUMN active " \
+                       "SET DEFAULT TRUE;".format(self.mdb.SCHEMA, tab)
                 txt += '\n'
-                txt += "UPDATE {0}.{1} SET active = TRUE WHERE active IS NULL;".format(
-                    self.mdb.SCHEMA, tab)
+                txt += "UPDATE {0}.{1} SET active = TRUE WHERE " \
+                       "active IS NULL;".format(self.mdb.SCHEMA, tab)
                 txt += '\n'
-                txt += "ALTER TABLE {0}.{1} ALTER COLUMN active SET NOT NULL;".format(
-                    self.mdb.SCHEMA, tab)
+                txt += "ALTER TABLE {0}.{1} ALTER COLUMN " \
+                       "active SET NOT NULL;".format(self.mdb.SCHEMA, tab)
                 txt += '\n'
                 return True
         except Exception as e:
@@ -731,16 +758,16 @@ class CheckTab:
 
             self.mdb.add_fct_for_visu()
 
-            qry = 'DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs;\n'.format(
-                self.mdb.SCHEMA)
-            qry += 'DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;\n'.format(
-                self.mdb.SCHEMA)
-            qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse ON {}.flood_marks;\n'.format(
-                self.mdb.SCHEMA)
+            qry = 'DROP TRIGGER IF EXISTS branchs_chstate_active ' \
+                  'ON {}.branchs;\n'.format(self.mdb.SCHEMA)
+            qry += 'DROP TRIGGER IF EXISTS basins_chstate_active ' \
+                   'ON {}.basins;\n'.format(self.mdb.SCHEMA)
+            qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse ' \
+                   'ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
             qry += 'DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood ' \
                    'ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
-            qry += 'DROP TRIGGER IF EXISTS flood_marks_delete_point_flood ON {}.flood_marks;\n'.format(
-                self.mdb.SCHEMA)
+            qry += 'DROP TRIGGER IF EXISTS flood_marks_delete_point_flood ' \
+                   'ON {}.flood_marks;\n'.format(self.mdb.SCHEMA)
             qry += '\n'
             cl = Maso.class_fct_psql()
             qry += cl.pg_chstate_branch()
@@ -776,11 +803,16 @@ class CheckTab:
         try:
             lst_fct = [
                 "public.update_abscisse_branch(_tbl_branchs regclass)",
-                "public.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)",
-                "public.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)",
-                "public.abscisse_branch(_tbl_branchs regclass, id_branch integer)",
-                "public.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)",
-                "public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)",
+                "public.update_abscisse_point"
+                "(_tbl regclass, _tbl_branchs regclass)",
+                "public.update_abscisse_profil"
+                "(_tbl regclass, _tbl_branchs regclass)",
+                "public.abscisse_branch"
+                "(_tbl_branchs regclass, id_branch integer)",
+                "public.abscisse_point"
+                "(_tbl regclass, _tbl_branchs regclass, id_point integer)",
+                "public.abscisse_profil"
+                "(_tbl regclass, _tbl_branchs regclass, id_prof integer)",
             ]
             qry = ''
             for fct in lst_fct:
@@ -837,7 +869,7 @@ class CheckTab:
             #              }
 
 
-            if not "law_config" in lst_tab:
+            if  "law_config" not in lst_tab:
                 vconf, _ = self.add_tab(Maso.law_config, False)
                 if not vconf:
                     self.mgis.add_info("Error  add table: law_config")
@@ -882,7 +914,7 @@ class CheckTab:
                     self.mdb.insert("law_config",
                                     tab,
                                     listimport)
-            if not "law_config" in lst_tab:
+            if "law_config" not in lst_tab:
                 vval, _ = self.add_tab(Maso.law_values, False)
                 if not vval:
                     self.mgis.add_info("Error  add table: law_values")
