@@ -169,9 +169,9 @@ class GraphCommon(QWidget):
                     mini_z = min(mini_z, min(lz))
                     maxi_z = max(maxi_z, max(lz))
 
-            d = max(abs(mini_z), abs(maxi_z)) * marge
-            mini_z -= d
-            maxi_z += d
+        d = max(abs(mini_z), abs(maxi_z)) * marge
+        mini_z -= d
+        maxi_z += d
 
         if no_data:
             if self.unit != 'date':

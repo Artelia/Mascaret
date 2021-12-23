@@ -20,6 +20,7 @@ email                :
 import os
 from datetime import datetime, timedelta
 from matplotlib.dates import date2num
+from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
@@ -82,13 +83,11 @@ dico_typ_law = {1: {'name': 'Hydrograph Q(t)',
                     'xIsTime': False},
                 6: {'name': 'Weir Zam = f(Q, Zav)',
                     'var': [{'name': 'flowrate', 'code': 'flowrate'},
-                            {'name': 'downstream level',
-                             'code': 'z_downstream'},
-                            {'name': 'upstream level', 'code': 'z_upstream'},
-                            ],
-                    'geom': {'extremities': [0, 6], 'weirs': [1],
-                             'lateral_inflows': False, 'lateral_weirs': False},
-                    'graph': None,
+                            {'name': 'downstream level', 'code': 'z_downstream'},
+                            {'name': 'upstream level', 'code': 'z_upstream'}],
+                    'graph': {'x': {'var': None, 'tit': None, 'unit': None},
+                              'y': {'var': [2], 'tit': 'Zup', 'unit': 'm'}},
+                    'geom':{'extremities': [0, 6], 'weirs': [1], 'lateral_inflows': False, 'lateral_weirs': False},
                     'xIsTime': False},
                 7: {'name': 'Floodgate Zinf, Zsup = f(t)',
                     'var': [{'name': 'time', 'code': 'time'},
@@ -110,7 +109,9 @@ class ClassHydroLawsDialog(QDialog):
         self.mdb = self.mgis.mdb
         self.cur_law = None
         self.param_law = None
+
         self.filling_tab = False
+        self.reorder_tab = False
 
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_hydro_laws.ui'), self)
@@ -120,7 +121,8 @@ class ClassHydroLawsDialog(QDialog):
         self.tree_laws.setColumnWidth(0, 175)
         self.tree_laws.setColumnWidth(1, 100)
         self.tree_laws.setColumnWidth(2, 40)
-        self.tree_laws.itemSelectionChanged.connect(self.display_graph_home)
+        self.tree_laws.itemSelectionChanged.connect(self.selected_law_changed)
+        self.cb_graph_opt.currentIndexChanged.connect(self.display_graph_home)
 
         self.ui.actionB_new.triggered.connect(self.new_law)
         self.ui.actionB_edit.triggered.connect(self.edit_law)
@@ -149,9 +151,18 @@ class ClassHydroLawsDialog(QDialog):
         self.bg_time.addButton(self.rb_date, 4)
         self.bg_time.buttonClicked[int].connect(self.chg_time)
 
+        self.bg_abs = QButtonGroup()
+        self.bg_abs.addButton(self.rb_abs_q, 0)
+        self.bg_abs.addButton(self.rb_abs_z, 1)
+        self.bg_abs.buttonClicked[int].connect(self.chg_abs_weir_zam)
+
         self.ui.actionB_import.triggered.connect(self.import_csv)
         self.ui.actionB_addLine.triggered.connect(self.new_time)
         self.ui.actionB_delLine.triggered.connect(self.delete_time)
+        self.b_add_q.clicked.connect(self.new_q)
+        self.b_delete_q.clicked.connect(self.delete_q)
+        self.b_add_zdown.clicked.connect(self.new_z_av)
+        self.b_delete_zdown.clicked.connect(self.delete_z_av)
         self.ui.b_OK_page2.accepted.connect(self.accept_page2)
         self.ui.b_OK_page2.rejected.connect(self.reject_page2)
 
@@ -172,9 +183,8 @@ class ClassHydroLawsDialog(QDialog):
     def fill_tree_laws(self, id=None):
         self.tree_laws.clear()
         for id_type, elem in dico_typ_law.items():
-            sql = "SELECT id, name, geom_obj, active, comment FROM {0}.law_config " \
-                  "WHERE id_law_type = '{1}' ORDER BY name".format(
-                self.mdb.SCHEMA, id_type)
+            sql = "SELECT id, name, geom_obj, active, comment, starttime FROM {0}.law_config " \
+                  "WHERE id_law_type = '{1}' ORDER BY name".format(self.mdb.SCHEMA, id_type)
             rows = self.mdb.run_query(sql, fetch=True)
             if rows:
                 typ_itm = QTreeWidgetItem()
@@ -184,19 +194,16 @@ class ClassHydroLawsDialog(QDialog):
                 self.tree_laws.addTopLevelItem(typ_itm)
 
                 for row in rows:
-                    ouv_itm = QTreeWidgetItem()
-                    ouv_itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                    ouv_itm.setData(0, 32, int(row[0]))
-                    ouv_itm.setText(0, row[1])
-                    ouv_itm.setText(1, str(row[2])) if row[
-                                                           2] is not None else ouv_itm.setText(
-                        1, '')
-                    ouv_itm.setText(2, str(row[3]))
-                    ouv_itm.setText(3, str(row[4])) if row[
-                                                           4] is not None else ouv_itm.setText(
-                        3, '')
+                    law_itm = QTreeWidgetItem()
+                    law_itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    law_itm.setData(0, 32, int(row[0]))
+                    law_itm.setText(0, row[1])
+                    law_itm.setData(1, 32, row[5])
+                    law_itm.setText(1, str(row[2])) if row[2] is not None else law_itm.setText(1, '')
+                    law_itm.setText(2, str(row[3]))
+                    law_itm.setText(3, str(row[4])) if row[4] is not None else law_itm.setText(3, '')
+                    typ_itm.addChild(law_itm)
 
-                    typ_itm.addChild(ouv_itm)
                 typ_itm.setExpanded(True)
 
         if id:
@@ -207,7 +214,48 @@ class ClassHydroLawsDialog(QDialog):
                         self.tree_laws.setCurrentItem(itm, 0)
                         break
         else:
-            self.display_graph_home()
+            self.selected_law_changed()
+
+
+    def selected_law_changed(self):
+        self.updatde_cb_graph_opt()
+        self.display_graph_home()
+
+
+    def updatde_cb_graph_opt(self):
+        cur_opt = self.cb_graph_opt.currentData()
+        self.cb_graph_opt.blockSignals(True)
+        self.cb_graph_opt.clear()
+
+        if self.tree_laws.selectedItems():
+            itm = self.tree_laws.selectedItems()[0]
+            typ_law = itm.parent().data(0, 32)
+            param_law = dico_typ_law[typ_law]
+
+            if typ_law == 6:
+                self.cb_graph_opt.addItem("Flowrate", 0)
+                self.cb_graph_opt.addItem("Downstream level", 1)
+                idx = self.cb_graph_opt.findData(cur_opt)
+                if idx != -1:
+                    self.cb_graph_opt.setCurrentIndex(idx)
+                self.frm_graph_opt.show()
+            else:
+                if param_law['xIsTime']:
+                    self.cb_graph_opt.addItem("Time (s)", "time")
+                    date_law = itm.data(1, 32)
+                    if date_law:
+                        self.cb_graph_opt.addItem("Date", "date")
+                    idx = self.cb_graph_opt.findData(cur_opt)
+                    if idx != -1:
+                        self.cb_graph_opt.setCurrentIndex(idx)
+                    self.frm_graph_opt.show()
+                else:
+                    self.frm_graph_opt.hide()
+
+        else:
+            self.frm_graph_opt.hide()
+
+        self.cb_graph_opt.blockSignals(False)
 
     def display_graph_home(self):
         if self.tree_laws.selectedItems():
@@ -215,8 +263,18 @@ class ClassHydroLawsDialog(QDialog):
             id_law = itm.data(0, 32)
             typ_law = itm.parent().data(0, 32)
             param_law = dico_typ_law[typ_law]
-            self.graph_home.initCurv(typ_law, param_law)
-            self.graph_home.initGraph(id_law)
+            graph_opt = self.cb_graph_opt.currentData()
+
+            if typ_law != 6:
+                date_ref = None
+                if param_law['xIsTime']:
+                    if graph_opt == 'date':
+                        date_ref = itm.data(1, 32)
+                self.graph_home.initCurv(typ_law, param_law, date_ref)
+                self.graph_home.initGraph(id_law, date_ref)
+            else:
+                self.graph_home.initCurvWeirZam(param_law, id_law, graph_opt)
+                self.graph_home.initGraphWeirZam(id_law)
         else:
             self.graph_home.initCurv()
 
@@ -266,7 +324,12 @@ class ClassHydroLawsDialog(QDialog):
 
         self.filling_tab = True
 
+        if self.ui.tab_sets.model():
+            self.ui.tab_sets.model().setRowCount(0)
+            self.ui.tab_sets.model().setColumnCount(0)
+
         self.grp_time.setVisible(self.param_law["xIsTime"])
+        self.grp_abs_wzam.setVisible(self.cur_typ == 6)
         self.cc_date_end_auto.setEnabled(self.param_law["xIsTime"])
         self.lbl_type.setText(self.param_law["name"])
         self.cc_date_end_auto.setCheckState(0)
@@ -299,34 +362,50 @@ class ClassHydroLawsDialog(QDialog):
             self.txt_comm.setText(str(row[5])) if row[
                 5] else self.txt_comm.setText('')
 
-        self.graph_edit.initCurv(self.cur_typ, self.param_law)
-        self.graph_edit.initGraph(self.cur_law)
-        self.fill_tab_laws()
+        if self.cur_typ != 6:
+            self.graph_edit.initCurv(self.cur_typ, self.param_law)
+            self.graph_edit.initGraph(self.cur_law)
+            self.fill_tab_laws()
+            self.frm_btn_classic.show()
+            self.frm_btn_weirzam.hide()
+        else:
+            self.graph_edit.initCurvWeirZam(self.param_law, self.cur_law)
+            self.graph_edit.initGraphWeirZam(self.cur_law)
+            self.fill_tab_laws_weirZam()
+            self.frm_btn_classic.hide()
+            self.frm_btn_weirzam.show()
         self.ui.laws_pages.setCurrentIndex(1)
 
         self.filling_tab = False
 
     def update_cb_geom(self, vdef=None):
-        sql = "SELECT 'None' as name_obj"
+        param_table = {'extremities': {'pref': 'Extr. - ', 'rang': 1},
+                       'weirs': {'pref': 'Weir - ', 'rang': 3},
+                       'lateral_inflows': {'pref': 'Lat. Inf. - ', 'rang': 2},
+                       'lateral_weirs': {'pref': 'Lat. Weir - ', 'rang': 4}}
+
+        sql = "SELECT '' as id_obj, 'None' as name_obj, 0 as rg"
         for table, val in self.param_law["geom"].items():
             if not val:
                 pass
-            elif val:
-                sql += " UNION SELECT name FROM {0}.{1}".format(self.mdb.SCHEMA,
-                                                                table)
+            elif val == True:
+                sql += " UNION SELECT name, '{2}' || name, {3} FROM {0}.{1}".format(self.mdb.SCHEMA, table,
+                                                                                    param_table[table]['pref'],
+                                                                                    param_table[table]['rang'])
             else:
-                sql += " UNION SELECT name FROM {0}.{1} WHERE type IN ({2})".format(
-                    self.mdb.SCHEMA, table,
-                    ", ".join([str(v) for v in val]))
-        sql += " ORDER BY name_obj"
+                sql += " UNION SELECT name, '{3}' || name, {4} FROM {0}.{1} " \
+                       "WHERE type IN ({2})".format(self.mdb.SCHEMA, table, ", ".join([str(v) for v in val]),
+                                                    param_table[table]['pref'], param_table[table]['rang'])
+        sql += " ORDER BY rg, name_obj"
+
         rows = self.mdb.run_query(sql, fetch=True)
-        lst_obj = list(set([r[0] for r in rows]))
 
         self.cb_geom.clear()
-        self.cb_geom.addItems(lst_obj)
+        for row in rows:
+            self.cb_geom.addItem(row[1], row[0])
 
         if vdef:
-            idx = self.cb_geom.findText(vdef)
+            idx = self.cb_geom.findData(vdef)
             if idx != -1:
                 self.cb_geom.setCurrentIndex(idx)
 
@@ -384,6 +463,70 @@ class ClassHydroLawsDialog(QDialog):
         model.itemChanged.connect(self.on_tab_data_change)
         return model
 
+
+    def fill_tab_laws_weirZam(self):
+        self.ui.tab_sets.setModel(self.create_tab_model_weirZam())
+        model = self.ui.tab_sets.model()
+
+        if self.cur_law != -1:
+            max_c = len(self.list_z_av)
+            cur_r = 1
+            cur_c = 0
+
+            sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} AND id_var = 2 " \
+                  "ORDER BY id_order".format(self.mdb.SCHEMA, self.cur_law)
+            recs = self.mdb.run_query(sql, fetch=True)
+            for rec in recs:
+                cur_c += 1
+                itm = QStandardItem()
+                itm.setData(rec[0], 0)
+                model.setItem(cur_r, cur_c, itm)
+
+                if cur_c == max_c:
+                    cur_c = 0
+                    cur_r += 1
+
+        self.rb_abs_q.click()
+
+
+    def create_tab_model_weirZam(self):
+        self.list_q, self.list_z_av = [], []
+        model = QStandardItemModel()
+        model.insertRow(0)
+        model.insertColumn(0)
+        model.setHeaderData(0, 1, "", 0)
+        model.setHeaderData(0, 2, "", 0)
+
+        itm = QStandardItemGray("", False)
+        model.setItem(0, 0, itm)
+
+        rows = self.mdb.run_query("SELECT DISTINCT value FROM {0}.law_values WHERE id_law = {1} AND id_var = 0 "
+                                  "ORDER BY value".format(self.mdb.SCHEMA, self.cur_law), fetch=True)
+        self.list_q = [r[0] for r in rows]
+        n_q = len(self.list_q)
+
+        rows = self.mdb.run_query("SELECT DISTINCT value FROM {0}.law_values WHERE id_law = {1} AND id_var = 1 "
+                                  "ORDER BY value".format(self.mdb.SCHEMA, self.cur_law), fetch=True)
+        self.list_z_av = [r[0] for r in rows]
+        n_z_av = len(self.list_z_av)
+
+        model.insertRows(1, n_q)
+        model.insertColumns(1, n_z_av)
+
+        for r, q in enumerate(self.list_q):
+            model.setHeaderData(r + 1, 2, "Q{}".format(r + 1), 0)
+            itm = QStandardItemGray(q)
+            model.setItem(r + 1, 0, itm)
+
+        for c, z_av in enumerate(self.list_z_av):
+            model.setHeaderData(c + 1, 1, "Zdown{}".format(c + 1), 0)
+            itm = QStandardItemGray(z_av)
+            model.setItem(0, c + 1, itm)
+
+        model.itemChanged.connect(self.on_WeirZam_tab_data_change)
+        return model
+
+
     ######################################################################
     #
     #                           TABLEAU
@@ -418,24 +561,31 @@ class ClassHydroLawsDialog(QDialog):
             rows = [idx.row() for idx in self.ui.tab_sets.selectedIndexes()]
             rows = list(set(rows))
             rows.sort(reverse=True)
+
+            model = self.ui.tab_sets.model()
             for row in rows:
-                model = self.ui.tab_sets.model()
                 model.removeRow(row)
             self.update_courbe("all")
 
     def short_cut_row_del(self):
         if self.ui.tab_sets.hasFocus():
-            d = 5 if self.param_law['xIsTime'] else 1
-
-            cols = []
             model = self.ui.tab_sets.model()
             selection = self.ui.tab_sets.selectedIndexes()
-            for idx in selection:
-                if idx.column() >= d:
-                    model.item(idx.row(), idx.column()).setData(None, 0)
-                    cols.append(idx.column())
-            cols = list(set(cols))
-            self.update_courbe(cols)
+
+            if self.cur_typ != 6:
+                d = 5 if self.param_law['xIsTime'] else 1
+                cols = []
+                for idx in selection:
+                    if idx.column() >= d:
+                        model.item(idx.row(), idx.column()).setData(None, 0)
+                        cols.append(idx.column())
+                cols = list(set(cols))
+                self.update_courbe(cols)
+            else:
+                for idx in selection:
+                    if idx.column() != 0 and idx.row() != 0:
+                        model.item(idx.row(), idx.column()).setData(None, 0)
+                self.update_graph_weirZam()
 
     def on_tab_data_change(self, itm):
         model = itm.model()
@@ -541,14 +691,191 @@ class ClassHydroLawsDialog(QDialog):
 
     ######################################################################
     #
+    #                           TABLEAU WEIR ZAM
+    #
+    ######################################################################
+
+
+    def chg_abs_weir_zam(self, v):
+        if not self.filling_tab:
+            self.update_graph_weirZam()
+
+    def new_q(self):
+        self.filling_tab = True
+        model = self.ui.tab_sets.model()
+        r = model.rowCount()
+        model.insertRow(r)
+        model.setHeaderData(r, 2, "Q{}".format(r), 0)
+
+        if r == 1:
+            val = 0.0
+        elif r == 2:
+            val = model.item(r - 1, 0).data(0) + 1
+        else:
+            val = 2 * model.item(r - 1, 0).data(0) - model.item(r - 2, 0).data(0)
+        itm = QStandardItemGray(val)
+        model.setItem(r, 0, itm)
+
+        for c in range(1, model.columnCount()):
+            model.setItem(r, c, QStandardItem())
+        self.ui.tab_sets.scrollToBottom()
+        self.filling_tab = False
+        self.update_graph_weirZam()
+
+    def delete_q(self):
+        if self.ui.tab_sets.selectedIndexes():
+            rows = [idx.row() for idx in self.ui.tab_sets.selectedIndexes() if idx.row() > 0]
+            rows = list(set(rows))
+            rows.sort(reverse=True)
+
+            model = self.ui.tab_sets.model()
+            for row in rows:
+                model.removeRow(row)
+            self.update_graph_weirZam()
+
+    def new_z_av(self):
+        self.filling_tab = True
+        model = self.ui.tab_sets.model()
+        c = model.columnCount()
+        model.insertColumn(c)
+        model.setHeaderData(c, 1, "Zdown{}".format(c), 0)
+
+        if c == 1:
+            val = 0.0
+        elif c == 2:
+            val = model.item(0, c - 1).data(0) + 1
+        else:
+            val = 2 * model.item(0, c - 1).data(0) - model.item(0, c - 2).data(0)
+        itm = QStandardItemGray(val)
+        model.setItem(0, c, itm)
+
+        for r in range(1, model.rowCount()):
+            model.setItem(r, c, QStandardItem())
+
+        self.filling_tab = False
+        self.update_graph_weirZam()
+
+    def delete_z_av(self):
+        if self.ui.tab_sets.selectedIndexes():
+            cols = [idx.column() for idx in self.ui.tab_sets.selectedIndexes() if idx.column() > 0]
+            cols = list(set(cols))
+            cols.sort(reverse=True)
+
+            model = self.ui.tab_sets.model()
+            for col in cols:
+                model.removeColumn(col)
+            self.update_graph_weirZam()
+
+
+    def on_WeirZam_tab_data_change(self, itm):
+        model = itm.model()
+        model.itemChanged.disconnect()
+
+        err_row, err_col = False, False
+
+        if itm.column() == 0:
+            if itm.row() != 1:
+                if itm.data(0) < model.item(itm.row() - 1, 0).data(0):
+                    err_row = True
+            if itm.row() != model.rowCount() - 1:
+                if itm.data(0) > model.item(itm.row() + 1, 0).data(0):
+                    err_row = True
+
+        if itm.row() == 0:
+            if itm.column() != 1:
+                if itm.data(0) < model.item(0, itm.column() - 1).data(0):
+                    err_col = True
+            if itm.column() != model.columnCount() - 1:
+                if itm.data(0) > model.item(0, itm.column() + 1).data(0):
+                    err_col = True
+
+        if err_row:
+            self.correct_order_row(itm)
+        if err_col:
+            self.correct_order_column(itm)
+
+        model.itemChanged.connect(self.on_WeirZam_tab_data_change)
+
+        if not self.filling_tab:
+           self.update_graph_weirZam()
+
+
+    def correct_order_row(self, itm):
+        model = itm.model()
+
+        row = itm.row()
+        val_q = itm.data(0)
+        val_row = [model.item(row, col).data(0) for col in range (1, model.columnCount())]
+
+        model.removeRow(row)
+
+        new_row = 1
+        for r in range(1, model.rowCount()):
+            if model.item(r, 0).data(0) >= val_q:
+                break
+            else:
+                new_row += 1
+
+        model.insertRow(new_row)
+
+        for r in range(1, model.rowCount()):
+            model.setHeaderData(r, 2, "Q{}".format(r), 0)
+
+        itm = QStandardItemGray(val_q)
+        model.setItem(new_row, 0, itm)
+
+        for c, v in enumerate(val_row):
+            itm = QStandardItem()
+            itm.setData(v, 0)
+            model.setItem(new_row, c + 1, itm)
+
+
+    def correct_order_column(self, itm):
+        model = itm.model()
+
+        col = itm.column()
+        val_z = itm.data(0)
+        val_col = [model.item(row, col).data(0) for row in range (1, model.rowCount())]
+
+        model.removeColumn(col)
+
+        new_col = 1
+        for c in range(1, model.columnCount()):
+            if model.item(0, c).data(0) >= val_z:
+                break
+            else:
+                new_col += 1
+
+        model.insertColumn(new_col)
+
+        for c in range(1, model.columnCount()):
+            model.setHeaderData(c, 1, "Zdown{}".format(c), 0)
+
+        itm = QStandardItemGray(val_z)
+        model.setItem(0, new_col, itm)
+
+        for r, v in enumerate(val_col):
+            itm = QStandardItem()
+            itm.setData(v, 0)
+            model.setItem(r + 1, new_col, itm)
+
+
+    ######################################################################
+    #
     #                           IMPORT
     #
     ######################################################################
 
+
     def import_csv(self):
-        file, _ = QFileDialog.getOpenFileName(None, 'File Selection',
-                                              self.mgis.repProject,
-                                              "File (*.txt *.csv)")
+        if self.cur_typ != 6:
+            self.import_csv_classic()
+        else:
+            self.import_csv_weirZam()
+
+    def import_csv_classic(self):
+        file, _ = QFileDialog.getOpenFileName(None, 'File Selection', self.mgis.repProject,
+                                              "File (*.txt *.csv *.loi)")
         if file:
             filein = open(file, "r")
 
@@ -617,6 +944,28 @@ class ClassHydroLawsDialog(QDialog):
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Import failed ({})".format(file))
 
+    def import_csv_weirZam(self):
+        file, _ = QFileDialog.getOpenFileName(None, 'File Selection', self.mgis.repProject,
+                                              "File (*.txt *.csv *.loi)")
+        if file:
+            filein = open(file, "r")
+
+            error = False
+            first_ligne = True
+            nb_col = 3
+
+            self.filling_tab = True
+
+            r = 0
+            model = self.create_tab_model()
+            for num_ligne, ligne in enumerate(filein):
+                if ligne[0] != '#':
+                    liste = ligne.replace('\n', '').replace('\t', ' ').split(";")
+                    print(liste)
+
+            filein.close()
+            self.filling_tab = False
+
     ######################################################################
     #
     #                           GRAPH
@@ -652,6 +1001,60 @@ class ClassHydroLawsDialog(QDialog):
 
         self.graph_edit.maj_courbes(data)
 
+
+    def update_graph_weirZam(self):
+        g = self.graph_edit
+
+        g.axes.cla()
+        g.axes.tick_params(axis='both', labelsize=7.)
+        g.axes.grid(True)
+
+        g.list_var.clear()
+        g.list_z.clear()
+        g.courbes.clear()
+
+        var_x = self.bg_abs.checkedId()
+        g.axeX = var_x
+        g.axeZ = abs(var_x - 1)
+
+        if var_x == 0:
+            g.list_z = [self.ui.tab_sets.model().item(0, c).data(0) for c in range(1, self.ui.tab_sets.model().columnCount())]
+            prfx_z = "Zdown"
+        elif var_x == 1:
+            g.list_z = [self.ui.tab_sets.model().item(r, 0).data(0) for r in range(1, self.ui.tab_sets.model().rowCount())]
+            prfx_z = "Q"
+
+        for idx, z in enumerate(g.list_z):
+            name = "{0} {1} ({2})".format(prfx_z, idx + 1, round(z, 2))
+            g.list_var.append({"id": idx, "name": name})
+            g.courbeTrac, = g.axes.plot([], [], zorder=100 - idx, label=name)
+            g.courbes.append(g.courbeTrac)
+
+        g.init_legende()
+
+        if g.axeX == 0:
+            g.maj_lbl_x('Q', 'm3/s')
+        elif g.axeX == 1:
+            g.maj_lbl_x('Zdown', 'm')
+        g.maj_lbl_y('Zup', 'm')
+
+        g.canvas.draw()
+
+        data = {}
+        if var_x == 0:
+            lx = [self.ui.tab_sets.model().item(r, 0).data(0) for r in range(1, self.ui.tab_sets.model().rowCount())]
+            for c in range(1, self.ui.tab_sets.model().columnCount()):
+                ly = [self.ui.tab_sets.model().item(r, c).data(0) for r in range(1, self.ui.tab_sets.model().rowCount())]
+                data[c - 1] = {"x": lx, "y": ly}
+        elif var_x == 1:
+            lx = [self.ui.tab_sets.model().item(0, c).data(0) for c in range(1, self.ui.tab_sets.model().columnCount())]
+            for r in range(1, self.ui.tab_sets.model().rowCount()):
+                ly = [self.ui.tab_sets.model().item(r, c).data(0) for c in range(1, self.ui.tab_sets.model().columnCount())]
+                data[r - 1] = {"x": lx, "y": ly}
+
+        g.maj_courbes(data)
+
+
     ######################################################################
     #
     #                           DATES
@@ -668,8 +1071,9 @@ class ClassHydroLawsDialog(QDialog):
             model = self.ui.tab_sets.model()
             if model:
                 r = model.rowCount() - 1
-                ds = model.item(r, 0).data(0)
-                self.de_end.setDateTime(self.ui.de_start.dateTime().addSecs(ds))
+                if r >= 0:
+                    ds = model.item(r, 0).data(0)
+                    self.de_end.setDateTime(self.ui.de_start.dateTime().addSecs(ds))
 
     def change_date_start(self):
         date, time = self.ui.de_start.date().toString(
@@ -737,10 +1141,8 @@ class ClassHydroLawsDialog(QDialog):
             return
 
         name_law = "'{}'".format(name_law)
-        geom_obj = "'{}'".format(
-            self.ui.cb_geom.currentText()) if self.ui.cb_geom.currentIndex() != 0 else 'Null'
-        comment = "'{}'".format(
-            self.ui.txt_comm.text()) if self.ui.txt_comm.text() else 'Null'
+        geom_obj = "'{}'".format(self.ui.cb_geom.currentData()) if self.ui.cb_geom.currentIndex() != 0 else 'Null'
+        comment = "'{}'".format(self.ui.txt_comm.text()) if self.ui.txt_comm.text() else 'Null'
         is_act = self.cc_act.isChecked()
 
         if self.cc_date_ref.isChecked():
@@ -777,15 +1179,28 @@ class ClassHydroLawsDialog(QDialog):
                 "DELETE FROM {0}.law_values WHERE id_law = {1}".format(
                     self.mdb.SCHEMA, self.cur_law))
 
-        col = list(range(self.ui.tab_sets.model().columnCount()))
-        if self.param_law['xIsTime']:
-            del col[1:5]
+        if is_act:
+            self.mdb.execute("UPDATE {0}.law_config SET active = {1} WHERE geom_obj = {2} "
+                             "AND id <> {3}".format(self.mdb.SCHEMA, False, geom_obj, self.cur_law))
 
-        recs = []
-        for id_var, c in enumerate(col):
-            for r in range(self.ui.tab_sets.model().rowCount()):
-                recs.append([self.cur_law, id_var, r,
-                             self.ui.tab_sets.model().item(r, c).data(0)])
+        if self.cur_typ != 6:
+            col = list(range(self.ui.tab_sets.model().columnCount()))
+            if self.param_law['xIsTime']:
+                del col[1:5]
+
+            recs = []
+            for id_var, c in enumerate(col):
+                for r in range(self.ui.tab_sets.model().rowCount()):
+                    recs.append([self.cur_law, id_var, r, self.ui.tab_sets.model().item(r, c).data(0)])
+        else:
+            recs = []
+            rg = 0
+            for r in range(1, self.ui.tab_sets.model().rowCount()):
+                for c in range(1, self.ui.tab_sets.model().columnCount()):
+                    recs.append([self.cur_law, 0, rg, self.ui.tab_sets.model().item(r, 0).data(0)])
+                    recs.append([self.cur_law, 1, rg, self.ui.tab_sets.model().item(0, c).data(0)])
+                    recs.append([self.cur_law, 2, rg, self.ui.tab_sets.model().item(r, c).data(0)])
+                    rg += 1
 
         self.mdb.run_query(
             "INSERT INTO {0}.law_values (id_law, id_var, id_order, value) VALUES (%s, %s, %s, %s)".format(
@@ -847,3 +1262,14 @@ class ClassHydroLawCreateDialog(QDialog):
         layout.addRow(self.btn_box)
 
         self.setLayout(layout)
+
+
+class QStandardItemGray(QStandardItem):
+    def __init__(self, v, enab=True, parent=None):
+        super(QStandardItemGray, self).__init__(parent)
+
+        self.setBackground(QColor("#E9E7E3"))
+        self.setData(v, 0)
+        if not enab:
+            self.setFlags(Qt.ItemIsEnabled)
+
