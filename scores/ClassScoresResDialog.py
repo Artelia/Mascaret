@@ -31,7 +31,7 @@ from .ScoreResWidget import ScoreResWidget
 from .ScoreDistWidget import ScoreDistWidget
 
 
-class ClassScoresResDialog():
+class ClassScoresResDialog:
     """
     GUI Class allow to compute scores
     """

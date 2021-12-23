@@ -245,7 +245,6 @@ class ClassDlgImport(QDialog):
         self.bool_ver_plug = True
         self.bool_ver_postgres = True
         self.bool_name_schema = True
-
         self.init_gui()
 
     def init_gui(self):

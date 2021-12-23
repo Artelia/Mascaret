@@ -28,11 +28,11 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 from .GraphResult import GraphResult
-from ..Function import tw_to_txt,  fill_zminbed
+from ..Function import tw_to_txt, fill_zminbed
 from datetime import timedelta
-from .ClassResProfil import ClassResProfil,get_valeurs
+from .ClassResProfil import ClassResProfil, get_valeurs
 from shapely.geometry import shape
-from .WidgetProfResultDialog import  WidgetProfResultDialog
+from .WidgetProfResultDialog import WidgetProfResultDialog
 from shapely.ops import cascaded_union
 from shapely.geometry import GeometryCollection
 
@@ -114,15 +114,14 @@ class GraphProfilResultDialog(QWidget):
             self.cb_det.currentIndexChanged.connect(
                 lambda: self.detail_changed(up_lim=False))
 
-            self.name_tab = {'prof' : {'name':'Graph Results',
-                                       'lst_vars':['ZREF', 'Z']},
-                            }
+            self.name_tab = {'prof': {'name': 'Graph Results',
+                                      'lst_vars': ['ZREF', 'Z']},
+                             }
             self.curent_data = {'prof': {},
                                 }
 
-            #TODO Export
+            # TODO Export
             self.bt_expCsv.clicked.connect(self.export_csv)
-
 
             self.lst_runs = []
             self.init_dico_run()
@@ -171,7 +170,7 @@ class GraphProfilResultDialog(QWidget):
                                list_var=['abscissa', 'x', 'z', 'leftminbed',
                                          'rightminbed', 'leftstock',
                                          'rightstock', 'zleftminbed',
-                                         'zrightminbed','branchnum'])
+                                         'zrightminbed', 'branchnum'])
         self.val_prof_ref = {}
         self.plani_graph = {}
         if prof:
@@ -201,12 +200,11 @@ class GraphProfilResultDialog(QWidget):
                     except:
                         pass
 
-
     def get_profil_plani(self):
         self.plani_graph = {}
         for pk, info in self.val_prof_ref.items():
-           # print(info.keys(),pk)
-            if info :
+            # print(info.keys(),pk)
+            if info:
                 x = info['x']
                 z = info['ZREF']
                 profil = list(zip(x, z))
@@ -216,13 +214,13 @@ class GraphProfilResultDialog(QWidget):
                 if info['leftstock'] and \
                         info['rightstock']:
                     maj_bed = [info['leftstock'],
-                                    info['rightstock']]
+                               info['rightstock']]
                 else:
                     maj_bed = [x[0],
                                x[-1]]
 
                 cond_plani, dico_plani = self.check_run_plani(pk)
-                #cond_plani  = False
+                # cond_plani  = False
                 self.plani_graph[pk] = {}
                 if cond_plani:
                     cl_geo = ClassResProfil()
@@ -231,11 +229,11 @@ class GraphProfilResultDialog(QWidget):
                                    info['branch'],
                                    min_bed, maj_bed, self.cur_run,
                                    zmax=self.zmax_save,
-                                   dico_plani = dico_plani,
+                                   dico_plani=dico_plani,
                                    database=self.mdb)
 
                     cl_geo.get_results()
-                    if cl_geo.dico_res :
+                    if cl_geo.dico_res:
                         for id, name in cl_geo.cas_prt.items():
                             if id in cl_geo.dico_res.keys():
                                 self.plani_graph[pk][name] = dict(
@@ -243,20 +241,22 @@ class GraphProfilResultDialog(QWidget):
 
                     del cl_geo
 
-    def get_run_plani(self,pk, get_bas=False):
+    def get_run_plani(self, pk, get_bas=False):
         where = 'id_runs = {} AND pknum = {}'.format(self.cur_run, pk)
         elem_plani = self.mdb.select('runs_plani', order='id_type,id_order',
-                               where=where,
-                               list_var=['id_type', 'id_order', 'ST_AsGeoJSON(line)'])
+                                     where=where,
+                                     list_var=['id_type', 'id_order',
+                                               'ST_AsGeoJSON(line)'])
 
-        if get_bas :
-            where = "id_runs = {0} AND var = 'pt_bas' AND type_res = 'opt'".format(self.cur_run)
+        if get_bas:
+            where = "id_runs = {0} AND var = 'pt_bas' AND type_res = 'opt'".format(
+                self.cur_run)
 
             elem = self.mdb.select('runs_graph', order='id',
                                    where=where,
                                    list_var=['val'])
 
-            if len(elem['val'])>0:
+            if len(elem['val']) > 0:
                 self.info_graph['opt']['pt_bas'] = elem['val'][0]
             else:
                 self.info_graph['opt']['pt_bas'] = {}
@@ -269,13 +269,14 @@ class GraphProfilResultDialog(QWidget):
         for id, id_type in enumerate(elem['id_type']):
             if not id_type in dico_plani.keys():
                 dico_plani[id_type] = {'pt_bas': pt_bas[str(id_type)],
-                                            'line': []}
-                #st_asgeojson eqv. line
-            dico_plani[id_type]['line'].append(shape(json.loads(elem['st_asgeojson'][id])))
+                                       'line': []}
+                # st_asgeojson eqv. line
+            dico_plani[id_type]['line'].append(
+                shape(json.loads(elem['st_asgeojson'][id])))
 
         return dico_plani
 
-    def check_run_plani(self,pk):
+    def check_run_plani(self, pk):
 
         pt_bas = None
         elem = self.get_run_plani(pk)
@@ -284,8 +285,7 @@ class GraphProfilResultDialog(QWidget):
             if str(pk) in self.info_graph['opt']['pt_bas'].keys():
                 pt_bas = self.info_graph['opt']['pt_bas'][str(pk)]
 
-
-        if len(elem['id_type'])> 0 and  pt_bas:
+        if len(elem['id_type']) > 0 and pt_bas:
             dico_plani = self.create_dico_plani(elem, pt_bas)
         else:
 
@@ -324,8 +324,7 @@ class GraphProfilResultDialog(QWidget):
                 # Pas de valeur pour le pk en cours
                 return False, None
 
-
-        return  True, dico_plani
+        return True, dico_plani
 
     def get_runs_graph(self):
         sql = "SELECT type_res,var,val FROM {0}.runs_graph WHERE " \
@@ -469,27 +468,29 @@ class GraphProfilResultDialog(QWidget):
                 if 'zmax' in self.info_graph[self.typ_res].keys():
                     self.zmax_save = self.info_graph[self.typ_res]['zmax'][
                         str(self.cur_pknum)]
-                    new_poly =  GeometryCollection()
+                    new_poly = GeometryCollection()
 
                     qmaj_max = self.get_qmaj_max()
 
-                    for i, key in enumerate(self.plani_graph[self.cur_pknum].keys()):
-                        if i ==0:
-                            new_poly = self.plani_graph[self.cur_pknum][key]['pr_poly']
+                    for i, key in enumerate(
+                            self.plani_graph[self.cur_pknum].keys()):
+                        if i == 0:
+                            new_poly = self.plani_graph[self.cur_pknum][key][
+                                'pr_poly']
                             if new_poly.is_valid and not new_poly.is_empty:
-                                last_poly =  new_poly
+                                last_poly = new_poly
                         else:
                             # check if flow major_bed
-                            if  qmaj_max > 0.001 :
+                            if qmaj_max > 0.001:
                                 new_poly = cascaded_union([last_poly,
                                                            self.plani_graph[
-                                                               self.cur_pknum][key][
+                                                               self.cur_pknum][
+                                                               key][
                                                                'pr_poly']])
                                 if new_poly.is_valid and not new_poly.is_empty:
-                                    last_poly =  new_poly
+                                    last_poly = new_poly
                     # save max
-                    self.val_zmax_save = get_valeurs(self.zmax_save, new_poly )
-
+                    self.val_zmax_save = get_valeurs(self.zmax_save, new_poly)
 
             if update:
                 self.update_data_profil()
@@ -522,6 +523,7 @@ class GraphProfilResultDialog(QWidget):
         qmaj_max = self.mgis.mdb.select_max("val", 'results',
                                             where=where)
         return qmaj_max
+
     def update_data_profil(self):
         """
         update graph data for profile
@@ -562,7 +564,6 @@ class GraphProfilResultDialog(QWidget):
 
                 self.cur_vars_lbl = self.find_var_lbl()
 
-
                 if self.cur_t == 'Zmax':
                     zlevel = self.zmax_save
                     val_str = None
@@ -587,15 +588,16 @@ class GraphProfilResultDialog(QWidget):
                 self.graph_obj.main_axe.set_xlabel(r'Distance ($m$)')
                 self.graph_obj.main_axe.set_ylabel(r'Level ($m$)')
 
-
                 # *******************************
 
-                plani =  False
-                if self.plani_graph :
+                plani = False
+                if self.plani_graph:
                     self.clear_plani_to_current_data()
-                    self.curent_data.update(dict(self.plani_graph[self.cur_pknum]))
-                    self.graph_obj.init_graph_plani(self.plani_graph[self.cur_pknum])
-                    for key,ctrl_ in self.ctrl_label.items():
+                    self.curent_data.update(
+                        dict(self.plani_graph[self.cur_pknum]))
+                    self.graph_obj.init_graph_plani(
+                        self.plani_graph[self.cur_pknum])
+                    for key, ctrl_ in self.ctrl_label.items():
                         val_d = self.val_zmax_save[key]
                         if val_d:
                             val_d = str(round(val_d, 2))
@@ -625,7 +627,7 @@ class GraphProfilResultDialog(QWidget):
         else:
             return "", "blue"
 
-    def fill_tab(self, zlevel,qmaj_max):
+    def fill_tab(self, zlevel, qmaj_max):
         self.cur_id_tab = self.clas_data.currentIndex()
         self.clas_data.clear()
         for idx, wow in enumerate(self.curent_data.items()):
@@ -655,18 +657,18 @@ class GraphProfilResultDialog(QWidget):
                 self.clas_data.addTab(cl_res, name)
                 # same behavior that the fill of graph
                 dico_tmp = {}
-                if qmaj_max>0.001 or self.cas_prt[0]==name :
-                    dico_tmp  = get_valeurs(zlevel, param['pr_poly'])
+                if qmaj_max > 0.001 or self.cas_prt[0] == name:
+                    dico_tmp = get_valeurs(zlevel, param['pr_poly'])
                 else:
-                    dico_tmp =  {'z' : zlevel,
-                                 'area':None,
-                                 'perimeter': None,
-                                 'width' : None}
+                    dico_tmp = {'z': zlevel,
+                                'area': None,
+                                'perimeter': None,
+                                'width': None}
 
                 cl_res.change_label(dico_tmp)
 
                 lst_vars = [x_var]
-                lst_vars.extend(['width','area','debitance'])
+                lst_vars.extend(['width', 'area', 'debitance'])
                 lst_lbls = []
                 for var in lst_vars:
                     if var == 'z':
@@ -697,7 +699,6 @@ class GraphProfilResultDialog(QWidget):
             self.cur_id_tab = 0
         self.clas_data.setCurrentIndex(self.cur_id_tab)
 
-
     def find_var_lbl(self):
         tmp = []
         for var in self.cur_vars:
@@ -713,7 +714,7 @@ class GraphProfilResultDialog(QWidget):
         txt = self.cb_graph.currentText()
         idx = self.clas_data.currentIndex()
         name = self.clas_data.tabText(idx)
-        txt = txt+' '+ name
+        txt = txt + ' ' + name
 
         default_name = txt.replace(' ', '_').replace(':', '-')
 

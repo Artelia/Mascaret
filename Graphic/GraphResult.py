@@ -89,7 +89,7 @@ class GraphResult(GraphCommonNew):
                                                           label=lst_lbls[v])
             self.ax[lst_axe[v]]["curves"].append(courbe_var)
             self.data_to_curve[v] = (
-            lst_axe[v], len(self.ax[lst_axe[v]]["curves"]) - 1)
+                lst_axe[v], len(self.ax[lst_axe[v]]["curves"]) - 1)
 
             annot_var = self.ax[lst_axe[v]]["axe"].annotate("", xy=(0, 0),
                                                             ha='left',
@@ -254,34 +254,35 @@ class GraphResult(GraphCommonNew):
         for (id_debord, var), param_debord in dict_debord.items():
             self.list_var.append({"id": v, "name": var, "clr": "grey"})
             courbe_debord, = self.ax[param_debord["axe"]]["axe"].plot([], [],
-                                                                color="grey",
-                                                                marker='o',
-                                                                markeredgewidth=0,
-                                                                zorder=100 - v,
-                                                                linestyle=
-                                                                MPL_LINE_STYLE[
-                                                                    idx+1],
-                                                                label="overflow level - {0} ".format(
-                                                                    id_debord))
+                                                                      color="grey",
+                                                                      marker='o',
+                                                                      markeredgewidth=0,
+                                                                      zorder=100 - v,
+                                                                      linestyle=
+                                                                      MPL_LINE_STYLE[
+                                                                          idx + 1],
+                                                                      label="overflow level - {0} ".format(
+                                                                          id_debord))
 
             self.ax[param_debord["axe"]]["curves"].append(courbe_debord)
             self.data_to_curve[v] = (
-                param_debord["axe"], len(self.ax[param_debord["axe"]]["curves"]) - 1)
+                param_debord["axe"],
+                len(self.ax[param_debord["axe"]]["curves"]) - 1)
 
-
-            annot_var = self.ax[param_debord["axe"]]["axe"].annotate("", xy=(0, 0),
-                                                                  ha='left',
-                                                                  xytext=(
-                                                                      10, 0),
-                                                                  textcoords='offset points',
-                                                                  va='top',
-                                                                  bbox=dict(
-                                                                      boxstyle='round, pad=0.5',
-                                                                      fc='white',
-                                                                      alpha=0.7),
-                                                                  color="grey",
-                                                                  visible=False,
-                                                                  zorder=199 - v)
+            annot_var = self.ax[param_debord["axe"]]["axe"].annotate("",
+                                                                     xy=(0, 0),
+                                                                     ha='left',
+                                                                     xytext=(
+                                                                         10, 0),
+                                                                     textcoords='offset points',
+                                                                     va='top',
+                                                                     bbox=dict(
+                                                                         boxstyle='round, pad=0.5',
+                                                                         fc='white',
+                                                                         alpha=0.7),
+                                                                     color="grey",
+                                                                     visible=False,
+                                                                     zorder=199 - v)
             self.annotation.append(annot_var)
             idx += 1
             v += 1
@@ -307,12 +308,12 @@ class GraphResult(GraphCommonNew):
 
             self.ax[param_obs["axe"]]["curves"].append(courbe_obs)
             self.data_to_curve[v] = (
-            param_obs["axe"], len(self.ax[param_obs["axe"]]["curves"]) - 1)
+                param_obs["axe"], len(self.ax[param_obs["axe"]]["curves"]) - 1)
 
             annot_var = self.ax[param_obs["axe"]]["axe"].annotate("", xy=(0, 0),
                                                                   ha='left',
                                                                   xytext=(
-                                                                  10, 0),
+                                                                      10, 0),
                                                                   textcoords='offset points',
                                                                   va='top',
                                                                   bbox=dict(
@@ -343,18 +344,16 @@ class GraphResult(GraphCommonNew):
                     xfinal.append(None)
                     yfinal.append(None)
 
-        cb,  = self.main_axe.plot(xfinal, yfinal,
-                                   color="grey",
-                                   marker='',
-                                   markeredgewidth=0,
-                                   zorder=100 - self.list_var[-1]["id"] + 1,
-                                   linestyle=MPL_LINE_STYLE[0],
-                                   alpha=0.5,
-                                   label="planimetry")
+        cb, = self.main_axe.plot(xfinal, yfinal,
+                                 color="grey",
+                                 marker='',
+                                 markeredgewidth=0,
+                                 zorder=100 - self.list_var[-1]["id"] + 1,
+                                 linestyle=MPL_LINE_STYLE[0],
+                                 alpha=0.5,
+                                 label="planimetry")
         self.courbePlani.append(cb)
         self.courbePlani[0].set_visible(True)
-
-
 
     def clear_plani(self):
         if self.ax[1]["curves"]:

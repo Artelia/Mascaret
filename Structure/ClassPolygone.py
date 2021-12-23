@@ -224,7 +224,7 @@ class ClassPolygone:
             delpoly = GeometryCollection()
 
         if not delpoly.is_empty:
-            if not poly.is_valid :
+            if not poly.is_valid:
                 # Polygone => multiPolygone
                 poly = poly.buffer(0)
             polyw = poly.difference(delpoly)
@@ -308,22 +308,21 @@ class ClassPolygone:
         poly_p = Polygon(liste_poly)
         return poly_p
 
-    def poly2_profile(self,profil):
+    def poly2_profile(self, profil):
         """
         creation profile polygone
         :param profil: profile data
         :return: polygone of profile
         """
-        zmax = max(profil[:,1])
+        zmax = max(profil[:, 1])
         liste_poly = []
-        if zmax != profil[0,1]:
-            liste_poly.append([ profil[0,0], zmax])
-        for x, z in  profil:
-
+        if zmax != profil[0, 1]:
+            liste_poly.append([profil[0, 0], zmax])
+        for x, z in profil:
             liste_poly.append([x, z])
-        if zmax != profil[-1,1]:
-            liste_poly.append([profil[-1,0], zmax])
-        liste_poly.append([profil[0,0], zmax])
+        if zmax != profil[-1, 1]:
+            liste_poly.append([profil[-1, 0], zmax])
+        liste_poly.append([profil[0, 0], zmax])
 
         poly_p = Polygon(liste_poly)
 

@@ -33,7 +33,6 @@ import gc
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
-
 from qgis.PyQt.QtCore import qVersion
 from qgis.core import *
 from qgis.gui import *
@@ -141,7 +140,7 @@ class ClassMascaret:
     def creer_geo_ref(self):
         # """creation of gemoetry file"""
         try:
-            branche, nom =  None, None
+            branche, nom = None, None
             nomfich = os.path.join(self.dossierFileMasc, self.baseName + '.geo')
 
             if os.path.isfile(nomfich):
@@ -421,7 +420,7 @@ class ClassMascaret:
 
         return dico
 
-    def geom_obj_toname(self, nom,type_):
+    def geom_obj_toname(self, nom, type_):
         """ get name law"""
         condition = "geom_obj='{0}' AND " \
                     "id_law_type={1} AND active".format(nom, type_)
@@ -906,7 +905,7 @@ class ClassMascaret:
             donnees = SubElement(struct, "donnees")
             SubElement(donnees, "modeEntree").text = '1'
             SubElement(donnees, "fichier").text = '{}.loi'.format(
-                del_symbol(self.geom_obj_toname(nom,dict_lois[nom]['type'])))
+                del_symbol(self.geom_obj_toname(nom, dict_lois[nom]['type'])))
             SubElement(donnees, "uniteTps").text = '-0'
             SubElement(donnees, "nbPoints").text = '-0'
             SubElement(donnees, "nbDebitsDifferents").text = '-0'
@@ -1274,9 +1273,9 @@ class ClassMascaret:
         else:
             arbre.write(fich_entree)
 
-    def creer_loi(self, nom, tab, type_,  init=False):
+    def creer_loi(self, nom, tab, type_, init=False):
         nom = self.geom_obj_toname(nom, type_)
-        if init :
+        if init:
             nom = nom + '_init'
         with open(os.path.join(self.dossierFileMasc, del_symbol(nom) + '.loi'),
                   'w') as fich:
@@ -1442,39 +1441,39 @@ class ClassMascaret:
                 if type == "Q":
                     tab = {'time': [0, 3600],
                            'flowrate': [valeur_init, valeur_init]}
-                    self.creer_loi(nom , tab, 1, init= True)
+                    self.creer_loi(nom, tab, 1, init=True)
                 else:
                     tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
-                    self.creer_loi(nom , tab, 2, init= True)
+                    self.creer_loi(nom, tab, 2, init=True)
 
         for nom, loi in dict_lois.items():
             if loi['type'] in (1, 2):
                 continue
             tab = self.get_laws(nom, loi['type'],
-                                          obs=True, date_deb=date_debut,
-                                          date_fin=date_fin)
+                                obs=True, date_deb=date_debut,
+                                date_fin=date_fin)
 
             if tab:
                 self.creer_loi(nom, tab, loi['type'])
             else:
                 self.mgis.add_info('The law for {} is not create.'.format(nom))
 
-            # if loi['type'] in (4, 5) and loi['couche'] == 'extremites':
-            #     for c, d in zip(tab["z"], tab["flowrate"]):
-            #         if debit_prec > 0 and d > somme:
-            #             valeur_init = (c - cote_prec) \
-            #                           / (d - debit_prec) \
-            #                           * (somme - debit_prec) \
-            #                           + cote_prec
-            #             break
-            #         else:
-            #             cote_prec, debit_prec = c, d
-            #     if valeur_init is not None:
-            #         tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
-            #         self.creer_loi(nom + '_init', tab, 2)
-            #
-            # else:
-            #self.creer_loi(nom + '_init', tab, loi['type'])
+                # if loi['type'] in (4, 5) and loi['couche'] == 'extremites':
+                #     for c, d in zip(tab["z"], tab["flowrate"]):
+                #         if debit_prec > 0 and d > somme:
+                #             valeur_init = (c - cote_prec) \
+                #                           / (d - debit_prec) \
+                #                           * (somme - debit_prec) \
+                #                           + cote_prec
+                #             break
+                #         else:
+                #             cote_prec, debit_prec = c, d
+                #     if valeur_init is not None:
+                #         tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
+                #         self.creer_loi(nom + '_init', tab, 2)
+                #
+                # else:
+                # self.creer_loi(nom + '_init', tab, loi['type'])
 
     def fct_comment(self):
         liste_col = self.mdb.list_columns('runs')
@@ -1666,7 +1665,7 @@ class ClassMascaret:
                     tfinal = 365 * 24 * 3600
 
                 condition = "geom_obj='{0}' AND id_law_type={1} AND active".format(
-                    nom,l['type'])
+                    nom, l['type'])
                 if l['type'] == 1:
                     tab = {"time": [0, tfinal],
                            'flowrate': [l["valeurperm"]] * 2}
@@ -1676,7 +1675,7 @@ class ClassMascaret:
                     l['type'] = 2
                     tab = {"time": [0, tfinal], 'z': [l["valeurperm"]] * 2}
                 else:
-                    tab= self.get_laws(nom, l["type"])
+                    tab = self.get_laws(nom, l["type"])
 
                 if tab:
                     self.creer_loi(nom, tab, l["type"])
@@ -1729,7 +1728,7 @@ class ClassMascaret:
         for nom, l in dict_lois.items():
             # dictLois.items() extremities liste
 
-            tab= self.get_laws(nom, l["type"])
+            tab = self.get_laws(nom, l["type"])
             if tab:
                 self.creer_loi(nom, tab, l["type"])
             else:
@@ -1741,7 +1740,7 @@ class ClassMascaret:
             if "valeurperm" not in l.keys():
                 continue
 
-            #nom = nom + "_init"
+            # nom = nom + "_init"
             if l["valeurperm"] is not None:
                 if l['type'] == 1:
                     tab = {"time": [0, 3600], 'flowrate': [l["valeurperm"]] * 2}

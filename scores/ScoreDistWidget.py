@@ -97,7 +97,7 @@ class ScoreDistWidget(QWidget):
                                     elif err == 'dist_abs_err':
                                         if dist in tab_fill_abs.keys():
                                             tab_fill_abs[dist][name_col] = \
-                                            tmp[1][id]
+                                                tmp[1][id]
                                         else:
                                             tab_fill_abs[dist] = {
                                                 name_col: tmp[1][id]}

@@ -36,14 +36,13 @@ from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
 
-from .GraphCommon import  GraphCommon
+from .GraphCommon import GraphCommon
 from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
 from ..Structure.ClassPolygone import ClassPolygone
 from .GraphProfilResultDialog import GraphProfilResultDialog
 from .GraphResultDialog import GraphResultDialog
 from .ClassProfInterpDialog import ClassProfInterpDialog
 from ..Function import tw_to_txt
-
 
 try:
     from matplotlib.backends.backend_qt5agg \
@@ -266,7 +265,6 @@ class GraphProfil(GraphCommon):
             self.select_changed)
         self.tableau.setSelectionMode(QAbstractItemView.ContiguousSelection)
         self.tableau.addAction(CopySelectedCellsAction(self.tableau))
-
 
         # figure
 
@@ -517,7 +515,6 @@ class GraphProfil(GraphCommon):
         self.courbeProfil.set_ydata(self.tab['z'])
         self.canvas.draw()
 
-
     def sauve_profil(self):
         if not self.tab['x']:
             self.mgis.add_info('No data to save profile')
@@ -540,11 +537,11 @@ class GraphProfil(GraphCommon):
                     v = min(self.tab['x'])
                     self.tab['leftminbed'] = v
                     self.tab['zleftminbed'] = self.tab['z'][0]
-                if not  self.tab['zrightminbed'] or self.tab['zleftminbed']:
+                if not self.tab['zrightminbed'] or self.tab['zleftminbed']:
                     lstz_minor = []
                     for x, z in zip(self.tab['x'], self.tab['z']):
-                        if x >= self.tab['leftminbed'] and \
-                                        x <= self.tab['rightminbed']:
+                        if self.tab['leftminbed'] <= x <= self.tab[
+                            'rightminbed']:
                             lstz_minor.append(z)
 
                 if k == 'zrightminbed' and not v:
@@ -552,7 +549,7 @@ class GraphProfil(GraphCommon):
 
                 if k == 'zleftminbed' and not v:
                     self.tab['zleftminbed'] = lstz_minor[0]
-                print(k,self.position)
+                print(k, self.position)
                 self.liste[k][self.position] = v
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
         tab = {self.nom: self.tab}
@@ -1308,8 +1305,6 @@ class GraphProfil(GraphCommon):
             self.tab['leftstock'] = oldx[-1] - (lmaj - xo)
             self.tab['rightstock'] = oldx[-1] - (rmaj - xo)
 
-
-
         dist_x = []
         for i, x in enumerate(oldx):
             if i != 0:
@@ -1322,7 +1317,6 @@ class GraphProfil(GraphCommon):
             xf = round(xf + dist, 6)
             new_x.append(xf)
         self.tab['x'] = new_x
-
 
         self.maj_graph()
 
@@ -1359,18 +1353,17 @@ class GraphProfil(GraphCommon):
 
         self.mdb.insert2("topo", tab)
 
-
     def del_amont_aval(self):
         """
         delet in top tab the down/upstream courbe
         :return:
         """
         reply = QMessageBox.question(self, 'Message',
-        'Do you want to delete the upstream / downstream topo profiles?',
-        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                     'Do you want to delete the upstream / downstream topo profiles?',
+                                     QMessageBox.Yes | QMessageBox.No,
+                                     QMessageBox.No)
 
         if reply == QMessageBox.Yes:
-
             condition = "name='{0}' AND profile='{1}'".format('upstream',
                                                               self.nom)
             self.mdb.delete("topo", condition)
@@ -1383,10 +1376,6 @@ class GraphProfil(GraphCommon):
             self.maj_graph()
             self.maj_limites()
             self.maj_legende()
-
-
-
-
 
     def topo_amont_aval(self):
         """
@@ -1476,10 +1465,10 @@ class GraphProfil(GraphCommon):
         else:
             x_pr = [float(val) for val in self.liste['x'][id].split()]
             z_pr = [float(val) for val in self.liste['z'][id].split()]
-            linS = []
+            lin_s = []
             for x, z in zip(x_pr, z_pr):
-                linS.append((x, z))
-            prof = np.array(linS)
+                lin_s.append((x, z))
+            prof = np.array(lin_s)
 
         bool = np.all(prof == prof[0, :], axis=0)
         if bool[1]:
@@ -1505,7 +1494,7 @@ class GraphProfil(GraphCommon):
                   'x_d': None,
                   'x_g': None, }
         for cas in [-1, 0, 1]:
-            if id + cas >= 0 and id + cas < len(self.liste['x']):
+            if 0 <= id + cas < len(self.liste['x']):
                 if self.liste['x'][id + cas]:
                     # print(self.liste['name'][id + cas])
                     minz, area, rz, lz, rmin, lmin = self.val_prof(
@@ -1539,7 +1528,7 @@ class GraphProfil(GraphCommon):
                                                      }
                 else:
                     self.ch_prof_inter[dcas[cas]] = nofind
-            elif id + cas >= 0 and id + cas < len(self.liste['x']):
+            elif 0 <= id + cas < len(self.liste['x']):
                 if self.liste['x'][id + cas]:
                     # print(self.liste['name'][id + cas])
 
@@ -1703,7 +1692,7 @@ class GraphProfil(GraphCommon):
             self.maj_graph()
             self.maj_legende()
             self.maj_limites()
-            
+
     def get_plani(self, pk, branch):
         """
         Get planimetry value
@@ -1767,9 +1756,9 @@ class GraphProfil(GraphCommon):
         lmaj = self.liste['leftstock'][id]
         rmaj = self.liste['rightstock'][id]
 
-        linS = []
+        lin_s = []
         for x, z in zip(x_pr, z_pr):
-            linS.append((x, z))
+            lin_s.append((x, z))
 
         if not lmin:
             # no valeur for minor bed
@@ -1780,7 +1769,7 @@ class GraphProfil(GraphCommon):
 
         if not lmaj:
             # no valeur for major bed
-            lmaj =  x_pr[0]
+            lmaj = x_pr[0]
         if not rmaj:
             # no valeur for major bed
             rmaj = x_pr[-1]
@@ -1789,7 +1778,7 @@ class GraphProfil(GraphCommon):
             'name': self.liste['name'][id],
             'id': self.liste['gid'][id],
             'branch': self.liste['branchnum'][id],
-            'prof': linS,
+            'prof': lin_s,
             'pk': self.liste['abscissa'][id],
             'minor': [lmin, rmin],
             'major': [lmaj, rmaj],
@@ -1807,9 +1796,9 @@ class GraphProfil(GraphCommon):
         lmin = self.liste['leftminbed'][id]
         rmin = self.liste['rightminbed'][id]
 
-        linS = []
+        lin_s = []
         for x, z in zip(x_pr, z_pr):
-            linS.append((x, z))
+            lin_s.append((x, z))
         #
         if not lmin:
             # no valeur for minor bed
@@ -1817,7 +1806,7 @@ class GraphProfil(GraphCommon):
         if not rmin:
             # no valeur for minor bed
             rmin = x_pr[-1]
-        pr_m, _, _, _, _ = decoup_pr(linS, [lmin, rmin], [lmin, rmin])
+        pr_m, _, _, _, _ = decoup_pr(lin_s, [lmin, rmin], [lmin, rmin])
         pr_m = np.array(pr_m)
         return pr_m, rmin, lmin
 
@@ -1838,14 +1827,14 @@ class GraphProfil(GraphCommon):
         idf = id
         while idf != 0:
             idf -= 1
-            if self.liste['x'][idf] != None:
+            if self.liste['x'][idf] is not None:
                 idam = idf
                 break
         # downstream
         idf = id
         while idf != idmax - 1:
             idf += 1
-            if self.liste['x'][idf] != None:
+            if self.liste['x'][idf] is not None:
                 idav = idf
                 break
         # check val
@@ -1854,42 +1843,6 @@ class GraphProfil(GraphCommon):
         elif idav is None:
             msgerr += 'No finds downstream profile'
         return msgerr, id, idam, idav
-        #
-        # idam =
-        #
-        # idav =
-        # self.liste['x'][id + cas]
-
-        # cas = -1 amont, cas=1 aval
-        # dcas = {-1: 'upstream', 0: 'current', 1: 'downstream'}
-        # for cas in [-1, 0, 1]:
-        #     if self.liste['x'][id + cas]:
-        #         # print(self.liste['name'][id + cas])
-        #         minz, area, rz, lz, rmin, lmin = self.val_inter_prof(id + cas)
-        #
-        #
-        #     'x': [float(val) for val in self.liste['x'][id].split()],
-        #     'z': [float(val) for val in self.liste['z'][id].split()]
-        # }
-        # linS = []
-        # for x, z in zip(profil['x'], profil['z']):
-        #     linS.append((x, z))
-        #
-        # # overflow point
-        # lmin = self.liste['leftminbed'][id]
-        # rmin = self.liste['rightminbed'][id]
-        #
-        #
-        #
-        # #
-        # if not lmin:
-        #     # no valeur for minor bed
-        #     lmin = profil['x'][0]
-        # if not rmin:
-        #     # no valeur for minor bed
-        #     rmin = profil['x'][0]
-        #
-        # pr_m, _, _, _, _ = decoup_pr(linS, [lmin, rmin], [lmin, rmin])
 
 
 def decoup_pr(pr, lminor_x, lmaj_x):
@@ -1911,22 +1864,22 @@ def decoup_pr(pr, lminor_x, lmaj_x):
                 pr_d.append(point)
         else:
             pr_m.append(point)
-    if pr_m == []:
+    if not pr_m:
         print('Pas de profil lit mineur')
         return [], [], [], [], []
-    if pr_g == []:
+    if not pr_g:
         pr_g = [pr_m[0], pr_m[0]]
     else:
         pr_g = pr_g + [pr_m[0], pr_m[0]]
-    if pr_d == []:
+    if not pr_d:
         pr_d = [pr_m[-1], pr_m[-1]]
     else:
         pr_d = [pr_m[-1], pr_m[-1]] + pr_d
-    if pr_st_g == []:
+    if not pr_st_g:
         pr_st_g = [pr_g[0], pr_g[0]]
     else:
         pr_st_g = pr_st_g + [pr_g[0], pr_g[0]]
-    if pr_st_d == []:
+    if not pr_st_d:
         pr_st_d = [pr_d[-1], pr_d[-1]]
     else:
         pr_st_d = [pr_d[-1], pr_d[-1]] + pr_st_d
@@ -1948,7 +1901,6 @@ class CopySelectedCellsAction(QAction):
 
     def copy_cells_to_clipboard(self):
         if len(self.table_widget.selectionModel().selectedIndexes()) > 0:
-
             lst_r = [idx.row() for idx in
                      self.table_widget.selectionModel().selectedIndexes()]
             lst_c = [idx.column() for idx in

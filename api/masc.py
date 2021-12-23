@@ -1010,7 +1010,7 @@ class Mascaret:
             raise TelemacException(
                 "Unknown data type %s for %s" % (vartype, varname))
 
-# MDU modif
+            # MDU modif
 
     def save_lig_restart(self, out_file='RestartLigneEau.lig', k_s=None):
         """
@@ -1027,8 +1027,8 @@ class Mascaret:
         # Formatting parameters
         nbcol = 5
         nbent = int((nbbf - 1) / nbcol) + 1
-        nbfmt = int( self.nb_nodes / nbcol) * nbcol
-        nbmod =  self.nb_nodes % nbcol
+        nbfmt = int(self.nb_nodes / nbcol) * nbcol
+        nbmod = self.nb_nodes % nbcol
         nblin = int(nbfmt / nbcol)
         # get coords
         xcoord = []
@@ -1040,22 +1040,22 @@ class Mascaret:
         # Assign the bief number to each section (piecewise constant list)
         ibief = [ib + 0 * i for ib in range(nbbf) for i in range(oribf[ib],
                                                                  endbf[ib])]
-        for i in range( self.nb_nodes):
+        for i in range(self.nb_nodes):
             xcoord.append(
                 self.get('Model.X', i) -
                 self.get('Model.X', oribf[ibief[i]]) +
                 self.get('Model.CrossSection.RelAbs',
-                              self.get('Model.IDT', oribf[ibief[i]]) - 1))
+                         self.get('Model.IDT', oribf[ibief[i]]) - 1))
         del ibief
         del oribf
-        del endbf            
-                   
+        del endbf
+
         # variables
         elevation = [self.get('State.Z', i)
                      for i in range(self.nb_nodes)]
         discharge = [self.get('State.Q', i)
                      for i in range(self.nb_nodes)]
-          
+
         with open(out_file, 'w') as lig:
             # Header
             lig.write('RESULTATS CALCUL, DATE :  '
@@ -1063,7 +1063,7 @@ class Mascaret:
             lig.write('FICHIER RESULTAT MASCARET\n')
             lig.write('------------------------------------------------\
                 -----------------------\n')
-            lig.write(' IMAX =%6i ' %  self.nb_nodes)
+            lig.write(' IMAX =%6i ' % self.nb_nodes)
             lig.write('NBBIEF=%5i\n' % nbbf)
             lig.write((nbent * ' ENTETE NON RELUE\n'))
             # X
@@ -1074,10 +1074,10 @@ class Mascaret:
                 np.savetxt(lig,
                            np.asarray(xcoord[nbfmt:]).reshape(1, nbmod),
                            fmt=(nbmod * '%13.2f'))
-            #  Z
+            # Z
             np.savetxt(lig,
                        np.asarray(elevation[0:nbfmt]).reshape(
-                            nblin, nbcol),
+                           nblin, nbcol),
                        fmt=(nbcol * '%13.3f'), header='Z', comments=' ')
             if nbmod != 0:
                 np.savetxt(lig,
@@ -1110,7 +1110,7 @@ class Mascaret:
 
                 # CF2
                 k_s = [self.get('Model.FricCoefFP', i)
-                            for i in range(self.nb_nodes)]
+                       for i in range(self.nb_nodes)]
                 np.savetxt(lig,
                            np.asarray(k_s[0:nbfmt]).reshape(nblin, nbcol),
                            fmt=(nbcol * '%13.3f'), header='CF2', comments=' ')
@@ -1122,8 +1122,8 @@ class Mascaret:
             # Footer
             lig.write(' FIN')
         lig.close()
-                    
-                    
+
+
 class TelemacException(Exception):
     """ Generic exception class for all of Telemac-Mascaret Exceptions """
     pass

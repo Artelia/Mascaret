@@ -70,7 +70,6 @@ class InitConcDialog(QDialog):
 
         self.init_ui()
 
-
     def init_ui(self):
         self.ui.LawWQ.setText(self.cur_wq_law_name)
         self.graph_edit = GraphInitConc(self.mgis, self.ui.lay_graph_edit)
@@ -96,7 +95,6 @@ class InitConcDialog(QDialog):
         for r, row in enumerate(rows):
             model.setHeaderData(r + 2, 1, row[1], 0)
             self.list_trac.append([row[0], row[1]])
-
 
         model.itemChanged.connect(self.on_tab_data_change)
         return model
@@ -360,7 +358,6 @@ class InitConcDialog(QDialog):
             recs = []
             for r in range(self.ui.tab_laws.model().rowCount()):
                 for c in range(2, self.ui.tab_laws.model().columnCount()):
-
                     recs.append([self.cur_wq_law, self.list_trac[c - 2][0],
                                  self.ui.tab_laws.model().item(r, 0).data(0),
                                  self.ui.tab_laws.model().item(r, 1).data(0),

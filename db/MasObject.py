@@ -1810,6 +1810,7 @@ class runs_graph(MasObject):
                       ('CONSTRAINT runs_graph_pkey',
                        ' PRIMARY KEY (id_runs,type_res,var)')]
 
+
 class runs_plani(MasObject):
     def __init__(self):
         super(runs_plani, self).__init__()
@@ -1823,6 +1824,7 @@ class runs_plani(MasObject):
                       ('line', 'GEOMETRY'),
                       ('CONSTRAINT runs_plani_pkey',
                        ' PRIMARY KEY (id_runs,pknum,id_type,id_order)')]
+
 
 class law_config(MasObject):
     def __init__(self):
@@ -1849,6 +1851,7 @@ class law_values(MasObject):
                       ('id_var', 'integer'),
                       ('id_order', 'integer'),
                       ('value', 'float'),
-                      ('CONSTRAINT law_values_pkey', 'PRIMARY KEY (id_law, id_var, id_order)')]
+                      ('CONSTRAINT law_values_pkey',
+                       'PRIMARY KEY (id_law, id_var, id_order)')]
 
 # ****************************************************************************

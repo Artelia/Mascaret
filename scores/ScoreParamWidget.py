@@ -117,7 +117,7 @@ class ScoreParamWidget(QWidget):
         self.ch_simple_err.disconnect()
         self.ch_quantil_err.disconnect()
 
-        try :
+        try:
             self.ch_persistence.disconnect()
             self.ch_pointe_err.disconnect()
 
@@ -669,7 +669,6 @@ class ScoreParamWidget(QWidget):
         """
         out = False
 
-
         for pk in self.data[id_run].keys():
             if self.cmpt_var[id_run][pk]['Q']:
                 for code in self.data[id_run][pk].keys():
@@ -987,7 +986,7 @@ class ScoreParamWidget(QWidget):
         lst_code = []
         for code, dict in self.obs.items():
             if name:
-                if  name in dict['name'] :
+                if name in dict['name']:
                     lst_code.append(code)
             elif abs:
                 if abs in dict['abscissa']:
@@ -1267,7 +1266,6 @@ class ScoreParamWidget(QWidget):
             pknums = self.get_pk(code)
             self.obs[code]['lst_pk'] = pknums
 
-
         return True
 
     def get_data(self):
@@ -1297,7 +1295,7 @@ class ScoreParamWidget(QWidget):
                 lst_obs = dict_model['lst_obs']
                 for code in lst_obs:
                     for pk in self.obs[code]['lst_pk']:
-                        if pk in  self.data[id_run].keys():
+                        if pk in self.data[id_run].keys():
                             self.data[id_run][pk][code] = {}
                         else:
                             self.data[id_run][pk] = {code: {}}
@@ -1354,7 +1352,7 @@ class ScoreParamWidget(QWidget):
         :param pk : abscissa
         :return:
         """
-        if not (id_run in  self.cmpt_var.keys()) :
+        if not (id_run in self.cmpt_var.keys()):
             self.cmpt_var[id_run] = {}
         if not (pk in self.cmpt_var[id_run].keys()):
             self.cmpt_var[id_run][pk] = {}
@@ -1369,7 +1367,7 @@ class ScoreParamWidget(QWidget):
                 self.resample_model_h(id_run, pk, code)
             else:
                 if 'H' in self.cmpt_var[id_run][pk][code].keys():
-                    if self.cmpt_var[id_run][pk][code]['H'] == False:
+                    if not self.cmpt_var[id_run][pk][code]['H']:
                         self.cmpt_var[id_run][pk][code]['H'] = False
                 else:
                     self.cmpt_var[id_run][pk][code]['H'] = False
@@ -1380,7 +1378,7 @@ class ScoreParamWidget(QWidget):
                 self.resample_model_q(id_run, pk, code)
             else:
                 if 'Q' in self.cmpt_var[id_run][pk][code].keys():
-                    if self.cmpt_var[id_run][pk][code]['Q'] == False:
+                    if not self.cmpt_var[id_run][pk][code]['Q']:
                         self.cmpt_var[id_run][pk][code]['Q'] = False
                 else:
                     self.cmpt_var[id_run][pk][code]['Q'] = False
@@ -1393,6 +1391,7 @@ class ScoreParamWidget(QWidget):
                     self.cmpt_var[id_run][pk]['H'] = True
                 if k['Q']:
                     self.cmpt_var[id_run][pk]['Q'] = True
+
     def ch_date_ref(self):
         """ change color and change  parameter limite"""
         ctrl = self.sender()  # get widget which invok signal

@@ -18,7 +18,6 @@ email                :
  ***************************************************************************/
  """
 
-
 from shapely.geometry import *
 from shapely.ops import cascaded_union
 import matplotlib.pyplot as plt
@@ -26,7 +25,7 @@ import numpy as np
 import json
 
 
-class ClassResProfil():
+class ClassResProfil:
     """
 
     """
@@ -51,13 +50,13 @@ class ClassResProfil():
         self.mdb = None
         self.id_run = None
 
-    def init_cl(self, pk, prof, branch, min_bed, maj_bed,id_run,
+    def init_cl(self, pk, prof, branch, min_bed, maj_bed, id_run,
                 database=None,
                 plani=None,
                 ksmaj=None,
                 ksmin=None,
                 zmax=None,
-                dico_plani = {},
+                dico_plani=None,
                 ):
 
         self.pk = pk
@@ -139,26 +138,26 @@ class ClassResProfil():
                     pr_d.append(point)
             else:
                 pr_m.append(point)
-        if pr_m == []:
+        if not pr_m:
             txt = 'Pas de profil lit mineur'
             if self.debug:
                 print(txt)
             self.warning_message += txt
             self.warning_message += '\n'
             return [], [], [], [], []
-        if pr_g == []:
+        if not pr_g:
             pr_g = [pr_m[0], pr_m[0]]
         else:
             pr_g = pr_g + [pr_m[0], pr_m[0]]
-        if pr_d == []:
+        if not pr_d:
             pr_d = [pr_m[-1], pr_m[-1]]
         else:
             pr_d = [pr_m[-1], pr_m[-1]] + pr_d
-        if pr_st_g == []:
+        if not pr_st_g:
             pr_st_g = [pr_g[0], pr_g[0]]
         else:
             pr_st_g = pr_st_g + [pr_g[0], pr_g[0]]
-        if pr_st_d == []:
+        if not pr_st_d:
             pr_st_d = [pr_d[-1], pr_d[-1]]
         else:
             pr_st_d = [pr_d[-1], pr_d[-1]] + pr_st_d
@@ -237,7 +236,7 @@ class ClassResProfil():
             limit_pr = pr[id_g:id_d + 1]
 
         wow = []
-        pzmax = max(zmax,pr[id_g, 1])
+        pzmax = max(zmax, pr[id_g, 1])
         for coord in limit_pr:
             wow.append([coord[0], coord[1]])
             if pzmax < coord[1]:
@@ -256,7 +255,7 @@ class ClassResProfil():
         if cond_pas_z:
             pasz = pas
         else:
-            pasz = (zmax - zmin) / (pas)
+            pasz = (zmax - zmin) / pas
 
         z_level = zmin
 
@@ -356,7 +355,7 @@ class ClassResProfil():
             self.dico_plani[num]['lines'] = line_disc
         return self.dico_plani
 
-    def plani_stock(self, dico_zmax, id_run, database ):
+    def plani_stock(self, dico_zmax, id_run, database):
         self.mdb = database
         prof = self.mdb.select('profiles', order='abscissa',
                                list_var=['abscissa', 'x', 'z', 'leftminbed',
@@ -389,7 +388,7 @@ class ClassResProfil():
 
                         self.init_cl(pk, profil,
                                      prof['branchnum'][id],
-                                     min_bed, maj_bed,id_run,
+                                     min_bed, maj_bed, id_run,
                                      database=self.mdb,
                                      )
                         self.genrete_plani(dico_zmax[str(pk)])
@@ -401,7 +400,8 @@ class ClassResProfil():
                             if 'lines' in dico.keys():
                                 for ord, line in enumerate(dico['lines']):
                                     list_insert_plani.append(
-                                        [id_run, pk, id_type, ord, json.dumps(mapping(line))])
+                                        [id_run, pk, id_type, ord,
+                                         json.dumps(mapping(line))])
                                 point_bas[pk][id_type] = dico['pt_bas']
 
                     except Exception as err:
@@ -446,8 +446,10 @@ class ClassResProfil():
             discratization level
         :return:
         """
-
-        self.dico_res = dict( self.dico_plani)
+        if self.dico_plani:
+            self.dico_res = dict(self.dico_plani)
+        else:
+            self.dico_res = dict()
         for num, dico in self.dico_res.items():
             if not dico:
                 continue
@@ -467,7 +469,7 @@ class ClassResProfil():
             lst_poly = self.get_poly_disc(line_disc, pt_bas)
             dico['poly'] = []
             dico['area'] = []
-            #dico['perimeter'] = []
+            # dico['perimeter'] = []
             dico['width'] = []
             dico['z'] = []
             dico['debitance'] = []
@@ -481,7 +483,7 @@ class ClassResProfil():
 
                     dico['poly'].append(poly)
                     dico['area'].append(area)
-                    #dico['perimeter'].append(perimeter)
+                    # dico['perimeter'].append(perimeter)
                     dico['z'].append(maxz)
                     dico['width'].append(line_disc[id].length)
                     dico['debitance'].append(
@@ -495,27 +497,27 @@ class ClassResProfil():
                         area = new_poly.area
                         dico['poly'].append(new_poly)
                         dico['area'].append(area)
-                        #dico['perimeter'].append(perimeter)
+                        # dico['perimeter'].append(perimeter)
                         dico['z'].append(maxz)
                         dico['width'].append(line_disc[id].length)
 
                         dico['debitance'].append(
                             self.debitance(num, ks, perimeter, area))
                         last_poly = new_poly
-            if len(dico['poly'])>1:
+            if len(dico['poly']) > 1:
                 dico['pr_poly'] = dico['poly'][-1]
                 dico['pr_area'] = dico['area'][-1]
-                #dico['pr_perimeter'] = dico['perimeter'][-1]
+                # dico['pr_perimeter'] = dico['perimeter'][-1]
                 dico['pr_width'] = dico['width'][-1]
                 dico['pr_z'] = dico['z'][-1]
-                perimeter =  dico['poly'][-1].length
+                perimeter = dico['poly'][-1].length
                 dico['pr_debitance'] = \
                     self.debitance(num, ks, perimeter,
                                    dico['area'][-1])
             else:
                 dico['pr_poly'] = None
                 dico['pr_area'] = 0.
-                #dico['pr_perimeter'] = 0.
+                # dico['pr_perimeter'] = 0.
                 dico['pr_width'] = 0.
                 dico['pr_z'] = 0.
 
@@ -545,18 +547,19 @@ class ClassResProfil():
 
 def get_valeurs(z_level, poly):
     res = {}
-    if poly :
-        if  poly.is_valid and not poly.is_empty:
+    if poly:
+        if poly.is_valid and not poly.is_empty:
             (minx, miny, maxx, maxy) = poly.bounds
 
-            if z_level <miny :
+            if z_level < miny:
                 res['z'] = z_level
                 res['area'] = None
                 res['perimeter'] = None
                 res['width'] = None
-            else :
+            else:
                 delpoly = Polygon([[minx - 1, z_level], [maxx + 1, z_level],
-                                   [maxx + 1, max(z_level+1,maxy + 1)], [minx - 1,  max(z_level+1,maxy + 1)],
+                                   [maxx + 1, max(z_level + 1, maxy + 1)],
+                                   [minx - 1, max(z_level + 1, maxy + 1)],
                                    [minx - 1, z_level]])
                 if not delpoly.is_empty:
                     if not poly.is_valid:
@@ -567,7 +570,7 @@ def get_valeurs(z_level, poly):
                         polyw = GeometryCollection()
                 else:
                     polyw = GeometryCollection()
-                if not polyw.is_empty :
+                if not polyw.is_empty:
                     (minx, miny, maxx, maxy) = polyw.bounds
                     res['z'] = z_level
                     res['area'] = polyw.area

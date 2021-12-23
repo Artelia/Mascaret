@@ -62,12 +62,12 @@ class ClassMasDatabase(object):
         Constructor for database object
 
         Args:
-            mgis (QgsInterface instance): Instance of QGIS interface.
-            dbname (str): Name of the database.
-            host (str): Host of the database.
-            port (str): Port of the database.
-            user (str):User login.
-            password (str): Password for user.
+            :param mgis (QgsInterface instance): Instance of QGIS interface.
+            :param dbname (str): Name of the database.
+            :param host (str): Host of the database.
+            :param port (str): Port of the database.
+            :param user (str):User login.
+            :param password (str): Password for user.
         """
         self.mgis = mgis
         self.dbname = dbname
@@ -139,13 +139,13 @@ class ClassMasDatabase(object):
         Running PostgreSQL queries
 
         Args:
-            qry (str): Query for database.
-            fetch (bool): Flag for returning result from query.
-            arraysize (int): Number of items returned from query - default 0 mean using fetchall method.
-            be_quiet (bool): Flag for printing exception message.
-            namvar (bool): Flag if returning variables name of returning results
-            many(bool): True :executemany
-            list_many: list value
+            :param qry (str): Query for database.
+            :param fetch (bool): Flag for returning result from query.
+            :param arraysize (int): Number of items returned from query - default 0 mean using fetchall method.
+            :param be_quiet (bool): Flag for printing exception message.
+            :param namvar (bool): Flag if returning variables name of returning results
+            :param many(bool): True :executemany
+            :param list_many: list value
 
         Returns:
             list/generator/None: Returned value depends on the 'fetch' and 'arraysize' parameters.
@@ -195,8 +195,8 @@ class ClassMasDatabase(object):
         Generator for getting partial results from query.
 
         Args:
-            cursor (psycopg2 cursor object): Cursor with query.
-            arraysize (int): Number of items returned from query.
+            :param cursor (psycopg2 cursor object): Cursor with query.
+            :param arraysize (int): Number of items returned from query.
 
         Yields:
             list: Items returned from query which length <= arraysize.
@@ -244,17 +244,17 @@ class ClassMasDatabase(object):
         Creating and processing tables inside PostGIS database.
 
         Args:
-            masobject (class): Mascaret class object.
-            pg_method (str): String representation of method that will be called on the masobject class.
-            schema (str): Schema where tables will be created or processed.
-            srid (int): A Spatial Reference System Identifier.
-            overwrite (bool): Flag deciding if objects can be overwrite.
-            **kwargs (dict): Additional keyword arguments passed to pg_method.
+            :param masobject (class): Mascaret class object.
+            :param pg_method (str): String representation of method that will be called on the masobject class.
+            :param schema (str): Schema where tables will be created or processed.
+            :param srid (int): A Spatial Reference System Identifier.
+            :param overwrite (bool): Flag deciding if objects can be overwrite.
+            :param **kwargs (dict): Additional keyword arguments passed to pg_method.
 
         Returns:
-            obj: Instance of Mascaret class object
+            :return obj: Instance of Mascaret class object
         """
-        if masobject.overwrite :
+        if masobject.overwrite:
             overwrite = masobject.overwrite
         self.setup_hydro_object(masobject, schema, srid, overwrite)
         obj = masobject()
@@ -276,7 +276,7 @@ class ClassMasDatabase(object):
         Registering object in database as dictionary entry.
 
         Args:
-            obj: Instance of a hydrodynamic schema object class.
+           :param  obj: Instance of a hydrodynamic schema object class.
         """
         key = obj.name
         if key not in self.register:
@@ -292,9 +292,9 @@ class ClassMasDatabase(object):
         Registering hydrodynamic model objects which already exists inside schema.
 
         Args:
-            hydro_module (module): hydrodynamic model module.
-            schema (str): Schema where tables will be created or processed.
-            srid (int): A Spatial Reference System Identifier.
+            :param hydro_module (module): hydrodynamic model module.
+            :param  schema (str): Schema where tables will be created or processed.
+            :param srid (int): A Spatial Reference System Identifier.
         """
         tabs = self.list_tables(schema)
         if tabs:
@@ -315,10 +315,10 @@ class ClassMasDatabase(object):
         Listing tables in model.
 
         Args:
-            schema (str): Schema where tables will be created or processed.
+           :param  schema (str): Schema where tables will be created or processed.
 
         Returns:
-            list: List of table names in schema.
+            :return list: List of table names in schema.
         """
         if schema is None:
             schema_new = self.SCHEMA
@@ -354,10 +354,10 @@ class ClassMasDatabase(object):
         Making layer from PostGIS table.
 
         Args:
-            obj: Instance of a hydrodynamic model object class.
+            :param  obj: Instance of a hydrodynamic model object class.
 
         Returns:
-            QgsVectorLayer: QGIS Vector Layer object.
+            :return QgsVectorLayer: QGIS Vector Layer object.
         """
         vl_schema, vl_name = obj.schema, obj.name
         try:  # qgis2
@@ -380,7 +380,7 @@ class ClassMasDatabase(object):
         Handling adding layer process to QGIS view.
 
         Args:
-            vlayer (QgsVectorLayer): QgsVectorLayer object.
+            :param  vlayer (QgsVectorLayer): QgsVectorLayer object.
         """
         try:
             if VERSION_QGIS == 3:  # qgis3
@@ -415,7 +415,7 @@ class ClassMasDatabase(object):
         Handling adding layer process to QGIS view.
 
         Args:
-            obj: Instance of a hydrodynamic model object class.
+            :param obj: Instance of a hydrodynamic model object class.
         """
         vlayer = self.make_vlayer(obj)
         src = vlayer.source()
@@ -431,6 +431,7 @@ class ClassMasDatabase(object):
     def create_model(self, dossier):
         """
         Create empty model inside PostgreSQL database.
+        :param dossier: represitory of parameter.csv in plugin represitory
         """
 
         self.register.clear()
@@ -461,7 +462,7 @@ class ClassMasDatabase(object):
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
                       Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
                       Maso.observations, Maso.parametres, Maso.runs,
-                      #Maso.laws,
+                      # Maso.laws,
                       Maso.admin_tab, Maso.visu_flood_marks,
                       # qualite d'eau
                       Maso.tracer_lateral_inflows, Maso.tracer_physic,
@@ -550,6 +551,10 @@ class ClassMasDatabase(object):
             self.mgis.add_info(str(e))
 
     def public_fct_sql(self):
+        """
+        add function in schema
+        :return:
+        """
 
         listefct = ['pg_create_calcul_abscisse',
                     'pg_create_calcul_abscisse_profil',
@@ -596,6 +601,11 @@ class ClassMasDatabase(object):
             self.mgis.add_info("Echec of creation First Model")
 
     def check_fct(self, fct_name):
+        """
+        check if functions exist
+        :param fct_name: (list or str)name function
+        :return:
+        """
         cond = True
         if isinstance(fct_name, list):
 
@@ -665,6 +675,10 @@ class ClassMasDatabase(object):
         return cond
 
     def liste_models(self):
+        """
+        get list schema
+        :return: schema list
+        """
         liste = []
         try:
             sql = """SELECT schema_name FROM information_schema.schemata"""
@@ -691,8 +705,9 @@ class ClassMasDatabase(object):
         Delete model inside PostgreSQL database.
 
         Args:
-            model_name (str): Name of the schema which will be deleted.
-            cascade (bool): Flag forcing cascade delete.
+            :param model_name (str): Name of the schema which will be deleted.
+            :param cascade (bool): Flag forcing cascade delete.
+            :param verbose (bool) : Print the name model
         """
         qry = '''DROP SCHEMA "{0}" CASCADE;''' if cascade is True else '''DROP SCHEMA "{0}";'''
         qry = qry.format(model_name)
@@ -700,7 +715,8 @@ class ClassMasDatabase(object):
             return False
         else:
             if verbose:
-                self.mgis.add_info('<br>Model "{0}" deleted.'.format(model_name))
+                self.mgis.add_info(
+                    '<br>Model "{0}" deleted.'.format(model_name))
             return True
 
     def drop_table(self, table_name):
@@ -862,7 +878,15 @@ $BODY$
         return liste_x
 
     def select(self, table, where="", order="", list_var=None, verbose=False):
-        """ Select variables of table"""
+        """
+        Select variables of table
+        :param table: (str) table name
+        :param where: (str)  condition
+        :param order: (str) name variables to sort
+        :param list_var: list of variables
+        :param verbose: (bool) display sql commande
+        :return:
+        """
         if where:
             where = " WHERE " + where + " "
         if order:
@@ -897,7 +921,14 @@ $BODY$
 
     #
     def select_one(self, table, where="", order="", verbose=False):
-        """select one variable"""
+        """
+        select one variable
+        :param table: (str) table name
+        :param where: (str)  condition
+        :param order: (str) name variables to sort
+        :param list_var: list of variables
+        :param verbose: (bool) display sql commande
+        """
 
         if where:
             where = " WHERE " + where + " "
@@ -928,7 +959,14 @@ $BODY$
 
     #
     def select_distinct(self, var, table, where="", ordre=None, verbose=False):
-        """select the "where" variable which is multiple"""
+        """
+        select the "where" variable which is multiple
+        :param var: (str) variable name
+        :param table: (str) table name
+        :param where: (str)  condition
+        :param order: (str) name variables to sort
+        :param verbose: display sql commande
+        """
         if ordre is None:
             ordre = var
         if where:
@@ -937,8 +975,9 @@ $BODY$
         (results, namCol) = self.run_query(
             sql.format(var, self.SCHEMA, table, where, ordre), fetch=True,
             namvar=True)
-        if verbose :
-            print(sql.format(var, self.SCHEMA, table, where, ordre))
+        if verbose:
+            self.mgis.add_info(
+                sql.format(var, self.SCHEMA, table, where, ordre))
         if namCol and results:
             cols = [col[0] for col in namCol]
             dico = {}
@@ -957,7 +996,13 @@ $BODY$
 
     #
     def select_max(self, var, table, where=None):
-        """select the max in the table for the "where" variable"""
+        """
+        select the max in the table for the "where" variable
+        :param var: (str) variable name
+        :param table: (str) table name
+        :param where: (str)  condition
+        :return: None
+        """
         if where:
             sql = "SELECT MAX({0}) FROM {1}.{2} WHERE {3};".format(var,
                                                                    self.SCHEMA,
@@ -977,7 +1022,13 @@ $BODY$
             return None
 
     def select_min(self, var, table, where=None):
-        """select the max in the table for the "where" variable"""
+        """
+        select the max in the table for the "where" variable"
+        :param var: (str) variable name
+        :param table: (str) table name
+        :param where: (str)  condition
+        :return: None
+        """
         if where:
             sql = "SELECT MIN({0}) FROM {1}.{2} WHERE {3};".format(var,
                                                                    self.SCHEMA,
@@ -992,7 +1043,11 @@ $BODY$
         return var
 
     def delete(self, table, where=None):
-        """ Delete table information"""
+        """
+        Delete table information
+        :param table : table name
+        :param  where : condition
+        """
         if where:
             where = "WHERE {0}".format(where)
         sql = "DELETE FROM {0}.{1} {2} ;".format(self.SCHEMA, table, where)
@@ -1000,7 +1055,17 @@ $BODY$
         # if self.mgis.DEBUG:
         #     self.mgis.add_info('function delete end')
 
-    def insert(self, table, tab, colonnes, delim=" ",verbose=False):
+    def insert(self, table, tab, colonnes, delim=" ", verbose=False):
+        """
+        Insert in table
+        :param table: (str) table name
+        :param tab: tab[key]= {key2 : list1}   key =  first column
+                    key2 = other columns and list1 values
+        :param colonnes: columns list
+        :param delim:
+        :param verbose:
+        :return:
+        """
         tmp = [colonnes[0]]
         tmp += sorted(colonnes[1:])
         var = ",".join(tmp)
@@ -1030,13 +1095,13 @@ $BODY$
                                                             var,
                                                             valeurs)
         if verbose:
-            print(sql)
+            self.mgis.add_info(sql)
         self.run_query(sql)
 
         # if self.mgis.DEBUG:
         #     self.mgis.add_info('function insert end')
 
-    def insert2(self, table, tab, verbose= False):
+    def insert2(self, table, tab, verbose=False):
         """ insert table in tableSQl"""
         colonnes = sorted(tab.keys())
         var = ','.join(colonnes)
@@ -1052,7 +1117,7 @@ $BODY$
                                                             var,
                                                             ",".join(valeurs))
         if verbose:
-            print(sql)
+            self.mgis.add_info(sql)
         self.run_query(sql)
 
     def insert_res(self, table, liste_value, colonnes):
@@ -1131,7 +1196,13 @@ $BODY$
         self.run_query(sql)
 
     def update(self, table, tab, var="nom"):
-        """update info"""
+        """
+        update info
+        :param table: (str) table name
+        :param tab:
+        :param var: (str) variable name
+        :return:
+        """
         for nom, t in tab.items():
             tab_var = []
             for k, v in tab[nom].items():
@@ -1155,12 +1226,22 @@ $BODY$
                 self.mgis.add_info('function update end')
 
     def copy(self, table, var, fichier):
-        """Copy file in sql"""
+        """
+        Copy file in sql
+        :param table (str): table name
+        :param var: (str) variable name
+        :param fichier:  name file
+        :return:
+        """
         sql = """COPY {0}.{1}({2}) FROM '{3}' WITH DELIMITER ',';"""
         self.run_query(sql.format(self.SCHEMA, table, ",".join(var), fichier))
 
     def list_columns(self, table):
-        """ List columns"""
+        """
+        List columns
+        :param table : table name
+        :return list of the columns
+        """
         sql = """SELECT column_name FROM information_schema.columns 
                   WHERE table_schema='{0}' AND table_name='{1}';"""
         rows = self.run_query(sql.format(self.SCHEMA, table), fetch=True)
@@ -1168,12 +1249,20 @@ $BODY$
         return liste
 
     def add_columns(self, table, colonne):
-        """ add columns"""
+        """
+        add columns
+        :param table: (str) table name
+        :param colonne : column name to add
+        """
         sql = """ALTER TABLE {0}.{1} ADD COLUMN {2} double precision;"""
         self.run_query(sql.format(self.SCHEMA, table, colonne))
 
     def export_schema(self, file, schem=None):
-        """export schema"""
+        """
+        export schema
+        :param file : file name to export
+        :param schem : schema name
+        """
         try:
             if schem is None:
                 schem = self.SCHEMA
@@ -1199,11 +1288,16 @@ $BODY$
             return False
 
     def import_schema(self, file, old=False):
-        """import schema"""
+        """
+        import schema
+        :param file: file name
+        :param old: old version to the importation
+        :return:
+        """
         try:
             if old:
                 exe = os.path.join(self.mgis.postgres_path, 'psql')
-            else :
+            else:
                 exe = os.path.join(self.mgis.postgres_path, 'pg_restore')
             if os.path.isfile(exe) or os.path.isfile(exe + '.exe'):
                 # d = dict(os.environ)
@@ -1215,8 +1309,10 @@ $BODY$
                         file, self.dbname, self.host)
                 else:
                     commande = '"{0}" -U {1} -O -F c -p {2}  -d {4} -h {5} ' \
-                               '--create "{3}"'.format(exe, self.USER, self.port,
-                                                       file, self.dbname, self.host)
+                               '--create "{3}"'.format(exe, self.USER,
+                                                       self.port,
+                                                       file, self.dbname,
+                                                       self.host)
 
                 p = subprocess.Popen(commande, shell=True,
                                      stdout=subprocess.PIPE,
@@ -1239,6 +1335,10 @@ $BODY$
             return False
 
     def list_schema(self):
+        """
+        get list schema
+        :return: list schema
+        """
         sql = "SELECT nspname from pg_catalog.pg_namespace;"
         info = self.run_query(sql, fetch=True)
         listf = []
@@ -1248,6 +1348,11 @@ $BODY$
         return listf
 
     def insert_abacus_table(self, dossier):
+        """
+        insert abacus in abacus table
+        :param dossier: name represitory
+        :return:
+        """
         list_fich = os.listdir(dossier)
         for fich in list_fich:
             fichabac = os.path.join(dossier, fich)
@@ -1282,7 +1387,12 @@ $BODY$
                 self.run_query(sql, many=True, list_many=list_insert)
 
     def checkabac(self, method, abc):
-        """check if abacus doesn't exist"""
+        """
+        check if abacus doesn't exist
+        :param method:  method
+        :param abc: abacus name
+        :return:
+        """
         where = "WHERE nam_method='{}' AND nam_abac ='{}'".format(method, abc)
         sql = "SELECT * FROM {0}.{1} {2};"
 
@@ -1322,6 +1432,11 @@ $BODY$
         return id_var
 
     def insert_var_to_result_var(self, dossier):
+        """
+        insrt variable in result_var table
+        :param dossier: represitory of "var.csv"
+        :return:
+        """
         try:
 
             fichparam = os.path.join(dossier, "var.csv")
@@ -1369,6 +1484,13 @@ $BODY$
         return results[0][0]
 
     def export_model(self, selection, file, plug_ver):
+        """
+        exportation model
+        :param selection: dict() key : run item: scenario list
+        :param file: file name
+        :param plug_ver: plugin version
+        :return:
+        """
         # parcours the selection for insert results
         js_dict = {'plugin_version': plug_ver}
 
@@ -1396,8 +1518,9 @@ $BODY$
                                                             ','.join(
                                                                 list_tab_res))
         self.run_query(qry)
-        if self.mgis.DEBUG :
-            self.mgis.add_info('Creation of the temporary table :{} '.format(dest))
+        if self.mgis.DEBUG:
+            self.mgis.add_info(
+                'Creation of the temporary table :{} '.format(dest))
         # add selection
         lst_run = self.get_id_run(selection)
         if len(lst_run) > 0:
@@ -1431,7 +1554,8 @@ $BODY$
 
     def import_model(self, metadict):
         """
-
+        Importation schema
+        :param metadict:  meta data file to import
         :return:
         """
         namesh = metadict["schema_name"]
@@ -1470,6 +1594,11 @@ $BODY$
         self.mgis.add_info('Import is done.')
 
     def get_id_run(self, selection):
+        """
+        get list index run
+        :param selection: dict() key : run item: scenario list
+        :return: list index
+        """
         lst_id = []
         for key, lst in selection.items():
             id_run = self.run_query("SELECT id FROM {0}.runs "
@@ -1482,6 +1611,11 @@ $BODY$
         return lst_id
 
     def get_scen_name(self, lst_id):
+        """
+        get name scenario and name run
+        :param lst_id: id run list
+        :return: dict()
+        """
         dict_name = dict()
 
         rows = self.run_query("SELECT id, run, scenario FROM {0}.runs "
@@ -1525,7 +1659,7 @@ $BODY$
             'profiles': 'gid',
             'results_var': 'id',
             'runs_graph': 'id',
-            'runs_plani':'id',
+            'runs_plani': 'id',
             'runs': 'id',
             'struct_config': 'id',
             'tracer_lateral_inflows': 'gid',
@@ -1554,8 +1688,12 @@ $BODY$
             # print(sql)
             self.run_query(sql)
 
-    # TODO OLD AFTER
     def checkschema_import(self, file):
+        """
+        check the schema name in file .psl (ASCII)
+        :param file: file name
+        :return:
+        """
         namesh = None
         with open(file, 'r') as infile:
             for line in infile:

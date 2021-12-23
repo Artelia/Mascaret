@@ -22,8 +22,10 @@ from .GraphCommon import GraphCommon
 import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
 
+
 class GraphHydroLaw(GraphCommon):
     """class Dialog GraphLaw"""
+
     def __init__(self, mgis=None, lay=None, typ_law=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
@@ -58,28 +60,36 @@ class GraphHydroLaw(GraphCommon):
         if typ_law:
             self.axeX = param_law['graph']['x']['var']
             for v, var in enumerate(param_law['graph']['y']['var']):
-                self.list_var.append({"id": var, "name": param_law['var'][var]['name']})
-                self.courbeTrac, = self.axes.plot([], [], zorder=100 - v, label=param_law['var'][var]['name'])
+                self.list_var.append(
+                    {"id": var, "name": param_law['var'][var]['name']})
+                self.courbeTrac, = self.axes.plot([], [], zorder=100 - v,
+                                                  label=param_law['var'][var][
+                                                      'name'])
                 self.courbes.append(self.courbeTrac)
 
             self.init_legende()
 
-            self.maj_lbl_x(param_law['graph']['x']['tit'], param_law['graph']['x']['unit'])
-            self.axes.set_ylabel("{} ({})".format(param_law['graph']['y']['tit'], param_law['graph']['y']['unit']))
+            self.maj_lbl_x(param_law['graph']['x']['tit'],
+                           param_law['graph']['x']['unit'])
+            self.axes.set_ylabel(
+                "{} ({})".format(param_law['graph']['y']['tit'],
+                                 param_law['graph']['y']['unit']))
 
         self.canvas.draw()
 
     def initGraph(self, id_law, all_vis=False):
         leglines = self.leg.get_lines()
 
-        sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(self.mdb.SCHEMA, id_law, self.axeX)
+        sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(
+            self.mdb.SCHEMA, id_law, self.axeX)
         rows = self.mdb.run_query(sql, fetch=True)
         lst_x = [r[0] for r in rows]
 
         for v, var in enumerate(self.list_var):
             lst_y = []
             if id_law is not None:
-                sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(self.mdb.SCHEMA, id_law, var['id'])
+                sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(
+                    self.mdb.SCHEMA, id_law, var['id'])
                 rows = self.mdb.run_query(sql, fetch=True)
                 if len(rows) > 0:
                     lst_y = [r[0] for r in rows]
@@ -97,11 +107,10 @@ class GraphHydroLaw(GraphCommon):
             self.axes.set_xlabel("date")
         else:
             self.axes.set_xlabel("{} ({})".format(var, unit))
-        #self.unit = unit
+        # self.unit = unit
 
         if unit == 'date':
-            self.axes.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+            self.axes.xaxis.set_major_formatter(
+                mdates.DateFormatter('%d-%m-%Y'))
         else:
             self.axes.xaxis.set_major_formatter(ticker.ScalarFormatter())
-
-

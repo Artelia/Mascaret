@@ -236,8 +236,9 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionTest.setVisible(True)
         # scores
         self.ui.actionScores.triggered.connect(self.fct_scores)
-        #TODO DELETE AFTER
-        self.ui.actionImport_Old_Model.triggered.connect(self.import_old_model_dgl)
+        # TODO DELETE AFTER
+        self.ui.actionImport_Old_Model.triggered.connect(
+            self.import_old_model_dgl)
         self.ui.menuUpate_table.menuAction().setVisible(False)
 
         self.ui.actionHydro_Laws.triggered.connect(self.fct_hydro_laws)
@@ -784,7 +785,6 @@ class MascPlugDialog(QMainWindow):
 
         return
 
-
     def main_graph(self):
         """ GUI graphique"""
 
@@ -968,9 +968,9 @@ Version : {}
     def fct_test(self):
         """ Test function"""
         # get_laws
-        #self.chkt.debug_update_vers_meta(version='4.0.2')
+        # self.chkt.debug_update_vers_meta(version='4.0.2')
         clam = ClassMascaret(self)
-        tab= clam.get_laws('aval', 2)
+        tab = clam.get_laws('aval', 2)
         print(tab)
         pass
 
@@ -1002,8 +1002,6 @@ Version : {}
         dlg = ClassScoresDialog(self)
         # dlg.exec_()
         dlg.show()
-
-
 
     def fct_hydro_laws(self):
         dlg = ClassHydroLawsDialog(self)

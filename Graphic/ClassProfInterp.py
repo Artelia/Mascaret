@@ -25,14 +25,14 @@ import pandas as pd
 import time
 
 
-class ClassProfInterp():
+class ClassProfInterp:
     """
 
     """
 
     def __init__(self, data, pk_int, nplan=100, plani=None, debug=False):
         """
-
+        initialize class
         :param data: dict containing the interpolation data
           data = { 'up': upsteam
                 {
@@ -66,10 +66,9 @@ class ClassProfInterp():
         self.plani = plani
         self.msg = ''
         self.err = True
-        self.debug =debug
-        if self.plani != None:
+        self.debug = debug
+        if self.plani is not None:
             self.typ_disc = 'autoplan'
-
 
     def merge_prof(self, key='prof', id=-1):
         """
@@ -83,7 +82,7 @@ class ClassProfInterp():
             dico = self.prf_loc[id]
         tmp = []
         for pr in dico[key]:
-            if pr != None:
+            if pr is not None:
                 tmp.append(pr.coords[0][0])
             else:
                 tmp.append(None)
@@ -92,11 +91,11 @@ class ClassProfInterp():
         outprof = []
         for i in order:
             line = dico[key][i]
-            if line != None:
+            if line is not None:
                 points = line.coords[:]
                 outprof += points
 
-        if outprof != []:
+        if outprof:
             prof_final = LineString(outprof)
         else:
             prof_final = None
@@ -111,11 +110,11 @@ class ClassProfInterp():
         :param id_pr: id profile
         :return:
         """
-        cas_prt = {0: 'minor profile' ,
-                  1: 'left major profile',
-                  2: 'right major profile',
-                  3: 'left stockage zone',
-                  4: 'right stockage zone', }
+        cas_prt = {0: 'minor profile',
+                   1: 'left major profile',
+                   2: 'right major profile',
+                   3: 'left stockage zone',
+                   4: 'right stockage zone', }
         if len(pr_am_tmp) <= 2 and len(pr_av_tmp) <= 2:
             # print("{} profile doesn't existe".format(id_pr))
             if id_pr == 0:
@@ -124,19 +123,18 @@ class ClassProfInterp():
                 self.err = False
                 return 'break'
             else:
-                if self.debug :
+                if self.debug:
                     self.msg += "{}  doesn't existe\n".format(cas_prt[id_pr])
                 if not id_pr in self.prf_loc.keys():
                     self.prf_loc[id_pr] = {'prof': []}
                 self.prf_loc[id_pr]['prof'].append(None)
                 return 'continue'
         self.prf_loc[id_pr] = {'prof': []}
-        prof_min, limx = self.interpol_fct_lg(pr_am_tmp,pr_av_tmp)
+        prof_min, limx = self.interpol_fct_lg(pr_am_tmp, pr_av_tmp)
 
         self.prf_loc[id_pr]['prof'].append(prof_min)
         self.prf_loc[id_pr]['limitx'] = limx
         self.data['interp']['prof'] += self.prf_loc[id_pr]['prof']
-
 
         return 'ok'
 
@@ -220,7 +218,7 @@ class ClassProfInterp():
         elif self.typ_disc == 'autoplan':
             nplan_am = (zmax_am - zmin_am) / self.plani
             nplan_av = (zmax_av - zmin_av) / self.plani
-            pas = max(nplan_am,nplan_av)
+            pas = max(nplan_am, nplan_av)
             cond_pas_z = False
         else:
             # print('Non-existent discretization type')
@@ -321,13 +319,13 @@ class ClassProfInterp():
                       cond_pas_z=True):
         """
                 vertical descritization
+               :param pr : (numpy.array) profil
+                :param x_fond : bottom x value
                 :param pas : dz in m or nb of plan
                 :param cond_pas_z : True si descritization in m or false in plan
                 :param id_g : id_am_g id point left
                 :param id_d : id_am_d id point right
-                :param pr : profile
                 :param zmin : bottom point of the profile
-                :param zmax : max level of the profile
 
         """
 
@@ -360,11 +358,11 @@ class ClassProfInterp():
         if cond_pas_z:
             pasz = pas
         else:
-            pasz = (zmax - zmin) / (pas)
+            pasz = (zmax - zmin) / pas
 
         z_level = zmin
 
-        while z_level+pasz <= zmax:
+        while z_level + pasz <= zmax:
             # line creation for cut
             z_level = z_level + pasz
             line = [(pr[id_g, 0] - 1, z_level),
@@ -398,7 +396,8 @@ class ClassProfInterp():
                 lst_line_disc.append(geom)
             else:
                 # print('Geometry type no treatment :', geom.geom_type)
-                self.msg += 'Geometry type no treatment : {} \n'.format(geom.geom_type)
+                self.msg += 'Geometry type no treatment : {} \n'.format(
+                    geom.geom_type)
         return lst_line_disc
 
     def decoup_pr(self, pr, lminor_x, lmaj_x):
@@ -432,24 +431,24 @@ class ClassProfInterp():
                     pr_d.append(point)
             else:
                 pr_m.append(point)
-        if pr_m == []:
+        if not pr_m:
             # print('No profil for the minor bed')
             self.msg += 'No profil for the minor bed \n'
             self.err = False
             return [], [], [], [], []
-        if pr_g == []:
+        if not pr_g:
             pr_g = [pr_m[0], pr_m[0]]
         else:
             pr_g = pr_g + [pr_m[0], pr_m[0]]
-        if pr_d == []:
+        if not pr_d:
             pr_d = [pr_m[-1], pr_m[-1]]
         else:
             pr_d = [pr_m[-1], pr_m[-1]] + pr_d
-        if pr_st_g == []:
+        if not pr_st_g:
             pr_st_g = [pr_g[0], pr_g[0]]
         else:
             pr_st_g = pr_st_g + [pr_g[0], pr_g[0]]
-        if pr_st_d == []:
+        if not pr_st_d:
             pr_st_d = [pr_d[-1], pr_d[-1]]
         else:
             pr_st_d = [pr_d[-1], pr_d[-1]] + pr_st_d
@@ -457,7 +456,10 @@ class ClassProfInterp():
         return pr_m, pr_g, pr_d, pr_st_g, pr_st_d
 
     def __call__(self):
-
+        """
+        run interpolation
+        :return:
+        """
 
         pr_am_m, pr_am_g, pr_am_d, \
         pr_am_st_g, pr_am_st_d = self.decoup_pr(self.data['up']['prof'],
@@ -470,23 +472,23 @@ class ClassProfInterp():
                                                 self.data['down']['major'])
 
         np_pr_am = np.array(pr_am_m)
-        np_pr_av =  np.array(pr_av_m)
+        np_pr_av = np.array(pr_av_m)
         zmin_am = min(np_pr_am[:, 1])
         zmin_av = min(np_pr_av[:, 1])
         zmax_am = max(np_pr_am[:, 1])
         zmax_av = max(np_pr_av[:, 1])
         if zmax_am == zmin_am:
-            #print('Upstream profile is plate')
+            # print('Upstream profile is plate')
             self.msg += 'Upstream profile is flat\n'
             self.msg += '   x1,z1 : ({},{}) , ' \
-                        'xn, zn : ({},{})\n'.format(np_pr_am[0,0],
-                                                    np_pr_am[0,1],
+                        'xn, zn : ({},{})\n'.format(np_pr_am[0, 0],
+                                                    np_pr_am[0, 1],
                                                     np_pr_am[-1, 0],
                                                     np_pr_am[-1, 1])
             self.err = False
             return
         if zmax_av == zmin_av:
-            #print('Downstream profile is plate')
+            # print('Downstream profile is plate')
             self.msg += 'Downstream profile is flat\n'
             self.msg += '   x1,z1 : ({},{}) , ' \
                         'xn, zn : ({},{})\n'.format(np_pr_av[0, 0],
@@ -509,20 +511,20 @@ class ClassProfInterp():
         for id, pr_am_tmp, pr_av_tmp in lst_pr:
             # print('*************** type : {}'.format(id))
             self.calc_profil(pr_am_tmp, pr_av_tmp, id)
-            if 'limitx' in self.prf_loc[id].keys() :
+            if 'limitx' in self.prf_loc[id].keys():
                 if id == 0:
                     self.data['interp']['minor'] = self.prf_loc[id]['limitx']
                 if id == 3:
                     g_lim = self.prf_loc[id]['limitx'][0]
-                if id ==4  :
+                if id == 4:
                     d_lim = self.prf_loc[id]['limitx'][1]
 
-        if g_lim and d_lim :
-            self.data['interp']['major']= [g_lim, d_lim]
+        if g_lim and d_lim:
+            self.data['interp']['major'] = [g_lim, d_lim]
 
         prof_final = self.merge_prof('prof')
 
-        #prof_final = LineString(prof_final)
+        # prof_final = LineString(prof_final)
         # export csv:
         # df = pd.DataFrame(np.array(prof_final))
         # df.to_csv('test', sep=';')
@@ -531,9 +533,5 @@ class ClassProfInterp():
         return
 
 
-
-
-
 if __name__ == '__main__':
-
     pass

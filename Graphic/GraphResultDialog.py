@@ -134,6 +134,10 @@ class GraphResultDialog(QWidget):
             self.update_graph()
 
     def add_wgt_compare(self):
+        """
+        compare mode widget
+        :return:
+        """
         param_init, param_date = dict(), dict()
         idx = len(self.lst_comp_wgt)
         if idx:
@@ -173,6 +177,10 @@ class GraphResultDialog(QWidget):
             self.btn_del_graph.setEnabled(True)
 
     def del_wgt_compare(self):
+        """
+        del graphic in compare mode
+        :return:
+        """
         idx = self.lw_graph.currentRow()
         if idx != -1:
             self.lw_graph.takeItem(idx)
@@ -199,6 +207,11 @@ class GraphResultDialog(QWidget):
             self.btn_del_graph.setEnabled(True)
 
     def graph_mode_changed(self, idx):
+        """
+        change mode graphic
+        :param idx: index
+        :return:
+        """
         if idx == 0:
             self.mode = "slider"
         elif idx == 1:
@@ -206,11 +219,18 @@ class GraphResultDialog(QWidget):
         self.update_graph()
 
     def slider_graph_edited(self, idx, param):
+        """
+        slider management
+        :param idx: index
+        :param param: dict of paramater
+        :return:
+        """
         self.lst_slid_graph = [param]
         if not self.initialising:
             self.update_graph()
 
     def compar_graph_edited(self, idx, param):
+        """ edit of  compare mode """
         self.lst_comp_graph[idx] = param
 
         if not self.initialising:
@@ -219,6 +239,10 @@ class GraphResultDialog(QWidget):
             self.update_graph()
 
     def compar_graph_verif_date(self):
+        """
+        check date of  compare mode
+        :return:
+        """
         date_multi_format = False
         graph_with_date, graph_with_no_date = list(), list()
         date_ref = None
@@ -249,6 +273,10 @@ class GraphResultDialog(QWidget):
             self.lst_comp_graph[w]["init_date"] = wgt.param_graph["init_date"]
 
     def update_graph(self):
+        """
+        update graphic
+        :return:
+        """
         self.lst_graph.clear()
         if self.mode == "slider":
             lst_graph = self.lst_slid_graph
@@ -293,6 +321,11 @@ class GraphResultDialog(QWidget):
         self.update_data(lst_var)
 
     def get_var_info(self, var):
+        """
+        get information variable dict
+        :param var: name var
+        :return:
+        """
         if var.lower() in self.mgis.variables.keys():
             return self.mgis.variables[var.lower()]['nom'], \
                    self.mgis.variables[var.lower()]['couleur']
@@ -307,6 +340,10 @@ class GraphResultDialog(QWidget):
             self.stw_res.setCurrentIndex(0)
 
     def checkrun(self):
+        """
+        check if there is run
+        :return:
+        """
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
                                   "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
                                   "ORDER BY run, scenario ".format(
@@ -319,6 +356,10 @@ class GraphResultDialog(QWidget):
             return False
 
     def init_dico_run(self):
+        """
+        initialize dico_run
+        :return: dico_run
+        """
         dict_run = dict()
         rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
                                   "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
@@ -332,6 +373,7 @@ class GraphResultDialog(QWidget):
         return dict_run
 
     def clear_results(self):
+        """ clear graphic"""
         self.cur_data.clear()
         self.graph_obj.fig.clf()
         self.graph_obj.canvas.draw()
@@ -442,12 +484,12 @@ class GraphResultDialog(QWidget):
                 self.clear_results()
                 return
 
-            if (self.typ_graph == "hydro"):
+            if self.typ_graph == "hydro":
                 self.update_obs(x_var_)
                 if self.lst_obs:
                     self.graph_obj.insert_obs_curves(self.lst_obs)
 
-            if (self.typ_graph == "hydro_pk"):
+            if self.typ_graph == "hydro_pk":
                 self.update_debord(x_var_)
                 if self.lst_debord:
                     self.graph_obj.insert_debord_curves(self.lst_debord)
@@ -505,7 +547,11 @@ class GraphResultDialog(QWidget):
             self.graph_obj.main_axe.title.set_text(r"")
 
     def update_debord(self, x_var_):
-
+        """
+         update debord variable
+        :param x_var_: name of axis variable
+        :return:
+        """
         for g, param in enumerate(self.lst_graph):
             vars = param["graph"]["vars"]
             var = None
@@ -538,7 +584,7 @@ class GraphResultDialog(QWidget):
                     curve['y']['left'].append(dict_data['zleftminbed'][idx])
                     curve['y']['right'].append(dict_data['zrightminbed'][idx])
 
-                for cote in ['left', 'right'] :
+                for cote in ['left', 'right']:
                     tmp_data = dict()
                     tmp_data["x_var"] = 'pknum'
                     tmp_data["y_var"] = [var]
@@ -547,13 +593,15 @@ class GraphResultDialog(QWidget):
                     tmp_data["pknum"] = curve['x']
                     tmp_data[var] = curve['y'][cote]
                     self.lst_debord[(cote, var)] = {"axe": axe,
-                                                      "name": cote}
+                                                    "name": cote}
                     self.cur_data.append(tmp_data)
 
-
-
     def update_obs(self, x_var_):
-
+        """
+        update observation variable
+        :param x_var_: name of axis variable
+        :return:
+        """
         dict_pk_obs = dict()
         for g, param in enumerate(self.lst_graph):
             pk, vars = param["pknum"], param["graph"]["vars"]
@@ -639,7 +687,11 @@ class GraphResultDialog(QWidget):
                     self.cur_data.append(tmp_data)
 
     def score(self, dict_obs):
-
+        """
+        score management
+        :param dict_obs: dict() observation info
+        :return:
+        """
         self.cc_scores.setEnabled(True)
         # self.lst_runs = list(set([g["scen"] for g in self.lst_graph]))
         # pks = {id: [] for id in self.lst_runs}
@@ -661,6 +713,10 @@ class GraphResultDialog(QWidget):
             self.cl_scores.wgt_param.init_gui()
 
     def fill_tab(self):
+        """
+        fill table in GUI
+        :return:
+        """
         self.clas_data.clear()
         for idx, param in enumerate(self.cur_data):
             tw = QTableWidget()
@@ -709,7 +765,6 @@ class GraphResultDialog(QWidget):
             self.clas_data.setCurrentIndex(idx)
         self.clas_data.setCurrentIndex(0)
 
-
     def get_laisses(self, param):
         """
         get flood marks data
@@ -729,8 +784,8 @@ class GraphResultDialog(QWidget):
     def update_laisse(self, var_x, cur_data):
         """
         To graph the flood mark
-
-        :param var_x:
+        :param var_x:  name of axis variable
+        :param cur_data: dict() curent data
         :return:
         """
         courbe_lais = {}
@@ -830,7 +885,7 @@ class GraphResultDialog(QWidget):
 
             # =======================================================================
 
-    def copier(self,tw):
+    def copier(self, tw):
         """copier la zone sélectionnée dans le clipboard
         """
         # emplacement sélectionné pour copier dans le clipboard
@@ -852,8 +907,6 @@ class GraphResultDialog(QWidget):
         QtGui.QApplication.clipboard().setText(texte)
 
 
-
-
 class CopySelectedCellsAction(QAction):
     def __init__(self, table_widget):
         if not isinstance(table_widget, QTableWidget):
@@ -870,7 +923,6 @@ class CopySelectedCellsAction(QAction):
     def copy_cells_to_clipboard(self):
         print('entreeeeeeeee')
         if len(self.table_widget.selectionModel().selectedIndexes()) > 0:
-
             lst_r = [idx.row() for idx in
                      self.table_widget.selectionModel().selectedIndexes()]
             lst_c = [idx.column() for idx in
@@ -881,5 +933,3 @@ class CopySelectedCellsAction(QAction):
 
             sys_clip = QApplication.clipboard()
             sys_clip.setText(clipboard)
-
-

@@ -37,49 +37,57 @@ else:  # qt5
     from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
     from qgis.PyQt.QtWidgets import *
 
-#TODO decorreler le nom de la loi et le nom de l'extremite
+# TODO decorreler le nom de la loi et le nom de l'extremite
 dico_typ_law = {1: {'name': 'Hydrograph Q(t)',
                     'var': [{'name': 'time', 'code': 'time'},
                             {'name': 'flowrate', 'code': 'flowrate'}],
                     'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
                               'y': {'var': [1], 'tit': 'Q', 'unit': 'm3/s'}},
-                    'geom':{'extremities': [1], 'weirs': False, 'lateral_inflows': True, 'lateral_weirs': False},
+                    'geom': {'extremities': [1], 'weirs': False,
+                             'lateral_inflows': True, 'lateral_weirs': False},
                     'xIsTime': True},
                 2: {'name': 'Limnigraph Z(t)',
                     'var': [{'name': 'time', 'code': 'time'},
                             {'name': 'level', 'code': 'z'}],
                     'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
                               'y': {'var': [1], 'tit': 'Z', 'unit': 'm'}},
-                    'geom':{'extremities': [2], 'weirs': [5], 'lateral_inflows': False, 'lateral_weirs': False},
+                    'geom': {'extremities': [2], 'weirs': [5],
+                             'lateral_inflows': False, 'lateral_weirs': False},
                     'xIsTime': True},
                 3: {'name': 'Limnihydrograph Z,Q(t)',
                     'var': [{'name': 'time', 'code': 'time'},
                             {'name': 'level', 'code': 'z'},
                             {'name': 'flowrate', 'code': 'flowrate'}],
                     'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
-                              'y': {'var': [1, 2], 'tit': 'Various', 'unit': ''}},
-                    'geom':{'extremities': [8], 'weirs': False, 'lateral_inflows': False, 'lateral_weirs': False},
+                              'y': {'var': [1, 2], 'tit': 'Various',
+                                    'unit': ''}},
+                    'geom': {'extremities': [8], 'weirs': False,
+                             'lateral_inflows': False, 'lateral_weirs': False},
                     'xIsTime': True},
                 4: {'name': 'Rating Curve Z = f(Q)',
                     'var': [{'name': 'flowrate', 'code': 'flowrate'},
                             {'name': 'level', 'code': 'z'}],
                     'graph': {'x': {'var': 0, 'tit': 'Q', 'unit': 'm3/s'},
                               'y': {'var': [1], 'tit': 'Z', 'unit': 'm'}},
-                    'geom':{'extremities': [3, 5], 'weirs': [2], 'lateral_inflows': False, 'lateral_weirs': [2]},
+                    'geom': {'extremities': [3, 5], 'weirs': [2],
+                             'lateral_inflows': False, 'lateral_weirs': [2]},
                     'xIsTime': False},
                 5: {'name': 'Rating Curve Q = f(Z)',
                     'var': [{'name': 'level', 'code': 'z'},
                             {'name': 'flowrate', 'code': 'flowrate'}],
                     'graph': {'x': {'var': 0, 'tit': 'Z', 'unit': 'm'},
                               'y': {'var': [1], 'tit': 'Q', 'unit': 'm3/s'}},
-                    'geom':{'extremities': [4], 'weirs': [6, 7], 'lateral_inflows': False, 'lateral_weirs': False},
+                    'geom': {'extremities': [4], 'weirs': [6, 7],
+                             'lateral_inflows': False, 'lateral_weirs': False},
                     'xIsTime': False},
                 6: {'name': 'Weir Zam = f(Q, Zav)',
                     'var': [{'name': 'flowrate', 'code': 'flowrate'},
-                            {'name': 'downstream level', 'code': 'z_downstream'},
+                            {'name': 'downstream level',
+                             'code': 'z_downstream'},
                             {'name': 'upstream level', 'code': 'z_upstream'},
                             ],
-                    'geom':{'extremities': [0, 6], 'weirs': [1], 'lateral_inflows': False, 'lateral_weirs': False},
+                    'geom': {'extremities': [0, 6], 'weirs': [1],
+                             'lateral_inflows': False, 'lateral_weirs': False},
                     'graph': None,
                     'xIsTime': False},
                 7: {'name': 'Floodgate Zinf, Zsup = f(t)',
@@ -89,7 +97,8 @@ dico_typ_law = {1: {'name': 'Hydrograph Q(t)',
 
                     'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
                               'y': {'var': [1, 2], 'tit': 'Z', 'unit': 'm'}},
-                    'geom':{'extremities': [7], 'weirs': [8], 'lateral_inflows': False, 'lateral_weirs': False},
+                    'geom': {'extremities': [7], 'weirs': [8],
+                             'lateral_inflows': False, 'lateral_weirs': False},
                     'xIsTime': True}
                 }
 
@@ -103,7 +112,8 @@ class ClassHydroLawsDialog(QDialog):
         self.param_law = None
         self.filling_tab = False
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath, 'ui/ui_hydro_laws.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_hydro_laws.ui'), self)
 
         # PAGE 1
 
@@ -147,13 +157,11 @@ class ClassHydroLawsDialog(QDialog):
 
         self.init_ui()
 
-
     def init_ui(self):
         self.ui.laws_pages.setCurrentIndex(0)
         self.graph_home = GraphHydroLaw(self.mgis, self.ui.lay_graph_home)
         self.graph_edit = GraphHydroLaw(self.mgis, self.ui.lay_graph_edit)
         self.fill_tree_laws()
-
 
     ######################################################################
     #
@@ -165,7 +173,8 @@ class ClassHydroLawsDialog(QDialog):
         self.tree_laws.clear()
         for id_type, elem in dico_typ_law.items():
             sql = "SELECT id, name, geom_obj, active, comment FROM {0}.law_config " \
-                  "WHERE id_law_type = '{1}' ORDER BY name".format(self.mdb.SCHEMA, id_type)
+                  "WHERE id_law_type = '{1}' ORDER BY name".format(
+                self.mdb.SCHEMA, id_type)
             rows = self.mdb.run_query(sql, fetch=True)
             if rows:
                 typ_itm = QTreeWidgetItem()
@@ -179,9 +188,13 @@ class ClassHydroLawsDialog(QDialog):
                     ouv_itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                     ouv_itm.setData(0, 32, int(row[0]))
                     ouv_itm.setText(0, row[1])
-                    ouv_itm.setText(1, str(row[2])) if row[2] is not None else ouv_itm.setText(1, '')
+                    ouv_itm.setText(1, str(row[2])) if row[
+                                                           2] is not None else ouv_itm.setText(
+                        1, '')
                     ouv_itm.setText(2, str(row[3]))
-                    ouv_itm.setText(3, str(row[4])) if row[4] is not None else ouv_itm.setText(3, '')
+                    ouv_itm.setText(3, str(row[4])) if row[
+                                                           4] is not None else ouv_itm.setText(
+                        3, '')
 
                     typ_itm.addChild(ouv_itm)
                 typ_itm.setExpanded(True)
@@ -196,7 +209,6 @@ class ClassHydroLawsDialog(QDialog):
         else:
             self.display_graph_home()
 
-
     def display_graph_home(self):
         if self.tree_laws.selectedItems():
             itm = self.tree_laws.selectedItems()[0]
@@ -208,7 +220,6 @@ class ClassHydroLawsDialog(QDialog):
         else:
             self.graph_home.initCurv()
 
-
     def new_law(self):
         dlg = ClassHydroLawCreateDialog()
         if dlg.exec_():
@@ -216,7 +227,6 @@ class ClassHydroLawsDialog(QDialog):
             self.cur_typ = dlg.cb_type.currentData()
             self.param_law = dico_typ_law[self.cur_typ]
             self.display_law_info()
-
 
     def edit_law(self):
         if self.tree_laws.selectedItems():
@@ -226,20 +236,24 @@ class ClassHydroLawsDialog(QDialog):
             self.param_law = dico_typ_law[self.cur_typ]
             self.display_law_info()
 
-
     def delete_law(self):
         if self.tree_laws.selectedItems():
             itm = self.tree_laws.selectedItems()[0]
             id_law = itm.data(0, 32)
             name_law = itm.text(0)
-            if (QMessageBox.question(self, "Law Settings", "Delete {} ?".format(name_law),
+            if (QMessageBox.question(self, "Law Settings",
+                                     "Delete {} ?".format(name_law),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 if self.mgis.DEBUG:
-                    self.mgis.add_info("Deletion of {} Hydro Law".format(name_set))
-                self.mdb.execute("DELETE FROM {0}.law_values WHERE id_law = {1}".format(self.mdb.SCHEMA, id_law))
-                self.mdb.execute("DELETE FROM {0}.law_config WHERE id = {1}".format(self.mdb.SCHEMA, id_law))
+                    self.mgis.add_info(
+                        "Deletion of {} Hydro Law".format(name_set))
+                self.mdb.execute(
+                    "DELETE FROM {0}.law_values WHERE id_law = {1}".format(
+                        self.mdb.SCHEMA, id_law))
+                self.mdb.execute(
+                    "DELETE FROM {0}.law_config WHERE id = {1}".format(
+                        self.mdb.SCHEMA, id_law))
                 self.fill_tree_laws()
-
 
     ######################################################################
     #
@@ -267,16 +281,23 @@ class ClassHydroLawsDialog(QDialog):
             self.txt_comm.setText('')
         else:
             sql = "SELECT name, geom_obj, starttime, endtime, active, comment FROM {0}.law_config " \
-                  "WHERE id = '{1}' ORDER BY name".format(self.mdb.SCHEMA, self.cur_law)
+                  "WHERE id = '{1}' ORDER BY name".format(self.mdb.SCHEMA,
+                                                          self.cur_law)
             rows = self.mdb.run_query(sql, fetch=True)
             row = rows[0]
-            self.txt_name.setText(str(row[0])) if row[0] else self.txt_name.setText('')
+            self.txt_name.setText(str(row[0])) if row[
+                0] else self.txt_name.setText('')
             self.update_cb_geom(row[1])
-            self.cc_date_ref.setCheckState(2) if row[2] else self.cc_date_ref.setCheckState(0)
-            self.de_start.setDateTime(row[2]) if row[2] else self.de_start.setDateTime(cur_date)
-            self.de_end.setDateTime(row[3]) if row[3] else self.de_end.setDateTime(cur_date.addDays(1))
-            self.cc_act.setCheckState(2) if row[4] else self.cc_act.setCheckState(0)
-            self.txt_comm.setText(str(row[5])) if row[5] else self.txt_comm.setText('')
+            self.cc_date_ref.setCheckState(2) if row[
+                2] else self.cc_date_ref.setCheckState(0)
+            self.de_start.setDateTime(row[2]) if row[
+                2] else self.de_start.setDateTime(cur_date)
+            self.de_end.setDateTime(row[3]) if row[
+                3] else self.de_end.setDateTime(cur_date.addDays(1))
+            self.cc_act.setCheckState(2) if row[
+                4] else self.cc_act.setCheckState(0)
+            self.txt_comm.setText(str(row[5])) if row[
+                5] else self.txt_comm.setText('')
 
         self.graph_edit.initCurv(self.cur_typ, self.param_law)
         self.graph_edit.initGraph(self.cur_law)
@@ -285,17 +306,18 @@ class ClassHydroLawsDialog(QDialog):
 
         self.filling_tab = False
 
-
     def update_cb_geom(self, vdef=None):
         sql = "SELECT 'None' as name_obj"
         for table, val in self.param_law["geom"].items():
-            if val == False:
+            if not val:
                 pass
-            elif val == True:
-                sql += " UNION SELECT name FROM {0}.{1}".format(self.mdb.SCHEMA, table)
+            elif val:
+                sql += " UNION SELECT name FROM {0}.{1}".format(self.mdb.SCHEMA,
+                                                                table)
             else:
-                sql += " UNION SELECT name FROM {0}.{1} WHERE type IN ({2})".format(self.mdb.SCHEMA, table,
-                                                                                    ", ".join([str(v) for v in val]))
+                sql += " UNION SELECT name FROM {0}.{1} WHERE type IN ({2})".format(
+                    self.mdb.SCHEMA, table,
+                    ", ".join([str(v) for v in val]))
         sql += " ORDER BY name_obj"
         rows = self.mdb.run_query(sql, fetch=True)
         lst_obj = list(set([r[0] for r in rows]))
@@ -308,7 +330,6 @@ class ClassHydroLawsDialog(QDialog):
             if idx != -1:
                 self.cb_geom.setCurrentIndex(idx)
 
-
     def fill_tab_laws(self):
         self.ui.tab_sets.setModel(self.create_tab_model())
         model = self.ui.tab_sets.model()
@@ -319,7 +340,8 @@ class ClassHydroLawsDialog(QDialog):
             c = 0
             for var in self.list_var:
                 sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} AND id_var = {2} " \
-                      "ORDER BY id_order".format(self.mdb.SCHEMA, self.cur_law, var[0])
+                      "ORDER BY id_order".format(self.mdb.SCHEMA, self.cur_law,
+                                                 var[0])
                 rows = self.mdb.run_query(sql, fetch=True)
 
                 if c == 0:
@@ -337,7 +359,6 @@ class ClassHydroLawsDialog(QDialog):
 
         if self.param_law['xIsTime']:
             self.rb_sec.click()
-
 
     def create_tab_model(self):
         self.list_var = []
@@ -362,7 +383,6 @@ class ClassHydroLawsDialog(QDialog):
 
         model.itemChanged.connect(self.on_tab_data_change)
         return model
-
 
     ######################################################################
     #
@@ -393,7 +413,6 @@ class ClassHydroLawsDialog(QDialog):
         self.filling_tab = False
         self.update_courbe("all")
 
-
     def delete_time(self):
         if self.ui.tab_sets.selectedIndexes():
             rows = [idx.row() for idx in self.ui.tab_sets.selectedIndexes()]
@@ -403,7 +422,6 @@ class ClassHydroLawsDialog(QDialog):
                 model = self.ui.tab_sets.model()
                 model.removeRow(row)
             self.update_courbe("all")
-
 
     def short_cut_row_del(self):
         if self.ui.tab_sets.hasFocus():
@@ -418,7 +436,6 @@ class ClassHydroLawsDialog(QDialog):
                     cols.append(idx.column())
             cols = list(set(cols))
             self.update_courbe(cols)
-
 
     def on_tab_data_change(self, itm):
         model = itm.model()
@@ -436,13 +453,15 @@ class ClassHydroLawsDialog(QDialog):
                         model.item(itm.row(), 2).setData(itm.data(0) / 3600., 0)
                         if not model.item(itm.row(), 3):
                             model.setItem(itm.row(), 3, QStandardItem())
-                        model.item(itm.row(), 3).setData(itm.data(0) / 86400., 0)
+                        model.item(itm.row(), 3).setData(itm.data(0) / 86400.,
+                                                         0)
                         if not model.item(itm.row(), 4):
                             date_itm = QStandardItem()
                             date_itm.setEditable(False)
                             model.setItem(itm.row(), 4, date_itm)
                         date = self.date_start + timedelta(seconds=itm.data(0))
-                        model.item(itm.row(), 4).setData(date.strftime('%d-%m-%Y %H:%M:%S'), 0)
+                        model.item(itm.row(), 4).setData(
+                            date.strftime('%d-%m-%Y %H:%M:%S'), 0)
                         model.blockSignals(False)
                     elif itm.column() == 1:
                         model.blockSignals(True)
@@ -460,7 +479,8 @@ class ClassHydroLawsDialog(QDialog):
                             date_itm.setEditable(False)
                             model.setItem(itm.row(), 4, date_itm)
                         date = self.date_start + timedelta(minutes=itm.data(0))
-                        model.item(itm.row(), 4).setData(date.strftime('%d-%m-%Y %H:%M:%S'), 0)
+                        model.item(itm.row(), 4).setData(
+                            date.strftime('%d-%m-%Y %H:%M:%S'), 0)
                         model.blockSignals(False)
                     elif itm.column() == 2:
                         model.blockSignals(True)
@@ -478,13 +498,15 @@ class ClassHydroLawsDialog(QDialog):
                             date_itm.setEditable(False)
                             model.setItem(itm.row(), 4, date_itm)
                         date = self.date_start + timedelta(hours=itm.data(0))
-                        model.item(itm.row(), 4).setData(date.strftime('%d-%m-%Y %H:%M:%S'), 0)
+                        model.item(itm.row(), 4).setData(
+                            date.strftime('%d-%m-%Y %H:%M:%S'), 0)
                         model.blockSignals(False)
                     elif itm.column() == 3:
                         model.blockSignals(True)
                         if not model.item(itm.row(), 0):
                             model.setItem(itm.row(), 0, QStandardItem())
-                        model.item(itm.row(), 0).setData(itm.data(0) * 86400., 0)
+                        model.item(itm.row(), 0).setData(itm.data(0) * 86400.,
+                                                         0)
                         if not model.item(itm.row(), 1):
                             model.setItem(itm.row(), 1, QStandardItem())
                         model.item(itm.row(), 1).setData(itm.data(0) * 1440., 0)
@@ -496,7 +518,8 @@ class ClassHydroLawsDialog(QDialog):
                             date_itm.setEditable(False)
                             model.setItem(itm.row(), 4, date_itm)
                         date = self.date_start + timedelta(days=itm.data(0))
-                        model.item(itm.row(), 4).setData(date.strftime('%d-%m-%Y %H:%M:%S'), 0)
+                        model.item(itm.row(), 4).setData(
+                            date.strftime('%d-%m-%Y %H:%M:%S'), 0)
                         model.blockSignals(False)
             elif itm.column() == 4:
                 cols = None
@@ -516,7 +539,6 @@ class ClassHydroLawsDialog(QDialog):
                 self.calcul_date_end()
             self.update_courbe(cols)
 
-
     ######################################################################
     #
     #                           IMPORT
@@ -524,7 +546,8 @@ class ClassHydroLawsDialog(QDialog):
     ######################################################################
 
     def import_csv(self):
-        file, _ = QFileDialog.getOpenFileName(None, 'File Selection', self.mgis.repProject,
+        file, _ = QFileDialog.getOpenFileName(None, 'File Selection',
+                                              self.mgis.repProject,
                                               "File (*.txt *.csv)")
         if file:
             filein = open(file, "r")
@@ -540,7 +563,8 @@ class ClassHydroLawsDialog(QDialog):
             model = self.create_tab_model()
             for num_ligne, ligne in enumerate(filein):
                 if ligne[0] != '#':
-                    liste = ligne.replace('\n', '').replace('\t', ' ').split(";")
+                    liste = ligne.replace('\n', '').replace('\t', ' ').split(
+                        ";")
                     if len(liste) == nb_col:
                         if first_ligne:
                             first_ligne = False
@@ -593,7 +617,6 @@ class ClassHydroLawsDialog(QDialog):
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Import failed ({})".format(file))
 
-
     ######################################################################
     #
     #                           GRAPH
@@ -614,7 +637,8 @@ class ClassHydroLawsDialog(QDialog):
                 if col_x != 4:
                     lx.append(self.ui.tab_sets.model().item(r, col_x).data(0))
                 else:
-                    date = self.date_start + timedelta(seconds=self.ui.tab_sets.model().item(r, 0).data(0))
+                    date = self.date_start + timedelta(
+                        seconds=self.ui.tab_sets.model().item(r, 0).data(0))
                     lx.append(date2num(date))
         else:
             for r in range(self.ui.tab_sets.model().rowCount()):
@@ -627,7 +651,6 @@ class ClassHydroLawsDialog(QDialog):
             data[crb - d] = {"x": lx, "y": ly}
 
         self.graph_edit.maj_courbes(data)
-
 
     ######################################################################
     #
@@ -649,7 +672,8 @@ class ClassHydroLawsDialog(QDialog):
                 self.de_end.setDateTime(self.ui.de_start.dateTime().addSecs(ds))
 
     def change_date_start(self):
-        date, time = self.ui.de_start.date().toString('dd-MM-yyyy'), self.ui.de_start.time().toString('HH:mm:ss')
+        date, time = self.ui.de_start.date().toString(
+            'dd-MM-yyyy'), self.ui.de_start.time().toString('HH:mm:ss')
         date_str = "'{} {}'".format(date, time)
         self.date_start = data_to_date(date_str)
 
@@ -664,14 +688,17 @@ class ClassHydroLawsDialog(QDialog):
                         date_itm = QStandardItem()
                         date_itm.setEditable(True)
                         model.setItem(r, 4, date_itm)
-                    date = self.date_start + timedelta(seconds=model.item(r, 0).data(0))
-                    model.item(r, 4).setData(date.strftime('%d-%m-%Y %H:%M:%S'), 0)
+                    date = self.date_start + timedelta(
+                        seconds=model.item(r, 0).data(0))
+                    model.item(r, 4).setData(date.strftime('%d-%m-%Y %H:%M:%S'),
+                                             0)
 
                 if (not self.filling_tab) and (self.bg_time.checkedId() == 4):
                     self.update_courbe("all")
 
     def change_date_end(self):
-        date, time = self.ui.de_end.date().toString('dd-MM-yyyy'), self.ui.de_end.time().toString('HH:mm:ss')
+        date, time = self.ui.de_end.date().toString(
+            'dd-MM-yyyy'), self.ui.de_end.time().toString('HH:mm:ss')
         date_str = "'{} {}'".format(date, time)
         self.date_end = data_to_date(date_str)
 
@@ -686,7 +713,6 @@ class ClassHydroLawsDialog(QDialog):
                     self.graph_edit.maj_lbl_x("time", unit[v])
                     self.update_courbe("all")
 
-
     ######################################################################
     #
     #                           VALIDATION
@@ -696,25 +722,34 @@ class ClassHydroLawsDialog(QDialog):
     def accept_page2(self):
         name_law = self.ui.txt_name.text() if self.ui.txt_name.text() else None
         if not name_law:
-            QMessageBox.warning(self, "Error", "Variable Law Name is needed !", QMessageBox.Ok)
+            QMessageBox.warning(self, "Error", "Variable Law Name is needed !",
+                                QMessageBox.Ok)
             return
 
-        rows = self.mdb.run_query("SELECT * FROM {0}.law_config WHERE name = '{1}' "
-                                  "AND id <> {2}".format(self.mdb.SCHEMA, name_law, self.cur_law), fetch=True)
+        rows = self.mdb.run_query(
+            "SELECT * FROM {0}.law_config WHERE name = '{1}' "
+            "AND id <> {2}".format(self.mdb.SCHEMA, name_law, self.cur_law),
+            fetch=True)
         if rows:
-            QMessageBox.warning(self, "Error", "Law Name '{}' already exists !".format(name_law), QMessageBox.Ok)
+            QMessageBox.warning(self, "Error",
+                                "Law Name '{}' already exists !".format(
+                                    name_law), QMessageBox.Ok)
             return
 
         name_law = "'{}'".format(name_law)
-        geom_obj = "'{}'".format(self.ui.cb_geom.currentText()) if self.ui.cb_geom.currentIndex() != 0 else 'Null'
-        comment = "'{}'".format(self.ui.txt_comm.text()) if self.ui.txt_comm.text() else 'Null'
+        geom_obj = "'{}'".format(
+            self.ui.cb_geom.currentText()) if self.ui.cb_geom.currentIndex() != 0 else 'Null'
+        comment = "'{}'".format(
+            self.ui.txt_comm.text()) if self.ui.txt_comm.text() else 'Null'
         is_act = self.cc_act.isChecked()
 
         if self.cc_date_ref.isChecked():
-            date_start = "'{} {}'".format(self.de_start.date().toString('yyyy-MM-dd'),
-                                          self.de_start.time().toString('HH:mm:ss'))
-            date_end = "'{} {}'".format(self.de_end.date().toString('yyyy-MM-dd'),
-                                        self.de_end.time().toString('HH:mm:ss'))
+            date_start = "'{} {}'".format(
+                self.de_start.date().toString('yyyy-MM-dd'),
+                self.de_start.time().toString('HH:mm:ss'))
+            date_end = "'{} {}'".format(
+                self.de_end.date().toString('yyyy-MM-dd'),
+                self.de_end.time().toString('HH:mm:ss'))
         else:
             date_start, date_end = 'Null', 'Null'
 
@@ -723,18 +758,24 @@ class ClassHydroLawsDialog(QDialog):
                 self.mgis.add_info("Addition of {} Hydro Law".format(name_law))
             self.mdb.execute(
                 "INSERT INTO {0}.law_config (name, geom_obj, starttime, endtime, id_law_type, active, comment) "
-                "VALUES ({1}, {2}, {3}, {4}, {5}, {6}, {7})".format(self.mdb.SCHEMA, name_law, geom_obj, date_start,
-                                                                    date_end, self.cur_typ, is_act, comment))
-            res = self.mdb.run_query("SELECT Max(id) FROM {0}.law_config".format(self.mdb.SCHEMA), fetch=True)
+                "VALUES ({1}, {2}, {3}, {4}, {5}, {6}, {7})".format(
+                    self.mdb.SCHEMA, name_law, geom_obj, date_start,
+                    date_end, self.cur_typ, is_act, comment))
+            res = self.mdb.run_query(
+                "SELECT Max(id) FROM {0}.law_config".format(self.mdb.SCHEMA),
+                fetch=True)
             self.cur_law = res[0][0]
         else:
             if self.mgis.DEBUG:
                 self.mgis.add_info("Editing of {} ".format(name_law))
             self.mdb.execute(
                 "UPDATE {0}.law_config SET name = {1}, geom_obj = {2}, starttime = {3}, endtime = {4}, "
-                "active = {5}, comment = {6} WHERE id = {7}".format(self.mdb.SCHEMA, name_law, geom_obj, date_start,
-                                                                    date_end, is_act, comment, self.cur_law))
-            self.mdb.execute("DELETE FROM {0}.law_values WHERE id_law = {1}".format(self.mdb.SCHEMA, self.cur_law))
+                "active = {5}, comment = {6} WHERE id = {7}".format(
+                    self.mdb.SCHEMA, name_law, geom_obj, date_start,
+                    date_end, is_act, comment, self.cur_law))
+            self.mdb.execute(
+                "DELETE FROM {0}.law_values WHERE id_law = {1}".format(
+                    self.mdb.SCHEMA, self.cur_law))
 
         col = list(range(self.ui.tab_sets.model().columnCount()))
         if self.param_law['xIsTime']:
@@ -743,16 +784,17 @@ class ClassHydroLawsDialog(QDialog):
         recs = []
         for id_var, c in enumerate(col):
             for r in range(self.ui.tab_sets.model().rowCount()):
-                recs.append([self.cur_law, id_var, r, self.ui.tab_sets.model().item(r, c).data(0)])
+                recs.append([self.cur_law, id_var, r,
+                             self.ui.tab_sets.model().item(r, c).data(0)])
 
-        self.mdb.run_query("INSERT INTO {0}.law_values (id_law, id_var, id_order, value) VALUES (%s, %s, %s, %s)".format(
-            self.mdb.SCHEMA), many=True, list_many=recs)
+        self.mdb.run_query(
+            "INSERT INTO {0}.law_values (id_law, id_var, id_order, value) VALUES (%s, %s, %s, %s)".format(
+                self.mdb.SCHEMA), many=True, list_many=recs)
 
         self.fill_tree_laws(self.cur_law)
         self.ui.laws_pages.setCurrentIndex(0)
         self.graph_edit.initCurv()
         self.tree_laws.setFocus()
-
 
     def reject_page2(self):
         if self.mgis.DEBUG:
@@ -760,8 +802,6 @@ class ClassHydroLawsDialog(QDialog):
         self.ui.laws_pages.setCurrentIndex(0)
         self.graph_edit.initCurv()
         self.tree_laws.setFocus()
-
-
 
 
 class ItemEditorFactory(QItemEditorFactory):
@@ -773,8 +813,10 @@ class ItemEditorFactory(QItemEditorFactory):
         if user_type == QVariant.Double or user_type == 0:
             double_spin_box = QDoubleSpinBox(parent)
             double_spin_box.setDecimals(10)
-            double_spin_box.setMinimum(-1000000000.)  # The default maximum value is 99.99.
-            double_spin_box.setMaximum(1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMinimum(
+                -1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMaximum(
+                1000000000.)  # The default maximum value is 99.99.
             return double_spin_box
         elif user_type == 16:
             date_time_edit = QDateTimeEdit(parent)

@@ -27,10 +27,6 @@ from datetime import datetime
 from ..HydroLawsDialog import dico_typ_law
 
 
-
-# from ..ClassParameterDialog import ClassParameterDialog
-
-
 def list_sql(liste):
     """
     list to srting for sql script
@@ -188,15 +184,15 @@ class CheckTab:
                                  "EXISTS  zleftminbed FLOAT;",
                                  "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
                                  "EXISTS  zrightminbed FLOAT;",
-                             ]},],
+                             ]}, ],
                 'fct': [
                     lambda: fill_zminbed(self.mdb),
                 ],
             },
             '4.0.3': {
 
-             'add_tab': [
-                    {'tab': Maso.runs_plani, 'overwrite': False},],
+                'add_tab': [
+                    {'tab': Maso.runs_plani, 'overwrite': False}, ],
             },
 
             '4.0.4': {
@@ -843,13 +839,14 @@ class CheckTab:
 
             if not "law_config" in lst_tab:
                 vconf, _ = self.add_tab(Maso.law_config, False)
-                if not (vconf):
+                if not vconf:
                     self.mgis.add_info("Error  add table: law_config")
                     return False
                 if 'id' in info.keys():
                     # law_config
-                    tab = {id: {'comment': ''} for id in range(len(info['name']))}
-                    cmpt=1
+                    tab = {id: {'comment': ''} for id in
+                           range(len(info['name']))}
+                    cmpt = 1
                     for key, item in info.items():
                         if key in ["z", "flowrate", "time",
                                    "z_upstream", "z_downstream",
@@ -858,7 +855,8 @@ class CheckTab:
                         elif key in ['starttime', 'endtime']:
                             for id, val in enumerate(item):
                                 if val:
-                                    tab[id][key] = val.strftime("%Y-%m-%d %H:%M:%S")
+                                    tab[id][key] = val.strftime(
+                                        "%Y-%m-%d %H:%M:%S")
                                 else:
                                     tab[id][key] = None
                         elif key in ['active']:
@@ -868,8 +866,8 @@ class CheckTab:
                             for id, val in enumerate(item):
                                 if val in [tmp['name'] for tmp in tab.values()
                                            if 'name' is tmp.keys()]:
-                                    tab[id]["name"] = val+'{}'.format(cmpt)
-                                    cmpt+=1
+                                    tab[id]["name"] = val + '{}'.format(cmpt)
+                                    cmpt += 1
                                 else:
                                     tab[id]["name"] = val
                                 tab[id]['geom_obj'] = val
@@ -877,7 +875,8 @@ class CheckTab:
                             for id, val in enumerate(item):
                                 tab[id]['id_law_type'] = val
 
-                    listimport = ['id', 'name', 'geom_obj', 'starttime', 'endtime',
+                    listimport = ['id', 'name', 'geom_obj', 'starttime',
+                                  'endtime',
                                   'id_law_type', 'active', 'comment']
 
                     self.mdb.insert("law_config",
@@ -896,19 +895,19 @@ class CheckTab:
                     }
                     for id_loi in range(len(info['name'])):
                         id_type = info['type'][id_loi]
-                        lst_var = [ tmp['code'] for tmp in dico_typ_law[id_type]['var'] ]
+                        lst_var = [tmp['code'] for tmp in
+                                   dico_typ_law[id_type]['var']]
 
                         for id_var, var in enumerate(lst_var):
-                            #lst_val = info[conv_dict[var]][id_loi].split()
+                            # lst_val = info[conv_dict[var]][id_loi].split()
                             lst_val = info[var][id_loi].split()
-                            for id_val , val in enumerate(lst_val):
+                            for id_val, val in enumerate(lst_val):
                                 valinsert["id_law"].append(id_loi)
-                                valinsert["id_var"].append( id_var)
+                                valinsert["id_var"].append(id_var)
                                 valinsert["id_order"].append(id_val)
                                 valinsert["value"].append(float(val))
 
-                    self.mdb.insert2("law_values",  valinsert)
-
+                    self.mdb.insert2("law_values", valinsert)
 
             return True
         except Exception as e:

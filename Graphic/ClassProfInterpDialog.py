@@ -37,7 +37,8 @@ class ClassProfInterpDialog(QDialog):
         self.mdb = self.mgis.mdb
 
         self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_interp_profile.ui'),self)
+            os.path.join(self.mgis.masplugPath, 'ui/ui_interp_profile.ui'),
+            self)
         self.nplan = 100
         self.plani = None
         self.pk_int = None
@@ -51,8 +52,7 @@ class ClassProfInterpDialog(QDialog):
         self.fct_autdisc()
         self.ch_autdisc.stateChanged.connect(self.fct_autdisc)
 
-
-    def init_gui(self, nplan,plani,dict_interp, pk_int, err):
+    def init_gui(self, nplan, plani, dict_interp, pk_int, err):
         """initialize GUI"""
         self.pk_int = pk_int
         self.data = dict_interp
@@ -60,15 +60,13 @@ class ClassProfInterpDialog(QDialog):
         self.sp_nbplan.setValue(nplan)
         self.compute = True
 
-
-        if len(err.keys())>0 :
+        if len(err.keys()) > 0:
             msg_lbl = 'WARNING: \n'
-            for key, msg  in err.items():
+            for key, msg in err.items():
                 msg_lbl += '  - {}\n'.format(msg)
-                if key =='plani':
-
+                if key == 'plani':
                     self.ch_autdisc.setEnabled(False)
-                if key =='iderr':
+                if key == 'iderr':
                     self.compute = False
                     msg_lbl += '******* NO COMPUTE *******\n'
                     self.ch_autdisc.hide()
@@ -87,13 +85,14 @@ class ClassProfInterpDialog(QDialog):
             msg_lbl += '  - Upstream Profile : \n'
             msg_lbl += '     - name : {} \n'.format(dict_interp['up']['name'])
             msg_lbl += '     - gid : {} \n'.format(dict_interp['up']['id'])
-            msg_lbl += '     - branch : {} \n'.format(dict_interp['up']['branch'])
+            msg_lbl += '     - branch : {} \n'.format(
+                dict_interp['up']['branch'])
             msg_lbl += '  - Downstream Profile : \n'
             msg_lbl += '     - name : {} \n'.format(dict_interp['down']['name'])
             msg_lbl += '     - gid : {} \n'.format(dict_interp['down']['id'])
-            msg_lbl += '     - branch : {} \n'.format(dict_interp['down']['branch'])
+            msg_lbl += '     - branch : {} \n'.format(
+                dict_interp['down']['branch'])
             self.lb_message.setText(msg_lbl)
-
 
     def fct_autdisc(self):
         """ enable if auto discretization"""
@@ -110,16 +109,14 @@ class ClassProfInterpDialog(QDialog):
         :return:
         """
 
-
-
-        if self.compute :
+        if self.compute:
             nplan_s = self.sp_nbplan.value()
             if self.ch_autdisc.isChecked():
                 plani_s = self.plani
             else:
                 plani_s = None
             cl_interp = ClassProfInterp(self.data, self.pk_int,
-                                        nplan=nplan_s,plani=plani_s,
+                                        nplan=nplan_s, plani=plani_s,
                                         debug=self.mgis.DEBUG)
 
             cl_interp()
@@ -127,7 +124,7 @@ class ClassProfInterpDialog(QDialog):
                 if not cl_interp.err:
                     cl_interp.msg += 'No interpolation.'
                 self.mgis.add_info(cl_interp.msg)
-            if cl_interp.err :
+            if cl_interp.err:
                 self.interpol_prof = cl_interp.data['interp']
 
         self.accept()
@@ -135,4 +132,3 @@ class ClassProfInterpDialog(QDialog):
     def reject_page(self):
         # print('cancel')
         self.reject()
-

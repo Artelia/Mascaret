@@ -32,10 +32,6 @@ from ..Function import data_to_float, str2bool
 from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
 
 
-
-
-
-
 class ClassMobilSingDialog(QDialog):
     def __init__(self, mgis):
         QDialog.__init__(self)
