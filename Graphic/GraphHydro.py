@@ -125,7 +125,7 @@ class GraphHydroLaw(GraphCommon):
             self.list_z = [r[0] for r in rows]
 
             for idx, z in enumerate(self.list_z):
-                name = "{0} {1} ({2})".format(param_law['var'][self.axeZ]['code'], idx + 1, round(z, 2))
+                name = "{0} {1} ({2})".format(param_law['var'][self.axeZ]['leg'], idx + 1, round(z, 2))
                 self.list_var.append({"id": idx, "name": name})
                 self.courbeTrac, = self.axes.plot([], [], zorder=100 - idx, label=name)
                 self.courbes.append(self.courbeTrac)
