@@ -44,6 +44,7 @@ class CheckTab:
     """
     Class update table
     """
+
     def __init__(self, mgis, mdb):
         self.mgis = mgis
         self.mdb = mdb
@@ -65,8 +66,6 @@ class CheckTab:
                                   '4.0.0',
                                   '4.0.1',
                                   '4.0.2',
-                                  '4.0.3',
-                                  '4.0.4',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -76,7 +75,7 @@ class CheckTab:
                         {'tab': Maso.struct_elem_param, 'overwrite': False},
                         {'tab': Maso.struct_abac, 'overwrite': False},
                         {'tab': Maso.struct_laws, 'overwrite': False}],
-            'fct': [self.fill_struct()],
+            'fct': [lambda: self.fill_struct()],
             'alt_tab': [{'tab': 'runs',
                          'sql': ["ALTER TABLE {0}.runs ADD COLUMN IF NOT "
                                  "EXISTS comments text;"]}],
@@ -90,7 +89,7 @@ class CheckTab:
                     "EXISTS active_mob boolean DEFAULT FALSE;",
                     "ALTER TABLE {0}.weirs ADD COLUMN IF NOT "
                     "EXISTS method_mob text;"]}],
-                'fct': [self.update_setting_json()]},
+                'fct': [lambda: self.update_setting_json()]},
             '3.0.2': {'add_tab': [
                 {'tab': Maso.results, 'overwrite': False},
                 {'tab': Maso.results_sect, 'overwrite': False},
@@ -105,9 +104,9 @@ class CheckTab:
                                 "ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
                                 "EXISTS active boolean DEFAULT TRUE;"]},
                             ],
-                'fct': [self.create_var_result(),
-                        self.convert_all_result(),
-                        self.fill_init_date_runs()],
+                'fct': [lambda: self.create_var_result(),
+                        lambda: self.convert_all_result(),
+                        lambda: self.fill_init_date_runs()],
             },
             '3.0.3': {},
             '3.0.4': {},
@@ -150,13 +149,13 @@ class CheckTab:
                                  "DEFAULT TRUE;"]},
 
                             ],
-                'fct': [self.update_tab_306(),
-                        self.add_trigger_update_306()
-                ],
+                'fct': [lambda: self.update_tab_306(),
+                        lambda: self.add_trigger_update_306()
+                        ],
 
             },
             '3.0.7': {'fct': [
-                self.update_fct_calc_abs(),
+                lambda: self.update_fct_calc_abs(),
             ]
             },
             '3.1.0': {'del_tab': ['resultats', 'resultats_basin',
@@ -164,7 +163,7 @@ class CheckTab:
             '3.1.1': {},
             '3.1.2': {},
             '4.0.0': {'fct': [
-                self.update_400(),
+                lambda: self.update_400(),
             ],
                 'alt_tab': [{'tab': 'results',
                              'sql': [
@@ -178,14 +177,15 @@ class CheckTab:
                             {'tab': 'observations',
                              'sql': [
                                  "CREATE INDEX IF NOT EXISTS "
-                                 "observations_code_typ  " 
+                                 "observations_code_typ  "
                                  "ON {0}.observations(code, type);",
                              ]},
                             ]
             },
             '4.0.1': {},
             '4.0.2': {
-
+                'add_tab': [
+                    {'tab': Maso.runs_plani, 'overwrite': False}, ],
                 'alt_tab': [{'tab': 'profiles',
                              'sql': [
                                  "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
@@ -194,20 +194,11 @@ class CheckTab:
                                  "EXISTS  zrightminbed FLOAT;",
                              ]}, ],
                 'fct': [
-                    fill_zminbed(self.mdb),
+                    lambda: fill_zminbed(self.mdb),
+                    lambda: self.laws_to_new(),
                 ],
             },
-            '4.0.3': {
 
-                'add_tab': [
-                    {'tab': Maso.runs_plani, 'overwrite': False}, ],
-            },
-
-            '4.0.4': {
-                'fct': [
-                    self.laws_to_new(),
-                ],
-            },
             # '3.0.x': { },
 
         }
@@ -869,7 +860,7 @@ class CheckTab:
             #              }
 
 
-            if  "law_config" not in lst_tab:
+            if "law_config" not in lst_tab:
                 vconf, _ = self.add_tab(Maso.law_config, False)
                 if not vconf:
                     self.mgis.add_info("Error  add table: law_config")
