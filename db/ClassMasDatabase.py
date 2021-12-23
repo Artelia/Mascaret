@@ -155,6 +155,7 @@ class ClassMasDatabase(object):
             list_many = []
         result = None
         descr = None
+        err = False
         try:
             if self.con:
                 cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -182,8 +183,11 @@ class ClassMasDatabase(object):
                 self.mgis.add_info(txt)
             else:
                 pass
+            err = True
         finally:
             # description pb voir ou utilisé
+            if not fetch:
+                return err
             if namvar:
                 return result, descr
             else:
@@ -1082,7 +1086,7 @@ $BODY$
                 elif isinstance(tab[id][k], list):
                     valeurs += "'" + delim.join(tab[id][k]) + "',"
                 else:
-                    if tab[id][k]:
+                    if tab[id][k] != None:
                         valeurs += str(tab[id][k]) + ","
                     else:
                         valeurs += "NULL,"
@@ -1096,7 +1100,8 @@ $BODY$
                                                             valeurs)
         if verbose:
             self.mgis.add_info(sql)
-        self.run_query(sql)
+        err = self.run_query(sql)
+        return err
 
         # if self.mgis.DEBUG:
         #     self.mgis.add_info('function insert end')

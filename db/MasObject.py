@@ -134,7 +134,7 @@ class MasObject(object):
 class laws(MasObject):
     def __init__(self):
         super(laws, self).__init__()
-        self.order = 0
+        self.order = 99
         self.geom_type = None
         self.attrs = [
             ('id', 'serial NOT NULL'),

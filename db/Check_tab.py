@@ -230,8 +230,12 @@ class CheckTab:
                 self.mdb.execute(sql)
 
         curent_v_tab = self.get_version()
+        try:
+            pos = self.list_hist_version.index(curent_v_tab)
+        except ValueError as errval:
+            self.mgis.add_info('Error: The version {}'.format(errval))
+            raise ValueError()
 
-        pos = self.list_hist_version.index(curent_v_tab)
         pos_fin = self.list_hist_version.index(version)
         tabs_no = deepcopy(tabs)
 
@@ -902,10 +906,16 @@ class CheckTab:
                                   'endtime',
                                   'id_law_type', 'active', 'comment']
 
-                    self.mdb.insert("law_config",
+                    err = self.mdb.insert("law_config",
                                     tab,
                                     listimport)
-            if "law_config" not in lst_tab:
+                    if err :
+                        self.mgis.add_info(
+                            "Error: Insert law_config")
+                        self.del_tab("law_config")
+                        return False
+
+            if "law_values" not in lst_tab:
                 vval, _ = self.add_tab(Maso.law_values, False)
                 if not vval:
                     self.mgis.add_info("Error  add table: law_values")
@@ -930,9 +940,13 @@ class CheckTab:
                                 valinsert["id_order"].append(id_val)
                                 valinsert["value"].append(float(val))
 
-                    self.mdb.insert2("law_values", valinsert)
-
+                    err= self.mdb.insert2("law_values", valinsert)
+                    if err :
+                        self.mgis.add_info(
+                            "Error  Insert law_values")
+                        self.del_tab("law_values")
+                        return False
             return True
         except Exception as e:
-            self.mgis.add_info("Error  update_400: {}".format(str(e)))
+            self.mgis.add_info("Error  update_402: {}".format(str(e)))
             return False
