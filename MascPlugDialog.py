@@ -233,7 +233,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionImport_Results.setVisible(False)
         # TODO Finaliser
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(True)
+        self.ui.actionTest.setVisible(False)
         # scores
         self.ui.actionScores.triggered.connect(self.fct_scores)
         # TODO DELETE AFTER
