@@ -1087,8 +1087,10 @@ class ClassHydroLawsDialog(QDialog):
                 self.calcul_date_end()
             self.update_courbe("all")
         else:
-            if self.mgis.DEBUG:
-                self.mgis.add_info("Import failed ({})".format(file))
+            #self.mgis.add_info("Import failed ({})".format(file))
+            QMessageBox.warning(self, "Error",
+                                "Import failed ({})".format(file),
+                                QMessageBox.Ok)
 
     def import_file_weir_zam(self, file, sep=";"):
         """
@@ -1175,8 +1177,10 @@ class ClassHydroLawsDialog(QDialog):
 
             self.rb_abs_q.click()
         else:
-            if self.mgis.DEBUG:
-                self.mgis.add_info("Import failed ({})".format(file))
+            #self.mgis.add_info("Import failed ({})".format(file))
+            QMessageBox.warning(self, "Error",
+                                "Import failed ({})".format(file),
+                                QMessageBox.Ok)
 
     ######################################################################
     #

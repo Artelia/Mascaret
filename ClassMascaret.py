@@ -2921,9 +2921,9 @@ class ClassMascaret:
                         [id_run, typ_res, 'zmax', json.dumps(dico_zmax)])
                     key_pknum = 'PK'
             # add stockage plani
-            # TODO Test
             if dico_zmax:
                 cl_geo = ClassResProfil()
+                dico_zmax = {str(key) : item for key, item in dico_zmax.items()}
                 cl_geo.plani_stock(dico_zmax, id_run, self.mdb)
 
                 del cl_geo
