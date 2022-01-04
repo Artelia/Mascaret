@@ -18,8 +18,12 @@ email                :
  ***************************************************************************/
 """
 import os
+import numpy as np
+
 from datetime import datetime, timedelta
 from matplotlib.dates import date2num
+from pandas import pivot_table, DataFrame
+
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
@@ -868,103 +872,165 @@ class ClassHydroLawsDialog(QDialog):
 
 
     def import_csv(self):
-        if self.cur_typ != 6:
-            self.import_csv_classic()
-        else:
-            self.import_csv_weirZam()
-
-    def import_csv_classic(self):
         file, _ = QFileDialog.getOpenFileName(None, 'File Selection', self.mgis.repProject,
                                               "File (*.txt *.csv *.loi)")
         if file:
-            filein = open(file, "r")
+            if self.cur_typ != 6:
+                self.import_csv_classic(file)
+            else:
+                if file[-4:] == ".loi":
+                    self.import_csv_weirZam(file, " ")
+                else:
+                    self.import_csv_weirZam(file, ";")
 
-            error = False
-            first_ligne = True
-            format_time = None
-            nb_col = len(self.param_law["var"])
+    def import_csv_classic(self, file):
+        filein = open(file, "r")
 
-            self.filling_tab = True
+        error = False
+        first_ligne = True
+        format_time = None
+        nb_col = len(self.param_law["var"])
 
-            r = 0
-            model = self.create_tab_model()
-            for num_ligne, ligne in enumerate(filein):
-                if ligne[0] != '#':
-                    liste = ligne.replace('\n', '').replace('\t', ' ').split(
-                        ";")
-                    if len(liste) == nb_col:
-                        if first_ligne:
-                            first_ligne = False
-                            if self.param_law["xIsTime"]:
-                                val = data_to_float(liste[0])
-                                if val is not None:
-                                    format_time = 'numeric'
-                                else:
-                                    val = data_to_date(liste[0])
-                                    if val is not None:
-                                        format_time = 'date'
-                                        date_ref = val
-                                        self.ui.cc_date_ref.setCheckState(2)
-                                        self.ui.de_start.setDateTime(date_ref)
-                                    else:
-                                        print('e1')
-                                        error = True
-                                        break
+        self.filling_tab = True
 
-                        model.insertRow(r)
-                        for c, val in enumerate(liste):
-                            if c == 0 and format_time == 'date':
-                                date_tmp = data_to_date(val)
-                                delta = date_tmp - date_ref
-                                val = delta.total_seconds()
-
-                            itm = QStandardItem()
-                            itm.setData(data_to_float(val), 0)
-                            if c == 0:
-                                model.setItem(r, c, itm)
+        r = 0
+        model = self.create_tab_model()
+        for num_ligne, ligne in enumerate(filein):
+            if ligne[0] != '#':
+                liste = ligne.replace('\n', '').replace('\t', ' ').split(
+                    ";")
+                if len(liste) == nb_col:
+                    if first_ligne:
+                        first_ligne = False
+                        if self.param_law["xIsTime"]:
+                            val = data_to_float(liste[0])
+                            if val is not None:
+                                format_time = 'numeric'
                             else:
-                                if self.param_law["xIsTime"]:
-                                    model.setItem(r, c + 4, itm)
+                                val = data_to_date(liste[0])
+                                if val is not None:
+                                    format_time = 'date'
+                                    date_ref = val
+                                    self.ui.cc_date_ref.setCheckState(2)
+                                    self.ui.de_start.setDateTime(date_ref)
                                 else:
-                                    model.setItem(r, c, itm)
-                        r += 1
-                    else:
+                                    print('e1')
+                                    error = True
+                                    break
+
+                    model.insertRow(r)
+                    for c, val in enumerate(liste):
+                        if c == 0 and format_time == 'date':
+                            date_tmp = data_to_date(val)
+                            delta = date_tmp - date_ref
+                            val = delta.total_seconds()
+
+                        itm = QStandardItem()
+                        itm.setData(data_to_float(val), 0)
+                        if c == 0:
+                            model.setItem(r, c, itm)
+                        else:
+                            if self.param_law["xIsTime"]:
+                                model.setItem(r, c + 4, itm)
+                            else:
+                                model.setItem(r, c, itm)
+                    r += 1
+                else:
+                    print('e2')
+                    error = True
+                    break
+        filein.close()
+        self.filling_tab = False
+
+        if not error:
+            self.ui.tab_sets.setModel(model)
+            if self.cc_date_end_auto.isChecked():
+                self.calcul_date_end()
+            self.update_courbe("all")
+        else:
+            if self.mgis.DEBUG:
+                self.mgis.add_info("Import failed ({})".format(file))
+
+
+    def import_csv_weirZam(self, file, sep=";"):
+        filein = open(file, "r")
+
+        error = False
+        nb_col = 3
+
+        rows = list()
+        for num_ligne, ligne in enumerate(filein):
+            if ligne[0] != '#':
+                ligne = ligne.strip().replace('\n', '').replace('\t', ' ').split(sep)
+                if len(ligne) == nb_col:
+                    row = [data_to_float(r) for r in ligne]
+                    if None in row:
                         print('e2')
                         error = True
                         break
-            filein.close()
-            self.filling_tab = False
+                    else:
+                        rows.append([data_to_float(r) for r in row])
+                else:
+                    print('e1')
+                    error = True
+                    break
 
-            if not error:
-                self.ui.tab_sets.setModel(model)
-                if self.cc_date_end_auto.isChecked():
-                    self.calcul_date_end()
-                self.update_courbe("all")
-            else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("Import failed ({})".format(file))
+        filein.close()
 
-    def import_csv_weirZam(self):
-        file, _ = QFileDialog.getOpenFileName(None, 'File Selection', self.mgis.repProject,
-                                              "File (*.txt *.csv *.loi)")
-        if file:
-            filein = open(file, "r")
-
-            error = False
-            first_ligne = True
-            nb_col = 3
-
+        if not error:
             self.filling_tab = True
 
-            r = 0
-            model = self.create_tab_model()
-            for num_ligne, ligne in enumerate(filein):
-                if ligne[0] != '#':
-                    liste = ligne.replace('\n', '').replace('\t', ' ').split(";")
-                    print(liste)
+            dico_imp = dict()
+            for idx, fld in enumerate(["q", "z_av", "z_am"]):
+                dico_imp[fld] = [r[idx] for r in rows]
 
-            filein.close()
+            df = DataFrame.from_dict(dico_imp)
+            piv = pivot_table(df, values="z_am", index=["q"], columns=["z_av"], aggfunc=np.mean)
+
+            self.list_q, self.list_z_av = [], []
+            model = QStandardItemModel()
+            model.insertRow(0)
+            model.insertColumn(0)
+            model.setHeaderData(0, 1, "", 0)
+            model.setHeaderData(0, 2, "", 0)
+
+            itm = QStandardItemGray("", False)
+            model.setItem(0, 0, itm)
+
+            self.list_q = [ax for ax in piv.axes[0]]
+            n_q = len(self.list_q)
+
+            self.list_z_av = [ax for ax in piv.axes[1]]
+            n_z_av = len(self.list_z_av)
+
+            model.insertRows(1, n_q)
+            model.insertColumns(1, n_z_av)
+
+            for r, q in enumerate(self.list_q):
+                model.setHeaderData(r + 1, 2, "Q{}".format(r + 1), 0)
+                itm = QStandardItemGray(q)
+                model.setItem(r + 1, 0, itm)
+
+            for c, z_av in enumerate(self.list_z_av):
+                model.setHeaderData(c + 1, 1, "Zdown{}".format(c + 1), 0)
+                itm = QStandardItemGray(z_av)
+                model.setItem(0, c + 1, itm)
+
+            for r in range(piv.shape[0]):
+                for c in range(piv.shape[1]):
+                    itm = QStandardItem()
+                    itm.setData(float(piv.iat[r, c]), 0)
+                    model.setItem(r + 1, c + 1, itm)
+
+            model.itemChanged.connect(self.on_WeirZam_tab_data_change)
+            self.ui.tab_sets.setModel(model)
+
             self.filling_tab = False
+
+            self.rb_abs_q.click()
+        else:
+            if self.mgis.DEBUG:
+                self.mgis.add_info("Import failed ({})".format(file))
 
     ######################################################################
     #
@@ -1179,7 +1245,7 @@ class ClassHydroLawsDialog(QDialog):
                 "DELETE FROM {0}.law_values WHERE id_law = {1}".format(
                     self.mdb.SCHEMA, self.cur_law))
 
-        if is_act:
+        if is_act and self.ui.cb_geom.currentIndex() != 0:
             self.mdb.execute("UPDATE {0}.law_config SET active = {1} WHERE geom_obj = {2} "
                              "AND id <> {3}".format(self.mdb.SCHEMA, False, geom_obj, self.cur_law))
 
