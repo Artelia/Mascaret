@@ -953,11 +953,14 @@ $BODY$
         if results is None or namCol is None:
             print("error : ", sql.format(self.SCHEMA, table, where, order))
             return None
+
         cols = [col[0] for col in namCol]
         results = [col[0] for col in results]
-
+        if not results:
+            return  None
         dico = {}
         # self.mgis.add_info("{0} {1}".format(results[0],cols))
+
         for i, val in enumerate(results[0]):
             # self.mgis.add_info("{0}  {1}".format(cols[i],val))
             dico[cols[i]] = val

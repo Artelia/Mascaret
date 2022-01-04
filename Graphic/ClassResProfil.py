@@ -405,8 +405,7 @@ class ClassResProfil:
                                 point_bas[pk][id_type] = dico['pt_bas']
 
                     except Exception as err:
-                        print('Error Plani', err)
-                        pass
+                        print('Warning Plani', err)
             if self.mdb:
                 if point_bas:
                     list_pt_bas = [[id_run, 'opt', 'pt_bas',
