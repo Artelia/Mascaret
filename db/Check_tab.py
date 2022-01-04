@@ -909,6 +909,10 @@ class CheckTab:
                     err = self.mdb.insert("law_config",
                                     tab,
                                     listimport)
+                    maxk = max(tab.keys())
+                    sql = "ALTER SEQUENCE {}.law_config_id_seq " \
+                          "RESTART WITH {};".format(self.mdb.SCHEMA,maxk+1)
+                    self.mdb.run_query(sql)
                     if err :
                         self.mgis.add_info(
                             "Error: Insert law_config")
@@ -941,6 +945,7 @@ class CheckTab:
                                 valinsert["value"].append(float(val))
 
                     err= self.mdb.insert2("law_values", valinsert)
+
                     if err :
                         self.mgis.add_info(
                             "Error  Insert law_values")
