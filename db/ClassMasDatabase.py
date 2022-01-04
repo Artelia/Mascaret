@@ -243,7 +243,7 @@ class ClassMasDatabase(object):
             hydro_object.USER = puser
 
     def process_masobject(self, masobject, pg_method, schema=None, srid=None,
-                          overwrite=None, **kwargs):
+                          **kwargs):
         """
         Creating and processing tables inside PostGIS database.
 
@@ -258,8 +258,11 @@ class ClassMasDatabase(object):
         Returns:
             :return obj: Instance of Mascaret class object
         """
-        if masobject.overwrite:
+
+        try:
             overwrite = masobject.overwrite
+        except AttributeError:
+            overwrite = None
         self.setup_hydro_object(masobject, schema, srid, overwrite)
         obj = masobject()
         method = getattr(obj, pg_method)
@@ -500,55 +503,55 @@ class ClassMasDatabase(object):
                     # ajout variable fichier parameter
                     # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV HEADER;"""
                     # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV;"""
-            fichparam = os.path.join(dossier, "parametres.csv")
-            # self.run_query(req.format(self.SCHEMA, fichparam))
-            liste_value = []
-            with open(fichparam, 'r') as file:
-                for ligne in file:
-                    liste_value.append(ligne.replace('\n', '').split(';'))
-            liste_col = self.list_columns('parametres')
-            var = ",".join(liste_col)
-            valeurs = "("
-            for k in liste_col:
-                valeurs += '%s,'
-            valeurs = valeurs[:-1] + ")"
+                fichparam = os.path.join(dossier, "parametres.csv")
+                # self.run_query(req.format(self.SCHEMA, fichparam))
+                liste_value = []
+                with open(fichparam, 'r') as file:
+                    for ligne in file:
+                        liste_value.append(ligne.replace('\n', '').split(';'))
+                liste_col = self.list_columns('parametres')
+                var = ",".join(liste_col)
+                valeurs = "("
+                for k in liste_col:
+                    valeurs += '%s,'
+                valeurs = valeurs[:-1] + ")"
 
-            sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
-                                                                'parametres',
-                                                                var,
-                                                                valeurs)
+                sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA,
+                                                                    'parametres',
+                                                                    var,
+                                                                    valeurs)
 
-            self.run_query(sql, many=True, list_many=liste_value)
-            # IF WATER QUALITY
-            tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
-            tbwq.default_tab_phy()
+                self.run_query(sql, many=True, list_many=liste_value)
+                # IF WATER QUALITY
+                tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
+                tbwq.default_tab_phy()
 
-            self.insert_abacus_table(self.mgis.dossier_struct)
-            self.insert_var_to_result_var(dossier)
+                self.insert_abacus_table(self.mgis.dossier_struct)
+                self.insert_var_to_result_var(dossier)
 
-            # admin_tab
-            chkt = CheckTab(self.mgis, self)
-            chkt.all_version(self.list_tables(self.SCHEMA),
-                             read_version(self.mgis.masplugPath))
+                # admin_tab
+                chkt = CheckTab(self.mgis, self)
+                chkt.all_version(self.list_tables(self.SCHEMA),
+                                 read_version(self.mgis.masplugPath))
 
-            # add fct
-            cl = Maso.class_fct_psql()
-            lfct = [cl.pg_abscisse_profil(),
-                    cl.pg_all_profil(),
-                    cl.pg_abscisse_point(),
-                    cl.pg_all_point(),
-                    ]
-            namefct = ['abscisse_profil', 'update_abscisse_profil',
-                       'abscisse_point', 'update_abscisse_point']
+                # add fct
+                cl = Maso.class_fct_psql()
+                lfct = [cl.pg_abscisse_profil(),
+                        cl.pg_all_profil(),
+                        cl.pg_abscisse_point(),
+                        cl.pg_all_point(),
+                        ]
+                namefct = ['abscisse_profil', 'update_abscisse_profil',
+                           'abscisse_point', 'update_abscisse_point']
 
-            for i, sql in enumerate(lfct):
-                if not self.check_fct(namefct[i]):
-                    self.run_query(sql)
+                for i, sql in enumerate(lfct):
+                    if not self.check_fct(namefct[i]):
+                        self.run_query(sql)
 
-            # visualization
-            self.load_gis_layer()
+                # visualization
+                self.load_gis_layer()
 
-            self.mgis.add_info('Model "{0}" completed'.format(self.SCHEMA))
+                self.mgis.add_info('Model "{0}" completed'.format(self.SCHEMA))
 
         except Exception as e:
             self.mgis.add_info("Echec of creation model")
