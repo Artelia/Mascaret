@@ -875,15 +875,17 @@ class ClassHydroLawsDialog(QDialog):
         file, _ = QFileDialog.getOpenFileName(None, 'File Selection', self.mgis.repProject,
                                               "File (*.txt *.csv *.loi)")
         if file:
-            if self.cur_typ != 6:
-                self.import_csv_classic(file)
+            if file[-4:] == ".loi":
+                sep = " "
             else:
-                if file[-4:] == ".loi":
-                    self.import_csv_weirZam(file, " ")
-                else:
-                    self.import_csv_weirZam(file, ";")
+                sep = ";"
 
-    def import_csv_classic(self, file):
+            if self.cur_typ != 6:
+                self.import_csv_classic(file, sep)
+            else:
+                self.import_csv_weirZam(file, sep)
+
+    def import_csv_classic(self, file, sep):
         filein = open(file, "r")
 
         error = False
@@ -895,10 +897,19 @@ class ClassHydroLawsDialog(QDialog):
 
         r = 0
         model = self.create_tab_model()
+        coef_time = 1.
         for num_ligne, ligne in enumerate(filein):
             if ligne[0] != '#':
-                liste = ligne.replace('\n', '').replace('\t', ' ').split(
-                    ";")
+                liste = ligne.replace('\n', '').replace('\t', ' ').strip().split(sep)
+                if self.param_law["xIsTime"] and liste[0] in ["S", "M", "H", "J"]:
+                    if liste[0] == "M":
+                        coef_time = 1.* 60.
+                    elif liste[0] == "H":
+                        coef_time = 1.* 60. * 60.
+                    elif liste[0] == "J":
+                        coef_time = 1.* 60. * 60. * 24.
+                    continue
+
                 if len(liste) == nb_col:
                     if first_ligne:
                         first_ligne = False
@@ -920,10 +931,13 @@ class ClassHydroLawsDialog(QDialog):
 
                     model.insertRow(r)
                     for c, val in enumerate(liste):
-                        if c == 0 and format_time == 'date':
-                            date_tmp = data_to_date(val)
-                            delta = date_tmp - date_ref
-                            val = delta.total_seconds()
+                        if c == 0:
+                            if format_time == 'date':
+                                date_tmp = data_to_date(val)
+                                delta = date_tmp - date_ref
+                                val = delta.total_seconds()
+                            elif format_time == 'numeric':
+                                val = data_to_float(val) * coef_time
 
                         itm = QStandardItem()
                         itm.setData(data_to_float(val), 0)
@@ -961,7 +975,7 @@ class ClassHydroLawsDialog(QDialog):
         rows = list()
         for num_ligne, ligne in enumerate(filein):
             if ligne[0] != '#':
-                ligne = ligne.strip().replace('\n', '').replace('\t', ' ').split(sep)
+                ligne = ligne.replace('\n', '').replace('\t', ' ').strip().split(sep)
                 if len(ligne) == nb_col:
                     row = [data_to_float(r) for r in ligne]
                     if None in row:
