@@ -940,7 +940,7 @@ class ClassMascaret:
         self.indent(fichier_cas)
         arbre = ElementTree(fichier_cas)
         arbre.write(fichier_sortie)
-
+        self.mgis.add_info("Save the Xcas file is done")
         # ****** XCAS initialisation **********
         temps_max = 3600
         np_pas_temps_init = 2
@@ -997,7 +997,7 @@ class ClassMascaret:
         arbre = ElementTree(fichier_cas)
         arbre.write(os.path.join(self.dossierFileMasc, fich_xcas))
 
-        self.mgis.add_info("Save the Xcas file is done")
+        self.mgis.add_info("Save the init. Xcas file  is done")
         # except Exception as e:
         #     self.mgis.add_info("Error: save Xcas file")
         #     self.mgis.add_info('error: {}'.format(e))
@@ -1841,6 +1841,8 @@ class ClassMascaret:
                 self.create_mobil_gate_file()
             self.fct_only_init(noyau)
             return
+
+
         # self.task_mascaret(None,tup=(
         #                                               par, dict_scen, dict_lois,
         #                                               comments, noyau, run))
@@ -2953,8 +2955,8 @@ class ClassMascaret:
         :return:
         """
         nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Load data ....")
+        #if self.mgis.DEBUG:
+        self.mgis.add_info("Load data ....")
         if not os.path.isfile(nom_fich):
             self.mgis.add_info("Simulation Error: there aren't results")
             self.mdb.delete('runs', 'id={}'.format(id_run))

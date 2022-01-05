@@ -231,17 +231,23 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionUpdate_all_PK.triggered.connect(self.update_pk)
         self.ui.actionImport_Results.triggered.connect(self.import_resu_model)
         self.ui.actionImport_Results.setVisible(False)
+
+        # scores
+        self.ui.actionScores.triggered.connect(self.fct_scores)
+
+        #Laws
+        self.ui.actionHydro_Laws.triggered.connect(self.fct_hydro_laws)
+
         # TODO Finaliser
         self.ui.actionTest.triggered.connect(self.fct_test)
         self.ui.actionTest.setVisible(False)
-        # scores
-        self.ui.actionScores.triggered.connect(self.fct_scores)
+
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(
             self.import_old_model_dgl)
         self.ui.menuUpate_table.menuAction().setVisible(False)
 
-        self.ui.actionHydro_Laws.triggered.connect(self.fct_hydro_laws)
+
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
