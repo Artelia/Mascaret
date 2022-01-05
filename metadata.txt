@@ -36,6 +36,7 @@ changelog=
              Addition of tables containing wet area/wet perimeter/ wet section
              Addition of Planimetry calculation and visualization
              Adding button of « Remove up-downstream »
+             Change weirs style
     4.0.1  : Adding Export GUI (old version)
              Change Alias
              Correct the display bug when you uncheck the DEM or the topo in the profile window
