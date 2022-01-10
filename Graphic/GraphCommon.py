@@ -246,6 +246,7 @@ class GraphCommonNew:
         self.courbes = []
         self.annotation = []
         self.courbeLaisses = []
+        self.etiquetteLaisses = []
         self.flag = False
         self.leg = None
         self.lined = dict()

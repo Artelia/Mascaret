@@ -163,9 +163,48 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             if flag_hydro and couche in('weirs', 'extremities',
                                         'lateral_inflows','lateral_weirs'):
                 feature = results[0].mFeature
+                param = {'name': None,
+                    'couche': couche,
+                    'method' : None,
+                    'type' : None,
+                    'active': None,
+                    'firstvalue' : None}
+                cond = True
+                if 'extremities' == couche:
+                    for var in ['name', 'method', 'active', 'firstvalue',
+                                'type']:
+                        id = feature.fieldNameIndex(var)
+                        param[var] = feature.attributes()[id]
 
-                graph_law = GraphBCDialog(self.mgis,feature,couche)
-                graph_law.show()
+                elif 'weirs' == couche:
+                    weirs_tolaw = {1: 6, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
+                    id = feature.fieldNameIndex('type')
+                    type = feature.attributes()[id]
+                    if type != (3, 4):
+                        param['type'] = weirs_tolaw[type]
+                        for var in ['name', 'method', 'active']:
+                            id = feature.fieldNameIndex(var)
+                            param[var] = feature.attributes()[id]
+                    else:
+                        cond = False
+                elif 'lateral_inflows' == couche:
+                    for var in ['name', 'method', 'firstvalue', 'active']:
+                        id = feature.fieldNameIndex(var)
+                        param[var] = feature.attributes()[id]
+                    param['type'] = 1
+                elif 'lateral_weirs' == couche:
+                    id = feature.fieldNameIndex('type')
+                    if feature.attributes()[id] == 2:
+                        for var in ['name', 'active']:
+                            id = feature.fieldNameIndex(var)
+                            param[var] = feature.attributes()[id]
+                        param['type'] = 4
+                    else:
+                        cond = False
+
+                if cond  and param['name']:
+                    graph_law = GraphBCDialog(self.mgis, param)
+                    graph_law.show()
             if flag_casier_r and couche in ('basins', 'links'):
                 feature = results[0].mFeature
 
