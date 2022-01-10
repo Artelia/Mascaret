@@ -48,8 +48,10 @@ from .ClassDownload import ClassDownloadMasc
 from .ClassImportExportDialog import ClassDlgExport, ClassDlgImport
 from .ClassImport_res import ClassImportRes
 from .scores.ClassScoresDialog import ClassScoresDialog
-
 from .HydroLawsDialog import ClassHydroLawsDialog
+
+from .Graphic.GraphBCDialog import GraphBCDialog
+
 
 from qgis.PyQt.QtWidgets import *
 

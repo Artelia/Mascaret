@@ -43,6 +43,7 @@ from .GraphProfilResultDialog import GraphProfilResultDialog
 from .GraphResultDialog import GraphResultDialog
 from .ClassProfInterpDialog import ClassProfInterpDialog
 from ..Function import tw_to_txt
+from .GraphBCDialog import GraphBCDialog
 
 try:
     from matplotlib.backends.backend_qt5agg \
@@ -139,7 +140,6 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
                 prof_a = self.mgis.mdb.select_distinct("name,abscissa",
                                                        "profiles", "active")
-
                 if feature['name'] in prof_a['name'] or feature['abscissa'] in \
                         prof_a['abscissa']:
                     graph_hyd = GraphResultDialog(self.mgis, "hydro",
@@ -160,6 +160,12 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 else:
                     self.mgis.add_info('no active branch')
 
+            if flag_hydro and couche in('weirs', 'extremities',
+                                        'lateral_inflows','lateral_weirs'):
+                feature = results[0].mFeature
+
+                graph_law = GraphBCDialog(self.mgis,feature,couche)
+                graph_law.show()
             if flag_casier_r and couche in ('basins', 'links'):
                 feature = results[0].mFeature
 
