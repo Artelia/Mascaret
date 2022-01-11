@@ -103,7 +103,7 @@ dico_typ_law = {1: {'name': 'Hydrograph Q(t)',
                               'y': {'var': [1, 2], 'tit': 'Z', 'unit': 'm'}},
                     'geom': {'extremities': [7], 'weirs': [8],
                              'lateral_inflows': False, 'lateral_weirs': False},
-                    'xIsTime': True}
+                    'xIsTime': True},
                 }
 
 
@@ -240,10 +240,10 @@ class ClassHydroLawsDialog(QDialog):
         action when select law
         :return:
         """
-        self.updatde_cb_graph_opt()
+        self.update_cb_graph_opt()
         self.display_graph_home()
 
-    def updatde_cb_graph_opt(self):
+    def update_cb_graph_opt(self):
         """
         update graph
         :return:
@@ -299,6 +299,7 @@ class ClassHydroLawsDialog(QDialog):
                 if param_law['xIsTime']:
                     if graph_opt == 'date':
                         date_ref = itm.data(1, 32)
+
                 self.graph_home.initCurv(typ_law, param_law, date_ref)
                 self.graph_home.initGraph(id_law, date_ref)
             else:
@@ -1253,8 +1254,8 @@ class ClassHydroLawsDialog(QDialog):
         for idx, z in enumerate(g.list_z):
             name = "{0} {1} ({2})".format(prfx_z, idx + 1, round(z, 2))
             g.list_var.append({"id": idx, "name": name})
-            g.courbeTrac, = g.axes.plot([], [], zorder=100 - idx, label=name)
-            g.courbes.append(g.courbeTrac)
+            g.courbe_laws, = g.axes.plot([], [], zorder=100 - idx, label=name)
+            g.courbes.append(g.courbe_laws)
 
         g.init_legende()
 

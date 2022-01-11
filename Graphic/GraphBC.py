@@ -120,3 +120,16 @@ class GraphBC(GraphCommonNew):
 
 
         self.maj_limites()
+
+    def init_graph_laws(self, data):
+        self.init_legende()
+        if len(self.ax[1]["curves"]) > 0:
+            for i, cb in enumerate(self.ax[1]["curves"]):
+                cb.set_data(data["date"], data['val'])
+                cb.set_visible(True)
+
+        else:
+            return
+
+
+        self.maj_limites()

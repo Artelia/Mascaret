@@ -56,16 +56,15 @@ class GraphHydroLaw(GraphCommon):
         self.list_var.clear()
         self.list_z.clear()
         self.courbes.clear()
-
         if typ_law:
             self.axeX = param_law['graph']['x']['var']
             for v, var in enumerate(param_law['graph']['y']['var']):
                 self.list_var.append(
                     {"id": var, "name": param_law['var'][var]['name']})
-                self.courbeTrac, = self.axes.plot([], [], zorder=100 - v,
-                                                  label=param_law['var'][var][
+                self.courbe_laws, = self.axes.plot([], [], zorder=100 - v,
+                                                   label=param_law['var'][var][
                                                       'name'])
-                self.courbes.append(self.courbeTrac)
+                self.courbes.append(self.courbe_laws)
 
             self.init_legende()
             if date_ref:
@@ -127,8 +126,8 @@ class GraphHydroLaw(GraphCommon):
             for idx, z in enumerate(self.list_z):
                 name = "{0} {1} ({2})".format(param_law['var'][self.axeZ]['leg'], idx + 1, round(z, 2))
                 self.list_var.append({"id": idx, "name": name})
-                self.courbeTrac, = self.axes.plot([], [], zorder=100 - idx, label=name)
-                self.courbes.append(self.courbeTrac)
+                self.courbe_laws, = self.axes.plot([], [], zorder=100 - idx, label=name)
+                self.courbes.append(self.courbe_laws)
 
             self.init_legende()
 
@@ -172,6 +171,23 @@ class GraphHydroLaw(GraphCommon):
 
         self.maj_limites()
 
+    def init_graph_obs(self, data,param_law, all_vis=False):
+        leglines = self.leg.get_lines()
+
+        for v, var in enumerate(self.list_var):
+            self.courbes[v].set_data([mdates.date2num(date_) for date_ in data["date"]], data['val'])
+
+            if all_vis:
+                self.courbes[v].set_visible(True)
+                leglines[v].set_alpha(1.0)
+        self.init_legende()
+        self.maj_lbl_x("time", "date")
+
+        self.maj_lbl_y(param_law['graph']['y']['tit'],
+                       param_law['graph']['y']['unit'])
+
+        self.maj_limites()
+        self.canvas.draw()
 
     def maj_lbl_x(self, var, unit):
         self.unit = unit
@@ -188,7 +204,6 @@ class GraphHydroLaw(GraphCommon):
                 mdates.DateFormatter('%d-%m-%Y'))
         else:
             self.axes.xaxis.set_major_formatter(ticker.ScalarFormatter())
-
 
     def maj_lbl_y(self, var, unit):
         if unit:
