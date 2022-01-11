@@ -169,7 +169,7 @@ class GraphBCLaw(QWidget):
         :return:
         """
         self.cb_law.clear()
-        if self.cur_event :
+        if self.cur_event != None :
             condition = """geom_obj='{0}'
                             AND starttime <= '{1:%Y-%m-%d %H:%M}'
                             AND endtime >= '{2:%Y-%m-%d %H:%M}'
@@ -215,10 +215,8 @@ class GraphBCLaw(QWidget):
         display graph
         :return:
         """
-        if self.cur_law and self.cur_law in self.laws.keys() :
+        if self.cur_law != None and self.cur_law in self.laws.keys() :
             id_law = self.cur_law
-            print(id_law , 'id_law')
-            print(self.laws[id_law])
             typ_law = self.laws[id_law]['type']
             param_law = dico_typ_law[typ_law]
             #graph_opt = self.cb_graph_opt.currentData()
@@ -226,15 +224,15 @@ class GraphBCLaw(QWidget):
             if typ_law != 6:
                 date_ref = None
                 if param_law['xIsTime']:
-                    if self.cur_event :
+                    if self.cur_event != None :
                         date_ref = self.laws[id_law]['starttime']
 
                 self.graph_obj.initCurv(typ_law, param_law, date_ref)
                 self.graph_obj.initGraph(id_law, date_ref)
-            # else:
-            #     self.graph_obj.initCurvWeirZam(param_law, id_law,
-            #                                     graph_opt)
-            #     self.graph_obj.initGraphWeirZam(id_law)
+            else:
+                self.graph_obj.initCurvWeirZam(param_law, id_law,
+                                                graph_opt)
+                self.graph_obj.initGraphWeirZam(id_law)
         else:
             self.graph_obj.initCurv()
 
