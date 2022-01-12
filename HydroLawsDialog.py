@@ -1432,11 +1432,11 @@ class ClassHydroLawsDialog(QDialog):
                 "DELETE FROM {0}.law_values WHERE id_law = {1}".format(
                     self.mdb.SCHEMA, self.cur_law))
 
-        if is_act and self.ui.cb_geom.currentIndex() != 0:
-            self.mdb.execute(
-                "UPDATE {0}.law_config SET active = {1} WHERE geom_obj = {2} "
-                "AND id <> {3}".format(self.mdb.SCHEMA, False, geom_obj,
-                                       self.cur_law))
+        # if is_act and self.ui.cb_geom.currentIndex() != 0:
+        #     self.mdb.execute(
+        #         "UPDATE {0}.law_config SET active = {1} WHERE geom_obj = {2} "
+        #         "AND id <> {3}".format(self.mdb.SCHEMA, False, geom_obj,
+        #                                self.cur_law))
 
         if self.cur_typ != 6:
             col = list(range(self.ui.tab_sets.model().columnCount()))

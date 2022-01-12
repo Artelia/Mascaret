@@ -553,7 +553,7 @@ class ClassMascaret:
                 type = libres["type"][i]
                 formule = libres["method"][i]
                 dict_libres["nom"].append(libres["name"][i])
-                dict_libres["typeCond"].append(extr_toloi[type])
+                dict_libres["typeCond"].append(type)
                 dict_libres["num"].append(len(dict_libres["nom"]))
                 dict_libres["extrem"].append(n * 2)
                 dict_libres["typeCond_tr"].append(
@@ -3183,7 +3183,7 @@ class ClassMascaret:
                     typ_law)
             # self.mgis.add_info('{}'.format(condition))
 
-            config = self.mdb.select_one('law_config', condition)
+            config = self.mdb.select_one('law_config', condition,verbose=True)
 
             if config:
                 values = self.mdb.select("law_values",
@@ -3192,7 +3192,6 @@ class ClassMascaret:
                                          list_var=['id_var',
                                                    'id_order',
                                                    'value'])
-
                 lst_var = [tmp['code'] for tmp in dico_typ_law[typ_law]['var']]
                 lst_idvar = [id for id, tmp in
                              enumerate(dico_typ_law[typ_law]['var'])]
