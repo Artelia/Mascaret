@@ -1350,12 +1350,13 @@ class ClassMascaret:
                 dico = {k: v[i] for k, v in tab.items()}
                 fich.write(chaine.format(**dico))
 
-    def obs_to_loi(self, dict_lois, date_debut, date_fin):
+    def obs_to_loi(self, dict_lois, date_debut, date_fin, par):
         """
         Creation law with observation data
-        :param dict_lois:
-        :param date_debut:
-        :param date_fin:
+        :param dict_lois: dict of law
+        :param date_debut: start date
+        :param date_fin: last date
+        :param par : dict of parameters
         :return:
         """
         # pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
@@ -1367,97 +1368,108 @@ class ClassMascaret:
 
         # liste_date = [date_debut + datetime.timedelta(hours=x)
         # for x in range(duree)]
-
+        cond_obs =  False
         for nom, loi in dict_lois.items():
+
             if loi['type'] == 1:
                 type = 'Q'
+                cond_obs = True
             elif loi['type'] == 2:
                 type = 'H'
+                cond_obs = True
             else:
-                continue
+                cond_obs = False
 
-            liste_stations = pattern.findall(loi['formule'])
-
-            liste_date = None
-            for cd_hydro, delta in liste_stations:
-                if not delta:
-                    delta = '0'
-                dt = datetime.timedelta(hours=int(delta))
-                condition = """code ='{0}'
-                            AND type = '{1}'
-                            AND date >= '{2:%Y-%m-%d %H:%M}' 
-                            AND date <= '{3:%Y-%m-%d %H:%M}'
-                            """.format(cd_hydro,
-                                       type,
-                                       date_debut + dt,
-                                       date_fin + dt)
-
-                obs[cd_hydro] = self.mdb.select('observations',
-                                                condition,
-                                                'code, date')
-
-                if not liste_date:
-                    # liste_date = map(lambda x: x - dt, obs[cd_hydro]['date'])
-                    liste_date = [x - dt for x in obs[cd_hydro]['date']]
-
-            fichier_loi = os.path.join(self.dossierFileMasc,
-                                       del_symbol(nom) + '.loi')
             valeur_init = None
+            if cond_obs:
+                liste_stations = pattern.findall(loi['formule'])
 
-            with open(fichier_loi, 'w') as fich_sortie:
-                fich_sortie.write('# {0}\n'.format(nom))
-                if type == "Q":
-                    fich_sortie.write('# Temps (H) Debit\n')
+                liste_date = None
+                for cd_hydro, delta in liste_stations:
+                    if not delta:
+                        delta = '0'
+                    dt = datetime.timedelta(hours=int(delta))
+                    condition = """code ='{0}'
+                                AND type = '{1}'
+                                AND date >= '{2:%Y-%m-%d %H:%M}' 
+                                AND date <= '{3:%Y-%m-%d %H:%M}'
+                                """.format(cd_hydro,
+                                           type,
+                                           date_debut + dt,
+                                           date_fin + dt)
+
+                    obs[cd_hydro] = self.mdb.select('observations',
+                                                    condition,
+                                                    'code, date')
+
+                    if not liste_date:
+                        # liste_date = map(lambda x: x - dt, obs[cd_hydro]['date'])
+                        liste_date = [x - dt for x in obs[cd_hydro]['date']]
+
+                fichier_loi = os.path.join(self.dossierFileMasc,
+                                           del_symbol(nom) + '.loi')
+
+
+                with open(fichier_loi, 'w') as fich_sortie:
+                    fich_sortie.write('# {0}\n'.format(nom))
+                    if type == "Q":
+                        fich_sortie.write('# Temps (H) Debit\n')
+                    else:
+                        fich_sortie.write('# Temps (H) Hauteur\n')
+                    fich_sortie.write(' H \n')
+                    for t in liste_date:
+                        calc = loi['formule']
+                        for cd_hydro, delta in liste_stations:
+                            if not delta:
+                                delta = '0'
+                            t2 = t + datetime.timedelta(hours=int(delta))
+                            if t2 in obs[cd_hydro]['date']:
+                                i = obs[cd_hydro]['date'].index(t2)
+                                val = obs[cd_hydro]['valeur'][i]
+                            else:
+                                val = None
+                            calc = pattern.sub(str(val), calc, 1)
+
+                        try:
+                            resultat = eval(calc)
+                        except:
+                            resultat = None
+
+                        if resultat is not None:
+                            if valeur_init is None:
+                                valeur_init = resultat
+                                somme += resultat
+                            tps = (t - date_debut).total_seconds() / 3600
+                            chaine = '  {0:4.3f}   {1:3.6f}\n'
+                            fich_sortie.write(chaine.format(tps, resultat))
+
+                if valeur_init is not None:
+                    if type == "Q":
+                        tab = {'time': [0, 3600],
+                               'flowrate': [valeur_init, valeur_init]}
+                        self.creer_loi(nom, tab, 1, init=True)
+                    else:
+                        tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
+                        self.creer_loi(nom, tab, 2, init=True)
                 else:
-                    fich_sortie.write('# Temps (H) Hauteur\n')
-                fich_sortie.write(' H \n')
-                for t in liste_date:
-                    calc = loi['formule']
-                    for cd_hydro, delta in liste_stations:
-                        if not delta:
-                            delta = '0'
-                        t2 = t + datetime.timedelta(hours=int(delta))
-                        if t2 in obs[cd_hydro]['date']:
-                            i = obs[cd_hydro]['date'].index(t2)
-                            val = obs[cd_hydro]['valeur'][i]
-                        else:
-                            val = None
-                        calc = pattern.sub(str(val), calc, 1)
+                    par["initialisationAuto"] = False
+                    self.mgis.add_info("No initialisation because of no SteadyValue")
 
-                    try:
-                        resultat = eval(calc)
-                    except:
-                        resultat = None
-
-                    if resultat is not None:
-                        if valeur_init is None:
-                            valeur_init = resultat
-                            somme += resultat
-                        tps = (t - date_debut).total_seconds() / 3600
-                        chaine = '  {0:4.3f}   {1:3.6f}\n'
-                        fich_sortie.write(chaine.format(tps, resultat))
-
-            if valeur_init is not None:
-                if type == "Q":
-                    tab = {'time': [0, 3600],
-                           'flowrate': [valeur_init, valeur_init]}
-                    self.creer_loi(nom, tab, 1, init=True)
-                else:
-                    tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
-                    self.creer_loi(nom, tab, 2, init=True)
-
-        for nom, loi in dict_lois.items():
-            if loi['type'] in (1, 2):
-                continue
-            tab = self.get_laws(nom, loi['type'],
-                                obs=True, date_deb=date_debut,
-                                date_fin=date_fin)
-            print(nom, loi)
-            if tab:
-                self.creer_loi(nom, tab, loi['type'])
             else:
-                self.mgis.add_info('The law for {} is not create.'.format(nom))
+                tab = self.get_laws(nom, loi['type'],
+                                    obs=True, date_deb=date_debut,
+                                    date_fin=date_fin)
+                if tab:
+                    self.creer_loi(nom, tab, loi['type'])
+                else:
+                    self.mgis.add_info('The law for {} is not create.'.format(nom))
 
+                if loi['type'] in [4, 5]:
+                    self.creer_loi(nom, tab, loi['type'], init=True)
+                else:
+                    par["initialisationAuto"] = False
+                    self.mgis.add_info("No initialisation, due to "
+                                       "{}".format(nom))
             # if loi['type'] in (4, 5) and loi['couche'] == 'extremites':
             #     for c, d in zip(tab["z"], tab["flowrate"]):
             #         if debit_prec > 0 and d > somme:
@@ -1471,9 +1483,7 @@ class ClassMascaret:
             #     if valeur_init is not None:
             #         tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
             #         self.creer_loi(nom + '_init', tab, 2)
-                #
-                # else:
-                # self.creer_loi(nom + '_init', tab, loi['type'])
+
 
     def fct_comment(self):
         liste_col = self.mdb.list_columns('runs')
@@ -1641,8 +1651,6 @@ class ClassMascaret:
                 else:
                     self.mgis.add_info(
                         'The law for {} is not create.'.format(nom))
-
-
             else:
                 try:
                     liste_ = ['pasTemps', 'critereArret', 'nbPasTemps',
@@ -1711,7 +1719,7 @@ class ClassMascaret:
                 self.wq.create_filemet(typ_time='date', datefirst=date_debut,
                                        dateend=date_fin)
 
-        self.obs_to_loi(dict_lois, date_debut, date_fin)
+        self.obs_to_loi(dict_lois, date_debut, date_fin,par)
 
         return date_debut
 
