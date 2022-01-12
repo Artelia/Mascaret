@@ -961,6 +961,7 @@ class ClassMascaret:
         parametres_temporels.find('pasTempsVar').text = 'false'
         geom_reseau = param_cas.find('parametresGeometrieReseau')
         type_cond = geom_reseau.find('extrLibres').find('typeCond')
+        type_cond.text = type_cond.text.replace('4', '2')
         # type_cond.text = type_cond.text.replace('4', '2').replace('6',
         #                                                           '1').replace(
         #     '7', '2')
@@ -969,8 +970,8 @@ class ClassMascaret:
         lois = lois_hydrauliques.find('lois')
         for child in lois:
             # # tarage loi
-            # if child.find('type').text == '5':
-            #     child.find('type').text = '2'
+            if child.find('type').text == '5':
+                child.find('type').text = '2'
             donnee = child.find('donnees').find('fichier')
             temp = donnee.text.split('.')
 
@@ -1464,25 +1465,26 @@ class ClassMascaret:
                 else:
                     self.mgis.add_info('The law for {} is not create.'.format(nom))
 
-                if loi['type'] in [4, 5]:
+                if loi['type'] in [4] : #, 5]: # car 5 mascaret plante à l'init
                     self.creer_loi(nom, tab, loi['type'], init=True)
+                elif loi['type'] in [5] and loi['couche'] == 'extremites':
+                    for c, d in zip(tab["z"], tab["flowrate"]):
+                        if debit_prec > 0 and d > somme:
+                            valeur_init = (c - cote_prec) \
+                                          / (d - debit_prec) \
+                                          * (somme - debit_prec) \
+                                          + cote_prec
+                            break
+                        else:
+                            cote_prec, debit_prec = c, d
+                    if valeur_init is not None:
+                        tab = {'time': [0, 3600],
+                               'z': [valeur_init ,valeur_init]}
+                        self.creer_loi(nom, tab, 2, init=True)
                 else:
                     par["initialisationAuto"] = False
                     self.mgis.add_info("No initialisation, due to "
                                        "{}".format(nom))
-            # if loi['type'] in (4, 5) and loi['couche'] == 'extremites':
-            #     for c, d in zip(tab["z"], tab["flowrate"]):
-            #         if debit_prec > 0 and d > somme:
-            #             valeur_init = (c - cote_prec) \
-            #                           / (d - debit_prec) \
-            #                           * (somme - debit_prec) \
-            #                           + cote_prec
-            #             break
-            #         else:
-            #             cote_prec, debit_prec = c, d
-            #     if valeur_init is not None:
-            #         tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
-            #         self.creer_loi(nom + '_init', tab, 2)
 
 
     def fct_comment(self):
