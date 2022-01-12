@@ -1452,25 +1452,25 @@ class ClassMascaret:
             tab = self.get_laws(nom, loi['type'],
                                 obs=True, date_deb=date_debut,
                                 date_fin=date_fin)
-
+            print(nom, loi)
             if tab:
                 self.creer_loi(nom, tab, loi['type'])
             else:
                 self.mgis.add_info('The law for {} is not create.'.format(nom))
 
-                # if loi['type'] in (4, 5) and loi['couche'] == 'extremites':
-                #     for c, d in zip(tab["z"], tab["flowrate"]):
-                #         if debit_prec > 0 and d > somme:
-                #             valeur_init = (c - cote_prec) \
-                #                           / (d - debit_prec) \
-                #                           * (somme - debit_prec) \
-                #                           + cote_prec
-                #             break
-                #         else:
-                #             cote_prec, debit_prec = c, d
-                #     if valeur_init is not None:
-                #         tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
-                #         self.creer_loi(nom + '_init', tab, 2)
+            # if loi['type'] in (4, 5) and loi['couche'] == 'extremites':
+            #     for c, d in zip(tab["z"], tab["flowrate"]):
+            #         if debit_prec > 0 and d > somme:
+            #             valeur_init = (c - cote_prec) \
+            #                           / (d - debit_prec) \
+            #                           * (somme - debit_prec) \
+            #                           + cote_prec
+            #             break
+            #         else:
+            #             cote_prec, debit_prec = c, d
+            #     if valeur_init is not None:
+            #         tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
+            #         self.creer_loi(nom + '_init', tab, 2)
                 #
                 # else:
                 # self.creer_loi(nom + '_init', tab, loi['type'])
@@ -1642,6 +1642,7 @@ class ClassMascaret:
                     self.mgis.add_info(
                         'The law for {} is not create.'.format(nom))
 
+
             else:
                 try:
                     liste_ = ['pasTemps', 'critereArret', 'nbPasTemps',
@@ -1653,6 +1654,7 @@ class ClassMascaret:
                                                          condition)
                         temp_dic[info] = dtemp['steady'][0]
                 except Exception as e:
+                    self.mgis.add_info('erreur crit')
                     self.mgis.add_info(str(e))
                     return
                 # self.mgis.add_info('{}'.format(condition))
@@ -3161,7 +3163,7 @@ class ClassMascaret:
         try:
             if obs and date_deb is not None and date_fin is not None:
                 condition = """geom_obj='{0}' 
-                                 AND type = {1}
+                                 AND id_law_type = {1}
                                  AND starttime <= '{2:%Y-%m-%d %H:%M}' 
                                  AND endtime >= '{3:%Y-%m-%d %H:%M}'
                                  """.format(name_obj, typ_law, date_deb,
