@@ -553,7 +553,7 @@ class ClassMascaret:
                 type = libres["type"][i]
                 formule = libres["method"][i]
                 dict_libres["nom"].append(libres["name"][i])
-                dict_libres["typeCond"].append(type)
+                dict_libres["typeCond"].append(extr_toloi[type])
                 dict_libres["num"].append(len(dict_libres["nom"]))
                 dict_libres["extrem"].append(n * 2)
                 dict_libres["typeCond_tr"].append(
@@ -3174,6 +3174,7 @@ class ClassMascaret:
                                  AND id_law_type = {1}
                                  AND starttime <= '{2:%Y-%m-%d %H:%M}' 
                                  AND endtime >= '{3:%Y-%m-%d %H:%M}'
+                                 AND active
                                  """.format(name_obj, typ_law, date_deb,
                                             date_fin)
             else:

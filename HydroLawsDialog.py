@@ -18,6 +18,8 @@ email                :
  ***************************************************************************/
 """
 import os
+import csv
+import io
 from datetime import timedelta
 
 import numpy as np
@@ -1479,7 +1481,44 @@ class ClassHydroLawsDialog(QDialog):
         self.graph_edit.initCurv()
         self.tree_laws.setFocus()
 
+    def copier(self):
+        """copier la zone sélectionnée dans le clipboard
+        """
+        selection = self.ui.tab_sets.selectedIndexes()
+        if selection:
+            rows = sorted(index.row() for index in selection)
+            columns = sorted(index.column() for index in selection)
+            rowcount = rows[-1] - rows[0] + 1
+            col_to_tab  = {col : id for id, col in enumerate(set(columns))}
+            nb_col = len(set(columns))
+            #colcount = columns[-1] - columns[0] + 1
+            #table = [[''] * colcount for _ in range(rowcount)]
+            table = [[''] * nb_col for _ in range(rowcount)]
 
+            for index in selection:
+                row = index.row() - rows[0]
+                # column = index.column() - columns[0]
+                column = col_to_tab[index.column()]
+                data = index.data()
+                table[row][column] = data
+            stream = io.StringIO()
+            csv.writer(stream).writerows(table)
+            qApp.clipboard().setText(stream.getvalue())
+
+    def keyPressEvent(self, event):
+
+        if self.ui.tab_sets.hasFocus():
+
+            # ----------------------------------------------------------------
+            # Ctle-C: copier
+            if event.key() == Qt.Key_C and (
+                        event.modifiers() & Qt.ControlModifier):
+                self.copier()
+                event.accept()
+            else:
+                event.ignore()
+        else:
+            event.ignore()
 class ItemEditorFactory(QItemEditorFactory):
     def __init__(self):
         QItemEditorFactory.__init__(self)
