@@ -1369,94 +1369,93 @@ class ClassMascaret:
 
         # liste_date = [date_debut + datetime.timedelta(hours=x)
         # for x in range(duree)]
-        cond_obs =  False
         for nom, loi in dict_lois.items():
 
             if loi['type'] == 1:
                 type = 'Q'
-                cond_obs = True
             elif loi['type'] == 2:
                 type = 'H'
-                cond_obs = True
             else:
-                cond_obs = False
+                continue
 
             valeur_init = None
-            if cond_obs:
-                liste_stations = pattern.findall(loi['formule'])
 
-                liste_date = None
-                for cd_hydro, delta in liste_stations:
-                    if not delta:
-                        delta = '0'
-                    dt = datetime.timedelta(hours=int(delta))
-                    condition = """code ='{0}'
-                                AND type = '{1}'
-                                AND date >= '{2:%Y-%m-%d %H:%M}' 
-                                AND date <= '{3:%Y-%m-%d %H:%M}'
-                                """.format(cd_hydro,
-                                           type,
-                                           date_debut + dt,
-                                           date_fin + dt)
+            liste_stations = pattern.findall(loi['formule'])
 
-                    obs[cd_hydro] = self.mdb.select('observations',
-                                                    condition,
-                                                    'code, date')
+            liste_date = None
+            for cd_hydro, delta in liste_stations:
+                if not delta:
+                    delta = '0'
+                dt = datetime.timedelta(hours=int(delta))
+                condition = """code ='{0}'
+                            AND type = '{1}'
+                            AND date >= '{2:%Y-%m-%d %H:%M}' 
+                            AND date <= '{3:%Y-%m-%d %H:%M}'
+                            """.format(cd_hydro,
+                                        type,
+                                        date_debut + dt,
+                                        date_fin + dt)
 
-                    if not liste_date:
-                        # liste_date = map(lambda x: x - dt, obs[cd_hydro]['date'])
-                        liste_date = [x - dt for x in obs[cd_hydro]['date']]
+                obs[cd_hydro] = self.mdb.select('observations',
+                                                condition,
+                                                'code, date')
 
-                fichier_loi = os.path.join(self.dossierFileMasc,
-                                           del_symbol(nom) + '.loi')
+                if not liste_date:
+                    # liste_date = map(lambda x: x - dt, obs[cd_hydro]['date'])
+                    liste_date = [x - dt for x in obs[cd_hydro]['date']]
+
+            fichier_loi = os.path.join(self.dossierFileMasc,
+                                        del_symbol(nom) + '.loi')
 
 
-                with open(fichier_loi, 'w') as fich_sortie:
-                    fich_sortie.write('# {0}\n'.format(nom))
-                    if type == "Q":
-                        fich_sortie.write('# Temps (H) Debit\n')
-                    else:
-                        fich_sortie.write('# Temps (H) Hauteur\n')
-                    fich_sortie.write(' H \n')
-                    for t in liste_date:
-                        calc = loi['formule']
-                        for cd_hydro, delta in liste_stations:
-                            if not delta:
-                                delta = '0'
-                            t2 = t + datetime.timedelta(hours=int(delta))
-                            if t2 in obs[cd_hydro]['date']:
-                                i = obs[cd_hydro]['date'].index(t2)
-                                val = obs[cd_hydro]['valeur'][i]
-                            else:
-                                val = None
-                            calc = pattern.sub(str(val), calc, 1)
-
-                        try:
-                            resultat = eval(calc)
-                        except:
-                            resultat = None
-
-                        if resultat is not None:
-                            if valeur_init is None:
-                                valeur_init = resultat
-                                somme += resultat
-                            tps = (t - date_debut).total_seconds() / 3600
-                            chaine = '  {0:4.3f}   {1:3.6f}\n'
-                            fich_sortie.write(chaine.format(tps, resultat))
-
-                if valeur_init is not None:
-                    if type == "Q":
-                        tab = {'time': [0, 3600],
-                               'flowrate': [valeur_init, valeur_init]}
-                        self.creer_loi(nom, tab, 1, init=True)
-                    else:
-                        tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
-                        self.creer_loi(nom, tab, 2, init=True)
+            with open(fichier_loi, 'w') as fich_sortie:
+                fich_sortie.write('# {0}\n'.format(nom))
+                if type == "Q":
+                    fich_sortie.write('# Temps (H) Debit\n')
                 else:
-                    par["initialisationAuto"] = False
-                    self.mgis.add_info("No initialisation because of no SteadyValue")
+                    fich_sortie.write('# Temps (H) Hauteur\n')
+                fich_sortie.write(' H \n')
+                for t in liste_date:
+                    calc = loi['formule']
+                    for cd_hydro, delta in liste_stations:
+                        if not delta:
+                            delta = '0'
+                        t2 = t + datetime.timedelta(hours=int(delta))
+                        if t2 in obs[cd_hydro]['date']:
+                            i = obs[cd_hydro]['date'].index(t2)
+                            val = obs[cd_hydro]['valeur'][i]
+                        else:
+                            val = None
+                        calc = pattern.sub(str(val), calc, 1)
 
+                    try:
+                        resultat = eval(calc)
+                    except:
+                        resultat = None
+
+                    if resultat is not None:
+                        if valeur_init is None:
+                            valeur_init = resultat
+                            somme += resultat
+                        tps = (t - date_debut).total_seconds() / 3600
+                        chaine = '  {0:4.3f}   {1:3.6f}\n'
+                        fich_sortie.write(chaine.format(tps, resultat))
+
+            if valeur_init is not None:
+                if type == "Q":
+                    tab = {'time': [0, 3600],
+                            'flowrate': [valeur_init, valeur_init]}
+                    self.creer_loi(nom, tab, 1, init=True)
+                else:
+                    tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
+                    self.creer_loi(nom, tab, 2, init=True)
             else:
+                par["initialisationAuto"] = False
+                self.mgis.add_info("No initialisation because of no SteadyValue")
+
+        for nom, loi in dict_lois.items():
+            if not loi['type'] in (1,2):
+                
                 tab = self.get_laws(nom, loi['type'],
                                     obs=True, date_deb=date_debut,
                                     date_fin=date_fin)
@@ -1471,20 +1470,20 @@ class ClassMascaret:
                     for c, d in zip(tab["z"], tab["flowrate"]):
                         if debit_prec > 0 and d > somme:
                             valeur_init = (c - cote_prec) \
-                                          / (d - debit_prec) \
-                                          * (somme - debit_prec) \
-                                          + cote_prec
+                                            / (d - debit_prec) \
+                                            * (somme - debit_prec) \
+                                            + cote_prec
                             break
                         else:
                             cote_prec, debit_prec = c, d
                     if valeur_init is not None:
                         tab = {'time': [0, 3600],
-                               'z': [valeur_init ,valeur_init]}
+                                'z': [valeur_init ,valeur_init]}
                         self.creer_loi(nom, tab, 2, init=True)
                 else:
                     par["initialisationAuto"] = False
                     self.mgis.add_info("No initialisation, due to "
-                                       "{}".format(nom))
+                                        "{}".format(nom))
 
 
     def fct_comment(self):
