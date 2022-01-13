@@ -67,6 +67,7 @@ class CheckTab:
                                   '4.0.1',
                                   '4.0.2',
                                   '4.0.3',
+                                  '4.0.4',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -200,6 +201,7 @@ class CheckTab:
                 ],
             },
             '4.0.3': {},
+            '4.0.4': {},
 
             # '3.0.x': { },
 
