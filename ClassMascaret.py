@@ -1452,7 +1452,7 @@ class ClassMascaret:
             else:
                 par["initialisationAuto"] = False
                 self.mgis.add_info("No initialisation because of no SteadyValue")
-
+        valeur_init = None
         for nom, loi in dict_lois.items():
             if not loi['type'] in (1,2):
                 
