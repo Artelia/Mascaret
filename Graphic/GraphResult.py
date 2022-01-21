@@ -135,7 +135,7 @@ class GraphResult(GraphCommonNew):
 
     def init_graph(self, lst_data, x_var, all_vis=True, lais=None):
         self.init_legende()
-        # self.set_data(data, x_var)
+        self.set_data(lst_data, self.data_to_curve, x_var)
 
         if lais:
             handles = [c for c in self.ax[1]["curves"]]
