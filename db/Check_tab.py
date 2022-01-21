@@ -66,6 +66,8 @@ class CheckTab:
                                   '4.0.0',
                                   '4.0.1',
                                   '4.0.2',
+                                  '4.0.3',
+                                  '4.0.4',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -198,6 +200,8 @@ class CheckTab:
                     lambda: self.laws_to_new(),
                 ],
             },
+            '4.0.3': {},
+            '4.0.4': {},
 
             # '3.0.x': { },
 
@@ -909,6 +913,11 @@ class CheckTab:
                     err = self.mdb.insert("law_config",
                                     tab,
                                     listimport)
+                    if len(tab.keys())>0 :
+                        maxk = max(tab.keys())
+                        sql = "ALTER SEQUENCE {}.law_config_id_seq " \
+                              "RESTART WITH {};".format(self.mdb.SCHEMA,maxk+1)
+                        self.mdb.run_query(sql)
                     if err :
                         self.mgis.add_info(
                             "Error: Insert law_config")
@@ -941,6 +950,7 @@ class CheckTab:
                                 valinsert["value"].append(float(val))
 
                     err= self.mdb.insert2("law_values", valinsert)
+
                     if err :
                         self.mgis.add_info(
                             "Error  Insert law_values")
@@ -948,5 +958,5 @@ class CheckTab:
                         return False
             return True
         except Exception as e:
-            self.mgis.add_info("Error  update_402: {}".format(str(e)))
+            self.mgis.add_info("Error laws_to_new: {}".format(str(e)))
             return False

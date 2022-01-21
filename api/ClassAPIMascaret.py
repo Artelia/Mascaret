@@ -237,8 +237,8 @@ class ClassAPIMascaret:
         self.zmax_co = self.masc.get('Model.MaxControlZ')
         self.sect_co = self.masc.get('Model.ControlSection')
 
-        if self.DEBUG:
-            self.mess_crit_stop()
+        #if self.DEBUG:
+        self.mess_crit_stop()
 
     def mess_crit_stop(self):
         """Print the criteria information"""

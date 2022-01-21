@@ -243,7 +243,7 @@ class ClassMasDatabase(object):
             hydro_object.USER = puser
 
     def process_masobject(self, masobject, pg_method, schema=None, srid=None,
-                          overwrite=None, **kwargs):
+                          **kwargs):
         """
         Creating and processing tables inside PostGIS database.
 
@@ -258,8 +258,11 @@ class ClassMasDatabase(object):
         Returns:
             :return obj: Instance of Mascaret class object
         """
-        if masobject.overwrite:
+
+        try:
             overwrite = masobject.overwrite
+        except AttributeError:
+            overwrite = None
         self.setup_hydro_object(masobject, schema, srid, overwrite)
         obj = masobject()
         method = getattr(obj, pg_method)
@@ -468,6 +471,8 @@ class ClassMasDatabase(object):
                       Maso.observations, Maso.parametres, Maso.runs,
                       # Maso.laws,
                       Maso.admin_tab, Maso.visu_flood_marks,
+                      # bassin
+                      Maso.basins, Maso.links,
                       # qualite d'eau
                       Maso.tracer_lateral_inflows, Maso.tracer_physic,
                       Maso.tracer_name,
@@ -950,11 +955,14 @@ $BODY$
         if results is None or namCol is None:
             print("error : ", sql.format(self.SCHEMA, table, where, order))
             return None
+
         cols = [col[0] for col in namCol]
         results = [col[0] for col in results]
-
+        if not results:
+            return  None
         dico = {}
         # self.mgis.add_info("{0} {1}".format(results[0],cols))
+
         for i, val in enumerate(results[0]):
             # self.mgis.add_info("{0}  {1}".format(cols[i],val))
             dico[cols[i]] = val

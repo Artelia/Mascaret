@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=3.00
 qgisMaximumVersion=3.99
 
-version=4.0.2
+version=4.0.4
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,6 +30,17 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    4.0.4  : Correction of a bug on the database importation when the check of postgres version
+             Correction of automatic initialization bug for taring laws
+             Addition of copy of law value tables with ctrl + c
+    4.0.3  : Correction of the table creation  bug
+    4.0.2  : Addition of law menu
+             Addition of the visualization of the overflow level on a longitudinal profile
+             Addition of tables containing area / width / section
+             Addition of tables containing wet area/wet perimeter/ wet section
+             Addition of Planimetry calculation and visualization
+             Adding button of « Remove up-downstream »
+             Change weirs style
     4.0.1  : Adding Export GUI (old version)
              Change Alias
              Correct the display bug when you uncheck the DEM or the topo in the profile window

@@ -925,7 +925,6 @@ class CopySelectedCellsAction(QAction):
         self.table_widget = table_widget
 
     def copy_cells_to_clipboard(self):
-        print('entreeeeeeeee')
         if len(self.table_widget.selectionModel().selectedIndexes()) > 0:
             lst_r = [idx.row() for idx in
                      self.table_widget.selectionModel().selectedIndexes()]

@@ -940,7 +940,7 @@ class ClassMascaret:
         self.indent(fichier_cas)
         arbre = ElementTree(fichier_cas)
         arbre.write(fichier_sortie)
-
+        self.mgis.add_info("Save the Xcas file is done")
         # ****** XCAS initialisation **********
         temps_max = 3600
         np_pas_temps_init = 2
@@ -961,6 +961,7 @@ class ClassMascaret:
         parametres_temporels.find('pasTempsVar').text = 'false'
         geom_reseau = param_cas.find('parametresGeometrieReseau')
         type_cond = geom_reseau.find('extrLibres').find('typeCond')
+        type_cond.text = type_cond.text.replace('4', '2')
         # type_cond.text = type_cond.text.replace('4', '2').replace('6',
         #                                                           '1').replace(
         #     '7', '2')
@@ -969,8 +970,8 @@ class ClassMascaret:
         lois = lois_hydrauliques.find('lois')
         for child in lois:
             # # tarage loi
-            # if child.find('type').text == '5':
-            #     child.find('type').text = '2'
+            if child.find('type').text == '5':
+                child.find('type').text = '2'
             donnee = child.find('donnees').find('fichier')
             temp = donnee.text.split('.')
 
@@ -997,7 +998,7 @@ class ClassMascaret:
         arbre = ElementTree(fichier_cas)
         arbre.write(os.path.join(self.dossierFileMasc, fich_xcas))
 
-        self.mgis.add_info("Save the Xcas file is done")
+        self.mgis.add_info("Save the init. Xcas file  is done")
         # except Exception as e:
         #     self.mgis.add_info("Error: save Xcas file")
         #     self.mgis.add_info('error: {}'.format(e))
@@ -1350,12 +1351,13 @@ class ClassMascaret:
                 dico = {k: v[i] for k, v in tab.items()}
                 fich.write(chaine.format(**dico))
 
-    def obs_to_loi(self, dict_lois, date_debut, date_fin):
+    def obs_to_loi(self, dict_lois, date_debut, date_fin, par):
         """
         Creation law with observation data
-        :param dict_lois:
-        :param date_debut:
-        :param date_fin:
+        :param dict_lois: dict of law
+        :param date_debut: start date
+        :param date_fin: last date
+        :param par : dict of parameters
         :return:
         """
         # pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
@@ -1367,14 +1369,16 @@ class ClassMascaret:
 
         # liste_date = [date_debut + datetime.timedelta(hours=x)
         # for x in range(duree)]
-
         for nom, loi in dict_lois.items():
+
             if loi['type'] == 1:
                 type = 'Q'
             elif loi['type'] == 2:
                 type = 'H'
             else:
                 continue
+
+            valeur_init = None
 
             liste_stations = pattern.findall(loi['formule'])
 
@@ -1388,9 +1392,9 @@ class ClassMascaret:
                             AND date >= '{2:%Y-%m-%d %H:%M}' 
                             AND date <= '{3:%Y-%m-%d %H:%M}'
                             """.format(cd_hydro,
-                                       type,
-                                       date_debut + dt,
-                                       date_fin + dt)
+                                        type,
+                                        date_debut + dt,
+                                        date_fin + dt)
 
                 obs[cd_hydro] = self.mdb.select('observations',
                                                 condition,
@@ -1401,8 +1405,8 @@ class ClassMascaret:
                     liste_date = [x - dt for x in obs[cd_hydro]['date']]
 
             fichier_loi = os.path.join(self.dossierFileMasc,
-                                       del_symbol(nom) + '.loi')
-            valeur_init = None
+                                        del_symbol(nom) + '.loi')
+
 
             with open(fichier_loi, 'w') as fich_sortie:
                 fich_sortie.write('# {0}\n'.format(nom))
@@ -1440,40 +1444,47 @@ class ClassMascaret:
             if valeur_init is not None:
                 if type == "Q":
                     tab = {'time': [0, 3600],
-                           'flowrate': [valeur_init, valeur_init]}
+                            'flowrate': [valeur_init, valeur_init]}
                     self.creer_loi(nom, tab, 1, init=True)
                 else:
                     tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
                     self.creer_loi(nom, tab, 2, init=True)
-
-        for nom, loi in dict_lois.items():
-            if loi['type'] in (1, 2):
-                continue
-            tab = self.get_laws(nom, loi['type'],
-                                obs=True, date_deb=date_debut,
-                                date_fin=date_fin)
-
-            if tab:
-                self.creer_loi(nom, tab, loi['type'])
             else:
-                self.mgis.add_info('The law for {} is not create.'.format(nom))
+                par["initialisationAuto"] = False
+                self.mgis.add_info("No initialisation because of no SteadyValue")
+        valeur_init = None
+        for nom, loi in dict_lois.items():
+            if not loi['type'] in (1,2):
+                
+                tab = self.get_laws(nom, loi['type'],
+                                    obs=True, date_deb=date_debut,
+                                    date_fin=date_fin)
+                if tab:
+                    self.creer_loi(nom, tab, loi['type'])
+                else:
+                    self.mgis.add_info('The law for {} is not create.'.format(nom))
 
-                # if loi['type'] in (4, 5) and loi['couche'] == 'extremites':
-                #     for c, d in zip(tab["z"], tab["flowrate"]):
-                #         if debit_prec > 0 and d > somme:
-                #             valeur_init = (c - cote_prec) \
-                #                           / (d - debit_prec) \
-                #                           * (somme - debit_prec) \
-                #                           + cote_prec
-                #             break
-                #         else:
-                #             cote_prec, debit_prec = c, d
-                #     if valeur_init is not None:
-                #         tab = {'time': [0, 3600], 'z': [valeur_init, valeur_init]}
-                #         self.creer_loi(nom + '_init', tab, 2)
-                #
-                # else:
-                # self.creer_loi(nom + '_init', tab, loi['type'])
+                if loi['type'] in [4] : #, 5]: # car 5 mascaret plante à l'init
+                    self.creer_loi(nom, tab, loi['type'], init=True)
+                elif loi['type'] in [5] and loi['couche'] == 'extremites':
+                    for c, d in zip(tab["z"], tab["flowrate"]):
+                        if debit_prec > 0 and d > somme:
+                            valeur_init = (c - cote_prec) \
+                                            / (d - debit_prec) \
+                                            * (somme - debit_prec) \
+                                            + cote_prec
+                            break
+                        else:
+                            cote_prec, debit_prec = c, d
+                    if valeur_init is not None:
+                        tab = {'time': [0, 3600],
+                                'z': [valeur_init ,valeur_init]}
+                        self.creer_loi(nom, tab, 2, init=True)
+                else:
+                    par["initialisationAuto"] = False
+                    self.mgis.add_info("No initialisation, due to "
+                                        "{}".format(nom))
+
 
     def fct_comment(self):
         liste_col = self.mdb.list_columns('runs')
@@ -1641,7 +1652,6 @@ class ClassMascaret:
                 else:
                     self.mgis.add_info(
                         'The law for {} is not create.'.format(nom))
-
             else:
                 try:
                     liste_ = ['pasTemps', 'critereArret', 'nbPasTemps',
@@ -1653,6 +1663,7 @@ class ClassMascaret:
                                                          condition)
                         temp_dic[info] = dtemp['steady'][0]
                 except Exception as e:
+                    self.mgis.add_info('erreur crit')
                     self.mgis.add_info(str(e))
                     return
                 # self.mgis.add_info('{}'.format(condition))
@@ -1709,7 +1720,7 @@ class ClassMascaret:
                 self.wq.create_filemet(typ_time='date', datefirst=date_debut,
                                        dateend=date_fin)
 
-        self.obs_to_loi(dict_lois, date_debut, date_fin)
+        self.obs_to_loi(dict_lois, date_debut, date_fin,par)
 
         return date_debut
 
@@ -1841,6 +1852,8 @@ class ClassMascaret:
                 self.create_mobil_gate_file()
             self.fct_only_init(noyau)
             return
+
+
         # self.task_mascaret(None,tup=(
         #                                               par, dict_scen, dict_lois,
         #                                               comments, noyau, run))
@@ -2921,9 +2934,9 @@ class ClassMascaret:
                         [id_run, typ_res, 'zmax', json.dumps(dico_zmax)])
                     key_pknum = 'PK'
             # add stockage plani
-            # TODO Test
             if dico_zmax:
                 cl_geo = ClassResProfil()
+                dico_zmax = {str(key) : item for key, item in dico_zmax.items()}
                 cl_geo.plani_stock(dico_zmax, id_run, self.mdb)
 
                 del cl_geo
@@ -2953,8 +2966,8 @@ class ClassMascaret:
         :return:
         """
         nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Load data ....")
+        #if self.mgis.DEBUG:
+        self.mgis.add_info("Load data ....")
         if not os.path.isfile(nom_fich):
             self.mgis.add_info("Simulation Error: there aren't results")
             self.mdb.delete('runs', 'id={}'.format(id_run))
@@ -3159,9 +3172,10 @@ class ClassMascaret:
         try:
             if obs and date_deb is not None and date_fin is not None:
                 condition = """geom_obj='{0}' 
-                                 AND type = {1}
+                                 AND id_law_type = {1}
                                  AND starttime <= '{2:%Y-%m-%d %H:%M}' 
                                  AND endtime >= '{3:%Y-%m-%d %H:%M}'
+                                 AND active
                                  """.format(name_obj, typ_law, date_deb,
                                             date_fin)
             else:
@@ -3170,7 +3184,7 @@ class ClassMascaret:
                     typ_law)
             # self.mgis.add_info('{}'.format(condition))
 
-            config = self.mdb.select_one('law_config', condition)
+            config = self.mdb.select_one('law_config', condition,verbose=True)
 
             if config:
                 values = self.mdb.select("law_values",
@@ -3179,7 +3193,6 @@ class ClassMascaret:
                                          list_var=['id_var',
                                                    'id_order',
                                                    'value'])
-
                 lst_var = [tmp['code'] for tmp in dico_typ_law[typ_law]['var']]
                 lst_idvar = [id for id, tmp in
                              enumerate(dico_typ_law[typ_law]['var'])]

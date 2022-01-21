@@ -398,19 +398,26 @@ class ClassDlgImport(QDialog):
         """
         strlst = []
         wow = []
-        for i, val in enumerate(ver):
+        newver= [ c for c in ver]
+        newver.reverse()
+        cpt=1
+        for i, val in enumerate(newver):
             wow.append(val)
-            if val == '0':
-                if i < len(ver) - 1:
-                    if ver[i + 1] != '0':
-                        strlst.append(wow[:-1])
-                        wow = []
-        strlst.append(wow)
-        lst_v = []
-        for val in strlst:
-            wow = int(''.join(val))
-            lst_v.append(wow)
-        return lst_v
+            if cpt==2:
+                cpt=1
+                wow.reverse()
+                wow = int(''.join(wow))
+                strlst.append(wow)
+                wow = []
+            else:
+                cpt +=1
+        if wow != []:
+            wow.reverse()
+            wow = int(''.join(wow))
+            strlst.append(wow)
+        strlst.reverse()
+        return strlst
+
 
     def compa_ver(self, vdb, vmeta):
         """

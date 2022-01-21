@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1083</width>
+    <width>1124</width>
     <height>810</height>
    </rect>
   </property>
@@ -17,7 +17,7 @@
    <bool>true</bool>
   </property>
   <property name="windowTitle">
-   <string>Profile Results</string>
+   <string>Profile Topography Edition</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_6">
    <item row="0" column="0">
@@ -249,7 +249,7 @@
                 </font>
                </property>
                <property name="title">
-                <string>Profiles importation</string>
+                <string>Topography</string>
                </property>
                <layout class="QGridLayout" name="gridLayout_5">
                 <item row="0" column="0">
