@@ -116,12 +116,14 @@ class GraphBCDialog(QWidget):
 
         print(self.param)
         self.wdgt_law = GraphBCLaw(self.mgis, self.param)
-        self.tabWidget.addTab(self.wdgt_law,
+        id_law = self.tabWidget.addTab(self.wdgt_law,
                              'Laws')
 
         self.wdgt_obs = GraphBCObs(self.mgis, self.param)
-        self.tabWidget.addTab(self.wdgt_obs,
+        id_obs = self.tabWidget.addTab(self.wdgt_obs,
                                'Observations')
+        if not len(self.wdgt_obs.events.keys()) > 0 :
+            self.tabWidget.setTabEnabled(id_obs, False)
         # print(feature.fieldNameIndex('name'))
 
 
@@ -150,6 +152,7 @@ class GraphBCLaw(QWidget):
         Initialize combobox on events
         :return:
         """
+        self.cur_event = None
         list_event = self.mdb.select('events',where ='run',order='starttime')
         self.events = {}
         self.cb_event.clear()
@@ -159,7 +162,7 @@ class GraphBCLaw(QWidget):
                 self.events[name] = {'starttime': list_event['starttime'][id],
                                   'endtime': list_event['endtime'][id],}
         self.cb_event.addItem('only law', None)
-        self.cur_event =  self.cb_event.currentText()
+        self.cur_event =  self.cb_event.currentData()
         self.update_law_change()
 
 
@@ -169,7 +172,7 @@ class GraphBCLaw(QWidget):
         :return:
         """
         self.cb_law.clear()
-        if self.cur_event != None :
+        if self.cur_event != None  :
             condition = """geom_obj='{0}'
                             AND starttime <= '{1:%Y-%m-%d %H:%M}'
                             AND endtime >= '{2:%Y-%m-%d %H:%M}'
@@ -182,7 +185,6 @@ class GraphBCLaw(QWidget):
                 self.param['name'])
 
         rows = self.mdb.select('law_config',condition, verbose=True)
-        print()
         self.laws = {}
         if len(rows['id']):
             for i,id in enumerate(rows['id']) :
@@ -230,132 +232,11 @@ class GraphBCLaw(QWidget):
                 self.graph_obj.initCurv(typ_law, param_law, date_ref)
                 self.graph_obj.initGraph(id_law, date_ref)
             else:
-                self.graph_obj.initCurvWeirZam(param_law, id_law,
-                                                graph_opt)
+                self.graph_obj.initCurvWeirZam(param_law, id_law)
                 self.graph_obj.initGraphWeirZam(id_law)
         else:
             self.graph_obj.initCurv()
 
-        # # event
-        # if self.cur_event :
-        #     values = self.mdb.select("law_values",
-        #                              where='id_law={}'.format(self.cur_law),
-        #                              order='id_var, id_order',
-        #                              list_var=['id_var',
-        #                                        'id_order',
-        #                                        'value'])
-        #
-        #     lst_var = [tmp['code'] for tmp in dico_typ_law[typ_law]['var']]
-        #     lst_idvar = [id for id, tmp in
-        #                  enumerate(dico_typ_law[typ_law]['var'])]
-        #
-        #     tab = {key: [] for key in lst_var}
-        #     conv_idvar = {id: lst_var[i] for i, id in enumerate(lst_idvar)}
-        #
-        #     for value, id_var in zip(values['value'], values['id_var']):
-        #         tab[conv_idvar[id_var]].append(float(value))
-
-
-        # for nom, loi in dict_lois.items():
-        #     if loi['type'] in (1, 2):
-        #         continue
-        #     tab = self.get_laws(nom, loi['type'],
-        #                         obs=True, date_deb=date_debut,
-        #                         date_fin=date_fin)
-
-        # loi
-        # for nom, l in dict_lois.items():
-        #     if "valeurperm" not in l.keys():
-        #         continue
-        #     if l["valeurperm"] is None:
-        #         # dictLois.items() extremities liste
-        #
-        #         tab = self.get_laws(nom, l["type"])
-        #         if tab:
-        #             self.creer_loi(nom, tab, l["type"])
-        #         else:
-        #             self.mgis.add_info(
-        #                 'The law for {} is not create.'.format(nom))
-        #
-        #     else:
-        #         try:
-        #             liste_ = ['pasTemps', 'critereArret', 'nbPasTemps',
-        #                       'tempsMax', 'tempsInit']
-        #             temp_dic = {}
-        #             for info in liste_:
-        #                 condition = "parametre ='{}'".format(info)
-        #                 dtemp = self.mdb.select_distinct('steady', 'parametres',
-        #                                                  condition)
-        #                 temp_dic[info] = dtemp['steady'][0]
-        #         except Exception as e:
-        #             self.mgis.add_info(str(e))
-        #             return
-        #         # self.mgis.add_info('{}'.format(condition))
-        #         if temp_dic['critereArret'] == 1:
-        #             tfinal = temp_dic['tempsMax']
-        #         elif temp_dic['critereArret'] == 2:
-        #             tfinal = temp_dic['tempsInit'] + temp_dic['pasTemps'] * \
-        #                                              temp_dic['nbPasTemps']
-        #         elif temp_dic['critereArret'] == 3:
-        #             tfinal = 365 * 24 * 3600
-        #
-        #         condition = "geom_obj='{0}' AND id_law_type={1} AND active".format(
-        #             nom, l['type'])
-        #         if l['type'] == 1:
-        #             tab = {"time": [0, tfinal],
-        #                    'flowrate': [l["valeurperm"]] * 2}
-        #         # no possible to use rating curve (5) with steady.
-        #         #   It's replaced in xcas
-        #         elif l['type'] == 2 or l['type'] == 5:
-        #             l['type'] = 2
-        #             tab = {"time": [0, tfinal], 'z': [l["valeurperm"]] * 2}
-        #         else:
-        #             tab = self.get_laws(nom, l["type"])
-        #
-        #         if tab:
-        #             self.creer_loi(nom, tab, l["type"])
-        #         else:
-        #             self.mgis.add_info(
-        #                 'The law for {} is not create.'.format(nom))
-
-        # loi 2
-        # for nom, l in dict_lois.items():
-        #     # dictLois.items() extremities liste
-        #
-        #     tab = self.get_laws(nom, l["type"])
-        #     if tab:
-        #         self.creer_loi(nom, tab, l["type"])
-        #     else:
-        #         self.mgis.add_info(
-        #             'The law for {} is not create.'.format(nom))
-        #     if self.mgis.DEBUG:
-        #         self.mgis.add_info("Laws file is created.")
-        #
-        #     if "valeurperm" not in l.keys():
-        #         continue
-        #
-        #     # nom = nom + "_init"
-        #     if l["valeurperm"] is not None:
-        #         if l['type'] == 1:
-        #             tab = {"time": [0, 3600], 'flowrate': [l["valeurperm"]] * 2}
-        #             self.creer_loi(nom, tab, 1, init=True)
-        #         elif l['type'] == 2:
-        #             tab = {"time": [0, 3600], 'z': [l["valeurperm"]] * 2}
-        #             self.creer_loi(nom, tab, 2, init=True)
-        #         elif l['type'] in [4, 5]:
-        #             self.creer_loi(nom, tab, l['type'], init=True)
-        #         else:
-        #
-        #             par["initialisationAuto"] = False
-        #             self.mgis.add_info("No initialisation")
-        #     else:
-        #         if l['type'] in [4, 5]:
-        #             self.creer_loi(nom, tab, l['type'], init=True)
-        #         else:
-        #             par["initialisationAuto"] = False
-        #             self.mgis.add_info(
-        #                 "No initialisation because of no valeurperm "
-        #                 "for {} condition".format(nom))
 
 
 class GraphBCObs(QWidget):
@@ -398,6 +279,7 @@ class GraphBCObs(QWidget):
         Initialize combobox on events
         :return:
         """
+        self.cur_event =  None
         list_event = self.mdb.select('events', where='run', order='starttime')
         self.events = {}
         self.cb_event.clear()
@@ -406,8 +288,9 @@ class GraphBCObs(QWidget):
                 self.cb_event.addItem(name, name)
                 self.events[name] = {'starttime': list_event['starttime'][id],
                                      'endtime': list_event['endtime'][id], }
-        self.cur_event = self.cb_event.currentText()
-        self.update_data()
+            self.cur_event = self.cb_event.currentData()
+            self.update_data()
+
 
     def event_changed(self):
         self.cur_event = self.cb_event.currentData()
@@ -482,31 +365,5 @@ class GraphBCObs(QWidget):
             self.graph_obj.init_graph_obs(data,self.dico_obs[type])
         else:
             self.graph_obj.initCurv()
-    # def display_graph_home(self):
-    #     """
-    #     display graph
-    #     :return:
-    #     """
-    #     if self.tree_laws.selectedItems():
-    #         itm = self.tree_laws.selectedItems()[0]
-    #         id_law = itm.data(0, 32)
-    #         typ_law = itm.parent().data(0, 32)
-    #         param_law = dico_typ_law[typ_law]
-    #         graph_opt = self.cb_graph_opt.currentData()
-    #
-    #         if typ_law != 6:
-    #             date_ref = None
-    #             if param_law['xIsTime']:
-    #                 if graph_opt == 'date':
-    #                     date_ref = itm.data(1, 32)
-    #
-    #             self.graph_home.initCurv(typ_law, param_law, date_ref)
-    #             self.graph_home.initGraph(id_law, date_ref)
-    #         else:
-    #             self.graph_home.initCurvWeirZam(param_law, id_law,
-    #                                             graph_opt)
-    #             self.graph_home.initGraphWeirZam(id_law)
-    #     else:
-    #         self.graph_home.initCurv()
 
 
