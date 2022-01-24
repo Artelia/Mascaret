@@ -787,25 +787,10 @@ BEGIN
     EXECUTE 'CREATE SEQUENCE ' || quote_ident(dest_schema) || '.' || quote_ident(object);
     srctbl := quote_ident(source_schema) || '.' || quote_ident(object);
 
-    EXECUTE 'SELECT last_value, max_value, start_value, increment_by, min_value, cache_value, log_cnt, is_cycled, is_called
+    EXECUTE 'SELECT last_value ,log_cnt, is_called
               FROM ' || quote_ident(source_schema) || '.' || quote_ident(object) || ';'
-    INTO sq_last_value, sq_max_value, sq_start_value, sq_increment_by, sq_min_value, sq_cache_value, sq_log_cnt, sq_is_cycled, sq_is_called ;
-
-    IF sq_is_cycled
-    THEN
-      sq_cycled := 'CYCLE';
-    ELSE
-      sq_cycled := 'NO CYCLE';
-    END IF;
-
-    EXECUTE 'ALTER SEQUENCE '   || quote_ident(dest_schema) || '.' || quote_ident(object)
-            || ' INCREMENT BY ' || sq_increment_by
-            || ' MINVALUE '     || sq_min_value
-            || ' MAXVALUE '     || sq_max_value
-            || ' START WITH '   || sq_start_value
-            || ' RESTART '      || sq_min_value
-            || ' CACHE '        || sq_cache_value
-            || sq_cycled || ' ;' ;
+              INTO sq_last_value, sq_log_cnt, sq_is_called ;
+	sq_start_value =  1;
 
     buffer := quote_ident(dest_schema) || '.' || quote_ident(object);
     IF include_recs

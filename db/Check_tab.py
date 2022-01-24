@@ -68,6 +68,7 @@ class CheckTab:
                                   '4.0.2',
                                   '4.0.3',
                                   '4.0.4',
+                                  '4.0.5',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -202,6 +203,7 @@ class CheckTab:
             },
             '4.0.3': {},
             '4.0.4': {},
+            '4.0.5': {  'fct': [ lambda: self.update_400()],},
 
             # '3.0.x': { },
 
@@ -960,3 +962,4 @@ class CheckTab:
         except Exception as e:
             self.mgis.add_info("Error laws_to_new: {}".format(str(e)))
             return False
+
