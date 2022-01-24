@@ -135,7 +135,7 @@ class GraphResult(GraphCommonNew):
 
     def init_graph(self, lst_data, x_var, all_vis=True, lais=None):
         self.init_legende()
-        # self.set_data(data, x_var)
+        self.set_data(lst_data, self.data_to_curve, x_var)
 
         if lais:
             handles = [c for c in self.ax[1]["curves"]]
@@ -164,7 +164,9 @@ class GraphResult(GraphCommonNew):
 
     def init_graph_profil(self, data, x_var, qmaj=0, plani=None):
         self.init_legende()
-        # self.set_data(data, x_var)
+        self.set_data([{'x_var': 'x', 'y_var': ['ZREF'], 'y_unit': '$m$', 'x': data['x'], 'ZREF': data['ZREF']}],
+                      {0: (1, 0)},
+                      x_var)
         if plani:
             self.ax[1]["curves"].append(self.courbePlani[0])
             self.init_legende()

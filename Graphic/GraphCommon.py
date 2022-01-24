@@ -236,6 +236,7 @@ class GraphCommonNew:
         self.gui_graph(wgt, lay, lay_toolbar)
         self.leg_selected = False
         self.data = None
+        self.data_to_curve = None
         self.var_x = None
         self.unit_x = "num"
         self.unit_y = None
@@ -272,8 +273,9 @@ class GraphCommonNew:
         else:
             lay_graph.addWidget(self.toolbar)
 
-    def set_data(self, data, var_x):
+    def set_data(self, data, data_to_curve, var_x):
         self.data = data
+        self.data_to_curve = data_to_curve
         self.var_x = var_x
 
     def graph_on_pick(self, evt):
@@ -340,36 +342,45 @@ class GraphCommonNew:
             self.canvas.draw()
             return
 
+        absc = event.xdata
         if self.unit_x == 'date':
-            temp = round((event.xdata - 719163) * 24) * 3600
-            decal = datetime.utcfromtimestamp(temp)
-            absc = min(self.data[self.var_x], key=lambda x: abs(x - decal))
+            cur_x = datetime.utcfromtimestamp(round((absc - 719163) * 24) * 3600)
+            txt_x = cur_x
         else:
-            absc = min(self.data[self.var_x],
-                       key=lambda x: abs(x - event.xdata))
-        idx = self.data[self.var_x].index(absc)
+            cur_x = absc
+            txt_x = round(cur_x, 0)
 
-        ymin, ymax = self.ax[1]["axe"].get_ylim()
+        ymin, ymax = self.main_axe.get_ylim()
         annot = self.annotation[0]
-        annot.set_text("{}".format(absc))
+        annot.set_text("{}".format(txt_x))
         annot.xytext = (10, 20)
         annot.xy = (absc, ymin)
         annot.set_visible(True)
 
-        for var in self.list_var:
-            idx_a = var["id"]
-            annot = self.annotation[idx_a + 1]
-            if self.data[var["name"]] and self.courbes[idx_a].get_visible():
-                val = self.data[var["name"]][idx]
-                annot.set_text("{} {}".format(val, self.unit_y))
-                annot.xy = (absc, val)
-                annot.set_visible(True)
-            else:
-                annot.set_visible(False)
+        idx_c = 0
+        for d in self.data:
+            for var in d["y_var"]:
+                annot = self.annotation[idx_c + 1]
+                axe, rg = self.data_to_curve[idx_c]
+                curv = self.ax[axe]["curves"][rg]
+                if curv.get_visible():
+                    if min(d[d["x_var"]]) <= cur_x <= max(d[d["x_var"]]):
+                        val_t = min(d[d["x_var"]], key=lambda x: abs(x - cur_x))
+                        idx_d = d[d["x_var"]].index(val_t)
+                        val = d[var][idx_d]
+                        annot.set_text("{} {}".format(round(val, 3), d["y_unit"]))
+                        annot.xy = (absc, val)
+                        annot.set_visible(True)
+                    else:
+                        annot.set_visible(False)
+                else:
+                    annot.set_visible(False)
+                idx_c += 1
 
         self.v_line.set_xdata(absc)
         self.v_line.set_visible(True)
         self.canvas.draw()
+
 
     def init_legende(self, handles=None):
         all_handles, all_noms, all_curves = list(), list(), list()
@@ -413,8 +424,7 @@ class GraphCommonNew:
         self.main_axe.set_xlabel("time ({})".format(unit))
         if self.unit == 'date':
             self.unit_x = 'date'
-            self.main_axe.xaxis.set_major_formatter(
-                mdates.DateFormatter('%d-%m-%Y'))
+            self.main_axe.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
         else:
             self.unit_x = 'num'
             self.main_axe.xaxis.set_major_formatter(ticker.ScalarFormatter())

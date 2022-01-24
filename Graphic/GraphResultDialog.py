@@ -397,6 +397,7 @@ class GraphResultDialog(QWidget):
                 tmp_data["is_obs"] = False
                 tmp_data["x_var"] = self.x_var
                 tmp_data["y_var"] = param["graph"]["vars"]
+                tmp_data["y_unit"] = param["graph"]["unit"]
 
                 sql_hyd_pk = ''
                 if self.typ_graph == 'hydro_pk':
@@ -474,11 +475,13 @@ class GraphResultDialog(QWidget):
             if len(lst_x_var) == 1:
                 x_var_ = lst_x_var[0]
                 if x_var_ == 'time':
+                    self.graph_obj.unit_x = 'time'
                     self.graph_obj.ax[1]["axe"].set_xlabel(r'Time ($s$)')
                 elif x_var_ == 'date':
                     self.graph_obj.unit_x = 'date'
                     self.graph_obj.ax[1]["axe"].set_xlabel(r'Time')
                 elif x_var_ == 'pknum':
+                    self.graph_obj.unit_x = 'pk'
                     self.graph_obj.ax[1]["axe"].set_xlabel(r'Pk ($m$)')
             else:
                 self.clear_results()
@@ -588,6 +591,7 @@ class GraphResultDialog(QWidget):
                     tmp_data = dict()
                     tmp_data["x_var"] = 'pknum'
                     tmp_data["y_var"] = [var]
+                    tmp_data["y_unit"] = "$m$"
                     tmp_data["is_obs"] = True
                     tmp_data["name"] = "overflow level - {0} ".format(cote)
                     tmp_data["pknum"] = curve['x']
@@ -678,6 +682,7 @@ class GraphResultDialog(QWidget):
                     tmp_data["is_obs"] = True
                     tmp_data["x_var"] = "date"
                     tmp_data["y_var"] = [var]
+                    tmp_data["y_unit"] = "$m$"
                     tmp_data["date"] = obs_graph['date']
                     if var == "H":
                         tmp_data[var] = [v + param_obs["zero"] for v in

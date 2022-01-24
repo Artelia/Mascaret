@@ -976,7 +976,7 @@ Version : {}
     def fct_test(self):
         """ Test function"""
         # get_laws
-        self.chkt.debug_update_vers_meta(version='4.0.1')
+        self.chkt.debug_update_vers_meta(version='4.0.4')
 
         pass
 

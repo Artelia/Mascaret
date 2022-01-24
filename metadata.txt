@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=3.00
 qgisMaximumVersion=3.99
 
-version=4.0.3
+version=4.0.5
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,6 +30,10 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    4.0.5  : Correction of a bug on the database importation for postgres > v11
+    4.0.4  : Correction of a bug on the database importation when the check of postgres version
+             Correction of automatic initialization bug for taring laws
+             Addition of copy of law value tables with ctrl + c
     4.0.3  : Correction of the table creation  bug
     4.0.2  : Addition of law menu
              Addition of the visualization of the overflow level on a longitudinal profile
