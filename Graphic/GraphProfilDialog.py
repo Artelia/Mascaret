@@ -180,7 +180,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     weirs_tolaw = {1: 6, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
                     id = feature.fieldNameIndex('type')
                     type = feature.attributes()[id]
-                    if type != (3, 4):
+                    if type not in (3, 4):
                         param['type'] = weirs_tolaw[type]
                         for var in ['name', 'method', 'active']:
                             id = feature.fieldNameIndex(var)
@@ -204,7 +204,8 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
                 if cond  and param['name']:
                     graph_law = GraphBCDialog(self.mgis, param)
-                    graph_law.show()
+                    #graph_law.show()
+                    graph_law.exec_()
             if flag_casier_r and couche in ('basins', 'links'):
                 feature = results[0].mFeature
 
@@ -594,7 +595,6 @@ class GraphProfil(GraphCommon):
 
                 if k == 'zleftminbed' and not v:
                     self.tab['zleftminbed'] = lstz_minor[0]
-                print(k, self.position)
                 self.liste[k][self.position] = v
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
         tab = {self.nom: self.tab}

@@ -33,77 +33,10 @@ from .GraphHydro import GraphHydroLaw
 
 from ..HydroLawsDialog import dico_typ_law
 
-#
-# dico_typ_law = {1: {'name': 'Hydrograph Q(t)',
-#                     'var': [{'name': 'time', 'code': 'time'},
-#                             {'name': 'flowrate', 'code': 'flowrate'}],
-#                     'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
-#                               'y': {'var': [1], 'tit': 'Q', 'unit': 'm3/s'}},
-#                     'geom': {'extremities': [1], 'weirs': False,
-#                              'lateral_inflows': True, 'lateral_weirs': False},
-#                     'xIsTime': True},
-#                 2: {'name': 'Limnigraph Z(t)',
-#                     'var': [{'name': 'time', 'code': 'time'},
-#                             {'name': 'level', 'code': 'z'}],
-#                     'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
-#                               'y': {'var': [1], 'tit': 'Z', 'unit': 'm'}},
-#                     'geom': {'extremities': [2], 'weirs': [5],
-#                              'lateral_inflows': False, 'lateral_weirs': False},
-#                     'xIsTime': True},
-#                 3: {'name': 'Limnihydrograph Z,Q(t)',
-#                     'var': [{'name': 'time', 'code': 'time'},
-#                             {'name': 'level', 'code': 'z'},
-#                             {'name': 'flowrate', 'code': 'flowrate'}],
-#                     'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
-#                               'y': {'var': [1, 2], 'tit': 'Various',
-#                                     'unit': ''}},
-#                     'geom': {'extremities': [8], 'weirs': False,
-#                              'lateral_inflows': False, 'lateral_weirs': False},
-#                     'xIsTime': True},
-#                 4: {'name': 'Rating Curve Z = f(Q)',
-#                     'var': [{'name': 'flowrate', 'code': 'flowrate'},
-#                             {'name': 'level', 'code': 'z'}],
-#                     'graph': {'x': {'var': 0, 'tit': 'Q', 'unit': 'm3/s'},
-#                               'y': {'var': [1], 'tit': 'Z', 'unit': 'm'}},
-#                     'geom': {'extremities': [3, 5], 'weirs': [2],
-#                              'lateral_inflows': False, 'lateral_weirs': [2]},
-#                     'xIsTime': False},
-#                 5: {'name': 'Rating Curve Q = f(Z)',
-#                     'var': [{'name': 'level', 'code': 'z'},
-#                             {'name': 'flowrate', 'code': 'flowrate'}],
-#                     'graph': {'x': {'var': 0, 'tit': 'Z', 'unit': 'm'},
-#                               'y': {'var': [1], 'tit': 'Q', 'unit': 'm3/s'}},
-#                     'geom': {'extremities': [4], 'weirs': [6, 7],
-#                              'lateral_inflows': False, 'lateral_weirs': False},
-#                     'xIsTime': False},
-#                 6: {'name': 'Weir Zam = f(Q, Zav)',
-#                     'var': [
-#                         {'name': 'flowrate', 'code': 'flowrate', 'leg': 'Q'},
-#                         {'name': 'downstream level', 'code': 'z_downstream',
-#                          'leg': 'Zdown'},
-#                         {'name': 'upstream level', 'code': 'z_upstream'}],
-#                     'graph': {'x': {'var': None, 'tit': None, 'unit': None},
-#                               'y': {'var': [2], 'tit': 'Zup', 'unit': 'm'}},
-#                     'geom': {'extremities': [0, 6], 'weirs': [1],
-#                              'lateral_inflows': False, 'lateral_weirs': False},
-#                     'xIsTime': False},
-#                 7: {'name': 'Floodgate Zinf, Zsup = f(t)',
-#                     'var': [{'name': 'time', 'code': 'time'},
-#                             {'name': 'lower level', 'code': 'z_lower'},
-#                             {'name': 'upper level', 'code': 'z_up'}],
-#
-#                     'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
-#                               'y': {'var': [1, 2], 'tit': 'Z', 'unit': 'm'}},
-#                     'geom': {'extremities': [7], 'weirs': [8],
-#                              'lateral_inflows': False, 'lateral_weirs': False},
-#                     'xIsTime': True}
-#                 }
 
-
-
-class GraphBCDialog(QWidget):
+class GraphBCDialog(QDialog):
     def __init__(self, mgis, param):
-        QWidget.__init__(self)
+        QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.param = param
@@ -114,18 +47,21 @@ class GraphBCDialog(QWidget):
 
     def init_gui(self):
 
-        print(self.param)
         self.wdgt_law = GraphBCLaw(self.mgis, self.param)
-        id_law = self.tabWidget.addTab(self.wdgt_law,
-                             'Laws')
+        id_law = self.tabWidget.addTab(self.wdgt_law, 'Laws')
+        condition = """geom_obj='{0}'""".format(self.param['name'])
+        rows = self.mdb.select('law_config', condition, verbose=True)
 
         self.wdgt_obs = GraphBCObs(self.mgis, self.param)
-        id_obs = self.tabWidget.addTab(self.wdgt_obs,
-                               'Observations')
-        if not len(self.wdgt_obs.events.keys()) > 0 :
-            self.tabWidget.setTabEnabled(id_obs, False)
-        # print(feature.fieldNameIndex('name'))
+        id_obs = self.tabWidget.addTab(self.wdgt_obs, 'Observations')
 
+        if len(rows['id']) == 0:
+            self.tabWidget.setTabEnabled(id_law, False)
+            self.tabWidget.setTabOrder(self.wdgt_obs, self.wdgt_law)
+
+        if str(self.param['method']) in ('NULL', '') :
+            self.tabWidget.setTabEnabled(id_obs, False)
+            self.tabWidget.setTabOrder(self.wdgt_law, self.wdgt_obs)
 
 class GraphBCLaw(QWidget):
     def __init__(self, mgis, param):
@@ -142,10 +78,18 @@ class GraphBCLaw(QWidget):
         self.cur_law = None
 
         self.graph_obj = GraphHydroLaw(self.mgis, self.lay_graph_home)
+
         self.init_event_changed()
 
         self.cb_event.currentIndexChanged.connect(self.event_changed)
         self.cb_law.currentIndexChanged.connect(self.law_changed)
+
+        self.bg_abs = QButtonGroup()
+        self.bg_abs.addButton(self.rb_abs_q, 0)
+        self.bg_abs.addButton(self.rb_abs_z, 1)
+        self.bg_abs.buttonClicked[int].connect(self.chg_abs_weir_zam)
+        self.rb_abs_q.click()
+        self.fram_absweirs.hide()
 
     def init_event_changed(self):
         """
@@ -158,12 +102,23 @@ class GraphBCLaw(QWidget):
         self.cb_event.clear()
         if len(list_event['name']) >0 :
             for id, name in enumerate(list_event['name']):
-                self.cb_event.addItem(name, name)
-                self.events[name] = {'starttime': list_event['starttime'][id],
-                                  'endtime': list_event['endtime'][id],}
+                condition = """geom_obj='{0}'
+                                            AND starttime <= '{1:%Y-%m-%d %H:%M}'
+                                            AND endtime >= '{2:%Y-%m-%d %H:%M}'
+                                            AND active""".format(
+                    self.param['name'],
+                    list_event['starttime'][id],
+                    list_event['endtime'][id])
+                rows = self.mdb.select('law_config', condition, verbose=True)
+                if len(rows['id']) > 0:
+                    self.cb_event.addItem(name, name)
+                    self.events[name] = {'starttime': list_event['starttime'][id],
+                                      'endtime': list_event['endtime'][id],}
         self.cb_event.addItem('only law', None)
         self.cur_event =  self.cb_event.currentData()
+
         self.update_law_change()
+
 
 
     def update_law_change(self):
@@ -181,12 +136,12 @@ class GraphBCLaw(QWidget):
                                        self.events[self.cur_event]['endtime'])
         else:
             #condition = """geom_obj='{0}' AND active""".format(self.param['name'])
-            condition = """geom_obj='{0}'""".format(
+            condition = """geom_obj='{0}' AND active""".format(
                 self.param['name'])
 
         rows = self.mdb.select('law_config',condition, verbose=True)
         self.laws = {}
-        if len(rows['id']):
+        if len(rows['id'])>0:
             for i,id in enumerate(rows['id']) :
                 self.cb_law.addItem(rows['name'][i], id)
                 self.laws[id] = { 'starttime': rows['starttime'][i],
@@ -196,12 +151,12 @@ class GraphBCLaw(QWidget):
                                   'active': rows['active'][i]
                 }
             self.cur_law =  self.cb_law.currentData()
-            print(self.laws)
+
+
         else:
             self.cur_law = None
 
         self.update_data()
-
 
     def event_changed(self) :
         self.cur_event = self.cb_event.currentData()
@@ -221,8 +176,6 @@ class GraphBCLaw(QWidget):
             id_law = self.cur_law
             typ_law = self.laws[id_law]['type']
             param_law = dico_typ_law[typ_law]
-            #graph_opt = self.cb_graph_opt.currentData()
-
             if typ_law != 6:
                 date_ref = None
                 if param_law['xIsTime']:
@@ -231,12 +184,22 @@ class GraphBCLaw(QWidget):
 
                 self.graph_obj.initCurv(typ_law, param_law, date_ref)
                 self.graph_obj.initGraph(id_law, date_ref)
+                self.fram_absweirs.hide()
             else:
-                self.graph_obj.initCurvWeirZam(param_law, id_law)
+                self.fram_absweirs.show()
+                self.graph_obj.initCurvWeirZam(param_law, id_law,
+                                               var_x=self.bg_abs.checkedId())
                 self.graph_obj.initGraphWeirZam(id_law)
         else:
             self.graph_obj.initCurv()
 
+    def chg_abs_weir_zam(self, v):
+        """
+        Change absissa for the graph
+        :param v:
+        :return:
+        """
+        self.update_data()
 
 
 class GraphBCObs(QWidget):
@@ -251,7 +214,9 @@ class GraphBCObs(QWidget):
         self.events = {}
         self.cur_event = None
         self.cur_law = None
+        self.display_obs = False
         self.cb_law.hide()
+        self.fram_absweirs.hide()
 
         self.dico_obs = {
             'H': {'name': 'Limnigraph Z(t)',
@@ -268,10 +233,9 @@ class GraphBCObs(QWidget):
                      'xIsTime': True}, }
 
         self.graph_obj = GraphHydroLaw(self.mgis, self.lay_graph_home)
-        self.init_event_changed()
-
-        self.cb_event.currentIndexChanged.connect(self.event_changed)
-        #elf.cb_law.currentIndexChanged.connect(self.law_changed)
+        if str(self.param['method']) not in ('NULL', '') :
+            self.init_event_changed()
+            self.cb_event.currentIndexChanged.connect(self.event_changed)
 
 
     def init_event_changed(self):
@@ -283,13 +247,19 @@ class GraphBCObs(QWidget):
         list_event = self.mdb.select('events', where='run', order='starttime')
         self.events = {}
         self.cb_event.clear()
+
         if len(list_event['name']) > 0:
             for id, name in enumerate(list_event['name']):
                 self.cb_event.addItem(name, name)
                 self.events[name] = {'starttime': list_event['starttime'][id],
                                      'endtime': list_event['endtime'][id], }
             self.cur_event = self.cb_event.currentData()
-            self.update_data()
+        else:
+            self.cb_event.addItem("No events", None)
+            self.cur_event = None
+            self.cb_event.setEnabled(False)
+
+        self.update_data()
 
 
     def event_changed(self):
@@ -316,20 +286,24 @@ class GraphBCObs(QWidget):
 
         if type :
             liste_stations = pattern.findall(self.param['method'])
+
             for cd_hydro, delta in liste_stations:
                 if not delta:
                     delta = '0'
 
                 dt = datetime.timedelta(hours=int(delta))
-
-                condition = """code ='{0}'
-                            AND type = '{1}'
-                            AND date >= '{2:%Y-%m-%d %H:%M}'
-                            AND date <= '{3:%Y-%m-%d %H:%M}'
-                            """.format(cd_hydro,
-                                       type,
-                                       self.events[self.cur_event]['starttime'] + dt,
-                                       self.events[self.cur_event]['endtime'] + dt)
+                if self.cur_event:
+                    condition = """code ='{0}'
+                                AND type = '{1}'
+                                AND date >= '{2:%Y-%m-%d %H:%M}'
+                                AND date <= '{3:%Y-%m-%d %H:%M}'
+                                """.format(cd_hydro,
+                                           type,
+                                           self.events[self.cur_event]['starttime'] + dt,
+                                           self.events[self.cur_event]['endtime'] + dt)
+                else:
+                    condition = """code ='{0}'
+                                  AND type = '{1}'""".format(cd_hydro,type)
 
                 obs[cd_hydro] = self.mdb.select('observations',
                                                 condition,
@@ -361,7 +335,6 @@ class GraphBCObs(QWidget):
 
                 data['date'].append(t)
                 data['val'].append(resultat)
-
             self.graph_obj.init_graph_obs(data,self.dico_obs[type])
         else:
             self.graph_obj.initCurv()

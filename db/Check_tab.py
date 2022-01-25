@@ -203,7 +203,8 @@ class CheckTab:
             },
             '4.0.3': {},
             '4.0.4': {},
-            '4.0.5': {  'fct': [ lambda: self.update_400()],},
+            '4.0.5': {  'fct': [ lambda: self.update_400(),
+                                 lambda: self.laws_to_new()],},
 
             # '3.0.x': { },
 
@@ -912,19 +913,20 @@ class CheckTab:
                                   'endtime',
                                   'id_law_type', 'active', 'comment']
 
-                    err = self.mdb.insert("law_config",
-                                    tab,
-                                    listimport)
                     if len(tab.keys())>0 :
-                        maxk = max(tab.keys())
-                        sql = "ALTER SEQUENCE {}.law_config_id_seq " \
-                              "RESTART WITH {};".format(self.mdb.SCHEMA,maxk+1)
-                        self.mdb.run_query(sql)
-                    if err :
-                        self.mgis.add_info(
-                            "Error: Insert law_config")
-                        self.del_tab("law_config")
-                        return False
+                        err = self.mdb.insert("law_config",
+                                        tab,
+                                        listimport)
+                        if len(tab.keys())>0 :
+                            maxk = max(tab.keys())
+                            sql = "ALTER SEQUENCE {}.law_config_id_seq " \
+                                  "RESTART WITH {};".format(self.mdb.SCHEMA,maxk+1)
+                            self.mdb.run_query(sql)
+                        if err :
+                            self.mgis.add_info(
+                                "Error: Insert law_config")
+                            self.del_tab("law_config")
+                            return False
 
             if "law_values" not in lst_tab:
                 vval, _ = self.add_tab(Maso.law_values, False)
@@ -950,14 +952,13 @@ class CheckTab:
                                 valinsert["id_var"].append(id_var)
                                 valinsert["id_order"].append(id_val)
                                 valinsert["value"].append(float(val))
-
-                    err= self.mdb.insert2("law_values", valinsert)
-
-                    if err :
-                        self.mgis.add_info(
-                            "Error  Insert law_values")
-                        self.del_tab("law_values")
-                        return False
+                    if len(valinsert['id_law']) > 0:
+                        err= self.mdb.insert2("law_values", valinsert)
+                        if err :
+                            self.mgis.add_info(
+                                "Error  Insert law_values")
+                            self.del_tab("law_values")
+                            return False
             return True
         except Exception as e:
             self.mgis.add_info("Error laws_to_new: {}".format(str(e)))

@@ -113,7 +113,6 @@ class GraphHydroLaw(GraphCommon):
         self.list_var.clear()
         self.list_z.clear()
         self.courbes.clear()
-
         self.axeX = var_x
         self.axeZ = abs(var_x - 1)
 

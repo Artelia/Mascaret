@@ -242,7 +242,7 @@ class MascPlugDialog(QMainWindow):
 
         # TODO Finaliser
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(False)
+        self.ui.actionTest.setVisible(True)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(
@@ -1006,8 +1006,8 @@ Version : {}
 
     def fct_scores(self):
         dlg = ClassScoresDialog(self)
-        # dlg.exec_()
-        dlg.show()
+        dlg.exec_()
+        #dlg.show()
 
     def fct_hydro_laws(self):
         dlg = ClassHydroLawsDialog(self)
