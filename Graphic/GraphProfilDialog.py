@@ -36,7 +36,7 @@ from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
 
-from .GraphCommon import GraphCommon
+from .GraphCommon import GraphCommon,DraggableLegend
 from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
 from ..Structure.ClassPolygone import ClassPolygone
 from .GraphProfilResultDialog import GraphProfilResultDialog
@@ -870,15 +870,16 @@ class GraphProfil(GraphCommon):
 
             self.maj_graph()
         elif not zone_selector and bouton == 1:
-            courbe = self.lined[legline.get_label()]
-            # efface en cliquand sur la legende
-            vis = not courbe.get_visible()
-            courbe.set_visible(vis)
-            if vis:
-                legline.set_alpha(1.0)
-            else:
-                legline.set_alpha(0.2)
-            self.canvas.draw()
+            if  legline in self.lined.keys():
+                courbe = self.lined[legline]
+                # efface en cliquand sur la legende
+                vis = not courbe.get_visible()
+                courbe.set_visible(vis)
+                if vis:
+                    legline.set_alpha(1.0)
+                else:
+                    legline.set_alpha(0.2)
+                self.canvas.draw()
 
     def onselect(self, eclick, erelease):
         mini_x = min(eclick.xdata, erelease.xdata)
@@ -1108,16 +1109,20 @@ class GraphProfil(GraphCommon):
             self.canvas.draw()
 
     def maj_legende(self):
+
         liste_noms = [c.get_label() for c in self.courbes]
         self.leg = self.axes.legend(self.courbes, liste_noms, loc='upper right',
                                     fancybox=False, shadow=False)
-        # self.leg.get_frame().set_alpha(0.4)
+        self.leg.get_frame().set_alpha(0.4)
+        self.leg.set_zorder(110)
+        # self.leg.draggable(True)
+        DraggableLegend(self.leg)
         self.lined = dict()
 
         for legline, courbe in zip(self.leg.get_lines(), self.courbes):
             legline.set_picker(5)
             legline.set_linewidth(3)
-            self.lined[legline.get_label()] = courbe
+            self.lined[legline] = courbe
         self.canvas.draw()
 
     @staticmethod
