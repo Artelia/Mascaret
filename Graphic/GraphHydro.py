@@ -35,6 +35,7 @@ class GraphHydroLaw(GraphCommon):
         self.list_var = []
         self.list_z = []
         self.courbes = []
+        self.old_xlim = None
 
         self.init_ui_common_p()
         self.gui_graph(lay)
@@ -43,10 +44,22 @@ class GraphHydroLaw(GraphCommon):
     def init_ui(self):
         self.axes = self.fig.add_subplot(111)
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
-
+        self.fig.canvas.mpl_connect('draw_event', self.draw_event)
         self.axes.tick_params(axis='both', labelsize=7.)
         self.axes.grid(True)
 
+    def draw_event(self, event):
+        new_xlim = self.axes.get_xlim()
+        if self.unit in ('date','datehhmm'):
+            if self.old_xlim == new_xlim :
+                return
+            self.old_xlim = new_xlim
+            xmin, xmax = new_xlim
+            if (xmax - xmin) < 2 :
+                self.maj_lbl_x("time",'datehhmm')
+            else:
+                self.maj_lbl_x("time", 'date')
+            self.canvas.draw()
 
     def initCurv(self, typ_law=None, param_law=None, date_ref=None):
         self.axes.cla()
@@ -56,6 +69,7 @@ class GraphHydroLaw(GraphCommon):
         self.list_var.clear()
         self.list_z.clear()
         self.courbes.clear()
+
         if typ_law:
             self.axeX = param_law['graph']['x']['var']
             for v, var in enumerate(param_law['graph']['y']['var']):
@@ -65,6 +79,7 @@ class GraphHydroLaw(GraphCommon):
                                                    label=param_law['var'][var][
                                                       'name'])
                 self.courbes.append(self.courbe_laws)
+
 
             self.init_legende()
             if date_ref:
@@ -190,7 +205,7 @@ class GraphHydroLaw(GraphCommon):
 
     def maj_lbl_x(self, var, unit):
         self.unit = unit
-        if unit == "date":
+        if unit in ("date", "datehhmm"):
             self.axes.set_xlabel("date")
         else:
             if unit:
@@ -198,9 +213,12 @@ class GraphHydroLaw(GraphCommon):
             else:
                 self.axes.set_xlabel("{}".format(var))
 
-        if unit == 'date':
+        if unit == "date" :
             self.axes.xaxis.set_major_formatter(
                 mdates.DateFormatter('%d-%m-%Y'))
+        elif unit == "datehhmm" :
+                self.axes.xaxis.set_major_formatter(
+                    mdates.DateFormatter('%d-%m-%Y %H:%M'))
         else:
             self.axes.xaxis.set_major_formatter(ticker.ScalarFormatter())
 
@@ -210,3 +228,6 @@ class GraphHydroLaw(GraphCommon):
         else:
             self.axes.set_ylabel("{}".format(var))
 
+    def ch_lbl_x(self):
+
+        pass

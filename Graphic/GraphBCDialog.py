@@ -49,8 +49,8 @@ class GraphBCDialog(QDialog):
 
         self.wdgt_law = GraphBCLaw(self.mgis, self.param)
         id_law = self.tabWidget.addTab(self.wdgt_law, 'Laws')
-        condition = """geom_obj='{0}'""".format(self.param['name'])
-        rows = self.mdb.select('law_config', condition, verbose=True)
+        condition = """geom_obj='{0}' and active""".format(self.param['name'])
+        rows = self.mdb.select('law_config', condition)
 
         self.wdgt_obs = GraphBCObs(self.mgis, self.param)
         id_obs = self.tabWidget.addTab(self.wdgt_obs, 'Observations')
@@ -76,20 +76,22 @@ class GraphBCLaw(QWidget):
         self.laws = {}
         self.cur_event =  None
         self.cur_law = None
+        self.bg_abs = QButtonGroup()
+        self.bg_abs.addButton(self.rb_abs_q, 0)
+        self.bg_abs.addButton(self.rb_abs_z, 1)
+        self.rb_abs_q.click()
+        self.fram_absweirs.hide()
 
         self.graph_obj = GraphHydroLaw(self.mgis, self.lay_graph_home)
+
+        self.bg_abs.buttonClicked[int].connect(self.chg_abs_weir_zam)
 
         self.init_event_changed()
 
         self.cb_event.currentIndexChanged.connect(self.event_changed)
         self.cb_law.currentIndexChanged.connect(self.law_changed)
 
-        self.bg_abs = QButtonGroup()
-        self.bg_abs.addButton(self.rb_abs_q, 0)
-        self.bg_abs.addButton(self.rb_abs_z, 1)
-        self.bg_abs.buttonClicked[int].connect(self.chg_abs_weir_zam)
-        self.rb_abs_q.click()
-        self.fram_absweirs.hide()
+
 
     def init_event_changed(self):
         """
@@ -109,7 +111,7 @@ class GraphBCLaw(QWidget):
                     self.param['name'],
                     list_event['starttime'][id],
                     list_event['endtime'][id])
-                rows = self.mdb.select('law_config', condition, verbose=True)
+                rows = self.mdb.select('law_config', condition)
                 if len(rows['id']) > 0:
                     self.cb_event.addItem(name, name)
                     self.events[name] = {'starttime': list_event['starttime'][id],
@@ -139,7 +141,7 @@ class GraphBCLaw(QWidget):
             condition = """geom_obj='{0}' AND active""".format(
                 self.param['name'])
 
-        rows = self.mdb.select('law_config',condition, verbose=True)
+        rows = self.mdb.select('law_config',condition)
         self.laws = {}
         if len(rows['id'])>0:
             for i,id in enumerate(rows['id']) :
@@ -338,5 +340,4 @@ class GraphBCObs(QWidget):
             self.graph_obj.init_graph_obs(data,self.dico_obs[type])
         else:
             self.graph_obj.initCurv()
-
 
