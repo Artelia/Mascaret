@@ -42,6 +42,10 @@ class GraphHydroLaw(GraphCommon):
         self.init_ui()
 
     def init_ui(self):
+        """
+        initialize GUI
+        :return:
+        """
         self.axes = self.fig.add_subplot(111)
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
         self.fig.canvas.mpl_connect('draw_event', self.draw_event)
@@ -49,19 +53,31 @@ class GraphHydroLaw(GraphCommon):
         self.axes.grid(True)
 
     def draw_event(self, event):
+        """
+        draw event
+        :param event:
+        :return:
+        """
         new_xlim = self.axes.get_xlim()
-        if self.unit in ('date','datehhmm'):
-            if self.old_xlim == new_xlim :
+        if self.unit in ('date', 'datehhmm'):
+            if self.old_xlim == new_xlim:
                 return
             self.old_xlim = new_xlim
             xmin, xmax = new_xlim
-            if (xmax - xmin) < 2 :
-                self.maj_lbl_x("time",'datehhmm')
+            if (xmax - xmin) < 2:
+                self.maj_lbl_x("time", 'datehhmm')
             else:
                 self.maj_lbl_x("time", 'date')
             self.canvas.draw()
 
     def initCurv(self, typ_law=None, param_law=None, date_ref=None):
+        """
+        initialize curve
+        :param typ_law: law type
+        :param param_law: parameters law
+        :param date_ref: reference date
+        :return:
+        """
         self.axes.cla()
         self.axes.tick_params(axis='both', labelsize=7.)
         self.axes.grid(True)
@@ -77,28 +93,37 @@ class GraphHydroLaw(GraphCommon):
                     {"id": var, "name": param_law['var'][var]['name']})
                 self.courbe_laws, = self.axes.plot([], [], zorder=100 - v,
                                                    label=param_law['var'][var][
-                                                      'name'])
+                                                       'name'])
                 self.courbes.append(self.courbe_laws)
-
 
             self.init_legende()
             if date_ref:
                 self.maj_lbl_x("time", "date")
             else:
-                self.maj_lbl_x(param_law['graph']['x']['tit'], param_law['graph']['x']['unit'])
-            self.maj_lbl_y(param_law['graph']['y']['tit'], param_law['graph']['y']['unit'])
+                self.maj_lbl_x(param_law['graph']['x']['tit'],
+                               param_law['graph']['x']['unit'])
+            self.maj_lbl_y(param_law['graph']['y']['tit'],
+                           param_law['graph']['y']['unit'])
 
         self.maj_limites()
         self.canvas.draw()
 
     def initGraph(self, id_law, date_ref=None, all_vis=False):
+        """
+        update law curve
+        :param id_law: id law
+        :param date_ref: reference date
+        :param all_vis:  bool display all curve
+        :return:
+        """
         leglines = self.leg.get_lines()
 
         sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(
             self.mdb.SCHEMA, id_law, self.axeX)
         rows = self.mdb.run_query(sql, fetch=True)
         if date_ref:
-            lst_x = [mdates.date2num(date_ref + timedelta(seconds=r[0])) for r in rows]
+            lst_x = [mdates.date2num(date_ref + timedelta(seconds=r[0])) for r
+                     in rows]
         else:
             lst_x = [r[0] for r in rows]
 
@@ -119,8 +144,14 @@ class GraphHydroLaw(GraphCommon):
 
         self.maj_limites()
 
-
     def initCurvWeirZam(self, param_law=None, id_law=None, var_x=0):
+        """
+
+        :param param_law: dict() parameter law
+        :param id_law: id law
+        :param var_x: varaible abscissa
+        :return:
+        """
         self.axes.cla()
         self.axes.tick_params(axis='both', labelsize=7.)
         self.axes.grid(True)
@@ -138,9 +169,11 @@ class GraphHydroLaw(GraphCommon):
             self.list_z = [r[0] for r in rows]
 
             for idx, z in enumerate(self.list_z):
-                name = "{0} {1} ({2})".format(param_law['var'][self.axeZ]['leg'], idx + 1, round(z, 2))
+                name = "{0} {1} ({2})".format(
+                    param_law['var'][self.axeZ]['leg'], idx + 1, round(z, 2))
                 self.list_var.append({"id": idx, "name": name})
-                self.courbe_laws, = self.axes.plot([], [], zorder=100 - idx, label=name)
+                self.courbe_laws, = self.axes.plot([], [], zorder=100 - idx,
+                                                   label=name)
                 self.courbes.append(self.courbe_laws)
 
             self.init_legende()
@@ -149,11 +182,18 @@ class GraphHydroLaw(GraphCommon):
                 self.maj_lbl_x('Q', 'm3/s')
             elif self.axeX == 1:
                 self.maj_lbl_x('Zdown', 'm')
-            self.maj_lbl_y(param_law['graph']['y']['tit'], param_law['graph']['y']['unit'])
+            self.maj_lbl_y(param_law['graph']['y']['tit'],
+                           param_law['graph']['y']['unit'])
 
         self.canvas.draw()
 
     def initGraphWeirZam(self, id_law, all_vis=False):
+        """
+          update weir law curve
+        :param id_law: id law
+        :param all_vis:  bool display all curve
+        :return:
+        """
         leglines = self.leg.get_lines()
 
         lst_x_ref = None
@@ -161,13 +201,15 @@ class GraphHydroLaw(GraphCommon):
         for idx, z in enumerate(self.list_z):
             sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} AND id_var = {2} AND id_order IN " \
                   "(SELECT id_order FROM {0}.law_values WHERE id_law = {1} AND id_var = {3} AND value = {4}) " \
-                  "ORDER BY id_order".format(self.mdb.SCHEMA, id_law, self.axeX, self.axeZ, z)
+                  "ORDER BY id_order".format(self.mdb.SCHEMA, id_law, self.axeX,
+                                             self.axeZ, z)
             rows = self.mdb.run_query(sql, fetch=True)
             lst_x = [r[0] for r in rows]
 
             sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} AND id_var = 2 AND id_order IN " \
                   "(SELECT id_order FROM {0}.law_values WHERE id_law = {1} AND id_var = {3} AND value = {4}) " \
-                  "ORDER BY id_order".format(self.mdb.SCHEMA, id_law, self.axeX, self.axeZ, z)
+                  "ORDER BY id_order".format(self.mdb.SCHEMA, id_law, self.axeX,
+                                             self.axeZ, z)
             rows = self.mdb.run_query(sql, fetch=True)
             lst_y = [r[0] for r in rows]
 
@@ -185,11 +227,19 @@ class GraphHydroLaw(GraphCommon):
 
         self.maj_limites()
 
-    def init_graph_obs(self, data,param_law, all_vis=False):
+    def init_graph_obs(self, data, param_law, all_vis=False):
+        """
+         update observation curve
+        :param data: dict() data
+        :param param_law: dict() law parameters
+        :param all_vis: bool display all curve
+        :return:
+        """
         leglines = self.leg.get_lines()
 
         for v, var in enumerate(self.list_var):
-            self.courbes[v].set_data([mdates.date2num(date_) for date_ in data["date"]], data['val'])
+            self.courbes[v].set_data(
+                [mdates.date2num(date_) for date_ in data["date"]], data['val'])
 
             if all_vis:
                 self.courbes[v].set_visible(True)
@@ -204,6 +254,12 @@ class GraphHydroLaw(GraphCommon):
         self.canvas.draw()
 
     def maj_lbl_x(self, var, unit):
+        """
+        Update x label
+        :param var: variable
+        :param unit:  unit
+        :return:
+        """
         self.unit = unit
         if unit in ("date", "datehhmm"):
             self.axes.set_xlabel("date")
@@ -213,21 +269,23 @@ class GraphHydroLaw(GraphCommon):
             else:
                 self.axes.set_xlabel("{}".format(var))
 
-        if unit == "date" :
+        if unit == "date":
             self.axes.xaxis.set_major_formatter(
                 mdates.DateFormatter('%d-%m-%Y'))
-        elif unit == "datehhmm" :
-                self.axes.xaxis.set_major_formatter(
-                    mdates.DateFormatter('%d-%m-%Y %H:%M'))
+        elif unit == "datehhmm":
+            self.axes.xaxis.set_major_formatter(
+                mdates.DateFormatter('%d-%m-%Y %H:%M'))
         else:
             self.axes.xaxis.set_major_formatter(ticker.ScalarFormatter())
 
     def maj_lbl_y(self, var, unit):
+        """
+        Update y label
+        :param var: variable
+        :param unit:  unit
+        :return:
+        """
         if unit:
             self.axes.set_ylabel("{} ({})".format(var, unit))
         else:
             self.axes.set_ylabel("{}".format(var))
-
-    def ch_lbl_x(self):
-
-        pass

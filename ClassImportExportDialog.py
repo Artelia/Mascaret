@@ -192,7 +192,7 @@ class ClassDlgExport(QDialog):
         if tup:
             selection, file, plug_ver = tup
         else:
-            print('no transmitted variable')
+            self.mgis.add_info('no transmitted variable')
             return
         self.mdb.export_model(selection, file, plug_ver)
         return
@@ -398,26 +398,25 @@ class ClassDlgImport(QDialog):
         """
         strlst = []
         wow = []
-        newver= [ c for c in ver]
+        newver = [c for c in ver]
         newver.reverse()
-        cpt=1
+        cpt = 1
         for i, val in enumerate(newver):
             wow.append(val)
-            if cpt==2:
-                cpt=1
+            if cpt == 2:
+                cpt = 1
                 wow.reverse()
                 wow = int(''.join(wow))
                 strlst.append(wow)
                 wow = []
             else:
-                cpt +=1
+                cpt += 1
         if wow != []:
             wow.reverse()
             wow = int(''.join(wow))
             strlst.append(wow)
         strlst.reverse()
         return strlst
-
 
     def compa_ver(self, vdb, vmeta):
         """

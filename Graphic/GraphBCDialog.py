@@ -28,7 +28,6 @@ from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
-from .GraphBC import GraphBC
 from .GraphHydro import GraphHydroLaw
 
 from ..HydroLawsDialog import dico_typ_law
@@ -41,11 +40,14 @@ class GraphBCDialog(QDialog):
         self.mdb = self.mgis.mdb
         self.param = param
         self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_visu_law.ui'),self)
+            os.path.join(self.mgis.masplugPath, 'ui/ui_visu_law.ui'), self)
         self.init_gui()
 
-
     def init_gui(self):
+        """
+        initialize GUI
+        :return:
+        """
 
         self.wdgt_law = GraphBCLaw(self.mgis, self.param)
         id_law = self.tabWidget.addTab(self.wdgt_law, 'Laws')
@@ -59,9 +61,10 @@ class GraphBCDialog(QDialog):
             self.tabWidget.setTabEnabled(id_law, False)
             self.tabWidget.setTabOrder(self.wdgt_obs, self.wdgt_law)
 
-        if str(self.param['method']) in ('NULL', '') :
+        if str(self.param['method']) in ('NULL', ''):
             self.tabWidget.setTabEnabled(id_obs, False)
             self.tabWidget.setTabOrder(self.wdgt_law, self.wdgt_obs)
+
 
 class GraphBCLaw(QWidget):
     def __init__(self, mgis, param):
@@ -70,11 +73,11 @@ class GraphBCLaw(QWidget):
         self.mdb = self.mgis.mdb
         self.param = param
         self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_wdget_bc.ui'),self)
+            os.path.join(self.mgis.masplugPath, 'ui/ui_wdget_bc.ui'), self)
         self.initialising = True
         self.events = {}
         self.laws = {}
-        self.cur_event =  None
+        self.cur_event = None
         self.cur_law = None
         self.bg_abs = QButtonGroup()
         self.bg_abs.addButton(self.rb_abs_q, 0)
@@ -91,18 +94,16 @@ class GraphBCLaw(QWidget):
         self.cb_event.currentIndexChanged.connect(self.event_changed)
         self.cb_law.currentIndexChanged.connect(self.law_changed)
 
-
-
     def init_event_changed(self):
         """
         Initialize combobox on events
         :return:
         """
         self.cur_event = None
-        list_event = self.mdb.select('events',where ='run',order='starttime')
+        list_event = self.mdb.select('events', where='run', order='starttime')
         self.events = {}
         self.cb_event.clear()
-        if len(list_event['name']) >0 :
+        if len(list_event['name']) > 0:
             for id, name in enumerate(list_event['name']):
                 condition = """geom_obj='{0}'
                                             AND starttime <= '{1:%Y-%m-%d %H:%M}'
@@ -114,14 +115,13 @@ class GraphBCLaw(QWidget):
                 rows = self.mdb.select('law_config', condition)
                 if len(rows['id']) > 0:
                     self.cb_event.addItem(name, name)
-                    self.events[name] = {'starttime': list_event['starttime'][id],
-                                      'endtime': list_event['endtime'][id],}
+                    self.events[name] = {
+                        'starttime': list_event['starttime'][id],
+                        'endtime': list_event['endtime'][id], }
         self.cb_event.addItem('only law', None)
-        self.cur_event =  self.cb_event.currentData()
+        self.cur_event = self.cb_event.currentData()
 
         self.update_law_change()
-
-
 
     def update_law_change(self):
         """
@@ -129,30 +129,32 @@ class GraphBCLaw(QWidget):
         :return:
         """
         self.cb_law.clear()
-        if self.cur_event != None  :
+        if self.cur_event != None:
             condition = """geom_obj='{0}'
                             AND starttime <= '{1:%Y-%m-%d %H:%M}'
                             AND endtime >= '{2:%Y-%m-%d %H:%M}'
                             AND active""".format(self.param['name'],
-                                       self.events[self.cur_event]['starttime'],
-                                       self.events[self.cur_event]['endtime'])
+                                                 self.events[self.cur_event][
+                                                     'starttime'],
+                                                 self.events[self.cur_event][
+                                                                             'endtime'])
         else:
-            #condition = """geom_obj='{0}' AND active""".format(self.param['name'])
+            # condition = """geom_obj='{0}' AND active""".format(self.param['name'])
             condition = """geom_obj='{0}' AND active""".format(
                 self.param['name'])
 
-        rows = self.mdb.select('law_config',condition)
+        rows = self.mdb.select('law_config', condition)
         self.laws = {}
-        if len(rows['id'])>0:
-            for i,id in enumerate(rows['id']) :
+        if len(rows['id']) > 0:
+            for i, id in enumerate(rows['id']):
                 self.cb_law.addItem(rows['name'][i], id)
-                self.laws[id] = { 'starttime': rows['starttime'][i],
-                                  'endtime': rows['endtime'][i],
-                                  'type': rows['id_law_type'][i],
-                                  'name' : rows['name'][i],
-                                  'active': rows['active'][i]
-                }
-            self.cur_law =  self.cb_law.currentData()
+                self.laws[id] = {'starttime': rows['starttime'][i],
+                                 'endtime': rows['endtime'][i],
+                                 'type': rows['id_law_type'][i],
+                                 'name': rows['name'][i],
+                                 'active': rows['active'][i]
+                                 }
+            self.cur_law = self.cb_law.currentData()
 
 
         else:
@@ -160,12 +162,19 @@ class GraphBCLaw(QWidget):
 
         self.update_data()
 
-    def event_changed(self) :
+    def event_changed(self):
+        """
+        change event combobox
+        :return:
+        """
         self.cur_event = self.cb_event.currentData()
         self.update_law_change()
 
-
-    def law_changed(self) :
+    def law_changed(self):
+        """
+        change law in combobox
+        :return:
+        """
         self.cur_law = self.cb_law.currentData()
         self.update_data()
 
@@ -174,14 +183,14 @@ class GraphBCLaw(QWidget):
         display graph
         :return:
         """
-        if self.cur_law != None and self.cur_law in self.laws.keys() :
+        if self.cur_law != None and self.cur_law in self.laws.keys():
             id_law = self.cur_law
             typ_law = self.laws[id_law]['type']
             param_law = dico_typ_law[typ_law]
             if typ_law != 6:
                 date_ref = None
                 if param_law['xIsTime']:
-                    if self.cur_event != None :
+                    if self.cur_event != None:
                         date_ref = self.laws[id_law]['starttime']
 
                 self.graph_obj.initCurv(typ_law, param_law, date_ref)
@@ -211,7 +220,7 @@ class GraphBCObs(QWidget):
         self.mdb = self.mgis.mdb
         self.param = param
         self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_wdget_bc.ui'),self)
+            os.path.join(self.mgis.masplugPath, 'ui/ui_wdget_bc.ui'), self)
         self.initialising = True
         self.events = {}
         self.cur_event = None
@@ -222,30 +231,29 @@ class GraphBCObs(QWidget):
 
         self.dico_obs = {
             'H': {'name': 'Limnigraph Z(t)',
-                     'var': [{'name': 'time', 'code': 'time'},
-                             {'name': 'level', 'code': 'z'}],
-                     'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
-                               'y': {'var': [1], 'tit': 'Z', 'unit': 'm'}},
-                     'xIsTime': True},
+                  'var': [{'name': 'time', 'code': 'time'},
+                          {'name': 'level', 'code': 'z'}],
+                  'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
+                            'y': {'var': [1], 'tit': 'Z', 'unit': 'm'}},
+                  'xIsTime': True},
             'Q': {'name': 'Hydrograph Q(t)',
-                     'var': [{'name': 'time', 'code': 'time'},
-                             {'name': 'flowrate', 'code': 'flowrate'}],
-                     'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
-                               'y': {'var': [1], 'tit': 'Q', 'unit': 'm3/s'}},
-                     'xIsTime': True}, }
+                  'var': [{'name': 'time', 'code': 'time'},
+                          {'name': 'flowrate', 'code': 'flowrate'}],
+                  'graph': {'x': {'var': 0, 'tit': 'time', 'unit': 's'},
+                            'y': {'var': [1], 'tit': 'Q', 'unit': 'm3/s'}},
+                  'xIsTime': True}, }
 
         self.graph_obj = GraphHydroLaw(self.mgis, self.lay_graph_home)
-        if str(self.param['method']) not in ('NULL', '') :
+        if str(self.param['method']) not in ('NULL', ''):
             self.init_event_changed()
             self.cb_event.currentIndexChanged.connect(self.event_changed)
-
 
     def init_event_changed(self):
         """
         Initialize combobox on events
         :return:
         """
-        self.cur_event =  None
+        self.cur_event = None
         list_event = self.mdb.select('events', where='run', order='starttime')
         self.events = {}
         self.cb_event.clear()
@@ -263,12 +271,19 @@ class GraphBCObs(QWidget):
 
         self.update_data()
 
-
     def event_changed(self):
+        """
+        change event combobox
+        :return:
+        """
         self.cur_event = self.cb_event.currentData()
         self.update_data()
 
     def update_data(self):
+        """
+        update data
+        :return:
+        """
 
         # pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
         pattern = re.compile('(\w+)\\[t([+-][0-9]+)?\\]')
@@ -280,13 +295,13 @@ class GraphBCObs(QWidget):
         elif self.param['type'] == 2:
             type = 'H'
         else:
-            type= None
+            type = None
 
         self.graph_obj.initCurv(typ_law=type,
                                 param_law=self.dico_obs[type],
                                 date_ref=True)
 
-        if type :
+        if type:
             liste_stations = pattern.findall(self.param['method'])
 
             for cd_hydro, delta in liste_stations:
@@ -301,22 +316,25 @@ class GraphBCObs(QWidget):
                                 AND date <= '{3:%Y-%m-%d %H:%M}'
                                 """.format(cd_hydro,
                                            type,
-                                           self.events[self.cur_event]['starttime'] + dt,
-                                           self.events[self.cur_event]['endtime'] + dt)
+                                           self.events[self.cur_event][
+                                                                               'starttime'] + dt,
+                                           self.events[self.cur_event][
+                                                                               'endtime'] + dt)
                 else:
                     condition = """code ='{0}'
-                                  AND type = '{1}'""".format(cd_hydro,type)
+                                  AND type = '{1}'""".format(cd_hydro, type)
 
                 obs[cd_hydro] = self.mdb.select('observations',
                                                 condition,
                                                 'code, date',
-                                                list_var=['id', 'valeur','date'])
+                                                list_var=['id', 'valeur',
+                                                          'date'])
 
                 if not liste_date:
                     liste_date = [x - dt for x in obs[cd_hydro]['date']]
-            resultat =  None
-            data = {'date' : [],
-                    'val' : []}
+            resultat = None
+            data = {'date': [],
+                    'val': []}
             for t in liste_date:
                 calc = self.param['method']
                 for cd_hydro, delta in liste_stations:
@@ -337,7 +355,6 @@ class GraphBCObs(QWidget):
 
                 data['date'].append(t)
                 data['val'].append(resultat)
-            self.graph_obj.init_graph_obs(data,self.dico_obs[type])
+            self.graph_obj.init_graph_obs(data, self.dico_obs[type])
         else:
             self.graph_obj.initCurv()
-

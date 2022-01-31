@@ -460,7 +460,7 @@ class MascPlugDialog(QMainWindow):
                 self.chkt.update_adim()
             except Exception as e:
                 self.add_info("********* Echec of update table ***********")
-                print(e)
+                self.add_info('Error : ', e)
 
             self.mdb.load_model()
             crs = QgsCoordinateReferenceSystem(

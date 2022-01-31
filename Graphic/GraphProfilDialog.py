@@ -36,7 +36,7 @@ from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
 
-from .GraphCommon import GraphCommon,DraggableLegend
+from .GraphCommon import GraphCommon, DraggableLegend
 from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
 from ..Structure.ClassPolygone import ClassPolygone
 from .GraphProfilResultDialog import GraphProfilResultDialog
@@ -160,21 +160,24 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 else:
                     self.mgis.add_info('no active branch')
 
-            if flag_hydro and couche in('weirs', 'extremities',
-                                        'lateral_inflows','lateral_weirs'):
+            if flag_hydro and couche in ('weirs', 'extremities',
+                                         'lateral_inflows', 'lateral_weirs'):
                 feature = results[0].mFeature
                 param = {'name': None,
-                    'couche': couche,
-                    'method' : None,
-                    'type' : None,
-                    'active': None,
-                    'firstvalue' : None}
+                         'couche': couche,
+                         'method': None,
+                         'type': None,
+                         'active': None,
+                         'firstvalue': None}
                 cond = True
                 if 'extremities' == couche:
                     for var in ['name', 'method', 'active', 'firstvalue',
                                 'type']:
                         id = feature.fieldNameIndex(var)
                         param[var] = feature.attributes()[id]
+
+                    if param['type'] in [10]:
+                        cond = False
 
                 elif 'weirs' == couche:
                     weirs_tolaw = {1: 6, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
@@ -202,9 +205,9 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     else:
                         cond = False
 
-                if cond  and param['name']:
+                if cond and param['name']:
                     graph_law = GraphBCDialog(self.mgis, param)
-                    #graph_law.show()
+                    # graph_law.show()
                     graph_law.exec_()
             if flag_casier_r and couche in ('basins', 'links'):
                 feature = results[0].mFeature
@@ -870,7 +873,7 @@ class GraphProfil(GraphCommon):
 
             self.maj_graph()
         elif not zone_selector and bouton == 1:
-            if  legline in self.lined.keys():
+            if legline in self.lined.keys():
                 courbe = self.lined[legline]
                 # efface en cliquand sur la legende
                 vis = not courbe.get_visible()
