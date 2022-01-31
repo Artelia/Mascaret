@@ -125,7 +125,7 @@ class ClassProfInterp:
             else:
                 if self.debug:
                     self.msg += "{}  doesn't existe\n".format(cas_prt[id_pr])
-                if not id_pr in self.prf_loc.keys():
+                if id_pr not in self.prf_loc.keys():
                     self.prf_loc[id_pr] = {'prof': []}
                 self.prf_loc[id_pr]['prof'].append(None)
                 return 'continue'

@@ -224,6 +224,7 @@ class ClassResProfil:
         :param id_g : id_am_g id point left
         :param id_d : id_am_d id point right
         :param pr : profile
+        :param x_fond : x bottom
         :param zmin : bottom point of the profile
         :param zmax : max level of the profile
 
@@ -405,7 +406,7 @@ class ClassResProfil:
                                 point_bas[pk][id_type] = dico['pt_bas']
 
                     except Exception as err:
-                        if self.debug :
+                        if self.debug:
                             print('Warning Plani', err)
             if self.mdb:
                 if point_bas:

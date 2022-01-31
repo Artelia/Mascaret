@@ -147,7 +147,7 @@ class GraphResultDialog(QWidget):
                           "init": self.lst_comp_wgt[
                               -1].ctrl_date_init.dateTime()}
 
-        if not 'graph' in param_init.keys() and idx > 0:
+        if 'graph' not in param_init.keys() and idx > 0:
             QMessageBox.warning(None, 'Error',
                                 'Last chart is empty.')
             return

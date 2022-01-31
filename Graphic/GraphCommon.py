@@ -344,7 +344,8 @@ class GraphCommonNew:
 
         absc = event.xdata
         if self.unit_x == 'date':
-            cur_x = datetime.utcfromtimestamp(round((absc - 719163) * 24) * 3600)
+            cur_x = datetime.utcfromtimestamp(
+                round((absc - 719163) * 24) * 3600)
             txt_x = cur_x
         else:
             cur_x = absc
@@ -368,7 +369,8 @@ class GraphCommonNew:
                         val_t = min(d[d["x_var"]], key=lambda x: abs(x - cur_x))
                         idx_d = d[d["x_var"]].index(val_t)
                         val = d[var][idx_d]
-                        annot.set_text("{} {}".format(round(val, 3), d["y_unit"]))
+                        annot.set_text(
+                            "{} {}".format(round(val, 3), d["y_unit"]))
                         annot.xy = (absc, val)
                         annot.set_visible(True)
                     else:
@@ -380,7 +382,6 @@ class GraphCommonNew:
         self.v_line.set_xdata(absc)
         self.v_line.set_visible(True)
         self.canvas.draw()
-
 
     def init_legende(self, handles=None):
         all_handles, all_noms, all_curves = list(), list(), list()
@@ -424,7 +425,8 @@ class GraphCommonNew:
         self.main_axe.set_xlabel("time ({})".format(unit))
         if self.unit == 'date':
             self.unit_x = 'date'
-            self.main_axe.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+            self.main_axe.xaxis.set_major_formatter(
+                mdates.DateFormatter('%d-%m-%Y'))
         else:
             self.unit_x = 'num'
             self.main_axe.xaxis.set_major_formatter(ticker.ScalarFormatter())

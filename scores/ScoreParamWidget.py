@@ -681,8 +681,8 @@ class ScoreParamWidget(QWidget):
                         self.add_res_dict('volume', id_run, pk, code)
                         self.res['volume'][id_run][pk][code]['Q'] = {
                             'vol_err': vol_err(q_obs, q_pred,
-                                                             lst_time_pred,
-                                                             lst_time_obs)}
+                                               lst_time_pred,
+                                               lst_time_obs)}
                         self.type_res['volume'] = True
                         out = True
 
@@ -707,10 +707,10 @@ class ScoreParamWidget(QWidget):
                     self.add_res_dict('quantil', id_run, pk, code)
                     self.res['quantil'][id_run][pk][code]['H'] = \
                         {'dist_err': dist_err(y_obs, y_pred,
-                                                            dist_step),
+                                              dist_step),
                          'dist_abs_err': dist_abs_err(y_obs,
-                                                                    y_pred,
-                                                                    dist_step)}
+                                                      y_pred,
+                                                      dist_step)}
                     self.type_res['quantil'] = True
                     out = True
                 if self.cmpt_var[id_run][pk][code]['Q']:
@@ -719,10 +719,10 @@ class ScoreParamWidget(QWidget):
                     self.add_res_dict('quantil', id_run, pk, code)
                     self.res['quantil'][id_run][pk][code]['Q'] = \
                         {'dist_err': dist_err(y_obs, y_pred,
-                                                            dist_step),
+                                              dist_step),
                          'dist_abs_err': dist_abs_err(y_obs,
-                                                                    y_pred,
-                                                                    dist_step)}
+                                                      y_pred,
+                                                      dist_step)}
                     self.type_res['quantil'] = True
                     out = True
 
@@ -792,8 +792,8 @@ class ScoreParamWidget(QWidget):
                         {
                             'per_err':
                                 persistence(new_obs, new_pred,
-                                                          new_obs_times,
-                                                          deltat),
+                                            new_obs_times,
+                                            deltat),
                         }
                     self.type_res['persistence'] = True
                     out = True
@@ -820,8 +820,8 @@ class ScoreParamWidget(QWidget):
                         {
                             'per_err':
                                 persistence(new_obs, new_pred,
-                                                          new_obs_times,
-                                                          deltat),
+                                            new_obs_times,
+                                            deltat),
                         }
                     self.type_res['persistence'] = True
                     out = True
@@ -889,9 +889,9 @@ class ScoreParamWidget(QWidget):
                                 err_point(new_obs, new_pred),
                             'pts_time_err':
                                 err_temps_point(new_obs, new_pred,
-                                                              new_obs_times,
-                                                              new_pred_times,
-                                                              alphah)
+                                                new_obs_times,
+                                                new_pred_times,
+                                                alphah)
                         }
                     self.type_res['tips_err'] = True
                     out = True
@@ -917,9 +917,9 @@ class ScoreParamWidget(QWidget):
                             err_point(new_obs, new_pred),
                         'pts_time_err':
                             err_temps_point(new_obs, new_pred,
-                                                          new_obs_times,
-                                                          new_pred_times,
-                                                          alphaq)
+                                            new_obs_times,
+                                            new_pred_times,
+                                            alphaq)
                     }
                     self.type_res['tips_err'] = True
                     out = True

@@ -70,7 +70,7 @@ class GraphHydroLaw(GraphCommon):
                 self.maj_lbl_x("time", 'date')
             self.canvas.draw()
 
-    def initCurv(self, typ_law=None, param_law=None, date_ref=None):
+    def init_curv(self, typ_law=None, param_law=None, date_ref=None):
         """
         initialize curve
         :param typ_law: law type
@@ -108,7 +108,7 @@ class GraphHydroLaw(GraphCommon):
         self.maj_limites()
         self.canvas.draw()
 
-    def initGraph(self, id_law, date_ref=None, all_vis=False):
+    def init_graph(self, id_law, date_ref=None, all_vis=False):
         """
         update law curve
         :param id_law: id law
@@ -144,7 +144,7 @@ class GraphHydroLaw(GraphCommon):
 
         self.maj_limites()
 
-    def initCurvWeirZam(self, param_law=None, id_law=None, var_x=0):
+    def init_curv_weir_zam(self, param_law=None, id_law=None, var_x=0):
         """
 
         :param param_law: dict() parameter law
@@ -187,7 +187,7 @@ class GraphHydroLaw(GraphCommon):
 
         self.canvas.draw()
 
-    def initGraphWeirZam(self, id_law, all_vis=False):
+    def init_graph_weir_zam(self, id_law, all_vis=False):
         """
           update weir law curve
         :param id_law: id law

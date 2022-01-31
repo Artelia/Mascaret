@@ -959,7 +959,7 @@ $BODY$
         cols = [col[0] for col in namCol]
         results = [col[0] for col in results]
         if not results:
-            return  None
+            return None
         dico = {}
         # self.mgis.add_info("{0} {1}".format(results[0],cols))
 

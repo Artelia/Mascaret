@@ -193,16 +193,16 @@ class GraphBCLaw(QWidget):
                     if self.cur_event != None:
                         date_ref = self.laws[id_law]['starttime']
 
-                self.graph_obj.initCurv(typ_law, param_law, date_ref)
-                self.graph_obj.initGraph(id_law, date_ref)
+                self.graph_obj.init_curv(typ_law, param_law, date_ref)
+                self.graph_obj.init_graph(id_law, date_ref)
                 self.fram_absweirs.hide()
             else:
                 self.fram_absweirs.show()
-                self.graph_obj.initCurvWeirZam(param_law, id_law,
-                                               var_x=self.bg_abs.checkedId())
-                self.graph_obj.initGraphWeirZam(id_law)
+                self.graph_obj.init_curv_weir_zam(param_law, id_law,
+                                                  var_x=self.bg_abs.checkedId())
+                self.graph_obj.init_graph_weir_zam(id_law)
         else:
-            self.graph_obj.initCurv()
+            self.graph_obj.init_curv()
 
     def chg_abs_weir_zam(self, v):
         """
@@ -297,9 +297,9 @@ class GraphBCObs(QWidget):
         else:
             type = None
 
-        self.graph_obj.initCurv(typ_law=type,
-                                param_law=self.dico_obs[type],
-                                date_ref=True)
+        self.graph_obj.init_curv(typ_law=type,
+                                 param_law=self.dico_obs[type],
+                                 date_ref=True)
 
         if type:
             liste_stations = pattern.findall(self.param['method'])
@@ -357,4 +357,4 @@ class GraphBCObs(QWidget):
                 data['val'].append(resultat)
             self.graph_obj.init_graph_obs(data, self.dico_obs[type])
         else:
-            self.graph_obj.initCurv()
+            self.graph_obj.init_curv()

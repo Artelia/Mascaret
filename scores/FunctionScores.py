@@ -367,6 +367,5 @@ def biais(y_obs, y_pred, seuil=None):
     return mean_r_err(y_obs, y_pred, seuil) * 100
 
 
-
 if __name__ == '__main__':
     pass

@@ -302,13 +302,13 @@ class ClassHydroLawsDialog(QDialog):
                     if graph_opt == 'date':
                         date_ref = itm.data(1, 32)
 
-                self.graph_home.initCurv(typ_law, param_law, date_ref)
-                self.graph_home.initGraph(id_law, date_ref)
+                self.graph_home.init_curv(typ_law, param_law, date_ref)
+                self.graph_home.init_graph(id_law, date_ref)
             else:
-                self.graph_home.initCurvWeirZam(param_law, id_law, graph_opt)
-                self.graph_home.initGraphWeirZam(id_law)
+                self.graph_home.init_curv_weir_zam(param_law, id_law, graph_opt)
+                self.graph_home.init_graph_weir_zam(id_law)
         else:
-            self.graph_home.initCurv()
+            self.graph_home.init_curv()
 
     def new_law(self):
         """ create new law button"""
@@ -405,14 +405,14 @@ class ClassHydroLawsDialog(QDialog):
                 5] else self.txt_comm.setText('')
 
         if self.cur_typ != 6:
-            self.graph_edit.initCurv(self.cur_typ, self.param_law)
-            self.graph_edit.initGraph(self.cur_law)
+            self.graph_edit.init_curv(self.cur_typ, self.param_law)
+            self.graph_edit.init_graph(self.cur_law)
             self.fill_tab_laws()
             self.frm_btn_classic.show()
             self.frm_btn_weirzam.hide()
         else:
-            self.graph_edit.initCurvWeirZam(self.param_law, self.cur_law)
-            self.graph_edit.initGraphWeirZam(self.cur_law)
+            self.graph_edit.init_curv_weir_zam(self.param_law, self.cur_law)
+            self.graph_edit.init_graph_weir_zam(self.cur_law)
             self.fill_tab_laws_weir_zam()
             self.frm_btn_classic.hide()
             self.frm_btn_weirzam.show()
@@ -1468,7 +1468,7 @@ class ClassHydroLawsDialog(QDialog):
 
         self.fill_tree_laws(self.cur_law)
         self.ui.laws_pages.setCurrentIndex(0)
-        self.graph_edit.initCurv()
+        self.graph_edit.init_curv()
         self.tree_laws.setFocus()
 
     def reject_page2(self):
@@ -1479,7 +1479,7 @@ class ClassHydroLawsDialog(QDialog):
         if self.mgis.DEBUG:
             self.mgis.add_info("Cancel of Hydro Law Setting")
         self.ui.laws_pages.setCurrentIndex(0)
-        self.graph_edit.initCurv()
+        self.graph_edit.init_curv()
         self.tree_laws.setFocus()
 
     def copier(self):
