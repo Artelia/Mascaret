@@ -52,7 +52,6 @@ from .HydroLawsDialog import ClassHydroLawsDialog
 
 from .Graphic.GraphBCDialog import GraphBCDialog
 
-
 from qgis.PyQt.QtWidgets import *
 
 
@@ -237,7 +236,7 @@ class MascPlugDialog(QMainWindow):
         # scores
         self.ui.actionScores.triggered.connect(self.fct_scores)
 
-        #Laws
+        # Laws
         self.ui.actionHydro_Laws.triggered.connect(self.fct_hydro_laws)
 
         # TODO Finaliser
@@ -248,8 +247,6 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionImport_Old_Model.triggered.connect(
             self.import_old_model_dgl)
         self.ui.menuUpate_table.menuAction().setVisible(False)
-
-
 
     def add_info(self, text):
         self.ui.textEdit.append(text)
@@ -1007,7 +1004,7 @@ Version : {}
     def fct_scores(self):
         dlg = ClassScoresDialog(self)
         dlg.exec_()
-        #dlg.show()
+        # dlg.show()
 
     def fct_hydro_laws(self):
         dlg = ClassHydroLawsDialog(self)
