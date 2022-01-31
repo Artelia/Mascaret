@@ -68,7 +68,8 @@ class GraphHydroLaw(GraphCommon):
                 self.maj_lbl_x("time", 'datehhmm')
             else:
                 self.maj_lbl_x("time", 'date')
-            self.canvas.draw()
+            if len(self.courbes)>0 :
+                self.canvas.draw()
 
     def init_curv(self, typ_law=None, param_law=None, date_ref=None):
         """
