@@ -49,13 +49,15 @@ class GraphBCDialog(QDialog):
         :return:
         """
 
+
+
+        self.wdgt_obs = GraphBCObs(self.mgis, self.param)
+        id_obs = self.tabWidget.addTab(self.wdgt_obs, 'Observations')
+
         self.wdgt_law = GraphBCLaw(self.mgis, self.param)
         id_law = self.tabWidget.addTab(self.wdgt_law, 'Laws')
         condition = """geom_obj='{0}' and active""".format(self.param['name'])
         rows = self.mdb.select('law_config', condition)
-
-        self.wdgt_obs = GraphBCObs(self.mgis, self.param)
-        id_obs = self.tabWidget.addTab(self.wdgt_obs, 'Observations')
 
         if len(rows['id']) == 0:
             self.tabWidget.setTabEnabled(id_law, False)

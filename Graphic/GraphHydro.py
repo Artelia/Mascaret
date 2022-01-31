@@ -58,17 +58,18 @@ class GraphHydroLaw(GraphCommon):
         :param event:
         :return:
         """
-        new_xlim = self.axes.get_xlim()
-        if self.unit in ('date', 'datehhmm'):
-            if self.old_xlim == new_xlim:
-                return
-            self.old_xlim = new_xlim
-            xmin, xmax = new_xlim
-            if (xmax - xmin) < 2:
-                self.maj_lbl_x("time", 'datehhmm')
-            else:
-                self.maj_lbl_x("time", 'date')
-            if len(self.courbes) > 0:
+        if len(self.courbes) > 0:
+
+            new_xlim = self.axes.get_xlim()
+            if self.unit in ('date', 'datehhmm'):
+                if self.old_xlim == new_xlim:
+                    return
+                self.old_xlim = new_xlim
+                xmin, xmax = new_xlim
+                if (xmax - xmin) < 2:
+                    self.maj_lbl_x("time", 'datehhmm')
+                else:
+                    self.maj_lbl_x("time", 'date')
                 self.canvas.draw()
 
     def init_curv(self, typ_law=None, param_law=None, date_ref=None):
