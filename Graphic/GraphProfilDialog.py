@@ -1182,8 +1182,8 @@ class GraphProfil(GraphCommon):
                         newta['x'].append(x + 1)
                         newta['z'].append(ta["z"][i])
                     else:
-                        newta['x'].append((ta["x"][i] + ta["x"][i + 1]) / 2.)
-                        newta['z'].append((ta["z"][i] + ta["z"][i + 1]) / 2.)
+                        newta['x'].append(self.fct1((ta["x"][i] + ta["x"][i + 1]) / 2.))
+                        newta['z'].append(self.fct1((ta["z"][i] + ta["z"][i + 1]) / 2.))
             ta['x'] = newta['x']
             ta['z'] = newta['z']
 
