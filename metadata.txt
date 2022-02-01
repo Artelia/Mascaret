@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=3.10
 qgisMaximumVersion=3.99
 
-version=4.0.5
+version=4.0.6
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,6 +30,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    4.0.6  : The possibility of line addition and deletion in profile editor menu
     4.0.5  : Correction of a bug on the database importation for postgres > v11
              Addition of visualisation law
     4.0.4  : Correction of a bug on the database importation when the check of postgres version
