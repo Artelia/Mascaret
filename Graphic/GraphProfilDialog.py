@@ -279,6 +279,9 @@ class GraphProfil(GraphCommon):
         self.ui.bt_ouvrage.clicked.connect(self.create_struct)
         self.ui.bt_interp.clicked.connect(self.bt_interpol_profile)
 
+        self.ui.bt_add_line.clicked.connect(self.add_line)
+        self.ui.bt_del_line.clicked.connect(self.del_line)
+
         self.ui.tab_aff.hide()
 
     def init_ui(self):
@@ -1132,6 +1135,59 @@ class GraphProfil(GraphCommon):
     def fct1(x):
         """around"""
         return round(float(x), 2)
+
+    def del_line(self):
+        """
+        delete line
+        :return:
+        """
+        if self.tableau.selectedIndexes():
+            rows = [idx.row() for idx in self.tableau.selectedIndexes() if
+                    idx.row() > 0]
+            rows = list(set(rows))
+            rows.sort(reverse=True)
+
+            ta = self.tab
+            newta = {'x': [], 'z': []}
+            for i, x in enumerate(ta["x"]):
+                if i not in rows:
+                    newta['x'].append(x)
+                    newta['z'].append(ta["z"][i])
+
+            ta['x'] = newta['x']
+            ta['z'] = newta['z']
+
+            self.maj_graph()
+
+    def add_line(self):
+
+        """
+        add line
+        :return:
+        """
+        if self.tableau.selectedIndexes():
+            rows = [idx.row() for idx in self.tableau.selectedIndexes() if
+                    idx.row() > 0]
+            rows = list(set(rows))
+            rows.sort(reverse=True)
+
+            ta = self.tab
+            newta = {'x': [], 'z': []}
+            lenta = len(ta["x"])
+            for i, x in enumerate(ta["x"]):
+                newta['x'].append(x)
+                newta['z'].append(ta["z"][i])
+                if i in rows:
+                    if i == lenta - 1:
+                        newta['x'].append(x + 1)
+                        newta['z'].append(ta["z"][i])
+                    else:
+                        newta['x'].append((ta["x"][i] + ta["x"][i + 1]) / 2.)
+                        newta['z'].append((ta["z"][i] + ta["z"][i + 1]) / 2.)
+            ta['x'] = newta['x']
+            ta['z'] = newta['z']
+
+            self.maj_graph()
 
     def ajout_points(self):
         """ add points"""
