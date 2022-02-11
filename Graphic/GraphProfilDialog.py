@@ -503,7 +503,6 @@ class GraphProfil(GraphCommon):
         requete = self.mdb.select("topo", condition, ordre)
         if not requete:
             return
-
         table = zip(requete['gid'],
                     requete['name'],
                     requete['x'],
@@ -579,7 +578,6 @@ class GraphProfil(GraphCommon):
             if isinstance(v, list):
                 self.liste[k][self.position] = " ".join([str(var) for var in v])
             else:
-
                 if k == 'rightminbed' and not v:
                     v = max(self.tab['x'])
                     self.tab['rightminbed'] = v
@@ -589,19 +587,24 @@ class GraphProfil(GraphCommon):
                     v = min(self.tab['x'])
                     self.tab['leftminbed'] = v
                     self.tab['zleftminbed'] = self.tab['z'][0]
-                if not self.tab['zrightminbed'] or self.tab['zleftminbed']:
-                    lstz_minor = []
-                    for x, z in zip(self.tab['x'], self.tab['z']):
-                        if self.tab['leftminbed'] <= x <= self.tab[
-                            'rightminbed']:
-                            lstz_minor.append(z)
 
-                if k == 'zrightminbed' and not v:
-                    self.tab['zrightminbed'] = lstz_minor[-1]
-
-                if k == 'zleftminbed' and not v:
-                    self.tab['zleftminbed'] = lstz_minor[0]
                 self.liste[k][self.position] = v
+
+        if not self.tab['zrightminbed'] or not self.tab['zleftminbed']:
+            lstz_minor = []
+            for x, z in zip(self.tab['x'], self.tab['z']):
+                if self.tab['leftminbed'] <= x \
+                        and x <= self.tab['rightminbed']:
+                    lstz_minor.append(z)
+
+            if not self.tab['zrightminbed']:
+                self.tab['zrightminbed'] = lstz_minor[-1]
+                self.liste['zrightminbed'][self.position] = lstz_minor[-1]
+
+            if not self.tab['zleftminbed']:
+                self.tab['zleftminbed'] = lstz_minor[0]
+                self.liste['zleftminbed'][self.position] = lstz_minor[0]
+
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
         tab = {self.nom: self.tab}
         self.mdb.update("profiles", tab, var="name")
