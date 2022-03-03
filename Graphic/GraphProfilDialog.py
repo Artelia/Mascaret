@@ -1285,6 +1285,9 @@ class GraphProfil(GraphCommon):
 
             pente, ord = np.polyfit(xx, zz, 1)
             zz.sort()
+            if len(zz) <= nb :
+                self.mgis.add_info("Warning: The filter works if there are a minimum of 5 points ")
+                return
             mediane = zz[nb]
 
             if abs((pente - derniere_pente) / derniere_pente) > seuil:
