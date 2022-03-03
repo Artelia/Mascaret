@@ -1494,7 +1494,11 @@ $BODY$
         """ get version postgres """
         sql = 'SHOW server_version_num;'
         results = self.run_query(sql, fetch=True)
-        return results[0][0]
+        if results :
+            return results[0][0]
+        else:
+            self.mgis.add_info("Check the connection of data base")
+            return  None
 
     def export_model(self, selection, file, plug_ver):
         """
