@@ -293,6 +293,8 @@ class GraphProfil(GraphCommon):
         self.x0 = None
         self.y0 = None
         self.flag = False
+        self.down_vis = False
+        self.up_vis = False
         self.image = None
         self.topoSelect = None
         self.order_topo = 0
@@ -329,10 +331,15 @@ class GraphProfil(GraphCommon):
                                          markeredgewidth=0, zorder=90,
                                          label='MNT')
         self.courbeTopo = []
-        for i in range(10):
+        for i in range(12):
             temp, = self.axes.plot([], [], color='green', marker='+', mew=2,
                                    zorder=95, label='Topo', picker=5)
             self.courbeTopo.append(temp)
+
+        self.courbedown,  = self.axes.plot([], [], color="purple", marker='+', mew=2,
+                               zorder=95, label='downstream', picker=5)
+        self.courbeup, = self.axes.plot([], [], color="brown", marker='+', mew=2,
+                                          zorder=95, label='upstream', picker=5)
 
         self.etiquetteTopo = []
         self.courbes = [self.courbeProfil, self.courbeMNT]
@@ -391,6 +398,7 @@ class GraphProfil(GraphCommon):
         """Point selection function"""
         if self.bt_select.isChecked():
             self.RS.set_active(True)
+            self.span.visible = False
             self.ui.bt_add_point.setEnabled(True)
             self.bt_select_z.setChecked(False)
             self.bt_translah.setChecked(False)
@@ -400,15 +408,20 @@ class GraphProfil(GraphCommon):
             self.ui.bt_add_point.setDisabled(True)
             self.RS.set_active(False)
 
+
     def zone_selector_toggled(self):
         """zone selection function"""
         if self.bt_select_z.isChecked():
             self.span.visible = True
+            self.span.active = True
             self.bt_select.setChecked(False)
+            self.RS.set_active(False)
             self.bt_translah.setChecked(False)
             self.bt_translav.setChecked(False)
         else:
             self.span.visible = False
+            self.span.active = False
+
 
     def deplace_h_toggled(self):
         """Translation function"""
@@ -1051,6 +1064,15 @@ class GraphProfil(GraphCommon):
         self.courbeMNT.set_data(self.mnt['x'], self.mnt['z'])
         self.courbes = [self.courbeProfil, self.courbeMNT]
 
+        if self.up_vis:
+            self.courbes.append(self.courbeup)
+        else:
+            self.courbeup.set_data([], [])
+        if self.down_vis:
+            self.courbes.append(self.courbedown)
+        else:
+            self.courbedown.set_data([], [])
+
         for c in self.courbeTopo:
             c.set_data([], [])
 
@@ -1069,6 +1091,7 @@ class GraphProfil(GraphCommon):
             else:
                 self.courbeTopo[i].set_color("green")
             self.courbes.append(self.courbeTopo[i])
+
         if allvis:
             for cb in self.courbes:
                 cb.set_visible(True)
@@ -1467,8 +1490,17 @@ class GraphProfil(GraphCommon):
                     tab["geom"].append(geom)
 
         self.mdb.insert2("topo", tab)
-
     def del_amont_aval(self):
+        """
+        delet curve the down/upstream courbe
+        :return:
+        """
+        self.up_vis = False
+        self.down_vis = False
+        self.maj_graph()
+        self.maj_limites()
+        self.maj_legende()
+    def del_amont_aval_old(self):
         """
         delet in top tab the down/upstream courbe
         :return:
@@ -1493,6 +1525,44 @@ class GraphProfil(GraphCommon):
             self.maj_legende()
 
     def topo_amont_aval(self):
+        """
+        add curve tab the down/upstream courbe
+        :return:
+        """
+        id = self.liste['name'].index(self.nom)
+        idam = id - 1
+        idav = id + 1
+        maj = False
+        self.down_vis = False
+        self.up_vis = False
+
+
+        if 0 < idam:
+            if self.liste['branchnum'][id] == self.liste['branchnum'][idam]:
+                if self.liste['x'][idam]:
+                    xamont = [float(val) for val in
+                              self.liste['x'][idam].split()]
+                    zamont = [float(val) for val in
+                              self.liste['z'][idam].split()]
+                    self.courbeup.set_data(xamont, zamont)
+                    self.up_vis = True
+                    maj = True
+        if idav < len(self.liste['branchnum']):
+            if self.liste['branchnum'][id] == self.liste['branchnum'][idav]:
+                if self.liste['x'][idav]:
+                    xaval = [float(val) for val in
+                             self.liste['x'][idav].split()]
+                    zaval = [float(val) for val in
+                             self.liste['z'][idav].split()]
+                    self.courbedown.set_data(xaval , zaval)
+                    self.down_vis = True
+
+        if maj:
+            self.maj_graph()
+            self.maj_limites()
+            self.maj_legende()
+
+    def topo_amont_aval_old(self):
         """
         add in top tab the down/upstream courbe
         :return:
