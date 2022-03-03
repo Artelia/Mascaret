@@ -398,7 +398,9 @@ class GraphProfil(GraphCommon):
         """Point selection function"""
         if self.bt_select.isChecked():
             self.RS.set_active(True)
+            self.RS.update()
             self.span.visible = False
+            self.rectSelection.set_visible(False)
             self.ui.bt_add_point.setEnabled(True)
             self.bt_select_z.setChecked(False)
             self.bt_translah.setChecked(False)
@@ -407,6 +409,9 @@ class GraphProfil(GraphCommon):
         else:
             self.ui.bt_add_point.setDisabled(True)
             self.RS.set_active(False)
+            self.RS.update()
+            self.courbeSelection.set_visible(False)
+
 
 
     def zone_selector_toggled(self):
@@ -416,11 +421,13 @@ class GraphProfil(GraphCommon):
             self.span.active = True
             self.bt_select.setChecked(False)
             self.RS.set_active(False)
+            self.RS.update()
+            self.courbeSelection.set_visible(False)
             self.bt_translah.setChecked(False)
             self.bt_translav.setChecked(False)
         else:
-            self.span.visible = False
             self.span.active = False
+            self.rectSelection.set_visible(False)
 
 
     def deplace_h_toggled(self):
