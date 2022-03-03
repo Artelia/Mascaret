@@ -425,12 +425,15 @@ class ClassResProfil:
                 else:
                     temp.append('%s')
             valeurs = "({})".format(",".join(temp))
-
+            list_insert2 = []
+            for lst in list_insert:
+                if lst not in list_insert:
+                    list_insert2.append(lst)
             sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
                                                                 "runs_plani",
                                                                 var,
                                                                 valeurs)
-            self.mdb.run_query(sql, many=True, list_many=list_insert)
+            self.mdb.run_query(sql, many=True, list_many=list_insert2)
 
         if point_bas:
             col_tab = ['id_runs', 'type_res', 'var', 'val']

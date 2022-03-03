@@ -954,8 +954,8 @@ class ScoreParamWidget(QWidget):
             info = self.mdb.select('profiles',
                                    where=where,
                                    list_var=['abscissa'])
-
-            lst_pk.append(info['abscissa'][0])
+            if info['abscissa'] :
+                lst_pk.append(info['abscissa'][0])
 
         if lst_pk:
             return lst_pk
@@ -1293,11 +1293,15 @@ class ScoreParamWidget(QWidget):
             if self.all:
                 lst_obs = dict_model['lst_obs']
                 for code in lst_obs:
-                    for pk in self.obs[code]['lst_pk']:
-                        if pk in self.data[id_run].keys():
-                            self.data[id_run][pk][code] = {}
-                        else:
-                            self.data[id_run][pk] = {code: {}}
+                    if self.obs[code]['lst_pk']:
+                        for pk in self.obs[code]['lst_pk']:
+                            if pk in self.data[id_run].keys():
+                                self.data[id_run][pk][code] = {}
+                            else:
+                                self.data[id_run][pk] = {code: {}}
+                    else:
+                        self.obs[code]['lst_pk'] =[]
+
 
             else:
                 lst_obs = []
