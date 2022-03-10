@@ -421,6 +421,10 @@ class GraphResultDialog(QWidget):
                                             id_config]
                         if not x_val:
                             x_val = param["info_graph"]['opt']['time']
+                        if "init_date" in param.keys():
+                            date = param["init_date"]
+                        else:
+                            date = None
                     else:
                         x_val = param["info_graph"][self.typ_res]['time']
 
