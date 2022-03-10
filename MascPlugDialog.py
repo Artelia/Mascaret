@@ -457,7 +457,7 @@ class MascPlugDialog(QMainWindow):
                 self.chkt.update_adim()
             except Exception as e:
                 self.add_info("********* Echec of update table ***********")
-                self.add_info('Error : ', e)
+                self.add_info('Error : {}'.format(e))
 
             self.mdb.load_model()
             crs = QgsCoordinateReferenceSystem(
@@ -974,7 +974,8 @@ Version : {}
         """ Test function"""
         # get_laws
         self.chkt.debug_update_vers_meta(version='4.0.4')
-
+        #self.mdb.correction_seq()
+        
         pass
 
     def update_pk(self):
