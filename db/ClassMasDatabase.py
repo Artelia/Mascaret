@@ -1322,7 +1322,7 @@ $BODY$
                         file, self.dbname, self.host)
                 else:
                     commande = '"{0}" -U {1} -O -F c -p {2}  -d {4} -h {5} ' \
-                               '--create "{3}"'.format(exe, self.USER,
+                               '"{3}"'.format(exe, self.USER,
                                                        self.port,
                                                        file, self.dbname,
                                                        self.host)

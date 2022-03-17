@@ -31,7 +31,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 # Uncomment the following line and add your changelog:
 changelog=
     4.0.9  : Correction of a bug of graphic of the hydraulic structure
-             Correction of a bug on translation in the profile editor menu
+             Correction of a bug about translation in the profile editor menu
+             Correction of a bug about the import database function
     4.0.8  : Correction of a bug in Socres Menu
              Remove the storage in the topo table of upstream and downstream curves
              Correction of a bug on the desactive the  point or zone selection
