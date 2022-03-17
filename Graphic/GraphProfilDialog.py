@@ -457,6 +457,8 @@ class GraphProfil(GraphCommon):
         self.rectSelection.set_visible(False)
         self.selected = {}
         self.courbeSelection.set_data([], [])
+        self.down_vis = False
+        self.up_vis = False
         pos = self.position
         pos += val
 
@@ -846,13 +848,14 @@ class GraphProfil(GraphCommon):
         zone_selector = self.bt_select_z.isChecked()
         bouton = event.mouseevent.button
 
-        if deplaceh and legline in self.courbeTopo and bouton == 1:
+        if (deplaceh and legline in self.courbeTopo and bouton == 1) or \
+                (deplaceh and legline in [self.courbedown, self.courbeup] and bouton == 1):
             self.x0 = round(event.mouseevent.xdata, 2)
             self.courbeSelected = legline
-        elif deplacev and legline in self.courbeTopo and bouton == 1:
+        elif (deplacev and legline in self.courbeTopo and bouton == 1) or \
+                (deplacev and legline in [self.courbedown, self.courbeup] and bouton == 1):
             self.y0 = round(event.mouseevent.ydata, 2)
             self.courbeSelected = legline
-
         elif self.flag and bouton == 1 and legline in self.courbeTopo:
             n = len(event.ind)
             if not n:
@@ -898,6 +901,7 @@ class GraphProfil(GraphCommon):
             self.courbeSelection.set_visible(True)
 
             self.maj_graph()
+
         elif not zone_selector and bouton == 1:
             if legline in self.lined.keys():
                 courbe = self.lined[legline]
@@ -1025,17 +1029,16 @@ class GraphProfil(GraphCommon):
         if self.bt_translah.isChecked() and self.x0:
             f = self.courbeSelected.get_label()
             try:
-                tab_x = self.topo[f]['x']
-
+                #tab_x = self.topo[f]['x']
+                tab_x = self.courbeSelected.get_xdata()
                 tempo = []
                 # fct2 = lambda x: x + round(float(event.xdata), 2) - self.x0
                 for var1 in tab_x:
                     tempo.append(self.fct2(var1, event.xdata, self.x0))
                 tab_x = tempo
-
-                self.topo[f]['x'] = tab_x
+                if self.courbeSelected in self.courbeTopo :
+                    self.topo[f]['x'] = tab_x
                 self.courbeSelected.set_xdata(tab_x)
-
                 self.x0 = round(float(event.xdata), 2)
             except:
                 if self.mgis.DEBUG:
@@ -1044,14 +1047,14 @@ class GraphProfil(GraphCommon):
         elif self.bt_translav.isChecked() and self.y0:
             f = self.courbeSelected.get_label()
             try:
-                tab_z = self.topo[f]['z']
-
+                #tab_z = self.topo[f]['z']
+                tab_z = self.courbeSelected.get_ydata()
                 tempo = []
                 for var1 in tab_z:
                     tempo.append(self.fct2(var1, event.ydata, self.y0))
                 tab_z = tempo
-
-                self.topo[f]['z'] = tab_z
+                if self.courbeSelected in self.courbeTopo:
+                    self.topo[f]['z'] = tab_z
                 self.courbeSelected.set_ydata(tab_z)
 
                 self.y0 = round(float(event.ydata), 2)
@@ -1543,8 +1546,7 @@ class GraphProfil(GraphCommon):
         self.down_vis = False
         self.up_vis = False
 
-
-        if 0 < idam:
+        if 0 <= idam:
             if self.liste['branchnum'][id] == self.liste['branchnum'][idam]:
                 if self.liste['x'][idam]:
                     xamont = [float(val) for val in
@@ -1563,6 +1565,7 @@ class GraphProfil(GraphCommon):
                              self.liste['z'][idav].split()]
                     self.courbedown.set_data(xaval , zaval)
                     self.down_vis = True
+                    maj = True
 
         if maj:
             self.maj_graph()
