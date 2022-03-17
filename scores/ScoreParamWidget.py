@@ -973,7 +973,6 @@ class ScoreParamWidget(QWidget):
         info = self.mdb.select('profiles',
                                where=where,
                                list_var=['gid', 'name', 'abscissa'])
-
         name = None
         abs = None
         if len(info['abscissa']) > 0:
@@ -983,14 +982,16 @@ class ScoreParamWidget(QWidget):
             abs = pk
 
         lst_code = []
+
         for code, dict in self.obs.items():
-            if name:
-                if name in dict['name']:
-                    lst_code.append(code)
-            elif abs:
+            valcode = True
+            if abs:
                 if abs in dict['abscissa']:
                     lst_code.append(code)
-
+                    valcode = False
+            if name and valcode:
+                if name in dict['name']:
+                    lst_code.append(code)
         return lst_code
 
     def get_model(self, id_run, pk, code):
@@ -1115,10 +1116,15 @@ class ScoreParamWidget(QWidget):
                                        verbose=False)
 
             if self.obs[code]['zero'] is None:
-                self.obs[code]['zero'] = 0
+                code_zero = 0
+            else:
+                for ipk, pk_obs in enumerate(self.obs[code]['lst_pk']) :
+                    if abs(pk_obs-pk) < 0.001:
+                        code_zero = self.obs[code]['zero'][ipk]
+                        break
             if gg == 'H' and len(tmp_dict['valeur']) > 0:
                 z = np.array(tmp_dict['valeur']) + \
-                    np.ones(len(tmp_dict['valeur'])) * self.obs[code]['zero']
+                    np.ones(len(tmp_dict['valeur'])) * code_zero
                 obs_time = np.array(
                     [datum_to_float(vv,
                                     tmp_dict['date'][0])
@@ -1273,7 +1279,6 @@ class ScoreParamWidget(QWidget):
         :return:
         """
         # if not all len(lst_run) == 1
-
         if not (len(self.lst_runs) > 0):
             self.txt_err_get += 'No model selected \n'
 
@@ -1301,8 +1306,6 @@ class ScoreParamWidget(QWidget):
                                 self.data[id_run][pk] = {code: {}}
                     else:
                         self.obs[code]['lst_pk'] =[]
-
-
             else:
                 lst_obs = []
                 if id_run in self.dict_pk.keys():
