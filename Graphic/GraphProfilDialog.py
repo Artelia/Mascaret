@@ -44,6 +44,7 @@ from .GraphResultDialog import GraphResultDialog
 from .ClassProfInterpDialog import ClassProfInterpDialog
 from ..Function import tw_to_txt
 from .GraphBCDialog import GraphBCDialog
+import pandas as pd
 
 try:
     from matplotlib.backends.backend_qt5agg \
@@ -1234,6 +1235,12 @@ class GraphProfil(GraphCommon):
             for var1 in self.selected['x']:
                 tempo.append(self.fct1(var1))
             self.selected['x'] = tempo
+
+            dataf = pd.DataFrame(self.selected)
+            dataf = dataf.sort_values(by='x')
+            self.selected['x'] =  dataf['x'].tolist()
+            self.selected['z'] = dataf['z'].tolist()
+            self.selected['label'] = dataf['label'].tolist()
 
             mini_x = min(self.selected['x'])
             maxi_x = max(self.selected['x'])

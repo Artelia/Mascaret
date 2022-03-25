@@ -19,7 +19,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=3.10
 qgisMaximumVersion=3.99
 
-version=4.0.9
+version=4.0.10
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -30,6 +30,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    4.0.10  : Correction of a bug of  profile editor menu
     4.0.9  : Correction of a bug of graphic of the hydraulic structure
              Correction of a bug about translation in the profile editor menu
              Correction of a bug about the import database function
