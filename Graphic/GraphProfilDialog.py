@@ -487,8 +487,8 @@ class GraphProfil(GraphCommon):
         condition = "idprofil={0}".format(self.gid)
         requete = self.mdb.select("mnt", condition)
         if "x" in requete.keys() and "z" in requete.keys():
-            self.mnt['x'] = [self.fct1(var) for var in requete["x"][0].split()]
-            self.mnt['z'] = [self.fct1(var) for var in requete["z"][0].split()]
+            self.mnt['x'] = [self.fct1(var, arrondi=3) for var in requete["x"][0].split()]
+            self.mnt['z'] = [self.fct1(var, arrondi=3) for var in requete["z"][0].split()]
 
     def extrait_profil(self):
 
@@ -1169,9 +1169,9 @@ class GraphProfil(GraphCommon):
         self.canvas.draw()
 
     @staticmethod
-    def fct1(x):
+    def fct1(x, arrondi = 2):
         """around"""
-        return round(float(x), 2)
+        return round(float(x),  arrondi)
 
     def del_line(self):
         """
