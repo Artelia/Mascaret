@@ -487,8 +487,8 @@ class GraphProfil(GraphCommon):
         condition = "idprofil={0}".format(self.gid)
         requete = self.mdb.select("mnt", condition)
         if "x" in requete.keys() and "z" in requete.keys():
-            self.mnt['x'] = [float(var) for var in requete["x"][0].split()]
-            self.mnt['z'] = [float(var) for var in requete["z"][0].split()]
+            self.mnt['x'] = [self.fct1(var) for var in requete["x"][0].split()]
+            self.mnt['z'] = [self.fct1(var) for var in requete["z"][0].split()]
 
     def extrait_profil(self):
 

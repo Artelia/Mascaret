@@ -1721,3 +1721,15 @@ $BODY$
                     break
 
         return namesh
+
+    def vacuum(self, lst_table):
+        old_isolation_level = self.con.isolation_level
+        self.con.set_isolation_level(0)
+        #query = "VACUUM FULL"
+        query = ''
+        for tbl in lst_table:
+            query = 'VACUUM {0}.{1};\n'.format(self.SCHEMA,tbl)
+        cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(query)
+        self.con.set_isolation_level(old_isolation_level)
+        self.con.commit()
