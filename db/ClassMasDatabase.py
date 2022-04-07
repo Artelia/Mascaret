@@ -488,7 +488,8 @@ class ClassMasDatabase(object):
                       Maso.struct_fg, Maso.struct_fg_val,
                       Maso.weirs_mob_val,
                       # new results
-                      Maso.runs_graph, Maso.results, Maso.results_var,
+                      Maso.runs_graph,  Maso.results_var,
+                      Maso.results_idx, Maso.results_val, #Maso.results,
                       Maso.results_sect, Maso.runs_plani,
                       # hydro laws
                       Maso.law_config, Maso.law_values,
@@ -1146,6 +1147,8 @@ $BODY$
                                                             valeurs)
         self.run_query(sql, many=True, list_many=liste_value)
 
+
+
     def new_insert_res(self, table, values, col_tab, be_quiet=False):
         try:
             if self.con:
@@ -1528,7 +1531,7 @@ $BODY$
             dest = src + '_ext{}_{}'.format(date, cpt)
         js_dict['export_name'] = dest
         self.ignor_schema += [dest]
-        list_tab_res = ['runs', 'results', 'results_sect',
+        list_tab_res = ['runs', 'results_idx','results_val', 'results_sect',
                         'runs_graph', 'runs_plani']
 
         qry = "SELECT clone_schema('{}','{}','{}');".format(src, dest,

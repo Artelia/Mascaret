@@ -29,6 +29,7 @@ import sys
 import json
 import time
 import gc
+import numpy as np
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
@@ -2096,7 +2097,8 @@ class ClassMascaret:
     def res_fg(self, dico_res, id_run):
         """stock flood gate results"""
 
-        colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+        #colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+        colonnes = ['idruntpk', 'var', 'val']
         values = []
         var_info = {'var': 'ZSTR',
                     'type_res': 'struct',
@@ -2114,12 +2116,12 @@ class ClassMascaret:
             lpk = [rows['abscissa'][0] for var in range(len(time))]
             dico_pk[id_config] = rows['abscissa'][0]
             dico_time[id_config] = list(time)
-
-            v_tmp = self.creat_values(id_run, id_var, lpk,
-                                      time, dico_res[id_config]['ZSTR'])
+            dict_idx = self.get_idruntpk()
+            v_tmp = self.creat_values_val(id_run, id_var, lpk,
+                                      time, dico_res[id_config]['ZSTR'], dict_idx)
 
             values += v_tmp
-        self.mdb.insert_res('results', values, colonnes)
+        self.mdb.insert_res('results_val', values, colonnes)
 
         if len(dico_res.keys()) > 0:
             list_insert = [[id_run, 'struct', 'pknum', json.dumps(dico_pk)],
@@ -2144,93 +2146,123 @@ class ClassMascaret:
 
         return values
 
-    def lit_opt(self, run, scen, id_run, date_debut, base_namefile, comments='',
-                tracer=False, casier=False):
-        nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
-        # tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Load data ....")
-        if not os.path.isfile(nom_fich):
-            self.mgis.add_info("Simulation Error: there aren't results")
-            self.mdb.delete('runs', 'id={}'.format(id_run))
-            return False
+    def creat_values_val(self, id_run, id_name, lpk, ltime, lval, dico_idruntpk):
+        """
+        create values list  for  insert_res function
+        :param id_name: (int) name index
+        :param id_run: (int) index of (run, screnario) couple
+        :param lpk: (list) pk list
+        :param ltime: (list) time list
+        :param lval:  (list) values list
+        :return: (list) value list
+        """
+        values = []
+        for time, pk, val in zip(ltime, lpk, lval):
+            values.append([dico_idruntpk[(id_run, time, pk)], id_name, val])
 
-        t, pk, col, value = self.read_opt(nom_fich, date_debut, scen, run)
+        return values
 
-        if tracer:
-            nom_fich_tra = os.path.join(self.dossierFileMasc,
-                                        base_namefile + '.tra_opt')
+    def creat_values_idx(self, id_run,  lpk, ltime):
+        """
+        create values list  for  insert_res function
+        :param id_run: (int) index of (run, screnario) couple
+        :param lpk: (list) pk list
+        :param ltime: (list) time list
+        :return: (list) value list
+        """
+        values = []
+        for time, pk in zip(ltime, lpk):
+            values.append([id_run, time, pk])
 
-            if not os.path.isfile(nom_fich_tra):
-                self.mgis.add_info(
-                    "Simulation Error: there aren't results for tracer")
-                return False
-            t_tra, pk_tra, col_tra, value_tra = self.read_opt(nom_fich_tra,
-                                                              date_debut, scen,
-                                                              run)
-            if self.wq.cur_wq_mod == 'TRANSPORT_PUR':
-                dico_tra = self.mdb.select('tracer_name',
-                                           where="type ='{}' ".format(
-                                               self.wq.cur_wq_mod),
-                                           order='id',
-                                           list_var=['sigle', 'text'])
+        return values
 
-                for cpt_tra, sigle in enumerate(dico_tra['sigle']):
-                    var_info = {'var': sigle,
-                                'type_res': 'tracer_TRANSPORT_PUR',
-                                'name': dico_tra['text'][cpt_tra],
-                                'type_var': 'float'}
-                    self.mdb.check_id_var(var_info)
-            lind = []
-            for i, c in enumerate(col_tra):
-                if c not in col:
-                    col.append(c)
-                    lind.append(i)
-            # add value_tra in value list
-            for j, lignval in enumerate(value):
-                for i in lind:
-                    lignval.append(value_tra[j][i])
-        tab = {id_run: {"t": list(t),
-                        "pk": list(pk)}
-               }
-        if date_debut:
-            tab[id_run]["init_date"] = "{:%Y-%m-%d %H:%M}".format(date_debut)
-        if comments != '':
-            tab[id_run]["comments"] = comments
-        if tracer:
-            tab[id_run]['wq'] = self.wq.cur_wq_mod
-
-        if tab[id_run]:
-            self.mdb.update("runs", tab, var='id')
-
-        liste_col = self.mdb.list_columns("resultats")
-        for c in col:
-            if c.lower() not in liste_col:
-                self.mdb.add_columns("resultats", c.lower())
-
-        self.mdb.insert_res("resultats", value, col)
-
-        if casier:
-            nom_fich_bas = os.path.join(self.dossierFileMasc,
-                                        base_namefile + '.cas_opt')
-            nom_fich_link = os.path.join(self.dossierFileMasc,
-                                         base_namefile + '.liai_opt')
-
-            t_bas, pk_bas, col_bas, value_bas = self.read_opt(nom_fich_bas,
-                                                              date_debut, scen,
-                                                              run,
-                                                              init_col=['t',
-                                                                        'bnum'])
-            t_link, pk_link, col_link, value_link = self.read_opt(nom_fich_link,
-                                                                  date_debut,
-                                                                  scen, run,
-                                                                  init_col=['t',
-                                                                            'lnum'])
-
-            self.mdb.insert_res("resultats_basin", value_bas, col_bas)
-            self.mdb.insert_res("resultats_links", value_link, col_link)
-
-        return True
+    # def lit_opt(self, run, scen, id_run, date_debut, base_namefile, comments='',
+    #             tracer=False, casier=False):
+    #     nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
+    #     # tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
+    #     if self.mgis.DEBUG:
+    #         self.mgis.add_info("Load data ....")
+    #     if not os.path.isfile(nom_fich):
+    #         self.mgis.add_info("Simulation Error: there aren't results")
+    #         self.mdb.delete('runs', 'id={}'.format(id_run))
+    #         return False
+    #
+    #     t, pk, col, value = self.read_opt(nom_fich, date_debut, scen, run)
+    #
+    #     if tracer:
+    #         nom_fich_tra = os.path.join(self.dossierFileMasc,
+    #                                     base_namefile + '.tra_opt')
+    #
+    #         if not os.path.isfile(nom_fich_tra):
+    #             self.mgis.add_info(
+    #                 "Simulation Error: there aren't results for tracer")
+    #             return False
+    #         t_tra, pk_tra, col_tra, value_tra = self.read_opt(nom_fich_tra,
+    #                                                           date_debut, scen,
+    #                                                           run)
+    #         if self.wq.cur_wq_mod == 'TRANSPORT_PUR':
+    #             dico_tra = self.mdb.select('tracer_name',
+    #                                        where="type ='{}' ".format(
+    #                                            self.wq.cur_wq_mod),
+    #                                        order='id',
+    #                                        list_var=['sigle', 'text'])
+    #
+    #             for cpt_tra, sigle in enumerate(dico_tra['sigle']):
+    #                 var_info = {'var': sigle,
+    #                             'type_res': 'tracer_TRANSPORT_PUR',
+    #                             'name': dico_tra['text'][cpt_tra],
+    #                             'type_var': 'float'}
+    #                 self.mdb.check_id_var(var_info)
+    #         lind = []
+    #         for i, c in enumerate(col_tra):
+    #             if c not in col:
+    #                 col.append(c)
+    #                 lind.append(i)
+    #         # add value_tra in value list
+    #         for j, lignval in enumerate(value):
+    #             for i in lind:
+    #                 lignval.append(value_tra[j][i])
+    #     tab = {id_run: {"t": list(t),
+    #                     "pk": list(pk)}
+    #            }
+    #     if date_debut:
+    #         tab[id_run]["init_date"] = "{:%Y-%m-%d %H:%M}".format(date_debut)
+    #     if comments != '':
+    #         tab[id_run]["comments"] = comments
+    #     if tracer:
+    #         tab[id_run]['wq'] = self.wq.cur_wq_mod
+    #
+    #     if tab[id_run]:
+    #         self.mdb.update("runs", tab, var='id')
+    #
+    #     liste_col = self.mdb.list_columns("resultats")
+    #     for c in col:
+    #         if c.lower() not in liste_col:
+    #             self.mdb.add_columns("resultats", c.lower())
+    #
+    #     self.mdb.insert_res("resultats", value, col)
+    #
+    #     if casier:
+    #         nom_fich_bas = os.path.join(self.dossierFileMasc,
+    #                                     base_namefile + '.cas_opt')
+    #         nom_fich_link = os.path.join(self.dossierFileMasc,
+    #                                      base_namefile + '.liai_opt')
+    #
+    #         t_bas, pk_bas, col_bas, value_bas = self.read_opt(nom_fich_bas,
+    #                                                           date_debut, scen,
+    #                                                           run,
+    #                                                           init_col=['t',
+    #                                                                     'bnum'])
+    #         t_link, pk_link, col_link, value_link = self.read_opt(nom_fich_link,
+    #                                                               date_debut,
+    #                                                               scen, run,
+    #                                                               init_col=['t',
+    #                                                                         'lnum'])
+    #
+    #         self.mdb.insert_res("resultats_basin", value_bas, col_bas)
+    #         self.mdb.insert_res("resultats_links", value_link, col_link)
+    #
+    #     return True
 
     def get_for_lig(self, run, scen):
 
@@ -2696,7 +2728,9 @@ class ClassMascaret:
                         'type_var': 'float'}
             id_var = self.mdb.check_id_var(var_info)
             # Stock information
-            colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+           # colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+            colonnes = ['idruntpk', 'time', 'val']
+
             values = []
             dico_pk = {}
             dico_time = {}
@@ -2708,11 +2742,12 @@ class ClassMascaret:
                 lpk = [info['abscissa'][0] for i in range(len(time))]
                 dico_pk[name] = info['abscissa'][0]
                 dico_time[name] = list(time)
-                v_tmp = self.creat_values(id_run, id_var, lpk,
-                                          time, dico_res[name]['ZSTR'])
+                dict_idx = self.get_idruntpk()
+                v_tmp = self.creat_values_val(id_run, id_var, lpk,
+                                          time, dico_res[name]['ZSTR'], dict_idx )
                 values += v_tmp
             if len(values) > 0:
-                self.mdb.insert_res('results', values, colonnes)
+                self.mdb.insert_res('results_val', values, colonnes)
 
             if len(dico_res.keys()) > 0:
                 list_insert = [[id_run, 'weirs', 'pknum', json.dumps(dico_pk)],
@@ -3043,6 +3078,15 @@ class ClassMascaret:
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
 
+    def get_idruntpk(self):
+        dict_idx = dict()
+        tmp = self.mdb.select('results_idx', list_var=['idruntpk', 'id_runs', 'time', 'pknum'])
+        if tmp:
+            for iter_id in range(len(tmp["idruntpk"])):
+                dict_idx[(tmp['id_runs'][iter_id], tmp['time'][iter_id], tmp['pknum'][iter_id])] \
+                    = tmp["idruntpk"][iter_id]
+        return dict_idx
+
     def save_new_results(self, val, id_run):
         """
         Save values in results table
@@ -3058,12 +3102,27 @@ class ClassMascaret:
             lpk = val['BNUM']
         elif 'LNUM' in val_keys:
             lpk = val['LNUM']
+
+        # insert table result_idx
+       # lst_var = [ key for key in val_keys if isinstance(key, int)]
+        values_idx = self.creat_values_idx(id_run,  lpk, val['TIME'])
+        dict_idx = {}
+        if len(values_idx)>0:
+            col_tab_idx = ['id_runs', 'time', 'pknum']
+            self.mdb.new_insert_res('results_idx',
+                                    values_idx,
+                                    col_tab_idx)
+        dict_idx = self.get_idruntpk()
+        if not dict_idx :
+            return False
         values = []
         val_sect = []
         for key in val_keys:
             if isinstance(key, int):
-                v_tmp = self.creat_values(id_run, key, lpk,
-                                          val['TIME'], val[key])
+                # v_tmp = self.creat_values(id_run, key, lpk,
+                #                           val['TIME'], val[key])
+                v_tmp =  self.creat_values_val(id_run, key, lpk,
+                                           val['TIME'], val[key],dict_idx)
                 values += v_tmp
             elif key == 'BRANCH':
                 val_sect = []
@@ -3075,22 +3134,23 @@ class ClassMascaret:
                     val_sect.append((id_run, pk, int(bra), sect))
                     cond = True
 
-        col_tab = ['id_runs', 'time', 'pknum', 'var', 'val']
+        #col_tab = ['id_runs', 'time', 'pknum', 'var', 'val']
+        col_tab = ['idruntpk', 'var', 'val']
         nb_stock = 10000
         if len(values) > 0:
             nb = max(int(len(values) / nb_stock), 1)
             if nb == 1:
-                self.mdb.new_insert_res('results',
+                self.mdb.new_insert_res('results_val',
                                         values,
                                         col_tab)
             else:
                 for i in range(nb - 1):
-                    self.mdb.new_insert_res('results',
+                    self.mdb.new_insert_res('results_val',
                                             values[
                                             nb_stock * i:nb_stock * (i + 1)],
                                             col_tab)
                 if nb_stock * (i + 1) < len(values):
-                    self.mdb.new_insert_res('results',
+                    self.mdb.new_insert_res('results_val',
                                             values[nb_stock * (i + 1):],
                                             col_tab)
 

@@ -99,7 +99,7 @@ class CheckTab:
                     "EXISTS method_mob text;"]}],
                 'fct': [lambda: self.update_setting_json()]},
             '3.0.2': {'add_tab': [
-                {'tab': Maso.results, 'overwrite': False},
+                {'tab': Maso.results_old, 'overwrite': False},
                 {'tab': Maso.results_sect, 'overwrite': False},
                 {'tab': Maso.results_var, 'overwrite': False},
                 {'tab': Maso.runs_graph, 'overwrite': False},
@@ -173,14 +173,14 @@ class CheckTab:
             '4.0.0': {'fct': [
                 lambda: self.update_400(),
             ],
-                'alt_tab': [{'tab': 'results',
+                'alt_tab': [{'tab': 'results_old',
                              'sql': [
                                  "CREATE INDEX IF NOT EXISTS "
-                                 "results_id_runs_pknum "
-                                 "ON {0}.results(id_runs, pknum);",
+                                 "results_old_id_runs_pknum "
+                                 "ON {0}.results_old(id_runs, pknum);",
                                  "CREATE INDEX IF NOT EXISTS "
-                                 "results_id_runs_time  "
-                                 "ON {0}.results(id_runs, time);",
+                                 "results_old_id_runs_time  "
+                                 "ON {0}.results_old(id_runs, time);",
                              ]},
                             {'tab': 'observations',
                              'sql': [
@@ -460,7 +460,7 @@ class CheckTab:
 
             for typ_res in lst_typ_res:
                 rows = self.mdb.run_query(
-                    "SELECT DISTINCT id_runs FROM {0}.results WHERE var in "
+                    "SELECT DISTINCT id_runs FROM {0}.results_old WHERE var in "
                     "(SELECT id FROM {0}.results_var WHERE type_res = '{1}') "
                     "".format(self.mdb.SCHEMA, typ_res),
                     fetch=True)
@@ -482,7 +482,7 @@ class CheckTab:
             for id_runs in dict_runs.keys():
                 if id_runs not in lst_exist:
 
-                    sql = "SELECT DISTINCT var FROM {0}.results WHERE " \
+                    sql = "SELECT DISTINCT var FROM {0}.results_old WHERE " \
                           "id_runs ={1} ORDER BY var"
                     rows = self.mdb.run_query(
                         sql.format(self.mdb.SCHEMA, id_runs), fetch=True)
@@ -513,7 +513,7 @@ class CheckTab:
                         list_value.append(
                             [id_runs, type_res, 'var', json.dumps(lst_var2)])
 
-                        sql = "SELECT DISTINCT time FROM {0}.results " \
+                        sql = "SELECT DISTINCT time FROM {0}.results_old " \
                               "WHERE id_runs ={1} " \
                               "AND var = {2} ORDER BY time" \
                               "".format(self.mdb.SCHEMA, id_runs,
@@ -523,7 +523,7 @@ class CheckTab:
                         list_value.append(
                             [id_runs, type_res, 'time', json.dumps(lst_time)])
 
-                        sql = "SELECT DISTINCT pknum FROM {0}.results " \
+                        sql = "SELECT DISTINCT pknum FROM {0}.results_old " \
                               "WHERE id_runs ={1} " \
                               "AND var = {2} ORDER BY pknum" \
                               "".format(self.mdb.SCHEMA, id_runs,
@@ -539,7 +539,7 @@ class CheckTab:
                                 for pknum in lst_pknum:
                                     if id_z[0][0] in lst_var:
                                         sql = "SELECT MAX(val) FROM " \
-                                              "{0}.results " \
+                                              "{0}.results_old " \
                                               "WHERE var = {2} " \
                                               "AND id_runs={1} AND " \
                                               "pknum ={3};".format(
@@ -612,8 +612,8 @@ class CheckTab:
 
         lst_var_exist = [r[0] for r in rows]
         self.mdb.execute(
-            "DELETE FROM {0}.results WHERE results.id_runs = {1} AND "
-            "results.var IN (SELECT id FROM {0}.results_var "
+            "DELETE FROM {0}.results_old WHERE results_old.id_runs = {1} AND "
+            "results_old.var IN (SELECT id FROM {0}.results_var "
             "WHERE type_res = '{2}')".format(self.mdb.SCHEMA, id_run, tab_src))
 
         rows = self.mdb.run_query("SELECT id, var FROM {0}.results_var "
@@ -628,7 +628,7 @@ class CheckTab:
 
         for id_var, nm_var in lst_var:
             if nm_var.lower() in lst_var_exist:
-                sql = "INSERT INTO {0}.results (" \
+                sql = "INSERT INTO {0}.results_old (" \
                       "SELECT {5}, {3}.t, {3}.{4}, {1}, {3}.{2} " \
                       "FROM {0}.{3} WHERE " \
                       "{3}.{2} is Not Null AND {3}.run = '{6}' " \
@@ -973,3 +973,30 @@ class CheckTab:
         except Exception as e:
             self.mgis.add_info("Error laws_to_new: {}".format(str(e)))
             return False
+
+    def creat_view(self):
+
+        sql = 'ALTER TABLE {}.results RENAME TO {}.results_old;'
+        sql = sql.format(self.mdb.SCHEMA)
+
+
+        # creation results_idx
+        sql = 'INSERT INTO {}.results_idx(id_runs, "time", pknum) ' \
+              'SELECT DISTINCT id_runs,  "time", pknum  FROM {}.results_old;'
+        sql = sql.format(self.mdb.SCHEMA)
+
+        sql = "INSERT INTO {}.results_val(idruntpk, var, val) " \
+              "SELECT idruntpk, var, val   FROM {}.results_idx " \
+              "Inner join  {}.results_old " \
+              "on {}.results_old.id_runs = {}.results_idx.id_runs " \
+              "AND {}.results_old.time = {}.results_idx.time " \
+              "AND {}.results_old.pknum = {}.results_idx.pknum;"
+        sql = sql.format(self.mdb.SCHEMA)
+
+        sql = 'CREATE VIEW {}.results ' \
+              'AS SELECT id_runs, "time", pknum,  var, val  FROM {}.results_idx 	' \
+              'Inner join  {}.results_val ' \
+              'on {}.results_val.idruntpk = {}.results_idx.idruntpk;'
+        sql = sql.format(self.mdb.SCHEMA)
+    # TODO Gestion de Result en result_old
+    #
