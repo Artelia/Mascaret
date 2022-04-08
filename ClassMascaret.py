@@ -2603,7 +2603,7 @@ class ClassMascaret:
                             nbt = max(rows['id_order']) + 1
                             if nbt < 501:
                                 fich.write(
-                                    "{} {}\n".format(info['name'][i], nbt))
+                                    "{} {}\n".format(info['name'][i].replace(' ', '_'), nbt))
                                 fich.write("methode 1\n")
                                 fich.write("T(s)\n")
                                 for j in range(nbt):
@@ -2631,7 +2631,7 @@ class ClassMascaret:
                                                where="id_weirs= {} AND name_var!='TIME' AND name_var!='ZVAR'".format(
                                                    idw))
                         if len(rows['id_weirs']) > 0:
-                            fich.write("{} {}\n".format(info['name'][i], idw))
+                            fich.write("{} {}\n".format(info['name'][i].replace(' ', '_'), idw))
                             fich.write("methode 2\n")
                             fich.write("Zregulation Zbas Zhaut (m ngf)\n")
                             fich.write("{} {} {}\n".format(
