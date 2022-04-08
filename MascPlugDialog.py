@@ -241,7 +241,7 @@ class MascPlugDialog(QMainWindow):
 
         # TODO Finaliser
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(False)
+        self.ui.actionTest.setVisible(True)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(
@@ -453,11 +453,11 @@ class MascPlugDialog(QMainWindow):
             res = self.mdb.run_query(sql.format(model), fetch=True)
             if res:
                 self.mdb.SRID = int(res[0][0])
-            try:
-                self.chkt.update_adim()
-            except Exception as e:
-                self.add_info("********* Echec of update table ***********")
-                self.add_info('Error : {}'.format(e))
+            #  try:
+            self.chkt.update_adim()
+            # self except Exception as e:
+            #     self.add_info("********* Echec of update table ***********")
+            #     self.add_info('Error : {}'.format(e))
 
             self.mdb.load_model()
             crs = QgsCoordinateReferenceSystem(
@@ -973,7 +973,7 @@ Version : {}
     def fct_test(self):
         """ Test function"""
         # get_laws
-        self.chkt.debug_update_vers_meta(version='4.0.4')
+        self.chkt.debug_update_vers_meta(version='4.0.10')
         #self.mdb.correction_seq()
         
         pass

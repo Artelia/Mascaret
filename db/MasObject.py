@@ -1752,7 +1752,7 @@ class results_val(MasObject):
         super(results_val, self).__init__()
         self.order = 45
         self.geom_type = None
-        self.attrs = [('idRunTPk', 'serial NOT NULL'),
+        self.attrs = [('idRunTPk', 'integer  NOT NULL'),
                       ('var', 'integer'),
                       ('val', 'float'),
                       ('CONSTRAINT results_val_pkey',

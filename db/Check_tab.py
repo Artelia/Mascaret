@@ -74,6 +74,7 @@ class CheckTab:
                                   '4.0.8',
                                   '4.0.9',
                                   '4.0.10',
+                                  '4.0.11',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -215,6 +216,7 @@ class CheckTab:
             '4.0.8': {},
             '4.0.9': {},
             '4.0.10': {},
+            '4.0.11': { 'fct': [lambda: self.update_4011()], },
             # '3.0.x': { },
 
         }
@@ -974,29 +976,58 @@ class CheckTab:
             self.mgis.add_info("Error laws_to_new: {}".format(str(e)))
             return False
 
-    def creat_view(self):
+    def update_4011(self):
+        sorti = True
+        lst_tab = self.mdb.list_tables()
+        print(lst_tab)
+        err, _ = self.add_tab(Maso.results_idx, False)
+        print('ERR5', err)
+        if not err:
+            sorti = False
+        err, _ = self.add_tab(Maso.results_val, False)
+        print('ERR4 ', err)
+        if not err:
+            sorti = False
 
-        sql = 'ALTER TABLE {}.results RENAME TO {}.results_old;'
+        if 'results_old' not in  lst_tab :
+            sql = 'ALTER TABLE {0}.results RENAME TO results_old;'
+            sql = sql.format(self.mdb.SCHEMA)
+            err = self.mdb.run_query(sql)
+            print('ERR3 ', err)
+            if not err:
+                sorti = False
+        info = self.mdb.select_one('results_old')
+        if info :
+            sql  =  "SELECT FROM {0}.results_old"
+            # creation results_idx
+            sql = 'INSERT INTO {0}.results_idx(id_runs, "time", pknum) ' \
+                  'SELECT DISTINCT id_runs,  "time", pknum  FROM {0}.results_old;'
+            sql = sql.format(self.mdb.SCHEMA)
+            err = self.mdb.run_query(sql)
+            print('ERR2 ', err)
+            if not err:
+                sorti = False
+            sql = "INSERT INTO {0}.results_val(idruntpk, var, val) " \
+                  "SELECT idruntpk, var, val   FROM {0}.results_idx " \
+                  "Inner join  {0}.results_old " \
+                  "on {0}.results_old.id_runs = {0}.results_idx.id_runs " \
+                  "AND {0}.results_old.time = {0}.results_idx.time " \
+                  "AND {0}.results_old.pknum = {0}.results_idx.pknum;"
+            sql = sql.format(self.mdb.SCHEMA)
+            err = self.mdb.run_query(sql)
+            print('ERR1 ', err)
+            if not err:
+                sorti = False
+        sql = 'CREATE OR REPLACE VIEW {0}.results ' \
+              'AS SELECT id_runs, "time", pknum,  var, val  FROM {0}.results_idx 	' \
+              'Inner join  {0}.results_val ' \
+              'on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;'
         sql = sql.format(self.mdb.SCHEMA)
+        err = self.mdb.run_query(sql)
+        print('view ', err)
+        if not err:
+            sorti = False
+        print(sorti)
+        return sorti
 
 
-        # creation results_idx
-        sql = 'INSERT INTO {}.results_idx(id_runs, "time", pknum) ' \
-              'SELECT DISTINCT id_runs,  "time", pknum  FROM {}.results_old;'
-        sql = sql.format(self.mdb.SCHEMA)
-
-        sql = "INSERT INTO {}.results_val(idruntpk, var, val) " \
-              "SELECT idruntpk, var, val   FROM {}.results_idx " \
-              "Inner join  {}.results_old " \
-              "on {}.results_old.id_runs = {}.results_idx.id_runs " \
-              "AND {}.results_old.time = {}.results_idx.time " \
-              "AND {}.results_old.pknum = {}.results_idx.pknum;"
-        sql = sql.format(self.mdb.SCHEMA)
-
-        sql = 'CREATE VIEW {}.results ' \
-              'AS SELECT id_runs, "time", pknum,  var, val  FROM {}.results_idx 	' \
-              'Inner join  {}.results_val ' \
-              'on {}.results_val.idruntpk = {}.results_idx.idruntpk;'
-        sql = sql.format(self.mdb.SCHEMA)
-    # TODO Gestion de Result en result_old
-    #

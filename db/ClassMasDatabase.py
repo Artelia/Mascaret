@@ -554,6 +554,14 @@ class ClassMasDatabase(object):
             # visualization
             self.load_gis_layer()
 
+            # create view
+            sql = 'CREATE VIEW {}.results ' \
+                  'AS SELECT id_runs, "time", pknum,  var, val  FROM {}.results_idx 	' \
+                  'Inner join  {}.results_val ' \
+                  'on {}.results_val.idruntpk = {}.results_idx.idruntpk;'
+            sql = sql.format(self.mdb.SCHEMA)
+            self.run_query(sql)
+
             self.mgis.add_info('Model "{0}" completed'.format(self.SCHEMA))
 
         except Exception as e:
