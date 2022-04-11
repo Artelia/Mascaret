@@ -1898,7 +1898,6 @@ class ClassMascaret:
             return
         for i, scen in enumerate(dict_scen['name']):
             self.mgis.add_info("The current scenario is {}".format(scen))
-
             # initialise file
             date_debut = None
             if noyau == "steady":
@@ -2478,6 +2477,7 @@ class ClassMascaret:
                     'new simulation? '.format(nom_scen))
 
                 if ok:
+                    lst_tab = self.mdb.list_tables()
                     # delete case initalization
                     condition = "(scenario LIKE '{0}' OR  scenario " \
                                 "LIKE '{0}_init')" \
@@ -2492,9 +2492,9 @@ class ClassMascaret:
                         self.mdb.SCHEMA, run, nom_scen), fetch=True)
 
                     self.mdb.delete('runs', condition)
-                    self.mdb.delete('resultats', condition)
+                    if 'resultats' in lst_tab:
+                        self.mdb.delete('resultats', condition)
                     # new results
-
                     if len(id_run) > 0:
                         id_run = id_run[0][0]
                         condition = "id_runs = {}".format(id_run)
@@ -2510,6 +2510,8 @@ class ClassMascaret:
                             self.mdb.SCHEMA, ','.join(list_var)))
                         self.mdb.delete('results', condition)
                         self.mdb.delete('results_sect', condition)
+                        self.mdb.delete('runs_graph', condition)
+                        self.mdb.delete('runs_plani', condition)
                     if self.mgis.DEBUG:
                         self.mgis.add_info(
                             "Deletion of {0} scenario for {1} is done".format(
@@ -2615,7 +2617,7 @@ class ClassMascaret:
         """
 
         info = self.mdb.select('weirs', where="active_mob = true",
-                               list_var=['method_mob', 'gid', 'name'])
+                               list_var=['method_mob', 'gid', 'name'], order='gid')
         if info:
             try:
                 nomfich = os.path.join(self.dossierFileMasc,
@@ -2635,7 +2637,7 @@ class ClassMascaret:
                             nbt = max(rows['id_order']) + 1
                             if nbt < 501:
                                 fich.write(
-                                    "{} {}\n".format(info['name'][i], nbt))
+                                    "{} {}\n".format(info['name'][i].replace(' ', '_'), nbt))
                                 fich.write("methode 1\n")
                                 fich.write("T(s)\n")
                                 for j in range(nbt):
@@ -2663,7 +2665,7 @@ class ClassMascaret:
                                                where="id_weirs= {} AND name_var!='TIME' AND name_var!='ZVAR'".format(
                                                    idw))
                         if len(rows['id_weirs']) > 0:
-                            fich.write("{} {}\n".format(info['name'][i], idw))
+                            fich.write("{} {}\n".format(info['name'][i].replace(' ', '_'), idw))
                             fich.write("methode 2\n")
                             fich.write("Zregulation Zbas Zhaut (m ngf)\n")
                             fich.write("{} {} {}\n".format(
@@ -2680,6 +2682,7 @@ class ClassMascaret:
                                 info['name'][i]))
 
                 fich.close()
+
                 self.mgis.add_info("Creation the dam is done")
 
             except Exception as e:
@@ -2709,52 +2712,63 @@ class ClassMascaret:
         """
         nomfich = os.path.join(self.dossierFileMasc, 'Fichier_Crete.csv')
         if os.path.isfile(nomfich):
-            # Read file
-            dico_res = {}
-            fich = open(nomfich, 'r')
+            try:
 
-            for ligne in fich:
-                liste = ligne.split()
-                if len(liste) > 1:
-                    nom = liste[2].strip()
-                    if not (nom in dico_res.keys()):
-                        dico_res[nom] = {'TIME': [], 'ZSTR': []}
-                    dico_res[nom]['TIME'].append(float(liste[0].strip()))
-                    dico_res[nom]['ZSTR'].append(float(liste[1].strip()))
+                # Read file
+                dico_res = {}
+                fich = open(nomfich, 'r')
 
-            var_info = {'var': 'ZSTR',
-                        'type_res': 'weirs',
-                        'name': 'valve movement',
-                        'type_var': 'float'}
-            id_var = self.mdb.check_id_var(var_info)
-            # Stock information
-           # colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
-            colonnes = ['idruntpk', 'time', 'val']
+                for ligne in fich:
+                    liste = ligne.split()
+                    if len(liste) > 1:
+                        nom = liste[2].strip()
+                        if not (nom in dico_res.keys()):
+                            dico_res[nom] = {'TIME': [], 'ZSTR': []}
+                        dico_res[nom]['TIME'].append(float(liste[0].strip()))
+                        dico_res[nom]['ZSTR'].append(float(liste[1].strip()))
 
-            values = []
-            dico_pk = {}
-            dico_time = {}
-            for name in dico_res.keys():
-                where = "name = '{}'".format(name)
-                info = self.mdb.select('weirs', where=where,
-                                       list_var=['gid', 'abscissa'])
-                time = dico_res[name]['TIME']
-                lpk = [info['abscissa'][0] for i in range(len(time))]
-                dico_pk[name] = info['abscissa'][0]
-                dico_time[name] = list(time)
-                dict_idx = self.get_idruntpk()
-                v_tmp = self.creat_values_val(id_run, id_var, lpk,
-                                          time, dico_res[name]['ZSTR'], dict_idx )
-                values += v_tmp
-            if len(values) > 0:
-                self.mdb.insert_res('results_val', values, colonnes)
+                var_info = {'var': 'ZSTR',
+                            'type_res': 'weirs',
+                            'name': 'valve movement',
+                            'type_var': 'float'}
+                id_var = self.mdb.check_id_var(var_info)
+                # Stock information
+            # colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+                colonnes = ['idruntpk', 'time', 'val']
 
-            if len(dico_res.keys()) > 0:
-                list_insert = [[id_run, 'weirs', 'pknum', json.dumps(dico_pk)],
-                               [id_run, 'weirs', 'time', json.dumps(dico_time)],
-                               [id_run, 'weirs', 'var', json.dumps([id_var])]]
-                col_tab = ['id_runs', 'type_res', 'var', 'val']
-                self.mdb.insert_res('runs_graph', list_insert, col_tab)
+                values = []
+                dico_pk = {}
+                dico_time = {}
+                for name in dico_res.keys():
+                    where = "name = '{}'".format(name)
+                    info = self.mdb.select('weirs', where=where,
+                                           list_var=['gid', 'abscissa'], order='gid')
+                    if  len(info['gid']) > 1:
+                        where = "name LIKE '{}%'".format(name)
+                        info = self.mdb.select('weirs', where=where,
+                                               list_var=['gid', 'abscissa'], order='gid')
+                    time = dico_res[name]['TIME']
+                    lpk = [info['abscissa'][0] for i in range(len(time))]
+                    dico_pk[name] = info['abscissa'][0]
+                    dico_time[name] = list(time)
+                    dict_idx = self.get_idruntpk()
+                    v_tmp = self.creat_values_val(id_run, id_var, lpk,
+                                            time, dico_res[name]['ZSTR'], dict_idx )
+                    values += v_tmp
+                if len(values) > 0:
+                    self.mdb.insert_res('results_val', values, colonnes)
+
+                if len(dico_res.keys()) > 0:
+                    list_insert = [[id_run, 'weirs', 'pknum', json.dumps(dico_pk)],
+                                [id_run, 'weirs', 'time', json.dumps(dico_time)],
+                                [id_run, 'weirs', 'var', json.dumps([id_var])]]
+                    col_tab = ['id_runs', 'type_res', 'var', 'val']
+                    self.mdb.insert_res('runs_graph', list_insert, col_tab)
+            except Exception as e:
+                txt =  "Erreur load of mobil_gate results.\n"
+                self.mgis.add_info(txt)
+                self.mgis.add_info(e)
+
 
     def insert_id_run(self, run, scen):
         """
@@ -3244,7 +3258,7 @@ class ClassMascaret:
                     typ_law)
             # self.mgis.add_info('{}'.format(condition))
 
-            config = self.mdb.select_one('law_config', condition, verbose=True)
+            config = self.mdb.select_one('law_config', condition, verbose=False)
 
             if config:
                 values = self.mdb.select("law_values",
