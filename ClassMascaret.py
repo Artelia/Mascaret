@@ -2710,7 +2710,7 @@ class ClassMascaret:
                     where = "name = '{}'".format(name)
                     info = self.mdb.select('weirs', where=where,
                                            list_var=['gid', 'abscissa'], order='gid', verbose=False)
-                    if  len(info['gid']) > 1:
+                    if  len(info['gid']) < 1:
                         where = "name LIKE '{}%'".format(name)
                         info = self.mdb.select('weirs', where=where,
                                                list_var=['gid', 'abscissa'], order='gid', verbose=False)
