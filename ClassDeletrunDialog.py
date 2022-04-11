@@ -178,6 +178,7 @@ class ClassDeletrunDialog(QDialog):
                     self.mdb.delete("resultats_links", sql)
 
                 self.mdb.delete("runs", sql)
+
                 self.delete_useless_data()
 
                 if self.mgis.DEBUG:
@@ -227,22 +228,12 @@ class ClassDeletrunDialog(QDialog):
               "where id_runs not in (SELECT id FROM {0}.runs));"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
 
-        lst_table = ["results_sect","runs_graph",
-                     "results_basin","results_links",
-                     "results_var","results", "runs_plani",
+        lst_table = ["results_sect", "runs_graph",
+                     "results_basin", "results_links",
+                     "results_var", "results", "runs_plani",
                      "runs"]
         self.mdb.vacuum(lst_table)
-        # sql = "VACUUM {0}.runs_graph;"
-        # self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-        # sql += "VACUUM {0}.results_sect;\n"
-        # sql += "VACUUM {0}.results_basin;\n"
-        # sql += "VACUUM {0}.results_links;\n"
-        # sql += "VACUUM {0}.results_var;"
-        # sql += "VACUUM {0}.results;\n"
-        # sql += "VACUUM {0}.runs_plani;\n"
-        # sql += "VACUUM {0}.runs;"
-        #
-        # self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
 
 
 
