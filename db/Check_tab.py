@@ -979,33 +979,28 @@ class CheckTab:
     def update_4011(self):
         sorti = True
         lst_tab = self.mdb.list_tables()
-        print(lst_tab)
         err, _ = self.add_tab(Maso.results_idx, False)
-        print('ERR5', err)
         if not err:
             sorti = False
         err, _ = self.add_tab(Maso.results_val, False)
-        print('ERR4 ', err)
         if not err:
             sorti = False
 
-        if 'results_old' not in  lst_tab :
+        if 'results_old' not in lst_tab:
             sql = 'ALTER TABLE {0}.results RENAME TO results_old;'
             sql = sql.format(self.mdb.SCHEMA)
             err = self.mdb.run_query(sql)
-            print('ERR3 ', err)
-            if not err:
+            if err:
                 sorti = False
         info = self.mdb.select_one('results_old')
-        if info :
-            sql  =  "SELECT FROM {0}.results_old"
+        if info:
+            sql = "SELECT FROM {0}.results_old"
             # creation results_idx
             sql = 'INSERT INTO {0}.results_idx(id_runs, "time", pknum) ' \
                   'SELECT DISTINCT id_runs,  "time", pknum  FROM {0}.results_old;'
             sql = sql.format(self.mdb.SCHEMA)
             err = self.mdb.run_query(sql)
-            print('ERR2 ', err)
-            if not err:
+            if err:
                 sorti = False
             sql = "INSERT INTO {0}.results_val(idruntpk, var, val) " \
                   "SELECT idruntpk, var, val   FROM {0}.results_idx " \
@@ -1015,8 +1010,7 @@ class CheckTab:
                   "AND {0}.results_old.pknum = {0}.results_idx.pknum;"
             sql = sql.format(self.mdb.SCHEMA)
             err = self.mdb.run_query(sql)
-            print('ERR1 ', err)
-            if not err:
+            if err:
                 sorti = False
         sql = 'CREATE OR REPLACE VIEW {0}.results ' \
               'AS SELECT id_runs, "time", pknum,  var, val  FROM {0}.results_idx 	' \
@@ -1024,8 +1018,7 @@ class CheckTab:
               'on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;'
         sql = sql.format(self.mdb.SCHEMA)
         err = self.mdb.run_query(sql)
-        print('view ', err)
-        if not err:
+        if err:
             sorti = False
         print(sorti)
         return sorti

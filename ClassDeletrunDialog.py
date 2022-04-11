@@ -213,7 +213,7 @@ class ClassDeletrunDialog(QDialog):
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
 
         # delete results_val
-        sql = "DELETE  FROM {0}.results_val WHERE id_runs IN " \
+        sql = "DELETE  FROM {0}.results_val WHERE idruntpk IN " \
               "(SELECT DISTINCT id_runs FROM {0}.results_idx " \
               "where id_runs not in (SELECT id FROM {0}.runs));"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))

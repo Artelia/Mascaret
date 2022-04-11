@@ -2263,25 +2263,25 @@ class ClassMascaret:
     #
     #     return True
 
-    def get_for_lig(self, run, scen):
-
-        condition = "run='{0}' AND scenario='{1}'".format(run, scen)
-
-        t_max = self.mdb.select_max("t", "resultats", condition)
-        if t_max is None:
-            self.mgis.add_info("No previous results to create the .lig file.")
-            return None
-        condition = condition + " AND t=" + str(t_max)
-
-        result = self.mdb.select("resultats", condition, 'pk')
-        if not result:
-            self.mgis.add_info('No results for initialisation')
-            return None
-
-        result["X"] = result.pop("pk")
-        result["Z"] = result.pop("z")
-        result["Q"] = result.pop("q")
-        return result
+    # def get_for_lig(self, run, scen):
+    #
+    #     condition = "run='{0}' AND scenario='{1}'".format(run, scen)
+    #
+    #     t_max = self.mdb.select_max("t", "resultats", condition)
+    #     if t_max is None:
+    #         self.mgis.add_info("No previous results to create the .lig file.")
+    #         return None
+    #     condition = condition + " AND t=" + str(t_max)
+    #
+    #     result = self.mdb.select("resultats", condition, 'pk')
+    #     if not result:
+    #         self.mgis.add_info('No results for initialisation')
+    #         return None
+    #
+    #     result["X"] = result.pop("pk")
+    #     result["Z"] = result.pop("z")
+    #     result["Q"] = result.pop("q")
+    #     return result
 
     def opt_to_lig(self, run, scen, id_run, base_namefiles):
         """Creation of .lig file """
@@ -2508,10 +2508,17 @@ class ClassMascaret:
                                            "type_res = '"
                                            "tracer_TRANSPORT_PUR'".format(
                             self.mdb.SCHEMA, ','.join(list_var)))
-                        self.mdb.delete('results', condition)
+                        if 'results_old' in lst_tab:
+                            self.mdb.delete('results_old', condition)
+
                         self.mdb.delete('results_sect', condition)
                         self.mdb.delete('runs_graph', condition)
                         self.mdb.delete('runs_plani', condition)
+                        condition_val = "idruntpk IN " \
+                                        "(SELECT DISTINCT id_runs FROM {0}.results_idx " \
+                                        "where id_runs={1})".format(self.mdb.SCHEMA, id_run)
+                        self.mdb.delete('results_val', condition_val)
+                        self.mdb.delete('results_idx', condition)
                     if self.mgis.DEBUG:
                         self.mgis.add_info(
                             "Deletion of {0} scenario for {1} is done".format(
@@ -2712,7 +2719,7 @@ class ClassMascaret:
         """
         nomfich = os.path.join(self.dossierFileMasc, 'Fichier_Crete.csv')
         if os.path.isfile(nomfich):
-            try:
+            # try:
 
                 # Read file
                 dico_res = {}
@@ -2743,7 +2750,7 @@ class ClassMascaret:
                     where = "name = '{}'".format(name)
                     info = self.mdb.select('weirs', where=where,
                                            list_var=['gid', 'abscissa'], order='gid')
-                    if  len(info['gid']) > 1:
+                    if  len(info['gid']) < 1:
                         where = "name LIKE '{}%'".format(name)
                         info = self.mdb.select('weirs', where=where,
                                                list_var=['gid', 'abscissa'], order='gid')
@@ -2753,7 +2760,7 @@ class ClassMascaret:
                     dico_time[name] = list(time)
                     dict_idx = self.get_idruntpk()
                     v_tmp = self.creat_values_val(id_run, id_var, lpk,
-                                            time, dico_res[name]['ZSTR'], dict_idx )
+                                            time, dico_res[name]['ZSTR'], dict_idx)
                     values += v_tmp
                 if len(values) > 0:
                     self.mdb.insert_res('results_val', values, colonnes)
@@ -2764,10 +2771,10 @@ class ClassMascaret:
                                 [id_run, 'weirs', 'var', json.dumps([id_var])]]
                     col_tab = ['id_runs', 'type_res', 'var', 'val']
                     self.mdb.insert_res('runs_graph', list_insert, col_tab)
-            except Exception as e:
-                txt =  "Erreur load of mobil_gate results.\n"
-                self.mgis.add_info(txt)
-                self.mgis.add_info(e)
+            # except Exception as e:
+            #     txt =  "Erreur load of mobil_gate results.\n"
+            #     self.mgis.add_info(txt)
+            #     self.mgis.add_info(e)
 
 
     def insert_id_run(self, run, scen):
