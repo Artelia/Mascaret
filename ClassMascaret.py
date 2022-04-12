@@ -2758,7 +2758,6 @@ class ClassMascaret:
                         where = "name LIKE '{}%'".format(name)
                         info = self.mdb.select('weirs', where=where,
                                                list_var=['gid', 'abscissa'], order='gid')
-                    print(info)
                     time = dico_res[name]['TIME']
                     nbt = len(time)
                     lpk = [info['abscissa'][0] for i in range( nbt)]
@@ -2772,7 +2771,6 @@ class ClassMascaret:
                     v_tmp = self.creat_values_val(id_run, id_var, lpk,
                                             time, dico_res[name]['ZSTR'], dict_idx)
                     values += v_tmp
-                print(values )
                 if len(values) > 0:
                     self.mdb.insert_res('results_val', values, colonnes)
 
