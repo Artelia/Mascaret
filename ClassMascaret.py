@@ -1854,8 +1854,7 @@ class ClassMascaret:
             self.fct_only_init(noyau)
             return
 
-        # self.task_mascaret(None,tup=(
-        #                                               par, dict_scen, dict_lois,
+        # self.task_mascaret(None,tup=(par, dict_scen, dict_lois,
         #                                               comments, noyau, run))
         self.mgis.task_mas = QgsTask.fromFunction('Run Mascaret',
                                                   self.task_mascaret,
@@ -2129,21 +2128,21 @@ class ClassMascaret:
             col_tab = ['id_runs', 'type_res', 'var', 'val']
             self.mdb.insert_res('runs_graph', list_insert, col_tab)
 
-    def creat_values(self, id_run, id_name, lpk, ltime, lval):
-        """
-        create values list  for  insert_res function
-        :param id_name: (int) name index
-        :param id_run: (int) index of (run, screnario) couple
-        :param lpk: (list) pk list
-        :param ltime: (list) time list
-        :param lval:  (list) values list
-        :return: (list) value list
-        """
-        values = []
-        for time, pk, val in zip(ltime, lpk, lval):
-            values.append([id_run, time, pk, id_name, val])
-
-        return values
+    # def creat_values(self, id_run, id_name, lpk, ltime, lval):
+    #     """
+    #     create values list  for  insert_res function
+    #     :param id_name: (int) name index
+    #     :param id_run: (int) index of (run, screnario) couple
+    #     :param lpk: (list) pk list
+    #     :param ltime: (list) time list
+    #     :param lval:  (list) values list
+    #     :return: (list) value list
+    #     """
+    #     values = []
+    #     for time, pk, val in zip(ltime, lpk, lval):
+    #         values.append([id_run, time, pk, id_name, val])
+    #
+    #     return values
 
     def creat_values_val(self, id_run, id_name, lpk, ltime, lval, dico_idruntpk):
         """
@@ -2161,19 +2160,6 @@ class ClassMascaret:
 
         return values
 
-    def creat_values_idx(self, id_run,  lpk, ltime):
-        """
-        create values list  for  insert_res function
-        :param id_run: (int) index of (run, screnario) couple
-        :param lpk: (list) pk list
-        :param ltime: (list) time list
-        :return: (list) value list
-        """
-        values = []
-        for time, pk in zip(ltime, lpk):
-            values.append([id_run, time, pk])
-
-        return values
 
     # def lit_opt(self, run, scen, id_run, date_debut, base_namefile, comments='',
     #             tracer=False, casier=False):
@@ -2711,6 +2697,23 @@ class ClassMascaret:
 
         return False
 
+    def add_res_idx(self,id_runs, times, pks):
+        dict_idx = self.get_idruntpk()
+        values_idx = []
+        if isinstance(id_runs, list):
+            for id_run, time, pk in zip(id_runs,times, pks):
+                if  (id_run, time, pk ) not in dict_idx.keys():
+                    values_idx.append([id_run, time, pk])
+        else:
+            if (id_runs, times, pks) not in dict_idx.keys():
+                values_idx.append([id_runs, times, pks])
+
+        if len(values_idx) > 0:
+            col_tab_idx = ['id_runs', 'time', 'pknum']
+            self.mdb.new_insert_res('results_idx',
+                                    values_idx,
+                                    col_tab_idx)
+
     def read_mobil_gate_res(self, id_run):
         """
         read result mobil_gate
@@ -2719,9 +2722,9 @@ class ClassMascaret:
         """
         nomfich = os.path.join(self.dossierFileMasc, 'Fichier_Crete.csv')
         if os.path.isfile(nomfich):
-            # try:
+            try:
 
-                # Read file
+            # Read file
                 dico_res = {}
                 fich = open(nomfich, 'r')
 
@@ -2733,16 +2736,17 @@ class ClassMascaret:
                             dico_res[nom] = {'TIME': [], 'ZSTR': []}
                         dico_res[nom]['TIME'].append(float(liste[0].strip()))
                         dico_res[nom]['ZSTR'].append(float(liste[1].strip()))
+                fich.close()
+
 
                 var_info = {'var': 'ZSTR',
-                            'type_res': 'weirs',
-                            'name': 'valve movement',
-                            'type_var': 'float'}
+                                'type_res': 'weirs',
+                                'name': 'valve movement',
+                                'type_var': 'float'}
                 id_var = self.mdb.check_id_var(var_info)
                 # Stock information
             # colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
-                colonnes = ['idruntpk', 'time', 'val']
-
+                colonnes = ['idruntpk', 'var', 'val']
                 values = []
                 dico_pk = {}
                 dico_time = {}
@@ -2750,18 +2754,25 @@ class ClassMascaret:
                     where = "name = '{}'".format(name)
                     info = self.mdb.select('weirs', where=where,
                                            list_var=['gid', 'abscissa'], order='gid')
-                    if  len(info['gid']) < 1:
+                    if len(info['gid']) < 1:
                         where = "name LIKE '{}%'".format(name)
                         info = self.mdb.select('weirs', where=where,
                                                list_var=['gid', 'abscissa'], order='gid')
+                    print(info)
                     time = dico_res[name]['TIME']
-                    lpk = [info['abscissa'][0] for i in range(len(time))]
+                    nbt = len(time)
+                    lpk = [info['abscissa'][0] for i in range( nbt)]
+                    lrun = [id_run for i in range(nbt)]
                     dico_pk[name] = info['abscissa'][0]
                     dico_time[name] = list(time)
+                    self.add_res_idx(lrun, list(time), lpk)
+
                     dict_idx = self.get_idruntpk()
+
                     v_tmp = self.creat_values_val(id_run, id_var, lpk,
                                             time, dico_res[name]['ZSTR'], dict_idx)
                     values += v_tmp
+                print(values )
                 if len(values) > 0:
                     self.mdb.insert_res('results_val', values, colonnes)
 
@@ -2771,10 +2782,10 @@ class ClassMascaret:
                                 [id_run, 'weirs', 'var', json.dumps([id_var])]]
                     col_tab = ['id_runs', 'type_res', 'var', 'val']
                     self.mdb.insert_res('runs_graph', list_insert, col_tab)
-            # except Exception as e:
-            #     txt =  "Erreur load of mobil_gate results.\n"
-            #     self.mgis.add_info(txt)
-            #     self.mgis.add_info(e)
+            except Exception as e:
+                txt =  "Erreur load of mobil_gate results.\n"
+                self.mgis.add_info(txt)
+                self.mgis.add_info(e)
 
 
     def insert_id_run(self, run, scen):
@@ -3125,14 +3136,7 @@ class ClassMascaret:
             lpk = val['LNUM']
 
         # insert table result_idx
-       # lst_var = [ key for key in val_keys if isinstance(key, int)]
-        values_idx = self.creat_values_idx(id_run,  lpk, val['TIME'])
-        dict_idx = {}
-        if len(values_idx)>0:
-            col_tab_idx = ['id_runs', 'time', 'pknum']
-            self.mdb.new_insert_res('results_idx',
-                                    values_idx,
-                                    col_tab_idx)
+        self.add_res_idx([id_run for ii in range(len(lpk))],  val['TIME'], lpk)
         dict_idx = self.get_idruntpk()
         if not dict_idx :
             return False
@@ -3155,7 +3159,6 @@ class ClassMascaret:
                     val_sect.append((id_run, pk, int(bra), sect))
                     cond = True
 
-        #col_tab = ['id_runs', 'time', 'pknum', 'var', 'val']
         col_tab = ['idruntpk', 'var', 'val']
         nb_stock = 10000
         if len(values) > 0:
