@@ -1503,6 +1503,9 @@ $BODY$
 
     def version_postgres(self):
         """ get version postgres """
+        if not self.con:
+            self.mgis.add_info("Warning, there is not the database connection")
+            
         sql = 'SHOW server_version_num;'
         results = self.run_query(sql, fetch=True)
         if results :
