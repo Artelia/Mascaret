@@ -175,14 +175,6 @@ class ClassDeletrunDialog(QDialog):
                                                                  ",".join(
                                                                      scenarios))
                 self.mdb.delete("runs", sql)
-                if "resultats" in self.lst_tab:
-                    self.mdb.delete("resultats", sql)
-                    self.mdb.delete("resultats_basin", sql)
-                    self.mdb.delete("resultats_links", sql)
-                    self.mdb.vacuum(["resultats",
-                                     "resultats_basin",
-                                     "resultats_links"])
-
             # old si existe
             if "results_old" in self.lst_tab:
                 sql = "DELETE  FROM {0}.results_old " \

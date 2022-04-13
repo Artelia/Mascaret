@@ -2478,8 +2478,6 @@ class ClassMascaret:
                         self.mdb.SCHEMA, run, nom_scen), fetch=True)
 
                     self.mdb.delete('runs', condition)
-                    if 'resultats' in lst_tab:
-                        self.mdb.delete('resultats', condition)
                     # new results
                     if len(id_run) > 0:
                         id_run = id_run[0][0]

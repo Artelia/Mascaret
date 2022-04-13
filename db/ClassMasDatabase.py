@@ -1337,18 +1337,18 @@ $BODY$
                                                        self.port,
                                                        file, self.dbname,
                                                        self.host)
-
                 p = subprocess.Popen(commande, shell=True,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE
                                      , stdin=subprocess.PIPE)
                 outs, err = p.communicate()
-
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Import File :{0}".format(file))
                     self.mgis.add_info("{0}".format(outs.decode('utf-8')))
                 p.wait()
-
+                if len(err)> 0:
+                    self.mgis.add_info("{0}".format(err.decode('utf-8')))
+                    return False
                 return True
             else:
                 self.mgis.add_info('Executable file not found. '
@@ -1620,9 +1620,10 @@ $BODY$
                 # l'existant remettre name
                 sql = "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(actname)
                 self.run_query(sql)
+            self.mgis.add_info('Import is done.')
         self.ignor_schema = list()
 
-        self.mgis.add_info('Import is done.')
+
 
     def get_id_run(self, selection):
         """
