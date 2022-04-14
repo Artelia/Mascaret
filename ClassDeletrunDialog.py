@@ -178,7 +178,7 @@ class ClassDeletrunDialog(QDialog):
             # old si existe
             if "results_old" in self.lst_tab:
                 sql = "DELETE  FROM {0}.results_old " \
-                      "where id_runs not in (SELECT id FROM {0}.runs));"
+                      "where id_runs not in (SELECT id FROM {0}.runs);"
                 self.mdb.run_query(sql.format(self.mdb.SCHEMA))
                 self.mdb.vacuum(["results_old"])
 

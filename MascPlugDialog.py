@@ -453,11 +453,11 @@ class MascPlugDialog(QMainWindow):
             res = self.mdb.run_query(sql.format(model), fetch=True)
             if res:
                 self.mdb.SRID = int(res[0][0])
-            #  try:
-            self.chkt.update_adim()
-            # self except Exception as e:
-            #     self.add_info("********* Echec of update table ***********")
-            #     self.add_info('Error : {}'.format(e))
+            try:
+                self.chkt.update_adim()
+            except Exception as e:
+                self.add_info("********* Echec of update table ***********")
+                self.add_info('Error : {}'.format(e))
 
             self.mdb.load_model()
             crs = QgsCoordinateReferenceSystem(
