@@ -92,7 +92,7 @@ class ClassDeletshDialog(QDialog):
                     self.mgis.add_info(
                         "Deletion of {0} Model is done".format(model))
 
-                progress.setValue(i / float(n) * 100)
+                progress.setValue(round(i / n * 100))
         else:
             if self.mgis.DEBUG:
                 self.mgis.add_info('Droping Model cancelled.')

@@ -175,20 +175,21 @@ class ClassDeletrunDialog(QDialog):
                                                                  ",".join(
                                                                      scenarios))
                 self.mdb.delete("runs", sql)
-            # old si existe
-            if "results_old" in self.lst_tab:
-                sql = "DELETE  FROM {0}.results_old " \
-                      "where id_runs not in (SELECT id FROM {0}.runs);"
-                self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-                self.mdb.vacuum(["results_old"])
+                # old si existe
+                if "results_old" in self.lst_tab:
+                    sql = "DELETE  FROM {0}.results_old " \
+                          "where id_runs not in (SELECT id FROM {0}.runs);"
+                    self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+                    self.mdb.vacuum(["results_old"])
 
-            self.delete_useless_data()
+                self.delete_useless_data()
 
-            if self.mgis.DEBUG:
-                self.mgis.add_info(
-                    "Deletion of scenarii is done")
+                if self.mgis.DEBUG:
+                    self.mgis.add_info(
+                        "Deletion of scenarii is done")
+                progress.setValue(round(i / n * 100))
 
-                # progress.setValue(i / float(n) * 100)
+
 
         self.iface.messageBar().clearWidgets()
 
