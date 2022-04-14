@@ -345,7 +345,9 @@ class GraphCommonNew:
         absc = event.xdata
         if self.unit_x == 'date':
             cur_x = datetime.utcfromtimestamp(
-                round((absc - 719163) * 24) * 3600)
+                round((absc) * 24) * 3600)
+            # cur_x = datetime.utcfromtimestamp(
+            #     round((absc - 719163) * 24) * 3600)
             txt_x = cur_x
         else:
             cur_x = absc

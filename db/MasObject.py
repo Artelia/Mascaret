@@ -1722,9 +1722,9 @@ class admin_tab(MasObject):
 
 
 # new results table
-class results(MasObject):
+class results_old(MasObject):
     def __init__(self):
-        super(results, self).__init__()
+        super(results_old, self).__init__()
         self.order = 37
         self.geom_type = None
         self.attrs = [('id_runs', 'integer NOT NULL'),
@@ -1732,19 +1732,65 @@ class results(MasObject):
                       ('pknum', 'float'),
                       ('var', 'integer'),
                       ('val', 'float'),
-                      ('CONSTRAINT results_pkey',
+                      ('CONSTRAINT results_old_pkey',
                        ' PRIMARY KEY (id_runs, time, pknum, var)')]
 
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
-        qry += "CREATE INDEX IF NOT EXISTS results_id_runs_pknum " \
+        qry += "CREATE INDEX IF NOT EXISTS results_old_id_runs_pknum " \
                "ON {}.results(id_runs, pknum);".format(self.schema)
         qry += '\n'
-        qry += "CREATE INDEX IF NOT EXISTS results_id_runs_time " \
+        qry += "CREATE INDEX IF NOT EXISTS results_old_id_runs_time " \
                "ON {}.results(id_runs, time);".format(self.schema)
         qry += '\n'
         return qry
+
+
+class results_val(MasObject):
+    def __init__(self):
+        super(results_val, self).__init__()
+        self.order = 45
+        self.geom_type = None
+        self.attrs = [('idRunTPk', 'integer  NOT NULL'),
+                      ('var', 'integer'),
+                      ('val', 'float'),
+                      ('CONSTRAINT results_val_pkey',
+                       ' PRIMARY KEY (idRunTPk, var)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_val_idRunTPk " \
+               "ON {}.results_val(idRunTPk, var);".format(self.schema)
+        qry += '\n'
+        return qry
+
+
+class results_idx(MasObject):
+    def __init__(self):
+        super(results_idx, self).__init__()
+        self.order = 44
+        self.geom_type = None
+        self.attrs = [('idRunTPk', 'serial NOT NULL'),
+                      ('id_runs', 'integer NOT NULL'),
+                      ('time', 'float'),
+                      ('pknum', 'float'),
+                      ('CONSTRAINT results_idx_pkey',
+                       ' PRIMARY KEY (id_runs, time, pknum)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_idx_id_runs_pknum " \
+               "ON {}.results_idx(id_runs, pknum);".format(self.schema)
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_idx_id_runs_time " \
+               "ON {}.results_idx(id_runs, time);".format(self.schema)
+        qry += '\n'
+        return qry
+
+
 
 
 class results_sect(MasObject):

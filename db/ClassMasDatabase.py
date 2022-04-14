@@ -488,7 +488,8 @@ class ClassMasDatabase(object):
                       Maso.struct_fg, Maso.struct_fg_val,
                       Maso.weirs_mob_val,
                       # new results
-                      Maso.runs_graph, Maso.results, Maso.results_var,
+                      Maso.runs_graph,  Maso.results_var,
+                      Maso.results_idx, Maso.results_val, #Maso.results,
                       Maso.results_sect, Maso.runs_plani,
                       # hydro laws
                       Maso.law_config, Maso.law_values,
@@ -552,6 +553,15 @@ class ClassMasDatabase(object):
 
             # visualization
             self.load_gis_layer()
+
+            # create view
+            sql = 'CREATE VIEW {0}.results ' \
+                  'AS SELECT id_runs, "time", pknum,  var, val  FROM {0}.results_idx ' \
+                  'Inner join  {0}.results_val ' \
+                  'on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;'
+
+            sql = sql.format(self.SCHEMA)
+            self.run_query(sql)
 
             self.mgis.add_info('Model "{0}" completed'.format(self.SCHEMA))
 
@@ -1146,6 +1156,8 @@ $BODY$
                                                             valeurs)
         self.run_query(sql, many=True, list_many=liste_value)
 
+
+
     def new_insert_res(self, table, values, col_tab, be_quiet=False):
         try:
             if self.con:
@@ -1326,18 +1338,18 @@ $BODY$
                                                        self.port,
                                                        file, self.dbname,
                                                        self.host)
-
                 p = subprocess.Popen(commande, shell=True,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE
                                      , stdin=subprocess.PIPE)
                 outs, err = p.communicate()
-
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Import File :{0}".format(file))
                     self.mgis.add_info("{0}".format(outs.decode('utf-8')))
                 p.wait()
-
+                if len(err)> 0:
+                    self.mgis.add_info("{0}".format(err.decode('utf-8')))
+                    return False
                 return True
             else:
                 self.mgis.add_info('Executable file not found. '
@@ -1492,6 +1504,9 @@ $BODY$
 
     def version_postgres(self):
         """ get version postgres """
+        if not self.con:
+            self.mgis.add_info("Warning, there is not the database connection")
+            
         sql = 'SHOW server_version_num;'
         results = self.run_query(sql, fetch=True)
         if results :
@@ -1528,7 +1543,7 @@ $BODY$
             dest = src + '_ext{}_{}'.format(date, cpt)
         js_dict['export_name'] = dest
         self.ignor_schema += [dest]
-        list_tab_res = ['runs', 'results', 'results_sect',
+        list_tab_res = ['runs', 'results_idx','results_val', 'results_sect',
                         'runs_graph', 'runs_plani']
 
         qry = "SELECT clone_schema('{}','{}','{}');".format(src, dest,
@@ -1606,9 +1621,10 @@ $BODY$
                 # l'existant remettre name
                 sql = "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(actname)
                 self.run_query(sql)
+            self.mgis.add_info('Import is done.')
         self.ignor_schema = list()
 
-        self.mgis.add_info('Import is done.')
+
 
     def get_id_run(self, selection):
         """

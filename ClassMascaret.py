@@ -29,6 +29,7 @@ import sys
 import json
 import time
 import gc
+import numpy as np
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
@@ -879,8 +880,8 @@ class ClassMascaret:
 
         for nom in dict_lois.keys():
             if nom in libres["name"] and (
-                            dict_lois[nom]['type'] == 6 or \
-                                dict_lois[nom]['type'] == 7):
+                    dict_lois[nom]['type'] == 6 or \
+                    dict_lois[nom]['type'] == 7):
                 # les types sont ceux de
                 if dict_lois[nom]['type'] == 6:
                     # TODO and noyau!='transcritical'
@@ -1671,7 +1672,7 @@ class ClassMascaret:
                     tfinal = temp_dic['tempsMax']
                 elif temp_dic['critereArret'] == 2:
                     tfinal = temp_dic['tempsInit'] + temp_dic['pasTemps'] * \
-                                                     temp_dic['nbPasTemps']
+                             temp_dic['nbPasTemps']
                 elif temp_dic['critereArret'] == 3:
                     tfinal = 365 * 24 * 3600
 
@@ -1853,8 +1854,7 @@ class ClassMascaret:
             self.fct_only_init(noyau)
             return
 
-        # self.task_mascaret(None,tup=(
-        #                                               par, dict_scen, dict_lois,
+        # self.task_mascaret(None,tup=(par, dict_scen, dict_lois,
         #                                               comments, noyau, run))
         self.mgis.task_mas = QgsTask.fromFunction('Run Mascaret',
                                                   self.task_mascaret,
@@ -1966,7 +1966,7 @@ class ClassMascaret:
 
             if self.check_mobil_gate():
                 self.read_mobil_gate_res(id_run)
-
+        # #
         self.iface.messageBar().clearWidgets()
         self.mgis.add_info("Simulation finished")
         return
@@ -2061,17 +2061,12 @@ class ClassMascaret:
             # Linux(2.x and 3.x) ='linux2' or 'linux'
             # Windows = 'win32'
             # Windows / Cygwin = 'cygwin'
-            # MacOSX = 'darwin'
-            # OS / 2 = 'os2'
-            # OS / 2  EMX ='os2emx'
-            # RiscOS ='riscos'
-            # AtheOS= 'atheos
-            # pas d'erreur exe manque lib
             p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE
                                  , stdin=subprocess.PIPE)
             p.wait()
-            self.mgis.add_info("{0}".format(p.communicate()[0].decode("utf-8")))
+            txt = "{0}".format(p.communicate()[0].decode("utf-8"))
+            self.mgis.add_info(txt)
             return True
         else:
             pwd = os.getcwd()
@@ -2095,7 +2090,8 @@ class ClassMascaret:
     def res_fg(self, dico_res, id_run):
         """stock flood gate results"""
 
-        colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+        # colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+        colonnes = ['idruntpk', 'var', 'val']
         values = []
         var_info = {'var': 'ZSTR',
                     'type_res': 'struct',
@@ -2113,12 +2109,12 @@ class ClassMascaret:
             lpk = [rows['abscissa'][0] for var in range(len(time))]
             dico_pk[id_config] = rows['abscissa'][0]
             dico_time[id_config] = list(time)
-
-            v_tmp = self.creat_values(id_run, id_var, lpk,
-                                      time, dico_res[id_config]['ZSTR'])
+            dict_idx = self.get_idruntpk()
+            v_tmp = self.creat_values_val(id_run, id_var, lpk,
+                                          time, dico_res[id_config]['ZSTR'], dict_idx)
 
             values += v_tmp
-        self.mdb.insert_res('results', values, colonnes)
+        self.mdb.insert_res('results_val', values, colonnes)
 
         if len(dico_res.keys()) > 0:
             list_insert = [[id_run, 'struct', 'pknum', json.dumps(dico_pk)],
@@ -2127,7 +2123,23 @@ class ClassMascaret:
             col_tab = ['id_runs', 'type_res', 'var', 'val']
             self.mdb.insert_res('runs_graph', list_insert, col_tab)
 
-    def creat_values(self, id_run, id_name, lpk, ltime, lval):
+    # def creat_values(self, id_run, id_name, lpk, ltime, lval):
+    #     """
+    #     create values list  for  insert_res function
+    #     :param id_name: (int) name index
+    #     :param id_run: (int) index of (run, screnario) couple
+    #     :param lpk: (list) pk list
+    #     :param ltime: (list) time list
+    #     :param lval:  (list) values list
+    #     :return: (list) value list
+    #     """
+    #     values = []
+    #     for time, pk, val in zip(ltime, lpk, lval):
+    #         values.append([id_run, time, pk, id_name, val])
+    #
+    #     return values
+
+    def creat_values_val(self, id_run, id_name, lpk, ltime, lval, dico_idruntpk):
         """
         create values list  for  insert_res function
         :param id_name: (int) name index
@@ -2139,117 +2151,117 @@ class ClassMascaret:
         """
         values = []
         for time, pk, val in zip(ltime, lpk, lval):
-            values.append([id_run, time, pk, id_name, val])
+            values.append([dico_idruntpk[(id_run, time, pk)], id_name, val])
 
         return values
 
-    def lit_opt(self, run, scen, id_run, date_debut, base_namefile, comments='',
-                tracer=False, casier=False):
-        nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
-        # tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Load data ....")
-        if not os.path.isfile(nom_fich):
-            self.mgis.add_info("Simulation Error: there aren't results")
-            self.mdb.delete('runs', 'id={}'.format(id_run))
-            return False
+    # def lit_opt(self, run, scen, id_run, date_debut, base_namefile, comments='',
+    #             tracer=False, casier=False):
+    #     nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
+    #     # tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
+    #     if self.mgis.DEBUG:
+    #         self.mgis.add_info("Load data ....")
+    #     if not os.path.isfile(nom_fich):
+    #         self.mgis.add_info("Simulation Error: there aren't results")
+    #         self.mdb.delete('runs', 'id={}'.format(id_run))
+    #         return False
+    #
+    #     t, pk, col, value = self.read_opt(nom_fich, date_debut, scen, run)
+    #
+    #     if tracer:
+    #         nom_fich_tra = os.path.join(self.dossierFileMasc,
+    #                                     base_namefile + '.tra_opt')
+    #
+    #         if not os.path.isfile(nom_fich_tra):
+    #             self.mgis.add_info(
+    #                 "Simulation Error: there aren't results for tracer")
+    #             return False
+    #         t_tra, pk_tra, col_tra, value_tra = self.read_opt(nom_fich_tra,
+    #                                                           date_debut, scen,
+    #                                                           run)
+    #         if self.wq.cur_wq_mod == 'TRANSPORT_PUR':
+    #             dico_tra = self.mdb.select('tracer_name',
+    #                                        where="type ='{}' ".format(
+    #                                            self.wq.cur_wq_mod),
+    #                                        order='id',
+    #                                        list_var=['sigle', 'text'])
+    #
+    #             for cpt_tra, sigle in enumerate(dico_tra['sigle']):
+    #                 var_info = {'var': sigle,
+    #                             'type_res': 'tracer_TRANSPORT_PUR',
+    #                             'name': dico_tra['text'][cpt_tra],
+    #                             'type_var': 'float'}
+    #                 self.mdb.check_id_var(var_info)
+    #         lind = []
+    #         for i, c in enumerate(col_tra):
+    #             if c not in col:
+    #                 col.append(c)
+    #                 lind.append(i)
+    #         # add value_tra in value list
+    #         for j, lignval in enumerate(value):
+    #             for i in lind:
+    #                 lignval.append(value_tra[j][i])
+    #     tab = {id_run: {"t": list(t),
+    #                     "pk": list(pk)}
+    #            }
+    #     if date_debut:
+    #         tab[id_run]["init_date"] = "{:%Y-%m-%d %H:%M}".format(date_debut)
+    #     if comments != '':
+    #         tab[id_run]["comments"] = comments
+    #     if tracer:
+    #         tab[id_run]['wq'] = self.wq.cur_wq_mod
+    #
+    #     if tab[id_run]:
+    #         self.mdb.update("runs", tab, var='id')
+    #
+    #     liste_col = self.mdb.list_columns("resultats")
+    #     for c in col:
+    #         if c.lower() not in liste_col:
+    #             self.mdb.add_columns("resultats", c.lower())
+    #
+    #     self.mdb.insert_res("resultats", value, col)
+    #
+    #     if casier:
+    #         nom_fich_bas = os.path.join(self.dossierFileMasc,
+    #                                     base_namefile + '.cas_opt')
+    #         nom_fich_link = os.path.join(self.dossierFileMasc,
+    #                                      base_namefile + '.liai_opt')
+    #
+    #         t_bas, pk_bas, col_bas, value_bas = self.read_opt(nom_fich_bas,
+    #                                                           date_debut, scen,
+    #                                                           run,
+    #                                                           init_col=['t',
+    #                                                                     'bnum'])
+    #         t_link, pk_link, col_link, value_link = self.read_opt(nom_fich_link,
+    #                                                               date_debut,
+    #                                                               scen, run,
+    #                                                               init_col=['t',
+    #                                                                         'lnum'])
+    #
+    #         self.mdb.insert_res("resultats_basin", value_bas, col_bas)
+    #         self.mdb.insert_res("resultats_links", value_link, col_link)
+    #
+    #     return True
 
-        t, pk, col, value = self.read_opt(nom_fich, date_debut, scen, run)
-
-        if tracer:
-            nom_fich_tra = os.path.join(self.dossierFileMasc,
-                                        base_namefile + '.tra_opt')
-
-            if not os.path.isfile(nom_fich_tra):
-                self.mgis.add_info(
-                    "Simulation Error: there aren't results for tracer")
-                return False
-            t_tra, pk_tra, col_tra, value_tra = self.read_opt(nom_fich_tra,
-                                                              date_debut, scen,
-                                                              run)
-            if self.wq.cur_wq_mod == 'TRANSPORT_PUR':
-                dico_tra = self.mdb.select('tracer_name',
-                                           where="type ='{}' ".format(
-                                               self.wq.cur_wq_mod),
-                                           order='id',
-                                           list_var=['sigle', 'text'])
-
-                for cpt_tra, sigle in enumerate(dico_tra['sigle']):
-                    var_info = {'var': sigle,
-                                'type_res': 'tracer_TRANSPORT_PUR',
-                                'name': dico_tra['text'][cpt_tra],
-                                'type_var': 'float'}
-                    self.mdb.check_id_var(var_info)
-            lind = []
-            for i, c in enumerate(col_tra):
-                if c not in col:
-                    col.append(c)
-                    lind.append(i)
-            # add value_tra in value list
-            for j, lignval in enumerate(value):
-                for i in lind:
-                    lignval.append(value_tra[j][i])
-        tab = {id_run: {"t": list(t),
-                        "pk": list(pk)}
-               }
-        if date_debut:
-            tab[id_run]["init_date"] = "{:%Y-%m-%d %H:%M}".format(date_debut)
-        if comments != '':
-            tab[id_run]["comments"] = comments
-        if tracer:
-            tab[id_run]['wq'] = self.wq.cur_wq_mod
-
-        if tab[id_run]:
-            self.mdb.update("runs", tab, var='id')
-
-        liste_col = self.mdb.list_columns("resultats")
-        for c in col:
-            if c.lower() not in liste_col:
-                self.mdb.add_columns("resultats", c.lower())
-
-        self.mdb.insert_res("resultats", value, col)
-
-        if casier:
-            nom_fich_bas = os.path.join(self.dossierFileMasc,
-                                        base_namefile + '.cas_opt')
-            nom_fich_link = os.path.join(self.dossierFileMasc,
-                                         base_namefile + '.liai_opt')
-
-            t_bas, pk_bas, col_bas, value_bas = self.read_opt(nom_fich_bas,
-                                                              date_debut, scen,
-                                                              run,
-                                                              init_col=['t',
-                                                                        'bnum'])
-            t_link, pk_link, col_link, value_link = self.read_opt(nom_fich_link,
-                                                                  date_debut,
-                                                                  scen, run,
-                                                                  init_col=['t',
-                                                                            'lnum'])
-
-            self.mdb.insert_res("resultats_basin", value_bas, col_bas)
-            self.mdb.insert_res("resultats_links", value_link, col_link)
-
-        return True
-
-    def get_for_lig(self, run, scen):
-
-        condition = "run='{0}' AND scenario='{1}'".format(run, scen)
-
-        t_max = self.mdb.select_max("t", "resultats", condition)
-        if t_max is None:
-            self.mgis.add_info("No previous results to create the .lig file.")
-            return None
-        condition = condition + " AND t=" + str(t_max)
-
-        result = self.mdb.select("resultats", condition, 'pk')
-        if not result:
-            self.mgis.add_info('No results for initialisation')
-            return None
-
-        result["X"] = result.pop("pk")
-        result["Z"] = result.pop("z")
-        result["Q"] = result.pop("q")
-        return result
+    # def get_for_lig(self, run, scen):
+    #
+    #     condition = "run='{0}' AND scenario='{1}'".format(run, scen)
+    #
+    #     t_max = self.mdb.select_max("t", "resultats", condition)
+    #     if t_max is None:
+    #         self.mgis.add_info("No previous results to create the .lig file.")
+    #         return None
+    #     condition = condition + " AND t=" + str(t_max)
+    #
+    #     result = self.mdb.select("resultats", condition, 'pk')
+    #     if not result:
+    #         self.mgis.add_info('No results for initialisation')
+    #         return None
+    #
+    #     result["X"] = result.pop("pk")
+    #     result["Z"] = result.pop("z")
+    #     result["Q"] = result.pop("q")
+    #     return result
 
     def opt_to_lig(self, run, scen, id_run, base_namefiles):
         """Creation of .lig file """
@@ -2460,8 +2472,6 @@ class ClassMascaret:
                         self.mdb.SCHEMA, run, nom_scen), fetch=True)
 
                     self.mdb.delete('runs', condition)
-                    if 'resultats' in lst_tab:
-                        self.mdb.delete('resultats', condition)
                     # new results
                     if len(id_run) > 0:
                         id_run = id_run[0][0]
@@ -2476,10 +2486,17 @@ class ClassMascaret:
                                            "type_res = '"
                                            "tracer_TRANSPORT_PUR'".format(
                             self.mdb.SCHEMA, ','.join(list_var)))
-                        self.mdb.delete('results', condition)
+                        if 'results_old' in lst_tab:
+                            self.mdb.delete('results_old', condition)
+
                         self.mdb.delete('results_sect', condition)
                         self.mdb.delete('runs_graph', condition)
                         self.mdb.delete('runs_plani', condition)
+                        condition_val = "idruntpk IN " \
+                                        "(SELECT DISTINCT id_runs FROM {0}.results_idx " \
+                                        "where id_runs={1})".format(self.mdb.SCHEMA, id_run)
+                        self.mdb.delete('results_val', condition_val)
+                        self.mdb.delete('results_idx', condition)
                     if self.mgis.DEBUG:
                         self.mgis.add_info(
                             "Deletion of {0} scenario for {1} is done".format(
@@ -2672,6 +2689,23 @@ class ClassMascaret:
 
         return False
 
+    def add_res_idx(self, id_runs, times, pks):
+        dict_idx = self.get_idruntpk()
+        values_idx = []
+        if isinstance(id_runs, list):
+            for id_run, time, pk in zip(id_runs, times, pks):
+                if (id_run, time, pk) not in dict_idx.keys():
+                    values_idx.append([id_run, time, pk])
+        else:
+            if (id_runs, times, pks) not in dict_idx.keys():
+                values_idx.append([id_runs, times, pks])
+
+        if len(values_idx) > 0:
+            col_tab_idx = ['id_runs', 'time', 'pknum']
+            self.mdb.new_insert_res('results_idx',
+                                    values_idx,
+                                    col_tab_idx)
+
     def read_mobil_gate_res(self, id_run):
         """
         read result mobil_gate
@@ -2681,6 +2715,7 @@ class ClassMascaret:
         nomfich = os.path.join(self.dossierFileMasc, 'Fichier_Crete.csv')
         if os.path.isfile(nomfich):
             try:
+
                 # Read file
                 dico_res = {}
                 fich = open(nomfich, 'r')
@@ -2694,36 +2729,42 @@ class ClassMascaret:
                         dico_res[nom]['TIME'].append(float(liste[0].strip()))
                         dico_res[nom]['ZSTR'].append(float(liste[1].strip()))
                 fich.close()
+
                 var_info = {'var': 'ZSTR',
                             'type_res': 'weirs',
                             'name': 'valve movement',
                             'type_var': 'float'}
                 id_var = self.mdb.check_id_var(var_info)
                 # Stock information
-                colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+                # colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+                colonnes = ['idruntpk', 'var', 'val']
                 values = []
                 dico_pk = {}
                 dico_time = {}
-
-
                 for name in dico_res.keys():
                     where = "name = '{}'".format(name)
                     info = self.mdb.select('weirs', where=where,
-                                           list_var=['gid', 'abscissa'], order='gid', verbose=False)
-                    if  len(info['gid']) < 1:
+                                           list_var=['gid', 'abscissa'], order='gid')
+                    if len(info['gid']) < 1:
+
                         where = "name LIKE '{}%'".format(name)
                         info = self.mdb.select('weirs', where=where,
-                                               list_var=['gid', 'abscissa'], order='gid', verbose=False)
+                                               list_var=['gid', 'abscissa'], order='gid')
                     time = dico_res[name]['TIME']
-                    dico_time[name] = list(time)
-                    lpk = [info['abscissa'][0] for i in range(len(time))]
+                    nbt = len(time)
+                    lpk = [info['abscissa'][0] for i in range(nbt)]
+                    lrun = [id_run for i in range(nbt)]
                     dico_pk[name] = info['abscissa'][0]
+                    dico_time[name] = list(time)
+                    self.add_res_idx(lrun, list(time), lpk)
 
-                    v_tmp = self.creat_values(id_run, id_var, lpk,
-                                              time, dico_res[name]['ZSTR'])
+                    dict_idx = self.get_idruntpk()
+
+                    v_tmp = self.creat_values_val(id_run, id_var, lpk,
+                                                  time, dico_res[name]['ZSTR'], dict_idx)
                     values += v_tmp
                 if len(values) > 0:
-                    self.mdb.insert_res('results', values, colonnes)
+                    self.mdb.insert_res('results_val', values, colonnes)
 
                 if len(dico_res.keys()) > 0:
                     list_insert = [[id_run, 'weirs', 'pknum', json.dumps(dico_pk)],
@@ -2732,7 +2773,7 @@ class ClassMascaret:
                     col_tab = ['id_runs', 'type_res', 'var', 'val']
                     self.mdb.insert_res('runs_graph', list_insert, col_tab)
             except Exception as e:
-                txt =  "Erreur load of mobil_gate results.\n"
+                txt = "Erreur load of mobil_gate results.\n"
                 self.mgis.add_info(txt)
                 self.mgis.add_info(e)
 
@@ -3058,6 +3099,15 @@ class ClassMascaret:
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
 
+    def get_idruntpk(self):
+        dict_idx = dict()
+        tmp = self.mdb.select('results_idx', list_var=['idruntpk', 'id_runs', 'time', 'pknum'])
+        if tmp:
+            for iter_id in range(len(tmp["idruntpk"])):
+                dict_idx[(tmp['id_runs'][iter_id], tmp['time'][iter_id], tmp['pknum'][iter_id])] \
+                    = tmp["idruntpk"][iter_id]
+        return dict_idx
+
     def save_new_results(self, val, id_run):
         """
         Save values in results table
@@ -3073,12 +3123,20 @@ class ClassMascaret:
             lpk = val['BNUM']
         elif 'LNUM' in val_keys:
             lpk = val['LNUM']
+
+        # insert table result_idx
+        self.add_res_idx([id_run for ii in range(len(lpk))], val['TIME'], lpk)
+        dict_idx = self.get_idruntpk()
+        if not dict_idx:
+            return False
         values = []
         val_sect = []
         for key in val_keys:
             if isinstance(key, int):
-                v_tmp = self.creat_values(id_run, key, lpk,
-                                          val['TIME'], val[key])
+                # v_tmp = self.creat_values(id_run, key, lpk,
+                #                           val['TIME'], val[key])
+                v_tmp = self.creat_values_val(id_run, key, lpk,
+                                              val['TIME'], val[key], dict_idx)
                 values += v_tmp
             elif key == 'BRANCH':
                 val_sect = []
@@ -3090,22 +3148,22 @@ class ClassMascaret:
                     val_sect.append((id_run, pk, int(bra), sect))
                     cond = True
 
-        col_tab = ['id_runs', 'time', 'pknum', 'var', 'val']
+        col_tab = ['idruntpk', 'var', 'val']
         nb_stock = 10000
         if len(values) > 0:
             nb = max(int(len(values) / nb_stock), 1)
             if nb == 1:
-                self.mdb.new_insert_res('results',
+                self.mdb.new_insert_res('results_val',
                                         values,
                                         col_tab)
             else:
                 for i in range(nb - 1):
-                    self.mdb.new_insert_res('results',
+                    self.mdb.new_insert_res('results_val',
                                             values[
                                             nb_stock * i:nb_stock * (i + 1)],
                                             col_tab)
                 if nb_stock * (i + 1) < len(values):
-                    self.mdb.new_insert_res('results',
+                    self.mdb.new_insert_res('results_val',
                                             values[nb_stock * (i + 1):],
                                             col_tab)
 
@@ -3120,7 +3178,7 @@ class ClassMascaret:
                 for i in range(nb - 1):
                     self.mdb.new_insert_res('results_sect', val_sect[
                                                             nb_stock * i:nb_stock * (
-                                                                i + 1)],
+                                                                    i + 1)],
                                             col_sect)
                 if nb_stock * (i + 1) < len(val_sect):
                     self.mdb.new_insert_res('results_sect',

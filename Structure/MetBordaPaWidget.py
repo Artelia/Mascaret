@@ -159,4 +159,4 @@ class MetBordaPaWidget(QWidget):
         self.completed += val
         if self.completed > 100:
             self.completed = 100
-        self.progress.setValue(self.completed)
+        self.progress.setValue(round(self.completed))
