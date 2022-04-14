@@ -880,8 +880,8 @@ class ClassMascaret:
 
         for nom in dict_lois.keys():
             if nom in libres["name"] and (
-                            dict_lois[nom]['type'] == 6 or \
-                                dict_lois[nom]['type'] == 7):
+                    dict_lois[nom]['type'] == 6 or \
+                    dict_lois[nom]['type'] == 7):
                 # les types sont ceux de
                 if dict_lois[nom]['type'] == 6:
                     # TODO and noyau!='transcritical'
@@ -1672,7 +1672,7 @@ class ClassMascaret:
                     tfinal = temp_dic['tempsMax']
                 elif temp_dic['critereArret'] == 2:
                     tfinal = temp_dic['tempsInit'] + temp_dic['pasTemps'] * \
-                                                     temp_dic['nbPasTemps']
+                             temp_dic['nbPasTemps']
                 elif temp_dic['critereArret'] == 3:
                     tfinal = 365 * 24 * 3600
 
@@ -1966,7 +1966,7 @@ class ClassMascaret:
 
             if self.check_mobil_gate():
                 self.read_mobil_gate_res(id_run)
-
+        # #
         self.iface.messageBar().clearWidgets()
         self.mgis.add_info("Simulation finished")
         return
@@ -2061,17 +2061,12 @@ class ClassMascaret:
             # Linux(2.x and 3.x) ='linux2' or 'linux'
             # Windows = 'win32'
             # Windows / Cygwin = 'cygwin'
-            # MacOSX = 'darwin'
-            # OS / 2 = 'os2'
-            # OS / 2  EMX ='os2emx'
-            # RiscOS ='riscos'
-            # AtheOS= 'atheos
-            # pas d'erreur exe manque lib
             p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE
                                  , stdin=subprocess.PIPE)
             p.wait()
-            self.mgis.add_info("{0}".format(p.communicate()[0].decode("utf-8")))
+            txt = "{0}".format(p.communicate()[0].decode("utf-8"))
+            self.mgis.add_info(txt)
             return True
         else:
             pwd = os.getcwd()
@@ -2095,7 +2090,7 @@ class ClassMascaret:
     def res_fg(self, dico_res, id_run):
         """stock flood gate results"""
 
-        #colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+        # colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
         colonnes = ['idruntpk', 'var', 'val']
         values = []
         var_info = {'var': 'ZSTR',
@@ -2116,7 +2111,7 @@ class ClassMascaret:
             dico_time[id_config] = list(time)
             dict_idx = self.get_idruntpk()
             v_tmp = self.creat_values_val(id_run, id_var, lpk,
-                                      time, dico_res[id_config]['ZSTR'], dict_idx)
+                                          time, dico_res[id_config]['ZSTR'], dict_idx)
 
             values += v_tmp
         self.mdb.insert_res('results_val', values, colonnes)
@@ -2159,7 +2154,6 @@ class ClassMascaret:
             values.append([dico_idruntpk[(id_run, time, pk)], id_name, val])
 
         return values
-
 
     # def lit_opt(self, run, scen, id_run, date_debut, base_namefile, comments='',
     #             tracer=False, casier=False):
@@ -2695,12 +2689,12 @@ class ClassMascaret:
 
         return False
 
-    def add_res_idx(self,id_runs, times, pks):
+    def add_res_idx(self, id_runs, times, pks):
         dict_idx = self.get_idruntpk()
         values_idx = []
         if isinstance(id_runs, list):
-            for id_run, time, pk in zip(id_runs,times, pks):
-                if  (id_run, time, pk ) not in dict_idx.keys():
+            for id_run, time, pk in zip(id_runs, times, pks):
+                if (id_run, time, pk) not in dict_idx.keys():
                     values_idx.append([id_run, time, pk])
         else:
             if (id_runs, times, pks) not in dict_idx.keys():
@@ -2722,7 +2716,7 @@ class ClassMascaret:
         if os.path.isfile(nomfich):
             try:
 
-            # Read file
+                # Read file
                 dico_res = {}
                 fich = open(nomfich, 'r')
 
@@ -2736,14 +2730,13 @@ class ClassMascaret:
                         dico_res[nom]['ZSTR'].append(float(liste[1].strip()))
                 fich.close()
 
-
                 var_info = {'var': 'ZSTR',
-                                'type_res': 'weirs',
-                                'name': 'valve movement',
-                                'type_var': 'float'}
+                            'type_res': 'weirs',
+                            'name': 'valve movement',
+                            'type_var': 'float'}
                 id_var = self.mdb.check_id_var(var_info)
                 # Stock information
-            # colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
+                # colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
                 colonnes = ['idruntpk', 'var', 'val']
                 values = []
                 dico_pk = {}
@@ -2758,7 +2751,7 @@ class ClassMascaret:
                                                list_var=['gid', 'abscissa'], order='gid')
                     time = dico_res[name]['TIME']
                     nbt = len(time)
-                    lpk = [info['abscissa'][0] for i in range( nbt)]
+                    lpk = [info['abscissa'][0] for i in range(nbt)]
                     lrun = [id_run for i in range(nbt)]
                     dico_pk[name] = info['abscissa'][0]
                     dico_time[name] = list(time)
@@ -2767,22 +2760,21 @@ class ClassMascaret:
                     dict_idx = self.get_idruntpk()
 
                     v_tmp = self.creat_values_val(id_run, id_var, lpk,
-                                            time, dico_res[name]['ZSTR'], dict_idx)
+                                                  time, dico_res[name]['ZSTR'], dict_idx)
                     values += v_tmp
                 if len(values) > 0:
                     self.mdb.insert_res('results_val', values, colonnes)
 
                 if len(dico_res.keys()) > 0:
                     list_insert = [[id_run, 'weirs', 'pknum', json.dumps(dico_pk)],
-                                [id_run, 'weirs', 'time', json.dumps(dico_time)],
-                                [id_run, 'weirs', 'var', json.dumps([id_var])]]
+                                   [id_run, 'weirs', 'time', json.dumps(dico_time)],
+                                   [id_run, 'weirs', 'var', json.dumps([id_var])]]
                     col_tab = ['id_runs', 'type_res', 'var', 'val']
                     self.mdb.insert_res('runs_graph', list_insert, col_tab)
             except Exception as e:
-                txt =  "Erreur load of mobil_gate results.\n"
+                txt = "Erreur load of mobil_gate results.\n"
                 self.mgis.add_info(txt)
                 self.mgis.add_info(e)
-
 
     def insert_id_run(self, run, scen):
         """
@@ -3132,9 +3124,9 @@ class ClassMascaret:
             lpk = val['LNUM']
 
         # insert table result_idx
-        self.add_res_idx([id_run for ii in range(len(lpk))],  val['TIME'], lpk)
+        self.add_res_idx([id_run for ii in range(len(lpk))], val['TIME'], lpk)
         dict_idx = self.get_idruntpk()
-        if not dict_idx :
+        if not dict_idx:
             return False
         values = []
         val_sect = []
@@ -3142,8 +3134,8 @@ class ClassMascaret:
             if isinstance(key, int):
                 # v_tmp = self.creat_values(id_run, key, lpk,
                 #                           val['TIME'], val[key])
-                v_tmp =  self.creat_values_val(id_run, key, lpk,
-                                           val['TIME'], val[key],dict_idx)
+                v_tmp = self.creat_values_val(id_run, key, lpk,
+                                              val['TIME'], val[key], dict_idx)
                 values += v_tmp
             elif key == 'BRANCH':
                 val_sect = []
@@ -3185,7 +3177,7 @@ class ClassMascaret:
                 for i in range(nb - 1):
                     self.mdb.new_insert_res('results_sect', val_sect[
                                                             nb_stock * i:nb_stock * (
-                                                                i + 1)],
+                                                                    i + 1)],
                                             col_sect)
                 if nb_stock * (i + 1) < len(val_sect):
                     self.mdb.new_insert_res('results_sect',
