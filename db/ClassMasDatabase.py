@@ -555,10 +555,11 @@ class ClassMasDatabase(object):
             self.load_gis_layer()
 
             # create view
-            sql = 'CREATE VIEW {}.results ' \
-                  'AS SELECT id_runs, "time", pknum,  var, val  FROM {}.results_idx 	' \
-                  'Inner join  {}.results_val ' \
-                  'on {}.results_val.idruntpk = {}.results_idx.idruntpk;'
+            sql = 'CREATE VIEW {0}.results ' \
+                  'AS SELECT id_runs, "time", pknum,  var, val  FROM {0}.results_idx ' \
+                  'Inner join  {0}.results_val ' \
+                  'on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;'
+
             sql = sql.format(self.SCHEMA)
             self.run_query(sql)
 
