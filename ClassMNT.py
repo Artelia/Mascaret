@@ -43,9 +43,6 @@ class ClassMNT(QObject):
         return round(float(x),  arrondi)
 
     def run(self):
-
-        # try:
-
         features = self.profil.selectedFeatures()
         self.profil.startEditing()
 

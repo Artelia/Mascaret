@@ -241,7 +241,7 @@ class MascPlugDialog(QMainWindow):
 
         # TODO Finaliser
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(True)
+        self.ui.actionTest.setVisible(False)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(
