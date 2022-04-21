@@ -30,7 +30,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    4.0.12 : Correction of planimetrie stockage bug
+    4.0.12 : Correction of the bug on planimetry storage
     4.0.11 : Correction to read the results of mobile weirs movement
              Correction warning to progress function
              Reduces MNT accuracy (10e-3) during extractions
@@ -41,8 +41,8 @@ changelog=
     4.0.9  : Correction of a bug of graphic of the hydraulic structure
              Correction of a bug about translation in the profile editor menu
              Correction of a bug about the import database function
-             Correction of a bug in Socres Menu
-    4.0.8  : Correction of a bug in Socres Menu
+             Correction of a bug in Scores Menu
+    4.0.8  : Correction of a bug in Scores Menu
              Remove the storage in the topo table of upstream and downstream curves
              Correction of a bug on the desactive the  point or zone selection
     4.0.7  :Correction of a bug to save a profile on profile editor menu
