@@ -427,7 +427,7 @@ class ClassResProfil:
             valeurs = "({})".format(",".join(temp))
             list_insert2 = []
             for lst in list_insert:
-                if lst not in list_insert:
+                if lst not in list_insert2:
                     list_insert2.append(lst)
             sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
                                                                 "runs_plani",
