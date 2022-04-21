@@ -276,8 +276,9 @@ class GraphProfilResultDialog(QWidget):
 
         return dico_plani
 
-    def check_run_plani(self, pk):
 
+
+    def check_run_plani(self, pk):
         pt_bas = None
         elem = self.get_run_plani(pk)
 
@@ -288,18 +289,23 @@ class GraphProfilResultDialog(QWidget):
         if len(elem['id_type']) > 0 and pt_bas:
             dico_plani = self.create_dico_plani(elem, pt_bas)
         else:
-
             if not 'pt_bas' in self.info_graph['opt'].keys():
                 # if pt_bas not existe => update table
                 cond = True
             else:
-                if len(self.info_graph['opt']['pt_bas'].keys()) < 1:
+                if len(self.info_graph['opt']['pt_bas'].keys()) < 1 :
                     # if  no itmes => update table
                     cond = True
                 else:
-                    # no need to update  table because of the items are not able to existe
-                    cond = False
-
+                    # check if data
+                    where = 'id_runs = {} '.format(self.cur_run)
+                    test = self.mdb.select_distinct("id_type", 'runs_plani',
+                                                    where=where)
+                    if not test:
+                        cond = True
+                    else:
+                        # no need to update  table because of the items are not able to existe
+                        cond = False
             if cond:
                 # creation Complete table si information n'existat pour le run
                 cl_geo = ClassResProfil()
