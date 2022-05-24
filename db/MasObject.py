@@ -559,7 +559,7 @@ class branchs(MasObject):
 
     def pg_updat_actv(self):
         qry = 'CREATE TRIGGER {1}_chstate_active\n' \
-              ' AFTER UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
+              ' AFTER UPDATE OF active \n  ON {0}.{1}\n'.format(self.schema, self.name)
         qry += ' FOR EACH ROW\n' \
                'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
                'EXECUTE PROCEDURE chstate_branch();\n'

@@ -76,6 +76,7 @@ class CheckTab:
                                   '4.0.10',
                                   '4.0.11',
                                   '4.0.12',
+                                  '4.0.13',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -219,6 +220,7 @@ class CheckTab:
             '4.0.10': {},
             '4.0.11': { 'fct': [lambda: self.update_4011()], },
             '4.0.12': {},
+            '4.0.13': {'fct': [lambda: self.change_branchs_chstate_active()], },
             # '3.0.x': { },
 
         }
@@ -1025,4 +1027,10 @@ class CheckTab:
         print(sorti)
         return sorti
 
-
+    def change_branchs_chstate_active(self):
+        sql = "DROP TRIGGER IF EXISTS branchs_chstate_active " \
+              "ON {0}.branchs; " \
+              "CREATE TRIGGER branchs_chstate_active " \
+              "AFTER UPDATE OF active ON {0}.branchs " \
+              "FOR EACH ROW EXECUTE PROCEDURE public.chstate_branch();".format(self.mdb.SCHEMA)
+        self.mdb.run_query(sql)
