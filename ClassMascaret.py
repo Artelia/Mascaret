@@ -345,7 +345,7 @@ class ClassMascaret:
                                      geom,
                                      row_number() 
                                         OVER (PARTITION BY branch, planim 
-                                              ORDER BY zonenum)
+                                              ORDER BY  branch,zonenum)
                                         - zonenum AS grp
                               FROM   {0}.branchs
                               WHERE active) x
@@ -388,10 +388,10 @@ class ClassMascaret:
                                                  geom,
                                                  row_number()
                                                     OVER (PARTITION BY branch,
-                                                         mesh ORDER BY zonenum)
+                                                         mesh ORDER BY  branch,zonenum)
                                                     - zonenum AS grp,
                                                  branch-lead(branch,1,branch+1)
-                                                OVER (ORDER BY zonenum) AS diff
+                                                OVER (ORDER BY  branch,zonenum) AS diff
                                           FROM   {0}.branchs
                                           WHERE active) x
                                    GROUP  BY branch, mesh, grp) AS t1,
