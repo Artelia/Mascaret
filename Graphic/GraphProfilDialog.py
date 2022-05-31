@@ -1856,7 +1856,7 @@ class GraphProfil(GraphCommon):
                 err['nplan'] = 'No compute discretization'
 
         dict_interp = {}
-        if idam and idav:
+        if isinstance(idam, int) and isinstance(idav, int):
             dict_interp['up'] = self.get_pr(idam)
             dict_interp['down'] = self.get_pr(idav)
 
@@ -2009,6 +2009,7 @@ class GraphProfil(GraphCommon):
         msgerr = ''
         idam = None
         idav = None
+
         id = self.liste['name'].index(self.nom)
         idmax = len(self.liste["name"]) - 1
         if id == 0:
@@ -2027,7 +2028,7 @@ class GraphProfil(GraphCommon):
                 break
         # downstream
         idf = id
-        while idf != idmax - 1:
+        while idf != idmax :
             idf += 1
             if self.liste['x'][idf] is not None:
                 idav = idf
