@@ -1556,14 +1556,26 @@ $BODY$
         # add selection
         lst_run = self.get_id_run(selection)
         if len(lst_run) > 0:
+            lst_run = ["{}".format(id) for id in lst_run]
+            res = None
             for tab in list_tab_res:
                 if tab == 'runs':
                     sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id IN ({4}) );"""
+                    sql = sql.format(dest, tab, src, tab, ','.join(lst_run))
+                elif tab == 'results_idx':
+                    sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id_runs IN ({4}) );"""
+                    sql = sql.format(dest, tab, src, tab, ','.join(lst_run))
+                    res = self.select_distinct('idruntpk', "results_idx", where="id_runs IN ({0})".format(','.join(lst_run)))
+                elif tab == 'results_val':
+                    sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE idruntpk IN ({4}) );"""
+                    if res :
+                        sql = sql.format(dest, tab, src, tab, ','.join([ str(a) for a in res['idruntpk']]))
+                    else:
+                        sql = None
                 else:
                     sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id_runs IN ({4}) );"""
-                lst_run = ["{}".format(id) for id in lst_run]
-
-                sql = sql.format(dest, tab, src, tab, ','.join(lst_run))
+                    sql = sql.format(dest, tab, src, tab, ','.join(lst_run))
+                
                 self.run_query(sql)
 
         basename = os.path.basename(file)
