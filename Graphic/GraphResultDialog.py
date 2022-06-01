@@ -152,8 +152,9 @@ class GraphResultDialog(QWidget):
                                 'Last chart is empty.')
             return
         itm = QListWidgetItem()
-        itm.setSizeHint(QSize(itm.sizeHint().width(), 20))
+        itm.setSizeHint(QSize(0, 22))
         self.lw_graph.addItem(itm)
+
 
         wgt = CompareCurveSelectorWidget(self.mgis, idx, self.typ_graph,
                                          self.typ_res, self.x_var,
