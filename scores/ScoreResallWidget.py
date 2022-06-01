@@ -188,7 +188,7 @@ class ScoreResallWidget(QWidget):
     def export_csv(self):
         """Export Table to .CSV file"""
         clipboard = self.clipboard_fill()
-        txt = 'Scores_results.csv'
+        txt = 'Scores_results'
         default_name = txt.replace(' ', '_').replace(':', '-')
         file_name_path, _ = QFileDialog.getSaveFileName(self,
                                                         "saveFile",
