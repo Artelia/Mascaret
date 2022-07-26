@@ -358,7 +358,7 @@ class ClassResProfil:
 
     def plani_stock(self, dico_zmax, id_run, database):
         self.mdb = database
-        prof = self.mdb.select('profiles', order='abscissa',
+        prof = self.mdb.select('profiles', order='abscissa', where='active',
                                list_var=['abscissa', 'x', 'z', 'leftminbed',
                                          'rightminbed', 'leftstock',
                                          'rightstock', 'zleftminbed',
