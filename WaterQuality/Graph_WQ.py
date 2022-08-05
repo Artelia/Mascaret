@@ -18,7 +18,7 @@ email                :
  ***************************************************************************/
 """
 
-from ..GraphCommon import GraphCommon
+from ..Graphic.GraphCommon import GraphCommon
 
 
 class GraphWaterQ(GraphCommon):
@@ -27,6 +27,11 @@ class GraphWaterQ(GraphCommon):
     def __init__(self, mgis=None, lay=None, mod=None):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
+        self.axes = None
+        self.list_trac = []
+        self.courbeTrac = None
+        self.courbes = []
+
         self.init_ui_common_p()
         self.gui_graph(lay)
         self.init_ui(mod)
@@ -160,10 +165,7 @@ class GraphInitConc(GraphCommon):
             if config is not None:
                 sql = "SELECT abscissa, value FROM {0}.init_conc_wq " \
                       "WHERE id_config = {1} and bief = {2} and id_trac = {3} ORDER BY abscissa".format(
-                    self.mdb.SCHEMA,
-                    config,
-                    bief,
-                    trac["id"])
+                    self.mdb.SCHEMA, config, bief, trac["id"])
                 rows = self.mdb.run_query(sql, fetch=True)
                 if len(rows) > 0:
                     lst = list(zip(*rows))

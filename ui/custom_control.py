@@ -24,15 +24,11 @@ import numpy as np
 import re
 
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtCore import qVersion
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 
-if int(qVersion()[0]) < 5:
-    from qgis.PyQt.QtGui import QMessageBox, QValidator, QDoubleSpinBox
-else:  # qt5
-    from qgis.PyQt.QtGui import QValidator
-    from qgis.PyQt.QtWidgets import QMessageBox, QDoubleSpinBox
+from qgis.PyQt.QtGui import QValidator
+from qgis.PyQt.QtWidgets import QMessageBox, QDoubleSpinBox
 
 
 # *******************************************************************************
@@ -61,6 +57,7 @@ class ClassWarningBox:
     def info(self, msg, title=''):
         QMessageBox.warning(None, title, msg)
 
+
 # *******************************************************************************
 #   Class  ScientificDoubleSpinBox
 # *******************************************************************************
@@ -86,6 +83,10 @@ class FloatValidator(QValidator):
 
 
 class ScientificDoubleSpinBox(QDoubleSpinBox):
+    """
+    Class QDoubleSpinBox with scientific format
+    """
+
     def __init__(self, *args, **kwargs):
         super(ScientificDoubleSpinBox, self).__init__(*args, **kwargs)
         self.setMinimum(-np.inf)
@@ -120,3 +121,8 @@ def format_float(value):
     string = re.sub("e(-?)0*(\d+)", r"e\1\2", string)
     return string
     # *******************************************************************************
+
+
+def datetime2QDateTime(date):
+    return QDateTime(date.year, date.month, date.day,
+                     date.hour, date.minute, date.second)

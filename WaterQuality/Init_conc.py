@@ -44,9 +44,11 @@ class InitConcDialog(QDialog):
         self.mdb = self.mgis.mdb
         self.tbwq = ClassTableWQ(self.mgis, self.mdb)
         self.cur_wq_mod = self.tbwq.dico_mod_wq[obj.type]
+        self.list_trac = []
         self.cur_wq_law = id
         self.cur_wq_law_name = name
         self.filling_tab = False
+        self.action = None
 
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_init_conc.ui'), self)
@@ -64,6 +66,7 @@ class InitConcDialog(QDialog):
         self.ui.b_OK_page2.accepted.connect(self.accept_page2)
         self.ui.b_OK_page2.rejected.connect(self.reject_page2)
         self.ui.cb_bief.currentIndexChanged[int].connect(self.change_bief)
+        self.graph_edit = None
 
         self.init_ui()
 
@@ -85,8 +88,10 @@ class InitConcDialog(QDialog):
             self.mdb.SCHEMA,
             self.tbwq.dico_wq_mod[
                 self.cur_wq_mod])
+
         rows = self.mdb.run_query(sql, fetch=True)
         model.insertColumns(2, len(rows))
+
         for r, row in enumerate(rows):
             model.setHeaderData(r + 2, 1, row[1], 0)
             self.list_trac.append([row[0], row[1]])

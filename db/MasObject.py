@@ -134,7 +134,7 @@ class MasObject(object):
 class laws(MasObject):
     def __init__(self):
         super(laws, self).__init__()
-        self.order = 0
+        self.order = 99
         self.geom_type = None
         self.attrs = [
             ('id', 'serial NOT NULL'),
@@ -455,6 +455,8 @@ class profiles(MasObject):
                       ('zmnt', 'text'),
                       ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('struct', 'integer DEFAULT 0'),
+                      ('zleftminbed', 'float'),
+                      ('zrightminbed', 'float'),
                       ('CONSTRAINT profiles_pkey', 'PRIMARY KEY (gid)'),
                       ('CONSTRAINT profile_unique', 'UNIQUE (name)')]
 
@@ -557,7 +559,7 @@ class branchs(MasObject):
 
     def pg_updat_actv(self):
         qry = 'CREATE TRIGGER {1}_chstate_active\n' \
-              ' AFTER UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
+              ' AFTER UPDATE OF active \n  ON {0}.{1}\n'.format(self.schema, self.name)
         qry += ' FOR EACH ROW\n' \
                'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
                'EXECUTE PROCEDURE chstate_branch();\n'
@@ -643,72 +645,13 @@ class observations(MasObject):
                       ('date', 'timestamp without time zone'),
                       ('CONSTRAINT cle_obs ', 'PRIMARY KEY (id)')]
 
-
-class resultats(MasObject):
-    def __init__(self):
-        super(resultats, self).__init__()
-        self.order = 17
-        self.geom_type = None
-        self.attrs = [('id', ' serial NOT NULL'),
-                      ('run', ' character varying(30)'),
-                      ('scenario', ' character varying(30)'),
-                      ('date', ' timestamp without time zone'),
-                      ('t', ' float'),
-                      ('branche', ' integer'),
-                      ('section', ' integer'),
-                      ('pk', ' float'),
-                      ('zref', ' float'),
-                      ('z', ' float'),
-                      ('qmin', ' float'),
-                      ('qmaj', ' float'),
-                      ('kmin', ' float'),
-                      ('kmaj', ' float'),
-                      ('fr', ' float'),
-                      ('y', ' float'),
-                      ('zmax', ' float'),
-                      ('qmax', ' float'),
-                      ('q', ' float'),
-                      ('bnum', ' integer'),
-                      ('zcas', ' float'),
-                      ('surcas', ' float'),
-                      ('volcas', ' float'),
-                      ('lnum', ' integer'),
-                      ('qech', ' float'),
-                      ('vech', ' float'),
-                      ('CONSTRAINT projet_pkey', ' PRIMARY KEY (id)')]
-
-
-class resultats_basin(MasObject):
-    def __init__(self):
-        super(resultats_basin, self).__init__()
-        self.order = 18
-        self.geom_type = None
-        self.attrs = [('id', ' serial NOT NULL'),
-                      ('run', ' character varying(30)'),
-                      ('scenario', ' character varying(30)'),
-                      ('date', ' timestamp without time zone'),
-                      ('t', ' float'),
-                      ('bnum', ' integer'),
-                      ('zcas', ' float'),
-                      ('surcas', ' float'),
-                      ('volcas', ' float'),
-                      ('CONSTRAINT res_basinkey', ' PRIMARY KEY (id)')]
-
-
-class resultats_links(MasObject):
-    def __init__(self):
-        super(resultats_links, self).__init__()
-        self.order = 19
-        self.geom_type = None
-        self.attrs = [('id', ' serial NOT NULL'),
-                      ('run', ' character varying(30)'),
-                      ('scenario', ' character varying(30)'),
-                      ('date', ' timestamp without time zone'),
-                      ('t', ' float'),
-                      ('lnum', ' integer'),
-                      ('qech', ' float'),
-                      ('vech', ' float'),
-                      ('CONSTRAINT res_linkkey', ' PRIMARY KEY (id)')]
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS observations_code_type " \
+               "ON {}.observations(code, type);".format(self.schema)
+        qry += '\n'
+        return qry
 
 
 # *****************************************
@@ -753,6 +696,277 @@ class class_fct_psql(MasObject):
     def __init__(self):
         super(class_fct_psql, self).__init__()
         self.order = 22
+
+    def pg_clone_schema(self):
+        """
+        clone schema in psql
+        example : SELECT clone_schema('ouvrage3','ouvrage3_ext','runs,results,results_sect,runs_graph');
+        """
+        qry = """
+-- Function: clone_schema(source text, dest text, include_records boolean default true, show_details boolean default false)
+
+-- DROP FUNCTION clone_schema(text, text,text, boolean, boolean);
+
+CREATE OR REPLACE FUNCTION clone_schema(
+  source_schema text,
+  dest_schema text,
+	list_tab text ,
+  include_recs boolean DEFAULT true,
+  show_details boolean DEFAULT false)
+  RETURNS void AS
+$BODY$
+
+--  This function will clone all sequences, tables, data, views & functions from any existing schema to a new one
+-- SAMPLE CALL:
+-- SELECT clone_schema('public', 'new_schema', 'list_tab_ignor');
+-- SELECT clone_schema('public', 'new_schema', 'list_tab_ignor', TRUE);
+-- SELECT clone_schema('public', 'new_schema', 'list_tab_ignor', TRUE, TRUE);
+
+DECLARE
+  src_oid          oid;
+  tbl_oid          oid;
+  func_oid         oid;
+  object           text;
+  buffer           text;
+  srctbl           text;
+  default_         text;
+  column_          text;
+  qry              text;
+  xrec             record;
+  dest_qry         text;
+  v_def            text;
+  seqval           bigint;
+  sq_last_value    bigint;
+  sq_max_value     bigint;
+  sq_start_value   bigint;
+  sq_increment_by  bigint;
+  sq_min_value     bigint;
+  sq_cache_value   bigint;
+  sq_log_cnt       bigint;
+  sq_is_called     boolean;
+  sq_is_cycled     boolean;
+  sq_cycled        char(10);
+  rec              record;
+  source_schema_dot text = source_schema || '.';
+  dest_schema_dot text = dest_schema || '.';
+
+BEGIN
+
+  -- Check that source_schema exists
+  SELECT oid INTO src_oid
+  FROM pg_namespace
+  WHERE nspname = quote_ident(source_schema);
+  IF NOT FOUND
+  THEN
+    RAISE NOTICE 'source schema % does not exist!', source_schema;
+    RETURN ;
+  END IF;
+
+  -- Check that dest_schema does not yet exist
+  PERFORM nspname
+  FROM pg_namespace
+  WHERE nspname = quote_ident(dest_schema);
+  IF FOUND
+  THEN
+    RAISE NOTICE 'dest schema % already exists!', dest_schema;
+    RETURN ;
+  END IF;
+
+  EXECUTE 'CREATE SCHEMA ' || quote_ident(dest_schema) ;
+
+  -- Defaults search_path to destination schema
+  PERFORM set_config('search_path', dest_schema, true);
+
+  -- Create sequences
+  -- TODO: Find a way to make this sequence's owner is the correct table.
+  FOR object IN
+  SELECT sequence_name::text
+  FROM information_schema.sequences
+  WHERE sequence_schema = quote_ident(source_schema)
+  LOOP
+    EXECUTE 'CREATE SEQUENCE ' || quote_ident(dest_schema) || '.' || quote_ident(object);
+    srctbl := quote_ident(source_schema) || '.' || quote_ident(object);
+
+    EXECUTE 'SELECT last_value ,log_cnt, is_called
+              FROM ' || quote_ident(source_schema) || '.' || quote_ident(object) || ';'
+              INTO sq_last_value, sq_log_cnt, sq_is_called ;
+	sq_start_value =  1;
+
+    buffer := quote_ident(dest_schema) || '.' || quote_ident(object);
+    IF include_recs
+    THEN
+      EXECUTE 'SELECT setval( ''' || buffer || ''', ' || sq_last_value || ', ' || sq_is_called || ');' ;
+    ELSE
+      EXECUTE 'SELECT setval( ''' || buffer || ''', ' || sq_start_value || ', ' || sq_is_called || ');' ;
+    END IF;
+    IF show_details THEN RAISE NOTICE 'Sequence created: %', object; END IF;
+  END LOOP;
+
+  -- Create tables
+  FOR object IN
+  SELECT TABLE_NAME::text
+  FROM information_schema.tables
+  WHERE table_schema = quote_ident(source_schema)
+        AND table_type = 'BASE TABLE'
+
+  LOOP
+    buffer := dest_schema || '.' || quote_ident(object);
+    EXECUTE 'CREATE TABLE ' || buffer || ' (LIKE ' || quote_ident(source_schema) || '.' || quote_ident(object)
+            || ' INCLUDING ALL)';
+
+    IF include_recs AND not (object IN (SELECT regexp_split_to_table(list_tab,'[,]')))
+    THEN
+      -- Insert records from source table
+      EXECUTE 'INSERT INTO ' || buffer || ' SELECT * FROM ' || quote_ident(source_schema) || '.' || quote_ident(object) || ';';
+    END IF;
+
+    FOR column_, default_ IN
+    SELECT column_name::text,
+      REPLACE(column_default::text, source_schema, dest_schema)
+    FROM information_schema.COLUMNS
+    WHERE table_schema = dest_schema
+          AND TABLE_NAME = object
+          AND column_default LIKE 'nextval(%' || quote_ident(source_schema) || '%::regclass)'
+    LOOP
+      EXECUTE 'ALTER TABLE ' || buffer || ' ALTER COLUMN ' || column_ || ' SET DEFAULT ' || default_;
+    END LOOP;
+
+    IF show_details THEN RAISE NOTICE 'base table created: %', object; END IF;
+
+  END LOOP;
+
+  --  add FK constraint
+  FOR xrec IN
+  SELECT ct.conname as fk_name, rn.relname as tb_name,  'ALTER TABLE ' || quote_ident(dest_schema) || '.' || quote_ident(rn.relname)
+         || ' ADD CONSTRAINT ' || quote_ident(ct.conname) || ' ' || replace(pg_get_constraintdef(ct.oid), source_schema_dot, '') || ';' as qry
+  FROM pg_constraint ct
+    JOIN pg_class rn ON rn.oid = ct.conrelid
+  WHERE connamespace = src_oid
+        AND rn.relkind = 'r'
+        AND ct.contype = 'f'
+
+  LOOP
+    IF show_details THEN RAISE NOTICE 'Creating FK constraint %.%...', xrec.tb_name, xrec.fk_name; END IF;
+    --RAISE NOTICE 'DEF: %', xrec.qry;
+    EXECUTE xrec.qry;
+  END LOOP;
+
+  -- Create functions
+  FOR xrec IN
+  SELECT proname as func_name, oid as func_oid
+  FROM pg_proc
+  WHERE pronamespace = src_oid
+
+  LOOP
+    IF show_details THEN RAISE NOTICE 'Creating function %...', xrec.func_name; END IF;
+    SELECT pg_get_functiondef(xrec.func_oid) INTO qry;
+    SELECT replace(qry, source_schema_dot, '') INTO dest_qry;
+    EXECUTE dest_qry;
+  END LOOP;
+
+  -- add Table Triggers
+  FOR rec IN
+  SELECT
+    trg.tgname AS trigger_name,
+    tbl.relname AS trigger_table,
+
+    CASE
+    WHEN trg.tgenabled='O' THEN 'ENABLED'
+    ELSE 'DISABLED'
+    END AS status,
+    CASE trg.tgtype::integer & 1
+    WHEN 1 THEN 'ROW'::text
+    ELSE 'STATEMENT'::text
+    END AS trigger_level,
+    CASE trg.tgtype::integer & 66
+    WHEN 2 THEN 'BEFORE'
+    WHEN 64 THEN 'INSTEAD OF'
+    ELSE 'AFTER'
+    END AS action_timing,
+    CASE trg.tgtype::integer & cast(60 AS int2)
+    WHEN 16 THEN 'UPDATE'
+    WHEN 8 THEN 'DELETE'
+    WHEN 4 THEN 'INSERT'
+    WHEN 20 THEN 'INSERT OR UPDATE'
+    WHEN 28 THEN 'INSERT OR UPDATE OR DELETE'
+    WHEN 24 THEN 'UPDATE OR DELETE'
+    WHEN 12 THEN 'INSERT OR DELETE'
+    WHEN 32 THEN 'TRUNCATE'
+    END AS trigger_event,
+    'EXECUTE PROCEDURE ' ||  (SELECT nspname FROM pg_namespace where oid = pc.pronamespace )
+    || '.' || proname || '('
+    || regexp_replace(replace(trim(trailing '0' from encode(tgargs,'escape')), '0',','),'{(.+)}','''{}''','g')
+    || ')' as action_statement
+
+  FROM pg_trigger trg
+    JOIN pg_class tbl on trg.tgrelid = tbl.oid
+    JOIN pg_proc pc ON pc.oid = trg.tgfoid
+  WHERE trg.tgname not like 'RI_ConstraintTrigger%'
+        AND trg.tgname not like 'pg_sync_pg%'
+        AND tbl.relnamespace = (SELECT oid FROM pg_namespace where nspname = quote_ident(source_schema) )
+
+  LOOP
+    buffer := dest_schema || '.' || quote_ident(rec.trigger_table);
+    IF show_details THEN RAISE NOTICE 'Creating trigger % % % ON %...', rec.trigger_name, rec.action_timing, rec.trigger_event, rec.trigger_table; END IF;
+    EXECUTE 'CREATE TRIGGER ' || rec.trigger_name || ' ' || rec.action_timing
+            || ' ' || rec.trigger_event || ' ON ' || buffer || ' FOR EACH '
+            || rec.trigger_level || ' ' || replace(rec.action_statement, source_schema_dot, '');
+
+  END LOOP;
+
+  -- Create views
+  FOR object IN
+  SELECT table_name::text,
+    view_definition
+  FROM information_schema.views
+  WHERE table_schema = quote_ident(source_schema)
+
+  LOOP
+    buffer := dest_schema || '.' || quote_ident(object);
+    SELECT replace(view_definition, source_schema_dot, '') INTO v_def
+    FROM information_schema.views
+    WHERE table_schema = quote_ident(source_schema)
+          AND table_name = quote_ident(object);
+    IF show_details THEN RAISE NOTICE 'Creating view % AS %', object, regexp_replace(v_def, '[\n\r]+', ' ', 'g'); END IF;
+    EXECUTE 'CREATE OR REPLACE VIEW ' || buffer || ' AS ' || v_def || ';' ;
+
+  END LOOP;
+
+  RETURN;
+
+END;
+
+$BODY$
+LANGUAGE plpgsql VOLATILE
+COST 100;
+"""
+        #         qry = """
+        # CREATE OR REPLACE FUNCTION public.clone_schema(source_schema text, dest_schema text, list_tab text ) RETURNS void AS
+        # $BODY$
+        # DECLARE
+        #   objeto text;
+        #   buffer text;
+        # BEGIN
+        #     EXECUTE 'CREATE SCHEMA ' || dest_schema ;
+        #
+        #     FOR objeto IN
+        #         SELECT table_name::text FROM information_schema.tables WHERE table_schema = source_schema
+        #     LOOP
+        #         buffer := dest_schema || '.' || objeto;
+        #
+        #         EXECUTE 'CREATE TABLE ' || buffer || ' (LIKE ' || source_schema || '.' || objeto || ' INCLUDING CONSTRAINTS INCLUDING INDEXES INCLUDING DEFAULTS)';
+        # 		IF not (objeto IN (SELECT regexp_split_to_table(list_tab,'[,]'))) THEN
+        # 			EXECUTE 'INSERT INTO ' || buffer || '(SELECT * FROM ' || source_schema || '.' || objeto ||  ')';
+        # 		ELSE
+        # 			RAISE NOTICE '%', objeto;
+        # 		END IF;
+        # 	END LOOP;
+        #
+        # END;
+        # $BODY$
+        # LANGUAGE plpgsql VOLATILE;
+        # """
+        return qry
 
     def pg_create_calcul_abscisse(self):
         qry = """CREATE OR REPLACE FUNCTION {0}()  
@@ -1249,7 +1463,8 @@ class laws_wq(MasObject):
             ('value', 'float'),
             ('active', 'boolean'),
             (
-            'CONSTRAINT cle_laws_wq', 'PRIMARY KEY (id_config, id_trac, time)')]
+                'CONSTRAINT cle_laws_wq',
+                'PRIMARY KEY (id_config, id_trac, time)')]
 
 
 # *****************************************
@@ -1317,7 +1532,8 @@ class laws_meteo(MasObject):
             ('time', 'float'),
             ('value', 'float'),
             (
-            'CONSTRAINT cle_laws_met', 'PRIMARY KEY (id_config, id_var, time)')]
+                'CONSTRAINT cle_laws_met',
+                'PRIMARY KEY (id_config, id_var, time)')]
 
 
 class init_conc_config(MasObject):
@@ -1506,9 +1722,9 @@ class admin_tab(MasObject):
 
 
 # new results table
-class results(MasObject):
+class results_old(MasObject):
     def __init__(self):
-        super(results, self).__init__()
+        super(results_old, self).__init__()
         self.order = 37
         self.geom_type = None
         self.attrs = [('id_runs', 'integer NOT NULL'),
@@ -1516,14 +1732,65 @@ class results(MasObject):
                       ('pknum', 'float'),
                       ('var', 'integer'),
                       ('val', 'float'),
-                      ('CONSTRAINT results_pkey',
+                      ('CONSTRAINT results_old_pkey',
                        ' PRIMARY KEY (id_runs, time, pknum, var)')]
 
-        # def pg_create_table(self):
-        #     qry = super(self.__class__, self).pg_create_table()
-        #     qry += '\n'
-        #     qry += "CREATE INDEX IF NOT EXISTS idx_res_var ON {0}.results(id_runs);\n".format(self.schema)
-        #     return qry
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_old_id_runs_pknum " \
+               "ON {}.results(id_runs, pknum);".format(self.schema)
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_old_id_runs_time " \
+               "ON {}.results(id_runs, time);".format(self.schema)
+        qry += '\n'
+        return qry
+
+
+class results_val(MasObject):
+    def __init__(self):
+        super(results_val, self).__init__()
+        self.order = 45
+        self.geom_type = None
+        self.attrs = [('idRunTPk', 'integer  NOT NULL'),
+                      ('var', 'integer'),
+                      ('val', 'float'),
+                      ('CONSTRAINT results_val_pkey',
+                       ' PRIMARY KEY (idRunTPk, var)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_val_idRunTPk " \
+               "ON {}.results_val(idRunTPk, var);".format(self.schema)
+        qry += '\n'
+        return qry
+
+
+class results_idx(MasObject):
+    def __init__(self):
+        super(results_idx, self).__init__()
+        self.order = 44
+        self.geom_type = None
+        self.attrs = [('idRunTPk', 'serial NOT NULL'),
+                      ('id_runs', 'integer NOT NULL'),
+                      ('time', 'float'),
+                      ('pknum', 'float'),
+                      ('CONSTRAINT results_idx_pkey',
+                       ' PRIMARY KEY (id_runs, time, pknum)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_idx_id_runs_pknum " \
+               "ON {}.results_idx(id_runs, pknum);".format(self.schema)
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_idx_id_runs_time " \
+               "ON {}.results_idx(id_runs, time);".format(self.schema)
+        qry += '\n'
+        return qry
+
+
 
 
 class results_sect(MasObject):
@@ -1537,6 +1804,14 @@ class results_sect(MasObject):
                       ('section', 'integer'),
                       ('CONSTRAINT results_sect_pkey',
                        ' PRIMARY KEY (id_runs, pk, branch)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_sect_id_runs_pknum " \
+               "ON {}.results_sect(id_runs, pk);".format(self.schema)
+        qry += '\n'
+        return qry
 
 
 class results_var(MasObject):
@@ -1565,5 +1840,49 @@ class runs_graph(MasObject):
                       ('val', 'json'),
                       ('CONSTRAINT runs_graph_pkey',
                        ' PRIMARY KEY (id_runs,type_res,var)')]
+
+
+class runs_plani(MasObject):
+    def __init__(self):
+        super(runs_plani, self).__init__()
+        self.order = 41
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('id_runs', 'integer'),
+                      ('pknum', 'float'),
+                      ('id_type', 'integer'),
+                      ('id_order', 'integer'),
+                      ('line', 'GEOMETRY'),
+                      ('CONSTRAINT runs_plani_pkey',
+                       ' PRIMARY KEY (id_runs,pknum,id_type,id_order)')]
+
+
+class law_config(MasObject):
+    def __init__(self):
+        super(law_config, self).__init__()
+        self.order = 42
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('name', 'text'),
+                      ('geom_obj', 'text'),
+                      ('starttime', 'timestamp without time zone'),
+                      ('endtime', 'timestamp without time zone'),
+                      ('id_law_type', 'integer'),
+                      ('active', ' boolean NOT NULL DEFAULT FALSE'),
+                      ('comment', 'text'),
+                      ('CONSTRAINT law_config_pkey', 'PRIMARY KEY (id)')]
+
+
+class law_values(MasObject):
+    def __init__(self):
+        super(law_values, self).__init__()
+        self.order = 43
+        self.geom_type = None
+        self.attrs = [('id_law', 'integer'),
+                      ('id_var', 'integer'),
+                      ('id_order', 'integer'),
+                      ('value', 'float'),
+                      ('CONSTRAINT law_values_pkey',
+                       'PRIMARY KEY (id_law, id_var, id_order)')]
 
 # ****************************************************************************

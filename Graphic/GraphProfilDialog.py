@@ -23,64 +23,41 @@ Comment:
         GraphCommon
         GraphProfil
         CopySelectedCellsAction
-        GraphProfilRes
-        GraphHydro
 """
 
 import os
-from datetime import datetime, date
-
-import matplotlib.dates as mdates
 import matplotlib.image as mpimg
-import matplotlib.lines as mlines
 import numpy as np
-from matplotlib import patches, colors
-from matplotlib.figure import Figure
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib import patches
 from matplotlib.widgets import RectangleSelector, SpanSelector, Cursor
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
 
-from .Function import isfloat, interpole
-from .GraphCommon import DraggableLegend, GraphCommon
-from .Structure.StructureCreateDialog import ClassStructureCreateDialog
+from .GraphCommon import GraphCommon, DraggableLegend
+from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
+from ..Structure.ClassPolygone import ClassPolygone
+from .GraphProfilResultDialog import GraphProfilResultDialog
 from .GraphResultDialog import GraphResultDialog
+from .ClassProfInterpDialog import ClassProfInterpDialog
+from ..Function import tw_to_txt
+from .GraphBCDialog import GraphBCDialog
 
-if int(qVersion()[0]) < 5:  # qt4
-
-    from qgis.PyQt.QtGui import *
-
-    try:
-        from matplotlib.backends.backend_qt4agg \
-            import FigureCanvasQTAgg as FigureCanvas
-    except:
-        from matplotlib.backends.backend_qt4agg \
-            import FigureCanvasQT as FigureCanvas
-    # ***************************
-    try:
-        from matplotlib.backends.backend_qt4agg \
-            import NavigationToolbar2QTAgg as NavigationToolbar
-    except:
-        from matplotlib.backends.backend_qt4agg \
-            import NavigationToolbar2QT as NavigationToolbar
-else:  # qt4
-    from qgis.PyQt.QtWidgets import *
-
-    try:
-        from matplotlib.backends.backend_qt5agg \
-            import FigureCanvasQTAgg as FigureCanvas
-    except:
-        from matplotlib.backends.backend_qt5agg \
-            import FigureCanvasQT as FigureCanvas
-    # ***************************
-    try:
-        from matplotlib.backends.backend_qt5agg \
-            import NavigationToolbar2QTAgg as NavigationToolbar
-    except:
-        from matplotlib.backends.backend_qt5agg \
-            import NavigationToolbar2QT as NavigationToolbar
+try:
+    from matplotlib.backends.backend_qt5agg \
+        import FigureCanvasQTAgg as FigureCanvas
+except:
+    from matplotlib.backends.backend_qt5agg \
+        import FigureCanvasQT as FigureCanvas
+# ***************************
+try:
+    from matplotlib.backends.backend_qt5agg \
+        import NavigationToolbar2QTAgg as NavigationToolbar
+except:
+    from matplotlib.backends.backend_qt5agg \
+        import NavigationToolbar2QT as NavigationToolbar
 
 # **************************************************
 try:
@@ -149,9 +126,10 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 prof_a = self.mgis.mdb.select_distinct("name", "profiles",
                                                        "active")
                 if results[0].mFeature['name'] in prof_a['name']:
-                    graph_res = GraphResultDialog(self.mgis, "hydro_profil",
-                                                  results[0].mFeature[
-                                                      "abscissa"])
+                    graph_res = GraphProfilResultDialog(self.mgis,
+                                                        "hydro_profil",
+                                                        results[0].mFeature[
+                                                            "abscissa"])
 
                     graph_res.show()
                 else:
@@ -162,7 +140,6 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
 
                 prof_a = self.mgis.mdb.select_distinct("name,abscissa",
                                                        "profiles", "active")
-
                 if feature['name'] in prof_a['name'] or feature['abscissa'] in \
                         prof_a['abscissa']:
                     graph_hyd = GraphResultDialog(self.mgis, "hydro",
@@ -183,6 +160,55 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 else:
                     self.mgis.add_info('no active branch')
 
+            if flag_hydro and couche in ('weirs', 'extremities',
+                                         'lateral_inflows', 'lateral_weirs'):
+                feature = results[0].mFeature
+                param = {'name': None,
+                         'couche': couche,
+                         'method': None,
+                         'type': None,
+                         'active': None,
+                         'firstvalue': None}
+                cond = True
+                if 'extremities' == couche:
+                    for var in ['name', 'method', 'active', 'firstvalue',
+                                'type']:
+                        id = feature.fieldNameIndex(var)
+                        param[var] = feature.attributes()[id]
+
+                    if param['type'] in [10]:
+                        cond = False
+
+                elif 'weirs' == couche:
+                    weirs_tolaw = {1: 6, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
+                    id = feature.fieldNameIndex('type')
+                    type = feature.attributes()[id]
+                    if type not in (3, 4):
+                        param['type'] = weirs_tolaw[type]
+                        for var in ['name', 'method', 'active']:
+                            id = feature.fieldNameIndex(var)
+                            param[var] = feature.attributes()[id]
+                    else:
+                        cond = False
+                elif 'lateral_inflows' == couche:
+                    for var in ['name', 'method', 'firstvalue', 'active']:
+                        id = feature.fieldNameIndex(var)
+                        param[var] = feature.attributes()[id]
+                    param['type'] = 1
+                elif 'lateral_weirs' == couche:
+                    id = feature.fieldNameIndex('type')
+                    if feature.attributes()[id] == 2:
+                        for var in ['name', 'active']:
+                            id = feature.fieldNameIndex(var)
+                            param[var] = feature.attributes()[id]
+                        param['type'] = 4
+                    else:
+                        cond = False
+
+                if cond and param['name']:
+                    graph_law = GraphBCDialog(self.mgis, param)
+                    # graph_law.show()
+                    graph_law.exec_()
             if flag_casier_r and couche in ('basins', 'links'):
                 feature = results[0].mFeature
 
@@ -223,19 +249,20 @@ class GraphProfil(GraphCommon):
         self.init_ui()
 
         # action
-        self.ui.actionBtTools_point_selection.triggered.connect(
-            self.selector_toggled)
-        self.ui.actionBtTools_zone_selection.triggered.connect(
-            self.zone_selector_toggled)
-
-        self.ui.actionBtTools_profil_translation.triggered.connect(
-            self.deplace_toggled)
+        self.bt_translah.clicked.connect(self.deplace_h_toggled)
+        self.bt_translav.clicked.connect(self.deplace_v_toggled)
+        self.bt_reverse_prof.clicked.connect(self.reverse_prof)
+        self.bt_select.clicked.connect(self.selector_toggled)
+        self.bt_select_z.clicked.connect(self.zone_selector_toggled)
 
         self.ui.bt_add_point.clicked.connect(self.ajout_points)
         self.ui.bt_topo_load.clicked.connect(self.import_topo)
         self.ui.bt_topo_del.clicked.connect(self.del_topo)
         # self.ui.bt_img_load.clicked.connect(self.import_image)
         self.ui.bt_topo_save.clicked.connect(self.sauve_topo)
+        self.ui.bt_amont_aval.clicked.connect(self.topo_amont_aval)
+        self.ui.bt_del_amont_aval.clicked.connect(self.del_amont_aval)
+        self.ui.bt_check_prof.clicked.connect(self.check_prof_diag)
 
         self.ui.bt_reculTot.clicked.connect(lambda: self.avance(-10))
         self.ui.bt_recul.clicked.connect(lambda: self.avance(-1))
@@ -250,6 +277,12 @@ class GraphProfil(GraphCommon):
         self.ui.bt_l_stok.clicked.connect(
             lambda: self.select_stock("leftstock"))
         self.ui.bt_ouvrage.clicked.connect(self.create_struct)
+        self.ui.bt_interp.clicked.connect(self.bt_interpol_profile)
+
+        self.ui.bt_add_line.clicked.connect(self.add_line)
+        self.ui.bt_del_line.clicked.connect(self.del_line)
+
+        self.ui.tab_aff.hide()
 
     def init_ui(self):
 
@@ -258,11 +291,15 @@ class GraphProfil(GraphCommon):
         self.selected = {}
         self.mnt = {'x': [], 'z': []}
         self.x0 = None
+        self.y0 = None
         self.flag = False
+        self.down_vis = False
+        self.up_vis = False
         self.image = None
         self.topoSelect = None
         self.order_topo = 0
-        self.bt_transla = self.ui.btTools_profil_translation
+        self.bt_translah = self.ui.BtTools_profil_translationH
+        self.bt_translav = self.ui.BtTools_profil_translationV
         self.bt_select = self.ui.btTools_point_selection
         self.bt_select_z = self.ui.btTools_zone_selection
         self.ui.bt_add_point.setDisabled(True)
@@ -280,6 +317,7 @@ class GraphProfil(GraphCommon):
         self.tableau.itemChanged.connect(self.modifie)
         self.tableau.selectionModel().selectionChanged.connect(
             self.select_changed)
+        self.tableau.setSelectionMode(QAbstractItemView.ContiguousSelection)
         self.tableau.addAction(CopySelectedCellsAction(self.tableau))
 
         # figure
@@ -293,10 +331,15 @@ class GraphProfil(GraphCommon):
                                          markeredgewidth=0, zorder=90,
                                          label='MNT')
         self.courbeTopo = []
-        for i in range(5):
+        for i in range(12):
             temp, = self.axes.plot([], [], color='green', marker='+', mew=2,
                                    zorder=95, label='Topo', picker=5)
             self.courbeTopo.append(temp)
+
+        self.courbedown,  = self.axes.plot([], [], color="purple", marker='+', mew=2,
+                               zorder=95, label='downstream', picker=5)
+        self.courbeup, = self.axes.plot([], [], color="brown", marker='+', mew=2,
+                                          zorder=95, label='upstream', picker=5)
 
         self.etiquetteTopo = []
         self.courbes = [self.courbeProfil, self.courbeMNT]
@@ -355,28 +398,51 @@ class GraphProfil(GraphCommon):
         """Point selection function"""
         if self.bt_select.isChecked():
             self.RS.set_active(True)
+            self.RS.update()
+            self.span.visible = False
+            self.rectSelection.set_visible(False)
             self.ui.bt_add_point.setEnabled(True)
             self.bt_select_z.setChecked(False)
-            self.bt_transla.setChecked(False)
+            self.bt_translah.setChecked(False)
+            self.bt_translav.setChecked(False)
 
         else:
             self.ui.bt_add_point.setDisabled(True)
             self.RS.set_active(False)
+            self.RS.update()
+            self.courbeSelection.set_visible(False)
+
+
 
     def zone_selector_toggled(self):
         """zone selection function"""
         if self.bt_select_z.isChecked():
             self.span.visible = True
+            self.span.active = True
             self.bt_select.setChecked(False)
-            self.bt_transla.setChecked(False)
+            self.RS.set_active(False)
+            self.RS.update()
+            self.courbeSelection.set_visible(False)
+            self.bt_translah.setChecked(False)
+            self.bt_translav.setChecked(False)
         else:
-            self.span.visible = False
+            self.span.active = False
+            self.rectSelection.set_visible(False)
 
-    def deplace_toggled(self):
+
+    def deplace_h_toggled(self):
         """Translation function"""
-        if self.bt_transla.isChecked():
+        if self.bt_translah.isChecked():
             self.bt_select.setChecked(False)
             self.bt_select_z.setChecked(False)
+            self.bt_translav.setChecked(False)
+
+    def deplace_v_toggled(self):
+        """Translation function"""
+        if self.bt_translav.isChecked():
+            self.bt_select.setChecked(False)
+            self.bt_select_z.setChecked(False)
+            self.bt_translah.setChecked(False)
 
     def create_struct(self):
         """ creation of hydraulic structure"""
@@ -391,6 +457,8 @@ class GraphProfil(GraphCommon):
         self.rectSelection.set_visible(False)
         self.selected = {}
         self.courbeSelection.set_data([], [])
+        self.down_vis = False
+        self.up_vis = False
         pos = self.position
         pos += val
 
@@ -407,7 +475,8 @@ class GraphProfil(GraphCommon):
 
         self.extrait_profil()
         self.extrait_topo()
-        self.maj_graph()
+        self.maj_tab_check()
+        self.maj_graph(allvis=True)
         self.maj_limites()
         self.maj_legende()
 
@@ -417,10 +486,8 @@ class GraphProfil(GraphCommon):
         condition = "idprofil={0}".format(self.gid)
         requete = self.mdb.select("mnt", condition)
         if "x" in requete.keys() and "z" in requete.keys():
-            # self.mnt['x'] = list(map(float, requete["x"][0].split()))
-            # self.mnt['z'] = list(map(float, requete["z"][0].split()))
-            self.mnt['x'] = [float(var) for var in requete["x"][0].split()]
-            self.mnt['z'] = [float(var) for var in requete["z"][0].split()]
+            self.mnt['x'] = [self.fct1(var, arrondi=3) for var in requete["x"][0].split()]
+            self.mnt['z'] = [self.fct1(var, arrondi=3) for var in requete["z"][0].split()]
 
     def extrait_profil(self):
 
@@ -435,8 +502,6 @@ class GraphProfil(GraphCommon):
         self.mnt = {'x': [], 'z': []}
 
         if self.feature["x"] and self.feature["z"]:
-            # self.tab['x'] = list(map(float, self.feature["x"].split()))
-            # self.tab['z'] = list(map(float, self.feature["z"].split()))
             self.tab['x'] = [float(var) for var in self.feature["x"].split()]
             self.tab['z'] = [float(var) for var in self.feature["z"].split()]
 
@@ -450,19 +515,16 @@ class GraphProfil(GraphCommon):
         if self.feature["xmnt"] and self.feature["zmnt"]:
             self.mnt['x'] = [float(var) for var in self.feature["xmnt"].split()]
             self.mnt['z'] = [float(var) for var in self.feature["zmnt"].split()]
-            # self.mnt['x'] = list(map(float, self.feature["xmnt"].split()))
-            # self.mnt['z'] = list(map(float, self.feature["zmnt"].split()))
 
     def extrait_topo(self):
 
         self.topo = {}
 
         condition = "profile='{0}'".format(self.nom)
-        ordre = "name, order_"
+        ordre = "name, order_,x,gid"
         requete = self.mdb.select("topo", condition, ordre)
         if not requete:
             return
-
         table = zip(requete['gid'],
                     requete['name'],
                     requete['x'],
@@ -479,7 +541,6 @@ class GraphProfil(GraphCommon):
             self.topo[nom]['z'].append(round(z, 2))
             self.topo[nom]['gid'].append(gid)
             self.topo[nom]['ordre'].append(ordre)
-
         for nom in self.topo.keys():
             self.topo[nom]['x'] = self.mdb.projection(self.nom,
                                                       self.topo[nom]['x'],
@@ -528,22 +589,44 @@ class GraphProfil(GraphCommon):
         self.canvas.draw()
 
     def sauve_profil(self):
-        if self.tab['x'] == []:
+        if not self.tab['x']:
             self.mgis.add_info('No data to save profile')
             return
+        self.tab['zrightminbed'] = None
+        self.tab['zleftminbed'] = None
+
         for k, v in self.tab.items():
+
             if isinstance(v, list):
                 self.liste[k][self.position] = " ".join([str(var) for var in v])
             else:
-
                 if k == 'rightminbed' and not v:
                     v = max(self.tab['x'])
                     self.tab['rightminbed'] = v
+                    self.tab['zrightminbed'] = self.tab['z'][-1]
 
                 if k == 'leftminbed' and not v:
                     v = min(self.tab['x'])
                     self.tab['leftminbed'] = v
+                    self.tab['zleftminbed'] = self.tab['z'][0]
+
                 self.liste[k][self.position] = v
+
+        if not self.tab['zrightminbed'] or not self.tab['zleftminbed']:
+            lstz_minor = []
+            for x, z in zip(self.tab['x'], self.tab['z']):
+                if self.tab['leftminbed'] <= x \
+                        and x <= self.tab['rightminbed']:
+                    lstz_minor.append(z)
+
+            if not self.tab['zrightminbed']:
+                self.tab['zrightminbed'] = lstz_minor[-1]
+                self.liste['zrightminbed'][self.position] = lstz_minor[-1]
+
+            if not self.tab['zleftminbed']:
+                self.tab['zleftminbed'] = lstz_minor[0]
+                self.liste['zleftminbed'][self.position] = lstz_minor[0]
+
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
         tab = {self.nom: self.tab}
         self.mdb.update("profiles", tab, var="name")
@@ -554,13 +637,21 @@ class GraphProfil(GraphCommon):
             for x, z, gid, ordre in zip(t['x'], t['z'], t['gid'], t['ordre']):
                 for f in self.coucheProfils.getFeatures():
                     if f["name"] == self.nom:
-                        interp = f.geometry().interpolate(x)
-                        if interp.isNull():
-                            self.mgis.add_info(
-                                "Warning : Check the profil lenght")
-                        p = interp.asPoint()
-                        geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
-                            p.x(), p.y(), self.mdb.SRID)
+                        if x < 0:
+                            geom = 'NULL'
+                        else:
+                            interp = f.geometry().interpolate(x)
+                            if interp.isNull():
+                                geom = 'NULL'
+                            else:
+                                # if interp.isNull():
+                                #     self.mgis.add_info(
+                                #         "Warning : Check the profil lenght")
+
+                                p = f.geometry().interpolate(x).asPoint()
+                                geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                                    p.x(), p.y(), self.mdb.SRID)
+
                 if gid:
                     sql = """UPDATE {0}.topo SET x={1}, geom={2}, order_={3}
                           WHERE gid={4}""".format(self.mdb.SCHEMA,
@@ -614,16 +705,11 @@ class GraphProfil(GraphCommon):
         self.maj_legende()
 
     def import_topo(self):
-        if int(qVersion()[0]) < 5:  # qt4
-            fichiers = QFileDialog.getOpenFileNames(None,
-                                                    'File Selection',
-                                                    self.dossierProjet,
-                                                    "File (*.txt *.csv)")
-        else:  # qt5
-            fichiers, _ = QFileDialog.getOpenFileNames(None,
-                                                       'File Selection',
-                                                       self.dossierProjet,
-                                                       "File (*.txt *.csv)")
+
+        fichiers, _ = QFileDialog.getOpenFileNames(None,
+                                                   'File Selection',
+                                                   self.dossierProjet,
+                                                   "File (*.txt *.csv)")
 
         if fichiers:
 
@@ -662,7 +748,6 @@ class GraphProfil(GraphCommon):
 
                         ordre = 0
                         for ligne in fich:
-                            # x, z = list(map(float, ligne.split(sep)))
 
                             if ligne[0] != '#':
                                 ligne = ligne.replace('\n', '')
@@ -671,13 +756,16 @@ class GraphProfil(GraphCommon):
                                 x, z = (float(var) for var in ligne.split(sep))
 
                                 ordre += 1
+                                if x < 0:
+                                    geom = 'NULL'
+                                else:
 
-                                p = f.geometry().interpolate(x).asPoint()
+                                    p = f.geometry().interpolate(x).asPoint()
 
-                                # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
+                                    # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
 
-                                geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
-                                    p.x(), p.y(), self.mdb.SRID)
+                                    geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                                        p.x(), p.y(), self.mdb.SRID)
 
                                 tab["name"].append("'" + basename + "'")
                                 tab["profile"].append("'" + profil + "'")
@@ -689,16 +777,10 @@ class GraphProfil(GraphCommon):
                     self.mdb.insert2("topo", tab)
 
     def import_image(self):
-        if int(qVersion()[0]) < 5:  # qt4
-            fichier = QFileDialog.getOpenFileName(None,
-                                                  'Sélection des fichiers',
-                                                  self.dossierProjet,
-                                                  "Fichier (*.png *.jpg)")
-        else:  # qt5
-            fichier, _ = QFileDialog.getOpenFileName(None,
-                                                     'Sélection des fichiers',
-                                                     self.dossierProjet,
-                                                     "Fichier (*.png *.jpg)")
+        fichier, _ = QFileDialog.getOpenFileName(None,
+                                                 'Sélection des fichiers',
+                                                 self.dossierProjet,
+                                                 "Fichier (*.png *.jpg)")
 
         try:
             fich = open(fichier + "w", "r")
@@ -760,15 +842,20 @@ class GraphProfil(GraphCommon):
 
     def onpick(self, event):
         legline = event.artist
-        deplace = self.bt_transla.isChecked()
+        deplaceh = self.bt_translah.isChecked()
+        deplacev = self.bt_translav.isChecked()
         selector = self.bt_select.isChecked()
         zone_selector = self.bt_select_z.isChecked()
         bouton = event.mouseevent.button
 
-        if deplace and legline in self.courbeTopo and bouton == 1:
+        if (deplaceh and legline in self.courbeTopo and bouton == 1) or \
+                (deplaceh and legline in [self.courbedown, self.courbeup] and bouton == 1):
             self.x0 = round(event.mouseevent.xdata, 2)
             self.courbeSelected = legline
-
+        elif (deplacev and legline in self.courbeTopo and bouton == 1) or \
+                (deplacev and legline in [self.courbedown, self.courbeup] and bouton == 1):
+            self.y0 = round(event.mouseevent.ydata, 2)
+            self.courbeSelected = legline
         elif self.flag and bouton == 1 and legline in self.courbeTopo:
             n = len(event.ind)
             if not n:
@@ -814,17 +901,18 @@ class GraphProfil(GraphCommon):
             self.courbeSelection.set_visible(True)
 
             self.maj_graph()
-        elif not zone_selector and bouton == 1:
-            courbe = self.lined[legline.get_label()]
-            # efface en cliquand sur la legende
-            vis = not courbe.get_visible()
 
-            courbe.set_visible(vis)
-            if vis:
-                legline.set_alpha(1.0)
-            else:
-                legline.set_alpha(0.2)
-            self.canvas.draw()
+        elif not zone_selector and bouton == 1:
+            if legline in self.lined.keys():
+                courbe = self.lined[legline]
+                # efface en cliquand sur la legende
+                vis = not courbe.get_visible()
+                courbe.set_visible(vis)
+                if vis:
+                    legline.set_alpha(1.0)
+                else:
+                    legline.set_alpha(0.2)
+                self.canvas.draw()
 
     def onselect(self, eclick, erelease):
         mini_x = min(eclick.xdata, erelease.xdata)
@@ -873,15 +961,18 @@ class GraphProfil(GraphCommon):
                     "The table has {0} elements, please add ".format(n))
 
     def onrelease(self, event):
-        if self.bt_transla.isChecked():
+        if self.bt_translah.isChecked():
             self.x0 = None
+        elif self.bt_translav.isChecked():
+            self.y0 = None
+
         return
 
     def onclick(self, event):
 
         if self.flag and event.button == 3:
             if self.ordre == -9999:
-                if self.topoSelect:
+                if self.topoSelect in self.topo.keys():
                     idx_topo = list(self.topo.keys()).index(self.topoSelect)
                 else:
                     idx_topo = 0
@@ -935,27 +1026,44 @@ class GraphProfil(GraphCommon):
 
     def onpress(self, event):
         """ event """
-        if self.bt_transla.isChecked() and self.x0:
+        if self.bt_translah.isChecked() and self.x0:
             f = self.courbeSelected.get_label()
             try:
-                tab_x = self.topo[f]['x']
-                # tab_x = list(map(lambda x: x + round(event.xdata, 2) - self.x0, tab_x))
+                #tab_x = self.topo[f]['x']
+                tab_x = self.courbeSelected.get_xdata()
                 tempo = []
                 # fct2 = lambda x: x + round(float(event.xdata), 2) - self.x0
                 for var1 in tab_x:
                     tempo.append(self.fct2(var1, event.xdata, self.x0))
                 tab_x = tempo
-
-                self.topo[f]['x'] = tab_x
+                if self.courbeSelected in self.courbeTopo :
+                    self.topo[f]['x'] = tab_x
                 self.courbeSelected.set_xdata(tab_x)
-
                 self.x0 = round(float(event.xdata), 2)
             except:
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Warning:Out of graph")
-            self.fig.canvas.draw()
 
-    def maj_graph(self):
+        elif self.bt_translav.isChecked() and self.y0:
+            f = self.courbeSelected.get_label()
+            try:
+                #tab_z = self.topo[f]['z']
+                tab_z = self.courbeSelected.get_ydata()
+                tempo = []
+                for var1 in tab_z:
+                    tempo.append(self.fct2(var1, event.ydata, self.y0))
+                tab_z = tempo
+                if self.courbeSelected in self.courbeTopo:
+                    self.topo[f]['z'] = tab_z
+                self.courbeSelected.set_ydata(tab_z)
+
+                self.y0 = round(float(event.ydata), 2)
+            except:
+                if self.mgis.DEBUG:
+                    self.mgis.add_info("Warning:Out of graph")
+        self.fig.canvas.draw()
+
+    def maj_graph(self, allvis=False):
         """Updating  graphic"""
         self.ui.label_Title.setText(_translate("ProfilGraph", self.nom, None))
         ta = self.tab
@@ -964,8 +1072,16 @@ class GraphProfil(GraphCommon):
         self.remplir_tab([ta['x'], ta['z']])
 
         self.courbeMNT.set_data(self.mnt['x'], self.mnt['z'])
-
         self.courbes = [self.courbeProfil, self.courbeMNT]
+
+        if self.up_vis:
+            self.courbes.append(self.courbeup)
+        else:
+            self.courbeup.set_data([], [])
+        if self.down_vis:
+            self.courbes.append(self.courbedown)
+        else:
+            self.courbedown.set_data([], [])
 
         for c in self.courbeTopo:
             c.set_data([], [])
@@ -976,7 +1092,19 @@ class GraphProfil(GraphCommon):
 
             self.courbeTopo[i].set_data(v['x'], v['z'])
             self.courbeTopo[i].set_label(fichier)
+            if fichier == 'downstream':
+                self.courbeTopo[i].set_color("purple")
+            elif fichier == 'upstream':
+                self.courbeTopo[i].set_color("brown")
+            elif fichier == 'interpolation':
+                self.courbeTopo[i].set_color("orange")
+            else:
+                self.courbeTopo[i].set_color("green")
             self.courbes.append(self.courbeTopo[i])
+
+        if allvis:
+            for cb in self.courbes:
+                cb.set_visible(True)
         if ta['x'] is not None and ta['leftminbed'] is not None and ta[
             'rightminbed'] is not None:
             self.litMineur.set_x(ta['leftminbed'])
@@ -1023,28 +1151,85 @@ class GraphProfil(GraphCommon):
             self.canvas.draw()
 
     def maj_legende(self):
+
         liste_noms = [c.get_label() for c in self.courbes]
         self.leg = self.axes.legend(self.courbes, liste_noms, loc='upper right',
                                     fancybox=False, shadow=False)
         self.leg.get_frame().set_alpha(0.4)
+        self.leg.set_zorder(110)
+        # self.leg.draggable(True)
+        DraggableLegend(self.leg)
         self.lined = dict()
 
         for legline, courbe in zip(self.leg.get_lines(), self.courbes):
             legline.set_picker(5)
             legline.set_linewidth(3)
-            self.lined[legline.get_label()] = courbe
+            self.lined[legline] = courbe
         self.canvas.draw()
 
     @staticmethod
-    def fct1(x):
+    def fct1(x, arrondi = 2):
         """around"""
-        return round(float(x), 2)
+        return round(float(x),  arrondi)
+
+    def del_line(self):
+        """
+        delete line
+        :return:
+        """
+        if self.tableau.selectedIndexes():
+            rows = [idx.row() for idx in self.tableau.selectedIndexes() if
+                    idx.row() > 0]
+            rows = list(set(rows))
+            rows.sort(reverse=True)
+
+            ta = self.tab
+            newta = {'x': [], 'z': []}
+            for i, x in enumerate(ta["x"]):
+                if i not in rows:
+                    newta['x'].append(x)
+                    newta['z'].append(ta["z"][i])
+
+            ta['x'] = newta['x']
+            ta['z'] = newta['z']
+
+            self.maj_graph()
+
+    def add_line(self):
+
+        """
+        add line
+        :return:
+        """
+        if self.tableau.selectedIndexes():
+            rows = [idx.row() for idx in self.tableau.selectedIndexes() if
+                    idx.row() > 0]
+            rows = list(set(rows))
+            rows.sort(reverse=True)
+
+            ta = self.tab
+            newta = {'x': [], 'z': []}
+            lenta = len(ta["x"])
+            for i, x in enumerate(ta["x"]):
+                newta['x'].append(x)
+                newta['z'].append(ta["z"][i])
+                if i in rows:
+                    if i == lenta - 1:
+                        newta['x'].append(x + 1)
+                        newta['z'].append(ta["z"][i])
+                    else:
+                        newta['x'].append(self.fct1((ta["x"][i] + ta["x"][i + 1]) / 2.))
+                        newta['z'].append(self.fct1((ta["z"][i] + ta["z"][i + 1]) / 2.))
+            ta['x'] = newta['x']
+            ta['z'] = newta['z']
+
+            self.maj_graph()
 
     def ajout_points(self):
         """ add points"""
         if self.selected:
             self.courbeSelection.set_visible(False)
-            # self.selected['x'] = list(map(lambda x: round(x, 2), self.selected['x']))
+
             tempo = []
             for var1 in self.selected['x']:
                 tempo.append(self.fct1(var1))
@@ -1133,6 +1318,9 @@ class GraphProfil(GraphCommon):
 
             pente, ord = np.polyfit(xx, zz, 1)
             zz.sort()
+            if len(zz) <= nb :
+                self.mgis.add_info("Warning: The filter works if there are a minimum of 5 points ")
+                return
             mediane = zz[nb]
 
             if abs((pente - derniere_pente) / derniere_pente) > seuil:
@@ -1245,6 +1433,655 @@ class GraphProfil(GraphCommon):
         except:
             pass
 
+    def reverse_prof(self):
+        """
+        Revers profil
+        :return:
+        """
+        self.tab['z'].reverse()
+        oldx = self.tab['x'].copy()
+
+        lmin = self.tab['leftminbed']
+        rmin = self.tab['rightminbed']
+        lmaj = self.tab['leftstock']
+        rmaj = self.tab['rightstock']
+        xo = oldx[0]
+        if lmin and rmin:
+            self.tab['leftminbed'] = oldx[-1] - (lmin - xo)
+            self.tab['rightminbed'] = oldx[-1] - (rmin - xo)
+        if lmaj and rmaj:
+            self.tab['leftstock'] = oldx[-1] - (lmaj - xo)
+            self.tab['rightstock'] = oldx[-1] - (rmaj - xo)
+
+        dist_x = []
+        for i, x in enumerate(oldx):
+            if i != 0:
+                dist_x.append(round(x - xo, 6))
+                xo = x
+        dist_x.reverse()
+        xf = oldx[0]
+        new_x = [xf]
+        for dist in dist_x:
+            xf = round(xf + dist, 6)
+            new_x.append(xf)
+        self.tab['x'] = new_x
+
+        self.maj_graph()
+
+    def add_topo(self, xval, zval, basename):
+
+        tab = {'name': [], 'profile': [], 'order_': [], 'x': [],
+               'z': [],
+               'geom': []}
+        ordre = 0
+        for f in self.coucheProfils.getFeatures():
+            if f["name"] == self.nom:
+                for x, z in zip(xval, zval):
+
+                    ordre += 1
+                    if x < 0:
+                        geom = 'NULL'
+                    else:
+
+                        geo_tmp = f.geometry().interpolate(x)
+                        if not geo_tmp.isNull:
+                            p = geo_tmp.asPoint()
+                            # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
+                            geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                                p.x(), p.y(), self.mdb.SRID)
+                        else:
+                            geom = 'NULL'
+
+                    tab["name"].append("'" + basename + "'")
+                    tab["profile"].append("'" + self.nom + "'")
+                    tab["order_"].append(ordre)
+                    tab["x"].append(x)
+                    tab["z"].append(z)
+                    tab["geom"].append(geom)
+
+        self.mdb.insert2("topo", tab)
+    def del_amont_aval(self):
+        """
+        delet curve the down/upstream courbe
+        :return:
+        """
+        self.up_vis = False
+        self.down_vis = False
+        self.maj_graph()
+        self.maj_limites()
+        self.maj_legende()
+    def del_amont_aval_old(self):
+        """
+        delet in top tab the down/upstream courbe
+        :return:
+        """
+        reply = QMessageBox.question(self, 'Message',
+                                     'Do you want to delete the upstream / downstream topo profiles?',
+                                     QMessageBox.Yes | QMessageBox.No,
+                                     QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            condition = "name='{0}' AND profile='{1}'".format('upstream',
+                                                              self.nom)
+            self.mdb.delete("topo", condition)
+
+            condition = "name='{0}' AND profile='{1}'".format('downstream',
+                                                              self.nom)
+            self.mdb.delete("topo", condition)
+
+            self.extrait_topo()
+            self.maj_graph()
+            self.maj_limites()
+            self.maj_legende()
+
+    def topo_amont_aval(self):
+        """
+        add curve tab the down/upstream courbe
+        :return:
+        """
+        id = self.liste['name'].index(self.nom)
+        idam = id - 1
+        idav = id + 1
+        maj = False
+        self.down_vis = False
+        self.up_vis = False
+
+        if 0 <= idam:
+            if self.liste['branchnum'][id] == self.liste['branchnum'][idam]:
+                if self.liste['x'][idam]:
+                    xamont = [float(val) for val in
+                              self.liste['x'][idam].split()]
+                    zamont = [float(val) for val in
+                              self.liste['z'][idam].split()]
+                    self.courbeup.set_data(xamont, zamont)
+                    self.up_vis = True
+                    maj = True
+        if idav < len(self.liste['branchnum']):
+            if self.liste['branchnum'][id] == self.liste['branchnum'][idav]:
+                if self.liste['x'][idav]:
+                    xaval = [float(val) for val in
+                             self.liste['x'][idav].split()]
+                    zaval = [float(val) for val in
+                             self.liste['z'][idav].split()]
+                    self.courbedown.set_data(xaval , zaval)
+                    self.down_vis = True
+                    maj = True
+
+        if maj:
+            self.maj_graph()
+            self.maj_limites()
+            self.maj_legende()
+
+    def topo_amont_aval_old(self):
+        """
+        add in top tab the down/upstream courbe
+        :return:
+        """
+
+        id = self.liste['name'].index(self.nom)
+        idam = id - 1
+        idav = id + 1
+        maj = False
+
+        if 0 < idam:
+            if self.liste['branchnum'][id] == self.liste['branchnum'][idam]:
+                if self.liste['x'][idam]:
+                    xamont = [float(val) for val in
+                              self.liste['x'][idam].split()]
+                    zamont = [float(val) for val in
+                              self.liste['z'][idam].split()]
+                    self.add_topo(xamont, zamont, 'upstream')
+                    maj = True
+        if idav < len(self.liste['branchnum']):
+            if self.liste['branchnum'][id] == self.liste['branchnum'][idav]:
+                if self.liste['x'][idav]:
+                    xaval = [float(val) for val in
+                             self.liste['x'][idav].split()]
+                    zaval = [float(val) for val in
+                             self.liste['z'][idav].split()]
+                    self.add_topo(xaval, zaval, 'downstream')
+                    maj = True
+        if maj:
+            self.extrait_topo()
+            self.maj_graph()
+            self.maj_limites()
+            self.maj_legende()
+
+    def val_prof(self, id):
+        """
+        Compute value:
+            section minor bed
+            overflow point
+            bottom point
+        :param id : index of profil
+        :return:
+        """
+        clpoly = ClassPolygone()
+
+        pr_m, rmin, lmin = self.get_minor_pr(id)
+
+        lz = pr_m[0][1]
+        rz = pr_m[-1][1]
+        h_pbord = min(lz, rz)
+
+        bool = np.all(pr_m == pr_m[0, :], axis=0)
+        if bool[1]:
+            # print('flat profil')
+            return pr_m[0, 1], None, rz, lz, rmin, lmin
+        poly = clpoly.poly2_profile(pr_m)
+        if poly.is_empty:
+            # print('Profil is empty')
+            return np.min(pr_m[:, 1]), None, rz, lz, rmin, lmin
+        poly = clpoly.coup_poly_h(poly, h_pbord, typ='U')
+
+        if poly.is_empty:
+            # print('Profil is empty')
+            return np.min(pr_m[:, 1]), None, rz, lz
+        _, minz, _, _ = poly.bounds
+        return minz, poly.area, rz, lz, rmin, lmin
+
+    def val_inter_prof(self, id):
+        """
+        Compute value interpolation topo:
+            section minor bed
+            overflow point
+            bottom point
+        :param id : index of profil if  -1 get topo interpolation
+        :return:
+        """
+        clpoly = ClassPolygone()
+        if id == -1:
+            nom = 'interpolation'
+            prof = np.zeros(shape=(len(self.topo[nom]['x']), 2))
+
+            for i, order in enumerate(self.topo[nom]['ordre']):
+                prof[order - 1, 0] = self.topo[nom]['x'][i]
+                prof[order - 1, 1] = self.topo[nom]['z'][i]
+        else:
+            x_pr = [float(val) for val in self.liste['x'][id].split()]
+            z_pr = [float(val) for val in self.liste['z'][id].split()]
+            lin_s = []
+            for x, z in zip(x_pr, z_pr):
+                lin_s.append((x, z))
+            prof = np.array(lin_s)
+
+        bool = np.all(prof == prof[0, :], axis=0)
+        if bool[1]:
+            # print('flat profil')
+            return prof[0, 1], None
+        poly = clpoly.poly2_profile(prof)
+        if poly.is_empty:
+            # print('Profil is empty')
+            return np.min(prof[:, 1]), None
+        _, minz, _, _ = poly.bounds
+        return minz, poly.area
+
+    def check_prof(self):
+
+        id = self.liste['name'].index(self.nom)
+        self.ch_prof = {}
+        # cas = -1 amont, cas=1 aval
+        dcas = {-1: 'upstream', 0: 'current', 1: 'downstream'}
+        nofind = {'point_bas': None,
+                  'sect_plein_bord': None,
+                  'cote_d': None,
+                  'cote_g': None,
+                  'x_d': None,
+                  'x_g': None, }
+        for cas in [-1, 0, 1]:
+            if 0 <= id + cas < len(self.liste['x']):
+                if self.liste['x'][id + cas]:
+                    # print(self.liste['name'][id + cas])
+                    minz, area, rz, lz, rmin, lmin = self.val_prof(
+                        id + cas)
+                    self.ch_prof[dcas[cas]] = {'point_bas': minz,
+                                               'sect_plein_bord': area,
+                                               'cote_d': rz,
+                                               'cote_g': lz,
+                                               'x_d': rmin,
+                                               'x_g': lmin}
+                else:
+                    self.ch_prof[dcas[cas]] = nofind
+            else:
+                self.ch_prof[dcas[cas]] = nofind
+
+    def check_prof_interp(self):
+        # TODO interpolation is all profile
+
+        id = self.liste['name'].index(self.nom)
+        self.ch_prof_inter = {}
+        # cas = -1 amont, cas=1 aval
+        dcas = {-1: 'upstream', 0: 'interpolation', 1: 'downstream'}
+        nofind = {'point_bas': None,
+                  'sect_plein_bord': None}
+        for cas in [-1, 0, 1]:
+            if cas == 0:
+                if 'interpolation' in self.topo.keys():
+                    minz, area = self.val_inter_prof(-1)
+                    self.ch_prof_inter[dcas[cas]] = {'point_bas': minz,
+                                                     'sect_plein_bord': area,
+                                                     }
+                else:
+                    self.ch_prof_inter[dcas[cas]] = nofind
+            elif 0 <= id + cas < len(self.liste['x']):
+                if self.liste['x'][id + cas]:
+                    # print(self.liste['name'][id + cas])
+
+                    minz, area = self.val_inter_prof(id + cas)
+                    self.ch_prof_inter[dcas[cas]] = {'point_bas': minz,
+                                                     'sect_plein_bord': area,
+                                                     }
+                else:
+                    self.ch_prof_inter[dcas[cas]] = nofind
+            else:
+                self.ch_prof_inter[dcas[cas]] = nofind
+
+    def check_prof_diag(self):
+
+        self.ui.tab_aff.show()
+
+        self.ui.table_check.show()
+        self.check_prof()
+        self.fill_table_check()
+
+        self.ui.table_check_interp.show()
+        self.check_prof_interp()
+        self.fill_table_check_interp()
+
+    def fill_table_check_interp(self):
+        """
+        Fill table for 'check profile'
+        :return:
+        """
+        # cols = list(self.ch_prof.keys())
+        # lines = list(self.ch_prof['current'].keys())
+        # exclude_line = ['x_d','x_g']
+        # for var in exclude_line :
+        #     lines.remove(var)
+
+        cols = ['interpolation', 'upstream', 'downstream']  # , 'interpolation']
+        key_str = {'point_bas': 'bottom point',
+                   'sect_plein_bord': "Section", }
+        lines = list(key_str.keys())
+        self.ui.table_check_interp.clear()
+        self.ui.table_check_interp.setRowCount(len(lines))
+        self.ui.table_check_interp.setColumnCount(len(cols))
+        self.ui.table_check_interp.setVerticalHeaderLabels(
+            list(key_str.values()))
+        self.ui.table_check_interp.setHorizontalHeaderLabels(cols)
+        for idc, col in enumerate(cols):
+            for idl, line in enumerate(lines):
+                val = self.ch_prof_inter[col][line]
+                if val is None:
+                    val = 'None'
+                if isinstance(val, str):
+                    item = QTableWidgetItem(
+                        '{}'.format(val))
+                else:
+                    item = QTableWidgetItem('{:.3f}'.format(val))
+                item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                item.setFlags(Qt.ItemIsEnabled)
+                self.ui.table_check_interp.setItem(idl, idc, item)
+
+    def fill_table_check(self):
+        """
+        Fill table for 'check profile'
+        :return:
+        """
+        # cols = list(self.ch_prof.keys())
+        # lines = list(self.ch_prof['current'].keys())
+        # exclude_line = ['x_d','x_g']
+        # for var in exclude_line :
+        #     lines.remove(var)
+
+        cols = ['current', 'upstream', 'downstream']  # , 'interpolation']
+        key_str = {'point_bas': 'bottom point',
+                   'sect_plein_bord': "Section of minor bed",
+                   'cote_d': "Height of the right bank",
+                   'cote_g': "Height of the left bank", }
+        lines = list(key_str.keys())
+        self.ui.table_check.clear()
+        self.ui.table_check.setRowCount(len(lines))
+        self.ui.table_check.setColumnCount(len(cols))
+        self.ui.table_check.setVerticalHeaderLabels(list(key_str.values()))
+        self.ui.table_check.setHorizontalHeaderLabels(cols)
+        for idc, col in enumerate(cols):
+            for idl, line in enumerate(lines):
+                val = self.ch_prof[col][line]
+                if val is None:
+                    val = 'None'
+                if isinstance(val, str):
+                    item = QTableWidgetItem(
+                        '{}'.format(val))
+                else:
+                    item = QTableWidgetItem('{:.3f}'.format(val))
+                item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                item.setFlags(Qt.ItemIsEnabled)
+                self.ui.table_check.setItem(idl, idc, item)
+
+    # •	La section de plein bord du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
+    # •	Le point bas du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
+    # •	Des cotes de débordement de la rive droite et gauche (profil en cours, aval et amont, soit 6 valeurs)
+    #
+    def maj_tab_check(self):
+        self.ch_prof = {}
+        self.ui.tab_aff.hide()
+        self.ui.table_check.clear()
+
+    def bt_interpol_profile(self):
+        """
+        Interpolate profile
+        :return:
+        """
+        err = {}
+        msgerr, id, idam, idav = self.find_pr_inter()
+        if msgerr != '':
+            err['iderr'] = msgerr
+        self.gui_interpol(id, idam, idav, err)
+
+    def gui_interpol(self, id, idam, idav, err):
+
+        if id:
+            plani = self.get_plani(self.liste['abscissa'][id],
+                                   self.liste['branchnum'][id])
+        else:
+            plani = None
+        nplan = 100
+        if plani is None or idam is None or idav is None:
+            err['plani'] = 'Planim not found'
+            err['nplan'] = 'No compute discretization'
+        else:
+            nplan = self.get_nplan(idam, idav, plani)
+            if nplan == 0:
+                err['nplan'] = 'No compute discretization'
+
+        dict_interp = {}
+        if isinstance(idam, int) and isinstance(idav, int):
+            dict_interp['up'] = self.get_pr(idam)
+            dict_interp['down'] = self.get_pr(idav)
+
+        dlg = ClassProfInterpDialog(self.mgis)
+        dlg.init_gui(nplan, plani, dict_interp,
+                     self.liste['abscissa'][id], err)
+        if dlg.exec_():
+            pass
+
+        if dlg.interpol_prof:
+            new_prof = np.array(dlg.interpol_prof['prof'])
+
+            condition = "name='{0}' AND profile='{1}'".format('interpolation',
+                                                              self.nom)
+            self.mdb.delete("topo", condition)
+            self.add_topo(new_prof[:, 0], new_prof[:, 1], 'interpolation')
+            self.extrait_topo()
+            # temporaire zone
+            if dlg.interpol_prof['minor'][1]:
+                self.tab['rightminbed'] = dlg.interpol_prof['minor'][1]
+            if dlg.interpol_prof['minor'][0]:
+                self.tab['leftminbed'] = dlg.interpol_prof['minor'][0]
+            if dlg.interpol_prof['major'][1]:
+                self.tab['rightstock'] = dlg.interpol_prof['major'][1]
+            if dlg.interpol_prof['major'][0]:
+                self.tab['leftstock'] = dlg.interpol_prof['major'][0]
+
+            self.maj_graph()
+            self.maj_legende()
+            self.maj_limites()
+
+    def get_plani(self, pk, branch):
+        """
+        Get planimetry value
+        :param pk: abscissa of the profile
+        :param branch: branch number
+        :return: plani
+        """
+        plani = None
+
+        rows = self.mdb.select('branchs',
+                               where="branch='{}'".format(branch),
+                               order="zoneabsstart",
+                               list_var=['zonenum', 'zoneabsstart',
+                                         'zoneabsend', 'planim', 'active'])
+
+        if rows:
+
+            for i, zone in enumerate(rows['zonenum']):
+                if rows['zoneabsstart'][i] <= pk <= rows['zoneabsend'][i]:
+                    plani = rows['planim'][i]
+                    if rows['active'][i]:
+                        break
+
+        # print('plani', plani)
+        return plani
+
+    def get_nplan(self, idam, idav, plani):
+        """
+        get nplan:
+            The higher number of planes between the minor bed of the upstream
+            profile and that of the downstream profile
+        :param idam: upstream profile index
+        :param idav: downstream profile  index
+        :param plani: planimetry value
+        :return:
+        """
+        nplan_lst = []
+        nplan = 0
+        for id in [idam, idav]:
+            pr_m, rmin, lmin = self.get_minor_pr(id)
+            lz = pr_m[0][1]
+            rz = pr_m[-1][1]
+            bottom = np.min(pr_m)
+            nplan_l = (lz - bottom) / plani
+            nplan_r = (rz - bottom) / plani
+            nplan_lst.append(max(nplan_l, nplan_r))
+        nplan = max(nplan, max(nplan_lst))
+        return nplan
+
+    def get_pr(self, id):
+        """
+        get profil id
+        :param id:
+        :return:
+        """
+
+        x_pr = [float(val) for val in self.liste['x'][id].split()]
+        z_pr = [float(val) for val in self.liste['z'][id].split()]
+        lmin = self.liste['leftminbed'][id]
+        rmin = self.liste['rightminbed'][id]
+        lmaj = self.liste['leftstock'][id]
+        rmaj = self.liste['rightstock'][id]
+
+        lin_s = []
+        for x, z in zip(x_pr, z_pr):
+            lin_s.append((x, z))
+
+        if not lmin:
+            # no valeur for minor bed
+            lmin = x_pr[0]
+        if not rmin:
+            # no valeur for minor bed
+            rmin = x_pr[-1]
+
+        if not lmaj:
+            # no valeur for major bed
+            lmaj = x_pr[0]
+        if not rmaj:
+            # no valeur for major bed
+            rmaj = x_pr[-1]
+
+        dico = {
+            'name': self.liste['name'][id],
+            'id': self.liste['gid'][id],
+            'branch': self.liste['branchnum'][id],
+            'prof': lin_s,
+            'pk': self.liste['abscissa'][id],
+            'minor': [lmin, rmin],
+            'major': [lmaj, rmaj],
+        }
+        return dico
+
+    def get_minor_pr(self, id):
+        """
+        Get minor bed
+        :param id : index profil
+        :return:
+        """
+        x_pr = [float(val) for val in self.liste['x'][id].split()]
+        z_pr = [float(val) for val in self.liste['z'][id].split()]
+        lmin = self.liste['leftminbed'][id]
+        rmin = self.liste['rightminbed'][id]
+
+        lin_s = []
+        for x, z in zip(x_pr, z_pr):
+            lin_s.append((x, z))
+        #
+        if not lmin:
+            # no valeur for minor bed
+            lmin = x_pr[0]
+        if not rmin:
+            # no valeur for minor bed
+            rmin = x_pr[-1]
+        pr_m, _, _, _, _ = decoup_pr(lin_s, [lmin, rmin], [lmin, rmin])
+        pr_m = np.array(pr_m)
+        return pr_m, rmin, lmin
+
+    def find_pr_inter(self):
+        msgerr = ''
+        idam = None
+        idav = None
+
+        id = self.liste['name'].index(self.nom)
+        idmax = len(self.liste["name"]) - 1
+        if id == 0:
+            msgerr += 'No finds upstream profile'
+            return msgerr, id, idam, idav
+        elif id == idmax:
+            msgerr += 'No finds downstream profile'
+            return msgerr, id, idam, idav
+
+        # upstream
+        idf = id
+        while idf != 0:
+            idf -= 1
+            if self.liste['x'][idf] is not None:
+                idam = idf
+                break
+        # downstream
+        idf = id
+        while idf != idmax :
+            idf += 1
+            if self.liste['x'][idf] is not None:
+                idav = idf
+                break
+        # check val
+        if idam is None:
+            msgerr += 'No finds upstream profile'
+        elif idav is None:
+            msgerr += 'No finds downstream profile'
+        return msgerr, id, idam, idav
+
+
+def decoup_pr(pr, lminor_x, lmaj_x):
+    pr_g = []
+    pr_d = []
+    pr_m = []
+    pr_st_g = []
+    pr_st_d = []
+    for point in pr:
+        if point[0] < lminor_x[0]:
+            if point[0] < lmaj_x[0]:
+                pr_st_g.append(point)
+            else:
+                pr_g.append(point)
+        elif point[0] > lminor_x[1]:
+            if point[0] > lmaj_x[1]:
+                pr_st_d.append(point)
+            else:
+                pr_d.append(point)
+        else:
+            pr_m.append(point)
+    if not pr_m:
+        print('Pas de profil lit mineur')
+        return [], [], [], [], []
+    if not pr_g:
+        pr_g = [pr_m[0], pr_m[0]]
+    else:
+        pr_g = pr_g + [pr_m[0], pr_m[0]]
+    if not pr_d:
+        pr_d = [pr_m[-1], pr_m[-1]]
+    else:
+        pr_d = [pr_m[-1], pr_m[-1]] + pr_d
+    if not pr_st_g:
+        pr_st_g = [pr_g[0], pr_g[0]]
+    else:
+        pr_st_g = pr_st_g + [pr_g[0], pr_g[0]]
+    if not pr_st_d:
+        pr_st_d = [pr_d[-1], pr_d[-1]]
+    else:
+        pr_st_d = [pr_d[-1], pr_d[-1]] + pr_st_d
+
+    return pr_m, pr_g, pr_d, pr_st_g, pr_st_d
+
 
 class CopySelectedCellsAction(QAction):
     def __init__(self, table_widget):
@@ -1260,29 +2097,13 @@ class CopySelectedCellsAction(QAction):
 
     def copy_cells_to_clipboard(self):
         if len(self.table_widget.selectionModel().selectedIndexes()) > 0:
-            previous = self.table_widget.selectionModel().selectedIndexes()[0]
-            col = previous.column()
-            columns = []
-            rows = [self.table_widget.horizontalHeaderItem(col).text()]
-            for index in self.table_widget.selectionModel().selectedIndexes():
-                if col != index.column():
-                    columns.append(rows)
-                    col = index.column()
-                    rows = [self.table_widget.horizontalHeaderItem(col).text()]
-                rows.append(index.data())
-                col = index.column()
-
-            columns.append(rows)
-            clipboard = ''
-            nrows = len(columns[0])
-            ncols = len(columns)
-            for r in range(nrows):
-                for c in range(ncols):
-                    clipboard += columns[c][r]
-                    if c != ncols - 1:
-                        clipboard += '\t'
-
-                clipboard += '\n'
+            lst_r = [idx.row() for idx in
+                     self.table_widget.selectionModel().selectedIndexes()]
+            lst_c = [idx.column() for idx in
+                     self.table_widget.selectionModel().selectedIndexes()]
+            range_r = range(min(lst_r), max(lst_r) + 1)
+            range_c = range(min(lst_c), max(lst_c) + 1)
+            clipboard = tw_to_txt(self.table_widget, range_r, range_c, '\t')
 
             sys_clip = QApplication.clipboard()
             sys_clip.setText(clipboard)

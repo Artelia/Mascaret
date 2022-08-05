@@ -49,6 +49,14 @@ class ClassWaterQualityDialog(QDialog):
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_water_quality.ui'), self)
 
+        self.par = {}
+        self.modeleQualiteEauBox = None
+        self.presenceTraceursBox = None
+        self.type = ''
+        self.table_Tr = None
+        self.initc = None
+        self.dicoTrac = []
+
         self.ui.buttonBox.accepted.connect(self.accept_dialog)
         self.ui.buttonBox.rejected.connect(self.reject)
 
@@ -227,24 +235,24 @@ class ClassWaterQualityDialog(QDialog):
         """updating table"""
         condition = """type='{0}'""".format(self.type)
         # self.mgis.add_info(condition)
-        self.tab_tracer_name = self.mdb.select("tracer_name", condition)
+        tab_tracer_name = self.mdb.select("tracer_name", condition)
 
         self.dicoTrac = []
-        for t in range(len(self.tab_tracer_name["id"])):
-            self.dicoTrac.append({"id": self.tab_tracer_name["id"][t],
-                                  "sigle": self.tab_tracer_name["sigle"][t],
-                                  "text": self.tab_tracer_name["text"][t],
-                                  "convec": self.tab_tracer_name["convec"][t],
-                                  "diffu": self.tab_tracer_name["diffu"][t]})
+        for t in range(len(tab_tracer_name["id"])):
+            self.dicoTrac.append({"id": tab_tracer_name["id"][t],
+                                  "sigle": tab_tracer_name["sigle"][t],
+                                  "text": tab_tracer_name["text"][t],
+                                  "convec": tab_tracer_name["convec"][t],
+                                  "diffu": tab_tracer_name["diffu"][t]})
 
-        self.columns = ['id', 'sigle', 'text']
-        self.listeTab = []
-        for c in self.columns:
-            if self.tab_tracer_name[c] != [None] * len(self.tab_tracer_name[c]):
-                self.listeTab.append(self.tab_tracer_name[c])
+        columns = ['id', 'sigle', 'text']
+        liste_tab = []
+        for c in columns:
+            if tab_tracer_name[c] != [None] * len(tab_tracer_name[c]):
+                liste_tab.append(tab_tracer_name[c])
 
         # gui
-        self.remplir_tab__tr(self.listeTab)
+        self.remplir_tab__tr(liste_tab)
         self.ui.nbTraceur.setText('{}'.format(self.table_Tr.rowCount()))
 
     def remplir_tab__tr(self, liste):

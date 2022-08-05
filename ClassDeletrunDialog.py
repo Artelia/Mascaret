@@ -48,12 +48,18 @@ class ClassDeletrunDialog(QDialog):
         self.box = ClassWarningBox()
         self.listeRuns = []
         self.listeScen = {}
+        self.cond_com = None
+        self.tree = None
+        self.parent = {}
+        self.child = {}
+
         self.init_gui()
 
     def init_gui(self):
         """
             initialisation GUI
         """
+        self.lst_tab = self.mdb.list_tables()
         liste_col = self.mdb.list_columns('runs')
         self.cond_com = ('comments' in liste_col)
 
@@ -161,26 +167,29 @@ class ClassDeletrunDialog(QDialog):
         ok = self.box.yes_no_q('Do you want to delete ?')
 
         if ok:
+
             for i, (run, scenarios) in enumerate(selection.items()):
 
-                lst_tab = self.mdb.list_tables()
+
                 sql = "run = '{0}' AND scenario IN ({1})".format(run,
                                                                  ",".join(
                                                                      scenarios))
-                if "resultats" in lst_tab:
-                    self.mdb.delete("resultats", sql)
-                    self.mdb.delete("resultats_basin", sql)
-                    self.mdb.delete("resultats_links", sql)
-
                 self.mdb.delete("runs", sql)
+                # old si existe
+                if "results_old" in self.lst_tab:
+                    sql = "DELETE  FROM {0}.results_old " \
+                          "where id_runs not in (SELECT id FROM {0}.runs);"
+                    self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+                    self.mdb.vacuum(["results_old"])
+
                 self.delete_useless_data()
 
                 if self.mgis.DEBUG:
                     self.mgis.add_info(
-                        "Deletion of {0} scenario for {1} is done".format(
-                            scenarios, run))
+                        "Deletion of scenarii is done")
+                progress.setValue(round(i / n * 100))
 
-                progress.setValue(i / float(n) * 100)
+
 
         self.iface.messageBar().clearWidgets()
 
@@ -190,28 +199,45 @@ class ClassDeletrunDialog(QDialog):
 
     def delete_useless_data(self):
         # delete var transport_pur
-        sql = "DELETE FROM {0}.results_var WHERE id IN(" \
-              "SELECT id FROM {0}.results_var " \
-              "WHERE id  IN (SELECT DISTINCT var FROM {0}.results " \
-              "WHERE id_runs IN (SELECT DISTINCT id_runs FROM {0}.results " \
-              "WHERE id_runs NOT IN (SELECT id FROM {0}.runs ))) " \
+        sql = "DELETE FROM {0}.results_var WHERE id IN (" \
+              "SELECT DISTINCT var FROM {0}.results " \
+              "WHERE id_runs NOT IN (SELECT id FROM {0}.runs ) " \
               "and type_res= 'tracer_TRANSPORT_PUR');"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
 
-        # delete results
-        sql = "DELETE  FROM {0}.results WHERE id_runs IN " \
-              "(SELECT DISTINCT id_runs FROM {0}.results " \
+        # delete results_val
+        sql = "DELETE  FROM {0}.results_val WHERE idruntpk IN " \
+              "(SELECT DISTINCT idruntpk FROM {0}.results_idx " \
               "where id_runs not in (SELECT id FROM {0}.runs));"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
+        # delete results_idx
+        sql = "DELETE  FROM {0}.results_idx WHERE id_runs not in (SELECT id FROM {0}.runs);"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
 
         # delete results_sect
-        sql = "DELETE  FROM {0}.results_sect WHERE id_runs IN " \
-              "(SELECT DISTINCT id_runs FROM {0}.results_sect " \
-              "where id_runs not in (SELECT id FROM {0}.runs));"
+        sql = "DELETE  FROM {0}.results_sect WHERE id_runs not in (SELECT id FROM {0}.runs);"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
 
         # delete run_graph
-        sql = "DELETE  FROM {0}.runs_graph WHERE id_runs IN " \
-              "(SELECT DISTINCT id_runs FROM {0}.runs_graph " \
-              "where id_runs not in (SELECT id FROM {0}.runs));"
+        sql = "DELETE  FROM {0}.runs_graph WHERE id_runs not in (SELECT id FROM {0}.runs);"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
+        # delete run_plani
+        sql = "DELETE  FROM {0}.runs_plani  WHERE id_runs not in (SELECT id FROM {0}.runs);"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
+
+        lst_tables = ["results_sect","runs_graph",
+                     "results_basin","results_links",
+                     "results_var", "runs_plani",
+                     "runs",]
+
+        self.mdb.vacuum(lst_tables)
+
+
+
+
+
+
+

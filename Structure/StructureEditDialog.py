@@ -65,6 +65,9 @@ class ClassStructureEditDialog(QDialog):
         self.clmeth = ClassMethod(self.mgis)
         self.wgt_met = QWidget()
 
+        self.met_calc = None
+        self.meth = None
+
         self.param_meth_calc = {'PC': {0: {'wgt': MetBradleyPcWidget,
                                            'wgt_param': [self.mgis, '72',
                                                          id_struct]},
@@ -169,8 +172,9 @@ class ClassStructureEditDialog(QDialog):
     def change_met_calc(self, idx):
         if not self.is_loading:
             if (
-            QMessageBox.question(self, "Warning", "Save current parameters ?",
-                                 QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
+                    QMessageBox.question(self, "Warning",
+                                         "Save current parameters ?",
+                                         QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 self.save_struct()
         self.txt_name.setFocus()
         self.met_calc = self.cb_met_calc.itemData(
@@ -533,7 +537,7 @@ class ClassStructureEditDialog(QDialog):
             forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
             if forme_arche == 1:
                 z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (
-                self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
+                    self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
             elif forme_arche == 2:
                 z_top = self.wgt_met.tab_trav.item(r, 3).data(0)
             if z_top >= cote_tablier:
@@ -560,7 +564,7 @@ class ClassStructureEditDialog(QDialog):
                     self.wgt_met.tab_trav.cellWidget(r, 0))
                 if forme_arche == 1:
                     z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (
-                    self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
+                        self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
                 elif forme_arche == 2:
                     z_top = self.wgt_met.tab_trav.item(r, 3).data(0)
                 sql = "SELECT MAX(z) FROM {0}.profil_struct " \

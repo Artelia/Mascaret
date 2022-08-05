@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -204,6 +204,7 @@
     <property name="title">
      <string>Tools</string>
     </property>
+    <addaction name="actionHydro_Laws"/>
     <addaction name="actionCross_section"/>
     <addaction name="actionObservations"/>
     <addaction name="actionStructures"/>
@@ -221,9 +222,6 @@
      <property name="title">
       <string>Update Table</string>
      </property>
-     <addaction name="actionAdd_WQ_tables"/>
-     <addaction name="actionAdd_Structure_tables"/>
-     <addaction name="actionAdd_Structure_temporal_tables"/>
     </widget>
     <addaction name="actionRefresh_Database"/>
     <addaction name="action_update_bin"/>
@@ -235,6 +233,7 @@
     <addaction name="separator"/>
     <addaction name="actionExport_Model"/>
     <addaction name="actionImport_Model"/>
+    <addaction name="actionImport_Old_Model"/>
    </widget>
    <widget class="QMenu" name="menuRun">
     <property name="title">
@@ -261,6 +260,8 @@
     <addaction name="actionCross_section_results"/>
     <addaction name="actionBasin"/>
     <addaction name="actionGraphRes"/>
+    <addaction name="separator"/>
+    <addaction name="actionScores"/>
    </widget>
    <widget class="QMenu" name="menuWater_Quality">
     <property name="title">
@@ -304,6 +305,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionHydro_Laws"/>
    <addaction name="actionCross_section"/>
    <addaction name="actionObservations"/>
    <addaction name="actionStructures"/>
@@ -734,6 +736,28 @@
    </property>
    <property name="toolTip">
     <string>Observations</string>
+   </property>
+  </action>
+  <action name="actionScores">
+   <property name="text">
+    <string>Scores</string>
+   </property>
+  </action>
+  <action name="actionImport_Old_Model">
+   <property name="text">
+    <string>Import Old Model</string>
+   </property>
+  </action>
+  <action name="actionHydro_Laws">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/lawHydro.png</normaloff>:/plugins/Mascaret/icones/lawHydro.png</iconset>
+   </property>
+   <property name="text">
+    <string>Hydro Laws</string>
+   </property>
+   <property name="toolTip">
+    <string>Hydro Laws</string>
    </property>
   </action>
  </widget>

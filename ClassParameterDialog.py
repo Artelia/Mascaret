@@ -42,6 +42,12 @@ class ClassParameterDialog(QDialog):
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_parameter.ui'), self)
 
+        self.combo = {}
+        self.libel_var = []
+        self.variables = []
+        self.exclusion = {}
+        self.par = {}
+
         self.init_ui()
 
         self.ui.actionEvenement.triggered.connect(self.ch_event)

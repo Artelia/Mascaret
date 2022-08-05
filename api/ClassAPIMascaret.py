@@ -45,6 +45,27 @@ class ClassAPIMascaret:
     def __init__(self, main):
         # def __init__(self):
 
+        self.npoin = 0
+        self.zini = 0
+        self.qini = 0
+
+        self.dt = 0
+        self.tini = 0
+        self.tfin = 0
+
+        self.tmaxiter = 0
+        self.stpcrit = 0
+        self.conum = 0
+
+        self.zmax_co = 0
+        self.sect_co = 0
+
+        self.tracer = False
+        self.basin = False
+        self.filelig = None
+
+        self.results_api = {}
+
         self.masc = Mascaret(log_level='INFO')
         self.masc.create_mascaret(iprint=1)
         if isinstance(main, dict):
@@ -65,16 +86,6 @@ class ClassAPIMascaret:
             # floodgat
             self.clfg = ClassFloodGate(self)
             self.mobil_struct = self.clfg.fg_active()
-
-        self.tracer = False
-        self.basin = False
-        self.filelig = None
-
-        self.npoin = 0
-        self.zini = 0
-        self.qini = 0
-
-        self.results_api = {}
 
     def initial(self, casfile):
         """
@@ -226,11 +237,11 @@ class ClassAPIMascaret:
         self.zmax_co = self.masc.get('Model.MaxControlZ')
         self.sect_co = self.masc.get('Model.ControlSection')
 
-        if self.DEBUG:
-            self.mess_crit_stop()
+        #if self.DEBUG:
+        self.mess_crit_stop()
 
     def mess_crit_stop(self):
-        """Print the crieria information"""
+        """Print the criteria information"""
         txt = '**************************************\n'
 
         if self.stpcrit == 1:
@@ -316,7 +327,8 @@ class ClassAPIMascaret:
 
     def write_res_struct(self, res):
         import json
-        with open(os.path.join(self.dossierFileMasc, "res_struct.res"), 'w') as filein:
+        with open(os.path.join(self.dossierFileMasc, "res_struct.res"),
+                  'w') as filein:
             json.dump(res, filein)
 
     def main(self, filename, tracer=False, basin=False):

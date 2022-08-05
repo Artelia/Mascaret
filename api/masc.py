@@ -134,21 +134,19 @@ class Mascaret:
         # MDU modif
         # libmascaret = './libmascaret.so'
         test = sys.platform
-
         if 'linux' in test or test == 'cygwin':
             # libmascaret = '../api/libmascaret.so'
             libmascaret = os.path.join(os.path.dirname(__file__),
                                        'libmascaret.so')
         elif test == 'win32':
-            #libmascaret = '../api/libmascaret.dll'
-            libmascaret = os.path.join(os.path.dirname(__file__),'libmascaret.dll')
+            # libmascaret = '../api/libmascaret.dll'
+            libmascaret = os.path.join(os.path.dirname(__file__),
+                                       'libmascaret.dll')
             # libmascaret = '../api/libmascaret_old.dll'
         else:
             print("{0} platform  doesn't allow to run simulation.".format(test))
-            return False
 
         # self.load_mascaret(libmascaret)
-
         self.libmascaret = ctypes.CDLL(libmascaret)
         # MDU fin modif
         self.iprint = 0
@@ -1012,8 +1010,120 @@ class Mascaret:
             raise TelemacException(
                 "Unknown data type %s for %s" % (vartype, varname))
 
+            # MDU modif
 
-# MDU modif
+    def save_lig_restart(self, out_file='RestartLigneEau.lig', k_s=None):
+        """
+        Save a lig restart files
+
+        :param str out_file: name (and path) of the output restart file
+        :param str k_s:       OPTIONAL : Ks other than None activate
+            CF1 and CF2 storage
+        """
+        # Size informations
+        if self.nb_nodes is None:
+            self.nb_nodes, _, _ = self.get_var_size('Model.X')
+        nbbf = self.get_var_size('Model.Connect.FirstNdNum')[0]
+        # Formatting parameters
+        nbcol = 5
+        nbent = int((nbbf - 1) / nbcol) + 1
+        nbfmt = int(self.nb_nodes / nbcol) * nbcol
+        nbmod = self.nb_nodes % nbcol
+        nblin = int(nbfmt / nbcol)
+        # get coords
+        xcoord = []
+        # Local abscissa
+        oribf = [self.get('Model.Connect.FirstNdNum', i) - 1
+                 for i in range(nbbf)]
+        endbf = [self.get('Model.Connect.LastNdNum', i)
+                 for i in range(nbbf)]
+        # Assign the bief number to each section (piecewise constant list)
+        ibief = [ib + 0 * i for ib in range(nbbf) for i in range(oribf[ib],
+                                                                 endbf[ib])]
+        for i in range(self.nb_nodes):
+            xcoord.append(
+                self.get('Model.X', i) -
+                self.get('Model.X', oribf[ibief[i]]) +
+                self.get('Model.CrossSection.RelAbs',
+                         self.get('Model.IDT', oribf[ibief[i]]) - 1))
+        del ibief
+        del oribf
+        del endbf
+
+        # variables
+        elevation = [self.get('State.Z', i)
+                     for i in range(self.nb_nodes)]
+        discharge = [self.get('State.Q', i)
+                     for i in range(self.nb_nodes)]
+
+        with open(out_file, 'w') as lig:
+            # Header
+            lig.write('RESULTATS CALCUL, DATE :  '
+                      '{}\n'.format(datetime.now().strftime('%d/%m/%Y %H:%M')))
+            lig.write('FICHIER RESULTAT MASCARET\n')
+            lig.write('------------------------------------------------\
+                -----------------------\n')
+            lig.write(' IMAX =%6i ' % self.nb_nodes)
+            lig.write('NBBIEF=%5i\n' % nbbf)
+            lig.write((nbent * ' ENTETE NON RELUE\n'))
+            # X
+            np.savetxt(lig,
+                       np.asarray(xcoord[0:nbfmt]).reshape(nblin, nbcol),
+                       fmt=(nbcol * '%13.2f'), header='X', comments=' ')
+            if nbmod != 0:
+                np.savetxt(lig,
+                           np.asarray(xcoord[nbfmt:]).reshape(1, nbmod),
+                           fmt=(nbmod * '%13.2f'))
+            # Z
+            np.savetxt(lig,
+                       np.asarray(elevation[0:nbfmt]).reshape(
+                           nblin, nbcol),
+                       fmt=(nbcol * '%13.3f'), header='Z', comments=' ')
+            if nbmod != 0:
+                np.savetxt(lig,
+                           np.asarray(elevation[nbfmt:]).
+                           reshape(1, nbmod),
+                           fmt=(nbmod * '%13.3f'))
+            # Q
+            np.savetxt(lig,
+                       np.asarray(discharge[0:nbfmt]).
+                       reshape(nblin, nbcol),
+                       fmt=(nbcol * '%13.3f'), header='Q', comments=' ')
+            if nbmod != 0:
+                np.savetxt(lig,
+                           np.asarray(discharge[nbfmt:]).
+                           reshape(1, nbmod),
+                           fmt=(nbmod * '%13.3f'))
+
+            # Optional Friction coefficients
+            if k_s is not None:
+                # CF1
+                k_s = [self.get('Model.FricCoefMainCh', i)
+                       for i in range(self.nb_nodes)]
+                np.savetxt(lig,
+                           np.asarray(k_s[0:nbfmt]).reshape(nblin, nbcol),
+                           fmt=(nbcol * '%13.3f'), header='CF1', comments=' ')
+                if nbmod != 0:
+                    np.savetxt(lig,
+                               np.asarray(k_s[nbfmt:]).reshape(1, nbmod),
+                               fmt=(nbmod * '%13.3f'))
+
+                # CF2
+                k_s = [self.get('Model.FricCoefFP', i)
+                       for i in range(self.nb_nodes)]
+                np.savetxt(lig,
+                           np.asarray(k_s[0:nbfmt]).reshape(nblin, nbcol),
+                           fmt=(nbcol * '%13.3f'), header='CF2', comments=' ')
+                if nbmod != 0:
+                    np.savetxt(lig,
+                               np.asarray(k_s[nbfmt:]).reshape(1, nbmod),
+                               fmt=(nbmod * '%13.3f'))
+
+            # Footer
+            lig.write(' FIN')
+        lig.close()
+
+
 class TelemacException(Exception):
     """ Generic exception class for all of Telemac-Mascaret Exceptions """
     pass

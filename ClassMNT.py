@@ -37,10 +37,12 @@ class ClassMNT(QObject):
         self.facteur = facteur
         self.mnt = {}
 
+    @staticmethod
+    def fct1(x, arrondi = 2):
+        """around"""
+        return round(float(x),  arrondi)
+
     def run(self):
-
-        # try:
-
         features = self.profil.selectedFeatures()
         self.profil.startEditing()
 
@@ -60,7 +62,7 @@ class ClassMNT(QObject):
                 feature["xmnt"] = ""
                 feature["zmnt"] = ""
 
-                # self.res taille du la résolution du raste
+                # self.res taille du la résolution du raster
 
                 for dist in np.arange(0.0, round(longueur, 3),
                                       round(self.res, 3)):
@@ -71,7 +73,7 @@ class ClassMNT(QObject):
 
                     if ident[1]:
                         feature["xmnt"] += " " + str(dist)
-                        feature["zmnt"] += " " + str(ident[1] / self.facteur)
+                        feature["zmnt"] += " " + str(self.fct1(ident[1] / self.facteur, arrondi=3))
                 self.profil.updateFeature(feature)
 
                 if len(feature["zmnt"]) > 0:

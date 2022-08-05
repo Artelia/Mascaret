@@ -49,6 +49,8 @@ class ClassStructureDialog(QDialog):
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_structure.ui'), self)
 
+        self.graph_struct = None
+
         self.tree_struct.setColumnWidth(0, 200)
         self.tree_struct.setColumnWidth(1, 100)
         self.tree_struct.setColumnWidth(2, 100)

@@ -22,7 +22,7 @@ from matplotlib.patches import Polygon as mpoly
 # from shapely.geometry import Polygon as spoly
 from shapely import geometry
 
-from ..GraphCommon import GraphCommon
+from ..Graphic.GraphCommon import GraphCommon
 
 
 class GraphStructure(GraphCommon):
@@ -32,6 +32,8 @@ class GraphStructure(GraphCommon):
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
         self.gui_graph(lay)
+        self.axes = None
+        self.courbes = {}
         self.init_ui()
 
     def init_ui(self):
@@ -75,8 +77,7 @@ class GraphStructure(GraphCommon):
 
             dico_profil = {'x': [r[0] for r in rows], 'z': [r[1] for r in rows]}
             minx, miny, maxx, maxy = min(dico_profil['x']), min(
-                dico_profil['z']) - 1, \
-                                     max(dico_profil['x']), max(
+                dico_profil['z']) - 1, max(dico_profil['x']), max(
                 dico_profil['z'])
             dico_profil['x'].insert(0, minx)
             dico_profil['x'].append(maxx)

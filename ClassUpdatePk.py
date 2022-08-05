@@ -34,7 +34,7 @@ else:  # qt4
 
 class ClassUpdatePk(QDialog):
     """
-    Class allow to delete schema
+    Class allow to update pk of the selected tables
     """
 
     def __init__(self, mgis, iface):
@@ -45,6 +45,7 @@ class ClassUpdatePk(QDialog):
         self.ui = loadUi(
             os.path.join(self.mgis.masplugPath, 'ui/ui_update_pk.ui'), self)
         self.box = ClassWarningBox()
+        self.tree = None
         self.lst_tables_p = ['links', 'profiles']
         self.lst_tables_pt = ['flood_marks', 'weirs', 'hydraulic_head',
                               'lateral_inflows',
