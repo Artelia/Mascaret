@@ -869,7 +869,8 @@ BEGIN
   SELECT
     trg.tgname AS trigger_name,
     tbl.relname AS trigger_table,
-
+(SELECT column_name FROM information_schema.columns 
+	WHERE ordinal_position=trg.tgattr[0] AND table_name=tbl.relname AND table_schema=source_schema) as trigger_attrib,
     CASE
     WHEN trg.tgenabled='O' THEN 'ENABLED'
     ELSE 'DISABLED'
@@ -908,10 +909,13 @@ BEGIN
   LOOP
     buffer := dest_schema || '.' || quote_ident(rec.trigger_table);
     IF show_details THEN RAISE NOTICE 'Creating trigger % % % ON %...', rec.trigger_name, rec.action_timing, rec.trigger_event, rec.trigger_table; END IF;
-    EXECUTE 'CREATE TRIGGER ' || rec.trigger_name || ' ' || rec.action_timing
+    IF rec.trigger_attrib  IS NOT NULL THEN     EXECUTE 'CREATE TRIGGER ' || rec.trigger_name || ' ' || rec.action_timing
+            || ' ' || rec.trigger_event || ' OF ' || rec.trigger_attrib  ||' ON ' || buffer || ' FOR EACH '
+            || rec.trigger_level || ' ' || replace(rec.action_statement, source_schema_dot, '');
+    ELSE EXECUTE 'CREATE TRIGGER ' || rec.trigger_name || ' ' || rec.action_timing
             || ' ' || rec.trigger_event || ' ON ' || buffer || ' FOR EACH '
             || rec.trigger_level || ' ' || replace(rec.action_statement, source_schema_dot, '');
-
+    END IF;
   END LOOP;
 
   -- Create views
