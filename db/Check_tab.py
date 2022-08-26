@@ -1043,6 +1043,7 @@ class CheckTab:
 
     def change_clone_shema_trigger(self):
         """ update 5.0.2 version"""
+        self.change_branchs_chstate_active()
         qry = "DROP FUNCTION clone_schema(text, text,text, boolean, boolean);"
         try:
             cl = Maso.class_fct_psql()
