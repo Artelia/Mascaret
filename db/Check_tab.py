@@ -79,6 +79,7 @@ class CheckTab:
                                   '4.0.13',
                                   '4.0.14',
                                   '5.0.1',
+                                  '5.0.2',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -225,6 +226,7 @@ class CheckTab:
             '4.0.13': {'fct': [lambda: self.change_branchs_chstate_active()], },
             '4.0.14': {},
             '5.0.1': {},
+            '5.0.2': {'fct': [lambda: self.change_clone_shema_trigger()], },
             # '3.0.x': { },
 
         }
@@ -1038,3 +1040,21 @@ class CheckTab:
               "AFTER UPDATE OF active ON {0}.branchs " \
               "FOR EACH ROW EXECUTE PROCEDURE public.chstate_branch();".format(self.mdb.SCHEMA)
         self.mdb.run_query(sql)
+
+    def change_clone_shema_trigger(self):
+        """ update 5.0.2 version"""
+        self.change_branchs_chstate_active()
+        qry = "DROP FUNCTION clone_schema(text, text,text, boolean, boolean);"
+        try:
+            cl = Maso.class_fct_psql()
+            lfct = [cl.pg_clone_schema()]
+            qry = ''
+            for sql in lfct:
+                qry += sql
+                qry += '\n'
+            self.mdb.run_query(qry)
+
+            return True
+        except Exception as e:
+            self.mgis.add_info("Error  update_502: {}".format(str(e)))
+            return False
