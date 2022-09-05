@@ -245,6 +245,7 @@ class ClassEventObsDialog(QDialog):
         self.mgis.up_repProject(file_name_path[0])
         succes, recs = self.read_csv(file_name_path)
 
+        dbls = None
         if succes:
             self.mdb.execute("DROP TABLE IF EXISTS {0}.tmp_observations".format(
                 self.mdb.SCHEMA))
@@ -262,6 +263,8 @@ class ClassEventObsDialog(QDialog):
                 "AND obs.date = tmp.date AND obs.type = tmp.type)".format(
                     self.mdb.SCHEMA),
                 fetch=True)
+        else:
+            return
 
         if dbls:
             txt_sta = ""
@@ -326,6 +329,7 @@ class ClassEventObsDialog(QDialog):
             self.mgis.add_info("Loading to observations is an echec.")
             if self.mgis.DEBUG:
                 self.mgis.add_info(repr(e))
+
             return False, None
 
     @staticmethod
