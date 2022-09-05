@@ -34,7 +34,7 @@ from qgis.gui import *
 from qgis.utils import *
 
 # from .table_WQ import table_WQ
-from .Function import data_to_float, data_to_date
+from .Function import data_to_float, data_to_date, del_2space
 from .Graphic.GraphHydro import GraphHydroLaw
 
 if int(qVersion()[0]) < 5:  # qt4
@@ -1026,6 +1026,7 @@ class ClassHydroLawsDialog(QDialog):
         coef_time = 1.
         for num_ligne, ligne in enumerate(filein):
             if ligne[0] != '#':
+                ligne = del_2space(ligne)
                 liste = ligne.replace('\n', '').replace('\t',
                                                         ' ').strip().split(sep)
                 if self.param_law["xIsTime"] and liste[0] in ["S", "M", "H",
@@ -1037,7 +1038,6 @@ class ClassHydroLawsDialog(QDialog):
                     elif liste[0] == "J":
                         coef_time = 1. * 60. * 60. * 24.
                     continue
-
                 if len(liste) == nb_col:
                     if first_ligne:
                         first_ligne = False

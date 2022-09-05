@@ -20,8 +20,12 @@ email                :
 import math
 import os
 import dateutil
+import re
 from shutil import copy2
 
+
+def del_2space(txt):
+   return re.sub(' +', ' ', txt)
 
 def data_to_float(txt):
     try:
