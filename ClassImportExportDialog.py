@@ -281,8 +281,10 @@ class ClassDlgImport(QDialog):
         """
         file_name_path, _ = QFileDialog.getOpenFileName(None,
                                                         'File Selection',
-                                                        QDir.homePath(),
+                                                        self.mgis.repProject,
+                                                        #QDir.homePath(),
                                                         filter="JSON (*.json);File (*)")
+        self.mgis.up_repProject(file_name_path)
         if file_name_path != '':
             self.txt_file.setText(file_name_path)
 

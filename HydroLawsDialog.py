@@ -991,9 +991,12 @@ class ClassHydroLawsDialog(QDialog):
         fct to import law
         :return:
         """
+
         file, _ = QFileDialog.getOpenFileName(None, 'File Selection',
                                               self.mgis.repProject,
                                               "File (*.txt *.csv *.loi)")
+        self.mgis.up_repProject(file)
+        
         if file:
             if file[-4:] == ".loi":
                 sep = " "

@@ -1027,6 +1027,19 @@ Version : {}
         dlg.exec_()
         # dlg.show()
 
+    def up_repProject(self, file_):
+        """
+        update repProject
+        :param file_: file_path
+        """
+        patmp = os.path.dirname(file_)
+        # check path
+        if os.path.exists(patmp):
+            # replace
+            self.repProject = patmp
+
+
+
     def fct_hydro_laws(self):
         dlg = ClassHydroLawsDialog(self)
         dlg.exec_()

@@ -240,8 +240,9 @@ class ClassEventObsDialog(QDialog):
     def import_csv(self):
         """ import CSV file"""
         file_name_path, _ = QFileDialog.getOpenFileNames(None, 'File Selection',
-                                                         self.mgis.masplugPath,
+                                                         self.mgis.repProject,
                                                          filter="CSV (*.csv);;File (*)")
+        self.mgis.up_repProject(file_name_path[0])
         succes, recs = self.read_csv(file_name_path)
 
         if succes:

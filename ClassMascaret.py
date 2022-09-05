@@ -2333,16 +2333,20 @@ class ClassMascaret:
         if int(qVersion()[0]) < 5:  # qt4
             fichiers = QFileDialog.getOpenFileNames(None,
                                                     'File Selection',
-                                                    self.dossierFileMasc,
+                                                    #self.dossierFileMasc,
+                                                    self.mgis.repProject,
                                                     "File (*.lig)")
 
         else:  # qt5
             fichiers, _ = QFileDialog.getOpenFileNames(None,
                                                        'File Selection',
-                                                       self.dossierFileMasc,
+                                                       self.mgis.repProject,
+                                                       #self.dossierFileMasc,
                                                        "File (*.lig)")
+
         try:
             fichiers = fichiers[0]
+            self.mgis.up_repProject(fichiers)
         except IndexError:
             self.mgis.add_info("Cancel  init file")
             return

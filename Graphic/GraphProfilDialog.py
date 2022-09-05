@@ -708,9 +708,9 @@ class GraphProfil(GraphCommon):
 
         fichiers, _ = QFileDialog.getOpenFileNames(None,
                                                    'File Selection',
-                                                   self.dossierProjet,
+                                                   self.mgis.repProject,
                                                    "File (*.txt *.csv)")
-
+        self.mgis.up_repProject(fichiers[0])
         if fichiers:
 
             self.charger_bathy(fichiers, self.coucheProfils,
@@ -725,6 +725,7 @@ class GraphProfil(GraphCommon):
 
     def charger_bathy(self, liste, couche_profil, profil=None):
         """charge la bathymetrie"""
+
         for fichier in liste:
             basename = os.path.basename(fichier)
             if not profil:
@@ -747,40 +748,51 @@ class GraphProfil(GraphCommon):
                             sep = ";"
 
                         ordre = 0
-                        for ligne in fich:
+                        err = False
+                        try:
+                            for ligne in fich:
 
-                            if ligne[0] != '#':
-                                ligne = ligne.replace('\n', '')
-                                if len(ligne.split(sep)) < 1:
-                                    break
-                                x, z = (float(var) for var in ligne.split(sep))
+                                if ligne[0] != '#':
+                                    ligne = ligne.replace('\n', '')
+                                    if len(ligne.split(sep)) < 1:
+                                        break
 
-                                ordre += 1
-                                if x < 0:
-                                    geom = 'NULL'
-                                else:
+                                    x, z = (float(var) for var in ligne.split(sep))
 
-                                    p = f.geometry().interpolate(x).asPoint()
+                                    ordre += 1
+                                    if x < 0:
+                                        geom = 'NULL'
+                                    else:
 
-                                    # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
+                                        p = f.geometry().interpolate(x).asPoint()
 
-                                    geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
-                                        p.x(), p.y(), self.mdb.SRID)
+                                        # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
 
-                                tab["name"].append("'" + basename + "'")
-                                tab["profile"].append("'" + profil + "'")
-                                tab["order_"].append(ordre)
-                                tab["x"].append(x)
-                                tab["z"].append(z)
-                                tab["geom"].append(geom)
+                                        geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                                            p.x(), p.y(), self.mdb.SRID)
 
-                    self.mdb.insert2("topo", tab)
+                                    tab["name"].append("'" + basename + "'")
+                                    tab["profile"].append("'" + profil + "'")
+                                    tab["order_"].append(ordre)
+                                    tab["x"].append(x)
+                                    tab["z"].append(z)
+                                    tab["geom"].append(geom)
+                        except Exception:
+                            err = True
+
+                    if err :
+                        QMessageBox.warning(self, "Error",
+                                            "Import failed ({})".format(fichier),
+                                            QMessageBox.Ok)
+                    else:
+                        self.mdb.insert2("topo", tab)
 
     def import_image(self):
         fichier, _ = QFileDialog.getOpenFileName(None,
                                                  'Sélection des fichiers',
-                                                 self.dossierProjet,
+                                                 self.mgis.repProject,
                                                  "Fichier (*.png *.jpg)")
+        self.mgis.up_repProject(fichier)
 
         try:
             fich = open(fichier + "w", "r")
