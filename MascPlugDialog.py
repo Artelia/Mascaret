@@ -242,7 +242,7 @@ class MascPlugDialog(QMainWindow):
 
         # TODO Finaliser
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(False)
+        self.ui.actionTest.setVisible(True)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(
@@ -993,7 +993,7 @@ Version : {}
     def fct_test(self):
         """ Test function"""
         # get_laws
-        self.chkt.debug_update_vers_meta(version='4.0.10')
+        self.chkt.debug_update_vers_meta(version='5.0.2')
         #self.mdb.correction_seq()
         
         pass

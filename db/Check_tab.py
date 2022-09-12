@@ -221,8 +221,6 @@ class CheckTab:
             '4.0.14': {},
             '5.0.1': {},
             '5.0.2': {'fct': [lambda: self.change_clone_shema_trigger()], },
-            '5.0.3': {},
-            '5.0.4': {},
             # '3.0.x': { },
 
         }
@@ -1069,6 +1067,3 @@ class CheckTab:
         except Exception as e:
             self.mgis.add_info("Error  update_502: {}".format(str(e)))
             return False
-    def new_branch_tab(self):
-
-        pass
