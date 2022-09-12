@@ -1069,3 +1069,6 @@ class CheckTab:
         except Exception as e:
             self.mgis.add_info("Error  update_502: {}".format(str(e)))
             return False
+    def new_branch_tab(self):
+
+        pass

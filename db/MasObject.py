@@ -522,7 +522,7 @@ class links(MasObject):
         return qry
 
 
-# *****************************************
+#*****************************************
 class branchs(MasObject):
     def __init__(self):
         super(branchs, self).__init__()
@@ -532,13 +532,6 @@ class branchs(MasObject):
                       ('branch', 'serial NOT NULL'),
                       ('startb', 'character varying(30)'),
                       ('endb', 'character varying(30)'),
-                      ('zonenum', 'serial NOT NULL'),
-                      ('zoneabsstart', 'float'),
-                      ('zoneabsend', 'float'),
-                      ('minbedcoef', 'float'),
-                      ('majbedcoef', 'float'),
-                      ('mesh', 'float'),
-                      ('planim', 'float'),
                       ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('CONSTRAINT branchs_pkey', 'PRIMARY KEY (gid)'),
                       ('CONSTRAINT cle_debut', 'FOREIGN KEY (startb)\n'
@@ -1890,3 +1883,56 @@ class law_values(MasObject):
                        'PRIMARY KEY (id_law, id_var, id_order)')]
 
 # ****************************************************************************
+# *****************************************
+class branchs_old(MasObject):
+    def __init__(self):
+        super(branchs_old, self).__init__()
+        self.order = 98
+        self.geom_type = 'MultiLineString'
+        self.attrs = [('gid', 'serial NOT NULL'),
+                      ('branch', 'serial NOT NULL'),
+                      ('startb', 'character varying(30)'),
+                      ('endb', 'character varying(30)'),
+                      ('zonenum', 'serial NOT NULL'),
+                      ('zoneabsstart', 'float'),
+                      ('zoneabsend', 'float'),
+                      ('minbedcoef', 'float'),
+                      ('majbedcoef', 'float'),
+                      ('mesh', 'float'),
+                      ('planim', 'float'),
+                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
+                      ('CONSTRAINT branchs_pkey', 'PRIMARY KEY (gid)'),
+                      ('CONSTRAINT cle_debut', 'FOREIGN KEY (startb)\n'
+                                               '\t   REFERENCES {0}.extremities (name) MATCH SIMPLE \n'
+                                               '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(
+                          self.schema)),
+                      ('CONSTRAINT cle_fin', 'FOREIGN KEY (startb)'
+                                             '\t   REFERENCES {0}.extremities (name) MATCH SIMPLE \n'
+                                             '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(
+                          self.schema))]
+
+    def pg_create_calcul_abscisse(self):
+        qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
+              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
+                                                                 self.name)
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_branche();\n'
+        return qry
+
+    def pg_updat_actv(self):
+        qry = 'CREATE TRIGGER {1}_chstate_active\n' \
+              ' AFTER UPDATE OF active \n  ON {0}.{1}\n'.format(self.schema, self.name)
+        qry += ' FOR EACH ROW\n' \
+               'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
+               'EXECUTE PROCEDURE chstate_branch();\n'
+        return qry
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        qry += '\n'
+        qry += self.pg_create_calcul_abscisse()
+        qry += '\n'
+        qry += self.pg_updat_actv()
+        return qry
+# *****************************************
