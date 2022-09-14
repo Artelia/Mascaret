@@ -646,9 +646,9 @@ class ClassMasDatabase(object):
     def add_fct_for_update_pk(self):
         """add fct psql to compute abscissa"""
         cl = Maso.class_fct_psql()
-        lfct = [cl.pg_abscisse_profil(), cl.pg_all_profil(),
-                cl.pg_abscisse_point(), cl.pg_all_point(),
-                cl.pg_abscisse_branch(), cl.pg_all_branch(),
+        lfct = [cl.pg_abscisse_profil(self.SCHEMA), cl.pg_all_profil(self.SCHEMA),
+                cl.pg_abscisse_point(self.SCHEMA), cl.pg_all_point(self.SCHEMA),
+                cl.pg_abscisse_branch(self.SCHEMA), cl.pg_all_branch(self.SCHEMA),
                 ]
         qry = ''
         for sql in lfct:
@@ -718,6 +718,12 @@ class ClassMasDatabase(object):
             self.mgis.add_info(repr(e))
 
         return liste
+
+    def check_schema_into_db(self):
+        """ check if schema exists yet"""
+        if self.SCHEMA in self.list_schema():
+            return True
+        return False
 
     def drop_model(self, model_name, cascade=False, verbose=True):
         """
@@ -1313,13 +1319,13 @@ $BODY$
             return False
 
     def import_schema(self, file, old=False):
-        """
-        import schema
-        :param file: file name
-        :param old: old version to the importation
-        :return:
-        """
-        try:
+        # """
+        # import schema
+        # :param file: file name
+        # :param old: old version to the importation
+        # :return:
+        # """
+        # try:
             if old:
                 exe = os.path.join(self.mgis.postgres_path, 'psql')
             else:
@@ -1345,19 +1351,20 @@ $BODY$
                 outs, err = p.communicate()
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Import File :{0}".format(file))
-                    self.mgis.add_info("{0}".format(outs.decode('utf-8')))
+                    self.mgis.add_info("{0}".format(outs.code('utf-8')))
                 p.wait()
                 if len(err)> 0:
-                    self.mgis.add_info("{0}".format(err.decode('utf-8')))
+                    print(err)
+                    self.mgis.add_info("{0}".format(err.code('utf-8')))
                     return False
                 return True
             else:
                 self.mgis.add_info('Executable file not found. '
                                    'Please, insert path in "path postgres" in Help / Setting / Options')
                 return False
-        except Exception as e:
-            print(e)
-            return False
+        # except Exception as e:
+        #     self.mgis.add_info('ERROR :', e)
+        #     return False
 
     def list_schema(self):
         """
@@ -1605,6 +1612,7 @@ $BODY$
         namesh = metadict["schema_name"]
         actname = metadict["export_name"]
         new_file = metadict["psqlfile"]
+        print( namesh,actname,new_file)
         self.ignor_schema += [namesh, actname, "{0}_tmp".format(actname)]
 
         if self.check_extension():

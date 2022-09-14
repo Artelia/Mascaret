@@ -82,6 +82,7 @@ class CheckTab:
                                   '5.0.2',
                                   '5.0.3',
                                   '5.0.4',
+                                  '5.1.1',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -221,6 +222,11 @@ class CheckTab:
             '4.0.14': {},
             '5.0.1': {},
             '5.0.2': {'fct': [lambda: self.change_clone_shema_trigger()], },
+            '5.0.3': {},
+            '5.1.1': {'fct': [
+                lambda: self.new_branch_tab(),
+            ]
+            },
             # '3.0.x': { },
 
         }
@@ -1067,3 +1073,78 @@ class CheckTab:
         except Exception as e:
             self.mgis.add_info("Error  update_502: {}".format(str(e)))
             return False
+
+    def new_branch_tab(self):
+        """
+        updat 5.1.1
+        """
+        print("new_branch_tab;")
+        print('Rename table branchs')
+        #  RENAME old branchs table
+        sql = "ALTER TABLE IF EXISTS {0}.branchs RENAME TO branchs_old;".format(self.mdb.SCHEMA)
+        sql += '\n'
+        sql +='ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT branchs_pkey TO branchs_old_pkey;'.format(
+            self.mdb.SCHEMA)
+        sql += '\n'
+        sql += 'ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT cle_debut TO cle_debut_old;'.format(
+            self.mdb.SCHEMA)
+        sql += '\n'
+        sql += 'ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT cle_fin TO cle_fin_old;'.format(self.mdb.SCHEMA)
+        sql += '\n'
+        sql += 'ALTER INDEX IF EXISTS {0}.branchs_geom_idx RENAME TO branchs_old_geom_idx;'.format(self.mdb.SCHEMA)
+        sql += '\n'
+        sql += 'ALTER SEQUENCE IF EXISTS  {0}.branchs_gid_seq RENAME TO branchs_old_gid_seq;'.format(self.mdb.SCHEMA)
+        sql += '\n'
+        sql += "DROP TRIGGER IF EXISTS branchs_calcul_abscisse ON {}.branchs_old;".format(self.mdb.SCHEMA)
+        sql += '\n'
+        sql += "DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs_old;".format(self.mdb.SCHEMA)
+        self.mdb.run_query(sql)
+
+        print('updates column profiles')
+        # updates column of the profiles table
+        vars = [ ('minbedcoef', 'float'),
+                      ('majbedcoef', 'float'),
+                      ('mesh', 'float'),
+                      ('planim', 'float'),]
+        sql = ''
+        for var,typ in vars:
+            sql += "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS {1} {2} ;".format(self.mdb.SCHEMA, var, typ)
+            sql += '\n'
+        self.mdb.run_query(sql)
+        print('updates abscisse function ')
+        # Update function abscisse
+        # fonction à delete :
+        # a ne pas delete
+        # pg_create_calcul_abscisse, pg_abscisse_branch(), pg_all_branch()
+        # fonction  à replace :
+        # pg_abscisse_profil, pg_create_calcul_abscisse, pg_create_calcul_abscisse_profil,
+        # pg_abscisse_profil(class_fct_psql), pg_create_calcul_abscisse_point_flood
+        cl = Maso.class_fct_psql()
+        lfct = [cl.pg_create_calcul_abscisse(local=self.mdb.SCHEMA),
+                cl.pg_create_calcul_abscisse_point_flood(local=self.mdb.SCHEMA),
+                cl.pg_abscisse_profil(local=self.mdb.SCHEMA),
+                cl.pg_create_calcul_abscisse_profil(local=self.mdb.SCHEMA),
+                cl.pg_create_calcul_abscisse(local=self.mdb.SCHEMA),
+                cl.pg_delete_visu_flood_marks(local=self.mdb.SCHEMA),
+
+                ]
+        qry = ''
+        for sql in lfct:
+            qry += sql
+            qry += '\n'
+        self.mdb.run_query(qry)
+
+        print('Creat table Branch ')
+        # Creation new branchs table
+        tabs = [Maso.branchs]
+        for tab in tabs :
+            self.add_tab(tab)
+
+        print('Complete table branch')
+
+
+        print('complete table profiles')
+
+
+
+

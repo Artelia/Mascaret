@@ -39,8 +39,15 @@ class ClassDlgExport(QDialog):
         """
         liste_col = self.mdb.list_columns('runs')
         self.cond_com = ('comments' in liste_col)
-
+        self.b_cancel.clicked.connect(self.annule)
+        if not self.mdb.check_schema_into_db():
+            qbox = QMessageBox.warning(self, "Warning",
+                                "\t No data in  database",
+                                QMessageBox.Ok)
+            self.b_export.hide()
+            return
         dico = self.mdb.select("runs", "", "date")
+
 
         if self.cond_com:
             for run, scen, date, comments in zip(dico["run"], dico["scenario"],
@@ -114,7 +121,7 @@ class ClassDlgExport(QDialog):
                 self.tw_runs.setItemWidget(self.parent[run], 1, lbl)
 
         self.b_export.clicked.connect(self.export)
-        self.b_cancel.clicked.connect(self.annule)
+
         self.cb_all_exp_res.stateChanged.connect(self.state_changed)
 
     def state_changed(self):
@@ -215,6 +222,8 @@ class ClassDlgExport(QDialog):
                                                             self.mdb.SCHEMA),
                                                         filter="JSON (*.json)")
         return file_name_path
+
+
 
 
 class ClassDlgImport(QDialog):
@@ -522,6 +531,7 @@ class ClassDlgImport(QDialog):
         if bool_import:
             self.metadict['jsfile'] = self.jsfile
             self.metadict['psqlfile'] = psqlfile
+            # self.mdb.import_model(self.metadict)
             self.mgis.task_imp = QgsTask.fromFunction('Import Schema',
                                                       self.task_import,
                                                       on_finished=self.completed,
