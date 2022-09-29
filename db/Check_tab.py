@@ -1078,8 +1078,8 @@ class CheckTab:
         """
         updat 5.1.1
         """
-        print("new_branch_tab;")
-        print('Rename table branchs')
+        if self.mgis.DEBUG :
+            self.mgis.add_info('Rename table branchs')
         #  RENAME old branchs table
         sql = "ALTER TABLE IF EXISTS {0}.branchs RENAME TO branchs_old;".format(self.mdb.SCHEMA)
         sql += '\n'
@@ -1099,8 +1099,8 @@ class CheckTab:
         sql += '\n'
         sql += "DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs_old;".format(self.mdb.SCHEMA)
         self.mdb.run_query(sql)
-
-        print('updates column profiles')
+        if self.mgis.DEBUG :
+            self.mgis.add_info('updates column profiles')
         # updates column of the profiles table
         vars = [ ('minbedcoef', 'float'),
                       ('majbedcoef', 'float'),
@@ -1111,39 +1111,59 @@ class CheckTab:
             sql += "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS {1} {2} ;".format(self.mdb.SCHEMA, var, typ)
             sql += '\n'
         self.mdb.run_query(sql)
-        print('updates abscisse function ')
-        # Update function abscisse
-        # fonction à delete :
-        # a ne pas delete
-        # pg_create_calcul_abscisse, pg_abscisse_branch(), pg_all_branch()
-        # fonction  à replace :
-        # pg_abscisse_profil, pg_create_calcul_abscisse, pg_create_calcul_abscisse_profil,
-        # pg_abscisse_profil(class_fct_psql), pg_create_calcul_abscisse_point_flood
-        cl = Maso.class_fct_psql()
-        lfct = [cl.pg_create_calcul_abscisse(local=self.mdb.SCHEMA),
-                cl.pg_create_calcul_abscisse_point_flood(local=self.mdb.SCHEMA),
-                cl.pg_abscisse_profil(local=self.mdb.SCHEMA),
-                cl.pg_create_calcul_abscisse_profil(local=self.mdb.SCHEMA),
-                cl.pg_create_calcul_abscisse(local=self.mdb.SCHEMA),
-                cl.pg_delete_visu_flood_marks(local=self.mdb.SCHEMA),
-
-                ]
-        qry = ''
-        for sql in lfct:
-            qry += sql
-            qry += '\n'
-        self.mdb.run_query(qry)
-
-        print('Creat table Branch ')
-        # Creation new branchs table
+        if self.mgis.DEBUG :
+            self.mgis.add_info('updates abscissa function ')
+        self.mdb.schema_fct_sql()
+        print('Create table Branch ')
         tabs = [Maso.branchs]
         for tab in tabs :
             self.add_tab(tab)
 
-        print('Complete table branch')
+        if self.mgis.DEBUG:
+            self.mgis.add_info('Fill table branch')
+        sql = """
+        CREATE OR REPLACE FUNCTION {0}.insert_new_branch(source_schema text) 
+            RETURNS void
+            LANGUAGE 'plpgsql'
+            COST 100
+            VOLATILE PARALLEL UNSAFE
+        AS $BODY$
+        DECLARE
+           rec              record;
+           geom_b    geometry;
+           actb boolean;
+           startb character varying(30);
+           endb character varying(30);
+           BEGIN
+        -- Disable trigger    
+           EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs DISABLE TRIGGER branchs_chstate_active';
+           EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles DISABLE TRIGGER profiles_calcul_abscisse';
+        -- creation new table   
+           FOR rec IN
+           EXECUTE 'SELECT DISTINCT branch as id_b  FROM  '||  quote_ident(source_schema) ||'.branchs_old' 
+           LOOP
+                EXECUTE ' SELECT st_multi(ST_Union(geom))  FROM  ' ||  quote_ident(source_schema) ||'.branchs_old  WHERE branch=$1 GROUP BY branch' USING rec.id_b INTO geom_b;
+                EXECUTE 'SELECT active,startb, endb  FROM ' ||  quote_ident(source_schema) ||'.branchs_old WHERE branch=$1 ORDER BY gid ASC LIMIT 1 ' USING rec.id_b INTO actb, startb, endb;
+        -- insert value new branch table
+                EXECUTE 'INSERT INTO ' ||  quote_ident(source_schema) ||'.branchs(geom,  branch, active,startb, endb)  VALUES ($1,$2,$3,$4,$5)' USING geom_b,rec.id_b,actb,startb, endb;
+            -- RAISE NOTICE 'test %', rec.id_b;
+            END LOOP;
+        -- Update fille profile table
+            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET minbedcoef=(SELECT minbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))';
+        -- Enable trigger
+            EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs ENABLE TRIGGER branchs_chstate_active';
+            EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles DISABLE TRIGGER profiles_calcul_abscisse';
+            RETURN;
+        END;
+        $BODY$;""".format(self.mdb.SCHEMA)
+        err = self.mdb.run_query(sql)
+        if self.mgis.DEBUG:
+            self.mgis.add_info('Creation of the conversion function')
+        sql= """SELECT {0}.insert_new_branch('{0}');""".format(self.mdb.SCHEMA)
+        err = self.mdb.run_query(sql)
+        if self.mgis.DEBUG:
+            self.mgis.add_info('Running the conversion function')
 
-
-        print('complete table profiles')
 
 
 

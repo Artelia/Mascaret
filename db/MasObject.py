@@ -219,10 +219,9 @@ class flood_marks(MasObject):
 
     def pg_clear_tab(self):
         """ create trigger"""
-        qry = """
-            CREATE TRIGGER flood_marks_delete_point_flood
+        qry = """CREATE TRIGGER flood_marks_delete_point_flood
             AFTER DELETE
-            ON {}.{}
+            ON {0}.{1}
             FOR EACH ROW
             EXECUTE PROCEDURE {0}.delete_point_flood();""".format(
             self.schema, self.name)
@@ -468,7 +467,7 @@ class profiles(MasObject):
         qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
               '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
                                                                  self.name)
-        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_profil();\n'
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_profil();\n'.format(self.schema)
         return qry
 
     def pg_create_table(self):
@@ -514,7 +513,7 @@ class links(MasObject):
         qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
               '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
                                                                  self.name)
-        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_profil();\n'
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_profil();\n'.format(self.schema)
         return qry
 
     def pg_create_table(self):
@@ -551,7 +550,7 @@ class branchs(MasObject):
     #     qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
     #           '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
     #                                                              self.name)
-    #     qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_branche();\n'
+    #     qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_branche();\n'.format(self.schema)
     #     return qry
 
     def pg_updat_actv(self):
@@ -559,7 +558,7 @@ class branchs(MasObject):
               ' AFTER UPDATE OF active \n  ON {0}.{1}\n'.format(self.schema, self.name)
         qry += ' FOR EACH ROW\n' \
                'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
-               'EXECUTE PROCEDURE chstate_branch();\n'
+               'EXECUTE PROCEDURE {0}.chstate_branch();\n'.format(self.schema)
         return qry
 
     def pg_create_table(self):
@@ -596,7 +595,7 @@ class basins(MasObject):
               ' AFTER UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
         qry += ' FOR EACH ROW\n' \
                'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
-               'EXECUTE PROCEDURE chstate_basin();\n'
+               'EXECUTE PROCEDURE {0}.chstate_basin();\n'.format(self.schema)
         return qry
 
     def pg_create_table(self):
@@ -694,7 +693,7 @@ class class_fct_psql(MasObject):
         super(class_fct_psql, self).__init__()
         self.order = 22
 
-    def pg_clone_schema(self):
+    def pg_clone_schema(self, local=None):
         """
         clone schema in psql
         example : SELECT clone_schema('ouvrage3','ouvrage3_ext','runs,results,results_sect,runs_graph');
@@ -1283,13 +1282,13 @@ AS $BODY$
 $BODY$;"""
         return qry.format(local)
 
-    def pg_all_branch(self):
+    def pg_all_branch(self, local='public'):
         """
          SQL function which updates abscissa of all branchs of one table
         :return:
         """
         qry = """
-CREATE OR REPLACE FUNCTION public.update_abscisse_branch(
+CREATE OR REPLACE FUNCTION {0}.update_abscisse_branch(
 	_tbl_branchs regclass)
     RETURNS void
     LANGUAGE 'plpgsql'
@@ -1920,7 +1919,7 @@ class branchs_old(MasObject):
         qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
               '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
                                                                  self.name)
-        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_branche();\n'
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_branche();\n'.format(self.schema)
         return qry
 
     def pg_updat_actv(self):
@@ -1928,7 +1927,7 @@ class branchs_old(MasObject):
               ' AFTER UPDATE OF active \n  ON {0}.{1}\n'.format(self.schema, self.name)
         qry += ' FOR EACH ROW\n' \
                'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
-               'EXECUTE PROCEDURE chstate_branch();\n'
+               'EXECUTE PROCEDURE {0}.chstate_branch();\n'.format(self.schema)
         return qry
 
     def pg_create_table(self):

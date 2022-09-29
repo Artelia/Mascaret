@@ -413,11 +413,27 @@ class MascPlugDialog(QMainWindow):
 
     def db_create_model(self):
         """Model creation"""
-        model_name, ok = QInputDialog.getText(self, 'New Model',
-                                              'New Model name:')
+        cond = True
+        lst_sh =  self.mdb.list_schema()
+        namesh = None
+        while cond:
+            model_name, ok = QInputDialog.getText(self, 'New Model',
+                                                  'New Model name:')
+            if ok:
+                namesh = model_name.lower()
+                if namesh in lst_sh :
+                    namesh = None
+                    self.box.info("The schema name already exists.\n"
+                                  " Please choose a new name.")
 
-        if ok:
-            self.mdb.SCHEMA = model_name.lower()
+                else:
+                    cond = False
+                # check
+            else:
+                cond = False
+
+        if ok and namesh != None:
+            self.mdb.SCHEMA = namesh
             self.mdb.create_model(self.dossier_sql)
             self.mdb.last_schema = self.mdb.SCHEMA
             self.enable_all_actions()
