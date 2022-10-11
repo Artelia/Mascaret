@@ -60,7 +60,8 @@ class ClassPostPreFG:
 
             for key, val in obj.items():
                 if key =="list_poly_trav" or key =="list_poly_pil":
-                    val = [shapely.wkt.loads(poly) for poly in val]
+                    for key, itm in val.items():
+                        val[key] = [shapely.wkt.loads(poly) for poly in itm]
                 setattr(self.cli, key, val)
 
         else:
