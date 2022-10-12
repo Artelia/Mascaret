@@ -1150,6 +1150,9 @@ class CheckTab:
             END LOOP;
         -- Update fille profile table
             EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET minbedcoef=(SELECT minbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))';
+            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET majbedcoef=(SELECT majbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))';
+            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET mesh=(SELECT mesh FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))';
+            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET planim=(SELECT planim FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))';
         -- Enable trigger
             EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs ENABLE TRIGGER branchs_chstate_active';
             EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles DISABLE TRIGGER profiles_calcul_abscisse';
