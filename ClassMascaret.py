@@ -1854,17 +1854,19 @@ class ClassMascaret:
             self.fct_only_init(noyau)
             return
 
-        # self.task_mascaret(None,tup=(par, dict_scen, dict_lois,
-        #                                               comments, noyau, run))
-        self.mgis.task_mas = QgsTask.fromFunction('Run Mascaret',
-                                                  self.task_mascaret,
-                                                  on_finished=self.completed,
-                                                  tup=(
-                                                      par, dict_scen, dict_lois,
-                                                      comments, noyau, run))
-        self.mgis.task_mas.taskCompleted.connect(self.del_task_mas)
-        self.mgis.task_mas.taskTerminated.connect(self.del_task_mas)
-        QgsApplication.taskManager().addTask(self.mgis.task_mas)
+        #
+        if self.mgis.task_use :
+            self.mgis.task_mas = QgsTask.fromFunction('Run Mascaret',
+                                                      self.task_mascaret,
+                                                      on_finished=self.completed,
+                                                      tup=(
+                                                          par, dict_scen, dict_lois,
+                                                          comments, noyau, run))
+            self.mgis.task_mas.taskCompleted.connect(self.del_task_mas)
+            self.mgis.task_mas.taskTerminated.connect(self.del_task_mas)
+            QgsApplication.taskManager().addTask(self.mgis.task_mas)
+        else:
+            self.task_mascaret(None, tup=(par, dict_scen, dict_lois, comments, noyau, run))
 
     def del_task_mas(self):
         """

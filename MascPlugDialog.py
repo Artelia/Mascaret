@@ -69,6 +69,7 @@ class MascPlugDialog(QMainWindow):
             os.path.join(self.masplugPath, 'ui/MascPlug_dialog_base.ui'), self)
         # variables
         self.DEBUG = 1
+        self.task_use = True
 
         self.curConnName = None
         self.passwd = None
