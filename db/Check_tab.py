@@ -80,6 +80,7 @@ class CheckTab:
                                   '4.0.14',
                                   '5.0.1',
                                   '5.0.2',
+                                  '5.0.3',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -227,6 +228,7 @@ class CheckTab:
             '4.0.14': {},
             '5.0.1': {},
             '5.0.2': {'fct': [lambda: self.change_clone_shema_trigger()], },
+            '5.0.3': {},
             # '3.0.x': { },
 
         }

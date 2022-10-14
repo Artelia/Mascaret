@@ -56,6 +56,7 @@ class ClassSettingsDialog(QDialog):
         #     self.ui.apiChbox.hide()
         # api
         self.ui.apiChbox.setChecked(self.mgis.cond_api)
+        self.ui.taskQChbox.setChecked(self.mgis.task_use)
 
         self.ui.debugModeChbox.setChecked(self.mgis.DEBUG)
         # DB
@@ -74,6 +75,7 @@ class ClassSettingsDialog(QDialog):
         self.mgis.open_last_schema = self.ui.open_lastChbox_schema.isChecked()
         self.mgis.cond_api = self.ui.apiChbox.isChecked()
         self.mgis.DEBUG = self.ui.debugModeChbox.isChecked()
+        self.mgis.task_use = self.ui.taskQChbox.isChecked()
         # Mascaret DB
         self.mgis.mdb.OVERWRITE = True
         self.mgis.mdb.LOAD_ALL = True
