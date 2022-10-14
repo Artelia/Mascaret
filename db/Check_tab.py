@@ -1078,6 +1078,8 @@ class CheckTab:
         """
         updat 5.1.1
         """
+        # TODO check si 1 profile coupe 2 branche
+        """SELECT pid, count(*) FROM (SELECT p.gid as pid ,b.gid as bid From  bva.profiles AS p,  bva.branchs_old as b WHERE ST_INTERSECTS(p.geom, b.geom) ) AS toto GROUP BY pid Having count(*)>1"""
         if self.mgis.DEBUG :
             self.mgis.add_info('Rename table branchs')
         #  RENAME old branchs table
@@ -1121,6 +1123,7 @@ class CheckTab:
 
         if self.mgis.DEBUG:
             self.mgis.add_info('Fill table branch')
+        #TODO ajout LIMIT 1 prendre
         sql = """
         CREATE OR REPLACE FUNCTION {0}.insert_new_branch(source_schema text) 
             RETURNS void
@@ -1149,10 +1152,10 @@ class CheckTab:
             -- RAISE NOTICE 'test %', rec.id_b;
             END LOOP;
         -- Update fille profile table
-            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET minbedcoef=(SELECT minbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))';
-            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET majbedcoef=(SELECT majbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))';
-            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET mesh=(SELECT mesh FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))';
-            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET planim=(SELECT planim FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))';
+            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET minbedcoef=(SELECT minbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))LIMIT 1';
+            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET majbedcoef=(SELECT majbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))LIMIT 1';
+            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET mesh=(SELECT mesh FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))LIMIT 1';
+            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET planim=(SELECT planim FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom)) LIMIT 1';
         -- Enable trigger
             EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs ENABLE TRIGGER branchs_chstate_active';
             EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles DISABLE TRIGGER profiles_calcul_abscisse';
@@ -1166,7 +1169,7 @@ class CheckTab:
         err = self.mdb.run_query(sql)
         if self.mgis.DEBUG:
             self.mgis.add_info('Running the conversion function')
-
+        # TODO retourner message d'erreur avec le numero de plrofil si coupe deux branch
 
 
 
