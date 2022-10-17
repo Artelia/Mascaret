@@ -216,7 +216,7 @@ class CheckTab:
             '4.0.8': {},
             '4.0.9': {},
             '4.0.10': {},
-            '4.0.11': { 'fct': [lambda: self.update_4011()], },
+            '4.0.11': {'fct': [lambda: self.update_4011()], },
             '4.0.12': {},
             '4.0.13': {'fct': [lambda: self.change_branchs_chstate_active()], },
             '4.0.14': {},
@@ -248,7 +248,7 @@ class CheckTab:
                 if self.mgis.DEBUG:
                     self.mgis.add_info('  {0} OK'.format(obj.name))
                 tabs.append("admin_tab")
-            except:
+            except Exception:
                 self.mgis.add_info('failure!<br>{0}'.format(Maso.admin_tab))
                 return
             for name_tab in tabs:
@@ -405,7 +405,7 @@ class CheckTab:
             if self.mgis.DEBUG:
                 self.mgis.add_info('  {0} OK'.format(obj.name))
             return valid, obj.name
-        except:
+        except Exception:
             valid = False
             self.mgis.add_info('failure!<br>Add table {0}'.format(tab))
 
@@ -429,7 +429,7 @@ class CheckTab:
                 if res is None:
                     valid = False
                     self.mgis.add_info('failure!<br>Alt table {0}'.format(tab))
-        except:
+        except Exception:
             valid = False
             self.mgis.add_info('failure!<br>Alt table {0}'.format(tab))
 
@@ -443,7 +443,7 @@ class CheckTab:
         """
         try:
             valid = self.mdb.drop_table(tab)
-        except:
+        except Exception:
             valid = False
             self.mgis.add_info('failure!<br>Del table {0}'.format(tab))
 
@@ -906,7 +906,6 @@ class CheckTab:
             #              'Zupp': 'z_up',
             #              }
 
-
             if "law_config" not in lst_tab:
                 vconf, _ = self.add_tab(Maso.law_config, False)
                 if not vconf:
@@ -1078,14 +1077,22 @@ class CheckTab:
         """
         updat 5.1.1
         """
-        # TODO check si 1 profile coupe 2 branche
-        """SELECT pid, count(*) FROM (SELECT p.gid as pid ,b.gid as bid From  bva.profiles AS p,  bva.branchs_old as b WHERE ST_INTERSECTS(p.geom, b.geom) ) AS toto GROUP BY pid Having count(*)>1"""
-        if self.mgis.DEBUG :
+
+        sql = """SELECT pid, count(*) FROM (SELECT p.gid as pid ,b.gid as bid From  {0}.profiles AS p, 
+                {0}.branchs as b WHERE ST_INTERSECTS(p.geom, b.geom) )
+                AS nb GROUP BY pid Having count(*)>1;"""
+        results = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
+        lst_profil_err = []
+        if results:
+            if len(results) > 0:
+                for val in results:
+                    lst_profil_err.append(val[0])
+        if self.mgis.DEBUG:
             self.mgis.add_info('Rename table branchs')
         #  RENAME old branchs table
         sql = "ALTER TABLE IF EXISTS {0}.branchs RENAME TO branchs_old;".format(self.mdb.SCHEMA)
         sql += '\n'
-        sql +='ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT branchs_pkey TO branchs_old_pkey;'.format(
+        sql += 'ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT branchs_pkey TO branchs_old_pkey;'.format(
             self.mdb.SCHEMA)
         sql += '\n'
         sql += 'ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT cle_debut TO cle_debut_old;'.format(
@@ -1101,29 +1108,29 @@ class CheckTab:
         sql += '\n'
         sql += "DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs_old;".format(self.mdb.SCHEMA)
         self.mdb.run_query(sql)
-        if self.mgis.DEBUG :
+        if self.mgis.DEBUG:
             self.mgis.add_info('updates column profiles')
+
         # updates column of the profiles table
-        vars = [ ('minbedcoef', 'float'),
-                      ('majbedcoef', 'float'),
-                      ('mesh', 'float'),
-                      ('planim', 'float'),]
+        vars = [('minbedcoef', 'float'),
+                ('majbedcoef', 'float'),
+                ('mesh', 'float'),
+                ('planim', 'float'), ]
         sql = ''
-        for var,typ in vars:
+        for var, typ in vars:
             sql += "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS {1} {2} ;".format(self.mdb.SCHEMA, var, typ)
             sql += '\n'
         self.mdb.run_query(sql)
-        if self.mgis.DEBUG :
+        if self.mgis.DEBUG:
             self.mgis.add_info('updates abscissa function ')
         self.mdb.schema_fct_sql()
         print('Create table Branch ')
         tabs = [Maso.branchs]
-        for tab in tabs :
+        for tab in tabs:
             self.add_tab(tab)
 
         if self.mgis.DEBUG:
             self.mgis.add_info('Fill table branch')
-        #TODO ajout LIMIT 1 prendre
         sql = """
         CREATE OR REPLACE FUNCTION {0}.insert_new_branch(source_schema text) 
             RETURNS void
@@ -1148,14 +1155,14 @@ class CheckTab:
                 EXECUTE ' SELECT st_multi(ST_Union(geom))  FROM  ' ||  quote_ident(source_schema) ||'.branchs_old  WHERE branch=$1 GROUP BY branch' USING rec.id_b INTO geom_b;
                 EXECUTE 'SELECT active,startb, endb  FROM ' ||  quote_ident(source_schema) ||'.branchs_old WHERE branch=$1 ORDER BY gid ASC LIMIT 1 ' USING rec.id_b INTO actb, startb, endb;
         -- insert value new branch table
-                EXECUTE 'INSERT INTO ' ||  quote_ident(source_schema) ||'.branchs(geom,  branch, active,startb, endb)  VALUES ($1,$2,$3,$4,$5)' USING geom_b,rec.id_b,actb,startb, endb;
+                EXECUTE 'INSERT INTO ' ||  quote_ident(source_schema) ||'.branchs(geom,  branch, active,startb, endb) VALUES ($1,$2,$3,$4,$5)' USING geom_b,rec.id_b,actb,startb, endb;
             -- RAISE NOTICE 'test %', rec.id_b;
             END LOOP;
         -- Update fille profile table
-            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET minbedcoef=(SELECT minbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))LIMIT 1';
-            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET majbedcoef=(SELECT majbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))LIMIT 1';
-            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET mesh=(SELECT mesh FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom))LIMIT 1';
-            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET planim=(SELECT planim FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom)) LIMIT 1';
+            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET minbedcoef=(SELECT minbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
+            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET majbedcoef=(SELECT majbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
+            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET mesh=(SELECT mesh FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
+            EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET planim=(SELECT planim FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
         -- Enable trigger
             EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs ENABLE TRIGGER branchs_chstate_active';
             EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles DISABLE TRIGGER profiles_calcul_abscisse';
@@ -1165,12 +1172,14 @@ class CheckTab:
         err = self.mdb.run_query(sql)
         if self.mgis.DEBUG:
             self.mgis.add_info('Creation of the conversion function')
-        sql= """SELECT {0}.insert_new_branch('{0}');""".format(self.mdb.SCHEMA)
+        sql = """SELECT {0}.insert_new_branch('{0}');""".format(self.mdb.SCHEMA)
         err = self.mdb.run_query(sql)
         if self.mgis.DEBUG:
             self.mgis.add_info('Running the conversion function')
-        # TODO retourner message d'erreur avec le numero de plrofil si coupe deux branch
 
-
-
-
+        if len(lst_profil_err) > 0:
+            txt = '\n'.join([str(ival) for ival in lst_profil_err])
+            ok = self.box.info("WARNING:\n\n"
+                               "Check the profiles : \n\n"
+                               "{}\n\n"
+                               "because they intersected two branches:\n".format(txt))
