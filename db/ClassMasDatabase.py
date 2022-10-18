@@ -972,12 +972,12 @@ $BODY$
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
         if verbose:
-            print(sql.format(self.SCHEMA, table, where, order, lvar))
+            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
         (results, namCol) = self.run_query(
             sql.format(self.SCHEMA, table, where, order, lvar), fetch=True,
             namvar=True)
         if results is None or namCol is None:
-            print("error : ",
+            self.mgis.add_info("error : ",
                   sql.format(self.SCHEMA, table, where, order, lvar))
             return None
         cols = [col[0] for col in namCol]
@@ -1011,14 +1011,14 @@ $BODY$
 
         sql = "SELECT * FROM {0}.{1} {2} {3};"
         if verbose:
-            print(sql.format(self.SCHEMA, table, where, order))
+            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
         # self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
         (results, namCol) = self.run_query(
             sql.format(self.SCHEMA, table, where, order),
             fetch=True, arraysize=1, namvar=True)
 
         if results is None or namCol is None:
-            print("error : ", sql.format(self.SCHEMA, table, where, order))
+            self.mgis.add_info("error : ", sql.format(self.SCHEMA, table, where, order))
             return None
 
         cols = [col[0] for col in namCol]
@@ -1068,7 +1068,7 @@ $BODY$
                         dico[cols[i]].append(val)
 
             return dico
-        # print('warning', sql.format(var, self.SCHEMA, table, where, ordre))
+        #  self.mgis.add_info('warning', sql.format(var, self.SCHEMA, table, where, ordre))
         return None
 
     #
@@ -1094,7 +1094,7 @@ $BODY$
                 var = row[0][0]
             return var
         else:
-            print("error : ",
+            self.mgis.add_info("error : ",
                   sql.format(var, self.SCHEMA, table, where))
             return None
 
@@ -1353,7 +1353,7 @@ $BODY$
                     exe, schem, self.USER, file,
                     self.dbname, self.host, self.port)
 
-                # print(commande, file)
+                #  self.mgis.add_info(commande, file)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
 
                 p = subprocess.Popen(commande, shell=True)
@@ -1400,11 +1400,11 @@ $BODY$
                 outs, err = p.communicate()
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Import File :{0}".format(file))
-                    self.mgis.add_info("{0}".format(outs.code('utf-8')))
+                    #self.mgis.add_info("{0}".format(outs.code('utf-8')))
                 p.wait()
                 if len(err)> 0:
-                    print(err)
-                    self.mgis.add_info("{0}".format(err.code('utf-8')))
+                    self.mgis.add_info(err)
+                    #self.mgis.add_info("{0}".format(err.code('utf-8')))
                     return False
                 return True
             else:
@@ -1671,15 +1671,12 @@ $BODY$
             obj = self.process_masobject(Maso.class_fct_psql, 'pg_clone_schema')
             if self.mgis.DEBUG:
                 self.mgis.add_info('  {0} OK'.format('pg_clone_schema'))
-            else:
-                pass
 
         chkt = CheckTab(self.mgis, self)
         vnow = chkt.list_hist_version.index(metadict['plugin_version'])
 
         if vnow< chkt.list_hist_version.index('5.1.1'):
             self.public_fct_sql()
-
         if actname in self.list_schema():
             sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp;".format(actname)
             self.run_query(sql)
@@ -1798,7 +1795,7 @@ $BODY$
                 ALTER TABLE {table} ALTER COLUMN {id_name} SET DEFAULT nextval('{my_seq}'::regclass);
                 """.format(**dico)
 
-            # print(sql)
+            #  self.mgis.add_info(sql)
             self.run_query(sql)
 
     def checkschema_import(self, file):

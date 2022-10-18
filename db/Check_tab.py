@@ -1183,3 +1183,5 @@ class CheckTab:
                                "Check the profiles : \n\n"
                                "{}\n\n"
                                "because they intersected two branches:\n".format(txt))
+        if self.mgis.DEBUG:
+            self.mgis.add_info('end of update branchs')
