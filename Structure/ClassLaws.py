@@ -163,7 +163,8 @@ class ClassLaws:
             msg = '\t m coeficient is NAN\n'
             cond = False
         if not cond and verb:
-            print(msg)
+            self.add_info("m coeficient :")
+            self.add_info(msg)
         return cond
 
     def check_j(self, j, form, q, h, verb=False):
@@ -212,7 +213,9 @@ class ClassLaws:
                 self.qh_j_no_hy.append([q, h])
             j = 0.18  # hyp for working
         if verb and not cond:
-            print(msg.format(j, form, q, h))
+            self.add_info("j coeficients :")
+            self.add_info(msg.format(j, form, q, h))
+
         return j
 
     def init_bradley(self, method, id_config):
@@ -1326,3 +1329,6 @@ class ClassLaws:
         info = info[info[:, 1].argsort(kind='mergesort')]
         info = info[info[:, 0].argsort(kind='mergesort')]
         return info
+
+    def print_msg(self):
+        print(self.msg)
