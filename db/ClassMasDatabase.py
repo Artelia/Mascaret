@@ -977,8 +977,8 @@ $BODY$
             sql.format(self.SCHEMA, table, where, order, lvar), fetch=True,
             namvar=True)
         if results is None or namCol is None:
-            self.mgis.add_info("error : ",
-                  sql.format(self.SCHEMA, table, where, order, lvar))
+            self.mgis.add_info("error : ")
+            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
             return None
         cols = [col[0] for col in namCol]
         dico = {}
@@ -1018,7 +1018,8 @@ $BODY$
             fetch=True, arraysize=1, namvar=True)
 
         if results is None or namCol is None:
-            self.mgis.add_info("error : ", sql.format(self.SCHEMA, table, where, order))
+            self.mgis.add_info("error : ")
+            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
             return None
 
         cols = [col[0] for col in namCol]
@@ -1094,8 +1095,8 @@ $BODY$
                 var = row[0][0]
             return var
         else:
-            self.mgis.add_info("error : ",
-                  sql.format(var, self.SCHEMA, table, where))
+            self.mgis.add_info("error : ")
+            self.mgis.add_info(sql.format(var, self.SCHEMA, table, where))
             return None
 
     def select_min(self, var, table, where=None):

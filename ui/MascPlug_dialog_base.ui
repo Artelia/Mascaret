@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -213,6 +213,7 @@
     <addaction name="separator"/>
     <addaction name="action_Extract_MNTfor_profile"/>
     <addaction name="actionUpdate_all_PK"/>
+    <addaction name="actionUpdate_Zones"/>
    </widget>
    <widget class="QMenu" name="menuDB">
     <property name="title">
@@ -758,6 +759,11 @@
    </property>
    <property name="toolTip">
     <string>Hydro Laws</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Zones">
+   <property name="text">
+    <string>Update Zones</string>
    </property>
   </action>
  </widget>

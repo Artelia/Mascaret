@@ -491,7 +491,8 @@ class ClassMascaret:
         apports = self.mdb.select("lateral_inflows", "active", "abscissa")
         var = "branch, startb, endb"
         branches = self.mdb.select_distinct(var, "branchs", "active")
-        zones = self.mdb.select("branchs", "active", "branch, zoneabsstart")
+        #TODO  zones
+        # zones = self.mdb.select("branchs", "active", "branch, zoneabsstart")
         deversoirs = self.mdb.select("lateral_weirs", "active", "abscissa")
         noeuds = self.mdb.select("extremities", "type=10", "active")
         libres = self.mdb.select("extremities", "type!=10 ", "active")
@@ -500,8 +501,9 @@ class ClassMascaret:
         prof_seuil = self.mdb.select("profiles", "NOT active", "abscissa")
         seuils = self.mdb.select("weirs", "active", "abscissa")
         sorties = self.mdb.select("outputs", "active", "abscissa")
-        planim = self.planim_select()
-        maillage = self.maillage_select()
+        #TODO  planim maillage
+        #planim = self.planim_select()
+        #maillage = self.maillage_select()
         dico_str = self.mdb.select('struct_config', "active", "abscissa")
         seuils, loi_struct = self.modif_seuil(seuils, dico_str)
         casiers = self.mdb.select("basins", "active ORDER BY basinnum ")
@@ -520,6 +522,7 @@ class ClassMascaret:
                 branches["abscfin"].append(max(temp))
             else:
                 self.mgis.add_info('Checked if the profiles are activated.')
+        print(branches)
         dict_noeuds = {}
         dict_libres = {"nom": [], "num": [], "extrem": [], "typeCond": [],
                        "typeCond_tr": [], "law_wq": []}

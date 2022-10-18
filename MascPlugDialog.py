@@ -49,6 +49,7 @@ from .ClassImportExportDialog import ClassDlgExport, ClassDlgImport
 from .ClassImport_res import ClassImportRes
 from .scores.ClassScoresDialog import ClassScoresDialog
 from .HydroLawsDialog import ClassHydroLawsDialog
+from .ClassEditKsDialog  import  ClassEditKsDialog
 
 from .Graphic.GraphBCDialog import GraphBCDialog
 
@@ -241,6 +242,9 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionHydro_Laws.triggered.connect(self.fct_hydro_laws)
 
         # TODO Finaliser
+        self.dockwidgetKs = None
+        self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
+
         self.ui.actionTest.triggered.connect(self.fct_test)
         self.ui.actionTest.setVisible(True)
 
@@ -344,6 +348,9 @@ class MascPlugDialog(QMainWindow):
         settings.setValue("/MasPlug/mainWindow/geometry", self.saveGeometry())
         settings.setValue("/MasPlug/mainWindow/flags", self.windowFlags())
         self.write_settings()
+
+        if self.dockwidgetKs is not None :
+            self.dockwidgetKs.close()
         QMainWindow.closeEvent(self, e)
 
     def conn_changed(self, conn_name='toto'):
@@ -1013,6 +1020,13 @@ Version : {}
         #self.mdb.correction_seq()
         
         pass
+    def update_ks_mesh_planim(self) :
+        """ update value of the seleted profiles"""
+
+        self.dockwidgetKs = ClassEditKsDialog(self, self.iface)
+        # connect to provide cleanup on closing of dockwidget
+        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidgetKs)
+
 
     def update_pk(self):
         """
