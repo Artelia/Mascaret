@@ -340,24 +340,41 @@ class ClassMascaret:
             elem.tail = i
 
     def planim_select(self):
-        sql = """SELECT MIN(t1.planim) AS pas, MIN(t2.nombre),MAX(t2.nombre) 
-                 FROM (SELECT branch, planim, ST_UNION(geom) AS geom
-                       FROM  (SELECT branch, 
-                                     planim, 
-                                     geom,
-                                     row_number() 
-                                        OVER (PARTITION BY branch, planim 
-                                              ORDER BY  branch,zonenum)
-                                        - zonenum AS grp
-                              FROM   {0}.branchs
-                              WHERE active) x
-                       GROUP  BY branch, planim, grp) AS t1,
-                    (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom 
-                       FROM {0}.profiles 
-                       WHERE active ) AS t2 
-                 WHERE ST_INTERSECTS(t1.geom,t2.geom) 
-                 GROUP BY t1.geom
-                 ORDER BY min;"""
+        # sql = """SELECT MIN(t1.planim) AS pas, MIN(t2.nombre),MAX(t2.nombre)
+        #          FROM (SELECT branch, planim, ST_UNION(geom) AS geom
+        #                FROM  (SELECT branch,
+        #                              planim,
+        #                              geom,
+        #                              row_number()
+        #                                 OVER (PARTITION BY branch, planim
+        #                                       ORDER BY  branch,zonenum)
+        #                                 - zonenum AS grp
+        #                       FROM   {0}.branchs
+        #                       WHERE active) x
+        #                GROUP  BY branch, planim, grp) AS t1,
+        #             (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom
+        #                FROM {0}.profiles
+        #                WHERE active ) AS t2
+        #          WHERE ST_INTERSECTS(t1.geom,t2.geom)
+        #          GROUP BY t1.geom
+        #          ORDER BY min;"""
+        sql = \
+"""
+SELECT t1.planim AS pas, t1.branchnum AS branch, MIN(t2.nombre),MAX(t2.nombre) FROM
+(SELECT DISTINCT planim, branchnum FROM bva.profiles  WHERE active  ORDER BY branchnum)  AS t1 ,
+(SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom, planim, branchnum  FROM bva.profiles  WHERE active) AS t2
+WHERE  t1.planim = t2.planim AND t1.branchnum = t2.branchnum GROUP BY t1.planim,t1.branchnum  ORDER BY min;
+"""
+        #-- OK fonctionn --ajout check intersection branch utile ? non utilis si calcul abscisse  profil est relancer à chaque modification branch
+#         sql = \
+# """
+# SELECT t1.planim AS pas, t1.branchnum AS branch, MIN(t2.nombre),MAX(t2.nombre) FROM
+# (SELECT branch, geom AS geom FROM   bva.branchs WHERE active) AS t3,
+# (SELECT DISTINCT planim, branchnum FROM bva.profiles  WHERE active  ORDER BY branchnum)  AS t1 ,
+# (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom, planim, branchnum  FROM bva.profiles  WHERE active) AS t2
+# WHERE  t1.planim = t2.planim AND t1.branchnum = t2.branchnum AND ST_INTERSECTS(t3.geom,t2.geom)
+# GROUP BY t1.planim,t1.branchnum  ORDER BY min;
+# """
 
         (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA),
                                                fetch=True, namvar=True)
@@ -374,7 +391,6 @@ class ClassMascaret:
                     dico[colonnes[i]].append(val.strip())
                 except:
                     dico[colonnes[i]].append(val)
-
         return dico
 
     def maillage_select(self):
@@ -502,8 +518,9 @@ class ClassMascaret:
         seuils = self.mdb.select("weirs", "active", "abscissa")
         sorties = self.mdb.select("outputs", "active", "abscissa")
         #TODO  planim maillage
-        #planim = self.planim_select()
-        #maillage = self.maillage_select()
+        planim = self.planim_select()
+        print(planim)
+        maillage = self.maillage_select()
         dico_str = self.mdb.select('struct_config', "active", "abscissa")
         seuils, loi_struct = self.modif_seuil(seuils, dico_str)
         casiers = self.mdb.select("basins", "active ORDER BY basinnum ")
@@ -522,7 +539,7 @@ class ClassMascaret:
                 branches["abscfin"].append(max(temp))
             else:
                 self.mgis.add_info('Checked if the profiles are activated.')
-        print(branches)
+
         dict_noeuds = {}
         dict_libres = {"nom": [], "num": [], "extrem": [], "typeCond": [],
                        "typeCond_tr": [], "law_wq": []}

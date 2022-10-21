@@ -1025,9 +1025,8 @@ Version : {}
 
         self.dockwidgetKs = ClassEditKsDialog(self, self.iface)
         # connect to provide cleanup on closing of dockwidget
-        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidgetKs)
-
-
+        # self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidgetKs)
+        self.iface.addTabifiedDockWidget(Qt.RightDockWidgetArea,self.dockwidgetKs,raiseTab = True)
     def update_pk(self):
         """
         update the abscissa

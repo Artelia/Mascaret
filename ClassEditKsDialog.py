@@ -46,6 +46,7 @@ class ClassEditKsDialog(QtWidgets.QDockWidget, FORM_CLASS) :
                         ("planim",self.ch_planim,self.dsp_planim),
                         ("minbedcoef",self.ch_minbedcoef,self.dsp_minbedcoef),
                         ("majbedcoef",self.ch_majbedcoef,self.dsp_majbedcoef),]
+
         self.init_gui()
 
     def init_gui(self):
