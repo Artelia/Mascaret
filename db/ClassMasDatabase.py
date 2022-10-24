@@ -1827,3 +1827,141 @@ $BODY$
         cur.execute(query)
         self.con.set_isolation_level(old_isolation_level)
         self.con.commit()
+
+
+    def planim_select(self):
+        sql = \
+            """
+            SELECT planim, branchnum, minp,maxp FROM
+            (SELECT planim, branchnum, minp,maxp,   Lag (minp,1) OVER (ORDER BY abs4, abs3) AS bp1 FROM
+            (SELECT  t3.planim, t3.branchnum, num2 as minp, num as maxp,  t4.abscissa as abs4 , t3.abscissa as abs3 FROM
+            (SELECT  planim, branchnum, num,abscissa FROM
+            (SELECT  nombre, planim, branchnum , case 
+                 when branchnum != bp1 then  nombre
+                 when planim != mp1  then  nombre
+                else -1 end AS num ,abscissa
+            FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, planim, branchnum ,abscissa,
+                  Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
+                  Lead (planim,1) OVER (ORDER BY abscissa) as mp1
+                  FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
+            WHERE num != -1 ORDER BY branchnum) t3 
+            JOIN
+            (SELECT  planim, branchnum, num2,abscissa FROM
+            (SELECT  nombre, planim, branchnum , case 
+                when branchnum != bm1 then  nombre
+                 when planim != mm1  then  nombre
+                When  mm1  is NULL and bm1 is null then nombre
+                else -1 end AS num2 ,abscissa
+            FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, planim, branchnum ,abscissa,
+                  LAg (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
+                  LAG (planim,1) OVER (ORDER BY abscissa) as mm1 
+                  FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
+            WHERE num2 != -1 ORDER BY branchnum) t4
+            ON t3.planim =t4.planim and t3.branchnum =t4.branchnum  WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
+            WHERE minp != bp1 or bp1 is NULL
+            """
+
+        (results, namCol) = self.run_query(sql.format(self.SCHEMA),
+                                               fetch=True, namvar=True)
+        dico_planim = {'pas': [], 'min': [], 'max': []}
+        for pas, branch, minp, maxp in results:
+            dico_planim['pas'].append(pas)
+            dico_planim['min'].append(minp)
+            dico_planim['max'] .append(maxp)
+
+        return dico_planim
+
+    def maillage_select(self):
+
+        sql = \
+        """
+            SELECT mesh, branchnum, minp,maxp FROM
+            (SELECT mesh, branchnum, minp,maxp,   Lag (minp,1) OVER (ORDER BY abs4, abs3) AS bp1 FROM
+            (SELECT  t3.mesh, t3.branchnum, num2 as minp, num as maxp,  t4.abscissa as abs4 , t3.abscissa as abs3 FROM
+            (SELECT  mesh, branchnum, num,abscissa FROM
+            (SELECT  nombre, mesh, branchnum , case 
+                 when branchnum != bp1 then  nombre
+                when mesh != mp1  then  nombre + 1
+                else -1 end AS num ,abscissa
+            FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, mesh, branchnum ,abscissa,
+                  Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
+                  Lead (mesh,1) OVER (ORDER BY abscissa) as mp1
+                  FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
+            WHERE num != -1 ORDER BY branchnum) t3 
+            JOIN
+            (SELECT  mesh, branchnum, num2,abscissa FROM
+            (SELECT  nombre, mesh, branchnum , case 
+                when branchnum != bm1 then  nombre
+                when mesh != mm1  then  nombre
+                When  mm1  is NULL and bm1 is null then nombre
+                else -1 end AS num2 ,abscissa
+            FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, mesh, branchnum ,abscissa,
+                  LAg (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
+                  LAG (mesh,1) OVER (ORDER BY abscissa) as mm1 
+                  FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
+            WHERE num2 != -1 ORDER BY branchnum) t4
+            ON t3.mesh =t4.mesh and t3.branchnum =t4.branchnum  WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
+            WHERE minp != bp1 or bp1 is NULL
+        """
+        (results, namCol) = self.run_query(sql.format(self.SCHEMA),
+                                               fetch=True, namvar=True)
+
+        dico_mesh = {'pas': [], 'min': [], 'max': []}
+        for pas, branch, minp, maxp in results:
+            dico_mesh['pas'].append(pas)
+            dico_mesh['min'].append(minp)
+            dico_mesh['max'].append(maxp)
+
+        return dico_mesh
+
+    def zone_ks(self):
+        sql ="""
+        SELECT  t3.minbedcoef, t3.majbedcoef, t3.branchnum,  (SELECT  abscissa FROM
+        (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
+        FROM  {0}.profiles WHERE active ORDER BY abscissa) t7
+        WHERE  nombre2 = num2) as absmin ,  (SELECT  abscissa FROM
+        (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
+        FROM  {0}.profiles WHERE active ORDER BY abscissa) t8
+        WHERE  nombre2 = num) as absmax FROM	  
+        (SELECT  minbedcoef,majbedcoef, branchnum, num,abscissa FROM
+        (SELECT  nombre, minbedcoef,majbedcoef, branchnum , case 
+             when branchnum != bp1 then  nombre
+            when minbedcoef != mibp1 OR majbedcoef != mabp1 then  nombre +1
+            else -1 end AS num ,abscissa
+        FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, minbedcoef,majbedcoef, branchnum ,abscissa,
+              Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
+              Lead (minbedcoef,1) OVER (ORDER BY abscissa) as mibp1,
+               Lead (majbedcoef,1) OVER (ORDER BY abscissa) as mabp1
+              FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1 
+        WHERE num != -1 ORDER BY branchnum) t3
+        JOIN
+        (SELECT  minbedcoef,majbedcoef, branchnum, num2, abscissa FROM
+        (SELECT  nombre, minbedcoef,majbedcoef, branchnum , case 
+             when branchnum != bm1 then  nombre
+            when minbedcoef != mibm1 OR majbedcoef != mabm1 then  nombre
+            When  mibm1  is NULL and mabm1 is NULL and bm1 is null then nombre
+            else -1 end AS num2 ,abscissa
+        FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, 
+            minbedcoef,majbedcoef, branchnum ,abscissa,
+              Lag (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
+              Lag (minbedcoef,1) OVER (ORDER BY abscissa) as mibm1,
+               Lag (majbedcoef,1) OVER (ORDER BY abscissa) as mabm1
+              FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
+        WHERE num2 != -1 ORDER BY branchnum) t4
+        ON t3.minbedcoef=t4.minbedcoef and t3.majbedcoef=t4.majbedcoef 
+         and t3.branchnum =t4.branchnum ORDER BY absmin ,  absmax     
+        """
+        (results, namCol) = self.run_query(sql.format(self.SCHEMA),
+                                               fetch=True, namvar=True)
+
+        dico_ks = {"branch": [], "minbedcoef": [],"majbedcoef":[],
+                   'zoneabsstart': [], 'zoneabsend': []}
+
+        for minbedcoef,majbedcoef, branch, minp, maxp in results:
+            dico_ks["branch"].append(branch)
+            dico_ks["minbedcoef"].append(minbedcoef)
+            dico_ks["majbedcoef"].append(majbedcoef)
+            dico_ks['zoneabsstart'].append(minp)
+            dico_ks['zoneabsend'].append(maxp)
+
+        return dico_ks

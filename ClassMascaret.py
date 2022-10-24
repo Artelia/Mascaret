@@ -339,106 +339,6 @@ class ClassMascaret:
         elif level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
-    def planim_select(self):
-        # sql = """SELECT MIN(t1.planim) AS pas, MIN(t2.nombre),MAX(t2.nombre)
-        #          FROM (SELECT branch, planim, ST_UNION(geom) AS geom
-        #                FROM  (SELECT branch,
-        #                              planim,
-        #                              geom,
-        #                              row_number()
-        #                                 OVER (PARTITION BY branch, planim
-        #                                       ORDER BY  branch,zonenum)
-        #                                 - zonenum AS grp
-        #                       FROM   {0}.branchs
-        #                       WHERE active) x
-        #                GROUP  BY branch, planim, grp) AS t1,
-        #             (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom
-        #                FROM {0}.profiles
-        #                WHERE active ) AS t2
-        #          WHERE ST_INTERSECTS(t1.geom,t2.geom)
-        #          GROUP BY t1.geom
-        #          ORDER BY min;"""
-        sql = \
-"""
-SELECT t1.planim AS pas, t1.branchnum AS branch, MIN(t2.nombre),MAX(t2.nombre) FROM
-(SELECT DISTINCT planim, branchnum FROM bva.profiles  WHERE active  ORDER BY branchnum)  AS t1 ,
-(SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom, planim, branchnum  FROM bva.profiles  WHERE active) AS t2
-WHERE  t1.planim = t2.planim AND t1.branchnum = t2.branchnum GROUP BY t1.planim,t1.branchnum  ORDER BY min;
-"""
-        #-- OK fonctionn --ajout check intersection branch utile ? non utilis si calcul abscisse  profil est relancer à chaque modification branch
-#         sql = \
-# """
-# SELECT t1.planim AS pas, t1.branchnum AS branch, MIN(t2.nombre),MAX(t2.nombre) FROM
-# (SELECT branch, geom AS geom FROM   bva.branchs WHERE active) AS t3,
-# (SELECT DISTINCT planim, branchnum FROM bva.profiles  WHERE active  ORDER BY branchnum)  AS t1 ,
-# (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom, planim, branchnum  FROM bva.profiles  WHERE active) AS t2
-# WHERE  t1.planim = t2.planim AND t1.branchnum = t2.branchnum AND ST_INTERSECTS(t3.geom,t2.geom)
-# GROUP BY t1.planim,t1.branchnum  ORDER BY min;
-# """
-
-        (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA),
-                                               fetch=True, namvar=True)
-
-        dico = {}
-        colonnes = [col[0] for col in namCol]
-        for col in colonnes:
-            dico[col] = []
-
-        for row in results:
-            for i, val in enumerate(row):
-
-                try:
-                    dico[colonnes[i]].append(val.strip())
-                except:
-                    dico[colonnes[i]].append(val)
-        return dico
-
-    def maillage_select(self):
-
-        sql = """SELECT MIN(t1.mesh) AS pas,
-                                    MIN(t2.nombre),
-                                    MAX(t2.nombre)+MIN(diff)+1 AS max
-                             FROM (SELECT branch, mesh,
-                                          ST_UNION(geom) AS geom,
-                                          MIN(diff) AS diff
-                                   FROM  (SELECT branch,
-                                                 mesh,
-                                                 geom,
-                                                 row_number()
-                                                    OVER (PARTITION BY branch,
-                                                         mesh ORDER BY  branch,zonenum)
-                                                    - zonenum AS grp,
-                                                 branch-lead(branch,1,branch+1)
-                                                OVER (ORDER BY  branch,zonenum) AS diff
-                                          FROM   {0}.branchs
-                                          WHERE active) x
-                                   GROUP  BY branch, mesh, grp) AS t1,
-                                  (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) 
-                                    AS nombre, geom
-                                   FROM {0}.profiles
-                                   WHERE active ) AS t2
-                             WHERE ST_INTERSECTS(t1.geom,t2.geom)
-                             GROUP BY t1.geom
-                             ORDER BY min;"""
-
-        (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA),
-                                               fetch=True, namvar=True)
-
-        dico = {}
-        colonnes = [col[0] for col in namCol]
-        for col in colonnes:
-            dico[col] = []
-
-        for row in results:
-            for i, val in enumerate(row):
-
-                try:
-                    dico[colonnes[i]].append(val.strip())
-                except:
-                    dico[colonnes[i]].append(val)
-
-        return dico
-
     def geom_obj_toname(self, nom, type_):
         """ get name law"""
         condition = "geom_obj='{0}' AND " \
@@ -507,8 +407,6 @@ WHERE  t1.planim = t2.planim AND t1.branchnum = t2.branchnum GROUP BY t1.planim,
         apports = self.mdb.select("lateral_inflows", "active", "abscissa")
         var = "branch, startb, endb"
         branches = self.mdb.select_distinct(var, "branchs", "active")
-        #TODO  zones
-        # zones = self.mdb.select("branchs", "active", "branch, zoneabsstart")
         deversoirs = self.mdb.select("lateral_weirs", "active", "abscissa")
         noeuds = self.mdb.select("extremities", "type=10", "active")
         libres = self.mdb.select("extremities", "type!=10 ", "active")
@@ -517,10 +415,9 @@ WHERE  t1.planim = t2.planim AND t1.branchnum = t2.branchnum GROUP BY t1.planim,
         prof_seuil = self.mdb.select("profiles", "NOT active", "abscissa")
         seuils = self.mdb.select("weirs", "active", "abscissa")
         sorties = self.mdb.select("outputs", "active", "abscissa")
-        #TODO  planim maillage
-        planim = self.planim_select()
-        print(planim)
-        maillage = self.maillage_select()
+        zones =self.mdb.zone_ks()
+        planim = self.mdb.planim_select()
+        maillage = self.mdb.maillage_select()
         dico_str = self.mdb.select('struct_config', "active", "abscissa")
         seuils, loi_struct = self.modif_seuil(seuils, dico_str)
         casiers = self.mdb.select("basins", "active ORDER BY basinnum ")
@@ -588,10 +485,7 @@ WHERE  t1.planim = t2.planim AND t1.branchnum = t2.branchnum GROUP BY t1.planim,
                                 'couche': 'extremites'}
         # Zones
         nb_pas = 0
-        i = 0
-        #  zones['num1erProf'] = [1] * len(zones["zoneabsstart"])
-        #  zones['numDerProfPlanim'] = [1] * len(zones["zoneabsstart"])
-        #  zones['numDerProfMaill'] = [1] * len(zones["zoneabsstart"])
+
         liste_stock = {"numProfil": [],
                        'limGauchLitMaj': [],
                        'limDroitLitMaj': []}
@@ -601,9 +495,10 @@ WHERE  t1.planim = t2.planim AND t1.branchnum = t2.branchnum GROUP BY t1.planim,
                   profils["z"],
                   profils["leftstock"],
                   profils["rightstock"],
-                  profils["branchnum"])
+                  profils["branchnum"],
+                  profils["planim"])
 
-        for j, (abs, x, z, sg, sd, n) in enumerate(tab):
+        for j, (abs, x, z, sg, sd, n, planim_val) in enumerate(tab):
 
             try:
                 xx = [float(var) for var in x.split()]
@@ -616,19 +511,10 @@ WHERE  t1.planim = t2.planim AND t1.branchnum = t2.branchnum GROUP BY t1.planim,
                     profils["name"][j]))
                 return dict_lois
 
-            if abs > zones['zoneabsend'][i]:
-                i = i + 1
-
             try:
-                nb_pas = max(int(diff / float(zones['planim'][i])) + 1, nb_pas)
+                nb_pas = max(int(diff / float(planim_val)) + 1, nb_pas)
             except:
                 self.mgis.add_info("Check planim ")
-
-            index = numero.index(n)
-            zones["zoneabsstart"][i] = max(zones["zoneabsstart"][i],
-                                           branches["abscdebut"][index])
-            zones["zoneabsend"][i] = min(zones["zoneabsend"][i],
-                                         branches["abscfin"][index])
 
             if sg or sd:
                 if sg:
@@ -734,6 +620,7 @@ WHERE  t1.planim = t2.planim AND t1.branchnum = t2.branchnum GROUP BY t1.planim,
 
         planim_e = SubElement(planimaill, "planim")
         SubElement(planim_e, 'nbPas').text = str(nb_pas)
+        print(planim)
         SubElement(planim_e, 'nbZones').text = str(len(planim["pas"]))
         SubElement(planim_e, 'valeursPas').text = self.fmt(planim['pas'])
         SubElement(planim_e, 'num1erProf').text = self.fmt(planim['min'])
@@ -745,12 +632,9 @@ WHERE  t1.planim = t2.planim AND t1.branchnum = t2.branchnum GROUP BY t1.planim,
         maillage_c = SubElement(maillage_e, 'maillageClavier')
         SubElement(maillage_c, 'nbSections').text = '0'
         SubElement(maillage_c, 'nbPlages').text = str(len(maillage["pas"]))
-        SubElement(maillage_c, 'num1erProfPlage').text = self.fmt(
-            maillage['min'])
-        SubElement(maillage_c, 'numDerProfPlage').text = self.fmt(
-            maillage['max'])
-        SubElement(maillage_c, 'pasEspacePlage').text = self.fmt(
-            maillage['pas'])
+        SubElement(maillage_c, 'num1erProfPlage').text = self.fmt(maillage['min'])
+        SubElement(maillage_c, 'numDerProfPlage').text = self.fmt(maillage['max'])
+        SubElement(maillage_c, 'pasEspacePlage').text = self.fmt(maillage['pas'])
         SubElement(maillage_c, 'nbZones').text = '0'
 
         # Singularites

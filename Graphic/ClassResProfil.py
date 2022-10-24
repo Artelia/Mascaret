@@ -94,7 +94,10 @@ class ClassResProfil:
                                list_var=['zonenum', 'zoneabsstart',
                                          'zoneabsend', 'planim', 'minbedcoef',
                                          'majbedcoef', 'active'])
-
+        sql = """ SELECT abscissa, minbedcoef, majbedcoef, mesh, planim FROM (
+         SELECT abscissa, minbedcoef, majbedcoef, mesh, planim
+            FROM bva.profiles where active order by ABS(abscissa- {0}) ASC LIMIT 2) t2 order by abscissa
+        """.format(self.pk)
         if rows:
 
             for i, zone in enumerate(rows['zonenum']):
