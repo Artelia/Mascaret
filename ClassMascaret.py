@@ -620,7 +620,6 @@ class ClassMascaret:
 
         planim_e = SubElement(planimaill, "planim")
         SubElement(planim_e, 'nbPas').text = str(nb_pas)
-        print(planim)
         SubElement(planim_e, 'nbZones').text = str(len(planim["pas"]))
         SubElement(planim_e, 'valeursPas').text = self.fmt(planim['pas'])
         SubElement(planim_e, 'num1erProf').text = self.fmt(planim['min'])

@@ -1021,12 +1021,13 @@ Version : {}
         cl = ClassResProfil()
         cl_geo = ClassResProfil()
         self.cas_prt = cl_geo.cas_prt
-        cl_geo.init_cl('3700',None,
-                       None,
-                       None,None, None,
-                       database=self.mdb)
+        for pk in [62839.97,66729.65,49780.98,49583.17,12997.09,13001.47,13013.56]:
+            cl_geo.init_cl(pk,None,
+                           None,
+                           None,None, None,
+                           database=self.mdb)
 
-
+            print(pk,'rrrrrrrr',cl_geo.plani, cl_geo.ksmaj, cl_geo.ksmin)
         #self.mdb.correction_seq()
         
         pass

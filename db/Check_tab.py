@@ -818,18 +818,6 @@ class CheckTab:
                 "Error add_trigger_update_306: {}".format(str(e)))
             return False
 
-    def add_fct_for_update_pk_old(self):
-        """add fct psql to compute abscissa"""
-        cl = Maso.class_fct_psql()
-        lfct = [cl.pg_abscisse_profil, cl.pg_all_profil,
-                cl.pg_abscisse_point, cl.pg_all_point,
-                ]
-        qry = ''
-        for sql in lfct:
-            qry += sql
-            qry += '\n'
-        self.mdb.run_query(qry)
-
     def update_fct_calc_abs(self):
         try:
             lst_fct = [

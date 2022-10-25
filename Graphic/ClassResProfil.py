@@ -91,37 +91,15 @@ class ClassResProfil:
         ksmin = None
         dict_ks = self.mdb.zone_ks()
         dict_plani = self.mdb.planim_select()
-        print(dict_plani, dict_ks)
-        # sql = """ SELECT abscissa, minbedcoef, majbedcoef,branchnum, planim FROM (
-        #  SELECT abscissa, minbedcoef, majbedcoef, branchnum, planim
-        #     FROM {0}.profiles where active order by ABS(abscissa- {1}) ASC LIMIT 2) t2 order by abscissa
-        # """.format(self.mdb.SCHEMA, self.pk)
-        # (results, namCol) = self.mdb.run_query(sql,
-        #                                    fetch=True, namvar=True)
-        # if results :
-        #
-        #     abs, minc, majc, bra, pla =results[0]
-        #     abs1, minc1, majc1, bra1, pla1 = results[1]
-        #     if self.pk == self.pk:
-        #         return pla,majc, minc
-        #     elif abs1 == self.pk:
-        #         return pla1, majc1, minc1
-        #     elif  abs < self.pk < abs1:
-        #         if
-        #         # plani = pla
-        #         # ksmaj = majc
-        #         # ksmin = minc
-        #     print(results, namCol)
-        # if rows:
-        #
-        #     for i, zone in enumerate(rows['zonenum']):
-        #         if rows['zoneabsstart'][i] <= self.pk <= rows['zoneabsend'][i]:
-        #             plani = rows['planim'][i]
-        #             ksmaj = rows['minbedcoef'][i]
-        #             ksmin = rows['majbedcoef'][i]
-        #             if rows['active'][i]:
-        #                 break
-
+        for i, (minp, maxp) in enumerate(zip(dict_plani['absmin'],dict_plani['absmax'])):
+            if minp<= self.pk <= maxp:
+                plani = dict_plani['pas'][i]
+                break
+        for i, (minp, maxp) in enumerate(zip(dict_ks['zoneabsstart'], dict_ks['zoneabsend'])):
+            if minp <= self.pk <= maxp:
+                ksmaj=dict_ks['majbedcoef'][i]
+                ksmin =dict_ks['minbedcoef'][i]
+                break
         return plani, ksmaj, ksmin
 
     def decoup_pr(self, pr, lminor_x, lmaj_x):

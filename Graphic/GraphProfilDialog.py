@@ -1854,8 +1854,7 @@ class GraphProfil(GraphCommon):
     def gui_interpol(self, id, idam, idav, err):
 
         if id:
-            plani = self.get_plani(self.liste['abscissa'][id],
-                                   self.liste['branchnum'][id])
+            plani = self.get_plani(self.liste['abscissa'][id])
         else:
             plani = None
         nplan = 100
@@ -1900,7 +1899,7 @@ class GraphProfil(GraphCommon):
             self.maj_legende()
             self.maj_limites()
 
-    def get_plani(self, pk, branch):
+    def get_plani(self, pk):
         """
         Get planimetry value
         :param pk: abscissa of the profile
@@ -1909,20 +1908,11 @@ class GraphProfil(GraphCommon):
         """
         plani = None
 
-        rows = self.mdb.select('branchs',
-                               where="branch='{}'".format(branch),
-                               order="zoneabsstart",
-                               list_var=['zonenum', 'zoneabsstart',
-                                         'zoneabsend', 'planim', 'active'])
-
-        if rows:
-
-            for i, zone in enumerate(rows['zonenum']):
-                if rows['zoneabsstart'][i] <= pk <= rows['zoneabsend'][i]:
-                    plani = rows['planim'][i]
-                    if rows['active'][i]:
-                        break
-
+        dict_plani = self.mdb.planim_select()
+        for i, (minp, maxp) in enumerate(zip(dict_plani['absmin'], dict_plani['absmax'])):
+            if minp <= self.pk <= maxp:
+                plani = dict_plani['pas'][i]
+                break
         # print('plani', plani)
         return plani
 

@@ -114,7 +114,7 @@ class MasObject(object):
             abscissa  double precision;
          BEGIN
             EXECUTE 'SELECT geom FROM {0}.profiles WHERE gid = $1' USING id_profil INTO geom_p;
-            EXECUTE 'SELECT branch,  geom, ST_Distance(geom,$1) FROM  {0}.branchs ORDER BY 4 LIMIT 1' USING geom_p INTO b,g,d;
+            EXECUTE 'SELECT branch,  geom, ST_Distance(geom,$1) FROM  {0}.branchs ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d;
             EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM {0}.branchs WHERE (branch<$1) OR (branch=$1 )' USING b INTO long1;
             p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
             long2 = (SELECT (ST_Length(g)*ST_LineLocatePoint(ST_LineMerge(g),p)));
@@ -645,7 +645,7 @@ class observations(MasObject):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS observations_code_type " \
-               "ON {}.observations(code, type);".format(self.schema)
+               "ON {0}.observations(code, type);".format(self.schema)
         qry += '\n'
         return qry
 
@@ -987,7 +987,7 @@ COST 100;
                     EXECUTE '(SELECT ST_UNION(geom) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch=$1))' USING NEW.branchnum INTO g;
                     NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
                 ELSE
-                    EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 4 LIMIT 1' USING NEW.geom INTO b,g,d  ;
+                    EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d  ;
 
                     IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                         NEW.branchnum= b ;
@@ -1034,7 +1034,7 @@ COST 100;
                     d	double precision;
                     BEGIN
                     
-                    EXECUTE 'SELECT branch,  geom, ST_Distance(geom,$1) FROM ' || TG_TABLE_SCHEMA ||'.branchs ORDER BY 4 LIMIT 1' USING NEW.geom INTO b,g,d;
+                    EXECUTE 'SELECT branch,  geom, ST_Distance(geom,$1) FROM ' || TG_TABLE_SCHEMA ||'.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d;
 
                     IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                     NEW.branchnum=b;
@@ -1093,7 +1093,7 @@ COST 100;
 
     def pg_chstate_branch(self,local='public'):
         qry = """
-CREATE  OR REPLACE FUNCTION {}.chstate_branch() RETURNS TRIGGER AS $$
+CREATE  OR REPLACE FUNCTION {0}.chstate_branch() RETURNS TRIGGER AS $$
     DECLARE
          my_row  integer; 
     BEGIN 
@@ -1119,7 +1119,7 @@ $$ LANGUAGE plpgsql;"""
 
     def pg_chstate_basin(self,local='public'):
         qry = """
-CREATE  OR REPLACE FUNCTION {}.chstate_basin() RETURNS TRIGGER AS $$
+CREATE  OR REPLACE FUNCTION {0}.chstate_basin() RETURNS TRIGGER AS $$
     BEGIN 
          EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.links SET active = $2 WHERE (basinstart = $1 OR basinend = $1)' USING NEW.basinnum,NEW.active;
          RETURN NEW;
@@ -1133,7 +1133,7 @@ $$ LANGUAGE plpgsql;"""
         :return:
         """
         qry = """
-    CREATE OR REPLACE FUNCTION {}.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)
+    CREATE OR REPLACE FUNCTION {0}.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)
         RETURNS TABLE(abscissa double precision, branch integer)
         LANGUAGE 'plpgsql'
     AS $BODY$
@@ -1148,7 +1148,7 @@ $$ LANGUAGE plpgsql;"""
             geom_p geometry;
          BEGIN
             EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_prof INTO geom_p;
-            EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 4 LIMIT 1' USING geom_p INTO b,g,d  ;
+            EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
             EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM  ' || _tbl_branchs || ' WHERE (branch<$1) OR (branch=$1))' USING b INTO long1;
             p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
             long2 = (SELECT (ST_Length(g)*ST_LineLocatePoint(ST_LineMerge(g),p)));
@@ -1167,7 +1167,7 @@ $$ LANGUAGE plpgsql;"""
     def pg_all_profil(self,local='public'):
         """ SQL function which updates abscissa of all profiles of one table"""
         qry = """
-CREATE OR REPLACE FUNCTION {}.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)
+CREATE OR REPLACE FUNCTION {0}.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)
     RETURNS  VOID 
     LANGUAGE 'plpgsql'
 AS $BODY$
@@ -1178,7 +1178,7 @@ AS $BODY$
      BEGIN
        FOR my_row IN  EXECUTE 'SELECT gid FROM ' ||_tbl
        LOOP
-          SELECT abscissa, branch FROM public.abscisse_profil( _tbl ,_tbl_branchs, my_row ) INTO abs1,b1;
+          SELECT abscissa, branch FROM {0}.abscisse_profil( _tbl ,_tbl_branchs, my_row ) INTO abs1,b1;
           EXECUTE 'UPDATE  '||_tbl || ' SET  branchnum = $3, abscissa = $1 WHERE gid = $2' USING abs1, my_row,b1;
         END LOOP;
         RETURN  ;
@@ -1192,7 +1192,7 @@ $BODY$;"""
         :return:
         """
         qry = """
-    CREATE OR REPLACE FUNCTION {}.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)
+    CREATE OR REPLACE FUNCTION {0}.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)
     RETURNS TABLE(abscissa double precision, branch integer)
     LANGUAGE 'plpgsql'
 AS $BODY$
@@ -1209,7 +1209,7 @@ AS $BODY$
 
      BEGIN
          EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_point INTO geom_p;
-         EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 4 LIMIT 1' USING geom_p INTO b,g,d  ;
+         EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
          EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM  ' || _tbl_branchs || ' WHERE (branch<$1) OR (branch=$1 ))' USING b INTO long1;
          f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),geom_p));
          long2 = (SELECT (ST_Length(g)*f));
@@ -1229,7 +1229,7 @@ $BODY$;"""
         :return:
         """
         qry = """
-    CREATE OR REPLACE FUNCTION  {}.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)
+    CREATE OR REPLACE FUNCTION  {0}.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)
         RETURNS  VOID 
         LANGUAGE 'plpgsql'
     AS $BODY$
@@ -1240,7 +1240,7 @@ $BODY$;"""
          BEGIN
           FOR my_row IN  EXECUTE 'SELECT gid FROM ' ||_tbl
            LOOP
-             SELECT abscissa, branch FROM  public.abscisse_point( _tbl ,_tbl_branchs, my_row ) INTO abs1,b1;
+             SELECT abscissa, branch FROM  {0}.abscisse_point( _tbl ,_tbl_branchs, my_row ) INTO abs1,b1;
              EXECUTE 'UPDATE  '||_tbl || ' SET  branchnum = $3, abscissa = $1 WHERE gid = $2' USING abs1, my_row,b1;
             END LOOP;
             RETURN  ;
@@ -1254,7 +1254,7 @@ $BODY$;"""
         :return:
         """
         qry = """
-CREATE OR REPLACE FUNCTION {}.abscisse_branch(
+CREATE OR REPLACE FUNCTION {0}.abscisse_branch(
 	_tbl_branchs regclass,
 	id_branch integer)
     RETURNS TABLE (zoneabsstart float, zoneabsend float)
@@ -1301,7 +1301,7 @@ AS $BODY$
      BEGIN
        FOR my_row IN  EXECUTE 'SELECT gid FROM '||_tbl_branchs
        LOOP
-          SELECT * FROM public.abscisse_branch( _tbl_branchs, my_row ) into abs1,abs2;
+          SELECT * FROM {0}.abscisse_branch( _tbl_branchs, my_row ) into abs1,abs2;
           EXECUTE 'UPDATE  '||_tbl_branchs || ' SET zoneabsstart = $1, zoneabsend = $2 WHERE gid = $3'
           USING  abs1, abs2,my_row;
         END LOOP;
@@ -1384,7 +1384,7 @@ AS $BODY$
         			END IF;
                    	
                 ELSE
-                    EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 4 LIMIT 1' USING NEW.geom INTO b,g,d  ;
+                    EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d  ;
                      
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                      	NEW.branchnum= b ;
@@ -1763,7 +1763,7 @@ class results_val(MasObject):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS results_val_idRunTPk " \
-               "ON {}.results_val(idRunTPk, var);".format(self.schema)
+               "ON {0}.results_val(idRunTPk, var);".format(self.schema)
         qry += '\n'
         return qry
 
@@ -1784,10 +1784,10 @@ class results_idx(MasObject):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS results_idx_id_runs_pknum " \
-               "ON {}.results_idx(id_runs, pknum);".format(self.schema)
+               "ON {0}.results_idx(id_runs, pknum);".format(self.schema)
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS results_idx_id_runs_time " \
-               "ON {}.results_idx(id_runs, time);".format(self.schema)
+               "ON {0}.results_idx(id_runs, time);".format(self.schema)
         qry += '\n'
         return qry
 
@@ -1810,7 +1810,7 @@ class results_sect(MasObject):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS results_sect_id_runs_pknum " \
-               "ON {}.results_sect(id_runs, pk);".format(self.schema)
+               "ON {0}.results_sect(id_runs, pk);".format(self.schema)
         qry += '\n'
         return qry
 

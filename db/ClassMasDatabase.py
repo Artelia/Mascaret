@@ -1753,7 +1753,6 @@ $BODY$
             'basins_1': 'gid',
             'branchs_0': 'branch',
             'branchs_1': 'gid',
-            'branchs_2': 'zonenum',
             'extremities': 'gid',
             'flood_marks': 'gid',
             'hydraulic_head': 'gid',
@@ -1832,42 +1831,76 @@ $BODY$
     def planim_select(self):
         sql = \
             """
-        SELECT planim, branchnum, minp,maxp,
-               (SELECT  abscissa FROM
-                    (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
-                    FROM  {0}.profiles WHERE active ORDER BY abscissa) t7
-                WHERE  nombre2 = minp) as absmin , 
-                (SELECT  abscissa FROM
-                    (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
-                    FROM  {0}.profiles WHERE active ORDER BY abscissa) t8
-                WHERE  nombre2 = maxp) as absmax 
-        FROM
-            (SELECT planim, branchnum, minp,maxp,   Lag (minp,1) OVER (ORDER BY abs4, abs3) AS bp1 FROM
-            (SELECT  t3.planim, t3.branchnum, num2 as minp, num as maxp,  t4.abscissa as abs4 , t3.abscissa as abs3 FROM
-            (SELECT  planim, branchnum, num,abscissa FROM
-            (SELECT  nombre, planim, branchnum , case 
-                 when branchnum != bp1 then  nombre
-                 when planim != mp1  then  nombre
-                else -1 end AS num ,abscissa
-            FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, planim, branchnum ,abscissa,
-                  Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
-                  Lead (planim,1) OVER (ORDER BY abscissa) as mp1
-                  FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
-            WHERE num != -1 ORDER BY branchnum) t3 
-            JOIN
-            (SELECT  planim, branchnum, num2,abscissa FROM
-            (SELECT  nombre, planim, branchnum , case 
-                when branchnum != bm1 then  nombre
-                 when planim != mm1  then  nombre
-                When  mm1  is NULL and bm1 is null then nombre
-                else -1 end AS num2 ,abscissa
-            FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, planim, branchnum ,abscissa,
-                  LAg (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
-                  LAG (planim,1) OVER (ORDER BY abscissa) as mm1 
-                  FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
-            WHERE num2 != -1 ORDER BY branchnum) t4
-            ON t3.planim =t4.planim and t3.branchnum =t4.branchnum  WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
-        WHERE minp != bp1 or bp1 is NULL
+ SELECT planim, 
+	branchnum, 
+	minp,
+	maxp,
+	(SELECT  abscissa FROM
+		(SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
+		 FROM  {0}.profiles WHERE active ORDER BY abscissa) t7
+	 WHERE  nombre2 = minp) as absmin , 
+	 (SELECT  abscissa FROM
+	  	(SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, 
+		 abscissa 
+		 FROM  {0}.profiles WHERE active ORDER BY abscissa) t8
+	  WHERE  nombre2 = maxp) as absmax 
+FROM
+	(SELECT planim,
+	 branchnum, 
+	 minp,
+	 maxp, 
+	 Lag (minp,1) OVER (ORDER BY abs4, abs3) AS bp1 
+	 FROM (SELECT  t3.planim,
+		   t3.branchnum, 
+		   num2 as minp, 
+		   num as maxp,  
+		   t4.abscissa as abs4 , 
+		   t3.abscissa as abs3 
+		   FROM (SELECT  planim, 
+				 branchnum, 
+				 num,
+				 abscissa
+				 FROM (SELECT  nombre, 
+					   planim, 
+					   branchnum , 
+					   case 
+					   when branchnum != bp1 then  nombre
+					   when planim != mp1  then  nombre
+					   when  mp1  is NULL and bp1 is null then nombre
+					   else -1 end AS num ,
+					   abscissa
+					   FROM (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, 
+							 planim, 
+							 branchnum ,
+							 abscissa,
+							 Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
+							 Lead (planim,1) OVER (ORDER BY abscissa) as mp1
+							 FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 
+					   ORDER BY abscissa ) t1
+				 WHERE num != -1 ORDER BY branchnum) t3 
+		   JOIN
+		   	(SELECT  planim, branchnum, num2,abscissa FROM
+			 	(SELECT  nombre,
+				 planim,
+				 branchnum , 
+				 case 
+				 when branchnum != bm1 then  nombre
+				 when planim != mm1  then  nombre
+				 When  mm1  is NULL and bm1 is null then nombre
+				 else -1 end AS num2 ,
+				 abscissa,
+				 bm1
+				 FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, 
+					   planim, 
+					   branchnum ,
+					   abscissa,
+					   LAG (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
+					   LAG (planim,1) OVER (ORDER BY abscissa) as mm1 
+					   FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 
+				 ORDER BY abscissa ) t1
+			 WHERE num2 != -1 ORDER BY branchnum) t4
+		   ON t3.planim =t4.planim and t3.branchnum =t4.branchnum  WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
+WHERE minp != bp1 or bp1 is NULL
             """
 
         (results, namCol) = self.run_query(sql.format(self.SCHEMA),
@@ -1895,6 +1928,7 @@ $BODY$
             (SELECT  nombre, mesh, branchnum , case 
                  when branchnum != bp1 then  nombre
                 when mesh != mp1  then  nombre + 1
+                when  mp1  is NULL and bp1 is null then nombre
                 else -1 end AS num ,abscissa
             FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, mesh, branchnum ,abscissa,
                   Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
@@ -1929,40 +1963,77 @@ $BODY$
 
     def zone_ks(self):
         sql ="""
-        SELECT  t3.minbedcoef, t3.majbedcoef, t3.branchnum,  (SELECT  abscissa FROM
-        (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
-        FROM  {0}.profiles WHERE active ORDER BY abscissa) t7
-        WHERE  nombre2 = num2) as absmin ,  (SELECT  abscissa FROM
-        (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
-        FROM  {0}.profiles WHERE active ORDER BY abscissa) t8
-        WHERE  nombre2 = num) as absmax FROM	  
-        (SELECT  minbedcoef,majbedcoef, branchnum, num,abscissa FROM
-        (SELECT  nombre, minbedcoef,majbedcoef, branchnum , case 
-             when branchnum != bp1 then  nombre
-            when minbedcoef != mibp1 OR majbedcoef != mabp1 then  nombre +1
-            else -1 end AS num ,abscissa
-        FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, minbedcoef,majbedcoef, branchnum ,abscissa,
-              Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
-              Lead (minbedcoef,1) OVER (ORDER BY abscissa) as mibp1,
-               Lead (majbedcoef,1) OVER (ORDER BY abscissa) as mabp1
-              FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1 
-        WHERE num != -1 ORDER BY branchnum) t3
-        JOIN
-        (SELECT  minbedcoef,majbedcoef, branchnum, num2, abscissa FROM
-        (SELECT  nombre, minbedcoef,majbedcoef, branchnum , case 
-             when branchnum != bm1 then  nombre
-            when minbedcoef != mibm1 OR majbedcoef != mabm1 then  nombre
-            When  mibm1  is NULL and mabm1 is NULL and bm1 is null then nombre
-            else -1 end AS num2 ,abscissa
-        FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, 
-            minbedcoef,majbedcoef, branchnum ,abscissa,
-              Lag (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
-              Lag (minbedcoef,1) OVER (ORDER BY abscissa) as mibm1,
-               Lag (majbedcoef,1) OVER (ORDER BY abscissa) as mabm1
-              FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
-        WHERE num2 != -1 ORDER BY branchnum) t4
-        ON t3.minbedcoef=t4.minbedcoef and t3.majbedcoef=t4.majbedcoef 
-         and t3.branchnum =t4.branchnum ORDER BY absmin ,  absmax     
+SELECT  minbedcoef, 
+		majbedcoef, 
+		branchnum,  
+		absmin,
+		absmax
+FROM
+(SELECT  minbedcoef, 
+		majbedcoef, 
+		branchnum,  
+		num2, 
+		num,
+		absmin,
+		absmax,
+	 	lag(num2,1) OVER (ORDER BY absmin,absmax) as numm1
+FROM
+	(SELECT  t3.minbedcoef, 
+			t3.majbedcoef, 
+			t3.branchnum,
+	 		(SELECT  abscissa FROM (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
+								FROM  {0}.profiles WHERE active ORDER BY abscissa) t7 
+			 WHERE  nombre2 = num2) as absmin ,  
+			(SELECT  abscissa FROM (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
+									FROM  {0}.profiles WHERE active ORDER BY abscissa) t8 
+			 WHERE  nombre2 = num) as absmax,
+			num2, 
+			num
+	FROM	  
+		(SELECT  minbedcoef,majbedcoef, branchnum, num,abscissa 
+		 FROM (SELECT  nombre, minbedcoef,majbedcoef, branchnum , case 
+			   when branchnum != bp1 then  nombre
+			   when minbedcoef != mibp1 OR majbedcoef != mabp1 then  nombre +1
+			   when  mibp1  is NULL and mabp1  is NULL and bp1 is null then nombre
+			   else -1 end AS num ,abscissa
+			   FROM 
+				   (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, 
+					minbedcoef,
+					majbedcoef, 
+					branchnum ,
+					abscissa,
+					Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
+					Lead (minbedcoef,1) OVER (ORDER BY abscissa) as mibp1,
+					Lead (majbedcoef,1) OVER (ORDER BY abscissa) as mabp1
+					FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1 
+		 WHERE num != -1 ORDER BY branchnum) t3
+		 JOIN
+		(SELECT  minbedcoef,majbedcoef, branchnum, num2, abscissa FROM
+			(SELECT  nombre, 
+			 minbedcoef,
+			 majbedcoef, 
+			 branchnum , 
+			 case 
+			 when branchnum != bm1 then  nombre
+			 when minbedcoef != mibm1 OR majbedcoef != mabm1 then  nombre
+			 When  mibm1  is NULL and mabm1 is NULL and bm1 is null then nombre
+			 else -1 end AS num2 ,
+			 abscissa
+			 FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, 
+				   minbedcoef,
+				   majbedcoef, 
+				   branchnum ,
+				   abscissa,
+				   Lag (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
+				   Lag (minbedcoef,1) OVER (ORDER BY abscissa) as mibm1,
+				   Lag (majbedcoef,1) OVER (ORDER BY abscissa) as mabm1
+				   FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 
+			 ORDER BY abscissa ) t1
+		 WHERE num2 != -1 ORDER BY branchnum) t4
+		 ON t3.minbedcoef=t4.minbedcoef and t3.majbedcoef=t4.majbedcoef 
+		 and t3.branchnum =t4.branchnum and num2< num  ORDER BY absmin ,  absmax ) t9) t10
+WHERE (num2 != numm1 OR numm1 is NULL)
+
         """
         (results, namCol) = self.run_query(sql.format(self.SCHEMA),
                                                fetch=True, namvar=True)
