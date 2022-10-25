@@ -1165,7 +1165,7 @@ class CheckTab:
             EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET planim=(SELECT planim FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
         -- Enable trigger
             EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs ENABLE TRIGGER branchs_chstate_active';
-            EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles DISABLE TRIGGER profiles_calcul_abscisse';
+            EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles ENABLE TRIGGER profiles_calcul_abscisse';
             RETURN;
         END;
         $BODY$;""".format(self.mdb.SCHEMA)
