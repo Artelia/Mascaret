@@ -1832,7 +1832,16 @@ $BODY$
     def planim_select(self):
         sql = \
             """
-            SELECT planim, branchnum, minp,maxp FROM
+        SELECT planim, branchnum, minp,maxp,
+               (SELECT  abscissa FROM
+                    (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
+                    FROM  {0}.profiles WHERE active ORDER BY abscissa) t7
+                WHERE  nombre2 = minp) as absmin , 
+                (SELECT  abscissa FROM
+                    (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
+                    FROM  {0}.profiles WHERE active ORDER BY abscissa) t8
+                WHERE  nombre2 = maxp) as absmax 
+        FROM
             (SELECT planim, branchnum, minp,maxp,   Lag (minp,1) OVER (ORDER BY abs4, abs3) AS bp1 FROM
             (SELECT  t3.planim, t3.branchnum, num2 as minp, num as maxp,  t4.abscissa as abs4 , t3.abscissa as abs3 FROM
             (SELECT  planim, branchnum, num,abscissa FROM
@@ -1858,16 +1867,19 @@ $BODY$
                   FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
             WHERE num2 != -1 ORDER BY branchnum) t4
             ON t3.planim =t4.planim and t3.branchnum =t4.branchnum  WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
-            WHERE minp != bp1 or bp1 is NULL
+        WHERE minp != bp1 or bp1 is NULL
             """
 
         (results, namCol) = self.run_query(sql.format(self.SCHEMA),
                                                fetch=True, namvar=True)
-        dico_planim = {'pas': [], 'min': [], 'max': []}
-        for pas, branch, minp, maxp in results:
+        dico_planim = {'pas': [], 'min': [], 'max': [],
+                       'absmin': [], 'absmax' : []}
+        for pas, branch, minp, maxp, absmin, absmax in results:
             dico_planim['pas'].append(pas)
             dico_planim['min'].append(minp)
             dico_planim['max'] .append(maxp)
+            dico_planim['absmin'].append(absmin)
+            dico_planim['absmax'].append(absmax)
 
         return dico_planim
 
@@ -1875,7 +1887,8 @@ $BODY$
 
         sql = \
         """
-            SELECT mesh, branchnum, minp,maxp FROM
+        SELECT mesh, branchnum, minp,maxp
+        FROM
             (SELECT mesh, branchnum, minp,maxp,   Lag (minp,1) OVER (ORDER BY abs4, abs3) AS bp1 FROM
             (SELECT  t3.mesh, t3.branchnum, num2 as minp, num as maxp,  t4.abscissa as abs4 , t3.abscissa as abs3 FROM
             (SELECT  mesh, branchnum, num,abscissa FROM
@@ -1901,7 +1914,7 @@ $BODY$
                   FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
             WHERE num2 != -1 ORDER BY branchnum) t4
             ON t3.mesh =t4.mesh and t3.branchnum =t4.branchnum  WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
-            WHERE minp != bp1 or bp1 is NULL
+        WHERE minp != bp1 or bp1 is NULL
         """
         (results, namCol) = self.run_query(sql.format(self.SCHEMA),
                                                fetch=True, namvar=True)

@@ -87,26 +87,40 @@ class ClassResProfil:
         :return: plani, ksmaj, ksmin
         """
         plani = None
-
-        rows = self.mdb.select('branchs',
-                               where="branch='{}'".format(self.branch),
-                               order="zoneabsstart",
-                               list_var=['zonenum', 'zoneabsstart',
-                                         'zoneabsend', 'planim', 'minbedcoef',
-                                         'majbedcoef', 'active'])
-        sql = """ SELECT abscissa, minbedcoef, majbedcoef, mesh, planim FROM (
-         SELECT abscissa, minbedcoef, majbedcoef, mesh, planim
-            FROM bva.profiles where active order by ABS(abscissa- {0}) ASC LIMIT 2) t2 order by abscissa
-        """.format(self.pk)
-        if rows:
-
-            for i, zone in enumerate(rows['zonenum']):
-                if rows['zoneabsstart'][i] <= self.pk <= rows['zoneabsend'][i]:
-                    plani = rows['planim'][i]
-                    ksmaj = rows['minbedcoef'][i]
-                    ksmin = rows['majbedcoef'][i]
-                    if rows['active'][i]:
-                        break
+        ksmaj= None
+        ksmin = None
+        dict_ks = self.mdb.zone_ks()
+        dict_plani = self.mdb.planim_select()
+        print(dict_plani, dict_ks)
+        # sql = """ SELECT abscissa, minbedcoef, majbedcoef,branchnum, planim FROM (
+        #  SELECT abscissa, minbedcoef, majbedcoef, branchnum, planim
+        #     FROM {0}.profiles where active order by ABS(abscissa- {1}) ASC LIMIT 2) t2 order by abscissa
+        # """.format(self.mdb.SCHEMA, self.pk)
+        # (results, namCol) = self.mdb.run_query(sql,
+        #                                    fetch=True, namvar=True)
+        # if results :
+        #
+        #     abs, minc, majc, bra, pla =results[0]
+        #     abs1, minc1, majc1, bra1, pla1 = results[1]
+        #     if self.pk == self.pk:
+        #         return pla,majc, minc
+        #     elif abs1 == self.pk:
+        #         return pla1, majc1, minc1
+        #     elif  abs < self.pk < abs1:
+        #         if
+        #         # plani = pla
+        #         # ksmaj = majc
+        #         # ksmin = minc
+        #     print(results, namCol)
+        # if rows:
+        #
+        #     for i, zone in enumerate(rows['zonenum']):
+        #         if rows['zoneabsstart'][i] <= self.pk <= rows['zoneabsend'][i]:
+        #             plani = rows['planim'][i]
+        #             ksmaj = rows['minbedcoef'][i]
+        #             ksmin = rows['majbedcoef'][i]
+        #             if rows['active'][i]:
+        #                 break
 
         return plani, ksmaj, ksmin
 

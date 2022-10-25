@@ -1016,7 +1016,17 @@ Version : {}
     def fct_test(self):
         """ Test function"""
         # get_laws
-        self.chkt.debug_update_vers_meta(version='5.0.2')
+        #self.chkt.debug_update_vers_meta(version='5.0.2')
+        from .Graphic.ClassResProfil import ClassResProfil
+        cl = ClassResProfil()
+        cl_geo = ClassResProfil()
+        self.cas_prt = cl_geo.cas_prt
+        cl_geo.init_cl('3700',None,
+                       None,
+                       None,None, None,
+                       database=self.mdb)
+
+
         #self.mdb.correction_seq()
         
         pass
