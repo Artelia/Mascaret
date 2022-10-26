@@ -94,7 +94,7 @@ class MasObject(object):
         qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_point();\n'.format(self.schema)
         return qry
 
-    def pg_abscisse_profil(self):
+    def pg_abscisse_profil(self,local='public'):
         qry = """
     CREATE OR REPLACE FUNCTION {0}.abscisse_profil(id_profil integer )
         RETURNS double precision
@@ -103,31 +103,25 @@ class MasObject(object):
         IMMUTABLE NOT LEAKPROOF 
     AS $BODY$
          DECLARE
-            long1	double precision;
             long2	double precision;
             g	geometry;
             p	geometry;
             b	integer;
-            z	integer;
             d	double precision;
             geom_p geometry;
             abscissa  double precision;
          BEGIN
-            EXECUTE 'SELECT geom FROM {0}.profiles WHERE gid = $1' USING id_profil INTO geom_p;
-            EXECUTE 'SELECT branch,  geom, ST_Distance(geom,$1) FROM  {0}.branchs ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d;
-            EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM {0}.branchs WHERE (branch<$1) OR (branch=$1 )' USING b INTO long1;
-            p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
-            long2 = (SELECT (ST_Length(g)*ST_LineLocatePoint(ST_LineMerge(g),p)));
-            IF long1 IS NULL THEN
-                  long1 = 0;
-            END IF;
-            abscissa = ROUND((long1+long2)::numeric,2);
+			EXECUTE 'SELECT geom FROM {0}.profiles WHERE gid = $1' USING id_profil INTO geom_p;
+			EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM {0}.branchs ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
+			p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
+			long2 = (SELECT ST_Length(g)* ST_LineLocatePoint(ST_LineMerge(g),p));
+			abscissa:= long2;
 
             RETURN abscissa;
          END;
     $BODY$; """
 
-        return qry
+        return qry.format(local)
 
 
 # *****************************************
@@ -1071,8 +1065,7 @@ COST 100;
                 long1	float;
                 long2	float;
             BEGIN
-
-                EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 )' USING NEW.branch INTO long1;
+                EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs_old WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING NEW.branch,NEW.zonenum INTO long1;
                 long2 = (SELECT ST_Length(NEW.geom));
 
                 IF long1 IS NULL THEN
@@ -1138,25 +1131,19 @@ $$ LANGUAGE plpgsql;"""
         LANGUAGE 'plpgsql'
     AS $BODY$
          DECLARE
-            long1	double precision;
             long2	double precision;
             g	geometry;
             p	geometry;
             b	integer;
-            z	integer;
             d	double precision;
             geom_p geometry;
          BEGIN
-            EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_prof INTO geom_p;
-            EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
-            EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM  ' || _tbl_branchs || ' WHERE (branch<$1) OR (branch=$1))' USING b INTO long1;
-            p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
-            long2 = (SELECT (ST_Length(g)*ST_LineLocatePoint(ST_LineMerge(g),p)));
-            IF long1 IS NULL THEN
-                  long1 = 0;
-            END IF;
-            abscissa := ROUND((long1+long2)::numeric,2);
-            branch := b;
+		    EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_prof INTO geom_p;
+			EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
+			p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
+			long2 = (SELECT ST_Length(g)* ST_LineLocatePoint(ST_LineMerge(g),p));
+			branch := b;
+			abscissa:= ROUND((long2)::numeric,2);  
 
             RETURN NEXT;
          END;
@@ -1197,12 +1184,10 @@ $BODY$;"""
     LANGUAGE 'plpgsql'
 AS $BODY$
  
-     DECLARE  
-        long1	double precision; 
+     DECLARE   
         long2	double precision;  
         g	geometry; 
         b	integer; 
-        z	integer; 
         d	double precision; 
         f	double precision;         
         geom_p  geometry;    
@@ -1210,13 +1195,9 @@ AS $BODY$
      BEGIN
          EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_point INTO geom_p;
          EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
-         EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM  ' || _tbl_branchs || ' WHERE (branch<$1) OR (branch=$1 ))' USING b INTO long1;
          f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),geom_p));
          long2 = (SELECT (ST_Length(g)*f));
-         IF long1 IS NULL THEN
-             long1 = 0;
-         END IF;
-         abscissa :=     ROUND((long1+long2)::numeric,2);        
+         abscissa :=     ROUND((long2)::numeric,2);        
          branch := b;          
         RETURN NEXT;
      END;      
@@ -1351,11 +1332,9 @@ AS $BODY$
 
  
             DECLARE  
-                long1	double precision; 
                 long2	double precision;  
                 g	geometry; 
                 b	integer; 
-                z	integer; 
                 d	double precision; 
                 f	double precision;
                 test	boolean;       
@@ -1389,7 +1368,6 @@ AS $BODY$
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                      	NEW.branchnum= b ;
                         /* projection compute*/
-                       EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 ) )' USING b INTO long1;
                        f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
                        geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
                         /* get srid value*/
@@ -1405,26 +1383,19 @@ AS $BODY$
         			   END IF;
                        
                        long2 = (SELECT (ST_Length(g)*f));
+            
                         
-                       IF long1 IS NULL THEN
-                           long1 = 0;
-                       END IF;
-                        
-                       NEW.abscissa = ROUND((long1+long2)::numeric,2);
+                       NEW.abscissa = ROUND((long2)::numeric,2);
                     ELSE
                          NEW.branchnum= b ;
                          
                         IF NOT  OLD.abscissa=  NEW.abscissa THEN
                          RAISE NOTICE 'entre 1 ';
-                            EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 ) )' USING b INTO long1;
-                            IF long1 IS NULL THEN
-                               long1 = 0;
-                            END IF;
-                            /* check if new abscissa is in zone*/
-                            val = (NEW.abscissa-long1)/ST_Length(g);
+                            /* check if new abscissa is in branch*/
+                            val = (NEW.abscissa)/ST_Length(g);
                             IF val>1 OR  val<0 THEN
-                            	RAISE NOTICE 'Branch : %, Zone : %',b,z;
-                            	RAISE NOTICE 'The new abscissa (%) is not between % and % ;', NEW.abscissa, long1, long1+ST_Length(g);
+                            	RAISE NOTICE 'Branch : %',b;
+                            	RAISE NOTICE 'The new abscissa (%) is not between % and % ;', NEW.abscissa, 0, ST_Length(g);
                             END IF ;    
 
                             geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),val));                            

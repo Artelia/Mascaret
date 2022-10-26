@@ -606,10 +606,10 @@ class ClassMasDatabase(object):
                     ('pg_delete_visu_flood_marks',self.SCHEMA),
                     ('pg_create_calcul_abscisse_point_flood',self.SCHEMA),
                     #
-                    ('abscisse_profil',self.SCHEMA),
-                    ('update_abscisse_profil',self.SCHEMA),
-                    ('abscisse_point',self.SCHEMA),
-                    ('update_abscisse_point',self.SCHEMA),
+                    ('pg_abscisse_profil',self.SCHEMA),
+                    ('pg_all_profil',self.SCHEMA),
+                    ('pg_abscisse_point',self.SCHEMA),
+                    ('pg_all_point',self.SCHEMA),
                     ]
 
         for fct, var in listefct:
@@ -619,12 +619,9 @@ class ClassMasDatabase(object):
                     self.mgis.add_info('  {0} OK'.format(fct))
                 else:
                     pass
-            except:
-                if self.mgis.DEBUG:
-                    # self.mgis.add_info('{0}\n'.format(fct))
-                    self.mgis.add_info('failure!{0}'.format(fct))
-                else:
-                    pass
+            except Exception as err:
+                self.mgis.add_info('failure!{0} : {1}'.format(fct, str(err)))
+
     def add_ext_postgis(self):
         """ 
         To add variable in db for the first model creation

@@ -170,8 +170,11 @@ class MascPlugDialog(QMainWindow):
         if self.open_last_conn:
             self.conn_changed(conn_name=self.opts['mdb']['last_conn'])
             self.add_info('shema {}'.format(self.opts['mdb']['last_schema']))
+
             if self.open_last_schema:
-                self.db_load(schema_info=self.opts['mdb']['last_schema'])
+                if self.opts['mdb']['last_schema'] in self.mdb.list_schema():
+                    self.db_load(schema_info=self.opts['mdb']['last_schema'])
+
         else:
             self.conn_changed()
 
