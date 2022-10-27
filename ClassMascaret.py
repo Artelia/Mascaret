@@ -30,6 +30,7 @@ import json
 import time
 import gc
 import numpy as np
+import copy
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
@@ -86,6 +87,7 @@ class ClassMascaret:
         self.wq = ClassMascWQ(self.mgis, self.dossierFileMasc)
         self.clmeth = ClassMascStruct(self.mgis)
         self.cond_api = self.mgis.cond_api
+        self.save_res_struct = None
 
     def creer_geo(self):
         """creation of gemoetry file"""
@@ -2075,7 +2077,7 @@ class ClassMascaret:
             os.chdir(self.dossierFileMasc)
             clapi = ClassAPIMascaret(self)
             clapi.main(fichier_cas, tracer, casier)
-            self.stock_res_api(clapi.results_api, id_run)
+            self.save_res_struct = (copy.deepcopy(clapi.results_api), id_run)
             del clapi
 
             os.chdir(pwd)
@@ -3100,7 +3102,8 @@ class ClassMascaret:
                         del val[key]
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
-
+        if self.cond_api:
+            self.stock_res_api(self.save_res_struct[0],self.save_res_struct[1])
     def get_idruntpk(self):
         dict_idx = dict()
         tmp = self.mdb.select('results_idx', list_var=['idruntpk', 'id_runs', 'time', 'pknum'])
