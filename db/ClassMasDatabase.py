@@ -1372,7 +1372,7 @@ $BODY$
         # :param old: old version to the importation
         # :return:
         # """
-        # try:
+        try:
             if old:
                 exe = os.path.join(self.mgis.postgres_path, 'psql')
             else:
@@ -1409,9 +1409,9 @@ $BODY$
                 self.mgis.add_info('Executable file not found. '
                                    'Please, insert path in "path postgres" in Help / Setting / Options')
                 return False
-        # except Exception as e:
-        #     self.mgis.add_info('ERROR :', e)
-        #     return False
+        except Exception as e:
+            self.mgis.add_info('ERROR :', e)
+            return False
 
     def list_schema(self):
         """
@@ -1560,13 +1560,15 @@ $BODY$
         """ get version postgres """
         if not self.con:
             self.mgis.add_info("Warning, there is not the database connection")
+            self.box.info("Check the connection of the database", title='Warning Database')
+            return None
             
         sql = 'SHOW server_version_num;'
         results = self.run_query(sql, fetch=True)
         if results :
             return results[0][0]
         else:
-            self.mgis.add_info("Check the connection of data base")
+            self.mgis.add_info("No find version")
             return  None
 
     def export_model(self, selection, file, plug_ver):
