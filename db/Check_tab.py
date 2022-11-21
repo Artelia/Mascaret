@@ -1196,7 +1196,6 @@ class CheckTab:
         sql += '\n'
         sql += "DROP TRIGGER IF EXISTS hydraulic_head_calcul_abscisse ON {}.hydraulic_head;".format(self.mdb.SCHEMA)
         self.mdb.run_query(sql)
-
         tabs_sql = [('flood_marks', Maso.flood_marks),
                     ('weirs', Maso.weirs),
                     ('profiles', Maso.profiles),
@@ -1210,13 +1209,14 @@ class CheckTab:
         sql = ''
         for name, obj_ in tabs_sql :
             obj = obj_()
+            obj.schema = self.mdb.SCHEMA
             if name == 'flood_marks':
                 sql += getattr(obj,'pg_calcul_abscisse_flood')()
                 sql += getattr(obj, 'pg_clear_tab')()
             else:
                 sql += getattr(obj, 'pg_create_calcul_abscisse' )()
-
         err = self.mdb.run_query(sql)
+
         if self.mgis.DEBUG:
             self.mgis.add_info('updates TRIGGER')
 
