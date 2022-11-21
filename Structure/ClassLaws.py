@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
 """
 import math as m
+import os
 import numpy as np
 from .ClassPolygone import ClassPolygone
 from .ClassPostPreFG import ClassPostPreFG

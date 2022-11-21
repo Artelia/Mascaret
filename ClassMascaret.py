@@ -27,7 +27,6 @@ import shutil
 import subprocess
 import sys
 import json
-import time
 import gc
 import numpy as np
 import copy
@@ -2308,7 +2307,7 @@ class ClassMascaret:
         except Exception as e:
             if self.mgis.DEBUG:
                 self.mgis.add_info(
-                    'Failed to delete {}. Reason: {}'.format(file_path, e))
+                    'Failed to delete {}. Reason: {}'.format(self.dossierFileMasc, e))
 
     def copy_run_file(self, rep):
         """copy run file in "rep" path"""
