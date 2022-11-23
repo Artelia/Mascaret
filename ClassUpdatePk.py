@@ -86,8 +86,7 @@ class ClassUpdatePk(QDialog):
         if not self.mdb.check_fct(["update_abscisse_profil", "abscisse_profil",
                                    "update_abscisse_point", "abscisse_point"]):
             self.mdb.add_fct_for_update_pk()
-        print(self.mdb.check_fct(["update_abscisse_profil", "abscisse_profil",
-                                   "update_abscisse_point", "abscisse_point"]))
+
         n = len(selection)
 
         sql = ''
@@ -98,7 +97,6 @@ class ClassUpdatePk(QDialog):
             elif table in self.lst_tables_p:
                 sql += "SELECT {0}.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
                        ";\n".format(self.mdb.SCHEMA, table, 'branchs')
-        print(sql)
         self.mdb.run_query(sql)
         if self.mgis.DEBUG:
             self.mgis.add_info("Update pk Done")
