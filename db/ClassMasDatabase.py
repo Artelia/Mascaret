@@ -594,7 +594,7 @@ class ClassMasDatabase(object):
     def schema_fct_sql(self):
         """
         add function in schema
-        :return:
+        :return: error: return true if one function failed
         """
 
         listefct = [('pg_create_calcul_abscisse',self.SCHEMA),
@@ -611,7 +611,7 @@ class ClassMasDatabase(object):
                     ('pg_abscisse_point',self.SCHEMA),
                     ('pg_all_point',self.SCHEMA),
                     ]
-
+        error = False
         for fct, var in listefct:
             try:
                 obj = self.process_masobject(Maso.class_fct_psql, fct, local = var)
@@ -621,6 +621,8 @@ class ClassMasDatabase(object):
                     pass
             except Exception as err:
                 self.mgis.add_info('failure!{0} : {1}'.format(fct, str(err)))
+                error = True
+        return error
 
     def add_ext_postgis(self):
         """ 
