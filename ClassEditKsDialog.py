@@ -23,14 +23,22 @@ from qgis.PyQt import QtWidgets, uic
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
-
+from qgis.utils import *
 from .ui.custom_control import ClassWarningBox
 from qgis.PyQt.QtGui import *
+from qgis import core
+try:
+    qgis_version = core.QGis.QGIS_VERSION_INT
+except AttributeError:
+    qgis_version = core.Qgis.QGIS_VERSION_INT
+if   qgis_version < 31616:
+    FORM_CLASS, BASE = uic.loadUiType(
+        os.path.join(os.path.join(os.path.dirname(__file__),'ui/edit_ks_mesh_plan31000.ui')))
+else :
+    FORM_CLASS, BASE = uic.loadUiType(
+        os.path.join(os.path.join(os.path.dirname(__file__), 'ui/edit_ks_mesh_plan31616.ui')))
 
-
-FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.join(os.path.dirname(__file__),'ui/edit_ks_mesh_plan2.ui')))
-
-class ClassEditKsDialog(QtWidgets.QDockWidget, FORM_CLASS) :
+class ClassEditKsDialog(BASE, FORM_CLASS) :
     """
     Class allow to update ks mesh planim of the selected profiles
     """
