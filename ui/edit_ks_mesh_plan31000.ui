@@ -82,8 +82,11 @@
             <pointsize>10</pointsize>
            </font>
           </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Horizontal discretization&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
-           <string>Mesh</string>
+           <string>Mesh                </string>
           </property>
          </widget>
         </item>
@@ -141,8 +144,11 @@
             <pointsize>10</pointsize>
            </font>
           </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Planimetry (vertical discretization)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
-           <string>Planim</string>
+           <string>Planim              </string>
           </property>
          </widget>
         </item>
@@ -162,6 +168,11 @@
             <width>100</width>
             <height>0</height>
            </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
           </property>
           <property name="decimals">
            <number>3</number>
@@ -201,8 +212,11 @@
             <pointsize>10</pointsize>
            </font>
           </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Friction  coefficient of the minor bed&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
-           <string>Minbedcoef</string>
+           <string>Minbedcoef       </string>
           </property>
          </widget>
         </item>
@@ -216,6 +230,11 @@
             <width>100</width>
             <height>0</height>
            </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
           </property>
           <property name="decimals">
            <number>3</number>
@@ -255,8 +274,11 @@
             <pointsize>10</pointsize>
            </font>
           </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Friction coefficient of the major bed&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
-           <string>Majbedcoef</string>
+           <string>Majbedcoef       </string>
           </property>
          </widget>
         </item>
