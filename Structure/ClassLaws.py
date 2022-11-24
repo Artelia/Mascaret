@@ -278,7 +278,7 @@ class ClassLaws:
         self.coef_cor_biais = (self.param_g['LONGPIL'] * m.sin(
             self.param_g['BIAIOUVRAD']) +
                                self.param_g['LARGPIL'] * m.cos(
-                                   self.param_g['BIAIOUVRAD'])) / self.param_g[
+                    self.param_g['BIAIOUVRAD'])) / self.param_g[
                                   'LARGPIL']
 
     def meth_brad(self, zav, q, coef_cor_biais, type_kb, list_ph, list_e):
@@ -425,8 +425,8 @@ class ClassLaws:
         poly_wet = self.clpoly.coup_poly_h(self.poly_p, hmon)
         area_amont = poly_wet.area
         term2 = alpha1 * (
-            (s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (
-                    2. * self.grav)
+                (s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (
+                        2. * self.grav)
         # print("term2 Remout", term2)
         remout = term1 + term2
         # print("Remous Total", remout)
@@ -1253,7 +1253,7 @@ class ClassLaws:
         """
         k = (sav / sc - 1) ** 2 + 1 / 9.
         zam = (q / (sav * self.param_g['COEFBOR'])) ** 2 * k / (
-            2 * self.grav) + zav
+                2 * self.grav) + zav
         return zam
 
     def area_wet_fct(self, poly, zw):

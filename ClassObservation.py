@@ -548,7 +548,7 @@ class ClassEventObsDialog(QDialog):
             # ----------------------------------------------------------------
             # Ctle-C: copier
             if event.key() == Qt.Key_C and (
-                        event.modifiers() & Qt.ControlModifier):
+                    event.modifiers() & Qt.ControlModifier):
                 self.copier()
                 event.accept()
             else:
@@ -644,7 +644,7 @@ class GraphObservation(GraphCommon):
         else:
             self.leg.get_texts()[0].set_text("None")
 
-        self.courbes[0].set_data([date2num(l) for l in lst[0]], lst[1])
+        self.courbes[0].set_data([date2num(lval) for lval in lst[0]], lst[1])
         self.courbes[0].set_visible(True)
         leglines[0].set_alpha(1.0)
 

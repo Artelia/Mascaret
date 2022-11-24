@@ -80,8 +80,8 @@ class ClassTracerLawsDialog(QDialog):
 
     def display_graph_home(self):
         if self.ui.lst_laws.selectedIndexes():
-            l = self.ui.lst_laws.selectedIndexes()[0].row()
-            config = int(self.ui.lst_laws.model().item(l, 0).text())
+            lval = self.ui.lst_laws.selectedIndexes()[0].row()
+            config = int(self.ui.lst_laws.model().item(lval, 0).text())
             self.graph_home.init_graph(config)
         else:
             self.graph_home.init_graph(None)
@@ -326,9 +326,9 @@ class ClassTracerLawsDialog(QDialog):
         # charger les informations
         # changer de page
         if self.ui.lst_laws.selectedIndexes():
-            l = self.ui.lst_laws.selectedIndexes()[0].row()
-            self.cur_wq_law = int(self.ui.lst_laws.model().item(l, 0).text())
-            self.ui.LawWQ.setText(self.ui.lst_laws.model().item(l, 1).text())
+            lval = self.ui.lst_laws.selectedIndexes()[0].row()
+            self.cur_wq_law = int(self.ui.lst_laws.model().item(lval, 0).text())
+            self.ui.LawWQ.setText(self.ui.lst_laws.model().item(lval, 1).text())
             self.fill_tab_laws()
             self.ui.Law_pages.setCurrentIndex(1)
             self.graph_edit.init_graph(self.cur_wq_law)
@@ -337,9 +337,9 @@ class ClassTracerLawsDialog(QDialog):
         # charger les informations
         # changer de page
         if self.ui.lst_laws.selectedIndexes():
-            l = self.ui.lst_laws.selectedIndexes()[0].row()
-            id_law = self.ui.lst_laws.model().item(l, 0).text()
-            name_law = self.ui.lst_laws.model().item(l, 1).text()
+            lval = self.ui.lst_laws.selectedIndexes()[0].row()
+            id_law = self.ui.lst_laws.model().item(lval, 0).text()
+            name_law = self.ui.lst_laws.model().item(lval, 1).text()
             if (QMessageBox.question(self, "Tracer Laws",
                                      "Delete {} ?".format(name_law),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:

@@ -27,34 +27,37 @@ from qgis.utils import *
 from .ui.custom_control import ClassWarningBox
 from qgis.PyQt.QtGui import *
 from qgis import core
+
 try:
     qgis_version = core.QGis.QGIS_VERSION_INT
 except AttributeError:
     qgis_version = core.Qgis.QGIS_VERSION_INT
 
-if   qgis_version < 31616:
+if qgis_version < 31616:
     FORM_CLASS, BASE = uic.loadUiType(
-        os.path.join(os.path.join(os.path.dirname(__file__),'ui/edit_ks_mesh_plan31000.ui')))
-else :
+        os.path.join(os.path.join(os.path.dirname(__file__), 'ui/edit_ks_mesh_plan31000.ui')))
+else:
     FORM_CLASS, BASE = uic.loadUiType(
         os.path.join(os.path.join(os.path.dirname(__file__), 'ui/edit_ks_mesh_plan31616.ui')))
 
-class ClassEditKsDialog(BASE, FORM_CLASS) :
+
+class ClassEditKsDialog(BASE, FORM_CLASS):
     """
     Class allow to update ks mesh planim of the selected profiles
     """
-    def __init__(self,  mgis, iface):
 
-        super(ClassEditKsDialog,self).__init__()
+    def __init__(self, mgis, iface):
+
+        super(ClassEditKsDialog, self).__init__()
         self.setupUi(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.iface = iface
         self.box = ClassWarningBox()
-        self.ctrl_ch = [("mesh", self.ch_mesh,  self.dsp_mesh ),
-                        ("planim",self.ch_planim,self.dsp_planim),
-                        ("minbedcoef",self.ch_minbedcoef,self.dsp_minbedcoef),
-                        ("majbedcoef",self.ch_majbedcoef,self.dsp_majbedcoef),]
+        self.ctrl_ch = [("mesh", self.ch_mesh, self.dsp_mesh),
+                        ("planim", self.ch_planim, self.dsp_planim),
+                        ("minbedcoef", self.ch_minbedcoef, self.dsp_minbedcoef),
+                        ("majbedcoef", self.ch_majbedcoef, self.dsp_majbedcoef), ]
 
         self.init_gui()
 
@@ -70,9 +73,9 @@ class ClassEditKsDialog(BASE, FORM_CLASS) :
 
     def chall_event(self):
         """event change check all"""
-        #self.sender()
+        # self.sender()
         val = self.chall.isChecked()
-        for var,ctrl,crtl2 in self.ctrl_ch :
+        for var, ctrl, crtl2 in self.ctrl_ch:
             ctrl.setChecked(val)
 
     def lancement(self):
@@ -83,7 +86,7 @@ class ClassEditKsDialog(BASE, FORM_CLASS) :
             if couche.name() == "profiles":
                 profil = couche
 
-        if len(profil.selectedFeatures()) ==0:
+        if len(profil.selectedFeatures()) == 0:
             self.box.info('Please, selection the profiles', title='Message')
             return
 
@@ -93,19 +96,18 @@ class ClassEditKsDialog(BASE, FORM_CLASS) :
             tab[feature["gid"]] = {}
             lst_name.append(feature["name"])
             # print(nom)
-            for var,ctrl,crtl2 in self.ctrl_ch :
+            for var, ctrl, crtl2 in self.ctrl_ch:
                 if ctrl.isChecked():
                     tab[feature["gid"]][var] = crtl2.value()
 
-        self.mgis.mdb.update('profiles', tab, var = "gid")
-        if  self.mgis.DEBUG :
+        self.mgis.mdb.update('profiles', tab, var="gid")
+        if self.mgis.DEBUG:
             self.mgis.add_info('List of profile which were updated :\n {}'.format(','.join(lst_name)))
-        ok = self.box.yes_no_q( 'Do you want to update other profiles ?', title='')
+        ok = self.box.yes_no_q('Do you want to update other profiles ?', title='')
         if ok:
             return
 
         self.close()
-
 
     def closeEvent(self, event):
         QtWidgets.QDockWidget.closeEvent(self, event)

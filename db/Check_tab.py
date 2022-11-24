@@ -1148,43 +1148,55 @@ class CheckTab:
 
         if valid:
             sql = """
-            CREATE OR REPLACE FUNCTION {0}.insert_new_branch(source_schema text)
-                RETURNS void
-                LANGUAGE 'plpgsql'
-                COST 100
-                VOLATILE PARALLEL UNSAFE
-            AS $BODY$
-            DECLARE
-               rec              record;
-               geom_b    geometry;
-               actb boolean;
-               startb character varying(30);
-               endb character varying(30);
-               BEGIN
-            -- Disable trigger
-               EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs DISABLE TRIGGER branchs_chstate_active';
-               EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles DISABLE TRIGGER profiles_calcul_abscisse';
-            -- creation new table
-               FOR rec IN
-               EXECUTE 'SELECT DISTINCT branch as id_b  FROM  '||  quote_ident(source_schema) ||'.branchs_old'
-               LOOP
-                    EXECUTE ' SELECT st_multi(ST_Union(geom))  FROM  ' ||  quote_ident(source_schema) ||'.branchs_old  WHERE branch=$1 GROUP BY branch' USING rec.id_b INTO geom_b;
-                    EXECUTE 'SELECT active,startb, endb  FROM ' ||  quote_ident(source_schema) ||'.branchs_old WHERE branch=$1 ORDER BY gid ASC LIMIT 1 ' USING rec.id_b INTO actb, startb, endb;
-            -- insert value new branch table
-                    EXECUTE 'INSERT INTO ' ||  quote_ident(source_schema) ||'.branchs(geom,  branch, active,startb, endb) VALUES ($1,$2,$3,$4,$5)' USING geom_b,rec.id_b,actb,startb, endb;
-                -- RAISE NOTICE 'test %', rec.id_b;
-                END LOOP;
-            -- Update fille profile table
-                EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET minbedcoef=(SELECT minbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
-                EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET majbedcoef=(SELECT majbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
-                EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET mesh=(SELECT mesh FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
-                EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p SET planim=(SELECT planim FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
-            -- Enable trigger
-                EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs ENABLE TRIGGER branchs_chstate_active';
-                EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles ENABLE TRIGGER profiles_calcul_abscisse';
-                RETURN;
-            END;
-            $BODY$;""".format(self.mdb.SCHEMA)
+CREATE OR REPLACE FUNCTION {0}.insert_new_branch(source_schema text)
+    RETURNS void
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+DECLARE
+   rec              record;
+   geom_b    geometry;
+   actb boolean;
+   startb character varying(30);
+   endb character varying(30);
+   BEGIN
+-- Disable trigger
+   EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs DISABLE TRIGGER branchs_chstate_active';
+   EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles DISABLE TRIGGER profiles_calcul_abscisse';
+-- creation new table
+   FOR rec IN
+   EXECUTE 'SELECT DISTINCT branch as id_b  FROM  '||  quote_ident(source_schema) ||'.branchs_old'
+   LOOP
+        EXECUTE ' SELECT st_multi(ST_Union(geom))  FROM  ' ||  quote_ident(source_schema) ||'.branchs_old  
+                WHERE branch=$1 GROUP BY branch' USING rec.id_b INTO geom_b;
+        EXECUTE 'SELECT active,startb, endb  FROM ' ||  quote_ident(source_schema) ||'.branchs_old 
+                WHERE branch=$1 ORDER BY gid ASC LIMIT 1 ' USING rec.id_b INTO actb, startb, endb;
+-- insert value new branch table
+        EXECUTE 'INSERT INTO ' ||  quote_ident(source_schema) ||'.branchs(geom,  branch, active,startb, endb) 
+                VALUES ($1,$2,$3,$4,$5)' USING geom_b,rec.id_b,actb,startb, endb;
+    -- RAISE NOTICE 'test %', rec.id_b;
+    END LOOP;
+-- Update fille profile table
+    EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p 
+            SET minbedcoef=(SELECT minbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b 
+                            WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
+    EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p 
+            SET majbedcoef=(SELECT majbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b 
+                            WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
+    EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p 
+            SET mesh=(SELECT mesh FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b 
+                        WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
+    EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p 
+            SET planim=(SELECT planim FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b 
+                        WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
+-- Enable trigger
+    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs ENABLE TRIGGER branchs_chstate_active';
+    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles ENABLE TRIGGER profiles_calcul_abscisse';
+    RETURN;
+END;
+$BODY$;
+            """.format(self.mdb.SCHEMA)
             err = self.mdb.run_query(sql)
             if err:
                 self.mgis.add_info('Create insert_new_branch - ERROR')
@@ -1233,7 +1245,6 @@ class CheckTab:
                 self.mgis.add_info('Delete Trigger functions  using public.calcul_abscisse* functions - ERROR')
                 valid = False
 
-
         if valid:
             tabs_sql = [('flood_marks', Maso.flood_marks),
                         ('weirs', Maso.weirs),
@@ -1258,16 +1269,16 @@ class CheckTab:
             if err2:
                 self.mgis.add_info('Adding the new Triggers using the local functions - ERROR')
                 valid = False
-        if valid :
+        if valid:
             self.mgis.add_info('Update the Triggers (public to local schema)- OK')
 
-        if valid :
+        if valid:
             sql = "DROP TABLE IF EXISTS  {0}.branchs_old;".format(self.mdb.SCHEMA)
             err = self.mdb.run_query(sql)
             if err:
                 self.mgis.add_info('Delete branchs_old which is temporary table - ERROR')
         else:
-            if not check_fill :
+            if not check_fill:
                 sql = "DROP TABLE IF EXISTS  {0}.branchs;".format(self.mdb.SCHEMA)
                 err = self.mdb.run_query(sql)
 
@@ -1297,6 +1308,5 @@ class CheckTab:
                                "because they intersected two branches:\n".format(txt))
         self.mgis.add_info('******')
         return valid
-
 
         # TODO delete function public

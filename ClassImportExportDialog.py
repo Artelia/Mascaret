@@ -42,12 +42,11 @@ class ClassDlgExport(QDialog):
         self.b_cancel.clicked.connect(self.annule)
         if not self.mdb.check_schema_into_db():
             qbox = QMessageBox.warning(self, "Warning",
-                                "\t No data in  database",
-                                QMessageBox.Ok)
+                                       "\t No data in  database",
+                                       QMessageBox.Ok)
             self.b_export.hide()
             return
         dico = self.mdb.select("runs", "", "date")
-
 
         if self.cond_com:
             for run, scen, date, comments in zip(dico["run"], dico["scenario"],
@@ -224,8 +223,6 @@ class ClassDlgExport(QDialog):
         return file_name_path
 
 
-
-
 class ClassDlgImport(QDialog):
     """
     Class allow to export schema
@@ -291,7 +288,7 @@ class ClassDlgImport(QDialog):
         file_name_path, _ = QFileDialog.getOpenFileName(None,
                                                         'File Selection',
                                                         self.mgis.repProject,
-                                                        #QDir.homePath(),
+                                                        # QDir.homePath(),
                                                         filter="JSON (*.json);File (*)")
         self.mgis.up_repProject(file_name_path)
         if file_name_path != '':
@@ -422,7 +419,7 @@ class ClassDlgImport(QDialog):
                 wow = []
             else:
                 cpt += 1
-        if wow != []:
+        if wow:
             wow.reverse()
             wow = int(''.join(wow))
             strlst.append(wow)

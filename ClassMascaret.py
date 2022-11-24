@@ -2053,6 +2053,7 @@ class ClassMascaret:
         :param lpk: (list) pk list
         :param ltime: (list) time list
         :param lval:  (list) values list
+        :param dico_idruntpk: (dico) data dico
         :return: (list) value list
         """
         values = []

@@ -317,7 +317,7 @@ class ClassMethod:
                 if val is not None:
                     try:
                         dico[cols[i]].append(shape(json.loads(val.strip())))
-                    except:
+                    except AttributeError:
                         dico[cols[i]].append(shape(json.loads(val)))
 
         return dico

@@ -249,7 +249,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(True)
+        self.ui.actionTest.setVisible(False)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(
@@ -442,7 +442,7 @@ class MascPlugDialog(QMainWindow):
             else:
                 cond = False
 
-        if ok and namesh != None:
+        if ok and namesh is not None:
             self.mdb.SCHEMA = namesh
             self.mdb.create_model(self.dossier_sql)
             self.mdb.last_schema = self.mdb.SCHEMA
@@ -1020,18 +1020,6 @@ Version : {}
         """ Test function"""
         # get_laws
         #self.chkt.debug_update_vers_meta(version='5.0.2')
-        from .Graphic.ClassResProfil import ClassResProfil
-        cl = ClassResProfil()
-        cl_geo = ClassResProfil()
-        self.cas_prt = cl_geo.cas_prt
-        for pk in [62839.97,66729.65,49780.98,49583.17,12997.09,13001.47,13013.56]:
-            cl_geo.init_cl(pk,None,
-                           None,
-                           None,None, None,
-                           database=self.mdb)
-
-            print(pk,'rrrrrrrr',cl_geo.plani, cl_geo.ksmaj, cl_geo.ksmin)
-        #self.mdb.correction_seq()
         
         pass
     def update_ks_mesh_planim(self) :

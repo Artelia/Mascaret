@@ -38,9 +38,9 @@ class ClassMNT(QObject):
         self.mnt = {}
 
     @staticmethod
-    def fct1(x, arrondi = 2):
+    def fct1(x, arrondi=2):
         """around"""
-        return round(float(x),  arrondi)
+        return round(float(x), arrondi)
 
     def run(self):
         features = self.profil.selectedFeatures()
@@ -52,7 +52,7 @@ class ClassMNT(QObject):
             if longueur < self.res:
                 self.mgis.add_info(
                     "Problem {0} between lenght profile : {1} and Raster accurancy : {2}."
-                    .format(feature["name"], longueur, self.res))
+                        .format(feature["name"], longueur, self.res))
                 self.mgis.add_info(
                     "This problem could come from the projection units.")
 
