@@ -569,6 +569,7 @@ class ClassMasDatabase(object):
         :return:
         """
         listefct = ['pg_create_calcul_abscisse',
+                    'pg_create_calcul_abscisse_outputs',
                     'pg_create_calcul_abscisse_profil',
                     'pg_create_calcul_abscisse_branche',
                     'pg_chstate_branch',
@@ -599,8 +600,8 @@ class ClassMasDatabase(object):
         """
 
         listefct = [('pg_create_calcul_abscisse', self.SCHEMA),
+                    ('pg_create_calcul_abscisse_outputs', self.SCHEMA),
                     ('pg_create_calcul_abscisse_profil', self.SCHEMA),
-                    ('pg_create_calcul_abscisse_branche', self.SCHEMA),
                     ('pg_chstate_branch', self.SCHEMA),
                     ('pg_chstate_basin', self.SCHEMA),
                     # visu

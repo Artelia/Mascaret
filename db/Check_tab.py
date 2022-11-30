@@ -1263,6 +1263,8 @@ $BODY$;
                 if name == 'flood_marks':
                     sql += getattr(obj, 'pg_calcul_abscisse_flood')()
                     sql += getattr(obj, 'pg_clear_tab')()
+                elif name == 'outputs':
+                    sql += getattr(obj, 'pg_create_calcul_abscisse_outputs')()
                 else:
                     sql += getattr(obj, 'pg_create_calcul_abscisse')()
             err2 = self.mdb.run_query(sql)
@@ -1309,4 +1311,4 @@ $BODY$;
         self.mgis.add_info('******')
         return valid
 
-        # TODO delete function public
+        # TODO delete function public in future

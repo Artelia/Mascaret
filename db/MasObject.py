@@ -391,12 +391,18 @@ class outputs(MasObject):
                       ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('CONSTRAINT outputs_pkey', 'PRIMARY KEY (gid)')]
 
+    def pg_create_calcul_abscisse_outputs(self):
+        qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
+              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
+                                                                 self.name)
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_point_outputs();\n'.format(self.schema)
+        return qry
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += self.pg_create_index()
         qry += '\n'
-        qry += self.pg_create_calcul_abscisse()
+        qry += self.pg_create_calcul_abscisse_outputs()
         return qry
 
 
@@ -989,7 +995,7 @@ COST 100;
 
                         
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
-                       EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 ))' USING b INTO long1;
+                       EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1))' USING b INTO long1;
                        f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
                        NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
                        long2 = (SELECT (ST_Length(g)*f));
@@ -1011,6 +1017,64 @@ COST 100;
             $BODY$ 
               LANGUAGE plpgsql IMMUTABLE 
               COST 100; """
+
+        return qry.format(local)
+
+    def pg_create_calcul_abscisse_outputs(self, local='public'):
+        qry = """CREATE OR REPLACE FUNCTION {}.calcul_abscisse_point_outputs()
+    RETURNS trigger
+    LANGUAGE 'plpgsql'
+    COST 100
+    IMMUTABLE NOT LEAKPROOF
+    AS $BODY$
+ 
+            DECLARE  
+                long1	double precision; 
+                long2	double precision;  
+				pk	double precision;  
+                g	geometry; 
+                b	integer; 
+                z	integer; 
+                d	double precision; 
+                f	double precision;
+                val	boolean;           
+             
+                BEGIN 
+				
+				IF NEW.geom IS NULL  AND NEW.name IS NOT NULL  AND (NEW.abscissa IS NULL OR NEW.branchnum IS NULL) THEN
+					EXECUTE ' SELECT abscissa FROM  ' || TG_TABLE_SCHEMA || '.profiles WHERE name =  $1 ' USING NEW.name INTO pk;
+					IF pk IS NOT NULL THEN
+						NEW.abscissa = ROUND(pk::numeric,2);
+					END IF;
+				END IF;
+				
+                IF NEW.geom IS NULL AND NEW.abscissa IS NOT NULL AND NEW.branchnum IS NOT NULL THEN
+                    EXECUTE '(SELECT ST_UNION(geom) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch=$1))' USING NEW.branchnum INTO g;
+                    NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
+                ELSE
+                    EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d  ;
+
+                    IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
+                        NEW.branchnum= b ;
+                    END IF;
+                        
+                    IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
+                       EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1))' USING b INTO long1;
+                       f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
+                       NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
+                       long2 = (SELECT (ST_Length(g)*f));
+                        
+                       IF long1 IS NULL THEN
+                           long1 = 0;
+                       END IF;                        
+                       NEW.abscissa = ROUND((long1+long2)::numeric,2);
+                    END IF;
+                    
+                END IF;                   
+                        
+                RETURN NEW;
+            END;      
+$BODY$; """
 
         return qry.format(local)
 
@@ -1036,7 +1100,7 @@ COST 100;
 
                     
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
-                        EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA ||'.branchs WHERE (branch<$1) OR (branch=$1 )' USING b INTO long1;
+                        EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA ||'.branchs WHERE (branch<$1)' USING b INTO long1;
                         p = (SELECT (ST_DUMP(ST_Intersection(NEW.geom, g))).geom LIMIT 1);
                         long2 = (SELECT (ST_Length(g)*ST_LineLocatePoint(ST_LineMerge(g),p)));
                         
@@ -1058,6 +1122,9 @@ COST 100;
 
 
     def pg_create_calcul_abscisse_branche(self,local='public'):
+        """
+        Old function TODO delete in future
+        """
         qry = '''CREATE OR REPLACE FUNCTION {0}.calcul_abscisse_branche()
               RETURNS trigger AS
             $BODY$
@@ -1231,7 +1298,7 @@ $BODY$;"""
 
     def pg_abscisse_branch(self,local='public'):
         """
-          SQL function which computes the branch abscissa
+          SQL function which computes the branch abscissa TODO delete in the future
         :return:
         """
         qry = """
@@ -1266,6 +1333,7 @@ $BODY$;"""
     def pg_all_branch(self, local='public'):
         """
          SQL function which updates abscissa of all branchs of one table
+         TODO delete in the future
         :return:
         """
         qry = """
