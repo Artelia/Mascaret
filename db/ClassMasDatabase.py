@@ -612,6 +612,7 @@ class ClassMasDatabase(object):
                     ('pg_all_profil', self.SCHEMA),
                     ('pg_abscisse_point', self.SCHEMA),
                     ('pg_all_point', self.SCHEMA),
+                    ('pg_up_abs_branch', self.SCHEMA),
                     ]
         error = False
         for fct, var in listefct:
