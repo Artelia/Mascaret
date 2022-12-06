@@ -1942,7 +1942,7 @@ WHERE minp != bp1 or bp1 is NULL
                   FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
             WHERE num2 != -1 ORDER BY branchnum) t4
             ON t3.mesh =t4.mesh and t3.branchnum =t4.branchnum  WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
-        WHERE minp != bp1 or bp1 is NULL
+        WHERE (minp != bp1 or bp1 is NULL) and minp !=maxp
         """
         (results, namCol) = self.run_query(sql.format(self.SCHEMA),
                                            fetch=True, namvar=True)
