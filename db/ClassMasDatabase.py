@@ -475,7 +475,7 @@ class ClassMasDatabase(object):
             tables = [Maso.events, Maso.lateral_inflows, Maso.lateral_weirs,
                       Maso.extremities,
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
-                      Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
+                      Maso.weirs, Maso.profiles, Maso.topo, Maso.visu_branchs, Maso.branchs,
                       Maso.observations, Maso.parametres, Maso.runs,
                       # Maso.laws,
                       Maso.admin_tab, Maso.visu_flood_marks,
@@ -613,6 +613,7 @@ class ClassMasDatabase(object):
                     ('pg_abscisse_point', self.SCHEMA),
                     ('pg_all_point', self.SCHEMA),
                     ('pg_up_abs_branch', self.SCHEMA),
+                    ('pg_change_visu_branch', self.SCHEMA)
                     ]
         error = False
         for fct, var in listefct:
@@ -819,8 +820,8 @@ class ClassMasDatabase(object):
         self.group = root.findGroup("Mas_{}".format(self.SCHEMA))
         if not self.group:
             self.group = root.addGroup("Mas_{}".format(self.SCHEMA))
-        lst_only_visu = ['visu_flood_marks']
-        dict_only_visu = {}
+        # lst_only_visu = []
+        # dict_only_visu = {}
         tables = list(self.register.items())
 
         # tables.sort(key=lambda x: x[1].order, reverse=True)
@@ -828,15 +829,15 @@ class ClassMasDatabase(object):
         for (name, obj) in tables:
             try:
                 # TODO modif if new geometric table
-                if obj.order < 16:
-                    if name in lst_only_visu:
-                        dict_only_visu[name] = obj
-                    else:
-                        self.add_to_view(obj)
+                if obj.order < 17:
+                    # if name in lst_only_visu:
+                    #     dict_only_visu[name] = obj
+                    # else:
+                    self.add_to_view(obj)
 
-                        if self.mgis.DEBUG:
-                            self.mgis.add_info(
-                                ' View {0} : OK'.format(obj.name))
+                    if self.mgis.DEBUG:
+                        self.mgis.add_info(
+                            ' View {0} : OK'.format(obj.name))
                 else:
                     pass
             except Exception as err:
@@ -844,20 +845,20 @@ class ClassMasDatabase(object):
                 self.mgis.add_info('Error : '.format(err))
 
         # add visualistation layer
-        group_main = self.group
-        self.group = group_main.findGroup("Visualisation".format(self.SCHEMA))
-        if not self.group:
-            self.group = group_main.addGroup(
-                "Visualisation".format(self.SCHEMA))
+        # group_main = self.group
+        # self.group = group_main.findGroup("Visualisation".format(self.SCHEMA))
+        # if not self.group:
+        #     self.group = group_main.addGroup(
+        #         "Visualisation".format(self.SCHEMA))
 
-        for name, obj in dict_only_visu.items():
-            try:
-                self.add_to_view(obj)
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(' View {0} : OK'.format(obj.name))
-            except Exception as err:
-                self.mgis.add_info('View failure!<br>{0}'.format(obj))
-                self.mgis.add_info('Error : '.format(err))
+        # for name, obj in dict_only_visu.items():
+        #     try:
+        #         self.add_to_view(obj)
+        #         if self.mgis.DEBUG:
+        #             self.mgis.add_info(' View {0} : OK'.format(obj.name))
+        #     except Exception as err:
+        #         self.mgis.add_info('View failure!<br>{0}'.format(obj))
+        #         self.mgis.add_info('Error : '.format(err))
 
         self.mgis.iface.mapCanvas().refresh()
 

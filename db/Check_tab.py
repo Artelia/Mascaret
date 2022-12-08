@@ -1137,7 +1137,7 @@ class CheckTab:
                 self.mgis.add_info('Adding new local function - OK')
 
         if valid:
-            tabs = [Maso.branchs]
+            tabs = [Maso.branchs, Maso.visu_branchs]
             for tab in tabs:
                 valid_add, _ = self.add_tab(tab)
             if not valid_add:
@@ -1145,6 +1145,17 @@ class CheckTab:
                 valid = False
             else:
                 self.mgis.add_info('Create table Branch - OK')
+
+        if valid:
+            obj = Maso.profiles()
+            obj.schema = self.mdb.SCHEMA
+            sql = obj.pg_profiles_edition()
+            err = self.mdb.run_query(sql)
+            if err:
+                self.mgis.add_info('Adding new profile trigger - ERROR')
+                valid = False
+            else:
+                self.mgis.add_info('Adding new profile trigger - OK')
 
         if valid:
             sql = """

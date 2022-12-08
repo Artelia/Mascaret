@@ -289,7 +289,7 @@ class ClassDlgImport(QDialog):
                                                         'File Selection',
                                                         self.mgis.repProject,
                                                         # QDir.homePath(),
-                                                        filter="JSON (*.json);File (*)")
+                                                        filter="JSON (*.json)")
         self.mgis.up_repProject(file_name_path)
         if file_name_path != '':
             self.txt_file.setText(file_name_path)

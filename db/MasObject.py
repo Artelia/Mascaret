@@ -243,11 +243,29 @@ class flood_marks(MasObject):
         return qry
 
 
+class visu_flood_marks(MasObject):
+    def __init__(self):
+        super(visu_flood_marks, self).__init__()
+        self.order = 4
+        self.geom_type = 'LineString'
+        self.attrs = [
+            ('gid', 'serial NOT NULL'),
+            ('id_marks', 'integer'),
+            ('CONSTRAINT visu_flood_marks_pkey', 'PRIMARY KEY(gid,id_marks)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        qry += '\n'
+        return qry
+
+
 # *****************************************
 class weirs(MasObject):
     def __init__(self):
         super(weirs, self).__init__()
-        self.order = 4
+        self.order = 5
         self.geom_type = 'Point'
         self.attrs = [
             ('gid', ' serial NOT NULL'),
@@ -280,7 +298,7 @@ class weirs(MasObject):
 class hydraulic_head(MasObject):
     def __init__(self):
         super(hydraulic_head, self).__init__()
-        self.order = 5
+        self.order = 6
         self.geom_type = 'Point'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -303,7 +321,7 @@ class hydraulic_head(MasObject):
 class lateral_inflows(MasObject):
     def __init__(self):
         super(lateral_inflows, self).__init__()
-        self.order = 6
+        self.order = 7
         self.geom_type = 'Point'
         self.attrs = [('gid', ' serial NOT NULL'),
                       ('name', ' character varying(30)'),
@@ -328,7 +346,7 @@ class lateral_inflows(MasObject):
 class lateral_weirs(MasObject):
     def __init__(self):
         super(lateral_weirs, self).__init__()
-        self.order = 7
+        self.order = 8
         self.geom_type = 'Point'
         self.attrs = [('gid serial', 'NOT NULL'),
                       ('name character', 'varying(30)'),
@@ -354,7 +372,7 @@ class lateral_weirs(MasObject):
 class tracer_lateral_inflows(MasObject):
     def __init__(self):
         super(tracer_lateral_inflows, self).__init__()
-        self.order = 8
+        self.order = 9
         self.geom_type = 'Point'
         self.attrs = [('gid', ' serial NOT NULL'),
                       ('name', ' character varying(30)'),
@@ -380,7 +398,7 @@ class tracer_lateral_inflows(MasObject):
 class outputs(MasObject):
     def __init__(self):
         super(outputs, self).__init__()
-        self.order = 9
+        self.order = 10
         self.geom_type = 'Point'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -410,7 +428,7 @@ class outputs(MasObject):
 class topo(MasObject):
     def __init__(self):
         super(topo, self).__init__()
-        self.order = 10
+        self.order = 11
         self.geom_type = 'Point'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -438,7 +456,7 @@ class topo(MasObject):
 class profiles(MasObject):
     def __init__(self):
         super(profiles, self).__init__()
-        self.order = 11
+        self.order = 12
         self.geom_type = 'MultiLineString'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -470,12 +488,23 @@ class profiles(MasObject):
         qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_profil();\n'.format(self.schema)
         return qry
 
+    def pg_profiles_edition(self):
+        qry = """CREATE TRIGGER profiles_edition 
+                AFTER INSERT OR DELETE OR UPDATE 
+                ON {0}.profiles
+                FOR EACH STATEMENT
+                EXECUTE FUNCTION {0}.change_visu_branch();
+            """
+        return qry.format(self.schema)
+
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += self.pg_create_index()
         qry += '\n'
         qry += self.pg_create_calcul_abscisse()
+        qry += '\n'
+        qry += self.pg_profiles_edition()
         return qry
 
 
@@ -483,7 +512,7 @@ class profiles(MasObject):
 class links(MasObject):
     def __init__(self):
         super(links, self).__init__()
-        self.order = 12
+        self.order = 13
         self.geom_type = 'MultiLineString'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -525,11 +554,37 @@ class links(MasObject):
         return qry
 
 
+
+#*****************************************
+class visu_branchs(MasObject):
+    def __init__(self):
+        super(visu_branchs, self).__init__()
+        self.order = 14
+        self.geom_type = 'LineString'
+        self.attrs = [('gid', 'serial NOT NULL'),
+                      ('branchnum', 'integer'),
+                      ('branch_part', 'integer'),
+                      ('prof_start', 'integer'),
+                      ('abs_start', 'double precision'),
+                      ('prof_end', 'integer'),
+                      ('abs_end', 'double precision'),
+                      ('minbedcoef', 'double precision'),
+                      ('majbedcoef', 'double precision'),
+                      ('mesh', 'double precision'),
+                      ('CONSTRAINT visu_branchs_pkey', 'PRIMARY KEY (gid)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        return qry
+
+
 #*****************************************
 class branchs(MasObject):
     def __init__(self):
         super(branchs, self).__init__()
-        self.order = 13
+        self.order = 15
         self.geom_type = 'MultiLineString'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('branch', 'serial NOT NULL'),
@@ -571,6 +626,15 @@ class branchs(MasObject):
             """
         return qry.format(self.schema)
 
+    def pg_branchs_edition(self):
+        qry = """CREATE TRIGGER branchs_edition 
+                AFTER INSERT OR DELETE OR UPDATE 
+                ON {0}.branchs
+                FOR EACH STATEMENT
+                EXECUTE FUNCTION {0}.change_visu_branch();
+            """
+        return qry.format(self.schema)
+
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
@@ -581,6 +645,8 @@ class branchs(MasObject):
         qry += self.pg_updat_actv()
         qry += '\n'
         qry += self.pg_all_up_abs_branchs()
+        qry += '\n'
+        qry += self.pg_branchs_edition()
         return qry
 
 
@@ -588,7 +654,7 @@ class branchs(MasObject):
 class basins(MasObject):
     def __init__(self):
         super(basins, self).__init__()
-        self.order = 14
+        self.order = 16
         self.geom_type = 'MultiPolygon'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -619,23 +685,6 @@ class basins(MasObject):
         return qry
 
 
-class visu_flood_marks(MasObject):
-    def __init__(self):
-        super(visu_flood_marks, self).__init__()
-        self.order = 15
-        self.geom_type = 'LineString'
-        self.attrs = [
-            ('gid', 'serial NOT NULL'),
-            ('id_marks', 'integer'),
-            ('CONSTRAINT visu_flood_marks_pkey', 'PRIMARY KEY(gid,id_marks)')]
-
-    def pg_create_table(self):
-        qry = super(self.__class__, self).pg_create_table()
-        qry += '\n'
-        qry += self.pg_create_index()
-        qry += '\n'
-        return qry
-
 
 # *******************************************
 # ******************************************
@@ -643,7 +692,7 @@ class visu_flood_marks(MasObject):
 class observations(MasObject):
     def __init__(self):
         super(observations, self).__init__()
-        self.order = 16
+        self.order = 17
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('code', 'character(10)'),
@@ -1554,6 +1603,43 @@ AS $BODY$
         """
 
         return qry
+
+    def pg_change_visu_branch(self, local='public'):
+        qry = """
+                CREATE OR REPLACE FUNCTION {0}.change_visu_branch()
+                    RETURNS trigger
+                    LANGUAGE 'plpgsql'
+                    COST 100
+                    VOLATILE NOT LEAKPROOF
+                AS $BODY$
+                    BEGIN 
+                    EXECUTE 'DELETE FROM ' || TG_TABLE_SCHEMA || '.visu_branchs';
+                    EXECUTE 'INSERT INTO ' || TG_TABLE_SCHEMA || '.visu_branchs (branchnum, branch_part, prof_start, abs_start, prof_end, abs_end, minbedcoef, majbedcoef, mesh, geom)
+                    SELECT br_id, ROW_NUMBER() OVER (PARTITION BY br_id ORDER BY pk), pr_id, absc, next_pr_id, next_absc, minbedcoef, majbedcoef, mesh, 
+                    ST_LineSubstring(gline, pk, next_pk) FROM 
+                        (SELECT 
+                         br_id, LEAD(br_id, 1) OVER (PARTITION BY br_id ORDER BY pk) As next_br_id, 
+                         pr_num As pr_id, LEAD(pr_num, 1) OVER (PARTITION BY br_id ORDER BY pk) As next_pr_id, 
+                         pk, LEAD(pk, 1) OVER (PARTITION BY br_id ORDER BY pk) As next_pk, 
+                         abscissa As absc, LEAD(abscissa, 1) OVER (PARTITION BY br_id ORDER BY pk) As next_absc, 
+                         minbedcoef, majbedcoef, mesh, planim, gline 
+                         FROM
+                            (SELECT br.branch As br_id, pr.gid As pr_id, ROW_NUMBER() OVER (ORDER BY abscissa) as pr_num, 
+                             pr.abscissa, pr.minbedcoef, pr.majbedcoef, pr.mesh, pr.planim, 
+                             ST_LineLocatePoint(ST_LineMerge(br.geom), ST_Intersection(br.geom, pr.geom)) As pk, 
+                             ST_LineMerge(br.geom) As gline 
+                             FROM ' || TG_TABLE_SCHEMA || '.profiles As pr, ' || TG_TABLE_SCHEMA || '.branchs As br 
+                             WHERE ST_Intersects(ST_LineMerge(br.geom), pr.geom) AND pr.active AND br.active 
+                             ORDER BY abscissa 
+                            ) As ord_profiles 
+                        ) As sect
+                    WHERE br_id = next_br_id ORDER BY br_id, pk';
+                    RETURN NULL;
+                    END;
+                $BODY$;
+              """
+        return qry.format(local)
+
 # *****************************************
 class laws_wq(MasObject):
     def __init__(self):
