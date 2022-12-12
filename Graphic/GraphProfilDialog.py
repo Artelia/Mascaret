@@ -706,9 +706,9 @@ class GraphProfil(GraphCommon):
                                                    'File Selection',
                                                    self.mgis.repProject,
                                                    "File (*.txt *.csv)")
-        self.mgis.up_repProject(fichiers[0])
-        if fichiers:
 
+        if fichiers:
+            self.mgis.up_repProject(fichiers[0])
             self.charger_bathy(fichiers, self.coucheProfils,
                                self.nom)
 

@@ -265,8 +265,8 @@ class ClassMeteoDialog(QDialog):
             listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection',
                                                     self.mgis.repProject,
                                                     "File (*.txt *.csv *.met)")
-        self.mgis.up_repProject(listf[0])
         if listf:
+            self.mgis.up_repProject(listf[0])
             error = False
             self.filling_tab = True
             model = self.create_tab_model()
