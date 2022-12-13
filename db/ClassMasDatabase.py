@@ -1369,12 +1369,12 @@ $BODY$
             return False
 
     def import_schema(self, file, old=False):
-        # """
-        # import schema
-        # :param file: file name
-        # :param old: old version to the importation
-        # :return:
-        # """
+        """
+        import schema
+        :param file: file name
+        :param old: old version to the importation
+        :return:
+        """
         try:
             if old:
                 exe = os.path.join(self.mgis.postgres_path, 'psql')
@@ -1401,7 +1401,7 @@ $BODY$
                     # self.mgis.add_info("{0}".format(outs.code('utf-8')))
                 p.wait()
                 if len(err) > 0:
-                    self.mgis.add_info(err)
+                    self.mgis.add_info(str(err))
                     # self.mgis.add_info("{0}".format(err.code('utf-8')))
                     return False
                 return True
@@ -1410,7 +1410,7 @@ $BODY$
                                    'Please, insert path in "path postgres" in Help / Setting / Options')
                 return False
         except Exception as e:
-            self.mgis.add_info('ERROR :', e)
+            self.mgis.add_info('ERROR : {}'.format(str(e)))
             return False
 
     def list_schema(self):
@@ -1665,7 +1665,7 @@ $BODY$
         self.ignor_schema += [namesh, actname, "{0}_tmp".format(actname)]
         # add fct if not exist
         if self.check_extension():
-            self.mgis.add_info(" Shema est {}".format(self.SCHEMA))
+            self.mgis.add_info(" Schema is {0}".format(self.SCHEMA))
             self.add_ext_postgis()
 
         if not self.check_fct_public('clone_schema'):

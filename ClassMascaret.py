@@ -1801,6 +1801,7 @@ class ClassMascaret:
         else:
             self.mgis.add_info('no transmitted variable for task_mascaret')
             return
+        self.clean_res()
         for i, scen in enumerate(dict_scen['name']):
             self.mgis.add_info("The current scenario is {}".format(scen))
             # initialise file
@@ -2292,7 +2293,7 @@ class ClassMascaret:
     def clean_res(self):
         """ Clean the run folder and copy the essential files to run mascaret"""
         files = os.listdir(self.dossierFileMasc)
-        listsup = [".opt", ".lig"]
+        listsup = [".opt", ".lig",".res"]
         for i in range(0, len(files)):
             ext = os.path.splitext(files[i])[1]
             # self.mgis.add_info('delet file rr{}rr {}'.format(ext,(ext in listsup)))
