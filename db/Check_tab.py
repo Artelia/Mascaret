@@ -184,6 +184,7 @@ class CheckTab:
                 lambda: self.update_400(),
             ],
                 'alt_tab': [
+<<<<<<< HEAD
                     {'tab': 'observations',
                      'sql': [
                          "CREATE INDEX IF NOT EXISTS "
@@ -191,6 +192,15 @@ class CheckTab:
                          "ON {0}.observations(code, type);",
                      ]},
                 ]
+=======
+                            {'tab': 'observations',
+                             'sql': [
+                                 "CREATE INDEX IF NOT EXISTS "
+                                 "observations_code_typ  "
+                                 "ON {0}.observations(code, type);",
+                             ]},
+                            ]
+>>>>>>> 6bf4a8d (fixe upgrad)
             },
             '4.0.1': {},
             '4.0.2': {
