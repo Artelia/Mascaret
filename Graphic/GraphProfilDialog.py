@@ -147,15 +147,19 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     graph_hyd.show()
                 else:
                     self.mgis.add_info('no active profiles')
-
-            if flag_hydro and couche == 'branchs':
+                    
+            if flag_hydro and (couche == 'branchs' or couche == 'visu_branchs') :
                 feature = results[0].mFeature
+                if couche == 'branchs' :
+                    fbranch = feature['branch']
+                else:
+                    fbranch = feature['branchnum']
                 # chaine='Branche ' + str(feature['branche'])
                 branches = self.mgis.mdb.select_distinct("branch", "branchs",
                                                          "active")
-                if feature['branch'] in branches['branch']:
+                if fbranch in branches['branch']:
                     graph_hyd_pk = GraphResultDialog(self.mgis, "hydro_pk",
-                                                     feature['branch'])
+                                                     fbranch)
                     graph_hyd_pk.show()
                 else:
                     self.mgis.add_info('no active branch')

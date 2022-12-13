@@ -88,11 +88,11 @@ class GraphCommon(QWidget):
         """variables in common for profile graphics"""
         self.gid = gid
         self.coucheProfils = self.mgis.coucheProfils
-        # try:
-        self.liste = self.mdb.select("profiles", "", "abscissa")
-        # except:
-        #     self.mgis.add_info("Error Select profils")
-
+        try:
+            self.liste = self.mdb.select("profiles", "", "abscissa", verbose=True)
+        except:
+            self.mgis.add_info("Error Select profils")
+            return
         self.position = self.liste["gid"].index(self.gid)
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
         self.nom = self.feature['name']
