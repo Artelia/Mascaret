@@ -1177,7 +1177,7 @@ CREATE OR REPLACE FUNCTION {0}.insert_new_branch(source_schema text)
 AS $BODY$
 DECLARE
    rec              record;
-   geom_b    geometry;
+   geom_b    public.geometry;
    actb boolean;
    startb character varying(30);
    endb character varying(30);
@@ -1185,6 +1185,9 @@ DECLARE
 -- Disable trigger
    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs DISABLE TRIGGER branchs_chstate_active';
    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles DISABLE TRIGGER profiles_calcul_abscisse';
+   EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles DISABLE TRIGGER profiles_edition';
+   EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs DISABLE TRIGGER all_up_abs_branchs';
+   EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs DISABLE TRIGGER branchs_edition';
 -- creation new table
    FOR rec IN
    EXECUTE 'SELECT DISTINCT branch as id_b  FROM  '||  quote_ident(source_schema) ||'.branchs_old'
@@ -1214,6 +1217,9 @@ DECLARE
 -- Enable trigger
     EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs ENABLE TRIGGER branchs_chstate_active';
     EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles ENABLE TRIGGER profiles_calcul_abscisse';
+    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles ENABLE TRIGGER profiles_edition';
+    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs  ENABLE TRIGGER all_up_abs_branchs';
+    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs  ENABLE TRIGGER branchs_edition';
     RETURN;
 END;
 $BODY$;

@@ -104,11 +104,11 @@ class MasObject(object):
     AS $BODY$
          DECLARE
             long2	double precision;
-            g	geometry;
-            p	geometry;
+            g	public.geometry;
+            p	public.geometry;
             b	integer;
             d	double precision;
-            geom_p geometry;
+            geom_p public.geometry;
             abscissa  double precision;
          BEGIN
 			EXECUTE 'SELECT geom FROM {0}.profiles WHERE gid = $1' USING id_profil INTO geom_p;
@@ -1036,7 +1036,7 @@ COST 100;
             DECLARE  
                 long1	double precision; 
                 long2	double precision;  
-                g	geometry; 
+                g	public.geometry; 
                 b	integer; 
                 z	integer; 
                 d	double precision; 
@@ -1093,7 +1093,7 @@ COST 100;
                 long1	double precision; 
                 long2	double precision;  
 				pk	double precision;  
-                g	geometry; 
+                g	public.geometry; 
                 b	integer; 
                 z	integer; 
                 d	double precision; 
@@ -1147,8 +1147,8 @@ $BODY$; """
                 DECLARE
                     long1	double precision;
                     long2	double precision;
-                    g	geometry;
-                    p	geometry;
+                    g	public.geometry;
+                    p	public.geometry;
                     b	integer;
                     z	integer;
                     d	double precision;
@@ -1262,11 +1262,11 @@ $$ LANGUAGE plpgsql;"""
          DECLARE
             long2	double precision;
             long1	double precision;
-            g	geometry;
-            p	geometry;
+            g	public.geometry;
+            p	public.geometry;
             b	integer;
             d	double precision;
-            geom_p geometry;
+            geom_p public.geometry;
          BEGIN
 		    EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_prof INTO geom_p;
 			EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
@@ -1322,11 +1322,11 @@ AS $BODY$
      DECLARE   
         long2	double precision;  
         long1	double precision;  
-        g	geometry; 
+        g	public.geometry; 
         b	integer; 
         d	double precision; 
         f	double precision;         
-        geom_p  geometry;    
+        geom_p  public.geometry;    
 
      BEGIN
          EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_point INTO geom_p;
@@ -1386,7 +1386,7 @@ AS $BODY$
     DECLARE
         long1	float;
         long2	float;
-        geom_b  geometry;
+        geom_b  public.geometry;
         branch integer;
         zonenum integer;
     BEGIN
@@ -1475,14 +1475,14 @@ AS $BODY$
  
             DECLARE  
                 long2	double precision;  
-                g	geometry; 
+                g	public.geometry; 
                 b	integer; 
                 d	double precision; 
                 f	double precision;
                 test	boolean;       
                 val  double precision;
-                new_line  geometry;
-                geom_final_p geometry;
+                new_line  public.geometry;
+                geom_final_p public.geometry;
                 srid integer;
                 
              
