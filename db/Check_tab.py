@@ -1078,15 +1078,7 @@ class CheckTab:
         self.mgis.add_info('*** Update 5.1.1  ***')
         valid = True
         check_fill = False
-        sql = """SELECT pid, count(*) FROM (SELECT p.gid as pid ,b.gid as bid From  {0}.profiles AS p,
-                {0}.branchs as b WHERE ST_INTERSECTS(p.geom, b.geom) )
-                AS nb GROUP BY pid Having count(*)>1;"""
-        results = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
-        lst_profil_err = []
-        if results:
-            if len(results) > 0:
-                for val in results:
-                    lst_profil_err.append(val[0])
+        lst_profil_err = self.mdb.check_valid_profil()
         if valid:
             #  RENAME old branchs table
             sql = "ALTER TABLE IF EXISTS {0}.branchs RENAME TO branchs_old;".format(self.mdb.SCHEMA)
@@ -1325,7 +1317,7 @@ $BODY$;
                 sql += 'ALTER SEQUENCE IF EXISTS  {0}.branchs_old_gid_seq RENAME TO branchs_gid_seq;'.format(
                     self.mdb.SCHEMA)
                 err = self.mdb.run_query(sql)
-
+        print(lst_profil_err)
         if len(lst_profil_err) > 0:
             txt = '\n'.join([str(ival) for ival in lst_profil_err])
             ok = self.box.info("WARNING:\n\n"

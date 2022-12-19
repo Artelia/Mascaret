@@ -2044,3 +2044,27 @@ WHERE (num2 != numm1 OR numm1 is NULL)
             dico_ks['zoneabsend'].append(maxp)
 
         return dico_ks
+
+    def check_valid_profil(self):
+        """
+        Check if profile intersect multiBranch or MultiPoint
+        """
+        sql = """SELECT pid, count(*) FROM (SELECT p.gid as pid ,b.gid as bid From  {0}.profiles AS p,
+                       {0}.branchs as b WHERE ST_INTERSECTS(p.geom, b.geom) )
+                       AS nb GROUP BY pid Having count(*)>1;"""
+        results = self.run_query(sql.format(self.SCHEMA), fetch=True)
+        lst_profil_err = []
+        if results:
+            if len(results) > 0:
+                for val in results:
+                    lst_profil_err.append(val[0])
+
+        sql ="""SELECT p.gid as pid ,b.gid as bid From  {0}.profiles AS p,
+                {0}.branchs as b WHERE  st_geometrytype(ST_Intersection(p.geom, b.geom))='ST_MultiPoint';"""
+        results = self.run_query(sql.format(self.SCHEMA), fetch=True)
+        if results:
+            if len(results) > 0:
+                for val in results:
+                    lst_profil_err.append(val[0])
+        return  lst_profil_err
+
