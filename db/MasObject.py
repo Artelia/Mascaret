@@ -1626,7 +1626,7 @@ AS $BODY$
                          FROM
                             (SELECT br.branch As br_id, pr.gid As pr_id, ROW_NUMBER() OVER (ORDER BY abscissa) as pr_num, 
                              pr.abscissa, pr.minbedcoef, pr.majbedcoef, pr.mesh, pr.planim, 
-                             ST_LineLocatePoint(ST_LineMerge(br.geom), ST_Intersection(br.geom, pr.geom)) As pk, 
+                             ST_LineLocatePoint(ST_LineMerge(br.geom), ST_GeometryN(ST_Intersection(br.geom, pr.geom),1)) As pk, 
                              ST_LineMerge(br.geom) As gline 
                              FROM ' || TG_TABLE_SCHEMA || '.profiles As pr, ' || TG_TABLE_SCHEMA || '.branchs As br 
                              WHERE ST_Intersects(ST_LineMerge(br.geom), pr.geom) AND pr.active AND br.active 
