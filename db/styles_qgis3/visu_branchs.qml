@@ -782,16 +782,16 @@
     <constraint field="mesh" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
   </constraints>
   <constraintExpressions>
-    <constraint desc="" exp="" field="gid"/>
-    <constraint desc="" exp="" field="branchnum"/>
-    <constraint desc="" exp="" field="branch_part"/>
-    <constraint desc="" exp="" field="prof_start"/>
-    <constraint desc="" exp="" field="abs_start"/>
-    <constraint desc="" exp="" field="prof_end"/>
-    <constraint desc="" exp="" field="abs_end"/>
-    <constraint desc="" exp="" field="minbedcoef"/>
-    <constraint desc="" exp="" field="majbedcoef"/>
-    <constraint desc="" exp="" field="mesh"/>
+    <constraint field="gid" exp="" desc=""/>
+    <constraint field="branchnum" exp="" desc=""/>
+    <constraint field="branch_part" exp="" desc=""/>
+    <constraint field="prof_start" exp="" desc=""/>
+    <constraint field="abs_start" exp="" desc=""/>
+    <constraint field="prof_end" exp="" desc=""/>
+    <constraint field="abs_end" exp="" desc=""/>
+    <constraint field="minbedcoef" exp="" desc=""/>
+    <constraint field="majbedcoef" exp="" desc=""/>
+    <constraint field="mesh" exp="" desc=""/>
   </constraintExpressions>
   <expressionfields/>
   <attributeactions>
@@ -841,18 +841,18 @@ def my_form_open(dialog, layer, feature):
   <featformsuppress>0</featformsuppress>
   <editorlayout>generatedlayout</editorlayout>
   <editable>
-    <field editable="1" name="abs_end"/>
-    <field editable="1" name="abs_start"/>
-    <field editable="1" name="branch_part"/>
-    <field editable="1" name="branchnum"/>
-    <field editable="1" name="gid"/>
-    <field editable="1" name="majbedcoef"/>
-    <field editable="1" name="mesh"/>
-    <field editable="1" name="minbedcoef"/>
-    <field editable="1" name="part"/>
-    <field editable="1" name="planim"/>
-    <field editable="1" name="prof_end"/>
-    <field editable="1" name="prof_start"/>
+    <field name="abs_end" editable="1"/>
+    <field name="abs_start" editable="1"/>
+    <field name="branch_part" editable="1"/>
+    <field name="branchnum" editable="1"/>
+    <field name="gid" editable="1"/>
+    <field name="majbedcoef" editable="1"/>
+    <field name="mesh" editable="1"/>
+    <field name="minbedcoef" editable="1"/>
+    <field name="part" editable="1"/>
+    <field name="planim" editable="1"/>
+    <field name="prof_end" editable="1"/>
+    <field name="prof_start" editable="1"/>
   </editable>
   <labelOnTop>
     <field labelOnTop="0" name="abs_end"/>
