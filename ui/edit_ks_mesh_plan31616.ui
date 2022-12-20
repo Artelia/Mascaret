@@ -346,7 +346,7 @@
         <item>
          <widget class="QPushButton" name="bcancel">
           <property name="text">
-           <string>Cancel</string>
+           <string>Close</string>
           </property>
          </widget>
         </item>

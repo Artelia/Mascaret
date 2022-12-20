@@ -92,6 +92,7 @@ class ClassEditKsDialog(BASE, FORM_CLASS):
 
         tab = {}
         lst_name = []
+
         for feature in profil.selectedFeatures():
             tab[feature["gid"]] = {}
             lst_name.append(feature["name"])
@@ -99,15 +100,12 @@ class ClassEditKsDialog(BASE, FORM_CLASS):
             for var, ctrl, crtl2 in self.ctrl_ch:
                 if ctrl.isChecked():
                     tab[feature["gid"]][var] = crtl2.value()
+        ok = self.box.yes_no_q("Do you confirm the modification of the {} profiles ?".format(len(lst_name)), title='')
 
-        self.mgis.mdb.update('profiles', tab, var="gid")
-        if self.mgis.DEBUG:
-            self.mgis.add_info('List of profile which were updated :\n {}'.format(','.join(lst_name)))
-        ok = self.box.yes_no_q('Do you want to update other profiles ?', title='')
         if ok:
-            return
-
-        self.close()
+            self.mgis.mdb.update('profiles', tab, var="gid")
+            #if self.mgis.DEBUG:
+            self.mgis.add_info('List of profile which were updated :\n {}'.format(' , '.join(lst_name)))
 
     def closeEvent(self, event):
         QtWidgets.QDockWidget.closeEvent(self, event)
