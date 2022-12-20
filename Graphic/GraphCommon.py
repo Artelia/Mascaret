@@ -96,6 +96,7 @@ class GraphCommon(QWidget):
         self.position = self.liste["gid"].index(self.gid)
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
         self.nom = self.feature['name']
+        self.planim = self.feature['planim']
 
         self.courbes = []
 

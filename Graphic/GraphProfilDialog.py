@@ -286,10 +286,11 @@ class GraphProfil(GraphCommon):
         self.ui.bt_add_line.clicked.connect(self.add_line)
         self.ui.bt_del_line.clicked.connect(self.del_line)
 
+        self.ui.cb_planim.toggled.connect(self.display_planim)
+
         self.ui.tab_aff.hide()
 
     def init_ui(self):
-
         # variables
         self.tab = {'x': [], 'z': []}
         self.selected = {}
@@ -327,7 +328,9 @@ class GraphProfil(GraphCommon):
         # figure
 
         self.axes = self.fig.add_subplot(111)
-        self.axes.grid(True)
+        self.axes.grid(visible=True, axis='both', which='major', color='black', linestyle='-')
+        self.axes.grid(visible=False, axis='y', which='minor', color='lightgrey', linestyle='-')
+
         # courbe
         self.courbeProfil, = self.axes.plot([], [], zorder=100, label='Profile')
 
@@ -473,6 +476,7 @@ class GraphProfil(GraphCommon):
         self.feature = {k: v[pos] for k, v in self.liste.items()}
         self.nom = self.feature['name']
         self.gid = self.feature['gid']
+        self.planim = self.feature['planim']
 
         self.extrait_profil()
         self.extrait_topo()
@@ -1075,11 +1079,31 @@ class GraphProfil(GraphCommon):
                     self.mgis.add_info("Warning:Out of graph")
         self.fig.canvas.draw()
 
+    def display_planim(self):
+        if self.ui.cb_planim.isChecked():
+            self.axes.minorticks_on()
+            ta = self.tab
+            self.axes.set_yticks(np.arange(min(ta['z']), max(ta['z'] + self.planim), self.planim), minor=True)
+            self.axes.grid(visible=True, axis='y', which='minor')
+        else:
+            self.axes.minorticks_off()
+            self.axes.grid(visible=False, axis='y', which='minor')
+        self.canvas.draw()
+
     def maj_graph(self, allvis=False):
         """Updating  graphic"""
         self.ui.label_Title.setText(_translate("ProfilGraph", self.nom, None))
         ta = self.tab
         self.courbeProfil.set_data(ta['x'], ta['z'])
+
+        if self.planim and ta['x']:
+            self.ui.cb_planim.setEnabled(True)
+            self.display_planim()
+        else:
+            self.ui.cb_planim.setCheckState(0)
+            self.ui.cb_planim.setEnabled(False)
+        #self.axes.grid(visible=True, axis='y', which='minor')
+
 
         self.remplir_tab([ta['x'], ta['z']])
 
