@@ -6,7 +6,7 @@
     <Searchable>1</Searchable>
     <Private>0</Private>
   </flags>
-  <temporal startField="" endExpression="" limitMode="0" accumulate="0" durationField="" durationUnit="min" fixedDuration="0" mode="0" startExpression="" enabled="0" endField="">
+  <temporal mode="0" fixedDuration="0" durationField="" limitMode="0" enabled="0" endField="" startExpression="" accumulate="0" startField="" endExpression="" durationUnit="min">
     <fixedRange>
       <start></start>
       <end></end>
@@ -89,33 +89,33 @@
         </layer>
         <layer pass="0" locked="0" enabled="1" class="SimpleLine">
           <Option type="Map">
-            <Option value="0" name="align_dash_pattern" type="QString"/>
-            <Option value="flat" name="capstyle" type="QString"/>
-            <Option value="5;2" name="customdash" type="QString"/>
-            <Option value="3x:0,0,0,0,0,0" name="customdash_map_unit_scale" type="QString"/>
-            <Option value="MM" name="customdash_unit" type="QString"/>
-            <Option value="0" name="dash_pattern_offset" type="QString"/>
-            <Option value="3x:0,0,0,0,0,0" name="dash_pattern_offset_map_unit_scale" type="QString"/>
-            <Option value="MM" name="dash_pattern_offset_unit" type="QString"/>
-            <Option value="0" name="draw_inside_polygon" type="QString"/>
-            <Option value="bevel" name="joinstyle" type="QString"/>
-            <Option value="198,198,198,255" name="line_color" type="QString"/>
-            <Option value="solid" name="line_style" type="QString"/>
-            <Option value="5.06" name="line_width" type="QString"/>
-            <Option value="MM" name="line_width_unit" type="QString"/>
-            <Option value="0" name="offset" type="QString"/>
-            <Option value="3x:0,0,0,0,0,0" name="offset_map_unit_scale" type="QString"/>
-            <Option value="MM" name="offset_unit" type="QString"/>
-            <Option value="0" name="ring_filter" type="QString"/>
-            <Option value="0" name="trim_distance_end" type="QString"/>
-            <Option value="3x:0,0,0,0,0,0" name="trim_distance_end_map_unit_scale" type="QString"/>
-            <Option value="MM" name="trim_distance_end_unit" type="QString"/>
-            <Option value="0" name="trim_distance_start" type="QString"/>
-            <Option value="3x:0,0,0,0,0,0" name="trim_distance_start_map_unit_scale" type="QString"/>
-            <Option value="MM" name="trim_distance_start_unit" type="QString"/>
-            <Option value="0" name="tweak_dash_pattern_on_corners" type="QString"/>
-            <Option value="0" name="use_custom_dash" type="QString"/>
-            <Option value="3x:0,0,0,0,0,0" name="width_map_unit_scale" type="QString"/>
+            <Option type="QString" value="0" name="align_dash_pattern"/>
+            <Option type="QString" value="flat" name="capstyle"/>
+            <Option type="QString" value="5;2" name="customdash"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="customdash_map_unit_scale"/>
+            <Option type="QString" value="MM" name="customdash_unit"/>
+            <Option type="QString" value="0" name="dash_pattern_offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="dash_pattern_offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="dash_pattern_offset_unit"/>
+            <Option type="QString" value="0" name="draw_inside_polygon"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="255,127,0,255" name="line_color"/>
+            <Option type="QString" value="solid" name="line_style"/>
+            <Option type="QString" value="5.06" name="line_width"/>
+            <Option type="QString" value="MM" name="line_width_unit"/>
+            <Option type="QString" value="0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="0" name="ring_filter"/>
+            <Option type="QString" value="0" name="trim_distance_end"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="trim_distance_end_map_unit_scale"/>
+            <Option type="QString" value="MM" name="trim_distance_end_unit"/>
+            <Option type="QString" value="0" name="trim_distance_start"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="trim_distance_start_map_unit_scale"/>
+            <Option type="QString" value="MM" name="trim_distance_start_unit"/>
+            <Option type="QString" value="0" name="tweak_dash_pattern_on_corners"/>
+            <Option type="QString" value="0" name="use_custom_dash"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="width_map_unit_scale"/>
           </Option>
           <prop v="0" k="align_dash_pattern"/>
           <prop v="flat" k="capstyle"/>
@@ -782,16 +782,16 @@
     <constraint field="mesh" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
   </constraints>
   <constraintExpressions>
-    <constraint field="gid" exp="" desc=""/>
-    <constraint field="branchnum" exp="" desc=""/>
-    <constraint field="branch_part" exp="" desc=""/>
-    <constraint field="prof_start" exp="" desc=""/>
-    <constraint field="abs_start" exp="" desc=""/>
-    <constraint field="prof_end" exp="" desc=""/>
-    <constraint field="abs_end" exp="" desc=""/>
-    <constraint field="minbedcoef" exp="" desc=""/>
-    <constraint field="majbedcoef" exp="" desc=""/>
-    <constraint field="mesh" exp="" desc=""/>
+    <constraint desc="" exp="" field="gid"/>
+    <constraint desc="" exp="" field="branchnum"/>
+    <constraint desc="" exp="" field="branch_part"/>
+    <constraint desc="" exp="" field="prof_start"/>
+    <constraint desc="" exp="" field="abs_start"/>
+    <constraint desc="" exp="" field="prof_end"/>
+    <constraint desc="" exp="" field="abs_end"/>
+    <constraint desc="" exp="" field="minbedcoef"/>
+    <constraint desc="" exp="" field="majbedcoef"/>
+    <constraint desc="" exp="" field="mesh"/>
   </constraintExpressions>
   <expressionfields/>
   <attributeactions>
@@ -841,18 +841,18 @@ def my_form_open(dialog, layer, feature):
   <featformsuppress>0</featformsuppress>
   <editorlayout>generatedlayout</editorlayout>
   <editable>
-    <field name="abs_end" editable="1"/>
-    <field name="abs_start" editable="1"/>
-    <field name="branch_part" editable="1"/>
-    <field name="branchnum" editable="1"/>
-    <field name="gid" editable="1"/>
-    <field name="majbedcoef" editable="1"/>
-    <field name="mesh" editable="1"/>
-    <field name="minbedcoef" editable="1"/>
-    <field name="part" editable="1"/>
-    <field name="planim" editable="1"/>
-    <field name="prof_end" editable="1"/>
-    <field name="prof_start" editable="1"/>
+    <field editable="1" name="abs_end"/>
+    <field editable="1" name="abs_start"/>
+    <field editable="1" name="branch_part"/>
+    <field editable="1" name="branchnum"/>
+    <field editable="1" name="gid"/>
+    <field editable="1" name="majbedcoef"/>
+    <field editable="1" name="mesh"/>
+    <field editable="1" name="minbedcoef"/>
+    <field editable="1" name="part"/>
+    <field editable="1" name="planim"/>
+    <field editable="1" name="prof_end"/>
+    <field editable="1" name="prof_start"/>
   </editable>
   <labelOnTop>
     <field labelOnTop="0" name="abs_end"/>
