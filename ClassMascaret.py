@@ -2602,13 +2602,14 @@ class ClassMascaret:
         return False
 
     def add_res_idx(self, id_runs, times, pks):
-        dict_idx = self.get_idruntpk()
         values_idx = []
         if isinstance(id_runs, list):
+            dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_runs[0]))
             for id_run, time, pk in zip(id_runs, times, pks):
                 if (id_run, time, pk) not in dict_idx.keys():
                     values_idx.append([id_run, time, pk])
         else:
+            dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_runs))
             if (id_runs, times, pks) not in dict_idx.keys():
                 values_idx.append([id_runs, times, pks])
 
@@ -3014,7 +3015,7 @@ class ClassMascaret:
             self.stock_res_api(self.save_res_struct[0],self.save_res_struct[1])
     def get_idruntpk(self):
         dict_idx = dict()
-        tmp = self.mdb.select('results_idx', list_var=['idruntpk', 'id_runs', 'time', 'pknum'])
+        tmp = self.mdb.select('results_idx', list_var=['idruntpk', 'id_runs', 'time', 'pknum'], where=where)
         if tmp:
             for iter_id in range(len(tmp["idruntpk"])):
                 dict_idx[(tmp['id_runs'][iter_id], tmp['time'][iter_id], tmp['pknum'][iter_id])] \
@@ -3039,7 +3040,7 @@ class ClassMascaret:
 
         # insert table result_idx
         self.add_res_idx([id_run for ii in range(len(lpk))], val['TIME'], lpk)
-        dict_idx = self.get_idruntpk()
+        dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_run))
         if not dict_idx:
             return False
         values = []

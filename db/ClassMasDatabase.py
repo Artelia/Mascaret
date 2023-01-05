@@ -1221,6 +1221,7 @@ $BODY$
                 cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
                 cur.copy_from(file, '{0}.{1}'.format(self.SCHEMA, table),
                               columns=col_tab)
+                self.con.commit()
                 del file
 
         except Exception as e:
