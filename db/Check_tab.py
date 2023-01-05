@@ -114,10 +114,11 @@ class CheckTab:
                 {'tab': Maso.results_var, 'overwrite': False},
                 {'tab': Maso.runs_graph, 'overwrite': False},
             ],
-                'alt_tab': [{'tab': 'runs', 'sql': [
-                    "ALTER TABLE {0}.runs ADD COLUMN IF NOT "
-                    "EXISTS init_date timestamp "
-                    "without time zone;"]},
+                'alt_tab': [
+                            {'tab': 'runs', 'sql': [
+                                "ALTER TABLE {0}.runs ADD COLUMN IF NOT "
+                                "EXISTS init_date timestamp "
+                                "without time zone;"]},
                             {'tab': 'outputs', 'sql': [
                                 "ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
                                 "EXISTS active boolean DEFAULT TRUE;"]},
@@ -300,14 +301,17 @@ class CheckTab:
                                         lst_tab = modif[proc]
                                         for tab in lst_tab:
                                             if proc == 'add_tab':
+                                                #self.mgis.add_info('add_tab {} {}'.format(ver ,tab))
                                                 valid, tab_name = self.add_tab(
                                                     tab["tab"],
                                                     tab["overwrite"])
                                             elif proc == 'alt_tab':
                                                 tab_name = tab["tab"]
+                                                #self.mgis.add_info('alt_tab {} {}'.format(ver ,tab))
                                                 valid = self.alt_tab(tab_name,
                                                                      tab["sql"])
                                             elif proc == 'del_tab':
+                                                #self.mgis.add_info('del_tab {} {}'.format(ver, tab))
                                                 tab_name = tab
                                                 valid = self.del_tab(tab_name)
                                             else:
@@ -324,6 +328,7 @@ class CheckTab:
                                             if tab_name in tabs_no:
                                                 tabs_no.remove(tab_name)
                                     else:
+                                        #self.mgis.add_info('fct_tab {} {}'.format(ver, tab))
                                         lst_fct = modif[proc]
                                         for fct in lst_fct:
                                             test_gd = fct()
@@ -476,12 +481,12 @@ class CheckTab:
                 "SELECT DISTINCT type_res FROM {0}.results_var".format(
                     self.mdb.SCHEMA),
                 fetch=True)
+
             lst_typ_res = [r[0] for r in rows]
             rows = self.mdb.run_query(
                 "SELECT id, run, scenario FROM {0}.runs".format(
                     self.mdb.SCHEMA), fetch=True)
             dict_runs = {r[0]: {"run": r[1], "scen": r[2]} for r in rows}
-
             for typ_res in lst_typ_res:
                 rows = self.mdb.run_query(
                     "SELECT DISTINCT id_runs FROM {0}.results_old WHERE var in "
@@ -501,7 +506,7 @@ class CheckTab:
             for run in dict_runs.keys():
                 if run not in lst_exist:
                     self.fill_result_sect(run)
-
+                    
             # ADD runs_graph
             for id_runs in dict_runs.keys():
                 if id_runs not in lst_exist:
@@ -582,12 +587,7 @@ class CheckTab:
         except Exception as e:
             self.mgis.add_info("Error convert_all_result : {}".format(str(e)))
             return False
-        if convert:
-            # TODO delete table
-            # self.mdb.drop_table('resutlats')
-            # self.mdb.drop_table('resutlats_basin')
-            # self.mdb.drop_table('resultats_links')
-            pass
+
         return True
 
     def convert_result(self, id_run, typ_res):
@@ -784,8 +784,8 @@ class CheckTab:
         :return:
         """
         try:
-            self.update_fct_calc_abs()
 
+            self.update_fct_calc_abs()
             self.mdb.add_fct_for_visu()
 
             qry = 'DROP TRIGGER IF EXISTS branchs_chstate_active ' \
@@ -823,6 +823,7 @@ class CheckTab:
             qry += cl.pg_calcul_abscisse_flood()
             qry += '\n'
             self.mdb.run_query(qry)
+
             return True
         except Exception as e:
             self.mgis.add_info(
@@ -1008,7 +1009,6 @@ class CheckTab:
         err, _ = self.add_tab(Maso.results_val, False)
         if not err:
             sorti = False
-
         if 'results_old' not in lst_tab:
             sql = 'ALTER TABLE {0}.results RENAME TO results_old;'
             sql = sql.format(self.mdb.SCHEMA)
@@ -1055,6 +1055,7 @@ class CheckTab:
 
     def change_clone_shema_trigger(self):
         """ update 5.0.2 version"""
+
         self.change_branchs_chstate_active()
         qry = "DROP FUNCTION clone_schema(text, text,text, boolean, boolean);"
         try:
@@ -1317,7 +1318,6 @@ $BODY$;
                 sql += 'ALTER SEQUENCE IF EXISTS  {0}.branchs_old_gid_seq RENAME TO branchs_gid_seq;'.format(
                     self.mdb.SCHEMA)
                 err = self.mdb.run_query(sql)
-        print(lst_profil_err)
         if len(lst_profil_err) > 0:
             txt = '\n'.join([str(ival) for ival in lst_profil_err])
             ok = self.box.info("WARNING:\n\n"

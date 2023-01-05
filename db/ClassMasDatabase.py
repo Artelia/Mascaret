@@ -711,8 +711,8 @@ class ClassMasDatabase(object):
     def add_fct_for_visu(self):
         """ add fct psql for the visualisation"""
         cl = Maso.class_fct_psql()
-        lfct = [cl.pg_delete_visu_flood_marks(),
-                cl.pg_create_calcul_abscisse_point_flood()]
+        lfct = [cl.pg_delete_visu_flood_marks(self.SCHEMA),
+                cl.pg_create_calcul_abscisse_point_flood(self.SCHEMA)]
         qry = ''
         for sql in lfct:
             qry += sql
