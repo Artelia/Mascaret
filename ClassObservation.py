@@ -244,7 +244,7 @@ class ClassEventObsDialog(QDialog):
                                                          filter="CSV (*.csv);;File (*)")
         if not file_name_path:
             return
-        self.mgis.up_repProject(file_name_path[0])
+        self.mgis.up_rep_project(file_name_path[0])
         succes, recs = self.read_csv(file_name_path)
 
         dbls = None

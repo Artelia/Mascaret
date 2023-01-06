@@ -177,7 +177,7 @@
      <x>0</x>
      <y>0</y>
      <width>902</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -235,6 +235,7 @@
     <addaction name="actionExport_Model"/>
     <addaction name="actionImport_Model"/>
     <addaction name="actionImport_Old_Model"/>
+    <addaction name="actionTo_clone_Model"/>
    </widget>
    <widget class="QMenu" name="menuRun">
     <property name="title">
@@ -764,6 +765,11 @@
   <action name="actionUpdate_Zones">
    <property name="text">
     <string>Update Zones</string>
+   </property>
+  </action>
+  <action name="actionTo_clone_Model">
+   <property name="text">
+    <string>To clone Model</string>
    </property>
   </action>
  </widget>

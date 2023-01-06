@@ -2250,7 +2250,7 @@ class ClassMascaret:
 
         try:
             fichiers = fichiers[0]
-            self.mgis.up_repProject(fichiers)
+            self.mgis.up_rep_project(fichiers)
         except IndexError:
             self.mgis.add_info("Cancel  init file")
             return

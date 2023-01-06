@@ -995,7 +995,7 @@ class ClassHydroLawsDialog(QDialog):
         file, _ = QFileDialog.getOpenFileName(None, 'File Selection',
                                               self.mgis.repProject,
                                               "File (*.txt *.csv *.loi)")
-        self.mgis.up_repProject(file)
+        self.mgis.up_rep_project(file)
         
         if file:
             if file[-4:] == ".loi":

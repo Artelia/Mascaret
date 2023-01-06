@@ -23,37 +23,34 @@ import os
 import posixpath
 
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.uic import *
 from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
+from .ClassDownload import ClassDownloadMasc
+from .ClassEditKsDialog import ClassEditKsDialog
+from .ClassImportExportDialog import ClassDlgExport, ClassDlgImport, CloneTask
+from .ClassImport_res import ClassImportRes
 from .ClassMNT import ClassMNT
 from .ClassMascaret import ClassMascaret
+from .ClassObservation import ClassEventObsDialog
 from .ClassParameterDialog import ClassParameterDialog
-from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .Function import read_version
+from .Graphic.GraphProfilDialog import IdentifyFeatureTool
+from .HydroLawsDialog import ClassHydroLawsDialog
+from .Structure.MobilSingDialog import ClassMobilSingDialog
 # # structures
 from .Structure.StructureDialog import ClassStructureDialog
-from .Structure.MobilSingDialog import ClassMobilSingDialog
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
-from .ClassObservation import ClassEventObsDialog
-from .db.ClassMasDatabase import ClassMasDatabase
 from .db.Check_tab import CheckTab
-from .ui.custom_control import ClassWarningBox
-from .ClassDownload import ClassDownloadMasc
-from .ClassImportExportDialog import ClassDlgExport, ClassDlgImport
-from .ClassImport_res import ClassImportRes
+from .db.ClassMasDatabase import ClassMasDatabase
 from .scores.ClassScoresDialog import ClassScoresDialog
-from .HydroLawsDialog import ClassHydroLawsDialog
-from .ClassEditKsDialog  import  ClassEditKsDialog
-
-from .Graphic.GraphBCDialog import GraphBCDialog
-
-from qgis.PyQt.QtWidgets import *
+from .ui.custom_control import ClassWarningBox
 
 
 class MascPlugDialog(QMainWindow):
@@ -142,6 +139,7 @@ class MascPlugDialog(QMainWindow):
         self.update_default_crs()
 
         # DB
+        self.ui.actionTo_clone_Model.triggered.connect(self.clone_model)
         self.ui.actionRefresh_Database.triggered.connect(self.conn_changed)
         self.ui.actionCreate_New_Model.triggered.connect(self.db_create_model)
         self.ui.actionDeleteModel.triggered.connect(self.db_delete_model)
@@ -244,7 +242,6 @@ class MascPlugDialog(QMainWindow):
         # Laws
         self.ui.actionHydro_Laws.triggered.connect(self.fct_hydro_laws)
 
-        # TODO Finaliser
         self.dockwidgetKs = None
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
 
@@ -254,6 +251,7 @@ class MascPlugDialog(QMainWindow):
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(
             self.import_old_model_dgl)
+        # TODO DELETE AFTER
         self.ui.menuUpate_table.menuAction().setVisible(False)
 
     def add_info(self, text):
@@ -298,7 +296,8 @@ class MascPlugDialog(QMainWindow):
                           "Load Model",
                           "Create New Model",
                           "Delete Model",
-                          "Import Model"]
+                          "Import Model",
+                          "Import Old Model"]
         for t in self.ui.dbToolBar.findChildren(QToolButton):
             if t.text() in self.list_menu:
                 t.setEnabled(True)
@@ -310,7 +309,8 @@ class MascPlugDialog(QMainWindow):
         else:
             pass
 
-        self.actions2Disable = [self.ui.actionExport_Model]
+        self.actions2Disable = [self.ui.actionExport_Model,
+                                self.ui.actionTo_clone_Model]
         self.ui.menuDB.findChildren(QAction)[0].setEnabled(True)
         for a in self.actions2Disable:
             a.setDisabled(True)
@@ -352,7 +352,7 @@ class MascPlugDialog(QMainWindow):
         settings.setValue("/MasPlug/mainWindow/flags", self.windowFlags())
         self.write_settings()
 
-        if self.dockwidgetKs is not None :
+        if self.dockwidgetKs is not None:
             self.dockwidgetKs.close()
         QMainWindow.closeEvent(self, e)
 
@@ -424,14 +424,14 @@ class MascPlugDialog(QMainWindow):
     def db_create_model(self):
         """Model creation"""
         cond = True
-        lst_sh =  self.mdb.list_schema()
+        lst_sh = self.mdb.list_schema()
         namesh = None
         while cond:
             model_name, ok = QInputDialog.getText(self, 'New Model',
                                                   'New Model name:')
             if ok:
                 namesh = model_name.lower()
-                if namesh in lst_sh :
+                if namesh in lst_sh:
                     namesh = None
                     self.box.info("The schema name already exists.\n"
                                   " Please choose a new name.")
@@ -765,6 +765,7 @@ class MascPlugDialog(QMainWindow):
         if not file_name_path:
             return
 
+        self.up_repProject(file_name_path[0])
         if self.mdb.check_extension():
             self.add_info(" Shema est {}".format(self.mdb.SCHEMA))
             self.mdb.add_ext_postgis()
@@ -778,16 +779,15 @@ class MascPlugDialog(QMainWindow):
                     if namesh in liste:
                         # demande change name
                         ok = self.box.yes_no_q("The {} shema already exists.\n "
-                                               "Do you want change the schema name befor import?".format(
-                            namesh))
+                                               "Do you want change the schema "
+                                               "name befor import?".format(namesh))
                         if ok:
                             newname, ok = QInputDialog.getText(self,
                                                                'New Model',
                                                                'New Model name:')
                             if ok and self.check_newname(newname, liste):
 
-                                sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp".format(
-                                    namesh)
+                                sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp".format(namesh)
                                 self.mdb.run_query(sql)
                                 sql = ''
                                 if self.mdb.import_schema(file, old=True):
@@ -1019,10 +1019,11 @@ Version : {}
     def fct_test(self):
         """ Test function"""
         # get_laws
-        #self.chkt.debug_update_vers_meta(version='5.0.2')
-        
+        # self.chkt.debug_update_vers_meta(version='5.0.2')
+
         pass
-    def update_ks_mesh_planim(self) :
+
+    def update_ks_mesh_planim(self):
         """ update value of the seleted profiles"""
 
         self.dockwidgetKs = ClassEditKsDialog(self, self.iface)
@@ -1031,6 +1032,7 @@ Version : {}
             self.iface.addTabifiedDockWidget(Qt.RightDockWidgetArea, self.dockwidgetKs, raiseTab=True)
         except AttributeError:
             self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidgetKs)
+
     def update_pk(self):
         """
         update the abscissa
@@ -1060,7 +1062,7 @@ Version : {}
         dlg.exec_()
         # dlg.show()
 
-    def up_repProject(self, file_):
+    def up_rep_project(self, file_):
         """
         update repProject
         :param file_: file_path
@@ -1071,8 +1073,34 @@ Version : {}
             # replace
             self.repProject = patmp
 
-
-
     def fct_hydro_laws(self):
         dlg = ClassHydroLawsDialog(self)
         dlg.exec_()
+
+    def clone_model(self):
+        """ Action clone schema (model)"""
+        liste = self.mdb.list_schema()
+        cpt = 0
+        while cpt != 6:
+            # demande change name
+            cpt += 1
+            newname, ok = QInputDialog.getText(self,
+                                               'Model Copy {}'.format(self.mdb.SCHEMA),
+                                               'Model name of copy:')
+            if not ok:
+                self.add_info('The copy is cancel')
+                return
+            if not self.check_newname(newname, liste):
+                ok = self.box.yes_no_q("The {} model already exists.\n "
+                                       "Do you want change the model "
+                                       "name before clone?".format(newname))
+                if not ok:
+                    self.add_info('The copy is cancel')
+                    return
+            else:
+                break
+
+        clonetasks = CloneTask("cloneTask", self, newname)
+        QgsApplication.taskManager().addTask(clonetasks)
+        clonetasks.finished()
+        return

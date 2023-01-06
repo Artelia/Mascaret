@@ -115,14 +115,14 @@ class CheckTab:
                 {'tab': Maso.runs_graph, 'overwrite': False},
             ],
                 'alt_tab': [
-                            {'tab': 'runs', 'sql': [
-                                "ALTER TABLE {0}.runs ADD COLUMN IF NOT "
-                                "EXISTS init_date timestamp "
-                                "without time zone;"]},
-                            {'tab': 'outputs', 'sql': [
-                                "ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
-                                "EXISTS active boolean DEFAULT TRUE;"]},
-                            ],
+                    {'tab': 'runs', 'sql': [
+                        "ALTER TABLE {0}.runs ADD COLUMN IF NOT "
+                        "EXISTS init_date timestamp "
+                        "without time zone;"]},
+                    {'tab': 'outputs', 'sql': [
+                        "ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
+                        "EXISTS active boolean DEFAULT TRUE;"]},
+                ],
                 'fct': [lambda: self.create_var_result(),
                         lambda: self.convert_all_result(),
                         lambda: self.fill_init_date_runs()],
@@ -193,15 +193,6 @@ class CheckTab:
                          "ON {0}.observations(code, type);",
                      ]},
                 ]
-=======
-                            {'tab': 'observations',
-                             'sql': [
-                                 "CREATE INDEX IF NOT EXISTS "
-                                 "observations_code_typ  "
-                                 "ON {0}.observations(code, type);",
-                             ]},
-                            ]
->>>>>>> 6bf4a8d (fixe upgrad)
             },
             '4.0.1': {},
             '4.0.2': {
@@ -301,17 +292,17 @@ class CheckTab:
                                         lst_tab = modif[proc]
                                         for tab in lst_tab:
                                             if proc == 'add_tab':
-                                                #self.mgis.add_info('add_tab {} {}'.format(ver ,tab))
+                                                # self.mgis.add_info('add_tab {} {}'.format(ver ,tab))
                                                 valid, tab_name = self.add_tab(
                                                     tab["tab"],
                                                     tab["overwrite"])
                                             elif proc == 'alt_tab':
                                                 tab_name = tab["tab"]
-                                                #self.mgis.add_info('alt_tab {} {}'.format(ver ,tab))
+                                                # self.mgis.add_info('alt_tab {} {}'.format(ver ,tab))
                                                 valid = self.alt_tab(tab_name,
                                                                      tab["sql"])
                                             elif proc == 'del_tab':
-                                                #self.mgis.add_info('del_tab {} {}'.format(ver, tab))
+                                                # self.mgis.add_info('del_tab {} {}'.format(ver, tab))
                                                 tab_name = tab
                                                 valid = self.del_tab(tab_name)
                                             else:
@@ -328,7 +319,7 @@ class CheckTab:
                                             if tab_name in tabs_no:
                                                 tabs_no.remove(tab_name)
                                     else:
-                                        #self.mgis.add_info('fct_tab {} {}'.format(ver, tab))
+                                        # self.mgis.add_info('fct_tab {} {}'.format(ver, tab))
                                         lst_fct = modif[proc]
                                         for fct in lst_fct:
                                             test_gd = fct()
@@ -506,7 +497,7 @@ class CheckTab:
             for run in dict_runs.keys():
                 if run not in lst_exist:
                     self.fill_result_sect(run)
-                    
+
             # ADD runs_graph
             for id_runs in dict_runs.keys():
                 if id_runs not in lst_exist:
@@ -1235,7 +1226,7 @@ $BODY$;
                 check_fill = True
                 self.mgis.add_info('Fill new branchs table - OK')
         if valid:
-            ##TRIGGER
+            # TRIGGER
             sql = "DROP TRIGGER IF EXISTS flood_marks_delete_point_flood ON {}.flood_marks;".format(self.mdb.SCHEMA)
             sql += '\n'
             sql += "DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood ON {}.flood_marks;".format(self.mdb.SCHEMA)

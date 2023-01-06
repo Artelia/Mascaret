@@ -1,14 +1,14 @@
-import os
 import json
+import os
+from datetime import datetime
+
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
-from qgis.PyQt.QtGui import QIcon
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from qgis.PyQt.QtWidgets import *
-from datetime import datetime
 from .Function import read_version
 from .db.Check_tab import CheckTab
 
@@ -290,7 +290,7 @@ class ClassDlgImport(QDialog):
                                                         self.mgis.repProject,
                                                         # QDir.homePath(),
                                                         filter="JSON (*.json)")
-        self.mgis.up_repProject(file_name_path)
+        self.mgis.up_rep_project(file_name_path)
         if file_name_path != '':
             self.txt_file.setText(file_name_path)
 
@@ -570,3 +570,61 @@ class ClassDlgImport(QDialog):
     def annule(self):
         """"Cancel """
         self.close()
+
+
+class CloneTask(QgsTask):
+    """Clone schema Class"""
+
+    def __init__(self, description, mgis, dest):
+        super().__init__(description, QgsTask.CanCancel)
+        self.mdb = mgis.mdb
+        self.src = self.mdb.SCHEMA
+        self.dest = dest
+        self.message_category = 'cloneTask'
+        self.exception = None
+        self.err = False
+        self.first = True
+
+    def run(self):
+        """ Run function to Clone schema
+        """
+        QgsMessageLog.logMessage('Started task "{}"'.format(
+            "clone"),
+            self.message_category, Qgis.Info)
+        # 3rd element '' because keep data
+        qry = "SELECT clone_schema('{}','{}','');".format(self.src, self.dest)
+        err = self.mdb.run_query(qry)
+        self.err = not err
+        self.finished()
+        return not err
+
+    def finished(self, result=None):
+        """
+        display message when the task is finished
+        :param result: boolean
+        """
+        QgsMessageLog.logMessage('Running',
+            self.message_category, Qgis.Info)
+        if not self.first:
+            if  self.err:
+                QgsMessageLog.logMessage(
+                    'CloneTask is completed',
+                    self.message_category, Qgis.Success)
+            else:
+                if self.exception is None:
+                    QgsMessageLog.logMessage('CloneTask is in error',
+                                             self.message_category, Qgis.Warning)
+                else:
+                    QgsMessageLog.logMessage(
+                        'CloneTask is in error Exception: {exception}'.format(
+                            exception=self.exception),
+                        self.message_category, Qgis.Critical)
+                    raise self.exception
+        self.first = False
+
+    def cancel(self):
+        """ cancel function ( can not use)"""
+        QgsMessageLog.logMessage(
+            ' CloneTask was canceled',
+            self.message_category, Qgis.Info)
+        super().cancel()

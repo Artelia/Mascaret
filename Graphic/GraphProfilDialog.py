@@ -716,7 +716,7 @@ class GraphProfil(GraphCommon):
                                                    "File (*.txt *.csv)")
 
         if fichiers:
-            self.mgis.up_repProject(fichiers[0])
+            self.mgis.up_rep_project(fichiers[0])
             self.charger_bathy(fichiers, self.coucheProfils,
                                self.nom)
 
@@ -796,7 +796,7 @@ class GraphProfil(GraphCommon):
                                                  'Sélection des fichiers',
                                                  self.mgis.repProject,
                                                  "Fichier (*.png *.jpg)")
-        self.mgis.up_repProject(fichier)
+        self.mgis.up_rep_project(fichier)
 
         try:
             fich = open(fichier + "w", "r")
