@@ -21,6 +21,8 @@ email                :
 
 import csv
 import datetime
+import gc
+import json
 import os
 import re
 import shutil
@@ -39,16 +41,16 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .Function import str2bool, del_accent, copy_dir_to_dir
+from .Function import TypeErrorModel
 from .Function import del_symbol
-
+from .Function import str2bool, del_accent, copy_dir_to_dir
+from .Graphic.ClassResProfil import ClassResProfil
+from .HydroLawsDialog import dico_typ_law
 from .Structure.ClassMascStruct import ClassMascStruct
 from .Structure.ClassPostPreFG import ClassPostPreFG
 from .WaterQuality.ClassMascWQ import ClassMascWQ
-from .ui.custom_control import ClassWarningBox
 from .api.ClassAPIMascaret import ClassAPIMascaret
-from .Graphic.ClassResProfil import ClassResProfil
-from .HydroLawsDialog import dico_typ_law
+from .ui.custom_control import ClassWarningBox
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -414,7 +416,7 @@ class ClassMascaret:
         prof_seuil = self.mdb.select("profiles", "NOT active", "abscissa")
         seuils = self.mdb.select("weirs", "active", "abscissa")
         sorties = self.mdb.select("outputs", "active", "abscissa")
-        zones =self.mdb.zone_ks()
+        zones = self.mdb.zone_ks()
         planim = self.mdb.planim_select()
         maillage = self.mdb.maillage_select()
         dico_str = self.mdb.select('struct_config', "active", "abscissa")
@@ -1319,6 +1321,7 @@ class ClassMascaret:
                 else:
                     fich_sortie.write('# Temps (H) Hauteur\n')
                 fich_sortie.write(' H \n')
+
                 for t in liste_date:
                     calc = loi['formule']
                     for cd_hydro, delta in liste_stations:
@@ -1344,6 +1347,10 @@ class ClassMascaret:
                         tps = (t - date_debut).total_seconds() / 3600
                         chaine = '  {0:4.3f}   {1:3.6f}\n'
                         fich_sortie.write(chaine.format(tps, resultat))
+            # check law after write
+            initime = round((liste_date[0] - date_debut).total_seconds() / 3600, 3) * 3600
+            lasttime = round((liste_date[-1] - date_debut).total_seconds() / 3600, 3) * 3600
+            self.check_timelaw(par, nom, initime, lasttime)
 
             if valeur_init is not None:
                 if type == "Q":
@@ -1360,16 +1367,20 @@ class ClassMascaret:
         valeur_init = None
         for nom, loi in dict_lois.items():
             if not loi['type'] in (1, 2):
-
+                # create other law
                 tab = self.get_laws(nom, loi['type'],
                                     obs=True, date_deb=date_debut,
                                     date_fin=date_fin)
                 if tab:
                     self.creer_loi(nom, tab, loi['type'])
+                    if 'time' in tab.keys():
+                        initime = round(tab['time'][0], 3)
+                        lasttime = round(tab['time'][-1], 3)
+                        self.check_timelaw(par, nom, initime, lasttime)
                 else:
                     self.mgis.add_info(
                         'The law for {} is not create.'.format(nom))
-
+                # create init law
                 if loi['type'] in [4]:  # , 5]: # car 5 mascaret plante à l'init
                     self.creer_loi(nom, tab, loi['type'], init=True)
                 elif loi['type'] in [5] and loi['couche'] == 'extremites':
@@ -1444,7 +1455,7 @@ class ClassMascaret:
             if par["evenement"] and noyau != "steady":
                 dict_scen_tmp = self.mdb.select('events', 'run', 'starttime')
                 if len(dict_scen_tmp['name']) == 0:
-                    self.mgis.add_info("Warning: **** scenario not found  ***")
+                    self.mgis.add_info("**** Warning: scenario not found  ***")
                 scen2, ok = QInputDialog.getItem(None,
                                                  'Select Events',
                                                  'Select Events',
@@ -1466,7 +1477,7 @@ class ClassMascaret:
                 dict_scen_tmp = self.mdb.select('events', 'run', 'starttime')
                 listexclu = []
                 if len(dict_scen_tmp['name']) == 0:
-                    self.mgis.add_info("Warning: **** scenario not found  ***")
+                    self.mgis.add_info("**** Warning: scenario not found  ***")
                 for i, scen in enumerate(dict_scen_tmp['name']):
                     # self.mgis.add_info("scen**************** {}".format(scen))
                     scen = scen.strip()
@@ -1619,6 +1630,7 @@ class ClassMascaret:
                                'balise1': 'parametresImpressionResultats'}
                }
         self.modif_xcas(tab, self.baseName + '.xcas')
+        par['tempsMax'] = duree
         self.mgis.add_info("Xcas file is created.")
         if par['presenceTraceurs']:
             if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
@@ -1647,6 +1659,10 @@ class ClassMascaret:
             tab = self.get_laws(nom, l["type"])
             if tab:
                 self.creer_loi(nom, tab, l["type"])
+                if 'time' in tab.keys():
+                    initime = round(tab['time'][0], 3)
+                    lasttime = round(tab['time'][-1], 3)
+                    self.check_timelaw(par, nom, initime, lasttime)
             else:
                 self.mgis.add_info(
                     'The law for {} is not create.'.format(nom))
@@ -1756,10 +1772,11 @@ class ClassMascaret:
             if self.check_mobil_gate() and noyau == "unsteady":
                 self.create_mobil_gate_file()
             self.fct_only_init(noyau)
+
             return
 
         #
-        if self.mgis.task_use :
+        if self.mgis.task_use:
             self.mgis.task_mas = QgsTask.fromFunction('Run Mascaret',
                                                       self.task_mascaret,
                                                       on_finished=self.completed,
@@ -1803,7 +1820,7 @@ class ClassMascaret:
             return
         self.clean_res()
         for i, scen in enumerate(dict_scen['name']):
-            self.mgis.add_info("The current scenario is {}".format(scen))
+            self.mgis.add_info(" *** The current scenario is {} ***".format(scen))
             # initialise file
             date_debut = None
             if noyau == "steady":
@@ -1816,6 +1833,17 @@ class ClassMascaret:
                 self.init_scen_trans_unsteady(par, dict_lois)
             if self.check_mobil_gate() and noyau == "unsteady":
                 self.create_mobil_gate_file()
+
+            # check error and warning:
+            self.check_apport()
+            arret = False
+            for typerr in self.err_model:
+                if self.err_model[typerr].status:
+                    self.mgis.add_info(self.err_model[typerr].get_alltxt())
+                    if self.err_model[typerr].stop:
+                        arret = True
+            if arret:
+                return False
 
             # RUN Model
             if par["initialisationAuto"] and noyau is not "steady":
@@ -1853,6 +1881,7 @@ class ClassMascaret:
 
             # elif par["LigEauInit"] and noyau != "steady":
             #     self.select_init_run_case()
+
             self.mgis.add_info("========== Run case  =========")
             self.mgis.add_info(
                 "Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen,
@@ -1873,6 +1902,10 @@ class ClassMascaret:
 
             if self.check_mobil_gate():
                 self.read_mobil_gate_res(id_run)
+
+            # if task :
+            #     if task.isCanceled():
+            #         return
         # #
         self.iface.messageBar().clearWidgets()
         self.mgis.add_info("Simulation finished")
@@ -2237,7 +2270,7 @@ class ClassMascaret:
         if int(qVersion()[0]) < 5:  # qt4
             fichiers = QFileDialog.getOpenFileNames(None,
                                                     'File Selection',
-                                                    #self.dossierFileMasc,
+                                                    # self.dossierFileMasc,
                                                     self.mgis.repProject,
                                                     "File (*.lig)")
 
@@ -2245,7 +2278,7 @@ class ClassMascaret:
             fichiers, _ = QFileDialog.getOpenFileNames(None,
                                                        'File Selection',
                                                        self.mgis.repProject,
-                                                       #self.dossierFileMasc,
+                                                       # self.dossierFileMasc,
                                                        "File (*.lig)")
 
         try:
@@ -2293,7 +2326,7 @@ class ClassMascaret:
     def clean_res(self):
         """ Clean the run folder and copy the essential files to run mascaret"""
         files = os.listdir(self.dossierFileMasc)
-        listsup = [".opt", ".lig",".res"]
+        listsup = [".opt", ".lig", ".res"]
         for i in range(0, len(files)):
             ext = os.path.splitext(files[i])[1]
             # self.mgis.add_info('delet file rr{}rr {}'.format(ext,(ext in listsup)))
@@ -2659,7 +2692,6 @@ class ClassMascaret:
                     info = self.mdb.select('weirs', where=where,
                                            list_var=['gid', 'abscissa'], order='gid')
                     if len(info['gid']) < 1:
-
                         where = "name LIKE '{}%'".format(name)
                         info = self.mdb.select('weirs', where=where,
                                                list_var=['gid', 'abscissa'], order='gid')
@@ -3172,7 +3204,6 @@ class ClassMascaret:
             # self.mgis.add_info('{}'.format(condition))
 
             config = self.mdb.select_one('law_config', condition, verbose=False)
-
             if config:
                 values = self.mdb.select("law_values",
                                          where='id_law={}'.format(config['id']),
@@ -3206,3 +3237,39 @@ class ClassMascaret:
             self.mgis.add_info(err)
             raise Exception(err)
             return None
+
+    def check_timelaw(self, par, name, initime, lasttime):
+        cond = False
+        if par['tempsInit'] < initime:
+            self.err_model['timeLaw'].add_err(name,
+                                             " Error law {} on the Initial Time".format(name))
+            cond = True
+        if par['critereArret'] == 1:
+            # tmax
+            if par['tempsMax'] > lasttime:
+                self.err_model['timeLaw'].add_err(name,
+                                                 " Error law {} on the Last Time".format(name))
+                cond = True
+        elif par['critereArret'] == 2:
+            # nb iterration
+            if par['nbPasTemps'] * par['pasTemps'] > lasttime:
+                self.err_model['timeLaw'].add_err(name,
+                                                 " Error law {} on the Last Time".format(name))
+                cond = True
+
+        return cond
+
+    def check_apport(self):
+        """checks if the inflow is before the first mesh."""
+        #
+        apports = self.mdb.select("lateral_inflows", "active", "abscissa")
+        for i, numb in enumerate(apports['branchnum']):
+            branches = self.mdb.select_one("visu_branchs",
+                                           "branchnum={}".format(numb), 'abs_start',
+                                           list_var=['abs_start', 'mesh'])
+
+            comp = branches['abs_start'] + branches['mesh']
+            if apports['abscissa'][i] < comp:
+                self.err_model['lInflowPos'].add_err(apports['name'][i],
+                                                    'Warning: {} is located before the first mesh.'
+                                                    ' Ignore in the model'.format(apports['name'][i]))

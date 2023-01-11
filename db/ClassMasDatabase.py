@@ -997,7 +997,7 @@ $BODY$
         return dico
 
     #
-    def select_one(self, table, where="", order="", verbose=False):
+    def select_one(self, table, where="", order="", list_var=None, verbose=False):
         """
         select one variable
         :param table: (str) table name
@@ -1011,17 +1011,22 @@ $BODY$
         if order:
             order = " ORDER BY " + order
 
-        sql = "SELECT * FROM {0}.{1} {2} {3};"
+        if list_var is not None:
+            lvar = ','.join([str(v) for v in list_var])
+        else:
+            lvar = '*'
+
+        sql = "SELECT {4} FROM {0}.{1} {2} {3};"
         if verbose:
-            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
+            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
         # self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
         (results, namCol) = self.run_query(
-            sql.format(self.SCHEMA, table, where, order),
+            sql.format(self.SCHEMA, table, where, order, lvar),
             fetch=True, arraysize=1, namvar=True)
 
         if results is None or namCol is None:
             self.mgis.add_info("error : ")
-            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
+            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
             return None
 
         cols = [col[0] for col in namCol]
@@ -2060,12 +2065,11 @@ WHERE (num2 != numm1 OR numm1 is NULL)
                 for val in results:
                     lst_profil_err.append(val[0])
 
-        sql ="""SELECT p.gid as pid ,b.gid as bid From  {0}.profiles AS p,
+        sql = """SELECT p.gid as pid ,b.gid as bid From  {0}.profiles AS p,
                 {0}.branchs as b WHERE  st_geometrytype(ST_Intersection(p.geom, b.geom))='ST_MultiPoint';"""
         results = self.run_query(sql.format(self.SCHEMA), fetch=True)
         if results:
             if len(results) > 0:
                 for val in results:
                     lst_profil_err.append(val[0])
-        return  lst_profil_err
-
+        return lst_profil_err
