@@ -1743,10 +1743,10 @@ class results_old(MasObject):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS results_old_id_runs_pknum " \
-               "ON {}.results(id_runs, pknum);".format(self.schema)
+               "ON {0}.results_old(id_runs, pknum);".format(self.schema)
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS results_old_id_runs_time " \
-               "ON {}.results(id_runs, time);".format(self.schema)
+               "ON {0}.results_old(id_runs, time);".format(self.schema)
         qry += '\n'
         return qry
 
