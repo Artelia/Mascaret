@@ -180,22 +180,14 @@ class CheckTab:
             '4.0.0': {'fct': [
                 lambda: self.update_400(),
             ],
-                'alt_tab': [{'tab': 'results_old',
-                             'sql': [
-                                 "CREATE INDEX IF NOT EXISTS "
-                                 "results_old_id_runs_pknum "
-                                 "ON {0}.results_old(id_runs, pknum);",
-                                 "CREATE INDEX IF NOT EXISTS "
-                                 "results_old_id_runs_time  "
-                                 "ON {0}.results_old(id_runs, time);",
-                             ]},
-                            {'tab': 'observations',
-                             'sql': [
-                                 "CREATE INDEX IF NOT EXISTS "
-                                 "observations_code_typ  "
-                                 "ON {0}.observations(code, type);",
-                             ]},
-                            ]
+                'alt_tab': [
+                    {'tab': 'observations',
+                     'sql': [
+                         "CREATE INDEX IF NOT EXISTS "
+                         "observations_code_typ  "
+                         "ON {0}.observations(code, type);",
+                     ]},
+                ]
             },
             '4.0.1': {},
             '4.0.2': {
@@ -229,6 +221,7 @@ class CheckTab:
             '5.0.1': {},
             '5.0.2': {'fct': [lambda: self.change_clone_shema_trigger()], },
             '5.0.3': {},
+            '5.0.4': {},
             # '3.0.x': { },
 
         }
@@ -280,6 +273,7 @@ class CheckTab:
                 for ver in self.list_hist_version[pos + 1:pos_fin + 1]:
                     list_test = []
                     if ver in self.dico_modif.keys():
+                        self.mgis.add_info('version : {}'.format(ver))
                         modif = self.dico_modif[ver]
                         if len(modif) > 0:
                             for proc in ['add_tab', 'alt_tab', 'fct',
@@ -556,11 +550,8 @@ class CheckTab:
                                               "{0}.results_old " \
                                               "WHERE var = {2} " \
                                               "AND id_runs={1} AND " \
-                                              "pknum ={3};".format(
-                                            self.mdb.SCHEMA, id_runs,
-                                            id_z[0][0], pknum)
-                                        rows = self.mdb.run_query(sql,
-                                                                  fetch=True)
+                                              "pknum ={3};".format(self.mdb.SCHEMA, id_runs, id_z[0][0], pknum)
+                                        rows = self.mdb.run_query(sql, fetch=True)
                                         dico_zmax[pknum] = rows[0][0]
                                 list_value.append([id_runs, 'opt', 'zmax',
                                                    json.dumps(dico_zmax)])
@@ -631,9 +622,8 @@ class CheckTab:
             "WHERE type_res = '{2}')".format(self.mdb.SCHEMA, id_run, tab_src))
 
         rows = self.mdb.run_query("SELECT id, var FROM {0}.results_var "
-                                  "WHERE type_res = '{2}' ORDER BY id".format(
-            self.mdb.SCHEMA, tab_src, typ_res),
-            fetch=True)
+                                  "WHERE type_res = '{2}' ORDER BY id".format(self.mdb.SCHEMA, tab_src, typ_res),
+                                  fetch=True)
         if typ_res.split('_')[0] == 'tracer':
             lst_var = [[row[0], 'c{}'.format(r + 1)] for r, row in
                        enumerate(rows)]
@@ -661,8 +651,7 @@ class CheckTab:
         """
         info = self.mdb.select('resultats',
                                where='(run, scenario) = (SELECT run, scenario '
-                                     'FROM {}.runs WHERE id= {})'.format(
-                                   self.mdb.SCHEMA, id_run),
+                                     'FROM {}.runs WHERE id= {})'.format(self.mdb.SCHEMA, id_run),
                                order='t',
                                list_var=['pk', 'branche', 'section'])
         lst_id = [id_run for i in range(len(info['pk']))]
@@ -824,6 +813,18 @@ class CheckTab:
                 "Error add_trigger_update_306: {}".format(str(e)))
             return False
 
+    def add_fct_for_update_pk_old(self):
+        """add fct psql to compute abscissa"""
+        cl = Maso.class_fct_psql()
+        lfct = [cl.pg_abscisse_profil, cl.pg_all_profil,
+                cl.pg_abscisse_point, cl.pg_all_point,
+                ]
+        qry = ''
+        for sql in lfct:
+            qry += sql
+            qry += '\n'
+        self.mdb.run_query(qry)
+
     def update_fct_calc_abs(self):
         try:
             lst_fct = [
@@ -843,7 +844,7 @@ class CheckTab:
             for fct in lst_fct:
                 qry += "DROP FUNCTION IF EXISTS {};\n".format(fct)
             self.mdb.run_query(qry)
-            self.mdb.add_fct_for_update_pk()
+            self.add_fct_for_update_pk_old()
             return True
         except Exception as e:
             self.mgis.add_info("Error update_fct_calc_abs: {}".format(str(e)))
@@ -869,6 +870,13 @@ class CheckTab:
             for sql in lfct:
                 qry += sql
                 qry += '\n'
+            self.mdb.run_query(qry)
+            ltabs = self.mdb.list_tables(self.mdb.SCHEMA)
+            if "results_old" in ltabs:
+                sql = """CREATE INDEX IF NOT EXISTS results_old_id_runs_pknum 
+                        ON {0}.results_old(id_runs, pknum);
+                        CREATE INDEX IF NOT EXISTS results_old_id_runs_time  
+                        ON {0}.results_old(id_runs, time);""".format(self.mdb.SCHEMA)
             self.mdb.run_query(qry)
 
             return True

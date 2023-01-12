@@ -734,11 +734,15 @@ class MascPlugDialog(QMainWindow):
 
         file_name_path, _ = QFileDialog.getOpenFileNames(None,
                                                          'File Selection',
-                                                         self.masplugPath,
-                                                         filter="PSQL (*.psql);;File (*)")
+                                                         self.repProject,
+                                                         filter="PSQL (*.psql);File (*);")
+        if not file_name_path:
+            return
+
         if self.mdb.check_extension():
             self.add_info(" Shema est {}".format(self.mdb.SCHEMA))
-            self.mdb.create_first_model()
+            self.mdb.add_ext_postgis()
+            self.mdb.public_fct_sql()
 
         for file in file_name_path:
             if os.path.isfile(file):
@@ -790,6 +794,21 @@ class MascPlugDialog(QMainWindow):
                 self.add_info('File not found.')
 
         return
+
+    def check_newname(self, name, liste):
+        """Check the new name validation
+            name : test name
+            liste : exclud list"""
+        if name == '':
+            if self.DEBUG:
+                self.add_info('Name is not correct.')
+            return False
+        elif name in liste:
+            if self.DEBUG:
+                self.add_info('<<{}>> schema name already exists'.format(name))
+            return False
+        else:
+            return True
 
     def main_graph(self):
         """ GUI graphique"""
