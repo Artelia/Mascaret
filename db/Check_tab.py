@@ -226,6 +226,7 @@ class CheckTab:
             '5.0.1': {},
             '5.0.2': {'fct': [lambda: self.change_clone_shema_trigger()], },
             '5.0.3': {},
+            '5.0.4': {},
             '5.1.1': {'fct': [
                 lambda: self.new_branch_tab(),
             ]

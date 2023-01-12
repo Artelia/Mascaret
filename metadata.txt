@@ -31,6 +31,13 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    5.1.1  : Changed the processing of friction (mesh, plani) in the plugin
+             Added the clone function
+             Added the law check for the events
+             Correction of update database bug
+             Added given storage optimization
+             Added the branchs_visu table
+             Addition of the  functionality of  fields modification :  ks, mesh, planim
     5.0.4  : Correction of old import function
     5.0.3  : Addition of Qgis task manager usage choice in settings
     5.0.2  : Correction of clone_schema function about trigger cloning
