@@ -120,7 +120,7 @@ class GraphProfilResultDialog(QWidget):
             self.curent_data = {'prof': {},
                                 }
 
-            # TODO Export
+
             self.bt_expCsv.clicked.connect(self.export_csv)
 
             self.lst_runs = []
@@ -722,14 +722,14 @@ class GraphProfilResultDialog(QWidget):
         name = self.clas_data.tabText(idx)
         txt = txt + ' ' + name
 
-        default_name = txt.replace(' ', '_').replace(':', '-')
-
+        default_name = os.path.join(self.mgis.repProject, txt.replace(' ', '_').replace(':', '-'))
         file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
                                                         "{0}.csv".format(
                                                             default_name),
                                                         filter="CSV (*.csv *.)")
 
         if file_name_path:
+            self.mgis.up_rep_project(file_name_path)
             wdget = self.clas_data.currentWidget()
             select = wdget.findChildren(QTableWidget)
             if select:

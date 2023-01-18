@@ -577,15 +577,15 @@ class MascPlugDialog(QMainWindow):
             clam = ClassMascaret(self, rep_run=rep_run)
 
             clam.creer_xcas(self.Klist[self.listeState.index(case)])
-
             file_name_path, _ = QFileDialog.getSaveFileName(self,
                                                             "saveFile",
                                                             "{0}.xcas".format(
                                                                 os.path.join(
-                                                                    QDir.homePath(),
+                                                                    self.repProject,
                                                                     clam.baseName)),
                                                             filter="XCAS (*.xcas)")
             if file_name_path:
+                self.up_rep_project(file_name_path)
                 clam.copy_file_model(file_name_path, case='xcas')
             clam.del_folder_mas()
 
@@ -599,11 +599,12 @@ class MascPlugDialog(QMainWindow):
         file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
                                                         "{0}.geo".format(
                                                             os.path.join(
-                                                                QDir.homePath(),
+                                                                self.repProject,
                                                                 clam.baseName)),
                                                         filter="GEO (*.geo)")
 
         if file_name_path:
+            self.up_rep_project(file_name_path)
             clam.copy_file_model(file_name_path, case='geo')
         clam.del_folder_mas()
 
@@ -620,11 +621,12 @@ class MascPlugDialog(QMainWindow):
         file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
                                                         "{0}.casier".format(
                                                             os.path.join(
-                                                                QDir.homePath(),
+                                                                self.repProject,
                                                                 clam.baseName)),
                                                         filter="CASIER (*.casier)")
 
         if file_name_path:
+            self.up_rep_project(file_name_path)
             clam.copy_file_model(file_name_path, case='casier')
         clam.del_folder_mas()
 

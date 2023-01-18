@@ -148,13 +148,14 @@ class ScoreDistWidget(QWidget):
         title = self.table_dist.horizontalHeaderItem(0).text().split('\n')
         txt = 'Quantiles_{}'.format(title[0])
 
-        default_name = txt.replace(' ', '_').replace(':', '-')
+        default_name = os.path.join(self.windmain.mgis.repProject, txt.replace(' ', '_').replace(':', '-'))
         file_name_path, _ = QFileDialog.getSaveFileName(self,
                                                         "saveFile",
                                                         "{0}.csv".format(
                                                             default_name),
                                                         filter="CSV (*.csv *.)")
         if file_name_path:
+            self.windmain.mgis.up_rep_project(file_name_path)
             cur_tw = self.table_dist
             range_r = range(0, cur_tw.rowCount())
             range_c = range(0, cur_tw.columnCount())
