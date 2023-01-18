@@ -493,7 +493,7 @@ class profiles(MasObject):
                 AFTER INSERT OR DELETE OR UPDATE 
                 ON {0}.profiles
                 FOR EACH STATEMENT
-                EXECUTE FUNCTION {0}.change_visu_branch();
+                EXECUTE PROCEDURE {0}.change_visu_branch();
             """
         return qry.format(self.schema)
 
@@ -622,7 +622,7 @@ class branchs(MasObject):
                 ON {0}.branchs
                 FOR EACH ROW
                 WHEN (OLD.geom IS DISTINCT FROM NEW.geom)
-                EXECUTE FUNCTION {0}.up_abs_branch();
+                EXECUTE PROCEDURE {0}.up_abs_branch();
             """
         return qry.format(self.schema)
 
@@ -631,7 +631,7 @@ class branchs(MasObject):
                 AFTER INSERT OR DELETE OR UPDATE 
                 ON {0}.branchs
                 FOR EACH STATEMENT
-                EXECUTE FUNCTION {0}.change_visu_branch();
+                EXECUTE PROCEDURE {0}.change_visu_branch();
             """
         return qry.format(self.schema)
 
@@ -1601,7 +1601,6 @@ AS $BODY$
         END;
         $BODY$;
         """
-
         return qry
 
     def pg_change_visu_branch(self, local='public'):
