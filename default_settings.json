@@ -5,8 +5,8 @@
   "open_last_conn": false,
   "open_last_schema": false,
    "postgres_path": ".",
-  "cond_api": false,
-  "task_use" : true
+  "cond_api": true,
+  "task_use" : false
   },
 
   "mdb": {
