@@ -822,7 +822,7 @@ class CheckTab:
                 ]
         qry = ''
         for sql in lfct:
-            qry += sql
+            qry += sql()
             qry += '\n'
         self.mdb.run_query(qry)
 
