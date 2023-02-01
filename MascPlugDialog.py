@@ -413,17 +413,33 @@ class MascPlugDialog(QMainWindow):
 
     def db_create_model(self):
         """Model creation"""
-        model_name, ok = QInputDialog.getText(self, 'New Model',
+        lst_schema = self.mdb.list_schema()
+        cpt = 0
+        while cpt != 6:
+            cpt += 1
+            model_name, ok = QInputDialog.getText(self, 'New Model',
                                               'New Model name:')
+            if not ok:
+                self.add_info('Creating new model cancelled')
+                return
+            if not self.check_newname(model_name.lower(), lst_schema):
+                ok2 = self.box.yes_no_q("The {} model already exists. Change the model name.\n "
+                                       "".format(model_name.lower()))
+                if not ok2 :
+                    self.add_info('Creating new model cancelled')
+                    return
+                if cpt == 6:
+                    self.add_info('Creating new model cancelled because of attempts number reached.')
+                    return
+            else:
+                break
 
-        if ok:
-            self.mdb.SCHEMA = model_name.lower()
-            self.mdb.create_model(self.dossier_sql)
-            self.mdb.last_schema = self.mdb.SCHEMA
-            self.enable_all_actions()
-        else:
 
-            self.add_info('Creating new model cancelled.')
+        self.mdb.SCHEMA = model_name.lower()
+        self.mdb.create_model(self.dossier_sql)
+        self.mdb.last_schema = self.mdb.SCHEMA
+        self.enable_all_actions()
+
 
     def db_delete_model(self):
         """ Model delete"""
