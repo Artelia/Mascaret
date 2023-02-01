@@ -423,33 +423,32 @@ class MascPlugDialog(QMainWindow):
 
     def db_create_model(self):
         """Model creation"""
-        cond = True
-        lst_sh = self.mdb.list_schema()
-        namesh = None
-        while cond:
+        lst_schema = self.mdb.list_schema()
+        cpt = 0
+        while cpt != 6:
+            cpt += 1
             model_name, ok = QInputDialog.getText(self, 'New Model',
-                                                  'New Model name:')
-            if ok:
-                namesh = model_name.lower()
-                if namesh in lst_sh:
-                    namesh = None
-                    self.box.info("The schema name already exists.\n"
-                                  " Please choose a new name.")
-
-                else:
-                    cond = False
-                # check
+                                              'New Model name:')
+            if not ok:
+                self.add_info('Creating new model cancelled')
+                return
+            if not self.check_newname(model_name.lower(), lst_schema):
+                ok2 = self.box.yes_no_q("The {} model already exists. Change the model name.\n "
+                                       "".format(model_name.lower()))
+                if not ok2 :
+                    self.add_info('Creating new model cancelled')
+                    return
+                if cpt == 6:
+                    self.add_info('Creating new model cancelled because of attempts number reached.')
+                    return
             else:
-                cond = False
+                break
 
-        if ok and namesh is not None:
-            self.mdb.SCHEMA = namesh
-            self.mdb.create_model(self.dossier_sql)
-            self.mdb.last_schema = self.mdb.SCHEMA
-            self.enable_all_actions()
-        else:
 
-            self.add_info('Creating new model cancelled.')
+        self.mdb.SCHEMA = model_name.lower()
+        self.mdb.create_model(self.dossier_sql)
+        self.mdb.last_schema = self.mdb.SCHEMA
+        self.enable_all_actions()
 
     def db_delete_model(self):
         """ Model delete"""
@@ -1098,6 +1097,9 @@ Version : {}
                                        "name before clone?".format(newname))
                 if not ok:
                     self.add_info('The copy is cancel')
+                    return
+                if cpt == 6:
+                    self.add_info('The copy is cancel because of attempts number reached.')
                     return
             else:
                 break
