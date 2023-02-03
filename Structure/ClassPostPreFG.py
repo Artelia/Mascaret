@@ -17,9 +17,12 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import pickle
+# import pickle
+import json
 import os
 from .ClassMethod import ClassMethod
+import shapely.wkt
+
 
 
 class ClassInfoParamFG(object):
@@ -50,24 +53,31 @@ class ClassPostPreFG:
 
     def import_cl(self, name='object.obj'):
         if os.path.isfile(name):
-            with open(name, 'rb') as file:
-                obj = pickle.load(file)
+            # with open(name, 'rb') as file:
+                # obj = pickle.load(file)
+            with open(name, 'r') as file:
+                obj = json.load(file)
 
             for key, val in obj.items():
+                if key =="list_poly_trav" or key =="list_poly_pil":
+                    for key2, itm in val.items():
+                        val[int(key2)] = [shapely.wkt.loads(poly) for poly in itm]
                 setattr(self.cli, key, val)
 
         else:
             pass
 
-    def export_cl(self, obj, name='object.obj'):
+    def export_cl(self, obj, name='object.js'):
         """
 
         :param obj: object to dump
         :param name: name file
         :return:
         """
-        with open(name, 'wb') as file:
-            pickle.dump(obj, file)
+        with open(name, 'w') as file:
+            json.dump(obj, file)
+        # with open(name, 'wb') as file:
+            # pickle.dump(obj, file)
 
     def create_cli_fg(self, name=None):
         """
@@ -86,10 +96,10 @@ class ClassPostPreFG:
             param_g = {}
 
             for id_config in list_actif:
-                list_poly_trav[id_config] = self.clmeth.select_poly_elem(
-                    id_config, 0)
-                list_poly_pil[id_config] = self.clmeth.select_poly_elem(
-                    id_config, 1)
+                list_poly_trav[id_config] = [ poly.wkt for poly in self.clmeth.select_poly_elem(id_config, 0)]
+                    # self.clmeth.select_poly_elem(id_config, 0)
+                list_poly_pil[id_config] = [ poly.wkt for poly in self.clmeth.select_poly_elem(id_config, 1)]
+                # self.clmeth.select_poly_elem(id_config, 1)
                 profil[id_config] = self.clmeth.get_profil(id_config)
                 param_g[id_config] = self.clmeth.get_param_g('all', id_config)
 

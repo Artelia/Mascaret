@@ -17,27 +17,28 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import os
-import numpy as np
-import subprocess
 import io
 import json
+import os
+import subprocess
 from datetime import datetime
+
+import numpy as np
 import psycopg2
 import psycopg2.extras
 from qgis.core import QgsVectorLayer, QgsProject
 
 from . import MasObject as Maso
+from .Check_tab import CheckTab
+from ..Function import read_version
 from ..WaterQuality import ClassTableWQ
 from ..ui.custom_control import ClassWarningBox
-from ..Function import read_version
-from .Check_tab import CheckTab
 
 try:  # qgis2
     from qgis.core import QgsMapLayerRegistry, QgsDataSourceURI
 
     VERSION_QGIS = 2
-except:  # qgis3
+except Exception:  # qgis3
     from qgis.core import QgsDataSourceUri
 
     VERSION_QGIS = 3
@@ -139,13 +140,13 @@ class ClassMasDatabase(object):
         Running PostgreSQL queries
 
         Args:
-            :param qry (str): Query for database.
-            :param fetch (bool): Flag for returning result from query.
-            :param arraysize (int): Number of items returned from query - default 0 mean using fetchall method.
-            :param be_quiet (bool): Flag for printing exception message.
-            :param namvar (bool): Flag if returning variables name of returning results
-            :param many(bool): True :executemany
-            :param list_many: list value
+            :param qry : (str) Query for database.
+            :param fetch: (bool) Flag for returning result from query.
+            :param arraysize: (int) Number of items returned from query - default 0 mean using fetchall method.
+            :param be_quiet: (bool) Flag for printing exception message.
+            :param namvar: (bool) Flag if returning variables name of returning results
+            :param many: (bool) True :executemany
+            :param list_many: (list) list value
 
         Returns:
             list/generator/None: Returned value depends on the 'fetch' and 'arraysize' parameters.
@@ -199,8 +200,8 @@ class ClassMasDatabase(object):
         Generator for getting partial results from query.
 
         Args:
-            :param cursor (psycopg2 cursor object): Cursor with query.
-            :param arraysize (int): Number of items returned from query.
+            :param cursor : (psycopg2 cursor object) Cursor with query.
+            :param arraysize : (int) Number of items returned from query.
 
         Yields:
             list: Items returned from query which length <= arraysize.
@@ -248,12 +249,11 @@ class ClassMasDatabase(object):
         Creating and processing tables inside PostGIS database.
 
         Args:
-            :param masobject (class): Mascaret class object.
-            :param pg_method (str): String representation of method that will be called on the masobject class.
-            :param schema (str): Schema where tables will be created or processed.
-            :param srid (int): A Spatial Reference System Identifier.
-            :param overwrite (bool): Flag deciding if objects can be overwrite.
-            :param **kwargs (dict): Additional keyword arguments passed to pg_method.
+            :param masobject: (class) Mascaret class object.
+            :param pg_method: (str) String representation of method that will be called on the masobject class.
+            :param schema: (str) Schema where tables will be created or processed.
+            :param srid: (int) A Spatial Reference System Identifier.
+            :param **kwargs: (dict) Additional keyword arguments passed to pg_method.
 
         Returns:
             :return obj: Instance of Mascaret class object
@@ -299,9 +299,9 @@ class ClassMasDatabase(object):
         Registering hydrodynamic model objects which already exists inside schema.
 
         Args:
-            :param hydro_module (module): hydrodynamic model module.
-            :param  schema (str): Schema where tables will be created or processed.
-            :param srid (int): A Spatial Reference System Identifier.
+            :param hydro_module: (module) hydrodynamic model module.
+            :param  schema: (str) Schema where tables will be created or processed.
+            :param srid: (int) A Spatial Reference System Identifier.
         """
         tabs = self.list_tables(schema)
         if tabs:
@@ -322,7 +322,7 @@ class ClassMasDatabase(object):
         Listing tables in model.
 
         Args:
-           :param  schema (str): Schema where tables will be created or processed.
+           :param  schema: (str) Schema where tables will be created or processed.
 
         Returns:
             :return list: List of table names in schema.
@@ -348,7 +348,7 @@ class ClassMasDatabase(object):
             self.uris = [vl.source() for vl in
                          QgsMapLayerRegistry.instance().mapLayers().values()]
 
-        except:  # qgis3
+        except Exception:  # qgis3
             self.uris = [vl.source() for vl in
                          QgsProject.instance().mapLayers().values()]
         if self.mgis.DEBUG:
@@ -369,7 +369,7 @@ class ClassMasDatabase(object):
         vl_schema, vl_name = obj.schema, obj.name
         try:  # qgis2
             uri = QgsDataSourceURI()
-        except:  # qgis3
+        except Exception:  # qgis3
             uri = QgsDataSourceUri()
 
         uri.setConnection(self.host, self.port, self.dbname, self.USER,
@@ -387,7 +387,7 @@ class ClassMasDatabase(object):
         Handling adding layer process to QGIS view.
 
         Args:
-            :param  vlayer (QgsVectorLayer): QgsVectorLayer object.
+            :param  vlayer :  (QgsVectorLayer) QgsVectorLayer object.
         """
         try:
             if VERSION_QGIS == 3:  # qgis3
@@ -401,14 +401,14 @@ class ClassMasDatabase(object):
             if self.group:
                 try:  # qgis2
                     QgsMapLayerRegistry.instance().addMapLayer(vlayer, False)
-                except:  # qgis3
+                except Exception:  # qgis3
                     QgsProject.instance().addMapLayer(vlayer, False)
                 self.group.addLayer(vlayer)
 
             else:
                 try:  # qgis2
                     QgsMapLayerRegistry.instance().addMapLayer(vlayer)
-                except:  # qgis3
+                except Exception:  # qgis3
                     QgsProject.instance().addMapLayer(vlayer)
             # self.mgis.add_info('path : {}'.format(style_file))
             # a mettre apres deplacement group pour etre pris en compte
@@ -452,8 +452,15 @@ class ClassMasDatabase(object):
                 self.add_ext_postgis()
             else:
                 pass
-
-            self.public_fct_sql()
+            # TODO to delete in future,  it was kept to old schema
+            # self.public_fct_sql()
+            # add clone_file is a reference fct to check public fct
+            if not self.check_fct_public('clone_schema'):
+                obj = self.process_masobject(Maso.class_fct_psql, 'pg_clone_schema')
+                if self.mgis.DEBUG:
+                    self.mgis.add_info('  {0} OK'.format('pg_clone_schema'))
+                else:
+                    pass
 
             chaine = """CREATE SCHEMA {0} AUTHORIZATION {1};"""
             # postgres;"""
@@ -462,12 +469,13 @@ class ClassMasDatabase(object):
             else:
                 self.mgis.add_info(
                     '<br>Model "{0}" created.'.format(self.SCHEMA))
-
+            # new for fct
+            self.schema_fct_sql()
             # table
             tables = [Maso.events, Maso.lateral_inflows, Maso.lateral_weirs,
                       Maso.extremities,
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
-                      Maso.weirs, Maso.profiles, Maso.topo, Maso.branchs,
+                      Maso.weirs, Maso.profiles, Maso.topo, Maso.visu_branchs, Maso.branchs,
                       Maso.observations, Maso.parametres, Maso.runs,
                       # Maso.laws,
                       Maso.admin_tab, Maso.visu_flood_marks,
@@ -488,8 +496,8 @@ class ClassMasDatabase(object):
                       Maso.struct_fg, Maso.struct_fg_val,
                       Maso.weirs_mob_val,
                       # new results
-                      Maso.runs_graph,  Maso.results_var,
-                      Maso.results_idx, Maso.results_val, #Maso.results,
+                      Maso.runs_graph, Maso.results_var,
+                      Maso.results_idx, Maso.results_val,
                       Maso.results_sect, Maso.runs_plani,
                       # hydro laws
                       Maso.law_config, Maso.law_values,
@@ -537,20 +545,6 @@ class ClassMasDatabase(object):
             chkt.all_version(self.list_tables(self.SCHEMA),
                              read_version(self.mgis.masplugPath))
 
-            # add fct
-            cl = Maso.class_fct_psql()
-            lfct = [cl.pg_abscisse_profil(),
-                    cl.pg_all_profil(),
-                    cl.pg_abscisse_point(),
-                    cl.pg_all_point(),
-                    ]
-            namefct = ['abscisse_profil', 'update_abscisse_profil',
-                       'abscisse_point', 'update_abscisse_point']
-
-            for i, sql in enumerate(lfct):
-                if not self.check_fct(namefct[i]):
-                    self.run_query(sql)
-
             # visualization
             self.load_gis_layer()
 
@@ -574,8 +568,8 @@ class ClassMasDatabase(object):
         add function in schema
         :return:
         """
-
         listefct = ['pg_create_calcul_abscisse',
+                    'pg_create_calcul_abscisse_outputs',
                     'pg_create_calcul_abscisse_profil',
                     'pg_create_calcul_abscisse_branche',
                     'pg_chstate_branch',
@@ -583,11 +577,8 @@ class ClassMasDatabase(object):
                     # visu
                     'pg_delete_visu_flood_marks',
                     'pg_create_calcul_abscisse_point_flood',
-                    # export import:
-                    'pg_clone_schema'
                     ]
-
-        if not self.check_fct(listefct):
+        if not self.check_fct_public(listefct):
             for fct in listefct:
                 try:
                     obj = self.process_masobject(Maso.class_fct_psql, fct)
@@ -595,12 +586,47 @@ class ClassMasDatabase(object):
                         self.mgis.add_info('  {0} OK'.format(fct))
                     else:
                         pass
-                except:
+                except Exception:
                     if self.mgis.DEBUG:
                         # self.mgis.add_info('{0}\n'.format(fct))
                         self.mgis.add_info('failure!{0}'.format(fct))
                     else:
                         pass
+
+    def schema_fct_sql(self):
+        """
+        add function in schema
+        :return: error: return true if one function failed
+        """
+
+        listefct = [('pg_create_calcul_abscisse', self.SCHEMA),
+                    ('pg_create_calcul_abscisse_outputs', self.SCHEMA),
+                    ('pg_create_calcul_abscisse_profil', self.SCHEMA),
+                    ('pg_chstate_branch', self.SCHEMA),
+                    ('pg_chstate_basin', self.SCHEMA),
+                    # visu
+                    ('pg_delete_visu_flood_marks', self.SCHEMA),
+                    ('pg_create_calcul_abscisse_point_flood', self.SCHEMA),
+                    #
+                    ('pg_abscisse_profil', self.SCHEMA),
+                    ('pg_all_profil', self.SCHEMA),
+                    ('pg_abscisse_point', self.SCHEMA),
+                    ('pg_all_point', self.SCHEMA),
+                    ('pg_up_abs_branch', self.SCHEMA),
+                    ('pg_change_visu_branch', self.SCHEMA)
+                    ]
+        error = False
+        for fct, var in listefct:
+            try:
+                obj = self.process_masobject(Maso.class_fct_psql, fct, local=var)
+                if self.mgis.DEBUG:
+                    self.mgis.add_info('  {0} OK'.format(fct))
+                else:
+                    pass
+            except Exception as err:
+                self.mgis.add_info('failure!{0} : {1}'.format(fct, str(err)))
+                error = True
+        return error
 
     def add_ext_postgis(self):
         """ 
@@ -643,12 +669,38 @@ class ClassMasDatabase(object):
                 cond = False
             return cond
 
+    def check_fct_public(self, fct_name):
+        """
+        check if functions exist
+        :param fct_name: (list or str)name function
+        :return:
+        """
+        cond = True
+        if isinstance(fct_name, list):
+
+            for name in fct_name:
+                sql = " select exists(select * from pg_proc where proname = '{}' " \
+                      "AND pronamespace = (SELECT pronamespace from pg_proc " \
+                      "WHERE proname ='clone_schema'));".format(name)
+                rows = self.run_query(sql, fetch=True)[0][0]
+                if not rows:
+                    cond = False
+            return cond
+        else:
+            sql = " select exists(select * from pg_proc where proname = '{}' " \
+                  "AND pronamespace = (SELECT pronamespace from pg_proc " \
+                  "WHERE proname ='clone_schema'));".format(fct_name)
+            rows = self.run_query(sql, fetch=True)[0][0]
+            if not rows:
+                cond = False
+            return cond
+
     def add_fct_for_update_pk(self):
         """add fct psql to compute abscissa"""
         cl = Maso.class_fct_psql()
-        lfct = [cl.pg_abscisse_profil(), cl.pg_all_profil(),
-                cl.pg_abscisse_point(), cl.pg_all_point(),
-                cl.pg_abscisse_branch(), cl.pg_all_branch(),
+        lfct = [cl.pg_abscisse_profil(self.SCHEMA), cl.pg_all_profil(self.SCHEMA),
+                cl.pg_abscisse_point(self.SCHEMA), cl.pg_all_point(self.SCHEMA),
+                cl.pg_abscisse_branch(self.SCHEMA), cl.pg_all_branch(self.SCHEMA),
                 ]
         qry = ''
         for sql in lfct:
@@ -659,8 +711,8 @@ class ClassMasDatabase(object):
     def add_fct_for_visu(self):
         """ add fct psql for the visualisation"""
         cl = Maso.class_fct_psql()
-        lfct = [cl.pg_delete_visu_flood_marks(),
-                cl.pg_create_calcul_abscisse_point_flood()]
+        lfct = [cl.pg_delete_visu_flood_marks(self.SCHEMA),
+                cl.pg_create_calcul_abscisse_point_flood(self.SCHEMA)]
         qry = ''
         for sql in lfct:
             qry += sql
@@ -719,14 +771,20 @@ class ClassMasDatabase(object):
 
         return liste
 
+    def check_schema_into_db(self):
+        """ check if schema exists yet"""
+        if self.SCHEMA in self.list_schema():
+            return True
+        return False
+
     def drop_model(self, model_name, cascade=False, verbose=True):
         """
         Delete model inside PostgreSQL database.
 
         Args:
-            :param model_name (str): Name of the schema which will be deleted.
-            :param cascade (bool): Flag forcing cascade delete.
-            :param verbose (bool) : Print the name model
+            :param model_name : (str) Name of the schema which will be deleted.
+            :param cascade : (bool) Flag forcing cascade delete.
+            :param verbose : (bool) Print the name model
         """
         qry = '''DROP SCHEMA "{0}" CASCADE;''' if cascade is True else '''DROP SCHEMA "{0}";'''
         qry = qry.format(model_name)
@@ -762,8 +820,8 @@ class ClassMasDatabase(object):
         self.group = root.findGroup("Mas_{}".format(self.SCHEMA))
         if not self.group:
             self.group = root.addGroup("Mas_{}".format(self.SCHEMA))
-        lst_only_visu = ['visu_flood_marks']
-        dict_only_visu = {}
+        # lst_only_visu = []
+        # dict_only_visu = {}
         tables = list(self.register.items())
 
         # tables.sort(key=lambda x: x[1].order, reverse=True)
@@ -771,15 +829,15 @@ class ClassMasDatabase(object):
         for (name, obj) in tables:
             try:
                 # TODO modif if new geometric table
-                if obj.order < 16:
-                    if name in lst_only_visu:
-                        dict_only_visu[name] = obj
-                    else:
-                        self.add_to_view(obj)
+                if obj.order < 17:
+                    # if name in lst_only_visu:
+                    #     dict_only_visu[name] = obj
+                    # else:
+                    self.add_to_view(obj)
 
-                        if self.mgis.DEBUG:
-                            self.mgis.add_info(
-                                ' View {0} : OK'.format(obj.name))
+                    if self.mgis.DEBUG:
+                        self.mgis.add_info(
+                            ' View {0} : OK'.format(obj.name))
                 else:
                     pass
             except Exception as err:
@@ -787,20 +845,20 @@ class ClassMasDatabase(object):
                 self.mgis.add_info('Error : '.format(err))
 
         # add visualistation layer
-        group_main = self.group
-        self.group = group_main.findGroup("Visualisation".format(self.SCHEMA))
-        if not self.group:
-            self.group = group_main.addGroup(
-                "Visualisation".format(self.SCHEMA))
+        # group_main = self.group
+        # self.group = group_main.findGroup("Visualisation".format(self.SCHEMA))
+        # if not self.group:
+        #     self.group = group_main.addGroup(
+        #         "Visualisation".format(self.SCHEMA))
 
-        for name, obj in dict_only_visu.items():
-            try:
-                self.add_to_view(obj)
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(' View {0} : OK'.format(obj.name))
-            except Exception as err:
-                self.mgis.add_info('View failure!<br>{0}'.format(obj))
-                self.mgis.add_info('Error : '.format(err))
+        # for name, obj in dict_only_visu.items():
+        #     try:
+        #         self.add_to_view(obj)
+        #         if self.mgis.DEBUG:
+        #             self.mgis.add_info(' View {0} : OK'.format(obj.name))
+        #     except Exception as err:
+        #         self.mgis.add_info('View failure!<br>{0}'.format(obj))
+        #         self.mgis.add_info('Error : '.format(err))
 
         self.mgis.iface.mapCanvas().refresh()
 
@@ -869,7 +927,7 @@ $BODY$
                 id = dump.split("=")[-1].strip()
                 try:  # qgis2
                     QgsMapLayerRegistry.instance().removeMapLayer(id)
-                except:  # qgis3
+                except Exception:  # qgis3
                     QgsProject.instance().removeMapLayer(id)
             root.removeChildNode(group1)
 
@@ -917,13 +975,13 @@ $BODY$
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
         if verbose:
-            print(sql.format(self.SCHEMA, table, where, order, lvar))
+            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
         (results, namCol) = self.run_query(
             sql.format(self.SCHEMA, table, where, order, lvar), fetch=True,
             namvar=True)
         if results is None or namCol is None:
-            print("error : ",
-                  sql.format(self.SCHEMA, table, where, order, lvar))
+            self.mgis.add_info("error : ")
+            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
             return None
         cols = [col[0] for col in namCol]
         dico = {}
@@ -934,18 +992,17 @@ $BODY$
             for i, val in enumerate(row):
                 try:
                     dico[cols[i]].append(val.strip())
-                except:
+                except Exception:
                     dico[cols[i]].append(val)
         return dico
 
     #
-    def select_one(self, table, where="", order="", verbose=False):
+    def select_one(self, table, where="", order="", list_var=None, verbose=False):
         """
         select one variable
         :param table: (str) table name
         :param where: (str)  condition
         :param order: (str) name variables to sort
-        :param list_var: list of variables
         :param verbose: (bool) display sql commande
         """
 
@@ -954,16 +1011,22 @@ $BODY$
         if order:
             order = " ORDER BY " + order
 
-        sql = "SELECT * FROM {0}.{1} {2} {3};"
+        if list_var is not None:
+            lvar = ','.join([str(v) for v in list_var])
+        else:
+            lvar = '*'
+
+        sql = "SELECT {4} FROM {0}.{1} {2} {3};"
         if verbose:
-            print(sql.format(self.SCHEMA, table, where, order))
+            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
         # self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
         (results, namCol) = self.run_query(
-            sql.format(self.SCHEMA, table, where, order),
+            sql.format(self.SCHEMA, table, where, order, lvar),
             fetch=True, arraysize=1, namvar=True)
 
         if results is None or namCol is None:
-            print("error : ", sql.format(self.SCHEMA, table, where, order))
+            self.mgis.add_info("error : ")
+            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
             return None
 
         cols = [col[0] for col in namCol]
@@ -986,7 +1049,7 @@ $BODY$
         :param var: (str) variable name
         :param table: (str) table name
         :param where: (str)  condition
-        :param order: (str) name variables to sort
+        :param ordre: (str) name variables to sort
         :param verbose: display sql commande
         """
         if ordre is None:
@@ -1009,11 +1072,11 @@ $BODY$
                         dico[cols[i]] = []
                     try:
                         dico[cols[i]].append(eval(val))
-                    except:
+                    except Exception:
                         dico[cols[i]].append(val)
 
             return dico
-        # print('warning', sql.format(var, self.SCHEMA, table, where, ordre))
+        #  self.mgis.add_info('warning', sql.format(var, self.SCHEMA, table, where, ordre))
         return None
 
     #
@@ -1039,8 +1102,8 @@ $BODY$
                 var = row[0][0]
             return var
         else:
-            print("error : ",
-                  sql.format(var, self.SCHEMA, table, where))
+            self.mgis.add_info("error : ")
+            self.mgis.add_info(sql.format(var, self.SCHEMA, table, where))
             return None
 
     def select_min(self, var, table, where=None):
@@ -1104,7 +1167,7 @@ $BODY$
                 elif isinstance(tab[id][k], list):
                     valeurs += "'" + delim.join(tab[id][k]) + "',"
                 else:
-                    if tab[id][k] != None:
+                    if tab[id][k] is not None:
                         valeurs += str(tab[id][k]) + ","
                     else:
                         valeurs += "NULL,"
@@ -1156,8 +1219,6 @@ $BODY$
                                                             valeurs)
         self.run_query(sql, many=True, list_many=liste_value)
 
-
-
     def new_insert_res(self, table, values, col_tab, be_quiet=False):
         try:
             if self.con:
@@ -1165,6 +1226,7 @@ $BODY$
                 cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
                 cur.copy_from(file, '{0}.{1}'.format(self.SCHEMA, table),
                               columns=col_tab)
+                self.con.commit()
                 del file
 
         except Exception as e:
@@ -1253,7 +1315,7 @@ $BODY$
     def copy(self, table, var, fichier):
         """
         Copy file in sql
-        :param table (str): table name
+        :param table: (str) table name
         :param var: (str) variable name
         :param fichier:  name file
         :return:
@@ -1298,7 +1360,7 @@ $BODY$
                     exe, schem, self.USER, file,
                     self.dbname, self.host, self.port)
 
-                # print(commande, file)
+                #  self.mgis.add_info(commande, file)
                 os.putenv("PGPASSWORD", "{0}".format(self.password))
 
                 p = subprocess.Popen(commande, shell=True)
@@ -1309,7 +1371,7 @@ $BODY$
                                    'Please, insert path in "path postgres" in Help / Setting / Options')
                 return False
 
-        except:
+        except Exception:
             return False
 
     def import_schema(self, file, old=False):
@@ -1334,10 +1396,7 @@ $BODY$
                         file, self.dbname, self.host)
                 else:
                     commande = '"{0}" -U {1} -O -F c -p {2}  -d {4} -h {5} ' \
-                               '"{3}"'.format(exe, self.USER,
-                                                       self.port,
-                                                       file, self.dbname,
-                                                       self.host)
+                               '"{3}"'.format(exe, self.USER, self.port, file, self.dbname, self.host)
                 p = subprocess.Popen(commande, shell=True,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE
@@ -1345,10 +1404,11 @@ $BODY$
                 outs, err = p.communicate()
                 if self.mgis.DEBUG:
                     self.mgis.add_info("Import File :{0}".format(file))
-                    self.mgis.add_info("{0}".format(outs.decode('utf-8')))
+                    # self.mgis.add_info("{0}".format(outs.code('utf-8')))
                 p.wait()
-                if len(err)> 0:
-                    self.mgis.add_info("{0}".format(err.decode('utf-8')))
+                if len(err) > 0:
+                    self.mgis.add_info(str(err))
+                    # self.mgis.add_info("{0}".format(err.code('utf-8')))
                     return False
                 return True
             else:
@@ -1356,7 +1416,7 @@ $BODY$
                                    'Please, insert path in "path postgres" in Help / Setting / Options')
                 return False
         except Exception as e:
-            print(e)
+            self.mgis.add_info('ERROR : {}'.format(str(e)))
             return False
 
     def list_schema(self):
@@ -1506,14 +1566,16 @@ $BODY$
         """ get version postgres """
         if not self.con:
             self.mgis.add_info("Warning, there is not the database connection")
-            
+            self.box.info("Check the connection of the database", title='Warning Database')
+            return None
+
         sql = 'SHOW server_version_num;'
         results = self.run_query(sql, fetch=True)
-        if results :
+        if results:
             return results[0][0]
         else:
-            self.mgis.add_info("Check the connection of data base")
-            return  None
+            self.mgis.add_info("No find version")
+            return None
 
     def export_model(self, selection, file, plug_ver):
         """
@@ -1543,7 +1605,7 @@ $BODY$
             dest = src + '_ext{}_{}'.format(date, cpt)
         js_dict['export_name'] = dest
         self.ignor_schema += [dest]
-        list_tab_res = ['runs', 'results_idx','results_val', 'results_sect',
+        list_tab_res = ['runs', 'results_idx', 'results_val', 'results_sect',
                         'runs_graph', 'runs_plani']
 
         qry = "SELECT clone_schema('{}','{}','{}');".format(src, dest,
@@ -1565,17 +1627,18 @@ $BODY$
                 elif tab == 'results_idx':
                     sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id_runs IN ({4}) );"""
                     sql = sql.format(dest, tab, src, tab, ','.join(lst_run))
-                    res = self.select_distinct('idruntpk', "results_idx", where="id_runs IN ({0})".format(','.join(lst_run)))
+                    res = self.select_distinct('idruntpk', "results_idx",
+                                               where="id_runs IN ({0})".format(','.join(lst_run)))
                 elif tab == 'results_val':
                     sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE idruntpk IN ({4}) );"""
-                    if res :
-                        sql = sql.format(dest, tab, src, tab, ','.join([ str(a) for a in res['idruntpk']]))
+                    if res:
+                        sql = sql.format(dest, tab, src, tab, ','.join([str(a) for a in res['idruntpk']]))
                     else:
                         sql = None
                 else:
                     sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id_runs IN ({4}) );"""
                     sql = sql.format(dest, tab, src, tab, ','.join(lst_run))
-                
+
                 self.run_query(sql)
 
         basename = os.path.basename(file)
@@ -1606,12 +1669,21 @@ $BODY$
         actname = metadict["export_name"]
         new_file = metadict["psqlfile"]
         self.ignor_schema += [namesh, actname, "{0}_tmp".format(actname)]
-
+        # add fct if not exist
         if self.check_extension():
-            self.mgis.add_info(" Shema est {}".format(self.SCHEMA))
+            self.mgis.add_info(" Schema is {0}".format(self.SCHEMA))
             self.add_ext_postgis()
-        self.public_fct_sql()
 
+        if not self.check_fct_public('clone_schema'):
+            obj = self.process_masobject(Maso.class_fct_psql, 'pg_clone_schema')
+            if self.mgis.DEBUG:
+                self.mgis.add_info('  {0} OK'.format('pg_clone_schema'))
+
+        chkt = CheckTab(self.mgis, self)
+        vnow = chkt.list_hist_version.index(metadict['plugin_version'])
+
+        if vnow < chkt.list_hist_version.index('5.1.1'):
+            self.public_fct_sql()
         if actname in self.list_schema():
             sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp;".format(actname)
             self.run_query(sql)
@@ -1636,8 +1708,6 @@ $BODY$
             self.mgis.add_info('Import is done.')
         self.ignor_schema = list()
 
-
-
     def get_id_run(self, selection):
         """
         get list index run
@@ -1646,11 +1716,9 @@ $BODY$
         """
         lst_id = []
         for key, lst in selection.items():
-            id_run = self.run_query("SELECT id FROM {0}.runs "
-                                    "WHERE run = '{1}' "
-                                    "AND scenario IN ({2})".format(
-                self.SCHEMA, key, ','.join(lst)),
-                fetch=True)
+            id_run = self.run_query(
+                "SELECT id FROM {0}.runs WHERE run = '{1}' AND scenario IN ({2})".format(self.SCHEMA, key,
+                                                                                         ','.join(lst)), fetch=True)
             if id_run:
                 lst_id += [id[0] for id in id_run]
         return lst_id
@@ -1687,7 +1755,6 @@ $BODY$
             'basins_1': 'gid',
             'branchs_0': 'branch',
             'branchs_1': 'gid',
-            'branchs_2': 'zonenum',
             'extremities': 'gid',
             'flood_marks': 'gid',
             'hydraulic_head': 'gid',
@@ -1730,7 +1797,7 @@ $BODY$
                 ALTER TABLE {table} ALTER COLUMN {id_name} SET DEFAULT nextval('{my_seq}'::regclass);
                 """.format(**dico)
 
-            # print(sql)
+            #  self.mgis.add_info(sql)
             self.run_query(sql)
 
     def checkschema_import(self, file):
@@ -1753,11 +1820,256 @@ $BODY$
     def vacuum(self, lst_table):
         old_isolation_level = self.con.isolation_level
         self.con.set_isolation_level(0)
-        #query = "VACUUM FULL"
+        # query = "VACUUM FULL"
         query = ''
         for tbl in lst_table:
-            query = 'VACUUM {0}.{1};\n'.format(self.SCHEMA,tbl)
+            query = 'VACUUM {0}.{1};\n'.format(self.SCHEMA, tbl)
         cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute(query)
         self.con.set_isolation_level(old_isolation_level)
         self.con.commit()
+
+    def planim_select(self):
+        sql = \
+            """
+ SELECT planim, 
+    branchnum, 
+    minp,
+    maxp,
+    (SELECT  abscissa FROM
+        (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
+         FROM  {0}.profiles WHERE active ORDER BY abscissa) t7
+     WHERE  nombre2 = minp) as absmin , 
+    (SELECT  abscissa FROM
+          (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, 
+         abscissa 
+         FROM  {0}.profiles WHERE active ORDER BY abscissa) t8
+      WHERE  nombre2 = maxp) as absmax 
+FROM
+    (SELECT planim,
+     branchnum, 
+     minp,
+     maxp, 
+     Lag (minp,1) OVER (ORDER BY abs4, abs3) AS bp1 
+     FROM (SELECT  t3.planim,
+           t3.branchnum, 
+           num2 as minp, 
+           num as maxp,  
+           t4.abscissa as abs4 , 
+           t3.abscissa as abs3 
+           FROM (SELECT  planim, 
+                 branchnum, 
+                 num,
+                 abscissa
+                 FROM (SELECT  nombre, 
+                       planim, 
+                       branchnum , 
+                       case 
+                       when branchnum != bp1 then  nombre
+                       when planim != mp1  then  nombre
+                       when  mp1  is NULL and bp1 is null then nombre
+                       else -1 end AS num ,
+                       abscissa
+                       FROM (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, 
+                             planim, 
+                             branchnum ,
+                             abscissa,
+                             Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
+                             Lead (planim,1) OVER (ORDER BY abscissa) as mp1
+                             FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 
+                       ORDER BY abscissa ) t1
+                 WHERE num != -1 ORDER BY branchnum) t3 
+           JOIN
+               (SELECT  planim, branchnum, num2,abscissa FROM
+                 (SELECT  nombre,
+                 planim,
+                 branchnum , 
+                 case 
+                 when branchnum != bm1 then  nombre
+                 when planim != mm1  then  nombre
+                 When  mm1  is NULL and bm1 is null then nombre
+                 else -1 end AS num2 ,
+                 abscissa,
+                 bm1
+                 FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, 
+                       planim, 
+                       branchnum ,
+                       abscissa,
+                       LAG (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
+                       LAG (planim,1) OVER (ORDER BY abscissa) as mm1 
+                       FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 
+                 ORDER BY abscissa ) t1
+             WHERE num2 != -1 ORDER BY branchnum) t4
+           ON t3.planim =t4.planim and t3.branchnum =t4.branchnum  WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
+WHERE minp != bp1 or bp1 is NULL
+            """
+
+        (results, namCol) = self.run_query(sql.format(self.SCHEMA),
+                                           fetch=True, namvar=True)
+        dico_planim = {'pas': [], 'min': [], 'max': [],
+                       'absmin': [], 'absmax': []}
+        for pas, branch, minp, maxp, absmin, absmax in results:
+            dico_planim['pas'].append(pas)
+            dico_planim['min'].append(minp)
+            dico_planim['max'].append(maxp)
+            dico_planim['absmin'].append(absmin)
+            dico_planim['absmax'].append(absmax)
+
+        return dico_planim
+
+    def maillage_select(self):
+
+        sql = \
+            """
+        SELECT mesh, branchnum, minp,maxp
+        FROM
+            (SELECT mesh, branchnum, minp,maxp,   Lag (minp,1) OVER (ORDER BY abs4, abs3) AS bp1 FROM
+            (SELECT  t3.mesh, t3.branchnum, num2 as minp, num as maxp,  t4.abscissa as abs4 , t3.abscissa as abs3 FROM
+            (SELECT  mesh, branchnum, num,abscissa FROM
+            (SELECT  nombre, mesh, branchnum , case 
+                 when branchnum != bp1 then  nombre
+                when mesh != mp1  then  nombre + 1
+                when  mp1  is NULL and bp1 is null then nombre
+                else -1 end AS num ,abscissa
+            FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, mesh, branchnum ,abscissa,
+                  Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
+                  Lead (mesh,1) OVER (ORDER BY abscissa) as mp1
+                  FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
+            WHERE num != -1 ORDER BY branchnum) t3 
+            JOIN
+            (SELECT  mesh, branchnum, num2,abscissa FROM
+            (SELECT  nombre, mesh, branchnum , case 
+                when branchnum != bm1 then  nombre
+                when mesh != mm1  then  nombre
+                When  mm1  is NULL and bm1 is null then nombre
+                else -1 end AS num2 ,abscissa
+            FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, mesh, branchnum ,abscissa,
+                  LAg (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
+                  LAG (mesh,1) OVER (ORDER BY abscissa) as mm1 
+                  FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
+            WHERE num2 != -1 ORDER BY branchnum) t4
+            ON t3.mesh =t4.mesh and t3.branchnum =t4.branchnum  WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
+        WHERE (minp != bp1 or bp1 is NULL) and minp !=maxp
+        """
+        (results, namCol) = self.run_query(sql.format(self.SCHEMA),
+                                           fetch=True, namvar=True)
+
+        dico_mesh = {'pas': [], 'min': [], 'max': []}
+        for pas, branch, minp, maxp in results:
+            dico_mesh['pas'].append(pas)
+            dico_mesh['min'].append(minp)
+            dico_mesh['max'].append(maxp)
+
+        return dico_mesh
+
+    def zone_ks(self):
+        sql = """
+SELECT  minbedcoef, 
+        majbedcoef, 
+        branchnum,  
+        absmin,
+        absmax
+FROM
+(SELECT  minbedcoef, 
+        majbedcoef, 
+        branchnum,  
+        num2, 
+        num,
+        absmin,
+        absmax,
+         lag(num2,1) OVER (ORDER BY absmin,absmax) as numm1
+FROM
+    (SELECT  t3.minbedcoef, 
+            t3.majbedcoef, 
+            t3.branchnum,
+             (SELECT  abscissa FROM (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
+                                FROM  {0}.profiles WHERE active ORDER BY abscissa) t7 
+             WHERE  nombre2 = num2) as absmin ,  
+            (SELECT  abscissa FROM (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
+                                    FROM  {0}.profiles WHERE active ORDER BY abscissa) t8 
+             WHERE  nombre2 = num) as absmax,
+            num2, 
+            num
+    FROM      
+        (SELECT  minbedcoef,majbedcoef, branchnum, num,abscissa 
+         FROM (SELECT  nombre, minbedcoef,majbedcoef, branchnum , case 
+               when branchnum != bp1 then  nombre
+               when minbedcoef != mibp1 OR majbedcoef != mabp1 then  nombre +1
+               when  mibp1  is NULL and mabp1  is NULL and bp1 is null then nombre
+               else -1 end AS num ,abscissa
+               FROM 
+                   (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, 
+                    minbedcoef,
+                    majbedcoef, 
+                    branchnum ,
+                    abscissa,
+                    Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
+                    Lead (minbedcoef,1) OVER (ORDER BY abscissa) as mibp1,
+                    Lead (majbedcoef,1) OVER (ORDER BY abscissa) as mabp1
+                    FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1 
+         WHERE num != -1 ORDER BY branchnum) t3
+         JOIN
+        (SELECT  minbedcoef,majbedcoef, branchnum, num2, abscissa FROM
+            (SELECT  nombre, 
+             minbedcoef,
+             majbedcoef, 
+             branchnum , 
+             case 
+             when branchnum != bm1 then  nombre
+             when minbedcoef != mibm1 OR majbedcoef != mabm1 then  nombre
+             When  mibm1  is NULL and mabm1 is NULL and bm1 is null then nombre
+             else -1 end AS num2 ,
+             abscissa
+             FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, 
+                   minbedcoef,
+                   majbedcoef, 
+                   branchnum ,
+                   abscissa,
+                   Lag (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
+                   Lag (minbedcoef,1) OVER (ORDER BY abscissa) as mibm1,
+                   Lag (majbedcoef,1) OVER (ORDER BY abscissa) as mabm1
+                   FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 
+             ORDER BY abscissa ) t1
+         WHERE num2 != -1 ORDER BY branchnum) t4
+         ON t3.minbedcoef=t4.minbedcoef and t3.majbedcoef=t4.majbedcoef 
+         and t3.branchnum =t4.branchnum and num2< num  ORDER BY absmin ,  absmax ) t9) t10
+WHERE (num2 != numm1 OR numm1 is NULL)
+
+        """
+        (results, namCol) = self.run_query(sql.format(self.SCHEMA),
+                                           fetch=True, namvar=True)
+
+        dico_ks = {"branch": [], "minbedcoef": [], "majbedcoef": [],
+                   'zoneabsstart': [], 'zoneabsend': []}
+
+        for minbedcoef, majbedcoef, branch, minp, maxp in results:
+            dico_ks["branch"].append(branch)
+            dico_ks["minbedcoef"].append(minbedcoef)
+            dico_ks["majbedcoef"].append(majbedcoef)
+            dico_ks['zoneabsstart'].append(minp)
+            dico_ks['zoneabsend'].append(maxp)
+
+        return dico_ks
+
+    def check_valid_profil(self):
+        """
+        Check if profile intersect multiBranch or MultiPoint
+        """
+        sql = """SELECT pid, count(*) FROM (SELECT p.gid as pid ,b.gid as bid From  {0}.profiles AS p,
+                       {0}.branchs as b WHERE ST_INTERSECTS(p.geom, b.geom) )
+                       AS nb GROUP BY pid Having count(*)>1;"""
+        results = self.run_query(sql.format(self.SCHEMA), fetch=True)
+        lst_profil_err = []
+        if results:
+            if len(results) > 0:
+                for val in results:
+                    lst_profil_err.append(val[0])
+
+        sql = """SELECT p.gid as pid ,b.gid as bid From  {0}.profiles AS p,
+                {0}.branchs as b WHERE  st_geometrytype(ST_Intersection(p.geom, b.geom))='ST_MultiPoint';"""
+        results = self.run_query(sql.format(self.SCHEMA), fetch=True)
+        if results:
+            if len(results) > 0:
+                for val in results:
+                    lst_profil_err.append(val[0])
+        return lst_profil_err

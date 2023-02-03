@@ -91,43 +91,37 @@ class MasObject(object):
         qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
               '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
                                                                  self.name)
-        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_point();\n'
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_point();\n'.format(self.schema)
         return qry
 
-    def pg_abscisse_profil(self):
+    def pg_abscisse_profil(self,local='public'):
         qry = """
-    CREATE OR REPLACE FUNCTION {}.abscisse_profil(id_profil integer )
+    CREATE OR REPLACE FUNCTION {0}.abscisse_profil(id_profil integer )
         RETURNS double precision
         LANGUAGE 'plpgsql'
         COST 100.0
         IMMUTABLE NOT LEAKPROOF 
     AS $BODY$
          DECLARE
-            long1	double precision;
             long2	double precision;
-            g	geometry;
-            p	geometry;
+            g	public.geometry;
+            p	public.geometry;
             b	integer;
-            z	integer;
             d	double precision;
-            geom_p geometry;
+            geom_p public.geometry;
             abscissa  double precision;
          BEGIN
-            EXECUTE 'SELECT geom FROM {0}.profiles WHERE gid = $1' USING id_profil INTO geom_p;
-            EXECUTE 'SELECT branch, zonenum, geom, ST_Distance(geom,$1) FROM  {0}.branchs ORDER BY 4 LIMIT 1' USING geom_p INTO b,z,g,d;
-            EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM {0}.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING b,z INTO long1;
-            p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
-            long2 = (SELECT (ST_Length(g)*ST_LineLocatePoint(ST_LineMerge(g),p)));
-            IF long1 IS NULL THEN
-                  long1 = 0;
-            END IF;
-            abscissa = ROUND((long1+long2)::numeric,2);
+			EXECUTE 'SELECT geom FROM {0}.profiles WHERE gid = $1' USING id_profil INTO geom_p;
+			EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM {0}.branchs ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
+			p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
+			long2 = (SELECT ST_Length(g)* ST_LineLocatePoint(ST_LineMerge(g),p));
+			abscissa:= long2;
 
             RETURN abscissa;
          END;
     $BODY$; """
 
-        return qry
+        return qry.format(local)
 
 
 # *****************************************
@@ -219,12 +213,11 @@ class flood_marks(MasObject):
 
     def pg_clear_tab(self):
         """ create trigger"""
-        qry = """
-            CREATE TRIGGER flood_marks_delete_point_flood
+        qry = """CREATE TRIGGER flood_marks_delete_point_flood
             AFTER DELETE
-            ON {}.{}
+            ON {0}.{1}
             FOR EACH ROW
-            EXECUTE PROCEDURE public.delete_point_flood();""".format(
+            EXECUTE PROCEDURE {0}.delete_point_flood();""".format(
             self.schema, self.name)
         return qry
 
@@ -235,7 +228,7 @@ class flood_marks(MasObject):
         BEFORE INSERT OR UPDATE 
         ON {0}.{1}
         FOR EACH ROW
-        EXECUTE PROCEDURE public.calcul_abscisse_point_flood();
+        EXECUTE PROCEDURE {0}.calcul_abscisse_point_flood();
         """.format(self.schema, self.name)
         return qry
 
@@ -250,11 +243,29 @@ class flood_marks(MasObject):
         return qry
 
 
+class visu_flood_marks(MasObject):
+    def __init__(self):
+        super(visu_flood_marks, self).__init__()
+        self.order = 4
+        self.geom_type = 'LineString'
+        self.attrs = [
+            ('gid', 'serial NOT NULL'),
+            ('id_marks', 'integer'),
+            ('CONSTRAINT visu_flood_marks_pkey', 'PRIMARY KEY(gid,id_marks)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        qry += '\n'
+        return qry
+
+
 # *****************************************
 class weirs(MasObject):
     def __init__(self):
         super(weirs, self).__init__()
-        self.order = 4
+        self.order = 5
         self.geom_type = 'Point'
         self.attrs = [
             ('gid', ' serial NOT NULL'),
@@ -287,7 +298,7 @@ class weirs(MasObject):
 class hydraulic_head(MasObject):
     def __init__(self):
         super(hydraulic_head, self).__init__()
-        self.order = 5
+        self.order = 6
         self.geom_type = 'Point'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -310,7 +321,7 @@ class hydraulic_head(MasObject):
 class lateral_inflows(MasObject):
     def __init__(self):
         super(lateral_inflows, self).__init__()
-        self.order = 6
+        self.order = 7
         self.geom_type = 'Point'
         self.attrs = [('gid', ' serial NOT NULL'),
                       ('name', ' character varying(30)'),
@@ -335,7 +346,7 @@ class lateral_inflows(MasObject):
 class lateral_weirs(MasObject):
     def __init__(self):
         super(lateral_weirs, self).__init__()
-        self.order = 7
+        self.order = 8
         self.geom_type = 'Point'
         self.attrs = [('gid serial', 'NOT NULL'),
                       ('name character', 'varying(30)'),
@@ -361,7 +372,7 @@ class lateral_weirs(MasObject):
 class tracer_lateral_inflows(MasObject):
     def __init__(self):
         super(tracer_lateral_inflows, self).__init__()
-        self.order = 8
+        self.order = 9
         self.geom_type = 'Point'
         self.attrs = [('gid', ' serial NOT NULL'),
                       ('name', ' character varying(30)'),
@@ -387,7 +398,7 @@ class tracer_lateral_inflows(MasObject):
 class outputs(MasObject):
     def __init__(self):
         super(outputs, self).__init__()
-        self.order = 9
+        self.order = 10
         self.geom_type = 'Point'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -398,12 +409,18 @@ class outputs(MasObject):
                       ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('CONSTRAINT outputs_pkey', 'PRIMARY KEY (gid)')]
 
+    def pg_create_calcul_abscisse_outputs(self):
+        qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
+              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
+                                                                 self.name)
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_point_outputs();\n'.format(self.schema)
+        return qry
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += self.pg_create_index()
         qry += '\n'
-        qry += self.pg_create_calcul_abscisse()
+        qry += self.pg_create_calcul_abscisse_outputs()
         return qry
 
 
@@ -411,7 +428,7 @@ class outputs(MasObject):
 class topo(MasObject):
     def __init__(self):
         super(topo, self).__init__()
-        self.order = 10
+        self.order = 11
         self.geom_type = 'Point'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -439,7 +456,7 @@ class topo(MasObject):
 class profiles(MasObject):
     def __init__(self):
         super(profiles, self).__init__()
-        self.order = 11
+        self.order = 12
         self.geom_type = 'MultiLineString'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -457,6 +474,10 @@ class profiles(MasObject):
                       ('struct', 'integer DEFAULT 0'),
                       ('zleftminbed', 'float'),
                       ('zrightminbed', 'float'),
+                      ('minbedcoef', 'float'),
+                      ('majbedcoef', 'float'),
+                      ('mesh', 'float'),
+                      ('planim', 'float'),
                       ('CONSTRAINT profiles_pkey', 'PRIMARY KEY (gid)'),
                       ('CONSTRAINT profile_unique', 'UNIQUE (name)')]
 
@@ -464,8 +485,17 @@ class profiles(MasObject):
         qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
               '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
                                                                  self.name)
-        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_profil();\n'
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_profil();\n'.format(self.schema)
         return qry
+
+    def pg_profiles_edition(self):
+        qry = """CREATE TRIGGER profiles_edition 
+                AFTER INSERT OR DELETE OR UPDATE 
+                ON {0}.profiles
+                FOR EACH STATEMENT
+                EXECUTE PROCEDURE {0}.change_visu_branch();
+            """
+        return qry.format(self.schema)
 
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
@@ -473,6 +503,8 @@ class profiles(MasObject):
         qry += self.pg_create_index()
         qry += '\n'
         qry += self.pg_create_calcul_abscisse()
+        qry += '\n'
+        qry += self.pg_profiles_edition()
         return qry
 
 
@@ -480,7 +512,7 @@ class profiles(MasObject):
 class links(MasObject):
     def __init__(self):
         super(links, self).__init__()
-        self.order = 12
+        self.order = 13
         self.geom_type = 'MultiLineString'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -510,7 +542,7 @@ class links(MasObject):
         qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
               '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
                                                                  self.name)
-        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_profil();\n'
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_profil();\n'.format(self.schema)
         return qry
 
     def pg_create_table(self):
@@ -522,23 +554,42 @@ class links(MasObject):
         return qry
 
 
-# *****************************************
+
+#*****************************************
+class visu_branchs(MasObject):
+    def __init__(self):
+        super(visu_branchs, self).__init__()
+        self.order = 14
+        self.geom_type = 'LineString'
+        self.attrs = [('gid', 'serial NOT NULL'),
+                      ('branchnum', 'integer'),
+                      ('branch_part', 'integer'),
+                      ('prof_start', 'integer'),
+                      ('abs_start', 'double precision'),
+                      ('prof_end', 'integer'),
+                      ('abs_end', 'double precision'),
+                      ('minbedcoef', 'double precision'),
+                      ('majbedcoef', 'double precision'),
+                      ('mesh', 'double precision'),
+                      ('CONSTRAINT visu_branchs_pkey', 'PRIMARY KEY (gid)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        return qry
+
+
+#*****************************************
 class branchs(MasObject):
     def __init__(self):
         super(branchs, self).__init__()
-        self.order = 13
+        self.order = 15
         self.geom_type = 'MultiLineString'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('branch', 'serial NOT NULL'),
                       ('startb', 'character varying(30)'),
                       ('endb', 'character varying(30)'),
-                      ('zonenum', 'serial NOT NULL'),
-                      ('zoneabsstart', 'float'),
-                      ('zoneabsend', 'float'),
-                      ('minbedcoef', 'float'),
-                      ('majbedcoef', 'float'),
-                      ('mesh', 'float'),
-                      ('planim', 'float'),
                       ('active', 'boolean NOT NULL DEFAULT TRUE'),
                       ('CONSTRAINT branchs_pkey', 'PRIMARY KEY (gid)'),
                       ('CONSTRAINT cle_debut', 'FOREIGN KEY (startb)\n'
@@ -550,29 +601,52 @@ class branchs(MasObject):
                                              '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(
                           self.schema))]
 
-    def pg_create_calcul_abscisse(self):
-        qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
-              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
-                                                                 self.name)
-        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE calcul_abscisse_branche();\n'
-        return qry
+    # def pg_create_calcul_abscisse(self):
+    #     qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
+    #           '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
+    #                                                              self.name)
+    #     qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_branche();\n'.format(self.schema)
+    #     return qry
 
     def pg_updat_actv(self):
         qry = 'CREATE TRIGGER {1}_chstate_active\n' \
               ' AFTER UPDATE OF active \n  ON {0}.{1}\n'.format(self.schema, self.name)
         qry += ' FOR EACH ROW\n' \
                'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
-               'EXECUTE PROCEDURE chstate_branch();\n'
+               'EXECUTE PROCEDURE {0}.chstate_branch();\n'.format(self.schema)
         return qry
+
+    def pg_all_up_abs_branchs(self):
+        qry = """CREATE TRIGGER all_up_abs_branchs
+                AFTER UPDATE 
+                ON {0}.branchs
+                FOR EACH ROW
+                WHEN (OLD.geom IS DISTINCT FROM NEW.geom)
+                EXECUTE PROCEDURE {0}.up_abs_branch();
+            """
+        return qry.format(self.schema)
+
+    def pg_branchs_edition(self):
+        qry = """CREATE TRIGGER branchs_edition 
+                AFTER INSERT OR DELETE OR UPDATE 
+                ON {0}.branchs
+                FOR EACH STATEMENT
+                EXECUTE PROCEDURE {0}.change_visu_branch();
+            """
+        return qry.format(self.schema)
 
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += self.pg_create_index()
-        qry += '\n'
-        qry += self.pg_create_calcul_abscisse()
+        #qry += '\n'
+        #qry += self.pg_create_calcul_abscisse()
         qry += '\n'
         qry += self.pg_updat_actv()
+        qry += '\n'
+        qry += self.pg_all_up_abs_branchs()
+        qry += '\n'
+        qry += self.pg_branchs_edition()
         return qry
 
 
@@ -580,7 +654,7 @@ class branchs(MasObject):
 class basins(MasObject):
     def __init__(self):
         super(basins, self).__init__()
-        self.order = 14
+        self.order = 16
         self.geom_type = 'MultiPolygon'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -599,7 +673,7 @@ class basins(MasObject):
               ' AFTER UPDATE\n  ON {0}.{1}\n'.format(self.schema, self.name)
         qry += ' FOR EACH ROW\n' \
                'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
-               'EXECUTE PROCEDURE chstate_basin();\n'
+               'EXECUTE PROCEDURE {0}.chstate_basin();\n'.format(self.schema)
         return qry
 
     def pg_create_table(self):
@@ -611,23 +685,6 @@ class basins(MasObject):
         return qry
 
 
-class visu_flood_marks(MasObject):
-    def __init__(self):
-        super(visu_flood_marks, self).__init__()
-        self.order = 15
-        self.geom_type = 'LineString'
-        self.attrs = [
-            ('gid', 'serial NOT NULL'),
-            ('id_marks', 'integer'),
-            ('CONSTRAINT visu_flood_marks_pkey', 'PRIMARY KEY(gid,id_marks)')]
-
-    def pg_create_table(self):
-        qry = super(self.__class__, self).pg_create_table()
-        qry += '\n'
-        qry += self.pg_create_index()
-        qry += '\n'
-        return qry
-
 
 # *******************************************
 # ******************************************
@@ -635,7 +692,7 @@ class visu_flood_marks(MasObject):
 class observations(MasObject):
     def __init__(self):
         super(observations, self).__init__()
-        self.order = 16
+        self.order = 17
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('code', 'character(10)'),
@@ -649,7 +706,7 @@ class observations(MasObject):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS observations_code_type " \
-               "ON {}.observations(code, type);".format(self.schema)
+               "ON {0}.observations(code, type);".format(self.schema)
         qry += '\n'
         return qry
 
@@ -697,7 +754,7 @@ class class_fct_psql(MasObject):
         super(class_fct_psql, self).__init__()
         self.order = 22
 
-    def pg_clone_schema(self):
+    def pg_clone_schema(self, local=None):
         """
         clone schema in psql
         example : SELECT clone_schema('ouvrage3','ouvrage3_ext','runs,results,results_sect,runs_graph');
@@ -972,14 +1029,14 @@ COST 100;
         # """
         return qry
 
-    def pg_create_calcul_abscisse(self):
-        qry = """CREATE OR REPLACE FUNCTION {0}()  
+    def pg_create_calcul_abscisse(self,local='public'):
+        qry = """CREATE OR REPLACE FUNCTION {0}.calcul_abscisse_point()  
             RETURNS trigger AS  
             $BODY$ 
             DECLARE  
                 long1	double precision; 
                 long2	double precision;  
-                g	geometry; 
+                g	public.geometry; 
                 b	integer; 
                 z	integer; 
                 d	double precision; 
@@ -991,7 +1048,7 @@ COST 100;
                     EXECUTE '(SELECT ST_UNION(geom) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch=$1))' USING NEW.branchnum INTO g;
                     NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
                 ELSE
-                    EXECUTE 'SELECT branch, zonenum, geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 4 LIMIT 1' USING NEW.geom INTO b,z,g,d  ;
+                    EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d  ;
 
                     IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                         NEW.branchnum= b ;
@@ -999,7 +1056,7 @@ COST 100;
 
                         
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
-                       EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2))' USING b,z INTO long1;
+                       EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1))' USING b INTO long1;
                        f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
                        NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
                        long2 = (SELECT (ST_Length(g)*f));
@@ -1022,23 +1079,82 @@ COST 100;
               LANGUAGE plpgsql IMMUTABLE 
               COST 100; """
 
-        return qry.format('calcul_abscisse_point')
+        return qry.format(local)
 
-    def pg_create_calcul_abscisse_profil(self):
-        qry = """CREATE OR REPLACE FUNCTION {0}()
+    def pg_create_calcul_abscisse_outputs(self, local='public'):
+        qry = """CREATE OR REPLACE FUNCTION {}.calcul_abscisse_point_outputs()
+    RETURNS trigger
+    LANGUAGE 'plpgsql'
+    COST 100
+    IMMUTABLE NOT LEAKPROOF
+    AS $BODY$
+ 
+            DECLARE  
+                long1	double precision; 
+                long2	double precision;  
+				pk	double precision;  
+                g	public.geometry; 
+                b	integer; 
+                z	integer; 
+                d	double precision; 
+                f	double precision;
+                val	boolean;           
+             
+                BEGIN 
+				
+				IF NEW.geom IS NULL  AND NEW.name IS NOT NULL  AND (NEW.abscissa IS NULL OR NEW.branchnum IS NULL) THEN
+					EXECUTE ' SELECT abscissa, branchnum FROM  ' || TG_TABLE_SCHEMA || '.profiles WHERE name =  $1 ' USING NEW.name INTO pk, b;
+					IF pk IS NOT NULL THEN
+						NEW.abscissa = ROUND(pk::numeric,2);
+						NEW.branchnum= b ;
+					END IF;
+				END IF;
+				
+                IF NEW.geom IS NULL AND NEW.abscissa IS NOT NULL AND NEW.branchnum IS NOT NULL THEN
+                    EXECUTE '(SELECT ST_UNION(geom) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch=$1))' USING NEW.branchnum INTO g;
+                    NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
+                ELSE
+                    EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d  ;
+
+                    IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
+                        NEW.branchnum= b ;
+                    END IF;
+                        
+                    IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
+                       EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1))' USING b INTO long1;
+                       f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
+                       NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
+                       long2 = (SELECT (ST_Length(g)*f));
+                        
+                       IF long1 IS NULL THEN
+                           long1 = 0;
+                       END IF;                        
+                       NEW.abscissa = ROUND((long1+long2)::numeric,2);
+                    END IF;
+                    
+                END IF;                   
+                        
+                RETURN NEW;
+            END;      
+$BODY$; """
+
+        return qry.format(local)
+
+    def pg_create_calcul_abscisse_profil(self,local='public'):
+        qry = """CREATE OR REPLACE FUNCTION {0}.calcul_abscisse_profil()
                   RETURNS trigger AS
                 $BODY$
                 DECLARE
                     long1	double precision;
                     long2	double precision;
-                    g	geometry;
-                    p	geometry;
+                    g	public.geometry;
+                    p	public.geometry;
                     b	integer;
                     z	integer;
                     d	double precision;
                     BEGIN
                     
-                    EXECUTE 'SELECT branch, zonenum, geom, ST_Distance(geom,$1) FROM ' || TG_TABLE_SCHEMA ||'.branchs ORDER BY 4 LIMIT 1' USING NEW.geom INTO b,z,g,d;
+                    EXECUTE 'SELECT branch,  geom, ST_Distance(geom,$1) FROM ' || TG_TABLE_SCHEMA ||'.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d;
 
                     IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                     NEW.branchnum=b;
@@ -1046,7 +1162,7 @@ COST 100;
 
                     
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
-                        EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA ||'.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING b,z INTO long1;
+                        EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA ||'.branchs WHERE (branch<$1)' USING b INTO long1;
                         p = (SELECT (ST_DUMP(ST_Intersection(NEW.geom, g))).geom LIMIT 1);
                         long2 = (SELECT (ST_Length(g)*ST_LineLocatePoint(ST_LineMerge(g),p)));
                         
@@ -1064,39 +1180,42 @@ COST 100;
                 $BODY$
                   LANGUAGE plpgsql IMMUTABLE
                   COST 100;"""
-        return qry.format('calcul_abscisse_profil')
+        return qry.format(local)
 
-    def pg_create_calcul_abscisse_branche(self):
-        qry = '''CREATE OR REPLACE FUNCTION calcul_abscisse_branche()
+
+    def pg_create_calcul_abscisse_branche(self,local='public'):
+        """
+        Old function TODO delete in future
+        """
+        qry = '''CREATE OR REPLACE FUNCTION {0}.calcul_abscisse_branche()
               RETURNS trigger AS
             $BODY$
             DECLARE
-                long1	float; 
-                long2	float; 
-            BEGIN 
-         
-                EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING NEW.branch,NEW.zonenum INTO long1; 
-                long2 = (SELECT ST_Length(NEW.geom)); 
-             
-                IF long1 IS NULL THEN 
-                    long1 = 0; 
-                END IF; 
-            
+                long1	float;
+                long2	float;
+            BEGIN
+                EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs_old WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING NEW.branch,NEW.zonenum INTO long1;
+                long2 = (SELECT ST_Length(NEW.geom));
+
+                IF long1 IS NULL THEN
+                    long1 = 0;
+                END IF;
+
                 NEW.zoneabsstart = ROUND(long1::numeric,1);
                 NEW.zoneabsend = ROUND((long1+long2)::numeric,1);
-            
+
                 RETURN NEW;
             END;
-            
+
             $BODY$
               LANGUAGE plpgsql IMMUTABLE
               COST 100;
 '''
-        return qry
+        return qry.format(local)
 
-    def pg_chstate_branch(self):
+    def pg_chstate_branch(self,local='public'):
         qry = """
-CREATE  OR REPLACE FUNCTION public.chstate_branch() RETURNS TRIGGER AS $$
+CREATE  OR REPLACE FUNCTION {0}.chstate_branch() RETURNS TRIGGER AS $$
     DECLARE
          my_row  integer; 
     BEGIN 
@@ -1116,61 +1235,61 @@ CREATE  OR REPLACE FUNCTION public.chstate_branch() RETURNS TRIGGER AS $$
          RETURN NEW;
     END;
 $$ LANGUAGE plpgsql;"""
-        return qry
+        return qry.format(local)
 
         # DROP TRIGGER IF EXISTS branch_chstate_active ON ouvrage3.branchs
 
-    def pg_chstate_basin(self):
+    def pg_chstate_basin(self,local='public'):
         qry = """
-CREATE  OR REPLACE FUNCTION public.chstate_basin() RETURNS TRIGGER AS $$
+CREATE  OR REPLACE FUNCTION {0}.chstate_basin() RETURNS TRIGGER AS $$
     BEGIN 
          EXECUTE 'UPDATE ' || TG_TABLE_SCHEMA || '.links SET active = $2 WHERE (basinstart = $1 OR basinend = $1)' USING NEW.basinnum,NEW.active;
          RETURN NEW;
     END;
 $$ LANGUAGE plpgsql;"""
-        return qry
+        return qry.format(local)
 
-    def pg_abscisse_profil(self):
+    def pg_abscisse_profil(self,local='public'):
         """
         SQL function which computes the profiles abscissa
         :return:
         """
         qry = """
-    CREATE OR REPLACE FUNCTION public.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)
+    CREATE OR REPLACE FUNCTION {0}.abscisse_profil(_tbl regclass, _tbl_branchs regclass, id_prof integer)
         RETURNS TABLE(abscissa double precision, branch integer)
         LANGUAGE 'plpgsql'
     AS $BODY$
          DECLARE
-            long1	double precision;
             long2	double precision;
-            g	geometry;
-            p	geometry;
+            long1	double precision;
+            g	public.geometry;
+            p	public.geometry;
             b	integer;
-            z	integer;
             d	double precision;
-            geom_p geometry;
+            geom_p public.geometry;
          BEGIN
-            EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_prof INTO geom_p;
-            EXECUTE 'SELECT branch, zonenum, geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 4 LIMIT 1' USING geom_p INTO b,z,g,d  ;
-            EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM  ' || _tbl_branchs || ' WHERE (branch<$1) OR (branch=$1 AND zonenum<$2))' USING b,z INTO long1;
-            p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
-            long2 = (SELECT (ST_Length(g)*ST_LineLocatePoint(ST_LineMerge(g),p)));
+		    EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_prof INTO geom_p;
+			EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
+			EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || _tbl_branchs || ' WHERE (branch<$1))' USING b INTO long1;
+			p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
+			long2 = (SELECT ST_Length(g)* ST_LineLocatePoint(ST_LineMerge(g),p));
+			branch := b;
             IF long1 IS NULL THEN
-                  long1 = 0;
+               long1 = 0;
             END IF;
-            abscissa := ROUND((long1+long2)::numeric,2);
-            branch := b;
+
+		    abscissa:= ROUND((long1+long2)::numeric,2);
 
             RETURN NEXT;
          END;
     $BODY$; """
 
-        return qry
+        return qry.format(local)
 
-    def pg_all_profil(self):
+    def pg_all_profil(self,local='public'):
         """ SQL function which updates abscissa of all profiles of one table"""
         qry = """
-CREATE OR REPLACE FUNCTION public.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)
+CREATE OR REPLACE FUNCTION {0}.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)
     RETURNS  VOID 
     LANGUAGE 'plpgsql'
 AS $BODY$
@@ -1181,58 +1300,58 @@ AS $BODY$
      BEGIN
        FOR my_row IN  EXECUTE 'SELECT gid FROM ' ||_tbl
        LOOP
-          SELECT abscissa, branch FROM public.abscisse_profil( _tbl ,_tbl_branchs, my_row ) INTO abs1,b1;
+          SELECT abscissa, branch FROM {0}.abscisse_profil( _tbl ,_tbl_branchs, my_row ) INTO abs1,b1;
           EXECUTE 'UPDATE  '||_tbl || ' SET  branchnum = $3, abscissa = $1 WHERE gid = $2' USING abs1, my_row,b1;
         END LOOP;
         RETURN  ;
      END;
 $BODY$;"""
-        return qry
+        return qry.format(local)
 
-    def pg_abscisse_point(self):
+    def pg_abscisse_point(self,local='public'):
         """
          SQL function which computes the points abscissa
         :return:
         """
         qry = """
-    CREATE OR REPLACE FUNCTION public.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)
+    CREATE OR REPLACE FUNCTION {0}.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)
     RETURNS TABLE(abscissa double precision, branch integer)
     LANGUAGE 'plpgsql'
 AS $BODY$
  
-     DECLARE  
-        long1	double precision; 
+     DECLARE   
         long2	double precision;  
-        g	geometry; 
+        long1	double precision;  
+        g	public.geometry; 
         b	integer; 
-        z	integer; 
         d	double precision; 
         f	double precision;         
-        geom_p  geometry;    
+        geom_p  public.geometry;    
 
      BEGIN
          EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_point INTO geom_p;
-         EXECUTE 'SELECT branch, zonenum, geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 4 LIMIT 1' USING geom_p INTO b,z,g,d  ;
-         EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM  ' || _tbl_branchs || ' WHERE (branch<$1) OR (branch=$1 AND zonenum<$2))' USING b,z INTO long1;
+         EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
+         EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || _tbl_branchs || ' WHERE (branch<$1))' USING b INTO long1;
          f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),geom_p));
          long2 = (SELECT (ST_Length(g)*f));
          IF long1 IS NULL THEN
-             long1 = 0;
+           long1 = 0;
          END IF;
-         abscissa :=     ROUND((long1+long2)::numeric,2);        
+
+         abscissa:= ROUND((long1+long2)::numeric,2); 
          branch := b;          
         RETURN NEXT;
      END;      
 $BODY$;"""
-        return qry
+        return qry.format(local)
 
-    def pg_all_point(self):
+    def pg_all_point(self,local='public'):
         """
          SQL function which updates abscissa of all point of one table
         :return:
         """
         qry = """
-    CREATE OR REPLACE FUNCTION  public.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)
+    CREATE OR REPLACE FUNCTION  {0}.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)
         RETURNS  VOID 
         LANGUAGE 'plpgsql'
     AS $BODY$
@@ -1243,85 +1362,86 @@ $BODY$;"""
          BEGIN
           FOR my_row IN  EXECUTE 'SELECT gid FROM ' ||_tbl
            LOOP
-             SELECT abscissa, branch FROM  public.abscisse_point( _tbl ,_tbl_branchs, my_row ) INTO abs1,b1;
+             SELECT abscissa, branch FROM  {0}.abscisse_point( _tbl ,_tbl_branchs, my_row ) INTO abs1,b1;
              EXECUTE 'UPDATE  '||_tbl || ' SET  branchnum = $3, abscissa = $1 WHERE gid = $2' USING abs1, my_row,b1;
             END LOOP;
             RETURN  ;
          END;
     $BODY$;"""
-        return qry
+        return qry.format(local)
 
-    def pg_abscisse_branch(self):
+    def pg_abscisse_branch(self,local='public'):
         """
-          SQL function which computes the branch abscissa
+          SQL function which computes the branch abscissa TODO delete in the future
         :return:
         """
         qry = """
-CREATE OR REPLACE FUNCTION public.abscisse_branch(
+CREATE OR REPLACE FUNCTION {0}.abscisse_branch(
 	_tbl_branchs regclass,
 	id_branch integer)
-    RETURNS TABLE (zoneabsstart float, zoneabsend float) 
+    RETURNS TABLE (zoneabsstart float, zoneabsend float)
     LANGUAGE 'plpgsql'
 AS $BODY$
 
     DECLARE
-        long1	float; 
-        long2	float; 
-        geom_b  geometry;
+        long1	float;
+        long2	float;
+        geom_b  public.geometry;
         branch integer;
-        zonenum integer;      
-    BEGIN 
+        zonenum integer;
+    BEGIN
         EXECUTE 'SELECT geom,zonenum,branch FROM  ' || _tbl_branchs || ' WHERE gid = $1' USING id_branch INTO geom_b,zonenum, branch;
-        EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || _tbl_branchs || ' WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING branch,zonenum INTO long1; 
-        long2 = (SELECT ST_Length(geom_b)); 
-        IF long1 IS NULL THEN 
-            long1 = 0; 
-        END IF; 
+        EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || _tbl_branchs || ' WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING branch,zonenum INTO long1;
+        long2 = (SELECT ST_Length(geom_b));
+        IF long1 IS NULL THEN
+            long1 = 0;
+        END IF;
         zoneabsstart := ROUND(long1::numeric,1);
-        zoneabsend := ROUND((long1+long2)::numeric,1);     
+        zoneabsend := ROUND((long1+long2)::numeric,1);
       	RETURN NEXT ;
     END;
-                  
-$BODY$;"""
-        return qry
 
-    def pg_all_branch(self):
+$BODY$;"""
+        return qry.format(local)
+
+    def pg_all_branch(self, local='public'):
         """
          SQL function which updates abscissa of all branchs of one table
+         TODO delete in the future
         :return:
         """
         qry = """
-CREATE OR REPLACE FUNCTION public.update_abscisse_branch(
+CREATE OR REPLACE FUNCTION {0}.update_abscisse_branch(
 	_tbl_branchs regclass)
     RETURNS void
     LANGUAGE 'plpgsql'
 AS $BODY$
 
      DECLARE
-        my_row  integer;     
+        my_row  integer;
         abs1 float;
         abs2 float;
      BEGIN
        FOR my_row IN  EXECUTE 'SELECT gid FROM '||_tbl_branchs
        LOOP
-          SELECT * FROM public.abscisse_branch( _tbl_branchs, my_row ) into abs1,abs2;        
-          EXECUTE 'UPDATE  '||_tbl_branchs || ' SET zoneabsstart = $1, zoneabsend = $2 WHERE gid = $3' 
+          SELECT * FROM {0}.abscisse_branch( _tbl_branchs, my_row ) into abs1,abs2;
+          EXECUTE 'UPDATE  '||_tbl_branchs || ' SET zoneabsstart = $1, zoneabsend = $2 WHERE gid = $3'
           USING  abs1, abs2,my_row;
         END LOOP;
         RETURN  ;
      END;
 
 $BODY$;"""
-        return qry
+        return qry.format(local)
 
-    def pg_delete_visu_flood_marks(self):
+    def pg_delete_visu_flood_marks(self, local='public'):
         """
          SQL function which delete visu_flood_marks
         :return:
         """
         qry = """
         
-        CREATE OR REPLACE FUNCTION public.delete_point_flood()
+        CREATE OR REPLACE FUNCTION {0}.delete_point_flood()
             RETURNS trigger
             LANGUAGE 'plpgsql'
             COST 100.0
@@ -1341,11 +1461,11 @@ $BODY$;"""
          END
         $BODY$;
         """
-        return qry
+        return qry.format(local)
 
-    def pg_create_calcul_abscisse_point_flood(self):
+    def pg_create_calcul_abscisse_point_flood(self, local='public'):
         qry = """
-CREATE OR REPLACE FUNCTION public.calcul_abscisse_point_flood()
+CREATE OR REPLACE FUNCTION {0}.calcul_abscisse_point_flood()
     RETURNS trigger
     LANGUAGE 'plpgsql'
     COST 100.0
@@ -1354,17 +1474,15 @@ AS $BODY$
 
  
             DECLARE  
-                long1	double precision; 
                 long2	double precision;  
-                g	geometry; 
+                g	public.geometry; 
                 b	integer; 
-                z	integer; 
                 d	double precision; 
                 f	double precision;
                 test	boolean;       
                 val  double precision;
-                new_line  geometry;
-                geom_final_p geometry;
+                new_line  public.geometry;
+                geom_final_p public.geometry;
                 srid integer;
                 
              
@@ -1387,12 +1505,11 @@ AS $BODY$
         			END IF;
                    	
                 ELSE
-                    EXECUTE 'SELECT branch, zonenum, geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 4 LIMIT 1' USING NEW.geom INTO b,z,g,d  ;
+                    EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d  ;
                      
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                      	NEW.branchnum= b ;
                         /* projection compute*/
-                       EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2) )' USING b,z INTO long1;
                        f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
                        geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
                         /* get srid value*/
@@ -1408,26 +1525,19 @@ AS $BODY$
         			   END IF;
                        
                        long2 = (SELECT (ST_Length(g)*f));
+            
                         
-                       IF long1 IS NULL THEN
-                           long1 = 0;
-                       END IF;
-                        
-                       NEW.abscissa = ROUND((long1+long2)::numeric,2);
+                       NEW.abscissa = ROUND((long2)::numeric,2);
                     ELSE
                          NEW.branchnum= b ;
                          
                         IF NOT  OLD.abscissa=  NEW.abscissa THEN
                          RAISE NOTICE 'entre 1 ';
-                            EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1) OR (branch=$1 AND zonenum<$2) )' USING b,z INTO long1;
-                            IF long1 IS NULL THEN
-                               long1 = 0;
-                            END IF;
-                            /* check if new abscissa is in zone*/
-                            val = (NEW.abscissa-long1)/ST_Length(g);
+                            /* check if new abscissa is in branch*/
+                            val = (NEW.abscissa)/ST_Length(g);
                             IF val>1 OR  val<0 THEN
-                            	RAISE NOTICE 'Branch : %, Zone : %',b,z;
-                            	RAISE NOTICE 'The new abscissa (%) is not between % and % ;', NEW.abscissa, long1, long1+ST_Length(g);
+                            	RAISE NOTICE 'Branch : %',b;
+                            	RAISE NOTICE 'The new abscissa (%) is not between % and % ;', NEW.abscissa, 0, ST_Length(g);
                             END IF ;    
 
                             geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),val));                            
@@ -1451,8 +1561,83 @@ AS $BODY$
         
 $BODY$;
               """
+        return qry.format(local)
+
+    def pg_up_abs_branch(self, local='public'):
+        """update the all abscissa when branch changes"""
+        qry = """
+        CREATE OR REPLACE FUNCTION {}.up_abs_branch()
+    RETURNS trigger
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE NOT LEAKPROOF
+AS $BODY$
+    DECLARE
+         my_row  integer;
+         _tbl regclass;
+          _tbl_branch regclass;
+    BEGIN 
+    _tbl_branch=TG_TABLE_SCHEMA || '.branchs';
+    """.format(local)
+
+        list_pr = ['profiles', 'links']
+        list_pts = ["flood_marks",
+                    "weirs",
+                    "hydraulic_head",
+                    "lateral_inflows",
+                    "lateral_weirs",
+                    "tracer_lateral_inflows",
+                    "outputs",]
+        sql1 = ''
+        for tab in list_pr:
+            sql1 += "_tbl=TG_TABLE_SCHEMA || '.{}';\n".format(tab)
+            sql1 += "EXECUTE 'SELECT '|| TG_TABLE_SCHEMA || '.update_abscisse_profil( $1, $2);'  USING _tbl, _tbl_branch ;\n"
+        for tab in list_pts:
+            sql1 += "_tbl=TG_TABLE_SCHEMA || '.{}';\n".format(tab)
+            sql1 += "EXECUTE 'SELECT '|| TG_TABLE_SCHEMA || '.update_abscisse_point( $1, $2);'  USING _tbl, _tbl_branch ;\n"
+        qry += sql1
+        qry += """
+        RETURN NEW;
+        END;
+        $BODY$;
+        """
         return qry
 
+    def pg_change_visu_branch(self, local='public'):
+        qry = """
+                CREATE OR REPLACE FUNCTION {0}.change_visu_branch()
+                    RETURNS trigger
+                    LANGUAGE 'plpgsql'
+                    COST 100
+                    VOLATILE NOT LEAKPROOF
+                AS $BODY$
+                    BEGIN 
+                    EXECUTE 'DELETE FROM ' || TG_TABLE_SCHEMA || '.visu_branchs';
+                    EXECUTE 'INSERT INTO ' || TG_TABLE_SCHEMA || '.visu_branchs (branchnum, branch_part, prof_start, abs_start, prof_end, abs_end, minbedcoef, majbedcoef, mesh, geom)
+                    SELECT br_id, ROW_NUMBER() OVER (PARTITION BY br_id ORDER BY pk), pr_id, absc, next_pr_id, next_absc, minbedcoef, majbedcoef, mesh, 
+                    ST_LineSubstring(gline, pk, next_pk) FROM 
+                        (SELECT 
+                         br_id, LEAD(br_id, 1) OVER (PARTITION BY br_id ORDER BY pk) As next_br_id, 
+                         pr_num As pr_id, LEAD(pr_num, 1) OVER (PARTITION BY br_id ORDER BY pk) As next_pr_id, 
+                         pk, LEAD(pk, 1) OVER (PARTITION BY br_id ORDER BY pk) As next_pk, 
+                         abscissa As absc, LEAD(abscissa, 1) OVER (PARTITION BY br_id ORDER BY pk) As next_absc, 
+                         minbedcoef, majbedcoef, mesh, planim, gline 
+                         FROM
+                            (SELECT br.branch As br_id, pr.gid As pr_id, ROW_NUMBER() OVER (ORDER BY abscissa) as pr_num, 
+                             pr.abscissa, pr.minbedcoef, pr.majbedcoef, pr.mesh, pr.planim, 
+                             ST_LineLocatePoint(ST_LineMerge(br.geom), ST_GeometryN(ST_Intersection(br.geom, pr.geom),1)) As pk, 
+                             ST_LineMerge(br.geom) As gline 
+                             FROM ' || TG_TABLE_SCHEMA || '.profiles As pr, ' || TG_TABLE_SCHEMA || '.branchs As br 
+                             WHERE ST_Intersects(ST_LineMerge(br.geom), pr.geom) AND pr.active AND br.active 
+                             ORDER BY abscissa 
+                            ) As ord_profiles 
+                        ) As sect
+                    WHERE br_id = next_br_id ORDER BY br_id, pk';
+                    RETURN NULL;
+                    END;
+                $BODY$;
+              """
+        return qry.format(local)
 
 # *****************************************
 class laws_wq(MasObject):
@@ -1766,7 +1951,7 @@ class results_val(MasObject):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS results_val_idRunTPk " \
-               "ON {}.results_val(idRunTPk, var);".format(self.schema)
+               "ON {0}.results_val(idRunTPk, var);".format(self.schema)
         qry += '\n'
         return qry
 
@@ -1787,10 +1972,10 @@ class results_idx(MasObject):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS results_idx_id_runs_pknum " \
-               "ON {}.results_idx(id_runs, pknum);".format(self.schema)
+               "ON {0}.results_idx(id_runs, pknum);".format(self.schema)
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS results_idx_id_runs_time " \
-               "ON {}.results_idx(id_runs, time);".format(self.schema)
+               "ON {0}.results_idx(id_runs, time);".format(self.schema)
         qry += '\n'
         return qry
 
@@ -1813,7 +1998,7 @@ class results_sect(MasObject):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS results_sect_id_runs_pknum " \
-               "ON {}.results_sect(id_runs, pk);".format(self.schema)
+               "ON {0}.results_sect(id_runs, pk);".format(self.schema)
         qry += '\n'
         return qry
 
@@ -1890,3 +2075,56 @@ class law_values(MasObject):
                        'PRIMARY KEY (id_law, id_var, id_order)')]
 
 # ****************************************************************************
+# *****************************************
+class branchs_old(MasObject):
+    def __init__(self):
+        super(branchs_old, self).__init__()
+        self.order = 98
+        self.geom_type = 'MultiLineString'
+        self.attrs = [('gid', 'serial NOT NULL'),
+                      ('branch', 'serial NOT NULL'),
+                      ('startb', 'character varying(30)'),
+                      ('endb', 'character varying(30)'),
+                      ('zonenum', 'serial NOT NULL'),
+                      ('zoneabsstart', 'float'),
+                      ('zoneabsend', 'float'),
+                      ('minbedcoef', 'float'),
+                      ('majbedcoef', 'float'),
+                      ('mesh', 'float'),
+                      ('planim', 'float'),
+                      ('active', 'boolean NOT NULL DEFAULT TRUE'),
+                      ('CONSTRAINT branchs_pkey', 'PRIMARY KEY (gid)'),
+                      ('CONSTRAINT cle_debut', 'FOREIGN KEY (startb)\n'
+                                               '\t   REFERENCES {0}.extremities (name) MATCH SIMPLE \n'
+                                               '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(
+                          self.schema)),
+                      ('CONSTRAINT cle_fin', 'FOREIGN KEY (startb)'
+                                             '\t   REFERENCES {0}.extremities (name) MATCH SIMPLE \n'
+                                             '\t   ON UPDATE NO ACTION ON DELETE NO ACTION'.format(
+                          self.schema))]
+
+    def pg_create_calcul_abscisse(self):
+        qry = 'CREATE TRIGGER {1}_calcul_abscisse\n' \
+              '  BEFORE INSERT OR UPDATE\n  ON {0}.{1}\n'.format(self.schema,
+                                                                 self.name)
+        qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_branche();\n'.format(self.schema)
+        return qry
+
+    def pg_updat_actv(self):
+        qry = 'CREATE TRIGGER {1}_chstate_active\n' \
+              ' AFTER UPDATE OF active \n  ON {0}.{1}\n'.format(self.schema, self.name)
+        qry += ' FOR EACH ROW\n' \
+               'WHEN (OLD.active IS DISTINCT FROM NEW.active)\n' \
+               'EXECUTE PROCEDURE {0}.chstate_branch();\n'.format(self.schema)
+        return qry
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        qry += '\n'
+        qry += self.pg_create_calcul_abscisse()
+        qry += '\n'
+        qry += self.pg_updat_actv()
+        return qry
+# *****************************************

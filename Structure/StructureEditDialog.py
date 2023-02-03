@@ -19,6 +19,7 @@ email                :
 """
 import os
 
+import numpy as np
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
@@ -27,7 +28,7 @@ from qgis.gui import *
 from qgis.utils import *
 from shapely.geometry import Point
 
-from .ClassMascStruct import ClassMascStruct
+from .ClassLaws import ClassLaws
 from .ClassMethod import ClassMethod
 from .ClassTableStructure import ClassTableStructure, update_etat_struct
 from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
@@ -46,8 +47,6 @@ from .MetOrificePaWidget import MetOrificePaWidget
 from .MetOrificePcWidget import MetOrificePcWidget
 # FloodGate
 from .StructureFgDialog import StructureFgDialog
-from .ClassLaws import ClassLaws
-import numpy as np
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -203,17 +202,15 @@ class ClassStructureEditDialog(QDialog):
             # tab.setRowCount(0)
             t = param['type']
             sql = "SELECT id_elem FROM {0}.struct_elem " \
-                  "WHERE id_config = {1} AND type = {2} ORDER BY id_elem".format(
-                self.mdb.SCHEMA, self.id_struct, t)
+                  "WHERE id_config = {1} AND type = {2} ORDER BY id_elem".format(self.mdb.SCHEMA, self.id_struct, t)
             elems = self.mdb.run_query(sql, fetch=True)
 
             for r, elem in enumerate(elems):
                 # tab.insertRow(r)
                 for c, col in enumerate(param['col']):
                     sql = "SELECT value FROM {0}.struct_elem_param WHERE id_config = {1} " \
-                          "AND id_elem = {2} and var = '{3}'".format(
-                        self.mdb.SCHEMA, self.id_struct,
-                        elem[0], col['fld'])
+                          "AND id_elem = {2} and var = '{3}'".format(self.mdb.SCHEMA, self.id_struct, elem[0],
+                                                                     col['fld'])
                     row = self.mdb.run_query(sql, fetch=True)
                     if len(row) > 0:
                         val = row[0][0]
@@ -327,9 +324,7 @@ class ClassStructureEditDialog(QDialog):
                         if val is None:
                             val = 'Null'
                         sql = "INSERT INTO {0}.struct_elem_param (id_config, id_elem, var, value) " \
-                              "VALUES ({1}, {2}, '{3}', {4})".format(
-                            self.mdb.SCHEMA, self.id_struct,
-                            id_elem, var, val)
+                              "VALUES ({1}, {2}, '{3}', {4})".format(self.mdb.SCHEMA, self.id_struct, id_elem, var, val)
                         self.mdb.execute(sql)
 
             return True
@@ -537,7 +532,7 @@ class ClassStructureEditDialog(QDialog):
             forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
             if forme_arche == 1:
                 z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (
-                    self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
+                        self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
             elif forme_arche == 2:
                 z_top = self.wgt_met.tab_trav.item(r, 3).data(0)
             if z_top >= cote_tablier:
@@ -564,13 +559,12 @@ class ClassStructureEditDialog(QDialog):
                     self.wgt_met.tab_trav.cellWidget(r, 0))
                 if forme_arche == 1:
                     z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (
-                        self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
+                            self.wgt_met.tab_trav.item(r, 1).data(0) / 2)
                 elif forme_arche == 2:
                     z_top = self.wgt_met.tab_trav.item(r, 3).data(0)
                 sql = "SELECT MAX(z) FROM {0}.profil_struct " \
-                      "WHERE id_config = {1} AND x >= {2} AND x <= {3}".format(
-                    self.mdb.SCHEMA, id_struct, x_tmp,
-                    larg + x_tmp)
+                      "WHERE id_config = {1} AND x >= {2} AND x <= {3}".format(self.mdb.SCHEMA, id_struct, x_tmp,
+                                                                               larg + x_tmp)
                 rows = self.mdb.run_query(sql, fetch=True)
                 profil_z_max = rows[0][0]
                 if profil_z_max >= z_top:

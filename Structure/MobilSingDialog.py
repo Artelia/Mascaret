@@ -209,8 +209,8 @@ class ClassMobilSingDialog(QDialog):
             listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection',
                                                     self.mgis.repProject,
                                                     "File (*.txt *.csv)")
-
         if listf:
+            self.mgis.up_rep_project(listf[0])
             error = False
             self.filling_tab = True
             model = self.create_tab_model()

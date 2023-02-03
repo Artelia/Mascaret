@@ -88,14 +88,15 @@ class GraphCommon(QWidget):
         """variables in common for profile graphics"""
         self.gid = gid
         self.coucheProfils = self.mgis.coucheProfils
-        # try:
-        self.liste = self.mdb.select("profiles", "", "abscissa")
-        # except:
-        #     self.mgis.add_info("Error Select profils")
-
+        try:
+            self.liste = self.mdb.select("profiles", "", "abscissa", verbose=True)
+        except:
+            self.mgis.add_info("Error Select profils")
+            return
         self.position = self.liste["gid"].index(self.gid)
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
         self.nom = self.feature['name']
+        self.planim = self.feature['planim']
 
         self.courbes = []
 
@@ -283,8 +284,8 @@ class GraphCommonNew:
         d_lined = dict()
         for ax in self.ax.values():
             lst_leg.append(ax["legend"])
-            for l, c in ax["lined"].items():
-                d_lined[l] = c
+            for lin, col in ax["lined"].items():
+                d_lined[lin] = col
 
         art = evt.artist
         if art in lst_leg:
@@ -345,7 +346,7 @@ class GraphCommonNew:
         absc = event.xdata
         if self.unit_x == 'date':
             cur_x = datetime.utcfromtimestamp(
-                round((absc) * 24) * 3600)
+                round(absc * 24) * 3600)
             # cur_x = datetime.utcfromtimestamp(
             #     round((absc - 719163) * 24) * 3600)
             txt_x = cur_x

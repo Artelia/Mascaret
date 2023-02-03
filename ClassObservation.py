@@ -240,10 +240,14 @@ class ClassEventObsDialog(QDialog):
     def import_csv(self):
         """ import CSV file"""
         file_name_path, _ = QFileDialog.getOpenFileNames(None, 'File Selection',
-                                                         self.mgis.masplugPath,
+                                                         self.mgis.repProject,
                                                          filter="CSV (*.csv);;File (*)")
+        if not file_name_path:
+            return
+        self.mgis.up_rep_project(file_name_path[0])
         succes, recs = self.read_csv(file_name_path)
 
+        dbls = None
         if succes:
             self.mdb.execute("DROP TABLE IF EXISTS {0}.tmp_observations".format(
                 self.mdb.SCHEMA))
@@ -261,6 +265,8 @@ class ClassEventObsDialog(QDialog):
                 "AND obs.date = tmp.date AND obs.type = tmp.type)".format(
                     self.mdb.SCHEMA),
                 fetch=True)
+        else:
+            return
 
         if dbls:
             txt_sta = ""
@@ -325,6 +331,7 @@ class ClassEventObsDialog(QDialog):
             self.mgis.add_info("Loading to observations is an echec.")
             if self.mgis.DEBUG:
                 self.mgis.add_info(repr(e))
+
             return False, None
 
     @staticmethod
@@ -543,7 +550,7 @@ class ClassEventObsDialog(QDialog):
             # ----------------------------------------------------------------
             # Ctle-C: copier
             if event.key() == Qt.Key_C and (
-                        event.modifiers() & Qt.ControlModifier):
+                    event.modifiers() & Qt.ControlModifier):
                 self.copier()
                 event.accept()
             else:
@@ -639,7 +646,7 @@ class GraphObservation(GraphCommon):
         else:
             self.leg.get_texts()[0].set_text("None")
 
-        self.courbes[0].set_data([date2num(l) for l in lst[0]], lst[1])
+        self.courbes[0].set_data([date2num(lval) for lval in lst[0]], lst[1])
         self.courbes[0].set_visible(True)
         leglines[0].set_alpha(1.0)
 

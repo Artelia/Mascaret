@@ -56,8 +56,8 @@ class ClassPolygone:
                 [[x0, zmin_t], [x0, z], [x1, z], [x1, zmin_t], [x0, zmin_t]])
         else:
             poly_t = GeometryCollection()
-
-            print('Inconsistent Z for the span')
+            if self.debug :
+                print('Inconsistent Z for the span')
         return poly_t
 
     def poly_dalot(self, param_elem, x0):
@@ -75,7 +75,8 @@ class ClassPolygone:
                 [[x0, zmin], [x0, z], [x1, z], [x1, zmin], [x0, zmin]])
         else:
             poly_t = GeometryCollection()
-            print('Inconsistent Z for the span')
+            if self.debug:
+                print('Inconsistent Z for the span')
         return poly_t
 
     def poly_buse(self, param_elem):
@@ -180,8 +181,8 @@ class ClassPolygone:
                 [[x0, zmin_t], [x0, z0], [x1, z1], [x1, zmin_t], [x0, zmin_t]])
         else:
             poly_t = GeometryCollection()
-
-            print('Inconsistent Z for the pier')
+            if self.debug:
+                print('Inconsistent Z for the pier')
         return poly_t
 
     def udpate_polygon_table(self, mdb, poly_final, id_config, id_elem):

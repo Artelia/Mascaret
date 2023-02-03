@@ -171,6 +171,7 @@ class InitConcDialog(QDialog):
                                         self.mgis.repProject,
                                         "File (*.txt *.csv)")
         if f[0] != '':
+            self.mgis.up_rep_project(f[0] )
             error = False
             self.filling_tab = True
             model = self.create_tab_model()

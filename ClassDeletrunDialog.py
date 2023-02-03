@@ -170,7 +170,6 @@ class ClassDeletrunDialog(QDialog):
 
             for i, (run, scenarios) in enumerate(selection.items()):
 
-
                 sql = "run = '{0}' AND scenario IN ({1})".format(run,
                                                                  ",".join(
                                                                      scenarios))
@@ -188,8 +187,6 @@ class ClassDeletrunDialog(QDialog):
                     self.mgis.add_info(
                         "Deletion of scenarii is done")
                 progress.setValue(round(i / n * 100))
-
-
 
         self.iface.messageBar().clearWidgets()
 
@@ -227,17 +224,9 @@ class ClassDeletrunDialog(QDialog):
         sql = "DELETE  FROM {0}.runs_plani  WHERE id_runs not in (SELECT id FROM {0}.runs);"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
 
-
-        lst_tables = ["results_sect","runs_graph",
-                     "results_basin","results_links",
-                     "results_var", "runs_plani",
-                     "runs",]
+        lst_tables = ["results_sect", "runs_graph",
+                      "results_basin", "results_links",
+                      "results_var", "runs_plani",
+                      "runs", ]
 
         self.mdb.vacuum(lst_tables)
-
-
-
-
-
-
-

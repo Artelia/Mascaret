@@ -19,9 +19,8 @@ email                :
  """
 
 import os
-from datetime import datetime, timedelta
 import numpy as np
-from scipy import interpolate
+from datetime import datetime, timedelta
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
@@ -29,11 +28,12 @@ from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
+from scipy import interpolate
 
 from .FunctionScores import *
 from ..Function import datum_to_float
-from ..ui.custom_control import datetime2QDateTime
 from ..ui.custom_control import ScientificDoubleSpinBox
+from ..ui.custom_control import datetime2QDateTime
 
 
 class ScoreParamWidget(QWidget):
@@ -488,7 +488,7 @@ class ScoreParamWidget(QWidget):
                     fst = self.param[id_run]['per_start_t']
 
                     if (init_mod < last <= lst_mod) and (
-                                    lst_mod > fst >= init_mod):
+                            lst_mod > fst >= init_mod):
                         test, lst_test = self.cpt_persistence(id_run)
                         if not test:
                             add_txt += '- Persistance error (Run : {})\n'.format(
@@ -523,7 +523,7 @@ class ScoreParamWidget(QWidget):
                     last = self.param[id_run]['per_last_t']
                     fst = self.param[id_run]['per_start_t']
                     if (init_mod < last <= lst_mod) and (
-                                    lst_mod > fst >= init_mod):
+                            lst_mod > fst >= init_mod):
                         if not self.cpt_pointe_err(id_run):
                             add_txt += '- Tips error (Run : {})\n'.format(
                                 name_run)
@@ -954,7 +954,7 @@ class ScoreParamWidget(QWidget):
             info = self.mdb.select('profiles',
                                    where=where,
                                    list_var=['abscissa'])
-            if info['abscissa'] :
+            if info['abscissa']:
                 lst_pk.append(info['abscissa'][0])
 
         if lst_pk:
@@ -1118,8 +1118,8 @@ class ScoreParamWidget(QWidget):
             if self.obs[code]['zero'] is None:
                 code_zero = 0
             else:
-                for ipk, pk_obs in enumerate(self.obs[code]['lst_pk']) :
-                    if abs(pk_obs-pk) < 0.001:
+                for ipk, pk_obs in enumerate(self.obs[code]['lst_pk']):
+                    if abs(pk_obs - pk) < 0.001:
                         code_zero = self.obs[code]['zero'][ipk]
                         break
             if gg == 'H' and len(tmp_dict['valeur']) > 0:
@@ -1188,8 +1188,7 @@ class ScoreParamWidget(QWidget):
                                where="id_runs={} "
                                      "AND type_res='opt'"
                                      "AND var in "
-                                     "('var','time','pknum')".format(
-                                   id_run),
+                                     "('var','time','pknum')".format(id_run),
                                list_var=['var', 'val']
                                )
         if len(info['var']) > 0:
@@ -1305,7 +1304,7 @@ class ScoreParamWidget(QWidget):
                             else:
                                 self.data[id_run][pk] = {code: {}}
                     else:
-                        self.obs[code]['lst_pk'] =[]
+                        self.obs[code]['lst_pk'] = []
             else:
                 lst_obs = []
                 if id_run in self.dict_pk.keys():
@@ -1354,7 +1353,6 @@ class ScoreParamWidget(QWidget):
         """
         Check if Q et z in model can be use
         :param id_run: run index
-        :param lst_obs: observation index list
         :param pk : abscissa
         :return:
         """
@@ -1366,8 +1364,7 @@ class ScoreParamWidget(QWidget):
             if not (code in self.cmpt_var[id_run][pk].keys()):
                 self.cmpt_var[id_run][pk][code] = {}
 
-            if 'h_obs' in self.data[id_run][pk][code].keys() and \
-                            'h_mod_ori' in self.data[id_run][pk][code].keys():
+            if 'h_obs' in self.data[id_run][pk][code].keys() and 'h_mod_ori' in self.data[id_run][pk][code].keys():
 
                 self.cmpt_var[id_run][pk][code]['H'] = True
                 self.resample_model_h(id_run, pk, code)
@@ -1378,8 +1375,7 @@ class ScoreParamWidget(QWidget):
                 else:
                     self.cmpt_var[id_run][pk][code]['H'] = False
 
-            if 'q_obs' in self.data[id_run][pk][code].keys() and \
-                            'q_mod_ori' in self.data[id_run][pk][code].keys():
+            if 'q_obs' in self.data[id_run][pk][code].keys() and 'q_mod_ori' in self.data[id_run][pk][code].keys():
                 self.cmpt_var[id_run][pk][code]['Q'] = True
                 self.resample_model_q(id_run, pk, code)
             else:
@@ -1434,8 +1430,7 @@ class ScoreParamWidget(QWidget):
                 'ref_time'].dateTime().toPyDateTime()
             old_ref = self.param[id_run]['ref_time']
 
-            final_date = ref_time + \
-                         timedelta(seconds=self.param[id_run]['lst_times'][-1])
+            final_date = ref_time + timedelta(seconds=self.param[id_run]['lst_times'][-1])
             final_date_crt = datetime2QDateTime(final_date)
             init_date_crt = datetime2QDateTime(ref_time)
             for row in rows:

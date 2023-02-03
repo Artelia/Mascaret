@@ -19,8 +19,14 @@ email                :
 """
 import math
 import os
-import dateutil
+import re
 from shutil import copy2
+
+import dateutil
+
+
+def del_2space(txt):
+    return re.sub(' +', ' ', txt)
 
 
 def data_to_float(txt):
@@ -364,3 +370,109 @@ def fill_zminbed(mdb):
             update_dico[gid]['zleftminbed'] = lstz_minor[0]
 
     mdb.update("profiles", update_dico, var="gid")
+
+
+# ****************************************************************
+
+class TypeErrorModel:
+    """ Class contain  info error in Model"""
+
+    def __init__(self, name=None, description=None, stop=None):
+        """
+        Args:
+            :param description: str Type Name
+            :param description:str description of error
+            :param status: boolean status default of erro (True exist False: not exist)
+        """
+        self.name = ''
+        if isinstance(name, str):
+            self.name = name
+        self.description = 'No description'
+        if isinstance(description, str):
+            self.description = description
+        self.dicterr = {}
+        self._status = None
+        self.stop = stop
+
+    @property
+    def status(self):
+        """
+        Returns status value
+        """
+        self._status = self.get_status()
+
+        return self._status
+
+    def add_err(self, name_obj, txt, value=True):
+        """
+        add element error
+        Args:
+            :param name_obj : object name
+            :param value : bool value of error
+            :param txt : text of error
+        """
+        self.dicterr[name_obj] = {"value": value,
+                                  "txt": txt
+                                  }
+
+    def del_err(self, name_obj):
+        """
+        delete in error dict
+        Args:
+            :param name_obj : object name
+        """
+        if name_obj in self.dicterr[name_obj].keys():
+            del self.dicterr[name_obj]
+
+    def get_val(self, name_obj):
+        """
+        delete in error dict
+        Args:
+            :param name_obj : object name
+        Returns:
+            :return value : value of error
+        """
+        return self.dicterr[name_obj]["value"]
+
+    def get_txt(self, name_obj):
+        """
+        get txt in error dict
+        Args:
+            :param name_obj : object name
+        Returns:
+            :return  txt : text of error
+        """
+        return self.dicterr[name_obj]["txt"]
+
+    def get_alltxt(self):
+        """
+        get all txt in error dict
+
+        Returns:
+            :return  txt : text of error
+        """
+        txtr = ''
+        if len(self.dicterr.keys()) > 0:
+            first = True
+            for name_obj in self.dicterr.keys():
+                if self.get_val(name_obj):
+                    if first:
+                        txtr += '*** {} ***\n'.format(self.description)
+                        first = False
+                    txtr += self.get_txt(name_obj)
+                    txtr += '\n'
+        return txtr
+
+    def get_status(self):
+        """
+        get status
+        """
+        if len(self.dicterr.keys()) > 0:
+            for name_obj in self.dicterr.keys():
+                if self.get_val(name_obj):
+                    return True
+        else:
+            return False
+
+    def clear_err(self):
+        self.dicterr = {}

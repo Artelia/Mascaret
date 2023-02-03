@@ -87,24 +87,19 @@ class ClassResProfil:
         :return: plani, ksmaj, ksmin
         """
         plani = None
-
-        rows = self.mdb.select('branchs',
-                               where="branch='{}'".format(self.branch),
-                               order="zoneabsstart",
-                               list_var=['zonenum', 'zoneabsstart',
-                                         'zoneabsend', 'planim', 'minbedcoef',
-                                         'majbedcoef', 'active'])
-
-        if rows:
-
-            for i, zone in enumerate(rows['zonenum']):
-                if rows['zoneabsstart'][i] <= self.pk <= rows['zoneabsend'][i]:
-                    plani = rows['planim'][i]
-                    ksmaj = rows['minbedcoef'][i]
-                    ksmin = rows['majbedcoef'][i]
-                    if rows['active'][i]:
-                        break
-
+        ksmaj= None
+        ksmin = None
+        dict_ks = self.mdb.zone_ks()
+        dict_plani = self.mdb.planim_select()
+        for i, (minp, maxp) in enumerate(zip(dict_plani['absmin'],dict_plani['absmax'])):
+            if minp<= self.pk <= maxp:
+                plani = dict_plani['pas'][i]
+                break
+        for i, (minp, maxp) in enumerate(zip(dict_ks['zoneabsstart'], dict_ks['zoneabsend'])):
+            if minp <= self.pk <= maxp:
+                ksmaj=dict_ks['majbedcoef'][i]
+                ksmin =dict_ks['minbedcoef'][i]
+                break
         return plani, ksmaj, ksmin
 
     def decoup_pr(self, pr, lminor_x, lmaj_x):

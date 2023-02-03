@@ -17,14 +17,15 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import os
 import json
-from . import MasObject as Maso
+import os
 from copy import deepcopy
-from ..Function import read_version, fill_zminbed
-from ..ui.custom_control import ClassWarningBox
 from datetime import datetime
+
+from . import MasObject as Maso
+from ..Function import read_version, fill_zminbed
 from ..HydroLawsDialog import dico_typ_law
+from ..ui.custom_control import ClassWarningBox
 
 
 def list_sql(liste):
@@ -82,6 +83,7 @@ class CheckTab:
                                   '5.0.2',
                                   '5.0.3',
                                   '5.0.4',
+                                  '5.1.1',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -112,14 +114,15 @@ class CheckTab:
                 {'tab': Maso.results_var, 'overwrite': False},
                 {'tab': Maso.runs_graph, 'overwrite': False},
             ],
-                'alt_tab': [{'tab': 'runs', 'sql': [
-                    "ALTER TABLE {0}.runs ADD COLUMN IF NOT "
-                    "EXISTS init_date timestamp "
-                    "without time zone;"]},
-                            {'tab': 'outputs', 'sql': [
-                                "ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
-                                "EXISTS active boolean DEFAULT TRUE;"]},
-                            ],
+                'alt_tab': [
+                    {'tab': 'runs', 'sql': [
+                        "ALTER TABLE {0}.runs ADD COLUMN IF NOT "
+                        "EXISTS init_date timestamp "
+                        "without time zone;"]},
+                    {'tab': 'outputs', 'sql': [
+                        "ALTER TABLE {0}.outputs ADD COLUMN IF NOT "
+                        "EXISTS active boolean DEFAULT TRUE;"]},
+                ],
                 'fct': [lambda: self.create_var_result(),
                         lambda: self.convert_all_result(),
                         lambda: self.fill_init_date_runs()],
@@ -215,7 +218,7 @@ class CheckTab:
             '4.0.8': {},
             '4.0.9': {},
             '4.0.10': {},
-            '4.0.11': { 'fct': [lambda: self.update_4011()], },
+            '4.0.11': {'fct': [lambda: self.update_4011()], },
             '4.0.12': {},
             '4.0.13': {'fct': [lambda: self.change_branchs_chstate_active()], },
             '4.0.14': {},
@@ -223,6 +226,10 @@ class CheckTab:
             '5.0.2': {'fct': [lambda: self.change_clone_shema_trigger()], },
             '5.0.3': {},
             '5.0.4': {},
+            '5.1.1': {'fct': [
+                lambda: self.new_branch_tab(),
+            ]
+            },
             # '3.0.x': { },
 
         }
@@ -244,7 +251,7 @@ class CheckTab:
                 if self.mgis.DEBUG:
                     self.mgis.add_info('  {0} OK'.format(obj.name))
                 tabs.append("admin_tab")
-            except:
+            except Exception:
                 self.mgis.add_info('failure!<br>{0}'.format(Maso.admin_tab))
                 return
             for name_tab in tabs:
@@ -285,14 +292,17 @@ class CheckTab:
                                         lst_tab = modif[proc]
                                         for tab in lst_tab:
                                             if proc == 'add_tab':
+                                                # self.mgis.add_info('add_tab {} {}'.format(ver ,tab))
                                                 valid, tab_name = self.add_tab(
                                                     tab["tab"],
                                                     tab["overwrite"])
                                             elif proc == 'alt_tab':
                                                 tab_name = tab["tab"]
+                                                # self.mgis.add_info('alt_tab {} {}'.format(ver ,tab))
                                                 valid = self.alt_tab(tab_name,
                                                                      tab["sql"])
                                             elif proc == 'del_tab':
+                                                # self.mgis.add_info('del_tab {} {}'.format(ver, tab))
                                                 tab_name = tab
                                                 valid = self.del_tab(tab_name)
                                             else:
@@ -309,6 +319,7 @@ class CheckTab:
                                             if tab_name in tabs_no:
                                                 tabs_no.remove(tab_name)
                                     else:
+                                        # self.mgis.add_info('fct_tab {} {}'.format(ver, tab))
                                         lst_fct = modif[proc]
                                         for fct in lst_fct:
                                             test_gd = fct()
@@ -401,7 +412,7 @@ class CheckTab:
             if self.mgis.DEBUG:
                 self.mgis.add_info('  {0} OK'.format(obj.name))
             return valid, obj.name
-        except:
+        except Exception:
             valid = False
             self.mgis.add_info('failure!<br>Add table {0}'.format(tab))
 
@@ -425,7 +436,7 @@ class CheckTab:
                 if res is None:
                     valid = False
                     self.mgis.add_info('failure!<br>Alt table {0}'.format(tab))
-        except:
+        except Exception:
             valid = False
             self.mgis.add_info('failure!<br>Alt table {0}'.format(tab))
 
@@ -439,7 +450,7 @@ class CheckTab:
         """
         try:
             valid = self.mdb.drop_table(tab)
-        except:
+        except Exception:
             valid = False
             self.mgis.add_info('failure!<br>Del table {0}'.format(tab))
 
@@ -461,12 +472,12 @@ class CheckTab:
                 "SELECT DISTINCT type_res FROM {0}.results_var".format(
                     self.mdb.SCHEMA),
                 fetch=True)
+
             lst_typ_res = [r[0] for r in rows]
             rows = self.mdb.run_query(
                 "SELECT id, run, scenario FROM {0}.runs".format(
                     self.mdb.SCHEMA), fetch=True)
             dict_runs = {r[0]: {"run": r[1], "scen": r[2]} for r in rows}
-
             for typ_res in lst_typ_res:
                 rows = self.mdb.run_query(
                     "SELECT DISTINCT id_runs FROM {0}.results_old WHERE var in "
@@ -567,12 +578,7 @@ class CheckTab:
         except Exception as e:
             self.mgis.add_info("Error convert_all_result : {}".format(str(e)))
             return False
-        if convert:
-            # TODO delete table
-            # self.mdb.drop_table('resutlats')
-            # self.mdb.drop_table('resutlats_basin')
-            # self.mdb.drop_table('resultats_links')
-            pass
+
         return True
 
     def convert_result(self, id_run, typ_res):
@@ -769,8 +775,8 @@ class CheckTab:
         :return:
         """
         try:
-            self.update_fct_calc_abs()
 
+            self.update_fct_calc_abs()
             self.mdb.add_fct_for_visu()
 
             qry = 'DROP TRIGGER IF EXISTS branchs_chstate_active ' \
@@ -808,6 +814,7 @@ class CheckTab:
             qry += cl.pg_calcul_abscisse_flood()
             qry += '\n'
             self.mdb.run_query(qry)
+
             return True
         except Exception as e:
             self.mgis.add_info(
@@ -817,8 +824,8 @@ class CheckTab:
     def add_fct_for_update_pk_old(self):
         """add fct psql to compute abscissa"""
         cl = Maso.class_fct_psql()
-        lfct = [cl.pg_abscisse_profil, cl.pg_all_profil,
-                cl.pg_abscisse_point, cl.pg_all_point,
+        lfct = [cl.pg_abscisse_profil(self.mdb.SCHEMA), cl.pg_all_profil(self.mdb.SCHEMA),
+                cl.pg_abscisse_point(self.mdb.SCHEMA), cl.pg_all_point(self.mdb.SCHEMA),
                 ]
         qry = ''
         for sql in lfct:
@@ -901,7 +908,6 @@ class CheckTab:
             #              'Zlow': 'z_lower',
             #              'Zupp': 'z_up',
             #              }
-
 
             if "law_config" not in lst_tab:
                 vconf, _ = self.add_tab(Maso.law_config, False)
@@ -1006,7 +1012,6 @@ class CheckTab:
         err, _ = self.add_tab(Maso.results_val, False)
         if not err:
             sorti = False
-
         if 'results_old' not in lst_tab:
             sql = 'ALTER TABLE {0}.results RENAME TO results_old;'
             sql = sql.format(self.mdb.SCHEMA)
@@ -1041,7 +1046,6 @@ class CheckTab:
         err = self.mdb.run_query(sql)
         if err:
             sorti = False
-        print(sorti)
         return sorti
 
     def change_branchs_chstate_active(self):
@@ -1054,6 +1058,7 @@ class CheckTab:
 
     def change_clone_shema_trigger(self):
         """ update 5.0.2 version"""
+
         self.change_branchs_chstate_active()
         qry = "DROP FUNCTION clone_schema(text, text,text, boolean, boolean);"
         try:
@@ -1069,3 +1074,260 @@ class CheckTab:
         except Exception as e:
             self.mgis.add_info("Error  update_502: {}".format(str(e)))
             return False
+
+    def new_branch_tab(self):
+        """
+        updat 5.1.1
+        """
+        self.mgis.add_info('*** Update 5.1.1  ***')
+        valid = True
+        check_fill = False
+        lst_profil_err = self.mdb.check_valid_profil()
+        if valid:
+            #  RENAME old branchs table
+            sql = "ALTER TABLE IF EXISTS {0}.branchs RENAME TO branchs_old;".format(self.mdb.SCHEMA)
+            sql += '\n'
+            sql += 'ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT branchs_pkey TO branchs_old_pkey;'.format(
+                self.mdb.SCHEMA)
+            sql += '\n'
+            sql += 'ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT cle_debut TO cle_debut_old;'.format(
+                self.mdb.SCHEMA)
+            sql += '\n'
+            sql += 'ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT cle_fin TO cle_fin_old;'.format(
+                self.mdb.SCHEMA)
+            sql += '\n'
+            sql += 'ALTER INDEX IF EXISTS {0}.branchs_geom_idx RENAME TO branchs_old_geom_idx;'.format(self.mdb.SCHEMA)
+            sql += '\n'
+            sql += 'ALTER SEQUENCE IF EXISTS  {0}.branchs_gid_seq RENAME TO branchs_old_gid_seq;'.format(
+                self.mdb.SCHEMA)
+            sql += '\n'
+            # delete TRIGGER
+            # sql += "DROP TRIGGER IF EXISTS branchs_calcul_abscisse ON {}.branchs_old;".format(self.mdb.SCHEMA)
+            sql += 'ALTER TABLE {}.branchs_old DISABLE TRIGGER branchs_calcul_abscisse;'.format(self.mdb.SCHEMA)
+            sql += '\n'
+            # sql += "DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs_old;".format(self.mdb.SCHEMA)
+            sql += 'ALTER TABLE {}.branchs_old DISABLE TRIGGER branchs_chstate_active;'.format(self.mdb.SCHEMA)
+            err = self.mdb.run_query(sql)
+            if err:
+                self.mgis.add_info('Rename table branchs - ERROR')
+                self.mgis.add_info('Erreur for rename branchs table to branchs_old')
+                valid = False
+            else:
+                self.mgis.add_info('Rename table branchs - OK')
+
+        if valid:
+            # updates column of the profiles table
+            vars = [('minbedcoef', 'float'),
+                    ('majbedcoef', 'float'),
+                    ('mesh', 'float'),
+                    ('planim', 'float'), ]
+            sql = ''
+            for var, typ in vars:
+                sql += "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS {1} {2} ;".format(self.mdb.SCHEMA, var, typ)
+                sql += '\n'
+            err = self.mdb.run_query(sql)
+            if err:
+                self.mgis.add_info('Adding new columns in profiles table - ERROR')
+                valid = False
+            else:
+                self.mgis.add_info('Adding new columns in profiles table - OK')
+        if valid:
+            # add fct sql local
+
+            self.mgis.add_info('Adding new local function -')
+            err = self.mdb.schema_fct_sql()
+            if err:
+                self.mgis.add_info('Adding new local function - ERROR')
+                valid = False
+            else:
+                self.mgis.add_info('Adding new local function - OK')
+
+        if valid:
+            tabs = [Maso.branchs, Maso.visu_branchs]
+            for tab in tabs:
+                valid_add, _ = self.add_tab(tab)
+            if not valid_add:
+                self.mgis.add_info('Create table Branch - ERROR')
+                valid = False
+            else:
+                self.mgis.add_info('Create table Branch - OK')
+
+        if valid:
+            obj = Maso.profiles()
+            obj.schema = self.mdb.SCHEMA
+            sql = obj.pg_profiles_edition()
+            err = self.mdb.run_query(sql)
+            if err:
+                self.mgis.add_info('Adding new profile trigger - ERROR')
+                valid = False
+            else:
+                self.mgis.add_info('Adding new profile trigger - OK')
+
+        if valid:
+            sql = """
+CREATE OR REPLACE FUNCTION {0}.insert_new_branch(source_schema text)
+    RETURNS void
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+DECLARE
+   rec              record;
+   geom_b    public.geometry;
+   actb boolean;
+   startb character varying(30);
+   endb character varying(30);
+   BEGIN
+-- Disable trigger
+   EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs DISABLE TRIGGER branchs_chstate_active';
+   EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles DISABLE TRIGGER profiles_calcul_abscisse';
+   EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs DISABLE TRIGGER all_up_abs_branchs';
+-- creation new table
+   FOR rec IN
+   EXECUTE 'SELECT DISTINCT branch as id_b  FROM  '||  quote_ident(source_schema) ||'.branchs_old'
+   LOOP
+        EXECUTE ' SELECT st_multi(ST_Union(geom))  FROM  ' ||  quote_ident(source_schema) ||'.branchs_old  
+                WHERE branch=$1 GROUP BY branch' USING rec.id_b INTO geom_b;
+        EXECUTE 'SELECT active,startb, endb  FROM ' ||  quote_ident(source_schema) ||'.branchs_old 
+                WHERE branch=$1 ORDER BY gid ASC LIMIT 1 ' USING rec.id_b INTO actb, startb, endb;
+-- insert value new branch table
+        EXECUTE 'INSERT INTO ' ||  quote_ident(source_schema) ||'.branchs(geom,  branch, active,startb, endb) 
+                VALUES ($1,$2,$3,$4,$5)' USING geom_b,rec.id_b,actb,startb, endb;
+    -- RAISE NOTICE 'test %', rec.id_b;
+    END LOOP;
+-- Update fille profile table
+    EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p 
+            SET minbedcoef=(SELECT minbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b 
+                            WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
+    EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p 
+            SET majbedcoef=(SELECT majbedcoef FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b 
+                            WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
+    EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p 
+            SET mesh=(SELECT mesh FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b 
+                        WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
+    EXECUTE 'UPDATE  ' ||  quote_ident(source_schema) ||'.profiles as p 
+            SET planim=(SELECT planim FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b 
+                        WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
+-- Enable trigger
+    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs ENABLE TRIGGER branchs_chstate_active';
+    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles ENABLE TRIGGER profiles_calcul_abscisse';
+    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs  ENABLE TRIGGER all_up_abs_branchs';
+    
+    RETURN;
+END;
+$BODY$;
+            """.format(self.mdb.SCHEMA)
+            err = self.mdb.run_query(sql)
+            if err:
+                self.mgis.add_info('Create insert_new_branch - ERROR')
+                self.mgis.add_info('Error for the creation of the conversion function '
+                                   '(branch_old table to new branchs table)')
+                valid = False
+
+            else:
+                self.mgis.add_info('Create insert_new_branch - OK')
+
+        if valid:
+
+            sql = """SELECT {0}.insert_new_branch('{0}');""".format(self.mdb.SCHEMA)
+            err = self.mdb.run_query(sql)
+            if err:
+                self.mgis.add_info('Fill new branchs table - ERROR')
+                valid = False
+            else:
+                check_fill = True
+                self.mgis.add_info('Fill new branchs table - OK')
+        if valid:
+            # TRIGGER
+            sql = "DROP TRIGGER IF EXISTS flood_marks_delete_point_flood ON {}.flood_marks;".format(self.mdb.SCHEMA)
+            sql += '\n'
+            sql += "DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood ON {}.flood_marks;".format(self.mdb.SCHEMA)
+            sql += '\n'
+            sql += "DROP TRIGGER IF EXISTS weirs_calcul_abscisse ON {}.weirs;".format(self.mdb.SCHEMA)
+            sql += '\n'
+            sql += "DROP TRIGGER IF EXISTS tracer_lateral_inflows_calcul_abscisse ON {}.tracer_lateral_inflows;".format(
+                self.mdb.SCHEMA)
+            sql += '\n'
+            sql += "DROP TRIGGER IF EXISTS profiles_calcul_abscisse ON {}.profiles;".format(self.mdb.SCHEMA)
+            sql += '\n'
+            sql += "DROP TRIGGER IF EXISTS outputs_calcul_abscisse ON {}.outputs;".format(self.mdb.SCHEMA)
+            sql += '\n'
+            sql += "DROP TRIGGER IF EXISTS links_calcul_abscisse ON {}.links;".format(self.mdb.SCHEMA)
+            sql += '\n'
+            sql += "DROP TRIGGER IF EXISTS lateral_weirs_calcul_abscisse ON {}.lateral_weirs;".format(self.mdb.SCHEMA)
+            sql += '\n'
+            sql += "DROP TRIGGER IF EXISTS lateral_inflows_calcul_abscisse ON {}.lateral_inflows;".format(
+                self.mdb.SCHEMA)
+            sql += '\n'
+            sql += "DROP TRIGGER IF EXISTS hydraulic_head_calcul_abscisse ON {}.hydraulic_head;".format(self.mdb.SCHEMA)
+            err1 = self.mdb.run_query(sql)
+            if err1:
+                self.mgis.add_info('Delete Trigger functions  using public.calcul_abscisse* functions - ERROR')
+                valid = False
+
+        if valid:
+            tabs_sql = [('flood_marks', Maso.flood_marks),
+                        ('weirs', Maso.weirs),
+                        ('profiles', Maso.profiles),
+                        ('outputs', Maso.outputs),
+                        ('links', Maso.links),
+                        ('lateral_weirs', Maso.lateral_weirs),
+                        ('lateral_inflows', Maso.lateral_inflows),
+                        ('hydraulic_head', Maso.hydraulic_head),
+                        ('tracer_lateral_inflows', Maso.tracer_lateral_inflows),
+                        ]
+            sql = ''
+            for name, obj_ in tabs_sql:
+                obj = obj_()
+                obj.schema = self.mdb.SCHEMA
+                if name == 'flood_marks':
+                    sql += getattr(obj, 'pg_calcul_abscisse_flood')()
+                    sql += getattr(obj, 'pg_clear_tab')()
+                elif name == 'outputs':
+                    sql += getattr(obj, 'pg_create_calcul_abscisse_outputs')()
+                else:
+                    sql += getattr(obj, 'pg_create_calcul_abscisse')()
+            err2 = self.mdb.run_query(sql)
+            if err2:
+                self.mgis.add_info('Adding the new Triggers using the local functions - ERROR')
+                valid = False
+        if valid:
+            self.mgis.add_info('Update the Triggers (public to local schema)- OK')
+
+        if valid:
+            sql = "DROP TABLE IF EXISTS  {0}.branchs_old;".format(self.mdb.SCHEMA)
+            err = self.mdb.run_query(sql)
+            if err:
+                self.mgis.add_info('Delete branchs_old which is temporary table - ERROR')
+        else:
+            if not check_fill:
+                sql = "DROP TABLE IF EXISTS  {0}.branchs;".format(self.mdb.SCHEMA)
+                err = self.mdb.run_query(sql)
+
+                sql = "ALTER TABLE IF EXISTS {0}.branchs_old RENAME TO branchs;".format(self.mdb.SCHEMA)
+                sql += '\n'
+                sql += 'ALTER TABLE IF EXISTS {0}.branchs RENAME CONSTRAINT branchs_old_pkey TO branchs_pkey;'.format(
+                    self.mdb.SCHEMA)
+                sql += '\n'
+                sql += 'ALTER TABLE IF EXISTS {0}.branchs RENAME CONSTRAINT cle_debut_old TO cle_debut;'.format(
+                    self.mdb.SCHEMA)
+                sql += '\n'
+                sql += 'ALTER TABLE IF EXISTS {0}.branchs  RENAME CONSTRAINT cle_fin_old TO cle_fin;'.format(
+                    self.mdb.SCHEMA)
+                sql += '\n'
+                sql += 'ALTER INDEX IF EXISTS {0}.branchs_old_geom_idx RENAME TO branchs_geom_idx;'.format(
+                    self.mdb.SCHEMA)
+                sql += '\n'
+                sql += 'ALTER SEQUENCE IF EXISTS  {0}.branchs_old_gid_seq RENAME TO branchs_gid_seq;'.format(
+                    self.mdb.SCHEMA)
+                err = self.mdb.run_query(sql)
+        if len(lst_profil_err) > 0:
+            txt = '\n'.join([str(ival) for ival in lst_profil_err])
+            ok = self.box.info("WARNING:\n\n"
+                               "Check the profiles : \n\n"
+                               "{}\n\n"
+                               "because they intersected two branches:\n".format(txt))
+        self.mgis.add_info('******')
+        return valid
+
+        # TODO delete function public in future

@@ -1,14 +1,14 @@
-import os
 import json
+import os
+from datetime import datetime
+
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
-from qgis.PyQt.QtGui import QIcon
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from qgis.PyQt.QtWidgets import *
-from datetime import datetime
 from .Function import read_version
 from .db.Check_tab import CheckTab
 
@@ -39,7 +39,13 @@ class ClassDlgExport(QDialog):
         """
         liste_col = self.mdb.list_columns('runs')
         self.cond_com = ('comments' in liste_col)
-
+        self.b_cancel.clicked.connect(self.annule)
+        if not self.mdb.check_schema_into_db():
+            qbox = QMessageBox.warning(self, "Warning",
+                                       "\t No data in  database",
+                                       QMessageBox.Ok)
+            self.b_export.hide()
+            return
         dico = self.mdb.select("runs", "", "date")
 
         if self.cond_com:
@@ -114,7 +120,7 @@ class ClassDlgExport(QDialog):
                 self.tw_runs.setItemWidget(self.parent[run], 1, lbl)
 
         self.b_export.clicked.connect(self.export)
-        self.b_cancel.clicked.connect(self.annule)
+
         self.cb_all_exp_res.stateChanged.connect(self.state_changed)
 
     def state_changed(self):
@@ -281,8 +287,10 @@ class ClassDlgImport(QDialog):
         """
         file_name_path, _ = QFileDialog.getOpenFileName(None,
                                                         'File Selection',
-                                                        QDir.homePath(),
-                                                        filter="JSON (*.json);File (*)")
+                                                        self.mgis.repProject,
+                                                        # QDir.homePath(),
+                                                        filter="JSON (*.json)")
+        self.mgis.up_rep_project(file_name_path)
         if file_name_path != '':
             self.txt_file.setText(file_name_path)
 
@@ -411,7 +419,7 @@ class ClassDlgImport(QDialog):
                 wow = []
             else:
                 cpt += 1
-        if wow != []:
+        if wow:
             wow.reverse()
             wow = int(''.join(wow))
             strlst.append(wow)
@@ -520,6 +528,7 @@ class ClassDlgImport(QDialog):
         if bool_import:
             self.metadict['jsfile'] = self.jsfile
             self.metadict['psqlfile'] = psqlfile
+            # self.mdb.import_model(self.metadict)
             self.mgis.task_imp = QgsTask.fromFunction('Import Schema',
                                                       self.task_import,
                                                       on_finished=self.completed,
@@ -561,3 +570,61 @@ class ClassDlgImport(QDialog):
     def annule(self):
         """"Cancel """
         self.close()
+
+
+class CloneTask(QgsTask):
+    """Clone schema Class"""
+
+    def __init__(self, description, mgis, dest):
+        super().__init__(description, QgsTask.CanCancel)
+        self.mdb = mgis.mdb
+        self.src = self.mdb.SCHEMA
+        self.dest = dest
+        self.message_category = 'cloneTask'
+        self.exception = None
+        self.err = False
+        self.first = True
+
+    def run(self):
+        """ Run function to Clone schema
+        """
+        QgsMessageLog.logMessage('Started task "{}"'.format(
+            "clone"),
+            self.message_category, Qgis.Info)
+        # 3rd element '' because keep data
+        qry = "SELECT clone_schema('{}','{}','');".format(self.src, self.dest)
+        err = self.mdb.run_query(qry)
+        self.err = not err
+        self.finished()
+        return not err
+
+    def finished(self, result=None):
+        """
+        display message when the task is finished
+        :param result: boolean
+        """
+        QgsMessageLog.logMessage('Running',
+            self.message_category, Qgis.Info)
+        if not self.first:
+            if  self.err:
+                QgsMessageLog.logMessage(
+                    'CloneTask is completed',
+                    self.message_category, Qgis.Success)
+            else:
+                if self.exception is None:
+                    QgsMessageLog.logMessage('CloneTask is in error',
+                                             self.message_category, Qgis.Warning)
+                else:
+                    QgsMessageLog.logMessage(
+                        'CloneTask is in error Exception: {exception}'.format(
+                            exception=self.exception),
+                        self.message_category, Qgis.Critical)
+                    raise self.exception
+        self.first = False
+
+    def cancel(self):
+        """ cancel function ( can not use)"""
+        QgsMessageLog.logMessage(
+            ' CloneTask was canceled',
+            self.message_category, Qgis.Info)
+        super().cancel()

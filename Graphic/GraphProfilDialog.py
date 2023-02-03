@@ -147,15 +147,19 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     graph_hyd.show()
                 else:
                     self.mgis.add_info('no active profiles')
-
-            if flag_hydro and couche == 'branchs':
+                    
+            if flag_hydro and (couche == 'branchs' or couche == 'visu_branchs') :
                 feature = results[0].mFeature
+                if couche == 'branchs' :
+                    fbranch = feature['branch']
+                else:
+                    fbranch = feature['branchnum']
                 # chaine='Branche ' + str(feature['branche'])
                 branches = self.mgis.mdb.select_distinct("branch", "branchs",
                                                          "active")
-                if feature['branch'] in branches['branch']:
+                if fbranch in branches['branch']:
                     graph_hyd_pk = GraphResultDialog(self.mgis, "hydro_pk",
-                                                     feature['branch'])
+                                                     fbranch)
                     graph_hyd_pk.show()
                 else:
                     self.mgis.add_info('no active branch')
@@ -282,10 +286,11 @@ class GraphProfil(GraphCommon):
         self.ui.bt_add_line.clicked.connect(self.add_line)
         self.ui.bt_del_line.clicked.connect(self.del_line)
 
+        self.ui.cb_planim.toggled.connect(self.display_planim)
+
         self.ui.tab_aff.hide()
 
     def init_ui(self):
-
         # variables
         self.tab = {'x': [], 'z': []}
         self.selected = {}
@@ -323,7 +328,9 @@ class GraphProfil(GraphCommon):
         # figure
 
         self.axes = self.fig.add_subplot(111)
-        self.axes.grid(True)
+        self.axes.grid(visible=True, axis='both', which='major', color='black', linestyle='-')
+        self.axes.grid(visible=False, axis='y', which='minor', color='lightgrey', linestyle='-')
+
         # courbe
         self.courbeProfil, = self.axes.plot([], [], zorder=100, label='Profile')
 
@@ -336,10 +343,10 @@ class GraphProfil(GraphCommon):
                                    zorder=95, label='Topo', picker=5)
             self.courbeTopo.append(temp)
 
-        self.courbedown,  = self.axes.plot([], [], color="purple", marker='+', mew=2,
-                               zorder=95, label='downstream', picker=5)
+        self.courbedown, = self.axes.plot([], [], color="purple", marker='+', mew=2,
+                                          zorder=95, label='downstream', picker=5)
         self.courbeup, = self.axes.plot([], [], color="brown", marker='+', mew=2,
-                                          zorder=95, label='upstream', picker=5)
+                                        zorder=95, label='upstream', picker=5)
 
         self.etiquetteTopo = []
         self.courbes = [self.courbeProfil, self.courbeMNT]
@@ -412,8 +419,6 @@ class GraphProfil(GraphCommon):
             self.RS.update()
             self.courbeSelection.set_visible(False)
 
-
-
     def zone_selector_toggled(self):
         """zone selection function"""
         if self.bt_select_z.isChecked():
@@ -428,7 +433,6 @@ class GraphProfil(GraphCommon):
         else:
             self.span.active = False
             self.rectSelection.set_visible(False)
-
 
     def deplace_h_toggled(self):
         """Translation function"""
@@ -472,6 +476,7 @@ class GraphProfil(GraphCommon):
         self.feature = {k: v[pos] for k, v in self.liste.items()}
         self.nom = self.feature['name']
         self.gid = self.feature['gid']
+        self.planim = self.feature['planim']
 
         self.extrait_profil()
         self.extrait_topo()
@@ -494,11 +499,11 @@ class GraphProfil(GraphCommon):
         self.tab = {'x': [], 'z': []}
         # liste = ["litmingauc", "litmindroi", "stockgauch", 'stockdroit']
         liste = ["leftminbed", "rightminbed", "leftstock", 'rightstock']
-        for l in liste:
-            if self.feature[l] is not None:
-                self.tab[l] = self.feature[l]
+        for lval in liste:
+            if self.feature[lval] is not None:
+                self.tab[lval] = self.feature[lval]
             else:
-                self.tab[l] = None
+                self.tab[lval] = None
         self.mnt = {'x': [], 'z': []}
 
         if self.feature["x"] and self.feature["z"]:
@@ -507,10 +512,10 @@ class GraphProfil(GraphCommon):
 
             mini = min(self.tab['x'])
             maxi = max(self.tab['x'])
-            for l in liste:
-                val = self.feature[l]
+            for lval in liste:
+                val = self.feature[lval]
                 if val and mini < val < maxi:
-                    self.tab[l] = val
+                    self.tab[lval] = val
 
         if self.feature["xmnt"] and self.feature["zmnt"]:
             self.mnt['x'] = [float(var) for var in self.feature["xmnt"].split()]
@@ -615,8 +620,7 @@ class GraphProfil(GraphCommon):
         if not self.tab['zrightminbed'] or not self.tab['zleftminbed']:
             lstz_minor = []
             for x, z in zip(self.tab['x'], self.tab['z']):
-                if self.tab['leftminbed'] <= x \
-                        and x <= self.tab['rightminbed']:
+                if self.tab['leftminbed'] <= x <= self.tab['rightminbed']:
                     lstz_minor.append(z)
 
             if not self.tab['zrightminbed']:
@@ -708,11 +712,11 @@ class GraphProfil(GraphCommon):
 
         fichiers, _ = QFileDialog.getOpenFileNames(None,
                                                    'File Selection',
-                                                   self.dossierProjet,
+                                                   self.mgis.repProject,
                                                    "File (*.txt *.csv)")
 
         if fichiers:
-
+            self.mgis.up_rep_project(fichiers[0])
             self.charger_bathy(fichiers, self.coucheProfils,
                                self.nom)
 
@@ -725,6 +729,7 @@ class GraphProfil(GraphCommon):
 
     def charger_bathy(self, liste, couche_profil, profil=None):
         """charge la bathymetrie"""
+
         for fichier in liste:
             basename = os.path.basename(fichier)
             if not profil:
@@ -747,40 +752,51 @@ class GraphProfil(GraphCommon):
                             sep = ";"
 
                         ordre = 0
-                        for ligne in fich:
+                        err = False
+                        try:
+                            for ligne in fich:
 
-                            if ligne[0] != '#':
-                                ligne = ligne.replace('\n', '')
-                                if len(ligne.split(sep)) < 1:
-                                    break
-                                x, z = (float(var) for var in ligne.split(sep))
+                                if ligne[0] != '#':
+                                    ligne = ligne.replace('\n', '')
+                                    if len(ligne.split(sep)) < 1:
+                                        break
 
-                                ordre += 1
-                                if x < 0:
-                                    geom = 'NULL'
-                                else:
+                                    x, z = (float(var) for var in ligne.split(sep))
 
-                                    p = f.geometry().interpolate(x).asPoint()
+                                    ordre += 1
+                                    if x < 0:
+                                        geom = 'NULL'
+                                    else:
 
-                                    # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
+                                        p = f.geometry().interpolate(x).asPoint()
 
-                                    geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
-                                        p.x(), p.y(), self.mdb.SRID)
+                                        # geom = "ST_MakePoint({0}, {1})".format(p.x(), p.y())
 
-                                tab["name"].append("'" + basename + "'")
-                                tab["profile"].append("'" + profil + "'")
-                                tab["order_"].append(ordre)
-                                tab["x"].append(x)
-                                tab["z"].append(z)
-                                tab["geom"].append(geom)
+                                        geom = "ST_SetSRID(ST_MakePoint({0}, {1}),{2})".format(
+                                            p.x(), p.y(), self.mdb.SRID)
 
-                    self.mdb.insert2("topo", tab)
+                                    tab["name"].append("'" + basename + "'")
+                                    tab["profile"].append("'" + profil + "'")
+                                    tab["order_"].append(ordre)
+                                    tab["x"].append(x)
+                                    tab["z"].append(z)
+                                    tab["geom"].append(geom)
+                        except Exception:
+                            err = True
+
+                    if err:
+                        QMessageBox.warning(self, "Error",
+                                            "Import failed ({})".format(fichier),
+                                            QMessageBox.Ok)
+                    else:
+                        self.mdb.insert2("topo", tab)
 
     def import_image(self):
         fichier, _ = QFileDialog.getOpenFileName(None,
                                                  'Sélection des fichiers',
-                                                 self.dossierProjet,
+                                                 self.mgis.repProject,
                                                  "Fichier (*.png *.jpg)")
+        self.mgis.up_rep_project(fichier)
 
         try:
             fich = open(fichier + "w", "r")
@@ -789,7 +805,7 @@ class GraphProfil(GraphCommon):
         else:
             x0 = float(fich.readline())
             z0 = float(fich.readline())
-            l = float(fich.readline())
+            lon = float(fich.readline())
             h = float(fich.readline())
             fich.close()
         try:
@@ -798,7 +814,7 @@ class GraphProfil(GraphCommon):
             self.mgis.add_info('File "{}" cannot open.'.format(fichier))
         else:
             self.image = self.axes.imshow(img,
-                                          extent=[x0, x0 + l, z0 - h, z0],
+                                          extent=[x0, x0 + lon, z0 - h, z0],
                                           zorder=1,
                                           aspect='auto')
             # self.axes.imshow(fichier)
@@ -1029,14 +1045,14 @@ class GraphProfil(GraphCommon):
         if self.bt_translah.isChecked() and self.x0:
             f = self.courbeSelected.get_label()
             try:
-                #tab_x = self.topo[f]['x']
+                # tab_x = self.topo[f]['x']
                 tab_x = self.courbeSelected.get_xdata()
                 tempo = []
                 # fct2 = lambda x: x + round(float(event.xdata), 2) - self.x0
                 for var1 in tab_x:
                     tempo.append(self.fct2(var1, event.xdata, self.x0))
                 tab_x = tempo
-                if self.courbeSelected in self.courbeTopo :
+                if self.courbeSelected in self.courbeTopo:
                     self.topo[f]['x'] = tab_x
                 self.courbeSelected.set_xdata(tab_x)
                 self.x0 = round(float(event.xdata), 2)
@@ -1047,7 +1063,7 @@ class GraphProfil(GraphCommon):
         elif self.bt_translav.isChecked() and self.y0:
             f = self.courbeSelected.get_label()
             try:
-                #tab_z = self.topo[f]['z']
+                # tab_z = self.topo[f]['z']
                 tab_z = self.courbeSelected.get_ydata()
                 tempo = []
                 for var1 in tab_z:
@@ -1063,11 +1079,31 @@ class GraphProfil(GraphCommon):
                     self.mgis.add_info("Warning:Out of graph")
         self.fig.canvas.draw()
 
+    def display_planim(self):
+        if self.ui.cb_planim.isChecked():
+            self.axes.minorticks_on()
+            ta = self.tab
+            self.axes.set_yticks(np.arange(min(ta['z']), max(ta['z'] + [self.planim]), self.planim), minor=True)
+            self.axes.grid(visible=True, axis='y', which='minor')
+        else:
+            self.axes.minorticks_off()
+            self.axes.grid(visible=False, axis='y', which='minor')
+        self.canvas.draw()
+
     def maj_graph(self, allvis=False):
         """Updating  graphic"""
         self.ui.label_Title.setText(_translate("ProfilGraph", self.nom, None))
         ta = self.tab
         self.courbeProfil.set_data(ta['x'], ta['z'])
+
+        if self.planim and ta['x']:
+            self.ui.cb_planim.setEnabled(True)
+            self.display_planim()
+        else:
+            self.ui.cb_planim.setCheckState(0)
+            self.ui.cb_planim.setEnabled(False)
+        #self.axes.grid(visible=True, axis='y', which='minor')
+
 
         self.remplir_tab([ta['x'], ta['z']])
 
@@ -1168,9 +1204,9 @@ class GraphProfil(GraphCommon):
         self.canvas.draw()
 
     @staticmethod
-    def fct1(x, arrondi = 2):
+    def fct1(x, arrondi=2):
         """around"""
-        return round(float(x),  arrondi)
+        return round(float(x), arrondi)
 
     def del_line(self):
         """
@@ -1318,7 +1354,7 @@ class GraphProfil(GraphCommon):
 
             pente, ord = np.polyfit(xx, zz, 1)
             zz.sort()
-            if len(zz) <= nb :
+            if len(zz) <= nb:
                 self.mgis.add_info("Warning: The filter works if there are a minimum of 5 points ")
                 return
             mediane = zz[nb]
@@ -1500,6 +1536,7 @@ class GraphProfil(GraphCommon):
                     tab["geom"].append(geom)
 
         self.mdb.insert2("topo", tab)
+
     def del_amont_aval(self):
         """
         delet curve the down/upstream courbe
@@ -1510,6 +1547,7 @@ class GraphProfil(GraphCommon):
         self.maj_graph()
         self.maj_limites()
         self.maj_legende()
+
     def del_amont_aval_old(self):
         """
         delet in top tab the down/upstream courbe
@@ -1563,7 +1601,7 @@ class GraphProfil(GraphCommon):
                              self.liste['x'][idav].split()]
                     zaval = [float(val) for val in
                              self.liste['z'][idav].split()]
-                    self.courbedown.set_data(xaval , zaval)
+                    self.courbedown.set_data(xaval, zaval)
                     self.down_vis = True
                     maj = True
 
@@ -1842,8 +1880,7 @@ class GraphProfil(GraphCommon):
     def gui_interpol(self, id, idam, idav, err):
 
         if id:
-            plani = self.get_plani(self.liste['abscissa'][id],
-                                   self.liste['branchnum'][id])
+            plani = self.get_plani(self.liste['abscissa'][id])
         else:
             plani = None
         nplan = 100
@@ -1888,29 +1925,19 @@ class GraphProfil(GraphCommon):
             self.maj_legende()
             self.maj_limites()
 
-    def get_plani(self, pk, branch):
+    def get_plani(self, pk):
         """
         Get planimetry value
         :param pk: abscissa of the profile
-        :param branch: branch number
         :return: plani
         """
         plani = None
 
-        rows = self.mdb.select('branchs',
-                               where="branch='{}'".format(branch),
-                               order="zoneabsstart",
-                               list_var=['zonenum', 'zoneabsstart',
-                                         'zoneabsend', 'planim', 'active'])
-
-        if rows:
-
-            for i, zone in enumerate(rows['zonenum']):
-                if rows['zoneabsstart'][i] <= pk <= rows['zoneabsend'][i]:
-                    plani = rows['planim'][i]
-                    if rows['active'][i]:
-                        break
-
+        dict_plani = self.mdb.planim_select()
+        for i, (minp, maxp) in enumerate(zip(dict_plani['absmin'], dict_plani['absmax'])):
+            if minp <= self.pk <= maxp:
+                plani = dict_plani['pas'][i]
+                break
         # print('plani', plani)
         return plani
 
@@ -2028,7 +2055,7 @@ class GraphProfil(GraphCommon):
                 break
         # downstream
         idf = id
-        while idf != idmax :
+        while idf != idmax:
             idf += 1
             if self.liste['x'][idf] is not None:
                 idav = idf

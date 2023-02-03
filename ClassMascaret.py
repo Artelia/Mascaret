@@ -21,13 +21,14 @@ email                :
 
 import csv
 import datetime
+import gc
+import json
 import os
 import re
 import shutil
 import subprocess
 import sys
 import json
-import time
 import gc
 import numpy as np
 import copy
@@ -40,16 +41,16 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .Function import str2bool, del_accent, copy_dir_to_dir
+from .Function import TypeErrorModel
 from .Function import del_symbol
-
+from .Function import str2bool, del_accent, copy_dir_to_dir
+from .Graphic.ClassResProfil import ClassResProfil
+from .HydroLawsDialog import dico_typ_law
 from .Structure.ClassMascStruct import ClassMascStruct
 from .Structure.ClassPostPreFG import ClassPostPreFG
 from .WaterQuality.ClassMascWQ import ClassMascWQ
-from .ui.custom_control import ClassWarningBox
 from .api.ClassAPIMascaret import ClassAPIMascaret
-from .Graphic.ClassResProfil import ClassResProfil
-from .HydroLawsDialog import dico_typ_law
+from .ui.custom_control import ClassWarningBox
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -88,6 +89,10 @@ class ClassMascaret:
         self.clmeth = ClassMascStruct(self.mgis)
         self.cond_api = self.mgis.cond_api
         self.save_res_struct = None
+
+        self.err_model ={}
+        self.err_model['timeLaw']=TypeErrorModel('timeLaw', ' ERROR : Law Time', stop= True)
+        self.err_model['lInflowPos'] = TypeErrorModel('lInflowPos', 'WARNING : the inflow position')
 
     def creer_geo(self):
         """creation of gemoetry file"""
@@ -339,90 +344,6 @@ class ClassMascaret:
         elif level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
-    def planim_select(self):
-        sql = """SELECT MIN(t1.planim) AS pas, MIN(t2.nombre),MAX(t2.nombre) 
-                 FROM (SELECT branch, planim, ST_UNION(geom) AS geom
-                       FROM  (SELECT branch, 
-                                     planim, 
-                                     geom,
-                                     row_number() 
-                                        OVER (PARTITION BY branch, planim 
-                                              ORDER BY  branch,zonenum)
-                                        - zonenum AS grp
-                              FROM   {0}.branchs
-                              WHERE active) x
-                       GROUP  BY branch, planim, grp) AS t1,
-                    (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, geom 
-                       FROM {0}.profiles 
-                       WHERE active ) AS t2 
-                 WHERE ST_INTERSECTS(t1.geom,t2.geom) 
-                 GROUP BY t1.geom
-                 ORDER BY min;"""
-
-        (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA),
-                                               fetch=True, namvar=True)
-
-        dico = {}
-        colonnes = [col[0] for col in namCol]
-        for col in colonnes:
-            dico[col] = []
-
-        for row in results:
-            for i, val in enumerate(row):
-
-                try:
-                    dico[colonnes[i]].append(val.strip())
-                except:
-                    dico[colonnes[i]].append(val)
-
-        return dico
-
-    def maillage_select(self):
-
-        sql = """SELECT MIN(t1.mesh) AS pas,
-                                    MIN(t2.nombre),
-                                    MAX(t2.nombre)+MIN(diff)+1 AS max
-                             FROM (SELECT branch, mesh,
-                                          ST_UNION(geom) AS geom,
-                                          MIN(diff) AS diff
-                                   FROM  (SELECT branch,
-                                                 mesh,
-                                                 geom,
-                                                 row_number()
-                                                    OVER (PARTITION BY branch,
-                                                         mesh ORDER BY  branch,zonenum)
-                                                    - zonenum AS grp,
-                                                 branch-lead(branch,1,branch+1)
-                                                OVER (ORDER BY  branch,zonenum) AS diff
-                                          FROM   {0}.branchs
-                                          WHERE active) x
-                                   GROUP  BY branch, mesh, grp) AS t1,
-                                  (SELECT ROW_NUMBER() OVER(ORDER BY abscissa) 
-                                    AS nombre, geom
-                                   FROM {0}.profiles
-                                   WHERE active ) AS t2
-                             WHERE ST_INTERSECTS(t1.geom,t2.geom)
-                             GROUP BY t1.geom
-                             ORDER BY min;"""
-
-        (results, namCol) = self.mdb.run_query(sql.format(self.mdb.SCHEMA),
-                                               fetch=True, namvar=True)
-
-        dico = {}
-        colonnes = [col[0] for col in namCol]
-        for col in colonnes:
-            dico[col] = []
-
-        for row in results:
-            for i, val in enumerate(row):
-
-                try:
-                    dico[colonnes[i]].append(val.strip())
-                except:
-                    dico[colonnes[i]].append(val)
-
-        return dico
-
     def geom_obj_toname(self, nom, type_):
         """ get name law"""
         condition = "geom_obj='{0}' AND " \
@@ -491,7 +412,6 @@ class ClassMascaret:
         apports = self.mdb.select("lateral_inflows", "active", "abscissa")
         var = "branch, startb, endb"
         branches = self.mdb.select_distinct(var, "branchs", "active")
-        zones = self.mdb.select("branchs", "active", "branch, zoneabsstart")
         deversoirs = self.mdb.select("lateral_weirs", "active", "abscissa")
         noeuds = self.mdb.select("extremities", "type=10", "active")
         libres = self.mdb.select("extremities", "type!=10 ", "active")
@@ -499,9 +419,10 @@ class ClassMascaret:
         profils = self.mdb.select("profiles", "active", "abscissa")
         prof_seuil = self.mdb.select("profiles", "NOT active", "abscissa")
         seuils = self.mdb.select("weirs", "active", "abscissa")
-        sorties = self.mdb.select("outputs", "", "abscissa")
-        planim = self.planim_select()
-        maillage = self.maillage_select()
+        sorties = self.mdb.select("outputs", "active", "abscissa")
+        zones = self.mdb.zone_ks()
+        planim = self.mdb.planim_select()
+        maillage = self.mdb.maillage_select()
         dico_str = self.mdb.select('struct_config', "active", "abscissa")
         seuils, loi_struct = self.modif_seuil(seuils, dico_str)
         casiers = self.mdb.select("basins", "active ORDER BY basinnum ")
@@ -520,6 +441,7 @@ class ClassMascaret:
                 branches["abscfin"].append(max(temp))
             else:
                 self.mgis.add_info('Checked if the profiles are activated.')
+
         dict_noeuds = {}
         dict_libres = {"nom": [], "num": [], "extrem": [], "typeCond": [],
                        "typeCond_tr": [], "law_wq": []}
@@ -568,10 +490,7 @@ class ClassMascaret:
                                 'couche': 'extremites'}
         # Zones
         nb_pas = 0
-        i = 0
-        #  zones['num1erProf'] = [1] * len(zones["zoneabsstart"])
-        #  zones['numDerProfPlanim'] = [1] * len(zones["zoneabsstart"])
-        #  zones['numDerProfMaill'] = [1] * len(zones["zoneabsstart"])
+
         liste_stock = {"numProfil": [],
                        'limGauchLitMaj': [],
                        'limDroitLitMaj': []}
@@ -581,9 +500,10 @@ class ClassMascaret:
                   profils["z"],
                   profils["leftstock"],
                   profils["rightstock"],
-                  profils["branchnum"])
+                  profils["branchnum"],
+                  profils["planim"])
 
-        for j, (abs, x, z, sg, sd, n) in enumerate(tab):
+        for j, (abs, x, z, sg, sd, n, planim_val) in enumerate(tab):
 
             try:
                 xx = [float(var) for var in x.split()]
@@ -596,19 +516,10 @@ class ClassMascaret:
                     profils["name"][j]))
                 return dict_lois
 
-            if abs > zones['zoneabsend'][i]:
-                i = i + 1
-
             try:
-                nb_pas = max(int(diff / float(zones['planim'][i])) + 1, nb_pas)
+                nb_pas = max(int(diff / float(planim_val)) + 1, nb_pas)
             except:
                 self.mgis.add_info("Check planim ")
-
-            index = numero.index(n)
-            zones["zoneabsstart"][i] = max(zones["zoneabsstart"][i],
-                                           branches["abscdebut"][index])
-            zones["zoneabsend"][i] = min(zones["zoneabsend"][i],
-                                         branches["abscfin"][index])
 
             if sg or sd:
                 if sg:
@@ -725,12 +636,9 @@ class ClassMascaret:
         maillage_c = SubElement(maillage_e, 'maillageClavier')
         SubElement(maillage_c, 'nbSections').text = '0'
         SubElement(maillage_c, 'nbPlages').text = str(len(maillage["pas"]))
-        SubElement(maillage_c, 'num1erProfPlage').text = self.fmt(
-            maillage['min'])
-        SubElement(maillage_c, 'numDerProfPlage').text = self.fmt(
-            maillage['max'])
-        SubElement(maillage_c, 'pasEspacePlage').text = self.fmt(
-            maillage['pas'])
+        SubElement(maillage_c, 'num1erProfPlage').text = self.fmt(maillage['min'])
+        SubElement(maillage_c, 'numDerProfPlage').text = self.fmt(maillage['max'])
+        SubElement(maillage_c, 'pasEspacePlage').text = self.fmt(maillage['pas'])
         SubElement(maillage_c, 'nbZones').text = '0'
 
         # Singularites
@@ -1417,6 +1325,7 @@ class ClassMascaret:
                 else:
                     fich_sortie.write('# Temps (H) Hauteur\n')
                 fich_sortie.write(' H \n')
+
                 for t in liste_date:
                     calc = loi['formule']
                     for cd_hydro, delta in liste_stations:
@@ -1442,6 +1351,10 @@ class ClassMascaret:
                         tps = (t - date_debut).total_seconds() / 3600
                         chaine = '  {0:4.3f}   {1:3.6f}\n'
                         fich_sortie.write(chaine.format(tps, resultat))
+            # check law after write
+            initime = round((liste_date[0] - date_debut).total_seconds() / 3600, 3) * 3600
+            lasttime = round((liste_date[-1] - date_debut).total_seconds() / 3600, 3) * 3600
+            self.check_timelaw(par, nom, initime, lasttime)
 
             if valeur_init is not None:
                 if type == "Q":
@@ -1458,16 +1371,20 @@ class ClassMascaret:
         valeur_init = None
         for nom, loi in dict_lois.items():
             if not loi['type'] in (1, 2):
-
+                # create other law
                 tab = self.get_laws(nom, loi['type'],
                                     obs=True, date_deb=date_debut,
                                     date_fin=date_fin)
                 if tab:
                     self.creer_loi(nom, tab, loi['type'])
+                    if 'time' in tab.keys():
+                        initime = round(tab['time'][0], 3)
+                        lasttime = round(tab['time'][-1], 3)
+                        self.check_timelaw(par, nom, initime, lasttime)
                 else:
                     self.mgis.add_info(
                         'The law for {} is not create.'.format(nom))
-
+                # create init law
                 if loi['type'] in [4]:  # , 5]: # car 5 mascaret plante à l'init
                     self.creer_loi(nom, tab, loi['type'], init=True)
                 elif loi['type'] in [5] and loi['couche'] == 'extremites':
@@ -1542,7 +1459,7 @@ class ClassMascaret:
             if par["evenement"] and noyau != "steady":
                 dict_scen_tmp = self.mdb.select('events', 'run', 'starttime')
                 if len(dict_scen_tmp['name']) == 0:
-                    self.mgis.add_info("Warning: **** scenario not found  ***")
+                    self.mgis.add_info("**** Warning: scenario not found  ***")
                 scen2, ok = QInputDialog.getItem(None,
                                                  'Select Events',
                                                  'Select Events',
@@ -1564,7 +1481,7 @@ class ClassMascaret:
                 dict_scen_tmp = self.mdb.select('events', 'run', 'starttime')
                 listexclu = []
                 if len(dict_scen_tmp['name']) == 0:
-                    self.mgis.add_info("Warning: **** scenario not found  ***")
+                    self.mgis.add_info("**** Warning: scenario not found  ***")
                 for i, scen in enumerate(dict_scen_tmp['name']):
                     # self.mgis.add_info("scen**************** {}".format(scen))
                     scen = scen.strip()
@@ -1717,6 +1634,7 @@ class ClassMascaret:
                                'balise1': 'parametresImpressionResultats'}
                }
         self.modif_xcas(tab, self.baseName + '.xcas')
+        par['tempsMax'] = duree
         self.mgis.add_info("Xcas file is created.")
         if par['presenceTraceurs']:
             if self.wq.dico_phy[self.wq.cur_wq_mod]['meteo']:
@@ -1745,6 +1663,10 @@ class ClassMascaret:
             tab = self.get_laws(nom, l["type"])
             if tab:
                 self.creer_loi(nom, tab, l["type"])
+                if 'time' in tab.keys():
+                    initime = round(tab['time'][0], 3)
+                    lasttime = round(tab['time'][-1], 3)
+                    self.check_timelaw(par, nom, initime, lasttime)
             else:
                 self.mgis.add_info(
                     'The law for {} is not create.'.format(nom))
@@ -1854,10 +1776,11 @@ class ClassMascaret:
             if self.check_mobil_gate() and noyau == "unsteady":
                 self.create_mobil_gate_file()
             self.fct_only_init(noyau)
+
             return
 
         #
-        if self.mgis.task_use :
+        if self.mgis.task_use:
             self.mgis.task_mas = QgsTask.fromFunction('Run Mascaret',
                                                       self.task_mascaret,
                                                       on_finished=self.completed,
@@ -1899,8 +1822,9 @@ class ClassMascaret:
         else:
             self.mgis.add_info('no transmitted variable for task_mascaret')
             return
+        self.clean_res()
         for i, scen in enumerate(dict_scen['name']):
-            self.mgis.add_info("The current scenario is {}".format(scen))
+            self.mgis.add_info(" *** The current scenario is {} ***".format(scen))
             # initialise file
             date_debut = None
             if noyau == "steady":
@@ -1913,6 +1837,17 @@ class ClassMascaret:
                 self.init_scen_trans_unsteady(par, dict_lois)
             if self.check_mobil_gate() and noyau == "unsteady":
                 self.create_mobil_gate_file()
+
+            # check error and warning:
+            self.check_apport()
+            arret = False
+            for typerr in self.err_model:
+                if self.err_model[typerr].status:
+                    self.mgis.add_info(self.err_model[typerr].get_alltxt())
+                    if self.err_model[typerr].stop:
+                        arret = True
+            if arret:
+                return False
 
             # RUN Model
             if par["initialisationAuto"] and noyau is not "steady":
@@ -1950,6 +1885,7 @@ class ClassMascaret:
 
             # elif par["LigEauInit"] and noyau != "steady":
             #     self.select_init_run_case()
+
             self.mgis.add_info("========== Run case  =========")
             self.mgis.add_info(
                 "Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen,
@@ -1970,6 +1906,10 @@ class ClassMascaret:
 
             if self.check_mobil_gate():
                 self.read_mobil_gate_res(id_run)
+
+            # if task :
+            #     if task.isCanceled():
+            #         return
         # #
         self.iface.messageBar().clearWidgets()
         self.mgis.add_info("Simulation finished")
@@ -2151,6 +2091,7 @@ class ClassMascaret:
         :param lpk: (list) pk list
         :param ltime: (list) time list
         :param lval:  (list) values list
+        :param dico_idruntpk: (dico) data dico
         :return: (list) value list
         """
         values = []
@@ -2333,16 +2274,20 @@ class ClassMascaret:
         if int(qVersion()[0]) < 5:  # qt4
             fichiers = QFileDialog.getOpenFileNames(None,
                                                     'File Selection',
-                                                    self.dossierFileMasc,
+                                                    # self.dossierFileMasc,
+                                                    self.mgis.repProject,
                                                     "File (*.lig)")
 
         else:  # qt5
             fichiers, _ = QFileDialog.getOpenFileNames(None,
                                                        'File Selection',
-                                                       self.dossierFileMasc,
+                                                       self.mgis.repProject,
+                                                       # self.dossierFileMasc,
                                                        "File (*.lig)")
+
         try:
             fichiers = fichiers[0]
+            self.mgis.up_rep_project(fichiers)
         except IndexError:
             self.mgis.add_info("Cancel  init file")
             return
@@ -2385,7 +2330,7 @@ class ClassMascaret:
     def clean_res(self):
         """ Clean the run folder and copy the essential files to run mascaret"""
         files = os.listdir(self.dossierFileMasc)
-        listsup = [".opt", ".lig"]
+        listsup = [".opt", ".lig", ".res"]
         for i in range(0, len(files)):
             ext = os.path.splitext(files[i])[1]
             # self.mgis.add_info('delet file rr{}rr {}'.format(ext,(ext in listsup)))
@@ -2401,7 +2346,7 @@ class ClassMascaret:
         except Exception as e:
             if self.mgis.DEBUG:
                 self.mgis.add_info(
-                    'Failed to delete {}. Reason: {}'.format(file_path, e))
+                    'Failed to delete {}. Reason: {}'.format(self.dossierFileMasc, e))
 
     def copy_run_file(self, rep):
         """copy run file in "rep" path"""
@@ -2694,13 +2639,14 @@ class ClassMascaret:
         return False
 
     def add_res_idx(self, id_runs, times, pks):
-        dict_idx = self.get_idruntpk()
         values_idx = []
         if isinstance(id_runs, list):
+            dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_runs[0]))
             for id_run, time, pk in zip(id_runs, times, pks):
                 if (id_run, time, pk) not in dict_idx.keys():
                     values_idx.append([id_run, time, pk])
         else:
+            dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_runs))
             if (id_runs, times, pks) not in dict_idx.keys():
                 values_idx.append([id_runs, times, pks])
 
@@ -2750,7 +2696,6 @@ class ClassMascaret:
                     info = self.mdb.select('weirs', where=where,
                                            list_var=['gid', 'abscissa'], order='gid')
                     if len(info['gid']) < 1:
-
                         where = "name LIKE '{}%'".format(name)
                         info = self.mdb.select('weirs', where=where,
                                                list_var=['gid', 'abscissa'], order='gid')
@@ -3104,9 +3049,9 @@ class ClassMascaret:
                 self.save_run_graph(val, id_run, type_res)
         if self.cond_api:
             self.stock_res_api(self.save_res_struct[0],self.save_res_struct[1])
-    def get_idruntpk(self):
+    def get_idruntpk(self, where=''):
         dict_idx = dict()
-        tmp = self.mdb.select('results_idx', list_var=['idruntpk', 'id_runs', 'time', 'pknum'])
+        tmp = self.mdb.select('results_idx', list_var=['idruntpk', 'id_runs', 'time', 'pknum'], where=where)
         if tmp:
             for iter_id in range(len(tmp["idruntpk"])):
                 dict_idx[(tmp['id_runs'][iter_id], tmp['time'][iter_id], tmp['pknum'][iter_id])] \
@@ -3131,7 +3076,7 @@ class ClassMascaret:
 
         # insert table result_idx
         self.add_res_idx([id_run for ii in range(len(lpk))], val['TIME'], lpk)
-        dict_idx = self.get_idruntpk()
+        dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_run))
         if not dict_idx:
             return False
         values = []
@@ -3263,7 +3208,6 @@ class ClassMascaret:
             # self.mgis.add_info('{}'.format(condition))
 
             config = self.mdb.select_one('law_config', condition, verbose=False)
-
             if config:
                 values = self.mdb.select("law_values",
                                          where='id_law={}'.format(config['id']),
@@ -3297,3 +3241,39 @@ class ClassMascaret:
             self.mgis.add_info(err)
             raise Exception(err)
             return None
+
+    def check_timelaw(self, par, name, initime, lasttime):
+        cond = False
+        if par['tempsInit'] < initime:
+            self.err_model['timeLaw'].add_err(name,
+                                             " Error law {} on the Initial Time".format(name))
+            cond = True
+        if par['critereArret'] == 1:
+            # tmax
+            if par['tempsMax'] > lasttime:
+                self.err_model['timeLaw'].add_err(name,
+                                                 " Error law {} on the Last Time".format(name))
+                cond = True
+        elif par['critereArret'] == 2:
+            # nb iterration
+            if par['nbPasTemps'] * par['pasTemps'] > lasttime:
+                self.err_model['timeLaw'].add_err(name,
+                                                 " Error law {} on the Last Time".format(name))
+                cond = True
+
+        return cond
+
+    def check_apport(self):
+        """checks if the inflow is before the first mesh."""
+        #
+        apports = self.mdb.select("lateral_inflows", "active", "abscissa")
+        for i, numb in enumerate(apports['branchnum']):
+            branches = self.mdb.select_one("visu_branchs",
+                                           "branchnum={}".format(numb), 'abs_start',
+                                           list_var=['abs_start', 'mesh'])
+
+            comp = branches['abs_start'] + branches['mesh']
+            if apports['abscissa'][i] < comp:
+                self.err_model['lInflowPos'].add_err(apports['name'][i],
+                                                    'Warning: {} is located before the first mesh.'
+                                                    ' Ignore in the model'.format(apports['name'][i]))
