@@ -1083,7 +1083,7 @@ class GraphProfil(GraphCommon):
         if self.ui.cb_planim.isChecked():
             self.axes.minorticks_on()
             ta = self.tab
-            self.axes.set_yticks(np.arange(min(ta['z']), max(ta['z'] + self.planim), self.planim), minor=True)
+            self.axes.set_yticks(np.arange(min(ta['z']), max(ta['z'] + [self.planim]), self.planim), minor=True)
             self.axes.grid(visible=True, axis='y', which='minor')
         else:
             self.axes.minorticks_off()

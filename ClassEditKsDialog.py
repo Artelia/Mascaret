@@ -85,7 +85,6 @@ class ClassEditKsDialog(BASE, FORM_CLASS):
         for couche in tempo:
             if couche.name() == "profiles":
                 profil = couche
-
         if len(profil.selectedFeatures()) == 0:
             self.box.info('Please, selection the profiles', title='Message')
             return

@@ -90,6 +90,10 @@ class ClassMascaret:
         self.cond_api = self.mgis.cond_api
         self.save_res_struct = None
 
+        self.err_model ={}
+        self.err_model['timeLaw']=TypeErrorModel('timeLaw', ' ERROR : Law Time', stop= True)
+        self.err_model['lInflowPos'] = TypeErrorModel('lInflowPos', 'WARNING : the inflow position')
+
     def creer_geo(self):
         """creation of gemoetry file"""
         try:
@@ -3045,7 +3049,7 @@ class ClassMascaret:
                 self.save_run_graph(val, id_run, type_res)
         if self.cond_api:
             self.stock_res_api(self.save_res_struct[0],self.save_res_struct[1])
-    def get_idruntpk(self):
+    def get_idruntpk(self, where=''):
         dict_idx = dict()
         tmp = self.mdb.select('results_idx', list_var=['idruntpk', 'id_runs', 'time', 'pknum'], where=where)
         if tmp:

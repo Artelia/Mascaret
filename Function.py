@@ -399,8 +399,7 @@ class TypeErrorModel:
         """
         Returns status value
         """
-        if self._status is None:
-            self._status = self.get_status()
+        self._status = self.get_status()
 
         return self._status
 

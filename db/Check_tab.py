@@ -185,7 +185,6 @@ class CheckTab:
                 lambda: self.update_400(),
             ],
                 'alt_tab': [
-<<<<<<< HEAD
                     {'tab': 'observations',
                      'sql': [
                          "CREATE INDEX IF NOT EXISTS "

@@ -766,7 +766,7 @@ class MascPlugDialog(QMainWindow):
         if not file_name_path:
             return
 
-        self.up_repProject(file_name_path[0])
+        self.up_rep_project(file_name_path[0])
         if self.mdb.check_extension():
             self.add_info(" Shema est {}".format(self.mdb.SCHEMA))
             self.mdb.add_ext_postgis()
