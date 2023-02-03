@@ -38,6 +38,7 @@ changelog=
              Added given storage optimization
              Added the branchs_visu table
              Addition of the  functionality of  fields modification :  ks, mesh, planim
+             Addition of optimisation to import results
     5.0.4  : Correction of old import function
     5.0.3  : Addition of Qgis task manager usage choice in settings
     5.0.2  : Correction of clone_schema function about trigger cloning
