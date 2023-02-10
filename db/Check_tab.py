@@ -1084,6 +1084,7 @@ class CheckTab:
         check_fill = False
         lst_profil_err = self.mdb.check_valid_profil()
         if valid:
+            lst_trigger_b = self.mdb.list_trigger(self.mdb.SCHEMA, 'branchs')
             #  RENAME old branchs table
             sql = "ALTER TABLE IF EXISTS {0}.branchs RENAME TO branchs_old;".format(self.mdb.SCHEMA)
             sql += '\n'
@@ -1102,11 +1103,13 @@ class CheckTab:
                 self.mdb.SCHEMA)
             sql += '\n'
             # delete TRIGGER
-            # sql += "DROP TRIGGER IF EXISTS branchs_calcul_abscisse ON {}.branchs_old;".format(self.mdb.SCHEMA)
-            sql += 'ALTER TABLE {}.branchs_old DISABLE TRIGGER branchs_calcul_abscisse;'.format(self.mdb.SCHEMA)
-            sql += '\n'
-            # sql += "DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs_old;".format(self.mdb.SCHEMA)
-            sql += 'ALTER TABLE {}.branchs_old DISABLE TRIGGER branchs_chstate_active;'.format(self.mdb.SCHEMA)
+            if 'branchs_calcul_abscisse' in lst_trigger_b:
+                # sql += "DROP TRIGGER IF EXISTS branchs_calcul_abscisse ON {}.branchs_old;".format(self.mdb.SCHEMA)
+                sql += 'ALTER TABLE {}.branchs_old DISABLE TRIGGER branchs_calcul_abscisse;'.format(self.mdb.SCHEMA)
+                sql += '\n'
+            if 'branchs_chstate_active' in lst_trigger_b:
+                # sql += "DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs_old;".format(self.mdb.SCHEMA)
+                sql += 'ALTER TABLE {}.branchs_old DISABLE TRIGGER branchs_chstate_active;'.format(self.mdb.SCHEMA)
             err = self.mdb.run_query(sql)
             if err:
                 self.mgis.add_info('Rename table branchs - ERROR')
@@ -1151,8 +1154,11 @@ class CheckTab:
                 valid = False
             else:
                 self.mgis.add_info('Create table Branch - OK')
-
+        lst_trigger_p = self.mdb.list_trigger(self.mdb.SCHEMA, 'profiles')
         if valid:
+            if  "profiles_edition" in lst_trigger_p:
+                sql="DROP TRIGGER IF EXISTS profiles_edition ON {}.profiles;".format(self.mdb.SCHEMA)
+                err = self.mdb.run_query(sql)
             obj = Maso.profiles()
             obj.schema = self.mdb.SCHEMA
             sql = obj.pg_profiles_edition()

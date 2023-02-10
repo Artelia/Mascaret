@@ -2073,3 +2073,31 @@ WHERE (num2 != numm1 OR numm1 is NULL)
                 for val in results:
                     lst_profil_err.append(val[0])
         return lst_profil_err
+
+    def list_trigger(self, schema, table):
+        """
+        list trigger for a schema and a table
+        """
+        sql = """SELECT table_name,trigger_schema,trigger_name	
+	            FROM (select event_object_schema as table_schema,
+                event_object_table as table_name,
+               trigger_schema,
+               trigger_name,
+               string_agg(event_manipulation, ',') as event,
+               action_timing as activation,
+               action_condition as condition,
+               action_statement as definition
+                from information_schema.triggers
+                group by 1,2,3,4,6,7,8
+                order by table_schema,
+                         table_name) as lst_triggger
+                WHERE table_name='{}' and trigger_schema='{}'
+                ;""".format(table, schema)
+        results = self.run_query(sql, fetch=True)
+        print(results)
+        lst_trigger = []
+        if results:
+            if len(results) > 0:
+                for val in results:
+                    lst_trigger.append(val[2])
+        return  lst_trigger
