@@ -84,6 +84,7 @@ class CheckTab:
                                   '5.0.3',
                                   '5.0.4',
                                   '5.1.1',
+                                  '5.1.2',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -228,7 +229,10 @@ class CheckTab:
             '5.0.4': {},
             '5.1.1': {'fct': [
                 lambda: self.new_branch_tab(),
-            ]
+            ], },
+                '5.1.2': {'fct': [
+                    lambda: self.update_512(),
+                ]
             },
             # '3.0.x': { },
 
@@ -1358,5 +1362,22 @@ $BODY$;
 
         self.mgis.add_info('******')
         return valid
+
+    def update_512(self):
+        valide = True
+        if valide :
+            sql = "DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;".format(self.mdb.SCHEMA)
+            err1 = self.mdb.run_query(sql)
+            tabs_sql = ['basins', Maso.basins]
+            obj=Maso.basins()
+            obj.schema = self.mdb.SCHEMA
+            sql = obj.pg_updat_actv()
+            err2 = self.mdb.run_query(sql)
+            if err2:
+                self.mgis.add_info('Fixe error basins_chstate_active - ERROR')
+                valid = False
+
+        # "decentrement"
+
 
         # TODO delete function public in future
