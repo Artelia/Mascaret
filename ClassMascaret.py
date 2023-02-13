@@ -2053,7 +2053,7 @@ class ClassMascaret:
             lpk = [rows['abscissa'][0] for var in range(len(time))]
             dico_pk[id_config] = rows['abscissa'][0]
             dico_time[id_config] = list(time)
-            dict_idx = self.get_idruntpk()
+            dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_run))
             v_tmp = self.creat_values_val(id_run, id_var, lpk,
                                           time, dico_res[id_config]['ZSTR'], dict_idx)
 
@@ -2707,7 +2707,7 @@ class ClassMascaret:
                     dico_time[name] = list(time)
                     self.add_res_idx(lrun, list(time), lpk)
 
-                    dict_idx = self.get_idruntpk()
+                    dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_run))
 
                     v_tmp = self.creat_values_val(id_run, id_var, lpk,
                                                   time, dico_res[name]['ZSTR'], dict_idx)
