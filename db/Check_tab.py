@@ -1279,6 +1279,9 @@ $BODY$;
                 self.mdb.SCHEMA)
             sql += '\n'
             sql += "DROP TRIGGER IF EXISTS hydraulic_head_calcul_abscisse ON {}.hydraulic_head;".format(self.mdb.SCHEMA)
+            sql += '\n'
+            sql += "DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;".format(self.mdb.SCHEMA)
+
             err1 = self.mdb.run_query(sql)
             if err1:
                 self.mgis.add_info('Delete Trigger functions  using public.calcul_abscisse* functions - ERROR')
@@ -1294,6 +1297,7 @@ $BODY$;
                         ('lateral_inflows', Maso.lateral_inflows),
                         ('hydraulic_head', Maso.hydraulic_head),
                         ('tracer_lateral_inflows', Maso.tracer_lateral_inflows),
+                        ('basins', Maso.basins)
                         ]
             sql = ''
             for name, obj_ in tabs_sql:
@@ -1304,6 +1308,8 @@ $BODY$;
                     sql += getattr(obj, 'pg_clear_tab')()
                 elif name == 'outputs':
                     sql += getattr(obj, 'pg_create_calcul_abscisse_outputs')()
+                elif name == 'basins':
+                    sql += getattr(obj, 'pg_updat_actv')()
                 else:
                     sql += getattr(obj, 'pg_create_calcul_abscisse')()
             err2 = self.mdb.run_query(sql)
