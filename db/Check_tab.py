@@ -269,7 +269,6 @@ class CheckTab:
 
         pos_fin = self.list_hist_version.index(version)
         tabs_no = deepcopy(tabs)
-
         if len(self.list_hist_version[pos + 1:pos_fin + 1]) > 0:
             ok = self.box.yes_no_q("WARNING:\n "
                                    "Do you want update tables for {} schema ?\n"
@@ -352,6 +351,7 @@ class CheckTab:
                                    where="table_ = {}".format(table),
                                    list_var=['version_'])
             curent_v_tab = info['version_'][0]
+
         else:
             min_ver = self.mdb.select_min('version_', 'admin_tab')
             curent_v_tab = min_ver
@@ -1082,6 +1082,19 @@ class CheckTab:
         self.mgis.add_info('*** Update 5.1.1  ***')
         valid = True
         check_fill = False
+
+        lst_tab = self.mdb.list_tables(schema=self.mdb.SCHEMA)
+        print(lst_tab)
+        lst_admin_tab = self.mdb.select('admin_tab',list_var =["table_"])
+        if 'results_old' in lst_tab :
+            self.mdb.drop_table('result_old')
+        if 'results_old' in lst_admin_tab['table_']:
+            self.mdb.delete('admin_tab', where="table_= 'results_old'")
+            new_ver = self.get_version()
+            if new_ver == '5.1.1':
+                return valid
+
+
         lst_profil_err = self.mdb.check_valid_profil()
         if valid:
             lst_trigger_b = self.mdb.list_trigger(self.mdb.SCHEMA, 'branchs')
@@ -1307,8 +1320,10 @@ $BODY$;
                 self.mgis.add_info('Delete branchs_old which is temporary table - ERROR')
         else:
             if not check_fill:
-                sql = "DROP TABLE IF EXISTS  {0}.branchs;".format(self.mdb.SCHEMA)
-                err = self.mdb.run_query(sql)
+                lst_tab = self.mdb.list_tables()
+                if 'branchs_old' in lst_tab:
+                    sql = "DROP TABLE IF EXISTS  {0}.branchs;".format(self.mdb.SCHEMA)
+                    err = self.mdb.run_query(sql)
 
                 sql = "ALTER TABLE IF EXISTS {0}.branchs_old RENAME TO branchs;".format(self.mdb.SCHEMA)
                 sql += '\n'
@@ -1333,6 +1348,8 @@ $BODY$;
                                "Check the profiles : \n\n"
                                "{}\n\n"
                                "because they intersected two branches:\n".format(txt))
+
+
         self.mgis.add_info('******')
         return valid
 
