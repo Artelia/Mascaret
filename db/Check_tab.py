@@ -1088,7 +1088,6 @@ class CheckTab:
         check_fill = False
 
         lst_tab = self.mdb.list_tables(schema=self.mdb.SCHEMA)
-        print(lst_tab)
         lst_admin_tab = self.mdb.select('admin_tab',list_var =["table_"])
         if 'results_old' in lst_tab :
             self.mdb.drop_table('result_old')
@@ -1376,6 +1375,19 @@ $BODY$;
             if err2:
                 self.mgis.add_info('Fixe error basins_chstate_active - ERROR')
                 valid = False
+        if valide:
+            lst_tab = self.mdb.list_tables(schema=self.mdb.SCHEMA)
+            lst_admin_tab = self.mdb.select('admin_tab', list_var=["table_"])
+            if 'results_old' in lst_tab:
+                self.mdb.drop_table('result_old')
+            if 'results_old' in lst_admin_tab['table_']:
+                self.mdb.delete('admin_tab', where="table_= 'results_old'")
+
+            if "runs_graph" not in lst_tab:
+                valid, tab_name = self.add_tab( Maso.runs_graph,False)
+                self.updat_num_v(tab_name, '5.1.2')
+
+
 
         # "decentrement"
 

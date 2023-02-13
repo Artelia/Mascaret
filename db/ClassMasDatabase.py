@@ -808,7 +808,7 @@ class ClassMasDatabase(object):
         if self.run_query(qry) is None:
             return False
         else:
-            self.mgis.add_info('<br>Table "{0}" deleted.'.format(table_name))
+            self.mgis.add_info('Table "{0}" deleted.'.format(table_name))
             return True
 
     def load_gis_layer(self):
