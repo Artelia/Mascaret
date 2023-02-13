@@ -2113,7 +2113,7 @@ class ClassMascaret:
             lpk = [rows['abscissa'][0] for var in range(len(time))]
             dico_pk[id_config] = rows['abscissa'][0]
             dico_time[id_config] = list(time)
-            dict_idx = self.get_idruntpk()
+            dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_run))
             v_tmp = self.creat_values_val(id_run, id_var, lpk,
                                           time, dico_res[id_config]['ZSTR'], dict_idx)
 
@@ -2694,13 +2694,14 @@ class ClassMascaret:
         return False
 
     def add_res_idx(self, id_runs, times, pks):
-        dict_idx = self.get_idruntpk()
         values_idx = []
         if isinstance(id_runs, list):
+            dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_runs[0]))
             for id_run, time, pk in zip(id_runs, times, pks):
                 if (id_run, time, pk) not in dict_idx.keys():
                     values_idx.append([id_run, time, pk])
         else:
+            dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_runs))
             if (id_runs, times, pks) not in dict_idx.keys():
                 values_idx.append([id_runs, times, pks])
 
@@ -2750,7 +2751,6 @@ class ClassMascaret:
                     info = self.mdb.select('weirs', where=where,
                                            list_var=['gid', 'abscissa'], order='gid')
                     if len(info['gid']) < 1:
-
                         where = "name LIKE '{}%'".format(name)
                         info = self.mdb.select('weirs', where=where,
                                                list_var=['gid', 'abscissa'], order='gid')
@@ -2762,7 +2762,7 @@ class ClassMascaret:
                     dico_time[name] = list(time)
                     self.add_res_idx(lrun, list(time), lpk)
 
-                    dict_idx = self.get_idruntpk()
+                    dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_run))
 
                     v_tmp = self.creat_values_val(id_run, id_var, lpk,
                                                   time, dico_res[name]['ZSTR'], dict_idx)
@@ -3104,9 +3104,9 @@ class ClassMascaret:
                 self.save_run_graph(val, id_run, type_res)
         if self.cond_api:
             self.stock_res_api(self.save_res_struct[0],self.save_res_struct[1])
-    def get_idruntpk(self):
+    def get_idruntpk(self, where=''):
         dict_idx = dict()
-        tmp = self.mdb.select('results_idx', list_var=['idruntpk', 'id_runs', 'time', 'pknum'])
+        tmp = self.mdb.select('results_idx', list_var=['idruntpk', 'id_runs', 'time', 'pknum'], where=where)
         if tmp:
             for iter_id in range(len(tmp["idruntpk"])):
                 dict_idx[(tmp['id_runs'][iter_id], tmp['time'][iter_id], tmp['pknum'][iter_id])] \
@@ -3131,7 +3131,7 @@ class ClassMascaret:
 
         # insert table result_idx
         self.add_res_idx([id_run for ii in range(len(lpk))], val['TIME'], lpk)
-        dict_idx = self.get_idruntpk()
+        dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_run))
         if not dict_idx:
             return False
         values = []
