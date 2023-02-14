@@ -159,9 +159,16 @@ class ClassAPIMascaret:
                 files_name.append(file)
         # WARNING, the law order must be the same than xcas file
         if law_files:
-            for file in sorted(law_files):
-                files_type.append('loi')
-                files_name.append(file)
+            if initfile :
+                law_tmp = [file.replace('_init.loi','') for file in law_files]
+                for file in sorted(law_tmp):
+                    files_type.append('loi')
+                    files_name.append(file + '_init.loi')
+            else:
+                for file in sorted(law_files):
+                    files_type.append('loi')
+                    files_name.append(file )
+
         else:
             self.add_info("The laws are not found.")
 
