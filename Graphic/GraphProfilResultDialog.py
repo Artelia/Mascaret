@@ -33,7 +33,7 @@ from datetime import timedelta
 from .ClassResProfil import ClassResProfil, get_valeurs
 from shapely.geometry import shape
 from .WidgetProfResultDialog import WidgetProfResultDialog
-from shapely.ops import cascaded_union
+from shapely.ops import unary_union
 from shapely.geometry import GeometryCollection
 
 
@@ -488,7 +488,7 @@ class GraphProfilResultDialog(QWidget):
                         else:
                             # check if flow major_bed
                             if qmaj_max > 0.001:
-                                new_poly = cascaded_union([last_poly,
+                                new_poly = unary_union([last_poly,
                                                            self.plani_graph[
                                                                self.cur_pknum][
                                                                key][

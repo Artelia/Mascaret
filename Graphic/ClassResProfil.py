@@ -19,7 +19,7 @@ email                :
  """
 
 from shapely.geometry import *
-from shapely.ops import cascaded_union
+from shapely.ops import unary_union
 import matplotlib.pyplot as plt
 import numpy as np
 import json
@@ -181,21 +181,21 @@ class ClassResProfil:
         elif geom.geom_type == 'MultiLineString' \
                 or geom.geom_type == 'GeometryCollection':
             id_tmp = 0
-            for j, ll in enumerate(geom):
+            for j, ll in enumerate(geom.geoms):
                 x, y = ll.xy
                 if min(x) <= x_fond <= max(x):
                     id_tmp = j
             l_g = 0
             l_d = 0
 
-            for j, ll in enumerate(geom):
+            for j, ll in enumerate(geom.geoms):
                 length = ll.length
                 x, y = ll.xy
                 if j != id_tmp and max(x) < x_fond:
                     l_g += length
                 elif j != id_tmp and min(x) > x_fond:
                     l_d += length
-            x, y = geom[id_tmp].xy
+            x, y = geom.geoms[id_tmp].xy
             linf = [(x[0] - l_g, z_level), (x[-1] + l_d, z_level)]
             line_disc = LineString(linf)
         elif geom.geom_type == 'LineString':
@@ -488,7 +488,8 @@ class ClassResProfil:
                     dico['debitance'].append(
                         self.debitance(num, ks, perimeter, area))
                 else:
-                    new_poly = cascaded_union([last_poly, poly])
+                    #new_poly = cascaded_union([last_poly, poly])
+                    new_poly = unary_union([last_poly, poly])
 
                     if new_poly.is_valid and not new_poly.is_empty:
                         (minx, minz, maxx, maxz) = new_poly.bounds

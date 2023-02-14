@@ -1127,7 +1127,7 @@ $BODY$
             var = row[0][0]
         return var
 
-    def delete(self, table, where=None):
+    def delete(self, table, where=None, verbose=False):
         """
         Delete table information
         :param table : table name
@@ -1136,6 +1136,8 @@ $BODY$
         if where:
             where = "WHERE {0}".format(where)
         sql = "DELETE FROM {0}.{1} {2} ;".format(self.SCHEMA, table, where)
+        if verbose:
+            self.mgis.add_info(sql)
         self.run_query(sql)
         # if self.mgis.DEBUG:
         #     self.mgis.add_info('function delete end')
@@ -1684,6 +1686,22 @@ $BODY$
 
         if vnow < chkt.list_hist_version.index('5.1.1'):
             self.public_fct_sql()
+        if vnow < chkt.list_hist_version.index('5.1.2'):
+            listefct = ['pg_chstate_basin']
+            if not self.check_fct_public(listefct):
+                for fct in listefct:
+                    try:
+                        obj = self.process_masobject(Maso.class_fct_psql, fct)
+                        if self.mgis.DEBUG:
+                            self.mgis.add_info('  {0} OK'.format(fct))
+                        else:
+                            pass
+                    except Exception:
+                        if self.mgis.DEBUG:
+                            # self.mgis.add_info('{0}\n'.format(fct))
+                            self.mgis.add_info('failure!{0}'.format(fct))
+                        else:
+                            pass
         if actname in self.list_schema():
             sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp;".format(actname)
             self.run_query(sql)
@@ -2074,10 +2092,12 @@ WHERE (num2 != numm1 OR numm1 is NULL)
                     lst_profil_err.append(val[0])
         return lst_profil_err
 
-    def list_trigger(self, schema, table):
+    def list_trigger(self, table, schema=None):
         """
         list trigger for a schema and a table
         """
+        if schema is None:
+            schema = self.SCHEMA
         sql = """SELECT table_name,trigger_schema,trigger_name	
 	            FROM (select event_object_schema as table_schema,
                 event_object_table as table_name,
@@ -2094,7 +2114,6 @@ WHERE (num2 != numm1 OR numm1 is NULL)
                 WHERE table_name='{}' and trigger_schema='{}'
                 ;""".format(table, schema)
         results = self.run_query(sql, fetch=True)
-        print(results)
         lst_trigger = []
         if results:
             if len(results) > 0:

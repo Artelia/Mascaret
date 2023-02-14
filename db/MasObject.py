@@ -917,7 +917,7 @@ BEGIN
   LOOP
     IF show_details THEN RAISE NOTICE 'Creating function %...', xrec.func_name; END IF;
     SELECT pg_get_functiondef(xrec.func_oid) INTO qry;
-    SELECT replace(qry, source_schema_dot, '') INTO dest_qry;
+    SELECT replace(qry, source_schema_dot, dest_schema_dot) INTO dest_qry;
     EXECUTE dest_qry;
   END LOOP;
 
@@ -968,10 +968,10 @@ BEGIN
     IF show_details THEN RAISE NOTICE 'Creating trigger % % % ON %...', rec.trigger_name, rec.action_timing, rec.trigger_event, rec.trigger_table; END IF;
     IF rec.trigger_attrib  IS NOT NULL THEN     EXECUTE 'CREATE TRIGGER ' || rec.trigger_name || ' ' || rec.action_timing
             || ' ' || rec.trigger_event || ' OF ' || rec.trigger_attrib  ||' ON ' || buffer || ' FOR EACH '
-            || rec.trigger_level || ' ' || replace(rec.action_statement, source_schema_dot, '');
+            || rec.trigger_level || ' ' || replace(rec.action_statement, source_schema_dot, dest_schema_dot);
     ELSE EXECUTE 'CREATE TRIGGER ' || rec.trigger_name || ' ' || rec.action_timing
             || ' ' || rec.trigger_event || ' ON ' || buffer || ' FOR EACH '
-            || rec.trigger_level || ' ' || replace(rec.action_statement, source_schema_dot, '');
+            || rec.trigger_level || ' ' || replace(rec.action_statement, source_schema_dot, dest_schema_dot);
     END IF;
   END LOOP;
 
@@ -984,7 +984,7 @@ BEGIN
 
   LOOP
     buffer := dest_schema || '.' || quote_ident(object);
-    SELECT replace(view_definition, source_schema_dot, '') INTO v_def
+    SELECT replace(view_definition, source_schema_dot, dest_schema_dot) INTO v_def
     FROM information_schema.views
     WHERE table_schema = quote_ident(source_schema)
           AND table_name = quote_ident(object);

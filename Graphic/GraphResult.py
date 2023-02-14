@@ -212,13 +212,13 @@ class GraphResult(GraphCommonNew):
 
         temp1 = np.array(data['ZREF'])
         temp2 = np.array(data['Z'])
-        aire = self.main_axe.fill_between(data['x'], temp1, temp2,
+        aire_tmp = self.main_axe.fill_between(data['x'], temp1, temp2,
                                           where=temp2 >= temp1,
                                           interpolate=True)
 
         self.aire = []
 
-        for p in aire.get_paths():
+        for p in aire_tmp.get_paths():
             if data['leftminbed'] is not None:
                 gauch = data['leftminbed']
             else:
@@ -246,7 +246,7 @@ class GraphResult(GraphCommonNew):
                         self.main_axe.add_patch(patch)
                         break
 
-        self.main_axe.collections.remove(aire)
+        self.main_axe.collections.remove(aire_tmp)
         self.maj_limites()
 
     def insert_debord_curves(self, dict_debord):

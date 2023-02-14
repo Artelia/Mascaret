@@ -344,17 +344,17 @@ class ClassMascaret:
         elif level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
-    def geom_obj_toname(self, nom, type_):
-        """ get name law"""
-        condition = "geom_obj='{0}' AND " \
-                    "id_law_type={1} AND active".format(nom, type_)
-
-        inf_law = self.mdb.select_one('law_config', condition)
-        if inf_law:
-            if 'name' in inf_law.keys():
-                return inf_law['name']
-
-        return nom
+    # def geom_obj_toname(self, nom, type_):
+    #     """ get name law"""
+    #     condition = "geom_obj='{0}' AND " \
+    #                 "id_law_type={1} AND active".format(nom, type_)
+    #
+    #     inf_law = self.mdb.select_one('law_config', condition)
+    #     if inf_law:
+    #         if 'name' in inf_law.keys():
+    #             return inf_law['name']
+    #
+    #     return nom
 
     def creer_xcas(self, noyau):
         """To create xcas file"""
@@ -384,8 +384,8 @@ class ClassMascaret:
             sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
 
         for param, valeur, b1, b2 in rows:
-            # self.mgis.add_info("valeur : {0},  param : {1}  ,  b1 : {2} , b2:
-            # {3}".format(valeur, param, b1, b2))
+            # self.mgis.add_info("valeur : {0},  param : {1}  ,  b1 : {2} , b2:#\
+            #  {3}".format(valeur, param, b1, b2))
             if b1:
                 try:
                     cas.find(b1).text
@@ -401,7 +401,6 @@ class ClassMascaret:
                         balise2 = SubElement(balise1, b2)
                     # if not balise1.find(b2):
                     #     balise2 = SubElement(balise1, b2)
-
                     par = SubElement(balise2, param)
 
                     par.text = valeur.lower()
@@ -815,8 +814,10 @@ class ClassMascaret:
             SubElement(struct, "type").text = str(dict_lois[nom]['type'])
             donnees = SubElement(struct, "donnees")
             SubElement(donnees, "modeEntree").text = '1'
-            SubElement(donnees, "fichier").text = '{}.loi'.format(
-                del_symbol(self.geom_obj_toname(nom, dict_lois[nom]['type'])))
+            # WARNING The law must be sorted because of the order of law must be the same than order File.law for API
+            #SubElement(donnees, "fichier").text = '{}.loi'.format(
+            #    del_symbol(self.geom_obj_toname(nom, dict_lois[nom]['type'])))
+            SubElement(donnees, "fichier").text = '{}.loi'.format(del_symbol(nom))
             SubElement(donnees, "uniteTps").text = '-0'
             SubElement(donnees, "nbPoints").text = '-0'
             SubElement(donnees, "nbDebitsDifferents").text = '-0'
@@ -1186,7 +1187,7 @@ class ClassMascaret:
             arbre.write(fich_entree)
 
     def creer_loi(self, nom, tab, type_, init=False):
-        nom = self.geom_obj_toname(nom, type_)
+        #nom = self.geom_obj_toname(nom, type_)
         if init:
             nom = nom + '_init'
         with open(os.path.join(self.dossierFileMasc, del_symbol(nom) + '.loi'),
@@ -1272,7 +1273,7 @@ class ClassMascaret:
         :return:
         """
         # pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
-        pattern = re.compile('(\w+)\\[t([+-][0-9]+)?\\]')
+        pattern = re.compile('(\\w+)\\[t([+-][0-9]+)?\\]')
         somme = 0
         debit_prec = 0
         obs = {}
@@ -1292,6 +1293,7 @@ class ClassMascaret:
             valeur_init = None
 
             liste_stations = pattern.findall(loi['formule'])
+
 
             liste_date = None
             for cd_hydro, delta in liste_stations:
@@ -1850,7 +1852,7 @@ class ClassMascaret:
                 return False
 
             # RUN Model
-            if par["initialisationAuto"] and noyau is not "steady":
+            if par["initialisationAuto"] and noyau != "steady":
                 # add if name of init. exist previously
                 sceninit = scen + '_init'
                 if self.check_scenar(sceninit, run):
@@ -2021,14 +2023,13 @@ class ClassMascaret:
             del clapi
 
             os.chdir(pwd)
-
             return True
 
     def stock_res_api(self, dico, id_run):
         """ Stock api results """
         if len(dico) > 0:
             for key in dico.keys():
-                if key is 'STRUCT_FG':
+                if key == 'STRUCT_FG':
                     self.res_fg(dico[key], id_run)
 
     def res_fg(self, dico_res, id_run):
@@ -2330,7 +2331,7 @@ class ClassMascaret:
     def clean_res(self):
         """ Clean the run folder and copy the essential files to run mascaret"""
         files = os.listdir(self.dossierFileMasc)
-        listsup = [".opt", ".lig", ".res"]
+        listsup = [".opt", ".lig", '.cas_opt','.liai_opt','.tra_opt']
         for i in range(0, len(files)):
             ext = os.path.splitext(files[i])[1]
             # self.mgis.add_info('delet file rr{}rr {}'.format(ext,(ext in listsup)))
@@ -2419,7 +2420,6 @@ class ClassMascaret:
                                                 "OR  scenario "
                                                 "LIKE '{2}_init') ".format(
                         self.mdb.SCHEMA, run, nom_scen), fetch=True)
-
                     self.mdb.delete('runs', condition)
                     # new results
                     if len(id_run) > 0:
@@ -2430,11 +2430,12 @@ class ClassMascaret:
                             "WHERE {1} ".format(self.mdb.SCHEMA, condition),
                             fetch=True)
                         list_var = [str(v[0]) for v in var]
-                        self.mdb.run_query("DELETE  FROM {}.results_var "
-                                           "where id in ({}) and "
-                                           "type_res = '"
-                                           "tracer_TRANSPORT_PUR'".format(
-                            self.mdb.SCHEMA, ','.join(list_var)))
+                        if  len(list_var)>0 :
+                            self.mdb.run_query("DELETE  FROM {}.results_var "
+                                               "where id in ({}) and "
+                                               "type_res = '"
+                                               "tracer_TRANSPORT_PUR'".format(
+                                self.mdb.SCHEMA, ','.join(list_var)))
                         if 'results_old' in lst_tab:
                             self.mdb.delete('results_old', condition)
 
@@ -2522,7 +2523,7 @@ class ClassMascaret:
                         ligne_list.append(tempo)
                     elif k == 'bnum':
                         # extrait le numero mascaret de casier
-                        numero_masca = re.findall('\d+', ligne[k])[0]
+                        numero_masca = re.findall('\\d+', ligne[k])[0]
 
                         # convertit le numero masca en qgis
                         # (different si un casier inactif)
@@ -2530,7 +2531,7 @@ class ClassMascaret:
                         ligne_list.append(numero_qgis)
                     elif k == 'lnum':
                         # extrait le numero mascaret de liaison
-                        numero_masca = re.findall('\d+', ligne[k])[0]
+                        numero_masca = re.findall('\\d+', ligne[k])[0]
                         # convertit le numero masca en qgis
                         # (different si une liaison inactive)
                         numero_qgis = str(self.dico_linknum[int(numero_masca)])
@@ -2836,13 +2837,13 @@ class ClassMascaret:
                     elif key in int_val:
                         val = int(val)
                     elif key == 'BNUM':
-                        numero_masca = re.findall('\d+', val)[0]
+                        numero_masca = re.findall('\\d+', val)[0]
                         # convertit le numero masca en qgis
                         # (different si un casier inactif)
                         numero_qgis = str(self.dico_basinnum[int(numero_masca)])
                         val = float(numero_qgis)
                     elif key == 'LNUM':
-                        numero_masca = re.findall('\d+', val)[0]
+                        numero_masca = re.findall('\\d+', val)[0]
                         # convertit le numero masca en qgis
                         # (different si un link inactif)
                         numero_qgis = str(self.dico_linknum[int(numero_masca)])

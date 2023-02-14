@@ -83,6 +83,7 @@ class CheckTab:
                                   '5.0.2',
                                   '5.0.3',
                                   '5.0.4',
+                                  '5.0.5',
                                   '5.1.1',
                                   '5.1.2',
                                   ]
@@ -227,6 +228,7 @@ class CheckTab:
             '5.0.2': {'fct': [lambda: self.change_clone_shema_trigger()], },
             '5.0.3': {},
             '5.0.4': {},
+            '5.0.5': {},
             '5.1.1': {'fct': [
                 lambda: self.new_branch_tab(),
             ], },
@@ -1064,7 +1066,12 @@ class CheckTab:
         """ update 5.0.2 version"""
 
         self.change_branchs_chstate_active()
-        qry = "DROP FUNCTION clone_schema(text, text,text, boolean, boolean);"
+        valid = self.update_clone()
+        if not valid :
+            self.mgis.add_info("Error  update_502")
+
+    def update_clone(self):
+        """update clone function"""
         try:
             cl = Maso.class_fct_psql()
             lfct = [cl.pg_clone_schema()]
@@ -1073,10 +1080,9 @@ class CheckTab:
                 qry += sql
                 qry += '\n'
             self.mdb.run_query(qry)
-
             return True
         except Exception as e:
-            self.mgis.add_info("Error  update_502: {}".format(str(e)))
+            self.mgis.add_info("Error update clone function : ".format(str(e)))
             return False
 
     def new_branch_tab(self):
@@ -1100,7 +1106,7 @@ class CheckTab:
 
         lst_profil_err = self.mdb.check_valid_profil()
         if valid:
-            lst_trigger_b = self.mdb.list_trigger(self.mdb.SCHEMA, 'branchs')
+            lst_trigger_b = self.mdb.list_trigger( 'branchs',self.mdb.SCHEMA)
             #  RENAME old branchs table
             sql = "ALTER TABLE IF EXISTS {0}.branchs RENAME TO branchs_old;".format(self.mdb.SCHEMA)
             sql += '\n'
@@ -1170,7 +1176,7 @@ class CheckTab:
                 valid = False
             else:
                 self.mgis.add_info('Create table Branch - OK')
-        lst_trigger_p = self.mdb.list_trigger(self.mdb.SCHEMA, 'profiles')
+        lst_trigger_p = self.mdb.list_trigger('profiles',self.mdb.SCHEMA)
         if valid:
             if  "profiles_edition" in lst_trigger_p:
                 sql="DROP TRIGGER IF EXISTS profiles_edition ON {}.profiles;".format(self.mdb.SCHEMA)
@@ -1379,7 +1385,7 @@ $BODY$;
             lst_tab = self.mdb.list_tables(schema=self.mdb.SCHEMA)
             lst_admin_tab = self.mdb.select('admin_tab', list_var=["table_"])
             if 'results_old' in lst_tab:
-                self.mdb.drop_table('result_old')
+                self.mdb.drop_table('results_old')
             if 'results_old' in lst_admin_tab['table_']:
                 self.mdb.delete('admin_tab', where="table_= 'results_old'")
 
@@ -1387,9 +1393,38 @@ $BODY$;
                 valid, tab_name = self.add_tab( Maso.runs_graph,False)
                 self.updat_num_v(tab_name, '5.1.2')
 
+            if valide:
+                valid = self.update_clone()
+                if not valid:
+                    self.mgis.add_info('Error to update clone function')
 
+            if valid:
+                try :
+                    fichparam = os.path.join(self.mgis.dossier_sql, "parametres.csv")
+                    # self.run_query(req.format(self.SCHEMA, fichparam))
+                    liste_value = []
+                    with open(fichparam, 'r') as file:
+                        for ligne in file:
+                            liste_value.append(ligne.replace('\n', '').split(';'))
+                    liste_col = self.mdb.list_columns('parametres')
+                    var = ",".join(liste_col)
+                    valeurs = "("
+                    for k in liste_col:
+                        valeurs += '%s,'
+                    valeurs = valeurs[:-1] + ")"
 
-        # "decentrement"
+                    self.mdb.delete('parametres')
 
+                    sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
+                                                                        'parametres',
+                                                                        var,
+                                                                        valeurs)
+
+                    self.mdb.run_query(sql, many=True, list_many=liste_value)
+                except Exception:
+                    valid = False
+                    self.mgis.add_info('Error when parameters update')
+
+        return valid
 
         # TODO delete function public in future

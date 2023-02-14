@@ -31,6 +31,10 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    5.1.2  : Correction of the basins trigger
+             Delete results_old table
+             Correction of the clone function
+             Correction of the order of laws for the mascaret API
     5.1.1  : Changed the processing of friction (mesh, plani) in the plugin
              Added the clone function
              Added the law check for the events
