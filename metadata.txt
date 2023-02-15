@@ -20,7 +20,7 @@ qgisMinimumVersion=3.10
 qgisMaximumVersion=3.99
 
 
-version=5.0.4
+version=5.0.5
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
