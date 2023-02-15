@@ -228,7 +228,7 @@ class CheckTab:
             '5.0.2': {'fct': [lambda: self.change_clone_shema_trigger()], },
             '5.0.3': {},
             '5.0.4': {},
-            '5.0.5': {},
+            '5.0.5': {'fct': [lambda: self.update_505()], },
             '5.1.1': {'fct': [
                 lambda: self.new_branch_tab(),
             ], },
@@ -1085,6 +1085,44 @@ class CheckTab:
             self.mgis.add_info("Error update clone function : ".format(str(e)))
             return False
 
+    def update_505(self):
+        """ update 5.0.5 version"""
+        valid = True
+        if valid :
+            lst_tab = self.mdb.list_tables(schema=self.mdb.SCHEMA)
+            if "runs_graph" not in lst_tab:
+                valid, tab_name = self.add_tab( Maso.runs_graph,False)
+                self.updat_num_v(tab_name, '5.1.2')
+
+        test = self.mdb.select('parametres',where="parametre ='decentrement'")
+        if valid and not len(test['id'])>0:
+
+            try:
+                fichparam = os.path.join(self.mgis.dossier_sql, "parametres.csv")
+                # self.run_query(req.format(self.SCHEMA, fichparam))
+                liste_value = []
+                with open(fichparam, 'r') as file:
+                    for ligne in file:
+                        liste_value.append(ligne.replace('\n', '').split(';'))
+                liste_col = self.mdb.list_columns('parametres')
+                var = ",".join(liste_col)
+                valeurs = "("
+                for k in liste_col:
+                    valeurs += '%s,'
+                valeurs = valeurs[:-1] + ")"
+
+                self.mdb.delete('parametres')
+
+                sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
+                                                                    'parametres',
+                                                                    var,
+                                                                    valeurs)
+
+                self.mdb.run_query(sql, many=True, list_many=liste_value)
+            except Exception:
+                valid = False
+        return valid
+
     def new_branch_tab(self):
         """
         updat 5.1.1
@@ -1397,8 +1435,8 @@ $BODY$;
                 valid = self.update_clone()
                 if not valid:
                     self.mgis.add_info('Error to update clone function')
-
-            if valid:
+            test = self.mdb.select('parametres', where="parametre ='decentrement'")
+            if valid and not len(test['id']) > 0:
                 try :
                     fichparam = os.path.join(self.mgis.dossier_sql, "parametres.csv")
                     # self.run_query(req.format(self.SCHEMA, fichparam))
