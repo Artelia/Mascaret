@@ -1182,7 +1182,6 @@ $BODY$; """
                   COST 100;"""
         return qry.format(local)
 
-
     def pg_create_calcul_abscisse_branche(self,local='public'):
         """
         Old function TODO delete in future
@@ -1475,12 +1474,14 @@ AS $BODY$
  
             DECLARE  
                 long2	double precision;  
+                long1	double precision; 
                 g	public.geometry; 
                 b	integer; 
                 d	double precision; 
                 f	double precision;
                 test	boolean;       
                 val  double precision;
+                abs_tmp  double precision;
                 new_line  public.geometry;
                 geom_final_p public.geometry;
                 srid integer;
@@ -1506,9 +1507,13 @@ AS $BODY$
                    	
                 ELSE
                     EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d  ;
-                     
+                    NEW.branchnum= b ;
+                    EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1))' USING NEW.branchnum INTO long1;
+                    IF long1 IS NULL THEN
+                            long1 = 0;
+                    END IF;
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
-                     	NEW.branchnum= b ;
+                     	
                         /* projection compute*/
                        f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
                        geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
@@ -1523,21 +1528,21 @@ AS $BODY$
                        ELSE
                     	   EXECUTE 'INSERT INTO ' || TG_TABLE_SCHEMA || '.visu_flood_marks (geom,gid, id_marks) VALUES( ST_SetSRID($1,$2),DEFAULT,$3)' USING new_line, srid,NEW.gid ;
         			   END IF;
-                       
+        			   
+        			   
+                      
                        long2 = (SELECT (ST_Length(g)*f));
-            
-                        
-                       NEW.abscissa = ROUND((long2)::numeric,2);
-                    ELSE
-                         NEW.branchnum= b ;
-                         
+                            
+                       NEW.abscissa = ROUND((long1+long2)::numeric,2);
+                    ELSE                         
                         IF NOT  OLD.abscissa=  NEW.abscissa THEN
+                        abs_tmp = ROUND((NEW.abscissa-long1)::numeric,2); 
                          RAISE NOTICE 'entre 1 ';
                             /* check if new abscissa is in branch*/
-                            val = (NEW.abscissa)/ST_Length(g);
+                            val = (abs_tmp)/ST_Length(g);
                             IF val>1 OR  val<0 THEN
                             	RAISE NOTICE 'Branch : %',b;
-                            	RAISE NOTICE 'The new abscissa (%) is not between % and % ;', NEW.abscissa, 0, ST_Length(g);
+                            	RAISE NOTICE 'The new relative abscissa (%) is not between % and % ;', abs_tmp, 0, ST_Length(g);
                             END IF ;    
 
                             geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),val));                            

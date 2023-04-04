@@ -86,6 +86,7 @@ class CheckTab:
                                   '5.0.5',
                                   '5.1.1',
                                   '5.1.2',
+                                  '5.1.3',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -232,10 +233,15 @@ class CheckTab:
             '5.1.1': {'fct': [
                 lambda: self.new_branch_tab(),
             ], },
-                '5.1.2': {'fct': [
-                    lambda: self.update_512(),
-                ]
+            '5.1.2': {'fct': [
+                lambda: self.update_512(),
+            ]
             },
+            '5.1.3': {'fct': [
+                lambda: self.update_513(),
+            ]
+            },
+
             # '3.0.x': { },
 
         }
@@ -1067,7 +1073,7 @@ class CheckTab:
 
         self.change_branchs_chstate_active()
         valid = self.update_clone()
-        if not valid :
+        if not valid:
             self.mgis.add_info("Error  update_502")
 
     def update_clone(self):
@@ -1088,14 +1094,14 @@ class CheckTab:
     def update_505(self):
         """ update 5.0.5 version"""
         valid = True
-        if valid :
+        if valid:
             lst_tab = self.mdb.list_tables(schema=self.mdb.SCHEMA)
             if "runs_graph" not in lst_tab:
-                valid, tab_name = self.add_tab( Maso.runs_graph,False)
+                valid, tab_name = self.add_tab(Maso.runs_graph, False)
                 self.updat_num_v(tab_name, '5.1.2')
 
-        test = self.mdb.select('parametres',where="parametre ='decentrement'")
-        if valid and not len(test['id'])>0:
+        test = self.mdb.select('parametres', where="parametre ='decentrement'")
+        if valid and not len(test['id']) > 0:
 
             try:
                 fichparam = os.path.join(self.mgis.dossier_sql, "parametres.csv")
@@ -1132,8 +1138,8 @@ class CheckTab:
         check_fill = False
 
         lst_tab = self.mdb.list_tables(schema=self.mdb.SCHEMA)
-        lst_admin_tab = self.mdb.select('admin_tab',list_var =["table_"])
-        if 'results_old' in lst_tab :
+        lst_admin_tab = self.mdb.select('admin_tab', list_var=["table_"])
+        if 'results_old' in lst_tab:
             self.mdb.drop_table('result_old')
         if 'results_old' in lst_admin_tab['table_']:
             self.mdb.delete('admin_tab', where="table_= 'results_old'")
@@ -1141,10 +1147,9 @@ class CheckTab:
             if new_ver == '5.1.1':
                 return valid
 
-
         lst_profil_err = self.mdb.check_valid_profil()
         if valid:
-            lst_trigger_b = self.mdb.list_trigger( 'branchs',self.mdb.SCHEMA)
+            lst_trigger_b = self.mdb.list_trigger('branchs', self.mdb.SCHEMA)
             #  RENAME old branchs table
             sql = "ALTER TABLE IF EXISTS {0}.branchs RENAME TO branchs_old;".format(self.mdb.SCHEMA)
             sql += '\n'
@@ -1214,10 +1219,10 @@ class CheckTab:
                 valid = False
             else:
                 self.mgis.add_info('Create table Branch - OK')
-        lst_trigger_p = self.mdb.list_trigger('profiles',self.mdb.SCHEMA)
+        lst_trigger_p = self.mdb.list_trigger('profiles', self.mdb.SCHEMA)
         if valid:
-            if  "profiles_edition" in lst_trigger_p:
-                sql="DROP TRIGGER IF EXISTS profiles_edition ON {}.profiles;".format(self.mdb.SCHEMA)
+            if "profiles_edition" in lst_trigger_p:
+                sql = "DROP TRIGGER IF EXISTS profiles_edition ON {}.profiles;".format(self.mdb.SCHEMA)
                 err = self.mdb.run_query(sql)
             obj = Maso.profiles()
             obj.schema = self.mdb.SCHEMA
@@ -1402,17 +1407,16 @@ $BODY$;
                                "{}\n\n"
                                "because they intersected two branches:\n".format(txt))
 
-
         self.mgis.add_info('******')
         return valid
 
     def update_512(self):
         valide = True
-        if valide :
+        if valide:
             sql = "DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;".format(self.mdb.SCHEMA)
             err1 = self.mdb.run_query(sql)
             tabs_sql = ['basins', Maso.basins]
-            obj=Maso.basins()
+            obj = Maso.basins()
             obj.schema = self.mdb.SCHEMA
             sql = obj.pg_updat_actv()
             err2 = self.mdb.run_query(sql)
@@ -1428,7 +1432,7 @@ $BODY$;
                 self.mdb.delete('admin_tab', where="table_= 'results_old'")
 
             if "runs_graph" not in lst_tab:
-                valid, tab_name = self.add_tab( Maso.runs_graph,False)
+                valid, tab_name = self.add_tab(Maso.runs_graph, False)
                 self.updat_num_v(tab_name, '5.1.2')
 
             if valide:
@@ -1437,7 +1441,7 @@ $BODY$;
                     self.mgis.add_info('Error to update clone function')
             test = self.mdb.select('parametres', where="parametre ='decentrement'")
             if valid and not len(test['id']) > 0:
-                try :
+                try:
                     fichparam = os.path.join(self.mgis.dossier_sql, "parametres.csv")
                     # self.run_query(req.format(self.SCHEMA, fichparam))
                     liste_value = []
@@ -1465,4 +1469,11 @@ $BODY$;
 
         return valid
 
-        # TODO delete function public in future
+    def update_513(self):
+        cl = Maso.class_fct_psql()
+        lfct = [cl.pg_create_calcul_abscisse_point_flood(self.mdb.SCHEMA)]
+        qry = ''
+        for sql in lfct:
+            qry += sql
+            qry += '\n'
+        self.mdb.run_query(qry)
