@@ -1824,8 +1824,8 @@ class ClassMascaret:
         else:
             self.mgis.add_info('no transmitted variable for task_mascaret')
             return
-        self.clean_res()
         for i, scen in enumerate(dict_scen['name']):
+            self.clean_res()
             self.mgis.add_info(" *** The current scenario is {} ***".format(scen))
             # initialise file
             date_debut = None
