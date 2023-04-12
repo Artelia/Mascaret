@@ -83,6 +83,7 @@ class CheckTab:
                                   '5.0.3',
                                   '5.0.4',
                                   '5.0.5',
+                                  '5.0.6',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -224,7 +225,8 @@ class CheckTab:
             '5.0.2': {'fct': [lambda: self.change_clone_shema_trigger()], },
             '5.0.3': {},
             '5.0.4': {},
-            '5.0.5': {'fct': [lambda: self.update_505()], },
+            '5.0.5': { },
+            '5.0.6': {'fct': [lambda: self.update_505()], },
             # '3.0.x': { },
 
         }
@@ -1043,7 +1045,7 @@ class CheckTab:
         err = self.mdb.run_query(sql)
         if err:
             sorti = False
-        print(sorti)
+
         return sorti
 
     def change_branchs_chstate_active(self):
@@ -1083,14 +1085,23 @@ class CheckTab:
 
         test = self.mdb.select('parametres',where="parametre ='decentrement'")
         if valid and not len(test['id'])>0:
-
             try:
                 fichparam = os.path.join(self.mgis.dossier_sql, "parametres.csv")
+
                 # self.run_query(req.format(self.SCHEMA, fichparam))
                 liste_value = []
                 with open(fichparam, 'r') as file:
                     for ligne in file:
-                        liste_value.append(ligne.replace('\n', '').split(';'))
+                        lst_val = ligne.replace('\n', '').split(';')
+                        val_ori = self.mdb.select('parametres', where="parametre = '{}'".format(lst_val[1]),verbose=True)
+                        if len(val_ori['id'])>0 :
+                            if  lst_val[2] != val_ori['steady'][0] :
+                                lst_val[2] = val_ori['steady'][0]
+                            if lst_val[3] != val_ori['unsteady'][0] :
+                                lst_val[3] = val_ori['unsteady'][0]
+                            if lst_val[4] != val_ori['transcritical'][0]:
+                                lst_val[4] = val_ori['transcritical'][0]
+                        liste_value.append(lst_val )
                 liste_col = self.mdb.list_columns('parametres')
                 var = ",".join(liste_col)
                 valeurs = "("
