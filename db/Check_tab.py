@@ -84,9 +84,12 @@ class CheckTab:
                                   '5.0.3',
                                   '5.0.4',
                                   '5.0.5',
+                                  '5.0.6',
+                                  '5.0.7',
                                   '5.1.1',
                                   '5.1.2',
                                   '5.1.3',
+                                  '5.1.4',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -230,6 +233,8 @@ class CheckTab:
             '5.0.3': {},
             '5.0.4': {},
             '5.0.5': {'fct': [lambda: self.update_505()], },
+            '5.0.6': {},
+            '5.0.7': {},
             '5.1.1': {'fct': [
                 lambda: self.new_branch_tab(),
             ], },
@@ -241,6 +246,8 @@ class CheckTab:
                 lambda: self.update_513(),
             ]
             },
+            '5.1.4': {},
+            
 
             # '3.0.x': { },
 
@@ -841,7 +848,7 @@ class CheckTab:
                 ]
         qry = ''
         for sql in lfct:
-            qry += sql
+            qry += sql()
             qry += '\n'
         self.mdb.run_query(qry)
 

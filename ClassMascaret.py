@@ -19,6 +19,7 @@ email                :
 
 """
 
+import copy
 import csv
 import datetime
 import gc
@@ -815,7 +816,7 @@ class ClassMascaret:
             donnees = SubElement(struct, "donnees")
             SubElement(donnees, "modeEntree").text = '1'
             # WARNING The law must be sorted because of the order of law must be the same than order File.law for API
-            #SubElement(donnees, "fichier").text = '{}.loi'.format(
+            # SubElement(donnees, "fichier").text = '{}.loi'.format(
             #    del_symbol(self.geom_obj_toname(nom, dict_lois[nom]['type'])))
             SubElement(donnees, "fichier").text = '{}.loi'.format(del_symbol(nom))
             SubElement(donnees, "uniteTps").text = '-0'
@@ -1187,7 +1188,7 @@ class ClassMascaret:
             arbre.write(fich_entree)
 
     def creer_loi(self, nom, tab, type_, init=False):
-        #nom = self.geom_obj_toname(nom, type_)
+        # nom = self.geom_obj_toname(nom, type_)
         if init:
             nom = nom + '_init'
         with open(os.path.join(self.dossierFileMasc, del_symbol(nom) + '.loi'),
@@ -1546,7 +1547,7 @@ class ClassMascaret:
 
         if par["LigEauInit"] and not par[
             "initialisationAuto"] and noyau != "steady":
-            self.select_init_run_case()
+            dict_scen = self.select_init_run_case(dict_scen)
 
         return par, dict_scen, dict_lois, comments
 
@@ -1703,7 +1704,7 @@ class ClassMascaret:
 
         return
 
-    def select_init_run_case(self):
+    def select_init_run_case(self, dict_scen):
         """
         Select initial run case
         :return:
@@ -1716,40 +1717,46 @@ class ClassMascaret:
         else:
             liste_run = []
         liste_run.append('".lig" File')
-        case, ok = QInputDialog.getItem(None,
-                                        'Initial run case ',
-                                        'Runs',
-                                        liste_run, 0, False)
+        dict_scen["id_run_init"] = []
+        for i, scen in enumerate(dict_scen['name']):
 
-        if ok:
-            if case == '".lig" File':
-                self.copy_lig()
-            else:
-                condition = "run LIKE '{0}'".format(case)
-                dico_scen = self.mdb.select_distinct("scenario",
-                                                     "runs", condition)
-                liste_scen = ['{}'.format(v) for v in dico_scen["scenario"]]
-
-                scen2, ok = QInputDialog.getItem(None,
-                                                 'Initial Scenario',
-                                                 'Initial Scenario',
-                                                 liste_scen, 0, False)
-
-                if ok:
-                    id_run = self.mdb.run_query("SELECT id FROM {0}.runs "
-                                                "WHERE run = '{1}' "
-                                                "AND scenario = '{2}'".format(
-                        self.mdb.SCHEMA, case, scen2), fetch=True)
-                    self.opt_to_lig(case, scen2, id_run[0][0], self.baseName)
+            case, ok = QInputDialog.getItem(None,
+                                            'Initial run case for {}'.format(scen),
+                                            'Runs',
+                                            liste_run, 0, False)
+            if ok:
+                if case == '".lig" File':
+                    self.copy_lig()
                 else:
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info("Cancel run")
-            return True
+                    condition = "run LIKE '{0}'".format(case)
+                    dico_scen = self.mdb.select_distinct("scenario",
+                                                         "runs", condition)
+                    liste_scen = ['{}'.format(v) for v in dico_scen["scenario"]]
 
-        else:
-            if self.mgis.DEBUG:
-                self.mgis.add_info("Cancel run")
-            return False
+                    scen2, ok = QInputDialog.getItem(None,
+                                                     'Initial Scenario for {}'.format(scen),
+                                                     'Initial Scenario',
+                                                     liste_scen, 0, False)
+
+                    if ok:
+
+                        id_run = self.mdb.run_query("SELECT id FROM {0}.runs "
+                                                    "WHERE run = '{1}' "
+                                                    "AND scenario = '{2}'".format(
+                            self.mdb.SCHEMA, case, scen2), fetch=True)
+                        dict_scen["id_run_init"].append(id_run[0][0])
+                        # self.opt_to_lig( id_run[0][0], self.baseName)
+
+                    else:
+                        dict_scen["id_run_init"].append(None)
+                        if self.mgis.DEBUG:
+                            self.mgis.add_info("Cancel run : {}".format(scen))
+            else:
+                dict_scen["id_run_init"].append(None)
+                if self.mgis.DEBUG:
+                    self.mgis.add_info("Cancel run: {}".format(scen))
+
+        return dict_scen
 
     # return
     def mascaret(self, noyau, run, only_init=False):
@@ -1777,8 +1784,7 @@ class ClassMascaret:
                 self.init_scen_trans_unsteady(par, dict_lois)
             if self.check_mobil_gate() and noyau == "unsteady":
                 self.create_mobil_gate_file()
-            self.fct_only_init(noyau)
-
+            self.fct_only_init(noyau, dict_scen)
             return
 
         #
@@ -1824,6 +1830,7 @@ class ClassMascaret:
         else:
             self.mgis.add_info('no transmitted variable for task_mascaret')
             return
+
         for i, scen in enumerate(dict_scen['name']):
             self.clean_res()
             self.mgis.add_info(" *** The current scenario is {} ***".format(scen))
@@ -1878,15 +1885,20 @@ class ClassMascaret:
                                        "from {} scenario.".format(sceninit))
                     return
 
-                self.opt_to_lig(run, sceninit, id_run, self.baseName)
+                self.opt_to_lig(id_run, self.baseName)
                 tab = {"LigEauInit": {'valeur': 'true',
                                       'balise1': 'parametresConditionsInitiales',
                                       'balise2': 'ligneEau'}
                        }
                 self.modif_xcas(tab, self.baseName + '.xcas')
 
-            # elif par["LigEauInit"] and noyau != "steady":
-            #     self.select_init_run_case()
+            elif par["LigEauInit"] and noyau != "steady":
+                #    self.select_init_run_case()
+                id_run_init = dict_scen['id_run_init'][i]
+                if id_run_init is None:
+                    self.mgis.add_info("Cancel run because No initial boundaries")
+                    continue
+                self.opt_to_lig(id_run_init, self.baseName)
 
             self.mgis.add_info("========== Run case  =========")
             self.mgis.add_info(
@@ -1956,7 +1968,7 @@ class ClassMascaret:
                 dico = json.load(filein)
             self.stock_res_api(dico, id_run)
 
-    def fct_only_init(self, noyau):
+    def fct_only_init(self, noyau, dict_scen):
         """
         clean and model file creation
         :param noyau: (str) kernel
@@ -1970,7 +1982,9 @@ class ClassMascaret:
                     os.remove(path)
         # select initial case
         if noyau != "steady":
-            self.select_init_run_case()
+            dict_scen = self.select_init_run_case(dict_scen)
+            if dict_scen["id_run_init"][0] != None:
+                self.opt_to_lig(dict_scen["id_run_init"][0], self.baseName)
         cl = ClassPostPreFG(self.mgis)
 
         # path = os.path.abspath(os.path.join(os.path.dirname(__file__),
@@ -2209,9 +2223,10 @@ class ClassMascaret:
     #     result["Q"] = result.pop("q")
     #     return result
 
-    def opt_to_lig(self, run, scen, id_run, base_namefiles):
+    def opt_to_lig(self, id_run, base_namefiles):
         """Creation of .lig file """
         # old
+        # (self, run, scen, id_run, base_namefiles)
         # result = self.get_for_lig(run, scen)
         result = self.get_for_lig_new(id_run)
         if not result:
@@ -2331,7 +2346,7 @@ class ClassMascaret:
     def clean_res(self):
         """ Clean the run folder and copy the essential files to run mascaret"""
         files = os.listdir(self.dossierFileMasc)
-        listsup = [".opt", ".lig", '.cas_opt','.liai_opt','.tra_opt']
+        listsup = [".opt", ".lig", '.cas_opt', '.liai_opt', '.tra_opt']
         for i in range(0, len(files)):
             ext = os.path.splitext(files[i])[1]
             # self.mgis.add_info('delet file rr{}rr {}'.format(ext,(ext in listsup)))
@@ -2430,7 +2445,7 @@ class ClassMascaret:
                             "WHERE {1} ".format(self.mdb.SCHEMA, condition),
                             fetch=True)
                         list_var = [str(v[0]) for v in var]
-                        if  len(list_var)>0 :
+                        if len(list_var) > 0:
                             self.mdb.run_query("DELETE  FROM {}.results_var "
                                                "where id in ({}) and "
                                                "type_res = '"
@@ -3049,7 +3064,8 @@ class ClassMascaret:
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
         if self.cond_api:
-            self.stock_res_api(self.save_res_struct[0],self.save_res_struct[1])
+            self.stock_res_api(self.save_res_struct[0], self.save_res_struct[1])
+
     def get_idruntpk(self, where=''):
         dict_idx = dict()
         tmp = self.mdb.select('results_idx', list_var=['idruntpk', 'id_runs', 'time', 'pknum'], where=where)

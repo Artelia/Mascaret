@@ -796,7 +796,7 @@ class ClassMasDatabase(object):
                     '<br>Model "{0}" deleted.'.format(model_name))
             return True
 
-    def drop_table(self, table_name):
+    def drop_table(self, table_name, verbose=False):
         """
         Delete tables inside PostgreSQL database.
 
