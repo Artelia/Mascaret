@@ -1956,7 +1956,9 @@ class ClassMascaret:
 
             elif par["LigEauInit"] and noyau != "steady":
                 #    self.select_init_run_case()
-                id_run_init = dict_scen['id_run_init'][i]
+                id_run_init = None
+                if 'id_run_init' in dict_scen.keys():
+                    id_run_init = dict_scen['id_run_init'][i]
                 if id_run_init is None:
                     self.mgis.add_info("Cancel run because No initial boundaries")
                     continue
