@@ -495,7 +495,7 @@ class ClassMascaret:
         profils = self.mdb.select("profiles", "active", "abscissa")
         prof_seuil = self.mdb.select("profiles", "NOT active", "abscissa")
         seuils = self.mdb.select("weirs", "active", "abscissa")
-        sorties = self.mdb.select("outputs", "", "abscissa")
+        sorties = self.mdb.select("outputs", "active", "abscissa")
         planim = self.planim_select()
         maillage = self.maillage_select()
         dico_str = self.mdb.select('struct_config', "active", "abscissa")
