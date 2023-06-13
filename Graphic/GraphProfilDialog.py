@@ -786,7 +786,8 @@ class GraphProfil(GraphCommon):
 
                     if err:
                         QMessageBox.warning(self, "Error",
-                                            "Import failed ({})".format(fichier),
+                                            "Import failed ({})\n" \
+                                            "Check the profile lenght".format(fichier),
                                             QMessageBox.Ok)
                     else:
                         self.mdb.insert2("topo", tab)
