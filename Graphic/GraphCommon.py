@@ -89,7 +89,7 @@ class GraphCommon(QWidget):
         self.gid = gid
         self.coucheProfils = self.mgis.coucheProfils
         try:
-            self.liste = self.mdb.select("profiles", "", "abscissa", verbose=True)
+            self.liste = self.mdb.select("profiles", "", "abscissa", verbose=False)
         except:
             self.mgis.add_info("Error Select profils")
             return

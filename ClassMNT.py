@@ -28,13 +28,14 @@ from qgis.gui import *
 class ClassMNT(QObject):
     """Example worker for calculating the total area of all features in a layer"""
 
-    def __init__(self, main, profil, raster, facteur):
+    def __init__(self, main, profil, raster, facteur,auto_prof=False):
         QObject.__init__(self)
         self.mgis = main
         self.profil = profil
         self.raster_provider = raster.dataProvider()
         self.res = raster.rasterUnitsPerPixelX()
         self.facteur = facteur
+        self.auto_prof = auto_prof
         self.mnt = {}
 
     @staticmethod
@@ -74,6 +75,9 @@ class ClassMNT(QObject):
                     if ident[1]:
                         feature["xmnt"] += " " + str(dist)
                         feature["zmnt"] += " " + str(self.fct1(ident[1] / self.facteur, arrondi=3))
+                if self.auto_prof :
+                    feature["x"] = feature["xmnt"]
+                    feature["z"] = feature["zmnt"]
                 self.profil.updateFeature(feature)
 
                 if len(feature["zmnt"]) > 0:
