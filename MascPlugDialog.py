@@ -536,7 +536,8 @@ class MascPlugDialog(QMainWindow):
         if self.DEBUG:
             self.add_info("Raster and Profile Selection, and Unit are Ok")
 
-        ok = self.box.yes_no_q("Do you want to use the DEM as default profile values?")
+        ok = self.box.yes_no_q(" Do you want to use the DEM as default profile values?\n"
+                               "WARRING: The profiles will be overwritten.")
         # create a new worker instance
         worker = ClassMNT(self, profil, raster, facteur, auto_prof=ok)
         worker.run()
