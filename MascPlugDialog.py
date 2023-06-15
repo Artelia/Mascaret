@@ -38,7 +38,7 @@ from .ClassMNT import ClassMNT
 from .ClassMascaret import ClassMascaret
 from .ClassObservation import ClassEventObsDialog
 from .ClassParameterDialog import ClassParameterDialog
-from .Function import read_version
+from .Function import read_version, filter_pr_fct
 from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .HydroLawsDialog import ClassHydroLawsDialog
 from .Structure.MobilSingDialog import ClassMobilSingDialog
@@ -208,6 +208,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionExport_Run.triggered.connect(self.export_run)
         self.ui.actionExport_Model.triggered.connect(self.export_model_dgl)
         self.ui.actionImport_Model.triggered.connect(self.import_model_dgl)
+        self.ui.actionFilter_All_Profiles.triggered.connect(self.filter_all_profiles)
 
         self.ui.actionParameters_Water_Quality.triggered.connect(
             self.fct_parameters_wq)
@@ -1110,3 +1111,36 @@ Version : {}
         QgsApplication.taskManager().addTask(clonetasks)
         clonetasks.finished()
         return
+
+    def filter_all_profiles(self):
+        """
+        Action filter on the all active profiles
+        """
+
+        seuil, ok = QInputDialog.getDouble(self,
+                                           "Filtrage, only on the active profiles",
+                                           "Entrez le seuil",
+                                           0.5)
+        if not ok:
+            self.add_info('The filter is cancel')
+            return
+        ok = self.box.yes_no_q("Please note that all active profiles will be modified.\n"
+                               " Are you sure you want to make the change?")
+        if not ok:
+            self.add_info('The filter is cancel')
+            return
+
+        result = self.mdb.select('profiles', where="active", list_var=['gid','x','z'], verbose=False)
+        tab = {}
+        for gid, x_str, z_str in zip(result['gid'], result['x'],result['z'],) :
+            pr_x = [float(val) for val in x_str.split()]
+            pr_z = [float(val) for val in z_str.split()]
+            newx, newz, err = filter_pr_fct(pr_x, pr_z, seuil)
+            if err != '':
+                self.add_info('Profile {} : {}'.format(gid,err))
+            newx_str = ' '.join([str(val) for val in newx])
+            newz_str = ' '.join([str(val) for val in newz])
+            tab[gid] = {'x' : newx_str, 'z' : newz_str}
+
+        self.mdb.update('profiles', tab, var="gid")
+        self.add_info('The all active profiles were changed.')

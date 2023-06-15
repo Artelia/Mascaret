@@ -21,7 +21,7 @@ import math
 import os
 import re
 from shutil import copy2
-
+import numpy as np
 import dateutil
 
 
@@ -371,7 +371,63 @@ def fill_zminbed(mdb):
 
     mdb.update("profiles", update_dico, var="gid")
 
+def filter_pr_fct(pr_x, pr_z, seuil):
+    err = ''
 
+    n = len(pr_z)
+    nb = 5
+    seuil2 = 0.
+    x = [pr_x[0]]
+    z = [pr_z[0]]
+    derniere_pente = 1
+
+    for i in range(1, n - 1):
+        mini = max(0, i - nb)
+        maxi = min(i + nb + 1, n)
+        xx = pr_x[mini:maxi]
+        zz = pr_z[mini:maxi]
+
+        pente, ord = np.polyfit(xx, zz, 1)
+        zz.sort()
+        if len(zz) <= nb:
+            err ="Warning: The filter works if there are a minimum of 5 points"
+            return pr_x, pr_z
+        mediane = zz[nb]
+
+        if abs((pente - derniere_pente) / derniere_pente) > seuil:
+
+            x.append(pr_x[i])
+            # z.append(self.tab['z'][i])
+            if abs(pr_z[i] - mediane) > seuil2:
+                z.append(pr_z[i])
+            else:
+                z.append(mediane)
+
+            derniere_pente = pente
+
+    x.append(pr_x[-1])
+    z.append(pr_z[-1])
+
+    flag = True
+    pr_x = [x[0]]
+    pr_z = [z[0]]
+    m = len(z)
+    for i in range(1, m):
+        if z[i - 1] != z[i]:
+            if flag:
+                pr_x.append(x[i - 1])
+                pr_z.append(z[i - 1])
+
+            pr_x.append(x[i])
+            pr_z.append(z[i])
+            flag = False
+        elif i == m - 1:
+            pr_x.append(x[i])
+            pr_z.append(z[i])
+        else:
+            flag = True
+
+    return pr_x, pr_z, err
 # ****************************************************************
 
 class TypeErrorModel:
