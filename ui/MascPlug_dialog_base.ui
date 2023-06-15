@@ -204,6 +204,14 @@
     <property name="title">
      <string>Tools</string>
     </property>
+    <widget class="QMenu" name="menuProfile_Tools">
+     <property name="title">
+      <string>Profile Tools</string>
+     </property>
+     <addaction name="action_Extract_MNTfor_profile"/>
+     <addaction name="actionUpdate_Zones"/>
+     <addaction name="actionFilter_All_Profiles"/>
+    </widget>
     <addaction name="actionHydro_Laws"/>
     <addaction name="actionCross_section"/>
     <addaction name="actionObservations"/>
@@ -211,9 +219,8 @@
     <addaction name="actionStructures_weirs"/>
     <addaction name="actionTest"/>
     <addaction name="separator"/>
-    <addaction name="action_Extract_MNTfor_profile"/>
     <addaction name="actionUpdate_all_PK"/>
-    <addaction name="actionUpdate_Zones"/>
+    <addaction name="menuProfile_Tools"/>
    </widget>
    <widget class="QMenu" name="menuDB">
     <property name="title">
@@ -770,6 +777,11 @@
   <action name="actionTo_clone_Model">
    <property name="text">
     <string>To clone Model</string>
+   </property>
+  </action>
+  <action name="actionFilter_All_Profiles">
+   <property name="text">
+    <string>Filter All Profiles</string>
    </property>
   </action>
  </widget>
