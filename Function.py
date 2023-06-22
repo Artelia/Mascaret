@@ -454,7 +454,7 @@ def find_perpendicular_distance(p, p1, p2):
     ## if start and end point are on the same x the distance is the difference in X.
     result = 0.0
     slope  = 0.0
-    if (p1[0]==p2[0]):
+    if abs(p1[0]-p2[0]):
         result=abs(p[0]-p1[0]);
     else:
         slope = (p2[1] - p1[1]) / (p2[0] - p1[0])
@@ -493,30 +493,46 @@ def proper_rdp(points, epsilon):
     else:
         return [firstPoint,lastPoint]
 
-def filter_dist_perpendiculaire(pr_x, pr_z, seuil, fixe_x = []):
+def filter_dist_perpendiculaire(pr_x, pr_z, seuil, fixe_x = [],dist_detection_vert = 0.2):
     """
     filters the points of a profile according to the perpendicular distance
     :param pr_x: list of X point
     :param pr_z: list of Z point
     :param seuil: limit distance
+    :param dist_detection_vert :Gap of x for the detection of a vertical parish
     :return:new  profile point X, Y and the error information
     """
     err = ''
-
     points = list(zip(pr_x,pr_z))
     if len(points) <3 :
         err = "Warning: The filter works if there are a minimum of 3 points"
         return
+    # traitement des paroi vertical a conserver
+    pointvert = []
+    for i, pts in enumerate(points[:-1]):
+        if abs(points[i][0] - points[i + 1][0]) < dist_detection_vert:
+            if points[i] not in pointvert:
+                pointvert.append(points[i])
+            pointvert.append(points[i + 1])
+    pointvert.sort(key=lambda x: x[0])
     new_points = proper_rdp(points, seuil)
     if len(fixe_x) > 0:
         new_points = interp_point_fix(new_points,fixe_x)
+    # ajout paroi vertical
+    if len(pointvert) > 0:
+        # tri point vert
+        tmp_points = []
+        for point in new_points:
+            if point[0] in [x for x,y in pointvert]:
+                continue
+            tmp_points.append(point)
+        new_points = tmp_points + pointvert
+        new_points.sort(key=lambda x: x[0])
 
     newx, newz = [], []
     for xx, zz in new_points:
-        newx.append(xx)
-        newz.append(zz)
-
-
+        newx.append(round(xx,3))
+        newz.append(round(zz,3))
     return newx, newz, err
 
 def interp_point_fix(points,fixe_x):

@@ -35,7 +35,8 @@ class ClassFilterDialog(QDialog):
         self.meth_filter = None
         self.seuil = None
         self.valid = False
-        lst_filter = [('f_pente', 'Slope-based Filter'), ('f_rdp', 'Filter based on perpendicular distance')]
+        lst_filter = [('f_pente', 'Slope-based Filter'), ('f_rdp', 'Filter based on Ramer-Douglas-Peucker  Algorithm')]
+        #rdp Ramer-Douglas-Peucker  Algorithm
         for elem in lst_filter:
             self.cb_filter.addItem(elem[1], elem[0])
         self.b_ok.accepted.connect(self.accept_page)
