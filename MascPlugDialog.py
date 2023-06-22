@@ -38,8 +38,9 @@ from .ClassMNT import ClassMNT
 from .ClassMascaret import ClassMascaret
 from .ClassObservation import ClassEventObsDialog
 from .ClassParameterDialog import ClassParameterDialog
-from .Function import read_version, filter_pr_fct
+from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire
 from .Graphic.GraphProfilDialog import IdentifyFeatureTool
+from .Graphic.FilterDialog import ClassFilterDialog
 from .HydroLawsDialog import ClassHydroLawsDialog
 from .Structure.MobilSingDialog import ClassMobilSingDialog
 # # structures
@@ -1117,31 +1118,41 @@ Version : {}
         """
         Action filter on the all active profiles
         """
-
-        seuil, ok = QInputDialog.getDouble(self,
-                                           "Filtrage, only on the active profiles",
-                                           "Entrez le seuil",
-                                           0.5)
-        if not ok:
+        err = ''
+        dlg = ClassFilterDialog(self)
+        dlg.exec_()
+        if not dlg.valid :
             self.add_info('The filter is cancel')
             return
+        seuil = dlg.seuil
+        meth = dlg.meth_filter
         ok = self.box.yes_no_q("Please note that all active profiles will be modified.\n"
                                " Are you sure you want to make the change?")
         if not ok:
             self.add_info('The filter is cancel')
             return
 
-        result = self.mdb.select('profiles', where="active", list_var=['gid','x','z'], verbose=False)
+        result = self.mdb.select('profiles', where="active", list_var=['gid','x','z', 'leftminbed', 'rightminbed', 'leftstock', 'rightstock'], verbose=False)
+
         tab = {}
-        for gid, x_str, z_str in zip(result['gid'], result['x'],result['z'],) :
+        compt = 0
+        for gid, x_str, z_str in zip(result['gid'], result['x'],result['z']) :
+            fixe_x = [result[key][compt]  for key in ['leftminbed', 'rightminbed', 'leftstock', 'rightstock'] if result[key][compt]]
             pr_x = [float(val) for val in x_str.split()]
             pr_z = [float(val) for val in z_str.split()]
-            newx, newz, err = filter_pr_fct(pr_x, pr_z, seuil)
+            if meth == 'f_pente':
+                newx, newz, err = filter_pr_fct(pr_x, pr_z, seuil)
+            elif meth == 'f_rdp':
+                newx, newz, err = filter_dist_perpendiculaire(pr_x, pr_z, seuil, fixe_x = fixe_x)
+            else:
+                newx, newz = [] , []
+
             if err != '':
                 self.add_info('Profile {} : {}'.format(gid,err))
             newx_str = ' '.join([str(val) for val in newx])
             newz_str = ' '.join([str(val) for val in newz])
             tab[gid] = {'x' : newx_str, 'z' : newz_str}
+            compt+=1
 
         self.mdb.update('profiles', tab, var="gid")
         self.add_info('The all active profiles were changed.')

@@ -37,12 +37,13 @@ from qgis.core import *
 from qgis.gui import *
 
 from .GraphCommon import GraphCommon, DraggableLegend
+from .FilterDialog import ClassFilterDialog
 from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
 from ..Structure.ClassPolygone import ClassPolygone
 from .GraphProfilResultDialog import GraphProfilResultDialog
 from .GraphResultDialog import GraphResultDialog
 from .ClassProfInterpDialog import ClassProfInterpDialog
-from ..Function import tw_to_txt
+from ..Function import tw_to_txt, filter_pr_fct, filter_dist_perpendiculaire
 from .GraphBCDialog import GraphBCDialog
 
 try:
@@ -1333,67 +1334,31 @@ class GraphProfil(GraphCommon):
 
     def filtre(self):
 
-        seuil, ok = QInputDialog.getDouble(self,
-                                           "Filtrage",
-                                           "Entrez le seuil",
-                                           0.5)
-        if not ok:
+        dlg = ClassFilterDialog(self.mgis)
+        dlg.exec_()
+        if not dlg.valid:
+            self.mgis.add_info('The filter is cancel')
             return
 
-        n = len(self.tab['z'])
-        nb = 5
-        seuil2 = 0.
-        x = [self.tab['x'][0]]
-        z = [self.tab['z'][0]]
-        derniere_pente = 1
+        fixe_x = [self.tab["leftminbed"],self.tab["rightminbed"],
+                  self.tab['leftstock'],self.tab['rightstock']]
+        fixe_x = [val for val in fixe_x if val]
+        seuil = dlg.seuil
+        meth = dlg.meth_filter
 
-        for i in range(1, n - 1):
-            mini = max(0, i - nb)
-            maxi = min(i + nb + 1, n)
-            xx = self.tab['x'][mini:maxi]
-            zz = self.tab['z'][mini:maxi]
-
-            pente, ord = np.polyfit(xx, zz, 1)
-            zz.sort()
-            if len(zz) <= nb:
-                self.mgis.add_info("Warning: The filter works if there are a minimum of 5 points ")
-                return
-            mediane = zz[nb]
-
-            if abs((pente - derniere_pente) / derniere_pente) > seuil:
-
-                x.append(self.tab['x'][i])
-                # z.append(self.tab['z'][i])
-                if abs(self.tab['z'][i] - mediane) > seuil2:
-                    z.append(self.tab['z'][i])
-                else:
-                    z.append(mediane)
-
-                derniere_pente = pente
-
-        x.append(self.tab['x'][-1])
-        z.append(self.tab['z'][-1])
-
-        flag = True
-        self.tab['x'] = [x[0]]
-        self.tab['z'] = [z[0]]
-        m = len(z)
-        for i in range(1, m):
-            if z[i - 1] != z[i]:
-                if flag:
-                    self.tab['x'].append(x[i - 1])
-                    self.tab['z'].append(z[i - 1])
-
-                self.tab['x'].append(x[i])
-                self.tab['z'].append(z[i])
-                flag = False
-            elif i == m - 1:
-                self.tab['x'].append(x[i])
-                self.tab['z'].append(z[i])
-            else:
-                flag = True
-
+        err = ''
+        if meth == 'f_pente':
+            newx, newz, err = filter_pr_fct(self.tab['x'], self.tab['z'], seuil, fixe_x = fixe_x)
+        elif meth == 'f_rdp':
+            newx, newz, err = filter_dist_perpendiculaire(self.tab['x'], self.tab['z'], seuil, fixe_x = fixe_x)
+        else:
+            newx, newz = [], []
+        if err != '':
+            self.mgis.add_info('{}'.format( err))
+        self.tab['x'] = newx
+        self.tab['z'] = newz
         self.maj_graph()
+
 
     def select_lit_mineur(self):
         self.rectSelection.set_visible(False)

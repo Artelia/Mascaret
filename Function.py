@@ -371,7 +371,14 @@ def fill_zminbed(mdb):
 
     mdb.update("profiles", update_dico, var="gid")
 
-def filter_pr_fct(pr_x, pr_z, seuil):
+def filter_pr_fct(pr_x, pr_z, seuil,fixe_x =[]):
+    """
+    Filters the points of a profile according to its slope
+    :param pr_x: list of X point
+    :param pr_z: list of Z point
+    :param seuil: step
+    :return:new  profile point X, Y and the error information
+    """
     err = ''
 
     n = len(pr_z)
@@ -391,18 +398,16 @@ def filter_pr_fct(pr_x, pr_z, seuil):
         zz.sort()
         if len(zz) <= nb:
             err ="Warning: The filter works if there are a minimum of 5 points"
-            return pr_x, pr_z
+            return pr_x, pr_z, err
         mediane = zz[nb]
 
         if abs((pente - derniere_pente) / derniere_pente) > seuil:
-
             x.append(pr_x[i])
             # z.append(self.tab['z'][i])
             if abs(pr_z[i] - mediane) > seuil2:
                 z.append(pr_z[i])
             else:
                 z.append(mediane)
-
             derniere_pente = pente
 
     x.append(pr_x[-1])
@@ -426,8 +431,119 @@ def filter_pr_fct(pr_x, pr_z, seuil):
             pr_z.append(z[i])
         else:
             flag = True
+    # force interpole sur les points de berge
+    if len(fixe_x) > 0:
+        new_points = list(zip(pr_x,pr_z))
+        new_points = interp_point_fix(new_points,fixe_x)
+        pr_x, pr_z = [], []
+        for xx, zz in new_points:
+            pr_x.append(xx)
+            pr_z.append(zz)
 
     return pr_x, pr_z, err
+
+
+def find_perpendicular_distance(p, p1, p2):
+    """
+    Compute the perpendicular distance between p point and the segment (p1,p2)
+    :param p1 : tuple of point 1
+    :param p2: tuple of point 2
+    :param p: tuple of point P
+    :return: distance
+    """
+    ## if start and end point are on the same x the distance is the difference in X.
+    result = 0.0
+    slope  = 0.0
+    if (p1[0]==p2[0]):
+        result=abs(p[0]-p1[0]);
+    else:
+        slope = (p2[1] - p1[1]) / (p2[0] - p1[0])
+        intercept = p1[1] - (slope * p1[0])
+        result = abs(slope * p[0] - p[1] + intercept) / math.sqrt(math.pow(slope, 2) + 1)
+    return result
+
+
+def proper_rdp(points, epsilon):
+    """
+    function of filter according to the perpendicular distance
+     :param points: list of points
+    :param epsilon: limit distance
+    :return: filters points
+    """
+    firstPoint = points[0]
+    lastPoint  = points[-1]
+    if (len(points) < 3):
+        return points
+    index = -1
+    dist  = 0.
+    for i in range(1,len(points)-2):
+        cDist = find_perpendicular_distance(points[i], firstPoint, lastPoint)
+        if cDist > dist:
+            dist = cDist
+            index = i
+    if (dist > epsilon):
+        ##iterate
+        l1 = points[0:index+1]
+        l2 = points[index:]
+        r1 = proper_rdp(l1, epsilon)
+        r2 = proper_rdp(l2, epsilon)
+        ## Concat r2 to r1 minus the end/startpoint that will be the same
+        rs = r1[0:-1] + r2
+        return rs
+    else:
+        return [firstPoint,lastPoint]
+
+def filter_dist_perpendiculaire(pr_x, pr_z, seuil, fixe_x = []):
+    """
+    filters the points of a profile according to the perpendicular distance
+    :param pr_x: list of X point
+    :param pr_z: list of Z point
+    :param seuil: limit distance
+    :return:new  profile point X, Y and the error information
+    """
+    err = ''
+
+    points = list(zip(pr_x,pr_z))
+    if len(points) <3 :
+        err = "Warning: The filter works if there are a minimum of 3 points"
+        return
+    new_points = proper_rdp(points, seuil)
+    if len(fixe_x) > 0:
+        new_points = interp_point_fix(new_points,fixe_x)
+
+    newx, newz = [], []
+    for xx, zz in new_points:
+        newx.append(xx)
+        newz.append(zz)
+
+
+    return newx, newz, err
+
+def interp_point_fix(points,fixe_x):
+    """
+    Interpolation of fixpoints in filtered profiles
+    :param points list of points
+    :param fixe_x : X point list of fixpoints
+     :return: new points
+    """
+
+    newfixe_x = []
+    points_tmp = np.array(points)
+    if len(fixe_x)>0 :
+        newfixe_x = [val for val in fixe_x if val not in points_tmp[:,0] ]
+        newfixe_x.sort()
+    if len(newfixe_x) > 0 :
+        fix_y = np.interp(newfixe_x, points_tmp[:,0], points_tmp[:,1])
+        for ifix, xfix in enumerate(newfixe_x):
+            compt = 0
+            xx = points[compt][0]
+            while xx<xfix :
+                compt +=1
+                xx = points[compt][0]
+            points.insert(compt ,(xfix,fix_y[ifix]))
+
+    return points
+
 # ****************************************************************
 
 class TypeErrorModel:
