@@ -250,7 +250,6 @@ class ClassAPIMascaret:
     def mess_crit_stop(self):
         """Print the criteria information"""
         txt = '**************************************\n'
-
         if self.stpcrit == 1:
             txt += ('Stop Criteria : {} \n'
                     'Variable Time Step :{}\n'

@@ -507,28 +507,75 @@ def filter_dist_perpendiculaire(pr_x, pr_z, seuil, fixe_x = [],dist_detection_ve
     if len(points) <3 :
         err = "Warning: The filter works if there are a minimum of 3 points"
         return
-    # traitement des paroi vertical a conserver
+    # traitement des paroi vertical a conserver  et fix conserver
     pointvert = []
+    pointfixe = []
+    pointhori = []
+    savp = []
     for i, pts in enumerate(points[:-1]):
         if abs(points[i][0] - points[i + 1][0]) < dist_detection_vert:
             if points[i] not in pointvert:
                 pointvert.append(points[i])
             pointvert.append(points[i + 1])
+        if points[i][0] in fixe_x and points[i] not in pointfixe :
+            pointfixe.append(points[i])
+        if pts[1] == points[i + 1][1]:
+            savp.append(pts)
+            continue
+        if len(savp) > 0 :
+            pointhori.append((savp[0],pts))
+            savp = []
+    if len(savp) > 0:
+        pointhori.append((savp[0],points[-1]))
+
+
     pointvert.sort(key=lambda x: x[0])
+    pointfixe.sort(key=lambda x: x[0])
+    # applique le filtre
     new_points = proper_rdp(points, seuil)
-    if len(fixe_x) > 0:
-        new_points = interp_point_fix(new_points,fixe_x)
-    # ajout paroi vertical
-    if len(pointvert) > 0:
-        # tri point vert
-        tmp_points = []
-        for point in new_points:
+    # retire apres filtre les point correspondant vertical et horrizontal
+    tmp_points = []
+    cmpt = 0
+    nbph = len(pointhori)
+    if nbph > 0 :
+        xh1 = pointhori[cmpt][0][0]
+        xh2 = pointhori[cmpt][1][0]
+    else:
+        xh1 = 0
+        xh2 = 0
+
+    for idp, point in enumerate(new_points[:-1]):
+        if point[0] in [x for x,y in pointfixe]:
+            continue
+        if len(pointvert) > 0:
             if point[0] in [x for x,y in pointvert]:
                 continue
-            tmp_points.append(point)
-        new_points = tmp_points + pointvert
-        new_points.sort(key=lambda x: x[0])
-
+        if cmpt < nbph:
+            if xh1 <= point[0]  <= xh2:
+                continue
+            if point[0]>xh2:
+                cmpt +=1
+                if cmpt < nbph:
+                    xh1 = pointhori[cmpt][0][0]
+                    xh2 = pointhori[cmpt][1][0]
+        tmp_points.append(point)
+    # last point
+    tmp_points.append(new_points[-1])
+    pointh = []
+    for pts in pointhori :
+        for ptn in pts:
+                pointh.append(ptn)
+    # adition des point
+    new_points = tmp_points + pointvert + pointfixe +  pointh
+    new_points.sort(key=lambda x: x[0])
+    # traitement des berge qui n'ont pas de point
+    tmp =  np.array(pointfixe)
+    lst_interp = [ptx for ptx in fixe_x if ptx not in tmp[:,0]]
+    if len(lst_interp) > 0:
+        new_points = interp_point_fix(new_points, lst_interp)
+    # supprimer double
+    new_points = list(set(new_points))
+    new_points.sort(key=lambda x: x[0])
     newx, newz = [], []
     for xx, zz in new_points:
         newx.append(round(xx,3))
