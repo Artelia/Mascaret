@@ -342,7 +342,7 @@ class ClassHydroLawsDialog(QDialog):
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
                 if self.mgis.DEBUG:
                     self.mgis.add_info(
-                        "Deletion of {} Hydro Law".format(name_set))
+                        "Deletion of {} Hydro Law".format(name_law))
                 self.mdb.execute(
                     "DELETE FROM {0}.law_values WHERE id_law = {1}".format(
                         self.mdb.SCHEMA, id_law))
