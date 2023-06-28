@@ -248,7 +248,10 @@ class CheckTab:
             ]
             },
             '5.1.4': {},
-            '5.1.5': {},
+            '5.1.5': {'fct': [
+                lambda: self.update_515(),
+            ],
+            },
             
 
             # '3.0.x': { },
@@ -1479,6 +1482,9 @@ $BODY$;
         return valid
 
     def update_513(self):
+        """
+        Action update version 5.1.3
+        """
         cl = Maso.class_fct_psql()
         lfct = [cl.pg_create_calcul_abscisse_point_flood(self.mdb.SCHEMA)]
         qry = ''
@@ -1486,3 +1492,11 @@ $BODY$;
             qry += sql
             qry += '\n'
         self.mdb.run_query(qry)
+
+    def update_515(self):
+        """
+         Action update version 5.1.5
+        """
+        lst_admin_tab = self.mdb.select('admin_tab', list_var=["table_"])
+        if 'results_old' in lst_admin_tab['table_']:
+            self.mdb.delete('admin_tab', where="table_= 'results_old'")
