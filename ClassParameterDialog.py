@@ -66,6 +66,7 @@ class ClassParameterDialog(QDialog):
         self.ui.actionbox_coef.triggered.connect(fct)
         fct = self.selb(self.ui.box_WaterLevel)
         self.ui.actionbox_WaterLevel.triggered.connect(fct)
+        self.decentrement.hide()
 
     def init_ui(self):
         """initialisation GUI"""
@@ -213,11 +214,13 @@ class ClassParameterDialog(QDialog):
                                        'termesNonHydrostatiques',
                                        'pasTempsVar',
                                        'nbCourant',
-                                       'repriseCalcul'],
+                                       'repriseCalcul',
+                                       'decentrement'],
                           'transcritical': ['presenceCasiers',
                                             'attenuationConvection',
                                             'compositionLits',
-                                            'repriseCalcul']
+                                            'repriseCalcul',
+                                            'decentrement']
 
                           }
         self.create_dico_para()
@@ -255,8 +258,6 @@ class ClassParameterDialog(QDialog):
                     self.par[param]["gui_type"] = gui_type
 
     def init_gui(self):
-        # pass
-
         for param, info in self.par.items():
             # self.mgis.add_info("param {}  info {}".format(param, info))
             if info['gui'] and info['gui_type'] == 'parameters':
