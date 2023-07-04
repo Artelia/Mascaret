@@ -94,35 +94,6 @@ class MasObject(object):
         qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_point();\n'.format(self.schema)
         return qry
 
-    def pg_abscisse_profil(self,local='public'):
-        qry = """
-    CREATE OR REPLACE FUNCTION {0}.abscisse_profil(id_profil integer )
-        RETURNS double precision
-        LANGUAGE 'plpgsql'
-        COST 100.0
-        IMMUTABLE NOT LEAKPROOF 
-    AS $BODY$
-         DECLARE
-            long2	double precision;
-            g	public.geometry;
-            p	public.geometry;
-            b	integer;
-            d	double precision;
-            geom_p public.geometry;
-            abscissa  double precision;
-         BEGIN
-			EXECUTE 'SELECT geom FROM {0}.profiles WHERE gid = $1' USING id_profil INTO geom_p;
-			EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM {0}.branchs ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
-			p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
-			long2 = (SELECT ST_Length(g)* ST_LineLocatePoint(ST_LineMerge(g),p));
-			abscissa:= long2;
-
-            RETURN abscissa;
-         END;
-    $BODY$; """
-
-        return qry.format(local)
-
 
 # *****************************************
 class laws(MasObject):
@@ -1288,7 +1259,7 @@ $$ LANGUAGE plpgsql;"""
     def pg_all_profil(self,local='public'):
         """ SQL function which updates abscissa of all profiles of one table"""
         qry = """
-CREATE OR REPLACE FUNCTION {0}.update_abscisse_profil(_tbl regclass, _tbl_branchs regclass)
+CREATE OR REPLACE FUNCTION {0}.update_abscisse_profil(_shem text,_tbl regclass, _tbl_branchs regclass)
     RETURNS  VOID 
     LANGUAGE 'plpgsql'
 AS $BODY$
@@ -1299,7 +1270,7 @@ AS $BODY$
      BEGIN
        FOR my_row IN  EXECUTE 'SELECT gid FROM ' ||_tbl
        LOOP
-          SELECT abscissa, branch FROM {0}.abscisse_profil( _tbl ,_tbl_branchs, my_row ) INTO abs1,b1;
+          EXECUTE 'SELECT abscissa, branch FROM '|| _shem||'.abscisse_profil('''|| _tbl||''' ,'''||_tbl_branchs||''','''|| my_row||''' )' INTO abs1,b1;
           EXECUTE 'UPDATE  '||_tbl || ' SET  branchnum = $3, abscissa = $1 WHERE gid = $2' USING abs1, my_row,b1;
         END LOOP;
         RETURN  ;
@@ -1350,7 +1321,7 @@ $BODY$;"""
         :return:
         """
         qry = """
-    CREATE OR REPLACE FUNCTION  {0}.update_abscisse_point(_tbl regclass, _tbl_branchs regclass)
+    CREATE OR REPLACE FUNCTION  {0}.update_abscisse_point(_shem text,_tbl regclass, _tbl_branchs regclass)
         RETURNS  VOID 
         LANGUAGE 'plpgsql'
     AS $BODY$
@@ -1361,7 +1332,7 @@ $BODY$;"""
          BEGIN
           FOR my_row IN  EXECUTE 'SELECT gid FROM ' ||_tbl
            LOOP
-             SELECT abscissa, branch FROM  {0}.abscisse_point( _tbl ,_tbl_branchs, my_row ) INTO abs1,b1;
+             EXECUTE 'SELECT abscissa, branch FROM '|| _shem||'.abscisse_point('''|| _tbl||''' ,'''||_tbl_branchs||''','''|| my_row||''' )' INTO abs1,b1;
              EXECUTE 'UPDATE  '||_tbl || ' SET  branchnum = $3, abscissa = $1 WHERE gid = $2' USING abs1, my_row,b1;
             END LOOP;
             RETURN  ;
@@ -1596,10 +1567,10 @@ AS $BODY$
         sql1 = ''
         for tab in list_pr:
             sql1 += "_tbl=TG_TABLE_SCHEMA || '.{}';\n".format(tab)
-            sql1 += "EXECUTE 'SELECT '|| TG_TABLE_SCHEMA || '.update_abscisse_profil( $1, $2);'  USING _tbl, _tbl_branch ;\n"
+            sql1 += "EXECUTE 'SELECT '|| TG_TABLE_SCHEMA || '.update_abscisse_profil($1, $2, $3);'  USING TG_TABLE_SCHEMA, _tbl, _tbl_branch ;\n"
         for tab in list_pts:
             sql1 += "_tbl=TG_TABLE_SCHEMA || '.{}';\n".format(tab)
-            sql1 += "EXECUTE 'SELECT '|| TG_TABLE_SCHEMA || '.update_abscisse_point( $1, $2);'  USING _tbl, _tbl_branch ;\n"
+            sql1 += "EXECUTE 'SELECT '|| TG_TABLE_SCHEMA || '.update_abscisse_point( $1, $2, $3);'  USING TG_TABLE_SCHEMA, _tbl, _tbl_branch ;\n"
         qry += sql1
         qry += """
         RETURN NEW;
