@@ -2023,12 +2023,16 @@ class ClassMascaret:
             # Linux(2.x and 3.x) ='linux2' or 'linux'
             # Windows = 'win32'
             # Windows / Cygwin = 'cygwin'
+
             p = subprocess.Popen(soft, shell=True, stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE
                                  , stdin=subprocess.PIPE)
             p.wait()
             txt = "{0}".format(p.communicate()[0].decode("utf-8"))
+            txt1 = "{0}".format(p.communicate()[1].decode("utf-8"))
             self.mgis.add_info(txt)
+            self.mgis.add_info(txt1)
+
             return True
         else:
             pwd = os.getcwd()
