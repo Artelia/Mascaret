@@ -92,10 +92,10 @@ class ClassUpdatePk(QDialog):
         sql = ''
         for i, table in enumerate(selection):
             if table in self.lst_tables_pt:
-                sql += "SELECT {0}.update_abscisse_point('{0}.{1}','{0}.{2}')" \
+                sql += "SELECT {0}.update_abscisse_point('{0}','{0}.{1}','{0}.{2}')" \
                        ";\n".format(self.mdb.SCHEMA, table, 'branchs')
             elif table in self.lst_tables_p:
-                sql += "SELECT {0}.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
+                sql += "SELECT {0}.update_abscisse_profil('{0}','{0}.{1}','{0}.{2}')" \
                        ";\n".format(self.mdb.SCHEMA, table, 'branchs')
         self.mdb.run_query(sql)
         if self.mgis.DEBUG:

@@ -31,9 +31,12 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    5.1.5  : Added the option to use DEM like default profile
+    5.1.5  : Correction of the bug when the schema is renamed
+             Added the option to use DEM like default profile
              Added the filter feature for the all active profiles
              Added a new methodology for filter feature
+             Adaptation to the new version of the executable
+             Added new output type
     5.1.4  : Correction of the bug due to initial water level
     5.1.3  :  Correction of abscisse compute of flood marks
     5.1.2  : Correction of the basins trigger

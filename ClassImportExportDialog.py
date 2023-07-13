@@ -394,7 +394,12 @@ class ClassDlgImport(QDialog):
         """
         self.checkdict['updat_pgsql'] = False
         vpsql = self.conv_ver_psql(self.metadict["pgsql_version"])
-        vdb = self.conv_ver_psql(self.checkdict["pgsql_version"])
+
+        if self.checkdict["pgsql_version"] :
+            vdb = self.conv_ver_psql(self.checkdict["pgsql_version"])
+        else:
+            vdb = None
+            self.mgis.add_info("WARNING: Check the database connection")
         if not self.compa_ver(vdb, vpsql):
             self.checkdict['updat_pgsql'] = True
 
@@ -434,6 +439,8 @@ class ClassDlgImport(QDialog):
         :return: True if  vdb >= vmeta
         """
         cond = False
+        if vdb is None or vmeta is None:
+            return cond
         if vdb[0] > vmeta[0]:
             cond = True
         else:
