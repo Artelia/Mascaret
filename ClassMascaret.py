@@ -302,9 +302,13 @@ class ClassMascaret:
             else:
                 # Inversion du dictionnaire: on cherche le numero mascaret
                 # pour le numero de casier sous Qgis
-                liste_num_masca.append(list(dico_num.keys())[
-                                           list(dico_num.values()).index(
-                                               num_qgis)])
+                try:
+                    liste_num_masca.append(dico_num[num_qgis])
+                except KeyError:
+                    txterr = 'Error, the basin {} does not exist'.format(num_qgis)
+                    self.mgis.add_info(txterr)
+                    raise KeyError(txterr)
+
         return " ".join([str(var) for var in liste_num_masca])
 
         # Fonction de calcul du planimetrage entre 2 niveaux de la loi surface
@@ -933,13 +937,15 @@ class ClassMascaret:
         # Creation du dictionnaire de numero de casier entre mascaret (cle)
         # et qgis (valeur)
         self.dico_basinnum = {}
-        for i, num_qgis in enumerate(casiers["basinnum"], 1):
-            self.dico_basinnum[i] = num_qgis
-        # Creation du dictionnaire de numero de liaison entre mascaret (cle)
-        # et qgis (valeur)
+        dico_basinnum_creat = {}
+        for id_mas, num_qgis in enumerate(casiers["basinnum"], 1):
+            self.dico_basinnum[id_mas] = num_qgis
+            dico_basinnum_creat[num_qgis] = id_mas
+        # # Creation du dictionnaire de numero de liaison entre mascaret (cle)
+        # # et qgis (valeur)
         self.dico_linknum = {}
-        for i, num_qgis in enumerate(liaisons["linknum"], 1):
-            self.dico_linknum[i] = num_qgis
+        for id_mas, num_qgis in enumerate(liaisons["linknum"], 1):
+            self.dico_linknum[id_mas] = num_qgis
         # Creation des lignes a ajouter dans Xcas
         cas = fichier_cas.find('parametresCas')
         casier = SubElement(cas, "parametresCasier")
@@ -981,9 +987,9 @@ class ClassMascaret:
             liaisons["culverttype"], '-1')
         SubElement(et_liaisons, "numCasierOrigine").text = self.fmt_num_basin(
             liaisons["basinstart"],
-            self.dico_basinnum, '-1')
+            dico_basinnum_creat, '-1')
         SubElement(et_liaisons, "numCasierFin").text = self.fmt_num_basin(
-            liaisons["basinend"], self.dico_linknum,
+            liaisons["basinend"], dico_basinnum_creat,
             '-1')
         SubElement(et_liaisons, "numBiefAssocie").text = self.fmt_sans_none(
             liaisons["branchnum"], '-1')
