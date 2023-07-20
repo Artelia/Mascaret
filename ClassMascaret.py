@@ -933,6 +933,63 @@ class ClassMascaret:
 
         return dict_lois, dico_loi_struct
 
+    def check_basin(self, liaisons, casiers,dico_basinnum):
+        """
+        Check if links is correctly defined
+        """
+        check_typ_link = {1 :['level','width','weirdischargecoef'],
+                         2 : ['level','width','length','roughness'],
+                         3 : ['level','length','crosssection','headlosscoef'],
+                         4 : ['level','width','crosssection','weirdischargecoef',
+                               'pipedischargecoef','culverttype',],}
+        for idl, num in enumerate(liaisons["linknum"]):
+            nat = liaisons["nature"][idl]
+            tupl = liaisons["type"][idl]
+            abs = liaisons["abscissa"][idl]
+            stb = liaisons["basinstart"][idl]
+            level = liaisons["level"][idl]
+            ste = liaisons["basinend"][idl]
+            #check "Basin-Reach" have an abscissa
+            if nat == 1 and (abs is None or abs == -1):
+                self.mgis.add_info('*** Error: The "Basin-Reach" type link {} '
+                                   'does not have an abscissa on the reach'.format(num))
+            # check coherent between variable and typ
+            for key in check_typ_link[tupl]:
+                val = liaisons[key][idl]
+                if val is None:
+                    self.mgis.add_info('*** Error: Link {} is not type coherent.'
+                                       ''.format(num))
+                    break
+
+            #check level for the start basin
+            if stb in dico_basinnum.keys():
+                numc = casiers["basinnum"][dico_basinnum[stb]-1]
+                init_level = casiers["initlevel"][dico_basinnum[stb]-1]
+                if  level < init_level:
+                    self.mgis.add_info('*** Warning: Please note that the elevation of '
+                                       'the upstream basin {} is higher than the elevation of the link {}. \n'
+                                       'This can generate an artificial flow.'.format(numc, num))
+            else:
+                self.mgis.add_info('*** Error: The link {} '
+                                   'does not have "Basin number start"'.format(num))
+            # check if "basinend" is existed  before  check level
+            if ste is None or ste == -1 :
+                continue
+            # check level for the end basin
+            if ste in dico_basinnum.keys():
+                # -1 because of Python begin by 0
+                numc = casiers["basinnum"][dico_basinnum[ste]-1]
+                init_level = casiers["initlevel"][dico_basinnum[ste]-1]
+                if level < init_level:
+                    self.mgis.add_info('*** Warning: Please note that the elevation of '
+                                       'the downtream basin {} is higher than the elevation of the link {}. \n'
+                                       'This can generate an artificial flow.'.format(numc, num))
+            else:
+                self.mgis.add_info('*** Error: The link {} '
+                                   'does not have "Basin number End"'.format(num))
+
+
+
     def add_basin_xcas(self, fichier_cas, casiers, liaisons):
         # Creation du dictionnaire de numero de casier entre mascaret (cle)
         # et qgis (valeur)
@@ -946,6 +1003,7 @@ class ClassMascaret:
         self.dico_linknum = {}
         for id_mas, num_qgis in enumerate(liaisons["linknum"], 1):
             self.dico_linknum[id_mas] = num_qgis
+        self.check_basin(liaisons, casiers,dico_basinnum_creat)
         # Creation des lignes a ajouter dans Xcas
         cas = fichier_cas.find('parametresCas')
         casier = SubElement(cas, "parametresCasier")
