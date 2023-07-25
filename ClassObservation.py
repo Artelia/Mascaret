@@ -329,8 +329,7 @@ class ClassEventObsDialog(QDialog):
             return True, recs
         except Exception as e:
             self.mgis.add_info("Loading to observations is an echec.")
-            if self.mgis.DEBUG:
-                self.mgis.add_info(repr(e))
+            self.mgis.add_info(repr(e), dbg=True)
 
             return False, None
 
@@ -401,10 +400,9 @@ class ClassEventObsDialog(QDialog):
                                      "Delete {} observations ?".format(
                                          str(self.cur_station).strip()),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Deletion of {} Observations of Events".format(
-                            self.cur_station))
+                self.mgis.add_info(
+                    "Deletion of {} Observations of Events".format(
+                        self.cur_station), dbg=True)
                 self.mdb.execute(
                     "DELETE FROM {0}.observations WHERE code = '{1}'".format(
                         self.mdb.SCHEMA, self.cur_station))
@@ -419,10 +417,10 @@ class ClassEventObsDialog(QDialog):
                                          self.cur_var,
                                          self.cur_station.strip()),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Deletion of {} Observations of Events".format(
-                            self.cur_station))
+
+                self.mgis.add_info(
+                    "Deletion of {} Observations of Events".format(
+                        self.cur_station), dbg=True)
                 self.mdb.execute(
                     "DELETE FROM {0}.observations WHERE code = '{1}' "
                     "and type = '{2}'".format(self.mdb.SCHEMA, self.cur_station,
@@ -476,15 +474,13 @@ class ClassEventObsDialog(QDialog):
             name_station = str(self.ui.txt_cur_station.text())
             name_var = str(self.ui.txt_cur_var.text())
             if self.cur_station == "":
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Addition of {0} Observations for {1}".format(name_var,
-                                                                      name_station))
+                self.mgis.add_info(
+                    "Addition of {0} Observations for {1}".format(name_var,
+                                                                  name_station), dbg=True)
             else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Editing of {0} Observations for {1}".format(name_var,
-                                                                     name_station))
+                self.mgis.add_info(
+                    "Editing of {0} Observations for {1}".format(name_var,
+                                                                 name_station), dbg=True)
                 self.mdb.execute(
                     "DELETE FROM {0}.observations WHERE code = '{1}' AND type = '{2}'".format(
                         self.mdb.SCHEMA,
@@ -514,8 +510,8 @@ class ClassEventObsDialog(QDialog):
         cancel button
         :return:
         """
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Cancel of Observations of Events")
+
+        self.mgis.add_info("Cancel of Observations of Events", dbg=True)
         self.ui.Obs_pages.setCurrentIndex(0)
         self.graph_edit.init_graph(None)
 

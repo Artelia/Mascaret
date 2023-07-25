@@ -166,8 +166,7 @@ class StructureFgDialog(QDialog):
         self.unitv = evt
 
     def reject_page(self):
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Cancel of FloodGate parameters")
+        self.mgis.add_info("Cancel of FloodGate parameters", dbg=True)
         self.reject()
 
     def update_min_zinc_fg_max(self):

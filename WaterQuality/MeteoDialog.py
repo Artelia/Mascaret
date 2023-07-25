@@ -322,8 +322,7 @@ class ClassMeteoDialog(QDialog):
                 self.ui.tab_sets.setModel(model)
                 self.update_courbe("all")
             else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("Import failed ({})".format(listf[0]))
+                self.mgis.add_info("Import failed ({})".format(listf[0]), dbg=True)
 
     def on_tab_data_change(self, itm):
         if itm.column() < 4:
@@ -480,9 +479,8 @@ class ClassMeteoDialog(QDialog):
             if (QMessageBox.question(self, "Meteo Settings",
                                      "Delete {} ?".format(name_set),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Deletion of {} Meteo Setting".format(name_set))
+                self.mgis.add_info(
+                    "Deletion of {} Meteo Setting".format(name_set), dbg=True)
                 self.mdb.execute(
                     "DELETE FROM {0}.laws_meteo WHERE id_config = {1}".format(
                         self.mdb.SCHEMA, id_set))
@@ -544,9 +542,8 @@ class ClassMeteoDialog(QDialog):
         else:
             date_set = 'Null'
         if self.cur_set == -1:
-            if self.mgis.DEBUG:
-                self.mgis.add_info(
-                    "Addition of {} Meteo Setting".format(name_set))
+            self.mgis.add_info(
+                "Addition of {} Meteo Setting".format(name_set), dbg=True)
             self.mdb.execute(
                 "INSERT INTO {0}.meteo_config (name, starttime, active) VALUES ('{1}', {2}, 'f')".format(
                     self.mdb.SCHEMA, name_set, date_set))
@@ -555,9 +552,9 @@ class ClassMeteoDialog(QDialog):
                 fetch=True)
             self.cur_set = res[0][0]
         else:
-            if self.mgis.DEBUG:
-                self.mgis.add_info(
-                    "Editing of {} Meteo Setting".format(name_set))
+
+            self.mgis.add_info(
+                "Editing of {} Meteo Setting".format(name_set), dbg=True)
             self.mdb.execute(
                 "UPDATE {0}.meteo_config SET name = '{1}', starttime = {2} WHERE id = {3}".format(
                     self.mdb.SCHEMA,
@@ -583,8 +580,7 @@ class ClassMeteoDialog(QDialog):
         self.graph_edit.init_graph(None, all_vis=True)
 
     def reject_page2(self):
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Cancel of Meteo Setting")
+        self.mgis.add_info("Cancel of Meteo Setting", dbg=True)
         self.ui.meteo_pages.setCurrentIndex(0)
         self.graph_edit.init_graph(None, all_vis=True)
 

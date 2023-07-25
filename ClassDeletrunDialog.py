@@ -182,10 +182,8 @@ class ClassDeletrunDialog(QDialog):
                     self.mdb.vacuum(["results_old"])
 
                 self.delete_useless_data()
-
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Deletion of scenarii is done")
+                self.mgis.add_info(
+                    "Deletion of scenarii is done", dbg=True)
                 progress.setValue(round(i / n * 100))
 
         self.iface.messageBar().clearWidgets()

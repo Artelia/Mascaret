@@ -120,8 +120,8 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 graph_p = GraphProfil(gid, self.mgis)
                 graph_p.show()
             # else:
-            #     if self.mgis.DEBUG:
-            #         self.mgis.add_info("Visu_profil: Not layer")
+
+            #         self.mgis.add_info("Visu_profil: Not layer", dbg=True)
             if couche == 'profiles' and flag_profil_r:
                 self.mgis.coucheProfils = results[0].mLayer
                 prof_a = self.mgis.mdb.select_distinct("name", "profiles",
@@ -974,9 +974,8 @@ class GraphProfil(GraphCommon):
             self.rectSelection.set_visible(True)
             self.canvas.draw()
         else:
-            if self.mgis.DEBUG:
-                self.mgis.add_info(
-                    "The table has {0} elements, please add ".format(n))
+            self.mgis.add_info(
+                "The table has {0} elements, please add ".format(n), dbg=True)
 
     def onrelease(self, event):
         if self.bt_translah.isChecked():
@@ -1059,8 +1058,8 @@ class GraphProfil(GraphCommon):
                 self.courbeSelected.set_xdata(tab_x)
                 self.x0 = round(float(event.xdata), 2)
             except:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("Warning:Out of graph")
+
+                self.mgis.add_info("Warning:Out of graph", dbg=True)
 
         elif self.bt_translav.isChecked() and self.y0:
             f = self.courbeSelected.get_label()
@@ -1077,8 +1076,7 @@ class GraphProfil(GraphCommon):
 
                 self.y0 = round(float(event.ydata), 2)
             except:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("Warning:Out of graph")
+                self.mgis.add_info("Warning:Out of graph", dbg=True)
         self.fig.canvas.draw()
 
     def display_planim(self):
@@ -1391,9 +1389,8 @@ class GraphProfil(GraphCommon):
             # self.liste[self.position] = (self.feature["abscisse"], self.feature)
             self.maj_graph()
         else:
-            if self.mgis.DEBUG:
-                self.mgis.add_info(
-                    "The table has {0} elements, please add ".format(n))
+            self.mgis.add_info(
+                "The table has {0} elements, please add ".format(n), dbg=True)
 
     def select_changed(self):
         # mini_x, maxi_x = self.tableau.selection()

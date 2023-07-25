@@ -177,9 +177,8 @@ class ClassTracerInitDialog:
                                          "Tracer Initial Concentration",
                                          "Delete {} ?".format(name_law),
                                          QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Deletion of {} Tracer Laws".format(name_law))
+                self.mgis.add_info(
+                    "Deletion of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(
                     "DELETE FROM {0}.init_conc_wq WHERE id_config = {1}".format(
                         self.mdb.SCHEMA, id_law))

@@ -103,7 +103,6 @@ class ClassEditKsDialog(BASE, FORM_CLASS):
 
         if ok:
             self.mgis.mdb.update('profiles', tab, var="gid")
-            #if self.mgis.DEBUG:
             self.mgis.add_info('List of profile which were updated :\n {}'.format(' , '.join(lst_name)))
 
     def closeEvent(self, event):

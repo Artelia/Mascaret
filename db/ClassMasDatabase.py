@@ -289,9 +289,9 @@ class ClassMasDatabase(object):
         if key not in self.register:
             self.register[key] = obj
         else:
-            if self.mgis.DEBUG:
-                self.mgis.add_info(
-                    '{0} already exists inside MasPlug registry.'.format(key))
+
+            self.mgis.add_info(
+                '{0} already exists inside MasPlug registry.'.format(key), dbg=True)
                 #
 
     def register_existing(self, hydro_module, schema=None, srid=None):
@@ -311,8 +311,8 @@ class ClassMasDatabase(object):
                     self.setup_hydro_object(hydro_object, schema, srid)
                     obj = hydro_object()
                     self.register_object(obj)
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info('{0} registered'.format(obj.name))
+
+                    self.mgis.add_info('{0} registered'.format(obj.name), dbg=True)
                 else:
                     pass
                     #
@@ -351,9 +351,8 @@ class ClassMasDatabase(object):
         except Exception:  # qgis3
             self.uris = [vl.source() for vl in
                          QgsProject.instance().mapLayers().values()]
-        if self.mgis.DEBUG:
-            self.mgis.add_info(
-                'Layers sources:\n    {0}'.format('\n    '.join(self.uris)))
+        self.mgis.add_info(
+            'Layers sources:\n    {0}'.format('\n    '.join(self.uris)), dbg=True)
             # *****************************************************************************
 
     def make_vlayer(self, obj):
@@ -457,8 +456,7 @@ class ClassMasDatabase(object):
             # add clone_file is a reference fct to check public fct
             if not self.check_fct_public('clone_schema'):
                 obj = self.process_masobject(Maso.class_fct_psql, 'pg_clone_schema')
-                if self.mgis.DEBUG:
-                    self.mgis.add_info('  {0} OK'.format('pg_clone_schema'))
+                self.mgis.add_info('  {0} OK'.format('pg_clone_schema'), dbg=True)
                 else:
                     pass
 
@@ -495,20 +493,24 @@ class ClassMasDatabase(object):
                       # ouvrage mobile
                       Maso.struct_fg, Maso.struct_fg_val,
                       Maso.weirs_mob_val,
-                      # new results
-                      Maso.runs_graph, Maso.results_var,
-                      Maso.results_idx, Maso.results_val,
-                      Maso.results_sect, Maso.runs_plani,
+                      # OLD results
+                      Maso.runs_graph, # TODO voir si ca vaut le coup de garder
+                      # Maso.results_idx, Maso.results_val,
+                      Maso.results_var,
+                      Maso.results_sect,  # TODO faire comme results
+                      Maso.runs_plani, # ?
+                      # new results V2
+                      Maso.results_by_pk,
                       # hydro laws
                       Maso.law_config, Maso.law_values,
+
                       ]
             tables.sort(key=lambda x: x().order)
 
             for masobj_class in tables:
                 # try:
                 obj = self.process_masobject(masobj_class, 'pg_create_table')
-                if self.mgis.DEBUG:
-                    self.mgis.add_info('  {0} OK'.format(obj.name))
+                self.mgis.add_info('  {0} OK'.format(obj.name), dbg=True)
                     # except:
                     #     self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
                     # ajout variable fichier parameter
@@ -550,9 +552,14 @@ class ClassMasDatabase(object):
 
             # create view
             sql = 'CREATE VIEW {0}.results ' \
-                  'AS SELECT id_runs, "time", pknum,  var, val  FROM {0}.results_idx ' \
-                  'Inner join  {0}.results_val ' \
-                  'on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;'
+            'AS SELECT results_by_pk.id_runs, UNNEST(res_by_pk."time") as time,' \
+            'res_by_pk.pknum, res_by_pk.var, UNNEST(res_by_pk.val) FROM {0}.res_by_pk;'
+
+            #OlD
+            # sql = 'CREATE VIEW {0}.results ' \
+            #       'AS SELECT id_runs, "time", pknum,  var, val  FROM {0}.results_idx ' \
+            #       'Inner join  {0}.results_val ' \
+            #       'on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;'
 
             sql = sql.format(self.SCHEMA)
             self.run_query(sql)
@@ -582,16 +589,11 @@ class ClassMasDatabase(object):
             for fct in listefct:
                 try:
                     obj = self.process_masobject(Maso.class_fct_psql, fct)
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info('  {0} OK'.format(fct))
-                    else:
-                        pass
+                    self.mgis.add_info('  {0} OK'.format(fct), dbg=True)
+
                 except Exception:
-                    if self.mgis.DEBUG:
-                        # self.mgis.add_info('{0}\n'.format(fct))
-                        self.mgis.add_info('failure!{0}'.format(fct))
-                    else:
-                        pass
+                    # self.mgis.add_info('{0}\n'.format(fct))
+                    self.mgis.add_info('failure!{0}'.format(fct), dbg=True)
 
     def schema_fct_sql(self):
         """
@@ -619,12 +621,9 @@ class ClassMasDatabase(object):
         for fct, var in listefct:
             try:
                 obj = self.process_masobject(Maso.class_fct_psql, fct, local=var)
-                if self.mgis.DEBUG:
-                    self.mgis.add_info('  {0} OK'.format(fct))
-                else:
-                    pass
+                self.mgis.add_info('  {0} OK'.format(fct), dbg=True)
             except Exception as err:
-                self.mgis.add_info('failure!{0} : {1}'.format(fct, str(err)))
+                self.mgis.add_info('failure!{0} : {1}'.format(fct, str(err)), dbg=True)
                 error = True
         return error
 
@@ -834,10 +833,8 @@ class ClassMasDatabase(object):
                     #     dict_only_visu[name] = obj
                     # else:
                     self.add_to_view(obj)
-
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info(
-                            ' View {0} : OK'.format(obj.name))
+                    self.mgis.add_info(
+                        ' View {0} : OK'.format(obj.name), dbg=True)
                 else:
                     pass
             except Exception as err:
@@ -854,8 +851,7 @@ class ClassMasDatabase(object):
         # for name, obj in dict_only_visu.items():
         #     try:
         #         self.add_to_view(obj)
-        #         if self.mgis.DEBUG:
-        #             self.mgis.add_info(' View {0} : OK'.format(obj.name))
+        #         self.mgis.add_info(' View {0} : OK'.format(obj.name), dbg=True)
         #     except Exception as err:
         #         self.mgis.add_info('View failure!<br>{0}'.format(obj))
         #         self.mgis.add_info('Error : '.format(err))
@@ -1139,8 +1135,7 @@ $BODY$
         if verbose:
             self.mgis.add_info(sql)
         self.run_query(sql)
-        # if self.mgis.DEBUG:
-        #     self.mgis.add_info('function delete end')
+        # self.mgis.add_info('function delete end', dbg=True)
 
     def insert(self, table, tab, colonnes, delim=" ", verbose=False):
         """
@@ -1186,8 +1181,6 @@ $BODY$
         err = self.run_query(sql)
         return err
 
-        # if self.mgis.DEBUG:
-        #     self.mgis.add_info('function insert end')
 
     def insert2(self, table, tab, verbose=False):
         """ insert table in tableSQl"""
@@ -1311,8 +1304,7 @@ $BODY$
                                       ", ".join(tab_var),
                                       var,
                                       nom))
-            if self.mgis.DEBUG:
-                self.mgis.add_info('function update end')
+            self.mgis.add_info('function update end', dbg=True)
 
     def copy(self, table, var, fichier):
         """
@@ -1404,8 +1396,7 @@ $BODY$
                                      stderr=subprocess.PIPE
                                      , stdin=subprocess.PIPE)
                 outs, err = p.communicate()
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("Import File :{0}".format(file))
+                self.mgis.add_info("Import File :{0}".format(file), dbg=True)
                     # self.mgis.add_info("{0}".format(outs.code('utf-8')))
                 p.wait()
                 if len(err) > 0:
@@ -1615,9 +1606,8 @@ $BODY$
                                                             ','.join(
                                                                 list_tab_res))
         self.run_query(qry)
-        if self.mgis.DEBUG:
-            self.mgis.add_info(
-                'Creation of the temporary table :{} '.format(dest))
+        self.mgis.add_info(
+            'Creation of the temporary table :{} '.format(dest), dbg=True)
         # add selection
         lst_run = self.get_id_run(selection)
         if len(lst_run) > 0:
@@ -1679,8 +1669,7 @@ $BODY$
 
         if not self.check_fct_public('clone_schema'):
             obj = self.process_masobject(Maso.class_fct_psql, 'pg_clone_schema')
-            if self.mgis.DEBUG:
-                self.mgis.add_info('  {0} OK'.format('pg_clone_schema'))
+            self.mgis.add_info('  {0} OK'.format('pg_clone_schema'), dbg=True)
 
         chkt = CheckTab(self.mgis, self)
         vnow = chkt.list_hist_version.index(metadict['plugin_version'])
@@ -1693,16 +1682,12 @@ $BODY$
                 for fct in listefct:
                     try:
                         obj = self.process_masobject(Maso.class_fct_psql, fct)
-                        if self.mgis.DEBUG:
-                            self.mgis.add_info('  {0} OK'.format(fct))
-                        else:
-                            pass
+                        self.mgis.add_info('  {0} OK'.format(fct), dbg=True)
+
                     except Exception:
-                        if self.mgis.DEBUG:
-                            # self.mgis.add_info('{0}\n'.format(fct))
-                            self.mgis.add_info('failure!{0}'.format(fct))
-                        else:
-                            pass
+                        # self.mgis.add_info('{0}\n'.format(fct), dbg=True)
+                        self.mgis.add_info('failure!{0}'.format(fct), dbg=True)
+
         if actname in self.list_schema():
             sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp;".format(actname)
             self.run_query(sql)

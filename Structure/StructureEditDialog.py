@@ -336,8 +336,8 @@ class ClassStructureEditDialog(QDialog):
             return False
 
     def reject_page(self):
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Cancel of Structure")
+
+        self.mgis.add_info("Cancel of Structure", dbg=True)
         self.reject()
 
     def verif_pc(self, id_struct):

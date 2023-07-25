@@ -800,14 +800,13 @@ class ClassMascaret:
                 if dict_lois[nom]['type'] == 6:
                     # TODO and noyau!='transcritical'
                     dict_lois[nom]['type'] = 1
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info(
-                            'The  {} law changes type 6 => 1'.format(nom))
+                    self.mgis.add_info(
+                        'The  {} law changes type 6 => 1'.format(nom), dbg=True)
                 elif dict_lois[nom]['type'] == 7:
                     dict_lois[nom]['type'] = 2
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info(
-                            'The  {} law changes type 7 => 2'.format(nom))
+
+                    self.mgis.add_info(
+                        'The  {} law changes type 7 => 2'.format(nom), dbg=True)
 
         nb = len(dict_lois.keys())
         SubElement(hydrauliques, "nb").text = str(nb)
@@ -1262,67 +1261,62 @@ class ClassMascaret:
                 fich.write('# Temps (S) Debit\n')
                 fich.write(' S\n')
                 chaine = ' {time:.3f} {flowrate:.6f}\n'
-                # if self.mgis.DEBUG:
-                #     self.mgis.add_info("\n")
+
+                #     self.mgis.add_info("\n", dbg=True)
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t
                 #                       Flow Rate :{2}"
-                #                       .format(nom, tab["temps"], tab["debit"]))
+                #                       .format(nom, tab["temps"], tab["debit"]), dbg=True)
 
             elif type_ == 2:
                 fich.write('# Temps (S) Cote\n')
                 fich.write(' S\n')
                 chaine = ' {time:.3f} {z:.6f}\n'
-                # if self.mgis.DEBUG:
-                #     self.mgis.add_info("\n")
+
+                #     self.mgis.add_info("\n", dbg=True)
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t
                 #                       Water Level :{2}"
-                #                       .format(nom, tab["temps"],tab["cote"]))
+                #                       .format(nom, tab["temps"],tab["cote"]), dbg=True)
             elif type_ == 3:
                 fich.write('# Temps (S) Cote Debit\n')
                 fich.write(' S\n')
                 chaine = ' {time:.3f} {z:.6f} {flowrate:.6f}\n'
-                # if self.mgis.DEBUG:
-                #     self.mgis.add_info("\n")
+                #     self.mgis.add_info("\n", dbg=True)
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t
                 #                   Water Level :{2}\n \t Flow Rate {3}"
                 #                       .format(nom, tab["temps"],
-                # tab["cote"],tab["debit"]))
+                # tab["cote"],tab["debit"]), dbg=True)
             elif type_ == 4:
                 fich.write('# Debit Cote\n')
                 chaine = ' {flowrate:.3f} {z:.6f}\n'
-                # if self.mgis.DEBUG:
-                #     self.mgis.add_info("\n")
+                #     self.mgis.add_info("\n", dbg=True)
                 #     self.mgis.add_info("{0} :\n \t Flow Rate {2}\n
                 #                       \t Water Level :{1}"
-                #                       .format(nom, tab["cote"],tab["debit"]))
+                #                       .format(nom, tab["cote"],tab["debit"]), dbg=True)
             elif type_ == 5:
                 fich.write('# Cote Debit\n')
                 chaine = ' {z:.6f} {flowrate:.6f}\n'
-                # if self.mgis.DEBUG:
-                #     self.mgis.add_info("\n")
+                #     self.mgis.add_info("\n", dbg=True)
                 #     self.mgis.add_info("{0} :\n \t Water Level :{1}\n
                 #                       \t Flow Rate {2}"
-                #                       .format(nom, tab["cote"],tab["debit"]))
+                #                       .format(nom, tab["cote"],tab["debit"]), dbg=True)
             elif type_ == 6:
                 fich.write('# Debit Cote_Aval Cote_Amont\n')
                 chaine = ' {flowrate:.6f} {z_downstream:.6f} {z_upstream:.6f}\n'
-                # if self.mgis.DEBUG:
-                #     self.mgis.add_info("\n")
+                #     self.mgis.add_info("\n", dbg=True)
                 #     self.mgis.add_info("{0} :\n \t Upstream Water Level{1}\n
                 #                          \t  Downstream Water Level :{2}"
                 #                       .format(nom, tab["cote_amont"],
-                #                       tab["cote_aval"]))
+                #                       tab["cote_aval"]), dbg=True)
             elif type_ == 7:
                 fich.write('# Temps (s) Cote inférieur Cote supérieur\n')
                 fich.write(' S\n')
                 chaine = ' {time:.3f} {z_lower:.6f} {z_up:.6f}\n'
-                # if self.mgis.DEBUG:
-                #     self.mgis.add_info("\n")
+                #     self.mgis.add_info("\n", dbg=True)
                 #     self.mgis.add_info("{0} :\n \t Time : {1}\n \t
                 #                        Upstream Water Level{2}\n \t  "
                 #                       "Downstream Water Level :{3}"
                 #                       .format(nom,tab["temps"],
-                #                       tab["cote_amont"], tab["cote_aval"]))
+                #                       tab["cote_amont"], tab["cote_aval"]), dbg=True)
             n = len(list(tab.values())[0])
             for i in range(n):
                 dico = {k: v[i] for k, v in tab.items()}
@@ -1482,9 +1476,8 @@ class ClassMascaret:
             if not isinstance(comments, str):
                 comments = str(comments)
             if not ok:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("No comments.")
-                    comments = ''
+                self.mgis.add_info("No comments.", dbg=True)
+                comments = ''
         else:
             comments = ''
         return comments.replace("'", "''").replace('"', ' ')
@@ -1512,9 +1505,8 @@ class ClassMascaret:
         if not par['repriseCalcul']:
             self.clean_rep()
             self.creer_geo_ref()
-            if self.mgis.DEBUG:
-                self.mgis.add_info("Geometric file is created.")
-                self.mgis.add_info("noyau {}".format(noyau))
+            self.mgis.add_info("Geometric file is created.", dbg=True)
+            self.mgis.add_info("noyau {}".format(noyau), dbg=True)
         else:
             self.clean_res()
 
@@ -1572,10 +1564,9 @@ class ClassMascaret:
                                                 'Please input a scenario name :')
                 scen = scen.replace("'", " ").replace('"', ' ').strip()
                 if not ok or not self.check_scenar(scen, run):
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info(
-                            "Canceled Simulation because of {0} "
-                            "already exists.".format(scen))
+                    self.mgis.add_info(
+                        "Canceled Simulation because of {0} "
+                        "already exists.".format(scen), dbg=True)
                     return None, None, None, None
                 comments = self.fct_comment()
                 dict_scen = {'name': [scen]}
@@ -1586,9 +1577,7 @@ class ClassMascaret:
         # self.iface.messageBar().INFO)
 
         dict_lois, dico_loi_struct = self.creer_xcas(noyau)
-
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Xcas file is created.")
+        self.mgis.add_info("Xcas file is created.", dbg=True)
         if par['presenceTraceurs']:
             self.wq.create_filephy()
             self.wq.law_tracer()
@@ -1606,8 +1595,8 @@ class ClassMascaret:
                                        dico_loi_struct[name]['type'],
                                        list_final)
 
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Tracer files are created.")
+
+        self.mgis.add_info("Tracer files are created.", dbg=True)
 
         if par["LigEauInit"] and not par[
             "initialisationAuto"] and noyau != "steady":
@@ -1737,8 +1726,8 @@ class ClassMascaret:
             else:
                 self.mgis.add_info(
                     'The law for {} is not create.'.format(nom))
-            if self.mgis.DEBUG:
-                self.mgis.add_info("Laws file is created.")
+
+            self.mgis.add_info("Laws file is created.", dbg=True)
 
             if "valeurperm" not in l.keys():
                 continue
@@ -1813,12 +1802,10 @@ class ClassMascaret:
 
                     else:
                         dict_scen["id_run_init"].append(None)
-                        if self.mgis.DEBUG:
-                            self.mgis.add_info("Cancel run : {}".format(scen))
+                        self.mgis.add_info("Cancel run : {}".format(scen), dbg=True)
             else:
                 dict_scen["id_run_init"].append(None)
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("Cancel run: {}".format(scen))
+                self.mgis.add_info("Cancel run: {}".format(scen), dbg=True)
 
         return dict_scen
 
@@ -1940,8 +1927,7 @@ class ClassMascaret:
 
                     self.lit_opt_new(id_run, None,
                                      self.baseName + '_init', comments)
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info("Auto-initialization Run is done")
+                    self.mgis.add_info("Auto-initialization Run is done", dbg=True)
 
                 else:
                     self.mgis.add_info("No Run initialization.\n"
@@ -2189,8 +2175,8 @@ class ClassMascaret:
     #             tracer=False, casier=False):
     #     nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
     #     # tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
-    #     if self.mgis.DEBUG:
-    #         self.mgis.add_info("Load data ....")
+
+    #     self.mgis.add_info("Load data ....", dbg=True)
     #     if not os.path.isfile(nom_fich):
     #         self.mgis.add_info("Simulation Error: there aren't results")
     #         self.mdb.delete('runs', 'id={}'.format(id_run))
@@ -2422,17 +2408,15 @@ class ClassMascaret:
             # self.mgis.add_info('delet file rr{}rr {}'.format(ext,(ext in listsup)))
             if ext in listsup:
                 os.remove(os.path.join(self.dossierFileMasc, files[i]))
-                if self.mgis.DEBUG:
-                    self.mgis.add_info('delete file {}'.format(files[i]))
+                self.mgis.add_info('delete file {}'.format(files[i]), dbg=True)
 
     def del_folder_mas(self):
         """ Delete the copy folder"""
         try:
             shutil.rmtree(self.dossierFileMasc)
         except Exception as e:
-            if self.mgis.DEBUG:
-                self.mgis.add_info(
-                    'Failed to delete {}. Reason: {}'.format(self.dossierFileMasc, e))
+            self.mgis.add_info(
+                'Failed to delete {}. Reason: {}'.format(self.dossierFileMasc, e), dbg=True)
 
     def copy_run_file(self, rep):
         """copy run file in "rep" path"""
@@ -2532,10 +2516,10 @@ class ClassMascaret:
                                         "where id_runs={1})".format(self.mdb.SCHEMA, id_run)
                         self.mdb.delete('results_val', condition_val)
                         self.mdb.delete('results_idx', condition)
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info(
-                            "Deletion of {0} scenario for {1} is done".format(
-                                nom_scen, run))
+
+                    self.mgis.add_info(
+                        "Deletion of {0} scenario for {1} is done".format(
+                            nom_scen, run), dbg=True)
                     return True
                 else:
                     return False
@@ -3161,6 +3145,61 @@ class ClassMascaret:
         elif 'LNUM' in val_keys:
             lpk = val['LNUM']
 
+        import time
+        print(len(lpk))
+
+        # t0 = time.time()
+        # d_res = dict()
+        # for var in val_keys:
+        #     if isinstance(var, int):
+        #         for tps, pk, value in zip(val['TIME'], lpk, val[var]):
+        #             if (pk, var) not in d_res.keys():
+        #                 d_res[(pk, var)] = {'t': list(), 'v': list()}
+        #             d_res[(pk, var)]['t'].append(tps)
+        #             d_res[(pk, var)]['v'].append(value)
+        # #print("tps create dico :", round(time.time() - t0, 3), '- len :', len(d_res))
+        #
+        # met = 'many'
+        # #t0 = time.time()
+        # if met == 'simple':
+        #     for (pk, var), v in d_res.items():
+        #         self.mdb.run_query("INSERT INTO {}.res_by_pk (id_runs, pknum, var, time, val) "
+        #                            "VALUES ({}, {}, {}, '{}', '{}')".format(self.mdb.SCHEMA, id_run, pk, var,
+        #                                                                     '{' + ','.join(str(i) for i in v['t']) + '}',
+        #                                                                     '{' + ','.join(str(i) for i in v['v']) + '}'))
+        # else:
+        #     values = list()
+        #     for (pk, var), v in d_res.items():
+        #         values.append([id_run, pk, var,
+        #                        "{" + ','.join(str(i) for i in v['t']) + "}",
+        #                        "{" + ','.join(str(i) for i in v['v']) + "}"])
+        #     if met == 'many':
+        #         t0 = time.time()
+        #         self.mdb.run_query("INSERT INTO {}.res_by_pk (id_runs, pknum, var, time, val) ".format(self.mdb.SCHEMA) +
+        #                            "VALUES (%s, %s, %s, %s, %s)", many=True, list_many=values)
+        #     elif met == 'csv':
+        #         col_tab = ['id_runs', 'pknum', 'var', 'time', 'val']
+        #         nb_stock = 10000
+        #         if len(values) > 0:
+        #             nb = max(int(len(values) / nb_stock), 1)
+        #             if nb == 1:
+        #                 self.mdb.new_insert_res('res_by_pk',
+        #                                         values,
+        #                                         col_tab)
+        #             else:
+        #                 for i in range(nb - 1):
+        #                     self.mdb.new_insert_res('res_by_pk',
+        #                                             values[
+        #                                             nb_stock * i:nb_stock * (i + 1)],
+        #                                             col_tab)
+        #                 if nb_stock * (i + 1) < len(values):
+        #                     self.mdb.new_insert_res('res_by_pk',
+        #                                             values[nb_stock * (i + 1):],
+        #                                             col_tab)
+        # print("tps sauv val", met, ":", round(time.time() - t0, 3))
+        # return True
+
+        t0 = time.time()
         # insert table result_idx
         self.add_res_idx([id_run for ii in range(len(lpk))], val['TIME'], lpk)
         dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_run))

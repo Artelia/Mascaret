@@ -229,8 +229,7 @@ class ClassTracerLawsDialog(QDialog):
                 self.ui.tab_laws.setModel(model)
                 self.update_courbe("all")
             else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("Import failed ({})".format(listf[0]))
+                self.mgis.add_info("Import failed ({})".format(listf[0]), dbg=True)
 
     def on_tab_data_change(self, itm):
         if itm.column() < 4:
@@ -343,9 +342,9 @@ class ClassTracerLawsDialog(QDialog):
             if (QMessageBox.question(self, "Tracer Laws",
                                      "Delete {} ?".format(name_law),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Deletion of {} Tracer Laws".format(name_law))
+
+                self.mgis.add_info(
+                    "Deletion of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(
                     "DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(
                         self.mdb.SCHEMA, id_law))
@@ -402,9 +401,8 @@ class ClassTracerLawsDialog(QDialog):
         if self.ui.tab_laws.model().rowCount() > 0:
             name_law = str(self.ui.LawWQ.text())
             if self.cur_wq_law == -1:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Addition of {} Tracer Laws".format(name_law))
+                self.mgis.add_info(
+                    "Addition of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(
                     "INSERT INTO {0}.tracer_config (name, type) VALUES ('{1}', {2})".format(
                         self.mdb.SCHEMA, name_law,
@@ -414,9 +412,8 @@ class ClassTracerLawsDialog(QDialog):
                         self.mdb.SCHEMA), fetch=True)
                 self.cur_wq_law = res[0][0]
             else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Editing of {} Tracer Laws".format(name_law))
+                self.mgis.add_info(
+                    "Editing of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(
                     "UPDATE {0}.tracer_config SET name = '{1}' WHERE id = {2}".format(
                         self.mdb.SCHEMA, name_law,
@@ -442,8 +439,8 @@ class ClassTracerLawsDialog(QDialog):
             self.reject_page2()
 
     def reject_page2(self):
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Cancel of Tracer Laws")
+
+        self.mgis.add_info("Cancel of Tracer Laws", dbg=True)
         self.ui.Law_pages.setCurrentIndex(0)
         self.graph_edit.init_graph(None, all_vis=True)
 

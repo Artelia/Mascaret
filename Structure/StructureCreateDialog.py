@@ -114,6 +114,5 @@ class ClassStructureCreateDialog(QDialog):
 
     def reject_page(self):
         # print('cancel')
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Cancel of Structure")
+        self.mgis.add_info("Cancel of Structure", dbg=True)
         self.reject()

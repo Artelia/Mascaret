@@ -340,9 +340,8 @@ class ClassHydroLawsDialog(QDialog):
             if (QMessageBox.question(self, "Law Settings",
                                      "Delete {} ?".format(name_law),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Deletion of {} Hydro Law".format(name_law))
+                self.mgis.add_info(
+                    "Deletion of {} Hydro Law".format(name_law), dbg=True)
                 self.mdb.execute(
                     "DELETE FROM {0}.law_values WHERE id_law = {1}".format(
                         self.mdb.SCHEMA, id_law))
@@ -1413,8 +1412,7 @@ class ClassHydroLawsDialog(QDialog):
             date_start, date_end = 'Null', 'Null'
 
         if self.cur_law == -1:
-            if self.mgis.DEBUG:
-                self.mgis.add_info("Addition of {} Hydro Law".format(name_law))
+            self.mgis.add_info("Addition of {} Hydro Law".format(name_law), dbg=True)
             self.mdb.execute(
                 "INSERT INTO {0}.law_config (name, geom_obj, starttime, endtime, id_law_type, active, comment) "
                 "VALUES ({1}, {2}, {3}, {4}, {5}, {6}, {7})".format(
@@ -1425,8 +1423,7 @@ class ClassHydroLawsDialog(QDialog):
                 fetch=True)
             self.cur_law = res[0][0]
         else:
-            if self.mgis.DEBUG:
-                self.mgis.add_info("Editing of {} ".format(name_law))
+            self.mgis.add_info("Editing of {} ".format(name_law), dbg=True)
             self.mdb.execute(
                 "UPDATE {0}.law_config SET name = {1}, geom_obj = {2}, starttime = {3}, endtime = {4}, "
                 "active = {5}, comment = {6} WHERE id = {7}".format(
@@ -1479,8 +1476,7 @@ class ClassHydroLawsDialog(QDialog):
         action when reject page
         :return:
         """
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Cancel of Hydro Law Setting")
+        self.mgis.add_info("Cancel of Hydro Law Setting", dbg=True)
         self.ui.laws_pages.setCurrentIndex(0)
         self.graph_edit.init_curv()
         self.tree_laws.setFocus()

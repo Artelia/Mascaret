@@ -248,8 +248,7 @@ class ClassMobilSingDialog(QDialog):
                 self.ui.tab_sets.setModel(model)
                 self.update_courbe("all")
             else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("Import failed ({})".format(listf[0]))
+                self.mgis.add_info("Import failed ({})".format(listf[0]), dbg=True)
 
     def on_tab_data_change(self, itm):
         if itm.column() < 4:
@@ -404,14 +403,11 @@ class ClassMobilSingDialog(QDialog):
             self.mgis.add_info("Cancel of gate information")
 
     def reject_page2(self):
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Cancel of Weirs tab")
+        self.mgis.add_info("Cancel of Weirs tab", dbg=True)
         self.ui.weirs_pages.setCurrentIndex(0)
 
     def reject_page3(self):
-
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Cancel of Weirs tab")
+        self.mgis.add_info("Cancel of Weirs tab", dbg=True)
         self.ui.weirs_pages.setCurrentIndex(0)
 
     def delete_time(self):
