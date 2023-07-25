@@ -199,9 +199,8 @@ class ClassWaterQualityDialog(QDialog):
                         val = info['val'] - 1
                     obj.setCurrentIndex(val)
                 else:
-                    if self.mgis.DEBUG:
-                        pass
-                        # self.mgis.add_info("param {}  obj {}  val {}".format(param, obj, info['val']))
+                    pass
+                    # self.mgis.add_info("param {}  obj {}  val {}".format(param, obj, info['val']), dbg=True)
 
         self.type = self.modeleQualiteEau.itemText(
             self.modeleQualiteEau.currentIndex())

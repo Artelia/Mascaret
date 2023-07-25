@@ -98,8 +98,7 @@ class ClassUpdatePk(QDialog):
                 sql += "SELECT {0}.update_abscisse_profil('{0}','{0}.{1}','{0}.{2}')" \
                        ";\n".format(self.mdb.SCHEMA, table, 'branchs')
         self.mdb.run_query(sql)
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Update pk Done")
+        self.mgis.add_info("Update pk Done", dbg=True)
 
     def annule(self):
         """"Cancel """

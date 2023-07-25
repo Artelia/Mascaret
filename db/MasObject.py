@@ -1885,29 +1885,31 @@ class admin_tab(MasObject):
                       ('CONSTRAINT cle_admin_tab',
                        'PRIMARY KEY (id_,table_, version_)')]
 
-
 # new results table
-class results_old(MasObject):
+class results_by_pk(MasObject):
     def __init__(self):
-        super(results_old, self).__init__()
+        super(results_by_pk, self).__init__()
         self.order = 37
         self.geom_type = None
-        self.attrs = [('id_runs', 'integer NOT NULL'),
-                      ('time', 'float'),
-                      ('pknum', 'float'),
-                      ('var', 'integer'),
-                      ('val', 'float'),
-                      ('CONSTRAINT results_old_pkey',
-                       ' PRIMARY KEY (id_runs, time, pknum, var)')]
+        self.attrs = [('idrunpkvar', 'serial NOT NULL'),
+                      ('id_runs', 'integer NOT NULL'),
+                      ('pknum', 'double precision NOT NULL'),
+                      ('var', 'integer NOT NULL'),
+                      ("time", 'double precision[]'),
+                      ('val', 'double precision[]'),
+                      ('CONSTRAINT results_by_pk_pkey',
+                       ' PRIMARY KEY (id_runs, pknum, var)')]
 
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
-        qry += "CREATE INDEX IF NOT EXISTS results_old_id_runs_pknum " \
-               "ON {0}.results_old(id_runs, pknum);".format(self.schema)
+        qry += "CREATE INDEX IF NOT EXISTS results_by_pk_id_runs_pknum_idx " \
+               "ON {0}.results_by_pk USING btree" \
+               "(id_runs ASC NULLS LAST, pknum ASC NULLS LAST);".format(self.schema)
         qry += '\n'
-        qry += "CREATE INDEX IF NOT EXISTS results_old_id_runs_time " \
-               "ON {0}.results_old(id_runs, time);".format(self.schema)
+        qry += "CREATE INDEX IF NOT EXISTS results_by_pk_id_runs_var_idx " \
+               "ON {0}.results_by_pk USING btree" \
+             "(id_runs ASC NULLS LAST, var ASC NULLS LAST);".format(self.schema)
         qry += '\n'
         return qry
 
@@ -1955,28 +1957,16 @@ class results_idx(MasObject):
         qry += '\n'
         return qry
 
-
-
-
 class results_sect(MasObject):
     def __init__(self):
         super(results_sect, self).__init__()
         self.order = 38
         self.geom_type = None
         self.attrs = [('id_runs', 'integer NOT NULL'),
-                      ('pk', 'float'),
-                      ('branch', 'integer'),
-                      ('section', 'integer'),
-                      ('CONSTRAINT results_sect_pkey',
-                       ' PRIMARY KEY (id_runs, pk, branch)')]
+                      ("pk", 'double precision[]'),
+                      ('branch', 'integer[]'),
+                      ('section', 'integer[]'),]
 
-    def pg_create_table(self):
-        qry = super(self.__class__, self).pg_create_table()
-        qry += '\n'
-        qry += "CREATE INDEX IF NOT EXISTS results_sect_id_runs_pknum " \
-               "ON {0}.results_sect(id_runs, pk);".format(self.schema)
-        qry += '\n'
-        return qry
 
 
 class results_var(MasObject):
@@ -2103,4 +2093,42 @@ class branchs_old(MasObject):
         qry += '\n'
         qry += self.pg_updat_actv()
         return qry
+
+
+# new results table
+class results_old(MasObject):
+    def __init__(self):
+        super(results_old, self).__init__()
+        self.order = 37
+        self.geom_type = None
+        self.attrs = [('id_runs', 'integer NOT NULL'),
+                      ('time', 'float'),
+                      ('pknum', 'float'),
+                      ('var', 'integer'),
+                      ('val', 'float'),
+                      ('CONSTRAINT results_old_pkey',
+                       ' PRIMARY KEY (id_runs, time, pknum, var)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_old_id_runs_pknum " \
+               "ON {0}.results_old(id_runs, pknum);".format(self.schema)
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS results_old_id_runs_time " \
+               "ON {0}.results_old(id_runs, time);".format(self.schema)
+        qry += '\n'
+        return qry
+
+class results_sect_old(MasObject):
+    def __init__(self):
+        super(results_sect_old, self).__init__()
+        self.order = 38
+        self.geom_type = None
+        self.attrs = [('id_runs', 'integer NOT NULL'),
+                      ('pk', 'float'),
+                      ('branch', 'integer'),
+                      ('section', 'integer'),
+                      ('CONSTRAINT results_sect_old_pkey',
+                       ' PRIMARY KEY (id_runs, pk, branch)')]
 # *****************************************

@@ -281,10 +281,9 @@ class ClassParameterDialog(QDialog):
                         val = info['val'] - 1
                     obj.setCurrentIndex(val)
                 else:
-                    if self.mgis.DEBUG:
-                        self.mgis.add_info(
-                            "param {}  obj {}  val {}".format(param, obj,
-                                                              info['val']))
+                    self.mgis.add_info(
+                        "param {}  obj {}  val {}".format(param, obj,
+                                                          info['val']), dbg=True)
 
                 if param in self.exclusion[self.kernel]:
                     obj.hide()

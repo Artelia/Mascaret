@@ -91,6 +91,7 @@ class CheckTab:
                                   '5.1.3',
                                   '5.1.4',
                                   '5.1.5',
+                                  '5.1.6',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -252,7 +253,10 @@ class CheckTab:
                 lambda: self.update_515(),
             ],
             },
-            
+            '5.1.6': {'fct': [
+                lambda: self.update_516(),
+            ],
+            },
 
             # '3.0.x': { },
 
@@ -272,8 +276,8 @@ class CheckTab:
                 Maso.admin_tab.overwrite = True
                 obj = self.mdb.process_masobject(Maso.admin_tab,
                                                  'pg_create_table')
-                if self.mgis.DEBUG:
-                    self.mgis.add_info('  {0} OK'.format(obj.name))
+
+                self.mgis.add_info('  {0} OK'.format(obj.name), dbg=True)
                 tabs.append("admin_tab")
             except Exception:
                 self.mgis.add_info('failure!<br>{0}'.format(Maso.admin_tab))
@@ -358,8 +362,6 @@ class CheckTab:
                         list_test_ver.append(False)
                         self.mgis.add_info('ERROR: Update table ************')
                         self.mgis.add_info('ERROR :{}'.format(tab_name))
-                        # if self.mgis.DEBUG:
-                        #     self.mgis.add_info('ERROR :{}'.format(tab_name))
                 if False not in list_test_ver:
                     tabs = self.mdb.list_tables(self.mdb.SCHEMA)
                     self.all_version(tabs, ver)
@@ -433,8 +435,7 @@ class CheckTab:
         try:
             tab.overwrite = overwrite
             obj = self.mdb.process_masobject(tab, 'pg_create_table')
-            if self.mgis.DEBUG:
-                self.mgis.add_info('  {0} OK'.format(obj.name))
+            self.mgis.add_info('  {0} OK'.format(obj.name), dbg=True)
             return valid, obj.name
         except Exception:
             valid = False
@@ -1567,3 +1568,60 @@ $BODY$;
         self.mgis.download_bin()
 
         return True
+
+    def update_516(self):
+        valide = True
+        self.mgis.add_info('Create the New results table ')
+        if valide:
+            tabs = [Maso.results_by_pk]
+            for tab in tabs:
+                valid_add, _ = self.add_tab(tab)
+            if not valid_add:
+                self.mgis.add_info('Create  the new reuslts table - ERROR')
+                valid = False
+            else:
+                self.mgis.add_info('Create table Branch - OK', dbg=True)
+
+        if valide:
+            self.mgis.add_info('Fill the New results table')
+            sql = "DELETE FROM {0}.results_by_pk;\n"
+            sql += 'INSERT INTO {0}.results_by_pk (id_runs, pknum, var, "time", val)'\
+            'SELECT id_runs, pknum, var, array_agg("time" ORDER BY "time"), array_agg(val ORDER BY "time")'\
+            'FROM {0}.results GROUP BY id_runs, pknum, var;\n'
+            print(sql.format(self.mdb.SCHEMA))
+            # err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            # if err:
+            #     self.mgis.add_info('Fill the New results table - ERROR')
+            #     valid = False
+        if valide :
+            self.mgis.add_info('Create the New view')
+            # new view
+            sql = 'DROP VIEW {0}.results;\n'
+            sql += 'CREATE VIEW {0}.results ' \
+                  'AS SELECT results_by_pk.id_runs,'\
+                'UNNEST(res_by_pk."time") as time,'\
+                'res_by_pk.pknum, res_by_pk.var,'\
+                'UNNEST(res_by_pk.val) FROM {0}.res_by_pk;'
+            print(sql.format(self.mdb.SCHEMA))
+            # err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            # if err:
+            #     self.mgis.add_info('Create the New view - ERROR')
+            #     valid = False
+            # TODO
+            # ALTER Table.results_sect in results_sect_old
+            # ALTER INDEX results_sect_id_runs_pknum  in results_sect_old_id_runs_pknum
+
+            # CREATE NEW Table results_sect
+            #FILL  Table results_sect
+            # DELETE old_table
+
+
+        # retour en arrière
+#DROP VIEW barrage_test.results;
+# CREATE VIEW barrage_test.results AS SELECT id_runs, "time", pknum,  var, val
+# FROM barrage_test.results_idx Inner join  barrage_test.results_val
+# on barrage_test.results_val.idruntpk = barrage_test.results_idx.idruntpk;
+        # TODO runs_graph
+        return  valide
+
+

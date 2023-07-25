@@ -248,7 +248,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(False)
+        self.ui.actionTest.setVisible(True)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(
@@ -256,8 +256,12 @@ class MascPlugDialog(QMainWindow):
         # TODO DELETE AFTER
         self.ui.menuUpate_table.menuAction().setVisible(False)
 
-    def add_info(self, text):
-        self.ui.textEdit.append(text)
+    def add_info(self, text, dbg=False):
+        if dbg:
+            if self.DEBUG:
+                self.ui.textEdit.append(text)
+        else:
+            self.ui.textEdit.append(text)
 
     def update_default_crs(self):
         self.crs = self.ui.crsWidget.crs()
@@ -1025,7 +1029,7 @@ Version : {}
     def fct_test(self):
         """ Test function"""
         # get_laws
-        # self.chkt.debug_update_vers_meta(version='5.0.2')
+        self.chkt.debug_update_vers_meta(version='5.1.5')
 
         pass
 

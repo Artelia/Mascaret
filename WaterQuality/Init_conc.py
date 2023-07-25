@@ -202,10 +202,9 @@ class InitConcDialog(QDialog):
                 self.update_cb_bief()
                 self.update_courbe("all")
             else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Import failed ({}) because the colone number of file isn't agree.".format(
-                            f[0]))
+                self.mgis.add_info(
+                    "Import failed ({}) because the colone number of file isn't agree.".format(
+                        f[0]), dbg=True)
 
     def current_bief(self):
         if self.ui.cb_bief.currentIndex() == -1:
@@ -330,10 +329,9 @@ class InitConcDialog(QDialog):
         if self.ui.tab_laws.model().rowCount() > 0:
             name_law = str(self.ui.LawWQ.text())
             if self.cur_wq_law == -1:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Addition of {} Tracer initial condition".format(
-                            name_law))
+                self.mgis.add_info(
+                    "Addition of {} Tracer initial condition".format(
+                        name_law), dbg=True)
                 self.mdb.execute(
                     "INSERT INTO {0}.init_conc_config (name, type) VALUES ('{1}', {2})".format(
                         self.mdb.SCHEMA,
@@ -344,10 +342,9 @@ class InitConcDialog(QDialog):
                         self.mdb.SCHEMA), fetch=True)
                 self.cur_wq_law = res[0][0]
             else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Editing of {} Tracer Initial Concentration".format(
-                            name_law))
+                self.mgis.add_info(
+                    "Editing of {} Tracer Initial Concentration".format(
+                        name_law), dbg=True)
                 self.mdb.execute(
                     "UPDATE {0}.init_conc_config SET name = '{1}' WHERE id = {2}".format(
                         self.mdb.SCHEMA, name_law,
@@ -372,8 +369,7 @@ class InitConcDialog(QDialog):
         self.accept()
 
     def reject_page2(self):
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Cancel of Tracer Laws")
+        self.mgis.add_info("Cancel of Tracer Laws", dbg=True)
         self.reject()
 
 
