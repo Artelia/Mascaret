@@ -402,9 +402,9 @@ class GraphResultDialog(QWidget):
 
                 sql_hyd_pk = ''
                 if self.typ_graph == 'hydro_pk':
-                    sql_hyd_pk = "AND pknum IN (SELECT pk FROM {0}.results_sect " \
-                                 "WHERE id_runs = {1} AND branch = {2})".format(
-                        self.mgis.mdb.SCHEMA, param["scen"], param["branch"])
+                    sql_hyd_pk = ('AND pknum IN (SELECT UNNEST((SELECT pk FROM {0}.results_sect '
+                     'WHERE id_runs = {1} AND branch = {2}))) '.format(
+                        self.mgis.mdb.SCHEMA, param["scen"], param["branch"]))
                 sqlw = self.sql_where.format(param["branch"], param["pknum"],
                                              param["t"])
 
@@ -444,12 +444,16 @@ class GraphResultDialog(QWidget):
 
                 elif self.x_var == 'pknum':
                     if self.typ_graph == 'hydro_pk':
-                        sql = "SELECT pk FROM {0}.results_sect WHERE id_runs = {1} AND branch = {2} " \
-                              "ORDER BY pk".format(self.mgis.mdb.SCHEMA,
+
+                        sql = ('SELECT  UNNEST((SELECT pk FROM {0}.results_sect '
+                            'WHERE id_runs = {1} AND branch = {2})) as pknum '
+                            'ORDER BY pknum'.format(self.mgis.mdb.SCHEMA,
                                                    param["scen"],
-                                                   param["branch"])
+                                                   param["branch"]))
                         rows = self.mdb.run_query(sql, fetch=True)
+
                         x_val = [row[0] for row in rows]
+
                     else:
                         x_val = param["info_graph"][self.typ_res]['pknum']
 
@@ -460,9 +464,9 @@ class GraphResultDialog(QWidget):
                           "ORDER BY {1}".format(self.mgis.mdb.SCHEMA,
                                                 self.x_var, param["scen"], sqlv,
                                                 sqlw, sql_hyd_pk)
+
                     rows = self.mdb.run_query(sql, fetch=True)
                     x_val = [row[0] for row in rows]
-
                 tmp_data[self.x_var] = x_val
 
                 for var in param["graph"]["vars"]:
@@ -471,6 +475,7 @@ class GraphResultDialog(QWidget):
                           "ORDER BY {1}".format(self.mgis.mdb.SCHEMA,
                                                 self.x_var, param["scen"], var,
                                                 sqlw, sql_hyd_pk)
+
                     rows = self.mdb.run_query(sql, fetch=True)
                     tmp_data[var] = [row[1] for row in rows]
 
@@ -511,7 +516,6 @@ class GraphResultDialog(QWidget):
                     if 'Z' in self.lst_graph[0]["graph"]["vars"]:
                         self.get_laisses(self.lst_graph[0])
                         lais_g = self.update_laisse(x_var_, self.cur_data[0])
-
             self.graph_obj.init_graph(self.cur_data, x_var_, lais=lais_g)
 
     def update_title(self):

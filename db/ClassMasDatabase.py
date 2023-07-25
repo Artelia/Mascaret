@@ -457,8 +457,6 @@ class ClassMasDatabase(object):
             if not self.check_fct_public('clone_schema'):
                 obj = self.process_masobject(Maso.class_fct_psql, 'pg_clone_schema')
                 self.mgis.add_info('  {0} OK'.format('pg_clone_schema'), dbg=True)
-                else:
-                    pass
 
             chaine = """CREATE SCHEMA {0} AUTHORIZATION {1};"""
             # postgres;"""
@@ -1599,8 +1597,8 @@ $BODY$
             dest = src + '_ext{}_{}'.format(date, cpt)
         js_dict['export_name'] = dest
         self.ignor_schema += [dest]
-        list_tab_res = ['runs', 'results_idx', 'results_val', 'results_sect',
-                        'runs_graph', 'runs_plani']
+        list_tab_res = ['runs', 'results_sect',
+                        'runs_graph', 'runs_plani', 'results_by_pk']
 
         qry = "SELECT clone_schema('{}','{}','{}');".format(src, dest,
                                                             ','.join(
@@ -1612,22 +1610,11 @@ $BODY$
         lst_run = self.get_id_run(selection)
         if len(lst_run) > 0:
             lst_run = ["{}".format(id) for id in lst_run]
-            res = None
+            # res = None
             for tab in list_tab_res:
                 if tab == 'runs':
                     sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id IN ({4}) );"""
                     sql = sql.format(dest, tab, src, tab, ','.join(lst_run))
-                elif tab == 'results_idx':
-                    sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id_runs IN ({4}) );"""
-                    sql = sql.format(dest, tab, src, tab, ','.join(lst_run))
-                    res = self.select_distinct('idruntpk', "results_idx",
-                                               where="id_runs IN ({0})".format(','.join(lst_run)))
-                elif tab == 'results_val':
-                    sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE idruntpk IN ({4}) );"""
-                    if res:
-                        sql = sql.format(dest, tab, src, tab, ','.join([str(a) for a in res['idruntpk']]))
-                    else:
-                        sql = None
                 else:
                     sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id_runs IN ({4}) );"""
                     sql = sql.format(dest, tab, src, tab, ','.join(lst_run))

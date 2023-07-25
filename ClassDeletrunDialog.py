@@ -200,14 +200,8 @@ class ClassDeletrunDialog(QDialog):
               "and type_res= 'tracer_TRANSPORT_PUR');"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
 
-        # delete results_val
-        sql = "DELETE  FROM {0}.results_val WHERE idruntpk IN " \
-              "(SELECT DISTINCT idruntpk FROM {0}.results_idx " \
-              "where id_runs not in (SELECT id FROM {0}.runs));"
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-
-        # delete results_idx
-        sql = "DELETE  FROM {0}.results_idx WHERE id_runs not in (SELECT id FROM {0}.runs);"
+        # delete results_by_pk
+        sql = "DELETE  FROM {0}.results_by_pk WHERE id_runs not in (SELECT id FROM {0}.runs);"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
 
         # delete results_sect
