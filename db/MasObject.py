@@ -1963,11 +1963,12 @@ class results_sect(MasObject):
         self.order = 38
         self.geom_type = None
         self.attrs = [('id_runs', 'integer NOT NULL'),
+                      ('branch', 'integer'),
                       ("pk", 'double precision[]'),
-                      ('branch', 'integer[]'),
-                      ('section', 'integer[]'),]
-
-
+                      ('section', 'integer[]'),
+                      ('CONSTRAINT results_sect_pkey',
+                       ' PRIMARY KEY (id_runs, branch)')
+                      ]
 
 class results_var(MasObject):
     def __init__(self):

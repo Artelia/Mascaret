@@ -1424,6 +1424,7 @@ $BODY$;
         return valid
 
     def update_512(self):
+        self.mgis.add_info('*** Update 5.1.2  ***')
         valide = True
         if valide:
             sql = "DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;".format(self.mdb.SCHEMA)
@@ -1486,6 +1487,7 @@ $BODY$;
         """
         Action update version 5.1.3
         """
+        self.mgis.add_info('*** Update 5.1.3  ***')
         cl = Maso.class_fct_psql()
         lfct = [cl.pg_create_calcul_abscisse_point_flood(self.mdb.SCHEMA)]
         qry = ''
@@ -1498,6 +1500,7 @@ $BODY$;
         """
          Action update version 5.1.5
         """
+        self.mgis.add_info('*** Update 5.1.5  ***')
         ok = self.box.yes_no_q("WARNING:\n "
                                "Please note that this 5.1.5 update automatically \n" 
                                " updates the mascaret executable.\n"
@@ -1570,57 +1573,115 @@ $BODY$;
         return True
 
     def update_516(self):
+        self.mgis.add_info('*** Update 5.1.6  ***')
         valide = True
+        test = ''
+        if valide:
+            test = 'results_sect'
+            sql = ("ALTER TABLE IF EXISTS {0}.results_sect RENAME TO results_sect_old;\n"
+                   "ALTER TABLE IF EXISTS {0}.results_sect_old RENAME CONSTRAINT results_sect_pkey TO results_sect_old_pkey;"
+                   )
+            err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            if err:
+                self.mgis.add_info('Alter the result_sect table - ERROR')
+                valide = False
+            else:
+                self.mgis.add_info('Alter the result_sect table - OK', dbg=True)
+
+
         self.mgis.add_info('Create the New results table ')
         if valide:
-            tabs = [Maso.results_by_pk]
+            test = 'create'
+            tabs = [Maso.results_by_pk, Maso.results_sect]
             for tab in tabs:
                 valid_add, _ = self.add_tab(tab)
             if not valid_add:
                 self.mgis.add_info('Create  the new reuslts table - ERROR')
-                valid = False
+                valide = False
             else:
-                self.mgis.add_info('Create table Branch - OK', dbg=True)
+                self.mgis.add_info('Create  the new reuslts table - OK', dbg=True)
 
         if valide:
+            test = 'fill_res'
             self.mgis.add_info('Fill the New results table')
             sql = "DELETE FROM {0}.results_by_pk;\n"
             sql += 'INSERT INTO {0}.results_by_pk (id_runs, pknum, var, "time", val)'\
             'SELECT id_runs, pknum, var, array_agg("time" ORDER BY "time"), array_agg(val ORDER BY "time")'\
             'FROM {0}.results GROUP BY id_runs, pknum, var;\n'
-            print(sql.format(self.mdb.SCHEMA))
-            # err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-            # if err:
-            #     self.mgis.add_info('Fill the New results table - ERROR')
-            #     valid = False
-        if valide :
-            self.mgis.add_info('Create the New view')
-            # new view
-            sql = 'DROP VIEW {0}.results;\n'
-            sql += 'CREATE VIEW {0}.results ' \
-                  'AS SELECT results_by_pk.id_runs,'\
-                'UNNEST(res_by_pk."time") as time,'\
-                'res_by_pk.pknum, res_by_pk.var,'\
-                'UNNEST(res_by_pk.val) FROM {0}.res_by_pk;'
-            print(sql.format(self.mdb.SCHEMA))
-            # err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-            # if err:
-            #     self.mgis.add_info('Create the New view - ERROR')
-            #     valid = False
-            # TODO
-            # ALTER Table.results_sect in results_sect_old
-            # ALTER INDEX results_sect_id_runs_pknum  in results_sect_old_id_runs_pknum
+            err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            if err:
+                self.mgis.add_info('Fill the New results table - ERROR')
+                valide = False
+            else:
+                self.mgis.add_info('Fill the New results table - OK', dbg=True)
 
-            # CREATE NEW Table results_sect
-            #FILL  Table results_sect
-            # DELETE old_table
+        if valide:
+            test = 'fill_res_sec'
+            self.mgis.add_info('Fill the New results section table')
+            sql = "DELETE FROM {0}.results_sect;\n"
+            sql += 'INSERT INTO {0}.results_sect (id_runs, branch, pk , section)' \
+                   'SELECT id_runs, branch, array_agg("pk" ORDER BY "pk"), array_agg(section ORDER BY "pk")' \
+                   'FROM {0}.results_sect_old GROUP BY id_runs, branch;\n'
+            err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            if err:
+                self.mgis.add_info('Fill the New results section table - ERROR')
+                valide = False
+            else:
+                self.mgis.add_info('Fill the New results section table - OK', dbg=True)
+        if valide:
+            test = 'fill_res_view'
+            self.mgis.add_info('New View results')
+            sql = "DROP VIEW  IF EXISTS {0}.results;\n"
+            sql += ('CREATE VIEW {0}.results AS SELECT results_by_pk.id_runs, '
+                    'UNNEST(results_by_pk."time") as time, '
+                    'results_by_pk.pknum, results_by_pk.var, '
+                    'UNNEST(results_by_pk.val) as val FROM barrage_test.results_by_pk;')
+            err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            if err:
+                self.mgis.add_info('New View results - ERROR')
+                valide = False
+            else:
+                self.mgis.add_info('New View results - OK', dbg=True)
+
+
+        # back update
+        if not valide:
+            self.mgis.add_info('Cancel update')
+            if  test == 'fill_res':
+                sql = 'DROP VIEW  IF EXISTS {0}.results;\n'
+                sql += ('CREATE VIEW {0}.results AS SELECT id_runs, "time", pknum,  var, val '
+                        'FROM {0}.results_idx Inner join  {0}.results_val '
+                        'on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;')
+
+                err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            elif test in ['fill_res', 'fill_res_sect','create'] :
+                if test != 'create' :
+                    sql = 'DROP TABLE IF EXISTS {0}.results_sect CASCADE;\n'
+                    sql += 'DROP TABLE IF EXISTS {0}.results_by_pk CASCADE;\n'
+                sql += 'ALTER TABLE IF EXISTS barrage_test.results_sect_old RENAME TO results_sect;\n'
+                sql += 'ALTER TABLE IF EXISTS barrage_test.results_sect RENAME CONSTRAINT ' \
+                       'results_sect_old_pkey TO results_sect_pkey;\n'
+                err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            if err:
+                self.mgis.add_info('Back the update - ERROR')
+            else:
+                self.mgis.add_info('Back the update  - OK')
+
+        if valide :
+            self.mgis.add_info('Drop the  tables: results_val, results_idx')
+            sql = 'DROP TABLE IF EXISTS {0}.results_val CASCADE;\n'
+            sql += 'DROP TABLE IF EXISTS {0}.results_idx CASCADE;\n'
+            err = False
+            #err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            if err:
+                self.mgis.add_info('Drop the  tables - ERROR')
+                valide = False
+            else:
+                self.mgis.add_info('Drop the  tables - OK', dbg=True)
 
 
         # retour en arrière
-#DROP VIEW barrage_test.results;
-# CREATE VIEW barrage_test.results AS SELECT id_runs, "time", pknum,  var, val
-# FROM barrage_test.results_idx Inner join  barrage_test.results_val
-# on barrage_test.results_val.idruntpk = barrage_test.results_idx.idruntpk;
+
         # TODO runs_graph
         return  valide
 

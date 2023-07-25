@@ -2116,20 +2116,24 @@ class ClassMascaret:
 
         dico_pk = {}
         dico_time = {}
+        d_res = {}
         for id_config in dico_res.keys():
             rows = self.mdb.select('struct_config',
                                    where='id={}'.format(id_config),
                                    list_var=['abscissa'])
-            time = dico_res[id_config]['TIME']
-            lpk = [rows['abscissa'][0] for var in range(len(time))]
-            dico_pk[id_config] = rows['abscissa'][0]
-            dico_time[id_config] = list(time)
-            dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_run))
-            v_tmp = self.creat_values_val(id_run, id_var, lpk,
-                                          time, dico_res[id_config]['ZSTR'], dict_idx)
-
-            values += v_tmp
-        self.mdb.insert_res('results_val', values, colonnes)
+            pknum = rows['abscissa'][0]
+            dico_pk[id_config] = pknum
+            dico_time[id_config] = dico_res[id_config]['TIME']
+            d_res[(pknum, id_var)] = {'t': dico_res[id_config]['TIME'],
+                                      'v': dico_res[id_config]['ZSTR']}
+        for (pk, var), v in d_res.items():
+            values.append([id_run, pk, var,
+                           "{" + ','.join(str(i) for i in v['t']) + "}",
+                           "{" + ','.join(str(i) for i in v['v']) + "}"])
+        if len(values) > 0:
+            self.mdb.run_query(
+                "INSERT INTO {}.results_by_pk (id_runs, pknum, var, time, val) ".format(self.mdb.SCHEMA) +
+                "VALUES (%s, %s, %s, %s, %s)", many=True, list_many=values)
 
         if len(dico_res.keys()) > 0:
             list_insert = [[id_run, 'struct', 'pknum', json.dumps(dico_pk)],
@@ -2138,153 +2142,11 @@ class ClassMascaret:
             col_tab = ['id_runs', 'type_res', 'var', 'val']
             self.mdb.insert_res('runs_graph', list_insert, col_tab)
 
-    # def creat_values(self, id_run, id_name, lpk, ltime, lval):
-    #     """
-    #     create values list  for  insert_res function
-    #     :param id_name: (int) name index
-    #     :param id_run: (int) index of (run, screnario) couple
-    #     :param lpk: (list) pk list
-    #     :param ltime: (list) time list
-    #     :param lval:  (list) values list
-    #     :return: (list) value list
-    #     """
-    #     values = []
-    #     for time, pk, val in zip(ltime, lpk, lval):
-    #         values.append([id_run, time, pk, id_name, val])
-    #
-    #     return values
 
-    def creat_values_val(self, id_run, id_name, lpk, ltime, lval, dico_idruntpk):
-        """
-        create values list  for  insert_res function
-        :param id_name: (int) name index
-        :param id_run: (int) index of (run, screnario) couple
-        :param lpk: (list) pk list
-        :param ltime: (list) time list
-        :param lval:  (list) values list
-        :param dico_idruntpk: (dico) data dico
-        :return: (list) value list
-        """
-        values = []
-        for time, pk, val in zip(ltime, lpk, lval):
-            values.append([dico_idruntpk[(id_run, time, pk)], id_name, val])
-
-        return values
-
-    # def lit_opt(self, run, scen, id_run, date_debut, base_namefile, comments='',
-    #             tracer=False, casier=False):
-    #     nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
-    #     # tempFichier = os.path.join(self.dossierFileMasc, baseNamefile + '_temp.opt')
-
-    #     self.mgis.add_info("Load data ....", dbg=True)
-    #     if not os.path.isfile(nom_fich):
-    #         self.mgis.add_info("Simulation Error: there aren't results")
-    #         self.mdb.delete('runs', 'id={}'.format(id_run))
-    #         return False
-    #
-    #     t, pk, col, value = self.read_opt(nom_fich, date_debut, scen, run)
-    #
-    #     if tracer:
-    #         nom_fich_tra = os.path.join(self.dossierFileMasc,
-    #                                     base_namefile + '.tra_opt')
-    #
-    #         if not os.path.isfile(nom_fich_tra):
-    #             self.mgis.add_info(
-    #                 "Simulation Error: there aren't results for tracer")
-    #             return False
-    #         t_tra, pk_tra, col_tra, value_tra = self.read_opt(nom_fich_tra,
-    #                                                           date_debut, scen,
-    #                                                           run)
-    #         if self.wq.cur_wq_mod == 'TRANSPORT_PUR':
-    #             dico_tra = self.mdb.select('tracer_name',
-    #                                        where="type ='{}' ".format(
-    #                                            self.wq.cur_wq_mod),
-    #                                        order='id',
-    #                                        list_var=['sigle', 'text'])
-    #
-    #             for cpt_tra, sigle in enumerate(dico_tra['sigle']):
-    #                 var_info = {'var': sigle,
-    #                             'type_res': 'tracer_TRANSPORT_PUR',
-    #                             'name': dico_tra['text'][cpt_tra],
-    #                             'type_var': 'float'}
-    #                 self.mdb.check_id_var(var_info)
-    #         lind = []
-    #         for i, c in enumerate(col_tra):
-    #             if c not in col:
-    #                 col.append(c)
-    #                 lind.append(i)
-    #         # add value_tra in value list
-    #         for j, lignval in enumerate(value):
-    #             for i in lind:
-    #                 lignval.append(value_tra[j][i])
-    #     tab = {id_run: {"t": list(t),
-    #                     "pk": list(pk)}
-    #            }
-    #     if date_debut:
-    #         tab[id_run]["init_date"] = "{:%Y-%m-%d %H:%M}".format(date_debut)
-    #     if comments != '':
-    #         tab[id_run]["comments"] = comments
-    #     if tracer:
-    #         tab[id_run]['wq'] = self.wq.cur_wq_mod
-    #
-    #     if tab[id_run]:
-    #         self.mdb.update("runs", tab, var='id')
-    #
-    #     liste_col = self.mdb.list_columns("resultats")
-    #     for c in col:
-    #         if c.lower() not in liste_col:
-    #             self.mdb.add_columns("resultats", c.lower())
-    #
-    #     self.mdb.insert_res("resultats", value, col)
-    #
-    #     if casier:
-    #         nom_fich_bas = os.path.join(self.dossierFileMasc,
-    #                                     base_namefile + '.cas_opt')
-    #         nom_fich_link = os.path.join(self.dossierFileMasc,
-    #                                      base_namefile + '.liai_opt')
-    #
-    #         t_bas, pk_bas, col_bas, value_bas = self.read_opt(nom_fich_bas,
-    #                                                           date_debut, scen,
-    #                                                           run,
-    #                                                           init_col=['t',
-    #                                                                     'bnum'])
-    #         t_link, pk_link, col_link, value_link = self.read_opt(nom_fich_link,
-    #                                                               date_debut,
-    #                                                               scen, run,
-    #                                                               init_col=['t',
-    #                                                                         'lnum'])
-    #
-    #         self.mdb.insert_res("resultats_basin", value_bas, col_bas)
-    #         self.mdb.insert_res("resultats_links", value_link, col_link)
-    #
-    #     return True
-
-    # def get_for_lig(self, run, scen):
-    #
-    #     condition = "run='{0}' AND scenario='{1}'".format(run, scen)
-    #
-    #     t_max = self.mdb.select_max("t", "resultats", condition)
-    #     if t_max is None:
-    #         self.mgis.add_info("No previous results to create the .lig file.")
-    #         return None
-    #     condition = condition + " AND t=" + str(t_max)
-    #
-    #     result = self.mdb.select("resultats", condition, 'pk')
-    #     if not result:
-    #         self.mgis.add_info('No results for initialisation')
-    #         return None
-    #
-    #     result["X"] = result.pop("pk")
-    #     result["Z"] = result.pop("z")
-    #     result["Q"] = result.pop("q")
-    #     return result
 
     def opt_to_lig(self, id_run, base_namefiles):
         """Creation of .lig file """
-        # old
-        # (self, run, scen, id_run, base_namefiles)
-        # result = self.get_for_lig(run, scen)
-        result = self.get_for_lig_new(id_run)
+        result = self.get_for_lig(id_run)
         if not result:
             return None
         i1 = {}
@@ -2511,11 +2373,16 @@ class ClassMascaret:
                         self.mdb.delete('results_sect', condition)
                         self.mdb.delete('runs_graph', condition)
                         self.mdb.delete('runs_plani', condition)
-                        condition_val = "idruntpk IN " \
-                                        "(SELECT DISTINCT id_runs FROM {0}.results_idx " \
-                                        "where id_runs={1})".format(self.mdb.SCHEMA, id_run)
-                        self.mdb.delete('results_val', condition_val)
-                        self.mdb.delete('results_idx', condition)
+
+                        self.mdb.delete('results_by_pk', condition)
+                        if 'results_val' in lst_tab:
+                            condition_val = "idruntpk IN " \
+                                            "(SELECT DISTINCT id_runs FROM {0}.results_idx " \
+                                            "where id_runs={1})".format(self.mdb.SCHEMA, id_run)
+                            self.mdb.delete('results_val', condition_val)
+                        if 'results_idx' in lst_tab:
+                            self.mdb.delete('results_idx', condition)
+
 
                     self.mgis.add_info(
                         "Deletion of {0} scenario for {1} is done".format(
@@ -2708,23 +2575,6 @@ class ClassMascaret:
 
         return False
 
-    def add_res_idx(self, id_runs, times, pks):
-        values_idx = []
-        if isinstance(id_runs, list):
-            dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_runs[0]))
-            for id_run, time, pk in zip(id_runs, times, pks):
-                if (id_run, time, pk) not in dict_idx.keys():
-                    values_idx.append([id_run, time, pk])
-        else:
-            dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_runs))
-            if (id_runs, times, pks) not in dict_idx.keys():
-                values_idx.append([id_runs, times, pks])
-
-        if len(values_idx) > 0:
-            col_tab_idx = ['id_runs', 'time', 'pknum']
-            self.mdb.new_insert_res('results_idx',
-                                    values_idx,
-                                    col_tab_idx)
 
     def read_mobil_gate_res(self, id_run):
         """
@@ -2755,12 +2605,10 @@ class ClassMascaret:
                             'name': 'valve movement',
                             'type_var': 'float'}
                 id_var = self.mdb.check_id_var(var_info)
-                # Stock information
-                # colonnes = ['id_runs', 'time', 'pknum', 'var', 'val']
-                colonnes = ['idruntpk', 'var', 'val']
                 values = []
+                d_res = {}
                 dico_pk = {}
-                dico_time = {}
+                dico_time= {}
                 for name in dico_res.keys():
                     where = "name = '{}'".format(name)
                     info = self.mdb.select('weirs', where=where,
@@ -2769,21 +2617,20 @@ class ClassMascaret:
                         where = "name LIKE '{}%'".format(name)
                         info = self.mdb.select('weirs', where=where,
                                                list_var=['gid', 'abscissa'], order='gid')
-                    time = dico_res[name]['TIME']
-                    nbt = len(time)
-                    lpk = [info['abscissa'][0] for i in range(nbt)]
-                    lrun = [id_run for i in range(nbt)]
+                    pknum = info['abscissa'][0]
+                    d_res[(pknum,id_var)] = {'t' : dico_res[name]['TIME'] ,
+                                             'v' : dico_res[name]['ZSTR'] }
                     dico_pk[name] = info['abscissa'][0]
-                    dico_time[name] = list(time)
-                    self.add_res_idx(lrun, list(time), lpk)
+                    dico_time[name] = dico_res[name]['TIME']
 
-                    dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_run))
-
-                    v_tmp = self.creat_values_val(id_run, id_var, lpk,
-                                                  time, dico_res[name]['ZSTR'], dict_idx)
-                    values += v_tmp
+                for (pk, var), v in d_res.items():
+                    values.append([id_run, pk, var,
+                                       "{" + ','.join(str(i) for i in v['t']) + "}",
+                                       "{" + ','.join(str(i) for i in v['v']) + "}"])
                 if len(values) > 0:
-                    self.mdb.insert_res('results_val', values, colonnes)
+                    self.mdb.run_query(
+                        "INSERT INTO {}.results_by_pk (id_runs, pknum, var, time, val) ".format(self.mdb.SCHEMA) +
+                        "VALUES (%s, %s, %s, %s, %s)", many=True, list_many=values)
 
                 if len(dico_res.keys()) > 0:
                     list_insert = [[id_run, 'weirs', 'pknum', json.dumps(dico_pk)],
@@ -3120,15 +2967,6 @@ class ClassMascaret:
         if self.cond_api:
             self.stock_res_api(self.save_res_struct[0], self.save_res_struct[1])
 
-    def get_idruntpk(self, where=''):
-        dict_idx = dict()
-        tmp = self.mdb.select('results_idx', list_var=['idruntpk', 'id_runs', 'time', 'pknum'], where=where)
-        if tmp:
-            for iter_id in range(len(tmp["idruntpk"])):
-                dict_idx[(tmp['id_runs'][iter_id], tmp['time'][iter_id], tmp['pknum'][iter_id])] \
-                    = tmp["idruntpk"][iter_id]
-        return dict_idx
-
     def save_new_results(self, val, id_run):
         """
         Save values in results table
@@ -3136,7 +2974,6 @@ class ClassMascaret:
         :param id_run: run index
         :return: True
         """
-
         val_keys = val.keys()
         if 'PK' in val_keys:
             lpk = val['PK']
@@ -3145,124 +2982,49 @@ class ClassMascaret:
         elif 'LNUM' in val_keys:
             lpk = val['LNUM']
 
-        import time
-        print(len(lpk))
+        d_res = {}
+        d_sect = {}
+        for var in val_keys:
+            if isinstance(var, int):
+                for tps, pk, value in zip(val['TIME'], lpk, val[var]):
+                    if (pk, var) not in d_res.keys():
+                        d_res[(pk, var)] = {'t': list(), 'v': list()}
+                    d_res[(pk, var)]['t'].append(tps)
+                    d_res[(pk, var)]['v'].append(value)
 
-        # t0 = time.time()
-        # d_res = dict()
-        # for var in val_keys:
-        #     if isinstance(var, int):
-        #         for tps, pk, value in zip(val['TIME'], lpk, val[var]):
-        #             if (pk, var) not in d_res.keys():
-        #                 d_res[(pk, var)] = {'t': list(), 'v': list()}
-        #             d_res[(pk, var)]['t'].append(tps)
-        #             d_res[(pk, var)]['v'].append(value)
-        # #print("tps create dico :", round(time.time() - t0, 3), '- len :', len(d_res))
-        #
-        # met = 'many'
-        # #t0 = time.time()
-        # if met == 'simple':
-        #     for (pk, var), v in d_res.items():
-        #         self.mdb.run_query("INSERT INTO {}.res_by_pk (id_runs, pknum, var, time, val) "
-        #                            "VALUES ({}, {}, {}, '{}', '{}')".format(self.mdb.SCHEMA, id_run, pk, var,
-        #                                                                     '{' + ','.join(str(i) for i in v['t']) + '}',
-        #                                                                     '{' + ','.join(str(i) for i in v['v']) + '}'))
-        # else:
-        #     values = list()
-        #     for (pk, var), v in d_res.items():
-        #         values.append([id_run, pk, var,
-        #                        "{" + ','.join(str(i) for i in v['t']) + "}",
-        #                        "{" + ','.join(str(i) for i in v['v']) + "}"])
-        #     if met == 'many':
-        #         t0 = time.time()
-        #         self.mdb.run_query("INSERT INTO {}.res_by_pk (id_runs, pknum, var, time, val) ".format(self.mdb.SCHEMA) +
-        #                            "VALUES (%s, %s, %s, %s, %s)", many=True, list_many=values)
-        #     elif met == 'csv':
-        #         col_tab = ['id_runs', 'pknum', 'var', 'time', 'val']
-        #         nb_stock = 10000
-        #         if len(values) > 0:
-        #             nb = max(int(len(values) / nb_stock), 1)
-        #             if nb == 1:
-        #                 self.mdb.new_insert_res('res_by_pk',
-        #                                         values,
-        #                                         col_tab)
-        #             else:
-        #                 for i in range(nb - 1):
-        #                     self.mdb.new_insert_res('res_by_pk',
-        #                                             values[
-        #                                             nb_stock * i:nb_stock * (i + 1)],
-        #                                             col_tab)
-        #                 if nb_stock * (i + 1) < len(values):
-        #                     self.mdb.new_insert_res('res_by_pk',
-        #                                             values[nb_stock * (i + 1):],
-        #                                             col_tab)
-        # print("tps sauv val", met, ":", round(time.time() - t0, 3))
-        # return True
-
-        t0 = time.time()
-        # insert table result_idx
-        self.add_res_idx([id_run for ii in range(len(lpk))], val['TIME'], lpk)
-        dict_idx = self.get_idruntpk(where="id_runs = {0}".format(id_run))
-        if not dict_idx:
-            return False
-        values = []
-        val_sect = []
-        for key in val_keys:
-            if isinstance(key, int):
-                # v_tmp = self.creat_values(id_run, key, lpk,
-                #                           val['TIME'], val[key])
-                v_tmp = self.creat_values_val(id_run, key, lpk,
-                                              val['TIME'], val[key], dict_idx)
-                values += v_tmp
-            elif key == 'BRANCH':
-                val_sect = []
+            elif var == 'BRANCH':
                 init_pk = lpk[0]
                 cond = False
                 for pk, bra, sect in zip(lpk, val['BRANCH'], val['SECTION']):
                     if pk == init_pk and cond:
                         break
-                    val_sect.append((id_run, pk, int(bra), sect))
+                    if  bra not in d_sect.keys() :
+                        d_sect[bra] = {'sect' : [], 'pk': []}
+                    d_sect[bra]['sect'].append(sect)
+                    d_sect[bra]['pk'].append(pk)
                     cond = True
 
-        col_tab = ['idruntpk', 'var', 'val']
-        nb_stock = 10000
-        if len(values) > 0:
-            nb = max(int(len(values) / nb_stock), 1)
-            if nb == 1:
-                self.mdb.new_insert_res('results_val',
-                                        values,
-                                        col_tab)
-            else:
-                for i in range(nb - 1):
-                    self.mdb.new_insert_res('results_val',
-                                            values[
-                                            nb_stock * i:nb_stock * (i + 1)],
-                                            col_tab)
-                if nb_stock * (i + 1) < len(values):
-                    self.mdb.new_insert_res('results_val',
-                                            values[nb_stock * (i + 1):],
-                                            col_tab)
+        values = list()
+        for (pk, var), v in d_res.items():
+            values.append([id_run, pk, var,
+                           "{" + ','.join(str(i) for i in v['t']) + "}",
+                           "{" + ','.join(str(i) for i in v['v']) + "}"])
+        if len(values) > 0 :
+            self.mdb.run_query("INSERT INTO {}.results_by_pk (id_runs, pknum, var, time, val) ".format(self.mdb.SCHEMA) +
+                               "VALUES (%s, %s, %s, %s, %s)", many=True, list_many=values)
 
-        col_sect = ['id_runs', 'pk', 'branch', 'section']
-        if len(val_sect) > 0:
-            nb = max(int(len(val_sect) / nb_stock), 1)
-            if nb == 1:
-                # self.mdb.insert_res('results_sect', val_sect, col_sect)
-                self.mdb.new_insert_res('results_sect', val_sect, col_sect)
+        values = list()
+        for bra, v in d_sect.items():
+            values.append([id_run, bra,
+                           "{" + ','.join(str(i) for i in v['sect']) + "}",
+                           "{" + ','.join(str(i) for i in v['pk']) + "}"])
+        if len(values) > 0 :
+            self.mdb.run_query("INSERT INTO {}.results_sect(id_runs, branch, section, pk) ".format(self.mdb.SCHEMA) +
+                               "VALUES (%s, %s, %s, %s)", many=True, list_many=values)
 
-            else:
-                for i in range(nb - 1):
-                    self.mdb.new_insert_res('results_sect', val_sect[
-                                                            nb_stock * i:nb_stock * (
-                                                                    i + 1)],
-                                            col_sect)
-                if nb_stock * (i + 1) < len(val_sect):
-                    self.mdb.new_insert_res('results_sect',
-                                            val_sect[nb_stock * (i + 1):],
-                                            col_sect)
         return True
 
-    def get_for_lig_new(self, id_run):
+    def get_for_lig(self, id_run):
         """
          Get value to create the lig file
         :param id_run: run index
@@ -3276,7 +3038,7 @@ class ClassMascaret:
             idq = var['id'][var['var'].index("Q")]
             t_max = self.mdb.select_max("time", "results",
                                         "var = {}  AND id_runs = {} ".format(
-                                            idz, id_run))
+                                            idz, id_run) )
             if t_max is None:
                 self.mgis.add_info(
                     "No previous results to create the .lig file.")
@@ -3293,12 +3055,17 @@ class ClassMascaret:
                                         idq, id_run, t_max),
                                     'pknum', ['val'])
             result['Q'] = value['val']
+
             value = self.mdb.select("results_sect",
                                     "id_runs = {}".format(id_run), 'pk',
                                     ['pk', 'branch', 'section'])
-            result['X'] = value['pk']
-            result["section"] = value['section']
-            result["branche"] = value['branch']
+
+            result['X'] = value['pk'][0]
+            result["section"] = value['section'][0]
+            nb_elem= len(result['X'])
+            result["branche"] = value['branch'] * nb_elem
+
+
             del value
         except:
             self.mgis.add_info('No results for initialisation')
