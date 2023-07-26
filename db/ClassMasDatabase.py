@@ -442,7 +442,7 @@ class ClassMasDatabase(object):
 
         self.register.clear()
         if self.last_schema:
-            self.remove_group__layer("Mas_{}".format(self.last_schema))
+            self.remove_group_layer("Mas_{}".format(self.last_schema))
         self.mgis.add_info('<br><b>Running Create Layers and Tables...</b>')
 
         try:
@@ -791,21 +791,28 @@ class ClassMasDatabase(object):
             if verbose:
                 self.mgis.add_info(
                     '<br>Model "{0}" deleted.'.format(model_name))
+
+            self.remove_group_layer("Mas_{}".format(model_name))
             return True
 
-    def drop_table(self, table_name, verbose=False):
+    def drop_table(self, table_name, cascade=False, verbose=False):
         """
         Delete tables inside PostgreSQL database.
 
         Args:
             table_name (str): Name of the table which will be deleted.
         """
-        qry = 'DROP TABLE IF EXISTS {0}.{1} ;'
-        qry = qry.format(self.SCHEMA, table_name)
+        casc = ''
+        if cascade is True :
+            casc = 'CASCADE'
+        qry = 'DROP TABLE IF EXISTS {0}.{1} {2};'
+        qry = qry.format(self.SCHEMA, table_name, casc)
+        if verbose :
+            self.mgis.add_info(qry)
         if self.run_query(qry) is None:
             return False
         else:
-            self.mgis.add_info('Table "{0}" deleted.'.format(table_name))
+            self.mgis.add_info('Table "{0}" deleted.'.format(table_name), dbg=True)
             return True
 
     def load_gis_layer(self):
@@ -890,7 +897,7 @@ $BODY$
         """ Load model"""
         self.register.clear()
         if self.last_schema:
-            self.remove_group__layer("Mas_{}".format(self.last_schema))
+            self.remove_group_layer("Mas_{}".format(self.last_schema))
         self.mgis.add_info('Current DB schema is: {0}'.format(self.SCHEMA))
         # crée index spatial si non existant
         self.create_spatial_index()
@@ -912,7 +919,7 @@ $BODY$
         #
         self.load_gis_layer()
 
-    def remove_group__layer(self, name):
+    def remove_group_layer(self, name):
         root = QgsProject.instance().layerTreeRoot()
         group1 = root.findGroup(name)
         if group1 is not None:

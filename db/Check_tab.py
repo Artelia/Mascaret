@@ -1589,7 +1589,7 @@ $BODY$;
                 self.mgis.add_info('Alter the result_sect table - OK', dbg=True)
 
 
-        self.mgis.add_info('Create the New results table ')
+        self.mgis.add_info('Create the New results table ', dbg=True)
         if valide:
             test = 'create'
             tabs = [Maso.results_by_pk, Maso.results_sect]
@@ -1603,7 +1603,7 @@ $BODY$;
 
         if valide:
             test = 'fill_res'
-            self.mgis.add_info('Fill the New results table')
+            self.mgis.add_info('Fill the New results table', dbg=True)
             sql = "DELETE FROM {0}.results_by_pk;\n"
             sql += 'INSERT INTO {0}.results_by_pk (id_runs, pknum, var, "time", val)'\
             'SELECT id_runs, pknum, var, array_agg("time" ORDER BY "time"), array_agg(val ORDER BY "time")'\
@@ -1617,7 +1617,7 @@ $BODY$;
 
         if valide:
             test = 'fill_res_sec'
-            self.mgis.add_info('Fill the New results section table')
+            self.mgis.add_info('Fill the New results section table', dbg=True)
             sql = "DELETE FROM {0}.results_sect;\n"
             sql += 'INSERT INTO {0}.results_sect (id_runs, branch, pk , section)' \
                    'SELECT id_runs, branch, array_agg("pk" ORDER BY "pk"), array_agg(section ORDER BY "pk")' \
@@ -1656,27 +1656,34 @@ $BODY$;
                 err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
             elif test in ['fill_res', 'fill_res_sect','create'] :
                 if test != 'create' :
-                    sql = 'DROP TABLE IF EXISTS {0}.results_sect CASCADE;\n'
-                    sql += 'DROP TABLE IF EXISTS {0}.results_by_pk CASCADE;\n'
-                sql += 'ALTER TABLE IF EXISTS barrage_test.results_sect_old RENAME TO results_sect;\n'
-                sql += 'ALTER TABLE IF EXISTS barrage_test.results_sect RENAME CONSTRAINT ' \
-                       'results_sect_old_pkey TO results_sect_pkey;\n'
-                err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+                    t_sec = self.mdb.drop_table('results_sect', cascade= True)
+                    t_pk = self.mdb.drop_table('results_by_pk', cascade=True)
+                if t_sec :
+                    sql = 'ALTER TABLE IF EXISTS barrage_test.results_sect_old RENAME TO results_sect;\n'
+                    sql += 'ALTER TABLE IF EXISTS barrage_test.results_sect RENAME CONSTRAINT ' \
+                           'results_sect_old_pkey TO results_sect_pkey;\n'
+                    err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+                if not t_pk or not t_sec:
+                    err = True
+
             if err:
                 self.mgis.add_info('Back the update - ERROR')
             else:
                 self.mgis.add_info('Back the update  - OK')
 
         if valide :
-            self.mgis.add_info('Drop the  tables: results_val, results_idx')
-            sql = 'DROP TABLE IF EXISTS {0}.results_val CASCADE;\n'
-            sql += 'DROP TABLE IF EXISTS {0}.results_idx CASCADE;\n'
-            err = False
-            #err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-            if err:
-                self.mgis.add_info('Drop the  tables - ERROR')
+            self.mgis.add_info('Drop the  tables: results_val, results_idx', dbg=True)
+            t_val = self.mdb.drop_table('results_val', cascade=True)
+            t_idx = self.mdb.drop_table('results_idx', cascade=True)
+            if not t_val or not t_idx:
+                if not t_val :
+                    tab = 'results_val'
+                elif not t_idx :
+                    tab = 'results_idx'
+                self.mgis.add_info('Drop the  tables {} - ERROR'.format(tab))
                 valide = False
             else:
+
                 self.mgis.add_info('Drop the  tables - OK', dbg=True)
 
 
