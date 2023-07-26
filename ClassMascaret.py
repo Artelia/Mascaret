@@ -2784,17 +2784,6 @@ class ClassMascaret:
         # list(map(str, liste))
         return " ".join([str(var) for var in liste])
 
-    # @staticmethod
-    # def fmt(self, liste):
-    #     txt = ''
-    #     for var in liste:
-    #         if str(var) == 'None':
-    #             txt += '0'
-    #         else:
-    #             txt += str(var)
-    #         txt += " "
-    #     return txt
-
     @staticmethod
     def check_none(liste):
         """ Check if None is list"""
@@ -2894,7 +2883,6 @@ class ClassMascaret:
             self.mgis.add_info("Simulation Error: there aren't results")
             self.mdb.delete('runs', 'id={}'.format(id_run))
             return False
-
         # update do old results
         tab = {id_run: {}}
         if date_debut:
@@ -2909,10 +2897,7 @@ class ClassMascaret:
         type_res = 'opt'
         init_col = ['TIME', 'BRANCH', 'SECTION', 'PK']
         val_opt = self.new_read_opt(nom_fich, type_res, init_col)
-        key_val_opt = list(val_opt.keys())
-
         self.save_new_results(val_opt, id_run)
-
         self.save_run_graph(val_opt, id_run, type_res)
         del val_opt
 

@@ -1635,15 +1635,13 @@ $BODY$;
             sql += ('CREATE VIEW {0}.results AS SELECT results_by_pk.id_runs, '
                     'UNNEST(results_by_pk."time") as time, '
                     'results_by_pk.pknum, results_by_pk.var, '
-                    'UNNEST(results_by_pk.val) as val FROM barrage_test.results_by_pk;')
+                    'UNNEST(results_by_pk.val) as val FROM {0}.results_by_pk;')
             err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
             if err:
                 self.mgis.add_info('New View results - ERROR')
                 valide = False
             else:
                 self.mgis.add_info('New View results - OK', dbg=True)
-
-
         # back update
         if not valide:
             self.mgis.add_info('Cancel update')
@@ -1659,8 +1657,8 @@ $BODY$;
                     t_sec = self.mdb.drop_table('results_sect', cascade= True)
                     t_pk = self.mdb.drop_table('results_by_pk', cascade=True)
                 if t_sec :
-                    sql = 'ALTER TABLE IF EXISTS barrage_test.results_sect_old RENAME TO results_sect;\n'
-                    sql += 'ALTER TABLE IF EXISTS barrage_test.results_sect RENAME CONSTRAINT ' \
+                    sql = 'ALTER TABLE IF EXISTS {0}.results_sect_old RENAME TO results_sect;\n'
+                    sql += 'ALTER TABLE IF EXISTS {0}.results_sect RENAME CONSTRAINT ' \
                            'results_sect_old_pkey TO results_sect_pkey;\n'
                     err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
                 if not t_pk or not t_sec:
@@ -1675,21 +1673,22 @@ $BODY$;
             self.mgis.add_info('Drop the  tables: results_val, results_idx', dbg=True)
             t_val = self.mdb.drop_table('results_val', cascade=True)
             t_idx = self.mdb.drop_table('results_idx', cascade=True)
-            if not t_val or not t_idx:
+            t_sec = self.mdb.drop_table('results_sect_old', cascade= True)
+            if not t_val or not t_idx or not t_sec:
                 if not t_val :
-                    tab = 'results_val'
+                    ntab = 'results_val'
                 elif not t_idx :
-                    tab = 'results_idx'
-                self.mgis.add_info('Drop the  tables {} - ERROR'.format(tab))
+                    ntab = 'results_idx'
+                elif not t_sec:
+                    ntab = 'results_sect_old'
+                self.mgis.add_info('Drop the  tables {0} - ERROR'.format(ntab))
                 valide = False
             else:
 
                 self.mgis.add_info('Drop the  tables - OK', dbg=True)
 
 
-        # retour en arrière
-
-        # TODO runs_graph
+        print(valide)
         return  valide
 
 
