@@ -1030,10 +1030,7 @@ Version : {}
         """ Test function"""
         # get_laws
         self.chkt.debug_update_vers_meta(version='5.1.5')
-        value = self.mdb.select("results_sect",
-                                "id_runs = {}".format(625), 'pk',
-                                ['pk', 'branch', 'section'])
-        pass
+
 
     def update_ks_mesh_planim(self):
         """ update value of the seleted profiles"""

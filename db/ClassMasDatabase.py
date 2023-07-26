@@ -1658,7 +1658,7 @@ $BODY$
         chkt = CheckTab(self.mgis, self)
         vnow = chkt.list_hist_version.index(metadict['plugin_version'])
 
-        if vnow < chkt.list_hist_version.index('5.1.1'):
+        if vnow < chkt.list_hist_version.index('5.1.6'):
             self.public_fct_sql()
         if vnow < chkt.list_hist_version.index('5.1.2'):
             listefct = ['pg_chstate_basin']
