@@ -2876,6 +2876,8 @@ class ClassMascaret:
         :param casier: if basins are actived
         :return:
         """
+        import time
+        t1 = time.time()
         nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
         # if self.mgis.DEBUG:
         self.mgis.add_info("Load data ....")
@@ -2951,7 +2953,7 @@ class ClassMascaret:
                 self.save_run_graph(val, id_run, type_res)
         if self.cond_api:
             self.stock_res_api(self.save_res_struct[0], self.save_res_struct[1])
-
+        print(id_run,' temps execution ', time.time() - t1)
     def save_new_results(self, val, id_run):
         """
         Save values in results table
@@ -3044,13 +3046,14 @@ class ClassMascaret:
             value = self.mdb.select("results_sect",
                                     "id_runs = {}".format(id_run), 'pk',
                                     ['pk', 'branch', 'section'])
-
-            result['X'] = value['pk'][0]
-            result["section"] = value['section'][0]
-            nb_elem= len(result['X'])
-            result["branche"] = value['branch'] * nb_elem
-
-
+            print(value['branch'])
+            result['X'] = []
+            result["section"] = []
+            result["branche"] = []
+            for idx, pk in enumerate(value['pk']):
+                result['X'] += pk
+                result["section"] += value['section'][idx]
+                result["branche"] += value['branch'] * len(pk)
             del value
         except:
             self.mgis.add_info('No results for initialisation')
