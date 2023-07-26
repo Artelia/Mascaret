@@ -1573,6 +1573,9 @@ $BODY$;
         return True
 
     def update_516(self):
+        """
+        Update 5.1.6
+        """
         self.mgis.add_info('*** Update 5.1.6  ***')
         valide = True
         test = ''
@@ -1686,9 +1689,105 @@ $BODY$;
             else:
 
                 self.mgis.add_info('Drop the  tables - OK', dbg=True)
+        # corrige_public fct
+        if valide :
+            valide = self.up_trigger()
+            if valide :
+                self.mgis.add_info('Update TRIGGER - OK', dbg=True)
+            else:
+                self.mgis.add_info('Update TRIGGER - ERROR', dbg=True)
 
-
-        print(valide)
         return  valide
+
+    def up_trigger(self, ref = True):
+        """
+        Update trigger in
+        :param ref: True if only current schema , False on the database
+        """
+        try :
+            if ref:
+                ref_schema = self.mdb.SCHEMA
+
+            sql = """
+                  SELECT
+                      t.tgname AS trigger_name,
+                      t.tgrelid::regclass AS table_name,
+                      p.proname AS function_name,
+                      n.nspname as shema_name
+                  FROM
+                      pg_trigger t
+                  LEFT JOIN
+                      pg_proc p ON t.tgfoid = p.oid
+                  JOIN
+                      pg_namespace n ON p.pronamespace = n.oid
+                  where
+                      n.nspname = 'public'"""
+            (results, namCol) = self.mdb.run_query(sql, fetch=True, namvar=True)
+            if results is None or namCol is None:
+                # self.mgis.add_info("error : ")
+                # self.mgis.add_info(sql)
+                return None
+            cols = [col[0] for col in namCol]
+            dico = {col: [] for col in cols}
+            for row in results:
+                for i, val in enumerate(row):
+                    try:
+                        dico[cols[i]].append(val.strip())
+                    except Exception:
+                        dico[cols[i]].append(val)
+            tabs_sql = {'flood_marks': {'obj': Maso.flood_marks,
+                                        'fct': ['pg_calcul_abscisse_flood',
+                                                'pg_clear_tab']},
+                        'weirs': {'obj': Maso.weirs,
+                                  'fct': ['pg_create_calcul_abscisse']},
+                        'profiles': {'obj': Maso.profiles,
+                                     'fct': ['pg_create_calcul_abscisse']},
+                        'outputs': {'obj': Maso.outputs,
+                                    'fct': ['pg_create_calcul_abscisse_outputs']},
+                        'links': {'obj': Maso.links,
+                                  'fct': ['pg_create_calcul_abscisse']},
+                        'lateral_weirs': {'obj': Maso.lateral_weirs,
+                                          'fct': ['pg_create_calcul_abscisse']},
+                        'lateral_inflows': {'obj': Maso.lateral_inflows,
+                                            'fct': ['pg_create_calcul_abscisse']},
+                        'hydraulic_head': {'obj': Maso.hydraulic_head,
+                                           'fct': ['pg_create_calcul_abscisse']},
+                        'tracer_lateral_inflows': {'obj': Maso.tracer_lateral_inflows,
+                                                   'fct': ['pg_create_calcul_abscisse']},
+                        'basins': {'obj': Maso.basins,
+                                   'fct': ['pg_updat_actv']},
+                        'branchs': {'obj': Maso.branchs,
+                                    'fct': ['pg_updat_actv',
+                                            'pg_all_up_abs_branchs',
+                                            'pg_branchs_edition']},
+                        }
+            new_dico = {}
+            cond = True
+            for ntab, ntrigger in zip(dico['table_name'], dico['trigger_name']):
+                name = ntab.split('.')[1]
+                schema = ntab.split('.')[0]
+                if ref :
+                    cond = False
+                    if schema == ref_schema :
+                        cond =True
+                if cond:
+                    qry = "DROP TRIGGER IF EXISTS {0} ON {1};\n".format(ntrigger, ntab)
+                    self.mdb.run_query(qry)
+                    if schema not in new_dico.keys():
+                        new_dico[schema] = []
+                    new_dico[schema].append(name)
+
+            for schema, names in new_dico.items():
+                for name in names :
+                    obj = tabs_sql[name]['obj']()
+                    obj.schema = schema
+                    sql = ''
+                    for fct in tabs_sql[name]['fct']:
+                        sql += getattr(obj, fct)()
+                        self.mdb.run_query(sql,be_quiet= True)
+            return True
+        except Exception:
+
+            return False
 
 

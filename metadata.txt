@@ -31,6 +31,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    5.1.6  : Optimization to import results in database
+             Fixe the bug on the public function in the trigger
     5.1.5  : Correction of the bug to the index management  between basin and links
              Correction of the bug on the culvert type for the links
              Correction of the bug when the schema is renamed
