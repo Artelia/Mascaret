@@ -492,10 +492,9 @@ class ClassMasDatabase(object):
                       Maso.struct_fg, Maso.struct_fg_val,
                       Maso.weirs_mob_val,
                       # OLD results
-                      Maso.runs_graph, # TODO voir si ca vaut le coup de garder
-                      # Maso.results_idx, Maso.results_val,
+                      Maso.runs_graph,
                       Maso.results_var,
-                      Maso.results_sect,  # TODO faire comme results
+                      Maso.results_sect,
                       Maso.runs_plani, # ?
                       # new results V2
                       Maso.results_by_pk,
@@ -531,7 +530,6 @@ class ClassMasDatabase(object):
                                                                 'parametres',
                                                                 var,
                                                                 valeurs)
-
             self.run_query(sql, many=True, list_many=liste_value)
             # IF WATER QUALITY
             tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
@@ -549,19 +547,12 @@ class ClassMasDatabase(object):
             self.load_gis_layer()
 
             # create view
-            sql = 'CREATE VIEW {0}.results ' \
-            'AS SELECT results_by_pk.id_runs, UNNEST(res_by_pk."time") as time,' \
-            'res_by_pk.pknum, res_by_pk.var, UNNEST(res_by_pk.val) FROM {0}.res_by_pk;'
-
-            #OlD
-            # sql = 'CREATE VIEW {0}.results ' \
-            #       'AS SELECT id_runs, "time", pknum,  var, val  FROM {0}.results_idx ' \
-            #       'Inner join  {0}.results_val ' \
-            #       'on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;'
-
+            sql = ('CREATE VIEW {0}.results AS SELECT results_by_pk.id_runs, '
+                    'UNNEST(results_by_pk."time") as time, '
+                    'results_by_pk.pknum, results_by_pk.var, '
+                    'UNNEST(results_by_pk.val) as val FROM {0}.results_by_pk;')
             sql = sql.format(self.SCHEMA)
             self.run_query(sql)
-
             self.mgis.add_info('Model "{0}" completed'.format(self.SCHEMA))
 
         except Exception as e:
