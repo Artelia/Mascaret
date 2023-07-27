@@ -36,7 +36,7 @@ else:  # qt5
     from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
     from qgis.PyQt.QtWidgets import *
     from qgis.PyQt.QtCore import Qt
-
+import pandas as pd
 
 class ClassEventObsDialog(QDialog):
     def __init__(self, mgis):
@@ -99,13 +99,14 @@ class ClassEventObsDialog(QDialog):
         self.ui.tab_stations.setColumnWidth(2, 10)
         self.ui.tab_stations.selectionModel().selectionChanged.connect(
             self.station_changed)
-
+        #TODO
         sql = "SELECT DISTINCT sta.code, not cnt_h isNull as h, not cnt_q isNull as q " \
               "FROM ({0}.observations as sta LEFT JOIN (SELECT code, count(*) as cnt_h FROM {0}.observations " \
               "WHERE type = 'H' GROUP BY code) as sta_h ON sta.code = sta_h.code) " \
               "LEFT JOIN (SELECT code, count(*) as cnt_q FROM {0}.observations " \
               "WHERE type = 'Q' GROUP BY code) as sta_q ON sta.code = sta_q.code " \
               "ORDER BY sta.code".format(self.mdb.SCHEMA)
+        print(sql)
         rows = self.mdb.run_query(sql, fetch=True)
 
         for i, row in enumerate(rows):
@@ -220,8 +221,11 @@ class ClassEventObsDialog(QDialog):
         model = self.ui.tab_values.model()
 
         if self.cur_station:
-            sql = "SELECT date, valeur, comment FROM {0}.observations WHERE code = '{1}' AND type = '{2}' " \
-                  "ORDER BY date".format(self.mdb.SCHEMA, cur_station, cur_var)
+            sql = ("SELECT UNNEST(date) as date, "
+                   "UNNEST(valeur), comment "
+                   "FROM {0}.observations "
+                   "WHERE code = '{1}' AND type = '{2}' " 
+                  "ORDER BY date".format(self.mdb.SCHEMA, cur_station, cur_var))
             rows = self.mdb.run_query(sql, fetch=True)
             for r, row in enumerate(rows):
                 for c, val in enumerate(row):
@@ -258,7 +262,7 @@ class ClassEventObsDialog(QDialog):
                   "VALUES ({1})".format(self.mdb.SCHEMA, "{}, {}, {}, {}, {}")
             for rec in recs:
                 self.mdb.execute(sql.format(*rec))
-
+            #TODO reprendre car au sein de la list date plus de verification si double
             dbls = self.mdb.run_query(
                 "SELECT DISTINCT code, type FROM {0}.observations As obs WHERE EXISTS "
                 "(SELECT 1 FROM {0}.tmp_observations AS tmp WHERE obs.code = tmp.code "
@@ -390,6 +394,7 @@ class ClassEventObsDialog(QDialog):
         if self.cur_station:
             self.fill_tab_values(self.cur_station, self.cur_var)
             self.ui.Obs_pages.setCurrentIndex(1)
+            print(self.cur_station, self.cur_var)
             self.graph_edit.init_graph([self.cur_station, self.cur_var])
 
     def delete_station(self):
@@ -471,34 +476,41 @@ class ClassEventObsDialog(QDialog):
         # modificaito liste page 1
         # change de page
         if self.ui.tab_values.model().rowCount() > 0:
-            name_station = str(self.ui.txt_cur_station.text())
+            name_stat = str(self.ui.txt_cur_station.text())
             name_var = str(self.ui.txt_cur_var.text())
             if self.cur_station == "":
                 self.mgis.add_info(
                     "Addition of {0} Observations for {1}".format(name_var,
-                                                                  name_station), dbg=True)
+                                                                  name_stat), dbg=True)
             else:
                 self.mgis.add_info(
                     "Editing of {0} Observations for {1}".format(name_var,
-                                                                 name_station), dbg=True)
+                                                                 name_stat), dbg=True)
                 self.mdb.execute(
                     "DELETE FROM {0}.observations WHERE code = '{1}' AND type = '{2}'".format(
                         self.mdb.SCHEMA,
-                        name_station, name_var))
+                        name_stat, name_var))
 
             recs = []
+            d_rec= {'date':[],'val':[]}
             for r in range(self.ui.tab_values.model().rowCount()):
-                recs.append([name_station,
-                             self.ui.tab_values.model().item(r, 0).data(
-                                 0).toPyDateTime(),
-                             name_var,
-                             self.ui.tab_values.model().item(r, 2).data(0),
-                             self.ui.tab_values.model().item(r, 1).data(0)])
+                if (name_stat,name_var) in d_rec.keys():
+                    d_rec[(name_stat,name_var)] = {'date':[],'val':[], 'comt':[]}
+                d_rec[(name_stat, name_var)]['date'].append(self.ui.tab_values.model().item(r, 0).data(
+                                 0).toPyDateTime())
+                d_rec[(name_stat, name_var)]['val'].append(self.ui.tab_values.model().item(r, 1).data(0))
+                d_rec[(name_stat, name_var)]['com'].append(self.ui.tab_values.model().item(r, 2).data(0))
+            recs = []
+            for (name_stat, name_var), v in d_rec.items():
+                recs.append([name_stat, name_var,
+                               "{" + ','.join(str(i) for i in v['date']) + "}",
+                               "{" + ','.join(str(i) for i in v['val']) + "}",
+                                "{" + ','.join(str(i) for i in v['com']) + "}"])
             self.mdb.run_query(
-                "INSERT INTO {0}.observations (code, date, type, comment, valeur) VALUES (%s, %s, %s, %s, %s)".format(
+                "INSERT INTO {0}.observations (code,type,  date, valeur, comment) VALUES (%s, %s, %s, %s, %s)".format(
                     self.mdb.SCHEMA), many=True, list_many=recs)
 
-            self.fill_lst_stations(name_station)
+            self.fill_lst_stations(name_stat)
             self.cb_var.setCurrentText(name_var)
             self.ui.Obs_pages.setCurrentIndex(0)
             self.graph_edit.init_graph(None)
