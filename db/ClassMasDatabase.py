@@ -1806,17 +1806,33 @@ $BODY$
 
         return namesh
 
-    def vacuum(self, lst_table):
+    def vacuum(self, lst_table=[], anal=False, full=False):
+        """
+        Run the sql command "VACUUM"
+        :param lst_table: table list if empty then on database
+        :param anal: run VACUUM ANALYSE (useless if full=True)
+        :param full: run VACUUM FULL
+        :return:
+        """
         old_isolation_level = self.con.isolation_level
         self.con.set_isolation_level(0)
-        # query = "VACUUM FULL"
-        query = ''
-        for tbl in lst_table:
-            query = 'VACUUM {0}.{1};\n'.format(self.SCHEMA, tbl)
         cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute(query)
+        sql_add = ''
+        if anal :
+            sql_add = 'ANALYSE'
+        if full:
+            sql_add = 'FULL' # recreer table peut être lourd
+
+        if len(lst_table) >0 :
+            for tbl in lst_table:
+                query = 'VACUUM {2} {0}.{1};\n'.format(self.SCHEMA, tbl, sql_add)
+                cur.execute(query) # obliger dans boucle si full
+        else:
+            query = 'VACUUM {2} ;\n'.format(sql_add)
+            cur.execute(query)
         self.con.set_isolation_level(old_isolation_level)
         self.con.commit()
+
 
     def planim_select(self):
         sql = \

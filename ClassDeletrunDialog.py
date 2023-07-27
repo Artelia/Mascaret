@@ -174,13 +174,6 @@ class ClassDeletrunDialog(QDialog):
                                                                  ",".join(
                                                                      scenarios))
                 self.mdb.delete("runs", sql)
-                # old si existe
-                if "results_old" in self.lst_tab:
-                    sql = "DELETE  FROM {0}.results_old " \
-                          "where id_runs not in (SELECT id FROM {0}.runs);"
-                    self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-                    self.mdb.vacuum(["results_old"])
-
                 self.delete_useless_data()
                 self.mgis.add_info(
                     "Deletion of scenarii is done", dbg=True)
@@ -217,8 +210,13 @@ class ClassDeletrunDialog(QDialog):
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
 
         lst_tables = ["results_sect", "runs_graph",
-                      "results_basin", "results_links",
                       "results_var", "runs_plani",
-                      "runs", ]
+                      'results_by_pk',"runs"]
 
-        self.mdb.vacuum(lst_tables)
+        # full=True (strong gain to size data and heavy in time
+        #               in function the remaining data)
+        #       If you empty all the results, do a vacuum full
+        # anal =  True (low gain to size data and time
+        #               between full and empty)
+        # empty (no gain to size data, not much time)
+        self.mdb.vacuum(lst_tables, full=True)
