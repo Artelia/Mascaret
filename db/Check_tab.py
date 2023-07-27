@@ -1567,8 +1567,9 @@ $BODY$;
             self.mgis.add_info("Error update_fct_calc_abs: {}".format(str(e)))
             return False
         # update executable
-
-        self.mgis.download_bin()
+        old_vers = self.check_v_masc()
+        if old_vers != '8.4':
+            self.mgis.download_bin()
 
         return True
 
@@ -1591,11 +1592,22 @@ $BODY$;
             else:
                 self.mgis.add_info('Alter the result_sect table - OK', dbg=True)
 
+        # OBSERVATION
+        if valide:
+            sql = ("ALTER TABLE IF EXISTS {0}.observations RENAME TO observations_old;\n"
+                   "ALTER TABLE IF EXISTS {0}.observations_old RENAME CONSTRAINT observations_pkey TO observations_old_pkey;"
+                   )
+            err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            if err:
+                self.mgis.add_info('Alter the observations table - ERROR')
+                valide = False
+            else:
+                self.mgis.add_info('Alter the observations table - OK', dbg=True)
 
         self.mgis.add_info('Create the New results table ', dbg=True)
         if valide:
             test = 'create'
-            tabs = [Maso.results_by_pk, Maso.results_sect]
+            tabs = [Maso.results_by_pk, Maso.results_sect, Maso.observations]
             for tab in tabs:
                 valid_add, _ = self.add_tab(tab)
             if not valid_add:
@@ -1632,6 +1644,19 @@ $BODY$;
             else:
                 self.mgis.add_info('Fill the New results section table - OK', dbg=True)
         if valide:
+            test = 'fill_obs'
+            self.mgis.add_info('Fill the New observations table', dbg=True)
+            sql = "DELETE FROM {0}.observations;\n"
+            sql += """INSERT INTO {0}.observations(code,type, comment, valeur, date)
+                SELECT code, type, comment, array_agg(valeur ORDER BY date), array_agg(date ORDER BY date)
+                FROM {0}.observations_old GROUP BY code,type, comment;"""
+            err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            if err:
+                self.mgis.add_info('Fill the New observations table - ERROR')
+                valide = False
+            else:
+                self.mgis.add_info('Fill the New observations table - OK', dbg=True)
+        if valide:
             test = 'fill_res_view'
             self.mgis.add_info('New View results')
             sql = "DROP VIEW  IF EXISTS {0}.results;\n"
@@ -1655,16 +1680,22 @@ $BODY$;
                         'on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;')
 
                 err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-            elif test in ['fill_res', 'fill_res_sect','create'] :
+            elif test in ['fill_res', 'fill_res_sect','create','fill_obs'] :
                 if test != 'create' :
                     t_sec = self.mdb.drop_table('results_sect', cascade= True)
                     t_pk = self.mdb.drop_table('results_by_pk', cascade=True)
-                if t_sec :
+                    t_obs = self.mdb.drop_table('observations', cascade=True)
+                if t_sec  :
                     sql = 'ALTER TABLE IF EXISTS {0}.results_sect_old RENAME TO results_sect;\n'
                     sql += 'ALTER TABLE IF EXISTS {0}.results_sect RENAME CONSTRAINT ' \
                            'results_sect_old_pkey TO results_sect_pkey;\n'
                     err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-                if not t_pk or not t_sec:
+                if  t_obs :
+                    sql = 'ALTER TABLE IF EXISTS {0}.observations_old RENAME TO observations;\n'
+                    sql += 'ALTER TABLE IF EXISTS {0}.observations RENAME CONSTRAINT ' \
+                           'observations_old_pkey TO observations_pkey;\n'
+                    err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+                if not t_pk or not t_sec or not t_obs:
                     err = True
 
             if err:
@@ -1677,26 +1708,29 @@ $BODY$;
             t_val = self.mdb.drop_table('results_val', cascade=True)
             t_idx = self.mdb.drop_table('results_idx', cascade=True)
             t_sec = self.mdb.drop_table('results_sect_old', cascade= True)
+            t_obs = self.mdb.drop_table('observations_old', cascade=True)
             if not t_val or not t_idx or not t_sec:
-                if not t_val :
+                if not t_val:
                     ntab = 'results_val'
-                elif not t_idx :
+                elif not t_idx:
                     ntab = 'results_idx'
                 elif not t_sec:
                     ntab = 'results_sect_old'
+                elif not t_obs:
+                    ntab = 'observations_old'
                 self.mgis.add_info('Drop the  tables {0} - ERROR'.format(ntab))
                 valide = False
             else:
 
                 self.mgis.add_info('Drop the  tables - OK', dbg=True)
-        # corrige_public fct
-        if valide :
+
+            # corrige_public fct
+        if valide:
             valide = self.up_trigger()
-            if valide :
+            if valide:
                 self.mgis.add_info('Update TRIGGER - OK', dbg=True)
             else:
                 self.mgis.add_info('Update TRIGGER - ERROR', dbg=True)
-
         return  valide
 
     def up_trigger(self, ref = True):
@@ -1790,4 +1824,14 @@ $BODY$;
 
             return False
 
+    def check_v_masc(self):
+        """ check_version mascaret"""
+        file_path = os.path.join(self.mgis.masplugPath,'conf.json')
+        if os.path.isfile(file_path):
+            f = open('data.json', "r")
+            jso = json.loads(f.read())
+            data = jso["masc_version"]
+        else:
+            data = ''
+        return data
 

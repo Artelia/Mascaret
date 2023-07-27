@@ -1051,18 +1051,19 @@ Version : {}
         dlg = ClassUpdatePk(self, self.iface)
         dlg.exec_()
 
+
     def download_bin(self):
         """ download the Mascaret executable """
         # url git
-        url_base = 'https://raw.githubusercontent.com/Artelia/Exe_Mascaret/'
 
+        url_base = 'https://raw.githubusercontent.com/Artelia/Exe_Mascaret/'
         # branch_test
         branch = 'master'
         url_path = posixpath.join(url_base, branch)
-
         cl_load = ClassDownloadMasc(self.masplugPath, url_path, self)
         dico = {'bin': ['mascaret.exe',
-                        'mascaret_linux']}
+                        'mascaret_linux',
+                        'conf.json']}
 
         cl_load.download_dir(dico)
 

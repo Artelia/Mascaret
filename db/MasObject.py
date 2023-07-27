@@ -660,6 +660,8 @@ class basins(MasObject):
 # *******************************************
 # ******************************************
 # *****************************************
+
+
 class observations(MasObject):
     def __init__(self):
         super(observations, self).__init__()
@@ -668,9 +670,9 @@ class observations(MasObject):
         self.attrs = [('id', 'serial NOT NULL'),
                       ('code', 'character(10)'),
                       ('type', 'character(1)'),
-                      ('comment', 'character varying(50)'),
-                      ('valeur', 'float'),
-                      ('date', 'timestamp without time zone'),
+                      ('comment', 'character varying(50)[]'),
+                      ('valeur', 'double precision[]'),
+                      ('date', ' timestamp without time zone[]'),
                       ('CONSTRAINT cle_obs ', 'PRIMARY KEY (id)')]
 
     def pg_create_table(self):
@@ -2128,6 +2130,27 @@ class results_val(MasObject):
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS results_val_idRunTPk " \
                "ON {0}.results_val(idRunTPk, var);".format(self.schema)
+        qry += '\n'
+        return qry
+
+class observations_old(MasObject):
+    def __init__(self):
+        super(observations_old, self).__init__()
+        self.order = 93
+        self.geom_type = None
+        self.attrs = [('id', 'serial NOT NULL'),
+                      ('code', 'character(10)'),
+                      ('type', 'character(1)'),
+                      ('comment', 'character varying(50)'),
+                      ('valeur', 'float'),
+                      ('date', 'timestamp without time zone'),
+                      ('CONSTRAINT cle_obs_old ', 'PRIMARY KEY (id)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += "CREATE INDEX IF NOT EXISTS observations_old_code_type " \
+               "ON {0}.observations_old(code, type);".format(self.schema)
         qry += '\n'
         return qry
 # *****************************************
