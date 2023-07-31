@@ -1104,17 +1104,18 @@ class ScoreParamWidget(QWidget):
         lst_var = ['H', 'Q']
         dict_model = self.model[id_run]
         for gg in lst_var:
-            condition = """code = '{0}'
-                                  AND date>='{1}'
-                                  AND date<='{2}'
-                                  AND type='{3}'
-                                  AND valeur > -999.9""".format(
-                code, dict_model['init_time'],
-                dict_model['final_time'], gg)
-            tmp_dict = self.mdb.select("observations", condition, "date",
-                                       list_var=['date', 'valeur'],
-                                       verbose=False)
+            sql_query =  ("SELECT date, valeur FROM ("
+                          "SELECT UNNEST(date) as date, "
+                          "UNNEST(valeur) as valeur, "
+                          "code, type "
+                          "FROM {4}.observations WHERE "
+                          "code = '{0}' AND type='{3}') t WHERE "
+                          "date>='{1}' AND date<='{2}' AND valeur > -999.9 "
+                          "ORDER BY date".format(code, dict_model['init_time'],
+                                    dict_model['final_time'], gg, self.mdb.SCHEMA))
 
+            tmp_dict = self.mdb.query_todico(sql_query, verbose=False)
+            print(tmp_dict)
             if self.obs[code]['zero'] is None:
                 code_zero = 0
             else:
@@ -1237,7 +1238,8 @@ class ScoreParamWidget(QWidget):
         """
         self.obs = {}
 
-        where = "active AND code IN (SELECT DISTINCT code FROM {0}.observations " \
+        where = "active AND code IN (SELECT DISTINCT code FROM (" \
+                "SELECT UNNEST(date)as date, code FROM {0}.observations) t " \
                 " WHERE date>='{1}' AND date<='{2}') " \
                 "AND (name IN (SELECT DISTINCT name  FROM {0}.profiles) " \
                 "OR abscissa IN (SELECT DISTINCT abscissa " \

@@ -1359,18 +1359,20 @@ class ClassMascaret:
                 if not delta:
                     delta = '0'
                 dt = datetime.timedelta(hours=int(delta))
-                condition = """code ='{0}'
-                            AND type = '{1}'
-                            AND date >= '{2:%Y-%m-%d %H:%M}' 
-                            AND date <= '{3:%Y-%m-%d %H:%M}'
-                            """.format(cd_hydro,
+                sql_tab = ("SELECT * FROM "
+                                "(SELECT code,type, UNNEST(date)as date, "
+                           "UNNEST(valeur)as valeur "
+                           "FROM {0}.observations "
+                                "WHERE code='{1}' and type='{2}') t "
+                           "WHERE date >= '{3:%Y-%m-%d %H:%M}' "
+                           "AND date <= '{4:%Y-%m-%d %H:%M}' "
+                            "ORDER BY date ".format(self.mdb.SCHEMA,
+                                      cd_hydro,
                                        type,
                                        date_debut + dt,
-                                       date_fin + dt)
+                                       date_fin + dt))
+                obs[cd_hydro] =  self.mdb.query_todico(sql_tab)
 
-                obs[cd_hydro] = self.mdb.select('observations',
-                                                condition,
-                                                'code, date')
 
                 if not liste_date:
                     # liste_date = map(lambda x: x - dt, obs[cd_hydro]['date'])
@@ -2876,8 +2878,6 @@ class ClassMascaret:
         :param casier: if basins are actived
         :return:
         """
-        import time
-        t1 = time.time()
         nom_fich = os.path.join(self.dossierFileMasc, base_namefile + '.opt')
         # if self.mgis.DEBUG:
         self.mgis.add_info("Load data ....")
@@ -2943,17 +2943,12 @@ class ClassMascaret:
                 type_res = 'tracer_{}'.format(self.wq.cur_wq_mod)
 
                 val = self.new_read_opt(nom_fich_tra, type_res, init_col)
-                key_val_opt.remove('TIME')
-                key_val_opt.remove('PK')
-                val_key = list(val.keys())
-                for key in val_key:
-                    if key in key_val_opt:
-                        del val[key]
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
+                del val
         if self.cond_api:
             self.stock_res_api(self.save_res_struct[0], self.save_res_struct[1])
-        print(id_run,' temps execution ', time.time() - t1)
+
     def save_new_results(self, val, id_run):
         """
         Save values in results table
@@ -3046,7 +3041,6 @@ class ClassMascaret:
             value = self.mdb.select("results_sect",
                                     "id_runs = {}".format(id_run), 'pk',
                                     ['pk', 'branch', 'section'])
-            print(value['branch'])
             result['X'] = []
             result["section"] = []
             result["branche"] = []

@@ -312,25 +312,21 @@ class GraphBCObs(QWidget):
 
                 dt = datetime.timedelta(hours=int(delta))
                 if self.cur_event:
-                    condition = """code ='{0}'
-                                AND type = '{1}'
-                                AND date >= '{2:%Y-%m-%d %H:%M}'
-                                AND date <= '{3:%Y-%m-%d %H:%M}'
-                                """.format(cd_hydro,
+                    sql_query = ("SELECT id, date, valeur FROM ("
+                                 "SELECT UNNEST(valeur) as valeur , "
+                                    "UNNEST(date) as date , code, type WHERE "
+                                    "code = '{0}' AND AND type='{3}') t WHERE "
+                                 "date>='{1}' AND date<='{2}' AND valeur > -999.9 "
+                                 "ORDER BY code, date".format(cd_hydro,
                                            type,
-                                           self.events[self.cur_event][
-                                                                               'starttime'] + dt,
-                                           self.events[self.cur_event][
-                                                                               'endtime'] + dt)
+                                           self.events[self.cur_event]['starttime'] + dt,
+                                           self.events[self.cur_event]['endtime'] + dt))
                 else:
-                    condition = """code ='{0}'
-                                  AND type = '{1}'""".format(cd_hydro, type)
-
-                obs[cd_hydro] = self.mdb.select('observations',
-                                                condition,
-                                                'code, date',
-                                                list_var=['id', 'valeur',
-                                                          'date'])
+                    sql_query = """SELECT  id, UNNEST(date) as date, 
+                                UNNEST(valeur) as valeur  FROM  {2}.observations 
+                                WHERE code ='{0}'AND type = '{1}'
+                                ORDER BY code, date;""".format(cd_hydro, type, self.mdb.SCHEMA)
+                obs[cd_hydro] = self.mdb.query_todico(sql_query, verbose=False)
 
                 if not liste_date:
                     liste_date = [x - dt for x in obs[cd_hydro]['date']]
