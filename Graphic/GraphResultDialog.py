@@ -670,7 +670,6 @@ class GraphResultDialog(QWidget):
                                     "axe": param["axe"],
                                     "date_min": dict_pk_obs[(pk, var)]["min"],
                                     "date_max": dict_pk_obs[(pk, var)]["max"]}
-
         if not dict_obs:
             self.disable_score()
         else:
@@ -678,13 +677,18 @@ class GraphResultDialog(QWidget):
 
         self.lst_obs.clear()
         if x_var_ == 'date':
+            if_val = False
             for (id_obs, var), param_obs in dict_obs.items():
-                condition = """code = '{0}' AND date>='{1}' AND date<='{2}' AND type='{3}' 
-                AND valeur > -999.9""".format(id_obs, param_obs["date_min"],
-                                              param_obs["date_max"], var)
-                obs_graph = self.mdb.select("observations", condition, "date")
+                sql_query = ("SELECT date, valeur FROM (SELECT code,type, UNNEST(date) as date, "
+                             "UNNEST(valeur) as valeur FROM {4}.observations "
+                             "WHERE code = '{0}' AND type='{3}') t "
+                             " WHERE date>='{1}' AND date<='{2}' AND valeur > -999.9 "
+                             "ORDER BY date".format(id_obs, param_obs["date_min"],
+                                       param_obs["date_max"], var, self.mdb.SCHEMA))
+                obs_graph = self.mdb.query_todico(sql_query)
 
                 if len(obs_graph["valeur"]) != 0:
+                    if_val = True
                     self.lst_obs[(obs, var)] = param_obs
                     tmp_data = dict()
                     tmp_data["name"] = "Obs {0} - {1}".format(obs, var)
@@ -699,6 +703,8 @@ class GraphResultDialog(QWidget):
                     else:
                         tmp_data[var] = obs_graph['valeur']
                     self.cur_data.append(tmp_data)
+        if not if_val :
+            self.disable_score()
 
     def score(self, dict_obs):
         """

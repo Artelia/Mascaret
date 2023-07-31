@@ -1648,8 +1648,9 @@ $BODY$;
             self.mgis.add_info('Fill the New observations table', dbg=True)
             sql = "DELETE FROM {0}.observations;\n"
             sql += """INSERT INTO {0}.observations(code,type, comment, valeur, date)
-                SELECT code, type, comment, array_agg(valeur ORDER BY date), array_agg(date ORDER BY date)
-                FROM {0}.observations_old GROUP BY code,type, comment;"""
+                SELECT code, type,  array_agg(comment ORDER BY date), array_agg(valeur ORDER BY date), 
+                array_agg(date ORDER BY date)
+                FROM {0}.observations_old GROUP BY code,type;"""
             err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
             if err:
                 self.mgis.add_info('Fill the New observations table - ERROR')
@@ -1756,19 +1757,7 @@ $BODY$;
                       pg_namespace n ON p.pronamespace = n.oid
                   where
                       n.nspname = 'public'"""
-            (results, namCol) = self.mdb.run_query(sql, fetch=True, namvar=True)
-            if results is None or namCol is None:
-                # self.mgis.add_info("error : ")
-                # self.mgis.add_info(sql)
-                return None
-            cols = [col[0] for col in namCol]
-            dico = {col: [] for col in cols}
-            for row in results:
-                for i, val in enumerate(row):
-                    try:
-                        dico[cols[i]].append(val.strip())
-                    except Exception:
-                        dico[cols[i]].append(val)
+            dico = self.mdb.query_todico(sql)
             tabs_sql = {'flood_marks': {'obj': Maso.flood_marks,
                                         'fct': ['pg_calcul_abscisse_flood',
                                                 'pg_clear_tab']},

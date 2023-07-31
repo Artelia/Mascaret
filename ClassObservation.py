@@ -99,14 +99,14 @@ class ClassEventObsDialog(QDialog):
         self.ui.tab_stations.setColumnWidth(2, 10)
         self.ui.tab_stations.selectionModel().selectionChanged.connect(
             self.station_changed)
-        #TODO
+
         sql = "SELECT DISTINCT sta.code, not cnt_h isNull as h, not cnt_q isNull as q " \
               "FROM ({0}.observations as sta LEFT JOIN (SELECT code, count(*) as cnt_h FROM {0}.observations " \
               "WHERE type = 'H' GROUP BY code) as sta_h ON sta.code = sta_h.code) " \
               "LEFT JOIN (SELECT code, count(*) as cnt_q FROM {0}.observations " \
               "WHERE type = 'Q' GROUP BY code) as sta_q ON sta.code = sta_q.code " \
               "ORDER BY sta.code".format(self.mdb.SCHEMA)
-        print(sql)
+
         rows = self.mdb.run_query(sql, fetch=True)
 
         for i, row in enumerate(rows):
@@ -222,7 +222,7 @@ class ClassEventObsDialog(QDialog):
 
         if self.cur_station:
             sql = ("SELECT UNNEST(date) as date, "
-                   "UNNEST(valeur), comment "
+                   "UNNEST(valeur) as valeur, UNNEST(comment) as comment "
                    "FROM {0}.observations "
                    "WHERE code = '{1}' AND type = '{2}' " 
                   "ORDER BY date".format(self.mdb.SCHEMA, cur_station, cur_var))
@@ -394,7 +394,6 @@ class ClassEventObsDialog(QDialog):
         if self.cur_station:
             self.fill_tab_values(self.cur_station, self.cur_var)
             self.ui.Obs_pages.setCurrentIndex(1)
-            print(self.cur_station, self.cur_var)
             self.graph_edit.init_graph([self.cur_station, self.cur_var])
 
     def delete_station(self):
@@ -490,22 +489,23 @@ class ClassEventObsDialog(QDialog):
                     "DELETE FROM {0}.observations WHERE code = '{1}' AND type = '{2}'".format(
                         self.mdb.SCHEMA,
                         name_stat, name_var))
-
-            recs = []
-            d_rec= {'date':[],'val':[]}
+            d_rec= {}
             for r in range(self.ui.tab_values.model().rowCount()):
-                if (name_stat,name_var) in d_rec.keys():
-                    d_rec[(name_stat,name_var)] = {'date':[],'val':[], 'comt':[]}
+                if (name_stat,name_var)  not in d_rec.keys():
+                    d_rec[(name_stat,name_var)] = {'date':[],'val':[], 'com':[]}
                 d_rec[(name_stat, name_var)]['date'].append(self.ui.tab_values.model().item(r, 0).data(
                                  0).toPyDateTime())
                 d_rec[(name_stat, name_var)]['val'].append(self.ui.tab_values.model().item(r, 1).data(0))
-                d_rec[(name_stat, name_var)]['com'].append(self.ui.tab_values.model().item(r, 2).data(0))
+                com = self.ui.tab_values.model().item(r, 2).data(0)
+                if com == '':
+                    com = "''"
+                d_rec[(name_stat, name_var)]['com'].append(com)
             recs = []
-            for (name_stat, name_var), v in d_rec.items():
+            for (name_stat, name_var), var in d_rec.items():
                 recs.append([name_stat, name_var,
-                               "{" + ','.join(str(i) for i in v['date']) + "}",
-                               "{" + ','.join(str(i) for i in v['val']) + "}",
-                                "{" + ','.join(str(i) for i in v['com']) + "}"])
+                               "{" + ','.join(str(i) for i in var['date']) + "}",
+                               "{" + ','.join(str(i) for i in var['val']) + "}",
+                                "{" + ','.join(str(i) for i in var['com']) + "}"])
             self.mdb.run_query(
                 "INSERT INTO {0}.observations (code,type,  date, valeur, comment) VALUES (%s, %s, %s, %s, %s)".format(
                     self.mdb.SCHEMA), many=True, list_many=recs)
@@ -645,7 +645,7 @@ class GraphObservation(GraphCommon):
         lst = [[], []]
         if config is not None:
             self.leg.get_texts()[0].set_text(config[1])
-            sql = "SELECT date, valeur FROM {0}.observations " \
+            sql = "SELECT UNNEST(date), UNNEST(valeur) FROM {0}.observations " \
                   "WHERE code = '{1}' and type = '{2}' " \
                   "ORDER BY date".format(self.mdb.SCHEMA, config[0], config[1])
             rows = self.mdb.run_query(sql, fetch=True)

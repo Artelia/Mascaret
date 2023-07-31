@@ -946,6 +946,33 @@ $BODY$
 
         return liste_x
 
+    def query_todico(self, sql_query,verbose= False):
+        """
+        Query Result to dictionnary
+        :param  sql_query : SQL query
+        :param verbose: (bool) display sql commande
+        :return: dict
+        """
+        if verbose:
+            self.mgis.add_info(sql_query)
+        (results, namCol) = self.run_query(sql_query, fetch=True, namvar=True)
+        if results is None or namCol is None:
+            self.mgis.add_info("error : ")
+            self.mgis.add_info(sql_query)
+            return None
+        cols = [col[0] for col in namCol]
+        dico = {}
+        for col in cols:
+            dico[col] = []
+
+        for row in results:
+            for i, val in enumerate(row):
+                try:
+                    dico[cols[i]].append(val.strip())
+                except Exception:
+                    dico[cols[i]].append(val)
+        return dico
+
     def select(self, table, where="", order="", list_var=None, verbose=False):
         """
         Select variables of table
@@ -966,28 +993,8 @@ $BODY$
             lvar = '*'
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        if verbose:
-            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
-        (results, namCol) = self.run_query(
-            sql.format(self.SCHEMA, table, where, order, lvar), fetch=True,
-            namvar=True)
-        if results is None or namCol is None:
-            self.mgis.add_info("error : ")
-            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
-            return None
-        cols = [col[0] for col in namCol]
-        dico = {}
-        for col in cols:
-            dico[col] = []
-
-        for row in results:
-            for i, val in enumerate(row):
-                try:
-                    dico[cols[i]].append(val.strip())
-                except Exception:
-                    dico[cols[i]].append(val)
+        dico = self.query_todico(sql.format(self.SCHEMA, table, where, order, lvar) , verbose)
         return dico
-
     #
     def select_one(self, table, where="", order="", list_var=None, verbose=False):
         """
