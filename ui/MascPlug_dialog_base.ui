@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>902</width>
-    <height>738</height>
+    <width>906</width>
+    <height>747</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -72,7 +72,7 @@
      </layout>
     </item>
     <item row="0" column="0">
-     <widget class="QTextEdit" name="textEdit">
+     <widget class="QTextEdit" name="text_edit">
       <property name="minimumSize">
        <size>
         <width>200</width>
@@ -176,8 +176,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>902</width>
-     <height>26</height>
+     <width>906</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -794,7 +794,7 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>textEdit</tabstop>
+  <tabstop>text_edit</tabstop>
  </tabstops>
  <resources>
   <include location="../resources.qrc"/>

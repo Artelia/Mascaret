@@ -1263,9 +1263,7 @@ DECLARE
    endb character varying(30);
    BEGIN
 -- Disable trigger
-   EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs DISABLE TRIGGER branchs_chstate_active';
-   EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles DISABLE TRIGGER profiles_calcul_abscisse';
-   EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs DISABLE TRIGGER all_up_abs_branchs';
+   EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs DISABLE TRIGGER ALL';
 -- creation new table
    FOR rec IN
    EXECUTE 'SELECT DISTINCT branch as id_b  FROM  '||  quote_ident(source_schema) ||'.branchs_old'
@@ -1293,14 +1291,12 @@ DECLARE
             SET planim=(SELECT planim FROM ' ||  quote_ident(source_schema) ||'.branchs_old AS b 
                         WHERE ST_INTERSECTS(p.geom, b.geom) LIMIT 1)';
 -- Enable trigger
-    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs ENABLE TRIGGER branchs_chstate_active';
-    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.profiles ENABLE TRIGGER profiles_calcul_abscisse';
-    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs  ENABLE TRIGGER all_up_abs_branchs';
-    
+    EXECUTE 'ALTER TABLE ' ||  quote_ident(source_schema) ||'.branchs ENABLE TRIGGER ALL';    
     RETURN;
 END;
 $BODY$;
             """.format(self.mdb.SCHEMA)
+
             err = self.mdb.run_query(sql)
             if err:
                 self.mgis.add_info('Create insert_new_branch - ERROR')
@@ -1810,14 +1806,13 @@ $BODY$;
                         self.mdb.run_query(sql,be_quiet= True)
             return True
         except Exception:
-
             return False
 
     def check_v_masc(self):
         """ check_version mascaret"""
-        file_path = os.path.join(self.mgis.masplugPath,'conf.json')
+        file_path = os.path.join(self.mgis.masplugPath,'bin','conf.json')
         if os.path.isfile(file_path):
-            f = open('data.json', "r")
+            f = open( file_path, "r")
             jso = json.loads(f.read())
             data = jso["masc_version"]
         else:
