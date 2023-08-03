@@ -2130,8 +2130,8 @@ class ClassMascaret:
                                       'v': dico_res[id_config]['ZSTR']}
         for (pk, var), v in d_res.items():
             values.append([id_run, pk, var,
-                           "{" + ','.join(str(i) for i in v['t']) + "}",
-                           "{" + ','.join(str(i) for i in v['v']) + "}"])
+                           "{" + ','.join(str(i_t) for i_t in v['t']) + "}",
+                           "{" + ','.join(str(i_v) for i_v in v['v']) + "}"])
         if len(values) > 0:
             self.mdb.run_query(
                 "INSERT INTO {}.results_by_pk (id_runs, pknum, var, time, val) ".format(self.mdb.SCHEMA) +
