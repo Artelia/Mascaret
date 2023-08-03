@@ -155,8 +155,8 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionOptions.triggered.connect(self.options)
         self.ui.actionRestore_Default_Options.triggered.connect(
             lambda: self.read_settings(defaults=True))
-
-        self.ui.textEdit.append(
+        self.text_edit.textChanged.connect(self.scroll_to_bottom)
+        self.ui.text_edit.append(
             '----------------------------------------------------------------------------')
         # initialise
 
@@ -259,9 +259,9 @@ class MascPlugDialog(QMainWindow):
     def add_info(self, text, dbg=False):
         if dbg:
             if self.DEBUG:
-                self.ui.textEdit.append(text)
+                self.ui.text_edit.append(text)
         else:
-            self.ui.textEdit.append(text)
+            self.ui.text_edit.append(text)
 
     def update_default_crs(self):
         self.crs = self.ui.crsWidget.crs()
@@ -1160,3 +1160,8 @@ Version : {}
 
         self.mdb.update('profiles', tab, var="gid")
         self.add_info('The all active profiles were changed.')
+
+
+    def scroll_to_bottom(self):
+        """Set the scrollbar value to the maximum to keep it at the bottom"""
+        self.text_edit.verticalScrollBar().setValue(self.text_edit.verticalScrollBar().maximum())
