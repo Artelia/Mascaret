@@ -177,7 +177,7 @@
      <x>0</x>
      <y>0</y>
      <width>906</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -226,18 +226,13 @@
     <property name="title">
      <string>Database</string>
     </property>
-    <widget class="QMenu" name="menuUpate_table">
-     <property name="title">
-      <string>Update Table</string>
-     </property>
-    </widget>
     <addaction name="actionRefresh_Database"/>
     <addaction name="action_update_bin"/>
     <addaction name="separator"/>
     <addaction name="actionCreate_New_Model"/>
     <addaction name="actionLoad_Model"/>
     <addaction name="actionDeleteModel"/>
-    <addaction name="menuUpate_table"/>
+    <addaction name="action_table_reconstruction_vacuum_full"/>
     <addaction name="separator"/>
     <addaction name="actionExport_Model"/>
     <addaction name="actionImport_Model"/>
@@ -782,6 +777,11 @@
   <action name="actionFilter_All_Profiles">
    <property name="text">
     <string>Filter All Profiles</string>
+   </property>
+  </action>
+  <action name="action_table_reconstruction_vacuum_full">
+   <property name="text">
+    <string>Table reconstruction (Vacuum Full)</string>
    </property>
   </action>
  </widget>

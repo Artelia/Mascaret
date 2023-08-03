@@ -219,4 +219,4 @@ class ClassDeletrunDialog(QDialog):
         # anal =  True (low gain to size data and time
         #               between full and empty)
         # empty (no gain to size data, not much time)
-        self.mdb.vacuum(lst_tables, full=True)
+        self.mdb.vacuum(lst_tables)

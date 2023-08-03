@@ -144,6 +144,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionRefresh_Database.triggered.connect(self.conn_changed)
         self.ui.actionCreate_New_Model.triggered.connect(self.db_create_model)
         self.ui.actionDeleteModel.triggered.connect(self.db_delete_model)
+        self.ui.action_table_reconstruction_vacuum_full.triggered.connect(self.schema_vacuum)
         # #mascaret
         self.ui.actionLoad_Model.triggered.connect(self.db_load)
 
@@ -248,13 +249,11 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(True)
+        self.ui.actionTest.setVisible(False)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(
             self.import_old_model_dgl)
-        # TODO DELETE AFTER
-        self.ui.menuUpate_table.menuAction().setVisible(False)
 
     def add_info(self, text, dbg=False):
         if dbg:
@@ -1165,3 +1164,18 @@ Version : {}
     def scroll_to_bottom(self):
         """Set the scrollbar value to the maximum to keep it at the bottom"""
         self.text_edit.verticalScrollBar().setValue(self.text_edit.verticalScrollBar().maximum())
+
+    def schema_vacuum(self):
+        """ DO a vacuum full on all tables"""
+        if self.mdb.SCHEMA :
+            lst_table = self.mdb.list_tables(self.mdb.SCHEMA)
+            ok = self.box.yes_no_q("This action should free some memory space \n"
+                                   "but it may take several minutes.\n"
+                                   "Do you want to do it?")
+            if not ok:
+                self.add_info('The vacuum is cancel',dbg=True)
+                return
+            self.mdb.vacuum(lst_table, full=True)
+
+        else:
+            self.add_info('No selected schema' )
