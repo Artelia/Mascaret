@@ -1405,6 +1405,7 @@ $BODY$
                 if len(err) > 0:
                     self.mgis.add_info(str(err))
                     # self.mgis.add_info("{0}".format(err.code('utf-8')))
+
                     return False
                 return True
             else:
