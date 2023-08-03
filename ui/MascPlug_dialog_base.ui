@@ -781,7 +781,7 @@
   </action>
   <action name="action_table_reconstruction_vacuum_full">
    <property name="text">
-    <string>Table reconstruction (Vacuum Full)</string>
+    <string>Rebuild Table (Vacuum Full)</string>
    </property>
   </action>
  </widget>

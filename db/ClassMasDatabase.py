@@ -292,7 +292,7 @@ class ClassMasDatabase(object):
 
             self.mgis.add_info(
                 '{0} already exists inside MasPlug registry.'.format(key), dbg=True)
-                #
+            #
 
     def register_existing(self, hydro_module, schema=None, srid=None):
         """
@@ -353,7 +353,7 @@ class ClassMasDatabase(object):
                          QgsProject.instance().mapLayers().values()]
         self.mgis.add_info(
             'Layers sources:\n    {0}'.format('\n    '.join(self.uris)), dbg=True)
-            # *****************************************************************************
+        # *****************************************************************************
 
     def make_vlayer(self, obj):
         """
@@ -495,7 +495,7 @@ class ClassMasDatabase(object):
                       Maso.runs_graph,
                       Maso.results_var,
                       Maso.results_sect,
-                      Maso.runs_plani, # ?
+                      Maso.runs_plani,  # ?
                       # new results V2
                       Maso.results_by_pk,
                       # hydro laws
@@ -508,11 +508,11 @@ class ClassMasDatabase(object):
                 # try:
                 obj = self.process_masobject(masobj_class, 'pg_create_table')
                 self.mgis.add_info('  {0} OK'.format(obj.name), dbg=True)
-                    # except:
-                    #     self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
-                    # ajout variable fichier parameter
-                    # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV HEADER;"""
-                    # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV;"""
+                # except:
+                #     self.mgis.add_info('failure!<br>{0}'.format(masobj_class))
+                # ajout variable fichier parameter
+                # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV HEADER;"""
+                # req = """COPY {0}.parametres FROM '{1}' DELIMITER ',' CSV;"""
             fichparam = os.path.join(dossier, "parametres.csv")
             # self.run_query(req.format(self.SCHEMA, fichparam))
             liste_value = []
@@ -548,9 +548,9 @@ class ClassMasDatabase(object):
 
             # create view
             sql = ('CREATE VIEW {0}.results AS SELECT results_by_pk.id_runs, '
-                    'UNNEST(results_by_pk."time") as time, '
-                    'results_by_pk.pknum, results_by_pk.var, '
-                    'UNNEST(results_by_pk.val) as val FROM {0}.results_by_pk;')
+                   'UNNEST(results_by_pk."time") as time, '
+                   'results_by_pk.pknum, results_by_pk.var, '
+                   'UNNEST(results_by_pk.val) as val FROM {0}.results_by_pk;')
             sql = sql.format(self.SCHEMA)
             self.run_query(sql)
             self.mgis.add_info('Model "{0}" completed'.format(self.SCHEMA))
@@ -794,11 +794,11 @@ class ClassMasDatabase(object):
             table_name (str): Name of the table which will be deleted.
         """
         casc = ''
-        if cascade is True :
+        if cascade is True:
             casc = 'CASCADE'
         qry = 'DROP TABLE IF EXISTS {0}.{1} {2};'
         qry = qry.format(self.SCHEMA, table_name, casc)
-        if verbose :
+        if verbose:
             self.mgis.add_info(qry)
         if self.run_query(qry) is None:
             return False
@@ -946,7 +946,7 @@ $BODY$
 
         return liste_x
 
-    def query_todico(self, sql_query,verbose= False):
+    def query_todico(self, sql_query, verbose=False):
         """
         Query Result to dictionnary
         :param  sql_query : SQL query
@@ -993,8 +993,9 @@ $BODY$
             lvar = '*'
 
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        dico = self.query_todico(sql.format(self.SCHEMA, table, where, order, lvar) , verbose)
+        dico = self.query_todico(sql.format(self.SCHEMA, table, where, order, lvar), verbose)
         return dico
+
     #
     def select_one(self, table, where="", order="", list_var=None, verbose=False):
         """
@@ -1183,7 +1184,6 @@ $BODY$
             self.mgis.add_info(sql)
         err = self.run_query(sql)
         return err
-
 
     def insert2(self, table, tab, verbose=False):
         """ insert table in tableSQl"""
@@ -1400,7 +1400,7 @@ $BODY$
                                      , stdin=subprocess.PIPE)
                 outs, err = p.communicate()
                 self.mgis.add_info("Import File :{0}".format(file), dbg=True)
-                    # self.mgis.add_info("{0}".format(outs.code('utf-8')))
+                # self.mgis.add_info("{0}".format(outs.code('utf-8')))
                 p.wait()
                 if len(err) > 0:
                     self.mgis.add_info(str(err))
@@ -1825,21 +1825,20 @@ $BODY$
         self.con.set_isolation_level(0)
         cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
         sql_add = ''
-        if anal :
+        if anal:
             sql_add = 'ANALYSE'
         if full:
-            sql_add = 'FULL' # recreer table peut être lourd
+            sql_add = 'FULL'  # recreer table peut être lourd
 
-        if len(lst_table) >0 :
+        if len(lst_table) > 0:
             for tbl in lst_table:
                 query = 'VACUUM {2} {0}.{1};\n'.format(self.SCHEMA, tbl, sql_add)
-                cur.execute(query) # obliger dans boucle si full
+                cur.execute(query)  # obliger dans boucle si full
         else:
             query = 'VACUUM {2} ;\n'.format(sql_add)
             cur.execute(query)
         self.con.set_isolation_level(old_isolation_level)
         self.con.commit()
-
 
     def planim_select(self):
         sql = \
@@ -2113,4 +2112,4 @@ WHERE (num2 != numm1 OR numm1 is NULL)
             if len(results) > 0:
                 for val in results:
                     lst_trigger.append(val[2])
-        return  lst_trigger
+        return lst_trigger

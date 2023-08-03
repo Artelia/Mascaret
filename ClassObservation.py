@@ -28,7 +28,6 @@ from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.uic import *
 from qgis.core import *
-
 from qgis.gui import *
 from qgis.utils import *
 
@@ -81,7 +80,7 @@ class ClassEventObsDialog(QDialog):
         self.ui.cb_var.currentIndexChanged.connect(self.var_changed)
 
         self.ui.tab_stations.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.seld  = SelectDelegate(self)
+        self.seld = SelectDelegate(self)
         self.ui.tab_stations.setItemDelegate(self.seld)
         self.init_ui()
 
@@ -360,10 +359,6 @@ class ClassEventObsDialog(QDialog):
                                 WHERE ref.code = tmp.code  and ref.type =tmp.type 
                                 and ref.date >= tmp.mindate AND date <= tmp.maxdate);
                         """
-
-            # lancement commande
-            # genere table ref
-            print('oooooooooooooooooooooooooooo')
             self.mdb.run_query(sql_tab.format(self.mdb.SCHEMA))
             if typ_s == 'no_overw':
                 self.mdb.run_query(sql_no.format(self.mdb.SCHEMA))
@@ -377,10 +372,6 @@ class ClassEventObsDialog(QDialog):
             else:
                 return
             # integration table observation
-            print('oooooooooooooooooooooooooooo 1')
-            print("DELETE FROM {0}.observations WHERE (code, type) IN "
-                               "(SELECT DISTINCT code,type FROM {0}.tmp_observations);"
-                               "".format(self.mdb.SCHEMA))
             self.mdb.run_query("DELETE FROM {0}.observations WHERE (code, type) IN "
                                "(SELECT DISTINCT code,type FROM {0}.tmp_observations);"
                                "".format(self.mdb.SCHEMA))
@@ -393,13 +384,12 @@ class ClassEventObsDialog(QDialog):
                              array_agg(date ORDER BY date) 
                              FROM {0}.tmp_observations GROUP BY code,type;
                        """
-        print('oooooooooooooooooooooooooooo 2')
+
         self.mdb.run_query(sql_insert.format(self.mdb.SCHEMA))
 
-            # nettoyage table tempo
+        # nettoyage table tempo
         self.mdb.execute(
             "DROP TABLE IF EXISTS {0}.tmp_observations;".format(self.mdb.SCHEMA))
-
 
         self.fill_lst_stations(self.cur_station)
 
@@ -420,7 +410,7 @@ class ClassEventObsDialog(QDialog):
                         for ligne in fichier:
                             temp = ligne.strip().split(';')
                             for i, val in enumerate(temp[1:]):
-                                if val != '' :
+                                if val != '':
                                     if float(val) != -99.99:
                                         rec = list()
                                         rec.append(self.fmt_col(codes[i]))
@@ -450,14 +440,14 @@ class ClassEventObsDialog(QDialog):
         try:
             tmp = pd.DataFrame()
             lst_cols = ['date', 'valeur', 'type', 'code']
-            converters = {col: self.fmt_col for col in lst_cols if col != 'valeur' }
+            converters = {col: self.fmt_col for col in lst_cols if col != 'valeur'}
 
             for file in data_file:
                 if os.path.isfile(file):
                     df_tmp = pd.read_csv(file, sep=';',
                                          names=lst_cols,
                                          na_values=-99.99,
-                                         converters= converters)
+                                         converters=converters)
 
                     df_tmp['comment'] = [self.fmt_col(os.path.splitext(os.path.basename(file))[0])] * df_tmp.count()[0]
                     df_tmp['fichier'] = [os.path.basename(file)] * df_tmp.count()[0]
@@ -543,10 +533,10 @@ class ClassEventObsDialog(QDialog):
         tab = self.ui.tab_stations
         indexes = tab.selectionModel().selectedRows()
         rows = [index.row() for index in indexes]
-        if len(rows)>0 :
+        if len(rows) > 0:
             sup_ind = 0
-            for row in rows :
-                station= tab.model().data(tab.model().index(row-sup_ind, 0))
+            for row in rows:
+                station = tab.model().data(tab.model().index(row - sup_ind, 0))
 
                 if (QMessageBox.question(self, "Observations of Events",
                                          "Delete {} observations ?".format(
@@ -559,7 +549,7 @@ class ClassEventObsDialog(QDialog):
                         "DELETE FROM {0}.observations WHERE code = '{1}'".format(
                             self.mdb.SCHEMA, station))
                     self.fill_lst_stations()
-                    sup_ind +=1
+                    sup_ind += 1
 
     def delete_var_station(self):
         # charger les informations
@@ -713,6 +703,7 @@ class ClassEventObsDialog(QDialog):
         else:
             event.ignore()
 
+
 class SelectDelegate(QStyledItemDelegate):
     def __init__(self, parent):
         super().__init__(parent)
@@ -721,7 +712,7 @@ class SelectDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         # check if selected
         selected = (option.state & QStyle.State_Selected)
-        if bool(selected) and index.row() == self.row :
+        if bool(selected) and index.row() == self.row:
             background_color = QColor(Qt.green)
             text_color = QColor(Qt.black)
             option.palette.setColor(QPalette.Highlight, background_color)

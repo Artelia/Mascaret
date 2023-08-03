@@ -31,7 +31,12 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    5.1.6  : Optimization to import results in database
+    5.1.6  : Added table rebuild option
+             Added multiple delete of the observations
+             Addition of the choice for the method of importing observations
+             Added import in OCTAVE format of observations
+             Optimization to import observations into the database
+             Optimization to import results into the database
              Fixe the bug on the public function in the trigger
     5.1.5  : Correction of the bug to the index management  between basin and links
              Correction of the bug on the culvert type for the links

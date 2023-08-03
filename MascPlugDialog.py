@@ -39,8 +39,8 @@ from .ClassMascaret import ClassMascaret
 from .ClassObservation import ClassEventObsDialog
 from .ClassParameterDialog import ClassParameterDialog
 from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire
-from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .Graphic.FilterDialog import ClassFilterDialog
+from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .HydroLawsDialog import ClassHydroLawsDialog
 from .Structure.MobilSingDialog import ClassMobilSingDialog
 # # structures
@@ -433,14 +433,14 @@ class MascPlugDialog(QMainWindow):
         while cpt != 6:
             cpt += 1
             model_name, ok = QInputDialog.getText(self, 'New Model',
-                                              'New Model name:')
+                                                  'New Model name:')
             if not ok:
                 self.add_info('Creating new model cancelled')
                 return
             if not self.check_newname(model_name.lower(), lst_schema):
                 ok2 = self.box.yes_no_q("The {} model already exists. Change the model name.\n "
-                                       "".format(model_name.lower()))
-                if not ok2 :
+                                        "".format(model_name.lower()))
+                if not ok2:
                     self.add_info('Creating new model cancelled')
                     return
                 if cpt == 6:
@@ -448,7 +448,6 @@ class MascPlugDialog(QMainWindow):
                     return
             else:
                 break
-
 
         self.mdb.SCHEMA = model_name.lower()
         self.mdb.create_model(self.dossier_sql)
@@ -1030,7 +1029,6 @@ Version : {}
         # get_laws
         self.chkt.debug_update_vers_meta(version='5.1.5')
 
-
     def update_ks_mesh_planim(self):
         """ update value of the seleted profiles"""
 
@@ -1049,7 +1047,6 @@ Version : {}
         from .ClassUpdatePk import ClassUpdatePk
         dlg = ClassUpdatePk(self, self.iface)
         dlg.exec_()
-
 
     def download_bin(self):
         """ download the Mascaret executable """
@@ -1124,7 +1121,7 @@ Version : {}
         err = ''
         dlg = ClassFilterDialog(self)
         dlg.exec_()
-        if not dlg.valid :
+        if not dlg.valid:
             self.add_info('The filter is cancel')
             return
         seuil = dlg.seuil
@@ -1135,31 +1132,33 @@ Version : {}
             self.add_info('The filter is cancel')
             return
 
-        result = self.mdb.select('profiles', where="active", list_var=['gid','x','z', 'leftminbed', 'rightminbed', 'leftstock', 'rightstock'], verbose=False)
+        result = self.mdb.select('profiles', where="active",
+                                 list_var=['gid', 'x', 'z', 'leftminbed', 'rightminbed', 'leftstock', 'rightstock'],
+                                 verbose=False)
 
         tab = {}
         compt = 0
-        for gid, x_str, z_str in zip(result['gid'], result['x'],result['z']) :
-            fixe_x = [result[key][compt]  for key in ['leftminbed', 'rightminbed', 'leftstock', 'rightstock'] if result[key][compt]]
+        for gid, x_str, z_str in zip(result['gid'], result['x'], result['z']):
+            fixe_x = [result[key][compt] for key in ['leftminbed', 'rightminbed', 'leftstock', 'rightstock'] if
+                      result[key][compt]]
             pr_x = [float(val) for val in x_str.split()]
             pr_z = [float(val) for val in z_str.split()]
             if meth == 'f_pente':
                 newx, newz, err = filter_pr_fct(pr_x, pr_z, seuil)
             elif meth == 'f_rdp':
-                newx, newz, err = filter_dist_perpendiculaire(pr_x, pr_z, seuil, fixe_x = fixe_x)
+                newx, newz, err = filter_dist_perpendiculaire(pr_x, pr_z, seuil, fixe_x=fixe_x)
             else:
-                newx, newz = [] , []
+                newx, newz = [], []
 
             if err != '':
-                self.add_info('Profile {} : {}'.format(gid,err))
+                self.add_info('Profile {} : {}'.format(gid, err))
             newx_str = ' '.join([str(val) for val in newx])
             newz_str = ' '.join([str(val) for val in newz])
-            tab[gid] = {'x' : newx_str, 'z' : newz_str}
-            compt+=1
+            tab[gid] = {'x': newx_str, 'z': newz_str}
+            compt += 1
 
         self.mdb.update('profiles', tab, var="gid")
         self.add_info('The all active profiles were changed.')
-
 
     def scroll_to_bottom(self):
         """Set the scrollbar value to the maximum to keep it at the bottom"""
@@ -1167,15 +1166,15 @@ Version : {}
 
     def schema_vacuum(self):
         """ DO a vacuum full on all tables"""
-        if self.mdb.SCHEMA :
+        if self.mdb.SCHEMA:
             lst_table = self.mdb.list_tables(self.mdb.SCHEMA)
             ok = self.box.yes_no_q("This action should free some memory space \n"
                                    "but it may take several minutes.\n"
                                    "Do you want to do it?")
             if not ok:
-                self.add_info('The vacuum is cancel',dbg=True)
+                self.add_info('The vacuum is cancel', dbg=True)
                 return
             self.mdb.vacuum(lst_table, full=True)
 
         else:
-            self.add_info('No selected schema' )
+            self.add_info('No selected schema')

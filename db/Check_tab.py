@@ -1498,7 +1498,7 @@ $BODY$;
         """
         self.mgis.add_info('*** Update 5.1.5  ***')
         ok = self.box.yes_no_q("WARNING:\n "
-                               "Please note that this 5.1.5 update automatically \n" 
+                               "Please note that this 5.1.5 update automatically \n"
                                " updates the mascaret executable.\n"
                                "Do you want to continue ?")
         if not ok:
@@ -1533,11 +1533,12 @@ $BODY$;
 
             self.mdb.run_query(sql, many=True, list_many=liste_value)
         # fix error
-        try :
+        try:
             qry = "DROP TRIGGER IF EXISTS all_up_abs_branchs ON {0}.branchs;".format(self.mdb.SCHEMA)
             self.mdb.run_query(qry)
 
-            lst_fct = ["{0}.update_{1}(regclass, regclass)".format(self.mdb.SCHEMA, info) for info in ["abscisse_profil",'abscisse_point']]
+            lst_fct = ["{0}.update_{1}(regclass, regclass)".format(self.mdb.SCHEMA, info) for info in
+                       ["abscisse_profil", 'abscisse_point']]
             lst_fct.append("{0}.up_abs_branch()".format(self.mdb.SCHEMA))
 
             qry = ''
@@ -1547,7 +1548,7 @@ $BODY$;
 
             cl = Maso.class_fct_psql()
             lfct = [cl.pg_all_profil,
-                     cl.pg_all_point,
+                    cl.pg_all_point,
                     cl.pg_up_abs_branch
                     ]
 
@@ -1557,7 +1558,7 @@ $BODY$;
                 qry += '\n'
             clb = Maso.branchs()
             clb.schema = self.mdb.SCHEMA
-            qry +=  clb.pg_all_up_abs_branchs()
+            qry += clb.pg_all_up_abs_branchs()
             self.mdb.run_query(qry)
         except Exception as e:
             self.mgis.add_info("Error update_fct_calc_abs: {}".format(str(e)))
@@ -1616,9 +1617,9 @@ $BODY$;
             test = 'fill_res'
             self.mgis.add_info('Fill the New results table', dbg=True)
             sql = "DELETE FROM {0}.results_by_pk;\n"
-            sql += 'INSERT INTO {0}.results_by_pk (id_runs, pknum, var, "time", val)'\
-            'SELECT id_runs, pknum, var, array_agg("time" ORDER BY "time"), array_agg(val ORDER BY "time")'\
-            'FROM {0}.results GROUP BY id_runs, pknum, var;\n'
+            sql += 'INSERT INTO {0}.results_by_pk (id_runs, pknum, var, "time", val)' \
+                   'SELECT id_runs, pknum, var, array_agg("time" ORDER BY "time"), array_agg(val ORDER BY "time")' \
+                   'FROM {0}.results GROUP BY id_runs, pknum, var;\n'
             err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
             if err:
                 self.mgis.add_info('Fill the New results table - ERROR')
@@ -1670,24 +1671,24 @@ $BODY$;
         # back update
         if not valide:
             self.mgis.add_info('Cancel update')
-            if  test == 'fill_res':
+            if test == 'fill_res':
                 sql = 'DROP VIEW  IF EXISTS {0}.results;\n'
                 sql += ('CREATE VIEW {0}.results AS SELECT id_runs, "time", pknum,  var, val '
                         'FROM {0}.results_idx Inner join  {0}.results_val '
                         'on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;')
 
                 err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-            elif test in ['fill_res', 'fill_res_sect','create','fill_obs'] :
-                if test != 'create' :
-                    t_sec = self.mdb.drop_table('results_sect', cascade= True)
+            elif test in ['fill_res', 'fill_res_sect', 'create', 'fill_obs']:
+                if test != 'create':
+                    t_sec = self.mdb.drop_table('results_sect', cascade=True)
                     t_pk = self.mdb.drop_table('results_by_pk', cascade=True)
                     t_obs = self.mdb.drop_table('observations', cascade=True)
-                if t_sec  :
+                if t_sec:
                     sql = 'ALTER TABLE IF EXISTS {0}.results_sect_old RENAME TO results_sect;\n'
                     sql += 'ALTER TABLE IF EXISTS {0}.results_sect RENAME CONSTRAINT ' \
                            'results_sect_old_pkey TO results_sect_pkey;\n'
                     err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-                if  t_obs :
+                if t_obs:
                     sql = 'ALTER TABLE IF EXISTS {0}.observations_old RENAME TO observations;\n'
                     sql += 'ALTER TABLE IF EXISTS {0}.observations RENAME CONSTRAINT ' \
                            'observations_old_pkey TO observations_pkey;\n'
@@ -1700,11 +1701,11 @@ $BODY$;
             else:
                 self.mgis.add_info('Back the update  - OK')
 
-        if valide :
+        if valide:
             self.mgis.add_info('Drop the  tables: results_val, results_idx', dbg=True)
             t_val = self.mdb.drop_table('results_val', cascade=True)
             t_idx = self.mdb.drop_table('results_idx', cascade=True)
-            t_sec = self.mdb.drop_table('results_sect_old', cascade= True)
+            t_sec = self.mdb.drop_table('results_sect_old', cascade=True)
             t_obs = self.mdb.drop_table('observations_old', cascade=True)
             if not t_val or not t_idx or not t_sec:
                 if not t_val:
@@ -1728,14 +1729,14 @@ $BODY$;
                 self.mgis.add_info('Update TRIGGER - OK', dbg=True)
             else:
                 self.mgis.add_info('Update TRIGGER - ERROR', dbg=True)
-        return  valide
+        return valide
 
-    def up_trigger(self, ref = True):
+    def up_trigger(self, ref=True):
         """
         Update trigger in
         :param ref: True if only current schema , False on the database
         """
-        try :
+        try:
             if ref:
                 ref_schema = self.mdb.SCHEMA
 
@@ -1785,10 +1786,10 @@ $BODY$;
             for ntab, ntrigger in zip(dico['table_name'], dico['trigger_name']):
                 name = ntab.split('.')[1]
                 schema = ntab.split('.')[0]
-                if ref :
+                if ref:
                     cond = False
-                    if schema == ref_schema :
-                        cond =True
+                    if schema == ref_schema:
+                        cond = True
                 if cond:
                     qry = "DROP TRIGGER IF EXISTS {0} ON {1};\n".format(ntrigger, ntab)
                     self.mdb.run_query(qry)
@@ -1797,25 +1798,24 @@ $BODY$;
                     new_dico[schema].append(name)
 
             for schema, names in new_dico.items():
-                for name in names :
+                for name in names:
                     obj = tabs_sql[name]['obj']()
                     obj.schema = schema
                     sql = ''
                     for fct in tabs_sql[name]['fct']:
                         sql += getattr(obj, fct)()
-                        self.mdb.run_query(sql,be_quiet= True)
+                        self.mdb.run_query(sql, be_quiet=True)
             return True
         except Exception:
             return False
 
     def check_v_masc(self):
         """ check_version mascaret"""
-        file_path = os.path.join(self.mgis.masplugPath,'bin','conf.json')
+        file_path = os.path.join(self.mgis.masplugPath, 'bin', 'conf.json')
         if os.path.isfile(file_path):
-            f = open( file_path, "r")
+            f = open(file_path, "r")
             jso = json.loads(f.read())
             data = jso["masc_version"]
         else:
             data = ''
         return data
-

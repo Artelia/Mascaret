@@ -386,6 +386,7 @@ class outputs(MasObject):
                                                                  self.name)
         qry += '   FOR EACH ROW\nEXECUTE PROCEDURE {0}.calcul_abscisse_point_outputs();\n'.format(self.schema)
         return qry
+
     def pg_create_table(self):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
@@ -525,8 +526,7 @@ class links(MasObject):
         return qry
 
 
-
-#*****************************************
+# *****************************************
 class visu_branchs(MasObject):
     def __init__(self):
         super(visu_branchs, self).__init__()
@@ -551,7 +551,7 @@ class visu_branchs(MasObject):
         return qry
 
 
-#*****************************************
+# *****************************************
 class branchs(MasObject):
     def __init__(self):
         super(branchs, self).__init__()
@@ -610,8 +610,8 @@ class branchs(MasObject):
         qry = super(self.__class__, self).pg_create_table()
         qry += '\n'
         qry += self.pg_create_index()
-        #qry += '\n'
-        #qry += self.pg_create_calcul_abscisse()
+        # qry += '\n'
+        # qry += self.pg_create_calcul_abscisse()
         qry += '\n'
         qry += self.pg_updat_actv()
         qry += '\n'
@@ -654,7 +654,6 @@ class basins(MasObject):
         qry += '\n'
         qry += self.pg_updat_actv()
         return qry
-
 
 
 # *******************************************
@@ -1002,7 +1001,7 @@ COST 100;
         # """
         return qry
 
-    def pg_create_calcul_abscisse(self,local='public'):
+    def pg_create_calcul_abscisse(self, local='public'):
         qry = """CREATE OR REPLACE FUNCTION {0}.calcul_abscisse_point()  
             RETURNS trigger AS  
             $BODY$ 
@@ -1113,7 +1112,7 @@ $BODY$; """
 
         return qry.format(local)
 
-    def pg_create_calcul_abscisse_profil(self,local='public'):
+    def pg_create_calcul_abscisse_profil(self, local='public'):
         qry = """CREATE OR REPLACE FUNCTION {0}.calcul_abscisse_profil()
                   RETURNS trigger AS
                 $BODY$
@@ -1155,7 +1154,7 @@ $BODY$; """
                   COST 100;"""
         return qry.format(local)
 
-    def pg_create_calcul_abscisse_branche(self,local='public'):
+    def pg_create_calcul_abscisse_branche(self, local='public'):
         """
         Old function TODO delete in future
         """
@@ -1185,7 +1184,7 @@ $BODY$; """
 '''
         return qry.format(local)
 
-    def pg_chstate_branch(self,local='public'):
+    def pg_chstate_branch(self, local='public'):
         qry = """
 CREATE  OR REPLACE FUNCTION {0}.chstate_branch() RETURNS TRIGGER AS $$
     DECLARE
@@ -1211,7 +1210,7 @@ $$ LANGUAGE plpgsql;"""
 
         # DROP TRIGGER IF EXISTS branch_chstate_active ON ouvrage3.branchs
 
-    def pg_chstate_basin(self,local='public'):
+    def pg_chstate_basin(self, local='public'):
         qry = """
 CREATE  OR REPLACE FUNCTION {0}.chstate_basin() RETURNS TRIGGER AS $$
     BEGIN 
@@ -1221,7 +1220,7 @@ CREATE  OR REPLACE FUNCTION {0}.chstate_basin() RETURNS TRIGGER AS $$
 $$ LANGUAGE plpgsql;"""
         return qry.format(local)
 
-    def pg_abscisse_profil(self,local='public'):
+    def pg_abscisse_profil(self, local='public'):
         """
         SQL function which computes the profiles abscissa
         :return:
@@ -1258,7 +1257,7 @@ $$ LANGUAGE plpgsql;"""
 
         return qry.format(local)
 
-    def pg_all_profil(self,local='public'):
+    def pg_all_profil(self, local='public'):
         """ SQL function which updates abscissa of all profiles of one table"""
         qry = """
 CREATE OR REPLACE FUNCTION {0}.update_abscisse_profil(_shem text,_tbl regclass, _tbl_branchs regclass)
@@ -1280,7 +1279,7 @@ AS $BODY$
 $BODY$;"""
         return qry.format(local)
 
-    def pg_abscisse_point(self,local='public'):
+    def pg_abscisse_point(self, local='public'):
         """
          SQL function which computes the points abscissa
         :return:
@@ -1317,7 +1316,7 @@ AS $BODY$
 $BODY$;"""
         return qry.format(local)
 
-    def pg_all_point(self,local='public'):
+    def pg_all_point(self, local='public'):
         """
          SQL function which updates abscissa of all point of one table
         :return:
@@ -1342,7 +1341,7 @@ $BODY$;"""
     $BODY$;"""
         return qry.format(local)
 
-    def pg_abscisse_branch(self,local='public'):
+    def pg_abscisse_branch(self, local='public'):
         """
           SQL function which computes the branch abscissa TODO delete in the future
         :return:
@@ -1565,7 +1564,7 @@ AS $BODY$
                     "lateral_inflows",
                     "lateral_weirs",
                     "tracer_lateral_inflows",
-                    "outputs",]
+                    "outputs", ]
         sql1 = ''
         for tab in list_pr:
             sql1 += "_tbl=TG_TABLE_SCHEMA || '.{}';\n".format(tab)
@@ -1616,6 +1615,7 @@ AS $BODY$
                 $BODY$;
               """
         return qry.format(local)
+
 
 # *****************************************
 class laws_wq(MasObject):
@@ -1887,6 +1887,7 @@ class admin_tab(MasObject):
                       ('CONSTRAINT cle_admin_tab',
                        'PRIMARY KEY (id_,table_, version_)')]
 
+
 # new results table
 class results_by_pk(MasObject):
     def __init__(self):
@@ -1911,9 +1912,10 @@ class results_by_pk(MasObject):
         qry += '\n'
         qry += "CREATE INDEX IF NOT EXISTS results_by_pk_id_runs_var_idx " \
                "ON {0}.results_by_pk USING btree" \
-             "(id_runs ASC NULLS LAST, var ASC NULLS LAST);".format(self.schema)
+               "(id_runs ASC NULLS LAST, var ASC NULLS LAST);".format(self.schema)
         qry += '\n'
         return qry
+
 
 class results_sect(MasObject):
     def __init__(self):
@@ -1927,6 +1929,7 @@ class results_sect(MasObject):
                       ('CONSTRAINT results_sect_pkey',
                        ' PRIMARY KEY (id_runs, branch)')
                       ]
+
 
 class results_var(MasObject):
     def __init__(self):
@@ -1998,6 +2001,7 @@ class law_values(MasObject):
                       ('value', 'float'),
                       ('CONSTRAINT law_values_pkey',
                        'PRIMARY KEY (id_law, id_var, id_order)')]
+
 
 # ****************************************************************************
 # *****************************************
@@ -2079,6 +2083,7 @@ class results_old(MasObject):
         qry += '\n'
         return qry
 
+
 class results_sect_old(MasObject):
     def __init__(self):
         super(results_sect_old, self).__init__()
@@ -2090,6 +2095,7 @@ class results_sect_old(MasObject):
                       ('section', 'integer'),
                       ('CONSTRAINT results_sect_old_pkey',
                        ' PRIMARY KEY (id_runs, pk, branch)')]
+
 
 class results_idx(MasObject):
     def __init__(self):
@@ -2114,6 +2120,7 @@ class results_idx(MasObject):
         qry += '\n'
         return qry
 
+
 class results_val(MasObject):
     def __init__(self):
         super(results_val, self).__init__()
@@ -2132,6 +2139,7 @@ class results_val(MasObject):
                "ON {0}.results_val(idRunTPk, var);".format(self.schema)
         qry += '\n'
         return qry
+
 
 class observations_old(MasObject):
     def __init__(self):
