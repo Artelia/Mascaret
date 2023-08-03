@@ -17,18 +17,22 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+import csv
+import datetime
+import io
 import os
+
+import pandas as pd
+from matplotlib.dates import date2num
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
 from qgis.PyQt.uic import *
 from qgis.core import *
+
 from qgis.gui import *
 from qgis.utils import *
 
-import datetime
-import csv
-import io
 from .Graphic.GraphCommon import GraphCommon
-from matplotlib.dates import date2num
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -36,7 +40,7 @@ else:  # qt5
     from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
     from qgis.PyQt.QtWidgets import *
     from qgis.PyQt.QtCore import Qt
-import pandas as pd
+
 
 class ClassEventObsDialog(QDialog):
     def __init__(self, mgis):
@@ -46,6 +50,7 @@ class ClassEventObsDialog(QDialog):
         self.filling_tab = False
 
         self.cur_station = ""
+
         self.cur_var = ""
 
         self.graph_home = None
@@ -75,6 +80,9 @@ class ClassEventObsDialog(QDialog):
         self.ui.b_OK_page1.accepted.connect(self.reject)
         self.ui.cb_var.currentIndexChanged.connect(self.var_changed)
 
+        self.ui.tab_stations.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.seld  = SelectDelegate(self)
+        self.ui.tab_stations.setItemDelegate(self.seld)
         self.init_ui()
 
     def init_ui(self):
@@ -142,8 +150,9 @@ class ClassEventObsDialog(QDialog):
         """
         cur_var = self.ui.cb_var.currentText()
         if self.ui.tab_stations.selectedIndexes():
-            l = self.ui.tab_stations.selectedIndexes()[0].row()
-            self.cur_station = self.ui.tab_stations.model().item(l, 0).text()
+            line = self.ui.tab_stations.selectedIndexes()[0].row()
+            self.cur_station = self.ui.tab_stations.model().item(line, 0).text()
+            self.seld.set_selected_cell(line)
         else:
             self.cur_station = ""
 
@@ -224,8 +233,8 @@ class ClassEventObsDialog(QDialog):
             sql = ("SELECT UNNEST(date) as date, "
                    "UNNEST(valeur) as valeur, UNNEST(comment) as comment "
                    "FROM {0}.observations "
-                   "WHERE code = '{1}' AND type = '{2}' " 
-                  "ORDER BY date".format(self.mdb.SCHEMA, cur_station, cur_var))
+                   "WHERE code = '{1}' AND type = '{2}' "
+                   "ORDER BY date".format(self.mdb.SCHEMA, cur_station, cur_var))
             rows = self.mdb.run_query(sql, fetch=True)
             for r, row in enumerate(rows):
                 for c, val in enumerate(row):
@@ -243,73 +252,163 @@ class ClassEventObsDialog(QDialog):
 
     def import_csv(self):
         """ import CSV file"""
+        dlg = ClassObsImportDialog(self.mgis)
+        if dlg.exec_():
+            pass
+        if dlg.result() == 0:
+            return False
+        typ_f = dlg.type_f
         file_name_path, _ = QFileDialog.getOpenFileNames(None, 'File Selection',
                                                          self.mgis.repProject,
                                                          filter="CSV (*.csv);;File (*)")
         if not file_name_path:
             return
         self.mgis.up_rep_project(file_name_path[0])
-        succes, recs = self.read_csv(file_name_path)
 
+        if typ_f == 'csv':
+            succes, recs = self.read_csv(file_name_path)
+        elif typ_f == 'octave':
+            succes, recs = self.read_octave(file_name_path)
+        else:
+            succes, recs = self.read_csv(file_name_path)
+        # recs data frame
         dbls = None
         if succes:
-            self.mdb.execute("DROP TABLE IF EXISTS {0}.tmp_observations".format(
-                self.mdb.SCHEMA))
-            self.mdb.execute("CREATE TABLE IF NOT EXISTS {0}.tmp_observations "
-                             "AS TABLE {0}.observations WITH NO DATA".format(
-                self.mdb.SCHEMA))
-            sql = "INSERT INTO {0}.tmp_observations (code, date, type, comment, valeur) " \
-                  "VALUES ({1})".format(self.mdb.SCHEMA, "{}, {}, {}, {}, {}")
-            for rec in recs:
+            duplic = recs[recs.duplicated(subset=['code', 'type', 'date'])]
+            if len(duplic):
+                txt_lst = ['{} - date  : {}'.format(fil, dat) for j, (fil, dat) in
+                           enumerate(zip(duplic['fichier'].tolist(), duplic['date'].tolist())) if j < 5]
+
+                msg = ("No recording of observations due to \n"
+                       "duplicate elements (code, type, date) having different values.\n\n"
+                       "Check the files (the first 5) : \n"
+                       "{0}".format('\n'.join(txt_lst))
+                       )
+                ok = QMessageBox.warning(None, "WARNING:", msg)
+                return
+
+            sql = """
+                    DROP TABLE  IF EXISTS {0}.tmp_observations;
+                    CREATE TABLE IF NOT EXISTS {0}.tmp_observations  AS SELECT DISTINCT code,type,
+                    UNNEST(comment) as comment, UNNEST(valeur) as valeur ,UNNEST(date) as date  
+                    FROM {0}.observations  WITH NO DATA;
+                    ALTER TABLE {0}.tmp_observations
+                    ADD CONSTRAINT constraint_obs UNIQUE (code,type,date);
+                """
+            self.mdb.execute(sql.format(self.mdb.SCHEMA))
+            recs = recs.drop(columns=['fichier'])
+            sql = "INSERT INTO {0}.tmp_observations ({2}) " \
+                  "VALUES ({1})".format(self.mdb.SCHEMA, "{}, {}, {}, {}, {}", ','.join(recs.columns.tolist()))
+            for rec in recs.values.tolist():
                 self.mdb.execute(sql.format(*rec))
-            #TODO reprendre car au sein de la list date plus de verification si double
+
+            # check if type and code existant
             dbls = self.mdb.run_query(
                 "SELECT DISTINCT code, type FROM {0}.observations As obs WHERE EXISTS "
                 "(SELECT 1 FROM {0}.tmp_observations AS tmp WHERE obs.code = tmp.code "
-                "AND obs.date = tmp.date AND obs.type = tmp.type)".format(
+                " AND obs.type = tmp.type)".format(
                     self.mdb.SCHEMA),
                 fetch=True)
         else:
             return
-
+        # si couple date,typ existe
         if dbls:
             txt_sta = ""
             for d, dbl in enumerate(dbls):
-                if d < 12:
+                if d < 5:
                     txt_sta += '- ' + dbl[0].strip() + ' : ' + dbl[1] + '\n'
                 else:
                     txt_sta += '- and more ...\n'
                     break
 
-            txt_mess = "Duplicates exist for these configurations : \n" + txt_sta + '\nOverwrite existing values ?'
-            r = QMessageBox.question(self, "Observations Import", txt_mess,
-                                     QMessageBox.Cancel | QMessageBox.No | QMessageBox.Yes)
-            if r == QMessageBox.Yes:
-                self.mdb.run_query(
-                    "DELETE FROM {0}.observations As obs WHERE EXISTS "
-                    "(SELECT 1 FROM {0}.tmp_observations AS tmp WHERE obs.code = tmp.code "
-                    "AND obs.date = tmp.date AND obs.type = tmp.type)".format(
-                        self.mdb.SCHEMA))
-            elif r == QMessageBox.No:
-                self.mdb.run_query(
-                    "DELETE FROM {0}.tmp_observations As tmp WHERE EXISTS "
-                    "(SELECT 1 FROM {0}.observations AS obs WHERE obs.code = tmp.code "
-                    "AND obs.date = tmp.date AND obs.type = tmp.type)".format(
-                        self.mdb.SCHEMA))
-            elif r == QMessageBox.Cancel:
+            txt_mess = "Duplicates exist for these configurations (the first 5) : \n" + txt_sta + '\n'
+            dlg = ClassObsDuplicDialog(self.mgis, txt_mess)
+            if dlg.exec_():
+                pass
+            if dlg.result() == 0:
+                return False
+            typ_s = dlg.type_save
+
+            sql_tab = """
+                    DROP TABLE  IF EXISTS {0}.obs_ref;
+                    CREATE TABLE {0}.obs_ref AS  SELECT  code,type,UNNEST(comment) as comment, 
+                        UNNEST(valeur) as valeur ,UNNEST(date) as date  
+                        FROM {0}.observations WHERE (code,type) 
+                        in (SELECT code,type FROM {0}.tmp_observations) 
+                        order by code, date;
+                """
+            sql_over = """
+                    INSERT INTO {0}.tmp_observations (code, type, comment, valeur, date)
+                        SELECT ref.code, ref.type, ref.comment, ref.valeur, ref.date
+                        FROM {0}.obs_ref ref
+                        ON CONFLICT (code, type, date) DO NOTHING;
+                """
+            sql_no = """
+                     INSERT INTO {0}.tmp_observations (code, type, comment, valeur, date)
+                        SELECT ref.code, ref.type, ref.comment, ref.valeur, ref.date
+                        FROM {0}.obs_ref ref ON CONFLICT (code, type, date) 
+                        DO UPDATE SET (comment,valeur) = (EXCLUDED.comment, EXCLUDED.valeur);
+                """
+            sqldp = """
+                        DELETE FROM {0}.obs_ref WHERE
+                            (code,type,date) in (
+                                SELECT ref.code,ref.type, ref.date 
+                                FROM {0}.obs_ref ref, 
+                                (SELECT code, type, MIN(date) as mindate, 
+                                MAX(date) as maxdate FROM {0}.tmp_observations 
+                                GROUP BY code,type) tmp
+                                WHERE ref.code = tmp.code  and ref.type =tmp.type 
+                                and ref.date >= tmp.mindate AND date <= tmp.maxdate);
+                        """
+
+            # lancement commande
+            # genere table ref
+            print('oooooooooooooooooooooooooooo')
+            self.mdb.run_query(sql_tab.format(self.mdb.SCHEMA))
+            if typ_s == 'no_overw':
+                self.mdb.run_query(sql_no.format(self.mdb.SCHEMA))
+            elif typ_s == 'overw':
+                self.mdb.run_query(sql_over.format(self.mdb.SCHEMA))
+            elif typ_s == 'plage_overw':
+                self.mdb.run_query(sqldp.format(self.mdb.SCHEMA))
+                self.mdb.run_query(sql_over.format(self.mdb.SCHEMA))
+            elif typ_s == 'replace':
+                pass
+            else:
                 return
+            # integration table observation
+            print('oooooooooooooooooooooooooooo 1')
+            print("DELETE FROM {0}.observations WHERE (code, type) IN "
+                               "(SELECT DISTINCT code,type FROM {0}.tmp_observations);"
+                               "".format(self.mdb.SCHEMA))
+            self.mdb.run_query("DELETE FROM {0}.observations WHERE (code, type) IN "
+                               "(SELECT DISTINCT code,type FROM {0}.tmp_observations);"
+                               "".format(self.mdb.SCHEMA))
+            self.mdb.execute(
+                "DROP TABLE IF EXISTS {0}.obs_ref;".format(self.mdb.SCHEMA))
+        sql_insert = """INSERT INTO {0}.observations(code, type, comment, valeur, date) 
+                             SELECT code,type,  
+                             array_agg(comment ORDER BY date), 
+                             array_agg(valeur ORDER BY date), 
+                             array_agg(date ORDER BY date) 
+                             FROM {0}.tmp_observations GROUP BY code,type;
+                       """
+        print('oooooooooooooooooooooooooooo 2')
+        self.mdb.run_query(sql_insert.format(self.mdb.SCHEMA))
 
-        self.mdb.run_query(
-            "INSERT INTO {0}.observations (code, date, type, comment, valeur) "
-            "SELECT code, date, type, comment, valeur FROM {0}.tmp_observations".format(
-                self.mdb.SCHEMA))
-
+            # nettoyage table tempo
         self.mdb.execute(
-            "DROP TABLE IF EXISTS {0}.tmp_observations".format(self.mdb.SCHEMA))
+            "DROP TABLE IF EXISTS {0}.tmp_observations;".format(self.mdb.SCHEMA))
+
 
         self.fill_lst_stations(self.cur_station)
 
     def read_csv(self, data_file):
+        """
+        Read the default CSV  format
+        :param data_file: list file to read
+        :return: pd.DataFrame
+        """
         try:
             recs = []
             for file in data_file:
@@ -321,15 +420,53 @@ class ClassEventObsDialog(QDialog):
                         for ligne in fichier:
                             temp = ligne.strip().split(';')
                             for i, val in enumerate(temp[1:]):
-                                if float(val) != -99.99:
-                                    rec = list()
-                                    rec.append("'{}'".format(codes[i]))
-                                    rec.append(
-                                        "'{}'".format(self.fmt_date(temp[0])))
-                                    rec.append("'{}'".format(types[i]))
-                                    rec.append("'{}'".format(nom_stat[i]))
-                                    rec.append(val)
-                                    recs.append(rec)
+                                if val != '' :
+                                    if float(val) != -99.99:
+                                        rec = list()
+                                        rec.append(self.fmt_col(codes[i]))
+                                        rec.append(self.fmt_col(self.fmt_date(temp[0])))
+                                        rec.append(self.fmt_col(types[i]))
+                                        rec.append(self.fmt_col(nom_stat[i]))
+                                        rec.append(val)
+                                        rec.append(os.path.basename(file))
+                                        recs.append(rec)
+            tmp = pd.DataFrame(recs, columns=['code', 'date', 'type', 'comment', 'valeur', 'fichier'])
+            recs = tmp.drop_duplicates()
+            recs = recs.dropna()
+
+            return True, recs
+        except Exception as e:
+            self.mgis.add_info("Loading to observations is an echec.")
+            self.mgis.add_info(repr(e), dbg=True)
+
+            return False, None
+
+    def read_octave(self, data_file):
+        """
+        Read  the OCTAVE format
+        :param data_file: list file to read
+        :return: pd.DataFrame
+        """
+        try:
+            tmp = pd.DataFrame()
+            lst_cols = ['date', 'valeur', 'type', 'code']
+            converters = {col: self.fmt_col for col in lst_cols if col != 'valeur' }
+
+            for file in data_file:
+                if os.path.isfile(file):
+                    df_tmp = pd.read_csv(file, sep=';',
+                                         names=lst_cols,
+                                         na_values=-99.99,
+                                         converters= converters)
+
+                    df_tmp['comment'] = [self.fmt_col(os.path.splitext(os.path.basename(file))[0])] * df_tmp.count()[0]
+                    df_tmp['fichier'] = [os.path.basename(file)] * df_tmp.count()[0]
+
+                    tmp = pd.concat([tmp, df_tmp])
+            # supprime les lignes en double
+            recs = tmp.drop_duplicates()
+            recs = recs.dropna()
+
             return True, recs
         except Exception as e:
             self.mgis.add_info("Loading to observations is an echec.")
@@ -345,6 +482,10 @@ class ClassEventObsDialog(QDialog):
         elif ldate == 19:
             val = datetime.datetime.strptime(date, '%d/%m/%Y %H:%M:%S')
         return val
+
+    @staticmethod
+    def fmt_col(col):
+        return "'{}'".format(col)
 
     def on_tab_data_change(self, itm):
         if not self.filling_tab:
@@ -399,18 +540,26 @@ class ClassEventObsDialog(QDialog):
     def delete_station(self):
         # charger les informations
         # changer de page
-        if self.cur_station:
-            if (QMessageBox.question(self, "Observations of Events",
-                                     "Delete {} observations ?".format(
-                                         str(self.cur_station).strip()),
-                                     QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
-                self.mgis.add_info(
-                    "Deletion of {} Observations of Events".format(
-                        self.cur_station), dbg=True)
-                self.mdb.execute(
-                    "DELETE FROM {0}.observations WHERE code = '{1}'".format(
-                        self.mdb.SCHEMA, self.cur_station))
-                self.fill_lst_stations()
+        tab = self.ui.tab_stations
+        indexes = tab.selectionModel().selectedRows()
+        rows = [index.row() for index in indexes]
+        if len(rows)>0 :
+            sup_ind = 0
+            for row in rows :
+                station= tab.model().data(tab.model().index(row-sup_ind, 0))
+
+                if (QMessageBox.question(self, "Observations of Events",
+                                         "Delete {} observations ?".format(
+                                             str(station).strip()),
+                                         QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
+                    self.mgis.add_info(
+                        "Deletion of {} Observations of Events".format(
+                            station), dbg=True)
+                    self.mdb.execute(
+                        "DELETE FROM {0}.observations WHERE code = '{1}'".format(
+                            self.mdb.SCHEMA, station))
+                    self.fill_lst_stations()
+                    sup_ind +=1
 
     def delete_var_station(self):
         # charger les informations
@@ -421,7 +570,6 @@ class ClassEventObsDialog(QDialog):
                                          self.cur_var,
                                          self.cur_station.strip()),
                                      QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
-
                 self.mgis.add_info(
                     "Deletion of {} Observations of Events".format(
                         self.cur_station), dbg=True)
@@ -489,12 +637,12 @@ class ClassEventObsDialog(QDialog):
                     "DELETE FROM {0}.observations WHERE code = '{1}' AND type = '{2}'".format(
                         self.mdb.SCHEMA,
                         name_stat, name_var))
-            d_rec= {}
+            d_rec = {}
             for r in range(self.ui.tab_values.model().rowCount()):
-                if (name_stat,name_var)  not in d_rec.keys():
-                    d_rec[(name_stat,name_var)] = {'date':[],'val':[], 'com':[]}
+                if (name_stat, name_var) not in d_rec.keys():
+                    d_rec[(name_stat, name_var)] = {'date': [], 'val': [], 'com': []}
                 d_rec[(name_stat, name_var)]['date'].append(self.ui.tab_values.model().item(r, 0).data(
-                                 0).toPyDateTime())
+                    0).toPyDateTime())
                 d_rec[(name_stat, name_var)]['val'].append(self.ui.tab_values.model().item(r, 1).data(0))
                 com = self.ui.tab_values.model().item(r, 2).data(0)
                 if com == '':
@@ -503,9 +651,9 @@ class ClassEventObsDialog(QDialog):
             recs = []
             for (name_stat, name_var), var in d_rec.items():
                 recs.append([name_stat, name_var,
-                               "{" + ','.join(str(i) for i in var['date']) + "}",
-                               "{" + ','.join(str(i) for i in var['val']) + "}",
-                                "{" + ','.join(str(i) for i in var['com']) + "}"])
+                             "{" + ','.join(str(i) for i in var['date']) + "}",
+                             "{" + ','.join(str(i) for i in var['val']) + "}",
+                             "{" + ','.join(str(i) for i in var['com']) + "}"])
             self.mdb.run_query(
                 "INSERT INTO {0}.observations (code,type,  date, valeur, comment) VALUES (%s, %s, %s, %s, %s)".format(
                     self.mdb.SCHEMA), many=True, list_many=recs)
@@ -552,7 +700,6 @@ class ClassEventObsDialog(QDialog):
             qApp.clipboard().setText(stream.getvalue())
 
     def keyPressEvent(self, event):
-
         if self.ui.tab_values.hasFocus():
 
             # ----------------------------------------------------------------
@@ -566,11 +713,30 @@ class ClassEventObsDialog(QDialog):
         else:
             event.ignore()
 
+class SelectDelegate(QStyledItemDelegate):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.row = None
+
+    def paint(self, painter, option, index):
+        # check if selected
+        selected = (option.state & QStyle.State_Selected)
+        if bool(selected) and index.row() == self.row :
+            background_color = QColor(Qt.green)
+            text_color = QColor(Qt.black)
+            option.palette.setColor(QPalette.Highlight, background_color)
+            option.palette.setColor(QPalette.HighlightedText, text_color)
+        else:
+            # Reset the background color for non-selected cells
+            option.palette.setColor(QPalette.Highlight, option.palette.color(QPalette.Active, QPalette.Highlight))
+
+        super().paint(painter, option, index)
+
+    def set_selected_cell(self, row):
+        self.row = row
+
 
 class ItemEditorFactory(QItemEditorFactory):
-    # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
-    # It is possible for a custom delegate to provide editors without the use of an editor item factory.
-    # In this case, the following virtual functions must be reimplemented:
     def __init__(self):
         QItemEditorFactory.__init__(self)
 
@@ -659,3 +825,68 @@ class GraphObservation(GraphCommon):
         leglines[0].set_alpha(1.0)
 
         self.maj_limites()
+
+
+class ClassObsImportDialog(QDialog):
+    def __init__(self, mgis):
+        QDialog.__init__(self)
+        self.mgis = mgis
+        self.type_f = 'csv'
+
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_obs_import.ui'),
+            self)
+        dict_f = {'csv': 'Default Format',
+                  'octave': 'OCTAVE Format', }
+        for key, itm in dict_f.items():
+            self.cb_typ_file.addItem(itm, key)
+        self.bt_ok.accepted.connect(self.accept_page)
+        self.bt_ok.rejected.connect(self.reject_page)
+
+    def accept_page(self):
+        # save Info
+        self.type_f = self.cb_typ_file.itemData(self.cb_typ_file.currentIndex())
+        self.accept()
+
+    def reject_page(self):
+        # print('cancel')
+        self.reject()
+
+
+class ClassObsDuplicDialog(QDialog):
+    def __init__(self, mgis, message):
+        QDialog.__init__(self)
+        self.mgis = mgis
+
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, 'ui/ui_obs_duplic.ui'),
+            self)
+        self.lst_ctr = [(self.rb_no_overw, 'no_overw'), (self.rb_overw, 'overw'),
+                        (self.rb_overw_plage, 'plage_overw'), (self.rb_replace, 'replace')]
+        # default
+        self.rb_no_overw.setChecked(True)
+        self.type_save = 'no_overw'
+        for ctrl_, typ in self.lst_ctr:
+            ctrl_.clicked.connect(self.check)
+        self.lbl_message.setText(message)
+        self.bt_ok.accepted.connect(self.accept_page)
+        self.bt_ok.rejected.connect(self.reject_page)
+
+    def check(self):
+        sender_button = self.sender()
+
+        for ctrl_, typ in self.lst_ctr:
+            if ctrl_ == sender_button:
+                self.type_save = typ
+                ctrl_.setChecked(True)
+            else:
+                ctrl_.setChecked(False)
+
+    def accept_page(self):
+
+        self.accept()
+
+    def reject_page(self):
+        # print('cancel')
+        self.type_save = None
+        self.reject()
