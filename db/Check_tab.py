@@ -1497,12 +1497,14 @@ $BODY$;
          Action update version 5.1.5
         """
         self.mgis.add_info('*** Update 5.1.5  ***')
-        ok = self.box.yes_no_q("WARNING:\n "
-                               "Please note that this 5.1.5 update automatically \n"
-                               " updates the mascaret executable.\n"
-                               "Do you want to continue ?")
-        if not ok:
-            return False
+        old_vers = self.check_v_masc()
+        if old_vers != '8.4':
+            ok = self.box.yes_no_q("WARNING:\n "
+                                   "Please note that this 5.1.5 update automatically \n"
+                                   " updates the mascaret executable.\n"
+                                   "Do you want to continue ?")
+            if not ok:
+                return False
 
         lst_admin_tab = self.mdb.select('admin_tab', list_var=["table_"])
         if 'results_old' in lst_admin_tab['table_']:
@@ -1564,7 +1566,6 @@ $BODY$;
             self.mgis.add_info("Error update_fct_calc_abs: {}".format(str(e)))
             return False
         # update executable
-        old_vers = self.check_v_masc()
         if old_vers != '8.4':
             self.mgis.download_bin()
 
@@ -1580,7 +1581,7 @@ $BODY$;
         if valide:
             test = 'results_sect'
             sql = ("ALTER TABLE IF EXISTS {0}.results_sect RENAME TO results_sect_old;\n"
-                   "ALTER TABLE IF EXISTS {0}.results_sect_old RENAME CONSTRAINT results_sect_pkey TO results_sect_old_pkey;"
+                   "ALTER TABLE IF EXISTS {0}.results_sect_old DROP CONSTRAINT IF EXISTS results_sect_pkey;"
                    )
             err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
             if err:
@@ -1592,7 +1593,7 @@ $BODY$;
         # OBSERVATION
         if valide:
             sql = ("ALTER TABLE IF EXISTS {0}.observations RENAME TO observations_old;\n"
-                   "ALTER TABLE IF EXISTS {0}.observations_old RENAME CONSTRAINT observations_pkey TO observations_old_pkey;"
+                    "ALTER TABLE IF EXISTS {0}.observations DROP CONSTRAINT IF EXISTS observations_pkey;"
                    )
             err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
             if err:
@@ -1685,13 +1686,13 @@ $BODY$;
                     t_obs = self.mdb.drop_table('observations', cascade=True)
                 if t_sec:
                     sql = 'ALTER TABLE IF EXISTS {0}.results_sect_old RENAME TO results_sect;\n'
-                    sql += 'ALTER TABLE IF EXISTS {0}.results_sect RENAME CONSTRAINT ' \
-                           'results_sect_old_pkey TO results_sect_pkey;\n'
+                    sql += 'ALTER TABLE IF EXISTS {0}.results_sect ' \
+                             'ADD CONSTRAINT results_sect_pkey PRIMARY KEY (id_runs, pk, branch);'
                     err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
                 if t_obs:
                     sql = 'ALTER TABLE IF EXISTS {0}.observations_old RENAME TO observations;\n'
-                    sql += 'ALTER TABLE IF EXISTS {0}.observations RENAME CONSTRAINT ' \
-                           'observations_old_pkey TO observations_pkey;\n'
+                    sql += 'ALTER TABLE IF EXISTS {0}.observations ' \
+                        'ADD CONSTRAINT observations_pkey PRIMARY KEY (id);'
                     err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
                 if not t_pk or not t_sec or not t_obs:
                     err = True
@@ -1729,6 +1730,17 @@ $BODY$;
                 self.mgis.add_info('Update TRIGGER - OK', dbg=True)
             else:
                 self.mgis.add_info('Update TRIGGER - ERROR', dbg=True)
+
+        # update executable
+        old_vers = self.check_v_masc()
+        if old_vers == '8.4':
+            ok = self.box.yes_no_q("WARNING:\n "
+                                   "Please note that the mascaret executable is updated. \n"
+                                   "Do you want to continue ?")
+            if not ok:
+                return False
+            self.mgis.download_bin()
+
         return valide
 
     def up_trigger(self, ref=True):
