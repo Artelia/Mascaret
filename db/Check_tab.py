@@ -1497,12 +1497,14 @@ $BODY$;
          Action update version 5.1.5
         """
         self.mgis.add_info('*** Update 5.1.5  ***')
-        ok = self.box.yes_no_q("WARNING:\n "
-                               "Please note that this 5.1.5 update automatically \n"
-                               " updates the mascaret executable.\n"
-                               "Do you want to continue ?")
-        if not ok:
-            return False
+        old_vers = self.check_v_masc()
+        if old_vers != '8.4':
+            ok = self.box.yes_no_q("WARNING:\n "
+                                   "Please note that this 5.1.5 update automatically \n"
+                                   " updates the mascaret executable.\n"
+                                   "Do you want to continue ?")
+            if not ok:
+                return False
 
         lst_admin_tab = self.mdb.select('admin_tab', list_var=["table_"])
         if 'results_old' in lst_admin_tab['table_']:
@@ -1564,7 +1566,6 @@ $BODY$;
             self.mgis.add_info("Error update_fct_calc_abs: {}".format(str(e)))
             return False
         # update executable
-        old_vers = self.check_v_masc()
         if old_vers != '8.4':
             self.mgis.download_bin()
 
@@ -1729,6 +1730,17 @@ $BODY$;
                 self.mgis.add_info('Update TRIGGER - OK', dbg=True)
             else:
                 self.mgis.add_info('Update TRIGGER - ERROR', dbg=True)
+
+        # update executable
+        old_vers = self.check_v_masc()
+        if old_vers == '8.4':
+            ok = self.box.yes_no_q("WARNING:\n "
+                                   "Please note that the mascaret executable is updated. \n"
+                                   "Do you want to continue ?")
+            if not ok:
+                return False
+            self.mgis.download_bin()
+
         return valide
 
     def up_trigger(self, ref=True):
