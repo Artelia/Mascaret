@@ -676,8 +676,8 @@ class GraphResultDialog(QWidget):
             self.score(dict_obs)
 
         self.lst_obs.clear()
+        if_val = False
         if x_var_ == 'date':
-            if_val = False
             for (id_obs, var), param_obs in dict_obs.items():
                 sql_query = ("SELECT date, valeur FROM (SELECT code,type, UNNEST(date) as date, "
                              "UNNEST(valeur) as valeur FROM {4}.observations "
