@@ -30,6 +30,7 @@ import matplotlib.image as mpimg
 import numpy as np
 from matplotlib import patches
 from matplotlib.widgets import RectangleSelector, SpanSelector, Cursor
+from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.PyQt.QtWidgets import *
@@ -253,6 +254,12 @@ class GraphProfil(GraphCommon):
         self.fig.autofmt_xdate()
         self.init_ui()
 
+        self.ui.bt_left_bed.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'icones\\zone_left_bed.png')))
+        self.ui.bt_both_bed.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'icones\\zone_both_bed.png')))
+        self.ui.bt_right_bed.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'icones\\zone_right_bed.png')))
+        self.ui.bt_left_stock.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'icones\\zone_left_stock.png')))
+        self.ui.bt_right_stock.setIcon(QIcon(os.path.join(self.mgis.masplugPath, 'icones\\zone_right_stock.png')))
+
         # action
         self.bt_translah.clicked.connect(self.deplace_h_toggled)
         self.bt_translav.clicked.connect(self.deplace_v_toggled)
@@ -283,6 +290,12 @@ class GraphProfil(GraphCommon):
             lambda: self.select_stock("leftstock"))
         self.ui.bt_ouvrage.clicked.connect(self.create_struct)
         self.ui.bt_interp.clicked.connect(self.bt_interpol_profile)
+
+        #self.ui.bt_left_bed.clicked.connect(self.add_line)
+        #self.ui.bt_both_bed.clicked.connect(self.add_line)
+        #self.ui.bt_right_bed.clicked.connect(self.add_line)
+        self.ui.bt_left_stock.clicked.connect(self.retrieve_left_stock)
+        #self.ui.bt_right_stock.clicked.connect(self.add_line)
 
         self.ui.bt_add_line.clicked.connect(self.add_line)
         self.ui.bt_del_line.clicked.connect(self.del_line)
@@ -351,6 +364,11 @@ class GraphProfil(GraphCommon):
 
         self.etiquetteTopo = []
         self.courbes = [self.courbeProfil, self.courbeMNT]
+
+        self.lg_lit_mineur = self.axes.axvline(x=-9999999., color="red", ymin=0., ymax=1., ls=":", lw=2.5, zorder=85)
+        self.ld_lit_mineur = self.axes.axvline(x=-9999999., color="red", ymin=0., ymax=1., ls=":", lw=2.5, zorder=85)
+        self.lg_stock = self.axes.axvline(x=-9999999., color="green", ymin=0., ymax=1., ls=":", lw=2.5, zorder=85)
+        self.ld_stock = self.axes.axvline(x=-9999999., color="green", ymin=0., ymax=1., ls=":", lw=2.5, zorder=85)
 
         # Selelection Zones
         rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='pink',
@@ -499,7 +517,8 @@ class GraphProfil(GraphCommon):
 
         self.tab = {'x': [], 'z': []}
         # liste = ["litmingauc", "litmindroi", "stockgauch", 'stockdroit']
-        liste = ["leftminbed", "rightminbed", "leftstock", 'rightstock']
+        liste = ["leftminbed", "rightminbed", "leftstock", 'rightstock',
+                 "leftminbed_g", "rightminbed_g", "leftstock_g", 'rightstock_g']
         for lval in liste:
             if self.feature[lval] is not None:
                 self.tab[lval] = self.feature[lval]
@@ -1141,6 +1160,31 @@ class GraphProfil(GraphCommon):
         if allvis:
             for cb in self.courbes:
                 cb.set_visible(True)
+
+        if ta['leftminbed_g'] is not None:
+            self.lg_lit_mineur.set_xdata([ta['leftminbed_g']])
+            self.lg_lit_mineur.set_visible(True)
+        else:
+            self.lg_lit_mineur.set_visible(False)
+
+        if ta['rightminbed_g'] is not None:
+            self.ld_lit_mineur.set_xdata([ta['rightminbed_g']])
+            self.ld_lit_mineur.set_visible(True)
+        else:
+            self.ld_lit_mineur.set_visible(False)
+
+        if ta['leftstock_g'] is not None:
+            self.lg_stock.set_xdata([ta['leftstock_g']])
+            self.lg_stock.set_visible(True)
+        else:
+            self.lg_stock.set_visible(False)
+
+        if ta['rightstock_g'] is not None:
+            self.ld_stock.set_xdata([ta['rightstock_g']])
+            self.ld_stock.set_visible(True)
+        else:
+            self.ld_stock.set_visible(False)
+
         if ta['x'] is not None and ta['leftminbed'] is not None and ta[
             'rightminbed'] is not None:
             self.litMineur.set_x(ta['leftminbed'])
@@ -1401,6 +1445,30 @@ class GraphProfil(GraphCommon):
             self.rectSelection.set_width(maxi_x - mini_x)
             self.rectSelection.set_visible(True)
             self.canvas.draw()
+
+    def retrieve_left_stock(self):
+        x = self.tab['leftstock_g']
+
+        if x > self.tab['rightminbed']:
+            QMessageBox.error(self, "Error", "Limit of the left Storage Area is located on the "
+                                             "right side of the Minor River Bed", QMessageBox.Ok)
+            return
+
+        if self.tab['leftminbed'] <= x <= self.tab['rightminbed']:
+            QMessageBox.error(self, "Error", "Limit of the left Storage Area is located inside "
+                                             "the Minor River Bed", QMessageBox.Ok)
+            return
+
+        if not min(self.tab['x']) < x < max(self.tab['x']):
+            QMessageBox.error(self, "Error", "Limit of the left Storage Area is located outside "
+                                             "the final profile", QMessageBox.Ok)
+            return
+
+        if x not in self.tab['x']:
+            self.interpolate_x_val(x)
+
+    def interpolate_x_val(self, new_x):
+        print(new_x)
 
     def zoom_fun(self, event):
         # get the current x and y limits

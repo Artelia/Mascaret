@@ -43,6 +43,7 @@ from .Graphic.FilterDialog import ClassFilterDialog
 from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .HydroLawsDialog import ClassHydroLawsDialog
 from .Structure.MobilSingDialog import ClassMobilSingDialog
+from .ClassExtractBedDialog import ClassExtractBedDialog
 # # structures
 from .Structure.StructureDialog import ClassStructureDialog
 from .WaterQuality.ClassMascWQ import ClassMascWQ
@@ -201,6 +202,7 @@ class MascPlugDialog(QMainWindow):
         # creatoin model
         self.ui.action_Extract_MNTfor_profile.triggered.connect(
             self.mnt_to_profil)
+        self.ui.actionExtract_Beds.triggered.connect(self.fct_extract_beds)
         self.ui.actionCreate_Geometry.triggered.connect(self.fct_create_geo)
         self.ui.actionCreate_xcas.triggered.connect(self.fct_create_xcas)
         self.ui.actionCreate_Basin.triggered.connect(self.fct_create_casier)
@@ -546,6 +548,14 @@ class MascPlugDialog(QMainWindow):
         worker.run()
         if self.DEBUG:
             self.add_info("Extraction is done")
+
+    def fct_extract_beds(self):
+        dlg = ClassExtractBedDialog(self)
+        dlg.setModal(False)
+        if not dlg.load_error:
+            dlg.exec_()
+        else:
+            del dlg
 
     def fct_parametres(self):
         """

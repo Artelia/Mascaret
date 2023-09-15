@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>906</width>
+    <width>978</width>
     <height>747</height>
    </rect>
   </property>
@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -176,8 +176,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>906</width>
-     <height>26</height>
+     <width>978</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -209,6 +209,7 @@
       <string>Profile Tools</string>
      </property>
      <addaction name="action_Extract_MNTfor_profile"/>
+     <addaction name="actionExtract_Beds"/>
      <addaction name="actionUpdate_Zones"/>
      <addaction name="actionFilter_All_Profiles"/>
     </widget>
@@ -315,6 +316,7 @@
    <addaction name="actionStructures"/>
    <addaction name="separator"/>
    <addaction name="action_Extract_MNTfor_profile"/>
+   <addaction name="actionExtract_Beds"/>
   </widget>
   <widget class="QToolBar" name="RunToolBar">
    <property name="windowTitle">
@@ -430,7 +432,7 @@
      <normaloff>:/plugins/Mascaret/icones/mntExtract.png</normaloff>:/plugins/Mascaret/icones/mntExtract.png</iconset>
    </property>
    <property name="text">
-    <string> Extract MNT for profile</string>
+    <string>Extract MNT for profile</string>
    </property>
   </action>
   <action name="actionSteady">
@@ -782,6 +784,18 @@
   <action name="action_table_reconstruction_vacuum_full">
    <property name="text">
     <string>Rebuild Table (Vacuum Full)</string>
+   </property>
+  </action>
+  <action name="actionExtract_Beds">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/play.png</normaloff>:/plugins/Mascaret/icones/play.png</iconset>
+   </property>
+   <property name="text">
+    <string>Extract Beds for profile</string>
+   </property>
+   <property name="toolTip">
+    <string>Extract Beds for profile</string>
    </property>
   </action>
  </widget>
