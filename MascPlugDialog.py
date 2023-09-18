@@ -22,6 +22,7 @@ import math
 import os
 import posixpath
 
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import *
@@ -53,6 +54,7 @@ from .db.Check_tab import CheckTab
 from .db.ClassMasDatabase import ClassMasDatabase
 from .scores.ClassScoresDialog import ClassScoresDialog
 from .ui.custom_control import ClassWarningBox
+
 
 
 class MascPlugDialog(QMainWindow):
@@ -251,7 +253,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(False)
+        self.ui.actionTest.setVisible(True)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(
@@ -1036,7 +1038,12 @@ Version : {}
     def fct_test(self):
         """ Test function"""
         # get_laws
-        self.chkt.debug_update_vers_meta(version='5.1.5')
+        #self.chkt.debug_update_vers_meta(version='5.1.5')
+        from .Structure.ClassPostPreFGLk import  ClassInfoParamFG_Lk
+        test = ClassInfoParamFG_Lk()
+        complet = test.fill_param_to_db(self.mdb)
+        print( test.param_fg)
+        print(complet)
 
     def update_ks_mesh_planim(self):
         """ update value of the seleted profiles"""

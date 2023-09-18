@@ -31,7 +31,6 @@ from ..Graphic.GraphCommon import DraggableLegend, GraphCommon
 from ..Function import data_to_float, str2bool
 from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
 
-
 class ClassFloodGateLink(QDialog):
     def __init__(self, mgis):
         QDialog.__init__(self)
@@ -69,7 +68,7 @@ class ClassFloodGateLink(QDialog):
                           'ZINCRFG': [self.zinc_fg],
                           'VREGCLOS': [self.val_reg_close],
                           'VREGOPEN': [self.val_reg_open],
-                          'XPCONT': [self.abscisse_reg],
+                          'PK': [self.abscisse_reg],
 
                           }
 
@@ -481,7 +480,7 @@ class ClassFloodGateLink(QDialog):
         self.ui.lst_sets.setModel(model)
         self.ui.lst_sets.setModelColumn(1)
         # TODO cas particulier
-        where = "active='t' AND type in (4,1) "
+        where = "active='t' AND type in (4,1) AND nature = 1"
         sql = "SELECT active_mob,name FROM {0}.links WHERE {1} ORDER BY name".format(
             self.mdb.SCHEMA, where)
         rows = self.mdb.run_query(sql, fetch=True)

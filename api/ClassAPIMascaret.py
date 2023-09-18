@@ -21,16 +21,19 @@ email                :
 import gc
 import os
 import sys
+import time
 
 try:
     # Plugin
     from .masc import Mascaret
     from ..Structure.ClassFloodGate import ClassFloodGate
+    from ..Structure.ClassFloodGateLk import ClassFloodGateLk
 except:
     # autonome python
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from masc import Mascaret
     from Structure.ClassFloodGate import ClassFloodGate
+    from Structure.ClassFloodGateLk import ClassFloodGateLk
 
 
 def check_init(file):
@@ -68,6 +71,7 @@ class ClassAPIMascaret:
 
         self.masc = Mascaret(log_level='INFO')
         self.masc.create_mascaret(iprint=1)
+
         if isinstance(main, dict):
             self.clmas = None
             self.mgis = None
@@ -75,17 +79,19 @@ class ClassAPIMascaret:
             os.chdir(main["RUN_REP"])
             self.DEBUG = main["DEBUG"]
             self.baseName = main['BASE_NAME']
-            self.clfg = ClassFloodGate(self)
-            self.mobil_struct = self.clfg.fg_active()
         else:
             self.clmas = main
             self.mgis = self.clmas.mgis
             self.dossierFileMasc = self.clmas.dossierFileMasc
             self.DEBUG = self.mgis.DEBUG
             self.baseName = self.clmas.baseName
-            # floodgat
-            self.clfg = ClassFloodGate(self)
-            self.mobil_struct = self.clfg.fg_active()
+        # floodgat
+        self.clfg = ClassFloodGate(self)
+        self.mobil_struct = self.clfg.fg_active()
+        #links floodgate
+        self.clfg_lk = ClassFloodGateLk(self)
+        self.mobil_link= self.clfg_lk.actif_mobil_lk
+
 
     def initial(self, casfile):
         """
@@ -339,13 +345,17 @@ class ClassAPIMascaret:
             json.dump(res, filein)
 
     def main(self, filename, tracer=False, basin=False):
+        t0 = time.time()
         self.tracer = tracer
         self.basin = basin
         self.initial(filename)
         if self.mobil_struct:
             self.clfg.init_floogate()
-        self.compute()
+        if self.mobil_link and self.basin:
+            self.clfg_lk.init_fg_links()
+        #self.compute()
         self.finalize()
+        self.add_info('Computation Time : {} s'.format(time.time() - t0))
 
     def add_info(self, txt):
         if self.mgis is not None:
