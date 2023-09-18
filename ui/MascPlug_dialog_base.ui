@@ -217,6 +217,7 @@
     <addaction name="actionObservations"/>
     <addaction name="actionStructures"/>
     <addaction name="actionStructures_weirs"/>
+    <addaction name="actionStructures_links"/>
     <addaction name="actionTest"/>
     <addaction name="separator"/>
     <addaction name="actionUpdate_all_PK"/>
@@ -782,6 +783,11 @@
   <action name="action_table_reconstruction_vacuum_full">
    <property name="text">
     <string>Rebuild Table (Vacuum Full)</string>
+   </property>
+  </action>
+  <action name="actionStructures_links">
+   <property name="text">
+    <string>Movable Links</string>
    </property>
   </action>
  </widget>
