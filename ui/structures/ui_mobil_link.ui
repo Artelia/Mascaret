@@ -32,6 +32,29 @@
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
         <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="4">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Existing Links ( with checkbox =  active or not)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <layout class="QVBoxLayout" name="verticalLayout_3"/>
+         </item>
          <item row="1" column="4">
           <layout class="QGridLayout" name="gridLayout_5">
            <item row="0" column="0">
@@ -74,29 +97,6 @@
             </widget>
            </item>
           </layout>
-         </item>
-         <item row="0" column="4">
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="1" column="0">
-          <layout class="QVBoxLayout" name="verticalLayout_3"/>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Existing Links ( with checkbox =  active or not)</string>
-           </property>
-          </widget>
          </item>
          <item row="1" column="1">
           <widget class="QListView" name="lst_sets"/>
@@ -265,13 +265,32 @@
       <layout class="QGridLayout" name="gridLayout_7">
        <item row="0" column="0">
         <layout class="QGridLayout" name="gridLayout_6">
-         <item row="7" column="6">
-          <spacer name="horizontalSpacer_2">
+         <item row="4" column="2">
+          <widget class="QDoubleSpinBox" name="cote_max_fg">
+           <property name="suffix">
+            <string> m</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="minimum">
+            <double>-1000000000.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>1000000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="19" column="0">
+          <spacer name="horizontalSpacer_4">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Expanding</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -281,80 +300,7 @@
            </property>
           </spacer>
          </item>
-         <item row="14" column="6">
-          <widget class="QDialogButtonBox" name="b_OK_page3">
-           <property name="standardButtons">
-            <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>Movement stop:</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="label_19">
-           <property name="text">
-            <string>Mobile part:</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="4">
-          <widget class="QComboBox" name="cb_type_t"/>
-         </item>
-         <item row="8" column="2">
-          <widget class="QDoubleSpinBox" name="val_reg_close">
-           <property name="decimals">
-            <number>3</number>
-           </property>
-           <property name="minimum">
-            <double>-1000000000.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>10000000.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>0.010000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="label_21">
-           <property name="text">
-            <string>The max increment of 
- each movement: </string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="4">
-          <widget class="QComboBox" name="cb_type_t_vit"/>
-         </item>
-         <item row="6" column="1">
-          <widget class="QLabel" name="label_15">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Regulation time step :</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
+         <item row="9" column="1">
           <widget class="QLabel" name="label_18">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
@@ -379,24 +325,8 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="2">
-          <widget class="QDoubleSpinBox" name="zinc_fg">
-           <property name="suffix">
-            <string> m</string>
-           </property>
-           <property name="decimals">
-            <number>3</number>
-           </property>
-           <property name="maximum">
-            <double>10000.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>999.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="2">
-          <widget class="QDoubleSpinBox" name="vel_fg">
+         <item row="11" column="2">
+          <widget class="QDoubleSpinBox" name="pas_temps_fg">
            <property name="suffix">
             <string/>
            </property>
@@ -404,10 +334,39 @@
             <number>2</number>
            </property>
            <property name="maximum">
-            <double>1000000.000000000000000</double>
+            <double>1000000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.100000000000000</double>
            </property>
            <property name="value">
-            <double>99.000000000000000</double>
+            <double>0.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="14" column="1">
+          <widget class="QLabel" name="label_14">
+           <property name="text">
+            <string>Variable of regulation : </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="15" column="2">
+          <widget class="QDoubleSpinBox" name="val_reg_close">
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="minimum">
+            <double>-1000000000.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>10000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
            </property>
           </widget>
          </item>
@@ -427,46 +386,23 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="2">
-          <widget class="QComboBox" name="cb_dir"/>
-         </item>
-         <item row="11" column="0">
-          <spacer name="horizontalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+         <item row="3" column="2">
+          <widget class="QDoubleSpinBox" name="zinc_fg">
+           <property name="suffix">
+            <string> m</string>
            </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
+           <property name="decimals">
+            <number>3</number>
            </property>
-          </spacer>
-         </item>
-         <item row="11" column="2">
-          <spacer name="verticalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+           <property name="maximum">
+            <double>10000.000000000000000</double>
            </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="7" column="2">
-          <widget class="QComboBox" name="cb_var"/>
-         </item>
-         <item row="8" column="1">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>Close regulation value :</string>
+           <property name="value">
+            <double>999.000000000000000</double>
            </property>
           </widget>
          </item>
-         <item row="5" column="2" colspan="4">
+         <item row="9" column="2" colspan="4">
           <widget class="Line" name="line_6">
            <property name="font">
             <font>
@@ -489,24 +425,65 @@
            </property>
           </widget>
          </item>
-         <item row="9" column="1">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>Open regulation value :</string>
+         <item row="18" column="2">
+          <widget class="QDoubleSpinBox" name="abscisse_reg">
+           <property name="suffix">
+            <string> m</string>
+           </property>
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <double>1000000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.100000000000000</double>
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QLabel" name="label_20">
+         <item row="2" column="2">
+          <widget class="QDoubleSpinBox" name="vel_fg">
+           <property name="suffix">
+            <string/>
+           </property>
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <double>1000000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>99.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="1">
+          <widget class="QLabel" name="label_15">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
-            <string>Velocity</string>
+            <string>Regulation time step :</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Movement stop:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>
-         <item row="9" column="2">
+         <item row="16" column="2">
           <widget class="QDoubleSpinBox" name="val_reg_open">
            <property name="decimals">
             <number>3</number>
@@ -522,16 +499,19 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="2">
-          <widget class="QDoubleSpinBox" name="cote_max_fg">
+         <item row="2" column="4">
+          <widget class="QComboBox" name="cb_type_t_vit"/>
+         </item>
+         <item row="1" column="2">
+          <widget class="QComboBox" name="cb_dir"/>
+         </item>
+         <item row="17" column="2">
+          <widget class="QDoubleSpinBox" name="tol_reg">
            <property name="suffix">
-            <string> m</string>
+            <string/>
            </property>
            <property name="decimals">
             <number>3</number>
-           </property>
-           <property name="minimum">
-            <double>-1000000000.000000000000000</double>
            </property>
            <property name="maximum">
             <double>1000000000.000000000000000</double>
@@ -540,38 +520,126 @@
             <double>0.010000000000000</double>
            </property>
            <property name="value">
-            <double>0.000000000000000</double>
+            <double>0.100000000000000</double>
            </property>
           </widget>
          </item>
-         <item row="7" column="1">
-          <widget class="QLabel" name="label_14">
+         <item row="2" column="1">
+          <widget class="QLabel" name="label_20">
            <property name="text">
-            <string>Variables : </string>
+            <string>Velocity</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>
-         <item row="6" column="2">
-          <widget class="QDoubleSpinBox" name="pas_temps_fg">
-           <property name="suffix">
-            <string/>
+         <item row="19" column="2">
+          <spacer name="verticalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
            </property>
-           <property name="decimals">
-            <number>2</number>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
            </property>
-           <property name="maximum">
-            <double>1000000000.000000000000000</double>
+          </spacer>
+         </item>
+         <item row="14" column="2">
+          <widget class="QComboBox" name="cb_var"/>
+         </item>
+         <item row="11" column="4">
+          <widget class="QComboBox" name="cb_type_t"/>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_19">
+           <property name="text">
+            <string>Mobile part:</string>
            </property>
-           <property name="singleStep">
-            <double>0.100000000000000</double>
-           </property>
-           <property name="value">
-            <double>0.000000000000000</double>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
            </property>
           </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="label_21">
+           <property name="text">
+            <string>The max increment of 
+ each movement: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="22" column="6">
+          <widget class="QDialogButtonBox" name="b_OK_page3">
+           <property name="standardButtons">
+            <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+           </property>
+          </widget>
+         </item>
+         <item row="16" column="1">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Opening level value:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="18" column="1">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Abscissa of the control point:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Initial level of the gate</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QDoubleSpinBox" name="cote_init_fg">
+           <property name="suffix">
+            <string> m</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="maximum">
+            <double>99999999.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="13" column="2">
+          <widget class="QSpinBox" name="npas_temps_fg">
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>9999</number>
+           </property>
+          </widget>
+         </item>
+         <item row="14" column="6">
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
          </item>
          <item row="0" column="1">
           <widget class="QLabel" name="label_17">
@@ -592,29 +660,46 @@
            </property>
           </widget>
          </item>
-         <item row="10" column="2">
-          <widget class="QDoubleSpinBox" name="abscisse_reg">
-           <property name="suffix">
-            <string> m</string>
-           </property>
-           <property name="decimals">
-            <number>2</number>
-           </property>
-           <property name="maximum">
-            <double>1000000000.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>0.100000000000000</double>
+         <item row="15" column="1">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Closing level value:</string>
            </property>
           </widget>
          </item>
-         <item row="10" column="1">
-          <widget class="QLabel" name="label_7">
+         <item row="17" column="1">
+          <widget class="QLabel" name="label_9">
            <property name="text">
-            <string>Abscissa of the control point:</string>
+            <string>Tolerance:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="13" column="1">
+          <widget class="QLabel" name="label_16">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>N time step to apply displacement</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="2">
+          <widget class="QComboBox" name="cb_critere_t"/>
+         </item>
+         <item row="10" column="1">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Step time criterion</string>
            </property>
           </widget>
          </item>

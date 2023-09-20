@@ -30,6 +30,8 @@ from qgis.utils import *
 from ..Graphic.GraphCommon import DraggableLegend, GraphCommon
 from ..Function import data_to_float, str2bool
 from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
+from ..ui.custom_control import ClassWarningBox
+
 
 class ClassFloodGateLink(QDialog):
     def __init__(self, mgis):
@@ -42,25 +44,26 @@ class ClassFloodGateLink(QDialog):
         self.cur_set = None
         self.filling_tab = False
         self.graph_edit = None
+        self.box = ClassWarningBox()
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath,
                                       'ui/structures/ui_mobil_link.ui'), self)
 
-        fill_qcombobox(self.cb_dir, [['U', 'top'], ['D', 'bottom']])
-        self.cb_dir.setCurrentIndex(1)
+        fill_qcombobox(self.cb_dir, [ ['D', 'bottom'],['U', 'top']])
         fill_qcombobox(self.cb_var, [['Z', 'Water level'], ['Q', 'Flow rate']])
-        self.cb_dir.setCurrentIndex(0)
-
         fill_qcombobox(self.cb_type_t,
                        [[1, 's'], [60, 'min'], [3600, 'h'], [86400, 'jours']])
-        self.cb_dir.setCurrentIndex(0)
         fill_qcombobox(self.cb_type_t_vit,
                        [[1, 'm/s'], [60, 'm/min'], [3600, 'm/h']])
-        self.cb_dir.setCurrentIndex(2)
+        fill_qcombobox(self.cb_dir, [['D', 'bottom'], ['U', 'top']])
+        fill_qcombobox(self.cb_critere_t, [['DTREG', 'Time Step'], ['NDTREG', 'N Time Step']])
+
 
         self.dico_ctrl = {'ZMAXFG': [self.cote_max_fg],
                           'TYPE_TIME_VELO': [self.cb_type_t_vit],
                           'TYPE_TIME': [self.cb_type_t],
+                          'CRITDTREG': [self.cb_critere_t],
+                          'NDTREG': [self.npas_temps_fg],
                           'DTREG': [self.pas_temps_fg],
                           'VELOFG': [self.vel_fg],
                           'VREG': [self.cb_var],
@@ -68,7 +71,9 @@ class ClassFloodGateLink(QDialog):
                           'ZINCRFG': [self.zinc_fg],
                           'VREGCLOS': [self.val_reg_close],
                           'VREGOPEN': [self.val_reg_open],
+                          'TOLREG': [self.tol_reg],
                           'PK': [self.abscisse_reg],
+                          'ZINITREG': [self.cote_init_fg],
 
                           }
 
@@ -164,13 +169,16 @@ class ClassFloodGateLink(QDialog):
         self.mdb.execute(sql)
 
     def select_list(self, itm):
-        self.name_cur = self.ui.lst_sets.model().item(itm.row(), 1).text()
+        nam = self.ui.lst_sets.model().item(itm.row(), 1).text()
+        nam = nam.split('-')[0].strip()
+        self.name_cur = nam
         self.ui.bt_edit.setDisabled(False)
         self.ui.cb_method.setDisabled(False)
 
         rows = self.mdb.select('links',
                                where="name = '{0}'".format(self.name_cur),
                                list_var=['method_mob', 'linknum'])
+        print(rows)
         if rows:
             self.id = rows['linknum'][0]
             ctrl_set_value(self.cb_method, rows['method_mob'][0])
@@ -344,8 +352,34 @@ class ClassFloodGateLink(QDialog):
             self.reject_page2()
             self.mgis.add_info("Cancel of gate information")
 
+    def check_level_regul(self):
+        """ Check if  'VREGOPEN' and 'VREGCLOS are consistent'"""
+        # check cas non possible
+        typ_g = ctrl_get_value(self.dico_ctrl['DIRFG'][0])
+        valo = float(ctrl_get_value(self.dico_ctrl['VREGOPEN'][0]))
+        valf = float(ctrl_get_value(self.dico_ctrl['VREGCLOS'][0]))
+        tol = float(ctrl_get_value(self.dico_ctrl['TOLREG'][0]))
+
+        if typ_g == 'D':  # bas
+            if valf + tol > valo - tol:
+                ok = self.box.info("ERROR:\n\n"
+                                   "Closing level value must be lower opening level value ")
+                return False
+
+        else:
+            if valf + tol < valo - tol :
+                ok = self.box.info("ERROR:\n\n"
+                                   "Opening level value must be lower closing level value ")
+                return False
+        return True
+
+
     def accept_page3(self):
         # try:
+
+            if not self.check_level_regul():
+                return
+
             fact_t = float(ctrl_get_value(self.dico_ctrl['TYPE_TIME'][0]))
             fact_t_velo = 1 / float(
                 ctrl_get_value(self.dico_ctrl['TYPE_TIME_VELO'][0]))
@@ -360,7 +394,7 @@ class ClassFloodGateLink(QDialog):
                 elif var == 'DTREG':
                     val = float(ctrl_get_value(ctrls[0]))
                     val = val * fact_t
-                elif var == 'DIRFG' or var == 'VREG':
+                elif var in ['DIRFG','VREG', 'CRITDTREG']:
                     val = ctrl_get_value(ctrls[0])
                     val = "'{}'".format(val)
                 else:
@@ -379,7 +413,6 @@ class ClassFloodGateLink(QDialog):
                     sql = "INSERT INTO {0}.links_mob_val (id_links, id_order, name_var, value)" \
                           " VALUES ({1}, {2}, '{3}',{4})" \
                         .format(self.mdb.SCHEMA, self.id, 0, var, val)
-                    print(sql)
                     self.mdb.execute(sql)
 
                 self.ui.links_pages.setCurrentIndex(0)
@@ -481,23 +514,26 @@ class ClassFloodGateLink(QDialog):
         self.ui.lst_sets.setModelColumn(1)
         # TODO cas particulier
         where = "active='t' AND type in (4,1) AND nature = 1"
-        sql = "SELECT active_mob,name FROM {0}.links WHERE {1} ORDER BY name".format(
+        sql = "SELECT active_mob,name,type FROM {0}.links WHERE {1} ORDER BY name".format(
             self.mdb.SCHEMA, where)
         rows = self.mdb.run_query(sql, fetch=True)
-
         if rows is not None:
             for i, row in enumerate(rows):
+                if row[2] == 1:
+                    typ = 'Weir'
+                elif row[2] == 4:
+                    typ = 'Culvert'
                 for j, field in enumerate(row):
-                    if j != 2:
-                        new_itm = QStandardItem(str(row[j]))
-                        new_itm.setEditable(False)
-                        if j == 1:
-                            new_itm.setCheckable(True)
-                            if not row[0]:
-                                new_itm.setCheckState(0)
-                            elif row[0]:
-                                new_itm.setCheckState(2)
-                        self.ui.lst_sets.model().setItem(i, j, new_itm)
+                    new_itm = QStandardItem('{} - ({})'.format(str(row[1]), typ))
+                    # new_itm = QStandardItem(str(row[j]))
+                    new_itm.setEditable(False)
+                    if j == 1:
+                        new_itm.setCheckable(True)
+                        if not row[0]:
+                            new_itm.setCheckState(0)
+                        elif row[0]:
+                            new_itm.setCheckState(2)
+                    self.ui.lst_sets.model().setItem(i, j, new_itm)
 
             self.ui.lst_sets.model().itemChanged.connect(self.sel_config_def)
 
@@ -544,6 +580,14 @@ class ClassFloodGateLink(QDialog):
                 self.ui.links_pages.setCurrentIndex(2)
 
     def display_method2(self):
+
+        sql = "SELECT  abscissa, type FROM {0}.links " \
+              "WHERE linknum = {1} ".format(self.mdb.SCHEMA, self.id)
+
+        rows_link = self.mdb.run_query(sql, fetch=True)
+
+
+        # get value
         sql = "SELECT  name_var, value FROM {0}.links_mob_val " \
               "WHERE id_links = {1} ".format(self.mdb.SCHEMA, self.id)
 
@@ -551,7 +595,7 @@ class ClassFloodGateLink(QDialog):
         if len(rows) > 0:
             dico = {}
             for param, val in rows:
-                if  param == 'DIRFG' or param == 'VREG':
+                if  param in ['DIRFG','VREG', 'CRITDTREG']:
                     dico[param] = val
                 else:
                     dico[param] = float(val)
@@ -581,20 +625,33 @@ class ClassFloodGateLink(QDialog):
 
             self.dico_ctrl['TYPE_TIME_VELO'][0].blockSignals(False)
         else:
-            # default value TODO
             for param in self.dico_ctrl.keys():
                 ctrls = self.dico_ctrl[param]
                 for ctrl in ctrls:
                     ctrl_set_value(ctrl, 0.0)
+            self.cb_dir.setCurrentIndex(0)
+            self.cb_var.setCurrentIndex(0)
+            self.cb_type_t_vit.setCurrentIndex(2)
+            self.cb_type_t.setCurrentIndex(0)
+            # default value TODO
+            if len(rows_link) > 0:
+                ctrl_set_value(self.abscisse_reg, rows_link[0][0])
+                ctrl_set_value(self.zinc_fg, 99)
 
-        sql = "SELECT  abscissa FROM {0}.links " \
-              "WHERE linknum = {1} ".format(self.mdb.SCHEMA, self.id)
 
-        rows = self.mdb.run_query(sql, fetch=True)
-        print(rows)
-        if len(rows) > 0:
-            ctrl_set_value(self.abscisse_reg, rows[0][0])
+            # default value
 
+        if len(rows_link) > 0:
+
+            if rows_link[0][1] == 1:  # weir
+                fill_qcombobox(self.cb_dir, [['D', 'bottom']])
+                self.cb_dir.setCurrentIndex(0)
+                ctrl_set_value(self.cote_max_fg, 9999)
+                self.cote_max_fg.setEnabled(False)
+            else:
+                fill_qcombobox(self.cb_dir, [['D', 'bottom'], ['U', 'top']])
+                self.cb_dir.setCurrentIndex(0)
+                self.cote_max_fg.setEnabled(True)
 
     def fill_tab_sets(self):
         """ fill table"""

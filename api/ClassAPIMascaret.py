@@ -120,6 +120,7 @@ class ClassAPIMascaret:
         if '_init.' in casfile:
             initfile = True
             self.mobil_struct = False
+            self.mobil_link = False
         files_name = []
         files_type = ['xcas']
         if not os.path.isfile(casfile):

@@ -27,14 +27,19 @@ class ClassInfoParamFG_Lk(object):
         self.param_fg = {}
         self.list_actif = []
         self.lst_param = {
+            'ZMAXFG': 'valeur Z limite max d\'ouverture ',
+            'CRITDTREG': 'critère NDTREG ou DTREG',
+            'NDTREG': 'Tout les N pas temps pour l\'application',
+            'DTREG': 'Si =0 pas de temps  du calcul, sinn celui indiqué (en s)',
+            'VELOFG': 'vitesse m/s de la vanne',
+            'VREG': 'Variable regulation Z ou Q',
+            'DIRFG': 'direction si D cote monte et section diminue si U seul section diminue',
+            'ZINCRFG': 'max d''incrementation',
             'VREGCLOS': 'valeur fermeture',
             'VREGOPEN': 'valeur ouverture',
+            'TOLREG': 'Tolerance sur les variale de regulation',
             'PK': 'PK de la régulation',
-            'DTREG': 'Si =0 pas de temps du calcul, sinn celui indiqué',
-            'ZINCRFG': 'max d''incrementation',
-            'ZMAXFG': 'valeur Z MAX ',
-            'DIRFG': 'direction si D cote monte et section diminue si U seul section diminue',
-            'VELOFG': 'vitesse m/s',
+            'ZINITREG': 'cote initial de la vanne',
             'name': 'nom du link',
             'level': 'cote de radier',
             'abscissa': 'pk du link',
@@ -47,7 +52,6 @@ class ClassInfoParamFG_Lk(object):
         Get param of mobil link
         """
         if not parent:
-            print('rrrrrrrrrrrrrrrrrrrrrr')
             path = os.path.abspath(
                 os.path.join(os.path.dirname(__file__), '../mascaret'))
             path = os.path.join(path, file)
