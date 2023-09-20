@@ -18,7 +18,6 @@ email                :
  ***************************************************************************/
 
 """
-import gc
 import os
 import sys
 import time
@@ -28,7 +27,7 @@ try:
     from .masc import Mascaret
     from ..Structure.ClassFloodGate import ClassFloodGate
     from ..Structure.ClassFloodGateLk import ClassFloodGateLk
-except:
+except ImportError:
     # autonome python
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from masc import Mascaret
@@ -37,13 +36,13 @@ except:
 
 
 def check_init(file):
-    if '_init.' in file:
+    if "_init." in file:
         return True
     return False
 
 
 class ClassAPIMascaret:
-    """ Class contain  model files creation and run model mascaret"""
+    """Class contain  model files creation and run model mascaret"""
 
     def __init__(self, main):
         # def __init__(self):
@@ -69,7 +68,7 @@ class ClassAPIMascaret:
 
         self.results_api = {}
 
-        self.masc = Mascaret(log_level='INFO')
+        self.masc = Mascaret(log_level="INFO")
         self.masc.create_mascaret(iprint=1)
 
         if isinstance(main, dict):
@@ -78,7 +77,7 @@ class ClassAPIMascaret:
             self.dossierFileMasc = main["RUN_REP"]
             os.chdir(main["RUN_REP"])
             self.DEBUG = main["DEBUG"]
-            self.baseName = main['BASE_NAME']
+            self.baseName = main["BASE_NAME"]
         else:
             self.clmas = main
             self.mgis = self.clmas.mgis
@@ -88,10 +87,9 @@ class ClassAPIMascaret:
         # floodgat
         self.clfg = ClassFloodGate(self)
         self.mobil_struct = self.clfg.fg_active()
-        #links floodgate
+        # links floodgate
         self.clfg_lk = ClassFloodGateLk(self)
-        self.mobil_link= self.clfg_lk.actif_mobil_lk
-
+        self.mobil_link = self.clfg_lk.actif_mobil_lk
 
     def initial(self, casfile):
         """
@@ -117,14 +115,14 @@ class ClassAPIMascaret:
         :return: list of type and of file
         """
         initfile = False
-        if '_init.' in casfile:
+        if "_init." in casfile:
             initfile = True
             self.mobil_struct = False
             self.mobil_link = False
         files_name = []
-        files_type = ['xcas']
+        files_type = ["xcas"]
         if not os.path.isfile(casfile):
-            self.add_info('{} not found'.format(casfile))
+            self.add_info("{} not found".format(casfile))
 
             return None
 
@@ -132,91 +130,91 @@ class ClassAPIMascaret:
         law_files = []
         law_tr_files = []
 
-        for file in os.listdir('.'):
-            if '.geo' in file:
-                files_type.append('geo')
+        for file in os.listdir("."):
+            if ".geo" in file:
+                files_type.append("geo")
                 files_name.append(file)
-            elif '.lig' in file and initfile == check_init(file):
-                files_type.append('lig')
+            elif ".lig" in file and initfile == check_init(file):
+                files_type.append("lig")
                 self.filelig = file
                 files_name.append(self.filelig)
-            elif '.met' in file and initfile == check_init(file):
+            elif ".met" in file and initfile == check_init(file):
                 self.tracer = True
-                files_type.append('tracer_meteo')
+                files_type.append("tracer_meteo")
                 filepath = file
                 files_name.append(filepath)
-            elif '.phy' in file and initfile == check_init(file):
+            elif ".phy" in file and initfile == check_init(file):
                 self.tracer = True
-                files_type.append('tracer_parphy')
+                files_type.append("tracer_parphy")
                 filepath = file
                 files_name.append(filepath)
-            elif '.conc' in file and initfile == check_init(file):
+            elif ".conc" in file and initfile == check_init(file):
                 self.tracer = True
-                files_type.append('tracer_conc')
+                files_type.append("tracer_conc")
                 filepath = file
                 files_name.append(filepath)
-            elif '_tra.loi' in file and initfile == check_init(file):
+            elif "_tra.loi" in file and initfile == check_init(file):
                 self.tracer = True
                 law_tr_files.append(file)
-            elif '.loi' in file and initfile == check_init(file):
+            elif ".loi" in file and initfile == check_init(file):
                 law_files.append(file)
-            elif '.casier' in file and initfile == check_init(file):
+            elif ".casier" in file and initfile == check_init(file):
                 self.basin = True
-                files_type.append('casier')
+                files_type.append("casier")
                 files_name.append(file)
         # WARNING, the law order must be the same than xcas file
         if law_files:
-            if initfile :
-                law_tmp = [file.replace('_init.loi','') for file in law_files]
+            if initfile:
+                law_tmp = [file.replace("_init.loi", "") for file in law_files]
                 for file in sorted(law_tmp):
-                    files_type.append('loi')
-                    files_name.append(file + '_init.loi')
+                    files_type.append("loi")
+                    files_name.append(file + "_init.loi")
             else:
                 for file in sorted(law_files):
-                    files_type.append('loi')
-                    files_name.append(file )
+                    files_type.append("loi")
+                    files_name.append(file)
 
         else:
             self.add_info("The laws are not found.")
 
         if self.tracer and law_tr_files:
             for file in sorted(law_tr_files):
-                files_type.append('tracer_loi')
+                files_type.append("tracer_loi")
                 filepath = file
                 files_name.append(filepath)
 
         # listing
-        files_type.append('listing')
-        files_name.append(self.baseName + '.lis')
+        files_type.append("listing")
+        files_name.append(self.baseName + ".lis")
         if initfile:
-            post = '_init'
+            post = "_init"
         else:
-            post = ''
+            post = ""
         # Resultat
-        files_type.append('res')
-        files_name.append(self.baseName + post + '.opt')
+        files_type.append("res")
+        files_name.append(self.baseName + post + ".opt")
 
         if self.tracer:
             # listing
-            files_type.append('tracer_listing')
-            files_name.append(self.baseName + '.tra_lis')
+            files_type.append("tracer_listing")
+            files_name.append(self.baseName + ".tra_lis")
             # Resultat
-            files_type.append('tracer_res')
-            files_name.append(self.baseName + '.tra_opt')
+            files_type.append("tracer_res")
+            files_name.append(self.baseName + ".tra_opt")
 
         if self.basin:
             # listing
-            files_type.append('listing_casier')
-            files_name.append(self.baseName + '.cas_lis')
+            files_type.append("listing_casier")
+            files_name.append(self.baseName + ".cas_lis")
             # Resultat
-            files_type.append('res_casier')
-            files_name.append(self.baseName + '.cas_opt')
+            files_type.append("res_casier")
+            files_name.append(self.baseName + ".cas_opt")
             # listing
-            files_type.append('listing_liaison')
-            files_name.append(self.baseName + '.liai_lis')
+            files_type.append("listing_liaison")
+            files_name.append(self.baseName + ".liai_lis")
             # Resultat
-            files_type.append('res_liaison')
-            files_name.append(self.baseName + '.liai_opt')
+            files_type.append("res_liaison")
+            files_name.append(self.baseName + ".liai_opt")
 
         return [files_name, files_type]
 
@@ -225,7 +223,7 @@ class ClassAPIMascaret:
         Initialize hydraulic
         :return:
         """
-        self.npoin = self.masc.get_var_size('Model.X')[0]
+        self.npoin = self.masc.get_var_size("Model.X")[0]
         if self.filelig is None:
             qinit = [self.qini] * self.npoin
             zinit = [self.zini] * self.npoin
@@ -240,59 +238,61 @@ class ClassAPIMascaret:
         Initializes the variables  for the different stop criteriae
         :return:
         """
-        self.dt = self.masc.get('Model.DT')
-        self.tini = self.masc.get('Model.InitTime')
-        self.tfin = self.masc.get('Model.MaxCompTime')
+        self.dt = self.masc.get("Model.DT")
+        self.tini = self.masc.get("Model.InitTime")
+        self.tfin = self.masc.get("Model.MaxCompTime")
 
-        self.tmaxiter = self.masc.get('Model.MaxNbTimeStep')
-        self.stpcrit = self.masc.get('Model.StopCriteria')
-        self.conum = self.masc.get('Model.VarTimeStep')
+        self.tmaxiter = self.masc.get("Model.MaxNbTimeStep")
+        self.stpcrit = self.masc.get("Model.StopCriteria")
+        self.conum = self.masc.get("Model.VarTimeStep")
 
-        self.zmax_co = self.masc.get('Model.MaxControlZ')
-        self.sect_co = self.masc.get('Model.ControlSection')
+        self.zmax_co = self.masc.get("Model.MaxControlZ")
+        self.sect_co = self.masc.get("Model.ControlSection")
 
         # if self.DEBUG:
         self.mess_crit_stop()
 
     def mess_crit_stop(self):
         """Print the criteria information"""
-        txt = '**************************************\n'
+        txt = "**************************************\n"
         if self.stpcrit == 1:
-            txt += ('Stop Criteria : {} \n'
-                    'Variable Time Step :{}\n'
-                    'Initial Time : {} \n'
-                    'Final Time :{} \n'
-                    'Time Step : {} \n'.format(self.stpcrit,
-                                               self.conum,
-                                               self.tini,
-                                               self.tfin,
-                                               self.dt))
+            txt += (
+                "Stop Criteria : {} \n"
+                "Variable Time Step :{}\n"
+                "Initial Time : {} \n"
+                "Final Time :{} \n"
+                "Time Step : {} \n".format(self.stpcrit, self.conum, self.tini, self.tfin, self.dt)
+            )
         elif self.stpcrit == 2:
-            txt += ('Stop Criteria : {} \n'
-                    'Variable Time Step :{}\n'
-                    'Initial Time : {} \n'
-                    'Max iteration :{} \n'
-                    'Time Step : {} \n'.format(self.stpcrit,
-                                               self.conum,
-                                               self.tini,
-                                               self.tmaxiter,
-                                               self.dt))
+            txt += (
+                "Stop Criteria : {} \n"
+                "Variable Time Step :{}\n"
+                "Initial Time : {} \n"
+                "Max iteration :{} \n"
+                "Time Step : {} \n".format(
+                    self.stpcrit, self.conum, self.tini, self.tmaxiter, self.dt
+                )
+            )
         elif self.stpcrit == 3:
-            txt += ('Stop Criteria : {} \n'
-                    'Variable Time Step :{}\n'
-                    'Initial Time : {} \n'
-                    'Time Step : {} \n'
-                    'Max level water of control : {} \n'
-                    'Abscissa of control section : {} \n'
-                    ''.format(self.stpcrit,
-                              self.conum,
-                              self.tini,
-                              self.dt,
-                              self.zmax_co,
-                              self.masc.get('Model.X', self.sect_co - 1)))
+            txt += (
+                "Stop Criteria : {} \n"
+                "Variable Time Step :{}\n"
+                "Initial Time : {} \n"
+                "Time Step : {} \n"
+                "Max level water of control : {} \n"
+                "Abscissa of control section : {} \n"
+                "".format(
+                    self.stpcrit,
+                    self.conum,
+                    self.tini,
+                    self.dt,
+                    self.zmax_co,
+                    self.masc.get("Model.X", self.sect_co - 1),
+                )
+            )
         else:
             txt += "Criteria {} doesn't exists. \n".format(self.stpcrit)
-        txt += '**************************************\n'
+        txt += "**************************************\n"
         self.add_info(txt)
 
     def compute(self):
@@ -311,11 +311,11 @@ class ClassAPIMascaret:
             for cmpt in range(self.tmaxiter):
                 t0, t1, dtp = self.one_iter(t0, t1, dtp)
         elif self.stpcrit == 3:
-            z_arret = self.masc.get('State.Z', self.sect_co - 1)
+            z_arret = self.masc.get("State.Z", self.sect_co - 1)
             while not z_arret > self.zmax_co:
                 t0, t1, dtp = self.one_iter(t0, t1, dtp)
-                z_arret = self.masc.get('State.Z', self.sect_co - 1)
-        self.tfin = self.masc.get('State.PreviousTime')
+                z_arret = self.masc.get("State.Z", self.sect_co - 1)
+        self.tfin = self.masc.get("State.PreviousTime")
 
     def one_iter(self, t0, t1, dtp):
         if self.mobil_struct:
@@ -323,7 +323,7 @@ class ClassAPIMascaret:
 
         self.masc.compute(t0, t1, dtp)
         if self.conum:
-            dtp_tmp = self.masc.get('State.DT')
+            dtp_tmp = self.masc.get("State.DT")
             if dtp_tmp != 0:
                 dtp = dtp_tmp
         t0 = t1
@@ -334,15 +334,14 @@ class ClassAPIMascaret:
         del self.masc
         if self.clfg is not None:
             self.clfg.finalize(self.tfin)
-            self.results_api['STRUCT_FG'] = self.clfg.results_fg_mv
+            self.results_api["STRUCT_FG"] = self.clfg.results_fg_mv
             if self.mgis is None:
-                self.write_res_struct(self.results_api['STRUCT_FG'])
-
+                self.write_res_struct(self.results_api["STRUCT_FG"])
 
     def write_res_struct(self, res):
         import json
-        with open(os.path.join(self.dossierFileMasc, "res_struct.res"),
-                  'w') as filein:
+
+        with open(os.path.join(self.dossierFileMasc, "res_struct.res"), "w") as filein:
             json.dump(res, filein)
 
     def main(self, filename, tracer=False, basin=False):
@@ -354,9 +353,9 @@ class ClassAPIMascaret:
             self.clfg.init_floogate()
         if self.mobil_link and self.basin:
             self.clfg_lk.init_fg_links()
-        #self.compute()
+        # self.compute()
         self.finalize()
-        self.add_info('Computation Time : {} s'.format(time.time() - t0))
+        self.add_info("Computation Time : {} s".format(time.time() - t0))
 
     def add_info(self, txt):
         if self.mgis is not None:
@@ -365,13 +364,10 @@ class ClassAPIMascaret:
             print(txt)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     path = os.getcwd()
-    dico = {
-        "RUN_REP": path,
-        "DEBUG": True,
-        'BASE_NAME': 'mascaret'}
+    dico = {"RUN_REP": path, "DEBUG": True, "BASE_NAME": "mascaret"}
 
     api = ClassAPIMascaret(dico)
-    api.main('mascaret.xcas')
-    print('fin')
+    api.main("mascaret.xcas")
+    print("fin")
