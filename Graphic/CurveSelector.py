@@ -190,6 +190,14 @@ class CurveSelectorWidget(QWidget):
                 self.lst_graph = [{"type_res": self.typ_res, "id": 'gate_move',
                                    "name": 'Gate movement', "unit": 'm',
                                    "vars": ["ZSTR"]}]
+            elif self.typ_graph in ["link_fg"]:
+                self.lst_graph = [{"type_res": self.typ_res, "id": 'gate_move',
+                                   "name": 'Gate movement', "unit": 'm',
+                                   "vars": ['ZLINK']},
+                                  {"type_res": self.typ_res, "id": 'gate_area',
+                                   "name": 'Opening area (culvert)', "unit": 'm',
+                                   "vars": ['CSECLINK']},
+                                  ]
             elif self.typ_graph in ["hydro", "hydro_pk"]:
                 self.get_lst_graph_opt()
             elif self.typ_graph in ["hydro_basin", "hydro_link"]:
@@ -221,7 +229,7 @@ class CurveSelectorWidget(QWidget):
         :return:
         """
         self.cb_det.clear()
-        if self.typ_graph in ["struct", "weirs"]:
+        if self.typ_graph in ["struct", "weirs", "link_fg"]:
             lstpk = []
             if self.typ_res in self.info_graph.keys():
                 for id_config in self.info_graph[self.typ_res]['pknum'].keys():

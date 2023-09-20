@@ -91,6 +91,8 @@ class ClassAPIMascaret:
         self.clfg_lk = ClassFloodGateLk(self)
         self.mobil_link = self.clfg_lk.actif_mobil_lk
 
+
+
     def initial(self, casfile):
         """
         Initialisation mascaret model with
@@ -320,6 +322,8 @@ class ClassAPIMascaret:
     def one_iter(self, t0, t1, dtp):
         if self.mobil_struct:
             self.clfg.iter_fg(t0, dtp)
+        if self.mobil_link:
+            self.clfg_lk.iter_fg(t0, dtp)
 
         self.masc.compute(t0, t1, dtp)
         if self.conum:
@@ -337,11 +341,22 @@ class ClassAPIMascaret:
             self.results_api["STRUCT_FG"] = self.clfg.results_fg_mv
             if self.mgis is None:
                 self.write_res_struct(self.results_api["STRUCT_FG"])
+        if self.mobil_link :
+            self.clfg_lk.finalize(self.tfin)
+            self.results_api["LINK_FG"] = self.clfg_lk.results_fg_lk_mv
+            if self.mgis is None:
+                self.write_res_link_fg(self.results_api["STRUCT_FG"])
 
     def write_res_struct(self, res):
         import json
 
         with open(os.path.join(self.dossierFileMasc, "res_struct.res"), "w") as filein:
+            json.dump(res, filein)
+
+    def write_res_link_fg(self, res):
+        import json
+
+        with open(os.path.join(self.dossierFileMasc, "res_link_fg.res"), "w") as filein:
             json.dump(res, filein)
 
     def main(self, filename, tracer=False, basin=False):
@@ -351,9 +366,11 @@ class ClassAPIMascaret:
         self.initial(filename)
         if self.mobil_struct:
             self.clfg.init_floogate()
-        if self.mobil_link and self.basin:
+        if basin and self.mobil_link:
             self.clfg_lk.init_fg_links()
-        # self.compute()
+        else:
+            self.mobil_struct = False
+        self.compute()
         self.finalize()
         self.add_info("Computation Time : {} s".format(time.time() - t0))
 

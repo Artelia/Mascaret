@@ -85,7 +85,7 @@ class GraphResultDialog(QWidget):
         if self.checkrun():
             self.btn_add_graph.setEnabled(True)
 
-            if self.typ_graph in ["struct", "weirs"]:
+            if self.typ_graph in ["struct", "weirs","link_fg"]:
                 self.typ_res = self.typ_graph
                 self.x_var = "time"
             elif self.typ_graph in ["hydro", "hydro_pk"]:
@@ -97,7 +97,6 @@ class GraphResultDialog(QWidget):
             elif self.typ_graph in ["hydro_basin", "hydro_link"]:
                 self.typ_res = self.typ_graph.replace("hydro_", "")
                 self.x_var = "time"
-
             if self.x_var == "pknum":
                 self.sql_where = "results.time = {2}"
                 self.id_branch = id
@@ -391,7 +390,6 @@ class GraphResultDialog(QWidget):
                 self.clear_results()
                 self.mgis.add_info('No Data')
                 return
-
             for param in self.lst_graph:
                 tmp_data = dict()
                 tmp_data["name"] = param["graph"]["name"]
@@ -407,9 +405,8 @@ class GraphResultDialog(QWidget):
                         self.mgis.mdb.SCHEMA, param["scen"], param["branch"]))
                 sqlw = self.sql_where.format(param["branch"], param["pknum"],
                                              param["t"])
-
                 if self.x_var == 'time':
-                    if self.typ_graph in ['struct', 'weirs']:
+                    if self.typ_graph in ['struct', 'weirs', 'link_fg']:
                         x_val = None
                         if self.typ_res in param["info_graph"].keys():
                             for id_config in param["info_graph"][self.typ_res][
@@ -426,6 +423,7 @@ class GraphResultDialog(QWidget):
                             date = param["init_date"]
                         else:
                             date = None
+
                     else:
                         x_val = param["info_graph"][self.typ_res]['time']
 
@@ -529,16 +527,20 @@ class GraphResultDialog(QWidget):
 
         if len(lst_title) == 1:
             txt_title = lst_title[0]
-            if self.typ_graph in ["struct", "weirs", "hydro"]:
-                try:
+            if self.typ_graph in ["struct", "weirs", "hydro", "link_fg"]:
+                if self.typ_graph is "link_fg":
                     self.graph_obj.main_axe.title.set_text(
-                        r'Profile - {0} m'.format(float(txt_title)))
-                except ValueError:
-                    list_txt = txt_title.split(':')
-                    if len(list_txt) > 1:
+                        r'Link - {0} '.format(float(txt_title)))
+                else:
+                    try:
                         self.graph_obj.main_axe.title.set_text(
-                            r'Profile {1} - {0} m '.format(list_txt[0],
-                                                           list_txt[1]))
+                            r'Profile - {0} m'.format(float(txt_title)))
+                    except ValueError:
+                        list_txt = txt_title.split(':')
+                        if len(list_txt) > 1:
+                            self.graph_obj.main_axe.title.set_text(
+                                r'Profile {1} - {0} m '.format(list_txt[0],
+                                                               list_txt[1]))
             elif self.typ_graph == "hydro_pk":
                 if len(lst_branch) == 1:
                     try:
@@ -676,8 +678,9 @@ class GraphResultDialog(QWidget):
             self.score(dict_obs)
 
         self.lst_obs.clear()
+        if_val = False
         if x_var_ == 'date':
-            if_val = False
+
             for (id_obs, var), param_obs in dict_obs.items():
                 sql_query = ("SELECT date, valeur FROM (SELECT code,type, UNNEST(date) as date, "
                              "UNNEST(valeur) as valeur FROM {4}.observations "

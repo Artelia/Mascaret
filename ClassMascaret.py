@@ -2103,6 +2103,78 @@ class ClassMascaret:
             for key in dico.keys():
                 if key == 'STRUCT_FG':
                     self.res_fg(dico[key], id_run)
+                if key == 'LINK_FG':
+                    self.res_link_fg(dico[key], id_run)
+
+    def res_link_fg(self, dico_res, id_run):
+        """stock flood gate results"""
+        values = []
+        var_info = {'var': 'ZLINK',
+                    'type_res': 'link_fg',
+                    'name': 'Gate movement',
+                    'type_var': 'float'}
+
+        id_var_zlink = self.mdb.check_id_var(var_info)
+        var_info = {'var': 'CSECLINK',
+                    'type_res': 'link_fg',
+                    'name': 'Opening section of Gate for culvert',
+                    'type_var': 'float'}
+
+        id_var_csec = self.mdb.check_id_var(var_info)
+        d_res = {}
+        dico_pk = {}
+        dico_time = {}
+
+        for id_link in dico_res.keys():
+            dico_pk[id_link] = id_link
+            dico_time[id_link] =  dico_res[id_link]['TIME']
+            d_res[(id_link, id_var_zlink)] = {'t': dico_res[id_link]['TIME'],
+                                            'v': dico_res[id_link]['ZLINK']}
+            d_res[(id_link, id_var_csec)] = {'t': dico_res[id_link]['TIME'],
+                                              'v': dico_res[id_link]['CSECLINK']}
+        for (pk, var), v in d_res.items():
+            values.append([id_run, pk, var,
+                           "{" + ','.join(str(i_t) for i_t in v['t']) + "}",
+                           "{" + ','.join(str(i_v) for i_v in v['v']) + "}"])
+        if len(values) > 0:
+            self.mdb.run_query(
+                "INSERT INTO {}.results_by_pk (id_runs, pknum, var, time, val) ".format(self.mdb.SCHEMA) +
+                "VALUES (%s, %s, %s, %s, %s)", many=True, list_many=values)
+
+        if len(dico_res.keys()) > 0:
+            list_insert = [[id_run, 'link_fg', 'pknum', json.dumps(dico_pk)],
+                           [id_run, 'link_fg', 'time', json.dumps(dico_time)],
+                           [id_run, 'link_fg', 'var', json.dumps([id_var_zlink,id_var_csec])]]
+            col_tab = ['id_runs', 'type_res', 'var', 'val']
+            self.mdb.insert_res('runs_graph', list_insert, col_tab)
+
+        # dico_pk = {}
+        # dico_time = {}
+        # d_res = {}
+        # for id_config in dico_res.keys():
+        #     rows = self.mdb.select('struct_config',
+        #                            where='id={}'.format(id_config),
+        #                            list_var=['abscissa'])
+        #     pknum = rows['abscissa'][0]
+        #     dico_pk[id_config] = pknum
+        #     dico_time[id_config] = dico_res[id_config]['TIME']
+        #     d_res[(pknum, id_var)] = {'t': dico_res[id_config]['TIME'],
+        #                               'v': dico_res[id_config]['ZSTR']}
+        # for (pk, var), v in d_res.items():
+        #     values.append([id_run, pk, var,
+        #                    "{" + ','.join(str(i_t) for i_t in v['t']) + "}",
+        #                    "{" + ','.join(str(i_v) for i_v in v['v']) + "}"])
+        # if len(values) > 0:
+        #     self.mdb.run_query(
+        #         "INSERT INTO {}.results_by_pk (id_runs, pknum, var, time, val) ".format(self.mdb.SCHEMA) +
+        #         "VALUES (%s, %s, %s, %s, %s)", many=True, list_many=values)
+        #
+        # if len(dico_res.keys()) > 0:
+        #     list_insert = [[id_run, 'struct', 'pknum', json.dumps(dico_pk)],
+        #                    [id_run, 'struct', 'time', json.dumps(dico_time)],
+        #                    [id_run, 'struct', 'var', json.dumps([id_var])]]
+        #     col_tab = ['id_runs', 'type_res', 'var', 'val']
+        #     self.mdb.insert_res('runs_graph', list_insert, col_tab)
 
     def res_fg(self, dico_res, id_run):
         """stock flood gate results"""
@@ -2946,6 +3018,7 @@ class ClassMascaret:
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
                 del val
+
         if self.cond_api:
             self.stock_res_api(self.save_res_struct[0], self.save_res_struct[1])
 

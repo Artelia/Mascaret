@@ -61,7 +61,6 @@ class ClassInfoParamFG_Lk(object):
                 print("Erreur lors de l'import links mobile")
         else:
             complet = self.fill_param_to_db(parent.mdb)
-            print(complet)
             print(self.param_fg)
             if complet:
                 parent.add_info("Import configuration links mobile")

@@ -94,19 +94,22 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             flag_casier_r = self.mgis.basin_result
             flag_profil_z = self.mgis.profil_z
 
-            if (couche == 'profiles' or couche == 'weirs') and flag_profil_z:
+            if (couche == 'profiles' or couche == 'weirs'or couche == 'links') and flag_profil_z:
                 if couche == 'profiles':
                     type_res = 'struct'
                 elif couche == 'weirs':
                     type_res = 'weirs'
+                elif couche == 'links':
+                    type_res = 'link_fg'
 
                 self.mgis.coucheProfils = results[0].mLayer
                 gid = results[0].mFeature["abscissa"]
-                sql = "SELECT DISTINCT pknum FROM {0}.results WHERE var IN " \
-                      "(SELECT id FROM {0}.results_var WHERE type_res ='{1}' )".format(
-                    self.mgis.mdb.SCHEMA, type_res)
-
-                rows = self.mgis.mdb.run_query(sql, fetch=True)
+                # sql = "SELECT DISTINCT pknum FROM {0}.results WHERE var IN " \
+                #       "(SELECT id FROM {0}.results_var WHERE type_res ='{1}' )".format(
+                #     self.mgis.mdb.SCHEMA, type_res)
+                #
+                # rows = self.mgis.mdb.run_query(sql, fetch=True)
+                # print(rows, sql)
                 graph_res = GraphResultDialog(self.mgis, type_res, gid)
                 graph_res.show()
                 # else:

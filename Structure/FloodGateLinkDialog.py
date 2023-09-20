@@ -178,7 +178,6 @@ class ClassFloodGateLink(QDialog):
         rows = self.mdb.select(
             "links", where="name = '{0}'".format(self.name_cur), list_var=["method_mob", "linknum"]
         )
-        print(rows)
         if rows:
             self.id = rows["linknum"][0]
             ctrl_set_value(self.cb_method, rows["method_mob"][0])
@@ -489,7 +488,7 @@ class ClassFloodGateLink(QDialog):
         self.ui.lst_sets.model().blockSignals(False)
         # get value lst_sets
         name = str(self.ui.lst_sets.model().item(itm.row(), 1).text())
-
+        name = name.split('-')[0].strip()
         if itm.checkState() == 2:
             sql = "UPDATE {0}.links SET active_mob = 't' WHERE name = '{1}'".format(
                 self.mdb.SCHEMA, name

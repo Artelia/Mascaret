@@ -24,16 +24,6 @@ import numpy as np
 from .ClassPostPreFGLk import ClassInfoParamFG_Lk
 
 
-def check_time_regul(time, dtreg, param_fg):
-    if time % dtreg == 0 and time >= dtreg:
-        # force regule même si mouvement pas fini
-        param_fg["ZRESI"] = 0
-        return True
-    elif param_fg["ZRESI"] != 0:
-        return True
-    return False
-
-
 class ClassFloodGateLk:
     """Class Flood Gate"""
 
@@ -59,13 +49,11 @@ class ClassFloodGateLk:
         # Get Section
         self.search_sec_control()
         self.search_link_to_param_fg()
-        if self.check_level_regul():
+        if not self.check_level_regul():
             self.clapi.add_info("***** ERROR: ignore the gates for the links")
             self.actif_mobil_lk = False
-
         self.update_var_mas()
-
-        # self.init_res()
+        self.init_res()
 
     def update_var_mas(self):
         """
@@ -80,27 +68,19 @@ class ClassFloodGateLk:
         """Init. the results dico"""
         self.results_fg_lk_mv = {}
         tini = self.masc.get("Model.InitTime")
-        for id_config in self.param_fg.keys():
-            self.results_fg_lk_mv[id_config] = {"TIME": [], "ZSTR": []}
-            self.results_fg_lk_mv[id_config]["TIME"].append(tini)
-            self.results_fg_lk_mv[id_config]["ZSTR"].append(self.param_fg[id_config]["ZOLD"])
+        for id_link in self.param_fg.keys():
+            self.results_fg_lk_mv[id_link] = {"TIME": [], "ZLINK": [], "CSECLINK": []}
+            self.results_fg_lk_mv[id_link]["TIME"].append(tini)
+            self.results_fg_lk_mv[id_link]["ZLINK"].append(self.param_fg[id_link]["level"])
+            self.results_fg_lk_mv[id_link]["CSECLINK"].append(self.param_fg[id_link]["CSection"])
 
-    def write(self, name, nbq, nbzav, num):
-        file = open(name, "w")
-        file.write("q;zav;zam\n")
-        for ii in range(nbq):
-            q = self.masc.get("Model.Weir.PtQ", i=num, j=ii, k=0)
-            for jj in range(nbzav):
-                zav = self.masc.get("Model.Weir.PtZds", i=num, j=jj, k=0)
-                zam = self.masc.get("Model.Weir.PtZus", i=num, j=ii, k=jj)
-                file.write("{};{};{}\n".format(q, zav, zam))
-        file.close()
 
     def finalize(self, tfin):
         if len(self.results_fg_lk_mv) > 0:
-            for id_config in self.param_fg.keys():
-                self.results_fg_lk_mv[id_config]["TIME"].append(tfin)
-                self.results_fg_lk_mv[id_config]["ZSTR"].append(self.param_fg[id_config]["ZOLD"])
+            for id_link in self.param_fg.keys():
+                self.results_fg_lk_mv[id_link]["TIME"].append(tfin)
+                self.results_fg_lk_mv[id_link]["ZLINK"].append(self.param_fg[id_link]["level"])
+                self.results_fg_lk_mv[id_link]["CSECLINK"].append(self.param_fg[id_link]["CSection"])
 
     def iter_fg(self, time, dtp):
         """
@@ -112,16 +92,13 @@ class ClassFloodGateLk:
         for id_lk in self.param_fg.keys():
             if self.check_dt_regul(self.param_fg[id_lk], dtp):
                 self.check_regul(self.param_fg[id_lk])
-                pass
-
-    def test_val_regul(self, item, val_check, tol):
-        if item["sign"] == ">":
-            if val_check > item["tvar"] - tol:
-                return item["res"]
-        if item["sign"] == "<":
-            if val_check < item["tvar"] + tol:
-                return item["res"]
-        return item["res"]
+                new_level, new_section, new_level_max = self.law_gate_regul(self.param_fg[id_lk], dtp)
+                # fill before to have the old value and new
+                self.fill_results_fg_mv(id_lk,new_level,new_section, new_level_max , time, dtp, self.param_fg[id_lk])
+                self.param_fg[id_lk]['level']= new_level
+                self.param_fg[id_lk]["CSection"] = new_section
+                self.param_fg[id_lk]["ZmaxSection"] = new_level_max
+                self.update_var_mas()
 
     def check_level_regul(self):
         """Check if  'VREGOPEN' and 'VREGCLOS are consistent'"""
@@ -151,6 +128,21 @@ class ClassFloodGateLk:
                     cond = False
         return cond
 
+    def test_val_regul(self, param,item, val_check, tol):
+        """
+        test variable val_check item["sign"] item["tvar"]
+        :param  item : dict
+        :param val_check: checked value
+        :param tol: tolerance
+        """
+        if item["sign"] == ">":
+            if val_check > param[item["tvar"]] - tol:
+                return item["res"]
+        if item["sign"] == "<":
+            if val_check < param[item["tvar"]] + tol:
+                return item["res"]
+        return item["res"]
+
     def check_regul(self, param_fg):
         """
         check if OPEN or CLOSE the flood Gate
@@ -163,16 +155,16 @@ class ClassFloodGateLk:
         tol = param_fg["TOLREG"]
         # sign  = val_test <sign> 'tvar'
         test = {
-            ("INIT", "D"): {"res": "OPEN", "tvar": "VREOPEN", "sign": ">"},
-            ("INIT", "U"): {"res": "CLOSE", "tvar": "VRECLOSE", "sign": ">"},
-            ("OPEN", "D"): {"res": "CLOSE", "tvar": "VRECLOSE", "sign": "<"},
-            ("OPEN", "U"): {"res": "CLOSE", "tvar": "VRECLOSE", "sign": ">"},
-            ("CLOSE", "D"): {"res": "OPEN", "tvar": "VREOPEN", "sign": ">"},
-            ("CLOSE", "U"): {"res": "OPEN", "tvar": "VREOPEN", "sign": "<"},
+            ("INIT", "D"): {"res": "OPEN", "tvar": "VREGOPEN", "sign": ">"},
+            ("INIT", "U"): {"res": "CLOSE", "tvar": "VREGCLOS", "sign": ">"},
+            ("OPEN", "D"): {"res": "CLOSE", "tvar": "VREGCLOS", "sign": "<"},
+            ("OPEN", "U"): {"res": "CLOSE", "tvar": "VREGCLOS", "sign": ">"},
+            ("CLOSE", "D"): {"res": "OPEN", "tvar": "VREGOPEN", "sign": ">"},
+            ("CLOSE", "U"): {"res": "OPEN", "tvar": "VREGOPEN", "sign": "<"},
         }
         key = (param_fg["OPEN_CLOSE"], param_fg["DIRFG"])
         if key in test.keys():
-            param_fg["OPEN_CLOSE"] = self.test_val_regul(test[key], val_check, tol)
+            param_fg["OPEN_CLOSE"] = self.test_val_regul(param_fg, test[key], val_check, tol)
         else:
             param_fg["OPEN_CLOSE"] = None
             self.clapi.add_info("Case not provided for in the regulation")
@@ -290,7 +282,7 @@ class ClassFloodGateLk:
             dz = vit / dt
         return min(dz, dzlimit)
 
-    def law_regul_meth2(self, param, dt):
+    def law_gate_regul(self, param, dt):
         """
 
         :return:  new position of flood gate, and new area, and if status is OPEN, CLOSE, NONE
@@ -323,25 +315,38 @@ class ClassFloodGateLk:
 
         new_section = width0 * (new_level_max - new_level)
 
-        return new_level, new_section
+        return new_level, new_section , new_level_max
 
-    def fill_results_fg_mv(self, id_config, time, newz, zold, dt):
+    def fill_results_fg_mv(self, id_lk, new_level,new_section, new_level_max, time, dt, param):
         """
         fill the results_fg_mv dico
-        :param id_config: configuration id
+        :param id_lk: link id
         :param time: time
-        :param newz:  new Z
-        :param zold: old Z
+        :param new_level :  new Z
+        :param new_section ! new sectino
+        :param new_level_max:  new Z height of the culvert
+        :param param : dico of flood gate paramter
         :param dt: step time
         :return:
         """
+        dir_fg = param["DIRFG"]
+        typ_sav = 0
+        for var , val in [('level',new_level), ("CSection", new_section), ('ZmaxSection', new_level_max)] :
+            if param[var] != val :
+                typ_sav = 1
+        if typ_sav == 1 :
+            if (time - dt) != self.results_fg_lk_mv[id_lk]["TIME"][-1]:
+                self.results_fg_lk_mv[id_lk]["TIME"].append(time - dt)
+                self.results_fg_lk_mv[id_lk]["CSECLINK"].append(param["CSection"])
+                if dir_fg == "D":
+                    self.results_fg_lk_mv[id_lk]["ZLINK"].append(param['level'])
+                else:
+                    self.results_fg_lk_mv[id_lk]["ZLINK"].append(param["ZmaxSection"])
 
-        if zold == newz:
-            self.results_fg_lk_mv[id_config]["TIME"].append(time)
-            self.results_fg_lk_mv[id_config]["ZSTR"].append(newz)
+        self.results_fg_lk_mv[id_lk]["TIME"].append(time)
+        self.results_fg_lk_mv[id_lk]["CSECLINK"].append(new_section)
+        if dir_fg == "D":
+            self.results_fg_lk_mv[id_lk]["ZLINK"].append(new_level)
         else:
-            if (time - dt) not in self.results_fg_lk_mv[id_config]["TIME"]:
-                self.results_fg_lk_mv[id_config]["TIME"].append(time - dt)
-                self.results_fg_lk_mv[id_config]["ZSTR"].append(zold)
-            self.results_fg_lk_mv[id_config]["TIME"].append(time)
-            self.results_fg_lk_mv[id_config]["ZSTR"].append(newz)
+            self.results_fg_lk_mv[id_lk]["ZLINK"].append(new_level_max)
+
