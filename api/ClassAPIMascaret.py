@@ -20,7 +20,7 @@ email                :
 """
 import os
 import sys
-import time
+import time as cl_time
 
 try:
     # Plugin
@@ -360,10 +360,13 @@ class ClassAPIMascaret:
             json.dump(res, filein)
 
     def main(self, filename, tracer=False, basin=False):
-        t0 = time.time()
+
+        t0 = cl_time.time()
         self.tracer = tracer
         self.basin = basin
+
         self.initial(filename)
+
         if self.mobil_struct:
             self.clfg.init_floogate()
         if basin and self.mobil_link:
@@ -372,7 +375,7 @@ class ClassAPIMascaret:
             self.mobil_struct = False
         self.compute()
         self.finalize()
-        self.add_info("Computation Time : {} s".format(time.time() - t0))
+        self.add_info("Computation Time : {} s".format(cl_time.time() - t0))
 
     def add_info(self, txt):
         if self.mgis is not None:

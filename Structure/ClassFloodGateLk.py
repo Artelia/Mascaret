@@ -19,7 +19,7 @@ email                :
 
 """
 import numpy as np
-
+import  math
 
 from .ClassPostPreFGLk import ClassInfoParamFG_Lk
 
@@ -99,7 +99,7 @@ class ClassFloodGateLk:
                 val_check = self.check_regul(self.param_fg[id_lk])
                 new_level, new_section, new_level_max = self.law_gate_regul(self.param_fg[id_lk], time)
                 # fill before to have the old value and new
-                self.fill_results_fg_mv(id_lk,new_level,new_section, new_level_max,val_check , time, self.param_fg[id_lk])
+                self.fill_results_fg_mv(id_lk,new_level,new_section, new_level_max,val_check , time, dtp,  self.param_fg[id_lk])
                 self.param_fg[id_lk]["REGVAR_VAL"] = val_check
                 self.param_fg[id_lk]['level']= new_level
                 self.param_fg[id_lk]["CSection"] = new_section
@@ -328,7 +328,7 @@ class ClassFloodGateLk:
         new_section = width0 * (new_level_max - new_level)
         return new_level, new_section , new_level_max
 
-    def fill_results_fg_mv(self, id_lk, new_level,new_section, new_level_max, val_check, time, param):
+    def fill_results_fg_mv(self, id_lk, new_level,new_section, new_level_max, val_check, time, dtp, param):
 
         """
         fill the results_fg_mv dico
@@ -349,8 +349,8 @@ class ClassFloodGateLk:
             if param[var] != val :
                 typ_sav = 1
         if typ_sav == 1 :
-            if (time - dt) != self.results_fg_lk_mv[id_lk]["TIME"][-1]:
-                self.results_fg_lk_mv[id_lk]["TIME"].append(time - dt)
+            if not math.isclose(dtp,  dt, rel_tol=1e-06) :
+                self.results_fg_lk_mv[id_lk]["TIME"].append(time - dtp)
                 self.results_fg_lk_mv[id_lk]["CSECLINK"].append(param["CSection"])
                 self.results_fg_lk_mv[id_lk]["REGVAR"].append(round(param["REGVAR_VAL"], 3))
                 if dir_fg == "D":
