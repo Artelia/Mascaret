@@ -85,6 +85,7 @@ class ClassFloodGateLink(QDialog):
         # ['1', 'Method 1'],
         fill_qcombobox(self.cb_method, [["2", "Method 2"]])
 
+
         self.cb_type_t_vit.currentIndexChanged.connect(self.cb_change_unitv)
 
         styled_item_delegate = QStyledItemDelegate()
@@ -104,6 +105,7 @@ class ClassFloodGateLink(QDialog):
         self.ui.b_OK_page1.rejected.connect(self.reject)
         self.ui.b_OK_page3.accepted.connect(self.accept_page3)
         self.ui.b_OK_page3.rejected.connect(self.reject_page3)
+        self.ui.bt_up_absc.clicked.connect(self.up_abscissa)
         self.ui.actionB_edit.triggered.connect(self.edit_set)
 
         self.ui.actionB_addLine.triggered.connect(self.new_time)
@@ -153,13 +155,15 @@ class ClassFloodGateLink(QDialog):
         self.unitv = evt
 
     def cb_change_meth(self, text):
+        print('uuuuuu', text)
         if text == "Method 1":
             self.edit_type = "table"
-
-        if text == "Method 2":
+        elif text == "Method 2":
             self.edit_type = "var"
         else:
-            self.edit_type = "table"
+            self.edit_type = None
+            return
+            #self.edit_type = "table"
 
         val = ctrl_get_value(self.cb_method)
 
@@ -180,7 +184,10 @@ class ClassFloodGateLink(QDialog):
         )
         if rows:
             self.id = rows["linknum"][0]
+            # .setCurrentIndex(1)
+
             ctrl_set_value(self.cb_method, rows["method_mob"][0])
+
 
     def import_csv(self):
         """Import csv file"""
@@ -588,9 +595,11 @@ class ClassFloodGateLink(QDialog):
                 self.fill_tab_sets()
                 self.ui.links_pages.setCurrentIndex(1)
                 self.graph_edit.init_graph(self.cur_set)
-            else:
+            elif self.edit_type == "var":
                 self.display_method2()
                 self.ui.links_pages.setCurrentIndex(2)
+            else:
+                return
 
     def display_method2(self):
         sql = "SELECT  abscissa, type FROM {0}.links " "WHERE linknum = {1} ".format(
@@ -646,10 +655,11 @@ class ClassFloodGateLink(QDialog):
             self.cb_var.setCurrentIndex(0)
             self.cb_type_t_vit.setCurrentIndex(2)
             self.cb_type_t.setCurrentIndex(0)
-            # default value TODO
+            # default value
+            ctrl_set_value(self.zinc_fg, 99)
             if len(rows_link) > 0:
                 ctrl_set_value(self.abscisse_reg, rows_link[0][0])
-                ctrl_set_value(self.zinc_fg, 99)
+
 
             # default value
 
@@ -658,11 +668,19 @@ class ClassFloodGateLink(QDialog):
                 fill_qcombobox(self.cb_dir, [["D", "bottom"]])
                 self.cb_dir.setCurrentIndex(0)
                 ctrl_set_value(self.cote_max_fg, 9999)
-                self.cote_max_fg.setEnabled(False)
+
             else:
                 fill_qcombobox(self.cb_dir, [["D", "bottom"], ["U", "top"]])
                 self.cb_dir.setCurrentIndex(0)
                 self.cote_max_fg.setEnabled(True)
+
+    def up_abscissa(self):
+        """update abscissa"""
+
+        sql = "SELECT  abscissa FROM {0}.links WHERE linknum = {1} ".format(self.mdb.SCHEMA, self.id)
+        rows_link = self.mdb.run_query(sql, fetch=True)
+        if len(rows_link) > 0:
+            ctrl_set_value(self.abscisse_reg, rows_link[0][0])
 
     def fill_tab_sets(self):
         """fill table"""

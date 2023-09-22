@@ -20,6 +20,7 @@ email                :
 import math
 import os
 import re
+import json
 from shutil import copy2
 import numpy as np
 import dateutil
@@ -297,6 +298,23 @@ def read_version(masplug_path):
             break
     file.close()
     return val
+
+def read_mas_version(masplug_path):
+    """
+    read version of mascaret
+    :return: (str) version
+    """
+    """ """
+    file_path = os.path.join(masplug_path, 'bin', 'conf.json')
+    if os.path.isfile(file_path):
+        f = open(file_path, "r")
+        jso = json.loads(f.read())
+        data = jso["masc_version"]
+        f.close()
+    else:
+        data = ''
+    return data
+
 
 
 def tw_to_txt(tw, range_r, range_c, sep):

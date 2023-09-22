@@ -39,7 +39,7 @@ from .ClassMNT import ClassMNT
 from .ClassMascaret import ClassMascaret
 from .ClassObservation import ClassEventObsDialog
 from .ClassParameterDialog import ClassParameterDialog
-from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire
+from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, read_mas_version
 from .Graphic.FilterDialog import ClassFilterDialog
 from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .HydroLawsDialog import ClassHydroLawsDialog
@@ -914,6 +914,7 @@ class MascPlugDialog(QMainWindow):
 
     def about(self):
         val = read_version(self.masplugPath)
+        vmas = read_mas_version(self.masplugPath)
         # TODO get "about" info of file
         txt = u"""
 Plugin dedicated to the building and exploitation of Mascaret models.
@@ -928,7 +929,8 @@ Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz 
 
 
 Version : {}
-           """.format(val)
+Mascaret Version : {}
+           """.format(val, vmas)
         self.windinfo(txt, title='About')
 
     def website(self):

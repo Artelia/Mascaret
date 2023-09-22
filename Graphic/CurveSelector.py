@@ -197,6 +197,9 @@ class CurveSelectorWidget(QWidget):
                                   {"type_res": self.typ_res, "id": 'gate_area',
                                    "name": 'Opening area (culvert)', "unit": 'm',
                                    "vars": ['CSECLINK']},
+                                  {"type_res": self.typ_res, "id": 'reg_var',
+                                   "name": 'Variable of regulation', "unit": '',
+                                   "vars": ['REGVAR']},
                                   ]
             elif self.typ_graph in ["hydro", "hydro_pk"]:
                 self.get_lst_graph_opt()

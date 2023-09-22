@@ -23,7 +23,7 @@ from copy import deepcopy
 from datetime import datetime
 
 from . import MasObject as Maso
-from ..Function import read_version, fill_zminbed
+from ..Function import read_version, fill_zminbed, read_mas_version
 from ..HydroLawsDialog import dico_typ_law
 from ..ui.custom_control import ClassWarningBox
 
@@ -1732,7 +1732,7 @@ $BODY$;
                 self.mgis.add_info('Update TRIGGER - ERROR', dbg=True)
 
         # update executable
-        old_vers = self.check_v_masc()
+        old_vers = read_mas_version(self.mgis.masplugPath)
         if old_vers == '8.4':
             ok = self.box.yes_no_q("WARNING:\n "
                                    "Please note that the mascaret executable is updated. \n"
@@ -1821,13 +1821,3 @@ $BODY$;
         except Exception:
             return False
 
-    def check_v_masc(self):
-        """ check_version mascaret"""
-        file_path = os.path.join(self.mgis.masplugPath, 'bin', 'conf.json')
-        if os.path.isfile(file_path):
-            f = open(file_path, "r")
-            jso = json.loads(f.read())
-            data = jso["masc_version"]
-        else:
-            data = ''
-        return data

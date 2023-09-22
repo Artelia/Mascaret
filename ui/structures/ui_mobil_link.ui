@@ -563,14 +563,6 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="label_21">
-           <property name="text">
-            <string>The max increment of 
- each movement: </string>
-           </property>
-          </widget>
-         </item>
          <item row="22" column="6">
           <widget class="QDialogButtonBox" name="b_OK_page3">
            <property name="standardButtons">
@@ -700,6 +692,21 @@
           <widget class="QLabel" name="label_3">
            <property name="text">
             <string>Step time criterion</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="label_21">
+           <property name="text">
+            <string>The max increment of 
+ each movement: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="18" column="4" colspan="2">
+          <widget class="QPushButton" name="bt_up_absc">
+           <property name="text">
+            <string>Abscissa link (default) </string>
            </property>
           </widget>
          </item>
