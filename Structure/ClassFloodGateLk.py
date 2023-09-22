@@ -19,7 +19,7 @@ email                :
 
 """
 import numpy as np
-import  math
+import math
 
 from .ClassPostPreFGLk import ClassInfoParamFG_Lk
 
@@ -53,8 +53,6 @@ class ClassFloodGateLk:
             self.clapi.add_info("***** ERROR: ignore the gates for the links")
             self.actif_mobil_lk = False
         self.update_var_mas()
-        # for id_lk in self.param_fg.keys():
-        #     print(self.masc.get("Model.Link.Level", self.param_fg[id_lk]["id_mas"]))
 
 
         self.init_res()
@@ -78,14 +76,17 @@ class ClassFloodGateLk:
             self.results_fg_lk_mv[id_link]["CSECLINK"].append(self.param_fg[id_link]["CSection"])
             self.results_fg_lk_mv[id_link]["REGVAR"].append(self.param_fg[id_link]["REGVAR_VAL"])
 
-
     def finalize(self, tfin):
         if len(self.results_fg_lk_mv) > 0:
             for id_link in self.param_fg.keys():
                 self.results_fg_lk_mv[id_link]["TIME"].append(tfin)
                 self.results_fg_lk_mv[id_link]["ZLINK"].append(self.param_fg[id_link]["level"])
-                self.results_fg_lk_mv[id_link]["CSECLINK"].append(self.param_fg[id_link]["CSection"])
-                self.results_fg_lk_mv[id_link]["REGVAR"].append(self.param_fg[id_link]["REGVAR_VAL"])
+                self.results_fg_lk_mv[id_link]["CSECLINK"].append(
+                    self.param_fg[id_link]["CSection"]
+                )
+                self.results_fg_lk_mv[id_link]["REGVAR"].append(
+                    self.param_fg[id_link]["REGVAR_VAL"]
+                )
 
     def iter_fg(self, time, dtp):
         """
@@ -97,11 +98,22 @@ class ClassFloodGateLk:
         for id_lk in self.param_fg.keys():
             if self.check_dt_regul(self.param_fg[id_lk], dtp):
                 val_check = self.check_regul(self.param_fg[id_lk])
-                new_level, new_section, new_level_max = self.law_gate_regul(self.param_fg[id_lk], time)
+                new_level, new_section, new_level_max = self.law_gate_regul(
+                    self.param_fg[id_lk], time
+                )
                 # fill before to have the old value and new
-                self.fill_results_fg_mv(id_lk,new_level,new_section, new_level_max,val_check , time, dtp,  self.param_fg[id_lk])
+                self.fill_results_fg_mv(
+                    id_lk,
+                    new_level,
+                    new_section,
+                    new_level_max,
+                    val_check,
+                    time,
+                    dtp,
+                    self.param_fg[id_lk],
+                )
                 self.param_fg[id_lk]["REGVAR_VAL"] = val_check
-                self.param_fg[id_lk]['level']= new_level
+                self.param_fg[id_lk]["level"] = new_level
                 self.param_fg[id_lk]["CSection"] = new_section
                 self.param_fg[id_lk]["ZmaxSection"] = new_level_max
                 self.param_fg[id_lk]["TIME"] = time
@@ -148,24 +160,24 @@ class ClassFloodGateLk:
         tol = param_fg["TOLREG"]
         #
         key = (param_fg["OPEN_CLOSE"], param_fg["DIRFG"])
-        if key == ('INIT' ,'D'):
-            if  val_check > param_fg['VREGOPEN']- tol :
-                param_fg['OPEN_CLOSE'] = 'OPEN'
-        elif key == ('OPEN' ,'D'):
+        if key == ("INIT", "D"):
+            if val_check > param_fg["VREGOPEN"] - tol:
+                param_fg["OPEN_CLOSE"] = "OPEN"
+        elif key == ("OPEN", "D"):
             if val_check < param_fg["VREGCLOS"] + tol:
-                param_fg['OPEN_CLOSE'] = 'CLOSE'
-        elif key == ('CLOSE', 'D'):
-            if val_check > param_fg['VREGOPEN'] - tol:
-                param_fg['OPEN_CLOSE'] = 'OPEN'
-        elif key == ('INIT', 'U'):
-            if  val_check > param_fg["VREGCLOS"]- tol :
-                param_fg['OPEN_CLOSE'] = 'CLOSE'
-        elif key == ('CLOSE', 'U'):
-            if val_check < param_fg['VREGOPEN'] + tol:
-                param_fg['OPEN_CLOSE'] = 'OPEN'
-        elif key == ('OPEN', 'U'):
+                param_fg["OPEN_CLOSE"] = "CLOSE"
+        elif key == ("CLOSE", "D"):
+            if val_check > param_fg["VREGOPEN"] - tol:
+                param_fg["OPEN_CLOSE"] = "OPEN"
+        elif key == ("INIT", "U"):
             if val_check > param_fg["VREGCLOS"] - tol:
-                param_fg['OPEN_CLOSE'] = 'CLOSE'
+                param_fg["OPEN_CLOSE"] = "CLOSE"
+        elif key == ("CLOSE", "U"):
+            if val_check < param_fg["VREGOPEN"] + tol:
+                param_fg["OPEN_CLOSE"] = "OPEN"
+        elif key == ("OPEN", "U"):
+            if val_check > param_fg["VREGCLOS"] - tol:
+                param_fg["OPEN_CLOSE"] = "CLOSE"
         return val_check
 
     def check_dt_regul(self, param_fg, dtp):
@@ -246,7 +258,9 @@ class ClassFloodGateLk:
                     val_mas = "State.Z"
                 else:
                     val_mas = "State.Q"
-                self.param_fg[id_lk]["REGVAR_VAL"] = self.masc.get(val_mas, self.param_fg[id_lk]["SECCON"])
+                self.param_fg[id_lk]["REGVAR_VAL"] = self.masc.get(
+                    val_mas, self.param_fg[id_lk]["SECCON"]
+                )
                 self.param_fg[id_lk]["OPEN_CLOSE"] = "INIT"
                 # info de la vanne
                 if self.param_fg[id_lk]["DIRFG"] == "D":
@@ -277,8 +291,6 @@ class ClassFloodGateLk:
                 self.clapi.add_info("Id_mas not found for numlink {}.".format(id_lk))
         del coords, lst_info
 
-
-
     def comput_dz(self, vit, dt, dzlimit=0):
         """
          comput_dx
@@ -302,7 +314,7 @@ class ClassFloodGateLk:
         status = param["OPEN_CLOSE"]
 
         if status in [None, "INIT"]:
-            return param["level"], param["CSection"],param["ZmaxSection"]
+            return param["level"], param["CSection"], param["ZmaxSection"]
 
         dz = self.comput_dz(param["VELOFG"], dt, param["ZINCRFG"])
         dir_fg = param["DIRFG"]
@@ -326,10 +338,11 @@ class ClassFloodGateLk:
                 new_level_max = max(zmax_section - dz, zmax_section0)
 
         new_section = width0 * (new_level_max - new_level)
-        return new_level, new_section , new_level_max
+        return new_level, new_section, new_level_max
 
-    def fill_results_fg_mv(self, id_lk, new_level,new_section, new_level_max, val_check, time, dtp, param):
-
+    def fill_results_fg_mv(
+        self, id_lk, new_level, new_section, new_level_max, val_check, time, dtp, param
+    ):
         """
         fill the results_fg_mv dico
         :param id_lk: link id
@@ -345,25 +358,27 @@ class ClassFloodGateLk:
         old_time = param["TIME"]
         dt = time - old_time
         typ_sav = 0
-        for var , val in [('level',new_level), ("CSection", new_section), ('ZmaxSection', new_level_max)] :
-            if param[var] != val :
+        for var, val in [
+            ("level", new_level),
+            ("CSection", new_section),
+            ("ZmaxSection", new_level_max),
+        ]:
+            if param[var] != val:
                 typ_sav = 1
-        if typ_sav == 1 :
-            if not math.isclose(dtp,  dt, rel_tol=1e-06) :
+        if typ_sav == 1:
+            if not math.isclose(dtp, dt, rel_tol=1e-06):
                 self.results_fg_lk_mv[id_lk]["TIME"].append(time - dtp)
                 self.results_fg_lk_mv[id_lk]["CSECLINK"].append(param["CSection"])
                 self.results_fg_lk_mv[id_lk]["REGVAR"].append(round(param["REGVAR_VAL"], 3))
                 if dir_fg == "D":
-                    self.results_fg_lk_mv[id_lk]["ZLINK"].append(param['level'])
+                    self.results_fg_lk_mv[id_lk]["ZLINK"].append(param["level"])
                 else:
                     self.results_fg_lk_mv[id_lk]["ZLINK"].append(param["ZmaxSection"])
 
-
         self.results_fg_lk_mv[id_lk]["TIME"].append(time)
         self.results_fg_lk_mv[id_lk]["CSECLINK"].append(new_section)
-        self.results_fg_lk_mv[id_lk]["REGVAR"].append(round(val_check,3))
+        self.results_fg_lk_mv[id_lk]["REGVAR"].append(round(val_check, 3))
         if dir_fg == "D":
             self.results_fg_lk_mv[id_lk]["ZLINK"].append(new_level)
         else:
             self.results_fg_lk_mv[id_lk]["ZLINK"].append(new_level_max)
-

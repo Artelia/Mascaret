@@ -85,7 +85,6 @@ class ClassFloodGateLink(QDialog):
         # ['1', 'Method 1'],
         fill_qcombobox(self.cb_method, [["2", "Method 2"]])
 
-
         self.cb_type_t_vit.currentIndexChanged.connect(self.cb_change_unitv)
 
         styled_item_delegate = QStyledItemDelegate()
@@ -155,7 +154,6 @@ class ClassFloodGateLink(QDialog):
         self.unitv = evt
 
     def cb_change_meth(self, text):
-        print('uuuuuu', text)
         if text == "Method 1":
             self.edit_type = "table"
         elif text == "Method 2":
@@ -163,7 +161,7 @@ class ClassFloodGateLink(QDialog):
         else:
             self.edit_type = None
             return
-            #self.edit_type = "table"
+            # self.edit_type = "table"
 
         val = ctrl_get_value(self.cb_method)
 
@@ -187,7 +185,6 @@ class ClassFloodGateLink(QDialog):
             # .setCurrentIndex(1)
 
             ctrl_set_value(self.cb_method, rows["method_mob"][0])
-
 
     def import_csv(self):
         """Import csv file"""
@@ -369,16 +366,12 @@ class ClassFloodGateLink(QDialog):
 
         if typ_g == "D":  # bas
             if valf + tol > valo - tol:
-                self.box.info(
-                    "ERROR:\n\n" "Closing level value must be lower opening level value "
-                )
+                self.box.info("ERROR:\n\n" "Closing level value must be lower opening level value ")
                 return False
 
         else:
             if valf + tol < valo - tol:
-                self.box.info(
-                    "ERROR:\n\n" "Opening level value must be lower closing level value "
-                )
+                self.box.info("ERROR:\n\n" "Opening level value must be lower closing level value ")
                 return False
         return True
 
@@ -495,7 +488,7 @@ class ClassFloodGateLink(QDialog):
         self.ui.lst_sets.model().blockSignals(False)
         # get value lst_sets
         name = str(self.ui.lst_sets.model().item(itm.row(), 1).text())
-        name = name.split('-')[0].strip()
+        name = name.split("-")[0].strip()
         if itm.checkState() == 2:
             sql = "UPDATE {0}.links SET active_mob = 't' WHERE name = '{1}'".format(
                 self.mdb.SCHEMA, name
@@ -660,7 +653,6 @@ class ClassFloodGateLink(QDialog):
             if len(rows_link) > 0:
                 ctrl_set_value(self.abscisse_reg, rows_link[0][0])
 
-
             # default value
 
         if len(rows_link) > 0:
@@ -677,7 +669,9 @@ class ClassFloodGateLink(QDialog):
     def up_abscissa(self):
         """update abscissa"""
 
-        sql = "SELECT  abscissa FROM {0}.links WHERE linknum = {1} ".format(self.mdb.SCHEMA, self.id)
+        sql = "SELECT  abscissa FROM {0}.links WHERE linknum = {1} ".format(
+            self.mdb.SCHEMA, self.id
+        )
         rows_link = self.mdb.run_query(sql, fetch=True)
         if len(rows_link) > 0:
             ctrl_set_value(self.abscisse_reg, rows_link[0][0])
