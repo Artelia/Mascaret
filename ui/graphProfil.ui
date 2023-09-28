@@ -553,6 +553,10 @@
                     <property name="text">
                      <string/>
                     </property>
+                    <property name="icon">
+                     <iconset resource="../resources.qrc">
+                      <normaloff>:/plugins/Mascaret/icones/zone_both_bed.png</normaloff>:/plugins/Mascaret/icones/zone_both_bed.png</iconset>
+                    </property>
                     <property name="iconSize">
                      <size>
                       <width>24</width>
@@ -573,6 +577,10 @@
                     <property name="text">
                      <string/>
                     </property>
+                    <property name="icon">
+                     <iconset resource="../resources.qrc">
+                      <normaloff>:/plugins/Mascaret/icones/zone_left_bed.png</normaloff>:/plugins/Mascaret/icones/zone_left_bed.png</iconset>
+                    </property>
                    </widget>
                   </item>
                   <item row="0" column="2">
@@ -586,6 +594,10 @@
                     </property>
                     <property name="text">
                      <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../resources.qrc">
+                      <normaloff>:/plugins/Mascaret/icones/zone_right_bed.png</normaloff>:/plugins/Mascaret/icones/zone_right_bed.png</iconset>
                     </property>
                    </widget>
                   </item>
@@ -601,6 +613,10 @@
                     <property name="text">
                      <string/>
                     </property>
+                    <property name="icon">
+                     <iconset resource="../resources.qrc">
+                      <normaloff>:/plugins/Mascaret/icones/zone_left_stock.png</normaloff>:/plugins/Mascaret/icones/zone_left_stock.png</iconset>
+                    </property>
                    </widget>
                   </item>
                   <item row="1" column="2">
@@ -614,6 +630,10 @@
                     </property>
                     <property name="text">
                      <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../resources.qrc">
+                      <normaloff>:/plugins/Mascaret/icones/zone_right_stock.png</normaloff>:/plugins/Mascaret/icones/zone_right_stock.png</iconset>
                     </property>
                    </widget>
                   </item>
@@ -1008,7 +1028,9 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>btTools_zone_selection</sender>

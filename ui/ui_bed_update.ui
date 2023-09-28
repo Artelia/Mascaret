@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>River Beds</string>
+   <string>River Beds Automatic Update</string>
   </property>
   <property name="windowIcon">
    <iconset resource="../resources.qrc">
@@ -42,7 +42,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Branch to analyze</string>
+         <string>Branch to update</string>
         </property>
        </widget>
       </item>
@@ -60,37 +60,8 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_2">
-        <property name="font">
-         <font>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Layer for River beds</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QgsMapLayerComboBox" name="cb_qgis_layers"/>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="cc_bed_sel">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Only selected features</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QFrame" name="frame_2">
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <property name="spacing">
-          <number>15</number>
-         </property>
+        <layout class="QGridLayout" name="gridLayout">
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -103,7 +74,10 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="cb_typ_bed"/>
+         </item>
+         <item row="0" column="0">
           <widget class="QLabel" name="label_3">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
@@ -112,30 +86,14 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Type :</string>
+            <string>Objects to update</string>
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QRadioButton" name="rb_river_bed">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
+         <item row="1" column="1">
+          <widget class="QCheckBox" name="cc_null_value">
            <property name="text">
-            <string>Minor River Bed</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="rb_storage_area">
-           <property name="text">
-            <string>Storage Area</string>
+            <string>Take into account NULL values (current values will be erased)</string>
            </property>
           </widget>
          </item>
@@ -223,13 +181,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QgsMapLayerComboBox</class>
-   <extends>QComboBox</extends>
-   <header>qgsmaplayercombobox.h</header>
-  </customwidget>
- </customwidgets>
  <resources>
   <include location="../resources.qrc"/>
  </resources>

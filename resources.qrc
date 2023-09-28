@@ -1,7 +1,14 @@
 <RCC>
   <qresource prefix="/plugins/Mascaret">
+    <file>icones/zone_both_bed.png</file>
+    <file>icones/zone_left_bed.png</file>
+    <file>icones/zone_left_stock.png</file>
+    <file>icones/zone_right_bed.png</file>
+    <file>icones/zone_right_stock.png</file>
+    <file>icones/bed_update.png</file>
     <file>icones/lawHydro.png</file>
     <file>icones/basinResult.png</file>
+    <file>icones/bed_import.png</file>
     <file>icones/bridge.png</file>
     <file>icones/icon_base.png</file>
     <file>icones/Model.png</file>

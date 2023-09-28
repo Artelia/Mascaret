@@ -450,6 +450,10 @@ class profiles(MasObject):
                       ('majbedcoef', 'float'),
                       ('mesh', 'float'),
                       ('planim', 'float'),
+                      ('leftminbed_g', 'float'),
+                      ('rightminbed_g', 'float'),
+                      ('leftstock_g', 'float'),
+                      ('rightstock_g', 'float'),
                       ('CONSTRAINT profiles_pkey', 'PRIMARY KEY (gid)'),
                       ('CONSTRAINT profile_unique', 'UNIQUE (name)')]
 
@@ -621,11 +625,30 @@ class branchs(MasObject):
         return qry
 
 
+# *****************************************
+class visu_minor_river_bed(MasObject):
+    def __init__(self):
+        super(visu_minor_river_bed, self).__init__()
+        self.order = 16
+        self.geom_type = 'LineString'
+        self.attrs = [('gid', 'serial NOT NULL'),
+                      ('branchnum', 'integer'),
+                      ('profile', 'text'),
+                      ('bank', 'character varying(5)'),
+                      ('CONSTRAINT visu_minor_river_bed_pkey', 'PRIMARY KEY (gid)')]
+
+    def pg_create_table(self):
+        qry = super(self.__class__, self).pg_create_table()
+        qry += '\n'
+        qry += self.pg_create_index()
+        return qry
+
+
 # **************** Basins *************************
 class basins(MasObject):
     def __init__(self):
         super(basins, self).__init__()
-        self.order = 16
+        self.order = 17
         self.geom_type = 'MultiPolygon'
         self.attrs = [('gid', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -664,7 +687,7 @@ class basins(MasObject):
 class observations(MasObject):
     def __init__(self):
         super(observations, self).__init__()
-        self.order = 17
+        self.order = 18
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('code', 'character(10)'),
@@ -687,7 +710,7 @@ class observations(MasObject):
 class runs(MasObject):
     def __init__(self):
         super(runs, self).__init__()
-        self.order = 18
+        self.order = 19
         self.geom_type = None
         self.attrs = [('id serial', 'NOT NULL'),
                       ('run', 'character varying(30)'),
@@ -705,7 +728,7 @@ class runs(MasObject):
 class parametres(MasObject):
     def __init__(self):
         super(parametres, self).__init__()
-        self.order = 19
+        self.order = 20
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('parametre', 'text'),
@@ -724,7 +747,7 @@ class parametres(MasObject):
 class class_fct_psql(MasObject):
     def __init__(self):
         super(class_fct_psql, self).__init__()
-        self.order = 20
+        self.order = 21
 
     def pg_clone_schema(self, local=None):
         """
@@ -1621,7 +1644,7 @@ AS $BODY$
 class laws_wq(MasObject):
     def __init__(self):
         super(laws_wq, self).__init__()
-        self.order = 21
+        self.order = 22
         self.geom_type = None
         self.attrs = [
             ('id_config', 'integer'),
@@ -1639,7 +1662,7 @@ class laws_wq(MasObject):
 class tracer_physic(MasObject):
     def __init__(self):
         super(tracer_physic, self).__init__()
-        self.order = 22
+        self.order = 23
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('type', 'text'),
@@ -1653,7 +1676,7 @@ class tracer_physic(MasObject):
 class tracer_name(MasObject):
     def __init__(self):
         super(tracer_name, self).__init__()
-        self.order = 23
+        self.order = 24
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('type', 'text'),
@@ -1668,7 +1691,7 @@ class tracer_name(MasObject):
 class tracer_config(MasObject):
     def __init__(self):
         super(tracer_config, self).__init__()
-        self.order = 24
+        self.order = 25
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -1679,7 +1702,7 @@ class tracer_config(MasObject):
 class meteo_config(MasObject):
     def __init__(self):
         super(meteo_config, self).__init__()
-        self.order = 25
+        self.order = 26
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -1691,7 +1714,7 @@ class meteo_config(MasObject):
 class laws_meteo(MasObject):
     def __init__(self):
         super(laws_meteo, self).__init__()
-        self.order = 26
+        self.order = 27
         self.geom_type = None
         self.attrs = [
             ('id_config', 'integer'),
@@ -1706,7 +1729,7 @@ class laws_meteo(MasObject):
 class init_conc_config(MasObject):
     def __init__(self):
         super(init_conc_config, self).__init__()
-        self.order = 27
+        self.order = 28
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -1718,7 +1741,7 @@ class init_conc_config(MasObject):
 class init_conc_wq(MasObject):
     def __init__(self):
         super(init_conc_wq, self).__init__()
-        self.order = 28
+        self.order = 29
         self.geom_type = None
         self.attrs = [
             ('id_config', 'integer'),
@@ -1736,7 +1759,7 @@ class init_conc_wq(MasObject):
 class struct_config(MasObject):
     def __init__(self):
         super(struct_config, self).__init__()
-        self.order = 29
+        self.order = 30
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'character varying(30)'),
@@ -1753,7 +1776,7 @@ class struct_config(MasObject):
 class profil_struct(MasObject):
     def __init__(self):
         super(profil_struct, self).__init__()
-        self.order = 30
+        self.order = 31
         self.geom_type = None
         self.attrs = [('id_config', 'integer'),
                       ('id_order', 'integer'),
@@ -1766,7 +1789,7 @@ class profil_struct(MasObject):
 class struct_param(MasObject):
     def __init__(self):
         super(struct_param, self).__init__()
-        self.order = 31
+        self.order = 32
         self.geom_type = None
         self.attrs = [('id_config', 'integer'),
                       ('var', 'text'),
@@ -1778,7 +1801,7 @@ class struct_param(MasObject):
 class struct_elem_param(MasObject):
     def __init__(self):
         super(struct_elem_param, self).__init__()
-        self.order = 32
+        self.order = 33
         self.geom_type = None
         self.attrs = [('id_config', 'integer'),
                       ('id_elem', 'integer'),
@@ -1791,7 +1814,7 @@ class struct_elem_param(MasObject):
 class struct_elem(MasObject):
     def __init__(self):
         super(struct_elem, self).__init__()
-        self.order = 33
+        self.order = 34
         self.geom_type = None
         self.attrs = [('id_config', 'integer'),
                       ('id_elem', 'integer'),
@@ -1804,7 +1827,7 @@ class struct_elem(MasObject):
 class struct_abac(MasObject):
     def __init__(self):
         super(struct_abac, self).__init__()
-        self.order = 34
+        self.order = 35
         self.geom_type = None
         self.attrs = [('nam_method', 'text'),
                       ('nam_abac', 'text'),
@@ -1818,7 +1841,7 @@ class struct_abac(MasObject):
 class struct_laws(MasObject):
     def __init__(self):
         super(struct_laws, self).__init__()
-        self.order = 35
+        self.order = 36
         self.geom_type = None
         self.attrs = [('id_config', 'integer'),
                       ('id_var', 'integer'),
@@ -1834,7 +1857,7 @@ class struct_fg(MasObject):
     # parameter vanne
     def __init__(self):
         super(struct_fg, self).__init__()
-        self.order = 36
+        self.order = 37
         self.geom_type = None
         self.attrs = [('id_config', 'integer'),
                       ('id_scen', 'integer'),
@@ -1850,7 +1873,7 @@ class struct_fg_val(MasObject):
     # valeur des variable float
     def __init__(self):
         super(struct_fg_val, self).__init__()
-        self.order = 37
+        self.order = 38
         self.geom_type = None
         self.attrs = [('id_config', 'integer'),
                       ('id_scen', 'integer'),
@@ -1865,7 +1888,7 @@ class weirs_mob_val(MasObject):
     # valeur des variable float
     def __init__(self):
         super(weirs_mob_val, self).__init__()
-        self.order = 38
+        self.order = 39
         self.geom_type = None
         self.attrs = [('id_weirs', 'integer'),
                       ('id_order', 'integer'),
@@ -1879,7 +1902,7 @@ class admin_tab(MasObject):
     # valeur des variable float
     def __init__(self):
         super(admin_tab, self).__init__()
-        self.order = 39
+        self.order = 40
         self.geom_type = None
         self.attrs = [('id_', 'serial NOT NULL'),
                       ('table_', 'text'),
@@ -1892,7 +1915,7 @@ class admin_tab(MasObject):
 class results_by_pk(MasObject):
     def __init__(self):
         super(results_by_pk, self).__init__()
-        self.order = 40
+        self.order = 41
         self.geom_type = None
         self.attrs = [('idrunpkvar', 'serial NOT NULL'),
                       ('id_runs', 'integer NOT NULL'),
@@ -1920,7 +1943,7 @@ class results_by_pk(MasObject):
 class results_sect(MasObject):
     def __init__(self):
         super(results_sect, self).__init__()
-        self.order = 41
+        self.order = 42
         self.geom_type = None
         self.attrs = [('id_runs', 'integer NOT NULL'),
                       ('branch', 'integer'),
@@ -1934,7 +1957,7 @@ class results_sect(MasObject):
 class results_var(MasObject):
     def __init__(self):
         super(results_var, self).__init__()
-        self.order = 42
+        self.order = 43
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('type_res', 'text'),
@@ -1948,7 +1971,7 @@ class results_var(MasObject):
 class runs_graph(MasObject):
     def __init__(self):
         super(runs_graph, self).__init__()
-        self.order = 43
+        self.order = 44
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('id_runs', 'integer'),
@@ -1962,7 +1985,7 @@ class runs_graph(MasObject):
 class runs_plani(MasObject):
     def __init__(self):
         super(runs_plani, self).__init__()
-        self.order = 44
+        self.order = 45
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('id_runs', 'integer'),
@@ -1977,7 +2000,7 @@ class runs_plani(MasObject):
 class law_config(MasObject):
     def __init__(self):
         super(law_config, self).__init__()
-        self.order = 45
+        self.order = 46
         self.geom_type = None
         self.attrs = [('id', 'serial NOT NULL'),
                       ('name', 'text'),
@@ -1993,7 +2016,7 @@ class law_config(MasObject):
 class law_values(MasObject):
     def __init__(self):
         super(law_values, self).__init__()
-        self.order = 46
+        self.order = 47
         self.geom_type = None
         self.attrs = [('id_law', 'integer'),
                       ('id_var', 'integer'),

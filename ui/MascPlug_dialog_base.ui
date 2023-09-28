@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>978</width>
-    <height>747</height>
+    <width>805</width>
+    <height>610</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -176,7 +176,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>978</width>
+     <width>805</width>
      <height>21</height>
     </rect>
    </property>
@@ -210,6 +210,8 @@
      </property>
      <addaction name="action_Extract_MNTfor_profile"/>
      <addaction name="actionExtract_Beds"/>
+     <addaction name="actionUpdate_Beds"/>
+     <addaction name="actionUpdate_Beds_Geom"/>
      <addaction name="actionUpdate_Zones"/>
      <addaction name="actionFilter_All_Profiles"/>
     </widget>
@@ -317,6 +319,7 @@
    <addaction name="separator"/>
    <addaction name="action_Extract_MNTfor_profile"/>
    <addaction name="actionExtract_Beds"/>
+   <addaction name="actionUpdate_Beds_Geom"/>
   </widget>
   <widget class="QToolBar" name="RunToolBar">
    <property name="windowTitle">
@@ -349,7 +352,7 @@
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>false</bool>
+    <bool>true</bool>
    </attribute>
    <addaction name="actionCross_section_results"/>
    <addaction name="actionHydrogramme"/>
@@ -789,13 +792,33 @@
   <action name="actionExtract_Beds">
    <property name="icon">
     <iconset resource="../resources.qrc">
-     <normaloff>:/plugins/Mascaret/icones/play.png</normaloff>:/plugins/Mascaret/icones/play.png</iconset>
+     <normaloff>:/plugins/Mascaret/icones/bed_import.png</normaloff>:/plugins/Mascaret/icones/bed_import.png</iconset>
    </property>
    <property name="text">
-    <string>Extract Beds for profile</string>
+    <string>Import Beds limits from polyline</string>
    </property>
    <property name="toolTip">
-    <string>Extract Beds for profile</string>
+    <string>Import Beds limits from polyline</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Beds">
+   <property name="text">
+    <string>Apply Bed limits imported</string>
+   </property>
+   <property name="toolTip">
+    <string>Apply Bed limits imported</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Beds_Geom">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/bed_update.png</normaloff>:/plugins/Mascaret/icones/bed_update.png</iconset>
+   </property>
+   <property name="text">
+    <string>Update River minor bed geometries</string>
+   </property>
+   <property name="toolTip">
+    <string>Update River minor bed geometries</string>
    </property>
   </action>
  </widget>

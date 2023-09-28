@@ -26,7 +26,7 @@ from . import MasObject as Maso
 from ..Function import read_version, fill_zminbed
 from ..HydroLawsDialog import dico_typ_law
 from ..ui.custom_control import ClassWarningBox
-
+from ..ClassUpdateBedDialog import update_all_bed_geometry
 
 def list_sql(liste):
     """
@@ -92,6 +92,7 @@ class CheckTab:
                                   '5.1.4',
                                   '5.1.5',
                                   '5.1.6',
+                                  '5.1.7',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -257,7 +258,23 @@ class CheckTab:
                 lambda: self.update_516(),
             ],
             },
-
+            '5.1.7': {'add_tab': [
+                {'tab': Maso.visu_minor_river_bed, 'overwrite': False}, ],
+                'alt_tab': [{'tab': 'profiles',
+                             'sql': [
+                                 "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
+                                 "EXISTS  leftminbed_g FLOAT;",
+                                 "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
+                                 "EXISTS  rightminbed_g FLOAT;",
+                                 "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
+                                 "EXISTS  leftstock_g FLOAT;",
+                                 "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
+                                 "EXISTS  rightstock_g FLOAT;",
+                             ]}, ],
+                'fct': [
+                lambda: update_all_bed_geometry(self.mdb),
+            ],
+            },
             # '3.0.x': { },
 
         }

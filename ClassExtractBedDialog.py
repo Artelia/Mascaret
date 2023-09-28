@@ -93,7 +93,7 @@ class ClassExtractBedDialog(QDialog):
         return b_lay, p_lay
 
     def init_cb_branch(self):
-        sql = "SELECT gid, 'Branch ' || branch FROM {0}.branchs WHERE active IS True"
+        sql = "SELECT branch, 'Branch ' || branch FROM {0}.branchs WHERE active IS True"
         l_branch = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
         for id_branch, nm_branch in l_branch:
             self.cb_branch.addItem(nm_branch, id_branch)
@@ -115,9 +115,6 @@ class ClassExtractBedDialog(QDialog):
 
         self.cb_qgis_layers.setExceptedLayerList(l_excl_lay)
         self.cb_qgis_layers.setFilters(QgsMapLayerProxyModel.LineLayer)
-
-    #def cur_branch_changed(self, idx):
-    #    print(self.cb_branch.currentData())
 
     def cur_qgis_layer_changed(self):
         self.lay_bed = None
@@ -208,23 +205,6 @@ class ClassExtractBedDialog(QDialog):
             profil.intersects_bed(l_bed_geom)
             profil.validate(typ_bed)
 
-            # d_json = json_to_dict(self.cat_lay.catalog_file)
-            # for fold, l_layers in d_json.items():
-            #     prt_itm = QStandardItem()
-            #     prt_itm.setData(fold, Qt.DisplayRole)
-            #     prt_itm.setFlags(Qt.ItemIsEnabled)
-            #     for row, lay in enumerate(l_layers):
-            #         file = os.path.join(fold, lay["metadata"])
-            #         itm = QStandardItem()
-            #         itm.setData(lay["title"], Qt.DisplayRole)
-            #         itm.setData(file, Qt.UserRole)
-            #         itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-            #         prt_itm.setChild(row, itm)
-            #     mdl.appendRow(prt_itm)
-            # self.trv_exist_files.setModel(mdl)
-            # self.trv_exist_files.expandAll()
-            # self.trv_exist_files.selectionModel().selectionChanged.connect(self.display_metadata)
-
             if profil.status == -1:
                 idx = self.itm_err.rowCount()
                 itm = QStandardItem()
@@ -273,7 +253,8 @@ class ClassExtractBedDialog(QDialog):
         self.mdb.run_query(sql, many=True, list_many=recs)
 
         self.lay_profile.reload()
-
+        QMessageBox.information(self, "Information", "Import successful", QMessageBox.Ok)
+        self.cancel_analysis()
 
 class Profile:
     def __init__(self, ft):
@@ -283,10 +264,10 @@ class Profile:
         self.name = ft["name"]
         self.db_bed = [ft["leftminbed"], ft["rightminbed"]]
         self.db_stock = [ft["leftstock"], ft["rightstock"]]
-        self.lx = [float(x) for x in str(ft["x"]).split(" ")]
+        self.lx = [float(x) for x in str(ft["x"]).strip().split(" ")]
         self.x_start = min(self.lx)
         self.x_end = max(self.lx)
-        self.lz = [float(z) for z in str(ft["z"]).split(" ")]
+        self.lz = [float(z) for z in str(ft["z"]).strip().split(" ")]
         self.x_branch = float()
         self.intersections = list()
         self.status = int()
@@ -402,24 +383,3 @@ class Profile:
         else:
             self.status = -1
             self.mess = "More than two intersections"
-
-class ProfilesCollection:
-    def __init__(self):
-        self.d_by_qid = dict()
-        self.d_by_gid = dict()
-
-    def add_profile(self, p):
-        self.d_by_qid[p.qid] = p
-        self.d_by_gid[p.gid] = p
-
-    def get_profile_by_qid(self, qid):
-        if qid in self.d_by_qid.keys():
-            return self.d_by_gid[qid]
-        else:
-            return None
-
-    def get_profile_by_gid(self, gid):
-        if gid in self.d_by_gid.keys():
-            return self.d_by_gid[gid]
-        else:
-            return None
