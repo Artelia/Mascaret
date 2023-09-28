@@ -45,6 +45,7 @@ class ClassInfoParamFG_Lk(object):
             "abscissa": "pk du link",
             "branchnum": "branch",
             "method_mob": "mehtode utilisé seul 2 actuellement",
+            "type": "type de link, 1:weir, 4:culvert",
         }
 
     def get_param(self, parent=None, file="cli_fg_lk.obj"):
@@ -68,14 +69,13 @@ class ClassInfoParamFG_Lk(object):
                 parent.add_info("Erreur lors de l'import links mobile")
 
     def fill_param_to_db(self, db):
-        lst_var = ["linknum", "name", "level", "abscissa", "method_mob", "branchnum"]
+        lst_var = ["linknum", "name", "level", "abscissa", "method_mob", "branchnum", "type"]
         sql = (
             "SELECT {1} "
             "FROM {0}.links "
             "WHERE active AND type in (4,1) AND nature=1 AND active_mob "
             "ORDER BY linknum;"
         ).format(db.SCHEMA, ", ".join(lst_var))
-        print(sql)
         rows = db.run_query(sql, fetch=True)
         if rows is None:
             self.param_fg = {}

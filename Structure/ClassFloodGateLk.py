@@ -326,12 +326,17 @@ class ClassFloodGateLk:
                         self.param_fg[id_lk]["ZINITREG"], self.param_fg[id_lk]["level0"]
                     )
                     self.param_fg[id_lk]["ZmaxSection"] = self.param_fg[id_lk]["ZmaxSection0"]
-                    self.param_fg[id_lk]["CSection"] = self.param_fg[id_lk]["width0"] * (
-                        self.param_fg[id_lk]["ZmaxSection"] - self.param_fg[id_lk]["level"]
-                    )
-                    self.param_fg[id_lk]["ZLIMITGATE"] = min(
-                        self.param_fg[id_lk]["ZMAXFG"], self.param_fg[id_lk]["ZmaxSection0"]
-                    )
+
+                    if self.param_fg[id_lk]["type"] == 4:
+                        self.param_fg[id_lk]["CSection"] = self.param_fg[id_lk]["width0"] * (
+                                self.param_fg[id_lk]["ZmaxSection"] - self.param_fg[id_lk]["level"]
+                        )
+                        self.param_fg[id_lk]["ZLIMITGATE"] = min(
+                            self.param_fg[id_lk]["ZMAXFG"], self.param_fg[id_lk]["ZmaxSection0"]
+                        )
+                    else:
+                        self.param_fg[id_lk]["ZLIMITGATE"] = self.param_fg[id_lk]["ZMAXFG"]
+                        self.param_fg[id_lk]["CSection"] = 0
 
                 else:
                     self.param_fg[id_lk]["level"] = self.param_fg[id_lk]["level0"]
@@ -344,6 +349,7 @@ class ClassFloodGateLk:
                     self.param_fg[id_lk]["ZLIMITGATE"] = min(
                         self.param_fg[id_lk]["ZMAXFG"], self.param_fg[id_lk]["level0"]
                     )
+
             else:
                 self.clapi.add_info("Id_mas not found for numlink {}.".format(id_lk))
         del coords, lst_info
@@ -369,7 +375,6 @@ class ClassFloodGateLk:
         old_time = param["TIME"]
         dt = time - old_time
         status = param["OPEN_CLOSE"]
-
         if status in [None, "INIT", "MAINT"]:
             return param["level"], param["CSection"], param["ZmaxSection"]
 

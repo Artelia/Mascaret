@@ -659,7 +659,6 @@ class ClassFloodGateLink(QDialog):
             if rows_link[0][1] == 1:  # weir
                 fill_qcombobox(self.cb_dir, [["D", "bottom"]])
                 self.cb_dir.setCurrentIndex(0)
-                ctrl_set_value(self.cote_max_fg, 9999)
 
             else:
                 fill_qcombobox(self.cb_dir, [["D", "bottom"], ["U", "top"]])
