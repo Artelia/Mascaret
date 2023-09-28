@@ -146,6 +146,7 @@ class ClassFloodGateLk:
                     )
                     cond = False
         return cond
+
     def check_regul(self, param_fg):
         """
         check if OPEN or CLOSE the flood Gate with maintains
@@ -167,39 +168,39 @@ class ClassFloodGateLk:
         elif key == ("OPEN", "D"):
             if param_fg["VREGOPEN"] > val_check >  param_fg["VREGCLOS"]:
                 param_fg["OPEN_CLOSE"] = "MAINT"
-            elif val_check < param_fg["VREGCLOS"] + tol:
+            elif val_check <= param_fg["VREGCLOS"] + tol:
                 param_fg["OPEN_CLOSE"] = "CLOSE"
         elif key == ("CLOSE", "D"):
             if param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"]:
                 param_fg["OPEN_CLOSE"] = "MAINT"
-            elif val_check > param_fg["VREGOPEN"] - tol:
+            elif val_check >= param_fg["VREGOPEN"] - tol:
                 param_fg["OPEN_CLOSE"] = "OPEN"
         elif key == ("MAINT", "D"):
             if param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"]:
                 param_fg["OPEN_CLOSE"] = "MAINT"
-            elif val_check > param_fg["VREGOPEN"] - tol:
+            elif val_check >= param_fg["VREGOPEN"] - tol:
                 param_fg["OPEN_CLOSE"] = "OPEN"
-            elif val_check < param_fg["VREGCLOS"] + tol:
+            elif val_check <= param_fg["VREGCLOS"] + tol:
                 param_fg["OPEN_CLOSE"] = "CLOSE"
         elif key == ("INIT", "U"):
-            if val_check > param_fg["VREGCLOS"] - tol:
+            if val_check >= param_fg["VREGCLOS"] - tol:
                 param_fg["OPEN_CLOSE"] = "CLOSE"
         elif key == ("CLOSE", "U"):
             if param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"]:
                 param_fg["OPEN_CLOSE"] = "MAINT"
-            elif val_check < param_fg["VREGOPEN"] + tol:
+            elif val_check <= param_fg["VREGOPEN"] + tol:
                 param_fg["OPEN_CLOSE"] = "OPEN"
         elif key == ("OPEN", "U"):
             if param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"]:
                 param_fg["OPEN_CLOSE"] = "MAINT"
-            elif val_check > param_fg["VREGCLOS"] - tol:
+            elif val_check >= param_fg["VREGCLOS"] - tol:
                 param_fg["OPEN_CLOSE"] = "CLOSE"
         elif key == ("MAINT", "U"):
             if param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"]:
                 param_fg["OPEN_CLOSE"] = "MAINT"
-            elif val_check < param_fg["VREGOPEN"] + tol:
+            elif val_check <= param_fg["VREGOPEN"] + tol:
                 param_fg["OPEN_CLOSE"] = "OPEN"
-            elif val_check > param_fg["VREGCLOS"] - tol:
+            elif val_check >= param_fg["VREGCLOS"] - tol:
                 param_fg["OPEN_CLOSE"] = "CLOSE"
         return val_check
 
