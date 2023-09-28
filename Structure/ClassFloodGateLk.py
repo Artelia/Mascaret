@@ -146,10 +146,66 @@ class ClassFloodGateLk:
                     )
                     cond = False
         return cond
-
     def check_regul(self, param_fg):
         """
-        check if OPEN or CLOSE the flood Gate
+        check if OPEN or CLOSE the flood Gate with maintains
+        between  param_fg["VREGOPEN"] et param_fg["VREGCLOS"]
+        """
+        if param_fg["VREG"] == "Z":
+            val_mas = "State.Z"
+        else:
+            val_mas = "State.Q"
+        val_check = self.masc.get(val_mas, param_fg["SECCON"])
+
+        tol = param_fg["TOLREG"]
+        #
+        key = (param_fg["OPEN_CLOSE"], param_fg["DIRFG"])
+
+        if key == ("INIT", "D"):
+            if val_check > param_fg["VREGOPEN"] - tol:
+                param_fg["OPEN_CLOSE"] = "OPEN"
+        elif key == ("OPEN", "D"):
+            if param_fg["VREGOPEN"] > val_check >  param_fg["VREGCLOS"]:
+                param_fg["OPEN_CLOSE"] = "MAINT"
+            elif val_check < param_fg["VREGCLOS"] + tol:
+                param_fg["OPEN_CLOSE"] = "CLOSE"
+        elif key == ("CLOSE", "D"):
+            if param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"]:
+                param_fg["OPEN_CLOSE"] = "MAINT"
+            elif val_check > param_fg["VREGOPEN"] - tol:
+                param_fg["OPEN_CLOSE"] = "OPEN"
+        elif key == ("MAINT", "D"):
+            if param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"]:
+                param_fg["OPEN_CLOSE"] = "MAINT"
+            elif val_check > param_fg["VREGOPEN"] - tol:
+                param_fg["OPEN_CLOSE"] = "OPEN"
+            elif val_check < param_fg["VREGCLOS"] + tol:
+                param_fg["OPEN_CLOSE"] = "CLOSE"
+        elif key == ("INIT", "U"):
+            if val_check > param_fg["VREGCLOS"] - tol:
+                param_fg["OPEN_CLOSE"] = "CLOSE"
+        elif key == ("CLOSE", "U"):
+            if param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"]:
+                param_fg["OPEN_CLOSE"] = "MAINT"
+            elif val_check < param_fg["VREGOPEN"] + tol:
+                param_fg["OPEN_CLOSE"] = "OPEN"
+        elif key == ("OPEN", "U"):
+            if param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"]:
+                param_fg["OPEN_CLOSE"] = "MAINT"
+            elif val_check > param_fg["VREGCLOS"] - tol:
+                param_fg["OPEN_CLOSE"] = "CLOSE"
+        elif key == ("MAINT", "U"):
+            if param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"]:
+                param_fg["OPEN_CLOSE"] = "MAINT"
+            elif val_check < param_fg["VREGOPEN"] + tol:
+                param_fg["OPEN_CLOSE"] = "OPEN"
+            elif val_check > param_fg["VREGCLOS"] - tol:
+                param_fg["OPEN_CLOSE"] = "CLOSE"
+        return val_check
+
+    def check_regul_no_maintien(self, param_fg):
+        """
+        check if OPEN or CLOSE the flood Gate Without maintain
         """
         if param_fg["VREG"] == "Z":
             val_mas = "State.Z"
@@ -313,7 +369,7 @@ class ClassFloodGateLk:
         dt = time - old_time
         status = param["OPEN_CLOSE"]
 
-        if status in [None, "INIT"]:
+        if status in [None, "INIT", "MAINT"]:
             return param["level"], param["CSection"], param["ZmaxSection"]
 
         dz = self.comput_dz(param["VELOFG"], dt, param["ZINCRFG"])
