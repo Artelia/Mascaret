@@ -258,21 +258,9 @@ class CheckTab:
                 lambda: self.update_516(),
             ],
             },
-            '5.1.7': {'add_tab': [
-                {'tab': Maso.visu_minor_river_bed, 'overwrite': False}, ],
-                'alt_tab': [{'tab': 'profiles',
-                             'sql': [
-                                 "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
-                                 "EXISTS  leftminbed_g FLOAT;",
-                                 "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
-                                 "EXISTS  rightminbed_g FLOAT;",
-                                 "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
-                                 "EXISTS  leftstock_g FLOAT;",
-                                 "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
-                                 "EXISTS  rightstock_g FLOAT;",
-                             ]}, ],
+            '5.1.7': {
                 'fct': [
-                lambda: update_all_bed_geometry(self.mdb),
+                lambda: self.update_517(),
             ],
             },
             # '3.0.x': { },
@@ -371,7 +359,7 @@ class CheckTab:
                                     list_test.append(test_gd)
                         else:
                             list_test.append(True)
-
+                    print(list_test,list_test_ver)
                     if False not in list_test:
                         list_test_ver.append(True)
                         self.all_version(tabs_no, ver)
@@ -1848,3 +1836,40 @@ $BODY$;
         else:
             data = ''
         return data
+
+    def update_517(self):
+        """
+         Update 5.1.7
+        """
+        self.mgis.add_info('*** Update 5.1.7  ***')
+        tabs = self.mdb.list_tables(self.mdb.SCHEMA)
+        valide = True
+        if valide and "visu_minor_river_bed" not in tabs:
+            tabs = [Maso.visu_minor_river_bed]
+            for tab in tabs:
+                valid_add, _ = self.add_tab(tab)
+            if not valid_add:
+                self.mgis.add_info('Create  the visu_minor_river_bed table - ERROR')
+                valide = False
+
+        if valide :
+            lst_alt = [  "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
+                         "EXISTS  leftminbed_g FLOAT;",
+                         "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
+                         "EXISTS  rightminbed_g FLOAT;",
+                         "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
+                         "EXISTS  leftstock_g FLOAT;",
+                         "ALTER TABLE {0}.profiles ADD COLUMN IF NOT "
+                         "EXISTS  rightstock_g FLOAT;",
+                     ]
+            for sql in lst_alt :
+                self.mdb.execute(sql.format(self.mdb.SCHEMA))
+        if valide:
+            try:
+                update_all_bed_geometry(self.mdb)
+            except Exception :
+                print('erreur update_all_bed_geometry')
+                pass
+
+        return valide
+

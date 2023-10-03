@@ -513,7 +513,12 @@ def update_bed_geometry(mdb, id_branch, l_typ_bed):
                     pl_temp = poly.boundary.intersection(g_buff)
                     if pl_temp.type == "MultiLineString":
                         pl_temp = linemerge(pl_temp)
-
+                        if pl_temp.type == "MultiLineString":
+                            line= LineString()
+                            for pl in pl_temp.geoms:
+                                if pl.length> line.length:
+                                    line = pl
+                            pl_temp = line
                     pl_coords = list(pl_temp.coords)
                     if typ_bed in ["rightminbed"]:
                         pl_coords.reverse()
