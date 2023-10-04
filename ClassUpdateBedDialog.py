@@ -264,7 +264,7 @@ class ClassUpdateBedDialog(QDialog):
             l_prof_to_edit.append(p)
 
         for r in range(self.itm_warn.rowCount()):
-            if self.itm_warn.child(r, 0).isChecked():
+            if self.itm_warn.child(r, 0).checkState() == 2:
                 p = self.d_profiles[self.itm_warn.child(r, 0).data(Qt.UserRole)]
                 l_prof_to_edit.append(p)
 

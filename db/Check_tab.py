@@ -359,7 +359,6 @@ class CheckTab:
                                     list_test.append(test_gd)
                         else:
                             list_test.append(True)
-                    print(list_test,list_test_ver)
                     if False not in list_test:
                         list_test_ver.append(True)
                         self.all_version(tabs_no, ver)
@@ -370,6 +369,9 @@ class CheckTab:
                 if False not in list_test_ver:
                     tabs = self.mdb.list_tables(self.mdb.SCHEMA)
                     self.all_version(tabs, ver)
+
+
+
 
             else:
                 self.mgis.add_info(
@@ -388,11 +390,19 @@ class CheckTab:
             curent_v_tab = min_ver
         return curent_v_tab
 
-    def all_version(self, tabs, version=None):
+    def all_version(self, tabs, version=None, clean=True):
         if not version:
             version = self.list_hist_version[0]
         for name_tab in tabs:
             self.updat_num_v(name_tab, version)
+        if clean :
+            sql = "SELECT table_ FROM {0}.admin_tab".format(self.mdb.SCHEMA)
+            row = self.mdb.run_query(sql, fetch=True)
+            for tab in row:
+                if tab[0] not in tabs:
+                    self.del_num_v(tab[0])
+
+
 
     def updat_num_v(self, name_tab, version):
         """
@@ -1868,8 +1878,9 @@ $BODY$;
             try:
                 update_all_bed_geometry(self.mdb)
             except Exception :
-                print('erreur update_all_bed_geometry')
-                pass
+                self.mgis.add_info('erreur update_all_bed_geometry')
+
+
 
         return valide
 

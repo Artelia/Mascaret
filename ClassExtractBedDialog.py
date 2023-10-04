@@ -136,6 +136,12 @@ class ClassExtractBedDialog(QDialog):
             self.cc_bed_sel.setCheckState(0)
 
     def start_analysis(self):
+        if self.lay_bed.crs() != self.lay_profile.crs():
+            QMessageBox.critical(self, "Error", "The projection of the layer for "
+                                                "river beds must be {}".format( self.lay_profile.crs().authid()),
+                                 QMessageBox.Ok)
+            return
+
         self.d_profiles.clear()
         self.fra_save.hide()
 
@@ -244,8 +250,17 @@ class ClassExtractBedDialog(QDialog):
 
     def save_analysis(self):
         recs = list()
+
+        l_prof_to_edit = list()
+        for r in range(self.itm_warn.rowCount()):
+            if self.itm_warn.child(r, 0).checkState() == 2:
+                p = self.d_profiles[self.itm_warn.child(r, 0).data(Qt.UserRole)]
+                l_prof_to_edit.append(p)
+
         for id_prof, profil in self.d_profiles.items():
-            if profil.status in [1, 2]:
+            if profil.status == 2:
+                recs.append([*profil.intersections, id_prof])
+            elif profil.status == 1 and id_prof in l_prof_to_edit:
                 recs.append([*profil.intersections, id_prof])
 
         sql = "UPDATE {0}.profiles SET left{1}_g = %s, right{1}_g = %s " \
