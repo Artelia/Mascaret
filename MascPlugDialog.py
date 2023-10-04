@@ -43,6 +43,8 @@ from .Graphic.FilterDialog import ClassFilterDialog
 from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .HydroLawsDialog import ClassHydroLawsDialog
 from .Structure.MobilSingDialog import ClassMobilSingDialog
+from .ClassExtractBedDialog import ClassExtractBedDialog
+from .ClassUpdateBedDialog import ClassUpdateBedDialog, update_all_bed_geometry, refresh_minor_bed_layer
 # # structures
 from .Structure.StructureDialog import ClassStructureDialog
 from .WaterQuality.ClassMascWQ import ClassMascWQ
@@ -201,6 +203,9 @@ class MascPlugDialog(QMainWindow):
         # creatoin model
         self.ui.action_Extract_MNTfor_profile.triggered.connect(
             self.mnt_to_profil)
+        self.ui.actionExtract_Beds.triggered.connect(self.fct_extract_beds)
+        self.ui.actionUpdate_Beds.triggered.connect(self.fct_update_beds)
+        self.ui.actionUpdate_Beds_Geom.triggered.connect(self.fct_update_beds_geom)
         self.ui.actionCreate_Geometry.triggered.connect(self.fct_create_geo)
         self.ui.actionCreate_xcas.triggered.connect(self.fct_create_xcas)
         self.ui.actionCreate_Basin.triggered.connect(self.fct_create_casier)
@@ -546,6 +551,24 @@ class MascPlugDialog(QMainWindow):
         worker.run()
         if self.DEBUG:
             self.add_info("Extraction is done")
+
+    def fct_extract_beds(self):
+        dlg = ClassExtractBedDialog(self)
+        dlg.setModal(False)
+        if not dlg.load_error:
+            dlg.exec_()
+        else:
+            del dlg
+
+    def fct_update_beds(self):
+        dlg = ClassUpdateBedDialog(self)
+        dlg.setModal(False)
+        dlg.exec_()
+
+    def fct_update_beds_geom(self):
+        update_all_bed_geometry(self.mdb)
+        refresh_minor_bed_layer(self.mdb, self.iface)
+        QMessageBox.information(self, "Information", "Update successful", QMessageBox.Ok)
 
     def fct_parametres(self):
         """

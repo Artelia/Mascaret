@@ -23,7 +23,7 @@ import numpy as np
 from qgis.PyQt.QtCore import *
 from qgis.core import *
 from qgis.gui import *
-
+from .ClassUpdateBedDialog import update_all_bed_geometry, refresh_minor_bed_layer
 
 class ClassMNT(QObject):
     """Example worker for calculating the total area of all features in a layer"""
@@ -78,6 +78,9 @@ class ClassMNT(QObject):
                 if self.auto_prof :
                     feature["x"] = feature["xmnt"]
                     feature["z"] = feature["zmnt"]
+                    print(feature["x"])
+                    feature["leftminbed"] = min([float(v) for v in str(feature["xmnt"]).strip().split(" ")])
+                    feature["rightminbed"] = max([float(v) for v in str(feature["xmnt"]).strip().split(" ")])
                 self.profil.updateFeature(feature)
 
                 if len(feature["zmnt"]) > 0:
@@ -94,3 +97,6 @@ class ClassMNT(QObject):
             self.profil.saveEdits()
         except:  # qgis 3
             self.profil.commitChanges()
+            update_all_bed_geometry(self.mgis.mdb)
+            refresh_minor_bed_layer(self.mgis.mdb, self.mgis.iface)
+

@@ -472,7 +472,7 @@ class ClassMasDatabase(object):
                       Maso.extremities,
                       Maso.flood_marks, Maso.hydraulic_head, Maso.outputs,
                       Maso.weirs, Maso.profiles, Maso.topo, Maso.visu_branchs, Maso.branchs,
-                      Maso.observations, Maso.parametres, Maso.runs,
+                      Maso.visu_minor_river_bed, Maso.observations, Maso.parametres, Maso.runs,
                       # Maso.laws,
                       Maso.admin_tab, Maso.visu_flood_marks,
                       # bassin
@@ -824,7 +824,7 @@ class ClassMasDatabase(object):
         for (name, obj) in tables:
             try:
                 # TODO modif if new geometric table
-                if obj.order < 17:
+                if obj.order < 18:
                     # if name in lst_only_visu:
                     #     dict_only_visu[name] = obj
                     # else:

@@ -30,6 +30,7 @@ import matplotlib.image as mpimg
 import numpy as np
 from matplotlib import patches
 from matplotlib.widgets import RectangleSelector, SpanSelector, Cursor
+from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.PyQt.QtWidgets import *
@@ -45,6 +46,8 @@ from .GraphResultDialog import GraphResultDialog
 from .ClassProfInterpDialog import ClassProfInterpDialog
 from ..Function import tw_to_txt, filter_pr_fct, filter_dist_perpendiculaire
 from .GraphBCDialog import GraphBCDialog
+from ..ClassUpdateBedDialog import verif_left_stock, verif_left_bed, verif_right_bed, \
+    verif_right_stock, update_all_bed_geometry, interpolate_x_val, refresh_minor_bed_layer
 
 try:
     from matplotlib.backends.backend_qt5agg \
@@ -284,6 +287,12 @@ class GraphProfil(GraphCommon):
         self.ui.bt_ouvrage.clicked.connect(self.create_struct)
         self.ui.bt_interp.clicked.connect(self.bt_interpol_profile)
 
+        self.ui.bt_left_bed.clicked.connect(self.retrieve_left_bed)
+        self.ui.bt_both_bed.clicked.connect(self.retrieve_both_bed)
+        self.ui.bt_right_bed.clicked.connect(self.retrieve_right_bed)
+        self.ui.bt_left_stock.clicked.connect(self.retrieve_left_stock)
+        self.ui.bt_right_stock.clicked.connect(self.retrieve_right_stock)
+
         self.ui.bt_add_line.clicked.connect(self.add_line)
         self.ui.bt_del_line.clicked.connect(self.del_line)
 
@@ -351,6 +360,11 @@ class GraphProfil(GraphCommon):
 
         self.etiquetteTopo = []
         self.courbes = [self.courbeProfil, self.courbeMNT]
+
+        self.lg_lit_mineur = self.axes.axvline(x=-9999999., color="red", ymin=0., ymax=1., ls=":", lw=2.5, zorder=85)
+        self.ld_lit_mineur = self.axes.axvline(x=-9999999., color="red", ymin=0., ymax=1., ls=":", lw=2.5, zorder=85)
+        self.lg_stock = self.axes.axvline(x=-9999999., color="green", ymin=0., ymax=1., ls=":", lw=2.5, zorder=85)
+        self.ld_stock = self.axes.axvline(x=-9999999., color="green", ymin=0., ymax=1., ls=":", lw=2.5, zorder=85)
 
         # Selelection Zones
         rect = patches.Rectangle((0, -9999999), 0, 2 * 9999999, color='pink',
@@ -499,7 +513,8 @@ class GraphProfil(GraphCommon):
 
         self.tab = {'x': [], 'z': []}
         # liste = ["litmingauc", "litmindroi", "stockgauch", 'stockdroit']
-        liste = ["leftminbed", "rightminbed", "leftstock", 'rightstock']
+        liste = ["leftminbed", "rightminbed", "leftstock", 'rightstock',
+                 "leftminbed_g", "rightminbed_g", "leftstock_g", 'rightstock_g']
         for lval in liste:
             if self.feature[lval] is not None:
                 self.tab[lval] = self.feature[lval]
@@ -635,6 +650,9 @@ class GraphProfil(GraphCommon):
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
         tab = {self.nom: self.tab}
         self.mdb.update("profiles", tab, var="name")
+
+        update_all_bed_geometry(self.mdb)
+        refresh_minor_bed_layer(self.mdb, self.mgis.iface)
 
     def sauve_topo(self):
         """ Save les modification du à la translation de la topo"""
@@ -1141,6 +1159,31 @@ class GraphProfil(GraphCommon):
         if allvis:
             for cb in self.courbes:
                 cb.set_visible(True)
+
+        if ta['leftminbed_g'] is not None:
+            self.lg_lit_mineur.set_xdata([ta['leftminbed_g']])
+            self.lg_lit_mineur.set_visible(True)
+        else:
+            self.lg_lit_mineur.set_visible(False)
+
+        if ta['rightminbed_g'] is not None:
+            self.ld_lit_mineur.set_xdata([ta['rightminbed_g']])
+            self.ld_lit_mineur.set_visible(True)
+        else:
+            self.ld_lit_mineur.set_visible(False)
+
+        if ta['leftstock_g'] is not None:
+            self.lg_stock.set_xdata([ta['leftstock_g']])
+            self.lg_stock.set_visible(True)
+        else:
+            self.lg_stock.set_visible(False)
+
+        if ta['rightstock_g'] is not None:
+            self.ld_stock.set_xdata([ta['rightstock_g']])
+            self.ld_stock.set_visible(True)
+        else:
+            self.ld_stock.set_visible(False)
+
         if ta['x'] is not None and ta['leftminbed'] is not None and ta[
             'rightminbed'] is not None:
             self.litMineur.set_x(ta['leftminbed'])
@@ -1401,6 +1444,149 @@ class GraphProfil(GraphCommon):
             self.rectSelection.set_width(maxi_x - mini_x)
             self.rectSelection.set_visible(True)
             self.canvas.draw()
+
+    def retrieve_both_bed(self):
+        x_left = self.tab['leftminbed_g']
+        x_right = self.tab['rightminbed_g']
+
+        clear_left_stock = False
+        clear_right_stock = False
+
+        if x_left is not None and x_right is not None:
+            status_left, mess_left = verif_left_bed(x_left, self.tab['leftstock'], self.tab['x'])
+            status_right, mess_right = verif_right_bed(x_right, self.tab['rightstock'], self.tab['x'])
+
+            if status_left == "e":
+                QMessageBox.critical(self, "Error", mess_left, QMessageBox.Ok)
+                return
+
+            if status_right == "e":
+                QMessageBox.critical(self, "Error", mess_right, QMessageBox.Ok)
+                return
+
+            if status_left == "w" or status_right == "w":
+                mess_both = str()
+                if status_right == "w":
+                    clear_right_stock = True
+                    mess_both = mess_right
+
+                if status_left == "w":
+                    clear_left_stock = True
+                    mess_both = mess_left
+
+                if QMessageBox.question(self, "Warning", mess_both,
+                                        QMessageBox.Cancel | QMessageBox.Ok) != QMessageBox.Ok:
+                    return
+
+            for x in [x_left, x_right]:
+                if x not in self.tab['x']:
+                    if not interpolate_x_val(x, self.tab['x'], self.tab['z']):
+                        return
+
+            self.tab['leftminbed'] = self.tab['leftminbed_g']
+            self.tab['rightminbed'] = self.tab['rightminbed_g']
+            if clear_left_stock:
+                self.tab['leftstock'] = None
+            if clear_right_stock:
+                self.tab['rightstock'] = None
+            self.maj_graph()
+        else:
+            QMessageBox.critical(self, "Error", "Missing value", QMessageBox.Ok)
+
+    def retrieve_left_bed(self):
+        new_x = self.tab['leftminbed_g']
+        clear_left_stock = False
+
+        if new_x is not None:
+            status, mess = verif_left_bed(new_x, self.tab['leftstock'], self.tab['x'])
+            if status == "e":
+                QMessageBox.critical(self, "Error", mess, QMessageBox.Ok)
+                return
+
+            if status == "w":
+                if QMessageBox.question(self, "Warning", mess,
+                                        QMessageBox.Cancel | QMessageBox.Ok) != QMessageBox.Ok:
+                    return
+                else:
+                    clear_left_stock = True
+
+            if new_x not in self.tab['x']:
+                if not interpolate_x_val(new_x, self.tab['x'], self.tab['z']):
+                    return
+
+            self.tab['leftminbed'] = self.tab['leftminbed_g']
+            if clear_left_stock:
+                self.tab['leftstock'] = None
+            self.maj_graph()
+        else:
+            QMessageBox.critical(self, "Error", "No value", QMessageBox.Ok)
+
+    def retrieve_right_bed(self):
+        new_x = self.tab['rightminbed_g']
+        clear_right_stock = False
+
+        if new_x is not None:
+            status, mess = verif_left_bed(new_x, self.tab['rightstock'], self.tab['x'])
+            if status == "e":
+                QMessageBox.critical(self, "Error", mess, QMessageBox.Ok)
+                return
+
+            if status == "w":
+                if QMessageBox.question(self, "Warning", mess,
+                                        QMessageBox.Cancel | QMessageBox.Ok) != QMessageBox.Ok:
+                    return
+                else:
+                    clear_right_stock = True
+
+            if new_x not in self.tab['x']:
+                if not interpolate_x_val(new_x, self.tab['x'], self.tab['z']):
+                    return
+
+            self.tab['rightminbed'] = self.tab['rightminbed_g']
+            if clear_right_stock:
+                self.tab['rightstock'] = None
+            self.maj_graph()
+        else:
+            QMessageBox.critical(self, "Error", "No value", QMessageBox.Ok)
+
+    def retrieve_left_stock(self):
+        new_x = self.tab['leftstock_g']
+
+        if new_x is not None:
+            status, mess = verif_left_stock(new_x, [self.tab['leftminbed'], self.tab['rightminbed']],
+                                            self.tab['x'])
+            if status == "e":
+                QMessageBox.critical(self, "Error", mess, QMessageBox.Ok)
+                return
+
+            if new_x not in self.tab['x']:
+                if not interpolate_x_val(new_x, self.tab['x'], self.tab['z']):
+                    return
+
+            self.tab['leftstock'] = self.tab['leftstock_g']
+            self.maj_graph()
+        else:
+            QMessageBox.critical(self, "Error", "No value", QMessageBox.Ok)
+
+    def retrieve_right_stock(self):
+        new_x = self.tab['rightstock_g']
+
+        if new_x is not None:
+            status, mess = verif_right_stock(new_x, [self.tab['leftminbed'], self.tab['rightminbed']],
+                                             self.tab['x'])
+
+            if status == "e":
+                QMessageBox.critical(self, "Error", mess, QMessageBox.Ok)
+                return
+
+            if new_x not in self.tab['x']:
+                if not interpolate_x_val(new_x, self.tab['x'], self.tab['z']):
+                    return
+
+            self.tab['rightstock'] = self.tab['rightstock_g']
+            self.maj_graph()
+        else:
+            QMessageBox.critical(self, "Error", "No value", QMessageBox.Ok)
 
     def zoom_fun(self, event):
         # get the current x and y limits
