@@ -28,4 +28,5 @@ def classFactory(iface):  # pylint: disable=invalid-name
     """
     #
     from .MascPlug import MascPlug
+
     return MascPlug(iface)

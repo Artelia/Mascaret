@@ -41,7 +41,7 @@ class ClassDownloadMasc:
         self.masplug_path = None
 
         if url_base is None:
-            self.url_base = ''
+            self.url_base = ""
         else:
             self.url_base = url_base
         self.parent = parent
@@ -51,7 +51,7 @@ class ClassDownloadMasc:
             self.dbg = self.parent.DEBUG
 
         if path_work is None:
-            self.masplug_path = ''
+            self.masplug_path = ""
         else:
             self.masplug_path = path_work
         self.file_install = None
@@ -66,15 +66,16 @@ class ClassDownloadMasc:
         :return:
         """
         for rep in dir.keys():
-            self.print_('Downloading executable file in "{}" directory\n'
-                        'Download ...'.format(rep))
+            self.print_(
+                'Downloading executable file in "{}" directory\n' "Download ...".format(rep)
+            )
             url = posixpath.join(self.url_base, rep)
             os.makedirs(os.path.join(self.masplug_path, rep), exist_ok=True)
             for filen in dir[rep]:
                 url2 = posixpath.join(url, filen)
                 paht_file = os.path.join(self.masplug_path, rep, filen)
                 self.download_file(url2, paht_file)
-            self.print_('Downloading Done')
+            self.print_("Downloading Done")
 
     def download_file(self, url, path_file):
         """
@@ -94,14 +95,15 @@ class ClassDownloadMasc:
         req = QNetworkRequest(QUrl(url))
         result = self.manager.get(req)
         result.finished.connect(lambda: self.fin_req(loop, result))
-        self.print_('fetching request...', self.dbg)
+        self.print_("fetching request...", self.dbg)
         if loop.exec_() == 0:
             timer.stop()
-            self.print_('{} is received: {}'.format(os.path.basename(path_file),
-                                                    result.readAll().count()),
-                        self.dbg)
+            self.print_(
+                "{} is received: {}".format(os.path.basename(path_file), result.readAll().count()),
+                self.dbg,
+            )
         else:
-            self.print_('request timed-out')
+            self.print_("request timed-out")
 
     def print_(self, txt, dbg=True):
         if self.parent is None and dbg:
@@ -131,6 +133,6 @@ class ClassDownloadMasc:
         :param data: data in file
         :return:
         """
-        fch = open(self.file_install, 'wb')
+        fch = open(self.file_install, "wb")
         with fch:
             fch.write(data)

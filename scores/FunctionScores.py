@@ -43,7 +43,7 @@ def err_temps_point(y_obs, y_pred, tps_obs, tps_pred, alpha):
     idobs = np.where(y_obs == mxobs)[0]
 
     if idpred.size == 0 or idpred.size == 0:
-        deltatmax = 'No found peaks'
+        deltatmax = "No found peaks"
     else:
         deltatmax = tps_pred[idpred[0]] - tps_obs[idobs[0]]
     return deltatmax
@@ -96,7 +96,7 @@ def calc_dist(dist_step=None):
     dist = []
     while wow < 100 - dist_step:
         wow += dist_step
-        dist.append(wow / 100.)
+        dist.append(wow / 100.0)
     return dist
 
 
@@ -152,8 +152,7 @@ def mean_rabs_err(y_obs, y_pred, seuil=None):
     :return: (array) mean relative absolute error
     """
     if seuil:
-        tmp = np.ma.masked_array(y_obs, mask=(
-            (y_obs <= seuil) & (y_obs >= -seuil)))
+        tmp = np.ma.masked_array(y_obs, mask=((y_obs <= seuil) & (y_obs >= -seuil)))
         yn_obs = tmp.data
         yn_pred = y_pred[~tmp.mask]
     else:
@@ -173,8 +172,7 @@ def mean_r_err(y_obs, y_pred, seuil=None):
     """
 
     if seuil:
-        tmp = np.ma.masked_array(y_obs, mask=(
-            (y_obs <= seuil) & (y_obs >= -seuil)))
+        tmp = np.ma.masked_array(y_obs, mask=((y_obs <= seuil) & (y_obs >= -seuil)))
         yn_obs = tmp.data
         yn_pred = y_pred[~tmp.mask]
     else:
@@ -211,7 +209,7 @@ def ecart_abs(y_obs, y_pred):
     :param y_obs: (array)observation data
     :param y_pred: (array) model data
           :return:(array) mean error
-          """
+    """
     return np.abs(y_pred - y_obs)
 
 
@@ -367,5 +365,5 @@ def biais(y_obs, y_pred, seuil=None):
     return mean_r_err(y_obs, y_pred, seuil) * 100
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

@@ -35,10 +35,12 @@ except AttributeError:
 
 if qgis_version < 31616:
     FORM_CLASS, BASE = uic.loadUiType(
-        os.path.join(os.path.join(os.path.dirname(__file__), 'ui/edit_ks_mesh_plan31000.ui')))
+        os.path.join(os.path.join(os.path.dirname(__file__), "ui/edit_ks_mesh_plan31000.ui"))
+    )
 else:
     FORM_CLASS, BASE = uic.loadUiType(
-        os.path.join(os.path.join(os.path.dirname(__file__), 'ui/edit_ks_mesh_plan31616.ui')))
+        os.path.join(os.path.join(os.path.dirname(__file__), "ui/edit_ks_mesh_plan31616.ui"))
+    )
 
 
 class ClassEditKsDialog(BASE, FORM_CLASS):
@@ -47,23 +49,24 @@ class ClassEditKsDialog(BASE, FORM_CLASS):
     """
 
     def __init__(self, mgis, iface):
-
         super(ClassEditKsDialog, self).__init__()
         self.setupUi(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.iface = iface
         self.box = ClassWarningBox()
-        self.ctrl_ch = [("mesh", self.ch_mesh, self.dsp_mesh),
-                        ("planim", self.ch_planim, self.dsp_planim),
-                        ("minbedcoef", self.ch_minbedcoef, self.dsp_minbedcoef),
-                        ("majbedcoef", self.ch_majbedcoef, self.dsp_majbedcoef), ]
+        self.ctrl_ch = [
+            ("mesh", self.ch_mesh, self.dsp_mesh),
+            ("planim", self.ch_planim, self.dsp_planim),
+            ("minbedcoef", self.ch_minbedcoef, self.dsp_minbedcoef),
+            ("majbedcoef", self.ch_majbedcoef, self.dsp_majbedcoef),
+        ]
 
         self.init_gui()
 
     def init_gui(self):
         """
-              initialisation GUI
+        initialisation GUI
         """
         self.chall.stateChanged.connect(self.chall_event)
         self.chall.setChecked(False)
@@ -79,14 +82,14 @@ class ClassEditKsDialog(BASE, FORM_CLASS):
             ctrl.setChecked(val)
 
     def lancement(self):
-        """ Delete selection function"""
+        """Delete selection function"""
 
         tempo = QgsProject.instance().mapLayers().values()
         for couche in tempo:
             if couche.name() == "profiles":
                 profil = couche
         if len(profil.selectedFeatures()) == 0:
-            self.box.info('Please, selection the profiles', title='Message')
+            self.box.info("Please, selection the profiles", title="Message")
             return
 
         tab = {}
@@ -99,16 +102,20 @@ class ClassEditKsDialog(BASE, FORM_CLASS):
             for var, ctrl, crtl2 in self.ctrl_ch:
                 if ctrl.isChecked():
                     tab[feature["gid"]][var] = crtl2.value()
-        ok = self.box.yes_no_q("Do you confirm the modification of the {} profiles ?".format(len(lst_name)), title='')
+        ok = self.box.yes_no_q(
+            "Do you confirm the modification of the {} profiles ?".format(len(lst_name)), title=""
+        )
 
         if ok:
-            self.mgis.mdb.update('profiles', tab, var="gid")
-            self.mgis.add_info('List of profile which were updated :\n {}'.format(' , '.join(lst_name)))
+            self.mgis.mdb.update("profiles", tab, var="gid")
+            self.mgis.add_info(
+                "List of profile which were updated :\n {}".format(" , ".join(lst_name))
+            )
 
     def closeEvent(self, event):
         QtWidgets.QDockWidget.closeEvent(self, event)
         event.accept()
 
     def annule(self):
-        """"Cancel """
+        """ "Cancel"""
         self.close()

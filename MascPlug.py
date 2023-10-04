@@ -46,24 +46,31 @@ class MascPlug:
         self.iface = iface
         self.dlg = None
         self.icon_path = ":/plugins/Mascaret/icones/icon_base.png"
-        self.name_plug = 'Mascaret'
+        self.name_plug = "Mascaret"
 
     def initGui(self):
-        """ initialisation GUI"""
-        self.action = QAction(QIcon(self.icon_path), QApplication.translate(self.name_plug, self.name_plug),
-                              self.iface.mainWindow())
+        """initialisation GUI"""
+        self.action = QAction(
+            QIcon(self.icon_path),
+            QApplication.translate(self.name_plug, self.name_plug),
+            self.iface.mainWindow(),
+        )
         self.action.setObjectName(self.name_plug)
 
         # QObject.connect(self.action, SIGNAL('triggered()'), self.run)
         self.action.triggered.connect(self.run)
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.action)
-        self.iface.addPluginToMenu(QApplication.translate(self.name_plug, self.name_plug), self.action)
+        self.iface.addPluginToMenu(
+            QApplication.translate(self.name_plug, self.name_plug), self.action
+        )
 
     def unload(self):
         # Remove the plugin menu item and icon
         self.iface.removeToolBarIcon(self.action)
-        self.iface.removePluginMenu(QApplication.translate(self.name_plug, self.name_plug), self.action)
+        self.iface.removePluginMenu(
+            QApplication.translate(self.name_plug, self.name_plug), self.action
+        )
 
         if self.dlg is not None:
             self.dlg.close()

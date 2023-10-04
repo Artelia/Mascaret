@@ -26,8 +26,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, ctrl_get_value, \
-    fill_qcombobox
+from .ClassTableStructure import ClassTableStructure, ctrl_get_value, fill_qcombobox
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -41,8 +40,9 @@ class MetOrificeDaWidget(QWidget):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
-                                      'ui/structures/ui_orifice_da.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, "ui/structures/ui_orifice_da.ui"), self
+        )
         self.id_struct = id_struct
 
         self.completed = 0
@@ -54,30 +54,34 @@ class MetOrificeDaWidget(QWidget):
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
         self.tab_trav.itemChanged.connect(self.verif_param_trav)
 
-        self.dico_ctrl = {'FIRSTWD': [self.dsb_abs_cul_rg],
-                          'ZTOPTAB': [self.dsb_cote_tab],
-                          'PASH': [self.dsb_h_pas],
-                          'MINH': [self.dsb_h_min],
-                          'MAXH': [self.dsb_h_max],
-                          'PASQ': [self.dsb_q_pas],
-                          'NBTRAVE': [self.sb_nb_trav],
-                          'COEFDS': [self.dsb_ds],
-                          'COEFDO': [self.dsb_do]
-                          }
+        self.dico_ctrl = {
+            "FIRSTWD": [self.dsb_abs_cul_rg],
+            "ZTOPTAB": [self.dsb_cote_tab],
+            "PASH": [self.dsb_h_pas],
+            "MINH": [self.dsb_h_min],
+            "MAXH": [self.dsb_h_max],
+            "PASQ": [self.dsb_q_pas],
+            "NBTRAVE": [self.sb_nb_trav],
+            "COEFDS": [self.dsb_ds],
+            "COEFDO": [self.dsb_do],
+        }
 
-        self.dico_tab = {self.tab_trav: {'type': 0,
-                                         'id': '({}*2) + 1',
-                                         'col': [{'fld': 'COTERAD', 'cb': None,
-                                                  'valdef': 1.},
-                                                 {'fld': 'HAUTDAL', 'cb': None,
-                                                  'valdef': 1.},
-                                                 {'fld': 'LARGTRA', 'cb': None,
-                                                  'valdef': 1.}]},
-                         self.tab_pile: {'type': 1,
-                                         'id': '({}*2) + 2',
-                                         'col': [{'fld': 'LARGPIL', 'cb': None,
-                                                  'valdef': 1.}]}
-                         }
+        self.dico_tab = {
+            self.tab_trav: {
+                "type": 0,
+                "id": "({}*2) + 1",
+                "col": [
+                    {"fld": "COTERAD", "cb": None, "valdef": 1.0},
+                    {"fld": "HAUTDAL", "cb": None, "valdef": 1.0},
+                    {"fld": "LARGTRA", "cb": None, "valdef": 1.0},
+                ],
+            },
+            self.tab_pile: {
+                "type": 1,
+                "id": "({}*2) + 2",
+                "col": [{"fld": "LARGPIL", "cb": None, "valdef": 1.0}],
+            },
+        }
 
     def change_ntrav(self, nb_trav):
         nb_pile = max(0, nb_trav - 1)
@@ -96,16 +100,15 @@ class MetOrificeDaWidget(QWidget):
 
     def insert_elem(self, tab, row):
         tab.insertRow(row)
-        for c, col in enumerate(self.dico_tab[tab]['col']):
-            if isinstance(col['valdef'], int) or isinstance(col['valdef'],
-                                                            float):
-                val = col['valdef']
+        for c, col in enumerate(self.dico_tab[tab]["col"]):
+            if isinstance(col["valdef"], int) or isinstance(col["valdef"], float):
+                val = col["valdef"]
             else:
-                val = ctrl_get_value(col['valdef'])
+                val = ctrl_get_value(col["valdef"])
 
-            if col['cb']:
+            if col["cb"]:
                 cb = QComboBox()
-                fill_qcombobox(cb, col['cb'], val_def=val)
+                fill_qcombobox(cb, col["cb"], val_def=val)
                 tab.setCellWidget(row, c, cb)
             else:
                 itm = QTableWidgetItem()
@@ -113,13 +116,12 @@ class MetOrificeDaWidget(QWidget):
                 tab.setItem(row, c, itm)
 
     def update_min_h_max(self):
-        self.dsb_h_max.setMinimum(
-            self.dsb_h_min.value() + self.dsb_h_pas.value())
+        self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
 
     def verif_param_trav(self, itm):
         if itm.column() in [1, 2]:
-            if itm.data(0) <= 0.:
-                itm.setData(0, 1.)
+            if itm.data(0) <= 0.0:
+                itm.setData(0, 1.0)
 
     def progress_bar(self, val):
         self.completed += val

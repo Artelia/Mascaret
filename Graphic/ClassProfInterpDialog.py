@@ -36,9 +36,7 @@ class ClassProfInterpDialog(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
 
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_interp_profile.ui'),
-            self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_interp_profile.ui"), self)
         self.nplan = 100
         self.plani = None
         self.pk_int = None
@@ -61,14 +59,14 @@ class ClassProfInterpDialog(QDialog):
         self.compute = True
 
         if len(err.keys()) > 0:
-            msg_lbl = 'WARNING: \n'
+            msg_lbl = "WARNING: \n"
             for key, msg in err.items():
-                msg_lbl += '  - {}\n'.format(msg)
-                if key == 'plani':
+                msg_lbl += "  - {}\n".format(msg)
+                if key == "plani":
                     self.ch_autdisc.setEnabled(False)
-                if key == 'iderr':
+                if key == "iderr":
                     self.compute = False
-                    msg_lbl += '******* NO COMPUTE *******\n'
+                    msg_lbl += "******* NO COMPUTE *******\n"
                     self.ch_autdisc.hide()
                     self.sp_nbplan.hide()
                     self.lb_disc.hide()
@@ -76,26 +74,24 @@ class ClassProfInterpDialog(QDialog):
         else:
             if self.pk_int is None:
                 self.compute = False
-                msg_lbl = 'WARNING: \n'
-                msg_lbl += '  - No find pk interpolation'
-                msg_lbl += '******* NO COMPUTE *******\n'
+                msg_lbl = "WARNING: \n"
+                msg_lbl += "  - No find pk interpolation"
+                msg_lbl += "******* NO COMPUTE *******\n"
 
         if self.compute:
-            msg_lbl = 'Interoplation between : \n'
-            msg_lbl += '  - Upstream Profile : \n'
-            msg_lbl += '     - name : {} \n'.format(dict_interp['up']['name'])
-            msg_lbl += '     - gid : {} \n'.format(dict_interp['up']['id'])
-            msg_lbl += '     - branch : {} \n'.format(
-                dict_interp['up']['branch'])
-            msg_lbl += '  - Downstream Profile : \n'
-            msg_lbl += '     - name : {} \n'.format(dict_interp['down']['name'])
-            msg_lbl += '     - gid : {} \n'.format(dict_interp['down']['id'])
-            msg_lbl += '     - branch : {} \n'.format(
-                dict_interp['down']['branch'])
+            msg_lbl = "Interoplation between : \n"
+            msg_lbl += "  - Upstream Profile : \n"
+            msg_lbl += "     - name : {} \n".format(dict_interp["up"]["name"])
+            msg_lbl += "     - gid : {} \n".format(dict_interp["up"]["id"])
+            msg_lbl += "     - branch : {} \n".format(dict_interp["up"]["branch"])
+            msg_lbl += "  - Downstream Profile : \n"
+            msg_lbl += "     - name : {} \n".format(dict_interp["down"]["name"])
+            msg_lbl += "     - gid : {} \n".format(dict_interp["down"]["id"])
+            msg_lbl += "     - branch : {} \n".format(dict_interp["down"]["branch"])
             self.lb_message.setText(msg_lbl)
 
     def fct_autdisc(self):
-        """ enable if auto discretization"""
+        """enable if auto discretization"""
         if self.ch_autdisc.isChecked():
             self.lb_disc.setEnabled(False)
             self.sp_nbplan.setEnabled(False)
@@ -115,17 +111,17 @@ class ClassProfInterpDialog(QDialog):
                 plani_s = self.plani
             else:
                 plani_s = None
-            cl_interp = ClassProfInterp(self.data, self.pk_int,
-                                        nplan=nplan_s, plani=plani_s,
-                                        debug=self.mgis.DEBUG)
+            cl_interp = ClassProfInterp(
+                self.data, self.pk_int, nplan=nplan_s, plani=plani_s, debug=self.mgis.DEBUG
+            )
 
             cl_interp()
-            if cl_interp.msg != '':
+            if cl_interp.msg != "":
                 if not cl_interp.err:
-                    cl_interp.msg += 'No interpolation.'
+                    cl_interp.msg += "No interpolation."
                 self.mgis.add_info(cl_interp.msg)
             if cl_interp.err:
-                self.interpol_prof = cl_interp.data['interp']
+                self.interpol_prof = cl_interp.data["interp"]
 
         self.accept()
 

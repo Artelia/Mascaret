@@ -44,7 +44,12 @@ from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .HydroLawsDialog import ClassHydroLawsDialog
 from .Structure.MobilSingDialog import ClassMobilSingDialog
 from .ClassExtractBedDialog import ClassExtractBedDialog
-from .ClassUpdateBedDialog import ClassUpdateBedDialog, update_all_bed_geometry, refresh_minor_bed_layer
+from .ClassUpdateBedDialog import (
+    ClassUpdateBedDialog,
+    update_all_bed_geometry,
+    refresh_minor_bed_layer,
+)
+
 # # structures
 from .Structure.StructureDialog import ClassStructureDialog
 from .WaterQuality.ClassMascWQ import ClassMascWQ
@@ -66,8 +71,7 @@ class MascPlugDialog(QMainWindow):
         self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.masplugPath = os.path.dirname(__file__)
-        self.ui = loadUi(
-            os.path.join(self.masplugPath, 'ui/MascPlug_dialog_base.ui'), self)
+        self.ui = loadUi(os.path.join(self.masplugPath, "ui/MascPlug_dialog_base.ui"), self)
         # variables
         self.DEBUG = 1
         self.task_use = True
@@ -82,10 +86,10 @@ class MascPlugDialog(QMainWindow):
         self.crs = 0
         self.list_menu = []
 
-        self.user = ''
-        self.host = ''
-        self.port = ''
-        self.database = ''
+        self.user = ""
+        self.host = ""
+        self.port = ""
+        self.database = ""
         self.chkt = False
         self.opts = {}
 
@@ -98,17 +102,14 @@ class MascPlugDialog(QMainWindow):
 
         self.prev_tool = None
 
-        self.dossierFileMasc = ''
+        self.dossierFileMasc = ""
 
         # self.pathPostgres = self.masplug_path
         # emplacement objet sql
-        self.dossier_sql = os.path.join(os.path.join(self.masplugPath, "db"),
-                                        "sql")
+        self.dossier_sql = os.path.join(os.path.join(self.masplugPath, "db"), "sql")
         # style des couches
-        self.dossier_style = os.path.join(os.path.join(self.masplugPath, "db"),
-                                          "style")
-        self.dossier_struct = os.path.join(
-            os.path.join(self.masplugPath, "Structure"), 'Abacus')
+        self.dossier_style = os.path.join(os.path.join(self.masplugPath, "db"), "style")
+        self.dossier_struct = os.path.join(os.path.join(self.masplugPath, "Structure"), "Abacus")
         self.repProject = None
         self.task_mas = None
         self.task_exp = None
@@ -117,17 +118,18 @@ class MascPlugDialog(QMainWindow):
         self.box = ClassWarningBox()
         # variables liste of results
         self.variables = {}
-        with open(os.path.join(self.masplugPath, 'variables.dat'),
-                  'r') as fichier:
+        with open(os.path.join(self.masplugPath, "variables.dat"), "r") as fichier:
             for ligne in fichier:
-                val = ligne.strip().replace('"', '').split(';')
-                self.variables[val[1].lower()] = {'nom': val[0],
-                                                  'code': val[1],
-                                                  'unite': val[2],
-                                                  'couleur': val[4]}
+                val = ligne.strip().replace('"', "").split(";")
+                self.variables[val[1].lower()] = {
+                    "nom": val[0],
+                    "code": val[1],
+                    "unite": val[2],
+                    "couleur": val[4],
+                }
 
         # state list
-        self.listeState = ['Steady', 'Unsteady', 'Transcritical unsteady']
+        self.listeState = ["Steady", "Unsteady", "Transcritical unsteady"]
         # kernel list
         self.Klist = ["steady", "unsteady", "transcritical"]
 
@@ -157,10 +159,12 @@ class MascPlugDialog(QMainWindow):
         # Settings
         self.ui.actionOptions.triggered.connect(self.options)
         self.ui.actionRestore_Default_Options.triggered.connect(
-            lambda: self.read_settings(defaults=True))
+            lambda: self.read_settings(defaults=True)
+        )
         self.text_edit.textChanged.connect(self.scroll_to_bottom)
         self.ui.text_edit.append(
-            '----------------------------------------------------------------------------')
+            "----------------------------------------------------------------------------"
+        )
         # initialise
 
         # restore the window state
@@ -170,12 +174,12 @@ class MascPlugDialog(QMainWindow):
 
         # # check if we should connect to previuosly used RDB
         if self.open_last_conn:
-            self.conn_changed(conn_name=self.opts['mdb']['last_conn'])
-            self.add_info('shema {}'.format(self.opts['mdb']['last_schema']))
+            self.conn_changed(conn_name=self.opts["mdb"]["last_conn"])
+            self.add_info("shema {}".format(self.opts["mdb"]["last_schema"]))
 
             if self.open_last_schema:
-                if self.opts['mdb']['last_schema'] in self.mdb.list_schema():
-                    self.db_load(schema_info=self.opts['mdb']['last_schema'])
+                if self.opts["mdb"]["last_schema"] in self.mdb.list_schema():
+                    self.db_load(schema_info=self.opts["mdb"]["last_schema"])
 
         else:
             self.conn_changed()
@@ -184,8 +188,7 @@ class MascPlugDialog(QMainWindow):
         self.read_settings()
 
         # set QGIS projection CRS as a default for MasPlug
-        self.ui.crsWidget.setCrs(
-            self.iface.mapCanvas().mapSettings().destinationCrs())
+        self.ui.crsWidget.setCrs(self.iface.mapCanvas().mapSettings().destinationCrs())
         self.update_default_crs()
 
         # # disable some actions until a connection to river database is established
@@ -201,8 +204,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionGraphRes.triggered.connect(self.main_graph)
 
         # creatoin model
-        self.ui.action_Extract_MNTfor_profile.triggered.connect(
-            self.mnt_to_profil)
+        self.ui.action_Extract_MNTfor_profile.triggered.connect(self.mnt_to_profil)
         self.ui.actionExtract_Beds.triggered.connect(self.fct_extract_beds)
         self.ui.actionUpdate_Beds.triggered.connect(self.fct_update_beds)
         self.ui.actionUpdate_Beds_Geom.triggered.connect(self.fct_update_beds_geom)
@@ -217,8 +219,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionImport_Model.triggered.connect(self.import_model_dgl)
         self.ui.actionFilter_All_Profiles.triggered.connect(self.filter_all_profiles)
 
-        self.ui.actionParameters_Water_Quality.triggered.connect(
-            self.fct_parameters_wq)
+        self.ui.actionParameters_Water_Quality.triggered.connect(self.fct_parameters_wq)
         self.ui.actionTracer_Laws.triggered.connect(self.fct_tracer_laws)
         self.ui.actionObservations.triggered.connect(self.fct_event_obs)
         self.ui.actionAbout.triggered.connect(self.about)
@@ -236,8 +237,7 @@ class MascPlugDialog(QMainWindow):
             self.ui.actionStructures_weirs.setEnabled(True)
 
         # WQ
-        self.ui.actionexport_tracer_files.triggered.connect(
-            self.fct_export_tracer_files)
+        self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.action_update_bin.triggered.connect(self.download_bin)
 
         self.ui.actionUpdate_all_PK.triggered.connect(self.update_pk)
@@ -257,8 +257,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionTest.setVisible(False)
 
         # TODO DELETE AFTER
-        self.ui.actionImport_Old_Model.triggered.connect(
-            self.import_old_model_dgl)
+        self.ui.actionImport_Old_Model.triggered.connect(self.import_old_model_dgl)
 
     def add_info(self, text, dbg=False):
         if dbg:
@@ -271,10 +270,10 @@ class MascPlugDialog(QMainWindow):
         self.crs = self.ui.crsWidget.crs()
         if self.mdb:
             self.mdb.SRID = int(self.crs.postgisSrid())
-        self.add_info('\nCurrent projection is {0}'.format(self.crs.authid()))
+        self.add_info("\nCurrent projection is {0}".format(self.crs.authid()))
 
     def disable_all(self):
-        menus_always_on = ['Help', 'Setting']
+        menus_always_on = ["Help", "Setting"]
         for m in self.menus:
             if not m.title() in menus_always_on:
                 for a in m.findChildren(QAction):
@@ -284,30 +283,33 @@ class MascPlugDialog(QMainWindow):
                 b.setDisabled(True)
 
     def disable_actions_connection(self):
-        """ cache les items avant la connection"""
+        """cache les items avant la connection"""
         self.disable_all()
-        self.list_menu = ['Refresh Connections List']
+        self.list_menu = ["Refresh Connections List"]
         for t in self.ui.dbToolBar.findChildren(QToolButton):
             if t.text() in self.list_menu:
                 t.setEnabled(True)
-        self.actions2Disable = [self.ui.actionCreate_New_Model,
-                                self.ui.actionLoad_Model,
-                                self.ui.actionDeleteModel,
-                                self.ui.actionEfl]
+        self.actions2Disable = [
+            self.ui.actionCreate_New_Model,
+            self.ui.actionLoad_Model,
+            self.ui.actionDeleteModel,
+            self.ui.actionEfl,
+        ]
         self.ui.menuDB.findChildren(QAction)[0].setEnabled(True)
         for a in self.actions2Disable:
             a.setDisabled(True)
 
     def disable_actions_model(self):
-
         self.disable_all()
         # bouton afficher
-        self.list_menu = ['Refresh Connections List',
-                          "Load Model",
-                          "Create New Model",
-                          "Delete Model",
-                          "Import Model",
-                          "Import Old Model"]
+        self.list_menu = [
+            "Refresh Connections List",
+            "Load Model",
+            "Create New Model",
+            "Delete Model",
+            "Import Model",
+            "Import Old Model",
+        ]
         for t in self.ui.dbToolBar.findChildren(QToolButton):
             if t.text() in self.list_menu:
                 t.setEnabled(True)
@@ -319,8 +321,7 @@ class MascPlugDialog(QMainWindow):
         else:
             pass
 
-        self.actions2Disable = [self.ui.actionExport_Model,
-                                self.ui.actionTo_clone_Model]
+        self.actions2Disable = [self.ui.actionExport_Model, self.ui.actionTo_clone_Model]
         self.ui.menuDB.findChildren(QAction)[0].setEnabled(True)
         for a in self.actions2Disable:
             a.setDisabled(True)
@@ -336,14 +337,14 @@ class MascPlugDialog(QMainWindow):
             a.setEnabled(True)
 
     def disable_actions(self, list_action_block):
-        """ cache les items de la liste d'action"""
+        """cache les items de la liste d'action"""
 
         self.ui.menuDB.findChildren(QAction)[0].setEnabled(True)
         for a in list_action_block:
             a.setDisabled(True)
 
     def enable_actions(self, list_action_block):
-        """ montre les items de la liste d'action"""
+        """montre les items de la liste d'action"""
         self.ui.menuDB.findChildren(QAction)[0].setEnabled(True)
         for a in list_action_block:
             a.setEnabled(True)
@@ -366,27 +367,29 @@ class MascPlugDialog(QMainWindow):
             self.dockwidgetKs.close()
         QMainWindow.closeEvent(self, e)
 
-    def conn_changed(self, conn_name='toto'):
+    def conn_changed(self, conn_name="toto"):
         """change the data base"""
         # close any existing connection to a MascPlug database
         if self.mdb:
             self.add_info(
                 "Closing existing connection to {0}@{1} Mascaret database".format(
-                    self.mdb.dbname, self.mdb.host))
+                    self.mdb.dbname, self.mdb.host
+                )
+            )
             self.mdb.disconnect_pg()
             self.mdb = None
         else:
             pass
         settings = QSettings()
-        settings.beginGroup('/PostgreSQL/connections')
+        settings.beginGroup("/PostgreSQL/connections")
         conns_names = settings.childGroups()
         if conn_name in conns_names:
             self.curConnName = conn_name
         else:
             self.curConnName = self.ui.connsCbo.currentText()
-        self.add_info('{}'.format(self.curConnName))
+        self.add_info("{}".format(self.curConnName))
         self.ui.connsCbo.clear()
-        self.ui.connsCbo.addItem('')
+        self.ui.connsCbo.addItem("")
         for conn in conns_names:
             self.ui.connsCbo.addItem(conn)
         try:
@@ -397,36 +400,40 @@ class MascPlugDialog(QMainWindow):
         conn_name = self.ui.connsCbo.currentText()
         settings.endGroup()
 
-        settings.beginGroup('/PostgreSQL/connections/{0}'.format(conn_name))
+        settings.beginGroup("/PostgreSQL/connections/{0}".format(conn_name))
         # first try to get the credentials from AuthManager, then from the basic settings
-        authconf = settings.value('authcfg', None)
+        authconf = settings.value("authcfg", None)
         if authconf:
             auth_manager = QgsApplication.authManager()
             conf = QgsAuthMethodConfig()
             auth_manager.loadAuthenticationConfig(authconf, conf, True)
             if conf.id():
-                self.user = conf.config('username', '')
-                self.passwd = conf.config('password', '')
+                self.user = conf.config("username", "")
+                self.passwd = conf.config("password", "")
         else:
-            self.user = settings.value('username')
-            self.passwd = settings.value('password')
+            self.user = settings.value("username")
+            self.passwd = settings.value("password")
 
         if not self.passwd:
             self.add_info("Warning: the password is NULL.")
-        self.host = settings.value('host')
-        self.port = settings.value('port')
-        self.database = settings.value('database')
+        self.host = settings.value("host")
+        self.port = settings.value("port")
+        self.database = settings.value("database")
         settings.endGroup()
         # create a new connection to masPlug database
-        self.mdb = ClassMasDatabase(self, self.database, self.host, self.port,
-                                    self.user, self.passwd)
+        self.mdb = ClassMasDatabase(
+            self, self.database, self.host, self.port, self.user, self.passwd
+        )
         self.chkt = CheckTab(self, self.mdb)
         self.mdb.SRID = int(self.crs.postgisSrid())
         msg = self.mdb.connect_pg()
-        self.add_info('Created connection to mascaret database: {0}@{1}'.format(
-            self.mdb.dbname, self.mdb.host))
+        self.add_info(
+            "Created connection to mascaret database: {0}@{1}".format(
+                self.mdb.dbname, self.mdb.host
+            )
+        )
         self.mdb.last_conn = conn_name
-        if 'Error:' in msg or 'None:' in msg:
+        if "Error:" in msg or "None:" in msg:
             self.disable_actions_connection()
         else:
             self.disable_actions_model()
@@ -437,19 +444,22 @@ class MascPlugDialog(QMainWindow):
         cpt = 0
         while cpt != 6:
             cpt += 1
-            model_name, ok = QInputDialog.getText(self, 'New Model',
-                                                  'New Model name:')
+            model_name, ok = QInputDialog.getText(self, "New Model", "New Model name:")
             if not ok:
-                self.add_info('Creating new model cancelled')
+                self.add_info("Creating new model cancelled")
                 return
             if not self.check_newname(model_name.lower(), lst_schema):
-                ok2 = self.box.yes_no_q("The {} model already exists. Change the model name.\n "
-                                        "".format(model_name.lower()))
+                ok2 = self.box.yes_no_q(
+                    "The {} model already exists. Change the model name.\n "
+                    "".format(model_name.lower())
+                )
                 if not ok2:
-                    self.add_info('Creating new model cancelled')
+                    self.add_info("Creating new model cancelled")
                     return
                 if cpt == 6:
-                    self.add_info('Creating new model cancelled because of attempts number reached.')
+                    self.add_info(
+                        "Creating new model cancelled because of attempts number reached."
+                    )
                     return
             else:
                 break
@@ -460,16 +470,16 @@ class MascPlugDialog(QMainWindow):
         self.enable_all_actions()
 
     def db_delete_model(self):
-        """ Model delete"""
+        """Model delete"""
         from .ClassDeletshDialog import ClassDeletshDialog
+
         dlg = ClassDeletshDialog(self, self.iface)
         dlg.exec_()
 
     def db_load(self, schema_info=None):
-        """ load model"""
+        """load model"""
         try:
-            self.repProject = os.path.dirname(
-                QgsProject.instance().fileName())
+            self.repProject = os.path.dirname(QgsProject.instance().fileName())
         except Exception:
             self.repProject = None
 
@@ -478,10 +488,7 @@ class MascPlugDialog(QMainWindow):
         else:
             liste = self.mdb.liste_models()
             liste = [v for v in liste if not (v in self.mdb.ignor_schema)]
-            model, ok = QInputDialog.getItem(None,
-                                             'Model Choice',
-                                             'Model',
-                                             liste, 0, False)
+            model, ok = QInputDialog.getItem(None, "Model Choice", "Model", liste, 0, False)
         if ok:
             self.mdb.SCHEMA = model
             sql = """SELECT Find_SRID('{}', 'extremities','geom');"""
@@ -492,18 +499,17 @@ class MascPlugDialog(QMainWindow):
                 self.chkt.update_adim()
             except Exception as e:
                 self.add_info("********* Echec of update table ***********")
-                self.add_info('Error : {}'.format(e))
+                self.add_info("Error : {}".format(e))
 
             self.mdb.load_model()
-            crs = QgsCoordinateReferenceSystem(
-                "POSTGIS:{}".format(self.mdb.SRID))
+            crs = QgsCoordinateReferenceSystem("POSTGIS:{}".format(self.mdb.SRID))
             self.ui.crsWidget.setCrs(crs)
 
             self.mdb.last_schema = self.mdb.SCHEMA
             self.enable_all_actions()
 
         else:
-            self.add_info('Droping Model cancelled.')
+            self.add_info("Droping Model cancelled.")
 
     def mnt_to_profil(self):
         """
@@ -515,8 +521,7 @@ class MascPlugDialog(QMainWindow):
             raster = self.iface.activeLayer()
 
         if not raster:
-            QMessageBox.warning(None, 'Message',
-                                'Please, selection the DTM raster')
+            QMessageBox.warning(None, "Message", "Please, selection the DTM raster")
             return
         try:  # qgis2
             tempo = QgsMapLayerRegistry.instance().mapLayers().values()
@@ -527,14 +532,14 @@ class MascPlugDialog(QMainWindow):
                 profil = couche
 
         if len(profil.selectedFeatures()) == 0:
-            QMessageBox.warning(None, 'Message',
-                                'Please, selection the profiles')
+            QMessageBox.warning(None, "Message", "Please, selection the profiles")
             return
 
         liste = ["m", "dm", "cm", "mm"]
 
-        valeur, ok = QInputDialog.getItem(None, "Selection of the DTM unit",
-                                          'Unit', liste, 0, False)
+        valeur, ok = QInputDialog.getItem(
+            None, "Selection of the DTM unit", "Unit", liste, 0, False
+        )
 
         if not ok:
             return
@@ -544,8 +549,10 @@ class MascPlugDialog(QMainWindow):
         if self.DEBUG:
             self.add_info("Raster and Profile Selection, and Unit are Ok")
 
-        ok = self.box.yes_no_q(" Do you want to use the DEM as default profile values?\n"
-                               "WARRING: The profiles will be overwritten.")
+        ok = self.box.yes_no_q(
+            " Do you want to use the DEM as default profile values?\n"
+            "WARRING: The profiles will be overwritten."
+        )
         # create a new worker instance
         worker = ClassMNT(self, profil, raster, facteur, auto_prof=ok)
         worker.run()
@@ -572,73 +579,63 @@ class MascPlugDialog(QMainWindow):
 
     def fct_parametres(self):
         """
-            Open parametters menu
-            :return:
+        Open parametters menu
+        :return:
         """
 
-        case, ok = QInputDialog.getItem(None,
-                                        'Study case',
-                                        'Kernel',
-                                        self.listeState, 0, False)
+        case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
         # kernel list
         if ok:
             if self.DEBUG:
-                self.add_info(
-                    "Kernel {}".format(self.Klist[self.listeState.index(case)]))
-            dlg = ClassParameterDialog(self,
-                                       self.Klist[self.listeState.index(case)])
+                self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
+            dlg = ClassParameterDialog(self, self.Klist[self.listeState.index(case)])
             dlg.exec_()
 
     def fct_create_xcas(self):
-        """ create Xcas"""
+        """create Xcas"""
 
-        case, ok = QInputDialog.getItem(self,
-                                        'Study case',
-                                        'Kernel',
-                                        self.listeState, 0, False)
+        case, ok = QInputDialog.getItem(self, "Study case", "Kernel", self.listeState, 0, False)
 
         # kernel list
         if ok:
             if self.DEBUG:
-                self.add_info(
-                    "Kernel {}".format(self.Klist[self.listeState.index(case)]))
+                self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
             rep_run = os.path.join(self.masplugPath, "mascaret_copy")
             clam = ClassMascaret(self, rep_run=rep_run)
 
             clam.creer_xcas(self.Klist[self.listeState.index(case)])
-            file_name_path, _ = QFileDialog.getSaveFileName(self,
-                                                            "saveFile",
-                                                            "{0}.xcas".format(
-                                                                os.path.join(
-                                                                    self.repProject,
-                                                                    clam.baseName)),
-                                                            filter="XCAS (*.xcas)")
+            file_name_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "saveFile",
+                "{0}.xcas".format(os.path.join(self.repProject, clam.baseName)),
+                filter="XCAS (*.xcas)",
+            )
             if file_name_path:
                 self.up_rep_project(file_name_path)
-                clam.copy_file_model(file_name_path, case='xcas')
+                clam.copy_file_model(file_name_path, case="xcas")
             clam.del_folder_mas()
 
     def fct_create_geo(self):
-        """ create Xcas"""
+        """create Xcas"""
         rep_run = os.path.join(self.masplugPath, "mascaret_copy")
         clam = ClassMascaret(self, rep_run=rep_run)
         clam.creer_geo_ref()
         # clam.creer_geo()
 
-        file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
-                                                        "{0}.geo".format(
-                                                            os.path.join(
-                                                                self.repProject,
-                                                                clam.baseName)),
-                                                        filter="GEO (*.geo)")
+        file_name_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "saveFile",
+            "{0}.geo".format(os.path.join(self.repProject, clam.baseName)),
+            filter="GEO (*.geo)",
+        )
 
         if file_name_path:
             self.up_rep_project(file_name_path)
-            clam.copy_file_model(file_name_path, case='geo')
+            clam.copy_file_model(file_name_path, case="geo")
         clam.del_folder_mas()
 
     def fct_create_casier(self):
-        """ create file .Casier """
+        """create file .Casier"""
         # Mascaret.exe demande un .casier et pas basin d'ou le nom de la fonction
         # Pas de dialog box sur le noyau: les casiers sont uniquement en transitoire
 
@@ -647,44 +644,42 @@ class MascPlugDialog(QMainWindow):
         # Appel de la fonction creerGEOCasier() definie dans Class_Mascaret.py
         clam.creer_geo_casier()
 
-        file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
-                                                        "{0}.casier".format(
-                                                            os.path.join(
-                                                                self.repProject,
-                                                                clam.baseName)),
-                                                        filter="CASIER (*.casier)")
+        file_name_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "saveFile",
+            "{0}.casier".format(os.path.join(self.repProject, clam.baseName)),
+            filter="CASIER (*.casier)",
+        )
 
         if file_name_path:
             self.up_rep_project(file_name_path)
-            clam.copy_file_model(file_name_path, case='casier')
+            clam.copy_file_model(file_name_path, case="casier")
         clam.del_folder_mas()
 
     def fct_run(self):
-        """ Run Mascaret"""
+        """Run Mascaret"""
         if self.task_mas:
-            self.box.info("The simulation is not running,\n"
-                          " because the previous simulation running yet")
-            self.add_info('The simulation is not running\n')
+            self.box.info(
+                "The simulation is not running,\n" " because the previous simulation running yet"
+            )
+            self.add_info("The simulation is not running\n")
             return
-        case, ok = QInputDialog.getItem(None,
-                                        'Study case',
-                                        'Kernel',
-                                        self.listeState, 0, False)
+        case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
         if ok:
             if self.DEBUG:
-                self.add_info(
-                    "Kernel {}".format(self.Klist[self.listeState.index(case)]))
-            run, ok = QInputDialog.getText(QWidget(), 'Run name',
-                                           'Please input a run name :',
-                                           text=case)
-            run = run.replace("'", " ").replace('"', ' ').strip()
+                self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
+            run, ok = QInputDialog.getText(
+                QWidget(), "Run name", "Please input a run name :", text=case
+            )
+            run = run.replace("'", " ").replace('"', " ").strip()
             if ok:
                 clam = ClassMascaret(self)
                 clam.mascaret(self.Klist[self.listeState.index(case)], run)
 
     def del_run(self):
-        """ Delete run of curent model"""
+        """Delete run of curent model"""
         from .ClassDeletrunDialog import ClassDeletrunDialog
+
         dlg = ClassDeletrunDialog(self, self.iface)
         dlg.exec_()
 
@@ -695,56 +690,53 @@ class MascPlugDialog(QMainWindow):
     def export_run(self, clam=None):
         if not clam:
             clam = ClassMascaret(self)
-        folder_name_path = QFileDialog.getExistingDirectory(self,
-                                                            "Choose a folder")
+        folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
         if clam.copy_run_file(folder_name_path):
-            self.add_info('Export is done.')
+            self.add_info("Export is done.")
         else:
-            self.add_info('Export failed.')
+            self.add_info("Export failed.")
 
     def options(self, widget):
-        """ GUI option"""
+        """GUI option"""
         from .ClassSettingsDialog import ClassSettingsDialog
+
         dlg = ClassSettingsDialog(self)
         dlg.exec_()
 
     def read_settings(self, defaults=False):
         """read Option"""
-        s_file = os.path.join(self.masplugPath, 'settings.json')
+        s_file = os.path.join(self.masplugPath, "settings.json")
         if not os.path.isfile(s_file) or defaults:
-            s_file = os.path.join(self.masplugPath, 'default_settings.json')
-        with open(s_file, 'r') as f:
+            s_file = os.path.join(self.masplugPath, "default_settings.json")
+        with open(s_file, "r") as f:
             self.opts = json.load(f)
         for group, options in self.opts.items():
             for name, defaultValue in options.items():
-                if group == 'mgis' and name in self.opts['mgis'].keys():
-                    setattr(self, name, self.opts['mgis'][name])
-                elif group == 'mdb' and name in self.opts['mdb'].keys():
-                    setattr(self, name, self.opts['mdb'][name])
+                if group == "mgis" and name in self.opts["mgis"].keys():
+                    setattr(self, name, self.opts["mgis"][name])
+                elif group == "mdb" and name in self.opts["mdb"].keys():
+                    setattr(self, name, self.opts["mdb"][name])
                 else:
-                    self.add_info(
-                        "Options have no key ['{}']['{}']".format(group, name))
+                    self.add_info("Options have no key ['{}']['{}']".format(group, name))
 
     def write_settings(self):
         """write Option"""
         for group, options in self.opts.items():
             for name, defaultValue in options.items():
-                if group == 'mgis':
+                if group == "mgis":
                     try:
-                        self.opts['mgis'][name] = getattr(self, name)
+                        self.opts["mgis"][name] = getattr(self, name)
                     except Exception:
-                        self.add_info(
-                            "Error: write_settings , group :{0}".format(group))
+                        self.add_info("Error: write_settings , group :{0}".format(group))
                         pass
-                elif group == 'mdb':
+                elif group == "mdb":
                     try:
-                        self.opts['mdb'][name] = getattr(self.mdb, name)
+                        self.opts["mdb"][name] = getattr(self.mdb, name)
                     except Exception:
-                        self.add_info(
-                            "Error: write_settings , group :{0}".format(group))
+                        self.add_info("Error: write_settings , group :{0}".format(group))
                         pass
         # self.add_info('{0}'.format(self.opts))
-        with open(os.path.join(self.masplugPath, 'settings.json'), 'w') as f:
+        with open(os.path.join(self.masplugPath, "settings.json"), "w") as f:
             json.dump(self.opts, f)
 
             # *******************************
@@ -756,9 +748,8 @@ class MascPlugDialog(QMainWindow):
 
     def export_model_dgl(self):
         if self.task_exp:
-            self.box.info("The export is not running,\n"
-                          " because the previous export running yet")
-            self.add_info('The export is not running\n')
+            self.box.info("The export is not running,\n" " because the previous export running yet")
+            self.add_info("The export is not running\n")
             return
         dlg = ClassDlgExport(self)
         if dlg.exec_():
@@ -768,9 +759,8 @@ class MascPlugDialog(QMainWindow):
 
     def import_model_dgl(self):
         if self.task_imp:
-            self.box.info("The export is not running,\n"
-                          " because the previous import running yet")
-            self.add_info('The import is not running\n')
+            self.box.info("The export is not running,\n" " because the previous import running yet")
+            self.add_info("The import is not running\n")
             return
         dlg = ClassDlgImport(self)
         if dlg.exec_():
@@ -783,16 +773,14 @@ class MascPlugDialog(QMainWindow):
         :return:
         """
         if self.task_imp:
-            self.box.info("The export is not running,\n"
-                          " because the previous import running yet")
-            self.add_info('The import is not running\n')
+            self.box.info("The export is not running,\n" " because the previous import running yet")
+            self.add_info("The import is not running\n")
 
             return
 
-        file_name_path, _ = QFileDialog.getOpenFileNames(None,
-                                                         'File Selection',
-                                                         self.repProject,
-                                                         filter="PSQL (*.psql);File (*);")
+        file_name_path, _ = QFileDialog.getOpenFileNames(
+            None, "File Selection", self.repProject, filter="PSQL (*.psql);File (*);"
+        )
         if not file_name_path:
             return
 
@@ -809,66 +797,65 @@ class MascPlugDialog(QMainWindow):
                     liste = self.mdb.list_schema()
                     if namesh in liste:
                         # demande change name
-                        ok = self.box.yes_no_q("The {} shema already exists.\n "
-                                               "Do you want change the schema "
-                                               "name befor import?".format(namesh))
+                        ok = self.box.yes_no_q(
+                            "The {} shema already exists.\n "
+                            "Do you want change the schema "
+                            "name befor import?".format(namesh)
+                        )
                         if ok:
-                            newname, ok = QInputDialog.getText(self,
-                                                               'New Model',
-                                                               'New Model name:')
+                            newname, ok = QInputDialog.getText(self, "New Model", "New Model name:")
                             if ok and self.check_newname(newname, liste):
-
                                 sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp".format(namesh)
                                 self.mdb.run_query(sql)
-                                sql = ''
+                                sql = ""
                                 if self.mdb.import_schema(file, old=True):
-                                    self.add_info('Import is done.')
+                                    self.add_info("Import is done.")
                                     sql = "ALTER SCHEMA {0} RENAME TO {1};\n".format(
-                                        namesh, newname)
+                                        namesh, newname
+                                    )
                                 else:
-                                    self.add_info('Import failed.')
+                                    self.add_info("Import failed.")
                                 #
-                                sql += "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(
-                                    namesh)
+                                sql += "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(namesh)
                                 self.mdb.run_query(sql)
                             else:
-                                self.add_info('Import cancel.')
+                                self.add_info("Import cancel.")
                                 return
                         else:
-                            self.add_info('Import cancel.')
+                            self.add_info("Import cancel.")
                             return
                     else:
                         if self.mdb.import_schema(file, old=True):
-                            self.add_info('Import is done.')
+                            self.add_info("Import is done.")
                         else:
-                            self.add_info('Import failed.')
+                            self.add_info("Import failed.")
                 else:
                     if self.mdb.import_schema(file, old=True):
-                        self.add_info('Import is done.')
+                        self.add_info("Import is done.")
                     else:
-                        self.add_info('Import failed.')
+                        self.add_info("Import failed.")
             else:
-                self.add_info('File not found.')
+                self.add_info("File not found.")
 
         return
 
     def check_newname(self, name, liste):
         """Check the new name validation
-            name : test name
-            liste : exclud list"""
-        if name == '':
+        name : test name
+        liste : exclud list"""
+        if name == "":
             if self.DEBUG:
-                self.add_info('Name is not correct.')
+                self.add_info("Name is not correct.")
             return False
         elif name in liste:
             if self.DEBUG:
-                self.add_info('<<{}>> schema name already exists'.format(name))
+                self.add_info("<<{}>> schema name already exists".format(name))
             return False
         else:
             return True
 
     def main_graph(self):
-        """ GUI graphique"""
+        """GUI graphique"""
 
         canvas = self.iface.mapCanvas()
         self.coucheProfils = None
@@ -914,19 +901,18 @@ class MascPlugDialog(QMainWindow):
         self.prev_tool = canvas.mapTool()
         self.map_tool = IdentifyFeatureTool(self)
         try:  # qgis2
-            QObject.connect(self.map_tool, SIGNAL('geomIdentified'),
-                            self.do_something)
+            QObject.connect(self.map_tool, SIGNAL("geomIdentified"), self.do_something)
         except Exception:  # qgis3
             self.map_tool.changedRasterResults.connect(self.do_something)
 
         canvas.setMapTool(self.map_tool)
 
-    def windinfo(self, txt, title='Informations'):
+    def windinfo(self, txt, title="Informations"):
         msg = QMessageBox()
         msg.setWindowTitle(title)
-        msg.setWindowIcon(QIcon(
-            os.path.join(os.path.join(self.masplugPath, 'icones'),
-                         'icon_base.png')))
+        msg.setWindowIcon(
+            QIcon(os.path.join(os.path.join(self.masplugPath, "icones"), "icon_base.png"))
+        )
         msg.setText(txt)
         msg.setStandardButtons(QMessageBox.Ok)
         retval = msg.exec_()
@@ -934,7 +920,7 @@ class MascPlugDialog(QMainWindow):
     def about(self):
         val = read_version(self.masplugPath)
         # TODO get "about" info of file
-        txt = u"""
+        txt = """
 Plugin dedicated to the building and exploitation of Mascaret models.
 
 Requires PostgreSQL and PostGIS.
@@ -947,8 +933,10 @@ Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz 
 
 
 Version : {}
-           """.format(val)
-        self.windinfo(txt, title='About')
+           """.format(
+            val
+        )
+        self.windinfo(txt, title="About")
 
     def website(self):
         pass
@@ -956,7 +944,8 @@ Version : {}
 
     def wikisite(self):
         import webbrowser
-        webbrowser.open('https://github.com/Artelia/Mascaret/wiki')
+
+        webbrowser.open("https://github.com/Artelia/Mascaret/wiki")
 
     #  *******************************
     #    Water Quality
@@ -974,8 +963,7 @@ Version : {}
         dlg.exec_()
 
     def fct_export_tracer_files(self):
-        folder_name_path = QFileDialog.getExistingDirectory(self,
-                                                            "Choose a folder")
+        folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
 
         self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
         cl = ClassMascWQ(self, self.dossierFileMasc)
@@ -990,9 +978,9 @@ Version : {}
             cl.create_filephy(dossier=folder_name_path)
             cl.law_tracer(dossier=folder_name_path)
 
-            self.add_info('Export is done.')
+            self.add_info("Export is done.")
         except Exception:
-            self.add_info('Export failed.')
+            self.add_info("Export failed.")
 
     # *******************************
     #    Structures
@@ -1003,7 +991,7 @@ Version : {}
         dlg.exec_()
 
     def fct_mv_dam(self):
-        """ Running GUI of movable dam"""
+        """Running GUI of movable dam"""
 
         dlg = ClassMobilSingDialog(self)
         dlg.exec_()
@@ -1014,21 +1002,15 @@ Version : {}
         :return:
         """
 
-        case, ok = QInputDialog.getItem(None,
-                                        'Study case',
-                                        'Kernel',
-                                        self.listeState, 0, False)
+        case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
         if ok:
-            self.add_info(
-                "Kernel {}".format(self.Klist[self.listeState.index(case)]))
+            self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
             run = "test"
             rep_run = os.path.join(self.masplugPath, "mascaret_copy")
             clam = ClassMascaret(self, rep_run=rep_run)
-            clam.mascaret(self.Klist[self.listeState.index(case)], run,
-                          only_init=True)
+            clam.mascaret(self.Klist[self.listeState.index(case)], run, only_init=True)
 
-            with open(os.path.join(clam.dossierFileMasc, 'FichierCas.txt'),
-                      'w') as fichier:
+            with open(os.path.join(clam.dossierFileMasc, "FichierCas.txt"), "w") as fichier:
                 fichier.write("'mascaret.xcas'\n")
             self.export_run(clam)
             clam.del_folder_mas()
@@ -1042,23 +1024,26 @@ Version : {}
         dlg = ClassImportRes(clam)
         dlg.exec_()
         if dlg.complet:
-            clam.import_results(dlg.run, dlg.scen, dlg.comments, dlg.path_model,
-                                date_debut=dlg.date)
+            clam.import_results(
+                dlg.run, dlg.scen, dlg.comments, dlg.path_model, date_debut=dlg.date
+            )
         del dlg
         del clam
 
     def fct_test(self):
-        """ Test function"""
+        """Test function"""
         # get_laws
-        self.chkt.debug_update_vers_meta(version='5.1.5')
+        self.chkt.debug_update_vers_meta(version="5.1.5")
 
     def update_ks_mesh_planim(self):
-        """ update value of the seleted profiles"""
+        """update value of the seleted profiles"""
 
         self.dockwidgetKs = ClassEditKsDialog(self, self.iface)
         # connect to provide cleanup on closing of dockwidget
         try:
-            self.iface.addTabifiedDockWidget(Qt.RightDockWidgetArea, self.dockwidgetKs, raiseTab=True)
+            self.iface.addTabifiedDockWidget(
+                Qt.RightDockWidgetArea, self.dockwidgetKs, raiseTab=True
+            )
         except AttributeError:
             self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidgetKs)
 
@@ -1068,21 +1053,20 @@ Version : {}
         :return:
         """
         from .ClassUpdatePk import ClassUpdatePk
+
         dlg = ClassUpdatePk(self, self.iface)
         dlg.exec_()
 
     def download_bin(self):
-        """ download the Mascaret executable """
+        """download the Mascaret executable"""
         # url git
 
-        url_base = 'https://raw.githubusercontent.com/Artelia/Exe_Mascaret/'
+        url_base = "https://raw.githubusercontent.com/Artelia/Exe_Mascaret/"
         # branch_test
-        branch = 'master'
+        branch = "master"
         url_path = posixpath.join(url_base, branch)
         cl_load = ClassDownloadMasc(self.masplugPath, url_path, self)
-        dico = {'bin': ['mascaret.exe',
-                        'mascaret_linux',
-                        'conf.json']}
+        dico = {"bin": ["mascaret.exe", "mascaret_linux", "conf.json"]}
 
         cl_load.download_dir(dico)
 
@@ -1107,27 +1091,29 @@ Version : {}
         dlg.exec_()
 
     def clone_model(self):
-        """ Action clone schema (model)"""
+        """Action clone schema (model)"""
         liste = self.mdb.list_schema()
         cpt = 0
         while cpt != 6:
             # demande change name
             cpt += 1
-            newname, ok = QInputDialog.getText(self,
-                                               'Model Copy {}'.format(self.mdb.SCHEMA),
-                                               'Model name of copy:')
+            newname, ok = QInputDialog.getText(
+                self, "Model Copy {}".format(self.mdb.SCHEMA), "Model name of copy:"
+            )
             if not ok:
-                self.add_info('The copy is cancel')
+                self.add_info("The copy is cancel")
                 return
             if not self.check_newname(newname, liste):
-                ok = self.box.yes_no_q("The {} model already exists.\n "
-                                       "Do you want change the model "
-                                       "name before clone?".format(newname))
+                ok = self.box.yes_no_q(
+                    "The {} model already exists.\n "
+                    "Do you want change the model "
+                    "name before clone?".format(newname)
+                )
                 if not ok:
-                    self.add_info('The copy is cancel')
+                    self.add_info("The copy is cancel")
                     return
                 if cpt == 6:
-                    self.add_info('The copy is cancel because of attempts number reached.')
+                    self.add_info("The copy is cancel because of attempts number reached.")
                     return
             else:
                 break
@@ -1141,63 +1127,73 @@ Version : {}
         """
         Action filter on the all active profiles
         """
-        err = ''
+        err = ""
         dlg = ClassFilterDialog(self)
         dlg.exec_()
         if not dlg.valid:
-            self.add_info('The filter is cancel')
+            self.add_info("The filter is cancel")
             return
         seuil = dlg.seuil
         meth = dlg.meth_filter
-        ok = self.box.yes_no_q("Please note that all active profiles will be modified.\n"
-                               " Are you sure you want to make the change?")
+        ok = self.box.yes_no_q(
+            "Please note that all active profiles will be modified.\n"
+            " Are you sure you want to make the change?"
+        )
         if not ok:
-            self.add_info('The filter is cancel')
+            self.add_info("The filter is cancel")
             return
 
-        result = self.mdb.select('profiles', where="active",
-                                 list_var=['gid', 'x', 'z', 'leftminbed', 'rightminbed', 'leftstock', 'rightstock'],
-                                 verbose=False)
+        result = self.mdb.select(
+            "profiles",
+            where="active",
+            list_var=["gid", "x", "z", "leftminbed", "rightminbed", "leftstock", "rightstock"],
+            verbose=False,
+        )
 
         tab = {}
         compt = 0
-        for gid, x_str, z_str in zip(result['gid'], result['x'], result['z']):
-            fixe_x = [result[key][compt] for key in ['leftminbed', 'rightminbed', 'leftstock', 'rightstock'] if
-                      result[key][compt]]
+        for gid, x_str, z_str in zip(result["gid"], result["x"], result["z"]):
+            fixe_x = [
+                result[key][compt]
+                for key in ["leftminbed", "rightminbed", "leftstock", "rightstock"]
+                if result[key][compt]
+            ]
             pr_x = [float(val) for val in x_str.split()]
             pr_z = [float(val) for val in z_str.split()]
-            if meth == 'f_pente':
+            if meth == "f_pente":
                 newx, newz, err = filter_pr_fct(pr_x, pr_z, seuil)
-            elif meth == 'f_rdp':
+            elif meth == "f_rdp":
                 newx, newz, err = filter_dist_perpendiculaire(pr_x, pr_z, seuil, fixe_x=fixe_x)
             else:
                 newx, newz = [], []
 
-            if err != '':
-                self.add_info('Profile {} : {}'.format(gid, err))
-            newx_str = ' '.join([str(val) for val in newx])
-            newz_str = ' '.join([str(val) for val in newz])
-            tab[gid] = {'x': newx_str, 'z': newz_str}
+            if err != "":
+                self.add_info("Profile {} : {}".format(gid, err))
+            newx_str = " ".join([str(val) for val in newx])
+            newz_str = " ".join([str(val) for val in newz])
+            tab[gid] = {"x": newx_str, "z": newz_str}
             compt += 1
 
-        self.mdb.update('profiles', tab, var="gid")
-        self.add_info('The all active profiles were changed.')
+        self.mdb.update("profiles", tab, var="gid")
+        self.add_info("The all active profiles were changed.")
 
     def scroll_to_bottom(self):
         """Set the scrollbar value to the maximum to keep it at the bottom"""
         self.text_edit.verticalScrollBar().setValue(self.text_edit.verticalScrollBar().maximum())
 
     def schema_vacuum(self):
-        """ DO a vacuum full on all tables"""
+        """DO a vacuum full on all tables"""
         if self.mdb.SCHEMA:
             lst_table = self.mdb.list_tables(self.mdb.SCHEMA)
-            ok = self.box.yes_no_q("This action should free some memory space \n"
-                                   "but it may take several minutes.\n"
-                                   "Do you want to do it?")
+            ok = self.box.yes_no_q(
+                "This action should free some memory space \n"
+                "but it may take several minutes.\n"
+                "Do you want to do it?"
+            )
             if not ok:
-                self.add_info('The vacuum is cancel', dbg=True)
+                self.add_info("The vacuum is cancel", dbg=True)
                 return
             self.mdb.vacuum(lst_table, full=True)
 
         else:
-            self.add_info('No selected schema')
+            self.add_info("No selected schema")

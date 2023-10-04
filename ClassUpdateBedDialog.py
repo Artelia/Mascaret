@@ -69,19 +69,20 @@ class ClassUpdateBedDialog(QDialog):
         self.iface = mgis.iface
         self.itm_val, self.itm_warn, self.itm_err, self.itm_no_val = None, None, None, None
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
-                                      'ui/ui_bed_update.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_bed_update.ui"), self)
         self.fra_save.hide()
 
         self.lay_profile = self.find_db_layer()
         self.d_profiles = dict()
         self.lst_sel_profiles = list()
 
-        for typ_bed, nm_bed in [["lsa", "Left Storage Area"],
-                                ["lmrb", "Minor River Bed (Left Bank only)"],
-                                ["mrb", "Minor River Bed"],
-                                ["rmrb", "Minor River Bed (Right Bank only)"],
-                                ["rsa", "Right Storage Area"]]:
+        for typ_bed, nm_bed in [
+            ["lsa", "Left Storage Area"],
+            ["lmrb", "Minor River Bed (Left Bank only)"],
+            ["mrb", "Minor River Bed"],
+            ["rmrb", "Minor River Bed (Right Bank only)"],
+            ["rsa", "Right Storage Area"],
+        ]:
             self.cb_typ_bed.addItem(nm_bed, typ_bed)
 
         self.cb_typ_bed.currentIndexChanged.connect(self.change_typ_bed)
@@ -98,8 +99,10 @@ class ClassUpdateBedDialog(QDialog):
         mas_group = tree_root.findGroup("Mas_{}".format(self.mdb.SCHEMA))
         l_child = mas_group.children()
         for child in l_child:
-            if child.nodeType() == 1 \
-                    and "dbname='{}'".format(self.mdb.dbname) in child.layer().source():
+            if (
+                child.nodeType() == 1
+                and "dbname='{}'".format(self.mdb.dbname) in child.layer().source()
+            ):
                 if 'table="{}"."profiles"'.format(self.mdb.SCHEMA) in child.layer().source():
                     p_lay = child.layer()
 
@@ -163,9 +166,11 @@ class ClassUpdateBedDialog(QDialog):
         typ_bed = self.cb_typ_bed.currentData()
 
         # Sélection des profils
-        sql = "SELECT gid, name, x, z, leftminbed, rightminbed, leftstock, rightstock, " \
-              "leftminbed_g, rightminbed_g, leftstock_g, rightstock_g  " \
-              "FROM {0}.profiles WHERE active IS True AND branchnum = {1}"
+        sql = (
+            "SELECT gid, name, x, z, leftminbed, rightminbed, leftstock, rightstock, "
+            "leftminbed_g, rightminbed_g, leftstock_g, rightstock_g  "
+            "FROM {0}.profiles WHERE active IS True AND branchnum = {1}"
+        )
         l_profiles = self.mdb.run_query(sql.format(self.mdb.SCHEMA, branch), fetch=True)
 
         self.d_profiles.clear()
@@ -320,8 +325,8 @@ class ClassUpdateBedDialog(QDialog):
 def interpolate_x_val(new_x, lx, lz):
     for i, x in enumerate(lx):
         if x > new_x:
-            x0, x1 = lx[i-1:i+1]
-            z0, z1 = lz[i-1:i+1]
+            x0, x1 = lx[i - 1 : i + 1]
+            z0, z1 = lz[i - 1 : i + 1]
             new_z = z0 + (z1 - z0) / (x1 - x0) * (new_x - x0)
             lx.insert(i, new_x)
             lz.insert(i, new_z)
@@ -356,8 +361,10 @@ def verif_left_bed(new_x, lstock, lx):
 
     if lstock is not None:
         if new_x <= lstock:
-            mess = "Limit(s) of Minor River Bed intersects Storage Area(s). " \
-                   "Storage Area(s) concerned will be erased."
+            mess = (
+                "Limit(s) of Minor River Bed intersects Storage Area(s). "
+                "Storage Area(s) concerned will be erased."
+            )
             return "w", mess
 
     return "v", str()
@@ -370,8 +377,10 @@ def verif_right_bed(new_x, rstock, lx):
 
     if rstock is not None:
         if new_x >= rstock:
-            mess = "Limit(s) of Minor River Bed intersects Storage Area(s). " \
-                   "Storage Area(s) concerned will be erased."
+            mess = (
+                "Limit(s) of Minor River Bed intersects Storage Area(s). "
+                "Storage Area(s) concerned will be erased."
+            )
             return "w", mess
 
     return "v", str()
@@ -415,8 +424,7 @@ def refresh_minor_bed_layer(mdb, iface):
     mas_group = tree_root.findGroup("Mas_{}".format(mdb.SCHEMA))
     l_child = mas_group.children()
     for child in l_child:
-        if child.nodeType() == 1 \
-                and "dbname='{}'".format(mdb.dbname) in child.layer().source():
+        if child.nodeType() == 1 and "dbname='{}'".format(mdb.dbname) in child.layer().source():
             if 'table="{}"."visu_minor_river_bed"'.format(mdb.SCHEMA) in child.layer().source():
                 mrb_lay = child.layer()
             if 'table="{}"."profiles"'.format(mdb.SCHEMA) in child.layer().source():
@@ -435,48 +443,64 @@ def update_all_bed_geometry(mdb):
     sql = "SELECT branch, 'Branch ' || branch FROM {0}.branchs WHERE active IS True"
     l_branch = mdb.run_query(sql.format(mdb.SCHEMA), fetch=True)
     for id_branch, nm_branch in l_branch:
-        update_bed_geometry(mdb, id_branch,["leftminbed", "rightminbed"])
+        update_bed_geometry(mdb, id_branch, ["leftminbed", "rightminbed"])
 
 
 def update_bed_geometry(mdb, id_branch, l_typ_bed):
     for typ_bed in l_typ_bed:
         bank = typ_bed.replace("minbed", "")
 
-        sql = "SELECT pr_num, pr_name, pr_id, next_pr_id, pr_pk, next_pr_pk, dist_prj, next_dist_prj, " \
-              "interp_pt_txt, next_interp_pt_txt, pt_prj_txt, next_pt_prj_txt, " \
-              "ST_Length(ST_LineSubstring(br_geom, pr_pk, next_pr_pk)), " \
-              "ST_AsText(ST_LineSubstring(br_geom, pr_pk, next_pr_pk)) " \
-              "FROM " \
-                  "(SELECT pr_num, pr_name, " \
-                  "pr_id, LEAD(pr_id, 1) OVER (ORDER BY pr_pk) As next_pr_id, " \
-                  "pr_pk, LEAD(pr_pk, 1) OVER (ORDER BY pr_pk) As next_pr_pk, " \
-                  "dist_prj, LEAD(dist_prj, 1) OVER (ORDER BY pr_pk) As next_dist_prj, " \
-                  "ST_AsText(interp_pt) As interp_pt_txt, " \
-                  "LEAD(ST_AsText(interp_pt), 1) OVER (ORDER BY pr_pk) As next_interp_pt_txt, " \
-                  "ST_AsText(pt_prj) As pt_prj_txt, " \
-                  "LEAD(ST_AsText(pt_prj), 1) OVER (ORDER BY pr_pk) As next_pt_prj_txt, " \
-                  "br_geom " \
-                  "FROM " \
-                      "(SELECT *, ST_LineLocatePoint(br_geom, pt_prj) As pr_pk, " \
-                      "ST_Distance(interp_pt, pt_prj) As dist_prj " \
-                      "FROM " \
-                          "(SELECT *, ST_ClosestPoint(br_geom, interp_pt) As pt_prj " \
-                          "FROM " \
-                              "(SELECT ROW_NUMBER() OVER (ORDER BY abscissa) As pr_num, " \
-                              "name as pr_name, pr.gid As pr_id, pr.abscissa As pr_abs, {2} As dist, " \
-                              "ST_LineInterpolatePoint(ST_LineMerge(pr.geom), {2}/ST_LENGTH(pr.geom)) As interp_pt, " \
-                              "ST_LineMerge(pr.geom) As pr_geom, ST_LineMerge(br.geom) As br_geom " \
-                              "FROM {0}.profiles As pr, {0}.branchs As br " \
-                              "WHERE ST_Intersects(ST_LineMerge(br.geom), pr.geom) AND pr.active AND br.active " \
-                              "AND br.branch = {1} ORDER BY abscissa) " \
-              "As r1) As r2) As r3) As r4"
+        sql = (
+            "SELECT pr_num, pr_name, pr_id, next_pr_id, pr_pk, next_pr_pk, dist_prj, next_dist_prj, "
+            "interp_pt_txt, next_interp_pt_txt, pt_prj_txt, next_pt_prj_txt, "
+            "ST_Length(ST_LineSubstring(br_geom, pr_pk, next_pr_pk)), "
+            "ST_AsText(ST_LineSubstring(br_geom, pr_pk, next_pr_pk)) "
+            "FROM "
+            "(SELECT pr_num, pr_name, "
+            "pr_id, LEAD(pr_id, 1) OVER (ORDER BY pr_pk) As next_pr_id, "
+            "pr_pk, LEAD(pr_pk, 1) OVER (ORDER BY pr_pk) As next_pr_pk, "
+            "dist_prj, LEAD(dist_prj, 1) OVER (ORDER BY pr_pk) As next_dist_prj, "
+            "ST_AsText(interp_pt) As interp_pt_txt, "
+            "LEAD(ST_AsText(interp_pt), 1) OVER (ORDER BY pr_pk) As next_interp_pt_txt, "
+            "ST_AsText(pt_prj) As pt_prj_txt, "
+            "LEAD(ST_AsText(pt_prj), 1) OVER (ORDER BY pr_pk) As next_pt_prj_txt, "
+            "br_geom "
+            "FROM "
+            "(SELECT *, ST_LineLocatePoint(br_geom, pt_prj) As pr_pk, "
+            "ST_Distance(interp_pt, pt_prj) As dist_prj "
+            "FROM "
+            "(SELECT *, ST_ClosestPoint(br_geom, interp_pt) As pt_prj "
+            "FROM "
+            "(SELECT ROW_NUMBER() OVER (ORDER BY abscissa) As pr_num, "
+            "name as pr_name, pr.gid As pr_id, pr.abscissa As pr_abs, {2} As dist, "
+            "ST_LineInterpolatePoint(ST_LineMerge(pr.geom), {2}/ST_LENGTH(pr.geom)) As interp_pt, "
+            "ST_LineMerge(pr.geom) As pr_geom, ST_LineMerge(br.geom) As br_geom "
+            "FROM {0}.profiles As pr, {0}.branchs As br "
+            "WHERE ST_Intersects(ST_LineMerge(br.geom), pr.geom) AND pr.active AND br.active "
+            "AND br.branch = {1} ORDER BY abscissa) "
+            "As r1) As r2) As r3) As r4"
+        )
 
         rows = mdb.run_query(sql.format(mdb.SCHEMA, id_branch, typ_bed), fetch=True)
 
         recs = list()
         for row in rows:
-            pr_num, pr_name, pr_id, next_pr_id, pk, next_pk, start_lmb, end_lmb, \
-            pt_prof, next_pt_prof, pt_proj, next_pt_proj, len_troncon, troncon = row
+            (
+                pr_num,
+                pr_name,
+                pr_id,
+                next_pr_id,
+                pk,
+                next_pk,
+                start_lmb,
+                end_lmb,
+                pt_prof,
+                next_pt_prof,
+                pt_proj,
+                next_pt_proj,
+                len_troncon,
+                troncon,
+            ) = row
 
             l_coords = list()
             if start_lmb and end_lmb:
@@ -495,9 +519,13 @@ def update_bed_geometry(mdb, id_branch, l_typ_bed):
                 if len(lst_pts) > 3:
                     g_troncon_buff = LineString(substring(g_troncon, dist_pt, dist - dist_pt))
                     if typ_bed in ["rightminbed"]:
-                        g_buff = g_troncon_buff.buffer(-dist_pt * 2., cap_style=2, single_sided=True)
+                        g_buff = g_troncon_buff.buffer(
+                            -dist_pt * 2.0, cap_style=2, single_sided=True
+                        )
                     else:
-                        g_buff = g_troncon_buff.buffer(dist_pt * 2., cap_style=2, single_sided=True)
+                        g_buff = g_troncon_buff.buffer(
+                            dist_pt * 2.0, cap_style=2, single_sided=True
+                        )
 
                     lst_buff = list()
                     for id_pt, pt in enumerate(lst_pts):
@@ -505,8 +533,10 @@ def update_bed_geometry(mdb, id_branch, l_typ_bed):
                         lst_buff.append(buff)
 
                     lst_poly = list()
-                    for id_buff in range(len(lst_buff)-1):
-                        lst_poly.append(unary_union([lst_buff[id_buff], lst_buff[id_buff + 1]]).convex_hull)
+                    for id_buff in range(len(lst_buff) - 1):
+                        lst_poly.append(
+                            unary_union([lst_buff[id_buff], lst_buff[id_buff + 1]]).convex_hull
+                        )
 
                     poly = unary_union(lst_poly)
 
@@ -514,9 +544,9 @@ def update_bed_geometry(mdb, id_branch, l_typ_bed):
                     if pl_temp.type == "MultiLineString":
                         pl_temp = linemerge(pl_temp)
                         if pl_temp.type == "MultiLineString":
-                            line= LineString()
+                            line = LineString()
                             for pl in pl_temp.geoms:
-                                if pl.length> line.length:
+                                if pl.length > line.length:
                                     line = pl
                             pl_temp = line
                     pl_coords = list(pl_temp.coords)
@@ -529,9 +559,13 @@ def update_bed_geometry(mdb, id_branch, l_typ_bed):
                 pl_final = LineString(l_coords)
                 recs.append([id_branch, pr_name, bank, pl_final.wkt])
 
-        mdb.run_query("DELETE FROM {0}.visu_minor_river_bed "
-                      "WHERE bank = '{1}' AND branchnum = {2}".format(mdb.SCHEMA, bank, id_branch))
+        mdb.run_query(
+            "DELETE FROM {0}.visu_minor_river_bed "
+            "WHERE bank = '{1}' AND branchnum = {2}".format(mdb.SCHEMA, bank, id_branch)
+        )
         if recs:
-            sql = "INSERT INTO {0}.visu_minor_river_bed (branchnum, profile, bank, geom) " \
-                  "VALUES (%s, %s, %s, ST_GeomFromText(%s))".format(mdb.SCHEMA)
+            sql = (
+                "INSERT INTO {0}.visu_minor_river_bed (branchnum, profile, bank, geom) "
+                "VALUES (%s, %s, %s, ST_GeomFromText(%s))".format(mdb.SCHEMA)
+            )
             mdb.run_query(sql, many=True, list_many=recs)

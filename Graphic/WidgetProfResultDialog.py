@@ -30,16 +30,16 @@ class WidgetProfResultDialog(QWidget):
         self.mgis = parent.mgis
         self.mdb = self.mgis.mdb
 
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_wdgt_profRes.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_wdgt_profRes.ui"), self)
 
-        self.ctrl_label = {'z': self.label_z,
-                           'area': self.label_warea_l,
-                           'perimeter': self.label_wpermi_l,
-                           'width': self.label_wmirror_l,
-                           }
+        self.ctrl_label = {
+            "z": self.label_z,
+            "area": self.label_warea_l,
+            "perimeter": self.label_wpermi_l,
+            "width": self.label_wmirror_l,
+        }
         for key, ctrl_ in self.ctrl_label.items():
-            ctrl_.setText('None')
+            ctrl_.setText("None")
 
     def change_label(self, dico):
         """

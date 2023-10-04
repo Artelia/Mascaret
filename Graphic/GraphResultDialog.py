@@ -29,27 +29,26 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .CurveSelector import SlideCurveSelectorWidget, \
-    CompareCurveSelectorWidget
+from .CurveSelector import SlideCurveSelectorWidget, CompareCurveSelectorWidget
 from .GraphResult import GraphResult
 from ..Function import tw_to_txt, interpole, fill_zminbed
 from ..scores.ClassScoresResDialog import ClassScoresResDialog
 
 
-def list_sql(liste, typ='str'):
+def list_sql(liste, typ="str"):
     """
     list to srting for sql script
     :param liste: element list
     :param typ : element type
     :return:
     """
-    txt = '('
+    txt = "("
     for t_res in liste:
-        if typ is 'str':
+        if typ is "str":
             txt += "'{}',".format(t_res)
-        elif typ == 'int' or typ == 'float':
+        elif typ == "int" or typ == "float":
             txt += "{},".format(t_res)
-    txt = txt[:-1] + ')'
+    txt = txt[:-1] + ")"
     return txt
 
 
@@ -65,8 +64,7 @@ class GraphResultDialog(QWidget):
         self.lst_comp_wgt = list()
         self.lst_slid_graph, self.lst_comp_graph = list(), list()
 
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/graphResult.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/graphResult.ui"), self)
         self.graph_obj = GraphResult(self, self.lay_graph, self.lay_graph_tbar)
         self.id_branch, self.id_pknum = None, None
 
@@ -115,16 +113,18 @@ class GraphResultDialog(QWidget):
 
             self.dict_run = self.init_dico_run()
 
-            self.curve_selector = SlideCurveSelectorWidget(self.mgis, 0,
-                                                           self.typ_graph,
-                                                           self.typ_res,
-                                                           self.x_var,
-                                                           self.dict_run,
-                                                           self.id_pknum,
-                                                           self.id_branch)
+            self.curve_selector = SlideCurveSelectorWidget(
+                self.mgis,
+                0,
+                self.typ_graph,
+                self.typ_res,
+                self.x_var,
+                self.dict_run,
+                self.id_pknum,
+                self.id_branch,
+            )
             self.curve_selector.cur_scen_edited.connect(self.clean_score)
-            self.curve_selector.graph_parameters_edited.connect(
-                self.slider_graph_edited)
+            self.curve_selector.graph_parameters_edited.connect(self.slider_graph_edited)
             self.curve_selector.init_run()
             self.lay_sel_curve.addWidget(self.curve_selector)
 
@@ -142,24 +142,29 @@ class GraphResultDialog(QWidget):
         idx = len(self.lst_comp_wgt)
         if idx:
             param_init = self.lst_comp_wgt[-1].param_graph
-            param_date = {"display": self.lst_comp_wgt[-1].init_date_displayed,
-                          "need": self.lst_comp_wgt[-1].init_date_needed,
-                          "init": self.lst_comp_wgt[
-                              -1].ctrl_date_init.dateTime()}
+            param_date = {
+                "display": self.lst_comp_wgt[-1].init_date_displayed,
+                "need": self.lst_comp_wgt[-1].init_date_needed,
+                "init": self.lst_comp_wgt[-1].ctrl_date_init.dateTime(),
+            }
 
-        if 'graph' not in param_init.keys() and idx > 0:
-            QMessageBox.warning(None, 'Error',
-                                'Last chart is empty.')
+        if "graph" not in param_init.keys() and idx > 0:
+            QMessageBox.warning(None, "Error", "Last chart is empty.")
             return
         itm = QListWidgetItem()
         itm.setSizeHint(QSize(0, 22))
         self.lw_graph.addItem(itm)
 
-
-        wgt = CompareCurveSelectorWidget(self.mgis, idx, self.typ_graph,
-                                         self.typ_res, self.x_var,
-                                         self.dict_run, self.id_pknum,
-                                         self.id_branch)
+        wgt = CompareCurveSelectorWidget(
+            self.mgis,
+            idx,
+            self.typ_graph,
+            self.typ_res,
+            self.x_var,
+            self.dict_run,
+            self.id_pknum,
+            self.id_branch,
+        )
         self.lst_comp_wgt.append(wgt)
         self.lw_graph.setItemWidget(itm, wgt)
         self.lst_comp_graph.append(None)
@@ -194,8 +199,7 @@ class GraphResultDialog(QWidget):
                 self.compar_graph_verif_date()
             self.update_graph()
         else:
-            QMessageBox.warning(None, 'warning',
-                                'No chart selected.')
+            QMessageBox.warning(None, "warning", "No chart selected.")
 
         if len(self.lst_comp_graph) == 4:
             self.btn_add_graph.setEnabled(False)
@@ -231,7 +235,7 @@ class GraphResultDialog(QWidget):
             self.update_graph()
 
     def compar_graph_edited(self, idx, param):
-        """ edit of  compare mode """
+        """edit of  compare mode"""
         self.lst_comp_graph[idx] = param
 
         if not self.initialising:
@@ -251,10 +255,14 @@ class GraphResultDialog(QWidget):
             if graph:
                 rows = self.mdb.run_query(
                     "SELECT init_date FROM {0}.runs WHERE id = {1}".format(
-                        self.mdb.SCHEMA, graph["scen"]), fetch=True)
+                        self.mdb.SCHEMA, graph["scen"]
+                    ),
+                    fetch=True,
+                )
                 if rows[0][0]:
                     graph_with_date.append((g, rows[0][0]))
-                    if not date_ref: date_ref = rows[0][0]
+                    if not date_ref:
+                        date_ref = rows[0][0]
                 else:
                     graph_with_no_date.append(g)
 
@@ -262,7 +270,7 @@ class GraphResultDialog(QWidget):
             date_multi_format = True
 
         if date_multi_format:
-            for (g, d) in graph_with_date:
+            for g, d in graph_with_date:
                 self.lst_comp_wgt[g].show_init_date(False, d)
             for g in graph_with_no_date:
                 self.lst_comp_wgt[g].show_init_date(True, date_ref)
@@ -283,8 +291,7 @@ class GraphResultDialog(QWidget):
             lst_graph = self.lst_slid_graph
         else:
             lst_graph = self.lst_comp_graph
-        self.lst_graph = [graph for graph in lst_graph if
-                          "graph" in graph.keys()]
+        self.lst_graph = [graph for graph in lst_graph if "graph" in graph.keys()]
 
         lst_unit, lst_name = {1: list(), 2: list()}, {1: list(), 2: list()}
         lst_var, lst_lbl, lst_col, lst_lin, lst_axe = list(), list(), list(), list(), list()
@@ -308,15 +315,13 @@ class GraphResultDialog(QWidget):
         for ax in [1, 2]:
             if lst_name[ax]:
                 dist_title = list(set(lst_name[ax]))
-                title_y[ax - 1] = dist_title[0] if len(
-                    dist_title) == 1 else "Various"
+                title_y[ax - 1] = dist_title[0] if len(dist_title) == 1 else "Various"
             if lst_unit[ax]:
                 dist_unit = list(set(lst_unit[ax]))
                 unit_y[ax - 1] = dist_unit[0] if len(dist_unit) == 1 else ""
 
         self.graph_obj.update_limites = True
-        self.graph_obj.init_mdl(lst_var, lst_lbl, lst_col, lst_lin, lst_axe,
-                                unit_y, title_y)
+        self.graph_obj.init_mdl(lst_var, lst_lbl, lst_col, lst_lin, lst_axe, unit_y, title_y)
         self.graph_obj.maj_limites()
 
         self.update_data(lst_var)
@@ -328,13 +333,15 @@ class GraphResultDialog(QWidget):
         :return:
         """
         if var.lower() in self.mgis.variables.keys():
-            return self.mgis.variables[var.lower()]['nom'], \
-                   self.mgis.variables[var.lower()]['couleur']
+            return (
+                self.mgis.variables[var.lower()]["nom"],
+                self.mgis.variables[var.lower()]["couleur"],
+            )
         else:
             return "", "blue"
 
     def ch_score(self):
-        """ change tab for score"""
+        """change tab for score"""
         if self.cc_scores.isChecked():
             self.stw_res.setCurrentIndex(1)
         else:
@@ -345,10 +352,12 @@ class GraphResultDialog(QWidget):
         check if there is run
         :return:
         """
-        rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
-                                  "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
-                                  "ORDER BY run, scenario ".format(
-            self.mdb.SCHEMA), fetch=True)
+        rows = self.mdb.run_query(
+            "SELECT id, run, scenario FROM {0}.runs "
+            "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
+            "ORDER BY run, scenario ".format(self.mdb.SCHEMA),
+            fetch=True,
+        )
 
         if rows:
             return True
@@ -362,10 +371,12 @@ class GraphResultDialog(QWidget):
         :return: dico_run
         """
         dict_run = dict()
-        rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
-                                  "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
-                                  "ORDER BY date DESC, run ASC, scenario ASC;".format(
-            self.mdb.SCHEMA), fetch=True)
+        rows = self.mdb.run_query(
+            "SELECT id, run, scenario FROM {0}.runs "
+            "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
+            "ORDER BY date DESC, run ASC, scenario ASC;".format(self.mdb.SCHEMA),
+            fetch=True,
+        )
         for row in rows:
             if row[1] not in dict_run.keys():
                 dict_run[row[1]] = dict()
@@ -374,7 +385,7 @@ class GraphResultDialog(QWidget):
         return dict_run
 
     def clear_results(self):
-        """ clear graphic"""
+        """clear graphic"""
         self.cur_data.clear()
         self.graph_obj.fig.clf()
         self.graph_obj.canvas.draw()
@@ -389,7 +400,7 @@ class GraphResultDialog(QWidget):
             self.cur_data = list()
             if lst_var is None:
                 self.clear_results()
-                self.mgis.add_info('No Data')
+                self.mgis.add_info("No Data")
                 return
 
             for param in self.lst_graph:
@@ -400,38 +411,39 @@ class GraphResultDialog(QWidget):
                 tmp_data["y_var"] = param["graph"]["vars"]
                 tmp_data["y_unit"] = param["graph"]["unit"]
 
-                sql_hyd_pk = ''
-                if self.typ_graph == 'hydro_pk':
-                    sql_hyd_pk = ('AND pknum IN (SELECT UNNEST((SELECT pk FROM {0}.results_sect '
-                     'WHERE id_runs = {1} AND branch = {2}))) '.format(
-                        self.mgis.mdb.SCHEMA, param["scen"], param["branch"]))
-                sqlw = self.sql_where.format(param["branch"], param["pknum"],
-                                             param["t"])
+                sql_hyd_pk = ""
+                if self.typ_graph == "hydro_pk":
+                    sql_hyd_pk = (
+                        "AND pknum IN (SELECT UNNEST((SELECT pk FROM {0}.results_sect "
+                        "WHERE id_runs = {1} AND branch = {2}))) ".format(
+                            self.mgis.mdb.SCHEMA, param["scen"], param["branch"]
+                        )
+                    )
+                sqlw = self.sql_where.format(param["branch"], param["pknum"], param["t"])
 
-                if self.x_var == 'time':
-                    if self.typ_graph in ['struct', 'weirs']:
+                if self.x_var == "time":
+                    if self.typ_graph in ["struct", "weirs"]:
                         x_val = None
                         if self.typ_res in param["info_graph"].keys():
-                            for id_config in param["info_graph"][self.typ_res][
-                                'pknum'].keys():
-                                if param["info_graph"][self.typ_res]['pknum'][
-                                    id_config] == param["pknum"]:
-                                    x_val = \
-                                        param["info_graph"][self.typ_res][
-                                            'time'][
-                                            id_config]
+                            for id_config in param["info_graph"][self.typ_res]["pknum"].keys():
+                                if (
+                                    param["info_graph"][self.typ_res]["pknum"][id_config]
+                                    == param["pknum"]
+                                ):
+                                    x_val = param["info_graph"][self.typ_res]["time"][id_config]
                         if not x_val:
-                            x_val = param["info_graph"]['opt']['time']
+                            x_val = param["info_graph"]["opt"]["time"]
                         if "init_date" in param.keys():
                             date = param["init_date"]
                         else:
                             date = None
                     else:
-                        x_val = param["info_graph"][self.typ_res]['time']
+                        x_val = param["info_graph"][self.typ_res]["time"]
 
                         date = param["init_date"]
                     sql = "SELECT init_date FROM {0}.runs WHERE id = {1} ".format(
-                        self.mgis.mdb.SCHEMA, param["scen"])
+                        self.mgis.mdb.SCHEMA, param["scen"]
+                    )
                     info = self.mdb.run_query(sql, fetch=True)
                     if info:
                         if info[0][0]:
@@ -439,42 +451,46 @@ class GraphResultDialog(QWidget):
 
                     if date:
                         tmp_data["x_var"] = "date"
-                        tmp_data["date"] = [date + timedelta(seconds=row) for
-                                            row in x_val]
+                        tmp_data["date"] = [date + timedelta(seconds=row) for row in x_val]
 
-                elif self.x_var == 'pknum':
-                    if self.typ_graph == 'hydro_pk':
-
-                        sql = ('SELECT  UNNEST((SELECT pk FROM {0}.results_sect '
-                            'WHERE id_runs = {1} AND branch = {2})) as pknum '
-                            'ORDER BY pknum'.format(self.mgis.mdb.SCHEMA,
-                                                   param["scen"],
-                                                   param["branch"]))
+                elif self.x_var == "pknum":
+                    if self.typ_graph == "hydro_pk":
+                        sql = (
+                            "SELECT  UNNEST((SELECT pk FROM {0}.results_sect "
+                            "WHERE id_runs = {1} AND branch = {2})) as pknum "
+                            "ORDER BY pknum".format(
+                                self.mgis.mdb.SCHEMA, param["scen"], param["branch"]
+                            )
+                        )
                         rows = self.mdb.run_query(sql, fetch=True)
 
                         x_val = [row[0] for row in rows]
 
                     else:
-                        x_val = param["info_graph"][self.typ_res]['pknum']
+                        x_val = param["info_graph"][self.typ_res]["pknum"]
 
                 else:
                     sqlv = "('{}')".format("', '".join(param["vars"]))
-                    sql = "SELECT DISTINCT {1} FROM {0}.results WHERE id_runs = {2} AND {4} AND var IN " \
-                          "(SELECT id FROM {0}.results_var WHERE var in {3}) {5} " \
-                          "ORDER BY {1}".format(self.mgis.mdb.SCHEMA,
-                                                self.x_var, param["scen"], sqlv,
-                                                sqlw, sql_hyd_pk)
+                    sql = (
+                        "SELECT DISTINCT {1} FROM {0}.results WHERE id_runs = {2} AND {4} AND var IN "
+                        "(SELECT id FROM {0}.results_var WHERE var in {3}) {5} "
+                        "ORDER BY {1}".format(
+                            self.mgis.mdb.SCHEMA, self.x_var, param["scen"], sqlv, sqlw, sql_hyd_pk
+                        )
+                    )
 
                     rows = self.mdb.run_query(sql, fetch=True)
                     x_val = [row[0] for row in rows]
                 tmp_data[self.x_var] = x_val
 
                 for var in param["graph"]["vars"]:
-                    sql = "SELECT {1}, val FROM {0}.results WHERE id_runs = {2} AND " \
-                          "var IN (SELECT id FROM {0}.results_var WHERE results_var.var = '{3}') AND {4} {5} " \
-                          "ORDER BY {1}".format(self.mgis.mdb.SCHEMA,
-                                                self.x_var, param["scen"], var,
-                                                sqlw, sql_hyd_pk)
+                    sql = (
+                        "SELECT {1}, val FROM {0}.results WHERE id_runs = {2} AND "
+                        "var IN (SELECT id FROM {0}.results_var WHERE results_var.var = '{3}') AND {4} {5} "
+                        "ORDER BY {1}".format(
+                            self.mgis.mdb.SCHEMA, self.x_var, param["scen"], var, sqlw, sql_hyd_pk
+                        )
+                    )
 
                     rows = self.mdb.run_query(sql, fetch=True)
                     tmp_data[var] = [row[1] for row in rows]
@@ -484,15 +500,15 @@ class GraphResultDialog(QWidget):
             lst_x_var = list(set([d["x_var"] for d in self.cur_data]))
             if len(lst_x_var) == 1:
                 x_var_ = lst_x_var[0]
-                if x_var_ == 'time':
-                    self.graph_obj.unit_x = 'time'
-                    self.graph_obj.ax[1]["axe"].set_xlabel(r'Time ($s$)')
-                elif x_var_ == 'date':
-                    self.graph_obj.unit_x = 'date'
-                    self.graph_obj.ax[1]["axe"].set_xlabel(r'Time')
-                elif x_var_ == 'pknum':
-                    self.graph_obj.unit_x = 'pk'
-                    self.graph_obj.ax[1]["axe"].set_xlabel(r'Pk ($m$)')
+                if x_var_ == "time":
+                    self.graph_obj.unit_x = "time"
+                    self.graph_obj.ax[1]["axe"].set_xlabel(r"Time ($s$)")
+                elif x_var_ == "date":
+                    self.graph_obj.unit_x = "date"
+                    self.graph_obj.ax[1]["axe"].set_xlabel(r"Time")
+                elif x_var_ == "pknum":
+                    self.graph_obj.unit_x = "pk"
+                    self.graph_obj.ax[1]["axe"].set_xlabel(r"Pk ($m$)")
             else:
                 self.clear_results()
                 return
@@ -513,18 +529,17 @@ class GraphResultDialog(QWidget):
             lais_g = False
             if self.mode == "slider":
                 if self.typ_graph in ["hydro", "hydro_pk"]:
-                    if 'Z' in self.lst_graph[0]["graph"]["vars"]:
+                    if "Z" in self.lst_graph[0]["graph"]["vars"]:
                         self.get_laisses(self.lst_graph[0])
                         lais_g = self.update_laisse(x_var_, self.cur_data[0])
             self.graph_obj.init_graph(self.cur_data, x_var_, lais=lais_g)
 
     def update_title(self):
-        """ update graph title"""
+        """update graph title"""
         if self.mode == "slider":
             lst_title = [self.curve_selector.cb_det.currentText()]
         elif self.mode == "compar":
-            lst_title = list(
-                set([wgt.cb_det.currentText() for wgt in self.lst_comp_wgt]))
+            lst_title = list(set([wgt.cb_det.currentText() for wgt in self.lst_comp_wgt]))
         lst_branch = list(set([graph["branch"] for graph in self.lst_graph]))
 
         if len(lst_title) == 1:
@@ -532,29 +547,28 @@ class GraphResultDialog(QWidget):
             if self.typ_graph in ["struct", "weirs", "hydro"]:
                 try:
                     self.graph_obj.main_axe.title.set_text(
-                        r'Profile - {0} m'.format(float(txt_title)))
+                        r"Profile - {0} m".format(float(txt_title))
+                    )
                 except ValueError:
-                    list_txt = txt_title.split(':')
+                    list_txt = txt_title.split(":")
                     if len(list_txt) > 1:
                         self.graph_obj.main_axe.title.set_text(
-                            r'Profile {1} - {0} m '.format(list_txt[0],
-                                                           list_txt[1]))
+                            r"Profile {1} - {0} m ".format(list_txt[0], list_txt[1])
+                        )
             elif self.typ_graph == "hydro_pk":
                 if len(lst_branch) == 1:
                     try:
                         self.graph_obj.main_axe.title.set_text(
-                            r'Branch {0} - {1} $s$'.format(lst_branch[0],
-                                                           float(txt_title)))
+                            r"Branch {0} - {1} $s$".format(lst_branch[0], float(txt_title))
+                        )
                     except ValueError:
                         self.graph_obj.main_axe.title.set_text(
-                            r'Branch {0} - {1}'.format(lst_branch[0],
-                                                       txt_title))
+                            r"Branch {0} - {1}".format(lst_branch[0], txt_title)
+                        )
             elif self.typ_graph == "hydro_basin":
-                self.graph_obj.main_axe.title.set_text(
-                    r'Basin - {0}'.format(txt_title))
+                self.graph_obj.main_axe.title.set_text(r"Basin - {0}".format(txt_title))
             elif self.typ_graph == "hydro_link":
-                self.graph_obj.main_axe.title.set_text(
-                    r'Link - {0}'.format(txt_title))
+                self.graph_obj.main_axe.title.set_text(r"Link - {0}".format(txt_title))
         else:
             self.graph_obj.main_axe.title.set_text(r"")
 
@@ -569,44 +583,42 @@ class GraphResultDialog(QWidget):
             var = None
             axe = None
             if "Z" in vars:
-                var = 'H'
+                var = "H"
                 axe = param["axe"]
                 break
         self.lst_debord.clear()
-        if x_var_ == 'pknum' and var:
+        if x_var_ == "pknum" and var:
             fill_zminbed(self.mdb)
             id_branch = self.lst_graph[0]["branch"]
-            dict_data = self.mdb.select('profiles',
-                                        where='zleftminbed IS NOT NULL '
-                                              'AND zrightminbed IS NOT NULL AND active AND '
-                                              'branchnum = {}'.format(
-                                            id_branch),
-                                        order='abscissa',
-                                        list_var=['gid', 'name', 'abscissa',
-                                                  'zleftminbed',
-                                                  'zrightminbed'])
+            dict_data = self.mdb.select(
+                "profiles",
+                where="zleftminbed IS NOT NULL "
+                "AND zrightminbed IS NOT NULL AND active AND "
+                "branchnum = {}".format(id_branch),
+                order="abscissa",
+                list_var=["gid", "name", "abscissa", "zleftminbed", "zrightminbed"],
+            )
 
             curve = {}
             if dict_data:
-                curve['x'] = []
-                curve['y'] = {'left': [], 'right': []}
+                curve["x"] = []
+                curve["y"] = {"left": [], "right": []}
 
-                for idx, gid in enumerate(dict_data['gid']):
-                    curve['x'].append(dict_data['abscissa'][idx])
-                    curve['y']['left'].append(dict_data['zleftminbed'][idx])
-                    curve['y']['right'].append(dict_data['zrightminbed'][idx])
+                for idx, gid in enumerate(dict_data["gid"]):
+                    curve["x"].append(dict_data["abscissa"][idx])
+                    curve["y"]["left"].append(dict_data["zleftminbed"][idx])
+                    curve["y"]["right"].append(dict_data["zrightminbed"][idx])
 
-                for cote in ['left', 'right']:
+                for cote in ["left", "right"]:
                     tmp_data = dict()
-                    tmp_data["x_var"] = 'pknum'
+                    tmp_data["x_var"] = "pknum"
                     tmp_data["y_var"] = [var]
                     tmp_data["y_unit"] = "$m$"
                     tmp_data["is_obs"] = True
                     tmp_data["name"] = "overflow level - {0} ".format(cote)
-                    tmp_data["pknum"] = curve['x']
-                    tmp_data[var] = curve['y'][cote]
-                    self.lst_debord[(cote, var)] = {"axe": axe,
-                                                    "name": cote}
+                    tmp_data["pknum"] = curve["x"]
+                    tmp_data[var] = curve["y"][cote]
+                    self.lst_debord[(cote, var)] = {"axe": axe, "name": cote}
                     self.cur_data.append(tmp_data)
 
     def update_obs(self, x_var_):
@@ -620,17 +632,16 @@ class GraphResultDialog(QWidget):
             pk, vars = param["pknum"], param["graph"]["vars"]
             var = None
             if "Z" in vars:
-                var = 'H'
+                var = "H"
             elif "Q" in vars:
-                var = 'Q'
+                var = "Q"
 
             if var:
-                if x_var_ == 'date':
+                if x_var_ == "date":
                     date_min = min(self.cur_data[g]["date"])
                     date_max = max(self.cur_data[g]["date"])
                     if (pk, var) not in dict_pk_obs.keys():
-                        dict_pk_obs[(pk, var)] = {"min": date_min,
-                                                  "max": date_max}
+                        dict_pk_obs[(pk, var)] = {"min": date_min, "max": date_max}
                     else:
                         if date_min < dict_pk_obs[(pk, var)]["min"]:
                             dict_pk_obs[(pk, var)]["min"] = date_min
@@ -644,32 +655,35 @@ class GraphResultDialog(QWidget):
             pk, vars = param["pknum"], param["graph"]["vars"]
             var = None
             if "Z" in vars:
-                var = 'H'
+                var = "H"
             elif "Q" in vars:
-                var = 'Q'
+                var = "Q"
 
             if var:
                 sql = "SELECT name FROM {0}.profiles WHERE abscissa={1} ".format(
-                    self.mdb.SCHEMA, pk)
+                    self.mdb.SCHEMA, pk
+                )
                 rows = self.mdb.run_query(sql, fetch=True)
                 if rows:
                     val = rows[0][0]
-                    d_obs = self.mgis.mdb.select('outputs',
-                                                 where="active AND (abscissa = {0} OR name = '{1}')".format(
-                                                     pk, val),
-                                                 order="abscissa",
-                                                 list_var=['code', 'zero',
-                                                           'abscissa', 'name'])
-                    for o, obs in enumerate(d_obs['code']):
+                    d_obs = self.mgis.mdb.select(
+                        "outputs",
+                        where="active AND (abscissa = {0} OR name = '{1}')".format(pk, val),
+                        order="abscissa",
+                        list_var=["code", "zero", "abscissa", "name"],
+                    )
+                    for o, obs in enumerate(d_obs["code"]):
                         if obs and len(obs) != 0:
                             if (obs, var) not in dict_obs.keys():
                                 dict_obs[(obs, var)] = {
-                                    "name": d_obs['name'][o],
-                                    "abs": d_obs['abscissa'][o],
-                                    "zero": d_obs['zero'][o], "pk": pk,
+                                    "name": d_obs["name"][o],
+                                    "abs": d_obs["abscissa"][o],
+                                    "zero": d_obs["zero"][o],
+                                    "pk": pk,
                                     "axe": param["axe"],
                                     "date_min": dict_pk_obs[(pk, var)]["min"],
-                                    "date_max": dict_pk_obs[(pk, var)]["max"]}
+                                    "date_max": dict_pk_obs[(pk, var)]["max"],
+                                }
         if not dict_obs:
             self.disable_score()
         else:
@@ -677,14 +691,17 @@ class GraphResultDialog(QWidget):
 
         self.lst_obs.clear()
         if_val = False
-        if x_var_ == 'date':
+        if x_var_ == "date":
             for (id_obs, var), param_obs in dict_obs.items():
-                sql_query = ("SELECT date, valeur FROM (SELECT code,type, UNNEST(date) as date, "
-                             "UNNEST(valeur) as valeur FROM {4}.observations "
-                             "WHERE code = '{0}' AND type='{3}') t "
-                             " WHERE date>='{1}' AND date<='{2}' AND valeur > -999.9 "
-                             "ORDER BY date".format(id_obs, param_obs["date_min"],
-                                       param_obs["date_max"], var, self.mdb.SCHEMA))
+                sql_query = (
+                    "SELECT date, valeur FROM (SELECT code,type, UNNEST(date) as date, "
+                    "UNNEST(valeur) as valeur FROM {4}.observations "
+                    "WHERE code = '{0}' AND type='{3}') t "
+                    " WHERE date>='{1}' AND date<='{2}' AND valeur > -999.9 "
+                    "ORDER BY date".format(
+                        id_obs, param_obs["date_min"], param_obs["date_max"], var, self.mdb.SCHEMA
+                    )
+                )
                 obs_graph = self.mdb.query_todico(sql_query)
 
                 if len(obs_graph["valeur"]) != 0:
@@ -696,14 +713,13 @@ class GraphResultDialog(QWidget):
                     tmp_data["x_var"] = "date"
                     tmp_data["y_var"] = [var]
                     tmp_data["y_unit"] = "$m$"
-                    tmp_data["date"] = obs_graph['date']
+                    tmp_data["date"] = obs_graph["date"]
                     if var == "H":
-                        tmp_data[var] = [v + param_obs["zero"] for v in
-                                         obs_graph['valeur']]
+                        tmp_data[var] = [v + param_obs["zero"] for v in obs_graph["valeur"]]
                     else:
-                        tmp_data[var] = obs_graph['valeur']
+                        tmp_data[var] = obs_graph["valeur"]
                     self.cur_data.append(tmp_data)
-        if not if_val :
+        if not if_val:
             self.disable_score()
 
     def score(self, dict_obs):
@@ -715,7 +731,7 @@ class GraphResultDialog(QWidget):
         self.cc_scores.setEnabled(True)
         # self.lst_runs = list(set([g["scen"] for g in self.lst_graph]))
         # pks = {id: [] for id in self.lst_runs}
-        obs_pk = list(set([g['pk'] for k, g in dict_obs.items()]))
+        obs_pk = list(set([g["pk"] for k, g in dict_obs.items()]))
         pks = {}
         lst_runs = []
         for param in self.lst_graph:
@@ -748,8 +764,7 @@ class GraphResultDialog(QWidget):
                 if param["is_obs"]:
                     self.clas_data.addTab(tw, param["name"])
                 else:
-                    self.clas_data.addTab(tw, "[{}] {}".format(idx + 1,
-                                                               param["name"]))
+                    self.clas_data.addTab(tw, "[{}] {}".format(idx + 1, param["name"]))
 
             tw.setColumnCount(0)
             nbcol = len(param["y_var"]) + 1
@@ -771,8 +786,7 @@ class GraphResultDialog(QWidget):
                 tw.setHorizontalHeaderItem(c, QTableWidgetItem(lst_lbls[c]))
                 for r, val in enumerate(param[var]):
                     if var == "date":
-                        val = '{:%d/%m/%Y %H:%M:%S}.{:02.0f}'.format(val,
-                                                                     val.microsecond / 10000.0)
+                        val = "{:%d/%m/%Y %H:%M:%S}.{:02.0f}".format(val, val.microsecond / 10000.0)
                     itm = QTableWidgetItem()
                     itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                     itm.setData(0, val)
@@ -790,16 +804,14 @@ class GraphResultDialog(QWidget):
         get flood marks data
         :return:
         """
-        info = self.mdb.select('runs', where="id={} ".format(param["scen"]),
-                               list_var=['scenario'])
-        condition = "event = '{}' AND active AND z is not null ".format(
-            info["scenario"][0])
+        info = self.mdb.select("runs", where="id={} ".format(param["scen"]), list_var=["scenario"])
+        condition = "event = '{}' AND active AND z is not null ".format(info["scenario"][0])
         if self.typ_graph == "hydro":
             condition += "AND abscissa = {} ".format(param["pknum"])
 
         self.laisses = self.mdb.select("flood_marks", condition, "abscissa")
         if self.laisses:
-            self.laisses['pknum'] = self.laisses['abscissa']
+            self.laisses["pknum"] = self.laisses["abscissa"]
 
     def update_laisse(self, var_x, cur_data):
         """
@@ -820,9 +832,8 @@ class GraphResultDialog(QWidget):
                 self.graph_obj.clear_laisse()
                 return False
 
-            courbe_lais["z"] = [v for i, v in enumerate(lai['z']) if
-                                lai[var_x][i]]
-            if 'ZMAX' in cur_data.keys():
+            courbe_lais["z"] = [v for i, v in enumerate(lai["z"]) if lai[var_x][i]]
+            if "ZMAX" in cur_data.keys():
                 courbe_lais["couleurs"] = []
                 courbe_lais["taille"] = []
                 if "pknum" in cur_data.keys():
@@ -831,14 +842,12 @@ class GraphResultDialog(QWidget):
                     key_val = "date"
                 for x, z in zip(courbe_lais["x"], courbe_lais["z"]):
                     if key_val == "date":
-                        x_cur_data = [datetime.timestamp(t) for t in
-                                      cur_data[key_val]]
-                        x_inter = datetime.timestamp(
-                            datetime(*x.timetuple()[:-4]))
+                        x_cur_data = [datetime.timestamp(t) for t in cur_data[key_val]]
+                        x_inter = datetime.timestamp(datetime(*x.timetuple()[:-4]))
                     else:
                         x_cur_data = cur_data[key_val]
                         x_inter = x
-                    val = interpole(x_inter, x_cur_data, cur_data['ZMAX'])
+                    val = interpole(x_inter, x_cur_data, cur_data["ZMAX"])
 
                     if val:
                         diff = z - val
@@ -873,7 +882,7 @@ class GraphResultDialog(QWidget):
         self.cc_scores.setChecked(False)
 
     def disable_score(self):
-        """ disable scores """
+        """disable scores"""
         self.clean_score()
         self.cc_scores.setEnabled(False)
 
@@ -882,41 +891,37 @@ class GraphResultDialog(QWidget):
 
         # txt = self.cb_graph.currentText()
         txt = "text"
-        default_name = os.path.join(self.mgis.repProject, txt.replace(' ', '_').replace(':', '-'))
+        default_name = os.path.join(self.mgis.repProject, txt.replace(" ", "_").replace(":", "-"))
         if int(qVersion()[0]) < 5:
-            file_name_path = QFileDialog.getSaveFileName(self, "saveFile",
-                                                         "{0}.csv".format(
-                                                             default_name),
-                                                         filter="CSV (*.csv *.)")
+            file_name_path = QFileDialog.getSaveFileName(
+                self, "saveFile", "{0}.csv".format(default_name), filter="CSV (*.csv *.)"
+            )
         else:
-            file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
-                                                            "{0}.csv".format(
-                                                                default_name),
-                                                            filter="CSV (*.csv *.)")
+            file_name_path, _ = QFileDialog.getSaveFileName(
+                self, "saveFile", "{0}.csv".format(default_name), filter="CSV (*.csv *.)"
+            )
 
         if file_name_path:
             self.mgis.up_rep_project(file_name_path)
             cur_tw = self.clas_data.currentWidget()
             range_r = range(0, cur_tw.rowCount())
             range_c = range(0, cur_tw.columnCount())
-            clipboard = tw_to_txt(cur_tw, range_r, range_c, ';')
-            file = open(file_name_path, 'w')
+            clipboard = tw_to_txt(cur_tw, range_r, range_c, ";")
+            file = open(file_name_path, "w")
             file.write(clipboard)
             file.close()
 
             # =======================================================================
 
     def copier(self, tw):
-        """copier la zone sélectionnée dans le clipboard
-        """
+        """copier la zone sélectionnée dans le clipboard"""
         # emplacement sélectionné pour copier dans le clipboard
         selected = tw.selectedRanges()
 
         # construction du texte à copier, ligne par ligne et colonne par colonne
         texte = ""
         for i in range(selected[0].topRow(), selected[0].bottomRow() + 1):
-            for j in range(selected[0].leftColumn(),
-                           selected[0].rightColumn() + 1):
+            for j in range(selected[0].leftColumn(), selected[0].rightColumn() + 1):
                 try:
                     texte += tw.item(i, j).text() + "\t"
                 except AttributeError:
@@ -935,20 +940,18 @@ class CopySelectedCellsAction(QAction):
                      a QTableWidget. A {0} was given."""
             raise ValueError(chaine.format(type(table_widget)))
 
-        super(CopySelectedCellsAction, self).__init__('Copy', table_widget)
-        self.setShortcut('Ctrl+C')
+        super(CopySelectedCellsAction, self).__init__("Copy", table_widget)
+        self.setShortcut("Ctrl+C")
         self.triggered.connect(self.copy_cells_to_clipboard)
         self.table_widget = table_widget
 
     def copy_cells_to_clipboard(self):
         if len(self.table_widget.selectionModel().selectedIndexes()) > 0:
-            lst_r = [idx.row() for idx in
-                     self.table_widget.selectionModel().selectedIndexes()]
-            lst_c = [idx.column() for idx in
-                     self.table_widget.selectionModel().selectedIndexes()]
+            lst_r = [idx.row() for idx in self.table_widget.selectionModel().selectedIndexes()]
+            lst_c = [idx.column() for idx in self.table_widget.selectionModel().selectedIndexes()]
             range_r = range(min(lst_r), max(lst_r) + 1)
             range_c = range(min(lst_c), max(lst_c) + 1)
-            clipboard = tw_to_txt(self.table_widget, range_r, range_c, '\t')
+            clipboard = tw_to_txt(self.table_widget, range_r, range_c, "\t")
 
             sys_clip = QApplication.clipboard()
             sys_clip.setText(clipboard)

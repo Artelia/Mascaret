@@ -26,16 +26,16 @@ import json
 
 
 class ClassResProfil:
-    """
-
-    """
+    """ """
 
     def __init__(self, debug=False):
-        self.cas_prt = {0: 'minor bed profile',
-                        1: 'left major bed profile',
-                        2: 'right major bed profile',
-                        3: 'left stockage zone',
-                        4: 'right stockage zone', }
+        self.cas_prt = {
+            0: "minor bed profile",
+            1: "left major bed profile",
+            2: "right major bed profile",
+            3: "left stockage zone",
+            4: "right stockage zone",
+        }
 
         self.dico_res = {}
         self.pk = None
@@ -45,20 +45,26 @@ class ClassResProfil:
         self.prof = None
         self.min_bed = None
         self.maj_bed = None
-        self.warning_message = ''
+        self.warning_message = ""
         self.lst_pr = []
         self.mdb = None
         self.id_run = None
 
-    def init_cl(self, pk, prof, branch, min_bed, maj_bed, id_run,
-                database=None,
-                plani=None,
-                ksmaj=None,
-                ksmin=None,
-                zmax=None,
-                dico_plani=None,
-                ):
-
+    def init_cl(
+        self,
+        pk,
+        prof,
+        branch,
+        min_bed,
+        maj_bed,
+        id_run,
+        database=None,
+        plani=None,
+        ksmaj=None,
+        ksmin=None,
+        zmax=None,
+        dico_plani=None,
+    ):
         self.pk = pk
         self.id_run = id_run
         self.branch = branch
@@ -66,7 +72,7 @@ class ClassResProfil:
         self.dico_plani = dico_plani
         self.min_bed = min_bed
         self.maj_bed = maj_bed
-        self.warning_message = ''
+        self.warning_message = ""
         self.dico_res = {}
         self.lst_pr = []
         self.zmax = zmax
@@ -87,18 +93,18 @@ class ClassResProfil:
         :return: plani, ksmaj, ksmin
         """
         plani = None
-        ksmaj= None
+        ksmaj = None
         ksmin = None
         dict_ks = self.mdb.zone_ks()
         dict_plani = self.mdb.planim_select()
-        for i, (minp, maxp) in enumerate(zip(dict_plani['absmin'],dict_plani['absmax'])):
-            if minp<= self.pk <= maxp:
-                plani = dict_plani['pas'][i]
-                break
-        for i, (minp, maxp) in enumerate(zip(dict_ks['zoneabsstart'], dict_ks['zoneabsend'])):
+        for i, (minp, maxp) in enumerate(zip(dict_plani["absmin"], dict_plani["absmax"])):
             if minp <= self.pk <= maxp:
-                ksmaj=dict_ks['majbedcoef'][i]
-                ksmin =dict_ks['minbedcoef'][i]
+                plani = dict_plani["pas"][i]
+                break
+        for i, (minp, maxp) in enumerate(zip(dict_ks["zoneabsstart"], dict_ks["zoneabsend"])):
+            if minp <= self.pk <= maxp:
+                ksmaj = dict_ks["majbedcoef"][i]
+                ksmin = dict_ks["minbedcoef"][i]
                 break
         return plani, ksmaj, ksmin
 
@@ -134,11 +140,11 @@ class ClassResProfil:
             else:
                 pr_m.append(point)
         if not pr_m:
-            txt = 'Pas de profil lit mineur'
+            txt = "Pas de profil lit mineur"
             if self.debug:
                 print(txt)
             self.warning_message += txt
-            self.warning_message += '\n'
+            self.warning_message += "\n"
             return [], [], [], [], []
         if not pr_g:
             pr_g = [pr_m[0], pr_m[0]]
@@ -172,14 +178,13 @@ class ClassResProfil:
         line = LineString(line)
         geom = line.intersection(poly)
         if geom.is_empty:
-            txt = 'Pas d intersection : {}  {}'.format(line, poly)
+            txt = "Pas d intersection : {}  {}".format(line, poly)
             if self.debug:
                 print(txt)
             self.warning_message += txt
-            self.warning_message += '\n'
+            self.warning_message += "\n"
             line_disc = None
-        elif geom.geom_type == 'MultiLineString' \
-                or geom.geom_type == 'GeometryCollection':
+        elif geom.geom_type == "MultiLineString" or geom.geom_type == "GeometryCollection":
             id_tmp = 0
             for j, ll in enumerate(geom.geoms):
                 x, y = ll.xy
@@ -198,20 +203,19 @@ class ClassResProfil:
             x, y = geom.geoms[id_tmp].xy
             linf = [(x[0] - l_g, z_level), (x[-1] + l_d, z_level)]
             line_disc = LineString(linf)
-        elif geom.geom_type == 'LineString':
+        elif geom.geom_type == "LineString":
             line_disc = geom
         else:
-            txt = 'Geo type non traite : {}'.format(geom.geom_type)
+            txt = "Geo type non traite : {}".format(geom.geom_type)
             if self.debug:
                 print(txt)
             self.warning_message += txt
-            self.warning_message += '\n'
+            self.warning_message += "\n"
             line_disc = None
 
         return line_disc
 
-    def discret_pr_lg(self, pr, x_fond, zmin, zmax, pas=0.1, id_g=0, id_d=-1,
-                      cond_pas_z=True):
+    def discret_pr_lg(self, pr, x_fond, zmin, zmax, pas=0.1, id_g=0, id_d=-1, cond_pas_z=True):
         """
         vertical descritization
         :param pas : dz in m or nb of plan
@@ -229,7 +233,7 @@ class ClassResProfil:
         if id_d == -1:
             limit_pr = pr[id_g:]
         else:
-            limit_pr = pr[id_g:id_d + 1]
+            limit_pr = pr[id_g : id_d + 1]
 
         wow = []
         pzmax = max(zmax, pr[id_g, 1])
@@ -281,11 +285,11 @@ class ClassResProfil:
         """
 
         for key in self.dico_res.keys():
-            print('************************')
-            print('Profil :', self.cas_prt[key])
+            print("************************")
+            print("Profil :", self.cas_prt[key])
             for elem, val in self.dico_res[key].items():
-                if elem != 'poly':
-                    print('{} , {}'.format(elem, val))
+                if elem != "poly":
+                    print("{} , {}".format(elem, val))
 
     def get_poly_disc(self, line_disc, pt_bas):
         """
@@ -312,15 +316,8 @@ class ClassResProfil:
         return lst_poly
 
     def genrete_plani(self, zmax=None):
-
-        pr_m, pr_g, pr_d, pr_st_g, pr_st_d = self.decoup_pr(self.prof,
-                                                            self.min_bed,
-                                                            self.maj_bed)
-        self.lst_pr = [(0, pr_m),
-                       (1, pr_g),
-                       (2, pr_d),
-                       (3, pr_st_g),
-                       (4, pr_st_d)]
+        pr_m, pr_g, pr_d, pr_st_g, pr_st_d = self.decoup_pr(self.prof, self.min_bed, self.maj_bed)
+        self.lst_pr = [(0, pr_m), (1, pr_g), (2, pr_d), (3, pr_st_g), (4, pr_st_d)]
         self.dico_plani = {}
 
         for num, prof_tmp in self.lst_pr:
@@ -339,100 +336,108 @@ class ClassResProfil:
             else:
                 x_fond = profile[id_f[0], 0]
             pt_bas = (x_fond, minz)
-            self.dico_plani[num]['pt_bas'] = pt_bas
+            self.dico_plani[num]["pt_bas"] = pt_bas
 
             if not zmax:
                 zmax = max(z_g, z_d)
 
-            line_disc, poly = self.discret_pr_lg(profile, x_fond, minz, zmax,
-                                                 pas=self.plani,
-                                                 id_g=0, id_d=-1,
-                                                 cond_pas_z=True)
-            self.dico_plani[num]['lines'] = line_disc
+            line_disc, poly = self.discret_pr_lg(
+                profile, x_fond, minz, zmax, pas=self.plani, id_g=0, id_d=-1, cond_pas_z=True
+            )
+            self.dico_plani[num]["lines"] = line_disc
         return self.dico_plani
 
     def plani_stock(self, dico_zmax, id_run, database):
         self.mdb = database
-        prof = self.mdb.select('profiles', order='abscissa', where='active',
-                               list_var=['abscissa', 'x', 'z', 'leftminbed',
-                                         'rightminbed', 'leftstock',
-                                         'rightstock', 'zleftminbed',
-                                         'zrightminbed', 'branchnum'])
+        prof = self.mdb.select(
+            "profiles",
+            order="abscissa",
+            where="active",
+            list_var=[
+                "abscissa",
+                "x",
+                "z",
+                "leftminbed",
+                "rightminbed",
+                "leftstock",
+                "rightstock",
+                "zleftminbed",
+                "zrightminbed",
+                "branchnum",
+            ],
+        )
         point_bas = {}
         list_insert_plani = []
         list_pt_bas = []
 
         if prof:
-            for id, pk in enumerate(prof['abscissa']):
+            for id, pk in enumerate(prof["abscissa"]):
                 if pk:
                     try:
                         # **********************************************************
 
-                        x = [float(v) for v in prof['x'][id].split()]
-                        z = [float(v) for v in prof['z'][id].split()]
+                        x = [float(v) for v in prof["x"][id].split()]
+                        z = [float(v) for v in prof["z"][id].split()]
                         profil = list(zip(x, z))
 
-                        min_bed = [prof['leftminbed'][id],
-                                   prof['rightminbed'][id]]
-                        if prof['leftstock'][id] and \
-                                prof['rightstock'][id]:
-                            maj_bed = [prof['leftstock'][id],
-                                       prof['rightstock'][id]]
+                        min_bed = [prof["leftminbed"][id], prof["rightminbed"][id]]
+                        if prof["leftstock"][id] and prof["rightstock"][id]:
+                            maj_bed = [prof["leftstock"][id], prof["rightstock"][id]]
                         else:
-                            maj_bed = [x[0],
-                                       x[-1]]
+                            maj_bed = [x[0], x[-1]]
 
-                        self.init_cl(pk, profil,
-                                     prof['branchnum'][id],
-                                     min_bed, maj_bed, id_run,
-                                     database=self.mdb,
-                                     )
+                        self.init_cl(
+                            pk,
+                            profil,
+                            prof["branchnum"][id],
+                            min_bed,
+                            maj_bed,
+                            id_run,
+                            database=self.mdb,
+                        )
                         self.genrete_plani(dico_zmax[str(pk)])
 
                         point_bas[pk] = {}
 
                         for id_type, dico in self.dico_plani.items():
-
-                            if 'lines' in dico.keys():
-                                for ord, line in enumerate(dico['lines']):
+                            if "lines" in dico.keys():
+                                for ord, line in enumerate(dico["lines"]):
                                     list_insert_plani.append(
-                                        [id_run, pk, id_type, ord,
-                                         json.dumps(mapping(line))])
-                                point_bas[pk][id_type] = dico['pt_bas']
+                                        [id_run, pk, id_type, ord, json.dumps(mapping(line))]
+                                    )
+                                point_bas[pk][id_type] = dico["pt_bas"]
 
                     except Exception as err:
                         if self.debug:
-                            print('Warning Plani', err)
+                            print("Warning Plani", err)
             if self.mdb:
                 if point_bas:
-                    list_pt_bas = [[id_run, 'opt', 'pt_bas',
-                                    json.dumps(point_bas)]]
+                    list_pt_bas = [[id_run, "opt", "pt_bas", json.dumps(point_bas)]]
                 self.insert_lst_mdb(list_insert_plani, list_pt_bas)
 
     def insert_lst_mdb(self, list_insert, point_bas):
         if list_insert:
-            col_tab = ['id_runs', 'pknum', 'id_type', 'id_order', 'line']
+            col_tab = ["id_runs", "pknum", "id_type", "id_order", "line"]
             var = ",".join(col_tab)
             temp = []
             for k in col_tab:
-                if k == 'line':
-                    temp.append('ST_GeomFromGeoJSON(%s)')
+                if k == "line":
+                    temp.append("ST_GeomFromGeoJSON(%s)")
                 else:
-                    temp.append('%s')
+                    temp.append("%s")
             valeurs = "({})".format(",".join(temp))
             list_insert2 = []
             for lst in list_insert:
                 if lst not in list_insert2:
                     list_insert2.append(lst)
-            sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.mdb.SCHEMA,
-                                                                "runs_plani",
-                                                                var,
-                                                                valeurs)
+            sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
+                self.mdb.SCHEMA, "runs_plani", var, valeurs
+            )
             self.mdb.run_query(sql, many=True, list_many=list_insert2)
 
         if point_bas:
-            col_tab = ['id_runs', 'type_res', 'var', 'val']
-            self.mdb.insert_res('runs_graph', point_bas, col_tab)
+            col_tab = ["id_runs", "type_res", "var", "val"]
+            self.mdb.insert_res("runs_graph", point_bas, col_tab)
 
     def get_results(self):
         """
@@ -452,12 +457,12 @@ class ClassResProfil:
         for num, dico in self.dico_res.items():
             if not dico:
                 continue
-            if not dico['line']:
+            if not dico["line"]:
                 continue
 
-            line_disc = dico['line']
+            line_disc = dico["line"]
 
-            pt_bas = dico['pt_bas']
+            pt_bas = dico["pt_bas"]
             if num == 0:
                 ks = self.ksmin
             elif num == 1 or num == 2:
@@ -466,12 +471,12 @@ class ClassResProfil:
                 ks = 0.0
 
             lst_poly = self.get_poly_disc(line_disc, pt_bas)
-            dico['poly'] = []
-            dico['area'] = []
+            dico["poly"] = []
+            dico["area"] = []
             # dico['perimeter'] = []
-            dico['width'] = []
-            dico['z'] = []
-            dico['debitance'] = []
+            dico["width"] = []
+            dico["z"] = []
+            dico["debitance"] = []
             last_poly = None
             for id, poly in enumerate(lst_poly):
                 if id == 0:
@@ -480,48 +485,44 @@ class ClassResProfil:
                     perimeter = poly.length
                     area = poly.area
 
-                    dico['poly'].append(poly)
-                    dico['area'].append(area)
+                    dico["poly"].append(poly)
+                    dico["area"].append(area)
                     # dico['perimeter'].append(perimeter)
-                    dico['z'].append(maxz)
-                    dico['width'].append(line_disc[id].length)
-                    dico['debitance'].append(
-                        self.debitance(num, ks, perimeter, area))
+                    dico["z"].append(maxz)
+                    dico["width"].append(line_disc[id].length)
+                    dico["debitance"].append(self.debitance(num, ks, perimeter, area))
                 else:
-                    #new_poly = cascaded_union([last_poly, poly])
+                    # new_poly = cascaded_union([last_poly, poly])
                     new_poly = unary_union([last_poly, poly])
 
                     if new_poly.is_valid and not new_poly.is_empty:
                         (minx, minz, maxx, maxz) = new_poly.bounds
                         perimeter = new_poly.length
                         area = new_poly.area
-                        dico['poly'].append(new_poly)
-                        dico['area'].append(area)
+                        dico["poly"].append(new_poly)
+                        dico["area"].append(area)
                         # dico['perimeter'].append(perimeter)
-                        dico['z'].append(maxz)
-                        dico['width'].append(line_disc[id].length)
+                        dico["z"].append(maxz)
+                        dico["width"].append(line_disc[id].length)
 
-                        dico['debitance'].append(
-                            self.debitance(num, ks, perimeter, area))
+                        dico["debitance"].append(self.debitance(num, ks, perimeter, area))
                         last_poly = new_poly
-            if len(dico['poly']) > 1:
-                dico['pr_poly'] = dico['poly'][-1]
-                dico['pr_area'] = dico['area'][-1]
+            if len(dico["poly"]) > 1:
+                dico["pr_poly"] = dico["poly"][-1]
+                dico["pr_area"] = dico["area"][-1]
                 # dico['pr_perimeter'] = dico['perimeter'][-1]
-                dico['pr_width'] = dico['width'][-1]
-                dico['pr_z'] = dico['z'][-1]
-                perimeter = dico['poly'][-1].length
-                dico['pr_debitance'] = \
-                    self.debitance(num, ks, perimeter,
-                                   dico['area'][-1])
+                dico["pr_width"] = dico["width"][-1]
+                dico["pr_z"] = dico["z"][-1]
+                perimeter = dico["poly"][-1].length
+                dico["pr_debitance"] = self.debitance(num, ks, perimeter, dico["area"][-1])
             else:
-                dico['pr_poly'] = None
-                dico['pr_area'] = 0.
+                dico["pr_poly"] = None
+                dico["pr_area"] = 0.0
                 # dico['pr_perimeter'] = 0.
-                dico['pr_width'] = 0.
-                dico['pr_z'] = 0.
+                dico["pr_width"] = 0.0
+                dico["pr_z"] = 0.0
 
-                dico['pr_debitance'] = 0.
+                dico["pr_debitance"] = 0.0
 
     def debitance(self, num, ks, perimeter, area):
         """
@@ -552,15 +553,20 @@ def get_valeurs(z_level, poly):
             (minx, miny, maxx, maxy) = poly.bounds
 
             if z_level < miny:
-                res['z'] = z_level
-                res['area'] = None
-                res['perimeter'] = None
-                res['width'] = None
+                res["z"] = z_level
+                res["area"] = None
+                res["perimeter"] = None
+                res["width"] = None
             else:
-                delpoly = Polygon([[minx - 1, z_level], [maxx + 1, z_level],
-                                   [maxx + 1, max(z_level + 1, maxy + 1)],
-                                   [minx - 1, max(z_level + 1, maxy + 1)],
-                                   [minx - 1, z_level]])
+                delpoly = Polygon(
+                    [
+                        [minx - 1, z_level],
+                        [maxx + 1, z_level],
+                        [maxx + 1, max(z_level + 1, maxy + 1)],
+                        [minx - 1, max(z_level + 1, maxy + 1)],
+                        [minx - 1, z_level],
+                    ]
+                )
                 if not delpoly.is_empty:
                     if not poly.is_valid:
                         # Polygone => multiPolygone
@@ -572,29 +578,29 @@ def get_valeurs(z_level, poly):
                     polyw = GeometryCollection()
                 if not polyw.is_empty:
                     (minx, miny, maxx, maxy) = polyw.bounds
-                    res['z'] = z_level
-                    res['area'] = polyw.area
-                    res['perimeter'] = polyw.length
-                    res['width'] = maxx - minx
+                    res["z"] = z_level
+                    res["area"] = polyw.area
+                    res["perimeter"] = polyw.length
+                    res["width"] = maxx - minx
                 else:
-                    res['z'] = z_level
-                    res['area'] = None
-                    res['perimeter'] = None
-                    res['width'] = None
+                    res["z"] = z_level
+                    res["area"] = None
+                    res["perimeter"] = None
+                    res["width"] = None
         else:
-            res['z'] = z_level
-            res['area'] = None
-            res['perimeter'] = None
-            res['width'] = None
+            res["z"] = z_level
+            res["area"] = None
+            res["perimeter"] = None
+            res["width"] = None
     else:
-        res['z'] = z_level
-        res['area'] = None
-        res['perimeter'] = None
-        res['width'] = None
+        res["z"] = z_level
+        res["area"] = None
+        res["perimeter"] = None
+        res["width"] = None
     return res
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
     # **************************************************************
     # **************************************************************

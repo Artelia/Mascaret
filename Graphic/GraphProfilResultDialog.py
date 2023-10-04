@@ -37,20 +37,20 @@ from shapely.ops import unary_union
 from shapely.geometry import GeometryCollection
 
 
-def list_sql(liste, typ='str'):
+def list_sql(liste, typ="str"):
     """
     list to srting for sql script
     :param liste: element list
     :param typ : element type
     :return:
     """
-    txt = '('
+    txt = "("
     for t_res in liste:
-        if typ is 'str':
+        if typ is "str":
             txt += "'{}',".format(t_res)
-        elif typ == 'int' or typ == 'float':
+        elif typ == "int" or typ == "float":
             txt += "{},".format(t_res)
-    txt = txt[:-1] + ')'
+    txt = txt[:-1] + ")"
     return txt
 
 
@@ -62,9 +62,7 @@ class GraphProfilResultDialog(QWidget):
         self.mdb = self.mgis.mdb
 
         self.typ_graph = typ_graph
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/graphProfilResult.ui'),
-            self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/graphProfilResult.ui"), self)
         self.graph_obj = GraphResult(self, self.lay_graph)
         self.cur_run, self.cur_graph, self.cur_vars = None, None, None
         self.cur_vars_lbl, self.cur_branch, self.cur_pknum, self.cur_t = None, None, None, None
@@ -83,25 +81,24 @@ class GraphProfilResultDialog(QWidget):
         self.cas_prt = {}
         self.dict_run = dict()
         self.laisses = {}
-        self.ctrl_label = {'area': self.label_warea,
-                           'perimeter': self.label_wpermi,
-                           'width': self.label_wmirror,
-                           }
+        self.ctrl_label = {
+            "area": self.label_warea,
+            "perimeter": self.label_wpermi,
+            "width": self.label_wmirror,
+        }
 
         fill_zminbed(self.mdb)
         self.show_hide_com(False)
         if self.checkrun():
-            self.typ_res = 'opt'
-            self.x_var = 'x'
+            self.typ_res = "opt"
+            self.x_var = "x"
             self.sql_where = "results.pknum = {1}"
 
             self.cur_pknum = id
-            sql = "SELECT id FROM {0}.results_var WHERE var = 'Z'".format(
-                self.mdb.SCHEMA)
+            sql = "SELECT id FROM {0}.results_var WHERE var = 'Z'".format(self.mdb.SCHEMA)
             rows = self.mdb.run_query(sql, fetch=True)
             self.id_z = rows[0][0]
-            sql = "SELECT id FROM {0}.results_var WHERE var = 'QMAJ'".format(
-                self.mdb.SCHEMA)
+            sql = "SELECT id FROM {0}.results_var WHERE var = 'QMAJ'".format(self.mdb.SCHEMA)
             rows = self.mdb.run_query(sql, fetch=True)
             self.id_qmaj = rows[0][0]
             self.cur_t = "Zmax"
@@ -109,17 +106,15 @@ class GraphProfilResultDialog(QWidget):
 
             self.cb_run.currentIndexChanged.connect(self.run_changed)
             self.cb_scen.currentIndexChanged.connect(self.scen_changed)
-            self.cb_graph.currentIndexChanged.connect(
-                lambda: self.graph_changed_profil(True))
-            self.cb_det.currentIndexChanged.connect(
-                lambda: self.detail_changed(up_lim=False))
+            self.cb_graph.currentIndexChanged.connect(lambda: self.graph_changed_profil(True))
+            self.cb_det.currentIndexChanged.connect(lambda: self.detail_changed(up_lim=False))
 
-            self.name_tab = {'prof': {'name': 'Graph Results',
-                                      'lst_vars': ['ZREF', 'Z']},
-                             }
-            self.curent_data = {'prof': {},
-                                }
-
+            self.name_tab = {
+                "prof": {"name": "Graph Results", "lst_vars": ["ZREF", "Z"]},
+            }
+            self.curent_data = {
+                "prof": {},
+            }
 
             self.bt_expCsv.clicked.connect(self.export_csv)
 
@@ -140,10 +135,12 @@ class GraphProfilResultDialog(QWidget):
             self.label_coment.hide()
 
     def checkrun(self):
-        rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
-                                  "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
-                                  "ORDER BY run, scenario ".format(
-            self.mdb.SCHEMA), fetch=True)
+        rows = self.mdb.run_query(
+            "SELECT id, run, scenario FROM {0}.runs "
+            "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
+            "ORDER BY run, scenario ".format(self.mdb.SCHEMA),
+            fetch=True,
+        )
 
         if rows:
             return True
@@ -152,50 +149,51 @@ class GraphProfilResultDialog(QWidget):
             return False
 
     def get_profil_data(self):
-        """ Get data of a profile"""
+        """Get data of a profile"""
         if self.cur_run is not None:
-            txt = self.mdb.select_distinct("comments", "runs",
-                                           where='id={}'.format(self.cur_run))
+            txt = self.mdb.select_distinct("comments", "runs", where="id={}".format(self.cur_run))
             if txt:
-                txt = txt['comments'][0]
+                txt = txt["comments"][0]
                 if not isinstance(txt, str):
                     txt = str(txt)
-                self.lbl_coment.setText(txt['comments'][0])
+                self.lbl_coment.setText(txt["comments"][0])
                 self.show_hide_com(True)
             else:
                 self.show_hide_com(False)
         else:
             self.show_hide_com(False)
-        prof = self.mdb.select('profiles', order='abscissa',
-                               list_var=['abscissa', 'x', 'z', 'leftminbed',
-                                         'rightminbed', 'leftstock',
-                                         'rightstock', 'zleftminbed',
-                                         'zrightminbed', 'branchnum'])
+        prof = self.mdb.select(
+            "profiles",
+            order="abscissa",
+            list_var=[
+                "abscissa",
+                "x",
+                "z",
+                "leftminbed",
+                "rightminbed",
+                "leftstock",
+                "rightstock",
+                "zleftminbed",
+                "zrightminbed",
+                "branchnum",
+            ],
+        )
         self.val_prof_ref = {}
         self.plani_graph = {}
         if prof:
-            for id, pk in enumerate(prof['abscissa']):
+            for id, pk in enumerate(prof["abscissa"]):
                 if pk:
                     try:
                         self.val_prof_ref[pk] = {}
-                        self.val_prof_ref[pk]['x'] = [float(v) for v in
-                                                      prof['x'][id].split()]
-                        self.val_prof_ref[pk]['ZREF'] = [float(v) for v in
-                                                         prof['z'][id].split()]
-                        self.val_prof_ref[pk]['leftminbed'] = \
-                            prof['leftminbed'][id]
-                        self.val_prof_ref[pk]['rightminbed'] = \
-                            prof['rightminbed'][id]
-                        self.val_prof_ref[pk]['leftstock'] = prof['leftstock'][
-                            id]
-                        self.val_prof_ref[pk]['rightstock'] = \
-                            prof['rightstock'][id]
-                        self.val_prof_ref[pk]['zleftminbed'] = \
-                            prof['zleftminbed'][id]
-                        self.val_prof_ref[pk]['zrightminbed'] = \
-                            prof['zrightminbed'][id]
-                        self.val_prof_ref[pk]['branch'] = prof['branchnum'][id]
-
+                        self.val_prof_ref[pk]["x"] = [float(v) for v in prof["x"][id].split()]
+                        self.val_prof_ref[pk]["ZREF"] = [float(v) for v in prof["z"][id].split()]
+                        self.val_prof_ref[pk]["leftminbed"] = prof["leftminbed"][id]
+                        self.val_prof_ref[pk]["rightminbed"] = prof["rightminbed"][id]
+                        self.val_prof_ref[pk]["leftstock"] = prof["leftstock"][id]
+                        self.val_prof_ref[pk]["rightstock"] = prof["rightstock"][id]
+                        self.val_prof_ref[pk]["zleftminbed"] = prof["zleftminbed"][id]
+                        self.val_prof_ref[pk]["zrightminbed"] = prof["zrightminbed"][id]
+                        self.val_prof_ref[pk]["branch"] = prof["branchnum"][id]
 
                     except:
                         pass
@@ -205,19 +203,15 @@ class GraphProfilResultDialog(QWidget):
         for pk, info in self.val_prof_ref.items():
             # print(info.keys(),pk)
             if info:
-                x = info['x']
-                z = info['ZREF']
+                x = info["x"]
+                z = info["ZREF"]
                 profil = list(zip(x, z))
 
-                min_bed = [info['leftminbed'],
-                           info['rightminbed']]
-                if info['leftstock'] and \
-                        info['rightstock']:
-                    maj_bed = [info['leftstock'],
-                               info['rightstock']]
+                min_bed = [info["leftminbed"], info["rightminbed"]]
+                if info["leftstock"] and info["rightstock"]:
+                    maj_bed = [info["leftstock"], info["rightstock"]]
                 else:
-                    maj_bed = [x[0],
-                               x[-1]]
+                    maj_bed = [x[0], x[-1]]
 
                 cond_plani, dico_plani = self.check_run_plani(pk)
                 # cond_plani  = False
@@ -225,82 +219,79 @@ class GraphProfilResultDialog(QWidget):
                 if cond_plani:
                     cl_geo = ClassResProfil()
                     self.cas_prt = cl_geo.cas_prt
-                    cl_geo.init_cl(pk, profil,
-                                   info['branch'],
-                                   min_bed, maj_bed, self.cur_run,
-                                   zmax=self.zmax_save,
-                                   dico_plani=dico_plani,
-                                   database=self.mdb)
+                    cl_geo.init_cl(
+                        pk,
+                        profil,
+                        info["branch"],
+                        min_bed,
+                        maj_bed,
+                        self.cur_run,
+                        zmax=self.zmax_save,
+                        dico_plani=dico_plani,
+                        database=self.mdb,
+                    )
 
                     cl_geo.get_results()
                     if cl_geo.dico_res:
                         for id, name in cl_geo.cas_prt.items():
                             if id in cl_geo.dico_res.keys():
-                                self.plani_graph[pk][name] = dict(
-                                    cl_geo.dico_res[id])
+                                self.plani_graph[pk][name] = dict(cl_geo.dico_res[id])
 
                     del cl_geo
 
     def get_run_plani(self, pk, get_bas=False):
-        where = 'id_runs = {} AND pknum = {}'.format(self.cur_run, pk)
-        elem_plani = self.mdb.select('runs_plani', order='id_type,id_order',
-                                     where=where,
-                                     list_var=['id_type', 'id_order',
-                                               'ST_AsGeoJSON(line)'])
+        where = "id_runs = {} AND pknum = {}".format(self.cur_run, pk)
+        elem_plani = self.mdb.select(
+            "runs_plani",
+            order="id_type,id_order",
+            where=where,
+            list_var=["id_type", "id_order", "ST_AsGeoJSON(line)"],
+        )
 
         if get_bas:
-            where = "id_runs = {0} AND var = 'pt_bas' AND type_res = 'opt'".format(
-                self.cur_run)
+            where = "id_runs = {0} AND var = 'pt_bas' AND type_res = 'opt'".format(self.cur_run)
 
-            elem = self.mdb.select('runs_graph', order='id',
-                                   where=where,
-                                   list_var=['val'])
+            elem = self.mdb.select("runs_graph", order="id", where=where, list_var=["val"])
 
-            if len(elem['val']) > 0:
-                self.info_graph['opt']['pt_bas'] = elem['val'][0]
+            if len(elem["val"]) > 0:
+                self.info_graph["opt"]["pt_bas"] = elem["val"][0]
             else:
-                self.info_graph['opt']['pt_bas'] = {}
+                self.info_graph["opt"]["pt_bas"] = {}
 
         return elem_plani
 
     def create_dico_plani(self, elem, pt_bas):
-
         dico_plani = {}
-        for id, id_type in enumerate(elem['id_type']):
+        for id, id_type in enumerate(elem["id_type"]):
             if not id_type in dico_plani.keys():
-                dico_plani[id_type] = {'pt_bas': pt_bas[str(id_type)],
-                                       'line': []}
+                dico_plani[id_type] = {"pt_bas": pt_bas[str(id_type)], "line": []}
                 # st_asgeojson eqv. line
-            dico_plani[id_type]['line'].append(
-                shape(json.loads(elem['st_asgeojson'][id])))
+            dico_plani[id_type]["line"].append(shape(json.loads(elem["st_asgeojson"][id])))
 
         return dico_plani
-
-
 
     def check_run_plani(self, pk):
         pt_bas = None
         elem = self.get_run_plani(pk)
 
-        if 'pt_bas' in self.info_graph['opt'].keys():
-            if str(pk) in self.info_graph['opt']['pt_bas'].keys():
-                pt_bas = self.info_graph['opt']['pt_bas'][str(pk)]
+        if "pt_bas" in self.info_graph["opt"].keys():
+            if str(pk) in self.info_graph["opt"]["pt_bas"].keys():
+                pt_bas = self.info_graph["opt"]["pt_bas"][str(pk)]
 
-        if len(elem['id_type']) > 0 and pt_bas:
+        if len(elem["id_type"]) > 0 and pt_bas:
             dico_plani = self.create_dico_plani(elem, pt_bas)
         else:
-            if not 'pt_bas' in self.info_graph['opt'].keys():
+            if not "pt_bas" in self.info_graph["opt"].keys():
                 # if pt_bas not existe => update table
                 cond = True
             else:
-                if len(self.info_graph['opt']['pt_bas'].keys()) < 1 :
+                if len(self.info_graph["opt"]["pt_bas"].keys()) < 1:
                     # if  no itmes => update table
                     cond = True
                 else:
                     # check if data
-                    where = 'id_runs = {} '.format(self.cur_run)
-                    test = self.mdb.select_distinct("id_type", 'runs_plani',
-                                                    where=where)
+                    where = "id_runs = {} ".format(self.cur_run)
+                    test = self.mdb.select_distinct("id_type", "runs_plani", where=where)
                     if not test:
                         cond = True
                     else:
@@ -310,18 +301,17 @@ class GraphProfilResultDialog(QWidget):
                 # creation Complete table si information n'existat pour le run
                 cl_geo = ClassResProfil()
                 self.cas_prt = cl_geo.cas_prt
-                cl_geo.plani_stock(self.info_graph[self.typ_res]['zmax'],
-                                   self.cur_run, self.mdb)
+                cl_geo.plani_stock(self.info_graph[self.typ_res]["zmax"], self.cur_run, self.mdb)
                 del cl_geo
 
                 elem = self.get_run_plani(pk, get_bas=True)
                 pt_bas = None
 
-                if str(pk) in self.info_graph['opt']['pt_bas'].keys():
-                    if str(pk) in self.info_graph['opt']['pt_bas'].keys():
-                        pt_bas = self.info_graph['opt']['pt_bas'][str(pk)]
+                if str(pk) in self.info_graph["opt"]["pt_bas"].keys():
+                    if str(pk) in self.info_graph["opt"]["pt_bas"].keys():
+                        pt_bas = self.info_graph["opt"]["pt_bas"][str(pk)]
 
-                if len(elem['id_type']) > 0 and pt_bas:
+                if len(elem["id_type"]) > 0 and pt_bas:
                     dico_plani = self.create_dico_plani(elem, pt_bas)
                 else:
                     # Pas de valeur pour le pk
@@ -333,9 +323,10 @@ class GraphProfilResultDialog(QWidget):
         return True, dico_plani
 
     def get_runs_graph(self):
-        sql = "SELECT type_res,var,val FROM {0}.runs_graph WHERE " \
-              "id_runs = {1} ORDER BY id".format(self.mdb.SCHEMA,
-                                                 self.cur_run)
+        sql = (
+            "SELECT type_res,var,val FROM {0}.runs_graph WHERE "
+            "id_runs = {1} ORDER BY id".format(self.mdb.SCHEMA, self.cur_run)
+        )
 
         rows = self.mdb.run_query(sql, fetch=True)
 
@@ -348,10 +339,12 @@ class GraphProfilResultDialog(QWidget):
 
     def init_dico_run(self):
         self.dict_run = dict()
-        rows = self.mdb.run_query("SELECT id, run, scenario FROM {0}.runs "
-                                  "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
-                                  "ORDER BY date DESC, run ASC, scenario ASC;".format(
-            self.mdb.SCHEMA), fetch=True)
+        rows = self.mdb.run_query(
+            "SELECT id, run, scenario FROM {0}.runs "
+            "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
+            "ORDER BY date DESC, run ASC, scenario ASC;".format(self.mdb.SCHEMA),
+            fetch=True,
+        )
         for row in rows:
             if row[1] not in self.dict_run.keys():
                 self.dict_run[row[1]] = dict()
@@ -375,10 +368,9 @@ class GraphProfilResultDialog(QWidget):
         lst_graph = None
         if self.cur_run:
             # add comment
-            txt = self.mdb.select_distinct("comments", "runs",
-                                           where='id={}'.format(self.cur_run))
+            txt = self.mdb.select_distinct("comments", "runs", where="id={}".format(self.cur_run))
             if txt:
-                txt = txt['comments'][0]
+                txt = txt["comments"][0]
                 if not isinstance(txt, str):
                     txt = str(txt)
                 self.lbl_coment.setText(txt)
@@ -387,41 +379,38 @@ class GraphProfilResultDialog(QWidget):
                 self.show_hide_com(False)
 
         lst_graph = []
-        info = self.mdb.select('profiles', list_var=['abscissa', "name"])
-        for pknum in self.info_graph['opt']['pknum']:
-            if pknum in info['abscissa']:
-                txt = str(pknum) + ' : ' + info['name'][
-                    info['abscissa'].index(pknum)]
-                lst_graph.append({"name": txt, 'id': float(pknum)})
+        info = self.mdb.select("profiles", list_var=["abscissa", "name"])
+        for pknum in self.info_graph["opt"]["pknum"]:
+            if pknum in info["abscissa"]:
+                txt = str(pknum) + " : " + info["name"][info["abscissa"].index(pknum)]
+                lst_graph.append({"name": txt, "id": float(pknum)})
                 # else:
                 #     lst_graph.append({"name": str(pknum), 'id': float(pknum)})
         self.lst_graph = lst_graph
         for i, graph in enumerate(lst_graph):
             self.cb_graph.addItem(graph["name"], graph["id"])
-        self.cb_graph.setCurrentIndex(
-            self.cb_graph.findData(self.cur_pknum))
+        self.cb_graph.setCurrentIndex(self.cb_graph.findData(self.cur_pknum))
         self.cb_graph.blockSignals(False)
 
     def init_cb_det(self, id):
         self.cb_det.blockSignals(True)
         self.cb_det.clear()
 
-        sql = "SELECT init_date FROM {0}.runs " \
-              "WHERE id = {1} ".format(self.mgis.mdb.SCHEMA,
-                                       self.cur_run)
+        sql = "SELECT init_date FROM {0}.runs " "WHERE id = {1} ".format(
+            self.mgis.mdb.SCHEMA, self.cur_run
+        )
         info = self.mdb.run_query(sql, fetch=True)
         if info:
             self.date = info[0][0]
         else:
             self.date = None
-        if self.typ_graph == 'hydro_profil':
+        if self.typ_graph == "hydro_profil":
             self.cb_det.addItem("Zmax", "Zmax")
 
-        for time_ in self.info_graph['opt']['time']:
+        for time_ in self.info_graph["opt"]["time"]:
             if self.date:
                 aff = self.date + timedelta(seconds=time_)
-                aff = '{:%d/%m/%Y %H:%M:%S}.{:02.0f}'.format(aff,
-                                                             aff.microsecond / 10000.0)
+                aff = "{:%d/%m/%Y %H:%M:%S}.{:02.0f}".format(aff, aff.microsecond / 10000.0)
             else:
                 aff = str(time_)
             self.cb_det.addItem(aff, time_)
@@ -438,7 +427,7 @@ class GraphProfilResultDialog(QWidget):
         self.cb_det.blockSignals(False)
 
     def run_changed(self):
-        """ change fct for cb_run"""
+        """change fct for cb_run"""
         self.graph_obj.update_limites = True
         self.cb_scen.blockSignals(True)
         self.init_cb_scen()
@@ -446,7 +435,7 @@ class GraphProfilResultDialog(QWidget):
         self.cb_scen.blockSignals(False)
 
     def scen_changed(self):
-        """ change scen"""
+        """change scen"""
         self.graph_obj.update_limites = True
         if self.cb_scen.currentIndex() != -1:
             self.cur_run = self.cb_scen.itemData(self.cb_scen.currentIndex())
@@ -461,38 +450,31 @@ class GraphProfilResultDialog(QWidget):
         """change graph of profile"""
         self.graph_obj.update_limites = True
         if self.cb_graph.currentIndex() != -1:
-            self.cur_pknum = self.cb_graph.itemData(
-                self.cb_graph.currentIndex())
-            self.cur_vars = ['ZREF']
-            lst_colors = ['black']
+            self.cur_pknum = self.cb_graph.itemData(self.cb_graph.currentIndex())
+            self.cur_vars = ["ZREF"]
+            lst_colors = ["black"]
             self.cur_vars_lbl = self.find_var_lbl()
 
-            self.graph_obj.init_mdl(self.cur_vars, self.cur_vars_lbl,
-                                    lst_colors, [0], [1], 'm')
+            self.graph_obj.init_mdl(self.cur_vars, self.cur_vars_lbl, lst_colors, [0], [1], "m")
             self.zmax_save = None
             if self.cur_run:
-                if 'zmax' in self.info_graph[self.typ_res].keys():
-                    self.zmax_save = self.info_graph[self.typ_res]['zmax'][
-                        str(self.cur_pknum)]
+                if "zmax" in self.info_graph[self.typ_res].keys():
+                    self.zmax_save = self.info_graph[self.typ_res]["zmax"][str(self.cur_pknum)]
                     new_poly = GeometryCollection()
 
                     qmaj_max = self.get_qmaj_max()
 
-                    for i, key in enumerate(
-                            self.plani_graph[self.cur_pknum].keys()):
+                    for i, key in enumerate(self.plani_graph[self.cur_pknum].keys()):
                         if i == 0:
-                            new_poly = self.plani_graph[self.cur_pknum][key][
-                                'pr_poly']
+                            new_poly = self.plani_graph[self.cur_pknum][key]["pr_poly"]
                             if new_poly.is_valid and not new_poly.is_empty:
                                 last_poly = new_poly
                         else:
                             # check if flow major_bed
                             if qmaj_max > 0.001:
-                                new_poly = unary_union([last_poly,
-                                                           self.plani_graph[
-                                                               self.cur_pknum][
-                                                               key][
-                                                               'pr_poly']])
+                                new_poly = unary_union(
+                                    [last_poly, self.plani_graph[self.cur_pknum][key]["pr_poly"]]
+                                )
                                 if new_poly.is_valid and not new_poly.is_empty:
                                     last_poly = new_poly
                     # save max
@@ -506,7 +488,7 @@ class GraphProfilResultDialog(QWidget):
             self.tw_data.clear()
 
     def detail_changed(self, up_lim=True):
-        """ change pk or data"""
+        """change pk or data"""
         self.graph_obj.update_limites = up_lim
         if self.cb_det.currentIndex() != -1:
             self.cur_t = self.cb_det.itemData(self.cb_det.currentIndex())
@@ -522,12 +504,10 @@ class GraphProfilResultDialog(QWidget):
         get Flowrate for Zmax
         :return:
         """
-        where = "id_runs = {0} AND pknum = {1} " \
-                "AND var ={2} ".format(self.cur_run,
-                                       self.cur_pknum,
-                                       self.id_qmaj)
-        qmaj_max = self.mgis.mdb.select_max("val", 'results',
-                                            where=where)
+        where = "id_runs = {0} AND pknum = {1} " "AND var ={2} ".format(
+            self.cur_run, self.cur_pknum, self.id_qmaj
+        )
+        qmaj_max = self.mgis.mdb.select_max("val", "results", where=where)
         return qmaj_max
 
     def update_data_profil(self):
@@ -537,72 +517,65 @@ class GraphProfilResultDialog(QWidget):
         """
 
         if not self.initialising:
-            self.curent_data['prof'] = dict(self.val_prof_ref[self.cur_pknum])
+            self.curent_data["prof"] = dict(self.val_prof_ref[self.cur_pknum])
 
             if self.cur_run:
-                if self.cur_t == 'Zmax':
+                if self.cur_t == "Zmax":
                     val = self.zmax_save
                     qmaj_max = self.get_qmaj_max()
                 else:
-                    where = "id_runs = {0} AND pknum = {1} " \
-                            "AND var ={2} AND time = {3}".format(self.cur_run,
-                                                                 self.cur_pknum,
-                                                                 self.id_z,
-                                                                 self.cur_t)
-                    val = self.mgis.mdb.select('results', where=where,
-                                               list_var=["val"])
+                    where = "id_runs = {0} AND pknum = {1} " "AND var ={2} AND time = {3}".format(
+                        self.cur_run, self.cur_pknum, self.id_z, self.cur_t
+                    )
+                    val = self.mgis.mdb.select("results", where=where, list_var=["val"])
                     if val:
-                        val = val['val'][0]
+                        val = val["val"][0]
 
-                    where = "id_runs = {0} AND pknum = {1} " \
-                            "AND var ={2} AND time = {3}".format(self.cur_run,
-                                                                 self.cur_pknum,
-                                                                 self.id_qmaj,
-                                                                 self.cur_t)
-                    qmaj_max = self.mgis.mdb.select_max("val", 'results',
-                                                        where=where)
+                    where = "id_runs = {0} AND pknum = {1} " "AND var ={2} AND time = {3}".format(
+                        self.cur_run, self.cur_pknum, self.id_qmaj, self.cur_t
+                    )
+                    qmaj_max = self.mgis.mdb.select_max("val", "results", where=where)
 
-                self.curent_data['prof']['Z'] = [val] * len(
-                    self.curent_data['prof']['x'])
+                self.curent_data["prof"]["Z"] = [val] * len(self.curent_data["prof"]["x"])
 
                 self.label_zmax.setText(str(self.zmax_save))
-                self.cur_vars = ['ZREF', 'Z']
+                self.cur_vars = ["ZREF", "Z"]
 
                 self.cur_vars_lbl = self.find_var_lbl()
 
-                if self.cur_t == 'Zmax':
+                if self.cur_t == "Zmax":
                     zlevel = self.zmax_save
                     val_str = None
                     if self.zmax_save:
                         val_str = round(self.zmax_save, 3)
                     self.graph_obj.main_axe.title.set_text(
-                        'Max of water level, {0} m '
-                        ''.format(val_str))
+                        "Max of water level, {0} m " "".format(val_str)
+                    )
 
                 elif isinstance(self.cur_t, float):
-                    zlevel = self.curent_data['prof']['Z'][0]
+                    zlevel = self.curent_data["prof"]["Z"][0]
                     try:
                         self.graph_obj.main_axe.title.set_text(
-                            'Water level, {0} m - {1} s'
-                            ''.format(self.curent_data['prof']['Z'][0],
-                                      float(self.cb_det.currentText())))
+                            "Water level, {0} m - {1} s"
+                            "".format(
+                                self.curent_data["prof"]["Z"][0], float(self.cb_det.currentText())
+                            )
+                        )
                     except ValueError:
                         self.graph_obj.main_axe.title.set_text(
-                            'Water level, {0} m - {1}'
-                            ''.format(self.curent_data['prof']['Z'][0],
-                                      self.cb_det.currentText()))
-                self.graph_obj.main_axe.set_xlabel(r'Distance ($m$)')
-                self.graph_obj.main_axe.set_ylabel(r'Level ($m$)')
+                            "Water level, {0} m - {1}"
+                            "".format(self.curent_data["prof"]["Z"][0], self.cb_det.currentText())
+                        )
+                self.graph_obj.main_axe.set_xlabel(r"Distance ($m$)")
+                self.graph_obj.main_axe.set_ylabel(r"Level ($m$)")
 
                 # *******************************
 
                 plani = False
                 if self.plani_graph:
                     self.clear_plani_to_current_data()
-                    self.curent_data.update(
-                        dict(self.plani_graph[self.cur_pknum]))
-                    self.graph_obj.init_graph_plani(
-                        self.plani_graph[self.cur_pknum])
+                    self.curent_data.update(dict(self.plani_graph[self.cur_pknum]))
+                    self.graph_obj.init_graph_plani(self.plani_graph[self.cur_pknum])
                     for key, ctrl_ in self.ctrl_label.items():
                         val_d = self.val_zmax_save[key]
                         if val_d:
@@ -611,10 +584,9 @@ class GraphProfilResultDialog(QWidget):
                     plani = True
                 # ********************************************
                 self.fill_tab(zlevel, qmaj_max)
-                self.graph_obj.init_graph_profil(self.curent_data['prof'],
-                                                 self.x_var,
-                                                 qmaj_max,
-                                                 plani=plani)
+                self.graph_obj.init_graph_profil(
+                    self.curent_data["prof"], self.x_var, qmaj_max, plani=plani
+                )
 
     def clear_plani_to_current_data(self):
         for num, key in self.cas_prt.items():
@@ -628,8 +600,10 @@ class GraphProfilResultDialog(QWidget):
         :return:
         """
         if var.lower() in self.mgis.variables.keys():
-            return self.mgis.variables[var.lower()]['nom'], \
-                   self.mgis.variables[var.lower()]['couleur']
+            return (
+                self.mgis.variables[var.lower()]["nom"],
+                self.mgis.variables[var.lower()]["couleur"],
+            )
         else:
             return "", "blue"
 
@@ -641,22 +615,22 @@ class GraphProfilResultDialog(QWidget):
             if not param:
                 continue
 
-            if name == 'prof':
+            if name == "prof":
                 tw = QTableWidget()
                 tw.addAction(CopySelectedCellsAction(tw))
-                x_var = 'x'
-                self.clas_data.addTab(tw, self.name_tab[name]['name'])
+                x_var = "x"
+                self.clas_data.addTab(tw, self.name_tab[name]["name"])
                 lst_vars = [x_var]
-                lst_vars.extend(self.name_tab[name]['lst_vars'])
+                lst_vars.extend(self.name_tab[name]["lst_vars"])
                 lst_lbls = []
                 for var in lst_vars:
-                    if var == 'x':
-                        lbl = 'Abscisa'
+                    if var == "x":
+                        lbl = "Abscisa"
                     else:
                         lbl, _ = self.get_var_info(var)
                     lst_lbls.append(lbl)
             else:
-                x_var = 'z'
+                x_var = "z"
                 cl_res = WidgetProfResultDialog(self)
                 tw = cl_res.tw
                 tw.addAction(CopySelectedCellsAction(tw))
@@ -664,21 +638,18 @@ class GraphProfilResultDialog(QWidget):
                 # same behavior that the fill of graph
                 dico_tmp = {}
                 if qmaj_max > 0.001 or self.cas_prt[0] == name:
-                    dico_tmp = get_valeurs(zlevel, param['pr_poly'])
+                    dico_tmp = get_valeurs(zlevel, param["pr_poly"])
                 else:
-                    dico_tmp = {'z': zlevel,
-                                'area': None,
-                                'perimeter': None,
-                                'width': None}
+                    dico_tmp = {"z": zlevel, "area": None, "perimeter": None, "width": None}
 
                 cl_res.change_label(dico_tmp)
 
                 lst_vars = [x_var]
-                lst_vars.extend(['width', 'area', 'debitance'])
+                lst_vars.extend(["width", "area", "debitance"])
                 lst_lbls = []
                 for var in lst_vars:
-                    if var == 'z':
-                        lbl = 'Altitude'
+                    if var == "z":
+                        lbl = "Altitude"
                     else:
                         lbl = var
                     lst_lbls.append(lbl)
@@ -708,10 +679,11 @@ class GraphProfilResultDialog(QWidget):
     def find_var_lbl(self):
         tmp = []
         for var in self.cur_vars:
-            rows = self.mdb.run_query("SELECT name FROM {0}.results_var "
-                                      "WHERE var = '{1}'".format(
-                self.mgis.mdb.SCHEMA, var),
-                fetch=True)
+            rows = self.mdb.run_query(
+                "SELECT name FROM {0}.results_var "
+                "WHERE var = '{1}'".format(self.mgis.mdb.SCHEMA, var),
+                fetch=True,
+            )
             tmp.append(rows[0][0])
         return tmp
 
@@ -720,13 +692,12 @@ class GraphProfilResultDialog(QWidget):
         txt = self.cb_graph.currentText()
         idx = self.clas_data.currentIndex()
         name = self.clas_data.tabText(idx)
-        txt = txt + ' ' + name
+        txt = txt + " " + name
 
-        default_name = os.path.join(self.mgis.repProject, txt.replace(' ', '_').replace(':', '-'))
-        file_name_path, _ = QFileDialog.getSaveFileName(self, "saveFile",
-                                                        "{0}.csv".format(
-                                                            default_name),
-                                                        filter="CSV (*.csv *.)")
+        default_name = os.path.join(self.mgis.repProject, txt.replace(" ", "_").replace(":", "-"))
+        file_name_path, _ = QFileDialog.getSaveFileName(
+            self, "saveFile", "{0}.csv".format(default_name), filter="CSV (*.csv *.)"
+        )
 
         if file_name_path:
             self.mgis.up_rep_project(file_name_path)
@@ -739,8 +710,8 @@ class GraphProfilResultDialog(QWidget):
                 cur_tw = wdget
             range_r = range(0, cur_tw.rowCount())
             range_c = range(0, cur_tw.columnCount())
-            clipboard = tw_to_txt(cur_tw, range_r, range_c, ';')
-            file = open(file_name_path, 'w')
+            clipboard = tw_to_txt(cur_tw, range_r, range_c, ";")
+            file = open(file_name_path, "w")
             file.write(clipboard)
             file.close()
 
@@ -752,19 +723,17 @@ class CopySelectedCellsAction(QAction):
                      a QTableWidget. A {0} was given."""
             raise ValueError(chaine.format(type(cur_tw)))
 
-        super(CopySelectedCellsAction, self).__init__('Copy', cur_tw)
-        self.setShortcut('Ctrl+C')
+        super(CopySelectedCellsAction, self).__init__("Copy", cur_tw)
+        self.setShortcut("Ctrl+C")
         self.triggered.connect(self.copy_cells_to_clipboard)
         self.cur_tw = cur_tw
 
     def copy_cells_to_clipboard(self):
         if len(self.cur_tw.selectionModel().selectedIndexes()) > 0:
-            lst_r = [idx.row() for idx in
-                     self.cur_tw.selectionModel().selectedIndexes()]
-            lst_c = [idx.column() for idx in
-                     self.cur_tw.selectionModel().selectedIndexes()]
+            lst_r = [idx.row() for idx in self.cur_tw.selectionModel().selectedIndexes()]
+            lst_c = [idx.column() for idx in self.cur_tw.selectionModel().selectedIndexes()]
             range_r = range(min(lst_r), max(lst_r) + 1)
             range_c = range(min(lst_c), max(lst_c) + 1)
-            clipboard = tw_to_txt(self.cur_tw, range_r, range_c, '\t')
+            clipboard = tw_to_txt(self.cur_tw, range_r, range_c, "\t")
             sys_clip = QApplication.clipboard()
             sys_clip.setText(clipboard)

@@ -40,9 +40,8 @@ class ClassMascStruct:
         order = "ORDER BY id_var, id_order "
         sql = "SELECT {4} FROM {0}.{1} {2} {3};"
         tabval = self.mdb.run_query(
-            sql.format(self.mdb.SCHEMA, "struct_laws", where, order,
-                       'id_var , value'),
-            fetch=True)
+            sql.format(self.mdb.SCHEMA, "struct_laws", where, order, "id_var , value"), fetch=True
+        )
         if not tabval:
             return liste_f
         tabval = np.array(tabval)
@@ -69,16 +68,15 @@ class ClassMascStruct:
 
         if not list_final:
             return
-        with open(os.path.join(dossier, nom + '.loi'), 'w') as fich:
-            fich.write('# ' + nom + '\n')
+        with open(os.path.join(dossier, nom + ".loi"), "w") as fich:
+            fich.write("# " + nom + "\n")
             if typel == 6:
-                fich.write('# Debit Cote_Aval Cote_Amont\n')
-                chaine = ' {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n'
+                fich.write("# Debit Cote_Aval Cote_Amont\n")
+                chaine = " {flowrate:.3f} {z_downstream:.3f} {z_upstream:.3f}\n"
                 list_final = list(self.sort_law(list_final))
 
                 for val in list_final:
-                    dico = {'flowrate': val[0], 'z_downstream': val[1],
-                            'z_upstream': val[2]}
+                    dico = {"flowrate": val[0], "z_downstream": val[1], "z_upstream": val[2]}
                     fich.write(chaine.format(**dico))
 
     def sort_law(self, list_final):
@@ -89,8 +87,7 @@ class ClassMascStruct:
         """
         info = np.array(list_final)
         # trie de la colonne 0 à 2
-        info = info[
-            info[:, 2].argsort()]  # First sort doesn't need to be stable.
-        info = info[info[:, 1].argsort(kind='mergesort')]
-        info = info[info[:, 0].argsort(kind='mergesort')]
+        info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
+        info = info[info[:, 1].argsort(kind="mergesort")]
+        info = info[info[:, 0].argsort(kind="mergesort")]
         return info

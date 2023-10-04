@@ -32,7 +32,7 @@ class ClassLaws:
     def __init__(self, mgis):
         self.clpoly = ClassPolygone()
         self.init_var = ClassPostPreFG(mgis)
-        self.msg = ''
+        self.msg = ""
         self.grav = 9.81
 
         self.dico_abc = {}
@@ -52,8 +52,8 @@ class ClassLaws:
         self.param_elem = {}
         self.list_poly_pil = []
         self.list_q = []
-        self.type_kb = ''
-        self.abac_dks = ''
+        self.type_kb = ""
+        self.abac_dks = ""
         self.list_ph = []
         self.list_e = []
         self.coef_cor_biais = 0
@@ -72,49 +72,60 @@ class ClassLaws:
             self.add_info(msg)
             return
 
-        list_recup = ['FIRSTWD', 'NBTRAVE',
-                      'ZTOPTAB', 'COEFDS', 'COEFDO',
-                      # numeric
-                      'MAXH', 'MINH', 'PASH', 'PASQ']
+        list_recup = [
+            "FIRSTWD",
+            "NBTRAVE",
+            "ZTOPTAB",
+            "COEFDS",
+            "COEFDO",
+            # numeric
+            "MAXH",
+            "MINH",
+            "PASH",
+            "PASQ",
+        ]
         self.param_g = self.init_var.get_param_g(list_recup, id_config)
         list_key = list(self.param_g.keys())
-        if 'COEFDO' not in list_key:
-            self.param_g['COEFDO'] = 1
-        if 'COEFDS' not in list_key:
-            self.param_g['COEFDS'] = 0.385
+        if "COEFDO" not in list_key:
+            self.param_g["COEFDO"] = 1
+        if "COEFDS" not in list_key:
+            self.param_g["COEFDS"] = 0.385
 
-        self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
+        self.param_g["NBPIL"] = self.param_g["NBTRAVE"] - 1
         self.poly_p = self.clpoly.poly_profil(profil)
 
-        poly_tmp = self.clpoly.coup_poly_h(self.poly_p, self.param_g['ZTOPTAB'])
+        poly_tmp = self.clpoly.coup_poly_h(self.poly_p, self.param_g["ZTOPTAB"])
         (minx, miny, maxx, maxy) = poly_tmp.bounds
-        self.param_g['TOTALW'] = maxx - minx
+        self.param_g["TOTALW"] = maxx - minx
 
         (minx, miny, maxx, maxy) = self.poly_p.bounds
         self.minz = miny
         self.list_zav = list(
-            np.arange(self.minz + self.param_g['MINH'],
-                      self.param_g['MAXH'] + self.minz, self.param_g['PASH']))
-        self.list_zav.append(self.param_g['MAXH'] + self.minz)
+            np.arange(
+                self.minz + self.param_g["MINH"],
+                self.param_g["MAXH"] + self.minz,
+                self.param_g["PASH"],
+            )
+        )
+        self.list_zav.append(self.param_g["MAXH"] + self.minz)
 
         self.list_zam = np.array(self.list_zav)
 
     def init_elem(self, id_config, method):
-        """ get polygon of travers"""
+        """get polygon of travers"""
         self.list_poly_trav = self.init_var.select_poly_elem(id_config, 0)
 
-        if 'Brad' not in method and self.mobil_struct:
+        if "Brad" not in method and self.mobil_struct:
             self.update_poly_mobil_struct()
         # MDU change vanne self.list_poly_trav
-        self.param_elem = {'ZMAXELEM': [], 'LARGELEM': [], 'SURFELEM': [],
-                           'ZMINELEM': []}
+        self.param_elem = {"ZMAXELEM": [], "LARGELEM": [], "SURFELEM": [], "ZMINELEM": []}
 
         for poly in self.list_poly_trav:
             (minx, miny, maxx, maxy) = poly.bounds
-            self.param_elem['ZMAXELEM'].append(maxy)
-            self.param_elem['LARGELEM'].append(maxx - minx)
-            self.param_elem['SURFELEM'].append(poly.area)
-            self.param_elem['ZMINELEM'].append(miny)
+            self.param_elem["ZMAXELEM"].append(maxy)
+            self.param_elem["LARGELEM"].append(maxx - minx)
+            self.param_elem["SURFELEM"].append(poly.area)
+            self.param_elem["ZMINELEM"].append(miny)
 
     def check_listinter(self, dico_abc, name_abc, varx, vary):
         """
@@ -130,10 +141,8 @@ class ClassLaws:
         else:
             list_inter_x = []
             list_inter_y = []
-            for idx, orderx in enumerate(
-                    dico_abc[name_abc]['order_{}'.format(varx)]):
-                for jdx, ordery in enumerate(
-                        dico_abc[name_abc]['order_{}'.format(vary)]):
+            for idx, orderx in enumerate(dico_abc[name_abc]["order_{}".format(varx)]):
+                for jdx, ordery in enumerate(dico_abc[name_abc]["order_{}".format(vary)]):
                     if orderx == ordery:
                         list_inter_x.append(dico_abc[name_abc][varx][idx])
                         list_inter_y.append(dico_abc[name_abc][vary][jdx])
@@ -147,21 +156,21 @@ class ClassLaws:
         :return:
         """
         cond = True
-        msg = 'The following coeficients leave application domain :\n'
+        msg = "The following coeficients leave application domain :\n"
         if coefm < 0.45:
-            msg += '\t - Kp coeficient\n'
+            msg += "\t - Kp coeficient\n"
             cond = False
         if coefm < 0.3:
-            msg += '\t - Kb coeficient\n'
+            msg += "\t - Kb coeficient\n"
             cond = False
         if coefm < 0.2 or coefm > 1:
-            msg += '\t - Ke coeficient\n'
+            msg += "\t - Ke coeficient\n"
             cond = False
         if coefm < 0.3 or coefm > 1:
-            msg += '\t - Ks coeficient\n'
+            msg += "\t - Ks coeficient\n"
             cond = False
         if m.isnan(coefm):
-            msg = '\t m coeficient is NAN\n'
+            msg = "\t m coeficient is NAN\n"
             cond = False
         if not cond and verb:
             self.add_info("m coeficient :")
@@ -178,7 +187,7 @@ class ClassLaws:
         :param verb: verbose yes or no
         :return:
         """
-        msg = 'The j coeficients > {} for {} span form with q = {} and h = {}.\n'
+        msg = "The j coeficients > {} for {} span form with q = {} and h = {}.\n"
         cond = True
         if form == 1 and j > 0.057:
             if [q, h] not in self.qh_j_no_hy:
@@ -226,60 +235,67 @@ class ClassLaws:
         :param id_config:  index of hydraulic structure
         :return:
         """
-        list_recup = ['BIAIOUV',
-                      'FORMCUL', 'ORIENTM',
-                      'PENTTAL', 'EPAITAB', 'BIAICUL',
-                      # pile de pont
-                      'LARGPIL', 'LONGPIL', 'FORMPIL', 'BIAIPIL',
-                      # numeric
-                      'MAXQ', 'MINQ']
+        list_recup = [
+            "BIAIOUV",
+            "FORMCUL",
+            "ORIENTM",
+            "PENTTAL",
+            "EPAITAB",
+            "BIAICUL",
+            # pile de pont
+            "LARGPIL",
+            "LONGPIL",
+            "FORMPIL",
+            "BIAIPIL",
+            # numeric
+            "MAXQ",
+            "MINQ",
+        ]
         param_g_temp = self.init_var.get_param_g(list_recup, id_config)
         self.param_g.update(param_g_temp)
         self.dico_name_abac = {
-            'Bradley 78': {'abac': ['bradley', 'bradley78']},
-            'Bradley 72': {'abac': ['bradley', 'bradley72']}
+            "Bradley 78": {"abac": ["bradley", "bradley78"]},
+            "Bradley 72": {"abac": ["bradley", "bradley72"]},
         }
-        self.dico_abc = self.init_var.get_abac(
-            self.dico_name_abac[method]['abac'])
+        self.dico_abc = self.init_var.get_abac(self.dico_name_abac[method]["abac"])
 
-        self.param_g['BIAIOUVRAD'] = self.param_g[
-                                         'BIAIOUV'] / 180. * m.pi  # rad
+        self.param_g["BIAIOUVRAD"] = self.param_g["BIAIOUV"] / 180.0 * m.pi  # rad
         # only meth
         self.list_poly_pil = self.init_var.select_poly_elem(id_config, 1)
 
-        self.list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'],
-                                     self.param_g['PASQ']))
-        self.list_q.append(self.param_g['MAXQ'])
+        self.list_q = list(
+            np.arange(self.param_g["MINQ"], self.param_g["MAXQ"], self.param_g["PASQ"])
+        )
+        self.list_q.append(self.param_g["MAXQ"])
 
-        self.param_g['TOTALOUV'] = 0
+        self.param_g["TOTALOUV"] = 0
         for poly in self.list_poly_trav:
             (minx, miny, maxx, maxy) = poly.bounds
-            self.param_g['TOTALOUV'] += (maxx - minx)
+            self.param_g["TOTALOUV"] += maxx - minx
 
         self.type_kb = self.def_type_kb(method)
 
-        if self.param_g['BIAICUL'] == '0':
+        if self.param_g["BIAICUL"] == "0":
             self.abac_dks = "dKs_casA_abac"
         else:
             self.abac_dks = "dKs_casB_abac"
 
         self.list_ph = []
         for key in self.dico_abc[self.abac_dks].keys():
-            if key != 'M' and key != 'phi>45' and 'order_' not in key:
-                self.list_ph.append((key, float(key.split('=')[1])))
+            if key != "M" and key != "phi>45" and "order_" not in key:
+                self.list_ph.append((key, float(key.split("=")[1])))
         self.list_ph = sorted(self.list_ph)
 
         self.list_e = []
-        for key in self.dico_abc['dKe_abac'].keys():
-            if key != 'M' and 'order_' not in key:
-                self.list_e.append((key, float(key.split('=')[1])))
+        for key in self.dico_abc["dKe_abac"].keys():
+            if key != "M" and "order_" not in key:
+                self.list_e.append((key, float(key.split("=")[1])))
         self.list_e = sorted(self.list_e)
 
-        self.coef_cor_biais = (self.param_g['LONGPIL'] * m.sin(
-            self.param_g['BIAIOUVRAD']) +
-                               self.param_g['LARGPIL'] * m.cos(
-                    self.param_g['BIAIOUVRAD'])) / self.param_g[
-                                  'LARGPIL']
+        self.coef_cor_biais = (
+            self.param_g["LONGPIL"] * m.sin(self.param_g["BIAIOUVRAD"])
+            + self.param_g["LARGPIL"] * m.cos(self.param_g["BIAIOUVRAD"])
+        ) / self.param_g["LARGPIL"]
 
     def meth_brad(self, zav, q, coef_cor_biais, type_kb, list_ph, list_e):
         """
@@ -304,22 +320,24 @@ class ClassLaws:
         umoy = q / area_wet
         for poly_pil in self.list_poly_pil:
             poly_pil = self.clpoly.coup_poly_h(poly_pil, zav)
-            if self.param_g['BIAIPIL'] != 0:
+            if self.param_g["BIAIPIL"] != 0:
                 area_pil_proj += poly_pil.area * coef_cor_biais
             area_pil += poly_pil.area
         if area_pil_proj == 0:
             area_pil_proj = area_pil
         # print("area_pil_proj",area_pil_proj)
         # print("area_pil",area_pil)
-        left_bank = self.param_g['FIRSTWD'] + self.param_g['TOTALOUV'] + \
-                    self.param_g['LARGPIL'] * len(self.list_poly_pil)
-        ssoh = self.clpoly.coup_poly_v(poly_wet,
-                                       [self.param_g['FIRSTWD'], left_bank],
-                                       typ='LR').area
+        left_bank = (
+            self.param_g["FIRSTWD"]
+            + self.param_g["TOTALOUV"]
+            + self.param_g["LARGPIL"] * len(self.list_poly_pil)
+        )
+        ssoh = self.clpoly.coup_poly_v(
+            poly_wet, [self.param_g["FIRSTWD"], left_bank], typ="LR"
+        ).area
         q1 = ssoh * umoy
-        q2 = self.clpoly.coup_poly_v(poly_wet, self.param_g['FIRSTWD'],
-                                     typ='R').area * umoy
-        q3 = self.clpoly.coup_poly_v(poly_wet, left_bank, typ='L').area * umoy
+        q2 = self.clpoly.coup_poly_v(poly_wet, self.param_g["FIRSTWD"], typ="R").area * umoy
+        q3 = self.clpoly.coup_poly_v(poly_wet, left_bank, typ="L").area * umoy
         qtot = q1 + q2 + q3
         alpha1 = 1
         alpha2 = 1
@@ -346,28 +364,24 @@ class ClassLaws:
         va = q / s1
         # print('Va', va)
         # *************** kb
-        list_inter_x, list_inter_y = self.check_listinter(self.dico_abc,
-                                                          "kb_abac", 'M',
-                                                          type_kb)
+        list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, "kb_abac", "M", type_kb)
         kb = np.interp(coefm, list_inter_x, list_inter_y)
         # print('kb',kb)
 
         # *************** Dkp
         # print(area_pil_proj,ssoh,area_pil)
         j = area_pil_proj / s1
-        j = self.check_j(j, int(self.param_g['FORMPIL']), q, zav)
+        j = self.check_j(j, int(self.param_g["FORMPIL"]), q, zav)
 
         # print('j',j)
-        list_inter_x, list_inter_y = self.check_listinter(self.dico_abc,
-                                                          'DKp_abac', 'J',
-                                                          str(int(self.param_g[
-                                                                      'FORMPIL'])))
+        list_inter_x, list_inter_y = self.check_listinter(
+            self.dico_abc, "DKp_abac", "J", str(int(self.param_g["FORMPIL"]))
+        )
         dkp = np.interp(j, list_inter_x, list_inter_y)
         # print('Dkp', dkp)
-        list_inter_x, list_inter_y = self.check_listinter(self.dico_abc,
-                                                          's_abac', 'M',
-                                                          str(int(self.param_g[
-                                                                      'FORMPIL'])))
+        list_inter_x, list_inter_y = self.check_listinter(
+            self.dico_abc, "s_abac", "M", str(int(self.param_g["FORMPIL"]))
+        )
         coefs = np.interp(coefm, list_inter_x, list_inter_y)
         # print('s', coefs)
         dkp = dkp * coefs
@@ -382,9 +396,7 @@ class ClassLaws:
         list_m_interp = []
         list_e_interp = []
         for ee in list_e:
-            list_inter_x, list_inter_y = self.check_listinter(self.dico_abc,
-                                                              'dKe_abac', 'M',
-                                                              ee[0])
+            list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, "dKe_abac", "M", ee[0])
             inter_tmp = np.interp(coefm, list_inter_x, list_inter_y)
             list_m_interp.append(inter_tmp)
             list_e_interp.append(ee[1])
@@ -392,26 +404,25 @@ class ClassLaws:
         dke = np.interp(e_calc, list_e_interp, list_m_interp)
         # print('dke', dke)
 
-        if self.param_g['BIAICUL'] == 0:
+        if self.param_g["BIAICUL"] == 0:
             dks = 0
         else:
-            if self.param_g['BIAIOUV'] > 45:
-                list_inter_x, list_inter_y = self.check_listinter(self.dico_abc,
-                                                                  self.abac_dks,
-                                                                  'M', 'phi>45')
+            if self.param_g["BIAIOUV"] > 45:
+                list_inter_x, list_inter_y = self.check_listinter(
+                    self.dico_abc, self.abac_dks, "M", "phi>45"
+                )
                 dksx = np.interp(coefm, list_inter_x, list_inter_y)
             else:
-
                 list_m_interp = []
                 list_ph_interp = []
                 for ph in list_ph:
                     list_inter_x, list_inter_y = self.check_listinter(
-                        self.dico_abc, self.abac_dks, 'M', ph[0])
+                        self.dico_abc, self.abac_dks, "M", ph[0]
+                    )
                     inter_tmp = np.interp(coefm, list_inter_x, list_inter_y)
                     list_m_interp.append(inter_tmp)
                     list_ph_interp.append(ph[1])
-                dksx = np.interp(self.param_g['BIAIOUV'], list_ph_interp,
-                                 list_m_interp)
+                dksx = np.interp(self.param_g["BIAIOUV"], list_ph_interp, list_m_interp)
 
             if dksx > 0:
                 dks = dksx
@@ -419,14 +430,14 @@ class ClassLaws:
                 dks = 0
         # print("dks",dks)
 
-        term1 = (kb + dkp + dke + dks) * va ** 2 / (2. * self.grav) * alpha2
+        term1 = (kb + dkp + dke + dks) * va**2 / (2.0 * self.grav) * alpha2
         # print("term1 Remout",term1)
         hmon = zav + term1
         poly_wet = self.clpoly.coup_poly_h(self.poly_p, hmon)
         area_amont = poly_wet.area
-        term2 = alpha1 * (
-                (s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (
-                        2. * self.grav)
+        term2 = (
+            alpha1 * ((s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va**2 / (2.0 * self.grav)
+        )
         # print("term2 Remout", term2)
         remout = term1 + term2
         # print("Remous Total", remout)
@@ -446,7 +457,7 @@ class ClassLaws:
 
         return list(sortie[idx])
 
-    def bradley(self, id_config, method='Bradley 78', ui=None):
+    def bradley(self, id_config, method="Bradley 78", ui=None):
         """
         Bradley method for structure
         :param id_config:  index of hydraulic structure
@@ -463,7 +474,7 @@ class ClassLaws:
         val_pg = 75 / len(self.list_zav)
 
         # self.list_zav=[9.75,6.25]
-        ztransi = min(self.param_elem['ZMAXELEM'])
+        ztransi = min(self.param_elem["ZMAXELEM"])
 
         for zav in self.list_zav:
             list_final = self.calc_law_brad(list_final, zav, ztransi)
@@ -490,8 +501,9 @@ class ClassLaws:
         list_brad = []
         brad_lim = None
         for q in self.list_q:
-            value = self.meth_brad(zav, q, self.coef_cor_biais,
-                                   self.type_kb, self.list_ph, self.list_e)
+            value = self.meth_brad(
+                zav, q, self.coef_cor_biais, self.type_kb, self.list_ph, self.list_e
+            )
             # [q, zav, zav + remout]
             if value is None:
                 continue
@@ -505,7 +517,7 @@ class ClassLaws:
         list_ori = []
         if len(list_brad) > 0:
             qmax = max(np.array(list_brad)[:, 0])
-            if qmax <= self.param_g['MAXQ']:
+            if qmax <= self.param_g["MAXQ"]:
                 return list_final + list_brad
             # interpol ztrans
             list_ori.append(list_brad[-1])
@@ -528,8 +540,8 @@ class ClassLaws:
 
         idx = np.where(self.list_zam > za)[0]
         if len(idx) > 0:
-            zcret = self.param_g['ZTOPTAB']
-            for zam in self.list_zam[idx[0]:]:
+            zcret = self.param_g["ZTOPTAB"]
+            for zam in self.list_zam[idx[0] :]:
                 if zav != zam:
                     q_seuil = 0
                     q_ori = 0
@@ -541,17 +553,21 @@ class ClassLaws:
                         else:
                             larg = 0
 
-                        q_ori += self.meth_orif(zam, zav,
-                                                self.param_elem['ZMINELEM'][i],
-                                                self.param_elem['ZMAXELEM'][i],
-                                                larg, self.param_g['COEFDS'],
-                                                self.param_g['COEFDO'],
-                                                self.param_elem['SURFELEM'][i])
+                        q_ori += self.meth_orif(
+                            zam,
+                            zav,
+                            self.param_elem["ZMINELEM"][i],
+                            self.param_elem["ZMAXELEM"][i],
+                            larg,
+                            self.param_g["COEFDS"],
+                            self.param_g["COEFDO"],
+                            self.param_elem["SURFELEM"][i],
+                        )
 
                     if zam >= zcret:
-                        q_seuil = self.meth_seuil(zam, zav, zcret,
-                                                  self.param_g['COEFDS'],
-                                                  self.param_g['TOTALW'])
+                        q_seuil = self.meth_seuil(
+                            zam, zav, zcret, self.param_g["COEFDS"], self.param_g["TOTALW"]
+                        )
 
                     if q_ori == 0 and q_seuil == 0:
                         value = None
@@ -560,7 +576,7 @@ class ClassLaws:
                     if value is None:
                         continue
                     else:
-                        if value[0] > self.param_g['MAXQ']:
+                        if value[0] > self.param_g["MAXQ"]:
                             list_ori.append(value)
                             break
                         list_ori.append(value)
@@ -568,14 +584,13 @@ class ClassLaws:
         if len(list_ori) > 1:
             idx = np.where(np.array(self.list_q) > list_ori[0][0])[0]
             if len(idx) > 0:
-                list_q_tmp = self.list_q[idx[0]:]
+                list_q_tmp = self.list_q[idx[0] :]
             else:
                 list_q_tmp = self.list_q
             q_tmp = np.array(list_ori)[:, 0]
             zam_tmp = np.array(list_ori)[:, 2]
             zam_f = np.interp(list_q_tmp, q_tmp, zam_tmp)
-            interpol_list = [[a, b, c] for a, b, c in
-                             zip(list_q_tmp, [zav] * len(zam_f), zam_f)]
+            interpol_list = [[a, b, c] for a, b, c in zip(list_q_tmp, [zav] * len(zam_f), zam_f)]
             list_ori = interpol_list
         else:
             list_ori = []
@@ -634,7 +649,6 @@ class ClassLaws:
                 idxz = np.where(info[idxq, 1] < transi[1])[0]
                 lenid = info.shape[0]
                 if len(idxz) > 0:
-
                     idxz = idxq[0] + idxz[-1]
                     if lenid > idxz + 1:
                         tab_tmp = info[idxz, :]
@@ -646,8 +660,7 @@ class ClassLaws:
                         z2 = (tab_tmp1[1] + 2 * zmoy) / 3
 
                         list_add.append([deb, z1, tab_tmp[2]])
-                        list_add.append(
-                            [deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2])
+                        list_add.append([deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2])
                         list_add.append([deb, z2, tab_tmp1[2]])
                 break
 
@@ -754,35 +767,35 @@ class ClassLaws:
         :param method: compute method
         :return:
         """
-        if method == 'Bradley 78':
-            if self.param_g['TOTALOUV'] > 60 and self.param_g['FORMCUL'] == 1:
-                type_kb = 'Others'
+        if method == "Bradley 78":
+            if self.param_g["TOTALOUV"] > 60 and self.param_g["FORMCUL"] == 1:
+                type_kb = "Others"
             else:
-                type_kb = 'type1<60m'
-                list_inter_x, list_inter_y = self.check_listinter(self.dico_abc,
-                                                                  "kb_abac",
-                                                                  'M', type_kb)
-                self.dico_abc["kb_abac"]['M'] = list_inter_x
+                type_kb = "type1<60m"
+                list_inter_x, list_inter_y = self.check_listinter(
+                    self.dico_abc, "kb_abac", "M", type_kb
+                )
+                self.dico_abc["kb_abac"]["M"] = list_inter_x
                 self.dico_abc["kb_abac"][type_kb] = list_inter_y
 
-        elif method == 'Bradley 72':
-            if self.param_g['FORMCUL'] == 1:
-                type_kb = 'type1'
-            elif self.param_g['FORMCUL'] == 2:
-                if self.param_g['ORIENTM'] == 30:
-                    type_kb = 'type2_30deg'
+        elif method == "Bradley 72":
+            if self.param_g["FORMCUL"] == 1:
+                type_kb = "type1"
+            elif self.param_g["FORMCUL"] == 2:
+                if self.param_g["ORIENTM"] == 30:
+                    type_kb = "type2_30deg"
                 else:
-                    type_kb = 'type2_45to60deg'
-            elif self.param_g['FORMCUL'] == 3:
-                if self.param_g['PENTTAL'] == 0:
-                    type_kb = 'type3_1:1'
-                elif self.param_g['PENTTAL'] == 1:
-                    type_kb = 'type3_1.5:1'
+                    type_kb = "type2_45to60deg"
+            elif self.param_g["FORMCUL"] == 3:
+                if self.param_g["PENTTAL"] == 0:
+                    type_kb = "type3_1:1"
+                elif self.param_g["PENTTAL"] == 1:
+                    type_kb = "type3_1.5:1"
                 else:
-                    type_kb = 'type3_2:1'
+                    type_kb = "type3_2:1"
             else:
                 # defaut 1
-                type_kb = 'type1'
+                type_kb = "type1"
                 # list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, "kb_abac", 'M', type_kb)
         return type_kb
 
@@ -821,7 +834,7 @@ class ClassLaws:
             else:
                 k = 0
         else:
-            if ham == 0.:
+            if ham == 0.0:
                 k = 1
             else:
                 k = m.pow(m.pow(1 - r, 1.5), 0.385)
@@ -859,12 +872,11 @@ class ClassLaws:
             # print('erreur loi orifice ham <0')
             return None
 
-        if surf < 0.:
+        if surf < 0.0:
             return 0
         qo = 0
         qs = 0
         if ham < ouv + epso:  # working threshold
-
             qs = self.meth_seuil(zam, zav, zinf, cf, larg)
 
         if ham > ouv:  # working orifice
@@ -937,8 +949,7 @@ class ClassLaws:
                 q_tmp = tmp[idx, 0]
                 zam_tmp = tmp[idx, 2]
                 zam_f = np.interp(q_new, q_tmp, zam_tmp)
-                interpol_list = [[a, b, c] for a, b, c in
-                                 zip(q_new, [zav] * len(zam_f), zam_f)]
+                interpol_list = [[a, b, c] for a, b, c in zip(q_new, [zav] * len(zam_f), zam_f)]
                 list_ori = interpol_list
             else:
                 list_ori = []
@@ -954,7 +965,7 @@ class ClassLaws:
         :param zav: z dowstream
         :return:
         """
-        prec = 1E-4  # accurency of dichotomie method
+        prec = 1e-4  # accurency of dichotomie method
         debut = min_elem
         fin = self.list_zav[-1]
         ecart = fin - debut
@@ -970,8 +981,7 @@ class ClassLaws:
                     larg = poly_wet.area / min(maxy - miny, zam_tmp - miny)
                 else:
                     larg = 0
-                qnew += self.meth_seuil(zam_tmp, zav, z_elem,
-                                        self.param_g['COEFDS'], larg)
+                qnew += self.meth_seuil(zam_tmp, zav, z_elem, self.param_g["COEFDS"], larg)
             if qnew > q:
                 fin = zam_tmp
             else:
@@ -1033,7 +1043,7 @@ class ClassLaws:
         list_ori = []
         if len(list_borda) > 0:
             qmax = max(np.array(list_borda)[:, 0])
-            if qmax >= self.param_g['MAXQ'] or cond_zmin:
+            if qmax >= self.param_g["MAXQ"] or cond_zmin:
                 return list_final + list_borda
             # interpol ztrans
             list_ori.append(list_borda[-1])
@@ -1055,16 +1065,14 @@ class ClassLaws:
 
         idx = np.where(self.list_zam > za)[0]
         if len(idx) > 0:
-
-            for zam in self.list_zam[idx[0]:]:
+            for zam in self.list_zam[idx[0] :]:
                 if zav != zam:
                     q_seuil = 0
-                    q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam,
-                                              zav)
+                    q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam, zav)
                     if zam >= zcret:
-                        q_seuil = self.meth_seuil(zam, zav, zcret,
-                                                  self.param_g['COEFDS'],
-                                                  self.param_g['TOTALW'])
+                        q_seuil = self.meth_seuil(
+                            zam, zav, zcret, self.param_g["COEFDS"], self.param_g["TOTALW"]
+                        )
                     if q_ori == 0 and q_seuil == 0:
                         value = None
                     else:
@@ -1072,7 +1080,7 @@ class ClassLaws:
                     if value is None:
                         continue
                     else:
-                        if value[0] > self.param_g['MAXQ']:
+                        if value[0] > self.param_g["MAXQ"]:
                             list_ori.append(value)
                             break
                         list_ori.append(value)
@@ -1080,20 +1088,19 @@ class ClassLaws:
         if len(list_ori) > 1:
             idx = np.where(np.array(self.list_q) > list_ori[0][0])[0]
             if len(idx) > 0:
-                list_q_tmp = self.list_q[idx[0]:]
+                list_q_tmp = self.list_q[idx[0] :]
             else:
                 list_q_tmp = self.list_q
             q_tmp = np.array(list_ori)[:, 0]
             zam_tmp = np.array(list_ori)[:, 2]
             zam_f = np.interp(list_q_tmp, q_tmp, zam_tmp)
-            interpol_list = [[a, b, c] for a, b, c in
-                             zip(list_q_tmp, [zav] * len(zam_f), zam_f)]
+            interpol_list = [[a, b, c] for a, b, c in zip(list_q_tmp, [zav] * len(zam_f), zam_f)]
             list_ori = interpol_list
         else:
             list_ori = []
         return list_final + list_borda + list_ori
 
-    def borda(self, id_config, method='Borda', ui=None):
+    def borda(self, id_config, method="Borda", ui=None):
         """
         Borda method for structure
         :param id_config:  index of hydraulic structure
@@ -1104,28 +1111,28 @@ class ClassLaws:
         self.init_method(id_config)
         self.init_elem(id_config, method)
 
-        list_recup = ['MAXQ', 'MINQ', 'COEFBOR']
+        list_recup = ["MAXQ", "MINQ", "COEFBOR"]
         param_g_temp = self.init_var.get_param_g(list_recup, id_config)
         self.param_g.update(param_g_temp)
-        self.list_q = list(np.arange(self.param_g['MINQ'], self.param_g['MAXQ'],
-                                     self.param_g['PASQ']))
-        self.list_q.append(self.param_g['MAXQ'])
+        self.list_q = list(
+            np.arange(self.param_g["MINQ"], self.param_g["MAXQ"], self.param_g["PASQ"])
+        )
+        self.list_q.append(self.param_g["MAXQ"])
         z_transi_fr = []
         list_final = []
-        zcret = self.param_g['ZTOPTAB']
+        zcret = self.param_g["ZTOPTAB"]
         val_pg = 75 / len(self.list_zav)
-        area_tot = 0.
+        area_tot = 0.0
         for poly_trav in self.list_poly_trav:
             area_tot += poly_trav.area
 
-        min_elem = min(self.param_elem['ZMINELEM'])
+        min_elem = min(self.param_elem["ZMINELEM"])
         self.dico_tr = {}
         for q in self.list_q:
             self.dico_tr[q] = [True, 9999]
 
         for zav in self.list_zav:
-            list_final = self.calc_law_borda(list_final, zav, zcret, zcret,
-                                             min_elem)
+            list_final = self.calc_law_borda(list_final, zav, zcret, zcret, min_elem)
 
             if list_final is None:
                 self.add_info("Problem : creation law")
@@ -1148,7 +1155,7 @@ class ClassLaws:
 
         return list_final
 
-    def orifice(self, id_config, method='Loi d\'orifice', ui=None):
+    def orifice(self, id_config, method="Loi d'orifice", ui=None):
         """
         Orifice method for structure
         :param id_config:  index of hydraulic structure
@@ -1162,12 +1169,11 @@ class ClassLaws:
         list_final = []
 
         qmax = self.deb_min  # self.param_g['MINQ']
-        zcret = self.param_g['ZTOPTAB']
+        zcret = self.param_g["ZTOPTAB"]
         val_pg = 90 / len(self.list_zav)
         first_trans = True
         ztransi = []
         for zav in self.list_zav:
-
             idx = np.where(self.list_zam > zav)[0]
             if len(idx) > 0:
                 # debut debit mini attention traitemen peut être différent
@@ -1175,13 +1181,13 @@ class ClassLaws:
                     value = [self.deb_min, zav, self.list_zam[idx[0] - 1]]
                     list_final.append(value)
 
-                for zam in self.list_zam[idx[0]:]:
+                for zam in self.list_zam[idx[0] :]:
                     q_seuil = 0
                     q_ori = 0
 
                     for i, poly in enumerate(self.list_poly_trav):
                         if first_trans:
-                            ztransi.append(self.param_elem['ZMAXELEM'][i])
+                            ztransi.append(self.param_elem["ZMAXELEM"][i])
                         poly_wet = self.clpoly.coup_poly_h(poly, zam)
                         if not poly_wet.is_empty:
                             (minx, miny, maxx, maxy) = poly.bounds
@@ -1189,20 +1195,24 @@ class ClassLaws:
                         else:
                             larg = 0
 
-                        val = self.meth_orif(zam, zav,
-                                             self.param_elem['ZMINELEM'][i],
-                                             self.param_elem['ZMAXELEM'][i],
-                                             larg, self.param_g['COEFDS'],
-                                             self.param_g['COEFDO'],
-                                             self.param_elem['SURFELEM'][i])
+                        val = self.meth_orif(
+                            zam,
+                            zav,
+                            self.param_elem["ZMINELEM"][i],
+                            self.param_elem["ZMAXELEM"][i],
+                            larg,
+                            self.param_g["COEFDS"],
+                            self.param_g["COEFDO"],
+                            self.param_elem["SURFELEM"][i],
+                        )
                         if val is not None:
                             q_ori += val
 
                     first_trans = False
                     if zam >= zcret:
-                        q_seuil = self.meth_seuil(zam, zav, zcret,
-                                                  self.param_g['COEFDS'],
-                                                  self.param_g['TOTALW'])
+                        q_seuil = self.meth_seuil(
+                            zam, zav, zcret, self.param_g["COEFDS"], self.param_g["TOTALW"]
+                        )
                     if q_ori is None:
                         value = None
                     else:
@@ -1218,10 +1228,9 @@ class ClassLaws:
             if ui is not None:
                 ui.progress_bar(val_pg)
         # treament of law for Mascaret model
-        list_final, self.list_q = self.interpol_list_final_for_new_q(list_final,
-                                                                     pasq=
-                                                                     self.param_g[
-                                                                         'PASQ'])
+        list_final, self.list_q = self.interpol_list_final_for_new_q(
+            list_final, pasq=self.param_g["PASQ"]
+        )
         list_final = self.transition_law(list_final, ztransi)
         list_final = self.complete_law(list_final)
         # if self.debug:
@@ -1237,9 +1246,8 @@ class ClassLaws:
         :param zav: z dowstream
         :return: q: flow rate
         """
-        k = (sav / sc - 1) ** 2 + 1 / 9.
-        q = m.sqrt((zam - zav) * 2 * self.grav / k) * sav * self.param_g[
-            'COEFBOR']
+        k = (sav / sc - 1) ** 2 + 1 / 9.0
+        q = m.sqrt((zam - zav) * 2 * self.grav / k) * sav * self.param_g["COEFBOR"]
         return q
 
     def meth_borda_z(self, sav, sc, q, zav):
@@ -1251,9 +1259,8 @@ class ClassLaws:
         :param zav: z dowstream
         :return: zam: z upstream
         """
-        k = (sav / sc - 1) ** 2 + 1 / 9.
-        zam = (q / (sav * self.param_g['COEFBOR'])) ** 2 * k / (
-                2 * self.grav) + zav
+        k = (sav / sc - 1) ** 2 + 1 / 9.0
+        zam = (q / (sav * self.param_g["COEFBOR"])) ** 2 * k / (2 * self.grav) + zav
         return zam
 
     def area_wet_fct(self, poly, zw):
@@ -1269,20 +1276,19 @@ class ClassLaws:
         return poly_wet.area
 
     def update_poly_mobil_struct(self):
-        """ modification  of polygone when ther is vanne"""
+        """modification  of polygone when ther is vanne"""
         list_poly_trav_tmp = []
         for poly in self.list_poly_trav:
             # print('poly decoup',self.new_z,self.param_fg["DIRFG"])
-            poly_tmp = self.clpoly.coup_poly_h(poly, self.new_z,
-                                               typ=self.param_fg["DIRFG"])
+            poly_tmp = self.clpoly.coup_poly_h(poly, self.new_z, typ=self.param_fg["DIRFG"])
 
             if not poly_tmp.is_empty:
                 # print(poly_tmp.bounds)
                 list_poly_trav_tmp.append(poly_tmp)
             else:
-                self.param_g['NBTRAVE'] -= 1
-                self.param_g['NBPIL'] = self.param_g['NBTRAVE'] - 1
-        if self.param_g['NBTRAVE'] <= 0:
+                self.param_g["NBTRAVE"] -= 1
+                self.param_g["NBPIL"] = self.param_g["NBTRAVE"] - 1
+        if self.param_g["NBTRAVE"] <= 0:
             self.add_info("WARNING, there are not hole in structure.")
 
         self.list_poly_trav = list_poly_trav_tmp
@@ -1300,7 +1306,7 @@ class ClassLaws:
         self.mobil_struct = mobil_struct
 
     def add_info(self, txt):
-        self.msg += txt + '\n'
+        self.msg += txt + "\n"
 
     def write_csv(self, list_final, masplug_path, name=r"mascaret\law_tmp.csv"):
         """
@@ -1311,10 +1317,10 @@ class ClassLaws:
         :return:
         """
 
-        f = open(os.path.join(masplug_path, name), 'w')
-        f.write('q ;zav ;zam \n')
+        f = open(os.path.join(masplug_path, name), "w")
+        f.write("q ;zav ;zam \n")
         for val in list_final:
-            f.write('{}; {} ;{} \n'.format(val[0], val[1], val[2]))
+            f.write("{}; {} ;{} \n".format(val[0], val[1], val[2]))
         f.close()
 
     def sort_law(self, list_final):
@@ -1325,10 +1331,9 @@ class ClassLaws:
         """
         info = np.array(list_final)
         # trie de la colonne 0 à 2
-        info = info[
-            info[:, 2].argsort()]  # First sort doesn't need to be stable.
-        info = info[info[:, 1].argsort(kind='mergesort')]
-        info = info[info[:, 0].argsort(kind='mergesort')]
+        info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
+        info = info[info[:, 1].argsort(kind="mergesort")]
+        info = info[info[:, 0].argsort(kind="mergesort")]
         return info
 
     def print_msg(self):

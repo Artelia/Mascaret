@@ -19,16 +19,16 @@ email                :
  """
 
 from shapely.geometry import *
+
 # import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
 # import time
 
 
 class ClassProfInterp:
-    """
-
-    """
+    """ """
 
     def __init__(self, data, pk_int, nplan=100, plani=None, debug=False):
         """
@@ -50,34 +50,29 @@ class ClassProfInterp:
         self.prf_loc = {}
 
         self.data = data
-        self.data['interp'] = {
-            'prof': None,
-            'minor': None,
-            'major': None,
-            'pk': pk_int
-        }
+        self.data["interp"] = {"prof": None, "minor": None, "major": None, "pk": pk_int}
         self.pk_int = pk_int
-        self.pk_am = data['up']['pk']
-        self.pk_av = data['down']['pk']
+        self.pk_am = data["up"]["pk"]
+        self.pk_av = data["down"]["pk"]
 
-        self.typ_disc = 'plan'
+        self.typ_disc = "plan"
         self.dz = None
         self.nplan = nplan
         self.plani = plani
-        self.msg = ''
+        self.msg = ""
         self.err = True
         self.debug = debug
         if self.plani is not None:
-            self.typ_disc = 'autoplan'
+            self.typ_disc = "autoplan"
 
-    def merge_prof(self, key='prof', id=-1):
+    def merge_prof(self, key="prof", id=-1):
         """
         :param key : 'prof' interpolated profile, 'pr_am' upstream profile amont, 'pr_av' downstream profile
         :param id :  profil number (minor, major ,...) ,-1 global
         """
         dico = {}
         if id == -1:
-            dico = self.data['interp']
+            dico = self.data["interp"]
         else:
             dico = self.prf_loc[id]
         tmp = []
@@ -86,7 +81,7 @@ class ClassProfInterp:
                 tmp.append(pr.coords[0][0])
             else:
                 tmp.append(None)
-        df = pd.DataFrame(tmp, columns=['x'])
+        df = pd.DataFrame(tmp, columns=["x"])
         order = df.sort_values(["x"]).index.values
         outprof = []
         for i in order:
@@ -110,33 +105,35 @@ class ClassProfInterp:
         :param id_pr: id profile
         :return:
         """
-        cas_prt = {0: 'minor profile',
-                   1: 'left major profile',
-                   2: 'right major profile',
-                   3: 'left stockage zone',
-                   4: 'right stockage zone', }
+        cas_prt = {
+            0: "minor profile",
+            1: "left major profile",
+            2: "right major profile",
+            3: "left stockage zone",
+            4: "right stockage zone",
+        }
         if len(pr_am_tmp) <= 2 and len(pr_av_tmp) <= 2:
             # print("{} profile doesn't existe".format(id_pr))
             if id_pr == 0:
                 # print("Minor bed doesn't existe")
                 self.msg += "Minor bed doesn't existe\n"
                 self.err = False
-                return 'break'
+                return "break"
             else:
                 if self.debug:
                     self.msg += "{}  doesn't existe\n".format(cas_prt[id_pr])
                 if id_pr not in self.prf_loc.keys():
-                    self.prf_loc[id_pr] = {'prof': []}
-                self.prf_loc[id_pr]['prof'].append(None)
-                return 'continue'
-        self.prf_loc[id_pr] = {'prof': []}
+                    self.prf_loc[id_pr] = {"prof": []}
+                self.prf_loc[id_pr]["prof"].append(None)
+                return "continue"
+        self.prf_loc[id_pr] = {"prof": []}
         prof_min, limx = self.interpol_fct_lg(pr_am_tmp, pr_av_tmp)
 
-        self.prf_loc[id_pr]['prof'].append(prof_min)
-        self.prf_loc[id_pr]['limitx'] = limx
-        self.data['interp']['prof'] += self.prf_loc[id_pr]['prof']
+        self.prf_loc[id_pr]["prof"].append(prof_min)
+        self.prf_loc[id_pr]["limitx"] = limx
+        self.data["interp"]["prof"] += self.prf_loc[id_pr]["prof"]
 
-        return 'ok'
+        return "ok"
 
     def interpol_fct_lg(self, pr_am, pr_av):
         """
@@ -171,12 +168,8 @@ class ClassProfInterp:
         z_am_fond = pr_am[id_am_f[0], 1]
         z_av_fond = pr_av[id_av_f[0], 1]
 
-        z_f = np.interp(self.pk_int,
-                        [self.pk_am, self.pk_av],
-                        [z_am_fond, z_av_fond])
-        x_f = np.interp(self.pk_int,
-                        [self.pk_am, self.pk_av],
-                        [x_am_fond, x_av_fond])
+        z_f = np.interp(self.pk_int, [self.pk_am, self.pk_av], [z_am_fond, z_av_fond])
+        x_f = np.interp(self.pk_int, [self.pk_am, self.pk_av], [x_am_fond, x_av_fond])
         list_points.append((x_f, z_f))
         id_am_g = 0
         id_av_g = 0
@@ -192,70 +185,52 @@ class ClassProfInterp:
         z1_av = pr_av[id_av_d, 1]
         x1_av = pr_av[id_av_d, 0]
 
-        z_g = np.interp(self.pk_int,
-                        [self.pk_am, self.pk_av],
-                        [z0_am, z0_av])
-        x_g = np.interp(self.pk_int,
-                        [self.pk_am, self.pk_av],
-                        [x0_am, x0_av])
+        z_g = np.interp(self.pk_int, [self.pk_am, self.pk_av], [z0_am, z0_av])
+        x_g = np.interp(self.pk_int, [self.pk_am, self.pk_av], [x0_am, x0_av])
         list_points.append((x_g, z_g))
 
-        z_d = np.interp(self.pk_int,
-                        [self.pk_am, self.pk_av],
-                        [z1_am, z1_av])
-        x_d = np.interp(self.pk_int,
-                        [self.pk_am, self.pk_av],
-                        [x1_am, x1_av])
+        z_d = np.interp(self.pk_int, [self.pk_am, self.pk_av], [z1_am, z1_av])
+        x_d = np.interp(self.pk_int, [self.pk_am, self.pk_av], [x1_am, x1_av])
         list_points.append((x_d, z_d))
 
         # calculated characteristic point
-        if self.typ_disc == 'plan':
+        if self.typ_disc == "plan":
             pas = self.nplan
             cond_pas_z = False
-        elif self.typ_disc == 'dz':
+        elif self.typ_disc == "dz":
             pas = self.dz
             cond_pas_z = True
-        elif self.typ_disc == 'autoplan':
+        elif self.typ_disc == "autoplan":
             nplan_am = (zmax_am - zmin_am) / self.plani
             nplan_av = (zmax_av - zmin_av) / self.plani
             pas = max(nplan_am, nplan_av)
             cond_pas_z = False
         else:
             # print('Non-existent discretization type')
-            self.msg += 'Non-existent discretization type\n'
+            self.msg += "Non-existent discretization type\n"
             self.err = False
             return
-        am_g = self.discret_pr_lg(pr_am,
-                                  x_am_fond, zmin_am,
-                                  pas=pas,
-                                  id_g=0, id_d=id_am_f[0],
-                                  cond_pas_z=cond_pas_z)
-        am_d = self.discret_pr_lg(pr_am,
-                                  x_am_fond, zmin_am,
-                                  pas=pas,
-                                  id_g=id_am_f[0], id_d=-1,
-                                  cond_pas_z=cond_pas_z)
+        am_g = self.discret_pr_lg(
+            pr_am, x_am_fond, zmin_am, pas=pas, id_g=0, id_d=id_am_f[0], cond_pas_z=cond_pas_z
+        )
+        am_d = self.discret_pr_lg(
+            pr_am, x_am_fond, zmin_am, pas=pas, id_g=id_am_f[0], id_d=-1, cond_pas_z=cond_pas_z
+        )
 
-        av_g = self.discret_pr_lg(pr_av,
-                                  x_av_fond, zmin_av,
-                                  pas=pas,
-                                  id_g=0, id_d=id_av_f[0],
-                                  cond_pas_z=cond_pas_z)
-        av_d = self.discret_pr_lg(pr_av,
-                                  x_av_fond, zmin_av,
-                                  pas=pas,
-                                  id_g=id_av_f[0], id_d=-1,
-                                  cond_pas_z=cond_pas_z)
+        av_g = self.discret_pr_lg(
+            pr_av, x_av_fond, zmin_av, pas=pas, id_g=0, id_d=id_av_f[0], cond_pas_z=cond_pas_z
+        )
+        av_d = self.discret_pr_lg(
+            pr_av, x_av_fond, zmin_av, pas=pas, id_g=id_av_f[0], id_d=-1, cond_pas_z=cond_pas_z
+        )
 
         list_points_g = []
         list_points_d = []
-        if len(am_g) == 0 and len(am_d) == 0 \
-                and len(av_g) == 0 and len(av_d) == 0:
+        if len(am_g) == 0 and len(am_d) == 0 and len(av_g) == 0 and len(av_d) == 0:
             return None, None, None
             # in the case where there is no upstream or downstream profile on the portion of the bed
             # the interpolation is done with respect to the point
         if len(am_g) == 0 and len(am_d) == 0:
-
             line_tmp = LineString([(p[0], p[1]) for p in pr_am])
             am_g = []
             am_d = []
@@ -277,12 +252,8 @@ class ClassProfInterp:
             line_am = line_am.coords[:]
             line_av = line_av.coords[:]
 
-            z_tmp = np.interp(self.pk_int,
-                              [self.pk_am, self.pk_av],
-                              [line_am[0][1], line_av[0][1]])
-            x_tmp = np.interp(self.pk_int,
-                              [self.pk_am, self.pk_av],
-                              [line_am[0][0], line_av[0][0]])
+            z_tmp = np.interp(self.pk_int, [self.pk_am, self.pk_av], [line_am[0][1], line_av[0][1]])
+            x_tmp = np.interp(self.pk_int, [self.pk_am, self.pk_av], [line_am[0][0], line_av[0][0]])
             if x_tmp > x_g and z_tmp < z_g:
                 list_points_g.append((x_tmp, z_tmp))
 
@@ -291,23 +262,25 @@ class ClassProfInterp:
             line_am = line_am.coords[:]
             line_av = line_av.coords[:]
 
-            z_tmp = np.interp(self.pk_int,
-                              [self.pk_am, self.pk_av],
-                              [line_am[-1][1], line_av[-1][1]])
-            x_tmp = np.interp(self.pk_int,
-                              [self.pk_am, self.pk_av],
-                              [line_am[-1][0], line_av[-1][0]])
+            z_tmp = np.interp(
+                self.pk_int, [self.pk_am, self.pk_av], [line_am[-1][1], line_av[-1][1]]
+            )
+            x_tmp = np.interp(
+                self.pk_int, [self.pk_am, self.pk_av], [line_am[-1][0], line_av[-1][0]]
+            )
             if x_tmp < x_d and z_tmp < z_d:
                 list_points_d.append((x_tmp, z_tmp))
 
         # pos treatment
-        df_g = pd.DataFrame(list_points_g, columns=['x', 'z'])
-        df_d = pd.DataFrame(list_points_d, columns=['x', 'z'])
-        prof_final = [(x_g, z_g)] + \
-                     df_g.sort_values(["x"]).values.tolist() + \
-                     [(x_f, z_f)] + \
-                     df_d.sort_values(["x"]).values.tolist() + \
-                     [(x_d, z_d)]
+        df_g = pd.DataFrame(list_points_g, columns=["x", "z"])
+        df_d = pd.DataFrame(list_points_d, columns=["x", "z"])
+        prof_final = (
+            [(x_g, z_g)]
+            + df_g.sort_values(["x"]).values.tolist()
+            + [(x_f, z_f)]
+            + df_d.sort_values(["x"]).values.tolist()
+            + [(x_d, z_d)]
+        )
         limx = [x_g, x_d]
         prof_final = LineString(prof_final)
         if prof_final.is_empty:
@@ -315,17 +288,16 @@ class ClassProfInterp:
 
         return prof_final, limx
 
-    def discret_pr_lg(self, pr, x_fond, zmin, pas=0.1, id_g=0, id_d=-1,
-                      cond_pas_z=True):
+    def discret_pr_lg(self, pr, x_fond, zmin, pas=0.1, id_g=0, id_d=-1, cond_pas_z=True):
         """
-                vertical descritization
-               :param pr : (numpy.array) profil
-                :param x_fond : bottom x value
-                :param pas : dz in m or nb of plan
-                :param cond_pas_z : True si descritization in m or false in plan
-                :param id_g : id_am_g id point left
-                :param id_d : id_am_d id point right
-                :param zmin : bottom point of the profile
+         vertical descritization
+        :param pr : (numpy.array) profil
+         :param x_fond : bottom x value
+         :param pas : dz in m or nb of plan
+         :param cond_pas_z : True si descritization in m or false in plan
+         :param id_g : id_am_g id point left
+         :param id_d : id_am_d id point right
+         :param zmin : bottom point of the profile
 
         """
 
@@ -336,7 +308,7 @@ class ClassProfInterp:
         if id_d == -1:
             limit_pr = pr[id_g:]
         else:
-            limit_pr = pr[id_g:id_d + 1]
+            limit_pr = pr[id_g : id_d + 1]
 
         wow = []
         pzmax = pr[id_g, 1]
@@ -365,16 +337,14 @@ class ClassProfInterp:
         while z_level + pasz <= zmax:
             # line creation for cut
             z_level = z_level + pasz
-            line = [(pr[id_g, 0] - 1, z_level),
-                    (pr[id_d, 0] + 1, z_level)]
+            line = [(pr[id_g, 0] - 1, z_level), (pr[id_d, 0] + 1, z_level)]
             point_fond = Point([x_fond, z_level])
             line = LineString(line)
             geom = line.intersection(poly)
             if geom.is_empty:
-                self.msg += 'Pas d intersection : {}  {} \n'.format(line, poly)
+                self.msg += "Pas d intersection : {}  {} \n".format(line, poly)
                 # print('Pas d intersection :', line, poly)
-            elif geom.geom_type == 'MultiLineString' \
-                    or geom.geom_type == 'GeometryCollection':
+            elif geom.geom_type == "MultiLineString" or geom.geom_type == "GeometryCollection":
                 if id_d == -1:
                     id_tmp = 0
                 else:
@@ -392,12 +362,11 @@ class ClassProfInterp:
                 x, y = geom[id_tmp].xy
                 linf = [(x[0] - l_g, z_level), (x[-1] + l_d, z_level)]
                 lst_line_disc.append(LineString(linf))
-            elif geom.geom_type == 'LineString':
+            elif geom.geom_type == "LineString":
                 lst_line_disc.append(geom)
             else:
                 # print('Geometry type no treatment :', geom.geom_type)
-                self.msg += 'Geometry type no treatment : {} \n'.format(
-                    geom.geom_type)
+                self.msg += "Geometry type no treatment : {} \n".format(geom.geom_type)
         return lst_line_disc
 
     def decoup_pr(self, pr, lminor_x, lmaj_x):
@@ -433,7 +402,7 @@ class ClassProfInterp:
                 pr_m.append(point)
         if not pr_m:
             # print('No profil for the minor bed')
-            self.msg += 'No profil for the minor bed \n'
+            self.msg += "No profil for the minor bed \n"
             self.err = False
             return [], [], [], [], []
         if not pr_g:
@@ -461,15 +430,13 @@ class ClassProfInterp:
         :return:
         """
 
-        pr_am_m, pr_am_g, pr_am_d, \
-        pr_am_st_g, pr_am_st_d = self.decoup_pr(self.data['up']['prof'],
-                                                self.data['up']['minor'],
-                                                self.data['up']['major'])
+        pr_am_m, pr_am_g, pr_am_d, pr_am_st_g, pr_am_st_d = self.decoup_pr(
+            self.data["up"]["prof"], self.data["up"]["minor"], self.data["up"]["major"]
+        )
 
-        pr_av_m, pr_av_g, pr_av_d, \
-        pr_av_st_g, pr_av_st_d = self.decoup_pr(self.data['down']['prof'],
-                                                self.data['down']['minor'],
-                                                self.data['down']['major'])
+        pr_av_m, pr_av_g, pr_av_d, pr_av_st_g, pr_av_st_d = self.decoup_pr(
+            self.data["down"]["prof"], self.data["down"]["minor"], self.data["down"]["major"]
+        )
 
         np_pr_am = np.array(pr_am_m)
         np_pr_av = np.array(pr_av_m)
@@ -479,59 +446,57 @@ class ClassProfInterp:
         zmax_av = max(np_pr_av[:, 1])
         if zmax_am == zmin_am:
             # print('Upstream profile is plate')
-            self.msg += 'Upstream profile is flat\n'
-            self.msg += '   x1,z1 : ({},{}) , ' \
-                        'xn, zn : ({},{})\n'.format(np_pr_am[0, 0],
-                                                    np_pr_am[0, 1],
-                                                    np_pr_am[-1, 0],
-                                                    np_pr_am[-1, 1])
+            self.msg += "Upstream profile is flat\n"
+            self.msg += "   x1,z1 : ({},{}) , " "xn, zn : ({},{})\n".format(
+                np_pr_am[0, 0], np_pr_am[0, 1], np_pr_am[-1, 0], np_pr_am[-1, 1]
+            )
             self.err = False
             return
         if zmax_av == zmin_av:
             # print('Downstream profile is plate')
-            self.msg += 'Downstream profile is flat\n'
-            self.msg += '   x1,z1 : ({},{}) , ' \
-                        'xn, zn : ({},{})\n'.format(np_pr_av[0, 0],
-                                                    np_pr_av[0, 1],
-                                                    np_pr_av[-1, 0],
-                                                    np_pr_av[-1, 1])
+            self.msg += "Downstream profile is flat\n"
+            self.msg += "   x1,z1 : ({},{}) , " "xn, zn : ({},{})\n".format(
+                np_pr_av[0, 0], np_pr_av[0, 1], np_pr_av[-1, 0], np_pr_av[-1, 1]
+            )
             self.err = False
             return
 
-        lst_pr = [(0, pr_am_m, pr_av_m),
-                  (1, pr_am_g, pr_av_g),
-                  (2, pr_am_d, pr_av_d),
-                  (3, pr_am_st_g, pr_av_st_g),
-                  (4, pr_am_st_d, pr_av_st_d)]
-        self.data['interp']['prof'] = []
-        self.data['interp']['minor'] = [None, None]
-        self.data['interp']['major'] = [None, None]
+        lst_pr = [
+            (0, pr_am_m, pr_av_m),
+            (1, pr_am_g, pr_av_g),
+            (2, pr_am_d, pr_av_d),
+            (3, pr_am_st_g, pr_av_st_g),
+            (4, pr_am_st_d, pr_av_st_d),
+        ]
+        self.data["interp"]["prof"] = []
+        self.data["interp"]["minor"] = [None, None]
+        self.data["interp"]["major"] = [None, None]
         g_lim = None
         d_lim = None
         for id, pr_am_tmp, pr_av_tmp in lst_pr:
             # print('*************** type : {}'.format(id))
             self.calc_profil(pr_am_tmp, pr_av_tmp, id)
-            if 'limitx' in self.prf_loc[id].keys():
+            if "limitx" in self.prf_loc[id].keys():
                 if id == 0:
-                    self.data['interp']['minor'] = self.prf_loc[id]['limitx']
+                    self.data["interp"]["minor"] = self.prf_loc[id]["limitx"]
                 if id == 3:
-                    g_lim = self.prf_loc[id]['limitx'][0]
+                    g_lim = self.prf_loc[id]["limitx"][0]
                 if id == 4:
-                    d_lim = self.prf_loc[id]['limitx'][1]
+                    d_lim = self.prf_loc[id]["limitx"][1]
 
         if g_lim and d_lim:
-            self.data['interp']['major'] = [g_lim, d_lim]
+            self.data["interp"]["major"] = [g_lim, d_lim]
 
-        prof_final = self.merge_prof('prof')
+        prof_final = self.merge_prof("prof")
 
         # prof_final = LineString(prof_final)
         # export csv:
         # df = pd.DataFrame(np.array(prof_final))
         # df.to_csv('test', sep=';')
 
-        self.data['interp']['prof'] = list(prof_final.coords)
+        self.data["interp"]["prof"] = list(prof_final.coords)
         return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

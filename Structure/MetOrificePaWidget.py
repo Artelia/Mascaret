@@ -25,8 +25,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, ctrl_set_value, \
-    ctrl_get_value, fill_qcombobox
+from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -41,8 +40,9 @@ class MetOrificePaWidget(QWidget):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
-                                      'ui/structures/ui_orifice_pa.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, "ui/structures/ui_orifice_pa.ui"), self
+        )
         self.id_struct = id_struct
 
         self.completed = 0
@@ -55,36 +55,41 @@ class MetOrificePaWidget(QWidget):
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
         self.tab_trav.itemChanged.connect(self.verif_larg_trav)
 
-        self.dico_ctrl = {'FIRSTWD': [self.dsb_abs_cul_rg],
-                          'ZTOPTAB': [self.dsb_cote_tab],
-                          'LARGPIL': [self.dsb_larg_pil],
-                          'PASH': [self.dsb_h_pas],
-                          'MINH': [self.dsb_h_min],
-                          'MAXH': [self.dsb_h_max],
-                          'PASQ': [self.dsb_q_pas],
-                          'NBTRAVE': [self.sb_nb_trav],
-                          'COEFDS': [self.dsb_ds],
-                          'COEFDO': [self.dsb_do]
-                          }
+        self.dico_ctrl = {
+            "FIRSTWD": [self.dsb_abs_cul_rg],
+            "ZTOPTAB": [self.dsb_cote_tab],
+            "LARGPIL": [self.dsb_larg_pil],
+            "PASH": [self.dsb_h_pas],
+            "MINH": [self.dsb_h_min],
+            "MAXH": [self.dsb_h_max],
+            "PASQ": [self.dsb_q_pas],
+            "NBTRAVE": [self.sb_nb_trav],
+            "COEFDS": [self.dsb_ds],
+            "COEFDO": [self.dsb_do],
+        }
 
-        self.dico_tab = {self.tab_trav: {'type': 0,
-                                         'id': '({}*2) + 1',
-                                         'col': [{'fld': 'FORMARC',
-                                                  'cb': [[1, 'Demi cercle'],
-                                                         [2, 'Ellipse']],
-                                                  'fn': self.change_form_arch,
-                                                  'valdef': 2},
-                                                 {'fld': 'LARGTRA', 'cb': None,
-                                                  'valdef': 1.},
-                                                 {'fld': 'ZMINARC', 'cb': None,
-                                                  'valdef': 0.},
-                                                 {'fld': 'ZMAXARC', 'cb': None,
-                                                  'valdef': 0.}]},
-                         self.tab_pile: {'type': 1,
-                                         'id': '({}*2) + 2',
-                                         'col': [{'fld': 'LARGPIL', 'cb': None,
-                                                  'valdef': self.dsb_larg_pil}]}
-                         }
+        self.dico_tab = {
+            self.tab_trav: {
+                "type": 0,
+                "id": "({}*2) + 1",
+                "col": [
+                    {
+                        "fld": "FORMARC",
+                        "cb": [[1, "Demi cercle"], [2, "Ellipse"]],
+                        "fn": self.change_form_arch,
+                        "valdef": 2,
+                    },
+                    {"fld": "LARGTRA", "cb": None, "valdef": 1.0},
+                    {"fld": "ZMINARC", "cb": None, "valdef": 0.0},
+                    {"fld": "ZMAXARC", "cb": None, "valdef": 0.0},
+                ],
+            },
+            self.tab_pile: {
+                "type": 1,
+                "id": "({}*2) + 2",
+                "col": [{"fld": "LARGPIL", "cb": None, "valdef": self.dsb_larg_pil}],
+            },
+        }
 
     def change_ntrav(self, nb_trav):
         nb_pile = max(0, nb_trav - 1)
@@ -103,19 +108,18 @@ class MetOrificePaWidget(QWidget):
 
     def insert_elem(self, tab, row):
         tab.insertRow(row)
-        for c, col in enumerate(self.dico_tab[tab]['col']):
-            if isinstance(col['valdef'], int) or isinstance(col['valdef'],
-                                                            float):
-                val = col['valdef']
+        for c, col in enumerate(self.dico_tab[tab]["col"]):
+            if isinstance(col["valdef"], int) or isinstance(col["valdef"], float):
+                val = col["valdef"]
             else:
-                val = ctrl_get_value(col['valdef'])
+                val = ctrl_get_value(col["valdef"])
 
-            if col['cb']:
+            if col["cb"]:
                 cb = QComboBox()
                 cb.setProperty("row", row)
                 tab.setCellWidget(row, c, cb)
-                tab.cellWidget(row, c).currentIndexChanged.connect(col['fn'])
-                fill_qcombobox(tab.cellWidget(row, c), col['cb'], val_def=val)
+                tab.cellWidget(row, c).currentIndexChanged.connect(col["fn"])
+                fill_qcombobox(tab.cellWidget(row, c), col["cb"], val_def=val)
             else:
                 itm = QTableWidgetItem()
                 itm.setData(0, val)
@@ -126,13 +130,12 @@ class MetOrificePaWidget(QWidget):
             self.tab_pile.item(row, 0).setData(0, self.dsb_larg_pil.value())
 
     def update_min_h_max(self):
-        self.dsb_h_max.setMinimum(
-            self.dsb_h_min.value() + self.dsb_h_pas.value())
+        self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
 
     def verif_larg_trav(self, itm):
         if itm.column() == 0:
-            if itm.data(0) <= 0.:
-                itm.setData(0, 1.)
+            if itm.data(0) <= 0.0:
+                itm.setData(0, 1.0)
 
     def change_form_arch(self):
         tw = self.sender().parent().parent()
@@ -143,7 +146,7 @@ class MetOrificePaWidget(QWidget):
         if ctrl_get_value(cb) == 1:  # cercle
             itm.setFlags(Qt.ItemIsSelectable)
         elif ctrl_get_value(cb) == 2:  # ellipse
-            itm.setData(0, self.dico_tab[tw]['col'][2]['valdef'])
+            itm.setData(0, self.dico_tab[tw]["col"][2]["valdef"])
         tw.setItem(r, 3, itm)
 
     def progress_bar(self, val):

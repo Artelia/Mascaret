@@ -38,6 +38,7 @@ else:  # qt5
 D_TYP_BED = {0: "bed", 1: "stock"}
 D_FLD_BED = {0: "minbed", 1: "stock"}
 
+
 class ClassExtractBedDialog(QDialog):
     def __init__(self, mgis):
         QDialog.__init__(self)
@@ -46,8 +47,7 @@ class ClassExtractBedDialog(QDialog):
         self.itm_val, self.itm_warn, self.itm_err = None, None, None
 
         self.load_error = False
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
-                                      'ui/ui_profiles_bed.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_profiles_bed.ui"), self)
         self.fra_save.hide()
 
         self.lay_bed = None
@@ -68,7 +68,7 @@ class ClassExtractBedDialog(QDialog):
             self.bg_type.addButton(self.rb_river_bed, 0)
             self.bg_type.addButton(self.rb_storage_area, 1)
 
-            #self.cb_branch.currentIndexChanged.connect(self.cur_branch_changed)
+            # self.cb_branch.currentIndexChanged.connect(self.cur_branch_changed)
             self.cb_qgis_layers.currentIndexChanged.connect(self.cur_qgis_layer_changed)
             self.bt_analysis.clicked.connect(self.start_analysis)
             self.bt_cancel.clicked.connect(self.cancel_analysis)
@@ -83,8 +83,10 @@ class ClassExtractBedDialog(QDialog):
         mas_group = tree_root.findGroup("Mas_{}".format(self.mdb.SCHEMA))
         l_child = mas_group.children()
         for child in l_child:
-            if child.nodeType() == 1 \
-                    and "dbname='{}'".format(self.mdb.dbname) in child.layer().source():
+            if (
+                child.nodeType() == 1
+                and "dbname='{}'".format(self.mdb.dbname) in child.layer().source()
+            ):
                 if 'table="{}"."branchs"'.format(self.mdb.SCHEMA) in child.layer().source():
                     b_lay = child.layer()
                 if 'table="{}"."profiles"'.format(self.mdb.SCHEMA) in child.layer().source():
@@ -104,8 +106,7 @@ class ClassExtractBedDialog(QDialog):
             self.cc_profil_sel.setCheckState(2)
 
     def init_cb_lay_model(self):
-        excluded_str = ['table="{}"'.format(self.mdb.SCHEMA),
-                        "dbname='{}'".format(self.mdb.dbname)]
+        excluded_str = ['table="{}"'.format(self.mdb.SCHEMA), "dbname='{}'".format(self.mdb.dbname)]
 
         l_excl_lay = []
         for lay_id in QgsProject.instance().mapLayers():
@@ -137,9 +138,13 @@ class ClassExtractBedDialog(QDialog):
 
     def start_analysis(self):
         if self.lay_bed.crs() != self.lay_profile.crs():
-            QMessageBox.critical(self, "Error", "The projection of the layer for "
-                                                "river beds must be {}".format( self.lay_profile.crs().authid()),
-                                 QMessageBox.Ok)
+            QMessageBox.critical(
+                self,
+                "Error",
+                "The projection of the layer for "
+                "river beds must be {}".format(self.lay_profile.crs().authid()),
+                QMessageBox.Ok,
+            )
             return
 
         self.d_profiles.clear()
@@ -170,8 +175,9 @@ class ClassExtractBedDialog(QDialog):
                 l_branch_geom.append(ft.geometry())
 
         if not l_branch_geom:
-            QMessageBox.critical(self, "Error", "No geometry found for branch {}".format(branch),
-                                 QMessageBox.Ok)
+            QMessageBox.critical(
+                self, "Error", "No geometry found for branch {}".format(branch), QMessageBox.Ok
+            )
             return
 
         # Sélection des profils
@@ -186,8 +192,9 @@ class ClassExtractBedDialog(QDialog):
                 self.d_profiles[ft.id()] = p
 
         if not self.d_profiles:
-            QMessageBox.critical(self, "Error", "No profiles found for branch {}".format(branch),
-                                 QMessageBox.Ok)
+            QMessageBox.critical(
+                self, "Error", "No profiles found for branch {}".format(branch), QMessageBox.Ok
+            )
             return
 
         # Sélection des polylignes (beds)
@@ -263,13 +270,15 @@ class ClassExtractBedDialog(QDialog):
             elif profil.status == 1 and id_prof in l_prof_to_edit:
                 recs.append([*profil.intersections, id_prof])
 
-        sql = "UPDATE {0}.profiles SET left{1}_g = %s, right{1}_g = %s " \
-              "WHERE gid = %s;".format(self.mdb.SCHEMA, D_FLD_BED[self.bg_type.checkedId()])
+        sql = "UPDATE {0}.profiles SET left{1}_g = %s, right{1}_g = %s " "WHERE gid = %s;".format(
+            self.mdb.SCHEMA, D_FLD_BED[self.bg_type.checkedId()]
+        )
         self.mdb.run_query(sql, many=True, list_many=recs)
 
         self.lay_profile.reload()
         QMessageBox.information(self, "Information", "Import successful", QMessageBox.Ok)
         self.cancel_analysis()
+
 
 class Profile:
     def __init__(self, ft):
@@ -394,7 +403,9 @@ class Profile:
                 elif self.db_bed[0] <= i_start <= self.db_bed[1] <= i_end:
                     self.mess = "Left Storage Area intersects the current Minor River Bed"
                 else:
-                    self.mess = "Both Storage Areas are in the same side of the current Minor River Bed"
+                    self.mess = (
+                        "Both Storage Areas are in the same side of the current Minor River Bed"
+                    )
         else:
             self.status = -1
             self.mess = "More than two intersections"

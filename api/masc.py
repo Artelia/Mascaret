@@ -46,8 +46,10 @@ import numpy as np
 #     return files_name, files_type
 #
 
+
 class Mascaret:
     """The Python class for MASCARET APIs"""
+
     libmascaret = None
     logger = logging.getLogger(__name__)
 
@@ -56,8 +58,7 @@ class Mascaret:
 
     @property
     def error(self):
-        """Error property
-        """
+        """Error property"""
         return self._error
 
     @error.setter
@@ -82,13 +83,11 @@ class Mascaret:
 
         @return (str) Error message
         """
-        err_mess_c = (ctypes.c_char_p * 1)((" " * 256).encode('utf8'))
+        err_mess_c = (ctypes.c_char_p * 1)((" " * 256).encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
-        error = \
-            self.libmascaret.C_GET_ERREUR_MASCARET(id_masc_c,
-                                                   ctypes.byref(err_mess_c))
+        error = self.libmascaret.C_GET_ERREUR_MASCARET(id_masc_c, ctypes.byref(err_mess_c))
         if error != 0:
-            return 'Error could not be retrieved from MASCARET...'
+            return "Error could not be retrieved from MASCARET..."
         return err_mess_c[0]
 
     # def load_mascaret(self, libmascaret):
@@ -116,32 +115,30 @@ class Mascaret:
     #         self.logger.error('Unsupported OS. Only macOS or Unix!')
     #         raise SystemExit
 
-    def __init__(self, log_level='INFO'):
+    def __init__(self, log_level="INFO"):
         """
         Constructor for apiModule
 
         @param log_level (str) Logger level
         """
-        if log_level == 'INFO':
+        if log_level == "INFO":
             i_log = logging.INFO
-        elif log_level == 'DEBUG':
+        elif log_level == "DEBUG":
             i_log = logging.DEBUG
         else:
             i_log = logging.CRITICAL
         logging.basicConfig(level=i_log)
-        self.logger.info('Using MascaretApi')
+        self.logger.info("Using MascaretApi")
         # Load the library libmascaret.(so|dll)
         # MDU modif
         # libmascaret = './libmascaret.so'
         test = sys.platform
-        if 'linux' in test or test == 'cygwin':
+        if "linux" in test or test == "cygwin":
             # libmascaret = '../api/libmascaret.so'
-            libmascaret = os.path.join(os.path.dirname(__file__),
-                                       'libmascaret.so')
-        elif test == 'win32':
+            libmascaret = os.path.join(os.path.dirname(__file__), "libmascaret.so")
+        elif test == "win32":
             # libmascaret = '../api/libmascaret.dll'
-            libmascaret = os.path.join(os.path.dirname(__file__),
-                                       'libmascaret.dll')
+            libmascaret = os.path.join(os.path.dirname(__file__), "libmascaret.dll")
             # libmascaret = '../api/libmascaret_old.dll'
         else:
             print("{0} platform  doesn't allow to run simulation.".format(test))
@@ -160,9 +157,9 @@ class Mascaret:
         @param iprint (int) flag value for the Mascaret listing files
         """
         id_masc = ctypes.c_int()
-        self.logger.debug('Creating a model...')
+        self.logger.debug("Creating a model...")
         self.error = self.libmascaret.C_CREATE_MASCARET(ctypes.byref(id_masc))
-        self.logger.debug('Model created.')
+        self.logger.debug("Model created.")
         self.id_masc = ctypes.c_int(id_masc.value)
         # .opt and .lis written only if iprint = 1 at import AND calcul steps
         self.iprint = iprint
@@ -179,17 +176,18 @@ class Mascaret:
         file_type = []
         file_name = []
         for name, typ in zip(files_name, files_type):
-            file_type.append(typ.encode('utf8'))
-            file_name.append(name.encode('utf8'))
+            file_type.append(typ.encode("utf8"))
+            file_name.append(name.encode("utf8"))
         file_name_c = (ctypes.c_char_p * len_file)(*file_name)
         file_type_c = (ctypes.c_char_p * len_file)(*file_type)
-        self.logger.debug('Importing a model...')
+        self.logger.debug("Importing a model...")
         self.error = self.libmascaret.C_IMPORT_MODELE_MASCARET(
-            self.id_masc, file_name_c,
-            file_type_c, len_file, self.iprint)
-        self.logger.info("Model imported with:\n"
-                         + "-> file_name: {}\n-> file_type: {}."
-                         .format(file_name, file_type))
+            self.id_masc, file_name_c, file_type_c, len_file, self.iprint
+        )
+        self.logger.info(
+            "Model imported with:\n"
+            + "-> file_name: {}\n-> file_type: {}.".format(file_name, file_type)
+        )
 
     def import_model_onefile(self, masc_file):
         """Read model from Mascaret files
@@ -198,20 +196,18 @@ class Mascaret:
 
         @param masc_file (str) file name listing all the Mascaret files
         """
-        masc_file_c = (ctypes.c_char_p * 1)(masc_file.encode('utf8'))
+        masc_file_c = (ctypes.c_char_p * 1)(masc_file.encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         iprint_c = (ctypes.c_int * 1)(self.iprint)
-        self.logger.debug('Importing a model...')
+        self.logger.debug("Importing a model...")
         self.error = self.libmascaret.C_IMPORT_MODELE_MASCARET_ONEFILE(
-            id_masc_c, iprint_c, masc_file_c)
-        self.logger.info("Model imported with:\n"
-                         + "-> masc_file: {}\n"
-                         .format(masc_file))
+            id_masc_c, iprint_c, masc_file_c
+        )
+        self.logger.info("Model imported with:\n" + "-> masc_file: {}\n".format(masc_file))
 
     def delete_mascaret(self):
         """Delete a model."""
-        self.logger.debug('Deleting instance #{}...'
-                          .format(self.id_masc.value))
+        self.logger.debug("Deleting instance #{}...".format(self.id_masc.value))
         self.error = self.libmascaret.C_DELETE_MASCARET(self.id_masc)
         self.logger.debug("Model #{} deleted.".format(self.id_masc.value))
 
@@ -223,10 +219,11 @@ class Mascaret:
         @return (int) id number for the saved state
         """
         saved_state_c = ctypes.c_int()
-        self.logger.debug('Save MASCARET state...')
+        self.logger.debug("Save MASCARET state...")
         self.error = self.libmascaret.C_SAVE_ETAT_MASCARET(
-            self.id_masc, ctypes.byref(saved_state_c))
-        self.logger.debug('Save MASCARET state done.')
+            self.id_masc, ctypes.byref(saved_state_c)
+        )
+        self.logger.debug("Save MASCARET state done.")
 
         return saved_state_c.value
 
@@ -238,10 +235,9 @@ class Mascaret:
         @param saved_state (int) id number of the state to delete
         """
         saved_state_c = ctypes.c_int(saved_state)
-        self.logger.debug('Free saved state mascaret...')
-        self.error = self.libmascaret.C_FREE_SAVE_ETAT_MASCARET(
-            saved_state_c)
-        self.logger.debug('Free save etat mascaret done.')
+        self.logger.debug("Free saved state mascaret...")
+        self.error = self.libmascaret.C_FREE_SAVE_ETAT_MASCARET(saved_state_c)
+        self.logger.debug("Free save etat mascaret done.")
 
     def get_hydro(self):
         """Get the water levels (m) and discharge values (m3/s)
@@ -249,16 +245,14 @@ class Mascaret:
         @return (list) water levels and discharges for all 1D nodes
         """
         if self.nb_nodes is None:
-            self.nb_nodes, _, _ = self.get_var_size('Model.X')
+            self.nb_nodes, _, _ = self.get_var_size("Model.X")
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         # (Q, Z)
         q_c = (ctypes.c_double * self.nb_nodes)(0.0)
         z_c = (ctypes.c_double * self.nb_nodes)(0.0)
-        self.logger.debug('Get hydro (Q,Z) at the current time...')
-        self.error = self.libmascaret.C_GET_LIGNE(
-            id_masc_c, ctypes.byref(q_c), ctypes.byref(z_c))
-        self.logger.debug(
-            'Getter successfull at the current time.')
+        self.logger.debug("Get hydro (Q,Z) at the current time...")
+        self.error = self.libmascaret.C_GET_LIGNE(id_masc_c, ctypes.byref(q_c), ctypes.byref(z_c))
+        self.logger.debug("Getter successfull at the current time.")
         return np.array(z_c), np.array(q_c)
 
     def set_state(self, id_state, to_delete=1, id_masc=None):
@@ -274,19 +268,17 @@ class Mascaret:
             id_masc = self.id_masc
         id_state_c = ctypes.c_int(id_state)
         to_delete_c = ctypes.c_int(to_delete)
-        self.logger.debug('Set MASCARET state...')
-        self.error = self.libmascaret.C_SET_ETAT_MASCARET(
-            id_masc, id_state_c, to_delete_c)
-        self.logger.debug('Set MASCARET state done.')
+        self.logger.debug("Set MASCARET state...")
+        self.error = self.libmascaret.C_SET_ETAT_MASCARET(id_masc, id_state_c, to_delete_c)
+        self.logger.debug("Set MASCARET state done.")
 
     def free_all_saved_states(self):
         """
         Mascaret Api :meth:`C_FREE_ALL_SAVE_ETAT_MASCARET`
         """
-        self.logger.debug('Free all saved states mascaret...')
-        self.error = self.libmascaret.C_FREE_ALL_SAVE_ETAT_MASCARET(
-            self.id_masc)
-        self.logger.debug('Free all saved states mascaret done.')
+        self.logger.debug("Free all saved states mascaret...")
+        self.error = self.libmascaret.C_FREE_ALL_SAVE_ETAT_MASCARET(self.id_masc)
+        self.logger.debug("Free all saved states mascaret done.")
 
     def init_hydro(self, z_val, q_val):
         """Initialize the model from hydraulic values
@@ -297,15 +289,15 @@ class Mascaret:
         @param q_val (list or array) discharges (m3/s)
         """
         if self.nb_nodes is None:
-            self.nb_nodes, _, _ = self.get_var_size('Model.X')
+            self.nb_nodes, _, _ = self.get_var_size("Model.X")
         # Initialize Mascaret Model from values
         q_c = (ctypes.c_double * self.nb_nodes)(*q_val)
         z_c = (ctypes.c_double * self.nb_nodes)(*z_val)
-        self.logger.debug('Initializing MASCARET from constant value...')
+        self.logger.debug("Initializing MASCARET from constant value...")
         self.error = self.libmascaret.C_INIT_LIGNE_MASCARET(
-            self.id_masc, ctypes.byref(q_c), ctypes.byref(z_c), self.nb_nodes)
-        self.logger.debug(
-            'State constant initialisation successfull from constant value.')
+            self.id_masc, ctypes.byref(q_c), ctypes.byref(z_c), self.nb_nodes
+        )
+        self.logger.debug("State constant initialisation successfull from constant value.")
 
     def init_hydro_from_file(self, hydro_file):
         """Initialize the model from a .lig file
@@ -314,56 +306,51 @@ class Mascaret:
 
         @param hydro_file (str) '.lig' Mascaret file
         """
-        init_file_name_c = (ctypes.c_char_p * 1)(hydro_file.encode('utf8'))
+        init_file_name_c = (ctypes.c_char_p * 1)(hydro_file.encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         iprint_c = (ctypes.c_int * 1)(self.iprint)
-        self.logger.debug('Initializing MASCARET from .lig ...')
-        self.error = self.libmascaret.C_INIT_ETAT_MASCARET(
-            id_masc_c, init_file_name_c, iprint_c)
-        self.logger.debug('State initialisation successfull from .lig')
+        self.logger.debug("Initializing MASCARET from .lig ...")
+        self.error = self.libmascaret.C_INIT_ETAT_MASCARET(id_masc_c, init_file_name_c, iprint_c)
+        self.logger.debug("State initialisation successfull from .lig")
 
     def init_tracer_state(self):
         """Initialize the tracer state from a conc file or from rest
 
         Mascaret Api :meth:`C_INIT_ETAT_TRACER`
         """
-        self.logger.debug('Initializing Tracer State ...')
-        self.error = self.libmascaret.C_INIT_ETAT_TRACER(
-            self.id_masc, self.iprint)
-        self.logger.debug('Tracer state initialisation successful')
+        self.logger.debug("Initializing Tracer State ...")
+        self.error = self.libmascaret.C_INIT_ETAT_TRACER(self.id_masc, self.iprint)
+        self.logger.debug("Tracer state initialisation successful")
 
     def init_tracer(self, c_val):
         """Initialize the tracer state from values
 
         Mascaret Api :meth:`C_INIT_LIGNE_TRACER`
         """
-        nb_nodes, _, _ = self.get_var_size('Model.X')
-        nb_trac = self.get('Model.Tracer.Number')
+        nb_nodes, _, _ = self.get_var_size("Model.X")
+        nb_trac = self.get("Model.Tracer.Number")
         nb_conc = nb_nodes * nb_trac
-        c_np = np.reshape(np.array(c_val, dtype=np.float64),
-                          nb_conc, order='F')
+        c_np = np.reshape(np.array(c_val, dtype=np.float64), nb_conc, order="F")
         c_c = (ctypes.c_double * nb_conc)(*c_np)
-        self.logger.debug('Initializing Tracer State from Vaues...')
+        self.logger.debug("Initializing Tracer State from Vaues...")
         self.error = self.libmascaret.C_INIT_LIGNE_TRACER(
-            self.id_masc, ctypes.byref(c_c), nb_nodes, nb_trac, self.iprint)
-        self.logger.debug('Tracer state initialisation successful')
+            self.id_masc, ctypes.byref(c_c), nb_nodes, nb_trac, self.iprint
+        )
+        self.logger.debug("Tracer state initialisation successful")
 
     def get_tracer(self):
         """Get the tracer concentrations
 
         @return (list) tracer concentrations
         """
-        nb_nodes, nb_trac, _ = self.get_var_size('State.Tracer.Concentration')
+        nb_nodes, nb_trac, _ = self.get_var_size("State.Tracer.Concentration")
         nb_conc = nb_nodes * nb_trac
         # (Ctraceur)
         c_c = (ctypes.c_double * nb_conc)(0.0)
-        self.logger.debug('Get tracer Concentration at the current time...')
-        self.error = self.libmascaret.C_GET_LIGNE_TRACER(
-            self.id_masc, ctypes.byref(c_c))
-        self.logger.debug(
-            'Getter successfull at the current time.')
-        return np.reshape(np.array(c_c, dtype=np.float64),
-                          (nb_nodes, nb_trac), order='F')
+        self.logger.debug("Get tracer Concentration at the current time...")
+        self.error = self.libmascaret.C_GET_LIGNE_TRACER(self.id_masc, ctypes.byref(c_c))
+        self.logger.debug("Getter successfull at the current time.")
+        return np.reshape(np.array(c_c, dtype=np.float64), (nb_nodes, nb_trac), order="F")
 
     def get_double(self, var_name, i=0, j=0, k=0):
         """Get the real value of a Mascaret variable
@@ -377,17 +364,22 @@ class Mascaret:
 
         @return (float) scalar value
         """
-        var_name_c = (ctypes.c_char_p * 1)(var_name.encode('utf8'))
+        var_name_c = (ctypes.c_char_p * 1)(var_name.encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         val_c = ctypes.c_double()
         i_c = ctypes.c_int(i)
         j_c = ctypes.c_int(j)
         k_c = ctypes.c_int(k)
-        self.logger.debug('Getting {}...'.format(var_name))
+        self.logger.debug("Getting {}...".format(var_name))
         self.error = self.libmascaret.C_GET_DOUBLE_MASCARET(
-            id_masc_c, var_name_c, ctypes.byref(i_c), ctypes.byref(j_c),
-            ctypes.byref(k_c), ctypes.byref(val_c))
-        self.logger.debug('Value: val={}.'.format(val_c.value))
+            id_masc_c,
+            var_name_c,
+            ctypes.byref(i_c),
+            ctypes.byref(j_c),
+            ctypes.byref(k_c),
+            ctypes.byref(val_c),
+        )
+        self.logger.debug("Value: val={}.".format(val_c.value))
 
         return val_c.value
 
@@ -403,17 +395,22 @@ class Mascaret:
 
         @return (int) scalar value
         """
-        var_name_c = (ctypes.c_char_p * 1)(var_name.encode('utf8'))
+        var_name_c = (ctypes.c_char_p * 1)(var_name.encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         val_c = ctypes.c_int()
         i_c = ctypes.c_int(i)
         j_c = ctypes.c_int(j)
         k_c = ctypes.c_int(k)
-        self.logger.debug('Getting {}...'.format(var_name))
+        self.logger.debug("Getting {}...".format(var_name))
         self.error = self.libmascaret.C_GET_INT_MASCARET(
-            id_masc_c, var_name_c, ctypes.byref(i_c), ctypes.byref(j_c),
-            ctypes.byref(k_c), ctypes.byref(val_c))
-        self.logger.debug('Value: val={}.'.format(val_c.value))
+            id_masc_c,
+            var_name_c,
+            ctypes.byref(i_c),
+            ctypes.byref(j_c),
+            ctypes.byref(k_c),
+            ctypes.byref(val_c),
+        )
+        self.logger.debug("Value: val={}.".format(val_c.value))
 
         return val_c.value
 
@@ -428,17 +425,22 @@ class Mascaret:
         @param k (int) third index of the Mascaret variable
         @return (bool) scalar value
         """
-        var_name_c = (ctypes.c_char_p * 1)(var_name.encode('utf8'))
+        var_name_c = (ctypes.c_char_p * 1)(var_name.encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         val_c = ctypes.c_int()
         i_c = ctypes.c_int(i)
         j_c = ctypes.c_int(j)
         k_c = ctypes.c_int(k)
-        self.logger.debug('Getting {}...'.format(var_name))
+        self.logger.debug("Getting {}...".format(var_name))
         self.error = self.libmascaret.C_GET_BOOL_MASCARET(
-            id_masc_c, var_name_c, ctypes.byref(i_c), ctypes.byref(j_c),
-            ctypes.byref(k_c), ctypes.byref(val_c))
-        self.logger.debug('Value: val={}.'.format(val_c.value))
+            id_masc_c,
+            var_name_c,
+            ctypes.byref(i_c),
+            ctypes.byref(j_c),
+            ctypes.byref(k_c),
+            ctypes.byref(val_c),
+        )
+        self.logger.debug("Value: val={}.".format(val_c.value))
 
         return val_c.value == val_c.value
 
@@ -453,19 +455,24 @@ class Mascaret:
         @param k (int) third index of the Mascaret variable
         @return (str) scalar value
         """
-        var_name_c = (ctypes.c_char_p * 1)(var_name.encode('utf8'))
+        var_name_c = (ctypes.c_char_p * 1)(var_name.encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
-        val_c = (ctypes.c_char_p * 1)((" " * 256).encode('utf8'))
+        val_c = (ctypes.c_char_p * 1)((" " * 256).encode("utf8"))
         i_c = ctypes.c_int(i)
         j_c = ctypes.c_int(j)
         k_c = ctypes.c_int(k)
-        self.logger.debug('Getting {}...'.format(var_name))
+        self.logger.debug("Getting {}...".format(var_name))
         self.error = self.libmascaret.C_GET_STRING_MASCARET(
-            id_masc_c, var_name_c, ctypes.byref(i_c), ctypes.byref(j_c),
-            ctypes.byref(k_c), ctypes.byref(val_c))
-        self.logger.debug('Value: val={}.'.format(val_c[0]))
+            id_masc_c,
+            var_name_c,
+            ctypes.byref(i_c),
+            ctypes.byref(j_c),
+            ctypes.byref(k_c),
+            ctypes.byref(val_c),
+        )
+        self.logger.debug("Value: val={}.".format(val_c[0]))
 
-        return str(val_c[0], 'utf-8')
+        return str(val_c[0], "utf-8")
 
     def set_int(self, var_name, val, i=0, j=0, k=0):
         """Set the integer value of a Mascaret variable
@@ -478,17 +485,22 @@ class Mascaret:
         @param j (int) second index of the Mascaret variable
         @param k (int) third index of the Mascaret variable
         """
-        var_name_c = (ctypes.c_char_p * 1)(var_name.encode('utf8'))
+        var_name_c = (ctypes.c_char_p * 1)(var_name.encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         val_c = ctypes.c_int(val)
         i_c = ctypes.c_int(i)
         j_c = ctypes.c_int(j)
         k_c = ctypes.c_int(k)
-        self.logger.debug('Setting {}...'.format(var_name))
+        self.logger.debug("Setting {}...".format(var_name))
         self.error = self.libmascaret.C_SET_INT_MASCARET(
-            id_masc_c, var_name_c, ctypes.byref(i_c), ctypes.byref(j_c),
-            ctypes.byref(k_c), ctypes.byref(val_c))
-        self.logger.debug('Value: val={}.'.format(val_c.value))
+            id_masc_c,
+            var_name_c,
+            ctypes.byref(i_c),
+            ctypes.byref(j_c),
+            ctypes.byref(k_c),
+            ctypes.byref(val_c),
+        )
+        self.logger.debug("Value: val={}.".format(val_c.value))
 
     def set_bool(self, var_name, val, i=0, j=0, k=0):
         """Set the boolean value of a Mascaret variable
@@ -501,17 +513,22 @@ class Mascaret:
         @param j (int) second index of the Mascaret variable
         @param k (int) third index of the Mascaret variable
         """
-        var_name_c = (ctypes.c_char_p * 1)(var_name.encode('utf8'))
+        var_name_c = (ctypes.c_char_p * 1)(var_name.encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         val_c = ctypes.c_int(val)
         i_c = ctypes.c_int(i)
         j_c = ctypes.c_int(j)
         k_c = ctypes.c_int(k)
-        self.logger.debug('Setting {}...'.format(var_name))
+        self.logger.debug("Setting {}...".format(var_name))
         self.error = self.libmascaret.C_SET_BOOL_MASCARET(
-            id_masc_c, var_name_c, ctypes.byref(i_c), ctypes.byref(j_c),
-            ctypes.byref(k_c), ctypes.byref(val_c))
-        self.logger.debug('Value: val={}.'.format(val_c.value))
+            id_masc_c,
+            var_name_c,
+            ctypes.byref(i_c),
+            ctypes.byref(j_c),
+            ctypes.byref(k_c),
+            ctypes.byref(val_c),
+        )
+        self.logger.debug("Value: val={}.".format(val_c.value))
 
     def set_string(self, var_name, val, i=0, j=0, k=0):
         """Set the string value of a Mascaret variable
@@ -524,17 +541,17 @@ class Mascaret:
         @param j (int) second index of the Mascaret variable
         @param k (int) third index of the Mascaret variable
         """
-        var_name_c = (ctypes.c_char_p * 1)(var_name.encode('utf8'))
+        var_name_c = (ctypes.c_char_p * 1)(var_name.encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         i_c = ctypes.c_int(i)
         j_c = ctypes.c_int(j)
         k_c = ctypes.c_int(k)
         val_c = (ctypes.c_char_p * 1)(val.encode("utf-8"))
-        self.logger.debug('Setting {}...'.format(var_name))
+        self.logger.debug("Setting {}...".format(var_name))
         self.error = self.libmascaret.C_SET_STRING_MASCARET(
-            id_masc_c, var_name_c, ctypes.byref(i_c), ctypes.byref(j_c),
-            ctypes.byref(k_c), val_c)
-        self.logger.debug('Value: val={}.'.format(ctypes.string_at(val_c)))
+            id_masc_c, var_name_c, ctypes.byref(i_c), ctypes.byref(j_c), ctypes.byref(k_c), val_c
+        )
+        self.logger.debug("Value: val={}.".format(ctypes.string_at(val_c)))
 
     def set_double(self, var_name, val, i=0, j=0, k=0):
         """Set the real value of a Mascaret variable
@@ -547,17 +564,22 @@ class Mascaret:
         @param j (int) second index of the Mascaret variable
         @param k (int) third index of the Mascaret variable
         """
-        var_name_c = (ctypes.c_char_p * 1)(var_name.encode('utf8'))
+        var_name_c = (ctypes.c_char_p * 1)(var_name.encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         val_c = ctypes.c_double(val)
         i_c = ctypes.c_int(i)
         j_c = ctypes.c_int(j)
         k_c = ctypes.c_int(k)
-        self.logger.debug('Setting {}...'.format(var_name))
+        self.logger.debug("Setting {}...".format(var_name))
         self.error = self.libmascaret.C_SET_DOUBLE_MASCARET(
-            id_masc_c, var_name_c, ctypes.byref(i_c), ctypes.byref(j_c),
-            ctypes.byref(k_c), ctypes.byref(val_c))
-        self.logger.debug('Value: val={}.'.format(val_c.value))
+            id_masc_c,
+            var_name_c,
+            ctypes.byref(i_c),
+            ctypes.byref(j_c),
+            ctypes.byref(k_c),
+            ctypes.byref(val_c),
+        )
+        self.logger.debug("Value: val={}.".format(val_c.value))
 
     def get_type_var(self, var_name):
         """Get the type of a Mascaret variable
@@ -567,27 +589,30 @@ class Mascaret:
         @param var_name (str) name of the Mascaret variable
         @return (str, str, int, int) type, category, modifiable, dimension
         """
-        var_name_c = (ctypes.c_char_p * 1)(var_name.encode('utf8'))
+        var_name_c = (ctypes.c_char_p * 1)(var_name.encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
-        var_type_c = (ctypes.c_char_p * 1)((" " * 10).encode('utf8'))
-        category_c = (ctypes.c_char_p * 1)((" " * 10).encode('utf8'))
+        var_type_c = (ctypes.c_char_p * 1)((" " * 10).encode("utf8"))
+        category_c = (ctypes.c_char_p * 1)((" " * 10).encode("utf8"))
         acces_c = ctypes.c_int()
         var_dim_c = ctypes.c_int()
 
-        self.logger.debug('Getting the type of {}...'.format(var_name))
+        self.logger.debug("Getting the type of {}...".format(var_name))
 
         self.error = self.libmascaret.C_GET_TYPE_VAR_MASCARET(
-            id_masc_c, var_name_c, ctypes.byref(var_type_c),
-            ctypes.byref(category_c), ctypes.byref(acces_c),
-            ctypes.byref(var_dim_c))
+            id_masc_c,
+            var_name_c,
+            ctypes.byref(var_type_c),
+            ctypes.byref(category_c),
+            ctypes.byref(acces_c),
+            ctypes.byref(var_dim_c),
+        )
 
-        self.logger.debug('type = {} {} {} {}.'
-                          .format(var_type_c[0],
-                                  category_c[0],
-                                  acces_c.value,
-                                  var_dim_c.value))
-        return var_type_c[0], category_c[0], \
-               acces_c.value, var_dim_c.value
+        self.logger.debug(
+            "type = {} {} {} {}.".format(
+                var_type_c[0], category_c[0], acces_c.value, var_dim_c.value
+            )
+        )
+        return var_type_c[0], category_c[0], acces_c.value, var_dim_c.value
 
     def get_var_size(self, var_name, index=0):
         """Get the size(s) of a Mascaret variable
@@ -599,18 +624,22 @@ class Mascaret:
                           junctions, storage areas
         @return (int, int, int) sizes
         """
-        var_name_c = (ctypes.c_char_p * 1)(var_name.encode('utf8'))
+        var_name_c = (ctypes.c_char_p * 1)(var_name.encode("utf8"))
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         index = ctypes.c_int(index + 1)
         size1 = ctypes.c_int()
         size2 = ctypes.c_int()
         size3 = ctypes.c_int()
-        self.logger.debug('Getting the size of {}...'.format(var_name))
+        self.logger.debug("Getting the size of {}...".format(var_name))
         self.error = self.libmascaret.C_GET_TAILLE_VAR_MASCARET(
-            id_masc_c, var_name_c, ctypes.byref(index), ctypes.byref(size1),
-            ctypes.byref(size2), ctypes.byref(size3))
-        self.logger.debug('size = {} {} {}.'
-                          .format(size1.value, size2.value, size3.value))
+            id_masc_c,
+            var_name_c,
+            ctypes.byref(index),
+            ctypes.byref(size1),
+            ctypes.byref(size2),
+            ctypes.byref(size3),
+        )
+        self.logger.debug("size = {} {} {}.".format(size1.value, size2.value, size3.value))
 
         return size1.value, size2.value, size3.value
 
@@ -626,18 +655,17 @@ class Mascaret:
         @param index (int) only for cross-sections, graphs,
                           weirs, junctions, storage areas
         """
-        var_name_c = ctypes.c_char_p(var_name.encode('utf-8'))
+        var_name_c = ctypes.c_char_p(var_name.encode("utf-8"))
 
         index = ctypes.c_int(index)
         size1_c = ctypes.c_int(size1)
         size2_c = ctypes.c_int(size2)
         size3_c = ctypes.c_int(size3)
-        self.logger.debug('Setting the size of {}...'.format(var_name))
+        self.logger.debug("Setting the size of {}...".format(var_name))
         self.error = self.libmascaret.C_SET_TAILLE_VAR_MASCARET(
-            self.id_masc, var_name_c, index, size1_c,
-            size2_c, size3_c)
-        self.logger.debug('size = {} {} {}.'
-                          .format(size1_c.value, size2_c.value, size3_c.value))
+            self.id_masc, var_name_c, index, size1_c, size2_c, size3_c
+        )
+        self.logger.debug("size = {} {} {}.".format(size1_c.value, size2_c.value, size3_c.value))
 
     def compute(self, t_0, t_end, time_step):
         """Direct computation of Mascaret
@@ -651,14 +679,13 @@ class Mascaret:
         t0_c = ctypes.c_double(t_0)
         tend_c = ctypes.c_double(t_end)
         dt_c = ctypes.c_double(time_step)
-        self.logger.debug('Running Mascaret... from {}'.format(t_0))
-        self.error = self.libmascaret.C_CALCUL_MASCARET(self.id_masc, t0_c,
-                                                        tend_c, dt_c,
-                                                        self.iprint)
-        self.logger.debug('Running Mascaret... to {}'.format(t_end))
+        self.logger.debug("Running Mascaret... from {}".format(t_0))
+        self.error = self.libmascaret.C_CALCUL_MASCARET(
+            self.id_masc, t0_c, tend_c, dt_c, self.iprint
+        )
+        self.logger.debug("Running Mascaret... to {}".format(t_end))
 
-    def compute_bc(self, t_0, t_end, time_step, tab_timebc, nb_timebc,
-                   nb_bc, tab_cl1, tab_cl2):
+    def compute_bc(self, t_0, t_end, time_step, tab_timebc, nb_timebc, nb_bc, tab_cl1, tab_cl2):
         """Indirect computation of Mascaret with a
             control on the boundary conditions
 
@@ -691,15 +718,21 @@ class Mascaret:
                 tab_cl1_c[i][j] = tab_cl1[j][i]
                 tab_cl2_c[i][j] = tab_cl2[j][i]
 
-        self.logger.debug('Running Mascaret cl...from {}'.format(t_0))
+        self.logger.debug("Running Mascaret cl...from {}".format(t_0))
         self.error = self.libmascaret.C_CALCUL_MASCARET_CONDITION_LIMITE(
-            self.id_masc, t0_c,
-            tend_c, dt_c, ctypes.byref(tab_timebc_c),
-            nb_timebc_c, ctypes.byref(tab_cl1_c), ctypes.byref(tab_cl2_c),
-            self.iprint)
-        self.logger.debug('Running Mascaret cl...to {}'.format(t_end))
+            self.id_masc,
+            t0_c,
+            tend_c,
+            dt_c,
+            ctypes.byref(tab_timebc_c),
+            nb_timebc_c,
+            ctypes.byref(tab_cl1_c),
+            ctypes.byref(tab_cl2_c),
+            self.iprint,
+        )
+        self.logger.debug("Running Mascaret cl...to {}".format(t_end))
 
-    def get_var_desc(self, prefix=''):
+    def get_var_desc(self, prefix=""):
         """Get info on the Mascaret variables
 
         Use Mascaret Api :meth:`C_GET_DESC_VAR_MASCARET`
@@ -711,20 +744,18 @@ class Mascaret:
         tab_desc_c = ctypes.POINTER(ctypes.c_char_p)()
         size_c = ctypes.c_int()
 
-        self.logger.debug('Get var desc MASCARET...')
-        self.error = self.libmascaret. \
-            C_GET_DESC_VAR_MASCARET(self.id_masc,
-                                    ctypes.byref(tab_name_c),
-                                    ctypes.byref(tab_desc_c),
-                                    ctypes.byref(size_c))
-        self.logger.debug('Get var desc MASCARET done.')
+        self.logger.debug("Get var desc MASCARET...")
+        self.error = self.libmascaret.C_GET_DESC_VAR_MASCARET(
+            self.id_masc, ctypes.byref(tab_name_c), ctypes.byref(tab_desc_c), ctypes.byref(size_c)
+        )
+        self.logger.debug("Get var desc MASCARET done.")
 
         var_desc = {}
         for i in range(size_c.value):
-            if str(ctypes.string_at(tab_name_c[i]), 'utf-8') \
-                    .startswith(prefix):
-                var_desc[str(ctypes.string_at(tab_name_c[i]), 'utf-8')] = \
-                    str(ctypes.string_at(tab_desc_c[i]), 'utf-8')
+            if str(ctypes.string_at(tab_name_c[i]), "utf-8").startswith(prefix):
+                var_desc[str(ctypes.string_at(tab_name_c[i]), "utf-8")] = str(
+                    ctypes.string_at(tab_desc_c[i]), "utf-8"
+                )
         return var_desc
 
     def version(self):
@@ -738,11 +769,11 @@ class Mascaret:
         v_c2 = ctypes.c_int()
         v_c3 = ctypes.c_int()
         error = self.libmascaret.C_VERSION_MASCARET(
-            ctypes.byref(v_c1), ctypes.byref(v_c2), ctypes.byref(v_c3))
+            ctypes.byref(v_c1), ctypes.byref(v_c2), ctypes.byref(v_c3)
+        )
         if error != 0:
-            return 'Version number could not be retrieved from MASCARET...'
-        return 'v' + str(v_c1.value) + 'p' + str(v_c2.value) + \
-               'r' + str(v_c3.value)
+            return "Version number could not be retrieved from MASCARET..."
+        return "v" + str(v_c1.value) + "p" + str(v_c2.value) + "r" + str(v_c3.value)
 
     def import_xml(self, file_name, import_model):
         """Import Model or State of Mascaret from xml files
@@ -755,10 +786,9 @@ class Mascaret:
         import_model_c = ctypes.c_int(import_model)
         file_name_c = ctypes.c_char_p(file_name.encode("utf-8"))
 
-        self.logger.debug('Import XML...')
-        self.error = self.libmascaret.C_IMPORT_XML(
-            self.id_masc, file_name_c, import_model_c)
-        self.logger.debug('Import XML done.')
+        self.logger.debug("Import XML...")
+        self.error = self.libmascaret.C_IMPORT_XML(self.id_masc, file_name_c, import_model_c)
+        self.logger.debug("Import XML done.")
 
     def export_xml(self, file_name, description, export_model):
         """Export Model or State of Mascaret to xml files
@@ -773,10 +803,11 @@ class Mascaret:
         description_c = ctypes.c_int(description)
         file_name_c = ctypes.c_char_p(file_name.encode("utf-8"))
 
-        self.logger.debug('Export XML...')
+        self.logger.debug("Export XML...")
         self.error = self.libmascaret.C_EXPORT_XML(
-            self.id_masc, file_name_c, description_c, export_model_c)
-        self.logger.debug('Export XML done.')
+            self.id_masc, file_name_c, description_c, export_model_c
+        )
+        self.logger.debug("Export XML done.")
 
     def export_xml_saint_venant(self, file_name):
         """Export data for the SVT code
@@ -787,10 +818,9 @@ class Mascaret:
         """
         file_name_c = ctypes.c_char_p(file_name.encode("utf-8"))
 
-        self.logger.debug('Export XML SAINT-VENANT...')
-        self.error = self.libmascaret.C_EXPORT_XML_SAINT_VENANT(
-            self.id_masc, file_name_c)
-        self.logger.debug('Export XML SAINT-VENANT done.')
+        self.logger.debug("Export XML SAINT-VENANT...")
+        self.error = self.libmascaret.C_EXPORT_XML_SAINT_VENANT(self.id_masc, file_name_c)
+        self.logger.debug("Export XML SAINT-VENANT done.")
 
     def open_tag_xml(self, file_name, unit, anchor):
         """Open xml file and root tag
@@ -805,10 +835,11 @@ class Mascaret:
         anchor_c = ctypes.c_char_p(anchor.encode("utf-8"))
         unit_c = ctypes.c_int(unit)
 
-        self.logger.debug('Open XML anchor...')
+        self.logger.debug("Open XML anchor...")
         self.error = self.libmascaret.C_OUVERTURE_BALISE_XML(
-            self.id_masc, file_name_c, unit_c, anchor_c)
-        self.logger.debug('Open XML anchor done.')
+            self.id_masc, file_name_c, unit_c, anchor_c
+        )
+        self.logger.debug("Open XML anchor done.")
 
     def export_var_xml(self, unit, var_name, description):
         """Export of a Mascaret variable to xml file
@@ -823,13 +854,13 @@ class Mascaret:
         unit_c = ctypes.c_int(unit)
         description_c = ctypes.c_int(description)
 
-        self.logger.debug('Export variable in xml...')
+        self.logger.debug("Export variable in xml...")
         self.error = self.libmascaret.C_EXPORT_VAR_XML(
-            self.id_masc, unit_c, var_name_c, description_c)
-        self.logger.debug('Export variable in xml done.')
+            self.id_masc, unit_c, var_name_c, description_c
+        )
+        self.logger.debug("Export variable in xml done.")
 
-    def export_uservar_xml(self, unit, var_name, var_type, description,
-                           var_val):
+    def export_uservar_xml(self, unit, var_name, var_type, description, var_val):
         """Export of user variable to xml file
 
         Use Mascaret Api :meth:`C_EXPORT_USERVAR_XML`.
@@ -846,11 +877,11 @@ class Mascaret:
         unit_c = ctypes.c_int(unit)
         description_c = ctypes.c_char_p(description.encode("utf-8"))
 
-        self.logger.debug('Export user variable in xml...')
+        self.logger.debug("Export user variable in xml...")
         self.error = self.libmascaret.C_EXPORT_USERVAR_XML(
-            self.id_masc, unit_c, var_name_c, var_type_c,
-            description_c, var_val_c)
-        self.logger.debug('Export user variable in xml done.')
+            self.id_masc, unit_c, var_name_c, var_type_c, description_c, var_val_c
+        )
+        self.logger.debug("Export user variable in xml done.")
 
     def close_tag_xml(self, unit, anchor):
         """Close xml file and root tag
@@ -863,10 +894,9 @@ class Mascaret:
         anchor_c = ctypes.c_char_p(anchor.encode("utf-8"))
         unit_c = ctypes.c_int(unit)
 
-        self.logger.debug('Close xml anchor...')
-        self.error = self.libmascaret.C_FERMETURE_BALISE_XML(
-            self.id_masc, unit_c, anchor_c)
-        self.logger.debug('Close xml anchor done.')
+        self.logger.debug("Close xml anchor...")
+        self.error = self.libmascaret.C_FERMETURE_BALISE_XML(self.id_masc, unit_c, anchor_c)
+        self.logger.debug("Close xml anchor done.")
 
     def get_nb_cl(self):
         """Get the number of boundary conditions
@@ -877,11 +907,9 @@ class Mascaret:
         """
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         nb_bc_c = (ctypes.c_int * 1)()
-        self.logger.debug('Getting the number of boundary conditions...')
-        self.error = self.libmascaret.C_GET_NB_CONDITION_LIMITE_MASCARET(
-            id_masc_c, nb_bc_c)
-        self.logger.debug('Number of boundary conditions: {}.'
-                          .format(nb_bc_c[0]))
+        self.logger.debug("Getting the number of boundary conditions...")
+        self.error = self.libmascaret.C_GET_NB_CONDITION_LIMITE_MASCARET(id_masc_c, nb_bc_c)
+        self.logger.debug("Number of boundary conditions: {}.".format(nb_bc_c[0]))
 
         return nb_bc_c[0]
 
@@ -896,13 +924,12 @@ class Mascaret:
         """
         id_masc_c = (ctypes.c_int * 1)(self.id_masc)
         num_cl_c = (ctypes.c_int * 1)(num_cl)
-        name_all_bc = (ctypes.c_char_p * 1)((" " * 30).encode('utf8'))
+        name_all_bc = (ctypes.c_char_p * 1)((" " * 30).encode("utf8"))
         n_law = ctypes.c_int()
-        self.logger.debug('Getting names of boundary condition #{}'.
-                          format(num_cl_c))
+        self.logger.debug("Getting names of boundary condition #{}".format(num_cl_c))
         self.error = self.libmascaret.C_GET_NOM_CONDITION_LIMITE_MASCARET(
-            id_masc_c, num_cl_c, ctypes.byref(name_all_bc),
-            ctypes.byref(n_law))
+            id_masc_c, num_cl_c, ctypes.byref(name_all_bc), ctypes.byref(n_law)
+        )
 
         return n_law.value, name_all_bc[0]
 
@@ -944,17 +971,16 @@ class Mascaret:
             index_k = 0
 
         # Getting value depending on type
-        if b'DOUBLE' in vartype:
+        if b"DOUBLE" in vartype:
             value = self.get_double(varname, index_i, index_j, index_k)
-        elif b'INT' in vartype:
+        elif b"INT" in vartype:
             value = self.get_int(varname, index_i, index_j, index_k)
-        elif b'STRING' in vartype:
+        elif b"STRING" in vartype:
             value = self.get_string(varname, index_i, index_j, index_k)
-        elif b'BOOL' in vartype:
+        elif b"BOOL" in vartype:
             value = self.get_bool(varname, index_i, index_j, index_k)
         else:
-            raise TelemacException(
-                "Unknown data type %s for %s" % (vartype, varname))
+            raise TelemacException("Unknown data type %s for %s" % (vartype, varname))
 
         return value
 
@@ -1007,12 +1033,11 @@ class Mascaret:
         elif b"BOOL" in vartype:
             self.set_bool(varname, value, index_i, index_j, index_k)
         else:
-            raise TelemacException(
-                "Unknown data type %s for %s" % (vartype, varname))
+            raise TelemacException("Unknown data type %s for %s" % (vartype, varname))
 
             # MDU modif
 
-    def save_lig_restart(self, out_file='RestartLigneEau.lig', k_s=None):
+    def save_lig_restart(self, out_file="RestartLigneEau.lig", k_s=None):
         """
         Save a lig restart files
 
@@ -1022,8 +1047,8 @@ class Mascaret:
         """
         # Size informations
         if self.nb_nodes is None:
-            self.nb_nodes, _, _ = self.get_var_size('Model.X')
-        nbbf = self.get_var_size('Model.Connect.FirstNdNum')[0]
+            self.nb_nodes, _, _ = self.get_var_size("Model.X")
+        nbbf = self.get_var_size("Model.Connect.FirstNdNum")[0]
         # Formatting parameters
         nbcol = 5
         nbent = int((nbbf - 1) / nbcol) + 1
@@ -1033,103 +1058,118 @@ class Mascaret:
         # get coords
         xcoord = []
         # Local abscissa
-        oribf = [self.get('Model.Connect.FirstNdNum', i) - 1
-                 for i in range(nbbf)]
-        endbf = [self.get('Model.Connect.LastNdNum', i)
-                 for i in range(nbbf)]
+        oribf = [self.get("Model.Connect.FirstNdNum", i) - 1 for i in range(nbbf)]
+        endbf = [self.get("Model.Connect.LastNdNum", i) for i in range(nbbf)]
         # Assign the bief number to each section (piecewise constant list)
-        ibief = [ib + 0 * i for ib in range(nbbf) for i in range(oribf[ib],
-                                                                 endbf[ib])]
+        ibief = [ib + 0 * i for ib in range(nbbf) for i in range(oribf[ib], endbf[ib])]
         for i in range(self.nb_nodes):
             xcoord.append(
-                self.get('Model.X', i) -
-                self.get('Model.X', oribf[ibief[i]]) +
-                self.get('Model.CrossSection.RelAbs',
-                         self.get('Model.IDT', oribf[ibief[i]]) - 1))
+                self.get("Model.X", i)
+                - self.get("Model.X", oribf[ibief[i]])
+                + self.get("Model.CrossSection.RelAbs", self.get("Model.IDT", oribf[ibief[i]]) - 1)
+            )
         del ibief
         del oribf
         del endbf
 
         # variables
-        elevation = [self.get('State.Z', i)
-                     for i in range(self.nb_nodes)]
-        discharge = [self.get('State.Q', i)
-                     for i in range(self.nb_nodes)]
+        elevation = [self.get("State.Z", i) for i in range(self.nb_nodes)]
+        discharge = [self.get("State.Q", i) for i in range(self.nb_nodes)]
 
-        with open(out_file, 'w') as lig:
+        with open(out_file, "w") as lig:
             # Header
-            lig.write('RESULTATS CALCUL, DATE :  '
-                      '{}\n'.format(datetime.now().strftime('%d/%m/%Y %H:%M')))
-            lig.write('FICHIER RESULTAT MASCARET\n')
-            lig.write('------------------------------------------------\
-                -----------------------\n')
-            lig.write(' IMAX =%6i ' % self.nb_nodes)
-            lig.write('NBBIEF=%5i\n' % nbbf)
-            lig.write((nbent * ' ENTETE NON RELUE\n'))
+            lig.write(
+                "RESULTATS CALCUL, DATE :  "
+                "{}\n".format(datetime.now().strftime("%d/%m/%Y %H:%M"))
+            )
+            lig.write("FICHIER RESULTAT MASCARET\n")
+            lig.write(
+                "------------------------------------------------\
+                -----------------------\n"
+            )
+            lig.write(" IMAX =%6i " % self.nb_nodes)
+            lig.write("NBBIEF=%5i\n" % nbbf)
+            lig.write((nbent * " ENTETE NON RELUE\n"))
             # X
-            np.savetxt(lig,
-                       np.asarray(xcoord[0:nbfmt]).reshape(nblin, nbcol),
-                       fmt=(nbcol * '%13.2f'), header='X', comments=' ')
+            np.savetxt(
+                lig,
+                np.asarray(xcoord[0:nbfmt]).reshape(nblin, nbcol),
+                fmt=(nbcol * "%13.2f"),
+                header="X",
+                comments=" ",
+            )
             if nbmod != 0:
-                np.savetxt(lig,
-                           np.asarray(xcoord[nbfmt:]).reshape(1, nbmod),
-                           fmt=(nbmod * '%13.2f'))
+                np.savetxt(
+                    lig, np.asarray(xcoord[nbfmt:]).reshape(1, nbmod), fmt=(nbmod * "%13.2f")
+                )
             # Z
-            np.savetxt(lig,
-                       np.asarray(elevation[0:nbfmt]).reshape(
-                           nblin, nbcol),
-                       fmt=(nbcol * '%13.3f'), header='Z', comments=' ')
+            np.savetxt(
+                lig,
+                np.asarray(elevation[0:nbfmt]).reshape(nblin, nbcol),
+                fmt=(nbcol * "%13.3f"),
+                header="Z",
+                comments=" ",
+            )
             if nbmod != 0:
-                np.savetxt(lig,
-                           np.asarray(elevation[nbfmt:]).
-                           reshape(1, nbmod),
-                           fmt=(nbmod * '%13.3f'))
+                np.savetxt(
+                    lig, np.asarray(elevation[nbfmt:]).reshape(1, nbmod), fmt=(nbmod * "%13.3f")
+                )
             # Q
-            np.savetxt(lig,
-                       np.asarray(discharge[0:nbfmt]).
-                       reshape(nblin, nbcol),
-                       fmt=(nbcol * '%13.3f'), header='Q', comments=' ')
+            np.savetxt(
+                lig,
+                np.asarray(discharge[0:nbfmt]).reshape(nblin, nbcol),
+                fmt=(nbcol * "%13.3f"),
+                header="Q",
+                comments=" ",
+            )
             if nbmod != 0:
-                np.savetxt(lig,
-                           np.asarray(discharge[nbfmt:]).
-                           reshape(1, nbmod),
-                           fmt=(nbmod * '%13.3f'))
+                np.savetxt(
+                    lig, np.asarray(discharge[nbfmt:]).reshape(1, nbmod), fmt=(nbmod * "%13.3f")
+                )
 
             # Optional Friction coefficients
             if k_s is not None:
                 # CF1
-                k_s = [self.get('Model.FricCoefMainCh', i)
-                       for i in range(self.nb_nodes)]
-                np.savetxt(lig,
-                           np.asarray(k_s[0:nbfmt]).reshape(nblin, nbcol),
-                           fmt=(nbcol * '%13.3f'), header='CF1', comments=' ')
+                k_s = [self.get("Model.FricCoefMainCh", i) for i in range(self.nb_nodes)]
+                np.savetxt(
+                    lig,
+                    np.asarray(k_s[0:nbfmt]).reshape(nblin, nbcol),
+                    fmt=(nbcol * "%13.3f"),
+                    header="CF1",
+                    comments=" ",
+                )
                 if nbmod != 0:
-                    np.savetxt(lig,
-                               np.asarray(k_s[nbfmt:]).reshape(1, nbmod),
-                               fmt=(nbmod * '%13.3f'))
+                    np.savetxt(
+                        lig, np.asarray(k_s[nbfmt:]).reshape(1, nbmod), fmt=(nbmod * "%13.3f")
+                    )
 
                 # CF2
-                k_s = [self.get('Model.FricCoefFP', i)
-                       for i in range(self.nb_nodes)]
-                np.savetxt(lig,
-                           np.asarray(k_s[0:nbfmt]).reshape(nblin, nbcol),
-                           fmt=(nbcol * '%13.3f'), header='CF2', comments=' ')
+                k_s = [self.get("Model.FricCoefFP", i) for i in range(self.nb_nodes)]
+                np.savetxt(
+                    lig,
+                    np.asarray(k_s[0:nbfmt]).reshape(nblin, nbcol),
+                    fmt=(nbcol * "%13.3f"),
+                    header="CF2",
+                    comments=" ",
+                )
                 if nbmod != 0:
-                    np.savetxt(lig,
-                               np.asarray(k_s[nbfmt:]).reshape(1, nbmod),
-                               fmt=(nbmod * '%13.3f'))
+                    np.savetxt(
+                        lig, np.asarray(k_s[nbfmt:]).reshape(1, nbmod), fmt=(nbmod * "%13.3f")
+                    )
 
             # Footer
-            lig.write(' FIN')
+            lig.write(" FIN")
         lig.close()
 
 
 class TelemacException(Exception):
-    """ Generic exception class for all of Telemac-Mascaret Exceptions """
+    """Generic exception class for all of Telemac-Mascaret Exceptions"""
+
     pass
 
 
 class MascaretException(TelemacException):
-    """ Generic exception class for all of Telemac-Mascaret Exceptions """
+    """Generic exception class for all of Telemac-Mascaret Exceptions"""
+
     pass
     # MDU fin modif

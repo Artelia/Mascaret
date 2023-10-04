@@ -25,18 +25,20 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
+
 class ClassFilterDialog(QDialog):
     def __init__(self, mgis):
         QDialog.__init__(self)
         self.mgis = mgis
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_filter.ui'),
-            self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_filter.ui"), self)
         self.meth_filter = None
         self.seuil = None
         self.valid = False
-        lst_filter = [('f_pente', 'Slope-based Filter'), ('f_rdp', 'Filter based on Ramer-Douglas-Peucker  Algorithm')]
-        #rdp Ramer-Douglas-Peucker  Algorithm
+        lst_filter = [
+            ("f_pente", "Slope-based Filter"),
+            ("f_rdp", "Filter based on Ramer-Douglas-Peucker  Algorithm"),
+        ]
+        # rdp Ramer-Douglas-Peucker  Algorithm
         for elem in lst_filter:
             self.cb_filter.addItem(elem[1], elem[0])
         self.b_ok.accepted.connect(self.accept_page)

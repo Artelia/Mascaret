@@ -31,20 +31,20 @@ else:
 from datetime import date, timedelta, datetime
 
 
-def list_sql(liste, typ='str'):
+def list_sql(liste, typ="str"):
     """
     list to srting for sql script
     :param liste: element list
     :param typ : element type
     :return:
     """
-    txt = '('
+    txt = "("
     for t_res in liste:
-        if typ is 'str':
+        if typ is "str":
             txt += "'{}',".format(t_res)
-        elif typ == 'int' or typ == 'float':
+        elif typ == "int" or typ == "float":
             txt += "{},".format(t_res)
-    txt = txt[:-1] + ')'
+    txt = txt[:-1] + ")"
     return txt
 
 
@@ -52,8 +52,7 @@ class CurveSelectorWidget(QWidget):
     cur_scen_edited = pyqtSignal()
     graph_parameters_edited = pyqtSignal(int, dict)
 
-    def __init__(self, mgis, mode, row, typ_graph, typ_res, x_var, dict_run,
-                 cur_pknum, cur_branch):
+    def __init__(self, mgis, mode, row, typ_graph, typ_res, x_var, dict_run, cur_pknum, cur_branch):
         QWidget.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
@@ -73,22 +72,20 @@ class CurveSelectorWidget(QWidget):
         self.cur_pknum, self.cur_branch, self.cur_t = cur_pknum, cur_branch, None
         self.cur_run, self.cur_scen, self.cur_graph = None, None, None
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
-                                      'ui/ui_curve_selector_{}.ui'.format(
-                                          mode)), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, "ui/ui_curve_selector_{}.ui".format(mode)), self
+        )
 
         self.cb_run.currentIndexChanged.connect(self.run_changed)
         self.cb_scen.currentIndexChanged.connect(self.scen_changed)
         self.cb_graph.currentIndexChanged.connect(self.graph_changed)
-        if self.typ_graph == 'hydro_pk':
-            self.cb_det.currentIndexChanged.connect(
-                lambda: self.detail_changed(up_lim=False))
+        if self.typ_graph == "hydro_pk":
+            self.cb_det.currentIndexChanged.connect(lambda: self.detail_changed(up_lim=False))
         else:
-            self.cb_det.currentIndexChanged.connect(
-                lambda: self.detail_changed(up_lim=True))
+            self.cb_det.currentIndexChanged.connect(lambda: self.detail_changed(up_lim=True))
 
     def init_run(self, param_init=None, param_date=None):
-        """ initialize GUI"""
+        """initialize GUI"""
         ini_run, ini_scen, ini_graph, ini_det = None, None, None, None
         if param_init:
             self.cb_axe.blockSignals(True)
@@ -106,8 +103,7 @@ class CurveSelectorWidget(QWidget):
                 if not param_date["display"]:
                     self.hide_init_date(False)
                 else:
-                    self.show_init_date(param_date["need"], param_date["init"],
-                                        False)
+                    self.show_init_date(param_date["need"], param_date["init"], False)
 
         self.cb_run.blockSignals(True)
         self.init_cb_run(ini_run)
@@ -187,9 +183,15 @@ class CurveSelectorWidget(QWidget):
         self.lst_graph.clear()
         if self.cur_scen:
             if self.typ_graph in ["struct", "weirs"]:
-                self.lst_graph = [{"type_res": self.typ_res, "id": 'gate_move',
-                                   "name": 'Gate movement', "unit": 'm',
-                                   "vars": ["ZSTR"]}]
+                self.lst_graph = [
+                    {
+                        "type_res": self.typ_res,
+                        "id": "gate_move",
+                        "name": "Gate movement",
+                        "unit": "m",
+                        "vars": ["ZSTR"],
+                    }
+                ]
             elif self.typ_graph in ["hydro", "hydro_pk"]:
                 self.get_lst_graph_opt()
             elif self.typ_graph in ["hydro_basin", "hydro_link"]:
@@ -224,17 +226,16 @@ class CurveSelectorWidget(QWidget):
         if self.typ_graph in ["struct", "weirs"]:
             lstpk = []
             if self.typ_res in self.info_graph.keys():
-                for id_config in self.info_graph[self.typ_res]['pknum'].keys():
-                    lstpk.append(
-                        self.info_graph[self.typ_res]['pknum'][id_config])
-                info = self.mdb.select('profiles',
-                                       where='abscissa IN {0}'.format(
-                                           list_sql(lstpk, 'float')),
-                                       list_var=['abscissa', "name"])
+                for id_config in self.info_graph[self.typ_res]["pknum"].keys():
+                    lstpk.append(self.info_graph[self.typ_res]["pknum"][id_config])
+                info = self.mdb.select(
+                    "profiles",
+                    where="abscissa IN {0}".format(list_sql(lstpk, "float")),
+                    list_var=["abscissa", "name"],
+                )
                 for pknum in lstpk:
-                    if pknum in info['abscissa']:
-                        txt = str(pknum) + ' : ' + info['name'][
-                            info['abscissa'].index(pknum)]
+                    if pknum in info["abscissa"]:
+                        txt = str(pknum) + " : " + info["name"][info["abscissa"].index(pknum)]
                     else:
                         txt = str(pknum)
                     self.cb_det.addItem(txt, pknum)
@@ -242,11 +243,10 @@ class CurveSelectorWidget(QWidget):
                 pass
 
         elif self.typ_graph == "hydro":
-            info = self.mdb.select('profiles', list_var=['abscissa', "name"])
-            for pknum in self.info_graph['opt']['pknum']:
-                if pknum in info['abscissa']:
-                    txt = str(pknum) + ' : ' + info['name'][
-                        info['abscissa'].index(pknum)]
+            info = self.mdb.select("profiles", list_var=["abscissa", "name"])
+            for pknum in self.info_graph["opt"]["pknum"]:
+                if pknum in info["abscissa"]:
+                    txt = str(pknum) + " : " + info["name"][info["abscissa"].index(pknum)]
                 else:
                     txt = str(pknum)
                 self.cb_det.addItem(txt, pknum)
@@ -255,30 +255,29 @@ class CurveSelectorWidget(QWidget):
             self.init_date = None
 
             sql = "SELECT init_date FROM {0}.runs WHERE id = {1} ".format(
-                self.mgis.mdb.SCHEMA, self.cur_scen)
+                self.mgis.mdb.SCHEMA, self.cur_scen
+            )
             info = self.mdb.run_query(sql, fetch=True)
             if info:
                 self.init_date = info[0][0]
 
-            for time_ in self.info_graph[self.typ_res]['time']:
+            for time_ in self.info_graph[self.typ_res]["time"]:
                 if self.init_date:
                     aff = self.init_date + timedelta(seconds=time_)
-                    aff = '{:%d/%m/%Y %H:%M:%S}.{:02.0f}'.format(aff,
-                                                                 aff.microsecond / 10000.0)
+                    aff = "{:%d/%m/%Y %H:%M:%S}.{:02.0f}".format(aff, aff.microsecond / 10000.0)
                 else:
                     aff = str(time_)
                 self.cb_det.addItem(aff, time_)
 
         elif self.typ_graph in ["hydro_basin", "hydro_link"]:
-            table, num = "{}s".format(self.typ_res), "{}num".format(
-                self.typ_res)
+            table, num = "{}s".format(self.typ_res), "{}num".format(self.typ_res)
             if self.typ_res in self.info_graph.keys():
-                sql = "SELECT DISTINCT name, {3}, gid FROM  {0}.{2} " \
-                      "WHERE {3} IN {1} ".format(self.mgis.mdb.SCHEMA,
-                                                 list_sql(self.info_graph[
-                                                              self.typ_res][
-                                                              'pknum'],
-                                                          'float'), table, num)
+                sql = "SELECT DISTINCT name, {3}, gid FROM  {0}.{2} " "WHERE {3} IN {1} ".format(
+                    self.mgis.mdb.SCHEMA,
+                    list_sql(self.info_graph[self.typ_res]["pknum"], "float"),
+                    table,
+                    num,
+                )
                 rows = self.mdb.run_query(sql, fetch=True)
                 for row in rows:
                     self.cb_det.addItem(row[0], row[1])
@@ -289,8 +288,7 @@ class CurveSelectorWidget(QWidget):
             if self.typ_graph == "hydro_pk":
                 self.cb_det.setCurrentIndex(self.cb_det.count() - 1)
             else:
-                self.cb_det.setCurrentIndex(
-                    self.cb_det.findData(self.cur_pknum))
+                self.cb_det.setCurrentIndex(self.cb_det.findData(self.cur_pknum))
 
     def detail_changed(self, up_lim=True):
         """
@@ -303,8 +301,7 @@ class CurveSelectorWidget(QWidget):
             if self.typ_graph == "hydro_pk":
                 self.cur_t = self.cb_det.itemData(self.cb_det.currentIndex())
             else:
-                self.cur_pknum = self.cb_det.itemData(
-                    self.cb_det.currentIndex())
+                self.cur_pknum = self.cb_det.itemData(self.cb_det.currentIndex())
         self.update_param_graph()
         self.graph_parameters_edited.emit(self.row, self.param_graph)
 
@@ -321,8 +318,7 @@ class CurveSelectorWidget(QWidget):
         self.param_graph["branch"] = self.cur_branch
         self.param_graph["pknum"] = self.cur_pknum
         self.param_graph["t"] = self.cur_t
-        if (self.cb_graph.currentIndex() != -1) and (
-                    self.cb_det.currentIndex() != -1):
+        if (self.cb_graph.currentIndex() != -1) and (self.cb_det.currentIndex() != -1):
             for graph in self.lst_graph:
                 if graph["id"] == self.cur_graph:
                     self.param_graph["graph"] = graph
@@ -333,8 +329,10 @@ class CurveSelectorWidget(QWidget):
         update info graphic
         :return:
         """
-        sql = "SELECT type_res, var, val FROM {0}.runs_graph WHERE " \
-              "id_runs = {1} ORDER BY id".format(self.mdb.SCHEMA, self.cur_scen)
+        sql = (
+            "SELECT type_res, var, val FROM {0}.runs_graph WHERE "
+            "id_runs = {1} ORDER BY id".format(self.mdb.SCHEMA, self.cur_scen)
+        )
         rows = self.mdb.run_query(sql, fetch=True)
         self.info_graph.clear()
         for i, row in enumerate(rows):
@@ -348,41 +346,71 @@ class CurveSelectorWidget(QWidget):
         get variable of graphic
         :return:
         """
-        list_typ_res = ["opt", "tracer_MICROPOLE", "tracer_EUTRO", "tracer_O2",
-                        "tracer_BIOMASS", "tracer_THERMIC",
-                        "tracer_TRANSPORT_PUR"]
+        list_typ_res = [
+            "opt",
+            "tracer_MICROPOLE",
+            "tracer_EUTRO",
+            "tracer_O2",
+            "tracer_BIOMASS",
+            "tracer_THERMIC",
+            "tracer_TRANSPORT_PUR",
+        ]
 
         self.lst_graph = [
-            {"type_res": 'opt', "id": 'Z', "name": 'Levels', "unit": '$m$',
-             "vars": ['ZREF', 'Z', 'ZMIN', 'ZMAX', 'CHAR']},
-            {"type_res": 'opt', "id": 'Q', "name": 'Flow rate',
-             "unit": '$m^3/s$',
-             "vars": ['Q', 'QMIN', 'QMAJ', 'QMAX']}]
+            {
+                "type_res": "opt",
+                "id": "Z",
+                "name": "Levels",
+                "unit": "$m$",
+                "vars": ["ZREF", "Z", "ZMIN", "ZMAX", "CHAR"],
+            },
+            {
+                "type_res": "opt",
+                "id": "Q",
+                "name": "Flow rate",
+                "unit": "$m^3/s$",
+                "vars": ["Q", "QMIN", "QMAJ", "QMAX"],
+            },
+        ]
 
-        common_var_exists = {'Q': False, 'QMIN': False, 'QMAJ': False,
-                             'QMAX': False,
-                             'ZREF': False, 'Z': False, 'ZMIN': False,
-                             'ZMAX': False, 'CHAR': False}
+        common_var_exists = {
+            "Q": False,
+            "QMIN": False,
+            "QMAJ": False,
+            "QMAX": False,
+            "ZREF": False,
+            "Z": False,
+            "ZMIN": False,
+            "ZMAX": False,
+            "CHAR": False,
+        }
 
         if self.cur_scen:
             list_vars = []
             for typ_res in list_typ_res:
                 if typ_res in self.info_graph.keys():
-                    list_vars.extend(self.info_graph[typ_res]['var'])
+                    list_vars.extend(self.info_graph[typ_res]["var"])
             sql = "SELECT * FROM {0}.results_var WHERE id in {1}".format(
-                self.mdb.SCHEMA, list_sql(list_vars))
+                self.mdb.SCHEMA, list_sql(list_vars)
+            )
         # else:
         #     sql = "SELECT DISTINCT * FROM {0}.results_var WHERE type_res in {1}".format(self.mdb.SCHEMA, list_sql(self.list_typ_res))
 
         rows = self.mdb.run_query(sql, fetch=True)
         if not rows:
-            self.mgis.add_info('No data')
+            self.mgis.add_info("No data")
         else:
             for rws in rows:
                 if not rws[2] in common_var_exists.keys():
                     self.lst_graph.append(
-                        {"type_res": rws[1], "id": rws[2], "name": rws[3],
-                         "unit": '', "vars": [rws[2]]})
+                        {
+                            "type_res": rws[1],
+                            "id": rws[2],
+                            "name": rws[3],
+                            "unit": "",
+                            "vars": [rws[2]],
+                        }
+                    )
                 else:
                     common_var_exists[rws[2]] = True
 
@@ -398,18 +426,25 @@ class CurveSelectorWidget(QWidget):
         """
         if self.typ_res in self.info_graph.keys():
             if self.cur_scen:
-                sql = "SELECT * FROM {0}.results_var " \
-                      "WHERE id in {1}".format(self.mdb.SCHEMA, list_sql(
-                    self.info_graph[self.typ_res]['var']))
+                sql = "SELECT * FROM {0}.results_var " "WHERE id in {1}".format(
+                    self.mdb.SCHEMA, list_sql(self.info_graph[self.typ_res]["var"])
+                )
             else:
                 sql = "SELECT DISTINCT * FROM {0}.results_var WHERE type_res = '{1}'".format(
-                    self.mdb.SCHEMA, self.typ_res)
+                    self.mdb.SCHEMA, self.typ_res
+                )
             rows = self.mdb.run_query(sql, fetch=True)
 
             for rws in rows:
                 self.lst_graph.append(
-                    {"type_res": self.typ_res, "id": rws[2], "name": rws[3],
-                     "unit": '', "vars": [rws[2]]})
+                    {
+                        "type_res": self.typ_res,
+                        "id": rws[2],
+                        "name": rws[3],
+                        "unit": "",
+                        "vars": [rws[2]],
+                    }
+                )
 
             self.correct_units()
 
@@ -419,12 +454,11 @@ class CurveSelectorWidget(QWidget):
         :return:
         """
         for graph in self.lst_graph:
-            if graph["id"] not in ['Z', 'Q']:
+            if graph["id"] not in ["Z", "Q"]:
                 var = graph["vars"][0].lower()
                 if var in self.mgis.variables.keys():
-                    if self.mgis.variables[var]['unite']:
-                        graph["unit"] = r"${}$".format(
-                            self.mgis.variables[var]['unite'])
+                    if self.mgis.variables[var]["unite"]:
+                        graph["unit"] = r"${}$".format(self.mgis.variables[var]["unite"])
 
 
 class SlideCurveSelectorWidget(CurveSelectorWidget):
@@ -432,21 +466,29 @@ class SlideCurveSelectorWidget(CurveSelectorWidget):
     slider management
     """
 
-    def __init__(self, mgis=None, row=None, typ_graph=None, typ_res=None,
-                 x_var=None, dict_run=None, cur_pknum=None, cur_branch=None):
-        CurveSelectorWidget.__init__(self, mgis, "slide", row, typ_graph,
-                                     typ_res, x_var, dict_run, cur_pknum,
-                                     cur_branch)
+    def __init__(
+        self,
+        mgis=None,
+        row=None,
+        typ_graph=None,
+        typ_res=None,
+        x_var=None,
+        dict_run=None,
+        cur_pknum=None,
+        cur_branch=None,
+    ):
+        CurveSelectorWidget.__init__(
+            self, mgis, "slide", row, typ_graph, typ_res, x_var, dict_run, cur_pknum, cur_branch
+        )
 
     def scen_changed(self, v, ini_graph=None, ini_det=None):
         CurveSelectorWidget.scen_changed(self, v, ini_graph, ini_det)
         self.display_comment()
 
     def display_comment(self):
-        txt = self.mdb.select_distinct("comments", "runs",
-                                       where='id={}'.format(self.cur_scen))
+        txt = self.mdb.select_distinct("comments", "runs", where="id={}".format(self.cur_scen))
         if txt:
-            txt = txt['comments'][0]
+            txt = txt["comments"][0]
             if not isinstance(txt, str):
                 txt = str(txt)
             self.lbl_com.setText(txt)
@@ -472,11 +514,20 @@ class SlideCurveSelectorWidget(CurveSelectorWidget):
 
 
 class CompareCurveSelectorWidget(CurveSelectorWidget):
-    def __init__(self, mgis=None, row=None, typ_graph=None, typ_res=None,
-                 x_var=None, dict_run=None, cur_pknum=None, cur_branch=None):
-        CurveSelectorWidget.__init__(self, mgis, "compare", row, typ_graph,
-                                     typ_res, x_var, dict_run, cur_pknum,
-                                     cur_branch)
+    def __init__(
+        self,
+        mgis=None,
+        row=None,
+        typ_graph=None,
+        typ_res=None,
+        x_var=None,
+        dict_run=None,
+        cur_pknum=None,
+        cur_branch=None,
+    ):
+        CurveSelectorWidget.__init__(
+            self, mgis, "compare", row, typ_graph, typ_res, x_var, dict_run, cur_pknum, cur_branch
+        )
 
         self.cb_axe.clear()
         for a in [1, 2]:
@@ -504,8 +555,7 @@ class CompareCurveSelectorWidget(CurveSelectorWidget):
         CurveSelectorWidget.update_param_graph(self)
         self.param_graph["axe"] = self.cb_axe.currentData()
         if self.init_date_needed:
-            self.param_graph[
-                "init_date"] = self.ctrl_date_init.dateTime().toPyDateTime()
+            self.param_graph["init_date"] = self.ctrl_date_init.dateTime().toPyDateTime()
 
     def show_init_date(self, needed=False, value=None, update=True):
         self.lbl_date_init.show()
@@ -518,7 +568,8 @@ class CompareCurveSelectorWidget(CurveSelectorWidget):
                 self.ctrl_date_init.blockSignals(False)
         self.init_date_needed = needed
         self.init_date_displayed = True
-        if update: self.update_param_graph()
+        if update:
+            self.update_param_graph()
 
     def hide_init_date(self, update=True):
         self.lbl_date_init.hide()
@@ -526,4 +577,5 @@ class CompareCurveSelectorWidget(CurveSelectorWidget):
         self.ctrl_date_init.setEnabled(False)
         self.init_date_needed = False
         self.init_date_displayed = False
-        if update: self.update_param_graph()
+        if update:
+            self.update_param_graph()

@@ -24,7 +24,6 @@ from .ClassMethod import ClassMethod
 import shapely.wkt
 
 
-
 class ClassInfoParamFG(object):
     def __init__(self):
         self.param_fg = {}
@@ -39,27 +38,25 @@ class ClassInfoParamFG(object):
 
 class ClassPostPreFG:
     def __init__(self, main=None):
-
         self.mgis = main
         self.cli = ClassInfoParamFG()
 
         if not main:
-            path = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), '../mascaret'))
-            path = os.path.join(path, 'cli_fg.obj')
+            path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../mascaret"))
+            path = os.path.join(path, "cli_fg.obj")
             self.import_cl(path)
         else:
             self.clmeth = ClassMethod(self.mgis)
 
-    def import_cl(self, name='object.obj'):
+    def import_cl(self, name="object.obj"):
         if os.path.isfile(name):
             # with open(name, 'rb') as file:
-                # obj = pickle.load(file)
-            with open(name, 'r') as file:
+            # obj = pickle.load(file)
+            with open(name, "r") as file:
                 obj = json.load(file)
 
             for key, val in obj.items():
-                if key =="list_poly_trav" or key =="list_poly_pil":
+                if key == "list_poly_trav" or key == "list_poly_pil":
                     for key2, itm in val.items():
                         val[int(key2)] = [shapely.wkt.loads(poly) for poly in itm]
                 setattr(self.cli, key, val)
@@ -67,17 +64,17 @@ class ClassPostPreFG:
         else:
             pass
 
-    def export_cl(self, obj, name='object.js'):
+    def export_cl(self, obj, name="object.js"):
         """
 
         :param obj: object to dump
         :param name: name file
         :return:
         """
-        with open(name, 'w') as file:
+        with open(name, "w") as file:
             json.dump(obj, file)
         # with open(name, 'wb') as file:
-            # pickle.dump(obj, file)
+        # pickle.dump(obj, file)
 
     def create_cli_fg(self, name=None):
         """
@@ -96,22 +93,27 @@ class ClassPostPreFG:
             param_g = {}
 
             for id_config in list_actif:
-                list_poly_trav[id_config] = [ poly.wkt for poly in self.clmeth.select_poly_elem(id_config, 0)]
-                    # self.clmeth.select_poly_elem(id_config, 0)
-                list_poly_pil[id_config] = [ poly.wkt for poly in self.clmeth.select_poly_elem(id_config, 1)]
+                list_poly_trav[id_config] = [
+                    poly.wkt for poly in self.clmeth.select_poly_elem(id_config, 0)
+                ]
+                # self.clmeth.select_poly_elem(id_config, 0)
+                list_poly_pil[id_config] = [
+                    poly.wkt for poly in self.clmeth.select_poly_elem(id_config, 1)
+                ]
                 # self.clmeth.select_poly_elem(id_config, 1)
                 profil[id_config] = self.clmeth.get_profil(id_config)
-                param_g[id_config] = self.clmeth.get_param_g('all', id_config)
+                param_g[id_config] = self.clmeth.get_param_g("all", id_config)
 
-            dico = {"list_actif": self.clmeth.fg_actif(),
-                    "param_fg": param_fg,
-                    "link_name_id": link_name_id,
-                    "list_poly_trav": list_poly_trav,
-                    "list_poly_pil": list_poly_pil,
-                    "profil": profil,
-                    "param_g": param_g,
-                    "abac": self.clmeth.get_abac('all')
-                    }
+            dico = {
+                "list_actif": self.clmeth.fg_actif(),
+                "param_fg": param_fg,
+                "link_name_id": link_name_id,
+                "list_poly_trav": list_poly_trav,
+                "list_poly_pil": list_poly_pil,
+                "profil": profil,
+                "param_g": param_g,
+                "abac": self.clmeth.get_abac("all"),
+            }
             self.export_cl(dico, name)
 
     def get_profil(self, id_config):
@@ -128,7 +130,7 @@ class ClassPostPreFG:
             return self.cli.profil[id_config]
 
     def get_param_fg(self):
-        """get variable of the floodgate """
+        """get variable of the floodgate"""
         if self.mgis:
             return self.clmeth.get_param_fg()
         else:
@@ -143,13 +145,13 @@ class ClassPostPreFG:
 
     def get_param_g(self, list_recup, id_config):
         """
-               Get general parameters
-               :param list_recup: list of  value to get
-               :param id_config: index of hydraulic structure
-               :return: dico
-               """
+        Get general parameters
+        :param list_recup: list of  value to get
+        :param id_config: index of hydraulic structure
+        :return: dico
+        """
         if self.mgis:
-            dico = self.clmeth.get_param_g('all', id_config)
+            dico = self.clmeth.get_param_g("all", id_config)
             new_dico = {}
             for info in list_recup:
                 if info in dico.keys():

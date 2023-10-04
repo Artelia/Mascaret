@@ -26,7 +26,6 @@ from qgis.gui import *
 from .ui.custom_control import ClassWarningBox
 
 if int(qVersion()[0]) < 5:  # qt4
-
     from qgis.PyQt.QtGui import *
 else:  # qt4
     from qgis.PyQt.QtWidgets import *
@@ -42,8 +41,7 @@ class ClassDeletshDialog(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.iface = iface
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_delete_sh.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_delete_sh.ui"), self)
         self.box = ClassWarningBox()
         self.liste_model = self.mdb.liste_models()
         self.parent = {}
@@ -52,16 +50,16 @@ class ClassDeletshDialog(QDialog):
 
     def init_gui(self):
         """
-              initialisation GUI
-          """
+        initialisation GUI
+        """
         if len(self.liste_model) > 0:
             self.tree = self.ui.treeWidget
             for model in self.liste_model:
                 self.parent[model] = QTreeWidgetItem(self.tree)
                 self.parent[model].setText(0, model)
-                self.parent[model].setFlags(self.parent[model].flags() |
-                                            Qt.ItemIsTristate |
-                                            Qt.ItemIsUserCheckable)
+                self.parent[model].setFlags(
+                    self.parent[model].flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable
+                )
                 self.parent[model].setCheckState(0, Qt.Unchecked)
         else:
             self.ui.b_delete.setDisabled(True)
@@ -69,7 +67,7 @@ class ClassDeletshDialog(QDialog):
         self.ui.b_cancel.clicked.connect(self.annule)
 
     def lancement(self):
-        """ Delete selection function"""
+        """Delete selection function"""
         selection = []
         for model in self.liste_model:
             if self.parent[model].checkState(0) > 0:
@@ -83,21 +81,20 @@ class ClassDeletshDialog(QDialog):
         progress_message_bar.pushWidget(progress)
 
         n = len(selection)
-        ok = self.box.yes_no_q('Do you want to delete ?')
+        ok = self.box.yes_no_q("Do you want to delete ?")
 
         if ok:
             for i, model in enumerate(selection):
                 self.mdb.drop_model(model, cascade=True)
 
-                self.mgis.add_info(
-                    "Deletion of {0} Model is done".format(model), dbg=True)
+                self.mgis.add_info("Deletion of {0} Model is done".format(model), dbg=True)
 
                 progress.setValue(round(i / n * 100))
         else:
-            self.mgis.add_info('Droping Model cancelled.', dbg=True)
+            self.mgis.add_info("Droping Model cancelled.", dbg=True)
 
         self.iface.messageBar().clearWidgets()
 
     def annule(self):
-        """"Cancel """
+        """ "Cancel"""
         self.close()

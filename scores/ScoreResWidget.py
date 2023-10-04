@@ -37,34 +37,34 @@ class ScoreResWidget(QWidget):
         self.all = windmain.all
         self.mdb = self.windmain.mgis.mdb
         self.ui = loadUi(
-            os.path.join(self.windmain.mgis.masplugPath,
-                         'ui/scores/ui_results_score.ui'), self)
+            os.path.join(self.windmain.mgis.masplugPath, "ui/scores/ui_results_score.ui"), self
+        )
         self.dict_name = {}
         self.res = {}
         #
         self.data_write = {
-            'mean_err': 'Mean error',
-            'mean_abs_err': 'Mean absolute error',
-            'mean_r_err': 'Mean relative error',
-            'biais': 'Mean relative error in % (biais)',
-            'mean_rabs_err': 'Mean relative absolute error',
-            'precision': 'Mean relative absolute error in % (precision)',
-            'std': 'Standard deviation',
-            'eqm': 'Mean square error',
-            'ns_err': 'Nash - Sutcliffe criterion',
-            'vol_err': "Error on volumes",
-            'pts_err': "Errors on the peaks",
-            'pts_time_err': "Time shift on the peaks",
-            'per_err': 'Persistence'
+            "mean_err": "Mean error",
+            "mean_abs_err": "Mean absolute error",
+            "mean_r_err": "Mean relative error",
+            "biais": "Mean relative error in % (biais)",
+            "mean_rabs_err": "Mean relative absolute error",
+            "precision": "Mean relative absolute error in % (precision)",
+            "std": "Standard deviation",
+            "eqm": "Mean square error",
+            "ns_err": "Nash - Sutcliffe criterion",
+            "vol_err": "Error on volumes",
+            "pts_err": "Errors on the peaks",
+            "pts_time_err": "Time shift on the peaks",
+            "per_err": "Persistence",
         }
 
         self.bt_export_csv.clicked.connect(self.export_csv)
         self.bt_export_csv.setEnabled(False)
 
     def fill_tab(self):
-        """ fill table"""
+        """fill table"""
         self.clear_tab()
-        err_typ_lst = [err for err in self.res.keys() if err != 'quantil']
+        err_typ_lst = [err for err in self.res.keys() if err != "quantil"]
         id_lst = []
         for err in err_typ_lst:
             for idrun in self.res[err].keys():
@@ -83,14 +83,17 @@ class ScoreResWidget(QWidget):
                 for pk, dict_pk in dict_id.items():
                     for code, dict_code in dict_pk.items():
                         for varq, tmp_var in dict_code.items():
-                            name_col = '{} - {}\n' \
-                                       '{}\n' \
-                                       '{} - {}'.format(
-                                self.dict_name[idrun]['run'],
-                                self.dict_name[idrun]['scenario'],
-                                pk,
-                                code,
-                                varq)
+                            name_col = (
+                                "{} - {}\n"
+                                "{}\n"
+                                "{} - {}".format(
+                                    self.dict_name[idrun]["run"],
+                                    self.dict_name[idrun]["scenario"],
+                                    pk,
+                                    code,
+                                    varq,
+                                )
+                            )
                             lst_col.append(name_col)
                             for err, tmp in tmp_var.items():
                                 if err in tab_fill.keys():
@@ -99,29 +102,25 @@ class ScoreResWidget(QWidget):
                                     tab_fill[err] = {name_col: tmp}
 
         if len(tab_fill.keys()) > 0:
-
             err_lst = [v for v in tab_fill.keys()]
             nb_line = len(err_lst)
             columns = list(set(lst_col))
             nb_col = len(columns)
             self.table_res.setRowCount(nb_line)
             self.table_res.setColumnCount(nb_col)
-            self.table_res.setVerticalHeaderLabels(
-                [self.data_write[v] for v in err_lst])
+            self.table_res.setVerticalHeaderLabels([self.data_write[v] for v in err_lst])
             self.table_res.setHorizontalHeaderLabels(columns)
             for row, dist in enumerate(err_lst):
                 for tmp in tab_fill[dist].keys():
                     val = tab_fill[dist][tmp]
                     if val is None:
-                        val = ''
+                        val = ""
                     if isinstance(val, str):
-                        item = QTableWidgetItem(
-                            '{}'.format(val))
-                    elif dist == 'vol_err':
-                        item = QTableWidgetItem(
-                            '{:e}'.format(val))
+                        item = QTableWidgetItem("{}".format(val))
+                    elif dist == "vol_err":
+                        item = QTableWidgetItem("{:e}".format(val))
                     else:
-                        item = QTableWidgetItem('{:.3f}'.format(val))
+                        item = QTableWidgetItem("{:.3f}".format(val))
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                     item.setFlags(Qt.ItemIsEnabled)
                     col = columns.index(tmp)
@@ -136,22 +135,22 @@ class ScoreResWidget(QWidget):
 
     def export_csv(self):
         """Export Table to .CSV file"""
-        title = self.table_res.horizontalHeaderItem(0).text().split('\n')
-        txt = 'Scores_{}'.format(title[0])
-        #default_name = txt.replace(' ', '_').replace(':', '-')
-        default_name = os.path.join(self.windmain.mgis.repProject, txt.replace(' ', '_').replace(':', '-'))
-        file_name_path, _ = QFileDialog.getSaveFileName(self,
-                                                        "saveFile",
-                                                        "{0}.csv".format(
-                                                            default_name),
-                                                        filter="CSV (*.csv *.)")
+        title = self.table_res.horizontalHeaderItem(0).text().split("\n")
+        txt = "Scores_{}".format(title[0])
+        # default_name = txt.replace(' ', '_').replace(':', '-')
+        default_name = os.path.join(
+            self.windmain.mgis.repProject, txt.replace(" ", "_").replace(":", "-")
+        )
+        file_name_path, _ = QFileDialog.getSaveFileName(
+            self, "saveFile", "{0}.csv".format(default_name), filter="CSV (*.csv *.)"
+        )
         if file_name_path:
             self.windmain.mgis.up_rep_project(file_name_path)
             cur_tw = self.table_res
             range_r = range(0, cur_tw.rowCount())
             range_c = range(0, cur_tw.columnCount())
-            clipboard = self.tw_to_txt(cur_tw, range_r, range_c, ';')
-            file = open(file_name_path, 'w')
+            clipboard = self.tw_to_txt(cur_tw, range_r, range_c, ";")
+            file = open(file_name_path, "w")
             file.write(clipboard)
             file.close()
 
@@ -164,34 +163,28 @@ class ScoreResWidget(QWidget):
         :param sep: separator
         :return:
         """
-        clipboard = '{}'.format(sep)
+        clipboard = "{}".format(sep)
         for c in range_c:
             if c != range_c[-1]:
-                clipboard = '{}{}{}'.format(clipboard,
-                                            tw.horizontalHeaderItem(
-                                                c).text().replace('\n', ' '),
-                                            sep)
+                clipboard = "{}{}{}".format(
+                    clipboard, tw.horizontalHeaderItem(c).text().replace("\n", " "), sep
+                )
             else:
-                clipboard = '{}{}\n'.format(clipboard,
-                                            tw.horizontalHeaderItem(
-                                                c).text().replace('\n', ' '))
+                clipboard = "{}{}\n".format(
+                    clipboard, tw.horizontalHeaderItem(c).text().replace("\n", " ")
+                )
 
         for r in range_r:
-            clipboard = '{}{}{}'.format(clipboard,
-                                        tw.verticalHeaderItem(r).text(),
-                                        sep)
+            clipboard = "{}{}{}".format(clipboard, tw.verticalHeaderItem(r).text(), sep)
 
             for c in range_c:
                 if tw.item(r, c):
                     val = tw.item(r, c).data(0)
                 else:
-                    val = ''
+                    val = ""
                 if c != range_c[-1]:
-                    clipboard = '{}{}{}'.format(clipboard,
-                                                val,
-                                                sep)
+                    clipboard = "{}{}{}".format(clipboard, val, sep)
                 else:
-                    clipboard = '{}{}\n'.format(clipboard,
-                                                val)
+                    clipboard = "{}{}\n".format(clipboard, val)
 
         return clipboard

@@ -39,8 +39,7 @@ class ClassParameterDialog(QDialog):
 
         self.kernel = kernel
 
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_parameter.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_parameter.ui"), self)
 
         self.combo = {}
         self.libel_var = []
@@ -70,159 +69,164 @@ class ClassParameterDialog(QDialog):
 
     def init_ui(self):
         """initialisation GUI"""
-        self.combo = {'code': {1: 'Steady',
-                               2: 'Unsteady',
-                               3: 'Transcritical'},
-                      'compositionLits': {0: 'Aucun',
-                                          1: 'Debord',
-                                          2: 'fond/berge'},
-                      'option': {1: 'Sections de calcul',
-                                 2: 'couche Points de sortie'},
-                      'postProcesseur': {1: 'Rubens',
-                                         2: 'Opthyca'},
-                      'critereArret': {1: 'Temps maximum',
-                                       2: 'Nombre de pas de temps max',
-                                       3: 'Cote maximale de controle'},
-                      }
+        self.combo = {
+            "code": {1: "Steady", 2: "Unsteady", 3: "Transcritical"},
+            "compositionLits": {0: "Aucun", 1: "Debord", 2: "fond/berge"},
+            "option": {1: "Sections de calcul", 2: "couche Points de sortie"},
+            "postProcesseur": {1: "Rubens", 2: "Opthyca"},
+            "critereArret": {
+                1: "Temps maximum",
+                2: "Nombre de pas de temps max",
+                3: "Cote maximale de controle",
+            },
+        }
 
-        self.libel_var = ["Bottom elevation",
-                          "Left bank water level",
-                          "Right bank water level",
-                          "Minor friction coefficient",
-                          "Major friction coefficient",
-                          "Water level",
-                          "Flow rate in minor river bed",
-                          "Flow rate in major river bed",
-                          "Wetted area of minor river bed",
-                          "Wetted area of major river bed",
-                          "Froude number",
-                          "Coefficient beta of Debord's formula",
-                          "Surface width of minor river bed",
-                          "Surface width of major river bed",
-                          "Surface width of storage area",
-                          "Wetted perimeter of minor river bed",
-                          "Wetted perimeter of major river bed",
-                          "Hydaulic radius of minor river bed",
-                          "Hydaulic radius of major river bed",
-                          "Velocity of minor river bed",
-                          "Velocity of major river bed",
-                          "Bottom shear stress",
-                          "Water depth",
-                          "Average water depth",
-                          "Flow rate in left major river bed",
-                          "Flow rate in right major river bed",
-                          "Wetted area of storage area",
-                          "Cumulative volume of the active river bed",
-                          "Cumulative volume of the storage area",
-                          "Hydraulic head",
-                          "Maximal water level",
-                          "Date of maximal water level",
-                          "Velocity for the maximal water level",
-                          "Minimal water level",
-                          "Date of minimal water level",
-                          "Minimum minor river bed velocity",
-                          "Maximum minor river bed velocity",
-                          "Maximum surface width",
-                          "Arrival time of the floodwave",
-                          "Maximum flow rate",
-                          "Date of maximum flow rate",
-                          "Maximum energy",
-                          "Total wetted area",
-                          "Basin water level",
-                          "Basin area",
-                          "Basin volume",
-                          "Link flow rate",
-                          "Link velocity"
-                          ]
+        self.libel_var = [
+            "Bottom elevation",
+            "Left bank water level",
+            "Right bank water level",
+            "Minor friction coefficient",
+            "Major friction coefficient",
+            "Water level",
+            "Flow rate in minor river bed",
+            "Flow rate in major river bed",
+            "Wetted area of minor river bed",
+            "Wetted area of major river bed",
+            "Froude number",
+            "Coefficient beta of Debord's formula",
+            "Surface width of minor river bed",
+            "Surface width of major river bed",
+            "Surface width of storage area",
+            "Wetted perimeter of minor river bed",
+            "Wetted perimeter of major river bed",
+            "Hydaulic radius of minor river bed",
+            "Hydaulic radius of major river bed",
+            "Velocity of minor river bed",
+            "Velocity of major river bed",
+            "Bottom shear stress",
+            "Water depth",
+            "Average water depth",
+            "Flow rate in left major river bed",
+            "Flow rate in right major river bed",
+            "Wetted area of storage area",
+            "Cumulative volume of the active river bed",
+            "Cumulative volume of the storage area",
+            "Hydraulic head",
+            "Maximal water level",
+            "Date of maximal water level",
+            "Velocity for the maximal water level",
+            "Minimal water level",
+            "Date of minimal water level",
+            "Minimum minor river bed velocity",
+            "Maximum minor river bed velocity",
+            "Maximum surface width",
+            "Arrival time of the floodwave",
+            "Maximum flow rate",
+            "Date of maximum flow rate",
+            "Maximum energy",
+            "Total wetted area",
+            "Basin water level",
+            "Basin area",
+            "Basin volume",
+            "Link flow rate",
+            "Link velocity",
+        ]
 
-        self.variables = ['ZREF',
-                          'RGC',
-                          'RDC',
-                          'KMIN',
-                          'KMAJ',
-                          'Z',
-                          'QMIN',
-                          'QMAJ',
-                          'S1',
-                          'S2',
-                          'FR',
-                          'BETA',
-                          'B1',
-                          'B2',
-                          'BS',
-                          'P1',
-                          'P2',
-                          'RH1',
-                          'RH2',
-                          'VMIN',
-                          'VMAJ',
-                          'TAUF',
-                          'Y',
-                          'HMOY',
-                          'Q2G',
-                          'Q2D',
-                          'SS',
-                          'VOL',
-                          'VOLS',
-                          'CHAR',
-                          'ZMAX',
-                          'TZMA',
-                          'VZMX',
-                          'ZMIN',
-                          'TZMI',
-                          'VINF',
-                          'VSUP',
-                          'BMAX',
-                          'TOND',
-                          'QMAX',
-                          'TQMA',
-                          'EMAX',
-                          'ATOT',
-                          'ZCAS',
-                          'SURCAS',
-                          'VOLCAS',
-                          'QECH',
-                          'VECH'
-                          ]
+        self.variables = [
+            "ZREF",
+            "RGC",
+            "RDC",
+            "KMIN",
+            "KMAJ",
+            "Z",
+            "QMIN",
+            "QMAJ",
+            "S1",
+            "S2",
+            "FR",
+            "BETA",
+            "B1",
+            "B2",
+            "BS",
+            "P1",
+            "P2",
+            "RH1",
+            "RH2",
+            "VMIN",
+            "VMAJ",
+            "TAUF",
+            "Y",
+            "HMOY",
+            "Q2G",
+            "Q2D",
+            "SS",
+            "VOL",
+            "VOLS",
+            "CHAR",
+            "ZMAX",
+            "TZMA",
+            "VZMX",
+            "ZMIN",
+            "TZMI",
+            "VINF",
+            "VSUP",
+            "BMAX",
+            "TOND",
+            "QMAX",
+            "TQMA",
+            "EMAX",
+            "ATOT",
+            "ZCAS",
+            "SURCAS",
+            "VOLCAS",
+            "QECH",
+            "VECH",
+        ]
         # Q
 
-        self.exclusion = {'steady': ['presenceCasiers',
-                                     'elevCoteArrivFront',
-                                     'calcOndeSubmersion',
-                                     'froudeLimCondLim',
-                                     'traitImplicitFrot',
-                                     'implicitNoyauTrans',
-                                     'optimisNoyauTrans',
-                                     'perteChargeAutoElargissement',
-                                     'termesNonHydrostatiques',
-                                     'attenuationConvection',
-                                     'pasTempsVar',
-                                     'nbCourant',
-                                     'repriseCalcul',
-                                     'LigEauInit',
-                                     'modeEntree',
-                                     'fichLigEau',
-                                     'formatFichLig',
-                                     'initialisationAuto'],
-                          'unsteady': ['elevCoteArrivFront',
-                                       'calcOndeSubmersion',
-                                       'froudeLimCondLim',
-                                       'traitImplicitFrot',
-                                       'implicitNoyauTrans',
-                                       'optimisNoyauTrans',
-                                       'perteChargeAutoElargissement',
-                                       'termesNonHydrostatiques',
-                                       'pasTempsVar',
-                                       'nbCourant',
-                                       'repriseCalcul',
-                                       'decentrement'],
-                          'transcritical': ['presenceCasiers',
-                                            'attenuationConvection',
-                                            'compositionLits',
-                                            'repriseCalcul',
-                                            'decentrement']
-
-                          }
+        self.exclusion = {
+            "steady": [
+                "presenceCasiers",
+                "elevCoteArrivFront",
+                "calcOndeSubmersion",
+                "froudeLimCondLim",
+                "traitImplicitFrot",
+                "implicitNoyauTrans",
+                "optimisNoyauTrans",
+                "perteChargeAutoElargissement",
+                "termesNonHydrostatiques",
+                "attenuationConvection",
+                "pasTempsVar",
+                "nbCourant",
+                "repriseCalcul",
+                "LigEauInit",
+                "modeEntree",
+                "fichLigEau",
+                "formatFichLig",
+                "initialisationAuto",
+            ],
+            "unsteady": [
+                "elevCoteArrivFront",
+                "calcOndeSubmersion",
+                "froudeLimCondLim",
+                "traitImplicitFrot",
+                "implicitNoyauTrans",
+                "optimisNoyauTrans",
+                "perteChargeAutoElargissement",
+                "termesNonHydrostatiques",
+                "pasTempsVar",
+                "nbCourant",
+                "repriseCalcul",
+                "decentrement",
+            ],
+            "transcritical": [
+                "presenceCasiers",
+                "attenuationConvection",
+                "compositionLits",
+                "repriseCalcul",
+                "decentrement",
+            ],
+        }
         self.create_dico_para()
         self.init_gui()
 
@@ -232,19 +236,23 @@ class ClassParameterDialog(QDialog):
         sql = "SELECT parametre, {0}, libelle, gui, gui_type FROM {1}.{2};"
 
         rows = self.mdb.run_query(
-            sql.format(self.kernel, self.mdb.SCHEMA, "parametres"), fetch=True)
+            sql.format(self.kernel, self.mdb.SCHEMA, "parametres"), fetch=True
+        )
         for param, valeur, libelle, gui, gui_type in rows:
-            if gui_type == 'parameters':
-                if param == 'variablesStockees':
+            if gui_type == "parameters":
+                if param == "variablesStockees":
                     # valeurs = list(map(eval, valeur.title().split()))
                     valeurs = []
                     for var1 in valeur.title().split():
                         valeurs.append(eval(var1))
 
-                    for var, val, lib in zip(self.variables, valeurs,
-                                             self.libel_var):
-                        self.par[var] = {"val": val, "libelle": lib,
-                                         "gui": True, "gui_type": 'parameters'}
+                    for var, val, lib in zip(self.variables, valeurs, self.libel_var):
+                        self.par[var] = {
+                            "val": val,
+                            "libelle": lib,
+                            "gui": True,
+                            "gui_type": "parameters",
+                        }
                         # self.par[var] = {"val": val, "libelle": lib}
                 else:
                     self.par[param] = {}
@@ -260,42 +268,43 @@ class ClassParameterDialog(QDialog):
     def init_gui(self):
         for param, info in self.par.items():
             # self.mgis.add_info("param {}  info {}".format(param, info))
-            if info['gui'] and info['gui_type'] == 'parameters':
+            if info["gui"] and info["gui_type"] == "parameters":
                 obj = getattr(self.ui, param)
                 if isinstance(obj, QCheckBox):
-                    obj.setChecked(info['val'])
-                elif isinstance(obj, QDoubleSpinBox) or isinstance(obj,
-                                                                   QSpinBox):
-                    obj.setValue(info['val'])
+                    obj.setChecked(info["val"])
+                elif isinstance(obj, QDoubleSpinBox) or isinstance(obj, QSpinBox):
+                    obj.setValue(info["val"])
                 elif obj == self.ui.evenement:
-                    self.ui.evenement.setChecked(info['val'])
+                    self.ui.evenement.setChecked(info["val"])
                     self.ch_event()
                 elif isinstance(obj, QComboBox):
-                    if param == 'option':
-                        val = info['val'] - 1
+                    if param == "option":
+                        val = info["val"] - 1
                     elif param == "compositionLits":
-                        val = info['val']
+                        val = info["val"]
                     elif param == "critereArret":
-                        val = info['val'] - 1
-                    elif param == 'postProcesseur':
-                        val = info['val'] - 1
+                        val = info["val"] - 1
+                    elif param == "postProcesseur":
+                        val = info["val"] - 1
                     obj.setCurrentIndex(val)
                 else:
                     self.mgis.add_info(
-                        "param {}  obj {}  val {}".format(param, obj,
-                                                          info['val']), dbg=True)
+                        "param {}  obj {}  val {}".format(param, obj, info["val"]), dbg=True
+                    )
 
                 if param in self.exclusion[self.kernel]:
                     obj.hide()
-                    if isinstance(obj, QSpinBox) or isinstance(obj,
-                                                               QDoubleSpinBox) \
-                            or isinstance(obj, QComboBox):
-                        getattr(self.ui, 'label_' + param).hide()
+                    if (
+                        isinstance(obj, QSpinBox)
+                        or isinstance(obj, QDoubleSpinBox)
+                        or isinstance(obj, QComboBox)
+                    ):
+                        getattr(self.ui, "label_" + param).hide()
 
     def ch_event(self):
         """event change between law and evenment"""
         event = self.ui.evenement.isChecked()
-        self.par['evenement']["val"] = event
+        self.par["evenement"]["val"] = event
 
     @staticmethod
     def str2bool(s):
@@ -310,7 +319,7 @@ class ClassParameterDialog(QDialog):
         return lambda: self.selectbox(obj)
 
     def selectbox(self, box):
-        """ function allow to select  or not for checkBox"""
+        """function allow to select  or not for checkBox"""
 
         for checkbox in box.findChildren(QCheckBox):
             checkbox.setChecked(box.isChecked())
@@ -320,18 +329,21 @@ class ClassParameterDialog(QDialog):
         """Modification of the parameters in sql table"""
         var = []
         for param, info in self.par.items():
-            if info['gui']:
+            if info["gui"]:
                 obj = getattr(self.ui, param)
                 if param in self.variables:
                     var.append((param, obj))
                     continue
                 else:
-                    if isinstance(obj, QCheckBox) or isinstance(obj,
-                                                                QRadioButton):
+                    if isinstance(obj, QCheckBox) or isinstance(obj, QRadioButton):
                         val = obj.isChecked()
                     elif isinstance(obj, QComboBox):
                         val = obj.currentIndex()
-                        if param == 'option' or param == "critereArret" or param == 'postProcesseur':
+                        if (
+                            param == "option"
+                            or param == "critereArret"
+                            or param == "postProcesseur"
+                        ):
                             val = val + 1
                         elif param == "compositionLits":
                             val = val
@@ -342,8 +354,7 @@ class ClassParameterDialog(QDialog):
                                    SET {1}='{2}'
                                    WHERE parametre='{3}'
                              """
-                    self.mdb.run_query(
-                        sql.format(self.mdb.SCHEMA, self.kernel, val, param))
+                    self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.kernel, val, param))
                     #
         liste = []
         for var2 in self.variables:
@@ -356,7 +367,6 @@ class ClassParameterDialog(QDialog):
                        WHERE parametre='variablesStockees'
                  """
 
-        self.mdb.run_query(
-            sql.format(self.mdb.SCHEMA, self.kernel, " ".join(liste)))
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.kernel, " ".join(liste)))
 
         self.close()
