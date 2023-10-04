@@ -462,7 +462,17 @@
                      </font>
                     </property>
                     <property name="text">
-                     <string>Minor River Bed</string>
+                     <string> Minor River Bed</string>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../resources.qrc">
+                      <normaloff>:/plugins/Mascaret/icones/zone_both_bed.png</normaloff>:/plugins/Mascaret/icones/zone_both_bed.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>20</width>
+                      <height>16</height>
+                     </size>
                     </property>
                    </widget>
                   </item>
@@ -476,7 +486,17 @@
                      </font>
                     </property>
                     <property name="text">
-                     <string>Right Storage Area</string>
+                     <string> Right Storage Area</string>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../resources.qrc">
+                      <normaloff>:/plugins/Mascaret/icones/zone_right_stock.png</normaloff>:/plugins/Mascaret/icones/zone_right_stock.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>20</width>
+                      <height>16</height>
+                     </size>
                     </property>
                    </widget>
                   </item>
@@ -490,7 +510,17 @@
                      </font>
                     </property>
                     <property name="text">
-                     <string>Left Storage Area</string>
+                     <string> Left Storage Area</string>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../resources.qrc">
+                      <normaloff>:/plugins/Mascaret/icones/zone_left_stock.png</normaloff>:/plugins/Mascaret/icones/zone_left_stock.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>20</width>
+                      <height>16</height>
+                     </size>
                     </property>
                    </widget>
                   </item>
@@ -518,6 +548,54 @@
                     </property>
                     <property name="checkable">
                      <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QPushButton" name="bt_clear_zone_minor">
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string> Clear Zones</string>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../resources.qrc">
+                      <normaloff>:/plugins/Mascaret/icones/zone_both_bed.png</normaloff>:/plugins/Mascaret/icones/zone_both_bed.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>20</width>
+                      <height>16</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QPushButton" name="bt_clear_zone_stock">
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string> Clear storage zone</string>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../resources.qrc">
+                      <normaloff>:/plugins/Mascaret/icones/zone_left_stock.png</normaloff>:/plugins/Mascaret/icones/zone_left_stock.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>20</width>
+                      <height>16</height>
+                     </size>
                     </property>
                    </widget>
                   </item>
