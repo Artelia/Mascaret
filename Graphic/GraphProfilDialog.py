@@ -281,8 +281,12 @@ class GraphProfil(GraphCommon):
         self.ui.bt_profil_filter.clicked.connect(self.filtre)
         self.ui.bt_profil_del.clicked.connect(self.efface_profil)
         self.ui.bt_minor_bed.clicked.connect(self.select_lit_mineur)
-        self.ui.bt_r_stok.clicked.connect(lambda: self.select_stock("rightstock"))
-        self.ui.bt_l_stok.clicked.connect(lambda: self.select_stock("leftstock"))
+        self.ui.bt_r_stok.clicked.connect(
+            lambda: self.select_stock("rightstock"))
+        self.ui.bt_l_stok.clicked.connect(
+            lambda: self.select_stock("leftstock"))
+        self.bt_clear_zone_minor.clicked.connect(self.clear_zones_minor)
+        self.bt_clear_zone_stock.clicked.connect(self.clear_zones_stock)
         self.ui.bt_ouvrage.clicked.connect(self.create_struct)
         self.ui.bt_interp.clicked.connect(self.bt_interpol_profile)
 
@@ -1394,6 +1398,7 @@ class GraphProfil(GraphCommon):
         self.tab["x"] = newx
         self.tab["z"] = newz
         self.maj_graph()
+
 
     def select_lit_mineur(self):
         self.rectSelection.set_visible(False)
