@@ -2725,7 +2725,7 @@ class ClassMascaret:
 
         if len(values_idx) > 0:
             col_tab_idx = ['id_runs', 'time', 'pknum']
-            self.mdb.new_insert_res('results_idx',
+            self.mdb.insert_res('results_idx',
                                     values_idx,
                                     col_tab_idx)
 
@@ -3175,39 +3175,39 @@ class ClassMascaret:
         col_tab = ['idruntpk', 'var', 'val']
         nb_stock = 10000
         if len(values) > 0:
-            nb = max(int(len(values) / nb_stock), 1)
-            if nb == 1:
-                self.mdb.new_insert_res('results_val',
+            #nb = max(int(len(values) / nb_stock), 1)
+            # if nb == 1:
+            self.mdb.insert_res('results_val',
                                         values,
                                         col_tab)
-            else:
-                for i in range(nb - 1):
-                    self.mdb.new_insert_res('results_val',
-                                            values[
-                                            nb_stock * i:nb_stock * (i + 1)],
-                                            col_tab)
-                if nb_stock * (i + 1) < len(values):
-                    self.mdb.new_insert_res('results_val',
-                                            values[nb_stock * (i + 1):],
-                                            col_tab)
+            # else:
+            #     for i in range(nb - 1):
+            #         self.mdb.new_insert_res('results_val',
+            #                                 values[
+            #                                 nb_stock * i:nb_stock * (i + 1)],
+            #                                 col_tab)
+            #     if nb_stock * (i + 1) < len(values):
+            #         self.mdb.new_insert_res('results_val',
+            #                                 values[nb_stock * (i + 1):],
+            #                                 col_tab)
 
         col_sect = ['id_runs', 'pk', 'branch', 'section']
         if len(val_sect) > 0:
-            nb = max(int(len(val_sect) / nb_stock), 1)
-            if nb == 1:
-                # self.mdb.insert_res('results_sect', val_sect, col_sect)
-                self.mdb.new_insert_res('results_sect', val_sect, col_sect)
+            #nb = max(int(len(val_sect) / nb_stock), 1)
+            #if nb == 1:
+            # self.mdb.insert_res('results_sect', val_sect, col_sect)
+            self.mdb.insert_res('results_sect', val_sect, col_sect)
 
-            else:
-                for i in range(nb - 1):
-                    self.mdb.new_insert_res('results_sect', val_sect[
-                                                            nb_stock * i:nb_stock * (
-                                                                    i + 1)],
-                                            col_sect)
-                if nb_stock * (i + 1) < len(val_sect):
-                    self.mdb.new_insert_res('results_sect',
-                                            val_sect[nb_stock * (i + 1):],
-                                            col_sect)
+            # else:
+            #     for i in range(nb - 1):
+            #         self.mdb.new_insert_res('results_sect', val_sect[
+            #                                                 nb_stock * i:nb_stock * (
+            #                                                         i + 1)],
+            #                                 col_sect)
+            #     if nb_stock * (i + 1) < len(val_sect):
+            #         self.mdb.new_insert_res('results_sect',
+            #                                 val_sect[nb_stock * (i + 1):],
+            #                                 col_sect)
         return True
 
     def get_for_lig_new(self, id_run):

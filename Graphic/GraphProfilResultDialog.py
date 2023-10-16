@@ -195,8 +195,6 @@ class GraphProfilResultDialog(QWidget):
                         self.val_prof_ref[pk]['zrightminbed'] = \
                             prof['zrightminbed'][id]
                         self.val_prof_ref[pk]['branch'] = prof['branchnum'][id]
-
-
                     except:
                         pass
 
