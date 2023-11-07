@@ -725,6 +725,11 @@ class GraphProfil(GraphCommon):
             "rightminbed": None,
             "leftstock": None,
             "rightstock": None,
+            "leftminbed_g": None,
+            "rightminbed_g": None,
+            "leftstock_g": None,
+            "rightstock_g": None,
+
         }
 
         self.mdb.update("profiles", {self.nom: self.tab}, var="name")
@@ -1158,7 +1163,6 @@ class GraphProfil(GraphCommon):
         if allvis:
             for cb in self.courbes:
                 cb.set_visible(True)
-
         if ta["leftminbed_g"] is not None:
             self.lg_lit_mineur.set_xdata([ta["leftminbed_g"]])
             self.lg_lit_mineur.set_visible(True)

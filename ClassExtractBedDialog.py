@@ -188,6 +188,11 @@ class ClassExtractBedDialog(QDialog):
 
         for ft in l_ft:
             if ft["branchnum"] == branch and ft["active"] is True:
+                try:
+                    test = [float(x) for x in str(ft["x"]).strip().split(" ")]
+                except ValueError:
+                    QMessageBox.critical(self, "Error", "There is no points on the profile", QMessageBox.Ok)
+                    return
                 p = Profile(ft)
                 self.d_profiles[ft.id()] = p
 
