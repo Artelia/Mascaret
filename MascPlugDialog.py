@@ -253,7 +253,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(True)
+        self.ui.actionTest.setVisible(False)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(

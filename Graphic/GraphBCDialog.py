@@ -315,7 +315,7 @@ class GraphBCObs(QWidget):
                     sql_query = ("SELECT id, date, valeur FROM ("
                                  "SELECT UNNEST(valeur) as valeur , "
                                     "UNNEST(date) as date , code, type WHERE "
-                                    "code = '{0}' AND AND type='{3}') t WHERE "
+                                    "code = '{0}' AND type='{3}') t WHERE "
                                  "date>='{1}' AND date<='{2}' AND valeur > -999.9 "
                                  "ORDER BY code, date".format(cd_hydro,
                                            type,
