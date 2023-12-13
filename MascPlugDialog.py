@@ -30,6 +30,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
+from .ClassExportDataRun import ClassExportDataRun
 from .ClassDownload import ClassDownloadMasc
 from .ClassEditKsDialog import ClassEditKsDialog
 from .ClassImportExportDialog import ClassDlgExport, ClassDlgImport, CloneTask
@@ -254,7 +255,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(False)
+        self.ui.actionTest.setVisible(True)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(self.import_old_model_dgl)
@@ -1033,7 +1034,9 @@ Version : {}
     def fct_test(self):
         """Test function"""
         # get_laws
-        self.chkt.debug_update_vers_meta(version="5.1.5")
+        #self.chkt.debug_update_vers_meta(version="5.1.5")
+        dlg = ClassExportDataRun(self)
+        dlg.exec_()
 
     def update_ks_mesh_planim(self):
         """update value of the seleted profiles"""
