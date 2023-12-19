@@ -854,7 +854,10 @@ class ClassExportDataRun(QDialog):
                         date_var = True
 
                     lst_obs_var = [dico_var[idx]['var'] for idx in lst_var if dico_var[idx]['obs']]
-                    filein.write("# Run; Scenario; Variable; Date; Valeur \n")
+                    if  date_var :
+                        filein.write("# Run; Scenario; Variable; Date; Values \n")
+                    else:
+                        filein.write("# Run; Scenario; Variable; Time; Values \n")
                     for row in  lst_var:
                         if not dico_var[row]['obs']:
                             where = "id_runs={} AND var={} AND pknum={}".format(id_run,  dico_var[row]['id'],
