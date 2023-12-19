@@ -246,7 +246,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="bt_export">
+          <widget class="QPushButton" name="bt_valid">
            <property name="minimumSize">
             <size>
              <width>90</width>
@@ -347,6 +347,45 @@
           </layout>
          </item>
          <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_8">
+           <item>
+            <spacer name="horizontalSpacer_5">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="bt_allselect_var">
+             <property name="text">
+              <string>All selection</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources.qrc">
+               <normaloff>:/plugins/Mascaret/icones/check_all.png</normaloff>:/plugins/Mascaret/icones/check_all.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="bt_clear_var">
+             <property name="text">
+              <string>Clear selection</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources.qrc">
+               <normaloff>:/plugins/Mascaret/icones/icon_clean.png</normaloff>:/plugins/Mascaret/icones/icon_clean.png</iconset>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
           <widget class="QListView" name="lstv_data"/>
          </item>
         </layout>
@@ -367,7 +406,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="bt_valid">
+          <widget class="QPushButton" name="bt_export">
            <property name="minimumSize">
             <size>
              <width>90</width>
