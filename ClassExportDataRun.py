@@ -188,7 +188,7 @@ class ClassExportDataRun(QDialog):
               "AND abscissa IN ({1}));".format(self.mdb.SCHEMA,
                                                ','.join([str(abs) for abs in lst_abs]),
                                                ','.join(["'{}'".format(txt) for txt in lst_name]))
-        dtmp = self.mdb.query_todico(sql, verbose=True)
+        dtmp = self.mdb.query_todico(sql)
         if dtmp is None:
             return model_var, row_to_name_var
         lastrow = len(row_to_name_var.keys())
@@ -222,7 +222,7 @@ class ClassExportDataRun(QDialog):
             return model_obs, row_to_name_obs
         where = "var IN ('Z','Q') AND id in (SELECT DISTINCT var FROM {}.results " \
                 "WHERE id_runs in ({}))".format(self.mdb.SCHEMA, ','.join([str(val) for val in list_run]))
-        dtmp = self.mdb.select("results_var", where=where, order="id", list_var=['id', 'name', 'var'], verbose=True)
+        dtmp = self.mdb.select("results_var", where=where, order="id", list_var=['id', 'name', 'var'])
         if dtmp is None:
             dtmp = {'name': []}
         for id, name in enumerate(dtmp['name']):
@@ -257,7 +257,7 @@ class ClassExportDataRun(QDialog):
             return model_var, row_to_name_var, exit_status
         where = "id in (SELECT DISTINCT var FROM {}.results " \
                 "WHERE id_runs in ({}))".format(self.mdb.SCHEMA, ','.join([str(val) for val in list_run]))
-        dtmp = self.mdb.select("results_var", where=where, order="id", list_var=['id', 'name', 'var'], verbose=True)
+        dtmp = self.mdb.select("results_var", where=where, order="id", list_var=['id', 'name', 'var'])
         for id, name in enumerate(dtmp['name']):
             var = dtmp['var'][id]
             row_to_name_var[id] = {"id": dtmp['id'][id], 'name': dtmp['name'][id], 'var': var, 'obs': False}
@@ -741,7 +741,9 @@ class ClassExportDataRun(QDialog):
             self.otamin(dico_mod, lst_pr, lst_run, dico_var, folder_name_path)
         else:
             self.csv_file(dico_mod, dico_var, lst_var, lst_pr, lst_run, folder_name_path)
-        
+
+        self.close()
+
 
     def otamin(self, dico_mod, lst_pr, lst_run, dico_var, folder_name_path):
         """
@@ -852,7 +854,7 @@ class ClassExportDataRun(QDialog):
                         date_var = True
 
                     lst_obs_var = [dico_var[idx]['var'] for idx in lst_var if dico_var[idx]['obs']]
-                    filein.write("# Run; Scenario; Variable , date; Valeur \n")
+                    filein.write("# Run; Scenario; Variable; Date; Valeur \n")
                     for row in  lst_var:
                         if not dico_var[row]['obs']:
                             where = "id_runs={} AND var={} AND pknum={}".format(id_run,  dico_var[row]['id'],

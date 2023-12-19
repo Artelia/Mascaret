@@ -313,18 +313,17 @@ class GraphBCObs(QWidget):
                 dt = datetime.timedelta(hours=int(delta))
                 if self.cur_event:
                     sql_query = (
-                        "SELECT id, date, valeur FROM ("
-                        "SELECT UNNEST(valeur) as valeur , "
-                        "UNNEST(date) as date , code, type WHERE "
-                        "code = '{0}' AND type='{3}') t WHERE "
-                        "date>='{1}' AND date<='{2}' AND valeur > -999.9 "
-                        "ORDER BY code, date".format(
-                            cd_hydro,
-                            type,
-                            self.events[self.cur_event]["starttime"] + dt,
+                        "SELECT date, valeur FROM (SELECT code,type, UNNEST(date) as date, "
+                        "UNNEST(valeur) as valeur FROM {4}.observations "
+                        "WHERE code = '{0}' AND type='{3}') t "
+                        " WHERE date>='{1}' AND date<='{2}' AND valeur > -999.9 "
+                        "ORDER BY date".format(
+                            cd_hydro,  self.events[self.cur_event]["starttime"] + dt,
                             self.events[self.cur_event]["endtime"] + dt,
+                            type, self.mdb.SCHEMA
                         )
                     )
+
                 else:
                     sql_query = """SELECT  id, UNNEST(date) as date, 
                                 UNNEST(valeur) as valeur  FROM  {2}.observations 

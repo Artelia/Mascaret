@@ -96,6 +96,7 @@ class CheckTab:
             "5.1.5",
             "5.1.6",
             "5.1.7",
+            "5.1.8",
         ]
         self.dico_modif = {
             "3.0.0": {
@@ -317,6 +318,7 @@ class CheckTab:
                     lambda: self.update_517(),
                 ],
             },
+            "5.1.8": {},
             # '3.0.x': { },
         }
 

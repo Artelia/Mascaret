@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>662</width>
+    <width>669</width>
     <height>530</height>
    </rect>
   </property>
@@ -77,7 +77,7 @@
              </property>
              <property name="icon">
               <iconset>
-               <normaloff>../icones/check_all.png</normaloff>../icones/check_all.png</iconset>
+               <normaloff>../../../../../../../../../../.designer/icones/check_all.png</normaloff>../../../../../../../../../../.designer/icones/check_all.png</iconset>
              </property>
             </widget>
            </item>
@@ -94,7 +94,7 @@
              </property>
              <property name="icon">
               <iconset>
-               <normaloff>../icones/icon_clean.png</normaloff>../icones/icon_clean.png</iconset>
+               <normaloff>../../../../../../../../../../.designer/icones/icon_clean.png</normaloff>../../../../../../../../../../.designer/icones/icon_clean.png</iconset>
              </property>
             </widget>
            </item>
@@ -132,7 +132,7 @@
              </property>
              <property name="icon">
               <iconset>
-               <normaloff>../icones/check_all.png</normaloff>../icones/check_all.png</iconset>
+               <normaloff>../../../../../../../../../../.designer/icones/check_all.png</normaloff>../../../../../../../../../../.designer/icones/check_all.png</iconset>
              </property>
             </widget>
            </item>
@@ -155,7 +155,7 @@
              </property>
              <property name="icon">
               <iconset>
-               <normaloff>../icones/icon_clean.png</normaloff>../icones/icon_clean.png</iconset>
+               <normaloff>../../../../../../../../../../.designer/icones/icon_clean.png</normaloff>../../../../../../../../../../.designer/icones/icon_clean.png</iconset>
              </property>
             </widget>
            </item>
@@ -258,7 +258,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../icones/icon_valid.png</normaloff>../icones/icon_valid.png</iconset>
+             <normaloff>../../../../../../../../../../.designer/icones/icon_valid.png</normaloff>../../../../../../../../../../.designer/icones/icon_valid.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -281,7 +281,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../icones/icon_cancel.png</normaloff>../icones/icon_cancel.png</iconset>
+             <normaloff>../../../../../../../../../../.designer/icones/icon_cancel.png</normaloff>../../../../../../../../../../.designer/icones/icon_cancel.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -418,7 +418,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../icones/mActionFileSave.png</normaloff>../icones/mActionFileSave.png</iconset>
+             <normaloff>../../../../../../../../../../.designer/icones/mActionFileSave.png</normaloff>../../../../../../../../../../.designer/icones/mActionFileSave.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -441,7 +441,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../icones/icon_cancel.png</normaloff>../icones/icon_cancel.png</iconset>
+             <normaloff>../../../../../../../../../../.designer/icones/icon_cancel.png</normaloff>../../../../../../../../../../.designer/icones/icon_cancel.png</iconset>
            </property>
            <property name="iconSize">
             <size>

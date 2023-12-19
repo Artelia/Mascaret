@@ -227,6 +227,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionWebsite.triggered.connect(self.website)
         self.ui.actionWebsite.setEnabled(False)
         self.ui.actionWikisite.triggered.connect(self.wikisite)
+        self.ui.actionExport_Results.triggered.connect(self.export_results)
 
         # Structures
         self.ui.actionStructures.triggered.connect(self.fct_structures)
@@ -255,7 +256,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(True)
+        self.ui.actionTest.setVisible(False)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(self.import_old_model_dgl)
@@ -1035,8 +1036,7 @@ Version : {}
         """Test function"""
         # get_laws
         #self.chkt.debug_update_vers_meta(version="5.1.5")
-        dlg = ClassExportDataRun(self)
-        dlg.exec_()
+
 
     def update_ks_mesh_planim(self):
         """update value of the seleted profiles"""
@@ -1200,3 +1200,10 @@ Version : {}
 
         else:
             self.add_info("No selected schema")
+
+    def export_results(self):
+        """
+        Export Results
+        """
+        dlg = ClassExportDataRun(self)
+        dlg.exec_()

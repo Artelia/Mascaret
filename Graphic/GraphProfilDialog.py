@@ -441,6 +441,8 @@ class GraphProfil(GraphCommon):
     def selector_toggled(self):
         """Point selection function"""
         if self.bt_select.isChecked():
+            self.span.active = False
+            self.rectSelection.set_visible(False)
             self.RS.set_active(True)
             self.RS.update()
             self.span.visible = False
