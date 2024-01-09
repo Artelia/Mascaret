@@ -409,11 +409,13 @@ class ClassResProfil:
 
                     except Exception as err:
                         if self.debug:
-                            print("Warning Plani", err)
+                            txt = ("Warning Plani \n" + err)
+                            return  txt
             if self.mdb:
                 if point_bas:
                     list_pt_bas = [[id_run, "opt", "pt_bas", json.dumps(point_bas)]]
                 self.insert_lst_mdb(list_insert_plani, list_pt_bas)
+            return  None
 
     def insert_lst_mdb(self, list_insert, point_bas):
         if list_insert:
