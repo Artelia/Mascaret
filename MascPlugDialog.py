@@ -50,6 +50,7 @@ from .ClassUpdateBedDialog import (
     update_all_bed_geometry,
     refresh_minor_bed_layer,
 )
+from .ClassCartoZi import ClassCartoZI
 
 # # structures
 from .Structure.StructureDialog import ClassStructureDialog
@@ -248,6 +249,9 @@ class MascPlugDialog(QMainWindow):
 
         # scores
         self.ui.actionScores.triggered.connect(self.fct_scores)
+
+        # scores
+        self.ui.actionCartoZI.triggered.connect(self.fct_carto_zi)
 
         # Laws
         self.ui.actionHydro_Laws.triggered.connect(self.fct_hydro_laws)
@@ -504,6 +508,8 @@ class MascPlugDialog(QMainWindow):
                 self.add_info("Error : {}".format(e))
 
             self.mdb.load_model()
+            self.iface.mapCanvas().waitWhileRendering()
+
             crs = QgsCoordinateReferenceSystem("POSTGIS:{}".format(self.mdb.SRID))
             self.ui.crsWidget.setCrs(crs)
 
@@ -578,6 +584,11 @@ class MascPlugDialog(QMainWindow):
         update_all_bed_geometry(self.mdb)
         refresh_minor_bed_layer(self.mdb, self.iface)
         QMessageBox.information(self, "Information", "Update successful", QMessageBox.Ok)
+
+    def fct_carto_zi(self):
+        dlg = ClassCartoZI(self)
+        dlg.setModal(False)
+        dlg.exec_()
 
     def fct_parametres(self):
         """

@@ -177,7 +177,7 @@
      <x>0</x>
      <y>0</y>
      <width>805</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -270,6 +270,7 @@
     <addaction name="separator"/>
     <addaction name="actionScores"/>
     <addaction name="actionExport_Results"/>
+    <addaction name="actionCartoZI"/>
    </widget>
    <widget class="QMenu" name="menuWater_Quality">
     <property name="title">
@@ -825,6 +826,11 @@
   <action name="actionExport_Results">
    <property name="text">
     <string>Export Results</string>
+   </property>
+  </action>
+  <action name="actionCartoZI">
+   <property name="text">
+    <string>CartoZI</string>
    </property>
   </action>
  </widget>
