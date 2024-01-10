@@ -57,20 +57,13 @@ from  ClassMessage import ClassMessage
 from qgis.PyQt.QtWidgets import *
 
 
-class ClassCreatFilesModels:
+class ClassGetResults:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, main, rep_run=None):
-        self.mgis = main
-        self.mdb = self.mgis.mdb
-        self.iface = self.mgis.iface
-        if not rep_run:
-            self.dossierFileMasc = os.path.join(self.mgis.masplugPath, "mascaret")
-        else:
-            self.dossierFileMasc = rep_run
-
-        self.baseName = "mascaret"
-        # self.box = ClassWarningBox()
+    def __init__(self, mdb, dossier_file_masc):
+        self.mdb = mdb
+        self.dossier_file_masc = dossier_file_masc
+        self.basename = "mascaret"
         self.mess = ClassMessage()
     # list ERROR: *****************************************
     # 'LoadOptFile'
@@ -128,7 +121,7 @@ class ClassCreatFilesModels:
             cond_casier = True
 
         id_run = self.insert_id_run(run, scen)
-        self.lit_opt_new(id_run, date_debut, self.baseName, comments, cond_tra, cond_casier)
+        self.lit_opt_new(id_run, date_debut, self.basename, comments, cond_tra, cond_casier)
 
         if os.path.isfile(os.path.join(path, "Fichier_Crete.csv")):
             self.read_mobil_gate_res(id_run)
@@ -144,7 +137,7 @@ class ClassCreatFilesModels:
         :param id_run: run if
         :return:
         """
-        nomfich = os.path.join(self.dossierFileMasc, "Fichier_Crete.csv")
+        nomfich = os.path.join(self.dossier_file_masc, "Fichier_Crete.csv")
         if os.path.isfile(nomfich):
             try:
                 # Read file
@@ -399,7 +392,8 @@ class ClassCreatFilesModels:
             self.mdb.insert_res("runs_graph", list_insert, col_tab)
 
     def lit_opt_new(
-        self, id_run, date_debut, base_namefile, comments="", tracer=False, casier=False
+        self, id_run, date_debut, base_namefile, comments="", tracer=False, casier=False,
+            cond_api=False,save_res_struct =  []
     ):
         """
         Read opt files and save in results table
@@ -411,8 +405,7 @@ class ClassCreatFilesModels:
         :param casier: if basins are actived
         :return:
         """
-        nom_fich = os.path.join(self.dossierFileMasc, base_namefile + ".opt")
-        # if self.mgis.DEBUG:
+        nom_fich = os.path.join(self.dossier_file_masc, base_namefile + ".opt")
         self.mess.add_mess('LoadOpt1', 'info', "Load data ....")
         if not os.path.isfile(nom_fich):
             txt = ("Simulation Error: there aren't results")
@@ -438,7 +431,7 @@ class ClassCreatFilesModels:
         del val_opt
 
         if casier:
-            nom_fich_bas = os.path.join(self.dossierFileMasc, base_namefile + ".cas_opt")
+            nom_fich_bas = os.path.join(self.dossier_file_masc, base_namefile + ".cas_opt")
             if not os.path.isfile(nom_fich_bas):
                 txt = ("Simulation Error: there aren't basin results")
                 self.mess.add_mess('LoadOptCas', 'warning', txt)
@@ -452,7 +445,7 @@ class ClassCreatFilesModels:
 
                 del val
 
-            nom_fich_link = os.path.join(self.dossierFileMasc, base_namefile + ".liai_opt")
+            nom_fich_link = os.path.join(self.dossier_file_masc, base_namefile + ".liai_opt")
             if not os.path.isfile(nom_fich_link):
                 txt = ("Simulation Error: there aren't link results")
                 self.mess.add_mess('LoadOptLink', 'warning', txt)
@@ -465,7 +458,7 @@ class ClassCreatFilesModels:
                 self.save_run_graph(val, id_run, type_res)
                 del val
         if tracer:
-            nom_fich_tra = os.path.join(self.dossierFileMasc, base_namefile + ".tra_opt")
+            nom_fich_tra = os.path.join(self.dossier_file_masc, base_namefile + ".tra_opt")
             if not os.path.isfile(nom_fich_tra):
                 txt = ("Simulation Error: there aren't basin results")
                 self.mess.add_mess('LoadOptWQ', 'warning', txt)
@@ -477,8 +470,8 @@ class ClassCreatFilesModels:
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
                 del val
-        if self.cond_api:
-            self.stock_res_api(self.save_res_struct[0], self.save_res_struct[1])
+        if cond_api and len(save_res_struct)>2:
+            self.stock_res_api(save_res_struct[0], save_res_struct[1])
 
     def save_new_results(self, val, id_run):
         """

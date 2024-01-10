@@ -94,3 +94,15 @@ class ClassMessage:
         """
         return self.derror[code_err]["type"]
 
+    def message(self):
+        txt = ''
+        for key, item in self.derror:
+            if item['type'] == 'debug':
+                txt += item['message'] + '\n'
+            elif item['type'] == 'info':
+                txt += item['message'] + '\n'
+            elif item['type'] == 'warning':
+                txt += '** Warning ** : '+ item['message'] + '\n'
+            elif item['type'] == 'info':
+                txt += '** Error ** : \n' + item['message'] + '\n'
+        return txt

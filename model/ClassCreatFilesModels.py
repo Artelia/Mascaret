@@ -19,39 +19,21 @@ email                :
 
 """
 
-import copy
-import csv
 import datetime
-import gc
-import json
 import os
 import re
 import shutil
-import subprocess
-import sys
-import json
-import gc
-import numpy as np
-import copy
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
-from qgis.PyQt.QtCore import qVersion
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .Function import TypeErrorModel
 from .Function import del_symbol
 from .Function import str2bool, del_accent, copy_dir_to_dir
-from .Graphic.ClassResProfil import ClassResProfil
 from .HydroLawsDialog import dico_typ_law
-from .Structure.ClassMascStruct import ClassMascStruct
-from .Structure.ClassPostPreFG import ClassPostPreFG
-from .WaterQuality.ClassMascWQ import ClassMascWQ
-from .api.ClassAPIMascaret import ClassAPIMascaret
-from .ui.custom_control import ClassWarningBox
 from  ClassMessage import ClassMessage
 
 from qgis.PyQt.QtWidgets import *
@@ -60,19 +42,15 @@ from qgis.PyQt.QtWidgets import *
 class ClassCreatFilesModels:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, main, rep_run=None):
-        self.mgis = main
-        self.mdb = self.mgis.mdb
-        if not rep_run:
-            self.dossierFileMasc = os.path.join(self.mgis.masplugPath, "mascaret")
-        else:
-            self.dossierFileMasc = rep_run
-        if not os.path.isdir(self.dossierFileMasc):
-            os.mkdir(self.dossierFileMasc)
-        self.baseName = "mascaret"
+    def __init__(self, mdb, dossier_file_masc):
+        self.mdb = mdb
+        self.dossier_file_masc = dossier_file_masc
+        self.basename = "mascaret"
         self.mess = ClassMessage()
-        self.geo_file = self.baseName + ".geo"
-        self.casier_file = self.baseName + ".casier"
+        self.geo_file = self.basename + ".geo"
+        self.casier_file = self.basename + ".casier"
+        self.dico_basinnum = {}
+        self.dico_linknum = {}
     # list ERROR: *****************************************
     #   'CreatBasinPlani','CreatBasin', 'CreatBasinNoNum'
     #   'creatGeoRef','creatGeo'
@@ -80,7 +58,7 @@ class ClassCreatFilesModels:
     #   "LinksB_{}", "LinksB1_{}", LinkErr_{}",
     #   "LinkBR_{}"
     #    "WQLoi", "tLaw_{}", "LigFile"
-    #   obsLaw_{}
+    #   obsLaw_{}, "MobGateFile"
     # List WARNING :***************************************
     #   "CheckPlani_"+j,"CheckProf",CheckProfCret
     #   "Links_{}_{}", "Links1_{}_{}"
@@ -116,7 +94,7 @@ class ClassCreatFilesModels:
     def creer_geo(self):
         """creation of gemoetry file"""
         try:
-            nomfich = os.path.join(self.dossierFileMasc, self.geo_file)
+            nomfich = os.path.join(self.dossier_file_masc, self.geo_file)
 
             if os.path.isfile(nomfich):
                 sauv = nomfich.replace(".geo", "_old.geo")
@@ -160,7 +138,7 @@ class ClassCreatFilesModels:
         """creation of gemoetry file"""
         try:
             branche, nom = None, None
-            nomfich = os.path.join(self.dossierFileMasc, self.geo_file)
+            nomfich = os.path.join(self.dossier_file_masc, self.geo_file)
 
             if os.path.isfile(nomfich):
                 sauv = nomfich.replace(".geo", "_old.geo")
@@ -266,7 +244,7 @@ class ClassCreatFilesModels:
          Fonction de creation du fichier .casier avec la loi surface-volume
         """
         try:
-            nomfich = os.path.join(self.dossierFileMasc, self.casier_file )
+            nomfich = os.path.join(self.dossier_file_masc, self.casier_file)
 
             if os.path.isfile(nomfich):
                 sauv = nomfich.replace(".casier", "_old.casier")
@@ -380,7 +358,7 @@ class ClassCreatFilesModels:
         """To create xcas file"""
         dict_lois = {}
         # try:
-        fichier_sortie = os.path.join(self.dossierFileMasc, self.baseName + ".xcas")
+        fichier_sortie = os.path.join(self.dossier_file_masc, self.basename + ".xcas")
         extr_toloi = {0: 6, 1: 1, 2: 2, 3: 4, 4: 5, 5: 4, 8: 3, 6: 6, 7: 7}
         abaque_toloi = {1: 6, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
 
@@ -884,7 +862,7 @@ class ClassCreatFilesModels:
 
         param_cas = fichier_cas.find("parametresCas")
         parametres_generaux = param_cas.find("parametresGeneraux")
-        fich_xcas = "{}_init.xcas".format(self.baseName)
+        fich_xcas = "{}_init.xcas".format(self.basename)
         parametres_generaux.find("fichMotsCles").text = fich_xcas
         parametres_generaux.find("code").text = "1"
         parametres_generaux.find("presenceCasiers").text = "false"
@@ -916,7 +894,7 @@ class ClassCreatFilesModels:
         initiales.find("repriseEtude").find("repriseCalcul").text = "false"
         initiales.find("ligneEau").find("LigEauInit").text = "false"
         resultats = param_cas.find("parametresImpressionResultats")
-        fich_opt = "{}_init.opt".format(self.baseName)
+        fich_opt = "{}_init.opt".format(self.basename)
         resultats.find("resultats").find("fichResultat").text = fich_opt
         resultats.find("impression").find("impressionCalcul").text = "true"
         resultats.find("pasStockage").find("premPasTpsStock").text = "1"
@@ -930,7 +908,7 @@ class ClassCreatFilesModels:
 
         self.indent(fichier_cas)
         arbre = ElementTree(fichier_cas)
-        arbre.write(os.path.join(self.dossierFileMasc, fich_xcas))
+        arbre.write(os.path.join(self.dossier_file_masc, fich_xcas))
 
         self.mess.add_mess("CreatXcasInit", "info",
                            "Save the init. Xcas file  is done")
@@ -940,7 +918,7 @@ class ClassCreatFilesModels:
         #     err +='error: {}'.format(e)
         #     self.mess.add_mess("CreatXcas", 'critical,err)
 
-        # add struct before harminization
+        # add struct before harmonization
         dict_lois_tmp = dict_lois.copy()
         dico_loi_struct = {}
         for name in dict_lois_tmp.keys():
@@ -1277,7 +1255,7 @@ class ClassCreatFilesModels:
             return None
 
     def modif_xcas(self, parametres, xcasfile, fich_sortie=None):
-        fich_entree = os.path.join(self.dossierFileMasc, xcasfile)
+        fich_entree = os.path.join(self.dossier_file_masc, xcasfile)
         arbre = et_parse(fich_entree)
         racine = arbre.getroot()
 
@@ -1303,7 +1281,7 @@ class ClassCreatFilesModels:
         # nom = self.geom_obj_toname(nom, type_)
         if init:
             nom = nom + "_init"
-        with open(os.path.join(self.dossierFileMasc, del_symbol(nom) + ".loi"), "w") as fich:
+        with open(os.path.join(self.dossier_file_masc, del_symbol(nom) + ".loi"), "w") as fich:
             fich.write("# " + nom + "\n")
             if type_ == 1:
                 fich.write("# Temps (S) Debit\n")
@@ -1390,7 +1368,7 @@ class ClassCreatFilesModels:
                 if not liste_date:
                     liste_date = [x - dt for x in obs[cd_hydro]["date"]]
 
-            fichier_loi = os.path.join(self.dossierFileMasc, del_symbol(nom) + ".loi")
+            fichier_loi = os.path.join(self.dossier_file_masc, del_symbol(nom) + ".loi")
 
             with open(fichier_loi, "w") as fich_sortie:
                 fich_sortie.write("# {0}\n".format(nom))
@@ -1475,6 +1453,7 @@ class ClassCreatFilesModels:
                     par["initialisationAuto"] = False
                     self.mess.add_mess('NoInitSteady', 'Warning',
                                        "No initialisation because of no SteadyValue")
+        return par
 
     def check_timelaw(self, par, name, initime, lasttime):
         cond = False
@@ -1522,7 +1501,6 @@ class ClassCreatFilesModels:
                 condition = "geom_obj='{0}' AND id_law_type={1} AND active".format(
                     name_obj, typ_law
                 )
-            # self.mgis.add_info('{}'.format(condition))
 
             config = self.mdb.select_one("law_config", condition, verbose=False)
             if config:
@@ -1579,7 +1557,7 @@ class ClassCreatFilesModels:
             i1i2.append(str(i1[b]))
             i1i2.append(str(i2[b]))
 
-        with open(os.path.join(self.dossierFileMasc, base_namefiles + ".lig"), "w") as fich:
+        with open(os.path.join(self.dossier_file_masc, base_namefiles + ".lig"), "w") as fich:
             date = datetime.datetime.utcnow()
             fich.write("RESULTATS CALCUL,DATE :  {0:%d/%m/%y %H:%M}\n".format(date))
             fich.write("FICHIER RESULTAT MASCARET{0}\n".format(" " * 47))
@@ -1673,7 +1651,7 @@ class ClassCreatFilesModels:
         )
         if info:
             try:
-                nomfich = os.path.join(self.dossierFileMasc, "Fichier_Barrage_Mobile.txt")
+                nomfich = os.path.join(self.dossier_file_masc, "Fichier_Barrage_Mobile.txt")
 
                 if os.path.isfile(nomfich):
                     os.remove(nomfich)
@@ -1751,6 +1729,5 @@ class ClassCreatFilesModels:
             except Exception as e:
                 err = "Error: save the dam file"
                 err += str(e)
-                self.mgis.add_info(err)
-                raise Exception(err)
+                self.mess.add_mess("MobGateFile", "critic", err)
 
