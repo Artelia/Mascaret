@@ -1,43 +1,18 @@
-import threading
-import os
-from datetime import datetime
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 from qgis.core import QgsTask
-import copy
-import csv
-import datetime
-import gc
-import json
 import os
-import re
-import shutil
 import subprocess
 import sys
-import json
-import gc
-import numpy as np
 import copy
 
-from .Function import TypeErrorModel
-from .Function import del_symbol
-from .Function import str2bool, del_accent, copy_dir_to_dir
-from .Graphic.ClassResProfil import ClassResProfil
-from .HydroLawsDialog import dico_typ_law
-from .Structure.ClassMascStruct import ClassMascStruct
-from .Structure.ClassPostPreFG import ClassPostPreFG
-from .WaterQuality.ClassMascWQ import ClassMascWQ
-from .api.ClassAPIMascaret import ClassAPIMascaret
-from .ui.custom_control import ClassWarningBox
-from ClassMessage import ClassMessage
+from ..api.ClassAPIMascaret import ClassAPIMascaret
 
-from ClassCreatFilesModels import ClassCreatFilesModels
 import time
 
 MESSAGE_CATEGORY ='TaskMascComput'
 
 class TaskMascComput(QgsTask):
     message = pyqtSignal(str)
-    error_sim = pyqtSignal(str)
 
     def __init__(self,cl_mas, init_task, mdb,cond_api, cpt_init = False):
         super().__init__()
@@ -45,8 +20,10 @@ class TaskMascComput(QgsTask):
         self.init_task = init_task
         self.mdb = mdb
         self.cpt_init = cpt_init
-        self.id_run = None
         self.cond_api =  cond_api
+
+
+        self.id_run = None
         self.save_res_struct = None
         # precedent task
         self.par = None
@@ -70,14 +47,19 @@ class TaskMascComput(QgsTask):
         self.noyau = self.init_task.noyau
         self.scen = self.init_task.scen
         self.dossier_file_masc = self.init_task.dossier_file_masc
-        self.base_name = self.init_task.base_name
+        self.base_name = self.init_task.basename
 
 
     def run_mascaret(self):
         if self.cpt_init :
             sceninit = self.scen + "_init"
             self.id_run = self.insert_id_run(self.run, sceninit)
-            self.lance_mascaret(self.base_name + "_init.xcas", self.id_run)
+            finish = self.lance_mascaret(self.base_name + "_init.xcas", self.id_run)
+            if not finish:
+                self.mess.add_mess("ErrSim", 'Warning', "Init Simulation error")
+                self.message.emit(self.write_mess(self.mess))
+                self.taskTerminated.emit()
+                return
 
         else:
             cond_casier = False
@@ -89,11 +71,12 @@ class TaskMascComput(QgsTask):
                 self.base_name + ".xcas", self.id_run, self.par["presenceTraceurs"], cond_casier
             )
             if not finish:
-                self.mgis.add_info()
                 self.mess.add_mess("ErrSim", 'Warning', "Simulation error")
-                self.error_sim.emit(self.write_mess(self.mess))
+                self.message.emit(self.write_mess(self.mess))
                 self.taskTerminated.emit()
                 return
+        self.taskCompleted.emit(True)
+        return
 
     def lance_mascaret(self, fichier_cas, id_run, tracer=False, casier=False):
         """

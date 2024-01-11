@@ -19,42 +19,21 @@ email                :
 
 """
 
-import copy
 import csv
 import datetime
-import gc
-import json
 import os
 import re
-import shutil
-import subprocess
-import sys
 import json
-import gc
-import numpy as np
-import copy
 
-from xml.etree.ElementTree import ElementTree, Element, SubElement
-from xml.etree.ElementTree import parse as et_parse
-
-from qgis.PyQt.QtCore import qVersion
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .Function import TypeErrorModel
-from .Function import del_symbol
-from .Function import str2bool, del_accent, copy_dir_to_dir
-from .Graphic.ClassResProfil import ClassResProfil
-from .HydroLawsDialog import dico_typ_law
-from .Structure.ClassMascStruct import ClassMascStruct
-from .Structure.ClassPostPreFG import ClassPostPreFG
-from .WaterQuality.ClassMascWQ import ClassMascWQ
-from .api.ClassAPIMascaret import ClassAPIMascaret
-from .ui.custom_control import ClassWarningBox
-from  ClassMessage import ClassMessage
+from ..Graphic.ClassResProfil import ClassResProfil
+from ..ClassMessage import ClassMessage
 
-from qgis.PyQt.QtWidgets import *
+
 
 
 class ClassGetResults:

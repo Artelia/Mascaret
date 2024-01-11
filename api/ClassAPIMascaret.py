@@ -26,6 +26,7 @@ try:
     # Plugin
     from .masc import Mascaret
     from ..Structure.ClassFloodGate import ClassFloodGate
+    from ..ClassMessage import ClassMessage
 except:
     # autonome python
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -86,6 +87,8 @@ class ClassAPIMascaret:
             # floodgat
             self.clfg = ClassFloodGate(self)
             self.mobil_struct = self.clfg.fg_active()
+            self.mess = ClassMessage()
+            self.num_mess = 0
 
     def initial(self, casfile):
         """
@@ -244,7 +247,6 @@ class ClassAPIMascaret:
         self.zmax_co = self.masc.get("Model.MaxControlZ")
         self.sect_co = self.masc.get("Model.ControlSection")
 
-        # if self.DEBUG:
         self.mess_crit_stop()
 
     def mess_crit_stop(self):
@@ -350,7 +352,9 @@ class ClassAPIMascaret:
 
     def add_info(self, txt):
         if self.mgis is not None:
-            self.mgis.add_info(txt)
+            self.mess.add_mess('api_{}'.format(self.num_mess),'info',txt)
+            self.num_mess += 1
+            # self.mgis.add_info(txt)
         else:
             print(txt)
 

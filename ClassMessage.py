@@ -28,8 +28,6 @@ from qgis.utils import *
 
 from qgis.PyQt.QtWidgets import *
 
-from .ui.custom_control import ClassWarningBox
-
 class ClassMessage:
     """Class contain  model files creation and run model mascaret"""
 

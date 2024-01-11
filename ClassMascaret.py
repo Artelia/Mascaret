@@ -19,11 +19,8 @@ email                :
 
 """
 
-import copy
 import csv
 import datetime
-import gc
-import json
 import os
 import re
 import shutil
@@ -31,7 +28,6 @@ import subprocess
 import sys
 import json
 import gc
-import numpy as np
 import copy
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement

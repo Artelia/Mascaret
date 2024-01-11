@@ -1,34 +1,21 @@
-import threading
+
 import os
-from datetime import datetime
+
 from PyQt5.QtCore import QObject, pyqtSignal
 
-from .Function import TypeErrorModel
-from .Function import del_symbol
-from .Function import str2bool, del_accent, copy_dir_to_dir
-from .Graphic.ClassResProfil import ClassResProfil
-from .HydroLawsDialog import dico_typ_law
-from .Structure.ClassMascStruct import ClassMascStruct
-from .Structure.ClassPostPreFG import ClassPostPreFG
-from .WaterQuality.ClassMascWQ import ClassMascWQ
-from .api.ClassAPIMascaret import ClassAPIMascaret
-from .ui.custom_control import ClassWarningBox
-from  ClassMessage import ClassMessage
+from  ..ClassMessage import ClassMessage
 import time
 
-from ClassCreatFilesModels import ClassCreatFilesModels
+from .ClassCreatFilesModels import ClassCreatFilesModels
 
 
 MESSAGE_CATEGORY ='TaskMascInit'
 
 class TaskMascInit(QgsTask):
     message = pyqtSignal(str)
-    error_law = pyqtSignal(str)
-    error_xcas = pyqtSignal(str)
-    error_mobil_g = pyqtSignal(str)
-    error_init = pyqtSignal(str)
 
-    def __init__(self, mdb, waterq, dossier_file_masc, par, noyau, scen, idx, dict_scen):
+    def __init__(self, mdb, waterq, dossier_file_masc, par, noyau, scen, idx, dict_scen,
+                 dict_lois, dico_loi_struct):
         super().__init__()
         self.mdb =  mdb
         self.dossier_file_masc = dossier_file_masc
@@ -39,6 +26,8 @@ class TaskMascInit(QgsTask):
         self.scen = scen
         self.idx = idx
         self.dict_scen = dict_scen
+        self.dict_lois = dict_lois
+        self.dico_loi_struct = dico_loi_struct
 
         self.clfile = ClassCreatFilesModels(self.mdb, dossier_file_masc)
         self.mess = ClassMessage()
@@ -52,6 +41,13 @@ class TaskMascInit(QgsTask):
         txt = obj.message()
         obj.clear_derror()
         return  txt
+
+    def exit_status_(self,obj):
+        exit_status = obj.get_critic_status()
+        if exit_status:
+            self.message.emit(self.write_mess(obj))
+            self.taskTerminated.emit()
+        return exit_status
 
     def clean_res(self):
         """Clean the run folder and copy the essential files to run mascaret"""
@@ -70,52 +66,46 @@ class TaskMascInit(QgsTask):
         self.mess.add_mess('InfoRun1', 'info', txt)
         self.message.emit(self.write_mess(self.mess))
 
-        dict_lois, dico_loi_struct = self.clfile.creer_xcas(self.noyau)
-        exit_status = self.clfile.mess.get_critic_status()
-        if exit_status:
-            self.error_xcas.emit(self.write_mess(self.clfile.mess))
-            self.taskTerminated.emit()
-            return False
-
-        if dico_loi_struct.keys():
-            for name in dico_loi_struct.keys():
-                list_final = self.clmeth.get_list_law(dico_loi_struct[name]["id_config"])
+        if self.dico_loi_struct.keys():
+            for name in self.dico_loi_struct.keys():
+                list_final = self.clmeth.get_list_law(self.dico_loi_struct[name]["id_config"])
 
                 self.clmeth.create_law(
-                    self.dossier_file_masc, name, dico_loi_struct[name]["type"], list_final
+                    self.dossier_file_masc, name, self.dico_loi_struct[name]["type"], list_final
                 )
                 self.clmeth.create_law(
-                    self.dossier_file_masc, name + "_init", dico_loi_struct[name]["type"], list_final
+                    self.dossier_file_masc, name + "_init", self.dico_loi_struct[name]["type"], list_final
                 )
         # initialise Law file
         self.date_debut = None
         if self.noyau == "steady":
-            exit_status = self.init_scen_steady(self.par, dict_lois)
+            exit_status = self.init_scen_steady(self.par, self.dict_lois)
         elif self.par["evenement"]:
-            self.date_debut, self.par = self.init_scen_even(self.par, dict_lois, self.idx, self.dict_scen)
+            self.date_debut, self.par = self.init_scen_even(self.par, self.dict_lois, self.idx, self.dict_scen)
             exit_status = self.clfile.mess.get_critic_status()
         else:
             # transcritical unsteady hors evenement
-            self.par = self.init_scen_trans_unsteady(self.par, dict_lois)
+            self.par = self.init_scen_trans_unsteady(self.par, self.dict_lois)
             exit_status = self.clfile.mess.get_critic_status()
         if exit_status:
-            self.error_law.emit(self.write_mess(self.clfile.mess))
+            self.message.emit(self.write_mess(self.clfile.mess))
             self.taskTerminated.emit()
-            return False
+            return
         self.mess.add_mess("Laws", 'info', "Laws file is created.")
         self.message.emit(self.write_mess(self.clfile.mess))
+        if self.exit_status_(self.mess):
+            return
         self.message.emit(self.write_mess(self.mess))
 
         if self.check_mobil_gate() and self.noyau == "unsteady":
             self.clfile.create_mobil_gate_file()
-            exit_status = self.clfile.mess.get_critic_status()
-            if exit_status:
-                self.error_mobil_g.emit(self.write_mess(self.clfile.mess))
-                self.taskTerminated.emit()
-                return False
+            if self.exit_status_(self.clfile.mess):
+                return
 
         # check error and warning:
         self.check_apport()
+        if self.exit_status_(self.mess):
+            return
         self.message.emit(self.write_mess(self.mess))
 
         if self.par["LigEauInit"] and self.noyau != "steady":
@@ -127,9 +117,12 @@ class TaskMascInit(QgsTask):
                                    "Cancel run because No initial boundaries")
                 self.message.emit(self.write_mess(self.mess))
                 self.taskTerminated.emit()
+                return
             self.clfile.opt_to_lig(id_run_init, self.baseName)
-
+            if self.exit_status_(self.clfile.mess):
+                return
         self.taskCompleted.emit(True)
+        return
 
     def init_scen_steady(self, dict_lois):
         """

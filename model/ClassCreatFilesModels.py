@@ -30,13 +30,14 @@ from xml.etree.ElementTree import parse as et_parse
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
-
-from .Function import del_symbol
-from .Function import str2bool, del_accent, copy_dir_to_dir
-from .HydroLawsDialog import dico_typ_law
-from  ClassMessage import ClassMessage
-
 from qgis.PyQt.QtWidgets import *
+
+from ..Function import del_symbol
+from ..Function import str2bool, del_accent
+from ..HydroLawsDialog import dico_typ_law
+from ..ClassMessage import ClassMessage
+
+
 
 
 class ClassCreatFilesModels:

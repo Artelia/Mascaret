@@ -1,11 +1,14 @@
-
-from PyQt5.QtCore import pyqtSignal
+from qgis.PyQt.QtWidgets import *
+from qgis.core import *
+from qgis.gui import *
+from qgis.utils import *
+from qgis.PyQt.QtCore import pyqtSignal
 from qgis.core import QgsTask
 
-from ClassMessage import ClassMessage
+from ..ClassMessage import ClassMessage
 
-from ClassGetResults import ClassGetResults
-from ClassCreatFilesModels import ClassCreatFilesModels
+from .ClassGetResults import ClassGetResults
+from .ClassCreatFilesModels import ClassCreatFilesModels
 import time
 
 MESSAGE_CATEGORY ='TaskMascPost'
@@ -13,16 +16,16 @@ MESSAGE_CATEGORY ='TaskMascPost'
 class TaskMascPost(QgsTask):
     message = pyqtSignal(str)
 
-    def __init__(self, comput_task, mdb, dict_scen,
-                 basename,  comments):
+    def __init__(self,init_task, comput_task, mdb, dict_scen,  comments):
         super().__init__()
         self.comput_task = comput_task
+        self.init_task = init_task
         self.mdb = mdb
-        self.basename = basename
         self.comments = comments
-        self.dossier_file_masc = None
+
         self.dict_scen = dict_scen
 
+        self.dossier_file_masc = None
         self.mess = ClassMessage()
 
 
@@ -37,11 +40,15 @@ class TaskMascPost(QgsTask):
 
     def get_precedent_task(self):
         self.comput_task.waitForFinished()
+        self.comput_task.waitForFinished()
 
-        self.date_debut = self.comput_task.date_debut
-        self.par = self.comput_task.par
-        self.noyau = self.comput_task.noyau
-        self.scen = self.comput_task.scen
+        self.par = self.init_task.par
+        self.noyau = self.init_task.noyau
+        self.scen = self.init_task.scen
+        self.dossier_file_masc = self.init_task.dossier_file_masc
+        self.basename = self.init_task.basename
+        self.date_debut = self.init_task.date_debut
+
         self.cpt_init = self.comput_task.cpt_init
         self.id_run = self.comput_task.id_run
         self.cond_api = self.comput_task.cond_api
@@ -50,6 +57,12 @@ class TaskMascPost(QgsTask):
         self.cls_res = ClassGetResults(self.mdb)
         self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc)
 
+    def exit_status_(self,obj):
+        exit_status = obj.get_critic_status()
+        if exit_status:
+            self.message.emit(self.write_mess(obj))
+            self.taskTerminated.emit()
+        return exit_status
 
     def run_post(self):
 
@@ -58,7 +71,11 @@ class TaskMascPost(QgsTask):
         if self.cpt_init:
             self.cls_res.lit_opt_new(self.id_run, None, self.basename + "_init", self.comments,
                                      cond_api=self.cond_api, save_res_struct = self.save_res_struct)
+            if self.exit_status_(self.cls_res.mess):
+                return
             self.clfile.opt_to_lig(self.id_run, self.basename)
+            if self.exit_status_(self.clfile.mess):
+                return
             tab = {
                 "LigEauInit": {
                     "valeur": "true",
@@ -75,9 +92,14 @@ class TaskMascPost(QgsTask):
                 self.id_run, self.date_debut, self.basename, self.comments,
                 self.par["presenceTraceurs"], cond_casier,
                 self.cond_api, self.save_res_struct)
+            if self.exit_status_(self.cls_res.mess):
+                return
 
             if self.check_mobil_gate():
                 self.cls_res.read_mobil_gate_res(self.id_run)
+                if self.exit_status_(self.cls_res.mess):
+                    return
+        self.taskCompleted.emit(True)
 
     def check_mobil_gate(self):
         """

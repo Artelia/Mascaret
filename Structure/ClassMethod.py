@@ -25,7 +25,7 @@ from shapely.geometry import *
 
 from .ClassTableStructure import ClassTableStructure
 from .ClassPolygone import ClassPolygone
-
+from ..ClassMessage import ClassMessage
 
 class ClassMethod:
     def __init__(self, mgis):
@@ -35,7 +35,9 @@ class ClassMethod:
 
         self.grav = 9.81
         self.tbst = ClassTableStructure()
-        self.clpoly = ClassPolygone(self.debug)
+        self.clpoly = ClassPolygone()
+        self.mess = ClassMessage()
+        self.num_mess = 0
 
     def sort_law(self, list_final):
         """
@@ -183,7 +185,8 @@ class ClassMethod:
 
     def add_info(self, txt):
         if self.mgis:
-            self.mgis.add_info(txt)
+            self.mess('clMehtod{}'.format(self.num_mess), 'info', txt)
+            # self.mgis.add_info(txt)
         else:
             print(txt)
 
