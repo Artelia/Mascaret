@@ -87,6 +87,7 @@ class ClassExportDataRun(QDialog):
         self.model_sta, self.id_to_name_sta = self.stations_mod()
         self.model_scen, self.id_to_run = self.run_scenar_mod()
 
+
         self.model_var = None
         self.model_obs = None
         # default
@@ -327,6 +328,8 @@ class ClassExportDataRun(QDialog):
         :return : None
         """
         lst_row = self.get_treeview_rows()
+        if not self.id_to_run:
+            return 
         old_row = self.id_to_run.copy()
         self.model_scen, self.id_to_run = self.run_scenar_mod(ignore_init=self.ch_ignor.checkState())
         new_row = [key for key, value in self.id_to_run.items() if any(
@@ -496,7 +499,7 @@ class ClassExportDataRun(QDialog):
         treeModel = QStandardItemModel()
         dtmp = self.mdb.select_distinct('run', "runs")
         if dtmp is None:
-            return treeModel
+            return treeModel, None
         lst_runs = dtmp['run']
         id_to_run = {}
         for row, run in enumerate(lst_runs):
