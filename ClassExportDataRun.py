@@ -257,7 +257,8 @@ class ClassExportDataRun(QDialog):
         if len(list_run) == 0 or len(list_row) == 0:
             return model_var, row_to_name_var, exit_status
         where = "id in (SELECT DISTINCT var FROM {}.results " \
-                "WHERE id_runs in ({}))".format(self.mdb.SCHEMA, ','.join([str(val) for val in list_run]))
+                "WHERE id_runs in ({})) AND  type_res NOT IN " \
+                "('weirs', 'struct', 'basin', 'link')".format(self.mdb.SCHEMA, ','.join([str(val) for val in list_run]))
         dtmp = self.mdb.select("results_var", where=where, order="id", list_var=['id', 'name', 'var'])
         for id, name in enumerate(dtmp['name']):
             var = dtmp['var'][id]
@@ -329,7 +330,7 @@ class ClassExportDataRun(QDialog):
         """
         lst_row = self.get_treeview_rows()
         if not self.id_to_run:
-            return 
+            return
         old_row = self.id_to_run.copy()
         self.model_scen, self.id_to_run = self.run_scenar_mod(ignore_init=self.ch_ignor.checkState())
         new_row = [key for key, value in self.id_to_run.items() if any(
