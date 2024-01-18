@@ -81,7 +81,7 @@ class ClassMascaret:
         self.dico_basinnum = {}
         self.dico_linknum = {}
         self.wq = ClassMascWQ(self.mgis, self.dossierFileMasc)
-        self.clmeth = ClassMascStruct(self.mgis)
+        self.clmeth = ClassMascStruct(self.mdb)
         self.cond_api = self.mgis.cond_api
         self.save_res_struct = None
 

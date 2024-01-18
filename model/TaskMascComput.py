@@ -20,7 +20,7 @@ email                :
 """
 
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
-from qgis.core import QgsTask
+from qgis.core import QgsTask,  QgsMessageLog, Qgis
 import os
 import subprocess
 import sys
@@ -69,9 +69,10 @@ class TaskMascComput(QgsTask):
         self.scen = self.init_task.scen
         self.dossier_file_masc = self.init_task.dossier_file_masc
         self.base_name = self.init_task.basename
+        print( self.par ,self.noyau, self.scen, self.dossier_file_masc, self.base_name   )
 
 
-    def run_mascaret(self):
+    def run(self):
         if self.cpt_init :
             sceninit = self.scen + "_init"
             self.id_run = self.insert_id_run(self.run, sceninit)
@@ -96,7 +97,7 @@ class TaskMascComput(QgsTask):
                 self.message.emit(self.write_mess(self.mess))
                 self.taskTerminated.emit()
                 return
-        self.taskCompleted.emit(True)
+        self.taskCompleted.emit()
         return
 
     def lance_mascaret(self, fichier_cas, id_run, tracer=False, casier=False):

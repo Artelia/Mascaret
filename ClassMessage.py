@@ -47,8 +47,8 @@ class ClassMessage:
             :return True if error stop model
         """
         if len(self.derror.keys()) > 0:
-            for name_obj in self.derror.keys():
-                if name_obj['type'] == 'critic':
+            for name_obj, obj in self.derror.items():
+                if obj['type'] == 'critic':
                     return True
         else:
             return False
@@ -94,7 +94,7 @@ class ClassMessage:
 
     def message(self):
         txt = ''
-        for key, item in self.derror:
+        for key, item in self.derror.items():
             if item['type'] == 'debug':
                 txt += item['message'] + '\n'
             elif item['type'] == 'info':

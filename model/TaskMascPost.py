@@ -19,7 +19,7 @@ email                :
 
 """
 from qgis.PyQt.QtCore import pyqtSignal
-from qgis.core import QgsTask
+from qgis.core import QgsTask, QgsMessageLog, Qgis
 
 from ..ClassMessage import ClassMessage
 
@@ -80,7 +80,7 @@ class TaskMascPost(QgsTask):
             self.taskTerminated.emit()
         return exit_status
 
-    def run_post(self):
+    def run(self):
 
         self.get_precedent_task()
         # RUN Model
@@ -115,7 +115,7 @@ class TaskMascPost(QgsTask):
                 self.cls_res.read_mobil_gate_res(self.id_run)
                 if self.exit_status_(self.cls_res.mess):
                     return
-        self.taskCompleted.emit(True)
+        self.taskCompleted.emit()
 
     def check_mobil_gate(self):
         """
