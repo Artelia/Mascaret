@@ -25,8 +25,10 @@ import os
 import subprocess
 import sys
 import copy
+import datetime
 
 from ..api.ClassAPIMascaret import ClassAPIMascaret
+from  ..ClassMessage import ClassMessage
 
 import time
 
@@ -35,13 +37,14 @@ MESSAGE_CATEGORY ='TaskMascComput'
 class TaskMascComput(QgsTask):
     message = pyqtSignal(str)
 
-    def __init__(self,cl_mas, init_task, mdb,cond_api, cpt_init = False):
+    def __init__(self,cl_mas, init_task, mdb,cond_api, run_, cpt_init = False):
         super().__init__()
         self.cl_mas = cl_mas
         self.init_task = init_task
         self.mdb = mdb
         self.cpt_init = cpt_init
         self.cond_api =  cond_api
+        self.run_ = run_
 
 
         self.id_run = None
@@ -52,10 +55,11 @@ class TaskMascComput(QgsTask):
         self.scen = None
         self.dossier_file_masc = None
         self.base_name  = None
-
+        self.mess = ClassMessage()
         # Task info
         self.exc_start_time = time.time()
         self.description = 'Computing model'
+
 
     def write_mess(self, obj):
         txt = obj.message()
@@ -64,19 +68,23 @@ class TaskMascComput(QgsTask):
 
     def get_precedent_task(self):
         self.init_task.waitForFinished()
+        QgsMessageLog.logMessage('self.init_task.waitForFinishe {}'.format(""), MESSAGE_CATEGORY, Qgis.Info)
         self.par = self.init_task.par
         self.noyau = self.init_task.noyau
         self.scen = self.init_task.scen
         self.dossier_file_masc = self.init_task.dossier_file_masc
         self.base_name = self.init_task.basename
-        print( self.par ,self.noyau, self.scen, self.dossier_file_masc, self.base_name   )
-
+        QgsMessageLog.logMessage('self.scen {}'.format(self.scen), MESSAGE_CATEGORY, Qgis.Info)
 
     def run(self):
+        self.get_precedent_task()
+        QgsMessageLog.logMessage('self.cpt_init {}'.format(self.cpt_init), MESSAGE_CATEGORY, Qgis.Info)
         if self.cpt_init :
             sceninit = self.scen + "_init"
-            self.id_run = self.insert_id_run(self.run, sceninit)
+            self.id_run = self.insert_id_run(self.run_, sceninit)
+            QgsMessageLog.logMessage('init avant lance', MESSAGE_CATEGORY, Qgis.Info)
             finish = self.lance_mascaret(self.base_name + "_init.xcas", self.id_run)
+            QgsMessageLog.logMessage('finish {}'.format(finish), MESSAGE_CATEGORY, Qgis.Info)
             if not finish:
                 self.mess.add_mess("ErrSim", 'Warning', "Init Simulation error")
                 self.message.emit(self.write_mess(self.mess))
@@ -88,7 +96,7 @@ class TaskMascComput(QgsTask):
             if self.par["presenceCasiers"] and self.noyau == "unsteady":
                 cond_casier = True
 
-            self.id_run = self.insert_id_run(self.run, self.scen)
+            self.id_run = self.insert_id_run(self.run_, self.scen)
             finish = self.lance_mascaret(
                 self.base_name + ".xcas", self.id_run, self.par["presenceTraceurs"], cond_casier
             )
@@ -151,7 +159,27 @@ class TaskMascComput(QgsTask):
             os.chdir(pwd)
             return True
 
+    def insert_id_run(self, run_, scen):
+        """
+        creation run line in runs table
+        :param run_: run name
+        :param scen: scenario name
+        :return:
+        """
+        QgsMessageLog.logMessage('run, scen {} {}'.format(run_, scen), MESSAGE_CATEGORY, Qgis.Info)
+        maintenant = datetime.datetime.utcnow()
+        tab = {run_: {"scenario": scen, "date": "{:%Y-%m-%d %H:%M}".format(maintenant)}}
+        listimport = ["run", "scenario", "date"]
+        QgsMessageLog.logMessage('maintenant {}'.format(maintenant), MESSAGE_CATEGORY, Qgis.Info)
+        self.mdb.insert("runs", tab, listimport)
+        info = self.mdb.select(
+            "runs", where="run='{}' AND scenario='{}'".format(run_, scen), list_var=["id"]
+        )
 
+        # QgsMessageLog.logMessage("SELECT {4} FROM {0}.{1} {2} {3};".format(self.SCHEMA,"runs",
+        #                          "run='{}' AND scenario='{}'".format(run_, scen), "id"), MESSAGE_CATEGORY, Qgis.Info)
+        id_run = info["id"][0]
+        return id_run
 
 
     def finished(self, result):

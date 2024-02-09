@@ -243,9 +243,15 @@ class ClassMascaret:
         if not par or not dict_scen or not dict_lois :
             self.mgis.add_info("**** Error : Error at initilisation of model")
             return
-
+        first = True
         for idx, scen in enumerate(dict_scen["name"]):
-            init_task = TaskMascInit(self.mdb, self.wq, self.dossierFileMasc, par, noyau,
+            if not first :
+                # res_task.waitForFinished()
+                pass
+            else:
+                first = False
+
+            init_task = TaskMascInit(self.mdb, self.wq, self.dossierFileMasc,self.baseName, par, noyau,
                                      scen, idx, dict_scen, dict_lois, dico_loi_struct)
             self.connect_task(init_task)
             QgsApplication.taskManager().addTask(init_task)
@@ -255,20 +261,22 @@ class ClassMascaret:
                 sceninit = scen + "_init"
                 self.mgis.add_info("========== Run initialization =========")
                 self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, sceninit, noyau))
-                cpt_task_init = TaskMascComput(self, init_task, self.mdb,self.cond_api, cpt_init=True)
+                cpt_task_init = TaskMascComput(self, init_task, self.mdb,self.cond_api, run, cpt_init=True)
                 self.connect_task(init_task)
                 QgsApplication.taskManager().addTask(cpt_task_init)
-                res_task_init = TaskMascPost(init_task, cpt_task_init, self.mdb,  dict_scen, comments)
+                print('check fin calcul')
 
+                res_task_init = TaskMascPost(init_task, cpt_task_init, self.mdb,  dict_scen, comments)
                 self.connect_task(init_task)
                 QgsApplication.taskManager().addTask(res_task_init)
-                res_task_init.waitForFinished(timeout=0)
+                #res_task_init.waitForFinished(timeout=0)
+                print('check post calcul')
             print('dddddddd')
             #
             # self.mgis.add_info("========== Run case  =========")
             # self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen, noyau))
             #
-            # cpt_task = TaskMascComput(self, init_task, self.mdb,self.cond_api, cpt_init=True)
+            # cpt_task = TaskMascComput(self, init_task, self.mdb,self.cond_api, run,  cpt_init=True)
             # self.connect_task(init_task)
             # QgsApplication.taskManager().addTask(cpt_task)
             # res_task = TaskMascPost(cpt_task, self.mdb, self.baseName, dict_scen, comments)
@@ -566,7 +574,7 @@ class ClassMascaret:
         idx = 0
         scen = dict_scen["name"][idx]
 
-        init_task = TaskMascInit(self.mdb, self.wq, self.dossierFileMasc, par, noyau,
+        init_task = TaskMascInit(self.mdb, self.wq, self.dossierFileMasc,self.baseName, par, noyau,
                                  scen, idx, dict_scen, dict_lois, dico_loi_struct)
         self.connect_task(init_task)
         QgsApplication.taskManager().addTask(init_task)

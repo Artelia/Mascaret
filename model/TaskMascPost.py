@@ -55,7 +55,7 @@ class TaskMascPost(QgsTask):
         return txt
 
     def get_precedent_task(self):
-        self.comput_task.waitForFinished()
+        self.init_task.waitForFinished()
         self.comput_task.waitForFinished()
 
         self.par = self.init_task.par
@@ -70,7 +70,7 @@ class TaskMascPost(QgsTask):
         self.cond_api = self.comput_task.cond_api
         self.save_res_struct = self.comput_task.save_res_struct
 
-        self.cls_res = ClassGetResults(self.mdb)
+        self.cls_res = ClassGetResults(self.mdb, self.dossier_file_masc)
         self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc)
 
     def exit_status_(self,obj):

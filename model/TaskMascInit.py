@@ -33,13 +33,13 @@ MESSAGE_CATEGORY ='TaskMascInit'
 class TaskMascInit(QgsTask):
     message = pyqtSignal(str)
 
-    def __init__(self, mdb, waterq, dossier_file_masc, par, noyau, scen, idx, dict_scen,
+    def __init__(self, mdb, waterq, dossier_file_masc, basename, par, noyau, scen, idx, dict_scen,
                  dict_lois, dico_loi_struct):
         super().__init__()
         self.mdb =  mdb
         self.dossier_file_masc = dossier_file_masc
         self.wq = waterq
-
+        self.basename = basename
         self.par = par
         self.noyau = noyau
         self.scen = scen
@@ -86,7 +86,8 @@ class TaskMascInit(QgsTask):
         txt = (" *** The current scenario is {} ***".format(self.scen))
         self.mess.add_mess('InfoRun1', 'info', txt)
         self.message.emit(self.write_mess(self.mess))
-
+        QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
+        self.message.emit( txt )
         if self.dico_loi_struct.keys():
             for name in self.dico_loi_struct.keys():
                 list_final = self.clmeth.get_list_law(self.dico_loi_struct[name]["id_config"])
@@ -117,6 +118,7 @@ class TaskMascInit(QgsTask):
             return False
         self.mess.add_mess("Laws", 'info', "Laws file is created.")
         self.message.emit(self.write_mess(self.clfile.mess))
+        QgsMessageLog.logMessage("Laws file is created.", MESSAGE_CATEGORY, Qgis.Info)
         if self.exit_status_(self.mess):
             self.erro_mess += self.write_mess(self.clfile.mess)
             return False
@@ -133,6 +135,7 @@ class TaskMascInit(QgsTask):
             self.erro_mess += self.write_mess(self.mess)
             return False
         self.message.emit(self.write_mess(self.mess))
+        QgsMessageLog.logMessage('checkApport', MESSAGE_CATEGORY, Qgis.Info)
 
         if self.par["LigEauInit"] and not self.par["initialisationAuto"] and self.noyau != "steady":
             id_run_init = None
@@ -149,6 +152,7 @@ class TaskMascInit(QgsTask):
             if self.exit_status_(self.clfile.mess):
                 self.erro_mess += self.write_mess(self.clfile.mess)
                 return False
+        QgsMessageLog.logMessage('complet', MESSAGE_CATEGORY, Qgis.Info)
         self.taskCompleted.emit()
         return True
 
