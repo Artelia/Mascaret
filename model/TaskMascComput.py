@@ -39,6 +39,7 @@ class TaskMascComput(QgsTask):
 
     def __init__(self,cl_mas, init_task, mdb,cond_api, run_, cpt_init = False):
         super().__init__()
+        self.name = 'TaskMascComput'
         self.cl_mas = cl_mas
         self.init_task = init_task
         self.mdb = mdb
@@ -89,7 +90,7 @@ class TaskMascComput(QgsTask):
                 self.mess.add_mess("ErrSim", 'Warning', "Init Simulation error")
                 self.message.emit(self.write_mess(self.mess))
                 self.taskTerminated.emit()
-                return
+                return False
 
         else:
             cond_casier = False
@@ -97,6 +98,7 @@ class TaskMascComput(QgsTask):
                 cond_casier = True
 
             self.id_run = self.insert_id_run(self.run_, self.scen)
+            QgsMessageLog.logMessage('avant lancemet', MESSAGE_CATEGORY, Qgis.Info)
             finish = self.lance_mascaret(
                 self.base_name + ".xcas", self.id_run, self.par["presenceTraceurs"], cond_casier
             )
@@ -104,9 +106,10 @@ class TaskMascComput(QgsTask):
                 self.mess.add_mess("ErrSim", 'Warning', "Simulation error")
                 self.message.emit(self.write_mess(self.mess))
                 self.taskTerminated.emit()
-                return
+                return False
+            QgsMessageLog.logMessage('FIN lancemet', MESSAGE_CATEGORY, Qgis.Info)
         self.taskCompleted.emit()
-        return
+        return True
 
     def lance_mascaret(self, fichier_cas, id_run, tracer=False, casier=False):
         """

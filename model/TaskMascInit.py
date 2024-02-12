@@ -36,6 +36,7 @@ class TaskMascInit(QgsTask):
     def __init__(self, mdb, waterq, dossier_file_masc, basename, par, noyau, scen, idx, dict_scen,
                  dict_lois, dico_loi_struct):
         super().__init__()
+        self.name = 'TaskMascInit'
         self.mdb =  mdb
         self.dossier_file_masc = dossier_file_masc
         self.wq = waterq

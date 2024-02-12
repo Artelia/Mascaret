@@ -34,6 +34,7 @@ class TaskMascPost(QgsTask):
 
     def __init__(self,init_task, comput_task, mdb, dict_scen,  comments):
         super().__init__()
+        self.name ='TaskMascPost'
         self.comput_task = comput_task
         self.init_task = init_task
         self.mdb = mdb
@@ -43,7 +44,7 @@ class TaskMascPost(QgsTask):
 
         self.dossier_file_masc = None
         self.mess = ClassMessage()
-
+        self.cpt_init = False
 
         # Task info
         self.exc_start_time = time.time()
@@ -55,8 +56,11 @@ class TaskMascPost(QgsTask):
         return txt
 
     def get_precedent_task(self):
+        QgsMessageLog.logMessage('get_precedent_task', MESSAGE_CATEGORY, Qgis.Info)
         self.init_task.waitForFinished()
+        QgsMessageLog.logMessage('get_precedent_task init', MESSAGE_CATEGORY, Qgis.Info)
         self.comput_task.waitForFinished()
+        QgsMessageLog.logMessage('get_precedent_task fin', MESSAGE_CATEGORY, Qgis.Info)
 
         self.par = self.init_task.par
         self.noyau = self.init_task.noyau
@@ -82,16 +86,19 @@ class TaskMascPost(QgsTask):
 
     def run(self):
 
-        self.get_precedent_task()
+
         # RUN Model
         if self.cpt_init:
+            self.get_precedent_task()
+            QgsMessageLog.logMessage('read opt', MESSAGE_CATEGORY, Qgis.Info)
             self.cls_res.lit_opt_new(self.id_run, None, self.basename + "_init", self.comments,
                                      cond_api=self.cond_api, save_res_struct = self.save_res_struct)
             if self.exit_status_(self.cls_res.mess):
-                return
+                return False
+            QgsMessageLog.logMessage('gener lig', MESSAGE_CATEGORY, Qgis.Info)
             self.clfile.opt_to_lig(self.id_run, self.basename)
             if self.exit_status_(self.clfile.mess):
-                return
+                return False
             tab = {
                 "LigEauInit": {
                     "valeur": "true",
@@ -100,22 +107,29 @@ class TaskMascPost(QgsTask):
                 }
             }
             self.clfile.modif_xcas(tab, self.basename + ".xcas")
+            QgsMessageLog.logMessage('OK', MESSAGE_CATEGORY, Qgis.Info)
         else:
-            cond_casier = False
-            if self.par["presenceCasiers"] and  self.noyau == "unsteady":
-                cond_casier = True
-            self.cls_res.lit_opt_new(
-                self.id_run, self.date_debut, self.basename, self.comments,
-                self.par["presenceTraceurs"], cond_casier,
-                self.cond_api, self.save_res_struct)
-            if self.exit_status_(self.cls_res.mess):
-                return
-
-            if self.check_mobil_gate():
-                self.cls_res.read_mobil_gate_res(self.id_run)
-                if self.exit_status_(self.cls_res.mess):
-                    return
+            QgsMessageLog.logMessage('daadada', MESSAGE_CATEGORY, Qgis.Info)
+            self.get_precedent_task()
+            QgsMessageLog.logMessage('daadada2 {}'.format( self.id_run), MESSAGE_CATEGORY, Qgis.Info)
+        #     cond_casier = False
+        #     if self.par["presenceCasiers"] and  self.noyau == "unsteady":
+        #         cond_casier = True
+            # self.cls_res.lit_opt_new(
+            #     self.id_run, self.date_debut, self.basename, self.comments,
+            #     self.par["presenceTraceurs"], cond_casier,
+            #     self.cond_api, self.save_res_struct)
+            # QgsMessageLog.logMessage('read lit', MESSAGE_CATEGORY, Qgis.Info)
+            # if self.exit_status_(self.cls_res.mess):
+            #     return False
+            # QgsMessageLog.logMessage('check_mobil_gate', MESSAGE_CATEGORY, Qgis.Info)
+            # if self.check_mobil_gate():
+            #     self.cls_res.read_mobil_gate_res(self.id_run)
+            #     if self.exit_status_(self.cls_res.mess):
+            #         return False
+        QgsMessageLog.logMessage('eeeeeeeeee', MESSAGE_CATEGORY, Qgis.Info)
         self.taskCompleted.emit()
+        return True
 
     def check_mobil_gate(self):
         """

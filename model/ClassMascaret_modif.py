@@ -43,7 +43,7 @@ from .TaskMascInit import TaskMascInit
 from .TaskMascComput import TaskMascComput
 from .TaskMascPost import TaskMascPost
 
-
+import time
 
 
 
@@ -238,6 +238,7 @@ class ClassMascaret:
         :param only_init: if only intialisation is true
         :return:
         """
+        t1 = time.time()
         par, dict_scen,  comments, dict_lois, dico_loi_struct = self.mascaret_init(noyau, run)
 
         if not par or not dict_scen or not dict_lois :
@@ -246,7 +247,7 @@ class ClassMascaret:
         first = True
         for idx, scen in enumerate(dict_scen["name"]):
             if not first :
-                # res_task.waitForFinished()
+                #res_task.waitForFinished()
                 pass
             else:
                 first = False
@@ -267,25 +268,24 @@ class ClassMascaret:
                 print('check fin calcul')
 
                 res_task_init = TaskMascPost(init_task, cpt_task_init, self.mdb,  dict_scen, comments)
-                self.connect_task(init_task)
+                self.connect_task(res_task_init)
                 QgsApplication.taskManager().addTask(res_task_init)
-                #res_task_init.waitForFinished(timeout=0)
+                res_task_init.waitForFinished()
                 print('check post calcul')
-            print('dddddddd')
+
             #
-            # self.mgis.add_info("========== Run case  =========")
-            # self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen, noyau))
-            #
-            # cpt_task = TaskMascComput(self, init_task, self.mdb,self.cond_api, run,  cpt_init=True)
-            # self.connect_task(init_task)
-            # QgsApplication.taskManager().addTask(cpt_task)
-            # res_task = TaskMascPost(cpt_task, self.mdb, self.baseName, dict_scen, comments)
-            # self.connect_task(init_task)
-            # QgsApplication.taskManager().addTask(res_task)
-            # res_task.waitForFinished(timeout =0)
-            # gtrr
-            # while QgsApplication.taskManager().countActiveTasks() > 0:
-            #     QgsApplication.processEvents()
+            self.mgis.add_info("========== Run case  =========")
+            self.mgis.add_info("Run = {} ;  Scenario = {} ; Kernel= {}".format(run, scen, noyau))
+
+            cpt_task = TaskMascComput(self, init_task, self.mdb,self.cond_api, run)
+            self.connect_task(cpt_task)
+            QgsApplication.taskManager().addTask(cpt_task)
+            res_task = TaskMascPost(init_task, cpt_task, self.mdb,  dict_scen, comments)
+            self.connect_task(res_task)
+            QgsApplication.taskManager().addTask(res_task)
+            # res_task.waitForFinished()
+            print('fin')
+        print("calcul final ", time.time() -t1)
 
     def fct_comment(self):
         liste_col = self.mdb.list_columns("runs")
