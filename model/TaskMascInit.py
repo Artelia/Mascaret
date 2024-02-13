@@ -68,7 +68,6 @@ class TaskMascInit(QgsTask):
         exit_status = obj.get_critic_status()
         if exit_status:
             self.message.emit(self.write_mess(obj))
-            self.taskTerminated.emit()
         return exit_status
 
     def clean_res(self):
@@ -122,18 +121,21 @@ class TaskMascInit(QgsTask):
         QgsMessageLog.logMessage("Laws file is created.", MESSAGE_CATEGORY, Qgis.Info)
         if self.exit_status_(self.mess):
             self.erro_mess += self.write_mess(self.clfile.mess)
+            self.taskTerminated.emit()
             return False
         self.message.emit(self.write_mess(self.mess))
         if self.check_mobil_gate() and self.noyau == "unsteady":
             self.clfile.create_mobil_gate_file()
             if self.exit_status_(self.clfile.mess):
                 self.erro_mess += self.write_mess(self.clfile.mess)
+                self.taskTerminated.emit()
                 return False
 
         # check error and warning:
         self.check_apport()
         if self.exit_status_(self.mess):
             self.erro_mess += self.write_mess(self.mess)
+            self.taskTerminated.emit()
             return False
         self.message.emit(self.write_mess(self.mess))
         QgsMessageLog.logMessage('checkApport', MESSAGE_CATEGORY, Qgis.Info)
@@ -152,6 +154,7 @@ class TaskMascInit(QgsTask):
             self.clfile.opt_to_lig(id_run_init, self.baseName)
             if self.exit_status_(self.clfile.mess):
                 self.erro_mess += self.write_mess(self.clfile.mess)
+                self.taskTerminated.emit()
                 return False
         QgsMessageLog.logMessage('complet', MESSAGE_CATEGORY, Qgis.Info)
         self.taskCompleted.emit()

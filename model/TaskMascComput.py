@@ -39,7 +39,6 @@ class TaskMascComput(QgsTask):
 
     def __init__(self,cl_mas, init_task, mdb,cond_api, run_, cpt_init = False):
         super().__init__()
-        self.name = 'TaskMascComput'
         self.cl_mas = cl_mas
         self.init_task = init_task
         self.mdb = mdb
@@ -67,9 +66,9 @@ class TaskMascComput(QgsTask):
         obj.clear_derror()
         return txt
 
-    def get_precedent_task(self):
-        self.init_task.waitForFinished()
-        QgsMessageLog.logMessage('self.init_task.waitForFinishe {}'.format(""), MESSAGE_CATEGORY, Qgis.Info)
+    def get_param_task(self):
+        # self.init_task.waitForFinished()
+        # QgsMessageLog.logMessage('self.init_task.waitForFinishe {}'.format(""), MESSAGE_CATEGORY, Qgis.Info)
         self.par = self.init_task.par
         self.noyau = self.init_task.noyau
         self.scen = self.init_task.scen
@@ -78,7 +77,7 @@ class TaskMascComput(QgsTask):
         QgsMessageLog.logMessage('self.scen {}'.format(self.scen), MESSAGE_CATEGORY, Qgis.Info)
 
     def run(self):
-        self.get_precedent_task()
+        self.get_param_task()
         QgsMessageLog.logMessage('self.cpt_init {}'.format(self.cpt_init), MESSAGE_CATEGORY, Qgis.Info)
         if self.cpt_init :
             sceninit = self.scen + "_init"
