@@ -700,6 +700,7 @@ class MascPlugDialog(QMainWindow):
             if ok:
                 clam = ClassMascaret(self)
                 clam.mascaret(self.Klist[self.listeState.index(case)], run)
+        return
 
     def del_run(self):
         """Delete run of curent model"""

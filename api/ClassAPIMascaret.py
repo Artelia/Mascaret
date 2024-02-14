@@ -43,8 +43,9 @@ def check_init(file):
 class ClassAPIMascaret:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, main):
+    def __init__(self, main, dbg=False):
         # def __init__(self):
+        self.DEBUG = dbg
 
         self.npoin = 0
         self.zini = 0
@@ -65,6 +66,7 @@ class ClassAPIMascaret:
         self.basin = False
         self.filelig = None
 
+
         self.results_api = {}
 
         self.masc = Mascaret(log_level="INFO")
@@ -74,7 +76,7 @@ class ClassAPIMascaret:
             self.mgis = None
             self.dossierFileMasc = main["RUN_REP"]
             os.chdir(main["RUN_REP"])
-            self.DEBUG = main["DEBUG"]
+
             self.baseName = main["BASE_NAME"]
             self.clfg = ClassFloodGate(self)
             self.mobil_struct = self.clfg.fg_active()
@@ -82,14 +84,12 @@ class ClassAPIMascaret:
             self.clmas = main
             self.mgis = self.clmas.mgis
             self.dossierFileMasc = self.clmas.dossierFileMasc
-            self.DEBUG = self.mgis.DEBUG
             self.baseName = self.clmas.baseName
             # floodgat
             self.clfg = ClassFloodGate(self)
             self.mobil_struct = self.clfg.fg_active()
             self.mess = ClassMessage()
             self.num_mess = 0
-
     def initial(self, casfile):
         """
         Initialisation mascaret model with

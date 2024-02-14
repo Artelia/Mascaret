@@ -223,10 +223,8 @@ class ClassMascaret:
 
 
     def print_info(self,txt):
+        print(txt)
         self.mgis.add_info(txt)
-
-    def connect_task(self, task):
-        task.message.connect(self.print_info)
 
     def mascaret(self, noyau, run):
         """
@@ -236,8 +234,6 @@ class ClassMascaret:
         :param only_init: if only intialisation is true
         :return:
         """
-
-        t1 = time.time()
         par, dict_scen,  comments, dict_lois, dico_loi_struct = self.mascaret_init(noyau, run)
 
         if not par or not dict_scen or not dict_lois :
@@ -258,8 +254,14 @@ class ClassMascaret:
             'masc' : self,
             'cond_api':self.cond_api
         }
+
         task_mas =  TaskMascaret('TaskMascaret', dict_task)
+        task_mas.message.connect(self.print_info)
         QgsApplication.taskManager().addTask(task_mas)
+        QgsMessageLog.logMessage('Send Task', 'TaskMascaret', Qgis.Info)
+        # print obligatoir  + consol sinon task ignorer ?
+        print()
+        return
 
 
 

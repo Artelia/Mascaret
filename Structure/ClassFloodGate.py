@@ -41,7 +41,6 @@ class ClassFloodGate:
     def __init__(self, main):
         self.clapi = main
         self.masc = main.masc
-        self.clmas = main.clmas
         self.debug = main.DEBUG
         self.init_var = ClassPostPreFG(main.mgis)
         self.tbst = ClassTableStructure()

@@ -19,23 +19,14 @@ email                :
 
 """
 
-from PyQt5.QtCore import QObject, pyqtSignal, QThread
-from qgis.core import QgsTask,  QgsMessageLog, Qgis
-from qgis.core import QgsApplication
-import os
-import subprocess
-import sys
-import copy
-import datetime
-
-from ..api.ClassAPIMascaret import ClassAPIMascaret
-from  ..ClassMessage import ClassMessage
-from .TaskMascInit import TaskMascInit
-from .TaskMascComput import TaskMascComput
-from .TaskMascPost import TaskMascPost
-
-
 import time
+
+from PyQt5.QtCore import pyqtSignal
+from qgis.core import QgsTask, QgsMessageLog, Qgis
+
+from .TaskMascComput import TaskMascComput
+from .TaskMascInit import TaskMascInit
+from .TaskMascPost import TaskMascPost
 
 MESSAGE_CATEGORY ='TaskMascaret'
 
@@ -65,50 +56,113 @@ class TaskMascaret(QgsTask):
         self.exc_start_time =time.time()
         self.error_txt = ''
 
+    def run_task(self,task, up_param, cpt_init = None):
+        if cpt_init:
+            task.update_inputs(up_param, cpt_init)
+        else:
+            task.update_inputs(up_param)
+        completed_status =  task.run()
+        up_param = task.maj_param(up_param)
+        self.message.emit(task.mess.message())
+        return completed_status, up_param
+
+    def log_mess(self, txt, typ='info'):
+        """Manage message
+            :param txt : (str) text
+            :param flag : (str) error flag
+            :param typ :(str) message typ
+        """
+        self.message.emit(txt)
+        if typ ==  'warning':
+            QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Warning)
+        elif typ == 'critic':
+            QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Critical)
+        else:
+            QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
+
 
     def  run(self):
         self.exc_start_time = time.time()
         try :
+            gbl_param = {'mdb': self.mdb,
+                         'dossier_file_masc': self.dossier_file_masc,
+                         'basename': self.basename,
+                         'noyau': self.noyau,
+                         'run': self.run_,
+                         'comments' : self.comments,
+                         'dict_scen': self.dict_scen,
+                         'cond_api' : self.cond_api,
+                         'masc' : self.masc
+                         }
+            param_init = {'waterq': self.wq,
+                          'dict_lois': self.dict_lois,
+                          'dico_loi_struct': self.dico_loi_struct
+                          }
+            self.init_task = TaskMascInit(gbl_param, param_init)
+            self.comput_task = TaskMascComput(gbl_param)
+            self.post_task = TaskMascPost(gbl_param)
+
+            self.log_mess("===== BEGIN OF RUN {} =====".format(self.run_))
             for idx, scen in enumerate(self.dict_scen["name"]):
+                t0_run =  time.time()
+                self.log_mess("************** The current scenario is {} ************".format(scen))
+                self.log_mess("Kernel - Run - scenario : {} - {} - {} ".format(self.noyau,self.run_, scen))
                 self.scen_cur = scen
-                self.init_task = TaskMascInit('TaskMascInit',self.mdb, self.wq, self.dossier_file_masc,
-                                              self.basename, self.par, self.noyau,
-                                              scen, idx, self.dict_scen, self.dict_lois, self.dico_loi_struct)
-                self.init_task.run()
-                # QgsApplication.taskManager().addTask(self.init_task)
-                # self.init_task.waitForFinished(0)
+                up_param = {'scen': scen,
+                            'idx': idx,
+                            'par': self.par,
+                            'id_run' : None,
+                            'save_res_struct' : None,
+                            'date_debut' : None,
+                            }
+                stat, up_param = self.run_task(self.init_task, up_param)
+                if not stat:
+                    # error ignor scenario
+                    self.log_mess("****** Error : File creation for {}  ******".format(self.scen))
+                    continue
+
                 if self.par["initialisationAuto"] and self.noyau != "steady":
-                    txt = "========== Run initialization ========="
-                    QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
-                    self.comput_task = TaskMascComput(' TaskMascComput_init', self.masc, self.init_task,
-                                                      self.mdb, self.cond_api, self.run_, cpt_init=True)
-                    self.comput_task.run()
-                    # QgsApplication.taskManager().addTask(self.comput_task)
-                    # self.comput_task.waitForFinished(0)
-
-                    self.post_task = TaskMascPost('TaskMascPost_init', self.init_task, self.comput_task,
-                                                  self.mdb, self.dict_scen, self.comments)
-                    self.post_task.run()
-                    # QgsApplication.taskManager().addTask(self.post_task)
-                    # self.post_task.waitForFinished(0)
-
-                self.comput_task = TaskMascComput(' TaskMascComput', self.masc, self.init_task,
-                                                  self.mdb, self.cond_api, self.run_)
-                self.comput_task.run()
-                # QgsApplication.taskManager().addTask(self.comput_task)
-                # self.comput_task.waitForFinished(0)
-                self.post_task = TaskMascPost('TaskMascPost', self.init_task, self.comput_task,
-                                              self.mdb, self.dict_scen, self.comments)
-                self.post_task.run()
-                # QgsApplication.taskManager().addTask(self.post_task)
-                # self.post_task.waitForFinished(0)
+                    self.log_mess("===== Run initialization =====")
+                    stat, up_param = self.run_task(self.comput_task, up_param, cpt_init=True)
+                    if not stat:
+                        # error ignor scenario
+                        self.log_mess("****** Error : Computing Initialization  for {}_init  ******".format(scen))
+                        continue
+                    stat, up_param = self.run_task(self.post_task, up_param, cpt_init = True)
+                    if not stat:
+                        self.log_mess("****** Error : Postprocessing Initialization for {}_init  ******".format(scen))
+                        continue
+                    tfin_run = time.time()
+                    self.log_mess("Initialization Execution time : {} s".format(tfin_run - t0_run))
+                    self.log_mess("===== End initialization =====")
+                stat, up_param = self.run_task(self.comput_task, up_param)
+                if not stat:
+                    self.log_mess("****** Error : Computing for {}  ******".format(scen))
+                    continue
+                print('oooooooooooooooooooooooooooooooooooo')
+                stat, up_param = self.run_task(self.post_task, up_param)
+                if not stat:
+                    self.log_mess("****** Error : Postprocessing for {}  ******".format(scen))
+                    continue
+                print('oooooooooooooooooooooooooooooooooooo2')
+                tfin_run = time.time()
+                self.log_mess("Execution time (Init + Run) : {} s".format(tfin_run - t0_run))
+                print('oooooooooooooooooooooooooooooooooooo3 ', tfin_run - t0_run)
+                self.log_mess("************** The End of {} ************".format(scen))
+                print('oooooooooooooooooooooooooooooooooooo4 ')
                 if self.isCanceled():
+                    self.log_mess("===== CANCEL RUN {} =====".format(self.run_))
                     self.taskTerminated.emit()
                     return False
+            tfin_run = time.time()
+            self.log_mess("Execution time (all Run) : {} s".format(tfin_run - self.exc_start_time))
+            self.log_mess("===== END OF RUN {} =====".format(self.run_))
             self.taskCompleted.emit()
             return True
         except Exception as e:
             self.error_txt = str(e)
+            self.log_mess( str(e))
+            print(str(e))
             self.taskTerminated.emit()
             return False
 
@@ -123,7 +177,8 @@ class TaskMascaret(QgsTask):
             txt_mess = 'Task "{name}" completed\nTotal time: {total} s'.format(name=self.description, total=total)
             QgsMessageLog.logMessage(txt_mess,MESSAGE_CATEGORY, Qgis.Success)
         else:
-            txt_mess = 'Task "{name}" echec\nTotal time: {total} s'.format(name=self.description, total=total)
+            txt_mess = self.error_txt + '\n'
+            txt_mess += 'Task "{name}" echec\nTotal time: {total} s'.format(name=self.description, total=total)
             QgsMessageLog.logMessage(txt_mess, MESSAGE_CATEGORY, Qgis.Critical)
 
 

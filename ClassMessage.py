@@ -101,6 +101,6 @@ class ClassMessage:
                 txt += item['message'] + '\n'
             elif item['type'] == 'warning':
                 txt += '** Warning ** : '+ item['message'] + '\n'
-            elif item['type'] == 'info':
+            elif item['type'] == 'critic':
                 txt += '** Error ** : \n' + item['message'] + '\n'
         return txt
