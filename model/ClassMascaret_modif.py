@@ -254,12 +254,15 @@ class ClassMascaret:
              'dict_lois': dict_lois,
              'dico_loi_struct' :dico_loi_struct,
              'noyau' : noyau,
-             'run': run
+             'run': run,
+            'masc' : self,
+            'cond_api':self.cond_api
         }
-        task_mas =  TaskMascaret(dict_task)
-        QgsApplication.taskManager().addTask(task_mas)
-        task_mas.waitForFinished()
-        print('fffffin')
+        task_mas =  TaskMascaret('TaskMascaret', dict_task)
+        task_mas.run()
+        #QgsApplication.taskManager().addTask(task_mas)
+        #task_mas.waitForFinished()
+
 
 
     def fct_comment(self):

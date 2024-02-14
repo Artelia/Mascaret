@@ -30,12 +30,12 @@ from ..Structure.ClassMascStruct import ClassMascStruct
 
 MESSAGE_CATEGORY ='TaskMascInit'
 
-class TaskMascInit(QgsTask):
+class TaskMascInit():
     message = pyqtSignal(str)
 
-    def __init__(self, description, mdb, waterq, dossier_file_masc, basename, par, noyau, scen, idx, dict_scen,
+    def __init__(self, mdb, waterq, dossier_file_masc, basename, par, noyau, scen, idx, dict_scen,
                  dict_lois, dico_loi_struct):
-        super().__init__( description, QgsTask.CanCancel)
+        super().__init__()
         self.mdb =  mdb
         self.dossier_file_masc = dossier_file_masc
         self.wq = waterq
@@ -57,7 +57,7 @@ class TaskMascInit(QgsTask):
         self.exc_start_time = time.time()
         self.description = 'Creating model initial files'
         self.erro_mess = ''
-
+        print('inininininininit')
 
     def write_mess(self, obj):
         txt = obj.message()
@@ -82,6 +82,9 @@ class TaskMascInit(QgsTask):
                 self.mess.add_mess('CleanRes', 'debug', txt)
 
     def run(self):
+        txt = 'rrrrrrrrrrrrrrrrrrrrr'
+        QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
+        print('rrrr')
         self.clean_res()
         txt = (" *** The current scenario is {} ***".format(self.scen))
         self.mess.add_mess('InfoRun1', 'info', txt)
@@ -151,7 +154,7 @@ class TaskMascInit(QgsTask):
                 self.taskTerminated.emit()
                 self.erro_mess += self.write_mess(self.mess)
                 return False
-            self.clfile.opt_to_lig(id_run_init, self.basename)
+            self.clfile.opt_to_lig(id_run_init, self.baseName)
             if self.exit_status_(self.clfile.mess):
                 self.erro_mess += self.write_mess(self.clfile.mess)
                 self.taskTerminated.emit()
@@ -242,7 +245,7 @@ class TaskMascInit(QgsTask):
                 "balise1": "parametresImpressionResultats",
             },
         }
-        self.clfile.modif_xcas(tab, self.basename + ".xcas")
+        self.clfile.modif_xcas(tab, self.baseName + ".xcas")
         par["tempsMax"] = duree
         #self.mgis.add_info("Xcas file is created.")
         if par["presenceTraceurs"]:
@@ -348,6 +351,7 @@ class TaskMascInit(QgsTask):
         This function is automatically called when the task has
         completed (successfully or not).
         """
+        print('finieshed INIT')
         exc_fin_time = time.time()
         total = exc_fin_time - self.exc_start_time
         if result:

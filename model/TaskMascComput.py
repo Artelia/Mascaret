@@ -37,8 +37,8 @@ MESSAGE_CATEGORY ='TaskMascComput'
 class TaskMascComput(QgsTask):
     message = pyqtSignal(str)
 
-    def __init__(self,cl_mas, init_task, mdb,cond_api, run_, cpt_init = False):
-        super().__init__()
+    def __init__(self, description, cl_mas, init_task, mdb,cond_api, run_, cpt_init = False):
+        super().__init__( description, QgsTask.CanCancel)
         self.cl_mas = cl_mas
         self.init_task = init_task
         self.mdb = mdb
