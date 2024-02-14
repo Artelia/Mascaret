@@ -38,58 +38,7 @@ from .TaskMascPost import TaskMascPost
 import time
 
 MESSAGE_CATEGORY ='TaskMascaret'
-# class TaskMascInit(QgsTask):
-#     # Signal pour indiquer que la tâche est complétée
-#     taskCompleted = pyqtSignal()
-#
-#     def __init__(self):
-#         super().__init__()
-#
-#     def run(self):
-#         try:
-#             print('iaiaia')
-#             # Code de votre tâche d'initialisation ici
-#
-#             QgsMessageLog.logMessage("TaskMascInit completed.", MESSAGE_CATEGORY, Qgis.Info)
-#             # Une fois que la tâche est complétée, émettre le signal taskCompleted
-#             self.taskCompleted.emit()
-#             return True  # Indiquer que la tâche a réussi
-#         except Exception as e:
-#             QgsMessageLog.logMessage(str(e), MESSAGE_CATEGORY, Qgis.Critical)
-#
-#             return False  # Indiquer que la tâche a échoué
-#
-# class TaskMascaret(QgsTask):
-#     def __init__(self,description, flags, dico_task ):
-#         super().__init__(description, flags)
-#
-#         # Flag pour suivre l'état de l'annulation de la tâche
-#         self.is_canceled = False
-#
-#     def run(self):
-#         print('iiiiiiiiiiii')
-#         # Créer et exécuter la tâche d'initialisation
-#         self.init_task = TaskMascInit()
-#         self.init_task.taskCompleted.connect(self.after_init_task)
-#         QgsApplication.taskManager().addTask(self.init_task)
-#         print('finnf')
-#         return True
-#
-#     def after_init_task(self):
-#         # Le slot qui sera appelé une fois que la tâche d'initialisation est terminée
-#         QgsMessageLog.logMessage("TaskMascInit completed V1.", MESSAGE_CATEGORY, Qgis.Info)
-#
-#         # Fermez la tâche principale une fois que la tâche d'initialisation est terminée
-#         self.taskCompleted.emit()
-#
-#     def cancel(self):
-#         # Annuler la tâche d'initialisation si elle est en cours d'exécution
-#         if self.init_task.isRunning():
-#             self.init_task.cancel()
-#
-#         # Marquer la tâche principale comme annulée
-#         self.is_canceled = True
-# #
+
 class TaskMascaret(QgsTask):
     message = pyqtSignal(str)
 
@@ -125,30 +74,37 @@ class TaskMascaret(QgsTask):
                 self.init_task = TaskMascInit('TaskMascInit',self.mdb, self.wq, self.dossier_file_masc,
                                               self.basename, self.par, self.noyau,
                                               scen, idx, self.dict_scen, self.dict_lois, self.dico_loi_struct)
-
-                QgsApplication.taskManager().addTask(self.init_task)
-                self.init_task.waitForFinished(0)
+                self.init_task.run()
+                # QgsApplication.taskManager().addTask(self.init_task)
+                # self.init_task.waitForFinished(0)
                 if self.par["initialisationAuto"] and self.noyau != "steady":
                     txt = "========== Run initialization ========="
                     QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
                     self.comput_task = TaskMascComput(' TaskMascComput_init', self.masc, self.init_task,
                                                       self.mdb, self.cond_api, self.run_, cpt_init=True)
-                    QgsApplication.taskManager().addTask(self.comput_task)
-                    self.comput_task.waitForFinished(0)
+                    self.comput_task.run()
+                    # QgsApplication.taskManager().addTask(self.comput_task)
+                    # self.comput_task.waitForFinished(0)
 
                     self.post_task = TaskMascPost('TaskMascPost_init', self.init_task, self.comput_task,
                                                   self.mdb, self.dict_scen, self.comments)
-                    QgsApplication.taskManager().addTask(self.post_task)
-                    self.post_task.waitForFinished(0)
+                    self.post_task.run()
+                    # QgsApplication.taskManager().addTask(self.post_task)
+                    # self.post_task.waitForFinished(0)
 
-            self.comput_task = TaskMascComput(' TaskMascComput', self.masc, self.init_task,
-                                              self.mdb, self.cond_api, self.run_)
-            QgsApplication.taskManager().addTask(self.comput_task)
-            self.comput_task.waitForFinished(0)
-            self.post_task = TaskMascPost('TaskMascPost', self.init_task, self.comput_task,
-                                          self.mdb, self.dict_scen, self.comments)
-            QgsApplication.taskManager().addTask(self.post_task)
-            self.post_task.waitForFinished(0)
+                self.comput_task = TaskMascComput(' TaskMascComput', self.masc, self.init_task,
+                                                  self.mdb, self.cond_api, self.run_)
+                self.comput_task.run()
+                # QgsApplication.taskManager().addTask(self.comput_task)
+                # self.comput_task.waitForFinished(0)
+                self.post_task = TaskMascPost('TaskMascPost', self.init_task, self.comput_task,
+                                              self.mdb, self.dict_scen, self.comments)
+                self.post_task.run()
+                # QgsApplication.taskManager().addTask(self.post_task)
+                # self.post_task.waitForFinished(0)
+                if self.isCanceled():
+                    self.taskTerminated.emit()
+                    return False
             self.taskCompleted.emit()
             return True
         except Exception as e:
@@ -156,8 +112,6 @@ class TaskMascaret(QgsTask):
             self.taskTerminated.emit()
             return False
 
-
-#
     def finished(self, result):
         """
         This function is automatically called when the task has

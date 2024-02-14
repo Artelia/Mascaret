@@ -259,9 +259,8 @@ class ClassMascaret:
             'cond_api':self.cond_api
         }
         task_mas =  TaskMascaret('TaskMascaret', dict_task)
-        task_mas.run()
-        #QgsApplication.taskManager().addTask(task_mas)
-        #task_mas.waitForFinished()
+        QgsApplication.taskManager().addTask(task_mas)
+
 
 
 

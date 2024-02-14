@@ -28,10 +28,9 @@ import time
 from .ClassCreatFilesModels import ClassCreatFilesModels
 from ..Structure.ClassMascStruct import ClassMascStruct
 
-MESSAGE_CATEGORY ='TaskMascInit'
+MESSAGE_CATEGORY ='TaskMascaret'
 
 class TaskMascInit(QgsTask):
-    message = pyqtSignal(str)
 
     def __init__(self, description, mdb, waterq, dossier_file_masc, basename, par, noyau, scen, idx, dict_scen,
                  dict_lois, dico_loi_struct):
@@ -66,8 +65,6 @@ class TaskMascInit(QgsTask):
 
     def exit_status_(self,obj):
         exit_status = obj.get_critic_status()
-        if exit_status:
-            self.message.emit(self.write_mess(obj))
         return exit_status
 
     def clean_res(self):
@@ -85,9 +82,8 @@ class TaskMascInit(QgsTask):
         self.clean_res()
         txt = (" *** The current scenario is {} ***".format(self.scen))
         self.mess.add_mess('InfoRun1', 'info', txt)
-        self.message.emit(self.write_mess(self.mess))
         QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
-        self.message.emit( txt )
+
         if self.dico_loi_struct.keys():
             for name in self.dico_loi_struct.keys():
                 list_final = self.clmeth.get_list_law(self.dico_loi_struct[name]["id_config"])
@@ -112,18 +108,15 @@ class TaskMascInit(QgsTask):
             exit_status = self.clfile.mess.get_critic_status()
 
         if exit_status:
-            self.message.emit(self.write_mess(self.clfile.mess))
             self.taskTerminated.emit()
             self.erro_mess += self.write_mess(self.clfile.mess)
             return False
         self.mess.add_mess("Laws", 'info', "Laws file is created.")
-        self.message.emit(self.write_mess(self.clfile.mess))
         QgsMessageLog.logMessage("Laws file is created.", MESSAGE_CATEGORY, Qgis.Info)
         if self.exit_status_(self.mess):
             self.erro_mess += self.write_mess(self.clfile.mess)
             self.taskTerminated.emit()
             return False
-        self.message.emit(self.write_mess(self.mess))
         if self.check_mobil_gate() and self.noyau == "unsteady":
             self.clfile.create_mobil_gate_file()
             if self.exit_status_(self.clfile.mess):
@@ -137,9 +130,7 @@ class TaskMascInit(QgsTask):
             self.erro_mess += self.write_mess(self.mess)
             self.taskTerminated.emit()
             return False
-        self.message.emit(self.write_mess(self.mess))
         QgsMessageLog.logMessage('checkApport', MESSAGE_CATEGORY, Qgis.Info)
-
         if self.par["LigEauInit"] and not self.par["initialisationAuto"] and self.noyau != "steady":
             id_run_init = None
             if "id_run_init" in self.dict_scen.keys():
@@ -147,7 +138,7 @@ class TaskMascInit(QgsTask):
             if id_run_init is None:
                 self.mess.add_mess("ErrInit", 'critic',
                                    "Cancel run because No initial boundaries")
-                self.message.emit(self.write_mess(self.mess))
+
                 self.taskTerminated.emit()
                 self.erro_mess += self.write_mess(self.mess)
                 return False

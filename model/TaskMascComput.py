@@ -32,10 +32,9 @@ from  ..ClassMessage import ClassMessage
 
 import time
 
-MESSAGE_CATEGORY ='TaskMascComput'
+MESSAGE_CATEGORY ='TaskMascaret'
 
 class TaskMascComput(QgsTask):
-    message = pyqtSignal(str)
 
     def __init__(self, description, cl_mas, init_task, mdb,cond_api, run_, cpt_init = False):
         super().__init__( description, QgsTask.CanCancel)

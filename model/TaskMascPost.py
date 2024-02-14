@@ -27,7 +27,7 @@ from .ClassGetResults import ClassGetResults
 from .ClassCreatFilesModels import ClassCreatFilesModels
 import time
 
-MESSAGE_CATEGORY ='TaskMascPost'
+MESSAGE_CATEGORY ='TaskMascaret'
 
 class TaskMascPost(QgsTask):
     message = pyqtSignal(str)
@@ -72,9 +72,6 @@ class TaskMascPost(QgsTask):
 
     def exit_status_(self,obj):
         exit_status = obj.get_critic_status()
-        if exit_status:
-            self.message.emit(self.write_mess(obj))
-            self.taskTerminated.emit()
         return exit_status
 
     def run(self):
@@ -86,10 +83,12 @@ class TaskMascPost(QgsTask):
             self.cls_res.lit_opt_new(self.id_run, None, self.basename + "_init", self.comments,
                                      cond_api=self.cond_api, save_res_struct = self.save_res_struct)
             if self.exit_status_(self.cls_res.mess):
+                self.taskTerminated.emit()
                 return False
             QgsMessageLog.logMessage('gener lig', MESSAGE_CATEGORY, Qgis.Info)
             self.clfile.opt_to_lig(self.id_run, self.basename)
             if self.exit_status_(self.clfile.mess):
+                self.taskTerminated.emit()
                 return False
             tab = {
                 "LigEauInit": {
@@ -110,11 +109,13 @@ class TaskMascPost(QgsTask):
                 self.cond_api, self.save_res_struct)
             QgsMessageLog.logMessage('read lit', MESSAGE_CATEGORY, Qgis.Info)
             if self.exit_status_(self.cls_res.mess):
+                self.taskTerminated.emit()
                 return False
             QgsMessageLog.logMessage('check_mobil_gate', MESSAGE_CATEGORY, Qgis.Info)
             if self.check_mobil_gate():
                 self.cls_res.read_mobil_gate_res(self.id_run)
                 if self.exit_status_(self.cls_res.mess):
+                    self.taskTerminated.emit()
                     return False
         self.taskCompleted.emit()
         return True
