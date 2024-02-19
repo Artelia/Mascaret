@@ -61,6 +61,34 @@ class TaskMascComput(QgsTask):
         self.exc_start_time = time.time()
         self.description = 'Computing model'
 
+    def log_mess(self, txt, flag, typ='info'):
+        """Manage message
+            :param txt : (str) text
+            :param flag : (str) error flag
+            :param typ :(str) message typ
+        """
+        self.mess.add_mess(flag, typ, txt)
+        if typ ==  'warning':
+            QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Warning)
+        elif typ == 'critic':
+            QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Critical)
+        else:
+            QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
+
+    def add_log_mess(self, obj):
+        """
+        Add log message to classMessage object
+        :param obj : (object) ClassMessage
+        """
+        fill_d = self.mess.mess_fill_other_obj(obj)
+        if fill_d:
+            for key, item in fill_d.items():
+                if item['type'] == 'warning':
+                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Warning)
+                elif item['type'] == 'critic':
+                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Critical)
+                else:
+                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Info)
 
     def update_inputs(self,up_dict,  cpt_init = False):
         """
@@ -83,35 +111,35 @@ class TaskMascComput(QgsTask):
         return  up_dict
 
     def run(self):
-        """
-        Run task
-        """
-        QgsMessageLog.logMessage('self.cpt_init {}'.format(self.cpt_init), MESSAGE_CATEGORY, Qgis.Info)
-        if self.cpt_init :
-            sceninit = self.scen + "_init"
-            self.id_run = self.insert_id_run(self.run_, sceninit)
-            QgsMessageLog.logMessage('init avant lance', MESSAGE_CATEGORY, Qgis.Info)
-            finish = self.lance_mascaret(self.base_name + "_init.xcas", self.id_run)
-            QgsMessageLog.logMessage('finish {}'.format(finish), MESSAGE_CATEGORY, Qgis.Info)
-            if not finish:
-                self.mess.add_mess("ErrSim", 'Warning', "Init Simulation error")
-                return False
+            """
+            Run task
+            """
+        # try:
+            if self.cpt_init :
+                sceninit = self.scen + "_init"
+                self.id_run = self.insert_id_run(self.run_, sceninit)
+                finish = self.lance_mascaret(self.base_name + "_init.xcas", self.id_run)
 
-        else:
-            cond_casier = False
-            if self.par["presenceCasiers"] and self.noyau == "unsteady":
-                cond_casier = True
+                if not finish:
+                    self.log_mess("Init Simulation error", "ErrSim", 'warning')
+                    return False
 
-            self.id_run = self.insert_id_run(self.run_, self.scen)
-            QgsMessageLog.logMessage('avant lancemet', MESSAGE_CATEGORY, Qgis.Info)
-            finish = self.lance_mascaret(
-                self.base_name + ".xcas", self.id_run, self.par["presenceTraceurs"], cond_casier
-            )
-            if not finish:
-                self.mess.add_mess("ErrSim", 'Warning', "Simulation error")
-                return False
-            QgsMessageLog.logMessage('FIN lancemet', MESSAGE_CATEGORY, Qgis.Info)
-        return True
+            else:
+                cond_casier = False
+                if self.par["presenceCasiers"] and self.noyau == "unsteady":
+                    cond_casier = True
+                self.id_run = self.insert_id_run(self.run_, self.scen)
+                finish = self.lance_mascaret(
+                    self.base_name + ".xcas", self.id_run, self.par["presenceTraceurs"], cond_casier
+                )
+                if not finish:
+                    self.log_mess("Simulation error", "ErrSim", 'warning')
+                    return False
+            QgsMessageLog.logMessage('END Run', MESSAGE_CATEGORY, Qgis.Info)
+            return True
+        # except Exception as e:
+        #     self.log_mess(str(e),'errCompt','critic')
+        #     return False
 
     def lance_mascaret(self, fichier_cas, id_run, tracer=False, casier=False):
         """
@@ -122,6 +150,7 @@ class TaskMascComput(QgsTask):
         :param casier:
         :return:
         """
+        self.log_mess('TaskMascComput Begin', 'info1')
         os.chdir(self.dossier_file_masc)
         with open("FichierCas.txt", "w") as fichier:
             fichier.write("'" + fichier_cas + "'\n")
@@ -133,7 +162,7 @@ class TaskMascComput(QgsTask):
                 soft = "mascaret.exe"
             else:
                 txt =("{0} platform  doesn't allow to run simulation.".format(test))
-                self.mess.add_mess('ErrPlatform', 'critic',  txt)
+                self.log_mess(txt, 'ErrPlatform', 'critic')
                 return False
 
             # Linux(2.x and 3.x) ='linux2' or 'linux'
@@ -150,18 +179,22 @@ class TaskMascComput(QgsTask):
             p.wait()
             txt = "{0}".format(p.communicate()[0].decode("utf-8"))
             txt1 = "{0}".format(p.communicate()[1].decode("utf-8"))
-            self.mess.add_mess('InfoRun', 'info', txt)
-            self.mess.add_mess('InfoRun1', 'info', txt1)
+            self.log_mess(txt, 'InfoRun')
+            self.log_mess(txt1, 'InfoRun1')
+            self.log_mess('TaskMascComput End', 'info2')
             return True
         else:
             pwd = os.getcwd()
             os.chdir(self.dossier_file_masc)
             clapi = ClassAPIMascaret(self.masc)
             clapi.main(fichier_cas, tracer, casier)
+            self.log_mess(clapi.info, 'InfoRun')
+            self.add_log_mess(clapi.mess)
             self.save_res_struct = (copy.deepcopy(clapi.results_api), id_run)
             del clapi
 
             os.chdir(pwd)
+            self.log_mess('TaskMascComput End', 'info2')
             return True
 
     def insert_id_run(self, run_, scen):
@@ -171,39 +204,13 @@ class TaskMascComput(QgsTask):
         :param scen: scenario name
         :return:
         """
-        QgsMessageLog.logMessage('run, scen {} {}'.format(run_, scen), MESSAGE_CATEGORY, Qgis.Info)
+
         maintenant = datetime.datetime.utcnow()
         tab = {run_: {"scenario": scen, "date": "{:%Y-%m-%d %H:%M}".format(maintenant)}}
         listimport = ["run", "scenario", "date"]
-        QgsMessageLog.logMessage('maintenant {}'.format(maintenant), MESSAGE_CATEGORY, Qgis.Info)
         self.mdb.insert("runs", tab, listimport)
         info = self.mdb.select(
             "runs", where="run='{}' AND scenario='{}'".format(run_, scen), list_var=["id"]
         )
-
-        # QgsMessageLog.logMessage("SELECT {4} FROM {0}.{1} {2} {3};".format(self.SCHEMA,"runs",
-        #                          "run='{}' AND scenario='{}'".format(run_, scen), "id"), MESSAGE_CATEGORY, Qgis.Info)
         id_run = info["id"][0]
         return id_run
-
-    #
-    # def finished(self, result):
-    #     """
-    #     This function is automatically called when the task has
-    #     completed (successfully or not).
-    #     """
-    #     exc_fin_time = time.time()
-    #     total = exc_fin_time - self.exc_start_time
-    #     if result:
-    #         txt_mess = 'Task "{name}" completed\nTotal time: {total} s'.format(name=self.description, total=total)
-    #         QgsMessageLog.logMessage(txt_mess,MESSAGE_CATEGORY, Qgis.Success)
-    #     else:
-    #         txt_mess = 'Task "{name}" echec\nTotal time: {total} s'.format(name=self.description, total=total)
-    #         QgsMessageLog.logMessage(txt_mess, MESSAGE_CATEGORY, Qgis.Critical)
-    #
-    # def cancel(self):
-    #     exc_fin_time = time.time()
-    #     total = exc_fin_time - self.exc_start_time
-    #     txt_mess = 'Task "{name}" was canceled \nTask time: {total} s'.format(name=self.description, total=total)
-    #     QgsMessageLog.logMessage(txt_mess, MESSAGE_CATEGORY, Qgis.Warning)
-    #     super().cancel()

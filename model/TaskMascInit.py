@@ -94,7 +94,7 @@ class TaskMascInit():
             if ext in listsup:
                 os.remove(os.path.join(self.dossier_file_masc, files[i]))
                 txt = "delete file {}".format(files[i])
-                self.mess.add_mess('CleanRes', 'debug', txt)
+                self.log_mess(txt, 'CleanRes', 'debug')
 
     def log_mess(self, txt, flag, typ='info'):
         """Manage message
@@ -110,64 +110,86 @@ class TaskMascInit():
         else:
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
 
+    def add_log_mess(self, obj):
+        """
+        Add log message to classMessage object
+        :param obj : (object) ClassMessage
+        """
+        fill_d  = self.mess.mess_fill_other_obj(obj)
+        if fill_d:
+            for key, item in fill_d.items() :
+                if  item['type'] == 'warning':
+                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Warning)
+                elif  item['type'] == 'critic':
+                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Critical)
+                else:
+                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Info)
 
     def run(self):
-        """
-        Run task
-        """
-        self.clean_res()
-        if self.dico_loi_struct.keys():
-            for name in self.dico_loi_struct.keys():
-                list_final = self.clmeth.get_list_law(self.dico_loi_struct[name]["id_config"])
+            """
+            Run task
+            """
+        # try :
+            self.log_mess('TaskMascInit Begin', 'info1')
+            self.clean_res()
+            if self.dico_loi_struct.keys():
+                for name in self.dico_loi_struct.keys():
+                    list_final = self.clmeth.get_list_law(self.dico_loi_struct[name]["id_config"])
 
-                self.clmeth.create_law(
-                    self.dossier_file_masc, name, self.dico_loi_struct[name]["type"], list_final
-                )
-                self.clmeth.create_law(
-                    self.dossier_file_masc, name + "_init", self.dico_loi_struct[name]["type"], list_final
-                )
+                    self.clmeth.create_law(
+                        self.dossier_file_masc, name, self.dico_loi_struct[name]["type"], list_final
+                    )
+                    self.clmeth.create_law(
+                        self.dossier_file_masc, name + "_init", self.dico_loi_struct[name]["type"], list_final
+                    )
 
-        # initialise Law file
-        self.date_debut = None
-        if self.noyau == "steady":
-            exit_status = self.init_scen_steady(self.par, self.dict_lois)
-        elif self.par["evenement"]:
-            self.date_debut, self.par = self.init_scen_even(self.par, self.dict_lois, self.idx, self.dict_scen)
-            exit_status = self.clfile.mess.get_critic_status()
-        else:
-            # transcritical unsteady hors evenement
-            self.par = self.init_scen_trans_unsteady(self.par, self.dict_lois)
-            exit_status = self.clfile.mess.get_critic_status()
+            # initialise Law file
+            self.date_debut = None
+            if self.noyau == "steady":
+                exit_status = self.init_scen_steady(self.par, self.dict_lois)
+            elif self.par["evenement"]:
+                self.date_debut, self.par = self.init_scen_even(self.par, self.dict_lois, self.idx, self.dict_scen)
+                exit_status = self.clfile.mess.get_critic_status()
+            else:
+                # transcritical unsteady hors evenement
+                self.par = self.init_scen_trans_unsteady(self.par, self.dict_lois)
+                exit_status = self.clfile.mess.get_critic_status()
 
-        if exit_status:
-            return False
-        txt = "Laws file is created."
-        self.log_mess(txt, "Laws")
-        if self.exit_status_(self.mess):
-            return False
-        if self.check_mobil_gate() and self.noyau == "unsteady":
-            self.clfile.create_mobil_gate_file()
-            if self.exit_status_(self.clfile.mess):
+            self.add_log_mess(self.clfile.mess)
+            if exit_status:
+                return False
+            txt = "Laws file is created."
+            self.log_mess(txt, "Laws")
+            if self.exit_status_(self.mess):
+                return False
+            if self.check_mobil_gate() and self.noyau == "unsteady":
+                self.clfile.create_mobil_gate_file()
+                self.add_log_mess(self.clfile.mess)
+                if self.exit_status_(self.clfile.mess):
+                    return False
+
+            # check error and warning:
+            self.check_apport()
+            if self.exit_status_(self.mess):
                 return False
 
-        # check error and warning:
-        self.check_apport()
-        if self.exit_status_(self.mess):
-            return False
-        QgsMessageLog.logMessage('checkApport', MESSAGE_CATEGORY, Qgis.Info)
-        if self.par["LigEauInit"] and not self.par["initialisationAuto"] and self.noyau != "steady":
-            id_run_init = None
-            if "id_run_init" in self.dict_scen.keys():
-                id_run_init = self.dict_scen["id_run_init"][self.idx]
-            if id_run_init is None:
-                txt = "Cancel run because No initial boundaries"
-                self.log_mess(txt, "ErrInit", 'critic')
-                return False
-            self.clfile.opt_to_lig(id_run_init, self.basename)
-            if self.exit_status_(self.clfile.mess):
-                return False
-        QgsMessageLog.logMessage('Fin TaskMascInit', MESSAGE_CATEGORY, Qgis.Info)
-        return True
+            if self.par["LigEauInit"] and not self.par["initialisationAuto"] and self.noyau != "steady":
+                id_run_init = None
+                if "id_run_init" in self.dict_scen.keys():
+                    id_run_init = self.dict_scen["id_run_init"][self.idx]
+                if id_run_init is None:
+                    txt = "Cancel run because No initial boundaries"
+                    self.log_mess(txt, "ErrInit", 'critic')
+                    return False
+                self.clfile.opt_to_lig(id_run_init, self.basename)
+                self.add_log_mess(self.clfile.mess)
+                if self.exit_status_(self.clfile.mess):
+                    return False
+            self.log_mess('TaskMascInit End', 'info2')
+            return True
+        # except Exception as e:
+        #     self.log_mess(str(e),'errInit','critic')
+        #     return False
 
     def init_scen_steady(self, dict_lois):
         """
@@ -187,7 +209,7 @@ class TaskMascInit():
                     self.clfile.creer_loi(nom, tab, l["type"])
                 else:
                     txt =  "The law for {} is not create.".format(nom)
-                    self.mess.add_mess("law_{}".format(nom), 'critic', txt)
+                    self.log_mess(txt, "law_{}".format(nom),'critic' )
                     exit_status = True
                     return exit_status
             else:
@@ -200,10 +222,9 @@ class TaskMascInit():
                         temp_dic[info] = dtemp["steady"][0]
                 except Exception as e:
                     err = "erreur crit, {}".format(str(e))
-                    self.mess.add_mess("law_{}".format(nom), 'critic', err)
+                    self.log_mess(err, "law_{}".format(nom), 'critic')
                     exit_status = True
                     return exit_status
-                # self.mgis.add_info('{}'.format(condition))
                 if temp_dic["critereArret"] == 1:
                     tfinal = temp_dic["tempsMax"]
                 elif temp_dic["critereArret"] == 2:
@@ -225,7 +246,7 @@ class TaskMascInit():
                     self.clfile.creer_loi(nom, tab, l["type"])
                 else:
                     txt = "The law for {} is not create.".format(nom)
-                    self.mess.add_mess("law_{}".format(nom), 'critic', txt)
+                    self.log_mess(txt, "law_{}".format(nom), 'critic')
                     exit_status = True
                     return exit_status
         return exit_status
@@ -253,12 +274,11 @@ class TaskMascInit():
         }
         self.clfile.modif_xcas(tab, self.basename + ".xcas")
         par["tempsMax"] = duree
-        #self.mgis.add_info("Xcas file is created.")
         if par["presenceTraceurs"]:
             if self.wq.dico_phy[self.wq.cur_wq_mod]["meteo"]:
                 exit_status, txt = self.wq.create_filemet(typ_time="date", datefirst=date_debut, dateend=date_fin)
                 if exit_status:
-                    self.mess.add_mess("WQMeteo", 'critic', txt)
+                    self.log_mess(txt, "WQMeteo", 'critic')
 
         par = self.clfile.obs_to_loi(dict_lois, date_debut, date_fin, par)
 
@@ -276,7 +296,7 @@ class TaskMascInit():
             if self.wq.dico_phy[self.wq.cur_wq_mod]["meteo"]:
                 exit_status, txt = self.wq.create_filemet()
                 if exit_status:
-                    self.mess.add_mess("WQMeteo", 'critic', txt)
+                    self.log_mess(txt, "WQMeteo", 'critic')
                     return
 
         for nom, l in dict_lois.items():
@@ -290,8 +310,8 @@ class TaskMascInit():
                     lasttime = round(tab["time"][-1], 3)
                     self.clfile.check_timelaw(par, nom, initime, lasttime)
             else:
-                self.mess.add_mess('CreatLaw_{}'.format(nom), 'Warning',
-                                   "The law for {} is not create.".format(nom))
+                txt = "The law for {} is not create.".format(nom)
+                self.log_mess(txt, 'CreatLaw_{}'.format(nom), 'warning')
 
             if "valeurperm" not in l.keys():
                 continue
@@ -308,8 +328,8 @@ class TaskMascInit():
                     self.clfile.creer_loi(nom, tab, l["type"], init=True)
                 else:
                     par["initialisationAuto"] = False
-                    self.mess.add_mess('NoInitUnsteady', 'Warning',
-                                       "No initialisation because of no SteadyValue")
+                    txt = "No initialisation because of no SteadyValue"
+                    self.log_mess(txt, 'NoInitUnsteady', 'warning')
             else:
                 if l["type"] in [4, 5]:
                     self.clfile.creer_loi(nom, tab, l["type"], init=True)
@@ -318,7 +338,7 @@ class TaskMascInit():
                     txt = (
                         "No initialisation because of no valeurperm " "for {} condition".format(nom)
                     )
-                    self.mess.add_mess('NoInitUnsteady', 'Warning',txt)
+                    self.log_mess(txt, 'NoInitUnsteady', 'warning')
 
         return par
 
@@ -336,7 +356,8 @@ class TaskMascInit():
             comp = branches["abs_start"] + branches["mesh"]
             if apports["abscissa"][i] < comp:
                 err = ("{} is located before the first mesh. Ignore in the model".format(apports["name"][i]))
-                self.mess.add_mess("lInflowPos_{}".format(apports["name"][i]), "Warning", err)
+                self.log_mess(err, "lInflowPos_{}".format(apports["name"][i]), 'warning')
+
 
     def check_mobil_gate(self):
         """
@@ -351,25 +372,3 @@ class TaskMascInit():
                 return True
 
         return False
-
-    # def finished(self, result):
-    #     """
-    #     This function is automatically called when the task has
-    #     completed (successfully or not).
-    #     """
-    #     exc_fin_time = time.time()
-    #     total = exc_fin_time - self.exc_start_time
-    #     if result:
-    #         txt_mess = 'Task "{name}" completed\nTotal time: {total} s'.format(name=self.description, total=total)
-    #         QgsMessageLog.logMessage(txt_mess,MESSAGE_CATEGORY, Qgis.Success)
-    #     else:
-    #         txt_mess = 'Task "{name}" echec\nTotal time: {total} s'.format(name=self.description, total=total)
-    #         QgsMessageLog.logMessage(txt_mess, MESSAGE_CATEGORY, Qgis.Critical)
-    #         QgsMessageLog.logMessage(self.erro_mess, MESSAGE_CATEGORY, Qgis.Critical)
-    #
-    # def cancel(self):
-    #     exc_fin_time = time.time()
-    #     total = exc_fin_time - self.exc_start_time
-    #     txt_mess = 'Task "{name}" was canceled \nTask time: {total} s'.format(name=self.description, total=total)
-    #     QgsMessageLog.logMessage(txt_mess, MESSAGE_CATEGORY, Qgis.Warning)
-    #     super().cancel()

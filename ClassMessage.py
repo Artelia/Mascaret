@@ -104,3 +104,15 @@ class ClassMessage:
             elif item['type'] == 'critic':
                 txt += '** Error ** : \n' + item['message'] + '\n'
         return txt
+
+    def mess_fill_other_obj(self, obj_ori):
+        """
+        Transfet message of a message class object (obj_ori) at a  message class object target
+        :param obj_ori) : (object) ClassMessage object
+        """
+        fill = {}
+        for key, item in obj_ori.derror.items():
+            if key not in self.derror :
+                self.derror[key] = item
+                fill[key] = item
+        return  fill

@@ -1433,8 +1433,9 @@ class ClassCreatFilesModels:
                         lasttime = round(tab["time"][-1], 3)
                         self.check_timelaw(par, nom, initime, lasttime)
                 else:
-                    self.mess.add_mess('CreatLaw_{}'.format(nom), 'Warning',
+                    self.mess.add_mess('CreatLaw_{}'.format(nom), 'critic',
                                        "The law for {} is not create.".format(nom))
+                    continue
                 # create init law
                 if loi["type"] in [4]:  # , 5]: # car 5 mascaret plante à l'init
                     self.creer_loi(nom, tab, loi["type"], init=True)

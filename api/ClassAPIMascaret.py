@@ -65,6 +65,7 @@ class ClassAPIMascaret:
         self.tracer = False
         self.basin = False
         self.filelig = None
+        self.info = ''
 
 
         self.results_api = {}
@@ -328,6 +329,7 @@ class ClassAPIMascaret:
         return t0, t1, dtp
 
     def finalize(self):
+        self.info = self.masc.log_stream.getvalue()
         del self.masc
         if self.clfg is not None:
             self.clfg.finalize(self.tfin)

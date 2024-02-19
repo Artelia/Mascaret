@@ -54,6 +54,34 @@ class TaskMascPost():
         self.exc_start_time = time.time()
         self.description = 'postprocessing model'
 
+    def log_mess(self, txt, flag, typ='info'):
+        """Manage message
+            :param txt : (str) text
+            :param flag : (str) error flag
+            :param typ :(str) message typ
+        """
+        self.mess.add_mess(flag, typ, txt)
+        if typ ==  'warning':
+            QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Warning)
+        elif typ == 'critic':
+            QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Critical)
+        else:
+            QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
+
+    def add_log_mess(self, obj):
+        """
+        Add log message to classMessage object
+        :param obj : (object) ClassMessage
+        """
+        fill_d = self.mess.mess_fill_other_obj(obj)
+        if fill_d:
+            for key, item in fill_d.items():
+                if item['type'] == 'warning':
+                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Warning)
+                elif item['type'] == 'critic':
+                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Critical)
+                else:
+                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Info)
 
     def update_inputs(self,up_dict,  cpt_init = False):
         """
@@ -81,44 +109,56 @@ class TaskMascPost():
         return exit_status
 
     def run(self):
+        """ Run post """
         # RUN Model
-        if self.cpt_init:
+        try :
+            self.log_mess('TaskMascPost Begin', 'info1')
+            if self.cpt_init:
 
-            QgsMessageLog.logMessage('read opt', MESSAGE_CATEGORY, Qgis.Info)
-            self.cls_res.lit_opt_new(self.id_run, None, self.basename + "_init", self.comments,
-                                     cond_api=self.cond_api, save_res_struct = self.save_res_struct)
-            if self.exit_status_(self.cls_res.mess):
-                return False
-            QgsMessageLog.logMessage('gener lig', MESSAGE_CATEGORY, Qgis.Info)
-            self.clfile.opt_to_lig(self.id_run, self.basename)
-            if self.exit_status_(self.clfile.mess):
-                return False
-            tab = {
-                "LigEauInit": {
-                    "valeur": "true",
-                    "balise1": "parametresConditionsInitiales",
-                    "balise2": "ligneEau",
-                }
-            }
-            self.clfile.modif_xcas(tab, self.basename + ".xcas")
-            QgsMessageLog.logMessage('OK', MESSAGE_CATEGORY, Qgis.Info)
-        else:
-            cond_casier = False
-            if self.par["presenceCasiers"] and  self.noyau == "unsteady":
-                cond_casier = True
-            self.cls_res.lit_opt_new(
-                self.id_run, self.date_debut, self.basename, self.comments,
-                self.par["presenceTraceurs"], cond_casier,
-                self.cond_api, self.save_res_struct)
-            QgsMessageLog.logMessage('read lit', MESSAGE_CATEGORY, Qgis.Info)
-            if self.exit_status_(self.cls_res.mess):
-                return False
-            QgsMessageLog.logMessage('check_mobil_gate', MESSAGE_CATEGORY, Qgis.Info)
-            if self.check_mobil_gate():
-                self.cls_res.read_mobil_gate_res(self.id_run)
+                self.log_mess('Read *_init.opt file', 'info3')
+                self.cls_res.lit_opt_new(self.id_run, None, self.basename + "_init", self.comments,
+                                         cond_api=self.cond_api, save_res_struct = self.save_res_struct)
+                self.add_log_mess(self.cls_res.mess)
                 if self.exit_status_(self.cls_res.mess):
                     return False
-        return True
+                self.log_mess('Create *.lig file', 'info4')
+                self.clfile.opt_to_lig(self.id_run, self.basename)
+                if self.exit_status_(self.clfile.mess):
+                    return False
+                tab = {
+                    "LigEauInit": {
+                        "valeur": "true",
+                        "balise1": "parametresConditionsInitiales",
+                        "balise2": "ligneEau",
+                    }
+                }
+                self.clfile.modif_xcas(tab, self.basename + ".xcas")
+                self.log_mess('Update Xcas', 'info5')
+            else:
+                cond_casier = False
+                if self.par["presenceCasiers"] and  self.noyau == "unsteady":
+                    cond_casier = True
+                self.log_mess('Read *.opt file', 'info3')
+                self.cls_res.lit_opt_new(
+                    self.id_run, self.date_debut, self.basename, self.comments,
+                    self.par["presenceTraceurs"], cond_casier,
+                    self.cond_api, self.save_res_struct)
+
+                self.add_log_mess(self.cls_res.mess)
+                if self.exit_status_(self.cls_res.mess):
+                    return False
+
+                if self.check_mobil_gate():
+                    self.log_mess('Read Mobile Gate', 'info4')
+                    self.cls_res.read_mobil_gate_res(self.id_run)
+                    self.add_log_mess(self.cls_res.mess)
+                    if self.exit_status_(self.cls_res.mess):
+                        return False
+            self.log_mess('TaskMascPost End', 'info2')
+            return True
+        except Exception as e:
+            self.log_mess(str(e),'errPost','critic')
+            return False
 
     def check_mobil_gate(self):
         """
@@ -133,24 +173,3 @@ class TaskMascPost():
                 return True
 
         return False
-
-    # def finished(self, result):
-    #     """
-    #     This function is automatically called when the task has
-    #     completed (successfully or not).
-    #     """
-    #     exc_fin_time = time.time()
-    #     total = exc_fin_time - self.exc_start_time
-    #     if result:
-    #         txt_mess = 'Task "{name}" completed\nTotal time: {total} s'.format(name=self.description, total=total)
-    #         QgsMessageLog.logMessage(txt_mess,MESSAGE_CATEGORY, Qgis.Success)
-    #     else:
-    #         txt_mess = 'Task "{name}" echec\nTotal time: {total} s'.format(name=self.description, total=total)
-    #         QgsMessageLog.logMessage(txt_mess, MESSAGE_CATEGORY, Qgis.Critical)
-    #
-    # def cancel(self):
-    #     exc_fin_time = time.time()
-    #     total = exc_fin_time - self.exc_start_time
-    #     txt_mess = 'Task "{name}" was canceled \nTask time: {total} s'.format(name=self.description, total=total)
-    #     QgsMessageLog.logMessage(txt_mess, MESSAGE_CATEGORY, Qgis.Warning)
-    #     super().cancel()

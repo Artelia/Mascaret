@@ -52,6 +52,7 @@ class TaskMascaret(QgsTask):
         self.init_task = None
         self.post_task = None
         self.scen_cur = None
+        self.description = description
 
         self.exc_start_time =time.time()
         self.error_txt = ''
@@ -82,8 +83,8 @@ class TaskMascaret(QgsTask):
 
 
     def  run(self):
-        self.exc_start_time = time.time()
-        try :
+            self.exc_start_time = time.time()
+        # try :
             gbl_param = {'mdb': self.mdb,
                          'dossier_file_masc': self.dossier_file_masc,
                          'basename': self.basename,
@@ -118,7 +119,7 @@ class TaskMascaret(QgsTask):
                 stat, up_param = self.run_task(self.init_task, up_param)
                 if not stat:
                     # error ignor scenario
-                    self.log_mess("****** Error : File creation for {}  ******".format(self.scen))
+                    self.log_mess("****** Error : File creation for {}  ******".format(scen),'warning')
                     continue
 
                 if self.par["initialisationAuto"] and self.noyau != "steady":
@@ -126,32 +127,28 @@ class TaskMascaret(QgsTask):
                     stat, up_param = self.run_task(self.comput_task, up_param, cpt_init=True)
                     if not stat:
                         # error ignor scenario
-                        self.log_mess("****** Error : Computing Initialization  for {}_init  ******".format(scen))
+                        self.log_mess("****** Error : Computing Initialization  for {}_init  ******".format(scen),'warning')
                         continue
                     stat, up_param = self.run_task(self.post_task, up_param, cpt_init = True)
                     if not stat:
-                        self.log_mess("****** Error : Postprocessing Initialization for {}_init  ******".format(scen))
+                        self.log_mess("****** Error : Postprocessing Initialization for {}_init  ******".format(scen),'warning')
                         continue
                     tfin_run = time.time()
                     self.log_mess("Initialization Execution time : {} s".format(tfin_run - t0_run))
                     self.log_mess("===== End initialization =====")
                 stat, up_param = self.run_task(self.comput_task, up_param)
                 if not stat:
-                    self.log_mess("****** Error : Computing for {}  ******".format(scen))
+                    self.log_mess("****** Error : Computing for {}  ******".format(scen),'warning')
                     continue
-                print('oooooooooooooooooooooooooooooooooooo')
                 stat, up_param = self.run_task(self.post_task, up_param)
                 if not stat:
-                    self.log_mess("****** Error : Postprocessing for {}  ******".format(scen))
+                    self.log_mess("****** Error : Postprocessing for {}  ******".format(scen),'warning')
                     continue
-                print('oooooooooooooooooooooooooooooooooooo2')
                 tfin_run = time.time()
                 self.log_mess("Execution time (Init + Run) : {} s".format(tfin_run - t0_run))
-                print('oooooooooooooooooooooooooooooooooooo3 ', tfin_run - t0_run)
                 self.log_mess("************** The End of {} ************".format(scen))
-                print('oooooooooooooooooooooooooooooooooooo4 ')
                 if self.isCanceled():
-                    self.log_mess("===== CANCEL RUN {} =====".format(self.run_))
+                    self.log_mess("===== CANCEL RUN {} =====".format(self.run_),'warning')
                     self.taskTerminated.emit()
                     return False
             tfin_run = time.time()
@@ -159,12 +156,11 @@ class TaskMascaret(QgsTask):
             self.log_mess("===== END OF RUN {} =====".format(self.run_))
             self.taskCompleted.emit()
             return True
-        except Exception as e:
-            self.error_txt = str(e)
-            self.log_mess( str(e))
-            print(str(e))
-            self.taskTerminated.emit()
-            return False
+        # except Exception as e:
+        #     self.error_txt = str(e)
+        #     self.log_mess(str(e),'critic')
+        #     self.taskTerminated.emit()
+        #     return False
 
     def finished(self, result):
         """
