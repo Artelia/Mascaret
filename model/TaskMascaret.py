@@ -58,6 +58,11 @@ class TaskMascaret(QgsTask):
         self.error_txt = ''
 
     def run_task(self,task, up_param, cpt_init = None):
+        """
+         :param task : (object) task object
+         :param up_param : (dict) parameter
+         :param  cpt_init : (boolean) If initialization , default None
+        """
         if cpt_init:
             task.update_inputs(up_param, cpt_init)
         else:
@@ -83,8 +88,11 @@ class TaskMascaret(QgsTask):
 
 
     def  run(self):
-            self.exc_start_time = time.time()
-        # try :
+        """ Run Task
+        :return boolean
+        """
+        self.exc_start_time = time.time()
+        try :
             gbl_param = {'mdb': self.mdb,
                          'dossier_file_masc': self.dossier_file_masc,
                          'basename': self.basename,
@@ -136,6 +144,10 @@ class TaskMascaret(QgsTask):
                     tfin_run = time.time()
                     self.log_mess("Initialization Execution time : {} s".format(tfin_run - t0_run))
                     self.log_mess("===== End initialization =====")
+                if self.isCanceled():
+                    self.log_mess("===== CANCEL RUN {} =====".format(self.run_), 'warning')
+                    self.taskTerminated.emit()
+                    return False
                 stat, up_param = self.run_task(self.comput_task, up_param)
                 if not stat:
                     self.log_mess("****** Error : Computing for {}  ******".format(scen),'warning')
@@ -156,16 +168,17 @@ class TaskMascaret(QgsTask):
             self.log_mess("===== END OF RUN {} =====".format(self.run_))
             self.taskCompleted.emit()
             return True
-        # except Exception as e:
-        #     self.error_txt = str(e)
-        #     self.log_mess(str(e),'critic')
-        #     self.taskTerminated.emit()
-        #     return False
+        except Exception as e:
+            self.error_txt = str(e)
+            self.log_mess(str(e),'critic')
+            self.taskTerminated.emit()
+            return False
 
     def finished(self, result):
         """
         This function is automatically called when the task has
         completed (successfully or not).
+        :param result :(boolean) result
         """
         exc_fin_time = time.time()
         total = exc_fin_time - self.exc_start_time
@@ -179,6 +192,9 @@ class TaskMascaret(QgsTask):
 
 
     def cancel(self):
+        """
+        Cancel task
+        """
         exc_fin_time = time.time()
         total = exc_fin_time - self.exc_start_time
         txt_mess = 'Task "{name}" was canceled \nTask time: {total} s'.format(name=self.description, total=total)

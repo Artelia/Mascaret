@@ -105,11 +105,15 @@ class TaskMascPost():
         return  up_dict
 
     def exit_status_(self,obj):
+        """ if exist status
+        :param obj :(object)  message class
+        :return : boolean"""
         exit_status = obj.get_critic_status()
         return exit_status
 
     def run(self):
-        """ Run post """
+        """ Run post
+        :return boolean"""
         # RUN Model
         try :
             self.log_mess('TaskMascPost Begin', 'info1')
@@ -163,7 +167,7 @@ class TaskMascPost():
     def check_mobil_gate(self):
         """
         check if weirs active
-        :return:
+        :return: boolean
         """
         info = self.mdb.select(
             "weirs", where="active_mob = true", list_var=["method_mob", "gid", "name"]

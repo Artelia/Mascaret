@@ -111,35 +111,33 @@ class TaskMascComput(QgsTask):
         return  up_dict
 
     def run(self):
-            """
-            Run task
-            """
-        # try:
-            if self.cpt_init :
-                sceninit = self.scen + "_init"
-                self.id_run = self.insert_id_run(self.run_, sceninit)
-                finish = self.lance_mascaret(self.base_name + "_init.xcas", self.id_run)
+        """
+        Run task
+        :return boolean
+        """
+        if self.cpt_init :
+            sceninit = self.scen + "_init"
+            self.id_run = self.insert_id_run(self.run_, sceninit)
+            finish = self.lance_mascaret(self.base_name + "_init.xcas", self.id_run)
 
-                if not finish:
-                    self.log_mess("Init Simulation error", "ErrSim", 'warning')
-                    return False
+            if not finish:
+                self.log_mess("Init Simulation error", "ErrSim", 'warning')
+                return False
 
-            else:
-                cond_casier = False
-                if self.par["presenceCasiers"] and self.noyau == "unsteady":
-                    cond_casier = True
-                self.id_run = self.insert_id_run(self.run_, self.scen)
-                finish = self.lance_mascaret(
-                    self.base_name + ".xcas", self.id_run, self.par["presenceTraceurs"], cond_casier
-                )
-                if not finish:
-                    self.log_mess("Simulation error", "ErrSim", 'warning')
-                    return False
-            QgsMessageLog.logMessage('END Run', MESSAGE_CATEGORY, Qgis.Info)
-            return True
-        # except Exception as e:
-        #     self.log_mess(str(e),'errCompt','critic')
-        #     return False
+        else:
+            cond_casier = False
+            if self.par["presenceCasiers"] and self.noyau == "unsteady":
+                cond_casier = True
+            self.id_run = self.insert_id_run(self.run_, self.scen)
+            finish = self.lance_mascaret(
+                self.base_name + ".xcas", self.id_run, self.par["presenceTraceurs"], cond_casier
+            )
+            if not finish:
+                self.log_mess("Simulation error", "ErrSim", 'warning')
+                return False
+        QgsMessageLog.logMessage('END Run', MESSAGE_CATEGORY, Qgis.Info)
+        return True
+
 
     def lance_mascaret(self, fichier_cas, id_run, tracer=False, casier=False):
         """

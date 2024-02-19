@@ -1035,7 +1035,7 @@ Version : {}
             rep_run = os.path.join(self.masplugPath, "mascaret_copy")
             clam = ClassMascaret(self, rep_run=rep_run)
             #clam.mascaret(self.Klist[self.listeState.index(case)], run, only_init=True)
-            clam = self.fct_only_init(self.Klist[self.listeState.index(case)], run)
+            clam .fct_only_init(self.Klist[self.listeState.index(case)], run)
 
             with open(os.path.join(clam.dossierFileMasc, "FichierCas.txt"), "w") as fichier:
                 fichier.write("'mascaret.xcas'\n")

@@ -81,7 +81,8 @@ class TaskMascInit():
 
 
     def exit_status_(self,obj):
-        """check if critical message"""
+        """check if critical message
+        :return boolean"""
         exit_status = obj.get_critic_status()
         return exit_status
 
@@ -126,10 +127,11 @@ class TaskMascInit():
                     QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Info)
 
     def run(self):
-            """
-            Run task
-            """
-        # try :
+        """
+        Run task
+        :return boolean
+        """
+        try :
             self.log_mess('TaskMascInit Begin', 'info1')
             self.clean_res()
             if self.dico_loi_struct.keys():
@@ -187,16 +189,16 @@ class TaskMascInit():
                     return False
             self.log_mess('TaskMascInit End', 'info2')
             return True
-        # except Exception as e:
-        #     self.log_mess(str(e),'errInit','critic')
-        #     return False
+        except Exception as e:
+            self.log_mess(str(e),'errInit','critic')
+            return False
 
     def init_scen_steady(self, dict_lois):
         """
          Initial  files creation  for steady scenario
         :param par: (dict) parameters
         :param dict_lois:  (dict) laws
-        :return:
+        :return: boolean
         """
         exit_status = False
         for nom, l in dict_lois.items():
@@ -258,7 +260,7 @@ class TaskMascInit():
         :param dict_lois: (dict) laws
         :param idx: (int) index scenario
         :param dict_scen: (dict)dictionnay of scenarii
-        :return:
+        :return: date begin (date_debut) and parameters (par)
         """
         # transcritical unsteady evenement
         date_debut = dict_scen["starttime"][idx]
@@ -289,7 +291,7 @@ class TaskMascInit():
         Initial  files creation  for unsteady scenario
         :param par: dict contains the parameters
         :param dict_lois: dict contains the law
-        :return:
+        :return: dict (par)
         """
         exit_satus = False
         if par["presenceTraceurs"]:
@@ -362,7 +364,7 @@ class TaskMascInit():
     def check_mobil_gate(self):
         """
         check if weirs active
-        :return:
+        :return: boolean
         """
         info = self.mdb.select(
             "weirs", where="active_mob = true", list_var=["method_mob", "gid", "name"]

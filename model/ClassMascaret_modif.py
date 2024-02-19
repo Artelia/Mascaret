@@ -40,8 +40,7 @@ from ..ui.custom_control import ClassWarningBox
 
 from .ClassCreatFilesModels import ClassCreatFilesModels
 from .TaskMascaret import TaskMascaret
-
-import time
+from .TaskMascInit import TaskMascInit
 
 
 
@@ -257,7 +256,7 @@ class ClassMascaret:
         task_mas =  TaskMascaret('TaskMascaret', dict_task)
         task_mas.message.connect(self.print_info)
         QgsApplication.taskManager().addTask(task_mas)
-        # obligatoir  sinon task ignorer ?
+        # obligatoir  sinon task ignorer
         QgsMessageLog.logMessage('Send Task', 'TaskMascaret', Qgis.Info)
         return
 
@@ -265,6 +264,10 @@ class ClassMascaret:
 
 
     def fct_comment(self):
+        """
+        Fct to add comment
+        :return (str) comments
+        """
         liste_col = self.mdb.list_columns("runs")
         if "comments" in liste_col:
             comments, ok = QInputDialog.getText(
@@ -282,7 +285,7 @@ class ClassMascaret:
     def select_init_run_case(self, dict_scen):
         """
         Select initial run case
-        :return:
+        :return: (dict) scenario
         """
         dico_run = self.mdb.select_distinct("run", "runs")
 
@@ -414,18 +417,25 @@ class ClassMascaret:
             )
 
     def copy_run_file(self, rep):
-        """copy run file in "rep" path"""
-        try:
-            files = os.listdir(self.dossierFileMasc)
-            for i in range(0, len(files)):
-                shutil.copy2(
-                    os.path.join(self.dossierFileMasc, files[i]), os.path.join(rep, files[i])
-                )
+        # """copy run file in "rep" path"""
+        # try:
+            # files = os.listdir(self.dossierFileMasc)
+            # for i in range(0, len(files)):
+            #     shutil.copy2(
+            #         os.path.join(self.dossierFileMasc, files[i]), os.path.join(rep, files[i])
+            #     )
+            tar_local = shutil.make_archive(
+                os.path.join(rep,os.path.basename(self.dossierFileMasc)), "gztar", os.path.dirname(self.dossierFileMasc),
+                os.path.basename(self.dossierFileMasc)
+            )
             return True
-        except:
-            return False
+        # except:
+        #     return False
 
     def copy_file_model(self, rep, case=None):
+        """
+        Fct to copy file
+        """
         # self.mgis.add_info('{}'.format(rep))
         if case == "xcas":
             file = os.path.join(self.dossierFileMasc, self.baseName + ".xcas")
@@ -551,11 +561,24 @@ class ClassMascaret:
         idx = 0
         scen = dict_scen["name"][idx]
 
-        init_task = TaskMascInit(self.mdb, self.wq, self.dossierFileMasc,self.baseName, par, noyau,
-                                 scen, idx, dict_scen, dict_lois, dico_loi_struct)
-        self.connect_task(init_task)
-        QgsApplication.taskManager().addTask(init_task)
-        init_task.waitForFinished(timeout=0)
+        gbl_param = {'mdb': self.mdb,
+                     'dossier_file_masc': self.dossierFileMasc,
+                     'basename': self.baseName,
+                     'noyau': noyau,
+                     'run': run,
+                     'comments': comments,
+                     'dict_scen': dict_scen
+                     }
+        param_init = {'waterq': self.wq,
+                      'dict_lois': dict_lois,
+                      'dico_loi_struct': dico_loi_struct
+                      }
+        init_task_ = TaskMascInit(gbl_param, param_init)
+        up_param = {'scen': scen,
+                    'idx': idx,
+                    'par': par}
+        init_task_.update_inputs(up_param)
+        init_task_.run()
 
         # if noyau == "steady":
         #     self.init_scen_steady(par, dict_lois)
@@ -567,10 +590,10 @@ class ClassMascaret:
         # if self.check_mobil_gate() and noyau == "unsteady":
         #     self.create_mobil_gate_file()
         # # select initial case
-        # if noyau != "steady":
-        #     dict_scen = self.select_init_run_case(dict_scen)
-        #     if dict_scen["id_run_init"][0] != None:
-        #         self.clfile.opt_to_lig(dict_scen["id_run_init"][0], self.baseName)
+        if noyau != "steady":
+            dict_scen = self.select_init_run_case(dict_scen)
+            if dict_scen["id_run_init"][0] != None:
+                self.clfile.opt_to_lig(dict_scen["id_run_init"][0], self.baseName)
 
         # delete "initialisationAuto" file
         for file in os.listdir(self.dossierFileMasc):
