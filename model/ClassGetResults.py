@@ -21,19 +21,17 @@ email                :
 
 import csv
 import datetime
+import json
 import os
 import re
-import json
 
 from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from ..Graphic.ClassResProfil import ClassResProfil
 from ..ClassMessage import ClassMessage
-
-
+from ..Graphic.ClassResProfil import ClassResProfil
 
 
 class ClassGetResults:
@@ -44,14 +42,6 @@ class ClassGetResults:
         self.dossier_file_masc = dossier_file_masc
         self.basename = "mascaret"
         self.mess = ClassMessage()
-    # list ERROR: *****************************************
-    # 'LoadOptFile'
-    # List WARNING :***************************************
-    # 'LoadOptLink', 'LoadOptCas', 'LoadOptWQ'
-    # List INFO: *******************************************
-    # 'LoadOpt1'
-    # List DEBUG:********************************************
-    #   'ClGeoPlani'
 
     def insert_id_run(self, run, scen):
         """
@@ -371,8 +361,8 @@ class ClassGetResults:
             self.mdb.insert_res("runs_graph", list_insert, col_tab)
 
     def lit_opt_new(
-        self, id_run, date_debut, base_namefile, comments="", tracer=False, casier=False,
-            cond_api=False,save_res_struct =  []
+            self, id_run, date_debut, base_namefile, comments="", tracer=False, casier=False,
+            cond_api=False, save_res_struct=[]
     ):
         """
         Read opt files and save in results table
@@ -387,7 +377,7 @@ class ClassGetResults:
         nom_fich = os.path.join(self.dossier_file_masc, base_namefile + ".opt")
         self.mess.add_mess('LoadOpt1', 'info', "Load data ....")
         if not os.path.isfile(nom_fich):
-            txt = ("Simulation Error: there aren't results")
+            txt = "Simulation Error: there aren't results"
             self.mess.add_mess('LoadOptFile', 'critic', txt)
             self.mdb.delete("runs", "id={}".format(id_run))
             return False
@@ -412,7 +402,7 @@ class ClassGetResults:
         if casier:
             nom_fich_bas = os.path.join(self.dossier_file_masc, base_namefile + ".cas_opt")
             if not os.path.isfile(nom_fich_bas):
-                txt = ("Simulation Error: there aren't basin results")
+                txt = "Simulation Error: there aren't basin results"
                 self.mess.add_mess('LoadOptCas', 'warning', txt)
             else:
                 type_res = "basin"
@@ -426,7 +416,7 @@ class ClassGetResults:
 
             nom_fich_link = os.path.join(self.dossier_file_masc, base_namefile + ".liai_opt")
             if not os.path.isfile(nom_fich_link):
-                txt = ("Simulation Error: there aren't link results")
+                txt = "Simulation Error: there aren't link results"
                 self.mess.add_mess('LoadOptLink', 'warning', txt)
             else:
                 type_res = "link"
@@ -439,7 +429,7 @@ class ClassGetResults:
         if tracer:
             nom_fich_tra = os.path.join(self.dossier_file_masc, base_namefile + ".tra_opt")
             if not os.path.isfile(nom_fich_tra):
-                txt = ("Simulation Error: there aren't basin results")
+                txt = "Simulation Error: there aren't basin results"
                 self.mess.add_mess('LoadOptWQ', 'warning', txt)
             else:
                 init_col = ["TIME", "BRANCH", "SECTION", "PK"]
@@ -449,7 +439,7 @@ class ClassGetResults:
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
                 del val
-        if cond_api and len(save_res_struct)>2:
+        if cond_api and len(save_res_struct) > 2:
             self.stock_res_api(save_res_struct[0], save_res_struct[1])
 
     def save_new_results(self, val, id_run):

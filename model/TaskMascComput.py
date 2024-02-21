@@ -19,8 +19,7 @@ email                :
 
 """
 
-from PyQt5.QtCore import QObject, pyqtSignal, QThread
-from qgis.core import QgsTask,  QgsMessageLog, Qgis
+from qgis.core import QgsTask, QgsMessageLog, Qgis
 import os
 import subprocess
 import sys
@@ -28,18 +27,19 @@ import copy
 import datetime
 
 from ..api.ClassAPIMascaret import ClassAPIMascaret
-from  ..ClassMessage import ClassMessage
+from ..ClassMessage import ClassMessage
 
 import time
 
-MESSAGE_CATEGORY ='TaskMascaret'
+MESSAGE_CATEGORY = 'TaskMascaret'
+
 
 class TaskMascComput(QgsTask):
     """
     Task of the Computing model
     """
 
-    def __init__(self, glb_param ):
+    def __init__(self, glb_param):
         super().__init__()
 
         self.mdb = glb_param['mdb']
@@ -56,6 +56,7 @@ class TaskMascComput(QgsTask):
         # precedent task
         self.par = None
         self.scen = None
+        self.cpt_init = False
         self.mess = ClassMessage()
         # Task info
         self.exc_start_time = time.time()
@@ -63,12 +64,13 @@ class TaskMascComput(QgsTask):
 
     def log_mess(self, txt, flag, typ='info'):
         """Manage message
+        Args:
             :param txt : (str) text
             :param flag : (str) error flag
             :param typ :(str) message typ
         """
         self.mess.add_mess(flag, typ, txt)
-        if typ ==  'warning':
+        if typ == 'warning':
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Warning)
         elif typ == 'critic':
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Critical)
@@ -78,7 +80,8 @@ class TaskMascComput(QgsTask):
     def add_log_mess(self, obj):
         """
         Add log message to classMessage object
-        :param obj : (object) ClassMessage
+        Args:
+            :param obj : (object) ClassMessage
         """
         fill_d = self.mess.mess_fill_other_obj(obj)
         if fill_d:
@@ -90,11 +93,12 @@ class TaskMascComput(QgsTask):
                 else:
                     QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Info)
 
-    def update_inputs(self,up_dict,  cpt_init = False):
+    def update_inputs(self, up_dict, cpt_init=False):
         """
         Updating class parameters
-        :param  up_dict: (dict) new parameters
-        :param cpt_init : (boolean) if inialisation phase or not
+        Args:
+            :param  up_dict: (dict) new parameters
+            :param cpt_init : (boolean) if inialisation phase or not
         """
         self.par = up_dict['par']
         self.scen = up_dict['scen']
@@ -103,19 +107,22 @@ class TaskMascComput(QgsTask):
     def maj_param(self, up_dict):
         """"
         Updating the information transfer dictionary
-        :param  up_dict: (dict) transfer dictionary
-        :return: (dict)
+        Args:
+            :param  up_dict: (dict) transfer dictionary
+        Return :
+            :return: (dict)
         """
         up_dict['id_run'] = self.id_run
         up_dict['save_res_struct'] = self.save_res_struct
-        return  up_dict
+        return up_dict
 
     def run(self):
         """
         Run task
-        :return boolean
+        Return :
+            :return boolean
         """
-        if self.cpt_init :
+        if self.cpt_init:
             sceninit = self.scen + "_init"
             self.id_run = self.insert_id_run(self.run_, sceninit)
             finish = self.lance_mascaret(self.base_name + "_init.xcas", self.id_run)
@@ -138,14 +145,14 @@ class TaskMascComput(QgsTask):
         QgsMessageLog.logMessage('END Run', MESSAGE_CATEGORY, Qgis.Info)
         return True
 
-
     def lance_mascaret(self, fichier_cas, id_run, tracer=False, casier=False):
         """
         Run mascaret
-        :param fichier_cas:
-        :param id_run:
-        :param tracer:
-        :param casier:
+        Args:
+            :param fichier_cas:
+            :param id_run:
+            :param tracer:
+            :param casier:
         :return:
         """
         self.log_mess('TaskMascComput Begin', 'info1')
@@ -159,7 +166,7 @@ class TaskMascComput(QgsTask):
             elif test == "win32":
                 soft = "mascaret.exe"
             else:
-                txt =("{0} platform  doesn't allow to run simulation.".format(test))
+                txt = ("{0} platform  doesn't allow to run simulation.".format(test))
                 self.log_mess(txt, 'ErrPlatform', 'critic')
                 return False
 
@@ -198,8 +205,9 @@ class TaskMascComput(QgsTask):
     def insert_id_run(self, run_, scen):
         """
         creation run line in runs table
-        :param run_: run name
-        :param scen: scenario name
+        Args:
+            :param run_: run name
+            :param scen: scenario name
         :return:
         """
 

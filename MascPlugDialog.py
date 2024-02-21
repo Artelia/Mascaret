@@ -36,12 +36,8 @@ from .ClassEditKsDialog import ClassEditKsDialog
 from .ClassImportExportDialog import ClassDlgExport, ClassDlgImport, CloneTask
 from .ClassImport_res import ClassImportRes
 from .ClassMNT import ClassMNT
-#TODO *******************************************
-#from .ClassMascaret import ClassMascaret
-#a tester :
-from .model.ClassMascaret_modif import ClassMascaret
+from .model.ClassMascaret import ClassMascaret
 from .ClassParamExportDialog import  ClassParamExportDialog
-#TODO  ********************************************
 from .model.ClassCreatFilesModels import ClassCreatFilesModels
 from .ClassObservation import ClassEventObsDialog
 from .ClassParameterDialog import ClassParameterDialog
@@ -720,7 +716,7 @@ class MascPlugDialog(QMainWindow):
         if not folder_name_path :
             folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
 
-        if clam.copy_run_file(folder_name_path):
+        if clam.compress_run_file(folder_name_path):
             self.add_info("Export is done.")
         else:
             self.add_info("Export failed.")
@@ -1030,23 +1026,6 @@ Version : {}
         model creation to run with api
         :return:
         """
-
-        # case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
-        # if ok:
-        #     self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
-        #     run = "test"
-        #     rep_run = os.path.join(self.masplugPath, "mascaret_copy")
-        #     clam = ClassMascaret(self, rep_run=rep_run)
-        #     #clam.mascaret(self.Klist[self.listeState.index(case)], run, only_init=True)
-        #     clam .fct_only_init(self.Klist[self.listeState.index(case)], run)
-        #
-        #     with open(os.path.join(clam.dossierFileMasc, "FichierCas.txt"), "w") as fichier:
-        #         fichier.write("'mascaret.xcas'\n")
-        #     self.export_run(clam)
-        #     clam.del_folder_mas()
-        #
-
-
         case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
         if ok:
             kernel  = self.Klist[self.listeState.index(case)]
@@ -1056,16 +1035,15 @@ Version : {}
                 dict_export = dlgp.dict_accept.copy()
             else:
                 return
-            #print(dict_export)
             run = 'test'
             rep_run = os.path.join(dict_export['path_rep'], dict_export['path_name'])
             clam = ClassMascaret(self, rep_run=rep_run)
-            clam.fct_only_initv2(kernel, run, dict_export)
+            clam.fct_only_init(kernel, run, dict_export)
             #
             with open(os.path.join(clam.dossierFileMasc, "FichierCas.txt"), "w") as fichier:
                 fichier.write("'mascaret.xcas'\n")
             self.export_run(clam, folder_name_path=dict_export['path_rep'])
-            #clam.del_folder_mas()
+            clam.del_folder_mas()
 
     def import_resu_model(self):
         """

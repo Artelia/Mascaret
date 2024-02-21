@@ -18,7 +18,6 @@ email                :
  ***************************************************************************/
 
 """
-import gc
 import os
 import sys
 
@@ -27,7 +26,7 @@ try:
     from .masc import Mascaret
     from ..Structure.ClassFloodGate import ClassFloodGate
     from ..ClassMessage import ClassMessage
-except:
+except  ModuleNotFoundError:
     # autonome python
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from masc import Mascaret
@@ -67,7 +66,6 @@ class ClassAPIMascaret:
         self.filelig = None
         self.info = ''
 
-
         self.results_api = {}
 
         self.masc = Mascaret(log_level="INFO")
@@ -91,6 +89,7 @@ class ClassAPIMascaret:
             self.mobil_struct = self.clfg.fg_active()
             self.mess = ClassMessage()
             self.num_mess = 0
+
     def initial(self, casfile):
         """
         Initialisation mascaret model with
@@ -354,7 +353,7 @@ class ClassAPIMascaret:
 
     def add_info(self, txt):
         if self.mgis is not None:
-            self.mess.add_mess('api_{}'.format(self.num_mess),'info',txt)
+            self.mess.add_mess('api_{}'.format(self.num_mess), 'info', txt)
             self.num_mess += 1
             # self.mgis.add_info(txt)
         else:

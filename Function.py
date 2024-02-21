@@ -270,8 +270,10 @@ def del_symbol(ligne):
 def del_symbolv2(txt, exclud=[]):
     """
      Remove symbol in the text
-    :param txt: (string) text to change
-    :return: (string)text without symbol
+     Args:
+        :param txt: (string) text to change
+     Return :
+        :return: (string)text without symbol
     """
     special_char = [pct for pct in st.punctuation if pct not in exclud]
     newtxt = "".join(filter(lambda char: char not in special_char, txt))
@@ -281,8 +283,9 @@ def del_symbolv2(txt, exclud=[]):
 def replace_all(txt, dico):
     """
     Replace several items
-    :param txt: text orginal
-    :param dico: de remplacement des variable
+    Args:
+        :param txt: text orginal
+        :param dico: de remplacement des variable
     :return:
     """
     for i in dico:

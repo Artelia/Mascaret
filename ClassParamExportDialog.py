@@ -21,11 +21,11 @@ email                :
 import os
 
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 
-from qgis.PyQt.QtWidgets import *
 from .Function import del_accent, del_symbolv2
 
 
@@ -55,7 +55,6 @@ class ClassParamExportDialog(QDialog):
         self.rb_init.clicked.connect(self.chg_init)
         self.rb_init_lig.clicked.connect(self.chg_init)
 
-
         fct = self.selb(self.ui.box_velocity)
         self.ui.box_velocity.clicked.connect(fct)
         fct = self.selb(self.ui.box_stress)
@@ -75,13 +74,12 @@ class ClassParamExportDialog(QDialog):
         self.cb_init_run.currentIndexChanged.connect(self.fill_cb_init_cas)
         self.lname_export.editingFinished.connect(self.check_str)
 
-
     def init_ui(self):
-        """initialisation GUI"""
+        """initialisation variable of GUI"""
         self.combo = {
             "code": {1: "Steady", 2: "Unsteady", 3: "Transcritical"},
             "option": {1: "Sections de calcul", 2: "couche Points de sortie",
-                       3:"couche profils + amont/aval singularite"},
+                       3: "couche profils + amont/aval singularite"},
             "critereArret": {
                 1: "Temps maximum",
                 2: "Nombre de pas de temps max",
@@ -206,6 +204,9 @@ class ClassParamExportDialog(QDialog):
         self.enable_tabwgt()
 
     def create_dico_para(self):
+        """
+        Creation of parameters dictionary
+        """
         self.par = {}
         # requete pour recuperer les parametres dans la base
         sql = "SELECT parametre, {0}, libelle, gui, gui_type FROM {1}.{2};"
@@ -248,17 +249,19 @@ class ClassParamExportDialog(QDialog):
         # Clear the useless parameters
         old_par = self.par.copy()
         self.lig_eau_init = self.par["LigEauInit"]
-        self.event  = self.par["evenement"]
+        self.event = self.par["evenement"]
 
         for param, info in old_par.items():
-            try :
+            try:
                 obj = getattr(self.ui, param)
-            except AttributeError :
+            except AttributeError:
                 del self.par[param]
                 continue
 
-
     def init_gui(self):
+        """
+        Initilize GUI
+        """
         for param, info in self.par.items():
             # self.mgis.add_info("param {}  info {}".format(param, info))
             obj = getattr(self.ui, param)
@@ -281,9 +284,9 @@ class ClassParamExportDialog(QDialog):
             if param in self.exclusion[self.kernel]:
                 obj.hide()
                 if (
-                    isinstance(obj, QSpinBox)
-                    or isinstance(obj, QDoubleSpinBox)
-                    or isinstance(obj, QComboBox)
+                        isinstance(obj, QSpinBox)
+                        or isinstance(obj, QDoubleSpinBox)
+                        or isinstance(obj, QComboBox)
                 ):
                     getattr(self.ui, "label_" + param).hide()
         # other parameters
@@ -347,22 +350,20 @@ class ClassParamExportDialog(QDialog):
         """
         lst_init = [self.label_init_cas, self.cb_init_run, self.cb_init_scen]
         lst_lig = [self.label_init_lig, self.bt_lig, self.lbl_lig]
-        if  self.rb_init.isChecked():
+        if self.rb_init.isChecked():
             self.show_lstobj(lst_init)
             self.hide_lstobj(lst_lig)
         else:
             self.hide_lstobj(lst_init)
             self.show_lstobj(lst_lig)
 
-
     def enable_tabwgt(self):
         """ Disable and Enbale tabWidget"""
         self.tab_widget.setEnabled(self.bt_edit_param.isChecked())
 
-
     def path_search_lig(self):
         """search path windows"""
-        path, _ = QFileDialog.getOpenFileNames(self, "Choose a File", self.mgis.repProject,  "File (*.lig)",)
+        path, _ = QFileDialog.getOpenFileNames(self, "Choose a File", self.mgis.repProject, "File (*.lig)", )
         if path:
             self.lbl_lig.setText(path[0])
         else:
@@ -376,16 +377,18 @@ class ClassParamExportDialog(QDialog):
         else:
             self.txt_rep.setText('')
 
-    def hide_lstobj(self,lst_obj):
+    def hide_lstobj(self, lst_obj):
         """Hide the PyQt object list
-        :param lst_obj: Pyqt object list
+        Args:
+            :param lst_obj: Pyqt object list
         """
         for obj in lst_obj:
             obj.hide()
 
-    def show_lstobj(self,lst_obj):
+    def show_lstobj(self, lst_obj):
         """SHow the PyQt object list
-        :param lst_obj: Pyqt object list
+        Args:
+            :param lst_obj: Pyqt object list
         """
         for obj in lst_obj:
             obj.show()
@@ -399,15 +402,22 @@ class ClassParamExportDialog(QDialog):
             return False
 
     def selb(self, obj):
-        """function selectbox"""
+        """function selectbox
+         Args:
+            :param obj: (object QT)
+        """
         return lambda: self.selectbox(obj)
 
     def selectbox(self, box):
-        """function allow to select  or not for checkBox"""
+        """function allow to select  or not for checkBox
+        Args:
+            :param box: (object QT) QcheckBox
+        """
         for checkbox in box.findChildren(QCheckBox):
             checkbox.setChecked(box.isChecked())
 
     def get_new_par(self):
+        """ Get new parameters dictionnary"""
         self.new_par = {}
         var = []
         for param, info in self.par.items():
@@ -444,7 +454,7 @@ class ClassParamExportDialog(QDialog):
         self.lname_export.blockSignals(True)
         name = self.lname_export.text().strip()
         name = name.replace(".", "_")
-        name = del_symbolv2(name,["_", "-"])
+        name = del_symbolv2(name, ["_", "-"])
         name = del_accent(name)
         name = name.replace(" ", "_")
         self.lname_export.setText(name)
@@ -461,20 +471,20 @@ class ClassParamExportDialog(QDialog):
         self.dict_accept['lig_eau_init'] = self.lig_eau_init
         self.dict_accept['event'] = self.event
 
-        if self.lig_eau_init :
+        if self.lig_eau_init:
             if self.rb_init.isChecked():
                 case = self.cb_init_run.currentText()
-                scen =  self.cb_init_scen.currentText()
+                scen = self.cb_init_scen.currentText()
                 id_run = self.mdb.run_query(
                     "SELECT id FROM {0}.runs "
                     "WHERE run = '{1}' "
                     "AND scenario = '{2}'".format(self.mdb.SCHEMA, case, scen),
                     fetch=True,
                 )
-                self.dict_accept['lig'] =  False
+                self.dict_accept['lig'] = False
                 self.dict_accept["id_run_init"] = [id_run[0][0]]
 
-            else :
+            else:
                 self.dict_accept['lig'] = True
                 self.dict_accept['path_copy'] = self.lbl_lig.text()
 
@@ -482,7 +492,7 @@ class ClassParamExportDialog(QDialog):
             dict_scen_tmp = self.mdb.select("events", "run", "starttime")
             scen_event = self.cb_event.currentText()
             id = dict_scen_tmp["name"].index(scen_event)
-            self.dict_accept['dict_scen']  = {
+            self.dict_accept['dict_scen'] = {
                 "name": [dict_scen_tmp["name"][id]],
                 "starttime": [dict_scen_tmp["starttime"][id]],
                 "endtime": [dict_scen_tmp["endtime"][id]],

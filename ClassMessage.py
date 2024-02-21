@@ -17,16 +17,14 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import os
-import datetime
 
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from qgis.PyQt.QtWidgets import *
 
 class ClassMessage:
     """Class contain  model files creation and run model mascaret"""
@@ -53,7 +51,7 @@ class ClassMessage:
         else:
             return False
 
-    def add_mess(self, code_err, type_mes, message ):
+    def add_mess(self, code_err, type_mes, message):
         """
         add element error
         Args:
@@ -100,7 +98,7 @@ class ClassMessage:
             elif item['type'] == 'info':
                 txt += item['message'] + '\n'
             elif item['type'] == 'warning':
-                txt += '** Warning ** : '+ item['message'] + '\n'
+                txt += '** Warning ** : ' + item['message'] + '\n'
             elif item['type'] == 'critic':
                 txt += '** Error ** : \n' + item['message'] + '\n'
         return txt
@@ -108,11 +106,11 @@ class ClassMessage:
     def mess_fill_other_obj(self, obj_ori):
         """
         Transfet message of a message class object (obj_ori) at a  message class object target
-        :param obj_ori) : (object) ClassMessage object
+        :param obj_ori : (object) ClassMessage object
         """
         fill = {}
         for key, item in obj_ori.derror.items():
-            if key not in self.derror :
+            if key not in self.derror:
                 self.derror[key] = item
                 fill[key] = item
-        return  fill
+        return fill
