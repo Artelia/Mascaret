@@ -26,6 +26,7 @@ from qgis.core import *
 from qgis.gui import *
 
 from qgis.PyQt.QtWidgets import *
+from .Function import del_accent, del_symbolv2
 
 
 class ClassParamExportDialog(QDialog):
@@ -72,6 +73,7 @@ class ClassParamExportDialog(QDialog):
         self.bt_lig.clicked.connect(self.path_search_lig)
         self.bt_rep.clicked.connect(self.path_search)
         self.cb_init_run.currentIndexChanged.connect(self.fill_cb_init_cas)
+        self.lname_export.editingFinished.connect(self.check_str)
 
 
     def init_ui(self):
@@ -200,6 +202,7 @@ class ClassParamExportDialog(QDialog):
         }
         self.create_dico_para()
         self.init_gui()
+        self.lname_export.setText("model_masc")
         self.enable_tabwgt()
 
     def create_dico_para(self):
@@ -435,6 +438,18 @@ class ClassParamExportDialog(QDialog):
                     liste.append(str(obj.isChecked()).lower())
         self.new_par['variablesStockees'] = " ".join(liste)
 
+    def check_str(self):
+        """ check name :
+        - delete accent and symbol"""
+        self.lname_export.blockSignals(True)
+        name = self.lname_export.text().strip()
+        name = name.replace(".", "_")
+        name = del_symbolv2(name,["_", "-"])
+        name = del_accent(name)
+        name = name.replace(" ", "_")
+        self.lname_export.setText(name)
+        self.lname_export.blockSignals(False)
+
     def accept_dialog(self):
         """Modification of the parameters in sql table"""
 
@@ -480,7 +495,15 @@ class ClassParamExportDialog(QDialog):
                 self, "WARNING", "The save folder does not exist."
             )
             return
+
+        if self.lname_export.text().strip() == "":
+            QMessageBox.warning(
+                self, "WARNING", "Specify the compressed directory name."
+            )
+            return
+
         self.dict_accept['path_rep'] = self.txt_rep.text()
+        self.dict_accept['name_rep'] = self.lname_export.text().strip()
         self.dict_accept['par'] = self.new_par
         self.complet = True
         self.close()

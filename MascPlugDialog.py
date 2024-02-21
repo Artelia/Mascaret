@@ -1058,7 +1058,7 @@ Version : {}
                 return
             #print(dict_export)
             run = 'test'
-            rep_run = os.path.join(dict_export['path_rep'], "model_masc")
+            rep_run = os.path.join(dict_export['path_rep'], dict_export['path_name'])
             clam = ClassMascaret(self, rep_run=rep_run)
             clam.fct_only_initv2(kernel, run, dict_export)
             #
