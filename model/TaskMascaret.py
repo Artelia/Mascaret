@@ -170,11 +170,13 @@ class TaskMascaret(QgsTask):
             tfin_run = time.time()
             self.log_mess("Execution time (all Run) : {} s".format(tfin_run - self.exc_start_time))
             self.log_mess("===== END OF RUN {} =====".format(self.run_))
+            time.sleep(1)
             self.taskCompleted.emit()
             return True
         except Exception as e:
             self.error_txt = str(e)
             self.log_mess(str(e), 'critic')
+            time.sleep(1)
             self.taskTerminated.emit()
             return False
 
