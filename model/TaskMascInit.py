@@ -132,6 +132,7 @@ class TaskMascInit():
         :return boolean
         """
         try:
+            self.clfile.mess.clear_derror()
             self.log_mess('TaskMascInit Begin', 'info1')
             self.clean_res()
             if self.dico_loi_struct.keys():
@@ -144,7 +145,6 @@ class TaskMascInit():
                     self.clmeth.create_law(
                         self.dossier_file_masc, name + "_init", self.dico_loi_struct[name]["type"], list_final
                     )
-
             # initialise Law file
             self.date_debut = None
             if self.noyau == "steady":

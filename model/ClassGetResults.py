@@ -419,7 +419,6 @@ class ClassGetResults:
         del val_opt
 
         if casier:
-            print(self.wq, self.dico_basinnum)
             nom_fich_bas = os.path.join(self.dossier_file_masc, base_namefile + ".cas_opt")
             if not os.path.isfile(nom_fich_bas):
                 txt = "Simulation Error: there aren't basin results"
@@ -430,7 +429,6 @@ class ClassGetResults:
                 init_col = ["TIME", "BNUM"]
 
                 val = self.new_read_opt(nom_fich_bas, type_res, init_col)
-                print(val, id_run, 'o')
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
 

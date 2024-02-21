@@ -116,6 +116,9 @@ class TaskMascaret(QgsTask):
             self.log_mess("===== BEGIN OF RUN {} =====".format(self.run_))
             for idx, scen in enumerate(self.dict_scen["name"]):
                 t0_run = time.time()
+                self.init_task.mess.clear_derror()
+                self.comput_task.mess.clear_derror()
+                self.post_task.mess.clear_derror()
                 self.log_mess("************** The current scenario is {} ************".format(scen))
                 self.log_mess("Kernel - Run - scenario : {} - {} - {} ".format(self.noyau, self.run_, scen))
                 self.scen_cur = scen
@@ -150,6 +153,7 @@ class TaskMascaret(QgsTask):
                     self.log_mess("===== End initialization =====")
                 if self.isCanceled():
                     self.log_mess("===== CANCEL RUN {} =====".format(self.run_), 'warning')
+                    time.sleep(1)
                     self.taskTerminated.emit()
                     return False
                 stat, up_param = self.run_task(self.comput_task, up_param)
@@ -165,6 +169,7 @@ class TaskMascaret(QgsTask):
                 self.log_mess("************** The End of {} ************".format(scen))
                 if self.isCanceled():
                     self.log_mess("===== CANCEL RUN {} =====".format(self.run_), 'warning')
+                    time.sleep(1)
                     self.taskTerminated.emit()
                     return False
             tfin_run = time.time()

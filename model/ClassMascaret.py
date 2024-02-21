@@ -228,6 +228,7 @@ class ClassMascaret:
         if not par or not dict_scen or not dict_lois:
             self.mgis.add_info("**** Error : Error at initilisation of model")
             return
+
         dict_task = {
             'mdb': self.mdb,
             'wq': self.wq,
@@ -349,18 +350,15 @@ class ClassMascaret:
             self.mgis.add_info("{}".format(e))
 
     def copy_lig_only(self, fichiers):
-        # """Load .lig file in run model when exporting
-        # Args:
-        #   :param fichiers: (str) path of the file to copy
-        #   """
-        # try:
-            print('copy')
-            print(fichiers,  os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
-            aa =shutil.copyfile(fichiers, os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
-            print("aa", aa)
-        # except Exception as e:
-        #     self.mgis.add_info("Error copying file")
-        #     self.mgis.add_info("{}".format(e))
+        """Load .lig file in run model when exporting
+        Args:
+          :param fichiers: (str) path of the file to copy
+          """
+        try:
+            shutil.copyfile(fichiers, os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
+        except Exception as e:
+            self.mgis.add_info("Error copying file")
+            self.mgis.add_info("{}".format(e))
 
     def clean_rep(self):
         """Clean the run folder and copy the essential files to run mascaret"""
@@ -596,7 +594,6 @@ class ClassMascaret:
         init_task_.run()
         if dict_exp['lig_eau_init']:
             if dict_exp['lig']:
-                print(dict_exp['path_copy'])
                 self.copy_lig_only(dict_exp['path_copy'])
 
         # delete "initialisationAuto" file

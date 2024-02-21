@@ -48,8 +48,7 @@ class ClassMessage:
             for name_obj, obj in self.derror.items():
                 if obj['type'] == 'critic':
                     return True
-        else:
-            return False
+        return False
 
     def add_mess(self, code_err, type_mes, message):
         """

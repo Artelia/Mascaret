@@ -127,6 +127,8 @@ class TaskMascPost():
         """
         # RUN Model
         try:
+            self.cls_res.mess.clear_derror()
+            self.clfile.mess.clear_derror()
             self.log_mess('TaskMascPost Begin', 'info1')
             if self.cpt_init:
 
