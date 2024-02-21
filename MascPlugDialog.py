@@ -262,7 +262,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(True)
+        self.ui.actionTest.setVisible(False)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(self.import_old_model_dgl)
@@ -616,10 +616,10 @@ class MascPlugDialog(QMainWindow):
             if self.DEBUG:
                 self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
             rep_run = os.path.join(self.masplugPath, "mascaret_copy")
-            #clam = ClassMascaret(self, rep_run=rep_run)
-            clam = ClassCreatFilesModels(self.mdb, rep_run)
+            clam = ClassMascaret(self, rep_run=rep_run)
+            # clam = ClassCreatFilesModels(self.mdb, rep_run)
 
-            clam.creer_xcas(self.Klist[self.listeState.index(case)])
+            clam.clfile.creer_xcas(self.Klist[self.listeState.index(case)])
             file_name_path, _ = QFileDialog.getSaveFileName(
                 self,
                 "saveFile",
@@ -634,11 +634,10 @@ class MascPlugDialog(QMainWindow):
     def fct_create_geo(self):
         """create Xcas"""
         rep_run = os.path.join(self.masplugPath, "mascaret_copy")
-        clam = ClassCreatFilesModels(self.mdb, rep_run)
-        #clam = ClassMascaret(self, rep_run=rep_run)
-        clam.creer_geo_ref()
-        if clam.mess.get_critic_status():
-            self.add_info(clam.mess.message)
+        clam = ClassMascaret(self, rep_run=rep_run)
+        clam.clfile.creer_geo_ref()
+        if clam.clfile.mess.get_critic_status():
+            self.add_info(clam.clfile.mess.message())
         # clam.creer_geo()
 
         file_name_path, _ = QFileDialog.getSaveFileName(
@@ -659,12 +658,12 @@ class MascPlugDialog(QMainWindow):
         # Pas de dialog box sur le noyau: les casiers sont uniquement en transitoire
 
         rep_run = os.path.join(self.masplugPath, "mascaret_copy")
-        #clam = ClassMascaret(self, rep_run=rep_run)
-        clam = ClassCreatFilesModels(self.mdb, rep_run)
+        clam = ClassMascaret(self, rep_run=rep_run)
+
         # Appel de la fonction creerGEOCasier() definie dans Class_Mascaret.py
-        clam.creer_geo_casier()
-        if clam.mess.get_critic_status():
-            self.add_info(clam.mess.message)
+        clam.clfile.creer_geo_casier()
+        if clam.clfile.mess.get_critic_status():
+            self.add_info(clam.clfile.mess.message())
 
         file_name_path, _ = QFileDialog.getSaveFileName(
             self,
@@ -1036,14 +1035,14 @@ Version : {}
             else:
                 return
             run = 'test'
-            rep_run = os.path.join(dict_export['path_rep'], dict_export['path_name'])
+            rep_run = os.path.join(dict_export['path_rep'], dict_export['name_rep'])
             clam = ClassMascaret(self, rep_run=rep_run)
             clam.fct_only_init(kernel, run, dict_export)
             #
             with open(os.path.join(clam.dossierFileMasc, "FichierCas.txt"), "w") as fichier:
                 fichier.write("'mascaret.xcas'\n")
             self.export_run(clam, folder_name_path=dict_export['path_rep'])
-            clam.del_folder_mas()
+            #clam.del_folder_mas()
 
     def import_resu_model(self):
         """
@@ -1064,6 +1063,7 @@ Version : {}
         """Test function"""
         # get_laws
         #self.chkt.debug_update_vers_meta(version="5.1.5")
+        pass
 
     def update_ks_mesh_planim(self):
         """update value of the seleted profiles"""

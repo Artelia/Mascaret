@@ -217,6 +217,12 @@ class ClassMascaret:
             :param only_init: if only intialisation is true
         :return:
         """
+        # Ensure that other task Mascaret are not running
+        if QgsApplication.taskManager().activeTasks():
+            self.mgis.add_info("**** Warning : Please wait before starting a new task.")
+            QMessageBox.warning(None, "Warning", "There are tasks in progress. \n "
+                                                 "Wait for them to complete before starting a new task.")
+            return
         par, dict_scen, comments, dict_lois, dico_loi_struct = self.mascaret_init(noyau, run)
 
         if not par or not dict_scen or not dict_lois:
@@ -238,11 +244,6 @@ class ClassMascaret:
             'cond_api': self.cond_api
         }
         if self.mgis.task_use:
-            if QgsApplication.taskManager().activeTasks():
-                self.mgis.add_info("**** Warning : Please wait before starting a new task.")
-                QMessageBox.warning(None, "Warning", "There are tasks in progress. \n "
-                                                     "Wait for them to complete before starting a new task.")
-                return
             task_mas = TaskMascaret('TaskMascaret', dict_task)
             task_mas.message.connect(self.print_info)
             QgsApplication.taskManager().addTask(task_mas)
@@ -348,12 +349,18 @@ class ClassMascaret:
             self.mgis.add_info("{}".format(e))
 
     def copy_lig_only(self, fichiers):
-        """Load .lig file in run model when exporting"""
-        try:
-            shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
-        except Exception as e:
-            self.mgis.add_info("Error copying file")
-            self.mgis.add_info("{}".format(e))
+        # """Load .lig file in run model when exporting
+        # Args:
+        #   :param fichiers: (str) path of the file to copy
+        #   """
+        # try:
+            print('copy')
+            print(fichiers,  os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
+            aa =shutil.copyfile(fichiers, os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
+            print("aa", aa)
+        # except Exception as e:
+        #     self.mgis.add_info("Error copying file")
+        #     self.mgis.add_info("{}".format(e))
 
     def clean_rep(self):
         """Clean the run folder and copy the essential files to run mascaret"""
@@ -551,9 +558,7 @@ class ClassMascaret:
         dict_scen = dict_exp['dict_scen']
         dict_scen["id_run_init"] = None
         if dict_exp['lig_eau_init']:
-            if dict_exp['lig']:
-                self.copy_lig_only(dict_exp['path_copy'])
-            else:
+            if not dict_exp['lig']:
                 dict_scen["id_run_init"] = dict_exp["id_run_init"]
 
         # update  par
@@ -589,6 +594,11 @@ class ClassMascaret:
                     'par': par}
         init_task_.update_inputs(up_param)
         init_task_.run()
+        if dict_exp['lig_eau_init']:
+            if dict_exp['lig']:
+                print(dict_exp['path_copy'])
+                self.copy_lig_only(dict_exp['path_copy'])
+
         # delete "initialisationAuto" file
         for file in os.listdir(self.dossierFileMasc):
             if "_init.loi" in file or "_init.xcas" in file or "mascaret_linux" in file \

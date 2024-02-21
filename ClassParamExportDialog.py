@@ -248,8 +248,10 @@ class ClassParamExportDialog(QDialog):
                     self.par[param]["gui_type"] = gui_type
         # Clear the useless parameters
         old_par = self.par.copy()
-        self.lig_eau_init = self.par["LigEauInit"]
-        self.event = self.par["evenement"]
+        self.lig_eau_init = self.par["LigEauInit"]['val']
+        if self.kernel == 'steady':
+            self.lig_eau_init = False
+        self.event = self.par["evenement"]['val']
 
         for param, info in old_par.items():
             try:
@@ -290,10 +292,18 @@ class ClassParamExportDialog(QDialog):
                 ):
                     getattr(self.ui, "label_" + param).hide()
         # other parameters
+        lst_ev = [self.cb_event, self.label_event]
+
+        if not self.event:
+            self.hide_lstobj(lst_ev)
+        else:
+            self.fill_cb_event()
+            self.show_lstobj(lst_ev)
 
         # if lig_eau
-        lst_lig = [self.cb_init_run, self.cb_init_scen, self.rb_init, self.rb_init_lig, self.label_init_cas]
-        if not self.lig_eau_init:
+        lst_lig = [self.cb_init_run, self.cb_init_scen, self.rb_init, self.rb_init_lig,
+                   self.label_init_cas, self.lbl_lig, self.bt_lig, self.label_init_lig]
+        if not self.lig_eau_init :
             self.hide_lstobj(lst_lig)
         else:
             self.show_lstobj(lst_lig)
@@ -302,12 +312,7 @@ class ClassParamExportDialog(QDialog):
             self.rb_init.setChecked(True)
             self.chg_init()
 
-        lst_ev = [self.cb_event, self.label_event]
-        if not self.event:
-            self.hide_lstobj(lst_ev)
-        else:
-            self.fill_cb_event()
-            self.show_lstobj(lst_ev)
+
 
     def fill_cb_init_run(self):
         """
@@ -512,8 +517,8 @@ class ClassParamExportDialog(QDialog):
             )
             return
 
-        self.dict_accept['path_rep'] = self.txt_rep.text()
-        self.dict_accept['name_rep'] = self.lname_export.text().strip()
+        self.dict_accept['path_rep'] = os.path.normpath(self.txt_rep.text())
+        self.dict_accept['name_rep'] = os.path.normpath(self.lname_export.text().strip())
         self.dict_accept['par'] = self.new_par
         self.complet = True
         self.close()
