@@ -43,8 +43,10 @@ class TaskMascPost():
         self.dossier_file_masc = glb_param['dossier_file_masc']
         self.basename = glb_param['basename']
         self.cond_api = glb_param['cond_api']
+        self.wq = glb_param['waterq']
 
         self.cls_res = ClassGetResults(self.mdb, self.dossier_file_masc)
+        self.cls_res.wq = self.wq
         self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc)
 
         self.mess = ClassMessage()
@@ -153,9 +155,9 @@ class TaskMascPost():
                     cond_casier = True
                 self.log_mess('Read *.opt file', 'info3')
                 self.cls_res.lit_opt_new(
-                    self.id_run, self.date_debut, self.basename, self.comments,
-                    self.par["presenceTraceurs"], cond_casier,
-                    self.cond_api, self.save_res_struct)
+                    self.id_run, self.date_debut, self.basename, comments=self.comments,
+                    tracer=self.par["presenceTraceurs"], casier=cond_casier,
+                    cond_api=self.cond_api, save_res_struct=self.save_res_struct)
 
                 self.add_log_mess(self.cls_res.mess)
                 if self.exit_status_(self.cls_res.mess):

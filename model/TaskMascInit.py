@@ -38,7 +38,7 @@ class TaskMascInit():
 
         self.mdb = glb_param['mdb']
         self.dossier_file_masc = glb_param['dossier_file_masc']
-        self.wq = init_param['waterq']
+        self.wq = glb_param['waterq']
         self.basename = glb_param['basename']
         self.noyau = glb_param['noyau']
         self.dict_scen = glb_param['dict_scen']

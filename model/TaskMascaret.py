@@ -102,9 +102,10 @@ class TaskMascaret(QgsTask):
                          'comments': self.comments,
                          'dict_scen': self.dict_scen,
                          'cond_api': self.cond_api,
-                         'masc': self.masc
+                         'masc': self.masc,
+                         'waterq': self.wq,
                          }
-            param_init = {'waterq': self.wq,
+            param_init = {
                           'dict_lois': self.dict_lois,
                           'dico_loi_struct': self.dico_loi_struct
                           }

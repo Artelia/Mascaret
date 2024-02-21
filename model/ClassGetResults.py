@@ -42,6 +42,25 @@ class ClassGetResults:
         self.dossier_file_masc = dossier_file_masc
         self.basename = "mascaret"
         self.mess = ClassMessage()
+        self.num_casier()
+
+    def num_casier(self):
+        """
+        Compute dico contains the link between  xcas numero and model numero
+        """
+        casiers = self.mdb.select("basins", "active ORDER BY basinnum ")
+        liaisons = self.mdb.select("links", "active ORDER BY linknum ")
+        self.dico_basinnum = {}
+        self.dico_linknum = {}
+        if casiers:
+            if len(casiers["basinnum"]) > 0:
+                for id_mas, num_qgis in enumerate(casiers["basinnum"], 1):
+                    self.dico_basinnum[id_mas] = num_qgis
+            # # Creation du dictionnaire de numero de liaison entre mascaret (cle)
+            # # et qgis (valeur)
+            if len(liaisons["linknum"]) > 0:
+                for id_mas, num_qgis in enumerate(liaisons["linknum"], 1):
+                    self.dico_linknum[id_mas] = num_qgis
 
     def insert_id_run(self, run, scen):
         """
@@ -90,7 +109,7 @@ class ClassGetResults:
             cond_casier = True
 
         id_run = self.insert_id_run(run, scen)
-        self.lit_opt_new(id_run, date_debut, self.basename, comments, cond_tra, cond_casier)
+        self.lit_opt_new(id_run, date_debut, self.basename, comments=comments, tracer=cond_tra, casier=cond_casier)
 
         if os.path.isfile(os.path.join(path, "Fichier_Crete.csv")):
             self.read_mobil_gate_res(id_run)
@@ -400,15 +419,18 @@ class ClassGetResults:
         del val_opt
 
         if casier:
+            print(self.wq, self.dico_basinnum)
             nom_fich_bas = os.path.join(self.dossier_file_masc, base_namefile + ".cas_opt")
             if not os.path.isfile(nom_fich_bas):
                 txt = "Simulation Error: there aren't basin results"
                 self.mess.add_mess('LoadOptCas', 'warning', txt)
             else:
+
                 type_res = "basin"
                 init_col = ["TIME", "BNUM"]
-                val = self.new_read_opt(nom_fich_bas, type_res, init_col)
 
+                val = self.new_read_opt(nom_fich_bas, type_res, init_col)
+                print(val, id_run, 'o')
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
 
