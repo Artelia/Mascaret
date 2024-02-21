@@ -26,7 +26,7 @@ from qgis.core import QgsMessageLog, Qgis
 from .ClassCreatFilesModels import ClassCreatFilesModels
 from ..ClassMessage import ClassMessage
 from ..Structure.ClassMascStruct import ClassMascStruct
-
+import shutil
 MESSAGE_CATEGORY = 'TaskMascaret'
 
 
@@ -179,19 +179,36 @@ class TaskMascInit():
                 id_run_init = None
                 if "id_run_init" in self.dict_scen.keys():
                     id_run_init = self.dict_scen["id_run_init"][self.idx]
-                if id_run_init is None:
+                if "path_init" in self.dict_scen.keys():
+                    path_init = self.dict_scen["path_init"][self.idx]
+
+                if id_run_init is None and path_init is None:
                     txt = "Cancel run because No initial boundaries"
                     self.log_mess(txt, "ErrInit", 'critic')
                     return False
-                self.clfile.opt_to_lig(id_run_init, self.basename)
-                self.add_log_mess(self.clfile.mess)
-                if self.exit_status_(self.clfile.mess):
+                if id_run_init is not None:
+                    self.clfile.opt_to_lig(id_run_init, self.basename)
+                    self.add_log_mess(self.clfile.mess)
+                    if self.exit_status_(self.clfile.mess):
+                        return False
+                elif path_init is not None:
+                    self.copy_lig(path_init)
+                else:
+                    txt = "Cancel run because No initial boundaries"
+                    self.log_mess(txt, "ErrInit", 'critic')
                     return False
             self.log_mess('TaskMascInit End', 'info2')
             return True
         except Exception as e:
             self.log_mess(str(e), 'errInit', 'critic')
             return False
+
+    def copy_lig(self, fichiers):
+        try:
+            shutil.copy(fichiers, os.path.join(self.dossier_file_masc, self.basename + ".lig"))
+        except Exception as e:
+            txt = "Error: copying .lig file \n {}".format(e)
+            self.log_mess(txt, "ErrInit", 'critic')
 
     def init_scen_steady(self, dict_lois):
         """

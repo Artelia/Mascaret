@@ -287,14 +287,18 @@ class ClassMascaret:
             liste_run = []
         liste_run.append('".lig" File')
         dict_scen["id_run_init"] = []
+        dict_scen["path_init"] = []
         for i, scen in enumerate(dict_scen["name"]):
             case, ok = QInputDialog.getItem(
                 None, "Initial run case for {}".format(scen), "Runs", liste_run, 0, False
             )
             if ok:
                 if case == '".lig" File':
-                    self.copy_lig()
+                    dict_scen["id_run_init"].append(None)
+                    dict_scen["path_init"].append(self.get_lig())
+                    # self.copy_lig()
                 else:
+                    dict_scen["path_init"].append(None)
                     condition = "run LIKE '{0}'".format(case)
                     dico_scen = self.mdb.select_distinct("scenario", "runs", condition)
                     liste_scen = ["{}".format(v) for v in dico_scen["scenario"]]
@@ -322,13 +326,37 @@ class ClassMascaret:
                         dict_scen["id_run_init"].append(None)
                         self.mgis.add_info("Cancel run : {}".format(scen), dbg=True)
             else:
+                dict_scen["path_init"].append(None)
                 dict_scen["id_run_init"].append(None)
                 self.mgis.add_info("Cancel run: {}".format(scen), dbg=True)
 
         return dict_scen
 
-    def copy_lig(self):
+    # def copy_lig(self):
+    #     """Load .lig file in run model"""
+    #     fichiers, _ = QFileDialog.getOpenFileNames(
+    #         None,
+    #         "File Selection",
+    #         self.mgis.repProject,
+    #         # self.dossierFileMasc,
+    #         "File (*.lig)",
+    #     )
+    #     try:
+    #         fichiers = fichiers[0]
+    #         self.mgis.up_rep_project(fichiers)
+    #     except IndexError:
+    #         self.mgis.add_info("Cancel  init file")
+    #         return
+    #
+    #     try:
+    #         shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
+    #     except Exception as e:
+    #         self.mgis.add_info("Error copying file")
+    #         self.mgis.add_info("{}".format(e))
+
+    def get_lig(self):
         """Load .lig file in run model"""
+        filen = None
         fichiers, _ = QFileDialog.getOpenFileNames(
             None,
             "File Selection",
@@ -337,17 +365,11 @@ class ClassMascaret:
             "File (*.lig)",
         )
         try:
-            fichiers = fichiers[0]
-            self.mgis.up_rep_project(fichiers)
+            filen = fichiers[0]
+            self.mgis.up_rep_project(filen)
         except IndexError:
             self.mgis.add_info("Cancel  init file")
-            return
-
-        try:
-            shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
-        except Exception as e:
-            self.mgis.add_info("Error copying file")
-            self.mgis.add_info("{}".format(e))
+        return filen
 
     def copy_lig_only(self, fichiers):
         """Load .lig file in run model when exporting
