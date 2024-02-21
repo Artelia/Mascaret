@@ -355,7 +355,7 @@ class ClassCreatFilesModels:
         elif level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
-    def creer_xcas(self, noyau):
+    def creer_xcas(self, noyau, par_init=None):
         """To create xcas file"""
         dict_lois = {}
         # try:
@@ -384,6 +384,9 @@ class ClassCreatFilesModels:
         for param, valeur, b1, b2 in rows:
             # print("valeur : {0},  param : {1}  ,  b1 : {2} , b2:#\
             #  {3}".format(valeur, param, b1, b2))
+            if par_init:
+                if param in par_init.keys():
+                    valeur = str(par_init[param])
             if b1:
                 try:
                     cas.find(b1).text

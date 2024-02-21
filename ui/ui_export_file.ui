@@ -6,16 +6,63 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>832</width>
-    <height>706</height>
+    <width>704</width>
+    <height>786</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_29">
-   <item row="1" column="0">
+   <item row="3" column="1">
+    <widget class="QToolButton" name="bt_lig">
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../resources.qrc">
+       <normaloff>:/plugins/Mascaret/icones/save_res.png</normaloff>:/plugins/Mascaret/icones/save_res.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>30</width>
+       <height>30</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_init_lig">
+     <property name="minimumSize">
+      <size>
+       <width>150</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Select .lig file</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="6">
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="font">
+        <font>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Save Folder </string>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QPushButton" name="bt_rep">
        <property name="text">
@@ -27,8 +74,8 @@
        </property>
        <property name="iconSize">
         <size>
-         <width>24</width>
-         <height>24</height>
+         <width>30</width>
+         <height>30</height>
         </size>
        </property>
       </widget>
@@ -42,8 +89,132 @@
      </item>
     </layout>
    </item>
+   <item row="1" column="4" colspan="2">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="5" column="5">
+    <widget class="QPushButton" name="bt_edit_param">
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Edit Parmaters</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../resources.qrc">
+       <normaloff>:/plugins/Mascaret/icones/mActionToggleEditing.png</normaloff>:/plugins/Mascaret/icones/mActionToggleEditing.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_init_cas">
+     <property name="minimumSize">
+      <size>
+       <width>150</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Select Initialize Case</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="3" colspan="2">
+    <widget class="QComboBox" name="cb_init_scen"/>
+   </item>
+   <item row="1" column="0">
+    <widget class="QRadioButton" name="rb_init">
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Initialize cas</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QRadioButton" name="rb_init_lig">
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>to provide .lig file</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
-    <widget class="QTabWidget" name="tabWidget">
+    <widget class="QLabel" name="label_event">
+     <property name="minimumSize">
+      <size>
+       <width>150</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Choice of event</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0" colspan="6">
+    <widget class="QPushButton" name="bt_export">
+     <property name="text">
+      <string>Export Model</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../resources.qrc">
+       <normaloff>:/plugins/Mascaret/icones/mActionFileSave.png</normaloff>:/plugins/Mascaret/icones/mActionFileSave.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>24</width>
+       <height>24</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1" colspan="2">
+    <widget class="QComboBox" name="cb_init_run"/>
+   </item>
+   <item row="6" column="0" rowspan="2" colspan="6">
+    <widget class="QTabWidget" name="tab_widget">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="currentIndex">
       <number>0</number>
      </property>
@@ -52,33 +223,10 @@
        <string>Temporal</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
+       <item row="0" column="1">
         <layout class="QGridLayout" name="gridLayout_28">
-         <item row="6" column="1">
-          <widget class="QDoubleSpinBox" name="nbCourant_2">
-           <property name="maximum">
-            <double>99.989999999999995</double>
-           </property>
-           <property name="singleStep">
-            <double>0.010000000000000</double>
-           </property>
-           <property name="value">
-            <double>0.800000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_pasTemps_2">
-           <property name="text">
-            <string>Time step : </string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QDoubleSpinBox" name="pasTemps_2">
+         <item row="2" column="2">
+          <widget class="QDoubleSpinBox" name="tempsInit">
            <property name="suffix">
             <string> s</string>
            </property>
@@ -91,33 +239,10 @@
            <property name="singleStep">
             <double>0.100000000000000</double>
            </property>
-           <property name="value">
-            <double>1.000000000000000</double>
-           </property>
           </widget>
          </item>
-         <item row="4" column="1">
-          <widget class="QSpinBox" name="nbPasTemps_2">
-           <property name="minimum">
-            <number>0</number>
-           </property>
-           <property name="maximum">
-            <number>999999999</number>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_tempsInit_2">
-           <property name="text">
-            <string>Initial time : </string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="0">
-          <widget class="QLabel" name="label_coteMax_2">
+         <item row="7" column="1">
+          <widget class="QLabel" name="label_coteMax">
            <property name="text">
             <string>Max control water level : </string>
            </property>
@@ -126,128 +251,18 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_option">
+         <item row="2" column="1">
+          <widget class="QLabel" name="label_tempsInit">
            <property name="text">
-            <string>Recorded Variables</string>
-           </property>
-          </widget>
-         </item>
-         <item row="9" column="0">
-          <widget class="QLabel" name="label_biefControle_2">
-           <property name="text">
-            <string>Control point  reach : </string>
+            <string>Initial time : </string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
           </widget>
-         </item>
-         <item row="8" column="1">
-          <widget class="QDoubleSpinBox" name="abscisseControle_2">
-           <property name="suffix">
-            <string> m</string>
-           </property>
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <double>1000000000.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>0.100000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="10" column="1">
-          <spacer name="horizontalSpacer_5">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
          </item>
          <item row="0" column="1">
-          <widget class="QComboBox" name="option">
-           <property name="currentIndex">
-            <number>0</number>
-           </property>
-           <item>
-            <property name="text">
-             <string>At all computational corss sections</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Output points layer</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Profiles + Up/Downstream singularity</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="QLabel" name="label_nbCourant_2">
-           <property name="text">
-            <string>Courant number : </string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="0">
-          <widget class="QLabel" name="label_abscisseControle_2">
-           <property name="text">
-            <string>Control point abscissa : </string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_nbPasTemps_2">
-           <property name="text">
-            <string>Max number of time steps : </string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="1">
-          <widget class="QDoubleSpinBox" name="coteMax_2">
-           <property name="suffix">
-            <string> m</string>
-           </property>
-           <property name="decimals">
-            <number>2</number>
-           </property>
-           <property name="maximum">
-            <double>1000000000.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>0.010000000000000</double>
-           </property>
-           <property name="value">
-            <double>0.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_critereArret_2">
+          <widget class="QLabel" name="label_critereArret">
            <property name="layoutDirection">
             <enum>Qt::LeftToRight</enum>
            </property>
@@ -259,50 +274,8 @@
            </property>
           </widget>
          </item>
-         <item row="10" column="0">
-          <spacer name="verticalSpacer_21">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="3" column="1">
-          <widget class="QDoubleSpinBox" name="tempsInit_2">
-           <property name="suffix">
-            <string> s</string>
-           </property>
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <double>1000000000.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>0.100000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="9" column="2">
-          <spacer name="horizontalSpacer_11">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="critereArret_2">
+         <item row="0" column="2">
+          <widget class="QComboBox" name="critereArret">
            <item>
             <property name="text">
              <string>Max time</string>
@@ -320,25 +293,131 @@
            </item>
           </widget>
          </item>
-         <item row="5" column="0">
-          <widget class="QLabel" name="label_tempsMax_2">
+         <item row="3" column="2">
+          <widget class="QSpinBox" name="nbPasTemps">
+           <property name="minimum">
+            <number>0</number>
+           </property>
+           <property name="maximum">
+            <number>999999999</number>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLabel" name="label_abscisseControle">
            <property name="text">
-            <string>Max time : </string>
+            <string>Control point abscissa : </string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>
-         <item row="9" column="1">
-          <widget class="QSpinBox" name="biefControle_2">
+         <item row="7" column="2">
+          <widget class="QDoubleSpinBox" name="coteMax">
+           <property name="suffix">
+            <string> m</string>
+           </property>
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <double>1000000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="1">
+          <spacer name="verticalSpacer_21">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="12" column="2">
+          <spacer name="horizontalSpacer_5">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Preferred</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="8" column="2">
+          <widget class="QDoubleSpinBox" name="abscisseControle">
+           <property name="suffix">
+            <string> m</string>
+           </property>
+           <property name="decimals">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <double>1000000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="3">
+          <spacer name="horizontalSpacer_11">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="9" column="2">
+          <widget class="QSpinBox" name="biefControle">
            <property name="maximum">
             <number>999999999</number>
            </property>
           </widget>
          </item>
-         <item row="5" column="1">
-          <widget class="QDoubleSpinBox" name="tempsMax_2">
+         <item row="1" column="2">
+          <widget class="QDoubleSpinBox" name="pasTemps">
+           <property name="suffix">
+            <string> s</string>
+           </property>
+           <property name="decimals">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <double>1000000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QDoubleSpinBox" name="tempsMax">
            <property name="suffix">
             <string> s</string>
            </property>
@@ -347,6 +426,79 @@
            </property>
            <property name="value">
             <double>100.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLabel" name="label_tempsMax">
+           <property name="text">
+            <string>Max time : </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="label_nbPasTemps">
+           <property name="text">
+            <string>Max number of time steps : </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_pasTemps">
+           <property name="text">
+            <string>Time step : </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QLabel" name="label_biefControle">
+           <property name="text">
+            <string>Control point  reach : </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="1">
+          <widget class="QLabel" name="label_nbCourant">
+           <property name="text">
+            <string>Courant number : </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="2">
+          <widget class="QDoubleSpinBox" name="nbCourant">
+           <property name="maximum">
+            <double>99.989999999999995</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.800000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="1" colspan="2">
+          <widget class="QCheckBox" name="pasTempsVar">
+           <property name="layoutDirection">
+            <enum>Qt::RightToLeft</enum>
+           </property>
+           <property name="text">
+            <string>Variable time step depending on the Courant number</string>
            </property>
           </widget>
          </item>
@@ -362,14 +514,14 @@
        <item row="0" column="0">
         <layout class="QGridLayout" name="gridLayout_31">
          <item row="7" column="0">
-          <widget class="QLabel" name="label_pasStock_2">
+          <widget class="QLabel" name="label_pasStock">
            <property name="text">
             <string>Write data all N time steps</string>
            </property>
           </widget>
          </item>
          <item row="4" column="0">
-          <widget class="QCheckBox" name="impressionligneEauInitiale_2">
+          <widget class="QCheckBox" name="impressionligneEauInitiale">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
@@ -379,7 +531,7 @@
           </widget>
          </item>
          <item row="5" column="0">
-          <widget class="QCheckBox" name="impressionCalcul_2">
+          <widget class="QCheckBox" name="impressionCalcul">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
@@ -389,7 +541,7 @@
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QCheckBox" name="impressionPlanimetrage_2">
+          <widget class="QCheckBox" name="impressionPlanimetrage">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
@@ -412,7 +564,7 @@
           </spacer>
          </item>
          <item row="2" column="0">
-          <widget class="QCheckBox" name="impressionReseau_2">
+          <widget class="QCheckBox" name="impressionReseau">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
@@ -422,14 +574,14 @@
           </widget>
          </item>
          <item row="8" column="0">
-          <widget class="QLabel" name="label_pasImpression_2">
+          <widget class="QLabel" name="label_pasImpression">
            <property name="text">
             <string>Write to the listing file all data all N time steps</string>
            </property>
           </widget>
          </item>
          <item row="0" column="0">
-          <widget class="QCheckBox" name="impressionGeometrie_2">
+          <widget class="QCheckBox" name="impressionGeometrie">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
@@ -439,21 +591,21 @@
           </widget>
          </item>
          <item row="9" column="0">
-          <widget class="QLabel" name="label_ecartInterBranch_2">
+          <widget class="QLabel" name="label_ecartInterBranch">
            <property name="text">
             <string>Distance between reaches (m)</string>
            </property>
           </widget>
          </item>
          <item row="6" column="0">
-          <widget class="QLabel" name="label_premPasTpsStock_2">
+          <widget class="QLabel" name="label_premPasTpsStock">
            <property name="text">
             <string>Number of the first time step</string>
            </property>
           </widget>
          </item>
          <item row="3" column="0">
-          <widget class="QCheckBox" name="impressionLoiHydraulique_2">
+          <widget class="QCheckBox" name="impressionLoiHydraulique">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
@@ -463,14 +615,14 @@
           </widget>
          </item>
          <item row="10" column="0">
-          <widget class="QLabel" name="label_option_3">
+          <widget class="QLabel" name="label_option_2">
            <property name="text">
             <string>Recorded Variables</string>
            </property>
           </widget>
          </item>
          <item row="10" column="1">
-          <widget class="QComboBox" name="option_3">
+          <widget class="QComboBox" name="option">
            <property name="currentIndex">
             <number>0</number>
            </property>
@@ -492,7 +644,7 @@
           </widget>
          </item>
          <item row="9" column="1">
-          <widget class="QDoubleSpinBox" name="ecartInterBranch_2">
+          <widget class="QDoubleSpinBox" name="ecartInterBranch">
            <property name="decimals">
             <number>1</number>
            </property>
@@ -505,21 +657,21 @@
           </widget>
          </item>
          <item row="8" column="1">
-          <widget class="QSpinBox" name="pasImpression_2">
+          <widget class="QSpinBox" name="pasImpression">
            <property name="maximum">
             <number>999999999</number>
            </property>
           </widget>
          </item>
          <item row="7" column="1">
-          <widget class="QSpinBox" name="pasStock_2">
+          <widget class="QSpinBox" name="pasStock">
            <property name="maximum">
             <number>999999999</number>
            </property>
           </widget>
          </item>
          <item row="6" column="1">
-          <widget class="QSpinBox" name="premPasTpsStock_2">
+          <widget class="QSpinBox" name="premPasTpsStock">
            <property name="maximum">
             <number>999999999</number>
            </property>
@@ -550,7 +702,7 @@
        <item row="0" column="0">
         <layout class="QGridLayout" name="gridLayout_21">
          <item row="0" column="2">
-          <widget class="QGroupBox" name="box_hydro_2">
+          <widget class="QGroupBox" name="box_hydro">
            <property name="title">
             <string>Hydraulic variables</string>
            </property>
@@ -564,91 +716,91 @@
             <item row="0" column="0">
              <layout class="QVBoxLayout" name="verticalLayout_7">
               <item>
-               <widget class="QCheckBox" name="S1_2">
+               <widget class="QCheckBox" name="S1">
                 <property name="text">
                  <string>Wetted area of minor river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="S2_2">
+               <widget class="QCheckBox" name="S2">
                 <property name="text">
                  <string>Wetted area of major river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="B1_2">
+               <widget class="QCheckBox" name="B1">
                 <property name="text">
                  <string>Surface width of minor river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="B2_2">
+               <widget class="QCheckBox" name="B2">
                 <property name="text">
                  <string>Surface width of major river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="BS_2">
+               <widget class="QCheckBox" name="BS">
                 <property name="text">
                  <string>Surface width of storage area</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="P1_2">
+               <widget class="QCheckBox" name="P1">
                 <property name="text">
                  <string>Wetted perimeter of minor river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="P2_2">
+               <widget class="QCheckBox" name="P2">
                 <property name="text">
                  <string>Wetted perimeter of major river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="RH1_2">
+               <widget class="QCheckBox" name="RH1">
                 <property name="text">
                  <string>Hydaulic radius of minor river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="RH2_2">
+               <widget class="QCheckBox" name="RH2">
                 <property name="text">
                  <string>Hydaulic radius of major river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="SS_2">
+               <widget class="QCheckBox" name="SS">
                 <property name="text">
                  <string>Wetted area of storage area</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="VOL_2">
+               <widget class="QCheckBox" name="VOL">
                 <property name="text">
                  <string>Cumulative volume of the active river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="VOLS_2">
+               <widget class="QCheckBox" name="VOLS">
                 <property name="text">
                  <string>Cumulative volume of the storage area</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="BMAX_2">
+               <widget class="QCheckBox" name="BMAX">
                 <property name="text">
                  <string>Maximum surface width</string>
                 </property>
@@ -673,7 +825,7 @@
           </widget>
          </item>
          <item row="0" column="0">
-          <widget class="QGroupBox" name="box_WaterLevel_2">
+          <widget class="QGroupBox" name="box_WaterLevel">
            <property name="enabled">
             <bool>true</bool>
            </property>
@@ -699,56 +851,56 @@
             <item row="0" column="0">
              <layout class="QVBoxLayout" name="verticalLayout_8">
               <item>
-               <widget class="QCheckBox" name="ZREF_2">
+               <widget class="QCheckBox" name="ZREF">
                 <property name="text">
                  <string>Bottom elevation</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="RGC_2">
+               <widget class="QCheckBox" name="RGC">
                 <property name="text">
                  <string>Left bank water level</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="RDC_2">
+               <widget class="QCheckBox" name="RDC">
                 <property name="text">
                  <string>Right bank water level</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="Z_2">
+               <widget class="QCheckBox" name="Z">
                 <property name="text">
                  <string>Water level</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="Y_2">
+               <widget class="QCheckBox" name="Y">
                 <property name="text">
                  <string>Water depth</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="HMOY_2">
+               <widget class="QCheckBox" name="HMOY">
                 <property name="text">
                  <string>Average water depth</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="ZMAX_2">
+               <widget class="QCheckBox" name="ZMAX">
                 <property name="text">
                  <string>Maximal water level</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="ZMIN_2">
+               <widget class="QCheckBox" name="ZMIN">
                 <property name="text">
                  <string>Minimal water level</string>
                 </property>
@@ -773,7 +925,7 @@
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QGroupBox" name="box_time_2">
+          <widget class="QGroupBox" name="box_time">
            <property name="title">
             <string>Time</string>
            </property>
@@ -787,28 +939,28 @@
             <item row="0" column="0">
              <layout class="QVBoxLayout" name="verticalLayout_9">
               <item>
-               <widget class="QCheckBox" name="TZMA_2">
+               <widget class="QCheckBox" name="TZMA">
                 <property name="text">
                  <string>Date of maximal water level</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="TZMI_2">
+               <widget class="QCheckBox" name="TZMI">
                 <property name="text">
                  <string>Date of minimal water level</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="TOND_2">
+               <widget class="QCheckBox" name="TOND">
                 <property name="text">
                  <string>Arrival time of the floodwave</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="TQMA_2">
+               <widget class="QCheckBox" name="TQMA">
                 <property name="text">
                  <string>Date of maximum flow rate</string>
                 </property>
@@ -833,7 +985,7 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QGroupBox" name="box_velocity_2">
+          <widget class="QGroupBox" name="box_velocity">
            <property name="title">
             <string>Flow rates and velocities</string>
            </property>
@@ -847,70 +999,70 @@
             <item row="1" column="0">
              <layout class="QVBoxLayout" name="verticalLayout_10">
               <item>
-               <widget class="QCheckBox" name="QMIN_2">
+               <widget class="QCheckBox" name="QMIN">
                 <property name="text">
                  <string>Flow rate in minor river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="QMAJ_2">
+               <widget class="QCheckBox" name="QMAJ">
                 <property name="text">
                  <string>Flow rate in major river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="VMIN_2">
+               <widget class="QCheckBox" name="VMIN">
                 <property name="text">
                  <string>Velocity of minor river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="VMAJ_2">
+               <widget class="QCheckBox" name="VMAJ">
                 <property name="text">
                  <string>Velocity of major river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="Q2G_2">
+               <widget class="QCheckBox" name="Q2G">
                 <property name="text">
                  <string>Flow rate in left major river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="Q2D_2">
+               <widget class="QCheckBox" name="Q2D">
                 <property name="text">
                  <string>Flow rate in right major river bed</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="VZMX_2">
+               <widget class="QCheckBox" name="VZMX">
                 <property name="text">
                  <string>Velocity for the maximal water level</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="VINF_2">
+               <widget class="QCheckBox" name="VINF">
                 <property name="text">
                  <string>Minimum minor river bed velocity</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="VSUP_2">
+               <widget class="QCheckBox" name="VSUP">
                 <property name="text">
                  <string>Maximum major river bed velocity</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="QMAX_2">
+               <widget class="QCheckBox" name="QMAX">
                 <property name="text">
                  <string>Maximum flow rate</string>
                 </property>
@@ -935,7 +1087,7 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QGroupBox" name="box_stress_2">
+          <widget class="QGroupBox" name="box_stress">
            <property name="title">
             <string>Shear stresses and energy</string>
            </property>
@@ -949,21 +1101,21 @@
             <item row="0" column="0">
              <layout class="QVBoxLayout" name="verticalLayout_11">
               <item>
-               <widget class="QCheckBox" name="TAUF_2">
+               <widget class="QCheckBox" name="TAUF">
                 <property name="text">
                  <string>Bottom shear stress</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="CHAR_2">
+               <widget class="QCheckBox" name="CHAR">
                 <property name="text">
                  <string>Hydraulic head</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="EMAX_2">
+               <widget class="QCheckBox" name="EMAX">
                 <property name="text">
                  <string>Maximum energy</string>
                 </property>
@@ -988,7 +1140,7 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QGroupBox" name="box_coef_2">
+          <widget class="QGroupBox" name="box_coef">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -1008,28 +1160,28 @@
             <item row="0" column="0">
              <layout class="QVBoxLayout" name="verticalLayout_12">
               <item>
-               <widget class="QCheckBox" name="KMIN_2">
+               <widget class="QCheckBox" name="KMIN">
                 <property name="text">
                  <string>Minor friction coefficient</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="KMAJ_2">
+               <widget class="QCheckBox" name="KMAJ">
                 <property name="text">
                  <string>Major friction coefficient</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="FR_2">
+               <widget class="QCheckBox" name="FR">
                 <property name="text">
                  <string>Froude number</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="BETA_2">
+               <widget class="QCheckBox" name="BETA">
                 <property name="text">
                  <string>Coefficient beta of Debord's formula</string>
                 </property>
@@ -1059,22 +1211,15 @@
      </widget>
     </widget>
    </item>
-   <item row="2" column="0">
-    <widget class="QPushButton" name="bt_export">
-     <property name="text">
-      <string>Export Model</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../resources.qrc">
-       <normaloff>:/plugins/Mascaret/icones/mActionFileSave.png</normaloff>:/plugins/Mascaret/icones/mActionFileSave.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>24</width>
-       <height>24</height>
-      </size>
+   <item row="3" column="2" colspan="4">
+    <widget class="QLineEdit" name="lbl_lig">
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
     </widget>
+   </item>
+   <item row="0" column="1" colspan="5">
+    <widget class="QComboBox" name="cb_event"/>
    </item>
   </layout>
  </widget>

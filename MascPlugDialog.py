@@ -40,6 +40,7 @@ from .ClassMNT import ClassMNT
 #from .ClassMascaret import ClassMascaret
 #a tester :
 from .model.ClassMascaret_modif import ClassMascaret
+from .ClassParamExportDialog import  ClassParamExportDialog
 #TODO  ********************************************
 from .model.ClassCreatFilesModels import ClassCreatFilesModels
 from .ClassObservation import ClassEventObsDialog
@@ -265,7 +266,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(False)
+        self.ui.actionTest.setVisible(True)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(self.import_old_model_dgl)
@@ -713,10 +714,12 @@ class MascPlugDialog(QMainWindow):
     #    SETTINGS
     # *******************************
 
-    def export_run(self, clam=None):
+    def export_run(self, clam=None,folder_name_path= None ):
         if not clam:
             clam = ClassMascaret(self)
-        folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
+        if not folder_name_path :
+            folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
+
         if clam.copy_run_file(folder_name_path):
             self.add_info("Export is done.")
         else:
@@ -1028,19 +1031,41 @@ Version : {}
         :return:
         """
 
+        # case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
+        # if ok:
+        #     self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
+        #     run = "test"
+        #     rep_run = os.path.join(self.masplugPath, "mascaret_copy")
+        #     clam = ClassMascaret(self, rep_run=rep_run)
+        #     #clam.mascaret(self.Klist[self.listeState.index(case)], run, only_init=True)
+        #     clam .fct_only_init(self.Klist[self.listeState.index(case)], run)
+        #
+        #     with open(os.path.join(clam.dossierFileMasc, "FichierCas.txt"), "w") as fichier:
+        #         fichier.write("'mascaret.xcas'\n")
+        #     self.export_run(clam)
+        #     clam.del_folder_mas()
+        #
+
+
         case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
         if ok:
-            self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
-            run = "test"
-            rep_run = os.path.join(self.masplugPath, "mascaret_copy")
+            kernel  = self.Klist[self.listeState.index(case)]
+            dlgp = ClassParamExportDialog(self, kernel)
+            dlgp.exec_()
+            if dlgp.complet:
+                dict_export = dlgp.dict_accept.copy()
+            else:
+                return
+            #print(dict_export)
+            run = 'test'
+            rep_run = os.path.join(dict_export['path_rep'], "model_masc")
             clam = ClassMascaret(self, rep_run=rep_run)
-            #clam.mascaret(self.Klist[self.listeState.index(case)], run, only_init=True)
-            clam .fct_only_init(self.Klist[self.listeState.index(case)], run)
-
+            clam.fct_only_initv2(kernel, run, dict_export)
+            #
             with open(os.path.join(clam.dossierFileMasc, "FichierCas.txt"), "w") as fichier:
                 fichier.write("'mascaret.xcas'\n")
-            self.export_run(clam)
-            clam.del_folder_mas()
+            self.export_run(clam, folder_name_path=dict_export['path_rep'])
+            #clam.del_folder_mas()
 
     def import_resu_model(self):
         """
@@ -1061,7 +1086,6 @@ Version : {}
         """Test function"""
         # get_laws
         #self.chkt.debug_update_vers_meta(version="5.1.5")
-
 
     def update_ks_mesh_planim(self):
         """update value of the seleted profiles"""

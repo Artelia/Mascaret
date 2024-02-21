@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="/plugins/Mascaret">
+    <file>icones/mActionToggleEditing.png</file>
+    <file>icones/rep_only.png</file>
     <file>icones/check_all.png</file>
     <file>icones/icon_cancel.png</file>
     <file>icones/icon_clean.png</file>
@@ -45,6 +47,6 @@
     <file>icones/lawWQ.png</file>
     <file>icones/lawObs.png</file>
     <file>icones/graph_struct.png</file>
-     <file>icones/save.png</file>
+    <file>icones/save.png</file>
   </qresource>
 </RCC>

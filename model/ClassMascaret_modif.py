@@ -135,13 +135,11 @@ class ClassMascaret:
             # TODO no make with event
             self.wq.law_tracer()
             self.wq.init_conc_tracer()
-        if only_init:
-            dict_scen, comments = self.creat_dict_scen_only_init(par, noyau)
-        else:
+        if not only_init:
             dict_scen, comments = self.creat_dict_scen(par, noyau, run)
-
         if par["LigEauInit"] and not par["initialisationAuto"] and noyau != "steady":
             dict_scen = self.select_init_run_case(dict_scen)
+
 
         # creation Xcas
         dict_lois, dico_loi_struct = self.clfile.creer_xcas(noyau)
@@ -152,31 +150,31 @@ class ClassMascaret:
 
         return par, dict_scen, comments, dict_lois, dico_loi_struct
 
-    def creat_dict_scen_only_init(self, par, noyau):
-        """ Create scen dictionnary if only initialisation
-        :param par : parameters
-        :param noyau: kernel
-        :param run: name run
-        """
-        if par["evenement"] and noyau != "steady":
-            dict_scen_tmp = self.mdb.select("events", "run", "starttime")
-            if len(dict_scen_tmp["name"]) == 0:
-                self.mgis.add_info("**** Warning: scenario not found  ***")
-            scen2, ok = QInputDialog.getItem(
-                None, "Select Events", "Select Events", dict_scen_tmp["name"], 0, False
-            )
-            if ok:
-                id = dict_scen_tmp["name"].index(scen2)
-                dict_scen = {
-                    "name": [dict_scen_tmp["name"][id]],
-                    "starttime": [dict_scen_tmp["starttime"][id]],
-                    "endtime": [dict_scen_tmp["endtime"][id]],
-                    "run": [dict_scen_tmp["run"][id]],
-                }
-
-        else:
-            dict_scen = {"name": ["test_api"]}
-        return dict_scen, ''
+    # def creat_dict_scen_only_init(self, par, noyau):
+    #     """ Create scen dictionnary if only initialisation
+    #     :param par : parameters
+    #     :param noyau: kernel
+    #     :param run: name run
+    #     """
+    #     if par["evenement"] and noyau != "steady":
+    #         dict_scen_tmp = self.mdb.select("events", "run", "starttime")
+    #         if len(dict_scen_tmp["name"]) == 0:
+    #             self.mgis.add_info("**** Warning: scenario not found  ***")
+    #         scen2, ok = QInputDialog.getItem(
+    #             None, "Select Events", "Select Events", dict_scen_tmp["name"], 0, False
+    #         )
+    #         if ok:
+    #             id = dict_scen_tmp["name"].index(scen2)
+    #             dict_scen = {
+    #                 "name": [dict_scen_tmp["name"][id]],
+    #                 "starttime": [dict_scen_tmp["starttime"][id]],
+    #                 "endtime": [dict_scen_tmp["endtime"][id]],
+    #                 "run": [dict_scen_tmp["run"][id]],
+    #             }
+    #
+    #     else:
+    #         dict_scen = {"name": ["test_api"]}
+    #     return dict_scen, ''
 
     def creat_dict_scen(self, par, noyau, run):
         """ Create scen dictionnary
@@ -252,16 +250,21 @@ class ClassMascaret:
             'masc' : self,
             'cond_api':self.cond_api
         }
-
-        task_mas =  TaskMascaret('TaskMascaret', dict_task)
-        task_mas.message.connect(self.print_info)
-        QgsApplication.taskManager().addTask(task_mas)
-        # obligatoir  sinon task ignorer
-        QgsMessageLog.logMessage('Send Task', 'TaskMascaret', Qgis.Info)
+        if self.mgis.task_use:
+            if QgsApplication.taskManager().activeTasks():
+                self.mgis.add_info("**** Warning : Please wait before starting a new task.")
+                QMessageBox.warning(None, "Warning", "There are tasks in progress. \n "
+                                   "Wait for them to complete before starting a new task.")
+                return
+            task_mas =  TaskMascaret('TaskMascaret', dict_task)
+            task_mas.message.connect(self.print_info)
+            QgsApplication.taskManager().addTask(task_mas)
+            # obligatoir  sinon task ignorer
+            QgsMessageLog.logMessage('Send Task', 'TaskMascaret', Qgis.Info)
+        else:
+            task_mas = TaskMascaret('TaskMascaret', dict_task)
+            task_mas.run()
         return
-
-
-
 
     def fct_comment(self):
         """
@@ -334,27 +337,15 @@ class ClassMascaret:
                 self.mgis.add_info("Cancel run: {}".format(scen), dbg=True)
 
         return dict_scen
-
     def copy_lig(self):
         """Load .lig file in run model"""
-        if int(qVersion()[0]) < 5:  # qt4
-            fichiers = QFileDialog.getOpenFileNames(
-                None,
-                "File Selection",
-                # self.dossierFileMasc,
-                self.mgis.repProject,
-                "File (*.lig)",
-            )
-
-        else:  # qt5
-            fichiers, _ = QFileDialog.getOpenFileNames(
-                None,
-                "File Selection",
-                self.mgis.repProject,
-                # self.dossierFileMasc,
-                "File (*.lig)",
-            )
-
+        fichiers, _ = QFileDialog.getOpenFileNames(
+            None,
+            "File Selection",
+            self.mgis.repProject,
+            # self.dossierFileMasc,
+            "File (*.lig)",
+        )
         try:
             fichiers = fichiers[0]
             self.mgis.up_rep_project(fichiers)
@@ -362,6 +353,14 @@ class ClassMascaret:
             self.mgis.add_info("Cancel  init file")
             return
 
+        try:
+            shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
+        except Exception as e:
+            self.mgis.add_info("Error copying file")
+            self.mgis.add_info("{}".format(e))
+
+    def copy_lig_only(self,fichiers):
+        """Load .lig file in run model"""
         try:
             shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
         except Exception as e:
@@ -423,9 +422,9 @@ class ClassMascaret:
             # for i in range(0, len(files)):
             #     shutil.copy2(
             #         os.path.join(self.dossierFileMasc, files[i]), os.path.join(rep, files[i])
-            #     )
+            #     )"gztar"
             tar_local = shutil.make_archive(
-                os.path.join(rep,os.path.basename(self.dossierFileMasc)), "gztar", os.path.dirname(self.dossierFileMasc),
+                os.path.join(rep,os.path.basename(self.dossierFileMasc)),"zip" , os.path.dirname(self.dossierFileMasc),
                 os.path.basename(self.dossierFileMasc)
             )
             return True
@@ -579,22 +578,6 @@ class ClassMascaret:
                     'par': par}
         init_task_.update_inputs(up_param)
         init_task_.run()
-
-        # if noyau == "steady":
-        #     self.init_scen_steady(par, dict_lois)
-        # elif par["evenement"]:
-        #     date_debut = self.init_scen_even(par, dict_lois, idx, dict_scen)
-        # else:
-        #     # transcritical unsteady hors evenement
-        #     self.init_scen_trans_unsteady(par, dict_lois)
-        # if self.check_mobil_gate() and noyau == "unsteady":
-        #     self.create_mobil_gate_file()
-        # # select initial case
-        if noyau != "steady":
-            dict_scen = self.select_init_run_case(dict_scen)
-            if dict_scen["id_run_init"][0] != None:
-                self.clfile.opt_to_lig(dict_scen["id_run_init"][0], self.baseName)
-
         # delete "initialisationAuto" file
         for file in os.listdir(self.dossierFileMasc):
             if "_init.loi" in file or "_init.xcas" in file:
@@ -607,5 +590,67 @@ class ClassMascaret:
         # 'mascaret'))
         path = self.dossierFileMasc
         path = os.path.join(path, "cli_fg.obj")
+        cl.create_cli_fg(path)
+        del cl
+
+    def fct_only_initv2(self, noyau, run, dict_exp):
+        """
+        clean and model file creation
+        :param noyau: (str) kernel
+        :return:
+        """
+        par, dict_scen, comments, dict_lois, dico_loi_struct = self.mascaret_init(noyau, run,only_init=True)
+        # update  dict_scen
+        dict_scen = dict_exp['dict_scen']
+        dict_scen["id_run_init"] = None
+        if dict_exp['lig_eau_init']:
+            if dict_exp['lig'] :
+                self.copy_lig_only(dict_exp['path_copy'])
+            else:
+                dict_scen["id_run_init"] = dict_exp["id_run_init"]
+
+        # update  par
+        for key,item in dict_exp['par'].items():
+            if key in par.keys() :
+                par[key] = item
+
+        self.clfile.creer_xcas(noyau, par_init=dict_exp['par'])
+        par["initialisationAuto"] = False
+
+        if not par or not dict_scen or not dict_lois :
+            self.mgis.add_info("**** Error : Error at file creation of the model")
+            return
+
+        idx = 0
+        scen = dict_scen["name"][idx]
+
+        gbl_param = {'mdb': self.mdb,
+                     'dossier_file_masc': self.dossierFileMasc,
+                     'basename': self.baseName,
+                     'noyau': noyau,
+                     'run': run,
+                     'comments': comments,
+                     'dict_scen': dict_scen
+                     }
+        param_init = {'waterq': self.wq,
+                      'dict_lois': dict_lois,
+                      'dico_loi_struct': dico_loi_struct
+                      }
+        init_task_ = TaskMascInit(gbl_param, param_init)
+        up_param = {'scen': scen,
+                    'idx': idx,
+                    'par': par}
+        init_task_.update_inputs(up_param)
+        init_task_.run()
+        # delete "initialisationAuto" file
+        for file in os.listdir(self.dossierFileMasc):
+            if "_init.loi" in file or "_init.xcas" in file or "mascaret_linux" in file \
+                    or "mascaret.exe" in file:
+                path = os.path.join(self.dossierFileMasc, file)
+                if os.path.isfile(path):
+                    os.remove(path)
+
+        cl = ClassPostPreFG(self.mgis)
+        path = os.path.join(self.dossierFileMasc, "cli_fg.obj")
         cl.create_cli_fg(path)
         del cl
