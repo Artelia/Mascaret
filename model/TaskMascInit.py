@@ -177,6 +177,7 @@ class TaskMascInit():
 
             if self.par["LigEauInit"] and not self.par["initialisationAuto"] and self.noyau != "steady":
                 id_run_init = None
+                path_init = None
                 if "id_run_init" in self.dict_scen.keys():
                     id_run_init = self.dict_scen["id_run_init"][self.idx]
                 if "path_init" in self.dict_scen.keys():
