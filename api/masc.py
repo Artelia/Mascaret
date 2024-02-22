@@ -12,8 +12,9 @@ import os
 import sys
 
 import numpy as np
-
-
+#Artelia
+from io import StringIO
+# end
 # from execution.mascaret_cas import MascaretCas
 # from utils.exceptions import TelemacException
 
@@ -121,6 +122,11 @@ class Mascaret:
 
         @param log_level (str) Logger level
         """
+        #Artelia
+        self.log_stream = StringIO()  # Créer un StringIO pour stocker les messages de journalisation
+        handler = logging.StreamHandler(self.log_stream)
+        self.logger.addHandler(handler)
+        #end
         if log_level == "INFO":
             i_log = logging.INFO
         elif log_level == "DEBUG":

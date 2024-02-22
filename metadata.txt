@@ -20,7 +20,7 @@ qgisMinimumVersion=3.10
 qgisMaximumVersion=3.99
 
 
-version=5.1.9
+version=5.1.10
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -31,6 +31,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    5.1.10 : Reorganization of the calculation launch code
+             Modified the model export function with the GUI addition and folder compression
     5.1.9  : Added functionality to generate profiles and basins layers for use in cartoZi
     5.1.8  : Added functionality to export profiles, outputs, or stations
     5.1.7  : Importation and visualisation of river minor bed

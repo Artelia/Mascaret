@@ -72,7 +72,8 @@ class ClassParameterDialog(QDialog):
         self.combo = {
             "code": {1: "Steady", 2: "Unsteady", 3: "Transcritical"},
             "compositionLits": {0: "Aucun", 1: "Debord", 2: "fond/berge"},
-            "option": {1: "Sections de calcul", 2: "couche Points de sortie"},
+            "option": {1: "Sections de calcul", 2: "couche Points de sortie",
+                       3:"couche profils + amont/aval singularite"},
             "postProcesseur": {1: "Rubens", 2: "Opthyca"},
             "critereArret": {
                 1: "Temps maximum",

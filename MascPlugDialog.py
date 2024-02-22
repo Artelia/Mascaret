@@ -36,7 +36,9 @@ from .ClassEditKsDialog import ClassEditKsDialog
 from .ClassImportExportDialog import ClassDlgExport, ClassDlgImport, CloneTask
 from .ClassImport_res import ClassImportRes
 from .ClassMNT import ClassMNT
-from .ClassMascaret import ClassMascaret
+from .model.ClassMascaret import ClassMascaret
+from .ClassParamExportDialog import  ClassParamExportDialog
+from .model.ClassCreatFilesModels import ClassCreatFilesModels
 from .ClassObservation import ClassEventObsDialog
 from .ClassParameterDialog import ClassParameterDialog
 from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire
@@ -615,8 +617,9 @@ class MascPlugDialog(QMainWindow):
                 self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
             rep_run = os.path.join(self.masplugPath, "mascaret_copy")
             clam = ClassMascaret(self, rep_run=rep_run)
+            # clam = ClassCreatFilesModels(self.mdb, rep_run)
 
-            clam.creer_xcas(self.Klist[self.listeState.index(case)])
+            clam.clfile.creer_xcas(self.Klist[self.listeState.index(case)])
             file_name_path, _ = QFileDialog.getSaveFileName(
                 self,
                 "saveFile",
@@ -632,7 +635,9 @@ class MascPlugDialog(QMainWindow):
         """create Xcas"""
         rep_run = os.path.join(self.masplugPath, "mascaret_copy")
         clam = ClassMascaret(self, rep_run=rep_run)
-        clam.creer_geo_ref()
+        clam.clfile.creer_geo_ref()
+        if clam.clfile.mess.get_critic_status():
+            self.add_info(clam.clfile.mess.message())
         # clam.creer_geo()
 
         file_name_path, _ = QFileDialog.getSaveFileName(
@@ -654,8 +659,11 @@ class MascPlugDialog(QMainWindow):
 
         rep_run = os.path.join(self.masplugPath, "mascaret_copy")
         clam = ClassMascaret(self, rep_run=rep_run)
+
         # Appel de la fonction creerGEOCasier() definie dans Class_Mascaret.py
-        clam.creer_geo_casier()
+        clam.clfile.creer_geo_casier()
+        if clam.clfile.mess.get_critic_status():
+            self.add_info(clam.clfile.mess.message())
 
         file_name_path, _ = QFileDialog.getSaveFileName(
             self,
@@ -688,6 +696,7 @@ class MascPlugDialog(QMainWindow):
             if ok:
                 clam = ClassMascaret(self)
                 clam.mascaret(self.Klist[self.listeState.index(case)], run)
+        return
 
     def del_run(self):
         """Delete run of curent model"""
@@ -700,11 +709,13 @@ class MascPlugDialog(QMainWindow):
     #    SETTINGS
     # *******************************
 
-    def export_run(self, clam=None):
+    def export_run(self, clam=None,folder_name_path= None ):
         if not clam:
             clam = ClassMascaret(self)
-        folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
-        if clam.copy_run_file(folder_name_path):
+        if not folder_name_path :
+            folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
+
+        if clam.compress_run_file(folder_name_path):
             self.add_info("Export is done.")
         else:
             self.add_info("Export failed.")
@@ -1014,19 +1025,24 @@ Version : {}
         model creation to run with api
         :return:
         """
-
         case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
         if ok:
-            self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
-            run = "test"
-            rep_run = os.path.join(self.masplugPath, "mascaret_copy")
+            kernel  = self.Klist[self.listeState.index(case)]
+            dlgp = ClassParamExportDialog(self, kernel)
+            dlgp.exec_()
+            if dlgp.complet:
+                dict_export = dlgp.dict_accept.copy()
+            else:
+                return
+            run = 'test'
+            rep_run = os.path.join(dict_export['path_rep'], dict_export['name_rep'])
             clam = ClassMascaret(self, rep_run=rep_run)
-            clam.mascaret(self.Klist[self.listeState.index(case)], run, only_init=True)
-
+            clam.fct_only_init(kernel, run, dict_export)
+            #
             with open(os.path.join(clam.dossierFileMasc, "FichierCas.txt"), "w") as fichier:
                 fichier.write("'mascaret.xcas'\n")
-            self.export_run(clam)
-            clam.del_folder_mas()
+            self.export_run(clam, folder_name_path=dict_export['path_rep'])
+            #clam.del_folder_mas()
 
     def import_resu_model(self):
         """
@@ -1047,7 +1063,7 @@ Version : {}
         """Test function"""
         # get_laws
         #self.chkt.debug_update_vers_meta(version="5.1.5")
-
+        pass
 
     def update_ks_mesh_planim(self):
         """update value of the seleted profiles"""

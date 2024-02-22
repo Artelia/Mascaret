@@ -301,7 +301,9 @@ class GraphProfilResultDialog(QWidget):
                 # creation Complete table si information n'existat pour le run
                 cl_geo = ClassResProfil()
                 self.cas_prt = cl_geo.cas_prt
-                cl_geo.plani_stock(self.info_graph[self.typ_res]["zmax"], self.cur_run, self.mdb)
+                txterr = cl_geo.plani_stock(self.info_graph[self.typ_res]["zmax"], self.cur_run, self.mdb)
+                if self.mgis.DEBUG and txterr:
+                    print(txterr)
                 del cl_geo
 
                 elem = self.get_run_plani(pk, get_bas=True)

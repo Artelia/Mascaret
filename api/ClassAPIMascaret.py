@@ -18,7 +18,6 @@ email                :
  ***************************************************************************/
 
 """
-import gc
 import os
 import sys
 
@@ -26,7 +25,8 @@ try:
     # Plugin
     from .masc import Mascaret
     from ..Structure.ClassFloodGate import ClassFloodGate
-except:
+    from ..ClassMessage import ClassMessage
+except  ModuleNotFoundError:
     # autonome python
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from masc import Mascaret
@@ -42,8 +42,9 @@ def check_init(file):
 class ClassAPIMascaret:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, main):
+    def __init__(self, main, dbg=False):
         # def __init__(self):
+        self.DEBUG = dbg
 
         self.npoin = 0
         self.zini = 0
@@ -63,6 +64,7 @@ class ClassAPIMascaret:
         self.tracer = False
         self.basin = False
         self.filelig = None
+        self.info = ''
 
         self.results_api = {}
 
@@ -73,7 +75,7 @@ class ClassAPIMascaret:
             self.mgis = None
             self.dossierFileMasc = main["RUN_REP"]
             os.chdir(main["RUN_REP"])
-            self.DEBUG = main["DEBUG"]
+
             self.baseName = main["BASE_NAME"]
             self.clfg = ClassFloodGate(self)
             self.mobil_struct = self.clfg.fg_active()
@@ -81,11 +83,12 @@ class ClassAPIMascaret:
             self.clmas = main
             self.mgis = self.clmas.mgis
             self.dossierFileMasc = self.clmas.dossierFileMasc
-            self.DEBUG = self.mgis.DEBUG
             self.baseName = self.clmas.baseName
             # floodgat
             self.clfg = ClassFloodGate(self)
             self.mobil_struct = self.clfg.fg_active()
+            self.mess = ClassMessage()
+            self.num_mess = 0
 
     def initial(self, casfile):
         """
@@ -244,7 +247,6 @@ class ClassAPIMascaret:
         self.zmax_co = self.masc.get("Model.MaxControlZ")
         self.sect_co = self.masc.get("Model.ControlSection")
 
-        # if self.DEBUG:
         self.mess_crit_stop()
 
     def mess_crit_stop(self):
@@ -326,6 +328,7 @@ class ClassAPIMascaret:
         return t0, t1, dtp
 
     def finalize(self):
+        self.info = self.masc.log_stream.getvalue()
         del self.masc
         if self.clfg is not None:
             self.clfg.finalize(self.tfin)
@@ -350,7 +353,9 @@ class ClassAPIMascaret:
 
     def add_info(self, txt):
         if self.mgis is not None:
-            self.mgis.add_info(txt)
+            self.mess.add_mess('api_{}'.format(self.num_mess), 'info', txt)
+            self.num_mess += 1
+            # self.mgis.add_info(txt)
         else:
             print(txt)
 

@@ -23,7 +23,7 @@ import re
 from shutil import copy2
 import numpy as np
 import dateutil
-
+import string as st
 
 def del_2space(txt):
     return re.sub(" +", " ", txt)
@@ -238,7 +238,7 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
 
 
 def del_accent(ligne):
-    """supprime les accents du texte source"""
+    """Remove  accents in texte"""
     accents = {
         "a": ["à", "ã", "á", "â"],
         "e": ["é", "è", "ê", "ë"],
@@ -260,19 +260,32 @@ def copy_dir_to_dir(src, target):
 
 
 def del_symbol(ligne):
-    """supprime les accents du texte source"""
+    """supprime les symbol du texte source"""
     accents = {"_": ["-", "."]}
     for char, accented_chars in accents.items():
         for accented_char in accented_chars:
             ligne = ligne.replace(accented_char, char)
     return ligne
 
+def del_symbolv2(txt, exclud=[]):
+    """
+     Remove symbol in the text
+     Args:
+        :param txt: (string) text to change
+     Return :
+        :return: (string)text without symbol
+    """
+    special_char = [pct for pct in st.punctuation if pct not in exclud]
+    newtxt = "".join(filter(lambda char: char not in special_char, txt))
+    return newtxt
+
 
 def replace_all(txt, dico):
     """
     Replace several items
-    :param txt: text orginal
-    :param dico: de remplacement des variable
+    Args:
+        :param txt: text orginal
+        :param dico: de remplacement des variable
     :return:
     """
     for i in dico:

@@ -23,10 +23,9 @@ import numpy as np
 
 
 class ClassMascStruct:
-    def __init__(self, mgis):
-        self.mgis = mgis
-        self.mdb = mgis.mdb
-        self.debug = mgis.DEBUG
+    def __init__(self, mdb):
+        self.mdb = mdb
+
 
     def get_list_law(self, id_config):
         """

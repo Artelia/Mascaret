@@ -223,25 +223,29 @@ class ClassMascWQ:
 
     def create_filemet(self, dossier=None, typ_time=None, datefirst=None, dateend=None):
         """creation .met file"""
+        exit_satus = False
         if dossier is None:
             dossier = self.dossierFileMasc
         order = "id"
         where = "active=true"
         meteo_trac = self.mdb.select("meteo_config", where, order)
         if not meteo_trac["id"]:
-            self.mgis.add_info("Warning: Please select the meteo configuration for tracers")
-            return
+            txt = ("Please select the meteo configuration for tracers")
+            exit_satus = True
+            return exit_satus, txt
         deb_time = None
         end_time = None
         if typ_time == "date" and meteo_trac["starttime"][0] is not None:
             duree = int((dateend - datefirst).total_seconds())
             if duree < 0:
-                self.mgis.add_info("Warning: Scenario date aren't correct.")
-                return
+                txt = ("Scenario date aren't correct.")
+                exit_satus = True
+                return exit_satus, txt
             dif_time = int((datefirst - meteo_trac["starttime"][0]).total_seconds())
             if dif_time < 0:
-                self.mgis.add_info("Warning: date for meteo law aren't correct.")
-                return
+                txt =("Date for meteo law aren't correct.")
+                exit_satus = True
+                return exit_satus, txt
             deb_time = dif_time
             end_time = dif_time + duree
 
@@ -258,8 +262,9 @@ class ClassMascWQ:
         )
 
         if meteo_val == [] or meteo_val is None:
-            self.mgis.add_info("Warning: Please fill the meteo conditions for tracers")
-            return
+            txt = ("Please fill the meteo conditions for tracers")
+            exit_satus = True
+            return exit_satus, txt
 
         fich = open(os.path.join(dossier, "mascaret.met"), "w")
 
@@ -310,3 +315,4 @@ class ClassMascWQ:
                 ligne += "{} ".format(val)
         fich.write(ligne)
         fich.close()
+        return exit_satus, ''

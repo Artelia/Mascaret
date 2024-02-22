@@ -1315,7 +1315,6 @@ $BODY$
 
             sql = """UPDATE {0}.{1} SET {2}  WHERE {3}='{4}'"""
             self.run_query(sql.format(self.SCHEMA, table, ", ".join(tab_var), var, nom))
-            self.mgis.add_info("function update end", dbg=True)
 
     def copy(self, table, var, fichier):
         """
