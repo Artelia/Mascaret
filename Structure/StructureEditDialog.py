@@ -164,6 +164,9 @@ class ClassStructureEditDialog(QDialog):
 
         self.mdb.delete("profil_struct", where="id_config = {}".format(self.id_struct))
         self.mdb.insert_res("profil_struct", values, colonnes)
+        absc= feature["abscissa"][0]
+        tab = {self.id_struct:{"abscissa" : absc}}
+        self.mdb.update("struct_config", tab , var="id")
 
     def change_met_calc(self, idx):
         if not self.is_loading:

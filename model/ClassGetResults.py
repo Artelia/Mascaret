@@ -459,7 +459,8 @@ class ClassGetResults:
                 self.save_new_results(val, id_run)
                 self.save_run_graph(val, id_run, type_res)
                 del val
-        if cond_api and len(save_res_struct) > 2:
+
+        if cond_api and len(save_res_struct) >= 2:
             self.stock_res_api(save_res_struct[0], save_res_struct[1])
 
     def save_new_results(self, val, id_run):
@@ -560,7 +561,6 @@ class ClassGetResults:
             "type_var": "float",
         }
         id_var = self.mdb.check_id_var(var_info)
-
         dico_pk = {}
         dico_time = {}
         d_res = {}
@@ -575,6 +575,7 @@ class ClassGetResults:
                 "t": dico_res[id_config]["TIME"],
                 "v": dico_res[id_config]["ZSTR"],
             }
+
         for (pk, var), v in d_res.items():
             values.append(
                 [
@@ -585,6 +586,7 @@ class ClassGetResults:
                     "{" + ",".join(str(i_v) for i_v in v["v"]) + "}",
                 ]
             )
+
         if len(values) > 0:
             self.mdb.run_query(
                 "INSERT INTO {}.results_by_pk (id_runs, pknum, var, time, val) ".format(

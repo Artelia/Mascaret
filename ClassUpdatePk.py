@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
  """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -52,9 +53,10 @@ class ClassUpdatePk(QDialog):
             "lateral_inflows",
             "lateral_weirs",
             "tracer_lateral_inflows",
-            "outputs",
+            "outputs"
         ]
-        self.liste_tables = self.lst_tables_p + self.lst_tables_pt
+        self.other = ["struct_config"]
+        self.liste_tables = self.lst_tables_p + self.lst_tables_pt + self.other
         # self.liste_tables =  self.lst_tables_p + self.lst_tables_pt
         self.parent = {}
         self.init_gui()
@@ -103,6 +105,23 @@ class ClassUpdatePk(QDialog):
                 sql += "SELECT {0}.update_abscisse_profil('{0}','{0}.{1}','{0}.{2}')" ";\n".format(
                     self.mdb.SCHEMA, table, "branchs"
                 )
+            elif table is "struct_config":
+                feature = self.mdb.select(table, list_var=["id", "id_prof_ori"])
+                if feature:
+                    if len(feature['id']):
+                        for idx, gid in enumerate(feature['id']):
+                            where = "gid = '{0}' ".format(feature["id_prof_ori"][idx])
+                            feat = self.mdb.select(
+                                "profiles", where=where, list_var=["abscissa", "branchnum"]
+                            )
+                            if feat:
+                                if len(feat["abscissa"]) > 0:
+                                    sql += "UPDATE {0}.{1} SET abscissa={2}, branchnum={3} WHERE id={4};\n".format(
+                                        self.mdb.SCHEMA,
+                                        table,
+                                        feat['abscissa'][0],
+                                        feat['branchnum'][0],
+                                        gid)
         self.mdb.run_query(sql)
         self.mgis.add_info("Update pk Done", dbg=True)
 
