@@ -531,7 +531,8 @@ class ClassGetResults:
                     "{" + ",".join(str(i) for i in v["pk"]) + "}",
                 ]
             )
-        if len(values) > 0:
+        rows = self.mdb.select_one("results_sect", where="id_runs={}".format(id_run), list_var=["id_runs"])
+        if len(values) > 0 and rows is None:
             self.mdb.run_query(
                 "INSERT INTO {}.results_sect(id_runs, branch, section, pk) ".format(self.mdb.SCHEMA)
                 + "VALUES (%s, %s, %s, %s)",

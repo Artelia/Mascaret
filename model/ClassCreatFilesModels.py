@@ -1058,6 +1058,7 @@ class ClassCreatFilesModels:
     def add_wq_xcas(self, fichier_cas, noyau, dict_libres):
         """Modification of xcas for Water Quality"""
         # requête pour récupérer les paramètres
+
         cas = fichier_cas.find("parametresCas")
         sql = (
             "SELECT parametre, {0}, balise1, balise2 FROM {1}.{2} "
@@ -1168,12 +1169,18 @@ class ClassCreatFilesModels:
         lois = SubElement(tracer_law, "loisTracer")
         if nb > 0:
             for name in list_loi:
-                struct = SubElement(lois, "structureSParametresLoiTraceur")
-                SubElement(struct, "nom").text = name
-                SubElement(struct, "modeEntree").text = "1"
-                SubElement(struct, "fichier").text = "{}_tra.loi".format(del_symbol(name.lower()))
-                SubElement(struct, "uniteTps").text = "-0"
-                SubElement(struct, "nbPoints").text = "-0"
+                try :
+                    struct = SubElement(lois, "structureSParametresLoiTraceur")
+                    SubElement(struct, "nom").text = name
+                    SubElement(struct, "modeEntree").text = "1"
+                    SubElement(struct, "fichier").text = "{}_tra.loi".format(del_symbol(name.lower()))
+                    SubElement(struct, "uniteTps").text = "-0"
+                    SubElement(struct, "nbPoints").text = "-0"
+                except Exception as err:
+                    txt = "Check  water quality laws (extremities,inflows)\n"
+                    txt += str(err)
+                    self.mess.add_mess("WQLoi2", "critic", txt)
+                    return False
 
         # modif extremite info
         typ = [0, 0]
