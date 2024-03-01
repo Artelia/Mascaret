@@ -319,8 +319,11 @@ class ClassParamExportDialog(QDialog):
         Fill cb_init_run comboBox
         """
         dico_run = self.mdb.select_distinct("run", "runs")
-        if dico_run != {} and dico_run is not None:
-            liste_run = ["{}".format(v) for v in dico_run["run"]]
+        if  dico_run :
+            if dico_run != {} :
+                liste_run = ["{}".format(v) for v in dico_run["run"]]
+            else:
+                liste_run = []
         else:
             liste_run = []
         self.cb_init_run.addItems(liste_run)
@@ -333,7 +336,10 @@ class ClassParamExportDialog(QDialog):
         init_run = self.cb_init_run.currentText()
         condition = "run LIKE '{0}'".format(init_run)
         dico_scen = self.mdb.select_distinct("scenario", "runs", condition)
-        liste_scen = ["{}".format(v) for v in dico_scen["scenario"]]
+        if dico_scen:
+            liste_scen = ["{}".format(v) for v in dico_scen["scenario"]]
+        else:
+            liste_scen = []
         self.cb_init_scen.addItems(liste_scen)
 
     def fill_cb_event(self):
@@ -341,12 +347,15 @@ class ClassParamExportDialog(QDialog):
         Fill event comboBox
         """
         dict_scen_tmp = self.mdb.select("events", "run", "starttime")
-        if len(dict_scen_tmp["name"]) == 0:
-            QMessageBox.warning(
-                self, "WARNING", "**** Warning: scenario not found  ***"
-            )
-            self.close()
-        list_event = dict_scen_tmp["name"]
+        if dict_scen_tmp:
+            if len(dict_scen_tmp["name"]) == 0:
+                QMessageBox.warning(
+                    self, "WARNING", "**** Warning: scenario not found  ***"
+                )
+                self.close()
+            list_event = dict_scen_tmp["name"]
+        else:
+            list_event = []
         self.cb_event.addItems(list_event)
 
     def chg_init(self):
@@ -495,14 +504,17 @@ class ClassParamExportDialog(QDialog):
 
         if self.event:
             dict_scen_tmp = self.mdb.select("events", "run", "starttime")
-            scen_event = self.cb_event.currentText()
-            id = dict_scen_tmp["name"].index(scen_event)
-            self.dict_accept['dict_scen'] = {
-                "name": [dict_scen_tmp["name"][id]],
-                "starttime": [dict_scen_tmp["starttime"][id]],
-                "endtime": [dict_scen_tmp["endtime"][id]],
-                "run": [dict_scen_tmp["run"][id]],
-            }
+            if dict_scen_tmp:
+                scen_event = self.cb_event.currentText()
+                id = dict_scen_tmp["name"].index(scen_event)
+                self.dict_accept['dict_scen'] = {
+                    "name": [dict_scen_tmp["name"][id]],
+                    "starttime": [dict_scen_tmp["starttime"][id]],
+                    "endtime": [dict_scen_tmp["endtime"][id]],
+                    "run": [dict_scen_tmp["run"][id]],
+                }
+            else:
+                self.dict_accept['dict_scen'] = {"name": ["model"]}
         else:
             self.dict_accept['dict_scen'] = {"name": ["model"]}
         if not os.path.isdir(self.txt_rep.text()):
