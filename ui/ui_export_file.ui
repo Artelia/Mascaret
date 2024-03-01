@@ -7,53 +7,79 @@
     <x>0</x>
     <y>0</y>
     <width>704</width>
-    <height>786</height>
+    <height>805</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_29">
-   <item row="2" column="3" colspan="2">
-    <widget class="QComboBox" name="cb_init_scen"/>
+   <item row="0" column="1" colspan="5">
+    <widget class="QComboBox" name="cb_event"/>
    </item>
-   <item row="3" column="2" colspan="4">
-    <widget class="QLineEdit" name="lbl_lig">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="QToolButton" name="bt_lig">
-     <property name="text">
-      <string>...</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../resources.qrc">
-       <normaloff>:/plugins/Mascaret/icones/save_res.png</normaloff>:/plugins/Mascaret/icones/save_res.png</iconset>
-     </property>
-     <property name="iconSize">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label_event">
+     <property name="minimumSize">
       <size>
-       <width>30</width>
-       <height>30</height>
+       <width>150</width>
+       <height>0</height>
       </size>
      </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QRadioButton" name="rb_init">
      <property name="font">
       <font>
        <pointsize>11</pointsize>
       </font>
      </property>
      <property name="text">
-      <string>Initialize cas</string>
+      <string>Choice of event</string>
      </property>
     </widget>
    </item>
-   <item row="11" column="0" colspan="6">
+   <item row="7" column="0" colspan="6">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="font">
+        <font>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Name Model</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lname_export"/>
+     </item>
+    </layout>
+   </item>
+   <item row="8" column="5">
+    <widget class="QPushButton" name="bt_edit_param">
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Edit Parameters</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../resources.qrc">
+       <normaloff>:/plugins/Mascaret/icones/mActionToggleEditing.png</normaloff>:/plugins/Mascaret/icones/mActionToggleEditing.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0" colspan="6">
     <widget class="QPushButton" name="bt_export">
      <property name="text">
       <string>Export Model</string>
@@ -70,7 +96,7 @@
      </property>
     </widget>
    </item>
-   <item row="8" column="0" rowspan="2" colspan="6">
+   <item row="9" column="0" rowspan="2" colspan="6">
     <widget class="QTabWidget" name="tab_widget">
      <property name="enabled">
       <bool>true</bool>
@@ -488,7 +514,7 @@
            </property>
            <item>
             <property name="text">
-             <string>At all computational corss sections</string>
+             <string>At all computational cross sections</string>
             </property>
            </item>
            <item>
@@ -1071,7 +1097,7 @@
      </widget>
     </widget>
    </item>
-   <item row="5" column="0" colspan="6">
+   <item row="6" column="0" colspan="6">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="label">
@@ -1111,134 +1137,122 @@
      </item>
     </layout>
    </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="label_init_cas">
-     <property name="minimumSize">
-      <size>
-       <width>150</width>
-       <height>0</height>
-      </size>
-     </property>
+   <item row="1" column="0" colspan="6">
+    <widget class="QGroupBox" name="gb_init">
      <property name="font">
       <font>
        <pointsize>11</pointsize>
       </font>
      </property>
-     <property name="text">
-      <string>Select Initialize Case</string>
+     <property name="title">
+      <string>Selection of Model Initialization :</string>
      </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_init_cas">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Select exsiting Run</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QComboBox" name="cb_init_scen"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_init_lig">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Select .lig file</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="rb_init">
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Run initialization</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QRadioButton" name="rb_init_lig">
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Existing &quot;.lig&quot; file for initialization</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="3" column="1">
+       <widget class="QToolButton" name="bt_lig">
+        <property name="text">
+         <string>...</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources.qrc">
+          <normaloff>:/plugins/Mascaret/icones/save_res.png</normaloff>:/plugins/Mascaret/icones/save_res.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>30</width>
+          <height>30</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="QComboBox" name="cb_init_run"/>
+      </item>
+      <item row="3" column="2" colspan="2">
+       <widget class="QLineEdit" name="lbl_lig">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
-   </item>
-   <item row="1" column="2">
-    <widget class="QRadioButton" name="rb_init_lig">
-     <property name="font">
-      <font>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>to provide .lig file</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="4" colspan="2">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="0" column="1" colspan="5">
-    <widget class="QComboBox" name="cb_event"/>
-   </item>
-   <item row="2" column="1" colspan="2">
-    <widget class="QComboBox" name="cb_init_run"/>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label_event">
-     <property name="minimumSize">
-      <size>
-       <width>150</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Choice of event</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="5">
-    <widget class="QPushButton" name="bt_edit_param">
-     <property name="font">
-      <font>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Edit Parmaters</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../resources.qrc">
-       <normaloff>:/plugins/Mascaret/icones/mActionToggleEditing.png</normaloff>:/plugins/Mascaret/icones/mActionToggleEditing.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_init_lig">
-     <property name="minimumSize">
-      <size>
-       <width>150</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Select .lig file</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0" colspan="6">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <item>
-      <widget class="QLabel" name="label_3">
-       <property name="font">
-        <font>
-         <pointsize>11</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Name Model Save</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="lname_export"/>
-     </item>
-    </layout>
    </item>
   </layout>
  </widget>

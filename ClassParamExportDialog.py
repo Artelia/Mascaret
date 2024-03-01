@@ -302,7 +302,7 @@ class ClassParamExportDialog(QDialog):
 
         # if lig_eau
         lst_lig = [self.cb_init_run, self.cb_init_scen, self.rb_init, self.rb_init_lig,
-                   self.label_init_cas, self.lbl_lig, self.bt_lig, self.label_init_lig]
+                   self.label_init_cas, self.lbl_lig, self.bt_lig, self.label_init_lig, self.gb_init ]
         if not self.lig_eau_init :
             self.hide_lstobj(lst_lig)
         else:
@@ -311,8 +311,6 @@ class ClassParamExportDialog(QDialog):
             self.fill_cb_init_cas()
             self.rb_init.setChecked(True)
             self.chg_init()
-
-
 
     def fill_cb_init_run(self):
         """
