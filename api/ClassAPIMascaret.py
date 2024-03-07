@@ -329,6 +329,7 @@ class ClassAPIMascaret:
 
     def finalize(self):
         self.info = self.masc.log_stream.getvalue()
+        self.masc.delete_mascaret()
         del self.masc
         if self.clfg is not None:
             self.clfg.finalize(self.tfin)
