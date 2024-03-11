@@ -249,6 +249,7 @@ class ClassMascaret:
             task_mas.message.connect(self.print_info)
             QgsApplication.taskManager().addTask(task_mas)
             # obligatoir  sinon task ignorer
+
             QgsMessageLog.logMessage('Send Task', 'TaskMascaret', Qgis.Info)
         else:
             task_mas = TaskMascaret('TaskMascaret', dict_task)
@@ -386,7 +387,11 @@ class ClassMascaret:
         """Clean the run folder and copy the essential files to run mascaret"""
         files = os.listdir(self.dossierFileMasc)
         for i in range(0, len(files)):
-            os.remove(os.path.join(self.dossierFileMasc, files[i]))
+            try:
+                os.remove(os.path.join(self.dossierFileMasc, files[i]))
+            except (PermissionError, FileNotFoundError) as e:
+                self.mgis.add_info(f"Impossible to delete  {files[i]} : {e}")
+
         copy_dir_to_dir(self.dossierFileMascOri, self.dossierFileMasc)
         if not self.check_exe():
             self.mgis.download_bin()
