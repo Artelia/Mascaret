@@ -435,7 +435,7 @@ class ClassMascaret:
                 "Failed to delete {}. Reason: {}".format(self.dossierFileMasc, e), dbg=True
             )
 
-    def compress_run_file(self, rep):
+    def compress_run_file(self, rep, typ_compress="zip"):
         """Compress folder "rep" path
         Args:
             :param rep : Model folder
@@ -444,7 +444,7 @@ class ClassMascaret:
         """
         try:
             tar_local = shutil.make_archive(
-                os.path.join(rep, os.path.basename(self.dossierFileMasc)), "zip", os.path.dirname(self.dossierFileMasc),
+                os.path.join(rep, os.path.basename(self.dossierFileMasc)), typ_compress, os.path.dirname(self.dossierFileMasc),
                 os.path.basename(self.dossierFileMasc)
             )
             return True
@@ -578,6 +578,7 @@ class ClassMascaret:
             :param dict_exp: (dict) parameters of the files creation
         :return:
         """
+        self.mgis.add_info("**** Creation File ****")
         par, dict_scen, comments, dict_lois, dico_loi_struct = self.mascaret_init(noyau, run, only_init=True)
         # update  dict_scen
         dict_scen = dict_exp['dict_scen']
@@ -607,9 +608,12 @@ class ClassMascaret:
                      'noyau': noyau,
                      'run': run,
                      'comments': comments,
-                     'dict_scen': dict_scen
+                     'dict_scen': dict_scen,
+                     'waterq': self.wq,
+                     'masc': self,
+                     'cond_api': self.cond_api,
                      }
-        param_init = {'waterq': self.wq,
+        param_init = {
                       'dict_lois': dict_lois,
                       'dico_loi_struct': dico_loi_struct
                       }
@@ -619,6 +623,7 @@ class ClassMascaret:
                     'par': par}
         init_task_.update_inputs(up_param)
         init_task_.run()
+        self.mgis.add_info(init_task_.mess.message())
         if dict_exp['lig_eau_init']:
             if dict_exp['lig']:
                 self.copy_lig_only(dict_exp['path_copy'])

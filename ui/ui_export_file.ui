@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>704</width>
-    <height>805</height>
+    <height>847</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -51,6 +51,9 @@
      </item>
      <item>
       <widget class="QLineEdit" name="lname_export"/>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cb_type_comp"/>
      </item>
     </layout>
    </item>

@@ -74,6 +74,7 @@ class ClassParamExportDialog(QDialog):
         self.cb_init_run.currentIndexChanged.connect(self.fill_cb_init_cas)
         self.lname_export.editingFinished.connect(self.check_str)
 
+
     def init_ui(self):
         """initialisation variable of GUI"""
         self.combo = {
@@ -198,6 +199,8 @@ class ClassParamExportDialog(QDialog):
                 "nbCourant",
             ],
         }
+        self.d_type = {"*.zip" : "zip",
+                        "*.tar.gz": "gztar"}
         self.create_dico_para()
         self.init_gui()
         self.lname_export.setText("model_masc")
@@ -311,6 +314,11 @@ class ClassParamExportDialog(QDialog):
             self.fill_cb_init_cas()
             self.rb_init.setChecked(True)
             self.chg_init()
+
+        # type tar.gz or zip
+        for key, val in self.d_type.items():
+            self.cb_type_comp.addItem(key, val)
+        self.cb_type_comp.setCurrentIndex(0)
 
     def fill_cb_init_run(self):
         """
@@ -530,5 +538,6 @@ class ClassParamExportDialog(QDialog):
         self.dict_accept['path_rep'] = os.path.normpath(self.txt_rep.text())
         self.dict_accept['name_rep'] = os.path.normpath(self.lname_export.text().strip())
         self.dict_accept['par'] = self.new_par
+        self.dict_accept['typ_compress'] = self.cb_type_comp.currentData()
         self.complet = True
         self.close()

@@ -150,6 +150,7 @@ class TaskMascaret(QgsTask):
                         continue
                     tfin_run = time.time()
                     self.log_mess("Initialization Execution time : {} s".format(tfin_run - t0_run))
+                    time.sleep(1)
                     self.log_mess("===== End initialization =====")
                 if self.isCanceled():
                     self.log_mess("===== CANCEL RUN {} =====".format(self.run_), 'warning')

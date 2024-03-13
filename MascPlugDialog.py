@@ -709,13 +709,13 @@ class MascPlugDialog(QMainWindow):
     #    SETTINGS
     # *******************************
 
-    def export_run(self, clam=None,folder_name_path= None ):
+    def export_run(self, clam=None,folder_name_path= None, typ_compress="zip"):
         if not clam:
             clam = ClassMascaret(self)
         if not folder_name_path :
             folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
 
-        if clam.compress_run_file(folder_name_path):
+        if clam.compress_run_file(folder_name_path, typ_compress):
             self.add_info("Export is done.")
         else:
             self.add_info("Export failed.")
@@ -1034,6 +1034,7 @@ Version : {}
                 dict_export = dlgp.dict_accept.copy()
             else:
                 return
+
             run = 'test'
             rep_run = os.path.join(dict_export['path_rep'], dict_export['name_rep'])
             clam = ClassMascaret(self, rep_run=rep_run)
@@ -1041,8 +1042,8 @@ Version : {}
             #
             with open(os.path.join(clam.dossierFileMasc, "FichierCas.txt"), "w") as fichier:
                 fichier.write("'mascaret.xcas'\n")
-            self.export_run(clam, folder_name_path=dict_export['path_rep'])
-            #clam.del_folder_mas()
+            self.export_run(clam, folder_name_path=dict_export['path_rep'], typ_compress=dict_export['typ_compress'])
+            clam.del_folder_mas()
 
     def import_resu_model(self):
         """
