@@ -110,14 +110,12 @@ class TaskMascaret(QgsTask):
                           'dico_loi_struct': self.dico_loi_struct
                           }
             self.init_task = TaskMascInit(gbl_param, param_init)
-            self.comput_task = TaskMascComput(gbl_param)
             self.post_task = TaskMascPost(gbl_param)
 
             self.log_mess("===== BEGIN OF RUN {} =====".format(self.run_))
             for idx, scen in enumerate(self.dict_scen["name"]):
                 t0_run = time.time()
                 self.init_task.mess.clear_derror()
-                self.comput_task.mess.clear_derror()
                 self.post_task.mess.clear_derror()
                 self.log_mess("************** The current scenario is {} ************".format(scen))
                 self.log_mess("Kernel - Run - scenario : {} - {} - {} ".format(self.noyau, self.run_, scen))
@@ -137,6 +135,7 @@ class TaskMascaret(QgsTask):
 
                 if self.par["initialisationAuto"] and self.noyau != "steady":
                     self.log_mess("===== Run initialization =====")
+                    self.comput_task = TaskMascComput(gbl_param)
                     stat, up_param = self.run_task(self.comput_task, up_param, cpt_init=True)
                     if not stat:
                         # error ignor scenario
@@ -148,16 +147,20 @@ class TaskMascaret(QgsTask):
                         self.log_mess("****** Error : Postprocessing Initialization for {}_init  ******".format(scen),
                                       'warning')
                         continue
+                    self.comput_task.mess.clear_derror()
                     tfin_run = time.time()
                     self.log_mess("Initialization Execution time : {} s".format(tfin_run - t0_run))
                     time.sleep(1)
                     self.log_mess("===== End initialization =====")
+
                 if self.isCanceled():
                     self.log_mess("===== CANCEL RUN {} =====".format(self.run_), 'warning')
                     time.sleep(1)
                     self.taskTerminated.emit()
                     return False
+                self.comput_task = TaskMascComput(gbl_param)
                 stat, up_param = self.run_task(self.comput_task, up_param)
+                self.comput_task.mess.clear_derror()
                 if not stat:
                     self.log_mess("****** Error : Computing for {}  ******".format(scen), 'warning')
                     continue

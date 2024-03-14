@@ -1335,9 +1335,9 @@ class ClassCreatFilesModels:
         # liste_date = [date_debut + datetime.timedelta(hours=x) for x in range(duree)]
         for nom, loi in dict_lois.items():
             if loi["type"] == 1:
-                type = "Q"
+                type_ = "Q"
             elif loi["type"] == 2:
-                type = "H"
+                type_ = "H"
             else:
                 continue
 
@@ -1359,7 +1359,7 @@ class ClassCreatFilesModels:
                     "WHERE date >= '{3:%Y-%m-%d %H:%M}' "
                     "AND date <= '{4:%Y-%m-%d %H:%M}' "
                     "ORDER BY date ".format(
-                        self.mdb.SCHEMA, cd_hydro, type, date_debut + dt, date_fin + dt
+                        self.mdb.SCHEMA, cd_hydro, type_, date_debut + dt, date_fin + dt
                     )
                 )
                 obs[cd_hydro] = self.mdb.query_todico(sql_tab)
@@ -1371,7 +1371,7 @@ class ClassCreatFilesModels:
 
             with open(fichier_loi, "w") as fich_sortie:
                 fich_sortie.write("# {0}\n".format(nom))
-                if type == "Q":
+                if type_ == "Q":
                     fich_sortie.write("# Temps (H) Debit\n")
                 else:
                     fich_sortie.write("# Temps (H) Hauteur\n")
@@ -1407,7 +1407,7 @@ class ClassCreatFilesModels:
             self.check_timelaw(par, nom, initime, lasttime)
 
             if valeur_init is not None:
-                if type == "Q":
+                if type_ == "Q":
                     tab = {"time": [0, 3600], "flowrate": [valeur_init, valeur_init]}
                     self.creer_loi(nom, tab, 1, init=True)
                 else:

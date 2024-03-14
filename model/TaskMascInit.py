@@ -288,7 +288,7 @@ class TaskMascInit():
         # transcritical unsteady evenement
         date_debut = dict_scen["starttime"][idx]
         date_fin = dict_scen["endtime"][idx]
-        duree = int((date_fin - date_debut).total_seconds()) - 3600
+        duree = int((date_fin - date_debut).total_seconds()) #- 3600
 
         tab = {
             "tempsMax": {"valeur": str(duree), "balise1": "parametresTemporels"},
