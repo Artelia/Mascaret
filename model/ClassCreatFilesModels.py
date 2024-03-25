@@ -1563,7 +1563,7 @@ class ClassCreatFilesModels:
             fich.write("RESULTATS CALCUL,DATE :  {0:%d/%m/%y %H:%M}\n".format(date))
             fich.write("FICHIER RESULTAT MASCARET{0}\n".format(" " * 47))
             fich.write("{0} \n".format("-" * 71))
-            fich.write(" IMAX  = {0:4} NBBIEF= {1:3}\n".format(str(imax), str(nb_bief)))
+            fich.write(" IMAX  ={0:5d} NBBIEF={1:5d}\n".format(int(imax), int(nb_bief)))
 
             chaine = [""]
             for k in range(0, len(i1i2), 10):
