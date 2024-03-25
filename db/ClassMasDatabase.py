@@ -500,6 +500,8 @@ class ClassMasDatabase(object):
                       Maso.results_by_pk,
                       # hydro laws
                       Maso.law_config, Maso.law_values,
+                      # SPC isere
+                      Maso.links_mob_val
 
                       ]
             tables.sort(key=lambda x: x().order)

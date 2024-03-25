@@ -92,6 +92,7 @@ class CheckTab:
                                   '5.1.4',
                                   '5.1.5',
                                   '5.1.6',
+                                  '5.2.1',
                                   ]
         self.dico_modif = {'3.0.0': {
             'add_tab': [{'tab': Maso.struct_config, 'overwrite': False},
@@ -257,7 +258,14 @@ class CheckTab:
                 lambda: self.update_516(),
             ],
             },
-
+            "5.2.1" :{'add_tab': [ {'tab': Maso.links_mob_val, 'overwrite': False},],
+                      'alt_tab': [
+                          {'tab': 'links',
+                           'sql': [
+                                 "ALTER TABLE IF EXISTS {0}.links ADD COLUMN IF NOT EXISTS method_mob text;",
+                                 "ALTER TABLE IF EXISTS {0}.links ADD COLUMN IF NOT EXISTS active_mob boolean;",
+                             ]}, ],
+                      }
             # '3.0.x': { },
 
         }
@@ -1820,4 +1828,28 @@ $BODY$;
             return True
         except Exception:
             return False
+
+
+
+
+
+    #  ALTER TABLE spc_test.links ADD COLUMN IF NOT EXISTS method_mob text
+    #  ALTER TABLE spc_test.links ADD COLUMN IF NOT EXISTS active_mob boolean
+    #
+    #  new table ****************************************************
+
+    # CREATE TABLE IF NOT EXISTS spc_test.links_mob_val
+    # (
+    #     id_links integer NOT NULL,
+    #     id_order integer NOT NULL,
+    #     name_var text COLLATE pg_catalog."default" NOT NULL,
+    #     value text,
+    #     CONSTRAINT links_mob_val_pkey PRIMARY KEY (id_links, id_order, name_var)
+    # )
+    #
+    # TABLESPACE pg_default;
+    #
+    # ALTER TABLE IF EXISTS spc_test.links_mob_val
+    #     OWNER to postgres;
+
 
