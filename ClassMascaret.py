@@ -1759,6 +1759,23 @@ class ClassMascaret:
 
         return
 
+    def get_lig(self):
+        """Load .lig file in run model"""
+        filen = None
+        fichiers, _ = QFileDialog.getOpenFileNames(
+            None,
+            "File Selection",
+            self.mgis.repProject,
+            # self.dossierFileMasc,
+            "File (*.lig)",
+        )
+        try:
+            filen = fichiers[0]
+            self.mgis.up_rep_project(filen)
+        except IndexError:
+            self.mgis.add_info("Cancel  init file")
+        return filen
+
     def select_init_run_case(self, dict_scen):
         """
         Select initial run case
@@ -1773,6 +1790,7 @@ class ClassMascaret:
             liste_run = []
         liste_run.append('".lig" File')
         dict_scen["id_run_init"] = []
+        dict_scen["path_init"] = []
         for i, scen in enumerate(dict_scen['name']):
 
             case, ok = QInputDialog.getItem(None,
@@ -1781,8 +1799,10 @@ class ClassMascaret:
                                             liste_run, 0, False)
             if ok:
                 if case == '".lig" File':
-                    self.copy_lig()
+                    dict_scen["id_run_init"].append(None)
+                    dict_scen["path_init"].append(self.get_lig())
                 else:
+                    dict_scen["path_init"].append(None)
                     condition = "run LIKE '{0}'".format(case)
                     dico_scen = self.mdb.select_distinct("scenario",
                                                          "runs", condition)
@@ -1806,6 +1826,7 @@ class ClassMascaret:
                         dict_scen["id_run_init"].append(None)
                         self.mgis.add_info("Cancel run : {}".format(scen), dbg=True)
             else:
+                dict_scen["path_init"].append(None)
                 dict_scen["id_run_init"].append(None)
                 self.mgis.add_info("Cancel run: {}".format(scen), dbg=True)
 
@@ -1947,12 +1968,25 @@ class ClassMascaret:
             elif par["LigEauInit"] and noyau != "steady":
                 #    self.select_init_run_case()
                 id_run_init = None
+                path_init = None
+                if "id_run_init" in self.dict_scen.keys():
+                    id_run_init = self.dict_scen["id_run_init"][i]
+                if "path_init" in self.dict_scen.keys():
+                    path_init = self.dict_scen["path_init"][i]
+
+                if id_run_init is None and path_init is None:
+                    self.mgis.add_info("Cancel run because No initial boundaries")
+                    continue
+
                 if 'id_run_init' in dict_scen.keys():
-                    id_run_init = dict_scen['id_run_init'][i]
+                    self.opt_to_lig(id_run_init, self.baseName)
+                elif path_init is not None:
+                    self.copy_ligv2(path_init)
+
                 if id_run_init is None:
                     self.mgis.add_info("Cancel run because No initial boundaries")
                     continue
-                self.opt_to_lig(id_run_init, self.baseName)
+
 
             self.mgis.add_info("========== Run case  =========")
             self.mgis.add_info(
@@ -2257,6 +2291,14 @@ class ClassMascaret:
                     fich.write('\n')
 
             fich.write(' FIN\n')
+
+    def copy_ligv2(self, fichiers):
+        try:
+            shutil.copy(fichiers, os.path.join(self.dossier_file_masc, self.basename + ".lig"))
+        except Exception as e:
+            txt = "Error: copying .lig file \n {}".format(e)
+            self.mgis.add_info(txt)
+
 
     def copy_lig(self):
         """ Load .lig file in run model"""
