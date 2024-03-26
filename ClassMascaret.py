@@ -1969,24 +1969,19 @@ class ClassMascaret:
                 #    self.select_init_run_case()
                 id_run_init = None
                 path_init = None
-                if "id_run_init" in self.dict_scen.keys():
-                    id_run_init = self.dict_scen["id_run_init"][i]
-                if "path_init" in self.dict_scen.keys():
-                    path_init = self.dict_scen["path_init"][i]
+                if "id_run_init" in dict_scen.keys():
+                    id_run_init = dict_scen["id_run_init"][i]
+                if "path_init" in dict_scen.keys():
+                    path_init = dict_scen["path_init"][i]
 
                 if id_run_init is None and path_init is None:
                     self.mgis.add_info("Cancel run because No initial boundaries")
                     continue
 
-                if 'id_run_init' in dict_scen.keys():
+                if 'id_run_init' is not None:
                     self.opt_to_lig(id_run_init, self.baseName)
                 elif path_init is not None:
                     self.copy_ligv2(path_init)
-
-                if id_run_init is None:
-                    self.mgis.add_info("Cancel run because No initial boundaries")
-                    continue
-
 
             self.mgis.add_info("========== Run case  =========")
             self.mgis.add_info(
@@ -2294,7 +2289,7 @@ class ClassMascaret:
 
     def copy_ligv2(self, fichiers):
         try:
-            shutil.copy(fichiers, os.path.join(self.dossier_file_masc, self.basename + ".lig"))
+            shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
         except Exception as e:
             txt = "Error: copying .lig file \n {}".format(e)
             self.mgis.add_info(txt)
