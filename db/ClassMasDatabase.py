@@ -1852,7 +1852,7 @@ $BODY$
                 query = "VACUUM {2} {0}.{1};\n".format(self.SCHEMA, tbl, sql_add)
                 cur.execute(query)  # obliger dans boucle si full
         else:
-            query = "VACUUM {2} ;\n".format(sql_add)
+            query = "VACUUM {0} ;\n".format(sql_add)
             cur.execute(query)
         self.con.set_isolation_level(old_isolation_level)
         self.con.commit()
