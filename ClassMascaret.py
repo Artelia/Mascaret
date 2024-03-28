@@ -262,18 +262,27 @@ class ClassMascaret:
             casiers = self.mdb.select("basins", "active ORDER BY basinnum")
 
             with open(nomfich, 'w') as fich:
+
+                lst_err = []
                 for i, nom in enumerate(casiers["name"]):
                     fich.write('CASIER {0}\n'.format(nom))
                     cotes = casiers["level"][i]
                     surfaces = casiers["area"][i]
                     volumes = casiers["volume"][i]
+
+                    if cotes is None or surfaces is None or volumes is None:
+                        lst_err.append(i)
+                        continue
+
                     for j, cote in enumerate(cotes.split()):
                         fich.write(
                             '{0:.2f} {1:.2f} {2:.2f}\n'.format(
                                 float(cotes.split()[j]),
                                 float(surfaces.split()[j]),
                                 float(volumes.split()[j])))
-
+            if len(lst_err) > 0:
+                raise Exception('ErrBasin', 'Basins law not specified. Id: '
+                                            '{}'.format(lst_err))
             self.mgis.add_info("Creation of the basin file is done")
         except Exception as e:
             err = "Error: save the basin file"
@@ -936,6 +945,14 @@ class ClassMascaret:
         """
         Check if links is correctly defined
         """
+        for idc, num in enumerate(casiers["basinnum"]):
+            if float(casiers["initlevel"][idc]) < min([float(val) for val in casiers["level"][idc].split()]):
+                self.mgis.add_info('*** Error: The "Reference level" for the basins {} '
+                                   'which must be greater than or equal to '
+                                   'the minimum level of the height volume law'.format(num))
+                raise Exception('ErrBasin', 'The Reference level of the the basins {}  is not correct.')
+
+
         check_typ_link = {1 :['level','width','weirdischargecoef'],
                          2 : ['level','width','length','roughness'],
                          3 : ['level','length','crosssection','headlosscoef'],

@@ -1111,6 +1111,7 @@ Mascaret Version : {}
             newname, ok = QInputDialog.getText(self,
                                                'Model Copy {}'.format(self.mdb.SCHEMA),
                                                'Model name of copy:')
+            newname = newname.lower()
             if not ok:
                 self.add_info('The copy is cancel')
                 return
