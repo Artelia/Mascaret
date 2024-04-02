@@ -230,13 +230,16 @@ class ClassCreatFilesModels:
                 shutil.move(nomfich, sauv)
 
             casiers = self.mdb.select("basins", "active ORDER BY basinnum")
-
+            lst_err = []
             with open(nomfich, "w") as fich:
                 for i, nom in enumerate(casiers["name"]):
                     fich.write("CASIER {0}\n".format(nom))
                     cotes = casiers["level"][i]
                     surfaces = casiers["area"][i]
                     volumes = casiers["volume"][i]
+                    if cotes is None or surfaces is None or volumes is None:
+                        lst_err.append(i)
+                        continue
                     for j, cote in enumerate(cotes.split()):
                         fich.write(
                             "{0:.2f} {1:.2f} {2:.2f}\n".format(
@@ -245,6 +248,9 @@ class ClassCreatFilesModels:
                                 float(volumes.split()[j]),
                             )
                         )
+            if len(lst_err) > 0:
+                raise Exception('ErrBasin', 'Basins law not specified. Id: '
+                                            '{}'.format(lst_err))
             self.mess.add_mess('creatBasin', 'info', "Creation of the basin file is done")
         except Exception as e:
             err = "Error: save the basin file"
@@ -924,6 +930,13 @@ class ClassCreatFilesModels:
         """
         Check if links is correctly defined
         """
+        for idc, num in enumerate(casiers["basinnum"]):
+            if float(casiers["initlevel"][idc]) < min([float(val) for val in casiers["level"][idc].split()]):
+                txte = ('*** Error: The "Reference level" for the basins {} '
+                                   'which must be greater than or equal to '
+                                   'the minimum level of the height volume law'.format(num))
+                self.mess.add_mess("BasinErr_{}".format(num), "critic", txte)
+
         check_typ_link = {
             1: ["level", "width", "weirdischargecoef"],
             2: ["level", "width", "length", "roughness"],
