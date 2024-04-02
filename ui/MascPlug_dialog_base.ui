@@ -258,6 +258,7 @@
     <addaction name="actionExport_Run"/>
     <addaction name="actionDelete_Run"/>
     <addaction name="actionImport_Results"/>
+    <addaction name="actionReadLisFile"/>
    </widget>
    <widget class="QMenu" name="menuPost_Treatment">
     <property name="title">
@@ -831,6 +832,11 @@
   <action name="actionCartoZI">
    <property name="text">
     <string>CartoZI</string>
+   </property>
+  </action>
+  <action name="actionReadLisFile">
+   <property name="text">
+    <string>Reading last .lis File</string>
    </property>
   </action>
  </widget>

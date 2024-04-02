@@ -41,7 +41,7 @@ from .ClassParamExportDialog import  ClassParamExportDialog
 from .model.ClassCreatFilesModels import ClassCreatFilesModels
 from .ClassObservation import ClassEventObsDialog
 from .ClassParameterDialog import ClassParameterDialog
-from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire
+from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, open_file_editor
 from .Graphic.FilterDialog import ClassFilterDialog
 from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .HydroLawsDialog import ClassHydroLawsDialog
@@ -263,6 +263,8 @@ class MascPlugDialog(QMainWindow):
 
         self.ui.actionTest.triggered.connect(self.fct_test)
         self.ui.actionTest.setVisible(False)
+
+        self.ui.actionReadLisFile.triggered.connect(self.read_lis_file)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(self.import_old_model_dgl)
@@ -1060,6 +1062,18 @@ Version : {}
         del dlg
         del clam
 
+    def open_with_default_editor(self,file_path):
+        import subprocess
+        import sys
+        if sys.platform.startswith('darwin'):  # macOS
+            subprocess.call(('open', file_path))
+        elif os.name == 'nt':  # Windows
+            os.startfile(file_path)
+        elif os.name == 'posix':  # Linux, Unix
+            subprocess.call(('xdg-open', file_path))
+
+
+
     def fct_test(self):
         """Test function"""
         # get_laws
@@ -1236,3 +1250,14 @@ Version : {}
         """
         dlg = ClassExportDataRun(self)
         dlg.exec_()
+
+    def read_lis_file(self):
+        model_path = os.path.join(self.masplugPath, "mascaret")
+        file_path =os.path.join(model_path, 'mascaret.lis')
+        if os.path.exists(file_path):
+            # openfile
+            open_file_editor(file_path)
+        else:
+            self.box.info(
+                "There is no listing file available."
+            )

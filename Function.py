@@ -24,6 +24,8 @@ from shutil import copy2
 import numpy as np
 import dateutil
 import string as st
+import sys
+import subprocess
 
 def del_2space(txt):
     return re.sub(" +", " ", txt)
@@ -95,6 +97,17 @@ def get_couche(nom, iface):
 
     return None
 
+
+def open_file_editor(filename):
+    """
+     Open file with default Editor
+    :param file_: file_path
+    """
+    if sys.platform == "win32":
+        os.startfile(filename)
+    else:
+        opener = "open" if sys.platform == "darwin" else "xdg-open"
+        subprocess.call([opener, filename])
 
 def calcul_abscisses(liste_couches, riviere, iface, dossier):
     couche_riv = get_couche(riviere, iface)
@@ -718,3 +731,6 @@ class TypeErrorModel:
 
     def clear_err(self):
         self.dicterr = {}
+
+
+
