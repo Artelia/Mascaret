@@ -1901,7 +1901,7 @@ class GraphProfil(GraphCommon):
 
         dict_plani = self.mdb.planim_select()
         for i, (minp, maxp) in enumerate(zip(dict_plani['absmin'], dict_plani['absmax'])):
-            if minp <= self.pk <= maxp:
+            if minp <= pk <= maxp:
                 plani = dict_plani['pas'][i]
                 break
         # print('plani', plani)

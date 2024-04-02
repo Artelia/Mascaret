@@ -361,7 +361,8 @@ class ClassProfInterp:
             pasz = (zmax - zmin) / pas
 
         z_level = zmin
-
+        if pasz == 0:
+            return lst_line_disc
         while z_level + pasz <= zmax:
             # line creation for cut
             z_level = z_level + pasz
@@ -382,14 +383,14 @@ class ClassProfInterp:
 
                 l_g = 0
                 l_d = 0
-                for j, ll in enumerate(geom):
+                for j, ll in enumerate(geom.geoms):
                     length = ll.length
                     x, y = ll.xy
                     if j != id_tmp and max(x) < x_fond:
                         l_g += length
                     elif j != id_tmp and min(x) > x_fond:
                         l_d += length
-                x, y = geom[id_tmp].xy
+                x, y = geom.geoms[id_tmp].xy
                 linf = [(x[0] - l_g, z_level), (x[-1] + l_d, z_level)]
                 lst_line_disc.append(LineString(linf))
             elif geom.geom_type == 'LineString':
