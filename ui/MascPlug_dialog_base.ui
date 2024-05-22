@@ -831,7 +831,7 @@
   </action>
   <action name="actionCartoZI">
    <property name="text">
-    <string>CartoZI</string>
+    <string>Export CartoZI</string>
    </property>
   </action>
   <action name="actionReadLisFile">

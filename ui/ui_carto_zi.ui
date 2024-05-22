@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>CartoZI</string>
+   <string>Export CartoZI</string>
   </property>
   <property name="windowIcon">
    <iconset resource="../resources.qrc">
