@@ -18,10 +18,11 @@ email                :
  ***************************************************************************/
 """
 
-from .GraphCommon import GraphCommonNew
-from matplotlib import patches
-import numpy as np
 import matplotlib.lines as mlines
+import numpy as np
+from matplotlib import patches
+
+from .GraphCommon import GraphCommonNew
 
 MPL_LINE_STYLE = {0: "-", 1: ":", 2: "--", 3: "-."}
 
@@ -33,7 +34,9 @@ class GraphResult(GraphCommonNew):
         self.annotation = []
         self.annot_var = []
         self.courbeLaisses = []
+        self.courbe_weirs = []
         self.etiquetteLaisses = []
+        self.etiquetteweirs = []
         self.litMineur = None
         self.stockgauche = None
         self.stockdroit = None
@@ -47,7 +50,7 @@ class GraphResult(GraphCommonNew):
         self.init_ui_common_p()
 
     def init_mdl(
-        self, lst_vars, lst_lbls, lst_colors, lst_line_style, lst_axe, unit_y, title_y=None
+            self, lst_vars, lst_lbls, lst_colors, lst_line_style, lst_axe, unit_y, title_y=None
     ):
         self.list_var.clear()
         self.annotation.clear()
@@ -79,8 +82,10 @@ class GraphResult(GraphCommonNew):
         )
         self.annotation.append(self.annot_var)
         self.courbeLaisses = []
+        self.courbe_weirs = []
         self.courbePlani = []
         self.etiquetteLaisses = []
+        self.etiquetteweirs = []
         for v, var in enumerate(lst_vars):
             self.list_var.append({"id": v, "name": var, "clr": lst_colors[v]})
             (courbe_var,) = self.ax[lst_axe[v]]["axe"].plot(
@@ -142,12 +147,11 @@ class GraphResult(GraphCommonNew):
 
         self.v_line = self.main_axe.axvline(color="black")
 
-    def init_graph(self, lst_data, x_var, all_vis=True, lais=None):
+    def init_graph(self, lst_data, x_var, all_vis=True, lais=None, weir=None):
         self.init_legende()
         self.set_data(lst_data, self.data_to_curve, x_var)
-
+        handles = [c for c in self.ax[1]["curves"]]
         if lais:
-            handles = [c for c in self.ax[1]["curves"]]
             handles.append(
                 mlines.Line2D(
                     [],
@@ -160,6 +164,12 @@ class GraphResult(GraphCommonNew):
                 )
             )
             self.ax[1]["curves"].append(self.courbeLaisses[0])
+            self.init_legende(handles)
+        if weir:
+            handles.append(
+                mlines.Line2D([], [], color='tab:orange', marker='d', linewidth=0,
+                              markersize=8, label='Weirs'))
+            self.ax[1]["curves"].append(self.courbe_weirs[0])
             self.init_legende(handles)
 
         idx = 0
@@ -284,6 +294,7 @@ class GraphResult(GraphCommonNew):
                 color="grey",
                 marker="o",
                 markeredgewidth=0,
+                markersize=4,
                 zorder=100 - v,
                 linestyle=MPL_LINE_STYLE[idx + 1],
                 label="overflow level - {0} ".format(id_debord),
@@ -322,7 +333,7 @@ class GraphResult(GraphCommonNew):
                 [],
                 [],
                 color="grey",
-                marker="o",
+                marker="",
                 markeredgewidth=0,
                 zorder=100 - v,
                 linestyle=MPL_LINE_STYLE[idx],
@@ -440,3 +451,45 @@ class GraphResult(GraphCommonNew):
             )
 
             self.etiquetteLaisses.append(temp)
+
+    def init_graph_weirs(self, weirs):
+        """ add weirs in graph"""
+
+        self.clear_weirs()
+
+        self.courbe_weirs.append(
+            self.main_axe.scatter(weirs['x'], weirs['cote'],
+                                  color=weirs['couleurs'],
+                                  marker='d',
+                                  label="Geo Weirs (orange) or Weir Laws (brown)",
+                                  s=40,
+                                  linewidth=1))
+
+        self.courbe_weirs[0].set_visible(True)
+        for name, x, z, c in zip(weirs['name'], weirs['x'], weirs['cote'], weirs["couleurs"]):
+            temp = self.main_axe.annotate(str(name) + ' - ' + str(z), xy=(x, z), xytext=(3, 3),
+                                          ha='left', va='bottom',
+                                          fontsize='x-small',
+                                          color=c,
+                                          textcoords='offset points',
+                                          clip_on=True)
+
+            self.etiquetteweirs.append(temp)
+
+    def clear_weirs(self):
+        """weirs"""
+        if self.ax[1]["curves"]:
+            tmp = []
+            for i, cb in enumerate(self.ax[1]["curves"]):
+                if cb not in self.courbe_weirs:
+                    tmp.append(cb)
+                else:
+                    for e in self.etiquetteweirs:
+                        self.main_axe.texts.remove(e)
+                        cb.set_visible(False)
+            self.ax[1]["curves"] = list(tmp)
+
+        self.courbe_weirs = []
+        for e in self.etiquetteweirs:
+            self.main_axe.texts.remove(e)
+        self.etiquetteweirs = []

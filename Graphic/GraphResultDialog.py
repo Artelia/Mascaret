@@ -76,6 +76,7 @@ class GraphResultDialog(QWidget):
 
         self.old_lst_run_score = list()
         self.laisses = dict()
+        self.lst_weirs = dict()                               
 
         self.btn_add_graph.clicked.connect(self.add_wgt_compare)
         self.btn_del_graph.clicked.connect(self.del_wgt_compare)
@@ -518,10 +519,15 @@ class GraphResultDialog(QWidget):
                 if self.lst_obs:
                     self.graph_obj.insert_obs_curves(self.lst_obs)
 
+            weir_g = False
             if self.typ_graph == "hydro_pk":
                 self.update_debord(x_var_)
                 if self.lst_debord:
                     self.graph_obj.insert_debord_curves(self.lst_debord)
+                self.graph_obj.clear_weirs()
+                self.get_weirs('pknum')
+                if len(self.lst_weirs['name'])>0:
+                    weir_g = True
             self.update_title()
             self.fill_tab()
 
@@ -532,7 +538,7 @@ class GraphResultDialog(QWidget):
                     if "Z" in self.lst_graph[0]["graph"]["vars"]:
                         self.get_laisses(self.lst_graph[0])
                         lais_g = self.update_laisse(x_var_, self.cur_data[0])
-            self.graph_obj.init_graph(self.cur_data, x_var_, lais=lais_g)
+            self.graph_obj.init_graph(self.cur_data, x_var_, lais=lais_g, weir=weir_g)
 
     def update_title(self):
         """update graph title"""
@@ -799,6 +805,41 @@ class GraphResultDialog(QWidget):
             self.clas_data.setCurrentIndex(idx)
         self.clas_data.setCurrentIndex(0)
 
+    def get_weirs(self, param):
+        """
+        get weirs data
+        :return:
+        """
+        condition = "active"
+        if self.typ_graph == "hydro":
+            condition += "AND abscissa = {} ".format(param["pknum"])
+
+        courbe_weirs = []
+        self.lst_weirs = self.mdb.select("weirs", condition, "abscissa")
+        if self.lst_weirs:
+            self.lst_weirs['pknum'] = self.lst_weirs['abscissa']
+
+            self.graph_obj.clear_weirs()
+            courbe_weirs={}
+
+
+            courbe_weirs["x"] = [v for v in self.lst_weirs["abscissa"] if v]
+            courbe_weirs["name"] = [w for w in self.lst_weirs["name"] if w]
+            courbe_weirs["couleurs"] = []
+            courbe_weirs["cote"] = []
+
+            for a, c, d in zip(self.lst_weirs["type"],self.lst_weirs['z_average_crest'],self.lst_weirs['z_crest']):
+                if a == 3:
+                    if c is None:
+                        c=0
+                    courbe_weirs["cote"].append(c)
+                    courbe_weirs["couleurs"].append("tab:orange")
+                if a == 4:
+                    if d is None:
+                        d=0
+                    courbe_weirs["cote"].append(d)
+                    courbe_weirs["couleurs"].append("tab:brown")
+            self.graph_obj.init_graph_weirs(courbe_weirs)                               
     def get_laisses(self, param):
         """
         get flood marks data
