@@ -33,7 +33,9 @@ class GraphResult(GraphCommonNew):
         self.annotation = []
         self.annot_var = []
         self.courbeLaisses = []
+        self.courbe_weirs = []
         self.etiquetteLaisses = []
+        self.etiquetteweirs = []
         self.litMineur = None
         self.stockgauche = None
         self.stockdroit = None
@@ -75,8 +77,10 @@ class GraphResult(GraphCommonNew):
                                                 zorder=200)
         self.annotation.append(self.annot_var)
         self.courbeLaisses = []
+        self.courbe_weirs = []
         self.courbePlani = []
         self.etiquetteLaisses = []
+        self.etiquetteweirs = []
         for v, var in enumerate(lst_vars):
             self.list_var.append({"id": v, "name": var, "clr": lst_colors[v]})
             courbe_var, = self.ax[lst_axe[v]]["axe"].plot([], [],
@@ -133,16 +137,30 @@ class GraphResult(GraphCommonNew):
 
         self.v_line = self.main_axe.axvline(color="black")
 
-    def init_graph(self, lst_data, x_var, all_vis=True, lais=None):
+    def init_graph(self, lst_data, x_var, all_vis=True, lais=None, weir=None):
         self.init_legende()
         self.set_data(lst_data, self.data_to_curve, x_var)
-
+        handles = [c for c in self.ax[1]["curves"]]
         if lais:
-            handles = [c for c in self.ax[1]["curves"]]
+
             handles.append(
-                mlines.Line2D([], [], color='darkcyan', marker='+', linewidth=0,
-                              markersize=10, label='Flood marks'))
+                mlines.Line2D(
+                    [],
+                    [],
+                    color="darkcyan",
+                    marker="+",
+                    linewidth=0,
+                    markersize=10,
+                    label="Flood marks",
+                )
+            )
             self.ax[1]["curves"].append(self.courbeLaisses[0])
+            self.init_legende(handles)
+        if weir:
+            handles.append(
+                mlines.Line2D([], [], color='tab:orange', marker='d', linewidth=0,
+                              markersize=8, label='Weirs'))
+            self.ax[1]["curves"].append(self.courbe_weirs[0])
             self.init_legende(handles)
 
         idx = 0
@@ -258,6 +276,7 @@ class GraphResult(GraphCommonNew):
             courbe_debord, = self.ax[param_debord["axe"]]["axe"].plot([], [],
                                                                       color="grey",
                                                                       marker='o',
+								      markersize=4,
                                                                       markeredgewidth=0,
                                                                       zorder=100 - v,
                                                                       linestyle=
@@ -298,7 +317,7 @@ class GraphResult(GraphCommonNew):
             self.list_var.append({"id": v, "name": var, "clr": "grey"})
             courbe_obs, = self.ax[param_obs["axe"]]["axe"].plot([], [],
                                                                 color="grey",
-                                                                marker='o',
+                                                                marker='',
                                                                 markeredgewidth=0,
                                                                 zorder=100 - v,
                                                                 linestyle=
@@ -401,12 +420,59 @@ class GraphResult(GraphCommonNew):
                                       'taille']))
 
         self.courbeLaisses[0].set_visible(True)
-        for x, z, c in zip(laisses['x'], laisses['z'], laisses["couleurs"]):
-            temp = self.main_axe.annotate(str(z), xy=(x, z), xytext=(3, 3),
+        for x, z, c in zip(laisses["x"], laisses["z"], laisses["couleurs"]):
+            temp = self.main_axe.annotate(
+                str(z),
+                xy=(x, z),
+                xytext=(3, 3),
+                ha="left",
+                va="bottom",
+                fontsize="x-small",
+                color=c,
+                textcoords="offset points",
+                clip_on=True,
+            )
+
+            self.etiquetteLaisses.append(temp)
+
+    def init_graph_weirs(self, weirs):
+        """ add weirs in graph"""
+
+        self.clear_weirs()
+
+        self.courbe_weirs.append(
+            self.main_axe.scatter(weirs['x'], weirs['cote'],
+                                  color=weirs['couleurs'],
+                                  marker='d',
+                                  label="Geo Weirs (orange) or Weir Laws (brown)",
+                                  s=40,
+                                  linewidth=1))
+
+        self.courbe_weirs[0].set_visible(True)
+        for name, x, z, c in zip(weirs['name'], weirs['x'], weirs['cote'], weirs["couleurs"]):
+            temp = self.main_axe.annotate(str(name) + ' - ' + str(z), xy=(x, z), xytext=(3, 3),
                                           ha='left', va='bottom',
                                           fontsize='x-small',
                                           color=c,
                                           textcoords='offset points',
                                           clip_on=True)
 
-            self.etiquetteLaisses.append(temp)
+            self.etiquetteweirs.append(temp)
+
+    def clear_weirs(self):
+        """weirs"""
+        if self.ax[1]["curves"]:
+            tmp = []
+            for i, cb in enumerate(self.ax[1]["curves"]):
+                if cb not in self.courbe_weirs:
+                    tmp.append(cb)
+                else:
+                    for e in self.etiquetteweirs:
+                        self.main_axe.texts.remove(e)
+                        cb.set_visible(False)
+            self.ax[1]["curves"] = list(tmp)
+
+        self.courbe_weirs = []
+        for e in self.etiquetteweirs:
+            self.main_axe.texts.remove(e)
+        self.etiquetteweirs = []

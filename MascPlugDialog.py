@@ -94,6 +94,7 @@ class MascPlugDialog(QMainWindow):
         self.profil_result = None
         self.basin_result = None
         self.profil_z = None
+        self.mass_graph = None
 
         self.prev_tool = None
 
@@ -239,7 +240,7 @@ class MascPlugDialog(QMainWindow):
 
         # Laws
         self.ui.actionHydro_Laws.triggered.connect(self.fct_hydro_laws)
-
+        self.ui.action_mass_graphic_events.triggered.connect(self.mass_graph_hq)
         # TODO Finaliser
         self.ui.actionTest.triggered.connect(self.fct_test)
         self.ui.actionTest.setVisible(False)
@@ -1046,3 +1047,14 @@ Version : {}
     def fct_hydro_laws(self):
         dlg = ClassHydroLawsDialog(self)
         dlg.exec_()
+    def mass_graph_hq(self):
+        """
+        run the mass graphic
+        """
+        canvas = self.iface.mapCanvas()
+        self.mass_graph = True
+        self.prev_tool = canvas.mapTool()
+        self.map_tool = IdentifyFeatureTool(self)
+        self.map_tool.changedRasterResults.connect(self.do_something)
+
+        canvas.setMapTool(self.map_tool)

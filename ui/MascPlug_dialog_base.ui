@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -177,7 +177,7 @@
      <x>0</x>
      <y>0</y>
      <width>902</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -262,6 +262,8 @@
     <addaction name="actionGraphRes"/>
     <addaction name="separator"/>
     <addaction name="actionScores"/>
+    <addaction name="separator"/>
+    <addaction name="action_mass_graphic_events"/>
    </widget>
    <widget class="QMenu" name="menuWater_Quality">
     <property name="title">
@@ -758,6 +760,11 @@
    </property>
    <property name="toolTip">
     <string>Hydro Laws</string>
+   </property>
+  </action>
+  <action name="action_mass_graphic_events">
+   <property name="text">
+    <string>Mass graphics</string>
    </property>
   </action>
  </widget>

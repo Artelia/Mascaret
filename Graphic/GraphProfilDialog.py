@@ -35,7 +35,7 @@ from qgis.PyQt.uic import *
 from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
-
+from .ClassMassGraph import MassGraph
 from .GraphCommon import GraphCommon, DraggableLegend
 from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
 from ..Structure.ClassPolygone import ClassPolygone
@@ -92,6 +92,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             flag_profil_r = self.mgis.profil_result
             flag_casier_r = self.mgis.basin_result
             flag_profil_z = self.mgis.profil_z
+            flag_mass_graph = self.mgis.mass_graph
 
             if (couche == 'profiles' or couche == 'weirs') and flag_profil_z:
                 if couche == 'profiles':
@@ -231,6 +232,12 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                                                             "hydro_basin",
                                                             feature["basinnum"])
                             graph_basin.show()
+
+            if flag_mass_graph and couche in ("outputs"):
+                self.mgis.mass_graph = False
+                feature = results[0].mFeature
+                cls = MassGraph(self.mgis)
+                cls.export_result_vs_obs(feature['gid'])
 
         return
 

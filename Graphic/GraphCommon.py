@@ -248,6 +248,8 @@ class GraphCommonNew:
         self.annotation = []
         self.courbeLaisses = []
         self.etiquetteLaisses = []
+        self.courbe_weirs = []
+        self.etiquetteweirs = []                                                              
         self.flag = False
         self.leg = None
         self.lined = dict()
@@ -300,10 +302,16 @@ class GraphCommonNew:
                     if courbe.get_label() == "Flood marks":
                         for e in self.etiquetteLaisses:
                             e.set_visible(True)
+                    elif  courbe.get_label() == "Geo Weirs (orange) or Weir Laws (brown)":
+                        for e in self.etiquetteweirs:
+                            e.set_visible(True)
                 else:
                     art.set_alpha(0.2)
                     if courbe.get_label() == "Flood marks":
                         for e in self.etiquetteLaisses:
+                            e.set_visible(False)
+                    elif  courbe.get_label() == "Geo Weirs (orange) or Weir Laws (brown)":
+                        for e in self.etiquetteweirs:
                             e.set_visible(False)
                 self.maj_limites()
 
