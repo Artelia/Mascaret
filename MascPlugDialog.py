@@ -44,6 +44,7 @@ from .ClassParameterDialog import ClassParameterDialog
 from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, open_file_editor
 from .Graphic.FilterDialog import ClassFilterDialog
 from .Graphic.GraphProfilDialog import IdentifyFeatureTool
+
 from .HydroLawsDialog import ClassHydroLawsDialog
 from .Structure.MobilSingDialog import ClassMobilSingDialog
 from .ClassExtractBedDialog import ClassExtractBedDialog
@@ -63,6 +64,7 @@ from .db.Check_tab import CheckTab
 from .db.ClassMasDatabase import ClassMasDatabase
 from .scores.ClassScoresDialog import ClassScoresDialog
 from .ui.custom_control import ClassWarningBox
+
 
 
 class MascPlugDialog(QMainWindow):
@@ -103,6 +105,7 @@ class MascPlugDialog(QMainWindow):
         self.profil_result = None
         self.basin_result = None
         self.profil_z = None
+        self.mass_graph = None
 
         self.prev_tool = None
 
@@ -260,6 +263,8 @@ class MascPlugDialog(QMainWindow):
 
         self.dockwidgetKs = None
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
+
+        self.ui.action_mass_graphic_events.triggered.connect(self.mass_graph_hq)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
         self.ui.actionTest.setVisible(False)
@@ -1078,6 +1083,8 @@ Version : {}
         """Test function"""
         # get_laws
         #self.chkt.debug_update_vers_meta(version="5.1.5")
+
+
         pass
 
     def update_ks_mesh_planim(self):
@@ -1252,6 +1259,9 @@ Version : {}
         dlg.exec_()
 
     def read_lis_file(self):
+        """
+        Open listing file
+        """
         model_path = os.path.join(self.masplugPath, "mascaret")
         file_path =os.path.join(model_path, 'mascaret.lis')
         if os.path.exists(file_path):
@@ -1261,3 +1271,15 @@ Version : {}
             self.box.info(
                 "There is no listing file available."
             )
+
+    def mass_graph_hq(self):
+        """
+        run the mass graphic
+        """
+        canvas = self.iface.mapCanvas()
+        self.mass_graph = True
+        self.prev_tool = canvas.mapTool()
+        self.map_tool = IdentifyFeatureTool(self)
+        self.map_tool.changedRasterResults.connect(self.do_something)
+
+        canvas.setMapTool(self.map_tool)

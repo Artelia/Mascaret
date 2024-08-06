@@ -26,26 +26,24 @@ Comment:
 """
 
 import os
+
 import matplotlib.image as mpimg
 import numpy as np
 from matplotlib import patches
 from matplotlib.widgets import RectangleSelector, SpanSelector, Cursor
-from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.uic import *
 from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 
-from .GraphCommon import GraphCommon, DraggableLegend
+from .ClassMassGraph import MassGraph
+from .ClassProfInterpDialog import ClassProfInterpDialog
 from .FilterDialog import ClassFilterDialog
-from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
-from ..Structure.ClassPolygone import ClassPolygone
+from .GraphBCDialog import GraphBCDialog
+from .GraphCommon import GraphCommon, DraggableLegend
 from .GraphProfilResultDialog import GraphProfilResultDialog
 from .GraphResultDialog import GraphResultDialog
-from .ClassProfInterpDialog import ClassProfInterpDialog
-from ..Function import tw_to_txt, filter_pr_fct, filter_dist_perpendiculaire
-from .GraphBCDialog import GraphBCDialog
 from ..ClassUpdateBedDialog import (
     verif_left_stock,
     verif_left_bed,
@@ -55,6 +53,9 @@ from ..ClassUpdateBedDialog import (
     interpolate_x_val,
     refresh_minor_bed_layer,
 )
+from ..Function import tw_to_txt, filter_pr_fct, filter_dist_perpendiculaire
+from ..Structure.ClassPolygone import ClassPolygone
+from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
 
 try:
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -69,6 +70,7 @@ except:
 # **************************************************
 try:
     _encoding = QApplication.UnicodeUTF8
+
 
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig, _encoding)
@@ -100,6 +102,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             flag_profil_r = self.mgis.profil_result
             flag_casier_r = self.mgis.basin_result
             flag_profil_z = self.mgis.profil_z
+            flag_mass_graph = self.mgis.mass_graph
 
             if (couche == "profiles" or couche == "weirs") and flag_profil_z:
                 if couche == "profiles":
@@ -169,10 +172,10 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     self.mgis.add_info("no active branch")
 
             if flag_hydro and couche in (
-                "weirs",
-                "extremities",
-                "lateral_inflows",
-                "lateral_weirs",
+                    "weirs",
+                    "extremities",
+                    "lateral_inflows",
+                    "lateral_weirs",
             ):
                 feature = results[0].mFeature
                 param = {
@@ -241,6 +244,12 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                                 self.mgis, "hydro_basin", feature["basinnum"]
                             )
                             graph_basin.show()
+
+            if flag_mass_graph and couche in ("outputs"):
+                self.mgis.mass_graph = False
+                feature = results[0].mFeature
+                cls = MassGraph(self.mgis)
+                cls.export_result_vs_obs(feature['gid'])
 
         return
 
@@ -902,12 +911,12 @@ class GraphProfil(GraphCommon):
         bouton = event.mouseevent.button
 
         if (deplaceh and legline in self.courbeTopo and bouton == 1) or (
-            deplaceh and legline in [self.courbedown, self.courbeup] and bouton == 1
+                deplaceh and legline in [self.courbedown, self.courbeup] and bouton == 1
         ):
             self.x0 = round(event.mouseevent.xdata, 2)
             self.courbeSelected = legline
         elif (deplacev and legline in self.courbeTopo and bouton == 1) or (
-            deplacev and legline in [self.courbedown, self.courbeup] and bouton == 1
+                deplacev and legline in [self.courbedown, self.courbeup] and bouton == 1
         ):
             self.y0 = round(event.mouseevent.ydata, 2)
             self.courbeSelected = legline
@@ -1496,10 +1505,10 @@ class GraphProfil(GraphCommon):
                     mess_both = mess_left
 
                 if (
-                    QMessageBox.question(
-                        self, "Warning", mess_both, QMessageBox.Cancel | QMessageBox.Ok
-                    )
-                    != QMessageBox.Ok
+                        QMessageBox.question(
+                            self, "Warning", mess_both, QMessageBox.Cancel | QMessageBox.Ok
+                        )
+                        != QMessageBox.Ok
                 ):
                     return
 
@@ -1530,8 +1539,8 @@ class GraphProfil(GraphCommon):
 
             if status == "w":
                 if (
-                    QMessageBox.question(self, "Warning", mess, QMessageBox.Cancel | QMessageBox.Ok)
-                    != QMessageBox.Ok
+                        QMessageBox.question(self, "Warning", mess, QMessageBox.Cancel | QMessageBox.Ok)
+                        != QMessageBox.Ok
                 ):
                     return
                 else:
@@ -1560,8 +1569,8 @@ class GraphProfil(GraphCommon):
 
             if status == "w":
                 if (
-                    QMessageBox.question(self, "Warning", mess, QMessageBox.Cancel | QMessageBox.Ok)
-                    != QMessageBox.Ok
+                        QMessageBox.question(self, "Warning", mess, QMessageBox.Cancel | QMessageBox.Ok)
+                        != QMessageBox.Ok
                 ):
                     return
                 else:

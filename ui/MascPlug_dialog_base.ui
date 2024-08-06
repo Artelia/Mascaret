@@ -177,7 +177,7 @@
      <x>0</x>
      <y>0</y>
      <width>805</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -272,6 +272,8 @@
     <addaction name="actionScores"/>
     <addaction name="actionExport_Results"/>
     <addaction name="actionCartoZI"/>
+    <addaction name="separator"/>
+    <addaction name="action_mass_graphic_events"/>
    </widget>
    <widget class="QMenu" name="menuWater_Quality">
     <property name="title">
@@ -837,6 +839,11 @@
   <action name="actionReadLisFile">
    <property name="text">
     <string>Reading last .lis File</string>
+   </property>
+  </action>
+  <action name="action_mass_graphic_events">
+   <property name="text">
+    <string>Mass graphics</string>
    </property>
   </action>
  </widget>
