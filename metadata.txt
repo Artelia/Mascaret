@@ -20,7 +20,7 @@ qgisMinimumVersion=3.10
 qgisMaximumVersion=3.99
 
 
-version=5.0.8
+version=5.0.9
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -31,6 +31,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    5.0.9  : Addition of Bulk Chart Export Feature
+             Addition of display weirs for the longitudinal profile
     5.0.8  : Fixed bug on results storage for Qgis 3.32
     5.0.7  : Correction of the bug due to initial water level
     5.0.6  : Correction of the bug due to the modification of the parameter.csv file
