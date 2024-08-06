@@ -18,7 +18,8 @@ class MassGraph:
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.box = ClassWarningBox()
-        self.typ_seuil = ['yellow', 'orange', 'red']
+        self.typ_seuil = ['Hyellow', 'Horange', 'Hred',
+                          'Qyellow', 'Qorange', 'Qred']
 
     def check_col_outputs(self):
         """
@@ -27,21 +28,49 @@ class MassGraph:
         cols = self.mdb.list_columns('outputs')
         # 'ordre': ['low', 'high'],
         dict_check = {
-            'yellow': {'bool': False,
+            'Hyellow': {'bool': False,
                        'val': [],
-                       'ref': [['jaune_bas', 'jaune_haut'], ['yellow_low', 'yellow_high']],
+                       'ref': [['jaune_bas', 'jaune_haut'], ['yellow_low', 'yellow_high'],
+                               ["hyb", "hyh"],["hyl", "hyh"]],
                        'numref': None,
+                       "color":'yellow'
                        },
-            'orange': {'bool': False, 'val': [],
-                       'ref': [['orange_bas', 'orange_haut'], ['orange_low', 'orange_high']],
+            'Horange': {'bool': False, 'val': [],
+                       'ref': [['orange_bas', 'orange_haut'], ['orange_low', 'orange_high'],
+                               ["hob", "hoh"], ["hol", "hoh"]],
                        'numref': None,
+                       "color": 'orange'
                        },
-            'red': {'bool': False, 'val': [],
-                    'ref': [['rouge_bas', 'rouge_haut'], ['red_low', 'red_high']],
+            'Hred': {'bool': False, 'val': [],
+                    'ref': [['rouge_bas', 'rouge_haut'], ['red_low', 'red_high'],
+                            ["hrb", "hrh"], ["hrl", "hrh"]],
                     'numref': None,
+                    "color": "red"
+                    },
+
+            'Qyellow': {'bool': False,
+                       'val': [],
+                       'ref': [['qjaune_bas', 'qjaune_haut'], ['qyellow_low', 'qyellow_high'],
+                               ["qyb", "qyh"],["qyl", "qyh"]],
+                       'numref': None,
+                       "color": 'yellow'
+                       },
+            'Qorange': {'bool': False, 'val': [],
+                       'ref': [['qorange_bas', 'qorange_haut'], ['qorange_low', 'qorange_high'],
+                               ["qob", "qoh"],["qol", "qoh"]],
+                       'numref': None,
+                       "color": 'orange'
+                       },
+            'Qred': {'bool': False, 'val': [],
+                    'ref': [['qrouge_bas', 'qrouge_haut'], ['qred_low', 'qred_high'],
+                            ["qrb", "qrh"],["qrl", "qrh"]],
+                    'numref': None,
+                    "color": "red"
                     },
         }
+
         if_true = False
+        lstyp = []
         for seuil in self.typ_seuil:
             res = [set(sub).issubset(cols) for sub in dict_check[seuil]['ref']]
             dict_check[seuil]['bool'] = any(res)
@@ -49,7 +78,10 @@ class MassGraph:
                 if_true = True
                 idx_r = res.index(True)
                 dict_check[seuil]['numref'] = idx_r
-        return dict_check, if_true
+                if seuil[0] not in lstyp:
+                    lstyp.append(seuil[0])
+
+        return dict_check, if_true, lstyp
 
     def export_result_vs_obs(self, id_out):
         """
@@ -88,9 +120,6 @@ class MassGraph:
         par_event = self.mdb.run_query(sql.format(self.mdb.SCHEMA, run), fetch=True)
         if_event = True
         if not par_event:
-            # msg = f"Warning : No event find. \n" \
-            #       f"This feature is not available without running with an event."
-            # self.box.info(msg, title="Warning")
             if_event = False
             sql = """SELECT scenario
                        FROM {0}.runs 
@@ -101,13 +130,36 @@ class MassGraph:
 
         dossier = QFileDialog.getExistingDirectory(None, u"Choosing the export folder")
         # check if seuil vigilance
-        dict_check, all_ch = self.check_col_outputs()
+        dict_check, all_ch, lstyp = self.check_col_outputs()
         aff_seuil = False
         if all_ch:
             # aff_seuil = self.box.yes_no_q('Voulez-vous afficher vos seuils de vigilance ?',
             #                                   'Voulez-vous afficher vos seuils de vigilance ?')
             aff_seuil = self.box.yes_no_q('Would you like to display your warning thresholds ?',
                                           'Would you like to display your warning thresholds ?')
+
+        if aff_seuil:
+            lst_seuil = []
+            if 'H' in lstyp :
+                lst_seuil.append('H')
+            if 'Q' in lstyp :
+                lst_seuil.append('Q')
+            if 'Q' in lstyp and 'H' in lstyp :
+                lst_seuil.append('H and Q')
+            tseuil, ok = QInputDialog.getItem(None,
+                                           'Alert thresholds',
+                                           "Choosing the warning thresholds you want to add :",
+                                           lst_seuil, 0, False)
+            if not ok:
+                aff_seuil = False
+            else:
+                for seuil in self.typ_seuil:
+                    if dict_check[seuil]['bool']:
+                        let = seuil[0]
+                        if 'Q' == let and 'H' == tseuil :
+                            dict_check[seuil]['bool'] = False
+                        if 'H' == let and 'Q' == tseuil :
+                            dict_check[seuil]['bool'] = False
 
         if aff_seuil:
             exist_seuil = self.box.yes_no_q('Would you like to use the warning values from the "outputs" table ?',
@@ -254,17 +306,31 @@ class MassGraph:
                             if g == 'H':
                                 ax[i % 5, j].set_ylabel(u"Scale rating (in m)", fontsize=8)
                                 if aff_seuil:
-                                    for seuil in self.typ_seuil:
+                                    lst_seuil = [typs for typs in self.typ_seuil if typs[0] == 'H']
+                                    for seuil in lst_seuil:
                                         if dict_check[seuil]['bool']:
                                             vals = dict_check[seuil]['val']
+                                            color = dict_check[seuil]['color']
                                             if vals[0] < vals[1]:
                                                 ax[i % 5, j].fill_between(listeprev,
                                                                           vals[0],
                                                                           vals[1],
-                                                                          color=f'{seuil}',
+                                                                          color=f'{color}',
                                                                           alpha=0.7)
                             else:
                                 ax[i % 5, j].set_ylabel(u"Flow rate (in m3/s)", fontsize=8)
+                                if aff_seuil:
+                                    lst_seuil = [typs for typs in self.typ_seuil if typs[0] == 'Q']
+                                    for seuil in lst_seuil:
+                                        if dict_check[seuil]['bool']:
+                                            vals = dict_check[seuil]['val']
+                                            color = dict_check[seuil]['color']
+                                            if vals[0] < vals[1]:
+                                                ax[i % 5, j].fill_between(listeprev,
+                                                                          vals[0],
+                                                                          vals[1],
+                                                                          color=f'{color}',
+                                                                          alpha=0.7)
                             if if_obs:
                                 ax[i % 5, j].set_title(u"{0} ({1}) - {2}".format(nom, code, scenario), fontsize=10)
                             else:
@@ -358,17 +424,31 @@ class MassGraph:
                             if g == 'H':
                                 ax[i % 5, j].set_ylabel(u"Scale rating (in m)", fontsize=8)
                                 if aff_seuil:
-                                    for seuil in self.typ_seuil:
+                                    lst_seuil = [typs for typs in self.typ_seuil if typs[0] == 'H']
+                                    for seuil in lst_seuil:
                                         if dict_check[seuil]['bool']:
                                             vals = dict_check[seuil]['val']
+                                            color = dict_check[seuil]['color']
                                             if vals[0] < vals[1]:
                                                 ax[i % 5, j].fill_between(listeprev,
                                                                           vals[0],
                                                                           vals[1],
-                                                                          color=f'{seuil}',
+                                                                          color=f'{color}',
                                                                           alpha=0.7)
                             else:
                                 ax[i % 5, j].set_ylabel(u"Flow rate (in m3/s)", fontsize=8)
+                                if aff_seuil:
+                                    lst_seuil = [typs for typs in self.typ_seuil if typs[0] == 'Q']
+                                    for seuil in lst_seuil:
+                                        if dict_check[seuil]['bool']:
+                                            vals = dict_check[seuil]['val']
+                                            color = dict_check[seuil]['color']
+                                            if vals[0] < vals[1]:
+                                                ax[i % 5, j].fill_between(listeprev,
+                                                                          vals[0],
+                                                                          vals[1],
+                                                                          color=f'{color}',
+                                                                          alpha=0.7)
 
                             ax[i % 5, j].set_title(u"{0} - {1}".format(nom, scenario), fontsize=10)
                             ax[i % 5, j].legend(fontsize=6)
