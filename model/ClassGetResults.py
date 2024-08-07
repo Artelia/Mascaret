@@ -19,11 +19,11 @@ email                :
 
 """
 
-import csv
 import datetime
 import json
 import os
 import re
+import pandas as pd
 
 from qgis.PyQt.QtWidgets import *
 from qgis.core import *
@@ -277,12 +277,16 @@ class ClassGetResults:
             dico_val = {}
             for key in col_tmp:
                 dico_val[key] = []
-            data = csv.DictReader(source, delimiter=";", fieldnames=col_tmp)
+
+            data = pd.read_csv(source, delimiter=';', names=col_tmp)
+            data = data.drop_duplicates()
+            data = data.to_dict(orient='records')
             int_val = ["BRANCHE", "SECTION"]
 
             for ligne in data:
                 for key in dico_val.keys():
-                    val = ligne[key].strip()
+                    # val = ligne[key].strip()
+                    val = ligne[key]
                     if key == "PK":
                         val = round(float(val), 2)
                     elif key in int_val:

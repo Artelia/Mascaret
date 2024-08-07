@@ -226,11 +226,30 @@ class DraggableLegend:
         if self.gotLegend:
             self.gotLegend = False
 
+class CustNavigationToolbar(NavigationToolbar):
+    def __init__(self, canvas, window, parent):
+        super().__init__(canvas, window, parent)
+        # Stocker les limites initiales des axes
+        self.par = parent
+        self.update_limites = True
+        if hasattr(self.par, 'update_limites'):
+            self.update_limites =  self.par.update_limites
+
+    def home(self, *args):
+        if not self.par.update_limites:
+           self.par.update_limites=True
+           self.par.maj_limites()
+           self.par.update_limites = False
+        else:
+            self._nav_stack.home()
+            self.set_history_buttons()
+            self._update_view()
 
 class GraphCommonNew:
     def __init__(self, wgt=None, lay=None, lay_toolbar=None):
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
+        self.wgt = wgt
         self.gui_graph(wgt, lay, lay_toolbar)
         self.leg_selected = False
         self.data = None
@@ -266,7 +285,7 @@ class GraphCommonNew:
 
     def gui_graph(self, wgt, lay_graph, lay_toolbar=None):
         lay_graph.addWidget(self.canvas)
-        self.toolbar = NavigationToolbar(self.canvas, wgt)
+        self.toolbar = CustNavigationToolbar(self.canvas, wgt, self)
         if lay_toolbar is not None:
             lay_toolbar.addWidget(self.toolbar)
         else:
@@ -487,7 +506,8 @@ class GraphCommonNew:
                 self.main_axe.set_xlim(0.0, 1.0)
             else:
                 self.main_axe.set_xlim(mini_x, maxi_x)
-
+                print(mini_x, maxi_x, len(lx))
+                print(mini_z, maxi_z, len(lz))
         self.fig.autofmt_xdate()
         self.canvas.draw()
 

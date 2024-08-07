@@ -288,8 +288,10 @@ class GraphResultDialog(QWidget):
         :return:
         """
         self.lst_graph.clear()
+        up_lim = True
         if self.mode == "slider":
             lst_graph = self.lst_slid_graph
+            up_lim =  self.lst_slid_graph[0]['up_lim']
         else:
             lst_graph = self.lst_comp_graph
         self.lst_graph = [graph for graph in lst_graph if "graph" in graph.keys()]
@@ -321,7 +323,7 @@ class GraphResultDialog(QWidget):
                 dist_unit = list(set(lst_unit[ax]))
                 unit_y[ax - 1] = dist_unit[0] if len(dist_unit) == 1 else ""
 
-        self.graph_obj.update_limites = True
+        self.graph_obj.update_limites = up_lim
         self.graph_obj.init_mdl(lst_var, lst_lbl, lst_col, lst_lin, lst_axe, unit_y, title_y)
         self.graph_obj.maj_limites()
 

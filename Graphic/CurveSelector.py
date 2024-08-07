@@ -64,6 +64,7 @@ class CurveSelectorWidget(QWidget):
 
         self.init_date_displayed = False
         self.init_date_needed = False
+        self.up_lim = True
 
         self.lst_graph = list()
         self.info_graph = dict()
@@ -302,7 +303,9 @@ class CurveSelectorWidget(QWidget):
                 self.cur_t = self.cb_det.itemData(self.cb_det.currentIndex())
             else:
                 self.cur_pknum = self.cb_det.itemData(self.cb_det.currentIndex())
+        self.up_lim = up_lim
         self.update_param_graph()
+        self.up_lim = True
         self.graph_parameters_edited.emit(self.row, self.param_graph)
 
     def update_param_graph(self):
@@ -311,6 +314,7 @@ class CurveSelectorWidget(QWidget):
         :return:
         """
         self.param_graph.clear()
+        self.param_graph["up_lim"] = self.up_lim
         self.param_graph["run"] = self.cur_run
         self.param_graph["scen"] = self.cur_scen
         self.param_graph["init_date"] = None

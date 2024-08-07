@@ -21,10 +21,15 @@ email                :
 import matplotlib.lines as mlines
 import numpy as np
 from matplotlib import patches
+try:
+    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QTAgg as NavigationToolbar
+except:
+    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 from .GraphCommon import GraphCommonNew
 
 MPL_LINE_STYLE = {0: "-", 1: ":", 2: "--", 3: "-."}
+
 
 
 class GraphResult(GraphCommonNew):
@@ -43,6 +48,7 @@ class GraphResult(GraphCommonNew):
         self.aire = []
         self.v_line = None
         self.data_to_curve = dict()
+        self.main_axe = None
 
         self.init_ui()
 
@@ -56,6 +62,12 @@ class GraphResult(GraphCommonNew):
         self.annotation.clear()
         self.data_to_curve.clear()
 
+        if self.main_axe and not self.update_limites:
+            oldx = self.main_axe.get_xlim()
+            oldy = {}
+            for id_ax, ax in self.ax.items():
+                if ax["axe"]:
+                    oldy[id_ax] = ax["axe"].get_ylim()
         self.ax = {
             1: {"axe": None, "curves": [], "labels": [], "lined": {}, "legend": None},
             2: {"axe": None, "curves": [], "labels": [], "lined": {}, "legend": None},
@@ -64,6 +76,13 @@ class GraphResult(GraphCommonNew):
         self.fig.clf()
         self.ax[1]["axe"] = self.fig.add_subplot(111)
         self.main_axe = self.ax[1]["axe"]
+
+        if not self.update_limites:
+            self.main_axe.set_xlim(oldx)
+            for id_ax, ax in self.ax.items():
+                if ax["axe"]:
+                    ax["axe"].set_ylim(oldy[id_ax])
+
         if lst_axe:
             if max(lst_axe) == 2:
                 self.ax[2]["axe"] = self.ax[1]["axe"].twinx()
