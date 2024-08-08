@@ -773,7 +773,7 @@ class ClassStructureEditDialog(QDialog):
             )
             self.mdb.run_query(sql)
 
-            self.add_info(
+            self.mgis.add_info(
                 "No values for the law because the coefficients leave application domain of the method.\n"
                 "The <<{}>> hydraulic structur is deactivated".format(name)
             )
