@@ -1021,7 +1021,10 @@ class ClassLaws:
                 cond_zmin = True
                 zam = self.find_zam_dicho(min_elem, q, zav)
             else:
-                froud = q / (area_wet * (self.grav * larg) ** 0.5)
+                if area_wet == 0:
+                    froud = q / (area_wet * (self.grav * larg) ** 0.5)
+                else:
+                    froud = 2
                 # peut poser probleme debit important
                 if froud < 1:
                     zam = self.meth_borda_z(pr_area_wet, area_wet, q, zav)
