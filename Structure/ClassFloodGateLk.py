@@ -156,6 +156,7 @@ class ClassFloodGateLk:
             val_mas = "State.Z"
         else:
             val_mas = "State.Q"
+        # modification pour le cas casier-casier
         val_check = self.masc.get(val_mas, param_fg["SECCON"])
 
         tol = param_fg["TOLREG"]
@@ -379,6 +380,7 @@ class ClassFloodGateLk:
             return param["level"], param["CSection"], param["ZmaxSection"]
 
         dz = self.comput_dz(param["VELOFG"], dt, param["ZINCRFG"])
+        # dz_close = self.comput_dz(param["VELOFG_CLO"], dt, param["ZINCRFG"])
         dir_fg = param["DIRFG"]
         zmax_section0 = param["ZmaxSection0"]
         level0 = param["level0"]
@@ -389,6 +391,7 @@ class ClassFloodGateLk:
             new_level_max = zmax_section0
             if status == "CLOSE":
                 new_level = min(level + dz, zlimit_gate)
+                #new_level = min(level + dz_close, zlimit_gate)
             elif status == "OPEN":
                 new_level = max(level - dz, level0)
         elif dir_fg == "U":
@@ -396,6 +399,7 @@ class ClassFloodGateLk:
             new_level = level0
             if status == "CLOSE":
                 new_level_max = min(zmax_section + dz, zlimit_gate)
+                # new_level_max = min(zmax_section + dz_close, zlimit_gate)
             elif status == "OPEN":
                 new_level_max = max(zmax_section - dz, zmax_section0)
 

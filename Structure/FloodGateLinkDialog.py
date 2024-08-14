@@ -68,6 +68,7 @@ class ClassFloodGateLink(QDialog):
             "NDTREG": [self.npas_temps_fg],
             "DTREG": [self.pas_temps_fg],
             "VELOFG": [self.vel_fg],
+            # "VELOFG_CLO": [self.vel_fg],
             "VREG": [self.cb_var],
             "DIRFG": [self.cb_dir],
             "ZINCRFG": [self.zinc_fg],
