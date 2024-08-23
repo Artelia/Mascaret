@@ -33,6 +33,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 changelog=
     5.0.9  : Addition of Bulk Chart Export Feature
              Addition of display weirs for the longitudinal profile
+             Correction of the bug due to the interpolation profile for the Qgis3.34
     5.0.8  : Fixed bug on results storage for Qgis 3.32
     5.0.7  : Correction of the bug due to initial water level
     5.0.6  : Correction of the bug due to the modification of the parameter.csv file
