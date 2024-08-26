@@ -209,7 +209,7 @@ class ClassProfInterp:
             # print('Non-existent discretization type')
             self.msg += "Non-existent discretization type\n"
             self.err = False
-            return
+            return None, None
         am_g = self.discret_pr_lg(
             pr_am, x_am_fond, zmin_am, pas=pas, id_g=0, id_d=id_am_f[0], cond_pas_z=cond_pas_z
         )
@@ -227,7 +227,7 @@ class ClassProfInterp:
         list_points_g = []
         list_points_d = []
         if len(am_g) == 0 and len(am_d) == 0 and len(av_g) == 0 and len(av_d) == 0:
-            return None, None, None
+            return None, None
             # in the case where there is no upstream or downstream profile on the portion of the bed
             # the interpolation is done with respect to the point
         if len(am_g) == 0 and len(am_d) == 0:
@@ -336,7 +336,7 @@ class ClassProfInterp:
         if pasz == 0 :
             return lst_line_disc
 
-        while z_level + pasz <= zmax:
+        while z_level + pasz <= zmax and pasz != 0.:
             # line creation for cut
             z_level = z_level + pasz
             line = [(pr[id_g, 0] - 1, z_level), (pr[id_d, 0] + 1, z_level)]

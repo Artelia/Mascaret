@@ -37,6 +37,7 @@ from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 
+
 from .ClassMassGraph import MassGraph
 from .ClassProfInterpDialog import ClassProfInterpDialog
 from .FilterDialog import ClassFilterDialog
@@ -56,6 +57,13 @@ from ..ClassUpdateBedDialog import (
 from ..Function import tw_to_txt, filter_pr_fct, filter_dist_perpendiculaire
 from ..Structure.ClassPolygone import ClassPolygone
 from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
+
+try :
+    from packaging.version import parse
+    import matplotlib
+    MPLT_NEW =  (parse(matplotlib.__version__) >= parse("3.6.3"))
+except:
+    MPLT_NEW =  False
 
 try:
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -79,6 +87,8 @@ except AttributeError:
 
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig)
+
+
 
 
 class IdentifyFeatureTool(QgsMapToolIdentify):
@@ -414,18 +424,31 @@ class GraphProfil(GraphCommon):
             [], [], marker="o", linewidth=0, color="yellow", zorder=110
         )
 
-        self.RS = RectangleSelector(self.axes, self.onselect, drawtype="box")
+        self.RS = RectangleSelector(self.axes, self.onselect)
         self.RS.set_active(False)
-        self.span = SpanSelector(
-            self.axes,
-            self.onselect_zone,
-            "horizontal",
-            rectprops=dict(alpha=0, facecolor="yellow"),
-            onmove_callback=self.onselect_zone,
-            useblit=False,
-        )
 
-        self.span.visible = False
+        if not MPLT_NEW :
+            self.span = SpanSelector(
+                self.axes,
+                self.onselect_zone,
+                "horizontal",
+                rectprops=dict(alpha=0, facecolor="yellow"),
+                onmove_callback=self.onselect_zone,
+                useblit=False,
+            )
+        else:
+            # version matplotlib> 3.5
+            self.span = SpanSelector(
+                self.axes,
+                self.onselect_zone,
+                "horizontal",
+                props=dict(alpha=0, facecolor="yellow"),
+                onmove_callback=self.onselect_zone,
+                useblit=False,
+            )
+        self.span.set_visible(False)
+
+
 
         self.curseur = Cursor(self.axes, useblit=True, color="red")
         self.curseur.visible = False
@@ -450,11 +473,11 @@ class GraphProfil(GraphCommon):
     def selector_toggled(self):
         """Point selection function"""
         if self.bt_select.isChecked():
-            self.span.active = False
+            self.span.set_active(False)
             self.rectSelection.set_visible(False)
             self.RS.set_active(True)
             self.RS.update()
-            self.span.visible = False
+            self.span.set_visible(False)
             self.rectSelection.set_visible(False)
             self.ui.bt_add_point.setEnabled(True)
             self.bt_select_z.setChecked(False)
@@ -470,8 +493,8 @@ class GraphProfil(GraphCommon):
     def zone_selector_toggled(self):
         """zone selection function"""
         if self.bt_select_z.isChecked():
-            self.span.visible = True
-            self.span.active = True
+            self.span.set_visible(True)
+            self.span.set_active(True)
             self.bt_select.setChecked(False)
             self.RS.set_active(False)
             self.RS.update()
@@ -479,7 +502,7 @@ class GraphProfil(GraphCommon):
             self.bt_translah.setChecked(False)
             self.bt_translav.setChecked(False)
         else:
-            self.span.active = False
+            self.span.set_active(False)
             self.rectSelection.set_visible(False)
 
     def deplace_h_toggled(self):

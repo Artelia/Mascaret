@@ -16,7 +16,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
        Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
        Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek (Many thanks for the work they've done on RiverGis)
 
-qgisMinimumVersion=3.10
+qgisMinimumVersion=3.22
 qgisMaximumVersion=3.99
 
 
