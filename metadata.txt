@@ -16,7 +16,7 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
        Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
        Some parts are based on the RiverGIS plugin developped by Radek Pasiok & Lukasz Debek (Many thanks for the work they've done on RiverGis)
 
-qgisMinimumVersion=3.10
+qgisMinimumVersion=3.16
 qgisMaximumVersion=3.99
 
 
@@ -31,7 +31,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    5.0.9  : Addition of Bulk Chart Export Feature
+    5.0.9  : Fixed bug for Qgis 3.38
+             Addition of Bulk Chart Export Feature
              Addition of display weirs for the longitudinal profile
              Correction of the bug due to the interpolation profile for the Qgis3.34
     5.0.8  : Fixed bug on results storage for Qgis 3.32
