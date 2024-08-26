@@ -2142,7 +2142,7 @@ class GraphProfil(GraphCommon):
             nplan_r = (rz - bottom) / plani
             nplan_lst.append(max(nplan_l, nplan_r))
         nplan = max(nplan, max(nplan_lst))
-        return nplan
+        return int(nplan)
 
     def get_pr(self, id):
         """
