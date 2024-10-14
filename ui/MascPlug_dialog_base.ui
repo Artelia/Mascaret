@@ -764,7 +764,7 @@
   </action>
   <action name="action_mass_graphic_events">
    <property name="text">
-    <string>Mass graphics</string>
+    <string>Mass outputs of plots</string>
    </property>
   </action>
  </widget>
