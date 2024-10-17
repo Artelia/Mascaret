@@ -366,6 +366,7 @@ class ClassFloodGateLink(QDialog):
         tol = float(ctrl_get_value(self.dico_ctrl["TOLREG"][0]))
 
         if typ_g == "D":  # bas
+            # TODO changer les + ou - la tolerance et pas sur dans le cas descent
             if valf + tol > valo - tol:
                 self.box.info("ERROR:\n\n" "Closing level value must be lower opening level value ")
                 return False

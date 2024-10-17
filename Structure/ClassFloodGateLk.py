@@ -183,6 +183,8 @@ class ClassFloodGateLk:
                 param_fg["OPEN_CLOSE"] = "OPEN"
             elif val_check <= param_fg["VREGCLOS"] + tol:
                 param_fg["OPEN_CLOSE"] = "CLOSE"
+        # TODO ATTENTION ORDRE overture et femeture pas besoin d'inverser
+        # Cas l'inversion seulement si inversion des mouvement que la fermure au lieu de réduire la taille de la zone ouvre la zone
         elif key == ("INIT", "U"):
             if val_check >= param_fg["VREGCLOS"] - tol:
                 param_fg["OPEN_CLOSE"] = "CLOSE"
