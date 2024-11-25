@@ -910,6 +910,7 @@ class ScoreParamWidget(QWidget):
         :param var_model: array  model variable
         :return:
         """
+        # print(time_model, var_model)
         fct = interpolate.interp1d(time_model, var_model, kind="linear")
         model_var = fct(obs_time)
         return model_var
@@ -1037,11 +1038,22 @@ class ScoreParamWidget(QWidget):
         """
         # interpolation en fonction des temps des Observation
         # ******* Z  **********
-        z = self.data[id_run][pk][code]["h_mod_ori"]
-        obs_time = self.data[id_run][pk][code]["h_obs_time"]
-        self.data[id_run][pk][code]["h_mod"] = self.interpol_date(
-            obs_time, self.model[id_run]["times"], z
+
+        obs_var, obs_time = self.filter_time(
+            self.model[id_run]["times"][0],
+            self.model[id_run]["times"][-1],
+            self.data[id_run][pk][code]["h_obs"],
+            self.data[id_run][pk][code]["h_obs_time"],
         )
+        self.data[id_run][pk][code]["h_obs_time"] = obs_time
+        self.data[id_run][pk][code]["h_obs"] = obs_var
+
+        z = self.data[id_run][pk][code]["h_mod_ori"]
+        time_mod  = self.model[id_run]["times"]
+        self.data[id_run][pk][code]["h_mod"] = self.interpol_date(
+            obs_time,time_mod, z
+        )
+
 
     def resample_model_q(self, id_run, pk, code):
         """
@@ -1052,9 +1064,17 @@ class ScoreParamWidget(QWidget):
         :return:
         """
         # ******* Q  **********
+        obs_var, obs_time = self.filter_time(
+            self.model[id_run]["times"][0],
+            self.model[id_run]["times"][-1],
+            self.data[id_run][pk][code]["q_obs"],
+            self.data[id_run][pk][code]["q_obs_time"],
+        )
+        self.data[id_run][pk][code]["q_obs_time"] = obs_time
+        self.data[id_run][pk][code]["q_obs"] = obs_var
 
         q = self.data[id_run][pk][code]["q_mod_ori"]
-        obs_time = self.data[id_run][pk][code]["q_obs_time"]
+        obs_time = obs_time
         self.data[id_run][pk][code]["q_mod"] = self.interpol_date(
             obs_time, self.model[id_run]["times"], q
         )
@@ -1084,7 +1104,6 @@ class ScoreParamWidget(QWidget):
             )
 
             tmp_dict = self.mdb.query_todico(sql_query, verbose=False)
-            print(tmp_dict)
             if self.obs[code]["zero"] is None:
                 code_zero = 0
             else:
@@ -1097,7 +1116,9 @@ class ScoreParamWidget(QWidget):
                 obs_time = np.array(
                     [datum_to_float(vv, tmp_dict["date"][0]) for vv in tmp_dict["date"]]
                 )
-                dic_tmp = {"h_obs": z, "h_obs_date": tmp_dict["date"], "h_obs_time": obs_time}
+                dic_tmp = {"h_obs_ori": z, "h_obs_date_ori": tmp_dict["date"], "h_obs_time_ori": obs_time,
+                           "h_obs": z, "h_obs_time": obs_time}
+                #self print(dic_tmp)
                 if code in self.data[id_run][pk].keys():
                     self.data[id_run][pk][code].update(dic_tmp)
                 else:
@@ -1108,8 +1129,10 @@ class ScoreParamWidget(QWidget):
                 )
 
                 dic_tmp = {
+                    "q_obs_ori": np.array(tmp_dict["valeur"]),
+                    "q_obs_date_ori": tmp_dict["date"],
+                    "q_obs_time_ori": obs_time,
                     "q_obs": np.array(tmp_dict["valeur"]),
-                    "q_obs_date": tmp_dict["date"],
                     "q_obs_time": obs_time,
                 }
                 if code in self.data[id_run][pk].keys():
