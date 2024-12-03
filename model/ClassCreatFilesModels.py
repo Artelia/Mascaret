@@ -1358,11 +1358,17 @@ class ClassCreatFilesModels:
 
             liste_stations = pattern.findall(loi["formule"])
 
-            liste_date = None
+            dt = datetime.timedelta(hours=int(99999999))
             for cd_hydro, delta in liste_stations:
                 if not delta:
                     delta = "0"
-                dt = datetime.timedelta(hours=int(delta))
+                dt = min(dt,datetime.timedelta(hours=int(delta)))
+
+            liste_date = None
+            for cd_hydro, delta in liste_stations:
+                # if not delta:
+                #     delta = "0"
+                #dt = datetime.timedelta(hours=int(delta))
                 sql_tab = (
                     "SELECT * FROM "
                     "(SELECT code,type, UNNEST(date)as date, "
@@ -1372,7 +1378,7 @@ class ClassCreatFilesModels:
                     "WHERE date >= '{3:%Y-%m-%d %H:%M}' "
                     "AND date <= '{4:%Y-%m-%d %H:%M}' "
                     "ORDER BY date ".format(
-                        self.mdb.SCHEMA, cd_hydro, type_, date_debut + dt, date_fin + dt
+                        self.mdb.SCHEMA, cd_hydro, type_, date_debut + dt, date_fin + abs(dt)
                     )
                 )
                 obs[cd_hydro] = self.mdb.query_todico(sql_tab)

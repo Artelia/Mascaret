@@ -37,6 +37,7 @@ changelog=
              Bug fix for teh score computing
              Bug fix for log display in edition of hydraulic structure
              Keep zoom when using slider
+             Bug Fix when using complex formula for observations with multiple time offsets
     5.1.11 : Bug fix for volume law generation in QGIS 3.34 basin.
              Bug fix for schema clone.
              Bug fix for profile interpolation.
