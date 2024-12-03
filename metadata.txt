@@ -31,8 +31,12 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    5.1.12  : Addition of Bulk Chart Export Feature
+    5.1.12 : Addition of Bulk Chart Export Feature
              Addition of display weirs for the longitudinal profile
+             Bug fix to work in QGIS 3.38.
+             Bug fix for teh score computing
+             Bug fix for log display in edition of hydraulic structure
+             Keep zoom when using slider
     5.1.11 : Bug fix for volume law generation in QGIS 3.34 basin.
              Bug fix for schema clone.
              Bug fix for profile interpolation.

@@ -1021,7 +1021,7 @@ class ClassLaws:
                 cond_zmin = True
                 zam = self.find_zam_dicho(min_elem, q, zav)
             else:
-                if area_wet == 0:
+                if area_wet != 0:
                     froud = q / (area_wet * (self.grav * larg) ** 0.5)
                 else:
                     froud = 2
