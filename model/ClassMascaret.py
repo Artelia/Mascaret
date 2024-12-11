@@ -252,7 +252,7 @@ class ClassMascaret:
 
             # obligatoir  sinon task ignorer
             print('Send Task', rep)
-            QgsMessageLog.logMessage('Send Task', 'TaskMascaret', Qgis.Info)
+            QgsMessageLog.logMessage(f'Send Task {rep}', 'TaskMascaret', Qgis.Info)
         else:
             task_mas = TaskMascaret('TaskMascaret', dict_task)
             task_mas.run()

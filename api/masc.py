@@ -53,7 +53,7 @@ class Mascaret:
 
     libmascaret = None
     # Créer un StringIO pour stocker les messages de journalisation
-    log_stream = StringIO()
+
     logger = logging.getLogger(__name__)
 
     _error = 0
@@ -124,8 +124,8 @@ class Mascaret:
 
         @param log_level (str) Logger level
         """
+        self.log_stream = StringIO()
         #Artelia
-
         if log_level == "INFO":
             i_log = logging.INFO
         elif log_level == "DEBUG":
