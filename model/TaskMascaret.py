@@ -215,3 +215,9 @@ class TaskMascaret(QgsTask):
         txt_mess = 'Task "{name}" was canceled \nTask time: {total} s'.format(name=self.description, total=total)
         QgsMessageLog.logMessage(txt_mess, MESSAGE_CATEGORY, Qgis.Warning)
         super().cancel()
+
+    def onCancel(self):
+        """
+            Cancel task
+        """
+        self.cancel()

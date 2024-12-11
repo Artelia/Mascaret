@@ -52,6 +52,8 @@ class Mascaret:
     """The Python class for MASCARET APIs"""
 
     libmascaret = None
+    # Créer un StringIO pour stocker les messages de journalisation
+    log_stream = StringIO()
     logger = logging.getLogger(__name__)
 
     _error = 0
@@ -123,17 +125,20 @@ class Mascaret:
         @param log_level (str) Logger level
         """
         #Artelia
-        self.log_stream = StringIO()  # Créer un StringIO pour stocker les messages de journalisation
-        handler = logging.StreamHandler(self.log_stream)
-        self.logger.addHandler(handler)
-        #end
+
         if log_level == "INFO":
             i_log = logging.INFO
         elif log_level == "DEBUG":
             i_log = logging.DEBUG
         else:
             i_log = logging.CRITICAL
-        logging.basicConfig(level=i_log)
+
+        self.logger.setLevel(getattr(logging, log_level.upper(), i_log))
+        # Ajouter un gestionnaire pour écrire les logs dans log_stream
+        handler = logging.StreamHandler(self.log_stream)
+        handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        self.logger.addHandler(handler)
+        #end
         self.logger.info("Using MascaretApi")
         # Load the library libmascaret.(so|dll)
         # MDU modif

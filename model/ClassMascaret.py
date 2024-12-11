@@ -248,9 +248,10 @@ class ClassMascaret:
 
             task_mas = TaskMascaret('TaskMascaret', dict_task)
             task_mas.message.connect(self.print_info)
-            QgsApplication.taskManager().addTask(task_mas)
+            rep = QgsApplication.taskManager().addTask(task_mas)
+
             # obligatoir  sinon task ignorer
-            print('Send Task')
+            print('Send Task', rep)
             QgsMessageLog.logMessage('Send Task', 'TaskMascaret', Qgis.Info)
         else:
             task_mas = TaskMascaret('TaskMascaret', dict_task)

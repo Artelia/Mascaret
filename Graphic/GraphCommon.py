@@ -426,9 +426,7 @@ class GraphCommonNew:
                     if c.get_visible():
                         liste_noms.append(c.get_label())
                 all_noms.extend(liste_noms)
-
                 all_curves.extend(ax["curves"])
-
         ax = self.ax[ax_max]
         ax["legend"] = ax["axe"].legend(
             all_handles,
@@ -506,8 +504,6 @@ class GraphCommonNew:
                 self.main_axe.set_xlim(0.0, 1.0)
             else:
                 self.main_axe.set_xlim(mini_x, maxi_x)
-                print(mini_x, maxi_x, len(lx))
-                print(mini_z, maxi_z, len(lz))
         self.fig.autofmt_xdate()
         self.canvas.draw()
 
