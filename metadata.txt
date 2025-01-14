@@ -33,6 +33,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 # Uncomment the following line and add your changelog:
 changelog=
     6.1.0 : New experimental version
+            Clear Qgis2 code 
     6.0.0 : Merge experimental version into master
     5.1.13 : Bug fix to print log mascaret in window main
     5.1.12 : Addition of Bulk Chart Export Feature
