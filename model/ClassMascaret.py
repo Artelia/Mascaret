@@ -248,11 +248,18 @@ class ClassMascaret:
 
             task_mas = TaskMascaret('TaskMascaret', dict_task)
             task_mas.message.connect(self.print_info)
-            rep = QgsApplication.taskManager().addTask(task_mas)
-
+            task_id = QgsApplication.taskManager().addTask(task_mas)
+            task = QgsApplication.taskManager().task(task_id)
             # obligatoir  sinon task ignorer
-            print('Send Task', rep)
-            QgsMessageLog.logMessage(f'Send Task {rep}', 'TaskMascaret', Qgis.Info)
+            QgsMessageLog.logMessage(f'Send Task {task_id}', 'TaskMascaret', Qgis.Info)
+            print('Send Task', task_id)
+            # Sassurer que la task part bien # bug Qgis demarre pas toujours
+            if not task.isActive():
+                while task.isActive():
+                    task_id = QgsApplication.taskManager().addTask(task_mas)
+                    task = QgsApplication.taskManager().task(task_id)
+                    QgsMessageLog.logMessage(f'Send Task {task_id}', 'TaskMascaret', Qgis.Info)
+                    print('Send Task', task_id)
         else:
             task_mas = TaskMascaret('TaskMascaret', dict_task)
             task_mas.run()
