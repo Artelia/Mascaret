@@ -27,11 +27,8 @@ from qgis.utils import *
 
 from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
 
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtGui import QIcon
-    from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import *
 
 
 class StructureFgDialog(QDialog):

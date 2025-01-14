@@ -362,7 +362,8 @@ class TaskMascInit():
                 else:
                     par["initialisationAuto"] = False
                     txt = (
-                        "No initialisation because of no valeurperm " "for {} condition".format(nom)
+                            'No initialisation because of no steady value set for {} condition'.format(nom) +
+                            'Set "steadyValue" in extremities layer for entity {}'.format(nom)
                     )
                     self.log_mess(txt, 'NoInitUnsteady', 'warning')
         return par

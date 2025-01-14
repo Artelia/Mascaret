@@ -34,14 +34,8 @@ from ..Function import read_version
 from ..WaterQuality import ClassTableWQ
 from ..ui.custom_control import ClassWarningBox
 
-try:  # qgis2
-    from qgis.core import QgsMapLayerRegistry, QgsDataSourceURI
+from qgis.core import QgsDataSourceUri
 
-    VERSION_QGIS = 2
-except Exception:  # qgis3
-    from qgis.core import QgsDataSourceUri
-
-    VERSION_QGIS = 3
 
 from qgis.gui import QgsMessageBar
 
@@ -350,11 +344,7 @@ class ClassMasDatabase(object):
         """
         Setting layers uris list from QgsProject.
         """
-        try:  # qgis2
-            self.uris = [vl.source() for vl in QgsMapLayerRegistry.instance().mapLayers().values()]
-
-        except Exception:  # qgis3
-            self.uris = [vl.source() for vl in QgsProject.instance().mapLayers().values()]
+        self.uris = [vl.source() for vl in QgsProject.instance().mapLayers().values()]
         self.mgis.add_info("Layers sources:\n    {0}".format("\n    ".join(self.uris)), dbg=True)
         # *****************************************************************************
 
@@ -369,10 +359,7 @@ class ClassMasDatabase(object):
             :return QgsVectorLayer: QGIS Vector Layer object.
         """
         vl_schema, vl_name = obj.schema, obj.name
-        try:  # qgis2
-            uri = QgsDataSourceURI()
-        except Exception:  # qgis3
-            uri = QgsDataSourceUri()
+        uri = QgsDataSourceUri()
 
         uri.setConnection(self.host, self.port, self.dbname, self.USER, self.password)
         if obj.geom_type is not None:
@@ -391,26 +378,15 @@ class ClassMasDatabase(object):
             :param  vlayer :  (QgsVectorLayer) QgsVectorLayer object.
         """
         try:
-            if VERSION_QGIS == 3:  # qgis3
-                style_file = os.path.join(
-                    self.mgis.masplugPath, "db", "styles_qgis3", "{0}.qml".format(vlayer.name())
-                )
-            else:
-                style_file = os.path.join(
-                    self.mgis.masplugPath, "db", "styles_qgis2", "{0}.qml".format(vlayer.name())
-                )
+            style_file = os.path.join(
+                self.mgis.masplugPath, "db", "styles_qgis3", "{0}.qml".format(vlayer.name())
+            )
             if self.group:
-                try:  # qgis2
-                    QgsMapLayerRegistry.instance().addMapLayer(vlayer, False)
-                except Exception:  # qgis3
-                    QgsProject.instance().addMapLayer(vlayer, False)
+                QgsProject.instance().addMapLayer(vlayer, False)
                 self.group.addLayer(vlayer)
 
             else:
-                try:  # qgis2
-                    QgsMapLayerRegistry.instance().addMapLayer(vlayer)
-                except Exception:  # qgis3
-                    QgsProject.instance().addMapLayer(vlayer)
+                QgsProject.instance().addMapLayer(vlayer)
             # self.mgis.add_info('path : {}'.format(style_file))
             # a mettre apres deplacement group pour etre pris en compte
             vlayer.loadNamedStyle(style_file)
@@ -952,10 +928,7 @@ $BODY$
             for child in group1.children():
                 dump = child.dump()
                 id = dump.split("=")[-1].strip()
-                try:  # qgis2
-                    QgsMapLayerRegistry.instance().removeMapLayer(id)
-                except Exception:  # qgis3
-                    QgsProject.instance().removeMapLayer(id)
+                QgsProject.instance().removeMapLayer(id)
             root.removeChildNode(group1)
 
     def projection(self, nom, liste_x, liste_g):

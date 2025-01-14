@@ -201,15 +201,9 @@ class ClassMobilSingDialog(QDialog):
         """Import csv file"""
         nb_col = 2
         first_ligne = True
-        if int(qVersion()[0]) < 5:  # qt4
-            listf = QFileDialog.getOpenFileNames(
-                None, "File Selection", self.mgis.repProject, "File (*.txt *.csv )"
-            )
-
-        else:  # qt5
-            listf, _ = QFileDialog.getOpenFileNames(
-                None, "File Selection", self.mgis.repProject, "File (*.txt *.csv)"
-            )
+        listf, _ = QFileDialog.getOpenFileNames(
+            None, "File Selection", self.mgis.repProject, "File (*.txt *.csv)"
+        )
         if listf:
             self.mgis.up_rep_project(listf[0])
             error = False

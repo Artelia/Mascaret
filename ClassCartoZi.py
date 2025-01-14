@@ -26,14 +26,6 @@ from qgis.gui import *
 from qgis.utils import *
 from qgis.core import NULL as qgis_null
 
-# from ..Function import data_to_float
-
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QColor, QBrush
-    from qgis.PyQt.QtWidgets import *
-
 from datetime import timedelta
 from shapely.wkt import loads as wkt_loads
 from scipy import interpolate

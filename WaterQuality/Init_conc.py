@@ -19,6 +19,7 @@ email                :
 """
 import os
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -28,11 +29,8 @@ from qgis.utils import *
 from .ClassTableWQ import ClassTableWQ
 from .Graph_WQ import GraphInitConc
 
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-    from qgis.PyQt.QtWidgets import *
+
+
 
 
 class InitConcDialog(QDialog):

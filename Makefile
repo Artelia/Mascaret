@@ -68,14 +68,14 @@ PLUGIN_UPLOAD = $(c)/plugin_upload.py
 
 RESOURCE_SRC=$(shell grep '^ *<file' resources.qrc | sed 's@</file>@@g;s/.*>//g' | tr '\n' ' ')
 
-QGISDIR=.qgis2
+QGISDIR=.qgis3
 
 default: compile
 
 compile: $(COMPILED_RESOURCE_FILES)
 
 %.py : %.qrc $(RESOURCES_SRC)
-	pyrcc4 -o $*.py  $<
+	pyrcc5 -o $*.py  $<
 
 %.qm : %.ts
 	$(LRELEASE) $<
@@ -101,7 +101,7 @@ test: compile transcompile
 deploy: compile doc transcompile
 	@echo
 	@echo "------------------------------------------"
-	@echo "Deploying plugin to your .qgis2 directory."
+	@echo "Deploying plugin to your .qgis3 directory."
 	@echo "------------------------------------------"
 	# The deploy  target only works on unix like operating system where
 	# the Python plugin directory is located at:

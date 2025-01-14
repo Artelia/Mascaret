@@ -22,14 +22,9 @@ import os
 import posixpath
 
 from qgis.core import QgsNetworkAccessManager
-from qgis.PyQt.QtCore import qVersion
 
-if int(qVersion()[0]) < 5:
-    from PyQt4.QtCore import QUrl, QEventLoop, QTimer
-    from PyQt4.QtNetwork import QNetworkRequest, QNetworkReply
-else:
-    from PyQt5.QtCore import QUrl, QEventLoop, QTimer
-    from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply
+from PyQt5.QtCore import QUrl, QEventLoop, QTimer
+from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply
 
 
 class ClassDownloadMasc:

@@ -33,12 +33,9 @@ from qgis.utils import *
 
 from .Graphic.GraphCommon import GraphCommon
 
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-    from qgis.PyQt.QtWidgets import *
-    from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
+from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtCore import Qt
 
 
 class ClassEventObsDialog(QDialog):

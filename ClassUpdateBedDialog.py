@@ -29,11 +29,7 @@ from shapely.ops import unary_union, linemerge, substring
 from shapely.geometry import LineString
 from shapely.wkt import loads as wkt_loads
 
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QColor, QBrush
-    from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QColor, QBrush
 
 D_TYP_BED = {0: "bed", 1: "stock"}
 D_FLD_BED = {0: "minbed", 1: "stock"}
