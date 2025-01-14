@@ -935,14 +935,9 @@ class GraphResultDialog(QWidget):
         # txt = self.cb_graph.currentText()
         txt = "text"
         default_name = os.path.join(self.mgis.repProject, txt.replace(" ", "_").replace(":", "-"))
-        if int(qVersion()[0]) < 5:
-            file_name_path = QFileDialog.getSaveFileName(
-                self, "saveFile", "{0}.csv".format(default_name), filter="CSV (*.csv *.)"
-            )
-        else:
-            file_name_path, _ = QFileDialog.getSaveFileName(
-                self, "saveFile", "{0}.csv".format(default_name), filter="CSV (*.csv *.)"
-            )
+        file_name_path, _ = QFileDialog.getSaveFileName(
+            self, "saveFile", "{0}.csv".format(default_name), filter="CSV (*.csv *.)"
+        )
 
         if file_name_path:
             self.mgis.up_rep_project(file_name_path)

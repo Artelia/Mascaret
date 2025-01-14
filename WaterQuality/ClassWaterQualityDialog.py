@@ -32,11 +32,6 @@ from .PhysicalParamDialog import ClassPhysicalParamDialog
 from ..Function import str2bool
 from ..ui.custom_control import ScientificDoubleSpinBox
 
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtWidgets import *
-
 
 class ClassWaterQualityDialog(QDialog):
     def __init__(self, mgis):

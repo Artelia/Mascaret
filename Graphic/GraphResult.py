@@ -348,6 +348,7 @@ class GraphResult(GraphCommonNew):
         idx = 0
         for (id_obs, var), param_obs in dict_obs.items():
             self.list_var.append({"id": v, "name": var, "clr": "grey"})
+
             (courbe_obs,) = self.ax[param_obs["axe"]]["axe"].plot(
                 [],
                 [],

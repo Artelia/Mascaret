@@ -21,14 +21,10 @@ email                :
 import os
 
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
-
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtWidgets import *
 
 
 class ClassParameterDialog(QDialog):

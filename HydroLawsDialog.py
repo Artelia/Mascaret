@@ -27,6 +27,7 @@ from matplotlib.dates import date2num
 from pandas import pivot_table, DataFrame
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -37,11 +38,7 @@ from qgis.utils import *
 from .Function import data_to_float, data_to_date, del_2space
 from .Graphic.GraphHydro import GraphHydroLaw
 
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-    from qgis.PyQt.QtWidgets import *
+
 
 dico_typ_law = {
     1: {

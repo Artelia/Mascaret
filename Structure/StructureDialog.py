@@ -30,14 +30,6 @@ from .GraphStructure import GraphStructure
 from .StructureEditDialog import ClassStructureEditDialog
 from .StructureCreateDialog import ClassStructureCreateDialog
 
-# from ..Function import data_to_float
-
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-    from qgis.PyQt.QtWidgets import *
-
 
 class ClassStructureDialog(QDialog):
     def __init__(self, mgis):

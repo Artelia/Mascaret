@@ -22,21 +22,13 @@ from qgis.PyQt.uic import *
 
 from .MascPlugDialog import MascPlugDialog
 
-if int(qVersion()[0]) < 5:
-    from qgis.PyQt.QtGui import QApplication, QAction, QIcon
+from qgis.PyQt.QtWidgets import QApplication, QAction
+from qgis.PyQt.QtGui import QIcon
 
-    try:
-        from . import resources
-    except ImportError:
-        pass
-else:  # qt5
-    from qgis.PyQt.QtWidgets import QApplication, QAction
-    from qgis.PyQt.QtGui import QIcon
-
-    try:
-        from . import resourcesQT5
-    except ImportError:
-        pass
+try:
+    from . import resourcesQT5
+except ImportError:
+    pass
 
 
 class MascPlug:

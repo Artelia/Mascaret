@@ -217,6 +217,7 @@ class ClassProfInterp:
             pr_am, x_am_fond, zmin_am, pas=pas, id_g=id_am_f[0], id_d=-1, cond_pas_z=cond_pas_z
         )
 
+
         av_g = self.discret_pr_lg(
             pr_av, x_av_fond, zmin_av, pas=pas, id_g=0, id_d=id_av_f[0], cond_pas_z=cond_pas_z
         )
@@ -226,6 +227,7 @@ class ClassProfInterp:
 
         list_points_g = []
         list_points_d = []
+
         if len(am_g) == 0 and len(am_d) == 0 and len(av_g) == 0 and len(av_d) == 0:
             return None, None
             # in the case where there is no upstream or downstream profile on the portion of the bed

@@ -37,7 +37,6 @@ from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 
-
 from .ClassMassGraph import MassGraph
 from .ClassProfInterpDialog import ClassProfInterpDialog
 from .FilterDialog import ClassFilterDialog
@@ -57,6 +56,13 @@ from ..ClassUpdateBedDialog import (
 from ..Function import tw_to_txt, filter_pr_fct, filter_dist_perpendiculaire
 from ..Structure.ClassPolygone import ClassPolygone
 from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
+
+try :
+    from packaging.version import parse
+    import matplotlib
+    MPLT_NEW =  (parse(matplotlib.__version__) >= parse("3.6.3"))
+except:
+    MPLT_NEW =  False
 
 try :
     from packaging.version import parse
@@ -426,7 +432,6 @@ class GraphProfil(GraphCommon):
 
         self.RS = RectangleSelector(self.axes, self.onselect)
         self.RS.set_active(False)
-
         if not MPLT_NEW :
             self.span = SpanSelector(
                 self.axes,
@@ -447,8 +452,6 @@ class GraphProfil(GraphCommon):
                 useblit=False,
             )
         self.span.set_visible(False)
-
-
 
         self.curseur = Cursor(self.axes, useblit=True, color="red")
         self.curseur.visible = False

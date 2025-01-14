@@ -27,13 +27,6 @@ from qgis.utils import *
 
 from .ClassTableStructure import ClassTableStructure, update_etat_struct
 
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QIcon
-    from qgis.PyQt.QtWidgets import *
-
-
 class ClassStructureCreateDialog(QDialog):
     def __init__(self, mgis, id_profil):
         QDialog.__init__(self)

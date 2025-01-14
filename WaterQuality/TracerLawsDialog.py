@@ -19,6 +19,7 @@ email                :
 """
 import os
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -29,11 +30,6 @@ from .ClassTableWQ import ClassTableWQ
 from .Graph_WQ import GraphWaterQ
 from ..Function import data_to_float
 
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-    from qgis.PyQt.QtWidgets import *
 
 
 class ClassTracerLawsDialog(QDialog):
@@ -189,15 +185,10 @@ class ClassTracerLawsDialog(QDialog):
     def import_csv(self):
         """import CSV file"""
         nb_col = len(self.list_trac) + 1
-        if int(qVersion()[0]) < 5:  # qt4
-            listf = QFileDialog.getOpenFileNames(
-                None, "File Selection", self.mgis.repProject, "File (*.txt *.csv *.met)"
-            )
 
-        else:  # qt5
-            listf, _ = QFileDialog.getOpenFileNames(
-                None, "File Selection", self.mgis.repProject, "File (*.txt *.csv *.met)"
-            )
+        listf, _ = QFileDialog.getOpenFileNames(
+            None, "File Selection", self.mgis.repProject, "File (*.txt *.csv *.met)"
+        )
 
         if listf:
             self.mgis.up_rep_project(listf[0])

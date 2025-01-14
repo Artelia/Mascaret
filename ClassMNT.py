@@ -97,9 +97,6 @@ class ClassMNT(QObject):
                         " between the raster and the profile"
                     )
 
-        try:  # qgis2
-            self.profil.saveEdits()
-        except:  # qgis 3
-            self.profil.commitChanges()
-            update_all_bed_geometry(self.mgis.mdb)
-            refresh_minor_bed_layer(self.mgis.mdb, self.mgis.iface)
+        self.profil.commitChanges()
+        update_all_bed_geometry(self.mgis.mdb)
+        refresh_minor_bed_layer(self.mgis.mdb, self.mgis.iface)

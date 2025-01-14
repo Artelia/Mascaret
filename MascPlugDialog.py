@@ -540,10 +540,7 @@ class MascPlugDialog(QMainWindow):
         if not raster:
             QMessageBox.warning(None, "Message", "Please, selection the DTM raster")
             return
-        try:  # qgis2
-            tempo = QgsMapLayerRegistry.instance().mapLayers().values()
-        except Exception:  # qgis 3
-            tempo = QgsProject.instance().mapLayers().values()
+        tempo = QgsProject.instance().mapLayers().values()
         for couche in tempo:
             if couche.name() == "profiles":
                 profil = couche
@@ -931,10 +928,7 @@ class MascPlugDialog(QMainWindow):
 
         self.prev_tool = canvas.mapTool()
         self.map_tool = IdentifyFeatureTool(self)
-        try:  # qgis2
-            QObject.connect(self.map_tool, SIGNAL("geomIdentified"), self.do_something)
-        except Exception:  # qgis3
-            self.map_tool.changedRasterResults.connect(self.do_something)
+        self.map_tool.changedRasterResults.connect(self.do_something)
 
         canvas.setMapTool(self.map_tool)
 

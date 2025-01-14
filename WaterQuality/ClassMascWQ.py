@@ -20,19 +20,13 @@ comment:
 
 """
 import os
-from qgis.PyQt.QtCore import qVersion
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
 from .ClassTableWQ import ClassTableWQ
 from ..Function import interpole, del_symbol
-
-if int(qVersion()[0]) < 5:  # qt4
-    from qgis.PyQt.QtGui import *
-else:  # qt5
-    from qgis.PyQt.QtWidgets import *
-
 
 class ClassMascWQ:
     def __init__(self, main, file):

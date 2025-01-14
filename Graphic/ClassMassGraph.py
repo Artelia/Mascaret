@@ -263,6 +263,7 @@ class MassGraph:
                                  WHERE date>='{2}'
                                  AND date<='{3}'
                                  ORDER BY date"""
+
                         rows = self.mdb.run_query(sql1.format(self.mdb.SCHEMA, run, scenario, abscisse), fetch=True)
                         for grandeur, date, val in rows:
                             if date not in tab[i].keys():

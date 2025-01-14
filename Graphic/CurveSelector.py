@@ -20,13 +20,9 @@ email                :
 """
 
 import os
-from qgis.PyQt.QtCore import qVersion, pyqtSignal
+from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.uic import *
-
-if int(qVersion()[0]) < 5:
-    from qgis.PyQt.QtGui import *
-else:
-    from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtWidgets import *
 
 from datetime import date, timedelta, datetime
 
