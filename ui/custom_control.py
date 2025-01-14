@@ -35,12 +35,12 @@ from qgis.PyQt.QtWidgets import QMessageBox, QDoubleSpinBox
 #   Class  warningBox
 # *******************************************************************************
 class ClassWarningBox:
-    """TODO add all select box """
+    """TODO add all select box"""
 
     def __init__(self):
         pass
 
-    def yes_no_q(self, msg, title=''):
+    def yes_no_q(self, msg, title=""):
         d = QMessageBox()
         d.setWindowTitle(title)
         d.addButton(QMessageBox.Yes)
@@ -54,14 +54,14 @@ class ClassWarningBox:
         else:
             return False
 
-    def info(self, msg, title=''):
+    def info(self, msg, title=""):
         QMessageBox.warning(None, title, msg)
 
 
 # *******************************************************************************
 #   Class  ScientificDoubleSpinBox
 # *******************************************************************************
-_float_re = re.compile(r'(([+-]?\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)')
+_float_re = re.compile(r"(([+-]?\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)")
 
 
 def valid_float_string(string):
@@ -73,7 +73,7 @@ class FloatValidator(QValidator):
     def validate(self, string, position):
         if valid_float_string(string):
             return QValidator.Acceptable
-        if string == "" or string[position - 1] in 'e.-+':
+        if string == "" or string[position - 1] in "e.-+":
             return QValidator.Intermediate
         return QValidator.Invalid
 
@@ -124,5 +124,4 @@ def format_float(value):
 
 
 def datetime2QDateTime(date):
-    return QDateTime(date.year, date.month, date.day,
-                     date.hour, date.minute, date.second)
+    return QDateTime(date.year, date.month, date.day, date.hour, date.minute, date.second)

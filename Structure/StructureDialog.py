@@ -46,8 +46,7 @@ class ClassStructureDialog(QDialog):
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
 
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_structure.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_structure.ui"), self)
 
         self.graph_struct = None
 
@@ -68,19 +67,20 @@ class ClassStructureDialog(QDialog):
 
     def fill_lst_struct(self, id=None):
         rows = self.mdb.run_query(
-            "SELECT gid, name FROM {0}.profiles".format(self.mdb.SCHEMA),
-            fetch=True)
+            "SELECT gid, name FROM {0}.profiles".format(self.mdb.SCHEMA), fetch=True
+        )
         dico_profil = {r[0]: r[1] for r in rows}
         self.tree_struct.clear()
         for id_type, elem in self.tbst.dico_struc_typ.items():
             typ_itm = QTreeWidgetItem()
             typ_itm.setFlags(Qt.ItemIsEnabled)
             typ_itm.setData(0, 32, id_type)
-            typ_itm.setText(0, elem['name'])
+            typ_itm.setText(0, elem["name"])
             self.tree_struct.addTopLevelItem(typ_itm)
-            sql = "SELECT id, name, id_prof_ori, method, comment,active FROM {0}.struct_config " \
-                  "WHERE type = '{1}' ORDER BY name".format(self.mdb.SCHEMA,
-                                                            id_type)
+            sql = (
+                "SELECT id, name, id_prof_ori, method, comment,active FROM {0}.struct_config "
+                "WHERE type = '{1}' ORDER BY name".format(self.mdb.SCHEMA, id_type)
+            )
             rows = self.mdb.run_query(sql, fetch=True)
             for row in rows:
                 ouv_itm = QTreeWidgetItem()
@@ -93,9 +93,9 @@ class ClassStructureDialog(QDialog):
                 else:
                     ouv_itm.setText(1, "#deleted")
                 if not row[5]:
-                    ouv_itm.setText(3, 'Deactivated')
+                    ouv_itm.setText(3, "Deactivated")
                 else:
-                    ouv_itm.setText(3, '')
+                    ouv_itm.setText(3, "")
                 if row[3] is not None:
                     ouv_itm.setText(2, self.tbst.dico_meth_calc[row[3]])
                 ouv_itm.setText(4, str(row[4]))
@@ -143,18 +143,21 @@ class ClassStructureDialog(QDialog):
             id_struct = itm.data(0, 32)
 
             sql = "DELETE FROM {0}.profil_struct WHERE id_config = {1}".format(
-                self.mdb.SCHEMA, id_struct)
+                self.mdb.SCHEMA, id_struct
+            )
             self.mdb.execute(sql)
             sql = "DELETE FROM {0}.struct_elem_param WHERE id_config = {1}".format(
-                self.mdb.SCHEMA, id_struct)
+                self.mdb.SCHEMA, id_struct
+            )
             self.mdb.execute(sql)
             sql = "DELETE FROM {0}.struct_elem WHERE id_config = {1}".format(
-                self.mdb.SCHEMA, id_struct)
+                self.mdb.SCHEMA, id_struct
+            )
             self.mdb.execute(sql)
             sql = "DELETE FROM {0}.struct_param WHERE id_config = {1}".format(
-                self.mdb.SCHEMA, id_struct)
+                self.mdb.SCHEMA, id_struct
+            )
             self.mdb.execute(sql)
-            sql = "DELETE FROM {0}.struct_config WHERE id = {1}".format(
-                self.mdb.SCHEMA, id_struct)
+            sql = "DELETE FROM {0}.struct_config WHERE id = {1}".format(self.mdb.SCHEMA, id_struct)
             self.mdb.execute(sql)
             self.fill_lst_struct()

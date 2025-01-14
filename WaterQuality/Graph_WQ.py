@@ -38,21 +38,21 @@ class GraphWaterQ(GraphCommon):
 
     def init_ui(self, mod):
         self.axes = self.fig.add_subplot(111)
-        self.axes.tick_params(axis='both', labelsize=7.)
+        self.axes.tick_params(axis="both", labelsize=7.0)
         self.axes.grid(True)
 
         sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(
-            self.mdb.SCHEMA, mod)
+            self.mdb.SCHEMA, mod
+        )
         rows = self.mdb.run_query(sql, fetch=True)
 
         self.list_trac = []
         for row in rows:
             self.list_trac.append({"id": row[0], "name": row[1]})
-            self.courbeTrac, = self.axes.plot([], [], zorder=100 - row[0],
-                                              label=row[1])
+            (self.courbeTrac,) = self.axes.plot([], [], zorder=100 - row[0], label=row[1])
             self.courbes.append(self.courbeTrac)
 
-        self.fig.canvas.mpl_connect('pick_event', self.onpick)
+        self.fig.canvas.mpl_connect("pick_event", self.onpick)
         self.init_legende()
 
     def init_graph(self, config, all_vis=False):
@@ -61,10 +61,11 @@ class GraphWaterQ(GraphCommon):
         for t, trac in enumerate(self.list_trac):
             lst = [[], []]
             if config is not None:
-                sql = "SELECT time, value FROM {0}.laws_wq " \
-                      "WHERE id_config = {1} and id_trac = {2}" \
-                      " ORDER BY time".format(self.mdb.SCHEMA, config,
-                                              trac["id"])
+                sql = (
+                    "SELECT time, value FROM {0}.laws_wq "
+                    "WHERE id_config = {1} and id_trac = {2}"
+                    " ORDER BY time".format(self.mdb.SCHEMA, config, trac["id"])
+                )
                 rows = self.mdb.run_query(sql, fetch=True)
                 if len(rows) > 0:
                     lst = list(zip(*rows))
@@ -91,15 +92,14 @@ class GraphMeteo(GraphCommon):
 
     def init_ui(self):
         self.axes = self.fig.add_subplot(111)
-        self.axes.tick_params(axis='both', labelsize=7.)
+        self.axes.tick_params(axis="both", labelsize=7.0)
         self.axes.grid(True)
 
         for var in self.lst_var:
-            self.courbeTrac, = self.axes.plot([], [], zorder=100 - var["id"],
-                                              label=var["name"])
+            (self.courbeTrac,) = self.axes.plot([], [], zorder=100 - var["id"], label=var["name"])
             self.courbes.append(self.courbeTrac)
 
-        self.fig.canvas.mpl_connect('pick_event', self.onpick)
+        self.fig.canvas.mpl_connect("pick_event", self.onpick)
         self.init_legende()
 
     def init_graph(self, config, all_vis=False):
@@ -108,9 +108,11 @@ class GraphMeteo(GraphCommon):
         for v, var in enumerate(self.lst_var):
             lst = [[], []]
             if config is not None:
-                sql = "SELECT time, value FROM {0}.laws_meteo " \
-                      "WHERE id_config = {1} and id_var = {2} " \
-                      "ORDER BY time".format(self.mdb.SCHEMA, config, var["id"])
+                sql = (
+                    "SELECT time, value FROM {0}.laws_meteo "
+                    "WHERE id_config = {1} and id_var = {2} "
+                    "ORDER BY time".format(self.mdb.SCHEMA, config, var["id"])
+                )
                 rows = self.mdb.run_query(sql, fetch=True)
                 if len(rows) > 0:
                     lst = list(zip(*rows))
@@ -136,23 +138,23 @@ class GraphInitConc(GraphCommon):
 
     def init_ui(self):
         self.axes = self.fig.add_subplot(111)
-        self.fig.canvas.mpl_connect('pick_event', self.onpick)
+        self.fig.canvas.mpl_connect("pick_event", self.onpick)
 
     def init_mdl(self, mod):
         sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(
-            self.mdb.SCHEMA, mod)
+            self.mdb.SCHEMA, mod
+        )
         rows = self.mdb.run_query(sql, fetch=True)
 
         self.axes.cla()
-        self.axes.tick_params(axis='both', labelsize=7.)
+        self.axes.tick_params(axis="both", labelsize=7.0)
         self.axes.grid(True)
 
         self.list_trac = []
         self.courbes = []
         for row in rows:
             self.list_trac.append({"id": row[0], "name": row[1]})
-            self.courbeTrac, = self.axes.plot([], [], zorder=100 - row[0],
-                                              label=row[1])
+            (self.courbeTrac,) = self.axes.plot([], [], zorder=100 - row[0], label=row[1])
             self.courbes.append(self.courbeTrac)
 
         self.init_legende()
@@ -163,9 +165,12 @@ class GraphInitConc(GraphCommon):
         for t, trac in enumerate(self.list_trac):
             lst = [[], []]
             if config is not None:
-                sql = "SELECT abscissa, value FROM {0}.init_conc_wq " \
-                      "WHERE id_config = {1} and bief = {2} and id_trac = {3} ORDER BY abscissa".format(
-                    self.mdb.SCHEMA, config, bief, trac["id"])
+                sql = (
+                    "SELECT abscissa, value FROM {0}.init_conc_wq "
+                    "WHERE id_config = {1} and bief = {2} and id_trac = {3} ORDER BY abscissa".format(
+                        self.mdb.SCHEMA, config, bief, trac["id"]
+                    )
+                )
                 rows = self.mdb.run_query(sql, fetch=True)
                 if len(rows) > 0:
                     lst = list(zip(*rows))

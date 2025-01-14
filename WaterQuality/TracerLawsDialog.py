@@ -49,8 +49,7 @@ class ClassTracerLawsDialog(QDialog):
         self.graph_edit = None
         self.list_trac = []
 
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_tracer_laws.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_tracer_laws.ui"), self)
 
         self.ui.tab_laws.sCut_del = QShortcut(QKeySequence("Del"), self)
         self.ui.tab_laws.sCut_del.activated.connect(self.short_cut_row_del)
@@ -80,18 +79,20 @@ class ClassTracerLawsDialog(QDialog):
 
     def display_graph_home(self):
         if self.ui.lst_laws.selectedIndexes():
-            l = self.ui.lst_laws.selectedIndexes()[0].row()
-            config = int(self.ui.lst_laws.model().item(l, 0).text())
+            lval = self.ui.lst_laws.selectedIndexes()[0].row()
+            config = int(self.ui.lst_laws.model().item(lval, 0).text())
             self.graph_home.init_graph(config)
         else:
             self.graph_home.init_graph(None)
 
     def init_ui(self):
         self.ui.Law_pages.setCurrentIndex(0)
-        self.graph_home = GraphWaterQ(self.mgis, self.ui.lay_graph_home,
-                                      self.tbwq.dico_wq_mod[self.cur_wq_mod])
-        self.graph_edit = GraphWaterQ(self.mgis, self.ui.lay_graph_edit,
-                                      self.tbwq.dico_wq_mod[self.cur_wq_mod])
+        self.graph_home = GraphWaterQ(
+            self.mgis, self.ui.lay_graph_home, self.tbwq.dico_wq_mod[self.cur_wq_mod]
+        )
+        self.graph_edit = GraphWaterQ(
+            self.mgis, self.ui.lay_graph_edit, self.tbwq.dico_wq_mod[self.cur_wq_mod]
+        )
         self.fill_lst_conf()
 
     def fill_lst_conf(self, id=None):
@@ -99,11 +100,11 @@ class ClassTracerLawsDialog(QDialog):
         model.setColumnCount(2)
         self.ui.lst_laws.setModel(model)
         self.ui.lst_laws.setModelColumn(1)
-        self.ui.lst_laws.selectionModel().selectionChanged.connect(
-            self.display_graph_home)
+        self.ui.lst_laws.selectionModel().selectionChanged.connect(self.display_graph_home)
 
         sql = "SELECT * FROM {0}.tracer_config WHERE type = {1} ORDER BY name".format(
-            self.mdb.SCHEMA, self.cur_wq_mod)
+            self.mdb.SCHEMA, self.cur_wq_mod
+        )
         rows = self.mdb.run_query(sql, fetch=True)
 
         for i, row in enumerate(rows):
@@ -117,8 +118,7 @@ class ClassTracerLawsDialog(QDialog):
         if id:
             for r in range(self.ui.lst_laws.model().rowCount()):
                 if str(self.ui.lst_laws.model().item(r, 0).text()) == str(id):
-                    self.ui.lst_laws.setCurrentIndex(
-                        self.ui.lst_laws.model().item(r, 1).index())
+                    self.ui.lst_laws.setCurrentIndex(self.ui.lst_laws.model().item(r, 1).index())
                     break
         else:
             self.display_graph_home()
@@ -128,12 +128,11 @@ class ClassTracerLawsDialog(QDialog):
         model = QStandardItemModel()
         model.insertColumns(0, 4)
         for c in range(4):
-            model.setHeaderData(c, 1, 'time', 0)
+            model.setHeaderData(c, 1, "time", 0)
 
         sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(
-            self.mdb.SCHEMA,
-            self.tbwq.dico_wq_mod[
-                self.cur_wq_mod])
+            self.mdb.SCHEMA, self.tbwq.dico_wq_mod[self.cur_wq_mod]
+        )
         rows = self.mdb.run_query(sql, fetch=True)
         model.insertColumns(4, len(rows))
         for r, row in enumerate(rows):
@@ -163,16 +162,17 @@ class ClassTracerLawsDialog(QDialog):
         if self.cur_wq_law != -1:
             c = 0
             for trac in self.list_trac:
-                sql = "SELECT time, value FROM {0}.laws_wq WHERE id_config = {1} AND id_trac = {2} " \
-                      "ORDER BY time".format(self.mdb.SCHEMA, self.cur_wq_law,
-                                             trac[0])
+                sql = (
+                    "SELECT time, value FROM {0}.laws_wq WHERE id_config = {1} AND id_trac = {2} "
+                    "ORDER BY time".format(self.mdb.SCHEMA, self.cur_wq_law, trac[0])
+                )
                 rows = self.mdb.run_query(sql, fetch=True)
 
                 if c == 0:
                     model.insertRows(0, len(rows))
                     for r, row in enumerate(rows):
                         itm = QStandardItem()
-                        itm.setData(row[0] / 1., 0)
+                        itm.setData(row[0] / 1.0, 0)
                         model.setItem(r, c, itm)
                     c = 4
 
@@ -187,27 +187,27 @@ class ClassTracerLawsDialog(QDialog):
         self.rb_sec.click()
 
     def import_csv(self):
-        """ import CSV file"""
+        """import CSV file"""
         nb_col = len(self.list_trac) + 1
         if int(qVersion()[0]) < 5:  # qt4
-            listf = QFileDialog.getOpenFileNames(None, 'File Selection',
-                                                 self.mgis.repProject,
-                                                 "File (*.txt *.csv *.met)")
+            listf = QFileDialog.getOpenFileNames(
+                None, "File Selection", self.mgis.repProject, "File (*.txt *.csv *.met)"
+            )
 
         else:  # qt5
-            listf, _ = QFileDialog.getOpenFileNames(None, 'File Selection',
-                                                    self.mgis.repProject,
-                                                    "File (*.txt *.csv *.met)")
+            listf, _ = QFileDialog.getOpenFileNames(
+                None, "File Selection", self.mgis.repProject, "File (*.txt *.csv *.met)"
+            )
 
         if listf:
-
+            self.mgis.up_rep_project(listf[0])
             error = False
             self.filling_tab = True
             model = self.create_tab_model()
             filein = open(listf[0], "r")
             r = 0
             for num_ligne, ligne in enumerate(filein):
-                if ligne[0] != '#':
+                if ligne[0] != "#":
                     liste = ligne.split(";")
                     if len(liste) == nb_col:
                         model.insertRow(r)
@@ -229,61 +229,60 @@ class ClassTracerLawsDialog(QDialog):
                 self.ui.tab_laws.setModel(model)
                 self.update_courbe("all")
             else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info("Import failed ({})".format(listf[0]))
+                self.mgis.add_info("Import failed ({})".format(listf[0]), dbg=True)
 
     def on_tab_data_change(self, itm):
         if itm.column() < 4:
             model = itm.model()
             # model = self.ui.tab_laws.model()
-            if itm.data(0) or itm.data(0) == .0:
+            if itm.data(0) or itm.data(0) == 0.0:
                 if itm.column() == 0:
                     model.blockSignals(True)
                     if not model.item(itm.row(), 1):
                         model.setItem(itm.row(), 1, QStandardItem())
-                    model.item(itm.row(), 1).setData(itm.data(0) / 60., 0)
+                    model.item(itm.row(), 1).setData(itm.data(0) / 60.0, 0)
                     if not model.item(itm.row(), 2):
                         model.setItem(itm.row(), 2, QStandardItem())
-                    model.item(itm.row(), 2).setData(itm.data(0) / 3600., 0)
+                    model.item(itm.row(), 2).setData(itm.data(0) / 3600.0, 0)
                     if not model.item(itm.row(), 3):
                         model.setItem(itm.row(), 3, QStandardItem())
-                    model.item(itm.row(), 3).setData(itm.data(0) / 86400., 0)
+                    model.item(itm.row(), 3).setData(itm.data(0) / 86400.0, 0)
                     model.blockSignals(False)
                 elif itm.column() == 1:
                     model.blockSignals(True)
                     if not model.item(itm.row(), 0):
                         model.setItem(itm.row(), 0, QStandardItem())
-                    model.item(itm.row(), 0).setData(itm.data(0) * 60., 0)
+                    model.item(itm.row(), 0).setData(itm.data(0) * 60.0, 0)
                     if not model.item(itm.row(), 2):
                         model.setItem(itm.row(), 2, QStandardItem())
-                    model.item(itm.row(), 2).setData(itm.data(0) / 60., 0)
+                    model.item(itm.row(), 2).setData(itm.data(0) / 60.0, 0)
                     if not model.item(itm.row(), 3):
                         model.setItem(itm.row(), 3, QStandardItem())
-                    model.item(itm.row(), 3).setData(itm.data(0) / 1440., 0)
+                    model.item(itm.row(), 3).setData(itm.data(0) / 1440.0, 0)
                     model.blockSignals(False)
                 elif itm.column() == 2:
                     model.blockSignals(True)
                     if not model.item(itm.row(), 0):
                         model.setItem(itm.row(), 0, QStandardItem())
-                    model.item(itm.row(), 0).setData(itm.data(0) * 3600., 0)
+                    model.item(itm.row(), 0).setData(itm.data(0) * 3600.0, 0)
                     if not model.item(itm.row(), 1):
                         model.setItem(itm.row(), 1, QStandardItem())
-                    model.item(itm.row(), 1).setData(itm.data(0) * 60., 0)
+                    model.item(itm.row(), 1).setData(itm.data(0) * 60.0, 0)
                     if not model.item(itm.row(), 3):
                         model.setItem(itm.row(), 3, QStandardItem())
-                    model.item(itm.row(), 3).setData(itm.data(0) / 24., 0)
+                    model.item(itm.row(), 3).setData(itm.data(0) / 24.0, 0)
                     model.blockSignals(False)
                 elif itm.column() == 3:
                     model.blockSignals(True)
                     if not model.item(itm.row(), 0):
                         model.setItem(itm.row(), 0, QStandardItem())
-                    model.item(itm.row(), 0).setData(itm.data(0) * 86400., 0)
+                    model.item(itm.row(), 0).setData(itm.data(0) * 86400.0, 0)
                     if not model.item(itm.row(), 1):
                         model.setItem(itm.row(), 1, QStandardItem())
-                    model.item(itm.row(), 1).setData(itm.data(0) * 1440., 0)
+                    model.item(itm.row(), 1).setData(itm.data(0) * 1440.0, 0)
                     if not model.item(itm.row(), 2):
                         model.setItem(itm.row(), 2, QStandardItem())
-                    model.item(itm.row(), 2).setData(itm.data(0) * 24., 0)
+                    model.item(itm.row(), 2).setData(itm.data(0) * 24.0, 0)
                     model.blockSignals(False)
 
             if not self.filling_tab:
@@ -317,7 +316,7 @@ class ClassTracerLawsDialog(QDialog):
     def new_law(self):
         # changer de page
         self.cur_wq_law = -1
-        self.ui.LawWQ.setText('')
+        self.ui.LawWQ.setText("")
         self.fill_tab_laws()
         self.ui.Law_pages.setCurrentIndex(1)
         self.graph_edit.init_graph(None)
@@ -326,9 +325,9 @@ class ClassTracerLawsDialog(QDialog):
         # charger les informations
         # changer de page
         if self.ui.lst_laws.selectedIndexes():
-            l = self.ui.lst_laws.selectedIndexes()[0].row()
-            self.cur_wq_law = int(self.ui.lst_laws.model().item(l, 0).text())
-            self.ui.LawWQ.setText(self.ui.lst_laws.model().item(l, 1).text())
+            lval = self.ui.lst_laws.selectedIndexes()[0].row()
+            self.cur_wq_law = int(self.ui.lst_laws.model().item(lval, 0).text())
+            self.ui.LawWQ.setText(self.ui.lst_laws.model().item(lval, 1).text())
             self.fill_tab_laws()
             self.ui.Law_pages.setCurrentIndex(1)
             self.graph_edit.init_graph(self.cur_wq_law)
@@ -337,21 +336,24 @@ class ClassTracerLawsDialog(QDialog):
         # charger les informations
         # changer de page
         if self.ui.lst_laws.selectedIndexes():
-            l = self.ui.lst_laws.selectedIndexes()[0].row()
-            id_law = self.ui.lst_laws.model().item(l, 0).text()
-            name_law = self.ui.lst_laws.model().item(l, 1).text()
-            if (QMessageBox.question(self, "Tracer Laws",
-                                     "Delete {} ?".format(name_law),
-                                     QMessageBox.Cancel | QMessageBox.Ok)) == QMessageBox.Ok:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Deletion of {} Tracer Laws".format(name_law))
+            lval = self.ui.lst_laws.selectedIndexes()[0].row()
+            id_law = self.ui.lst_laws.model().item(lval, 0).text()
+            name_law = self.ui.lst_laws.model().item(lval, 1).text()
+            if (
+                QMessageBox.question(
+                    self,
+                    "Tracer Laws",
+                    "Delete {} ?".format(name_law),
+                    QMessageBox.Cancel | QMessageBox.Ok,
+                )
+            ) == QMessageBox.Ok:
+                self.mgis.add_info("Deletion of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(
-                    "DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(
-                        self.mdb.SCHEMA, id_law))
+                    "DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, id_law)
+                )
                 self.mdb.execute(
-                    "DELETE FROM {0}.tracer_config WHERE id = {1}".format(
-                        self.mdb.SCHEMA, id_law))
+                    "DELETE FROM {0}.tracer_config WHERE id = {1}".format(self.mdb.SCHEMA, id_law)
+                )
                 self.fill_lst_conf()
 
     def new_time(self):
@@ -385,7 +387,7 @@ class ClassTracerLawsDialog(QDialog):
             self.update_courbe("all")
 
     def chg_time(self, v):
-        unit = ['s', 'min', 'h', 'day']
+        unit = ["s", "min", "h", "day"]
         for i in range(4):
             if i == v:
                 self.ui.tab_laws.setColumnHidden(i, False)
@@ -402,38 +404,47 @@ class ClassTracerLawsDialog(QDialog):
         if self.ui.tab_laws.model().rowCount() > 0:
             name_law = str(self.ui.LawWQ.text())
             if self.cur_wq_law == -1:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Addition of {} Tracer Laws".format(name_law))
+                self.mgis.add_info("Addition of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(
                     "INSERT INTO {0}.tracer_config (name, type) VALUES ('{1}', {2})".format(
-                        self.mdb.SCHEMA, name_law,
-                        self.cur_wq_mod))
+                        self.mdb.SCHEMA, name_law, self.cur_wq_mod
+                    )
+                )
                 res = self.mdb.run_query(
-                    "SELECT Max(id) FROM {0}.tracer_config".format(
-                        self.mdb.SCHEMA), fetch=True)
+                    "SELECT Max(id) FROM {0}.tracer_config".format(self.mdb.SCHEMA), fetch=True
+                )
                 self.cur_wq_law = res[0][0]
             else:
-                if self.mgis.DEBUG:
-                    self.mgis.add_info(
-                        "Editing of {} Tracer Laws".format(name_law))
+                self.mgis.add_info("Editing of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(
                     "UPDATE {0}.tracer_config SET name = '{1}' WHERE id = {2}".format(
-                        self.mdb.SCHEMA, name_law,
-                        self.cur_wq_law))
+                        self.mdb.SCHEMA, name_law, self.cur_wq_law
+                    )
+                )
                 self.mdb.execute(
                     "DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(
-                        self.mdb.SCHEMA, self.cur_wq_law))
+                        self.mdb.SCHEMA, self.cur_wq_law
+                    )
+                )
 
             recs = []
             for r in range(self.ui.tab_laws.model().rowCount()):
                 for c in range(4, self.ui.tab_laws.model().columnCount()):
-                    recs.append([self.cur_wq_law, self.list_trac[c - 4][0],
-                                 self.ui.tab_laws.model().item(r, 0).data(0),
-                                 self.ui.tab_laws.model().item(r, c).data(0)])
+                    recs.append(
+                        [
+                            self.cur_wq_law,
+                            self.list_trac[c - 4][0],
+                            self.ui.tab_laws.model().item(r, 0).data(0),
+                            self.ui.tab_laws.model().item(r, c).data(0),
+                        ]
+                    )
             self.mdb.run_query(
                 "INSERT INTO {0}.laws_wq (id_config, id_trac, time, value) VALUES (%s, %s, %s, %s)".format(
-                    self.mdb.SCHEMA), many=True, list_many=recs)
+                    self.mdb.SCHEMA
+                ),
+                many=True,
+                list_many=recs,
+            )
 
             self.fill_lst_conf(self.cur_wq_law)
             self.ui.Law_pages.setCurrentIndex(0)
@@ -442,8 +453,7 @@ class ClassTracerLawsDialog(QDialog):
             self.reject_page2()
 
     def reject_page2(self):
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Cancel of Tracer Laws")
+        self.mgis.add_info("Cancel of Tracer Laws", dbg=True)
         self.ui.Law_pages.setCurrentIndex(0)
         self.graph_edit.init_graph(None, all_vis=True)
 
@@ -456,14 +466,11 @@ class ItemEditorFactory(QItemEditorFactory):
         QItemEditorFactory.__init__(self)
 
     def createEditor(self, user_type, parent):
-
         if user_type == QVariant.Double or user_type == 0:
             double_spin_box = QDoubleSpinBox(parent)
             double_spin_box.setDecimals(10)
-            double_spin_box.setMinimum(
-                -1000000000.)  # The default maximum value is 99.99.
-            double_spin_box.setMaximum(
-                1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMinimum(-1000000000.0)  # The default maximum value is 99.99.
+            double_spin_box.setMaximum(1000000000.0)  # The default maximum value is 99.99.
             return double_spin_box
         else:
             return ItemEditorFactory.createEditor(user_type, parent)

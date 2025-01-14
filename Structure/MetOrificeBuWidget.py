@@ -26,8 +26,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, ctrl_get_value, \
-    fill_qcombobox
+from .ClassTableStructure import ClassTableStructure, ctrl_get_value, fill_qcombobox
 
 if int(qVersion()[0]) < 5:  # qt4
     from qgis.PyQt.QtGui import *
@@ -41,8 +40,9 @@ class MetOrificeBuWidget(QWidget):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
-                                      'ui/structures/ui_orifice_bu.ui'), self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, "ui/structures/ui_orifice_bu.ui"), self
+        )
         self.id_struct = id_struct
 
         self.completed = 0
@@ -54,24 +54,28 @@ class MetOrificeBuWidget(QWidget):
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
         self.tab_trav.itemChanged.connect(self.verif_param_trav)
 
-        self.dico_ctrl = {'ZTOPTAB': [self.dsb_cote_tab],
-                          'PASH': [self.dsb_h_pas],
-                          'MINH': [self.dsb_h_min],
-                          'MAXH': [self.dsb_h_max],
-                          'PASQ': [self.dsb_q_pas],
-                          'NBTRAVE': [self.sb_nb_trav],
-                          'COEFDS': [self.dsb_ds],
-                          'COEFDO': [self.dsb_do]
-                          }
+        self.dico_ctrl = {
+            "ZTOPTAB": [self.dsb_cote_tab],
+            "PASH": [self.dsb_h_pas],
+            "MINH": [self.dsb_h_min],
+            "MAXH": [self.dsb_h_max],
+            "PASQ": [self.dsb_q_pas],
+            "NBTRAVE": [self.sb_nb_trav],
+            "COEFDS": [self.dsb_ds],
+            "COEFDO": [self.dsb_do],
+        }
 
-        self.dico_tab = {self.tab_trav: {'type': 0,
-                                         'id': '{} + 1',
-                                         'col': [{'fld': 'ABSBUSE', 'cb': None,
-                                                  'valdef': 1.},
-                                                 {'fld': 'COTERAD', 'cb': None,
-                                                  'valdef': 0.},
-                                                 {'fld': 'LARGTRA', 'cb': None,
-                                                  'valdef': 1.}]}}
+        self.dico_tab = {
+            self.tab_trav: {
+                "type": 0,
+                "id": "{} + 1",
+                "col": [
+                    {"fld": "ABSBUSE", "cb": None, "valdef": 1.0},
+                    {"fld": "COTERAD", "cb": None, "valdef": 0.0},
+                    {"fld": "LARGTRA", "cb": None, "valdef": 1.0},
+                ],
+            }
+        }
 
     def change_ntrav(self, nb_trav):
         nrow_trav = self.tab_trav.rowCount()
@@ -83,31 +87,29 @@ class MetOrificeBuWidget(QWidget):
 
     def insert_elem(self, tab, row):
         tab.insertRow(row)
-        for c, col in enumerate(self.dico_tab[tab]['col']):
-            if isinstance(col['valdef'], int) or isinstance(col['valdef'],
-                                                            float):
-                val = col['valdef']
+        for c, col in enumerate(self.dico_tab[tab]["col"]):
+            if isinstance(col["valdef"], int) or isinstance(col["valdef"], float):
+                val = col["valdef"]
             else:
-                val = ctrl_get_value(col['valdef'])
+                val = ctrl_get_value(col["valdef"])
 
-            if col['cb']:
+            if col["cb"]:
                 cb = QComboBox()
                 cb.setProperty("row", row)
                 tab.setCellWidget(row, c, cb)
-                tab.cellWidget(row, c).currentIndexChanged.connect(col['fn'])
-                fill_qcombobox(tab.cellWidget(row, c), col['cb'], val_def=val)
+                tab.cellWidget(row, c).currentIndexChanged.connect(col["fn"])
+                fill_qcombobox(tab.cellWidget(row, c), col["cb"], val_def=val)
             else:
                 itm = QTableWidgetItem()
                 itm.setData(0, val)
                 tab.setItem(row, c, itm)
 
     def update_min_h_max(self):
-        self.dsb_h_max.setMinimum(
-            self.dsb_h_min.value() + self.dsb_h_pas.value())
+        self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
 
     def verif_param_trav(self, itm):
-        if itm.data(0) <= 0.:
-            itm.setData(0, 1.)
+        if itm.data(0) <= 0.0:
+            itm.setData(0, 1.0)
 
     def progress_bar(self, val):
         self.completed += val

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>700</width>
-    <height>561</height>
+    <width>832</width>
+    <height>661</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -278,13 +278,23 @@
       <layout class="QGridLayout" name="gridLayout_6">
        <item row="0" column="0">
         <layout class="QGridLayout" name="gridLayout_5">
-         <item row="0" column="1">
-          <spacer name="horizontalSpacer_2">
+         <item row="10" column="0">
+          <spacer name="verticalSpacer_8">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="2" column="2">
+          <spacer name="horizontalSpacer_8">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -293,6 +303,29 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item row="5" column="0">
+          <widget class="QCheckBox" name="optimisNoyauTrans">
+           <property name="layoutDirection">
+            <enum>Qt::RightToLeft</enum>
+           </property>
+           <property name="text">
+            <string>Optimization of the super-critical kernel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_froudeLimCondLim">
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="text">
+            <string>Limit Froude number for boundary conditions : </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
          </item>
          <item row="2" column="1">
           <widget class="QDoubleSpinBox" name="froudeLimCondLim">
@@ -310,13 +343,39 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="0">
-          <widget class="QCheckBox" name="optimisNoyauTrans">
+         <item row="0" column="1">
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Preferred</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="7" column="0">
+          <widget class="QCheckBox" name="termesNonHydrostatiques">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
            <property name="text">
-            <string>Optimization of the super-critical kernel</string>
+            <string>Non-hydrostsatic terms for super-critical kernel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QCheckBox" name="attenuationConvection">
+           <property name="layoutDirection">
+            <enum>Qt::RightToLeft</enum>
+           </property>
+           <property name="text">
+            <string>Reduced momentum equation</string>
            </property>
           </widget>
          </item>
@@ -350,23 +409,13 @@
            </property>
           </widget>
          </item>
-         <item row="7" column="0">
-          <widget class="QCheckBox" name="termesNonHydrostatiques">
+         <item row="3" column="0">
+          <widget class="QCheckBox" name="traitImplicitFrot">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
            <property name="text">
-            <string>Non-hydrostsatic terms for super-critical kernel</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QCheckBox" name="attenuationConvection">
-           <property name="layoutDirection">
-            <enum>Qt::RightToLeft</enum>
-           </property>
-           <property name="text">
-            <string>Reduced momentum equation</string>
+            <string>Impliciation of friction</string>
            </property>
           </widget>
          </item>
@@ -380,54 +429,15 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_froudeLimCondLim">
-           <property name="layoutDirection">
-            <enum>Qt::LeftToRight</enum>
-           </property>
-           <property name="text">
-            <string>Limit Froude number for boundary conditions : </string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QCheckBox" name="traitImplicitFrot">
+         <item row="9" column="0">
+          <widget class="QCheckBox" name="decentrement">
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
            </property>
            <property name="text">
-            <string>Impliciation of friction</string>
+            <string>Decentrement</string>
            </property>
           </widget>
-         </item>
-         <item row="9" column="0">
-          <spacer name="verticalSpacer_8">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="2" column="2">
-          <spacer name="horizontalSpacer_8">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
          </item>
         </layout>
        </item>
@@ -913,12 +923,17 @@
            </property>
            <item>
             <property name="text">
-             <string>At all computational corss sections</string>
+             <string>At all computational cross sections</string>
             </property>
            </item>
            <item>
             <property name="text">
              <string>Output points layer</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Profiles + Up/Downstream singularity</string>
             </property>
            </item>
           </widget>

@@ -17,7 +17,7 @@
 17;litMajeur;TRUE;TRUE;TRUE;Progressive overflow type  of major river bed;parametresModelePhysique;debordement;True;parameters
 18;zoneStock;TRUE;TRUE;TRUE;Progressive overflow type  of storage area;parametresModelePhysique;debordement;True;parameters
 19;calcOndeSubmersion;FALSE;FALSE;FALSE;Computation of a dam break flood wave;parametresNumeriques;;True;parameters
-20;decentrement;FALSE;FALSE;FALSE;;parametresNumeriques;;False;parameters
+20;decentrement;FALSE;FALSE;FALSE;;parametresNumeriques;;True;parameters
 21;froudeLimCondLim;1000;1000;1000;Limit Froude number for boundary conditions;parametresNumeriques;;True;parameters
 22;traitImplicitFrot;FALSE;FALSE;FALSE;Impliciation of friction;parametresNumeriques;;True;parameters
 23;hauteurEauMini;0.005;0.005;0.005;Minimum water level;parametresNumeriques;;False;parameters

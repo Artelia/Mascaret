@@ -93,6 +93,13 @@
             </widget>
            </item>
            <item>
+            <widget class="Line" name="line_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="b_delete">
              <property name="text">
               <string>Delete Station</string>
@@ -161,7 +168,7 @@
             <bool>false</bool>
            </attribute>
            <attribute name="verticalHeaderDefaultSectionSize">
-            <number>24</number>
+            <number>26</number>
            </attribute>
           </widget>
          </item>
@@ -283,7 +290,7 @@
             <number>50</number>
            </attribute>
            <attribute name="verticalHeaderDefaultSectionSize">
-            <number>22</number>
+            <number>26</number>
            </attribute>
           </widget>
          </item>

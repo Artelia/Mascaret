@@ -37,33 +37,33 @@ class ScoreResallWidget(QWidget):
         self.all = windmain.all
         self.mdb = self.windmain.mgis.mdb
         self.ui = loadUi(
-            os.path.join(self.windmain.mgis.masplugPath,
-                         'ui/scores/ui_results_all_score.ui'), self)
+            os.path.join(self.windmain.mgis.masplugPath, "ui/scores/ui_results_all_score.ui"), self
+        )
         self.dict_name = {}
         self.res = {}
         self.lst_runs = []
         #
         self.data_write = {
-            'mean_err': 'Mean error',
-            'mean_abs_err': 'Mean absolute error',
-            'mean_r_err': 'Mean relative error',
-            'biais': 'Mean relative error in % (biais)',
-            'mean_rabs_err': 'Mean relative absolute error',
-            'precision': 'Mean relative absolute error in % (precision)',
-            'std': 'Standard deviation',
-            'eqm': 'Mean square error',
-            'ns_err': 'Nash - Sutcliffe criterion',
-            'vol_err': "Error on volumes",
-            'pts_err': "Errors on the peaks",
-            'pts_time_err': "Time shift on the peaks",
-            'per_err': 'Persistence'
+            "mean_err": "Mean error",
+            "mean_abs_err": "Mean absolute error",
+            "mean_r_err": "Mean relative error",
+            "biais": "Mean relative error in % (biais)",
+            "mean_rabs_err": "Mean relative absolute error",
+            "precision": "Mean relative absolute error in % (precision)",
+            "std": "Standard deviation",
+            "eqm": "Mean square error",
+            "ns_err": "Nash - Sutcliffe criterion",
+            "vol_err": "Error on volumes",
+            "pts_err": "Errors on the peaks",
+            "pts_time_err": "Time shift on the peaks",
+            "per_err": "Persistence",
         }
         self.data_err = {
-            'simple': 'Simple error',
-            'nash_crit': 'Nash-Sutcliffe criterion',
-            'volume': "Error on volumes",
-            'tips_err': "Errors on the peaks",
-            'persistence': "Persistence score"
+            "simple": "Simple error",
+            "nash_crit": "Nash-Sutcliffe criterion",
+            "volume": "Error on volumes",
+            "tips_err": "Errors on the peaks",
+            "persistence": "Persistence score",
         }
         self.bt_export_csv.clicked.connect(self.export_csv)
 
@@ -91,8 +91,8 @@ class ScoreResallWidget(QWidget):
         self.fill_table()
 
     def get_data(self):
-        """ fill table"""
-        err_typ_lst = [err for err in self.res.keys() if err != 'quantil']
+        """fill table"""
+        err_typ_lst = [err for err in self.res.keys() if err != "quantil"]
         id_lst = []
         for err in err_typ_lst:
             for idrun in self.res[err].keys():
@@ -110,17 +110,13 @@ class ScoreResallWidget(QWidget):
             for idrun, dict_id in self.res[err_typ].items():
                 for pk, dict_pk in dict_id.items():
                     for code, dict_code in dict_pk.items():
-
                         for varq, tmp_var in dict_code.items():
-                            name_line = '{} - {}\n' \
-                                        '{}'.format(
-                                self.dict_name[idrun]['run'],
-                                self.dict_name[idrun]['scenario'],
-                                pk)
-                            name_col = '{} - {}'.format(code, varq)
+                            name_line = "{} - {}\n" "{}".format(
+                                self.dict_name[idrun]["run"], self.dict_name[idrun]["scenario"], pk
+                            )
+                            name_col = "{} - {}".format(code, varq)
                             for err, tmp in tmp_var.items():
-                                self.add_dict(err_typ, err, name_line, name_col,
-                                              tmp)
+                                self.add_dict(err_typ, err, name_line, name_col, tmp)
 
     def add_gui(self):
         """GUI gestion"""
@@ -130,12 +126,10 @@ class ScoreResallWidget(QWidget):
             for err_typ, tab_err_typ in self.tab_fill.items():
                 self.parent[err_typ] = QTabWidget()
                 self.child[err_typ] = {}
-                self.tabWidget.addTab(self.parent[err_typ],
-                                      self.data_err[err_typ])
+                self.tabWidget.addTab(self.parent[err_typ], self.data_err[err_typ])
                 for err, tab_err in tab_err_typ.items():
                     self.child[err_typ][err] = QTableWidget()
-                    self.parent[err_typ].addTab(self.child[err_typ][err],
-                                                self.data_write[err])
+                    self.parent[err_typ].addTab(self.child[err_typ][err], self.data_write[err])
 
     def fill_table(self):
         """
@@ -161,17 +155,14 @@ class ScoreResallWidget(QWidget):
                         for tmp in tab_err[dist].keys():
                             val = tab_err[dist][tmp]
                             if val is None:
-                                val = ''
+                                val = ""
                             if isinstance(val, str):
-                                item = QTableWidgetItem(
-                                    '{}'.format(val))
-                            elif dist == 'vol_err':
-                                item = QTableWidgetItem(
-                                    '{:e}'.format(val))
+                                item = QTableWidgetItem("{}".format(val))
+                            elif dist == "vol_err":
+                                item = QTableWidgetItem("{:e}".format(val))
                             else:
-                                item = QTableWidgetItem('{:.3f}'.format(val))
-                            item.setTextAlignment(
-                                Qt.AlignHCenter | Qt.AlignVCenter)
+                                item = QTableWidgetItem("{:.3f}".format(val))
+                            item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                             item.setFlags(Qt.ItemIsEnabled)
                             col = columns.index(tmp)
                             self.child[err_typ][err].setItem(row, col, item)
@@ -188,27 +179,28 @@ class ScoreResallWidget(QWidget):
     def export_csv(self):
         """Export Table to .CSV file"""
         clipboard = self.clipboard_fill()
-        txt = 'Scores_results'
-        default_name = txt.replace(' ', '_').replace(':', '-')
-        file_name_path, _ = QFileDialog.getSaveFileName(self,
-                                                        "saveFile",
-                                                        "{0}.csv".format(
-                                                            default_name),
-                                                        filter="CSV (*.csv *.)")
+        txt = "Scores_results"
+        default_name = os.path.join(
+            self.windmain.mgis.repProject, txt.replace(" ", "_").replace(":", "-")
+        )
+        file_name_path, _ = QFileDialog.getSaveFileName(
+            self, "saveFile", "{0}.csv".format(default_name), filter="CSV (*.csv *.)"
+        )
         if file_name_path:
-            file = open(file_name_path, 'w')
+            self.windmain.mgis.up_rep_project(file_name_path)
+            file = open(file_name_path, "w")
             file.write(clipboard)
             file.close()
 
-    def clipboard_fill(self, sep=';'):
+    def clipboard_fill(self, sep=";"):
         """
         Creation text in CSV
         :param sep: separateur
         :return:
         """
-        txt = ''
-        first_line = 'Errors {} '.format(sep)
-        second_line = 'Runs\\ observations {} '.format(sep)
+        txt = ""
+        first_line = "Errors {} ".format(sep)
+        second_line = "Runs\\ observations {} ".format(sep)
 
         list_line = []
         list_col1 = []
@@ -226,26 +218,26 @@ class ScoreResallWidget(QWidget):
 
         first = True
         for line in list_line:
-            txt += '{} {} '.format(line, sep)
+            txt += "{} {} ".format(line, sep)
             for err_typ, err in list_col1:
                 for obs in list_col2:
                     if first:
-                        first_line += '{} {} '.format(self.data_write[err], sep)
-                        second_line += '{} {} '.format(obs, sep)
+                        first_line += "{} {} ".format(self.data_write[err], sep)
+                        second_line += "{} {} ".format(obs, sep)
                     try:
                         val = self.tab_fill[err_typ][err][line][obs]
                     except KeyError:
-                        val = ''
+                        val = ""
 
-                    txt += '{} {} '.format(val, sep)
+                    txt += "{} {} ".format(val, sep)
 
             if first:
-                second_line += '\n'
-                first_line += '\n'
+                second_line += "\n"
+                first_line += "\n"
                 first = False
-            txt += '\n'
+            txt += "\n"
 
-        clipboard = 'Scores Results {} \n'.format(sep)
+        clipboard = "Scores Results {} \n".format(sep)
         clipboard += first_line
         clipboard += second_line
         clipboard += txt

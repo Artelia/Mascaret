@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
  """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.uic import *
 from qgis.core import *
@@ -26,7 +27,6 @@ from qgis.gui import *
 from .ui.custom_control import ClassWarningBox
 
 if int(qVersion()[0]) < 5:  # qt4
-
     from qgis.PyQt.QtGui import *
 else:  # qt4
     from qgis.PyQt.QtWidgets import *
@@ -42,34 +42,38 @@ class ClassUpdatePk(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.iface = iface
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_update_pk.ui'), self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_update_pk.ui"), self)
         self.box = ClassWarningBox()
         self.tree = None
-        self.lst_tables_p = ['links', 'profiles']
-        self.lst_tables_pt = ['flood_marks', 'weirs', 'hydraulic_head',
-                              'lateral_inflows',
-                              'lateral_weirs', 'tracer_lateral_inflows',
-                              'outputs']
-        self.lst_tables_b = ['branchs']
-        self.liste_tables = self.lst_tables_b + self.lst_tables_p + self.lst_tables_pt
+        self.lst_tables_p = ["links", "profiles"]
+        self.lst_tables_pt = [
+            "flood_marks",
+            "weirs",
+            "hydraulic_head",
+            "lateral_inflows",
+            "lateral_weirs",
+            "tracer_lateral_inflows",
+            "outputs"
+        ]
+        self.other = ["struct_config"]
+        self.liste_tables = self.lst_tables_p + self.lst_tables_pt + self.other
         # self.liste_tables =  self.lst_tables_p + self.lst_tables_pt
         self.parent = {}
         self.init_gui()
 
     def init_gui(self):
         """
-              initialisation GUI
-          """
+        initialisation GUI
+        """
         if len(self.liste_tables) > 0:
             self.tree = self.ui.treeWidget
 
             for table in self.liste_tables:
                 self.parent[table] = QTreeWidgetItem(self.tree)
                 self.parent[table].setText(0, table)
-                self.parent[table].setFlags(self.parent[table].flags() |
-                                            Qt.ItemIsTristate |
-                                            Qt.ItemIsUserCheckable)
+                self.parent[table].setFlags(
+                    self.parent[table].flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable
+                )
                 self.parent[table].setCheckState(0, Qt.Checked)
         else:
             self.ui.b_delete.setDisabled(True)
@@ -77,36 +81,50 @@ class ClassUpdatePk(QDialog):
         self.ui.b_cancel.clicked.connect(self.annule)
 
     def lancement(self):
-        """ Delete selection function"""
+        """Delete selection function"""
         selection = []
         for table in self.liste_tables:
             if self.parent[table].checkState(0) > 0:
                 selection.append("{}".format(table))
         self.close()
 
-        if not self.mdb.check_fct(["update_abscisse_profil", "abscisse_profil",
-                                   "update_abscisse_point", "abscisse_point",
-                                   "update_abscisse_branch",
-                                   "abscisse_branch"]):
+        if not self.mdb.check_fct(
+            ["update_abscisse_profil", "abscisse_profil", "update_abscisse_point", "abscisse_point"]
+        ):
             self.mdb.add_fct_for_update_pk()
 
         n = len(selection)
 
-        sql = ''
+        sql = ""
         for i, table in enumerate(selection):
             if table in self.lst_tables_pt:
-                sql += "SELECT public.update_abscisse_point('{0}.{1}','{0}.{2}')" \
-                       ";\n".format(self.mdb.SCHEMA, table, 'branchs')
+                sql += "SELECT {0}.update_abscisse_point('{0}','{0}.{1}','{0}.{2}')" ";\n".format(
+                    self.mdb.SCHEMA, table, "branchs"
+                )
             elif table in self.lst_tables_p:
-                sql += "SELECT public.update_abscisse_profil('{0}.{1}','{0}.{2}')" \
-                       ";\n".format(self.mdb.SCHEMA, table, 'branchs')
-            elif table in self.lst_tables_b:
-                sql += "SELECT public.update_abscisse_branch('{0}.{1}')" \
-                       ";\n".format(self.mdb.SCHEMA, table)
+                sql += "SELECT {0}.update_abscisse_profil('{0}','{0}.{1}','{0}.{2}')" ";\n".format(
+                    self.mdb.SCHEMA, table, "branchs"
+                )
+            elif table is "struct_config":
+                feature = self.mdb.select(table, list_var=["id", "id_prof_ori"])
+                if feature:
+                    if len(feature['id']):
+                        for idx, gid in enumerate(feature['id']):
+                            where = "gid = '{0}' ".format(feature["id_prof_ori"][idx])
+                            feat = self.mdb.select(
+                                "profiles", where=where, list_var=["abscissa", "branchnum"]
+                            )
+                            if feat:
+                                if len(feat["abscissa"]) > 0:
+                                    sql += "UPDATE {0}.{1} SET abscissa={2}, branchnum={3} WHERE id={4};\n".format(
+                                        self.mdb.SCHEMA,
+                                        table,
+                                        feat['abscissa'][0],
+                                        feat['branchnum'][0],
+                                        gid)
         self.mdb.run_query(sql)
-        if self.mgis.DEBUG:
-            self.mgis.add_info("Update pk Done")
+        self.mgis.add_info("Update pk Done", dbg=True)
 
     def annule(self):
-        """"Cancel """
+        """ "Cancel"""
         self.close()

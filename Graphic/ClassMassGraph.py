@@ -257,12 +257,12 @@ class MassGraph:
                                  AND r.var = v.id AND v.var IN ('Z','Q')
                                  ORDER BY date"""
 
-                        sql2 = """SELECT type,  date, valeur
-                                                 FROM {0}.observations
-                                                 WHERE code = '{1}'
-                                                 AND date>='{2}'
-                                                 AND date<='{3}'
-                                                 ORDER BY date"""
+                        sql2 = """SELECT type,  date, valeur FROM (SELECT code,type, UNNEST(date) as date,
+                                 UNNEST(valeur) as valeur FROM {0}.observations
+                                 WHERE code = '{1}') t
+                                 WHERE date>='{2}'
+                                 AND date<='{3}'
+                                 ORDER BY date"""
 
                         rows = self.mdb.run_query(sql1.format(self.mdb.SCHEMA, run, scenario, abscisse), fetch=True)
                         for grandeur, date, val in rows:

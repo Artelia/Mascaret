@@ -26,18 +26,14 @@ from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 
 try:
-    from matplotlib.backends.backend_qt5agg \
-        import FigureCanvasQTAgg as FigureCanvas
+    from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 except:
-    from matplotlib.backends.backend_qt5agg \
-        import FigureCanvasQT as FigureCanvas
+    from matplotlib.backends.backend_qt5agg import FigureCanvasQT as FigureCanvas
 # ***************************
 try:
-    from matplotlib.backends.backend_qt5agg \
-        import NavigationToolbar2QTAgg as NavigationToolbar
+    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QTAgg as NavigationToolbar
 except:
-    from matplotlib.backends.backend_qt5agg \
-        import NavigationToolbar2QT as NavigationToolbar
+    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 from matplotlib import pyplot
 from matplotlib.figure import Figure
@@ -51,10 +47,11 @@ from datetime import datetime
 try:
     _encoding = QApplication.UnicodeUTF8
 
-
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig, _encoding)
+
 except AttributeError:
+
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig)
 
@@ -66,7 +63,7 @@ class GraphCommon(QWidget):
         self.mdb = self.mgis.mdb
         self.dossierPlugin = self.mgis.masplugPath
         self.dossierProjet = self.mgis.repProject
-        self.unit = 'date'
+        self.unit = "date"
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
 
@@ -77,7 +74,7 @@ class GraphCommon(QWidget):
         self.coucheProfils = None
         self.liste = {}
         self.position = 0
-        self.nom = ''
+        self.nom = ""
         self.leg = None
         self.lined = dict()
 
@@ -88,14 +85,15 @@ class GraphCommon(QWidget):
         """variables in common for profile graphics"""
         self.gid = gid
         self.coucheProfils = self.mgis.coucheProfils
-        # try:
-        self.liste = self.mdb.select("profiles", "", "abscissa")
-        # except:
-        #     self.mgis.add_info("Error Select profils")
-
+        try:
+            self.liste = self.mdb.select("profiles", "", "abscissa", verbose=False)
+        except:
+            self.mgis.add_info("Error Select profils")
+            return
         self.position = self.liste["gid"].index(self.gid)
         self.feature = {k: v[self.position] for k, v in self.liste.items()}
-        self.nom = self.feature['name']
+        self.nom = self.feature["name"]
+        self.planim = self.feature["planim"]
 
         self.courbes = []
 
@@ -122,8 +120,9 @@ class GraphCommon(QWidget):
 
     def init_legende(self):
         liste_noms = [c.get_label() for c in self.courbes]
-        self.leg = self.axes.legend(self.courbes, liste_noms, loc='upper right',
-                                    fancybox=False, shadow=False, fontsize=7.)
+        self.leg = self.axes.legend(
+            self.courbes, liste_noms, loc="upper right", fancybox=False, shadow=False, fontsize=7.0
+        )
         self.leg.get_frame().set_alpha(0.4)
         self.leg.set_zorder(110)
         # self.leg.draggable(True)
@@ -138,11 +137,10 @@ class GraphCommon(QWidget):
     def maj_unit_x(self, unit):
         self.unit = unit
         self.axes.set_xlabel("time ({})".format(unit))
-        if self.unit != 'date':
+        if self.unit != "date":
             self.axes.xaxis.set_major_formatter(ticker.ScalarFormatter())
         else:
-            self.axes.xaxis.set_major_formatter(
-                mdates.DateFormatter('%d-%m-%Y'))
+            self.axes.xaxis.set_major_formatter(mdates.DateFormatter("%d-%m-%Y"))
 
     def maj_courbes(self, courbes):
         for c in courbes.keys():
@@ -152,10 +150,10 @@ class GraphCommon(QWidget):
 
     def maj_limites(self, marge=0.05):
         no_data = True
-        mini_x = 999999.
-        maxi_x = -999999.
-        mini_z = 999999.
-        maxi_z = -999999.
+        mini_x = 999999.0
+        maxi_x = -999999.0
+        mini_z = 999999.0
+        maxi_z = -999999.0
 
         for courbe in self.courbes:
             if courbe.get_visible():
@@ -174,12 +172,12 @@ class GraphCommon(QWidget):
         maxi_z += d
 
         if no_data:
-            if self.unit != 'date':
-                self.axes.set_xlim(0., 1.)
-                self.axes.set_ylim(0., 1.)
+            if self.unit != "date":
+                self.axes.set_xlim(0.0, 1.0)
+                self.axes.set_ylim(0.0, 1.0)
             else:
-                self.axes.set_xlim(1., 2.)
-                self.axes.set_ylim(1., 2.)
+                self.axes.set_xlim(1.0, 2.0)
+                self.axes.set_ylim(1.0, 2.0)
         else:
             self.axes.set_xlim(mini_x, maxi_x)
             self.axes.set_ylim(mini_z, maxi_z)
@@ -196,10 +194,9 @@ class DraggableLegend:
         self.mouse_y = None
         self.legend_x = None
         self.legend_y = None
-        legend.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
-        legend.figure.canvas.mpl_connect('pick_event', self.on_pick)
-        legend.figure.canvas.mpl_connect('button_release_event',
-                                         self.on_release)
+        legend.figure.canvas.mpl_connect("motion_notify_event", self.on_motion)
+        legend.figure.canvas.mpl_connect("pick_event", self.on_pick)
+        legend.figure.canvas.mpl_connect("button_release_event", self.on_release)
         legend.set_picker(self.my_legend_picker)
 
     def on_motion(self, evt):
@@ -208,7 +205,8 @@ class DraggableLegend:
             dy = evt.y - self.mouse_y
             loc_in_canvas = self.legend_x + dx, self.legend_y + dy
             loc_in_norm_axes = self.legend.parent.transAxes.inverted().transform_point(
-                loc_in_canvas)
+                loc_in_canvas
+            )
             self.legend._loc = tuple(loc_in_norm_axes)
             self.legend.figure.canvas.draw()
 
@@ -228,11 +226,30 @@ class DraggableLegend:
         if self.gotLegend:
             self.gotLegend = False
 
+class CustNavigationToolbar(NavigationToolbar):
+    def __init__(self, canvas, window, parent):
+        super().__init__(canvas, window, parent)
+        # Stocker les limites initiales des axes
+        self.par = parent
+        self.update_limites = True
+        if hasattr(self.par, 'update_limites'):
+            self.update_limites =  self.par.update_limites
+
+    def home(self, *args):
+        if not self.par.update_limites:
+           self.par.update_limites=True
+           self.par.maj_limites()
+           self.par.update_limites = False
+        else:
+            self._nav_stack.home()
+            self.set_history_buttons()
+            self._update_view()
 
 class GraphCommonNew:
     def __init__(self, wgt=None, lay=None, lay_toolbar=None):
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
+        self.wgt = wgt
         self.gui_graph(wgt, lay, lay_toolbar)
         self.leg_selected = False
         self.data = None
@@ -253,7 +270,7 @@ class GraphCommonNew:
         self.flag = False
         self.leg = None
         self.lined = dict()
-        self.unit = ''
+        self.unit = ""
 
     def init_ui_common_p(self):
         self.list_var = []
@@ -261,15 +278,14 @@ class GraphCommonNew:
         self.annotation = []
         self.courbeLaisses = []
 
-        self.fig.canvas.mpl_connect('button_release_event',
-                                    self.graph_off_click)
-        self.fig.canvas.mpl_connect('button_press_event', self.graph_on_click)
-        self.fig.canvas.mpl_connect('motion_notify_event', self.graph_on_press)
-        self.fig.canvas.mpl_connect('pick_event', self.graph_on_pick)
+        self.fig.canvas.mpl_connect("button_release_event", self.graph_off_click)
+        self.fig.canvas.mpl_connect("button_press_event", self.graph_on_click)
+        self.fig.canvas.mpl_connect("motion_notify_event", self.graph_on_press)
+        self.fig.canvas.mpl_connect("pick_event", self.graph_on_pick)
 
     def gui_graph(self, wgt, lay_graph, lay_toolbar=None):
         lay_graph.addWidget(self.canvas)
-        self.toolbar = NavigationToolbar(self.canvas, wgt)
+        self.toolbar = CustNavigationToolbar(self.canvas, wgt, self)
         if lay_toolbar is not None:
             lay_toolbar.addWidget(self.toolbar)
         else:
@@ -285,8 +301,8 @@ class GraphCommonNew:
         d_lined = dict()
         for ax in self.ax.values():
             lst_leg.append(ax["legend"])
-            for l, c in ax["lined"].items():
-                d_lined[l] = c
+            for lin, col in ax["lined"].items():
+                d_lined[lin] = col
 
         art = evt.artist
         if art in lst_leg:
@@ -351,9 +367,8 @@ class GraphCommonNew:
             return
 
         absc = event.xdata
-        if self.unit_x == 'date':
-            cur_x = datetime.utcfromtimestamp(
-                round((absc) * 24) * 3600)
+        if self.unit_x == "date":
+            cur_x = datetime.utcfromtimestamp(round(absc * 24) * 3600)
             # cur_x = datetime.utcfromtimestamp(
             #     round((absc - 719163) * 24) * 3600)
             txt_x = cur_x
@@ -379,8 +394,7 @@ class GraphCommonNew:
                         val_t = min(d[d["x_var"]], key=lambda x: abs(x - cur_x))
                         idx_d = d[d["x_var"]].index(val_t)
                         val = d[var][idx_d]
-                        annot.set_text(
-                            "{} {}".format(round(val, 3), d["y_unit"]))
+                        annot.set_text("{} {}".format(round(val, 3), d["y_unit"]))
                         annot.xy = (absc, val)
                         annot.set_visible(True)
                     else:
@@ -412,14 +426,17 @@ class GraphCommonNew:
                     if c.get_visible():
                         liste_noms.append(c.get_label())
                 all_noms.extend(liste_noms)
-
                 all_curves.extend(ax["curves"])
-
         ax = self.ax[ax_max]
-        ax["legend"] = ax["axe"].legend(all_handles, all_noms,
-                                        loc='upper right', fancybox=False,
-                                        shadow=False, fontsize=7.,
-                                        handlelength=4)
+        ax["legend"] = ax["axe"].legend(
+            all_handles,
+            all_noms,
+            loc="upper right",
+            fancybox=False,
+            shadow=False,
+            fontsize=7.0,
+            handlelength=4,
+        )
         ax["legend"].get_frame().set_alpha(0.4)
         ax["legend"].set_zorder(111 - id_ax)
         ax["legend"].set_draggable(True)
@@ -433,12 +450,11 @@ class GraphCommonNew:
     def maj_unit_x(self, unit):
         self.unit = unit
         self.main_axe.set_xlabel("time ({})".format(unit))
-        if self.unit == 'date':
-            self.unit_x = 'date'
-            self.main_axe.xaxis.set_major_formatter(
-                mdates.DateFormatter('%d-%m-%Y'))
+        if self.unit == "date":
+            self.unit_x = "date"
+            self.main_axe.xaxis.set_major_formatter(mdates.DateFormatter("%d-%m-%Y"))
         else:
-            self.unit_x = 'num'
+            self.unit_x = "num"
             self.main_axe.xaxis.set_major_formatter(ticker.ScalarFormatter())
 
     def maj_courbes(self, courbes):
@@ -480,17 +496,17 @@ class GraphCommonNew:
                                 pass
 
                     if no_data:
-                        ax["axe"].set_ylim(0., 1.)
+                        ax["axe"].set_ylim(0.0, 1.0)
                     else:
                         ax["axe"].set_ylim(mini_z, maxi_z)
 
             if no_data:
-                self.main_axe.set_xlim(0., 1.)
+                self.main_axe.set_xlim(0.0, 1.0)
             else:
                 self.main_axe.set_xlim(mini_x, maxi_x)
-
         self.fig.autofmt_xdate()
         self.canvas.draw()
+
 
 # class DraggableLegendNew:
 #     def __init__(self, axes):
@@ -530,7 +546,7 @@ class GraphCommonNew:
 #                 param_leg["legend_x"] = bbox.xmin
 #                 param_leg["legend_y"] = bbox.ymin
 #                 param_leg["gotLegend"] = 1
-# 
+#
 #     def lgd_on_release(self, evt):
 #         for leg, param in self.legend.items():
 #             if param["gotLegend"]:

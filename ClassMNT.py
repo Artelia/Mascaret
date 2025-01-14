@@ -23,24 +23,26 @@ import numpy as np
 from qgis.PyQt.QtCore import *
 from qgis.core import *
 from qgis.gui import *
+from .ClassUpdateBedDialog import update_all_bed_geometry, refresh_minor_bed_layer
 
 
 class ClassMNT(QObject):
     """Example worker for calculating the total area of all features in a layer"""
 
-    def __init__(self, main, profil, raster, facteur):
+    def __init__(self, main, profil, raster, facteur, auto_prof=False):
         QObject.__init__(self)
         self.mgis = main
         self.profil = profil
         self.raster_provider = raster.dataProvider()
         self.res = raster.rasterUnitsPerPixelX()
         self.facteur = facteur
+        self.auto_prof = auto_prof
         self.mnt = {}
 
     @staticmethod
-    def fct1(x, arrondi = 2):
+    def fct1(x, arrondi=2):
         """around"""
-        return round(float(x),  arrondi)
+        return round(float(x), arrondi)
 
     def run(self):
         features = self.profil.selectedFeatures()
@@ -51,10 +53,11 @@ class ClassMNT(QObject):
             longueur = geomcoupe.length()
             if longueur < self.res:
                 self.mgis.add_info(
-                    "Problem {0} between lenght profile : {1} and Raster accurancy : {2}."
-                    .format(feature["name"], longueur, self.res))
-                self.mgis.add_info(
-                    "This problem could come from the projection units.")
+                    "Problem {0} between lenght profile : {1} and Raster accurancy : {2}.".format(
+                        feature["name"], longueur, self.res
+                    )
+                )
+                self.mgis.add_info("This problem could come from the projection units.")
 
             else:
                 nom = feature["name"]
@@ -64,29 +67,39 @@ class ClassMNT(QObject):
 
                 # self.res taille du la résolution du raster
 
-                for dist in np.arange(0.0, round(longueur, 3),
-                                      round(self.res, 3)):
-
+                for dist in np.arange(0.0, round(longueur, 3), round(self.res, 3)):
                     point = geomcoupe.interpolate(dist)
-                    ident = self.raster_provider.identify(point.asPoint(),
-                                                          QgsRaster.IdentifyFormatValue).results()
+                    ident = self.raster_provider.identify(
+                        point.asPoint(), QgsRaster.IdentifyFormatValue
+                    ).results()
 
                     if ident[1]:
                         feature["xmnt"] += " " + str(dist)
                         feature["zmnt"] += " " + str(self.fct1(ident[1] / self.facteur, arrondi=3))
+                if self.auto_prof:
+                    feature["x"] = feature["xmnt"]
+                    feature["z"] = feature["zmnt"]
+                    print(feature["x"])
+                    feature["leftminbed"] = min(
+                        [float(v) for v in str(feature["xmnt"]).strip().split(" ")]
+                    )
+                    feature["rightminbed"] = max(
+                        [float(v) for v in str(feature["xmnt"]).strip().split(" ")]
+                    )
                 self.profil.updateFeature(feature)
 
                 if len(feature["zmnt"]) > 0:
-                    self.mgis.add_info(
-                        "Extraction of {0} : Ok".format(feature['name']))
+                    self.mgis.add_info("Extraction of {0} : Ok".format(feature["name"]))
                 else:
-                    self.mgis.add_info(
-                        "Extraction of {} : Echec".format(feature['name']))
+                    self.mgis.add_info("Extraction of {} : Echec".format(feature["name"]))
                     self.mgis.add_info(
                         "This problem could come from the different projection"
-                        " between the raster and the profile")
+                        " between the raster and the profile"
+                    )
 
         try:  # qgis2
             self.profil.saveEdits()
         except:  # qgis 3
             self.profil.commitChanges()
+            update_all_bed_geometry(self.mgis.mdb)
+            refresh_minor_bed_layer(self.mgis.mdb, self.mgis.iface)

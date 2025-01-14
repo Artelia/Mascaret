@@ -1,7 +1,21 @@
 <RCC>
   <qresource prefix="/plugins/Mascaret">
+    <file>icones/mActionToggleEditing.png</file>
+    <file>icones/rep_only.png</file>
+    <file>icones/check_all.png</file>
+    <file>icones/icon_cancel.png</file>
+    <file>icones/icon_clean.png</file>
+    <file>icones/icon_valid.png</file>
+    <file>icones/mActionFileSave.png</file>
+    <file>icones/zone_both_bed.png</file>
+    <file>icones/zone_left_bed.png</file>
+    <file>icones/zone_left_stock.png</file>
+    <file>icones/zone_right_bed.png</file>
+    <file>icones/zone_right_stock.png</file>
+    <file>icones/bed_update.png</file>
     <file>icones/lawHydro.png</file>
     <file>icones/basinResult.png</file>
+    <file>icones/bed_import.png</file>
     <file>icones/bridge.png</file>
     <file>icones/icon_base.png</file>
     <file>icones/Model.png</file>
@@ -33,5 +47,6 @@
     <file>icones/lawWQ.png</file>
     <file>icones/lawObs.png</file>
     <file>icones/graph_struct.png</file>
+    <file>icones/save.png</file>
   </qresource>
 </RCC>

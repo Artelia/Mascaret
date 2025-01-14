@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>902</width>
-    <height>738</height>
+    <width>805</width>
+    <height>610</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -72,7 +72,7 @@
      </layout>
     </item>
     <item row="0" column="0">
-     <widget class="QTextEdit" name="textEdit">
+     <widget class="QTextEdit" name="text_edit">
       <property name="minimumSize">
        <size>
         <width>200</width>
@@ -176,7 +176,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>902</width>
+     <width>805</width>
      <height>21</height>
     </rect>
    </property>
@@ -204,6 +204,17 @@
     <property name="title">
      <string>Tools</string>
     </property>
+    <widget class="QMenu" name="menuProfile_Tools">
+     <property name="title">
+      <string>Profile Tools</string>
+     </property>
+     <addaction name="action_Extract_MNTfor_profile"/>
+     <addaction name="actionExtract_Beds"/>
+     <addaction name="actionUpdate_Beds"/>
+     <addaction name="actionUpdate_Beds_Geom"/>
+     <addaction name="actionUpdate_Zones"/>
+     <addaction name="actionFilter_All_Profiles"/>
+    </widget>
     <addaction name="actionHydro_Laws"/>
     <addaction name="actionCross_section"/>
     <addaction name="actionObservations"/>
@@ -211,29 +222,25 @@
     <addaction name="actionStructures_weirs"/>
     <addaction name="actionTest"/>
     <addaction name="separator"/>
-    <addaction name="action_Extract_MNTfor_profile"/>
     <addaction name="actionUpdate_all_PK"/>
+    <addaction name="menuProfile_Tools"/>
    </widget>
    <widget class="QMenu" name="menuDB">
     <property name="title">
      <string>Database</string>
     </property>
-    <widget class="QMenu" name="menuUpate_table">
-     <property name="title">
-      <string>Update Table</string>
-     </property>
-    </widget>
     <addaction name="actionRefresh_Database"/>
     <addaction name="action_update_bin"/>
     <addaction name="separator"/>
     <addaction name="actionCreate_New_Model"/>
     <addaction name="actionLoad_Model"/>
     <addaction name="actionDeleteModel"/>
-    <addaction name="menuUpate_table"/>
+    <addaction name="action_table_reconstruction_vacuum_full"/>
     <addaction name="separator"/>
     <addaction name="actionExport_Model"/>
     <addaction name="actionImport_Model"/>
     <addaction name="actionImport_Old_Model"/>
+    <addaction name="actionTo_clone_Model"/>
    </widget>
    <widget class="QMenu" name="menuRun">
     <property name="title">
@@ -251,6 +258,7 @@
     <addaction name="actionExport_Run"/>
     <addaction name="actionDelete_Run"/>
     <addaction name="actionImport_Results"/>
+    <addaction name="actionReadLisFile"/>
    </widget>
    <widget class="QMenu" name="menuPost_Treatment">
     <property name="title">
@@ -262,8 +270,6 @@
     <addaction name="actionGraphRes"/>
     <addaction name="separator"/>
     <addaction name="actionScores"/>
-    <addaction name="separator"/>
-    <addaction name="action_mass_graphic_events"/>
    </widget>
    <widget class="QMenu" name="menuWater_Quality">
     <property name="title">
@@ -313,6 +319,8 @@
    <addaction name="actionStructures"/>
    <addaction name="separator"/>
    <addaction name="action_Extract_MNTfor_profile"/>
+   <addaction name="actionExtract_Beds"/>
+   <addaction name="actionUpdate_Beds_Geom"/>
   </widget>
   <widget class="QToolBar" name="RunToolBar">
    <property name="windowTitle">
@@ -345,7 +353,7 @@
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>false</bool>
+    <bool>true</bool>
    </attribute>
    <addaction name="actionCross_section_results"/>
    <addaction name="actionHydrogramme"/>
@@ -428,7 +436,7 @@
      <normaloff>:/plugins/Mascaret/icones/mntExtract.png</normaloff>:/plugins/Mascaret/icones/mntExtract.png</iconset>
    </property>
    <property name="text">
-    <string> Extract MNT for profile</string>
+    <string>Extract MNT for profile</string>
    </property>
   </action>
   <action name="actionSteady">
@@ -762,11 +770,6 @@
     <string>Hydro Laws</string>
    </property>
   </action>
-  <action name="action_mass_graphic_events">
-   <property name="text">
-    <string>Mass output of plots</string>
-   </property>
-  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -777,7 +780,7 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>textEdit</tabstop>
+  <tabstop>text_edit</tabstop>
  </tabstops>
  <resources>
   <include location="../resources.qrc"/>

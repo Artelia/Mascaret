@@ -44,9 +44,7 @@ class ClassPhysicalParamDialog(QDialog):
         self.dico_phy = self.tbwq.dico_phy
         self.cur_wq_mod = mod
 
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, 'ui/ui_physical_param.ui'),
-            self)
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_physical_param.ui"), self)
         self.ui.btn_val_def.clicked.connect(self.val_def)
 
         styled_item_delegate = QStyledItemDelegate()
@@ -58,13 +56,14 @@ class ClassPhysicalParamDialog(QDialog):
     def init_ui(self):
         model = QStandardItemModel()
         model.insertColumns(0, 4)
-        model.setHeaderData(0, 1, 'ID', 0)
-        model.setHeaderData(1, 1, 'Sigle', 0)
-        model.setHeaderData(2, 1, 'Parameter', 0)
-        model.setHeaderData(3, 1, 'Value', 0)
+        model.setHeaderData(0, 1, "ID", 0)
+        model.setHeaderData(1, 1, "Sigle", 0)
+        model.setHeaderData(2, 1, "Parameter", 0)
+        model.setHeaderData(3, 1, "Value", 0)
 
         sql = "SELECT id, sigle, text, value FROM {0}.tracer_physic WHERE type = '{1}' ORDER BY id".format(
-            self.mdb.SCHEMA, self.cur_wq_mod)
+            self.mdb.SCHEMA, self.cur_wq_mod
+        )
         rows = self.mdb.run_query(sql, fetch=True)
         model.insertRows(0, len(rows))
         for r, row in enumerate(rows):
@@ -73,8 +72,7 @@ class ClassPhysicalParamDialog(QDialog):
                 itm.setData(val, 0)
                 if c == 3:
                     itm.setData(data_to_float(val), 0)
-                    itm.setFlags(
-                        Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsEditable)
+                    itm.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsEditable)
                     itm.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                 else:
                     itm.setData(val, 0)
@@ -89,9 +87,9 @@ class ClassPhysicalParamDialog(QDialog):
         self.ui.ui.tab_param.show()
 
     def val_def(self):
-        for r, param in enumerate(self.dico_phy[self.cur_wq_mod]['physic']):
+        for r, param in enumerate(self.dico_phy[self.cur_wq_mod]["physic"]):
             mdl = self.ui.tab_param.model()
-            mdl.item(r, 3).setData(param['value'], 0)
+            mdl.item(r, 3).setData(param["value"], 0)
 
 
 class ItemEditorFactory(QItemEditorFactory):
@@ -105,10 +103,8 @@ class ItemEditorFactory(QItemEditorFactory):
         if user_type == QVariant.Double or user_type == 0:
             double_spin_box = QDoubleSpinBox(parent)
             double_spin_box.setDecimals(10)
-            double_spin_box.setMinimum(
-                -1000000000.)  # The default maximum value is 99.99.
-            double_spin_box.setMaximum(
-                1000000000.)  # The default maximum value is 99.99.
+            double_spin_box.setMinimum(-1000000000.0)  # The default maximum value is 99.99.
+            double_spin_box.setMaximum(1000000000.0)  # The default maximum value is 99.99.
             return double_spin_box
         else:
             return ItemEditorFactory.createEditor(user_type, parent)
