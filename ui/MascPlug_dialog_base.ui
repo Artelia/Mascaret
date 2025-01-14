@@ -270,6 +270,10 @@
     <addaction name="actionGraphRes"/>
     <addaction name="separator"/>
     <addaction name="actionScores"/>
+    <addaction name="actionExport_Results"/>
+    <addaction name="actionCartoZI"/>
+    <addaction name="separator"/>
+    <addaction name="action_mass_graphic_events"/>
    </widget>
    <widget class="QMenu" name="menuWater_Quality">
     <property name="title">
@@ -768,6 +772,78 @@
    </property>
    <property name="toolTip">
     <string>Hydro Laws</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Zones">
+   <property name="text">
+    <string>Update Zones</string>
+   </property>
+  </action>
+  <action name="actionTo_clone_Model">
+   <property name="text">
+    <string>To clone Model</string>
+   </property>
+  </action>
+  <action name="actionFilter_All_Profiles">
+   <property name="text">
+    <string>Filter All Profiles</string>
+   </property>
+  </action>
+  <action name="action_table_reconstruction_vacuum_full">
+   <property name="text">
+    <string>Rebuild Table (Vacuum Full)</string>
+   </property>
+  </action>
+  <action name="actionExtract_Beds">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/bed_import.png</normaloff>:/plugins/Mascaret/icones/bed_import.png</iconset>
+   </property>
+   <property name="text">
+    <string>Import Beds limits from polyline</string>
+   </property>
+   <property name="toolTip">
+    <string>Import Beds limits from polyline</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Beds">
+   <property name="text">
+    <string>Apply Bed limits imported</string>
+   </property>
+   <property name="toolTip">
+    <string>Apply Bed limits imported</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Beds_Geom">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/bed_update.png</normaloff>:/plugins/Mascaret/icones/bed_update.png</iconset>
+   </property>
+   <property name="text">
+    <string>Update River minor bed geometries</string>
+   </property>
+   <property name="toolTip">
+    <string>Update River minor bed geometries</string>
+   </property>
+  </action>
+  <action name="actionExport_Results">
+   <property name="text">
+    <string>Export Results</string>
+   </property>
+  </action>
+  <action name="actionCartoZI">
+   <property name="text">
+    <string>Export CartoZI</string>
+   </property>
+  </action>
+  <action name="actionReadLisFile">
+   <property name="text">
+    <string>Reading last .lis File</string>
+   </property>
+  </action>
+  <action name="action_mass_graphic_events">
+   <property name="text">
+    <string>Mass output of plots</string>
    </property>
   </action>
  </widget>
