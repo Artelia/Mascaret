@@ -21,7 +21,7 @@ qgisMinimumVersion=3.22
 qgisMaximumVersion=3.99
 
 
-version=6.1.0
+version=6.1.1
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -32,6 +32,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    6.1.1 : Fix the bug for methods using several observations with different time offsets
     6.1.0 : New experimental version
             Clear Qgis2 code 
     6.0.0 : Merge experimental version into master
