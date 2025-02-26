@@ -47,6 +47,7 @@ from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 
 from .HydroLawsDialog import ClassHydroLawsDialog
 from .Structure.MobilSingDialog import ClassMobilSingDialog
+from .Structure.FloodGateLinkDialog  import ClassFloodGateLink
 from .ClassExtractBedDialog import ClassExtractBedDialog
 from .ClassUpdateBedDialog import (
     ClassUpdateBedDialog,
@@ -239,6 +240,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionStructures.triggered.connect(self.fct_structures)
         self.ui.actionExport_Model_Files.triggered.connect(self.fct_creat_run)
         self.ui.actionStructures_weirs.triggered.connect(self.fct_mv_dam)
+        self.ui.actionStructures_links.triggered.connect(self.fct_mv_link)
         if self.cond_api:
             self.ui.actionStructures_weirs.setEnabled(False)
         else:
@@ -1019,6 +1021,13 @@ Version : {}
         """Running GUI of movable dam"""
 
         dlg = ClassMobilSingDialog(self)
+        dlg.exec_()
+
+
+    def fct_mv_link(self):
+        """ Running GUI of movable link"""
+
+        dlg = ClassFloodGateLink(self)
         dlg.exec_()
 
     def fct_creat_run(self):

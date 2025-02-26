@@ -84,7 +84,7 @@ class GraphResultDialog(QWidget):
         if self.checkrun():
             self.btn_add_graph.setEnabled(True)
 
-            if self.typ_graph in ["struct", "weirs"]:
+            if self.typ_graph in ["struct", "weirs","link_fg"]:
                 self.typ_res = self.typ_graph
                 self.x_var = "time"
             elif self.typ_graph in ["hydro", "hydro_pk"]:
@@ -425,7 +425,7 @@ class GraphResultDialog(QWidget):
                 sqlw = self.sql_where.format(param["branch"], param["pknum"], param["t"])
 
                 if self.x_var == "time":
-                    if self.typ_graph in ["struct", "weirs"]:
+                    if self.typ_graph in ["struct", "weirs", 'link_fg']:
                         x_val = None
                         if self.typ_res in param["info_graph"].keys():
                             for id_config in param["info_graph"][self.typ_res]["pknum"].keys():
@@ -552,17 +552,21 @@ class GraphResultDialog(QWidget):
 
         if len(lst_title) == 1:
             txt_title = lst_title[0]
-            if self.typ_graph in ["struct", "weirs", "hydro"]:
-                try:
+            if self.typ_graph in ["struct", "weirs", "hydro", "link_fg"]:
+                if self.typ_graph is "link_fg":
                     self.graph_obj.main_axe.title.set_text(
-                        r"Profile - {0} m".format(float(txt_title))
-                    )
-                except ValueError:
-                    list_txt = txt_title.split(":")
-                    if len(list_txt) > 1:
+                        r'Link - {0} '.format(float(txt_title)))
+                else:
+                    try:
                         self.graph_obj.main_axe.title.set_text(
-                            r"Profile {1} - {0} m ".format(list_txt[0], list_txt[1])
+                            r"Profile - {0} m".format(float(txt_title))
                         )
+                    except ValueError:
+                        list_txt = txt_title.split(":")
+                        if len(list_txt) > 1:
+                            self.graph_obj.main_axe.title.set_text(
+                                r"Profile {1} - {0} m ".format(list_txt[0], list_txt[1])
+                            )
             elif self.typ_graph == "hydro_pk":
                 if len(lst_branch) == 1:
                     try:
@@ -841,7 +845,8 @@ class GraphResultDialog(QWidget):
                         d=0
                     courbe_weirs["cote"].append(d)
                     courbe_weirs["couleurs"].append("tab:brown")
-            self.graph_obj.init_graph_weirs(courbe_weirs)                               
+            self.graph_obj.init_graph_weirs(courbe_weirs)
+
     def get_laisses(self, param):
         """
         get flood marks data

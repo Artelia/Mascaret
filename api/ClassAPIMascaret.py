@@ -25,12 +25,14 @@ try:
     # Plugin
     from .masc import Mascaret
     from ..Structure.ClassFloodGate import ClassFloodGate
+    from ..Structure.ClassFloodGateLk import ClassFloodGateLk
     from ..ClassMessage import ClassMessage
 except  ModuleNotFoundError:
     # autonome python
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from masc import Mascaret
     from Structure.ClassFloodGate import ClassFloodGate
+    from Structure.ClassFloodGateLk import ClassFloodGateLk
 
 
 def check_init(file):
@@ -75,20 +77,23 @@ class ClassAPIMascaret:
             self.mgis = None
             self.dossierFileMasc = main["RUN_REP"]
             os.chdir(main["RUN_REP"])
-
             self.baseName = main["BASE_NAME"]
-            self.clfg = ClassFloodGate(self)
-            self.mobil_struct = self.clfg.fg_active()
         else:
             self.clmas = main
             self.mgis = self.clmas.mgis
             self.dossierFileMasc = self.clmas.dossierFileMasc
             self.baseName = self.clmas.baseName
-            # floodgat
-            self.clfg = ClassFloodGate(self)
-            self.mobil_struct = self.clfg.fg_active()
-            self.mess = ClassMessage()
-            self.num_mess = 0
+
+        self.mess = ClassMessage()
+        self.num_mess = 0
+        # floodgat
+        self.clfg = ClassFloodGate(self)
+        self.mobil_struct = self.clfg.fg_active()
+        # links floodgate
+        self.clfg_lk = ClassFloodGateLk(self)
+        self.mobil_link = self.clfg_lk.actif_mobil_lk
+
+
 
     def initial(self, casfile):
         """
@@ -117,6 +122,7 @@ class ClassAPIMascaret:
         if "_init." in casfile:
             initfile = True
             self.mobil_struct = False
+            self.mobil_link = False
         files_name = []
         files_type = ["xcas"]
         if not os.path.isfile(casfile):
@@ -317,6 +323,8 @@ class ClassAPIMascaret:
     def one_iter(self, t0, t1, dtp):
         if self.mobil_struct:
             self.clfg.iter_fg(t0, dtp)
+        if self.mobil_link:
+            self.clfg_lk.iter_fg(t0, dtp)
 
         self.masc.compute(t0, t1, dtp)
         if self.conum:
@@ -328,7 +336,8 @@ class ClassAPIMascaret:
         return t0, t1, dtp
 
     def finalize(self):
-        self.info = self.masc.log_stream.getvalue()
+        info = self.masc.log_stream.getvalue()
+        self.add_info(info)
         self.masc.delete_mascaret()
         del self.masc
         if self.clfg is not None:
@@ -336,11 +345,23 @@ class ClassAPIMascaret:
             self.results_api["STRUCT_FG"] = self.clfg.results_fg_mv
             if self.mgis is None:
                 self.write_res_struct(self.results_api["STRUCT_FG"])
+        if self.mobil_link:
+            self.clfg_lk.finalize(self.tfin)
+            self.results_api["LINK_FG"] = self.clfg_lk.results_fg_lk_mv
+            if self.mgis is None:
+                self.write_res_link_fg(self.results_api["STRUCT_FG"])
+        self.mess.export_obj(self.dossierFileMasc)
 
     def write_res_struct(self, res):
         import json
 
         with open(os.path.join(self.dossierFileMasc, "res_struct.res"), "w") as filein:
+            json.dump(res, filein)
+
+    def write_res_link_fg(self, res):
+        import json
+
+        with open(os.path.join(self.dossierFileMasc, "res_link_fg.res"), "w") as filein:
             json.dump(res, filein)
 
     def main(self, filename, tracer=False, basin=False):
@@ -349,16 +370,17 @@ class ClassAPIMascaret:
         self.initial(filename)
         if self.mobil_struct:
             self.clfg.init_floogate()
+        if basin and self.mobil_link:
+            self.clfg_lk.init_fg_links()
+        else:
+            self.mobil_link = False
         self.compute()
         self.finalize()
 
     def add_info(self, txt):
-        if self.mgis is not None:
-            self.mess.add_mess('api_{}'.format(self.num_mess), 'info', txt)
-            self.num_mess += 1
-            # self.mgis.add_info(txt)
-        else:
-            print(txt)
+        self.mess.add_mess('api_{}'.format(self.num_mess), 'info', txt)
+        self.num_mess += 1
+        # print(txt)
 
 
 if __name__ == "__main__":

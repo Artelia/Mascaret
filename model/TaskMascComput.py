@@ -193,8 +193,9 @@ class TaskMascComput(QgsTask):
             os.chdir(self.dossier_file_masc)
             clapi = ClassAPIMascaret(self.masc)
             clapi.main(fichier_cas, tracer, casier)
-            self.log_mess(clapi.info, 'InfoRun')
-            self.add_log_mess(clapi.mess)
+            mess = ClassMessage()
+            mess.load_obj(self.dossier_file_masc)
+            self.add_log_mess(mess)
             self.save_res_struct = (copy.deepcopy(clapi.results_api), id_run)
             del clapi
 

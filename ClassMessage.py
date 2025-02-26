@@ -17,14 +17,8 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
-
+import os
+import pickle
 
 class ClassMessage:
     """Class contain  model files creation and run model mascaret"""
@@ -113,3 +107,11 @@ class ClassMessage:
                 self.derror[key] = item
                 fill[key] = item
         return fill
+
+    def export_obj(self, rep=''):
+        with open(os.path.join(rep,'derror.pkl'), 'wb') as file:
+            pickle.dump(self.derror, file)
+
+    def load_obj(self, rep=''):
+        with open(os.path.join(rep,'derror.pkl'), 'rb') as file:
+            self.derror = pickle.load(file)

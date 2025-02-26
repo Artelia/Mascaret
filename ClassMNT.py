@@ -79,7 +79,7 @@ class ClassMNT(QObject):
                 if self.auto_prof:
                     feature["x"] = feature["xmnt"]
                     feature["z"] = feature["zmnt"]
-                    print(feature["x"])
+                    # print(feature["x"])
                     feature["leftminbed"] = min(
                         [float(v) for v in str(feature["xmnt"]).strip().split(" ")]
                     )
