@@ -478,7 +478,12 @@ def update_bed_geometry(mdb, id_branch, l_typ_bed):
         )
 
         rows = mdb.run_query(sql.format(mdb.SCHEMA, id_branch, typ_bed), fetch=True)
-
+        if not rows :
+            mdb.run_query(
+                "DELETE FROM {0}.visu_minor_river_bed "
+                "WHERE bank = '{1}' AND branchnum = {2}".format(mdb.SCHEMA, bank, id_branch)
+            )
+            return
         recs = list()
         for row in rows:
             (
