@@ -491,6 +491,7 @@ class ClassMasDatabase(object):
                 Maso.struct_fg,
                 Maso.struct_fg_val,
                 Maso.weirs_mob_val,
+                Maso.links_mob_val
                 # OLD results
                 Maso.runs_graph,
                 Maso.results_var,

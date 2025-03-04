@@ -339,6 +339,7 @@ class CheckTab:
             "6.0.1": {},
             "6.1.0": {},
             "6.1.1": {},
+
             # '3.0.x': { },
         }
 
@@ -2074,3 +2075,10 @@ $BODY$;
                 self.mgis.add_info("erreur update_all_bed_geometry")
 
         return valide
+
+    def update_620(self):
+        # TODO
+        # add links_mob_val
+        # modification link  table
+
+        pass

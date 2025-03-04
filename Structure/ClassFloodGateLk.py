@@ -46,8 +46,11 @@ class ClassFloodGateLk:
 
     def init_fg_links(self):
         """Get information for floodgate"""
+
         # Get Section
         self.search_sec_control()
+
+        if if self.clfg_lk.param_fg[]
         self.search_link_to_param_fg()
         if not self.check_level_regul():
             self.clapi.add_info("***** ERROR: ignore the gates for the links")
@@ -96,11 +99,13 @@ class ClassFloodGateLk:
 
         """
         for id_lk in self.param_fg.keys():
-            if self.check_dt_regul(self.param_fg[id_lk], dtp):
-                val_check = self.check_regul(self.param_fg[id_lk])
-                new_level, new_section, new_level_max = self.law_gate_regul(
-                    self.param_fg[id_lk], time
-                )
+            if self.param_fg[id_lk]["method_mob"] == "meth_regul":
+                if self.check_dt_regul(self.param_fg[id_lk], dtp):
+                    val_check = self.check_regul(self.param_fg[id_lk])
+                    new_level, new_section, new_level_max = self.law_gate_regul(
+                        self.param_fg[id_lk], time
+                    )
+
                 # fill before to have the old value and new
                 self.fill_results_fg_mv(
                     id_lk,
@@ -112,12 +117,24 @@ class ClassFloodGateLk:
                     dtp,
                     self.param_fg[id_lk],
                 )
+
                 self.param_fg[id_lk]["REGVAR_VAL"] = val_check
                 self.param_fg[id_lk]["level"] = new_level
                 self.param_fg[id_lk]["CSection"] = new_section
                 self.param_fg[id_lk]["ZmaxSection"] = new_level_max
                 self.param_fg[id_lk]["TIME"] = time
                 self.update_var_mas()
+            elif self.param_fg[id_lk]["method_mob"] == "meth_time":
+                # new_level
+                self.update_var_mas()
+            elif self.param_fg[id_lk]["method_mob"] == "meth_fusible":
+                pass
+                # if self.check_dt_fuse(self.param_fg[id_lk], dtp):
+
+    def update_time_level(self):
+        self.param_fg[id_lk]["level"]
+        self.param_fg[id_lk]["level"] =
+        self.param_fg[id_lk]["CSection"] =
 
     def check_level_regul(self):
         """Check if  'VREGOPEN' and 'VREGCLOS are consistent'"""
@@ -160,82 +177,47 @@ class ClassFloodGateLk:
         val_check = self.masc.get(val_mas, param_fg["SECCON"])
 
         tol = param_fg["TOLREG"]
-        #
         key = (param_fg["OPEN_CLOSE"], param_fg["DIRFG"])
+        # conditions
+        conditions = {
+            # fermeture par le bas
+            ("INIT", "D"): [(val_check >= param_fg["VREGOPEN"] - tol, "OPEN")],
+            ("OPEN", "D"): [
+                (val_check <= param_fg["VREGCLOS"] + tol, "CLOSE"),
+                (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
+            ],
+            ("CLOSE", "D"): [
+                (val_check >= param_fg["VREGOPEN"] - tol, "OPEN")
+                (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
+            ],
+            ("MAINT", "D"): [
+                (val_check >= param_fg["VREGOPEN"] - tol, "OPEN"),
+                (val_check <= param_fg["VREGCLOS"] + tol, "CLOSE")
+                (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
+            ],
+            # fermeture par le haut
+            ("INIT", "U"): [(val_check >= param_fg["VREGCLOS"] - tol, "CLOSE")],
+            ("CLOSE", "U"): [
+                (val_check <= param_fg["VREGOPEN"] + tol, "OPEN")
+                (param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"], "MAINT"),
+            ],
+            ("OPEN", "U"): [
+                (val_check >= param_fg["VREGCLOS"] - tol, "CLOSE")
+                (param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"], "MAINT"),
+            ],
+            ("MAINT", "U"): [
+                (val_check <= param_fg["VREGOPEN"] + tol, "OPEN"),
+                (val_check >= param_fg["VREGCLOS"] - tol, "CLOSE")
+                (param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"], "MAINT"),
+            ]
+        }
 
-        if key == ("INIT", "D"):
-            if val_check > param_fg["VREGOPEN"] - tol:
-                param_fg["OPEN_CLOSE"] = "OPEN"
-        elif key == ("OPEN", "D"):
-            if param_fg["VREGOPEN"] > val_check >  param_fg["VREGCLOS"]:
-                param_fg["OPEN_CLOSE"] = "MAINT"
-            elif val_check <= param_fg["VREGCLOS"] + tol:
-                param_fg["OPEN_CLOSE"] = "CLOSE"
-        elif key == ("CLOSE", "D"):
-            if param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"]:
-                param_fg["OPEN_CLOSE"] = "MAINT"
-            elif val_check >= param_fg["VREGOPEN"] - tol:
-                param_fg["OPEN_CLOSE"] = "OPEN"
-        elif key == ("MAINT", "D"):
-            if param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"]:
-                param_fg["OPEN_CLOSE"] = "MAINT"
-            elif val_check >= param_fg["VREGOPEN"] - tol:
-                param_fg["OPEN_CLOSE"] = "OPEN"
-            elif val_check <= param_fg["VREGCLOS"] + tol:
-                param_fg["OPEN_CLOSE"] = "CLOSE"
-        elif key == ("INIT", "U"):
-            if val_check >= param_fg["VREGCLOS"] - tol:
-                param_fg["OPEN_CLOSE"] = "CLOSE"
-        elif key == ("CLOSE", "U"):
-            if param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"]:
-                param_fg["OPEN_CLOSE"] = "MAINT"
-            elif val_check <= param_fg["VREGOPEN"] + tol:
-                param_fg["OPEN_CLOSE"] = "OPEN"
-        elif key == ("OPEN", "U"):
-            if param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"]:
-                param_fg["OPEN_CLOSE"] = "MAINT"
-            elif val_check >= param_fg["VREGCLOS"] - tol:
-                param_fg["OPEN_CLOSE"] = "CLOSE"
-        elif key == ("MAINT", "U"):
-            if param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"]:
-                param_fg["OPEN_CLOSE"] = "MAINT"
-            elif val_check <= param_fg["VREGOPEN"] + tol:
-                param_fg["OPEN_CLOSE"] = "OPEN"
-            elif val_check >= param_fg["VREGCLOS"] - tol:
-                param_fg["OPEN_CLOSE"] = "CLOSE"
-        return val_check
+        for condition, action in conditions.get(key, []):
+            if condition:
+                param_fg["OPEN_CLOSE"] = action
+                break
 
-    def check_regul_no_maintien(self, param_fg):
-        """
-        check if OPEN or CLOSE the flood Gate Without maintain
-        """
-        if param_fg["VREG"] == "Z":
-            val_mas = "State.Z"
-        else:
-            val_mas = "State.Q"
-        val_check = self.masc.get(val_mas, param_fg["SECCON"])
 
-        tol = param_fg["TOLREG"]
-        #
-        key = (param_fg["OPEN_CLOSE"], param_fg["DIRFG"])
-        if key == ("INIT", "D"):
-            if val_check > param_fg["VREGOPEN"] - tol:
-                param_fg["OPEN_CLOSE"] = "OPEN"
-        elif key == ("OPEN", "D"):
-            if val_check < param_fg["VREGCLOS"] + tol:
-                param_fg["OPEN_CLOSE"] = "CLOSE"
-        elif key == ("CLOSE", "D"):
-            if val_check > param_fg["VREGOPEN"] - tol:
-                param_fg["OPEN_CLOSE"] = "OPEN"
-        elif key == ("INIT", "U"):
-            if val_check > param_fg["VREGCLOS"] - tol:
-                param_fg["OPEN_CLOSE"] = "CLOSE"
-        elif key == ("CLOSE", "U"):
-            if val_check < param_fg["VREGOPEN"] + tol:
-                param_fg["OPEN_CLOSE"] = "OPEN"
-        elif key == ("OPEN", "U"):
-            if val_check > param_fg["VREGCLOS"] - tol:
-                param_fg["OPEN_CLOSE"] = "CLOSE"
         return val_check
 
     def check_dt_regul(self, param_fg, dtp):
@@ -312,48 +294,72 @@ class ClassFloodGateLk:
                 self.param_fg[id_lk]["TIME0"] = tini
                 # variable qui evolura ********************************
                 self.param_fg[id_lk]["TIME"] = tini
-                if self.param_fg[id_lk]["VREG"] == "Z":
-                    val_mas = "State.Z"
-                else:
-                    val_mas = "State.Q"
-                self.param_fg[id_lk]["REGVAR_VAL"] = self.masc.get(
-                    val_mas, self.param_fg[id_lk]["SECCON"]
-                )
-                self.param_fg[id_lk]["OPEN_CLOSE"] = "INIT"
-                # info de la vanne
-                if self.param_fg[id_lk]["DIRFG"] == "D":
-                    # TODO mettre a jours mascaret
-                    self.param_fg[id_lk]["level"] = max(
-                        self.param_fg[id_lk]["ZINITREG"], self.param_fg[id_lk]["level0"]
-                    )
-                    self.param_fg[id_lk]["ZmaxSection"] = self.param_fg[id_lk]["ZmaxSection0"]
-
+                if self.param_fg[id_lk]["method_mob"] == "meth_regul":
+                        self.init_regul(id_lk)
+                elif self.param_fg[id_lk]["method_mob"] == "meth_time":
+                    self.param_fg[id_lk]["TIMEZ"] = np.array(self.param_fg[id_lk]["TIMEZ"])
+                    self.param_fg[id_lk]["VALUEZ"] = np.array(self.param_fg[id_lk]["VALUEZ"])
+                    self.param_fg[id_lk]["level"] = np.interp(self.param_fg[id_lk]["TIME"],
+                                                    self.param_fg[id_lk]["TIMEZ"],
+                                                    self.param_fg[id_lk]["VALUEZ"])
                     if self.param_fg[id_lk]["type"] == 4:
-                        self.param_fg[id_lk]["CSection"] = self.param_fg[id_lk]["width0"] * (
-                                self.param_fg[id_lk]["ZmaxSection"] - self.param_fg[id_lk]["level"]
-                        )
-                        self.param_fg[id_lk]["ZLIMITGATE"] = min(
-                            self.param_fg[id_lk]["ZMAXFG"], self.param_fg[id_lk]["ZmaxSection0"]
-                        )
-                    else:
-                        self.param_fg[id_lk]["ZLIMITGATE"] = self.param_fg[id_lk]["ZMAXFG"]
-                        self.param_fg[id_lk]["CSection"] = 0
-
-                else:
-                    self.param_fg[id_lk]["level"] = self.param_fg[id_lk]["level0"]
-                    self.param_fg[id_lk]["ZmaxSection"] = min(
-                        self.param_fg[id_lk]["ZINITREG"], self.param_fg[id_lk]["ZmaxSection0"]
-                    )
-                    self.param_fg[id_lk]["CSection"] = self.param_fg[id_lk]["width0"] * (
-                        self.param_fg[id_lk]["ZmaxSection"] - self.param_fg[id_lk]["level"]
-                    )
-                    self.param_fg[id_lk]["ZLIMITGATE"] = min(
-                        self.param_fg[id_lk]["ZMAXFG"], self.param_fg[id_lk]["level0"]
-                    )
-
+                        pass
+                        # TODO max(
+                    # pass #TODO
+                    # self.param_fg[id_lk]["level"] = self.param_fg[id_lk]["level0"]
+                    # self.param_fg[id_lk]["CSection"] = self.param_fg[id_lk]["width0"] * (
+                    #         self.param_fg[id_lk]["ZmaxSection"] - self.param_fg[id_lk]["level"]
+                    # )
             else:
                 self.clapi.add_info("Id_mas not found for numlink {}.".format(id_lk))
         del coords, lst_info
+
+    def init_regul(self,id_lk):
+        """ Initialise the regulation variable
+        :param id_lk: link id"""
+
+        if self.param_fg[id_lk]["VREG"] == "Z":
+            val_mas = "State.Z"
+        else:
+            val_mas = "State.Q"
+
+        self.param_fg[id_lk]["REGVAR_VAL"] = self.masc.get(
+            val_mas, self.param_fg[id_lk]["SECCON"]
+        )
+        self.param_fg[id_lk]["OPEN_CLOSE"] = "INIT"
+        # info de la vanne
+        if self.param_fg[id_lk]["DIRFG"] == "D":
+            self.param_fg[id_lk]["level"] = max(
+                self.param_fg[id_lk]["ZINITREG"], self.param_fg[id_lk]["level0"]
+            )
+            self.param_fg[id_lk]["ZmaxSection"] = self.param_fg[id_lk]["ZmaxSection0"]
+
+            if self.param_fg[id_lk]["type"] == 4:
+                # section rectangulaire
+                self.param_fg[id_lk]["CSection"] = self.param_fg[id_lk]["width0"] * (
+                        self.param_fg[id_lk]["ZmaxSection"] - self.param_fg[id_lk]["level"]
+                )
+                self.param_fg[id_lk]["ZLIMITGATE"] = min(
+                    self.param_fg[id_lk]["ZMAXFG"], self.param_fg[id_lk]["ZmaxSection0"]
+                )
+            else:
+                self.param_fg[id_lk]["ZLIMITGATE"] = self.param_fg[id_lk]["ZMAXFG"]
+                self.param_fg[id_lk]["CSection"] = 0
+
+        elif self.param_fg[id_lk]["DIRFG"] == "U" and self.param_fg[id_lk]["type"] == 4:
+            # seulement type 4
+            self.param_fg[id_lk]["level"] = self.param_fg[id_lk]["level0"]
+            self.param_fg[id_lk]["ZmaxSection"] = min(
+                self.param_fg[id_lk]["ZINITREG"], self.param_fg[id_lk]["ZmaxSection0"]
+            )
+            self.param_fg[id_lk]["CSection"] = self.param_fg[id_lk]["width0"] * (
+                    self.param_fg[id_lk]["ZmaxSection"] - self.param_fg[id_lk]["level"]
+            )
+            self.param_fg[id_lk]["ZLIMITGATE"] = min(
+                self.param_fg[id_lk]["ZMAXFG"], self.param_fg[id_lk]["level0"]
+            )
+        else:
+            self.clapi.add_info("non-consistency type floodgate with the moving part".format(id_lk))
 
     def comput_dz(self, vit, dt, dzlimit=0):
         """

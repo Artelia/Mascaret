@@ -546,6 +546,8 @@ class links(MasObject):
             ("branchnum", "integer"),
             ("abscissa", "float"),
             ("active", "boolean NOT NULL DEFAULT TRUE"),
+            ('method_mob', 'text'),
+            ('active_mob', 'boolean NOT NULL DEFAULT FALSE'),
             ("CONSTRAINT links_pkey", "PRIMARY KEY (gid)"),
             ("CONSTRAINT link_name_unique", "UNIQUE (name)"),
             ("CONSTRAINT link_num_unique", "UNIQUE (linknum)"),
@@ -2129,6 +2131,18 @@ class law_values(MasObject):
             ("CONSTRAINT law_values_pkey", "PRIMARY KEY (id_law, id_var, id_order)"),
         ]
 
+class links_mob_val(MasObject):
+    # valeur des variable float
+    def __init__(self):
+        super(links_mob_val, self).__init__()
+        self.order = 48
+        self.geom_type = None
+        self.attrs = [('id_links', 'integer'),
+                      ('id_order', 'integer'),
+                      ('name_var', 'text'),
+                      ('value', 'float'),
+                      ('CONSTRAINT cle_lins_mob_val',
+                       'PRIMARY KEY (id_links,id_order,name_var)')]
 
 # ****************************************************************************
 # *****************************************

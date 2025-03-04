@@ -27,26 +27,99 @@ class ClassInfoParamFG_Lk(object):
         self.param_fg = {}
         self.list_actif = []
         self.lst_param = {
-            "ZMAXFG": "valeur Z limite max d'ouverture ",
-            "CRITDTREG": "critère NDTREG ou DTREG",
-            "NDTREG": "Tout les N pas temps pour l'application",
-            "DTREG": "Si =0 pas de temps  du calcul, sinn celui indiqué (en s)",
-            "VELOFG": "vitesse m/s de la vanne",
-            "VREG": "Variable regulation Z ou Q",
-            "DIRFG": "direction si D cote monte et section diminue si U seul section diminue",
-            "ZINCRFG": "max d" "incrementation",
-            "VREGCLOS": "valeur fermeture",
-            "VREGOPEN": "valeur ouverture",
-            "TOLREG": "Tolerance sur les variale de regulation",
-            "PK": "PK de la régulation",
-            "ZINITREG": "cote initial de la vanne",
-            "name": "nom du link",
-            "level": "cote de radier",
-            "abscissa": "pk du link",
-            "branchnum": "branch",
-            "method_mob": "mehtode utilisé seul 2 actuellement",
-            "type": "type de link, 1:weir, 4:culvert",
-        }
+            "name": {"desc": "nom du link"},
+            "level": {"desc": "cote de radier"},
+            "abscissa": {"desc": "pk du link"},
+            "branchnum": {"desc": "branch"},
+            "basinstart" : {"desc": "Casier Initial"},
+            "basinend" :{"desc": "Casier Final"},
+            "method_mob": {"desc": "mehtode utilisé : meth_tempo, meth_regul, ",
+                           "default": "meth_regul"},
+            "type": {"desc": "type de link, 1:weir, 4:culvert"},
+            # methode de régulation
+            "DIRFG": {"desc": "direction si D cote monte et section diminue si U seul section diminue",
+                      "default": "D"},
+            "VELOFGOPEN": {"desc": "vitesse d'ouverture m/s de la vanne",
+                           "default":99.0},
+            "VELOFGCLOSE": {"desc": "vitesse de fermeture m/s de la vanne",
+                           "default": "VELOFGOPEN"},
+            "ZMAXFG": {"desc": "valeur Z limite max d'ouverture ",
+                       "default": ""},
+            "ZINITREG": {"desc": "cote initial de la vanne (compris entre ZMAXFG et cote de radier)",
+                         "default":"level"},
+            "VREG": {"desc": "Variable regulation Z ou Q",
+                     "default": "Z"},
+            "USEBASIN" :{"desc": "Utilise le casier comme point de regulatinon",
+                     "default": False},
+            "NUMBASINREG": {"desc": "Start or end basin",
+                         "default": ''},
+            "USEPOINT": {"desc": "Utilise point comme point de regulatinon",
+                         "default": False},
+            "PK": {"desc": "PK de la régulation",
+                   "default": "abscissa"},
+            "VREGCLOS": {"desc": "valeur fermeture de la vanne",
+                         "default": "level"},
+            "VREGOPEN": {"desc": "valeur d'ouverture de la vanne",
+                         "default": "VREGOPEN"},
+            "CRITDTREG": {"desc": "critère NDTREG ou DTREG",
+                          "default": "NDTREG"},
+            "NDTREG": {"desc": "Tout les N pas temps pour l'application",
+                       "default": 1},
+            "DTREG": {"desc": "Si =0 pas de temps  du calcul, sinn celui indiqué (en s)",
+                      "default": 0},
+            "ZINCRFG": {"desc": "max d'incrementation",
+                        "default":99999},
+            "TOLREG": {"desc": "Tolerance sur les variale de regulation",
+                       "default":0.05},
+            # meth_tempo
+            "TIMEZ": {"desc": "Valeur Temps en s",
+                       "default":0},
+            "VALUEZ":{"desc": "Valeur associé à TIME",
+                       "default":0},
+            # meth_fusible :TIME, VALUEVAR,
+            "METHBREAK": {"desc": "méthode de rupture à un temps donnée ou valeur régulation",
+                      "default": "time"},
+            "TIMEFUS": {"desc": "Valeur Temps fusible en s",
+                     "default": 0},
+            "WIDTHFUS": {"desc": "Largeur associé à TIME",
+                       "default": 0},
+            "VFUS": {"desc": "Variable regulation Z ou Q seuil fusible",
+                     "default": "Z"},
+            "VBREAKFUS": {"desc": "Valeur de ruputre seuil",
+                     "default": "0"},
+            "TBREAKFUS": {"desc": "Temps de ruputre seuil",
+                          "default": "0"},
+            "ZFINALFUS": {"desc": "Cote final weirs",
+                          "default": "0"},
+            "USEBASINFUS": {"desc": "Utilise le casier comme point de regulatinon",
+                         "default": False},
+            "NUMBASINFUS": {"desc": "Start or end basin",
+                            "default": ''},
+            "USEPOINTFUS": {"desc": "Utilise point comme point de regulatinon",
+                         "default": False},
+            "PKFUS": {"desc": "PK de la régulation",
+                   "default": "abscissa"},
+
+            }
+
+        self.param_meth_reg = [
+            "DIRFG",
+            "VELOFGOPEN",
+            "VELOFGCLOSE",
+            "ZMAXFG",
+            "ZINITREG",
+            "VREG",
+            "USEBASIN",
+            "NUMBASINREG",
+            "USEPOINT",
+            "PK",
+            "CRITDTREG",
+            "NDTREG",
+            "DTREG",
+            "ZINCRFG",
+            "TOLREG"
+            ]
+
 
     def get_param(self, parent=None, file="cli_fg_lk.obj"):
         """
@@ -69,7 +142,16 @@ class ClassInfoParamFG_Lk(object):
                 parent.add_info("Erreur lors de l'import links mobile")
 
     def fill_param_to_db(self, db):
-        lst_var = ["linknum", "name", "level", "abscissa", "method_mob", "branchnum", "type"]
+        lst_var = ["linknum",
+                   "name",
+                   "level",
+                   "abscissa",
+                   "method_mob",
+                   "branchnum",
+                   "type",
+                   "basinstart",
+                   "basinend"
+                   ]
         sql = (
             "SELECT {1} "
             "FROM {0}.links "
