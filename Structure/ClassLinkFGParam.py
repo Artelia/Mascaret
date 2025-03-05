@@ -22,18 +22,19 @@ import json
 import os
 
 
-class ClassInfoParamFG_Lk(object):
+class ClassLinkFGParam(object):
     def __init__(self):
         self.param_fg = {}
         self.list_actif = []
         self.lst_param = {
+            # LINK CASIER
             "name": {"desc": "nom du link"},
             "level": {"desc": "cote de radier"},
             "abscissa": {"desc": "pk du link"},
             "branchnum": {"desc": "branch"},
             "basinstart" : {"desc": "Casier Initial"},
-            "basinend" :{"desc": "Casier Final"},
-            "method_mob": {"desc": "mehtode utilisé : meth_tempo, meth_regul, ",
+            "basinend" : {"desc": "Casier Final"},
+            "method_mob": {"desc": "mehtode utilisé : meth_tempo, meth_regul, meth_fus",
                            "default": "meth_regul"},
             "type": {"desc": "type de link, 1:weir, 4:culvert"},
             # methode de régulation
@@ -77,7 +78,7 @@ class ClassInfoParamFG_Lk(object):
             "VALUEZ":{"desc": "Valeur associé à TIME",
                        "default":0},
             # meth_fusible :TIME, VALUEVAR,
-            "METHBREAK": {"desc": "méthode de rupture à un temps donnée ou valeur régulation",
+            "METHBREAK": {"desc": "méthode de rupture à un temps donnée time ou valeur régulation regul",
                       "default": "time"},
             "TIMEFUS": {"desc": "Valeur Temps fusible en s",
                      "default": 0},
@@ -100,30 +101,15 @@ class ClassInfoParamFG_Lk(object):
             "PKFUS": {"desc": "PK de la régulation",
                    "default": "abscissa"},
 
-            }
 
-        self.param_meth_reg = [
-            "DIRFG",
-            "VELOFGOPEN",
-            "VELOFGCLOSE",
-            "ZMAXFG",
-            "ZINITREG",
-            "VREG",
-            "USEBASIN",
-            "NUMBASINREG",
-            "USEPOINT",
-            "PK",
-            "CRITDTREG",
-            "NDTREG",
-            "DTREG",
-            "ZINCRFG",
-            "TOLREG"
-            ]
+            }
 
 
     def get_param(self, parent=None, file="cli_fg_lk.obj"):
         """
         Get param of mobil link
+        :param parent: parent class
+        :param file: name file
         """
         if not parent:
             path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../mascaret"))
@@ -142,6 +128,13 @@ class ClassInfoParamFG_Lk(object):
                 parent.add_info("Erreur lors de l'import links mobile")
 
     def fill_param_to_db(self, db):
+        """
+        Read parameters in database
+        TODO attention au méthode peut provoquer des modifications
+
+        :param db: database object
+        :return:
+        """
         lst_var = ["linknum",
                    "name",
                    "level",
@@ -203,6 +196,10 @@ class ClassInfoParamFG_Lk(object):
         return True
 
     def check_param(self):
+        """
+        Check if all variable
+        TODO à reprendre en fonction des méthode
+        """
         for num, test in self.param_fg.items():
             for var in self.lst_param.keys():
                 if var not in test.keys():
@@ -212,6 +209,7 @@ class ClassInfoParamFG_Lk(object):
 
     def export_cl(self, name="cli_fg_lk.obj"):
         """
+        generte json file parameters
         :param obj: object to dump
         :param name: name file
         :return:
@@ -220,6 +218,11 @@ class ClassInfoParamFG_Lk(object):
             json.dump(self.param_fg, file)
 
     def import_cl(self, name="cli_fg_lk.obj"):
+        """
+         Import parameter
+        :param name: Name file
+        :return:
+        """
         if os.path.isfile(name):
             with open(name, "r") as file:
                 obj = json.load(file)

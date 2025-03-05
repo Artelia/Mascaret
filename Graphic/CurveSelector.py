@@ -304,7 +304,7 @@ class CurveSelectorWidget(QWidget):
         :param up_lim:
         :return:
         """
-        # self.graph_obj.update_limites = up_lim TODO
+        # self.graph_obj.update_limites = up_lim
         if self.cb_det.currentIndex() != -1:
             if self.typ_graph == "hydro_pk":
                 self.cur_t = self.cb_det.itemData(self.cb_det.currentIndex())

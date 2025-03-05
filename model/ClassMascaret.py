@@ -139,7 +139,6 @@ class ClassMascaret:
 
         if par["presenceTraceurs"]:
             self.wq.create_filephy()
-            # TODO no make with event
             self.wq.law_tracer()
             self.wq.init_conc_tracer()
         if not only_init:

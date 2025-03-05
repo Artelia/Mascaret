@@ -1942,8 +1942,6 @@ class GraphProfil(GraphCommon):
                 self.ch_prof[dcas[cas]] = nofind
 
     def check_prof_interp(self):
-        # TODO interpolation is all profile
-
         id = self.liste["name"].index(self.nom)
         self.ch_prof_inter = {}
         # cas = -1 amont, cas=1 aval

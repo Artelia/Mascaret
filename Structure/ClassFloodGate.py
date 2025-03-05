@@ -78,13 +78,13 @@ class ClassFloodGate:
         self.results_fg_mv = {}
         tini = self.masc.get("Model.InitTime")
         for id_config in self.param_fg.keys():
-            self.results_fg_mv[id_config] = {"TIME": [], "ZSTR": []}
-            self.results_fg_mv[id_config]["TIME"].append(tini)
-            self.results_fg_mv[id_config]["ZSTR"].append(self.param_fg[id_config]["ZOLD"])
+            self.results_fg_mv[id_config] = {"TIME": [tini],
+                                             "ZSTR": [self.param_fg[id_config]["ZOLD"]]}
 
     def info_init_poly(self):
         """Get information of polygones"""
         for id_config in self.param_fg.keys():
+            param  = self.param_fg[id_config]
             list_poly_trav = self.init_var.select_poly_elem(id_config, 0)
             list_miny = []
             list_maxy = []
@@ -94,13 +94,14 @@ class ClassFloodGate:
                 list_maxy.append(maxy)
             zmin = min(list_miny)
             zmax = max(list_maxy)
-            self.param_fg[id_config]["MINZ0"] = zmin
-            self.param_fg[id_config]["MAXZ0"] = zmax
 
-            if self.param_fg[id_config]["DIRFG"] == "D":
-                self.param_fg[id_config]["ZOLD"] = zmin
-            elif self.param_fg[id_config]["DIRFG"] == "U":
-                self.param_fg[id_config]["ZOLD"] = zmax
+            param.update({"MINZ0" : zmin,
+                          "MAXZ0" : zmax
+                          })
+            if param["DIRFG"] == "D":
+                param["ZOLD"] = zmin
+            elif param["DIRFG"] == "U":
+                param["ZOLD"] = zmax
 
     def update_law_mas(self, id_config, list_q, list_zav, list_zam):
         """
@@ -144,8 +145,9 @@ class ClassFloodGate:
     def finalize(self, tfin):
         if len(self.results_fg_mv) > 0:
             for id_config in self.param_fg.keys():
-                self.results_fg_mv[id_config]["TIME"].append(tfin)
-                self.results_fg_mv[id_config]["ZSTR"].append(self.param_fg[id_config]["ZOLD"])
+                res = self.results_fg_mv[id_config]
+                res["TIME"].append(tfin)
+                res["ZSTR"].append(self.param_fg[id_config]["ZOLD"])
 
     def fg_active(self):
         """check if floodgate is active"""
@@ -304,15 +306,16 @@ class ClassFloodGate:
         # ibief = [ib+0*i for ib in range(nbbf) for i in range(oribf[ib], endbf[ib])]
         # ibief => connu
         for id_config in self.param_fg.keys():
-            ib = int(self.param_fg[id_config]["BIEFCONT"]) - 1
+            param = self.param_fg[id_config]
+            ib = int(param["BIEFCONT"]) - 1
             coords = []
 
             for i in range(oribf[ib], endbf[ib]):
                 coords.append(self.masc.get("Model.X", i))
             coords = np.array(coords)
-            idx = (np.abs(coords - self.param_fg[id_config]["XPCONT"])).argmin()
+            idx = (np.abs(coords - param["XPCONT"])).argmin()
             if idx:
-                self.param_fg[id_config]["SECCON"] = idx
+                param["SECCON"] = idx
             else:
                 self.clapi.add_info("Regulation point not found.")
             del coords
@@ -330,16 +333,16 @@ class ClassFloodGate:
         :param dt: step time
         :return:
         """
-
+        res = self.results_fg_mv[id_config]
         if zold == newz:
-            self.results_fg_mv[id_config]["TIME"].append(time)
-            self.results_fg_mv[id_config]["ZSTR"].append(newz)
+            res["TIME"].append(time)
+            res["ZSTR"].append(newz)
         else:
-            if (time - dt) not in self.results_fg_mv[id_config]["TIME"]:
-                self.results_fg_mv[id_config]["TIME"].append(time - dt)
-                self.results_fg_mv[id_config]["ZSTR"].append(zold)
-            self.results_fg_mv[id_config]["TIME"].append(time)
-            self.results_fg_mv[id_config]["ZSTR"].append(newz)
+            if (time - dt) not in res["TIME"]:
+                res["TIME"].append(time - dt)
+                res["ZSTR"].append(zold)
+            res["TIME"].append(time)
+            res["ZSTR"].append(newz)
 
     def update_law(self, id_config, param_fg, new_z, mobil_struct):
         """Compute new law

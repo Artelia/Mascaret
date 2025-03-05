@@ -88,7 +88,7 @@ class ClassFloodGateLink(QDialog):
 
         self.cb_method.currentIndexChanged["QString"].connect(self.cb_change_meth)
         # ['1', 'Method 1'],
-        fill_qcombobox(self.cb_method, [["2", "Regulation law"]])
+        fill_qcombobox(self.cb_method, [["2", "Regulation Time"],["2", "Regulation law"],["3",'fusible weirs']])
 
         self.cb_type_t_vit.currentIndexChanged.connect(self.cb_change_unitv)
         self.cb_type_t_vitclo.currentIndexChanged.connect(self.cb_change_unitv)

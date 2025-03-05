@@ -792,7 +792,6 @@ class ClassCreatFilesModels:
             ):
                 # les types sont ceux de
                 if dict_lois[nom]["type"] == 6:
-                    # TODO and noyau!='transcritical'
                     dict_lois[nom]["type"] = 1
                     self.mess.add_mess("LawChang_" + nom, "debug",
                                        "The  {} law changes type 6 => 1".format(nom))

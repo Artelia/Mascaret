@@ -159,7 +159,6 @@ class InitConcDialog(QDialog):
 
     def import_csv(self):
         """import CSV"""
-        # TODO not good format
         # +2 (bief , abscissa)
         nb_col = len(self.list_trac) + 2
         f = QFileDialog.getOpenFileName(

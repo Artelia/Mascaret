@@ -160,14 +160,6 @@ class extremities(MasObject):
             ("CONSTRAINT cle_extremities", " PRIMARY KEY (gid)"),
             ("CONSTRAINT extremities_nom_key", " UNIQUE (name)"),
         ]
-        # TODO plante
-        # def pg_create_table(self):
-        #     qry = super(self.__class__, self).pg_create_table()
-        #     qry += '\n'
-        #     qry += self.pg_create_index()
-        #     qry += '\n'
-        #     qry += self.pg_create_calcul_abscisse()
-        #     return qry
 
 
 # *****************************************

@@ -21,7 +21,7 @@ email                :
 import numpy as np
 import math
 
-from .ClassPostPreFGLk import ClassInfoParamFG_Lk
+from .ClassLinkFGParam import ClassLinkFGParam
 
 
 class ClassFloodGateLk:
@@ -29,152 +29,330 @@ class ClassFloodGateLk:
 
     def __init__(self, main):
         self.clapi = main
+        self.add_info = self.clapi.add_info
         self.masc = main.masc
         self.clmas = main.clmas
         self.debug = main.DEBUG
         self.model_size = 0
         self.size_link = 0
         self.new_z = 99
-        self.compt_dt = 0
-        self.cl_fg_l = ClassInfoParamFG_Lk()
+        self.arret_comput = False
 
-        self.cl_fg_l.get_param(parent=main.mgis)
-        self.actif_mobil_lk = self.cl_fg_l.fg_actif_lk()
-        self.param_fg = self.cl_fg_l.param_fg
+        self.cl_param = ClassLinkFGParam()
+        self.cl_param.get_param(parent=main.mgis)
+        self.actif_mobil_lk = self.cl_param.fg_actif_lk()
+        self.param_fg = self.cl_param.param_fg
         # resultats du mouvement de la vanne
         self.results_fg_lk_mv = {}
+
+        self.cl_regul= ClassMethRegul(self)
+        self.cl_time = ClassMethTime(self)
+        self.cl_fusible = ClassMethFusible(self)
 
     def init_fg_links(self):
         """Get information for floodgate"""
 
         # Get Section
         self.search_sec_control()
-
-        if if self.clfg_lk.param_fg[]
         self.search_link_to_param_fg()
-        if not self.check_level_regul():
-            self.clapi.add_info("***** ERROR: ignore the gates for the links")
-            self.actif_mobil_lk = False
-        self.update_var_mas()
-
+        if not self.check_param():
+            self.add_info("***** ERROR: the gates for the links\n COMPUTATION STOP")
+            self.arret_comput = False
 
         self.init_res()
+        self.update_var_mas(force=True)
 
-    def update_var_mas(self):
+        return
+
+    def update_var_mas(self, force=False):
         """
         Update valu in Mascaret
         """
-        for id_lk in self.param_fg.keys():
-            id_mas = self.param_fg[id_lk]["id_mas"]
-            self.masc.set("Model.Link.Level", self.param_fg[id_lk]["level"], id_mas)
-            self.masc.set("Model.Link.CSection'", self.param_fg[id_lk]["CSection"], id_mas)
+        for param in self.param_fg.values():
+            if ((param["level"], param["CSection"], param["width"]) !=
+                    (param["level-dt"], param["CSection-dt"], param["width-dt"]) or force):
+                id_mas = param["id_mas"]
+                updates = {
+                    "Model.Link.Level": param["level"],
+                    "Model.Link.CSection": param["CSection"],
+                    "Model.Link.Width": param["width"]
+                }
+                for key, value in updates.items():
+                    self.masc.set(key, value, id_mas)
 
     def init_res(self):
         """Init. the results dico"""
-        self.results_fg_lk_mv = {}
-        for id_link in self.param_fg.keys():
-            self.results_fg_lk_mv[id_link] = {"TIME": [], "ZLINK": [], "CSECLINK": [], "REGVAR": []}
-            self.results_fg_lk_mv[id_link]["TIME"].append(self.param_fg[id_link]["TIME"])
-            self.results_fg_lk_mv[id_link]["ZLINK"].append(self.param_fg[id_link]["level"])
-            self.results_fg_lk_mv[id_link]["CSECLINK"].append(self.param_fg[id_link]["CSection"])
-            self.results_fg_lk_mv[id_link]["REGVAR"].append(self.param_fg[id_link]["REGVAR_VAL"])
+        self.results_fg_lk_mv = {
+            id_link: {
+                "TIME": [params["TIME"]],
+                "ZLINK": [params["level"]],
+                "CSECLINK": [params["CSection"]],
+                "WIDTHLINK": [params["width"]],
+                "REGVAR": [params["REGVAR_VAL"]],
+            }
+            for id_link, params in self.param_fg.items()
+        }
 
     def finalize(self, tfin):
         if len(self.results_fg_lk_mv) > 0:
-            for id_link in self.param_fg.keys():
-                self.results_fg_lk_mv[id_link]["TIME"].append(tfin)
-                self.results_fg_lk_mv[id_link]["ZLINK"].append(self.param_fg[id_link]["level"])
-                self.results_fg_lk_mv[id_link]["CSECLINK"].append(
-                    self.param_fg[id_link]["CSection"]
-                )
-                self.results_fg_lk_mv[id_link]["REGVAR"].append(
-                    self.param_fg[id_link]["REGVAR_VAL"]
-                )
+            for id_link, param in self.param_fg.items():
+                res = self.results_fg_lk_mv[id_link]
+                res["TIME"].append(tfin)
+                res["ZLINK"].append(param["level"])
+                res["CSECLINK"].append(param["CSection"])
+                res["WIDTHLINK"].append(param["width"])
+                res["REGVAR"].append(param["REGVAR_VAL"])
 
     def iter_fg(self, time, dtp):
         """
         Floodgate treatment during an iteration
         :param dtp : time step
         :param time: time
-
         """
-        for id_lk in self.param_fg.keys():
-            if self.param_fg[id_lk]["method_mob"] == "meth_regul":
-                if self.check_dt_regul(self.param_fg[id_lk], dtp):
-                    val_check = self.check_regul(self.param_fg[id_lk])
-                    new_level, new_section, new_level_max = self.law_gate_regul(
-                        self.param_fg[id_lk], time
-                    )
+        for id_lk, param in self.param_fg.items():
+            if param["method_mob"] == "meth_regul":
+                if self.cl_regul.check_dt_regul(param, dtp):
+                    # modification pour le cas casier-casier
+                    # TODO BASIN
+                    val_check = self.masc.get(("State.Z" if param["VREG"] == "Z" else "State.Q"),
+                                              param["SECCON"])
+                    self.cl_regul.state_regul(val_check, param)
+                    dnew = self.cl_regul.law_gate_regul(param, time)
+                    self.fill_res_and_update(id_lk, time, param, dnew, val_check)
+            elif param["method_mob"] == "meth_time":
 
-                # fill before to have the old value and new
-                self.fill_results_fg_mv(
-                    id_lk,
-                    new_level,
-                    new_section,
-                    new_level_max,
-                    val_check,
-                    time,
-                    dtp,
-                    self.param_fg[id_lk],
-                )
+                val_check = self.masc.get("State.Z" , param["SECCON"])
+                dnew = self.cl_time.law_mth_time(param, time)
+                self.fill_res_and_update(id_lk, time, param, dnew, val_check)
 
-                self.param_fg[id_lk]["REGVAR_VAL"] = val_check
-                self.param_fg[id_lk]["level"] = new_level
-                self.param_fg[id_lk]["CSection"] = new_section
-                self.param_fg[id_lk]["ZmaxSection"] = new_level_max
-                self.param_fg[id_lk]["TIME"] = time
-                self.update_var_mas()
-            elif self.param_fg[id_lk]["method_mob"] == "meth_time":
-                # new_level
-                self.update_var_mas()
-            elif self.param_fg[id_lk]["method_mob"] == "meth_fusible":
-                pass
-                # if self.check_dt_fuse(self.param_fg[id_lk], dtp):
+            elif param[id_lk]["method_mob"] == "meth_fus":
+                # TODO BASIN
+                val_check = self.masc.get(("State.Z" if param["VFUS"] == "Z" else "State.Q"),
+                                          param["SECCON"])
+                if not param["break"] :
+                    param["break"] = self.cl_fusible.check_break_fus(param, val_check, time)
+                    param["break_time"] = time
+                if param["break"]:
+                    dnew = self.cl_fusible.law_mth_fus(param, time)
+                    self.fill_res_and_update(id_lk, time, param, dnew, val_check)
 
-    def update_time_level(self):
-        self.param_fg[id_lk]["level"]
-        self.param_fg[id_lk]["level"] =
-        self.param_fg[id_lk]["CSection"] =
 
-    def check_level_regul(self):
-        """Check if  'VREGOPEN' and 'VREGCLOS are consistent'"""
+    def fill_res_and_update(self, id_lk, time, param, dnew, val_check):
+        param.update({
+            # var time-dt
+            "CSection-dt": param["CSection"],
+            "level-dt": param["level"],
+            "width-dt": param["width"],
+            "TIME-dt": param["TIME"],
+            "ZmaxSection-dt": param["ZmaxSection"],
+            "REGVAR_VAL-dt": param["REGVAR_VAL"],
+            # var update in run
+            "REGVAR_VAL": val_check,
+            "level": dnew['level'],
+            "CSection": dnew["CSection"],
+            "width": dnew["width"],
+            "ZmaxSection": dnew["ZmaxSection"],
+            "TIME": time
+        })
+        self.fill_results_fg_mv(id_lk, param)
+        self.update_var_mas()
+
+    def check_param(self):
+        """'"""
         # check cas non possible
         cond = True
-        for id_lk in self.param_fg.keys():
-            typ_g = self.param_fg[id_lk]["DIRFG"]
-            valo = self.param_fg[id_lk]["VREGOPEN"]
-            valf = self.param_fg[id_lk]["VREGCLOS"]
-            tol = self.param_fg[id_lk]["TOLREG"]
-            if typ_g == "D":  # bas
-                if valf + tol > valo - tol:
-                    self.clapi.add_info(
-                        "***** ERROR: "
-                        "Closing level value must be lower opening level value\n"
-                        " for the {} link ".format(id_lk)
-                    )
-                    cond = False
+        for id_lk,  param in self.param_fg.items():
+            if param["method_mob"]== "meth_regul":
+                cond = self.cl_regul.check_param(param, id_lk)
 
-            else:
-                if valo - tol > valf + tol:
-                    self.clapi.add_info(
-                        "***** ERROR:"
-                        "Opening level value must be lower closing level value\n"
-                        " for the {} link ".format(id_lk)
-                    )
-                    cond = False
         return cond
 
-    def check_regul(self, param_fg):
+    def search_sec_control(self):
+        """
+        Get control section to compare the regulation variable
+        """
+        self.model_size, _, _ = self.masc.get_var_size("Model.X")
+        coords = []
+        for i in range(self.model_size):
+            coords.append(self.masc.get("Model.X", i))
+        coords = np.array(coords)
+        for id_lk, param in self.param_fg.itmes():
+            # 2 valeur
+            # 'PK' regule
+            # 'abscissa' pk link
+            if param["method_mob"] == "meth_regul":
+                var = "PK"
+            elif param["method_mob"] == "meth_time":
+                var = "abscissa"
+            elif param["method_mob"] == "meth_fus":
+                var = "PKFUS"
+            idx = (np.abs(coords - param[var])).argmin()
+            if idx:
+                param["SECCON"] = idx
+            else:
+                self.add_info("Regulation point not found for numlink {}.".format(id_lk))
+        del coords
+
+    def search_link_to_param_fg(self):
+        """
+        Link information between the model and the parameters file
+        """
+        self.size_link, _, _ = self.masc.get_var_size("Model.Link.Kind")
+        tini = self.masc.get("Model.InitTime")
+
+        lst_info = []
+        coords = []
+        for id_mas_lk in range(self.size_link):
+            nature = self.masc.get("Model.Link.Kind", id_mas_lk)
+            typ = self.masc.get("Model.Link.Type", id_mas_lk)
+            if nature == 1 and typ in [1, 4]:  # narure 1: basin-reach, typ 1 weirs, 4 culvert
+                abs = self.masc.get("Model.Link.StoR.Abscissa", id_mas_lk)
+                lst_info.append(id_mas_lk)
+                coords.append(abs)
+        coords = np.array(coords)
+
+        for id_lk, param in self.param_fg.items():
+            idx = (np.abs(coords - param["abscissa"])).argmin()
+            if idx:
+                id_mas = lst_info[idx]
+                param.update({
+                    "id_mas": id_mas,
+                    "CSection0": self.masc.get("Model.Link.CSection", id_mas),
+                    "level0": self.masc.get("Model.Link.Level", id_mas),
+                    "width0": self.masc.get("Model.Link.Width", id_mas),
+                    "TIME0": tini,
+                    "TIME": tini
+                })
+                param["ZmaxSection0"] = param["level0"] + param["CSection0"] / param["width0"]
+
+                if param["method_mob"] == "meth_regul":
+                    self.cl_regul.init_meth_regul(param)
+                elif param["method_mob"] == "meth_time":
+                    self.cl_time.init_meth_time(param)
+                elif param["method_mob"] == "meth_fus":
+                    self.cl_fusible.init_meth_fusible(param)
+            else:
+                self.add_info("Id_mas not found for numlink {}.".format(id_lk))
+
+            # inti var time-dt
+            param.update({
+                "CSection-dt": param["CSection0"],
+                "level-dt": param["level0"],
+                "width-dt": param["width0"],
+                "TIME-dt": tini,
+                "ZmaxSection-dt": param["ZmaxSection0"],
+                "REGVAR_VAL-dt":param("REGVAR_VAL")
+            })
+        del coords, lst_info
+
+    def fill_results_fg_mv(self, id_lk, param):
+        """
+        fill the results_fg_mv dico
+        :param id_lk: link id
+        :param dnew: dico fo new value
+        :param param : dico of flood gate paramter
+        :return:
+        """
+        res = self.results_fg_lk_mv[id_lk]
+
+        # Check if any parameter has changed
+        if ((param["level"], param["CSection"], param["width"]) !=
+            (param["level-dt"], param["CSection-dt"], param["width-dt"])):
+                res["TIME"].append(param["TIME-dt"])
+                res["CSECLINK"].append(param["CSection-dt"])
+                res["WIDTHLINK"].append(param["width-dt"])
+                res["REGVAR"].append(round(param["REGVAR_VAL-dt"], 3))
+                if param["method_mob"] == "meth_regul":
+                    if param["DIRFG"] == "D":
+                        res["ZLINK"].append(param['level-dt'])
+                    else:
+                        res["ZLINK"].append(param["ZmaxSection-dt"])
+                else:
+                    res["ZLINK"].append(param['level-dt'])
+        # Update with new values
+        res["TIME"].append(param["TIME"])
+        res["CSECLINK"].append(param["CSection"])
+        res["WIDTHLINK"].append(param["width"])
+        res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
+        if param["method_mob"] == "meth_regul":
+            if param["DIRFG"] == "D":
+                res["ZLINK"].append(param['level'])
+            else:
+                res["ZLINK"].append(param["ZmaxSection"])
+        else:
+            res["ZLINK"].append(param['level'])
+
+
+class ClassMethRegul:
+    """Class Flood Gate"""
+
+    def __init__(self, parent):
+        self.prt = parent
+        self.arret_comput =  parent.arret_comput
+        self.add_info =parent.add_info
+        self.masc = parent.masc
+        self.compt_dt = 0
+
+    def init_meth_regul(self, param):
+        """ Initialise the regulation variable
+        :param parameters: parameters dict """
+
+        param.update({
+            "width": param["width0"],
+            "CSection": param["CSection0"],
+            "REGVAR_VAL": self.masc.get("State.Z" if param["VREG"] == "Z" else "State.Q", param["SECCON"]),
+            "OPEN_CLOSE": "INIT"
+        })
+        # info de la vanne
+        if param["DIRFG"] == "D":
+            param["level"] = max(param["ZINITREG"], param["level0"])
+            param["ZmaxSection"] = param["ZmaxSection0"]
+            if param["type"] == 4:
+                # section rectangulaire
+                param["ZLIMITGATE"] = min(param["ZMAXFG"], param["ZmaxSection0"])
+                param["CSection"] = param["width"] *min((param["ZmaxSection"] - param["level"]),0)
+            else:
+                param["ZLIMITGATE"] = param["ZMAXFG"]
+                param["CSection"] = 0
+
+        elif param["DIRFG"] == "U" and param["type"] == 4:
+            param["level"] = param["level0"]
+            param["ZmaxSection"] = min(param["ZINITREG"], param["ZmaxSection0"])
+            param["CSection"] = param["width0"] * min((param["ZmaxSection"] - param["level"]),0)
+            param["ZLIMITGATE"] = min(param["ZMAXFG"], param["level0"])
+        else:
+            self.add_info(f"Non-consistency type floodgate with the moving part {id_lk}.")
+
+    def check_param(self, param, id_lk):
+        """Check if  'VREGOPEN' and 'VREGCLOS are consistent"""
+
+        valo = param["VREGOPEN"]
+        valf = param["VREGCLOS"]
+        tol = param["TOLREG"]
+
+        if param["DIRFG"] == "D":  # bas
+            if valf + tol > valo - tol:
+                self.add_info(
+                    "***** ERROR: "
+                    "Closing level value must be lower opening level value\n"
+                    " for the {} link ".format(id_lk)
+                )
+                cond = False
+        else:
+            if valo - tol > valf + tol:
+                self.add_info(
+                    "***** ERROR:"
+                    "Opening level value must be lower closing level value\n"
+                    " for the {} link ".format(id_lk)
+                )
+                cond = False
+
+    def state_regul(self, val_check, param_fg):
         """
         check if OPEN or CLOSE the flood Gate with maintains
         between  param_fg["VREGOPEN"] et param_fg["VREGCLOS"]
         """
-        if param_fg["VREG"] == "Z":
-            val_mas = "State.Z"
-        else:
-            val_mas = "State.Q"
-        # modification pour le cas casier-casier
-        val_check = self.masc.get(val_mas, param_fg["SECCON"])
+
 
         tol = param_fg["TOLREG"]
         key = (param_fg["OPEN_CLOSE"], param_fg["DIRFG"])
@@ -187,27 +365,27 @@ class ClassFloodGateLk:
                 (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
             ],
             ("CLOSE", "D"): [
-                (val_check >= param_fg["VREGOPEN"] - tol, "OPEN")
+                (val_check >= param_fg["VREGOPEN"] - tol, "OPEN"),
                 (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
             ],
             ("MAINT", "D"): [
                 (val_check >= param_fg["VREGOPEN"] - tol, "OPEN"),
-                (val_check <= param_fg["VREGCLOS"] + tol, "CLOSE")
+                (val_check <= param_fg["VREGCLOS"] + tol, "CLOSE"),
                 (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
             ],
             # fermeture par le haut
             ("INIT", "U"): [(val_check >= param_fg["VREGCLOS"] - tol, "CLOSE")],
             ("CLOSE", "U"): [
-                (val_check <= param_fg["VREGOPEN"] + tol, "OPEN")
+                (val_check <= param_fg["VREGOPEN"] + tol, "OPEN"),
                 (param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"], "MAINT"),
             ],
             ("OPEN", "U"): [
-                (val_check >= param_fg["VREGCLOS"] - tol, "CLOSE")
+                (val_check >= param_fg["VREGCLOS"] - tol, "CLOSE"),
                 (param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"], "MAINT"),
             ],
             ("MAINT", "U"): [
                 (val_check <= param_fg["VREGOPEN"] + tol, "OPEN"),
-                (val_check >= param_fg["VREGCLOS"] - tol, "CLOSE")
+                (val_check >= param_fg["VREGCLOS"] - tol, "CLOSE"),
                 (param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"], "MAINT"),
             ]
         }
@@ -217,8 +395,64 @@ class ClassFloodGateLk:
                 param_fg["OPEN_CLOSE"] = action
                 break
 
-
         return val_check
+
+    def law_gate_regul(self, param, time):
+        """
+        :return: new value
+        """
+        status = param["OPEN_CLOSE"]
+
+        if status in [None, "INIT", "MAINT"]:
+            return {
+            "level": param["level"],
+            "CSection": param["CSection"],
+            "ZmaxSection": param["ZmaxSection"],
+            "width": param["width"]
+            }
+        dt = time - param["TIME"]
+        dz_open = self.comput_dz(param["VELOFGOPEN"], dt, param["ZINCRFG"])
+        dz_close = self.comput_dz(param["VELOFGCLOSE"], dt, param["ZINCRFG"])
+
+        dir_fg = param["DIRFG"]
+        level, level0 = param["level"], param["level0"]
+        zmax_section, zmax_section0 = param["ZmaxSection"], param["ZmaxSection0"]
+        zlimit_gate = param["ZLIMITGATE"]
+        width = param["width0"]
+
+        if dir_fg == "D":
+            new_level_max = zmax_section0
+            if status == "CLOSE":
+                new_level = min(level + dz_close, zlimit_gate)
+            elif status == "OPEN":
+                new_level = max(level - dz_open, level0)
+        elif dir_fg == "U":
+            new_level = level0
+            if status == "CLOSE":
+                new_level_max = min(zmax_section + dz_close, zlimit_gate)
+            elif status == "OPEN":
+                new_level_max = max(zmax_section - dz_open, zmax_section0)
+
+        new_section = width * (new_level_max - new_level)
+        return {
+            "level": new_level,
+            "CSection": new_section,
+            "ZmaxSection": new_level_max,
+            "width": width
+        }
+
+    def comput_dz(self, vit, dt, dzlimit=0):
+        """
+         comput_dx
+        :param vit: velocity
+        :param dt: step time
+        :param dzlimit:  Limit dz max by dt
+        :return: dz : displacement in a time dt
+        """
+        dz = 0.0
+        if dt > 0:
+            dz = vit * dt
+        return min(dz, dzlimit)
 
     def check_dt_regul(self, param_fg, dtp):
         """
@@ -241,216 +475,89 @@ class ClassFloodGateLk:
             self.compt_dt = 0
             return False
 
-    def search_sec_control(self):
-        """
-        Get control section to compare the regulation variable
-        """
-        self.model_size, _, _ = self.masc.get_var_size("Model.X")
-        coords = []
-        for i in range(self.model_size):
-            coords.append(self.masc.get("Model.X", i))
-        coords = np.array(coords)
-        for id_lk in self.param_fg.keys():
-            # 2 valeur
-            # 'PK' regule
-            # 'abscissa' pk link
-            idx = (np.abs(coords - self.param_fg[id_lk]["PK"])).argmin()
-            if idx:
-                self.param_fg[id_lk]["SECCON"] = idx
-            else:
-                self.clapi.add_info("Regulation point not found for numlink {}.".format(id_lk))
-        del coords
+class ClassMethTime:
+    """Class Flood Gate"""
+    # self.cl_time = ClassMethTime(self)
 
-    def search_link_to_param_fg(self):
-        """
-        Link information between the model and the parameters file
-        """
-        self.size_link, _, _ = self.masc.get_var_size("Model.Link.Kind")
-        tini = self.masc.get("Model.InitTime")
-        lst_info = []
-        coords = []
-        for id_mas_lk in range(self.size_link):
-            nature = self.masc.get("Model.Link.Kind", id_mas_lk)
-            typ = self.masc.get("Model.Link.Type", id_mas_lk)
-            if nature == 1 and typ in [1, 4]:  # narure 1: basin-reach, typ 1 weirs, 4 culvert
-                abs = self.masc.get("Model.Link.StoR.Abscissa", id_mas_lk)
-                lst_info.append(id_mas_lk)
-                coords.append(abs)
-        coords = np.array(coords)
+    def __init__(self, parent):
+        self.arret_comput =  parent.arret_comput
+        self.add_info =parent.add_info
+        self.masc = parent.masc
 
-        for id_lk in self.param_fg.keys():
-            idx = (np.abs(coords - self.param_fg[id_lk]["abscissa"])).argmin()
-            if idx:
-                id_mas = lst_info[idx]
-                self.param_fg[id_lk]["id_mas"] = id_mas
-                # conserv variable initial
-                self.param_fg[id_lk]["CSection0"] = self.masc.get("Model.Link.CSection", id_mas)
-                self.param_fg[id_lk]["level0"] = self.masc.get("Model.Link.Level", id_mas)
-                self.param_fg[id_lk]["width0"] = self.masc.get("Model.Link.Width", id_mas)
-                self.param_fg[id_lk]["ZmaxSection0"] = (
-                    self.param_fg[id_lk]["level0"]
-                    + self.param_fg[id_lk]["CSection0"] / self.param_fg[id_lk]["width0"]
-                )
-                self.param_fg[id_lk]["TIME0"] = tini
-                # variable qui evolura ********************************
-                self.param_fg[id_lk]["TIME"] = tini
-                if self.param_fg[id_lk]["method_mob"] == "meth_regul":
-                        self.init_regul(id_lk)
-                elif self.param_fg[id_lk]["method_mob"] == "meth_time":
-                    self.param_fg[id_lk]["TIMEZ"] = np.array(self.param_fg[id_lk]["TIMEZ"])
-                    self.param_fg[id_lk]["VALUEZ"] = np.array(self.param_fg[id_lk]["VALUEZ"])
-                    self.param_fg[id_lk]["level"] = np.interp(self.param_fg[id_lk]["TIME"],
-                                                    self.param_fg[id_lk]["TIMEZ"],
-                                                    self.param_fg[id_lk]["VALUEZ"])
-                    if self.param_fg[id_lk]["type"] == 4:
-                        pass
-                        # TODO max(
-                    # pass #TODO
-                    # self.param_fg[id_lk]["level"] = self.param_fg[id_lk]["level0"]
-                    # self.param_fg[id_lk]["CSection"] = self.param_fg[id_lk]["width0"] * (
-                    #         self.param_fg[id_lk]["ZmaxSection"] - self.param_fg[id_lk]["level"]
-                    # )
-            else:
-                self.clapi.add_info("Id_mas not found for numlink {}.".format(id_lk))
-        del coords, lst_info
-
-    def init_regul(self,id_lk):
-        """ Initialise the regulation variable
-        :param id_lk: link id"""
-
-        if self.param_fg[id_lk]["VREG"] == "Z":
-            val_mas = "State.Z"
+    def init_meth_time(self, param):
+        param.update({
+            "width": param["width0"],
+            "CSection": param["CSection0"],
+            "ZmaxSection": param["ZmaxSection0"],
+            "TIMEZ": np.array(param["TIMEZ"]),
+            "VALUEZ": np.array(param["VALUEZ"])
+        })
+        param["level"] = np.interp(param["TIME"], param["TIMEZ"],param["VALUEZ"])
+        if param["type"] == 4:
+            param["CSection"] = param["width0"] * min((param["ZmaxSection0"] - param["level"]),0)
         else:
-            val_mas = "State.Q"
+            param["CSection"] = 0
 
-        self.param_fg[id_lk]["REGVAR_VAL"] = self.masc.get(
-            val_mas, self.param_fg[id_lk]["SECCON"]
-        )
-        self.param_fg[id_lk]["OPEN_CLOSE"] = "INIT"
-        # info de la vanne
-        if self.param_fg[id_lk]["DIRFG"] == "D":
-            self.param_fg[id_lk]["level"] = max(
-                self.param_fg[id_lk]["ZINITREG"], self.param_fg[id_lk]["level0"]
-            )
-            self.param_fg[id_lk]["ZmaxSection"] = self.param_fg[id_lk]["ZmaxSection0"]
-
-            if self.param_fg[id_lk]["type"] == 4:
-                # section rectangulaire
-                self.param_fg[id_lk]["CSection"] = self.param_fg[id_lk]["width0"] * (
-                        self.param_fg[id_lk]["ZmaxSection"] - self.param_fg[id_lk]["level"]
-                )
-                self.param_fg[id_lk]["ZLIMITGATE"] = min(
-                    self.param_fg[id_lk]["ZMAXFG"], self.param_fg[id_lk]["ZmaxSection0"]
-                )
-            else:
-                self.param_fg[id_lk]["ZLIMITGATE"] = self.param_fg[id_lk]["ZMAXFG"]
-                self.param_fg[id_lk]["CSection"] = 0
-
-        elif self.param_fg[id_lk]["DIRFG"] == "U" and self.param_fg[id_lk]["type"] == 4:
-            # seulement type 4
-            self.param_fg[id_lk]["level"] = self.param_fg[id_lk]["level0"]
-            self.param_fg[id_lk]["ZmaxSection"] = min(
-                self.param_fg[id_lk]["ZINITREG"], self.param_fg[id_lk]["ZmaxSection0"]
-            )
-            self.param_fg[id_lk]["CSection"] = self.param_fg[id_lk]["width0"] * (
-                    self.param_fg[id_lk]["ZmaxSection"] - self.param_fg[id_lk]["level"]
-            )
-            self.param_fg[id_lk]["ZLIMITGATE"] = min(
-                self.param_fg[id_lk]["ZMAXFG"], self.param_fg[id_lk]["level0"]
-            )
+    def law_mth_time(self, param, time):
+        """ compute new value"""
+        dnew = {"ZmaxSection": param["ZmaxSection0"], "width": param["width0"],
+                "level": np.interp(time, param["TIMEZ"], param["VALUEZ"])}
+        if param["type"] == 4:
+            dnew["CSection"] = param["width0"] * min((param["ZmaxSection0"] - dnew["level"]), 0)
         else:
-            self.clapi.add_info("non-consistency type floodgate with the moving part".format(id_lk))
+            dnew["CSection"] = 0
 
-    def comput_dz(self, vit, dt, dzlimit=0):
-        """
-         comput_dx
-        :param vit: velocity
-        :param dt: step time
-        :param dzlimit:  Limit dz max by dt
-        :return: dz : displacement in a time dt
-        """
-        dz = 0.0
-        if dt > 0:
-            dz = vit * dt
-        return min(dz, dzlimit)
+        return dnew
 
-    def law_gate_regul(self, param, time):
+
+
+class ClassMethFusible:
+    """Class Flood Gate"""
+    # self.cl_fusible = ClassMethFusible(self)
+    def __init__(self, parent):
+        self.arret_comput =  parent.arret_comput
+        self.add_info =parent.add_info
+        self.masc = parent.masc
+
+    def init_meth_fusible(self, param):
+        param.update({
+            "level": param["level0"],
+            "width": param["width0"],
+            "CSection": param["CSection0"],
+            "ZmaxSection": param["ZmaxSection0"],
+            "TIMEFUS": np.array(param["TIMEFUS"]),
+            "WIDTHFUS": np.array(param["WIDTHFUS"]),
+            "break" : False,
+            "break_time": -9999
+        })
+
+    def check_break_fus(self, param, val_check, time):
+        """
+         Check if treat the flood gate
+        :return: true or false
         """
 
-        :return:  new position of flood gate, and new area, and if status is OPEN, CLOSE, NONE
-        """
-        old_time = param["TIME"]
-        dt = time - old_time
-        status = param["OPEN_CLOSE"]
-        if status in [None, "INIT", "MAINT"]:
-            return param["level"], param["CSection"], param["ZmaxSection"]
-        dz = self.comput_dz(param["VELOFG"], dt, param["ZINCRFG"])
-        dz_close = self.comput_dz(param["VELOFG_CLO"], dt, param["ZINCRFG"])
-        dir_fg = param["DIRFG"]
-        zmax_section0 = param["ZmaxSection0"]
-        level0 = param["level0"]
-        zlimit_gate = param["ZLIMITGATE"]
-        width0 = param["width0"]
-        # attention à reprendre CS négatif
-        if dir_fg == "D":
-            level = param["level"]
-            new_level_max = zmax_section0
-            if status == "CLOSE":
-                new_level = min(level + dz_close, zlimit_gate)
-            elif status == "OPEN":
-                new_level = max(level - dz, level0)
-        elif dir_fg == "U":
-            zmax_section = param["ZmaxSection"]
-            new_level = level0
-            if status == "CLOSE":
-                new_level_max = min(zmax_section + dz_close, zlimit_gate)
-            elif status == "OPEN":
-                new_level_max = max(zmax_section - dz, zmax_section0)
-        print(zmax_section0,zlimit_gate,level0  )
-        print(new_level_max, new_level)
-        new_section = width0 * (new_level_max - new_level)
-        print('****',new_section)
-        return new_level, new_section, new_level_max
-
-    def fill_results_fg_mv(
-        self, id_lk, new_level, new_section, new_level_max, val_check, time, dtp, param
-    ):
-        """
-        fill the results_fg_mv dico
-        :param id_lk: link id
-        :param time: time
-        :param new_level :  new Z
-        :param new_section ! new sectino
-        :param new_level_max:  new Z height of the culvert
-        :param param : dico of flood gate paramter
-        :param  val_check : regulation value
-        :return:
-        """
-        dir_fg = param["DIRFG"]
-        old_time = param["TIME"]
-        dt = time - old_time
-        typ_sav = 0
-        for var, val in [
-            ("level", new_level),
-            ("CSection", new_section),
-            ("ZmaxSection", new_level_max),
-        ]:
-            if param[var] != val:
-                typ_sav = 1
-        if typ_sav == 1:
-            if not math.isclose(dtp, dt, rel_tol=1e-06):
-                self.results_fg_lk_mv[id_lk]["TIME"].append(time - dtp)
-                self.results_fg_lk_mv[id_lk]["CSECLINK"].append(param["CSection"])
-                self.results_fg_lk_mv[id_lk]["REGVAR"].append(round(param["REGVAR_VAL"], 3))
-                if dir_fg == "D":
-                    self.results_fg_lk_mv[id_lk]["ZLINK"].append(param["level"])
-                else:
-                    self.results_fg_lk_mv[id_lk]["ZLINK"].append(param["ZmaxSection"])
-
-        self.results_fg_lk_mv[id_lk]["TIME"].append(time)
-        self.results_fg_lk_mv[id_lk]["CSECLINK"].append(new_section)
-        self.results_fg_lk_mv[id_lk]["REGVAR"].append(round(val_check, 3))
-        if dir_fg == "D":
-            self.results_fg_lk_mv[id_lk]["ZLINK"].append(new_level)
+        if param["METHBREAK"] == 'regul':
+            if val_check >= param["VBREAKFUS"]:
+                 return True
         else:
-            self.results_fg_lk_mv[id_lk]["ZLINK"].append(new_level_max)
+            if time >= param["TBREAKFUS"]:
+                return True
+        return False
+
+    def law_mth_fus(self, param, time):
+        """ compute new value"""
+
+        dnew = {"level": param["ZFINALFUS"],
+                "ZmaxSection" : param["ZmaxSection0"]}
+
+        rela_time = time - param["break_time"]
+        new_width = np.interp(rela_time, param["TIMEZ"], param["VBREAKFUS"])
+        dnew["width"] = min(0.05, new_width)
+
+        if param["type"] == 4:
+            dnew["CSection"] = dnew["width"] * min((param["ZmaxSection0"] - dnew["level"]), 0)
+        else:
+            dnew["CSection"] = 0
+
+        return dnew
