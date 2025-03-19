@@ -33,7 +33,6 @@ def del_2space(txt):
 
 def data_to_float(txt):
     try:
-        float(txt)
         return float(txt)
     except ValueError:
         return None
@@ -41,7 +40,6 @@ def data_to_float(txt):
 
 def data_to_date(txt):
     try:
-        dateutil.parser.parse(txt, dayfirst=True)
         return dateutil.parser.parse(txt, dayfirst=True)
     except ValueError:
         return None
@@ -49,7 +47,6 @@ def data_to_date(txt):
 
 def data_to_int(txt):
     try:
-        int(txt)
         return int(txt)
     except ValueError:
         return None

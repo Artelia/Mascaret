@@ -372,7 +372,6 @@ class ClassAPIMascaret:
             self.clfg.init_floogate()
         if basin and self.mobil_link:
             self.clfg_lk.init_fg_links()
-
         else:
             self.mobil_link = False
         if self.clfg_lk.arret_comput:
