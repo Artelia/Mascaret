@@ -20,6 +20,7 @@ email                :
 """
 import os
 import sys
+import json
 
 try:
     # Plugin
@@ -67,6 +68,7 @@ class ClassAPIMascaret:
         self.basin = False
         self.filelig = None
         self.info = ''
+
 
         self.results_api = {}
 
@@ -336,6 +338,13 @@ class ClassAPIMascaret:
         return t0, t1, dtp
 
     def finalize(self):
+        """
+        Finalize the computing :
+        - store results
+        - close masc object
+        - Display the end information
+        :return:
+        """
         info = self.masc.log_stream.getvalue()
         self.add_info(info)
         self.masc.delete_mascaret()
@@ -353,18 +362,31 @@ class ClassAPIMascaret:
         self.mess.export_obj(self.dossierFileMasc)
 
     def write_res_struct(self, res):
-        import json
-
+        """
+        Write a json file about the hydraulic structure results
+        :param res: results to write f
+        :return:
+        """
         with open(os.path.join(self.dossierFileMasc, "res_struct.res"), "w") as filein:
             json.dump(res, filein)
 
     def write_res_link_fg(self, res):
-        import json
-
+        """
+        Write a json file about the movable link results
+        :param res:
+        :return:
+        """
         with open(os.path.join(self.dossierFileMasc, "res_link_fg.res"), "w") as filein:
             json.dump(res, filein)
 
     def main(self, filename, tracer=False, basin=False):
+        """
+         Main programme which run model
+        :param filename: Xcas file
+        :param tracer: if there is the tracers
+        :param basin: if there is the basins
+        :return:
+        """
         self.tracer = tracer
         self.basin = basin
         self.initial(filename)
@@ -381,6 +403,11 @@ class ClassAPIMascaret:
         self.finalize()
 
     def add_info(self, txt):
+        """
+        Display text
+        :param txt: Text to display
+        :return:
+        """
         self.mess.add_mess('api_{}'.format(self.num_mess), 'info', txt)
         self.num_mess += 1
         # print(txt)

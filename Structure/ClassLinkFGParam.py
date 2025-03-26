@@ -34,7 +34,7 @@ class ClassLinkFGParam(object):
             "branchnum": {"desc": "branch", 'typ': 'int'},
             "basinstart": {"desc": "Casier Initial", 'typ': 'int'},
             "basinend": {"desc": "Casier Final", 'typ': 'int'},
-            "method_mob": {"desc": "mehtode utilisé : meth_tempo(1), meth_regul(2), meth_fus(3)",
+            "method_mob": {"desc": "mehtode utilisé : (0 ou NULL) ignore, meth_tempo(1), meth_regul(2), meth_fus(3)",
                            "default": "2", 'typ': 'str'},
             "type": {"desc": "type de link, 1:weir, 4:culvert",'typ': 'int'},
             # methode de régulation
@@ -179,6 +179,12 @@ class ClassLinkFGParam(object):
         return True
 
     def typ_to_val(self, typ, val):
+        """
+
+        :param typ: type of the value
+        :param val: Value
+        :return:  return the value with the good type
+        """
         if typ =='bool':
             return  str2bool(val)
         elif typ =='int':
@@ -190,8 +196,7 @@ class ClassLinkFGParam(object):
 
     def check_lst_param(self):
         """
-        Check if all variable
-
+        Check if all variables
         """
         for num, test in self.param_fg.items():
             lst_test = self.create_lst_test(test["method_mob"])
@@ -202,6 +207,11 @@ class ClassLinkFGParam(object):
         return True
 
     def create_lst_test(self, meth):
+        """
+        Creation of test list allowing to check the variables
+        :param meth:
+        :return:
+        """
         lst_com = ["name", "level", "abscissa", "branchnum", "basinstart", "basinend", "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG", "USEBASIN", "NUMBASINREG",
                    "USEPOINT", "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG", "TOLREG",
@@ -221,7 +231,7 @@ class ClassLinkFGParam(object):
 
     def export_cl(self, name="cli_fg_lk.obj"):
         """
-        generte json file parameters
+        To Generate json file parameters
         :param obj: object to dump
         :param name: name file
         :return:
@@ -231,7 +241,7 @@ class ClassLinkFGParam(object):
 
     def import_cl(self, name="cli_fg_lk.obj"):
         """
-         Import parameter
+        Load parameter
         :param name: Name file
         :return:
         """
