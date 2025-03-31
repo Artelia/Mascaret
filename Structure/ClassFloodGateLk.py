@@ -61,7 +61,6 @@ class ClassFloodGateLk:
         if not self.check_param():
             self.add_info("***** ERROR: the gates for the links\n COMPUTATION STOP")
             self.arret_comput = False
-
         self.init_res()
         self.update_var_mas(force=True)
 
@@ -141,8 +140,10 @@ class ClassFloodGateLk:
                 val_check = self.masc.get(param['CHECK_VAR'], param["SECCON"])
                 self.cl_time.check_break(param, val_check)
                 dnew = self.cl_time.law_mth_time(param, time)
+
                 self.fill_res_and_update(id_lk, time, param, dnew, val_check)
             elif param[id_lk]["method_mob"] == self.dmeth["meth_fus"]:
+                print('iiiiiiiiiiiii555')
                 val_check = self.masc.get(param['CHECK_VAR'],
                                           param["SECCON"])
                 self.cl_fusible.check_break_fus(param, val_check, time)
@@ -240,7 +241,6 @@ class ClassFloodGateLk:
         """
         self.size_link, _, _ = self.masc.get_var_size("Model.Link.Kind")
         tini = self.masc.get("Model.InitTime")
-
         lst_info = []
         coords = []
         for id_mas_lk in range(self.size_link):
@@ -419,6 +419,7 @@ class ClassMethRegul:
     def state_regul(self, val_check, param_fg):
         """
         Determine the state of the floodgate (OPEN, CLOSE, or MAINTAIN) based on the regulation variable.
+
         :param val_check: Current value of the regulation variable.
         :param param_fg: Dictionary of floodgate parameters.
         """
@@ -582,7 +583,8 @@ class ClassMethTime:
             "CSection": param["CSection0"],
             "ZmaxSection": param["ZmaxSection0"],
             "TIMEZ": np.array(param["TIMEZ"]),
-            "VALUEZ": np.array(param["VALUEZ"])
+            "VALUEZ": np.array(param["VALUEZ"]),
+            "REGVAR_VAL" : self.masc.get(param['CHECK_VAR'], param["SECCON"])
         })
         param["level"] = np.interp(param["TIME"], param["TIMEZ"], param["VALUEZ"])
         if param["type"] == 4:
@@ -624,7 +626,7 @@ class ClassMethTime:
 
 class ClassMethFusible:
     """Class for handling fusible floodgate."""
-
+    #NOK
     def __init__(self, parent):
         """
         Initialize the "fusible" class.
@@ -647,7 +649,9 @@ class ClassMethFusible:
             "ZmaxSection": param["ZmaxSection0"],
             "TIMEFUS": np.array(param["TIMEFUS"]),
             "WIDTHFUS": np.array(param["WIDTHFUS"]),
-            "break_time": -9999
+            "break_time": -9999,
+            "REGVAR_VAL" : self.masc.get(param['CHECK_VAR'], param["SECCON"])
+
         })
 
     def check_break_fus(self, param, val_check, time):
@@ -657,6 +661,7 @@ class ClassMethFusible:
         :param val_check: Current value of the regulation variable.
         :param time: Current simulation time.
         """
+        print('iiiiiiiiiiiii2222', val_check >= param["VBREAKT"] or (self.break_lk and param["BPERMT"]))
         if self.break_lk:
             return
         if param["METHBREAK"] == 'regul' and val_check >= param["VBREAKFUS"]:
@@ -680,7 +685,7 @@ class ClassMethFusible:
         if rela_time <= max(param["TIMEZ"]):
             new_width = np.interp(rela_time, param["TIMEZ"], param["WIDTHFUS"])
         else:
-            new_width = dnew["width"]
+            new_width =  param["WIDTHFUS"]
         dnew["width"] = min(0.05, new_width)
 
         if param["type"] == 4:

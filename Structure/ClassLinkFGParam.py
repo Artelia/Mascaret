@@ -3,8 +3,8 @@
 /***************************************************************************
 Name                 : Mascaret
 Description          : Pre and Postprocessing for Mascaret for QGIS
-Date                 : December,2017
-copyright            : (C) 2017 by Artelia
+Date                 : December,2025
+copyright            : (C) 2025 by Artelia
 email                :
 ***************************************************************************/
 
@@ -24,6 +24,11 @@ from ..Function import str2bool,data_to_float,data_to_int
 
 class ClassLinkFGParam(object):
     def __init__(self):
+        """
+        Initialize the ClassLinkFGParam object.
+        - Defines the list of parameters (`lst_param`) for floodgate links.
+        - Sets up default methods (`dmeth`) for mobility handling.
+        """
         self.param_fg = {}
         self.list_actif = []
         self.lst_param = {
@@ -86,9 +91,12 @@ class ClassLinkFGParam(object):
 
     def get_param(self, parent=None, file="cli_fg_lk.obj"):
         """
-        Get param of mobil link
-        :param parent: parent class
-        :param file: name file
+        Retrieve parameters for mobile links.
+        - If `parent` is provided, fetch parameters from the database.
+        - Otherwise, import parameters from a file.
+
+        :param parent: Parent class (optional).
+        :param file: Name of the file to import parameters from (default: "cli_fg_lk.obj").
         """
         if not parent:
             path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../mascaret"))
@@ -111,11 +119,12 @@ class ClassLinkFGParam(object):
 
     def fill_param_to_db(self, db):
         """
-        Read parameters in database
-        TODO attention au méthode peut provoquer des modifications
+        Populate the `param_fg` dictionary with parameters from the database.
+        - Fetches general link information from the `links` table.
+        - Fetches mobility-specific values from the `links_mob_val` table.
 
-        :param db: database object
-        :return:
+        :param db: Database object.
+        :return: True if parameters are successfully fetched, otherwise False.
         """
         lst_var = ["linknum",
                    "name",
@@ -163,10 +172,18 @@ class ClassLinkFGParam(object):
             self.param_fg = {}
             print("links_mob_val  non coherant avec link")
             return False
-
+        var_tab = [
+            "TIMEZ",
+            "VALUEZ",
+            "TIMEFUS",
+            "WIDTHFUS"]
+        lst_id_tab = []
         for row in rows:
             id_link = row[0]
             var = row[1]
+            if var in var_tab:
+                lst_id_tab.append(id_link)
+                continue
             if var in self.lst_param:
                 self.param_fg[id_link][var] = self.typ_to_val(self.lst_param[var]['typ'], row[2])
             else:
@@ -175,15 +192,36 @@ class ClassLinkFGParam(object):
             #     self.param_fg[id_link][var] = float(row[2])
             # except ValueError:
             #     self.param_fg[id_link][var] = row[2]
+        #TODO add var_tab
+        lst_id_tab = list(set(lst_id_tab))
+        if len(lst_id_tab) > 0 :
+            lst_var = ["id_links", "name_var", "value", "id_order"]
+            sql = (
+                "SELECT {1} " "FROM {0}.links_mob_val " "WHERE id_links in ({2}) AND name_var in ({3})"
+                "ORDER BY id_links,id_order;"
+            ).format(db.SCHEMA, ", ".join(lst_var), ", ".join([str(v) for v in lst_id_tab]),
+                                                              ", ".join([f"'{v}'" for v in var_tab]))
+            # print(sql)
+            rows = db.run_query(sql, fetch=True)
+            dico_tmp = {id :{v:[] for v in var_tab} for id in lst_id_tab}
+            self.param_fg[id_link].update({v:[] for v in var_tab})
+            if not (rows is None or len(rows) == 0):
+                for row in rows:
+                    id_link = row[0]
+                    var = row[1]
+                    if var in var_tab:
+                        self.param_fg[id_link][var].append(self.typ_to_val('float',row[2]))
+                print( self.param_fg)
 
         return True
 
-    def typ_to_val(self, typ, val):
+    @staticmethod
+    def typ_to_val(typ, val):
         """
-
-        :param typ: type of the value
-        :param val: Value
-        :return:  return the value with the good type
+        Convert a value to its specified type.
+        :param typ: The target type (e.g., 'bool', 'int', 'float').
+        :param val: The value to be converted.
+        :return: The converted value.
         """
         if typ =='bool':
             return  str2bool(val)
@@ -196,7 +234,9 @@ class ClassLinkFGParam(object):
 
     def check_lst_param(self):
         """
-        Check if all variables
+        Verify that all required variables are present in the `param_fg` dictionary.
+        - Ensures that each link has the necessary parameters based on its mobility method.
+        :return: True if all variables are present, otherwise False.
         """
         for num, test in self.param_fg.items():
             lst_test = self.create_lst_test(test["method_mob"])
@@ -208,9 +248,9 @@ class ClassLinkFGParam(object):
 
     def create_lst_test(self, meth):
         """
-        Creation of test list allowing to check the variables
-        :param meth:
-        :return:
+        Create a list of required variables for a given mobility method.
+        :param meth: Mobility method (e.g., "meth_time", "meth_regul", "meth_fus").
+        :return: List of required variables.
         """
         lst_com = ["name", "level", "abscissa", "branchnum", "basinstart", "basinend", "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG", "USEBASIN", "NUMBASINREG",
@@ -231,19 +271,17 @@ class ClassLinkFGParam(object):
 
     def export_cl(self, name="cli_fg_lk.obj"):
         """
-        To Generate json file parameters
-        :param obj: object to dump
-        :param name: name file
-        :return:
+        Export the `param_fg` dictionary to a JSON file.
+        :param name: Name of the output file (default: "cli_fg_lk.obj").
         """
         with open(name, "w") as file:
             json.dump(self.param_fg, file)
 
     def import_cl(self, name="cli_fg_lk.obj"):
         """
-        Load parameter
-        :param name: Name file
-        :return:
+        Import parameters from a JSON file into the `param_fg` dictionary.
+        :param name: Name of the input file (default: "cli_fg_lk.obj").
+        :return: True if the file is successfully loaded, otherwise False.
         """
         if os.path.isfile(name):
             with open(name, "r") as file:
@@ -260,7 +298,8 @@ class ClassLinkFGParam(object):
 
     def fg_actif_lk(self):
         """
-        Check if there is mobil links
+        Check if there are any active mobile links.
+        :return: True if there are active links, otherwise False.
         """
         if len(self.param_fg.keys()) > 0:
             return True
