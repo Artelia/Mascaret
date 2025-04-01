@@ -63,7 +63,6 @@ class ClassFloodGateLk:
             self.arret_comput = False
         self.init_res()
         self.update_var_mas(force=True)
-
         return
 
     def update_var_mas(self, force=False):
@@ -126,12 +125,9 @@ class ClassFloodGateLk:
         """
         for id_lk, param in self.param_fg.items():
             if param["method_mob"] == self.dmeth["meth_regul"]:
-
                 if self.cl_regul.check_dt_regul(param, dtp):
                     val_check = self.masc.get(param['CHECK_VAR'],
                                               param["SECCON"])
-                    # print(val_check,param['CHECK_VAR'],
-                    #                           param["SECCON"] )
                     self.cl_regul.state_regul(val_check, param)
                     self.cl_regul.check_break(param, val_check)
                     dnew = self.cl_regul.law_gate_regul(param, time)
@@ -142,15 +138,15 @@ class ClassFloodGateLk:
                 dnew = self.cl_time.law_mth_time(param, time)
 
                 self.fill_res_and_update(id_lk, time, param, dnew, val_check)
-            elif param[id_lk]["method_mob"] == self.dmeth["meth_fus"]:
-                print('iiiiiiiiiiiii555')
+            elif param["method_mob"] == self.dmeth["meth_fus"]:
                 val_check = self.masc.get(param['CHECK_VAR'],
                                           param["SECCON"])
                 self.cl_fusible.check_break_fus(param, val_check, time)
                 if self.cl_fusible.break_lk:
                     dnew = self.cl_fusible.law_mth_fus(param, time)
                     self.fill_res_and_update(id_lk, time, param, dnew, val_check)
-
+                param.update({"TIME": time,
+                              "REGVAR_VAL": val_check})
     def fill_res_and_update(self, id_lk, time, param, dnew, val_check):
         """
         Update floodgate parameters and fill the results dictionary with the new values.
@@ -295,31 +291,32 @@ class ClassFloodGateLk:
         res = self.results_fg_lk_mv[id_lk]
 
         # Check if any parameter has changed
+        zlink_var_dt = 'level-dt'
+        zlink_var = 'level'
+        if param["method_mob"] == "meth_regul":
+            if param["DIRFG"] == "D":
+                zlink_var_dt = 'level-dt'
+                zlink_var = 'level'
+            else:
+                zlink_var_dt  = "ZmaxSection-dt"
+                zlink_var = "ZmaxSection"
         if ((param["level"], param["CSection"], param["width"]) !=
-                (param["level-dt"], param["CSection-dt"], param["width-dt"])):
+                (param["level-dt"], param["CSection-dt"], param["width-dt"])) and(
+                (res["TIME"][-1], res["CSECLINK"][-1], res["WIDTHLINK"][-1],res["ZLINK"][-1]) !=
+                (param["TIME-dt"],param["CSection-dt"],param["width-dt"], param[zlink_var_dt])):
+
             res["TIME"].append(param["TIME-dt"])
             res["CSECLINK"].append(param["CSection-dt"])
             res["WIDTHLINK"].append(param["width-dt"])
             res["REGVAR"].append(round(param["REGVAR_VAL-dt"], 3))
-            if param["method_mob"] == "meth_regul":
-                if param["DIRFG"] == "D":
-                    res["ZLINK"].append(param['level-dt'])
-                else:
-                    res["ZLINK"].append(param["ZmaxSection-dt"])
-            else:
-                res["ZLINK"].append(param['level-dt'])
+            res["ZLINK"].append(param[zlink_var_dt])
+
         # Update with new values
         res["TIME"].append(param["TIME"])
         res["CSECLINK"].append(param["CSection"])
         res["WIDTHLINK"].append(param["width"])
         res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
-        if param["method_mob"] == "meth_regul":
-            if param["DIRFG"] == "D":
-                res["ZLINK"].append(param['level'])
-            else:
-                res["ZLINK"].append(param["ZmaxSection"])
-        else:
-            res["ZLINK"].append(param['level'])
+        res["ZLINK"].append(param[zlink_var])
 
 
 class ClassMethRegul:
@@ -462,12 +459,8 @@ class ClassMethRegul:
 
         for condition, action in conditions.get(key, []):
             if condition:
-                # TODO clean
-                # print(f"val_check {val_check}, action {action}, precedent action {param_fg['OPEN_CLOSE']}")
-                # print(f'VREGOPEN {param_fg["VREGOPEN"]} VREGCLOS {param_fg["VREGCLOS"]}, tol {tol}')
                 param_fg["OPEN_CLOSE"] = action
                 break
-        # print(val_check,param_fg["OPEN_CLOSE"] ,param_fg["VREGOPEN"] + tol,param_fg["VREGCLOS"] - tol)
         return val_check
 
     def law_gate_regul(self, param, time):
@@ -661,7 +654,6 @@ class ClassMethFusible:
         :param val_check: Current value of the regulation variable.
         :param time: Current simulation time.
         """
-        print('iiiiiiiiiiiii2222', val_check >= param["VBREAKT"] or (self.break_lk and param["BPERMT"]))
         if self.break_lk:
             return
         if param["METHBREAK"] == 'regul' and val_check >= param["VBREAKFUS"]:
@@ -682,11 +674,11 @@ class ClassMethFusible:
                 "ZmaxSection": param["ZmaxSection0"]}
 
         rela_time = time - param["break_time"]
-        if rela_time <= max(param["TIMEZ"]):
-            new_width = np.interp(rela_time, param["TIMEZ"], param["WIDTHFUS"])
+        if rela_time <= max(param["TIMEFUS"]):
+            new_width = np.interp(rela_time, param["TIMEFUS"], param["WIDTHFUS"])
         else:
             new_width =  param["WIDTHFUS"]
-        dnew["width"] = min(0.05, new_width)
+        dnew["width"] = max(0.05, new_width)
 
         if param["type"] == 4:
             dnew["CSection"] = dnew["width"] * min((param["ZmaxSection0"] - dnew["level"]), 0)

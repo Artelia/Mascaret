@@ -108,7 +108,6 @@ class ClassLinkFGParam(object):
                 print("Erreur lors de l'import links mobile")
         else:
             complet = self.fill_param_to_db(parent.mdb)
-            # print(self.param_fg)
             if complet:
                 parent.add_info("Import configuration links mobile")
             else:
@@ -188,11 +187,7 @@ class ClassLinkFGParam(object):
                 self.param_fg[id_link][var] = self.typ_to_val(self.lst_param[var]['typ'], row[2])
             else:
                 self.param_fg[id_link][var] = row[2]
-            # try:
-            #     self.param_fg[id_link][var] = float(row[2])
-            # except ValueError:
-            #     self.param_fg[id_link][var] = row[2]
-        #TODO add var_tab
+
         lst_id_tab = list(set(lst_id_tab))
         if len(lst_id_tab) > 0 :
             lst_var = ["id_links", "name_var", "value", "id_order"]
@@ -211,7 +206,6 @@ class ClassLinkFGParam(object):
                     var = row[1]
                     if var in var_tab:
                         self.param_fg[id_link][var].append(self.typ_to_val('float',row[2]))
-                print( self.param_fg)
 
         return True
 
