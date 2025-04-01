@@ -20,7 +20,7 @@ email                :
 """
 
 import os
-from qgis.PyQt.QtCore import pyqtSignal
+from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.uic import *
 from qgis.PyQt.QtWidgets import *
 
@@ -193,15 +193,15 @@ class CurveSelectorWidget(QWidget):
                 self.lst_graph = [{"type_res": self.typ_res, "id": 'gate_move',
                                    "name": 'Gate movement', "unit": 'm',
                                    "vars": ['ZLINK']},
-                                  {"type_res": self.typ_res, "id": 'gate_area',
-                                   "name": 'Opening area (culvert)', "unit": 'm2',
-                                   "vars": ['CSECLINK']},
                                   {"type_res": self.typ_res, "id": 'gate_width',
                                    "name": 'Width (Fusible)', "unit": 'm',
                                    "vars": ['WIDTHLINK']},
                                   {"type_res": self.typ_res, "id": 'reg_var',
                                    "name": 'Variable of regulation', "unit": '',
                                    "vars": ['REGVAR']},
+                                  {"type_res": self.typ_res, "id": 'gate_area',
+                                   "name": 'Opening area (culvert)', "unit": 'm2',
+                                   "vars": ['CSECLINK']},
                                   ]
             elif self.typ_graph in ["hydro", "hydro_pk"]:
                 self.get_lst_graph_opt()
@@ -235,18 +235,27 @@ class CurveSelectorWidget(QWidget):
         """
         self.cb_det.clear()
         if self.typ_graph in ["struct", "weirs", "link_fg"]:
-            lstpk = []
             if self.typ_res in self.info_graph.keys():
-                for id_config in self.info_graph[self.typ_res]["pknum"].keys():
-                    lstpk.append(self.info_graph[self.typ_res]["pknum"][id_config])
+                lstpk = [self.info_graph[self.typ_res]["pknum"][id_config]
+                         for id_config in self.info_graph[self.typ_res]["pknum"]]
+
+                table_map = {
+                    "struct": ("profiles", "abscissa"),
+                    "weirs": ("weirs", "abscissa"),
+                    "link_fg": ("links", "linknum")
+                }
+
+                table, var_test = table_map[self.typ_graph]
                 info = self.mdb.select(
-                    "profiles",
-                    where="abscissa IN {0}".format(list_sql(lstpk, "float")),
-                    list_var=["abscissa", "name"],
+                    table,
+                    where=f"{var_test} IN {list_sql(lstpk, 'float')}",
+                    list_var=[var_test, "name"]
                 )
+
                 for pknum in lstpk:
-                    if pknum in info["abscissa"]:
-                        txt = str(pknum) + " : " + info["name"][info["abscissa"].index(pknum)]
+                    if pknum in info[var_test]:
+                        name = info["name"][info[var_test].index(pknum)]
+                        txt = f"{pknum} : {name}" if var_test != "linknum" else name
                     else:
                         txt = str(pknum)
                     self.cb_det.addItem(txt, pknum)
@@ -332,6 +341,20 @@ class CurveSelectorWidget(QWidget):
         self.param_graph["branch"] = self.cur_branch
         self.param_graph["pknum"] = self.cur_pknum
         self.param_graph["t"] = self.cur_t
+        # delete  CSECLINK if it's not a culvert
+        if self.typ_graph in ["link_fg"]:
+            info = self.mdb.select(
+                "links",
+                where=f"linknum={self.cur_pknum}",
+                list_var=['type']
+            )
+            if info:
+                index = self.cb_graph.findText(self.lst_graph[3]["name"])
+                if info['type'][0] != 4 and index != -1:
+                        self.cb_graph.removeItem(index)
+                elif  info['type'][0] == 4  and index == -1:
+                    self.cb_graph.addItem(self.lst_graph[3]["name"], self.lst_graph[3]["id"])
+
         if (self.cb_graph.currentIndex() != -1) and (self.cb_det.currentIndex() != -1):
             for graph in self.lst_graph:
                 if graph["id"] == self.cur_graph:
