@@ -35,6 +35,7 @@ from .TaskMascaret import TaskMascaret
 from ..Function import TypeErrorModel
 from ..Function import copy_dir_to_dir
 from ..Structure.ClassPostPreFG import ClassPostPreFG
+from ..Structure.ClassLinkFGParam import ClassLinkFGParam
 from ..WaterQuality.ClassMascWQ import ClassMascWQ
 from ..ui.custom_control import ClassWarningBox
 
@@ -136,6 +137,17 @@ class ClassMascaret:
             if exit_status:
                 self.mgis.add_info("Compute is cancel.")
                 return None, None, None, None, None
+
+            cl_lk = ClassLinkFGParam()
+            if cl_lk.fg_actif_lk(self.mgis.mdb):
+                path = os.path.join(self.dossierFileMasc, "links_cli_fg.obj")
+                cl_lk.create_cli_fg(self.mgis,path)
+                exit_status = cl_lk.mess.get_critic_status()
+                self.write_mess(cl_lk.mess)
+                if  exit_status:
+                    self.mgis.add_info("Compute is cancel.")
+                    return None, None, None, None, None
+            del cl_lk
 
         if par["presenceTraceurs"]:
             self.wq.create_filephy()
@@ -648,3 +660,5 @@ class ClassMascaret:
         path = os.path.join(self.dossierFileMasc, "cli_fg.obj")
         cl.create_cli_fg(path)
         del cl
+
+

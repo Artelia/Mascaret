@@ -387,18 +387,15 @@ class ClassAPIMascaret:
         :param basin: if there is the basins
         :return:
         """
-        print('***************************')
         self.tracer = tracer
         self.basin = basin
         self.initial(filename)
         if self.mobil_struct:
             self.clfg.init_floogate()
-        print("aaaaa", self.mobil_link)
         if basin and self.mobil_link:
             self.clfg_lk.init_fg_links()
         else:
             self.mobil_link = False
-        print("iiii",self.mobil_link)
         if self.clfg_lk.arret_comput:
             self.finalize()
 

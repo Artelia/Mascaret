@@ -71,7 +71,9 @@ class ClassMessage:
         Returns:
             :return  message : message
         """
-        return self.derror[code_err]["message"]
+        if code_err in self.derror:
+            return self.derror[code_err]["message"]
+        return ''
 
     def get_type(self, code_err):
         """
@@ -81,7 +83,9 @@ class ClassMessage:
         Returns:
             :return  type : type
         """
-        return self.derror[code_err]["type"]
+        if code_err in self.derror:
+            return self.derror[code_err]["type"]
+        return ''
 
     def message(self):
         txt = ''

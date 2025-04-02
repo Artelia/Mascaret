@@ -147,6 +147,7 @@ class ClassFloodGateLk:
                     self.fill_res_and_update(id_lk, time, param, dnew, val_check)
                 param.update({"TIME": time,
                               "REGVAR_VAL": val_check})
+        
     def fill_res_and_update(self, id_lk, time, param, dnew, val_check):
         """
         Update floodgate parameters and fill the results dictionary with the new values.
