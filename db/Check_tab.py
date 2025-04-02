@@ -107,6 +107,7 @@ class CheckTab:
             "6.0.1",
             "6.1.0",
             "6.1.1",
+            "6.2.0",
         ]
         self.dico_modif = {
             "3.0.0": {
@@ -339,6 +340,10 @@ class CheckTab:
             "6.0.1": {},
             "6.1.0": {},
             "6.1.1": {},
+            "6.2.0": {"fct": [
+                lambda: self.update_620(),
+            ],
+            },
 
             # '3.0.x': { },
         }
@@ -378,7 +383,7 @@ class CheckTab:
 
         pos_fin = self.list_hist_version.index(version)
         tabs_no = deepcopy(tabs)
-        if len(self.list_hist_version[pos + 1 : pos_fin + 1]) > 0:
+        if len(self.list_hist_version[pos + 1: pos_fin + 1]) > 0:
             ok = self.box.yes_no_q(
                 "WARNING:\n "
                 "Do you want update tables for {} schema ?\n"
@@ -388,7 +393,7 @@ class CheckTab:
             )
             if ok:
                 list_test_ver = []
-                for ver in self.list_hist_version[pos + 1 : pos_fin + 1]:
+                for ver in self.list_hist_version[pos + 1: pos_fin + 1]:
                     list_test = []
                     if ver in self.dico_modif.keys():
                         self.mgis.add_info("version : {}".format(ver))
@@ -783,7 +788,7 @@ class CheckTab:
         info = self.mdb.select(
             "resultats",
             where="(run, scenario) = (SELECT run, scenario "
-            "FROM {}.runs WHERE id= {})".format(self.mdb.SCHEMA, id_run),
+                  "FROM {}.runs WHERE id= {})".format(self.mdb.SCHEMA, id_run),
             order="t",
             list_var=["pk", "branche", "section"],
         )
@@ -2080,5 +2085,14 @@ $BODY$;
         # TODO
         # add links_mob_val
         # modification link  table
-
+        self.mgis.add_info("*** Update 6.2.0  ***")
+        tabs = self.mdb.list_tables(self.mdb.SCHEMA)
+        lst_add_tab = ["links_mob_val"]
+        valide = True
+        for attr in lst_add_tab:
+            if attr not in tabs:
+                valid_add, _ = self.add_tab(getattr(Maso, attr))
+                if not valid_add:
+                    self.mgis.add_info(f"Create  the {attr} table - ERROR")
+                    valide = False
         pass
