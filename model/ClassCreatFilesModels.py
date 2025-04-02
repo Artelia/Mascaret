@@ -1354,7 +1354,10 @@ class ClassCreatFilesModels:
                 continue
 
             valeur_init = None
-
+            if not loi["formule"]:
+                self.mess.add_mess('NoFormule', 'critic',
+                                   f"No Formul to the {nom} law.")
+                return None
             liste_stations = pattern.findall(loi["formule"])
 
             dt = datetime.timedelta(hours=int(99999999))

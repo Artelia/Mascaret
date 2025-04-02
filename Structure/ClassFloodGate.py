@@ -190,12 +190,8 @@ class ClassFloodGate:
         :param list_final: law data
         :return:
         """
-        info = np.array(list_final)
-        # trie de la colonne 0 à 2
-        info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
-        info = info[info[:, 1].argsort(kind="mergesort")]
-        info = info[info[:, 0].argsort(kind="mergesort")]
-        return info
+        info = np.asarray(list_final)  # Convert only if needed
+        return info[np.lexsort((info[:, 2], info[:, 1], info[:, 0]))]
 
     def check_regul(self, param_fg):
         """
