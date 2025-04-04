@@ -32,7 +32,7 @@ from shapely.geometry import Point
 from .ClassLaws import ClassLaws
 from .ClassMethod import ClassMethod
 from .ClassTableStructure import ClassTableStructure, update_etat_struct
-from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
+from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
 
 # Widgets Buse
 from .MetBordaBuWidget import MetBordaBuWidget
@@ -105,12 +105,13 @@ class ClassStructureEditDialog(QDialog):
         if id_struct:
             self.is_loading = True
             sql = (
-                "SELECT name, type, method, active, id_prof_ori,comment FROM {0}.struct_config "
+                "SELECT name, type, method, active, id_prof_ori,comment, zbreak, erase_flag FROM {0}.struct_config "
                 "WHERE id = {1}".format(self.mdb.SCHEMA, self.id_struct)
             )
             rows = self.mdb.run_query(sql, fetch=True)
             self.id_prof_ori = rows[0][4]
             self.typ_struct = rows[0][1]
+
 
             for m in self.tbst.dico_struc_typ[self.typ_struct]["meth_calc"]:
                 self.lst_meth_calc.append([m, self.tbst.dico_meth_calc[m]])
@@ -119,6 +120,17 @@ class ClassStructureEditDialog(QDialog):
             self.txt_name.setText(rows[0][0])
             self.txt_comm.setText(rows[0][5])
             self.cc_active.setChecked(rows[0][3])
+            self.ch_bperm.setChecked(rows[0][7])
+            self.dbs_zbreak.setValue( rows[0][6])
+
+            if not self.mgis.cond_api:
+                self.ch_bperm.setEnabled(False)
+                self.dbs_zbreak.setEnabled(False)
+                self.label_info.show()
+            else:
+                self.ch_bperm.setEnabled(True)
+                self.dbs_zbreak.setEnabled(True)
+                self.label_info.hide()
             fill_qcombobox(self.cb_met_calc, self.lst_meth_calc, val_def=rows[0][2])
             self.is_loading = False
 
@@ -267,6 +279,8 @@ class ClassStructureEditDialog(QDialog):
             name = str(self.txt_name.text())
             comm = str(self.txt_comm.toPlainText())
             active = self.cc_active.isChecked()
+            zbreak = self.dbs_zbreak.value()
+            bperm = self.ch_bperm.isChecked()
             if active:
                 sql = "SELECT id_prof_ori FROM {0}.struct_config WHERE id = {1}".format(
                     self.mdb.SCHEMA, self.id_struct
@@ -279,9 +293,9 @@ class ClassStructureEditDialog(QDialog):
                 self.mdb.execute(sql)
 
             sql = (
-                "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4}, comment= '{5}' "
-                "WHERE id = {1}".format(
-                    self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active, comm
+                "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4}, comment= '{5}', "
+                "zbreak = {6}, erase_flag = {7} WHERE id = {1}".format(
+                    self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active, comm, zbreak,bperm
                 )
             )
             self.mdb.execute(sql)

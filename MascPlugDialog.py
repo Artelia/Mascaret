@@ -269,7 +269,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.action_mass_graphic_events.triggered.connect(self.mass_graph_hq)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(False)
+        self.ui.actionTest.setVisible(True)
 
         self.ui.actionReadLisFile.triggered.connect(self.read_lis_file)
 
@@ -1086,7 +1086,8 @@ Version : {}
         """Test function"""
         # get_laws
         #self.chkt.debug_update_vers_meta(version="5.1.5")
-
+        cl = ClassCreatFilesModels(self.mdb,self.dossierFileMasc)
+        cl.creat_file_no_keep_break()
 
         pass
 

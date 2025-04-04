@@ -29,7 +29,7 @@ from qgis.utils import *
 
 from ..Graphic.GraphCommon import DraggableLegend, GraphCommon
 from ..Function import data_to_float, str2bool
-from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
+from .FctDialog import  ctrl_set_value, ctrl_get_value, fill_qcombobox
 
 
 class ClassMobilSingDialog(QDialog):

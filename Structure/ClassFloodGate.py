@@ -163,8 +163,8 @@ class ClassFloodGate:
         :param time: time
 
         """
-        for id_config in self.param_fg.keys():
-            self.regul(id_config, time, self.param_fg[id_config], dtp)
+        for id_config, param in self.param_fg.items():
+            self.regul(id_config, time, param , dtp)
 
     def regul(self, id_config, time, param_fg, dtp):
         if check_time_regul(time, param_fg["DTREG"], param_fg):

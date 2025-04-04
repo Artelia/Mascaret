@@ -342,6 +342,12 @@ class ClassMethRegul:
         :param id_lk: Link ID.
         """
         param.update({
+            "rup_level": param["level0"],
+            "rup_CSection": param["CSection0"],
+            "rup_ZmaxSection": param["ZmaxSection0"],
+            "rup_width": param["width0"]
+        })
+        param.update({
             "width": param["width0"],
             "CSection": param["CSection0"],
             "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
@@ -402,17 +408,25 @@ class ClassMethRegul:
         :param param: Dictionary of floodgate parameters.
         :param val_check: Current value of the regulation variable.
         """
-        if val_check >= param["VBREAKREG"] or (self.break_lk and param["BPERMREG"]):
+        if val_check >= param["VBREAKREG"] :
             self.break_lk = True
+            param.update({
+                "rup_level": param["level"],
+                "rup_CSection": param["CSection"],
+                "rup_ZmaxSection": param["ZmaxSection"],
+                "rup_width": param["width"]
+            })
         else:
-            if self.break_lk:
+            # reveient à l'état avant rupture
+            if not param["BPERMREG"]:
+                self.break_lk = False
                 param.update({
-                    "level": param["level0"],
-                    "CSection": param["CSection0"],
-                    "ZmaxSection": param["ZmaxSection0"],
-                    "width": param["width0"]
+                    "level": param["rup_level"],
+                    "CSection": param["rup_CSection"],
+                    "ZmaxSection": param["rup_ZmaxSection"],
+                    "width": param["rup_width"]
                 })
-            self.break_lk = False
+
 
     def state_regul(self, val_check, param_fg):
         """
@@ -586,13 +600,39 @@ class ClassMethTime:
         else:
             param["CSection"] = 0
 
+        param.update({
+            "rup_level": param["level0"],
+            "rup_CSection": param["CSection0"],
+            "rup_ZmaxSection": param["ZmaxSection0"],
+            "rup_width": param["width0"]
+        })
+
+
+
     def check_break(self, param, val_check):
         """
         Check if the floodgate should break.
         :param param: Dictionary of floodgate parameters.
         :param val_check: Current value of the regulation variable.
         """
-        self.break_lk = val_check >= param["VBREAKT"] or (self.break_lk and param["BPERMT"])
+        if val_check >= param["VBREAKT"]:
+            self.break_lk = True
+            param.update({
+                "rup_level": param["level"],
+                "rup_CSection": param["CSection"],
+                "rup_ZmaxSection": param["ZmaxSection"],
+                "rup_width": param["width"]
+            })
+        else:
+            # reveient à l'état avant rupture
+            if not  param["BPERMT"]:
+                self.break_lk = False
+                param.update({
+                    "level": param["rup_level"],
+                    "CSection": param["rup_CSection"],
+                    "ZmaxSection": param["rup_ZmaxSection"],
+                    "width": param["rup_width"]
+                })
 
     def law_mth_time(self, param, time):
         """

@@ -26,7 +26,8 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, ctrl_get_value, fill_qcombobox
+from .ClassTableStructure import ClassTableStructure
+from .FctDialog import ctrl_get_value, fill_qcombobox
 
 
 class MetBordaPaWidget(QWidget):

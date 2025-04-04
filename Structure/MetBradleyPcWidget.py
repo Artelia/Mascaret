@@ -28,7 +28,8 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, ctrl_get_value, fill_qcombobox
+from .ClassTableStructure import ClassTableStructure
+from .FctDialog import  ctrl_get_value, fill_qcombobox
 
 class MetBradleyPcWidget(QWidget):
     def __init__(self, mgis, met=None, id_struct=None):

@@ -2066,10 +2066,10 @@ $BODY$;
 
         if valide:
             lst_alt = [
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT " "EXISTS  leftminbed_g FLOAT;",
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT " "EXISTS  rightminbed_g FLOAT;",
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT " "EXISTS  leftstock_g FLOAT;",
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT " "EXISTS  rightstock_g FLOAT;",
+                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  leftminbed_g FLOAT;",
+                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  rightminbed_g FLOAT;",
+                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  leftstock_g FLOAT;",
+                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  rightstock_g FLOAT;",
             ]
             for sql in lst_alt:
                 self.mdb.execute(sql.format(self.mdb.SCHEMA))
@@ -2095,4 +2095,13 @@ $BODY$;
                 if not valid_add:
                     self.mgis.add_info(f"Create  the {attr} table - ERROR")
                     valide = False
-        pass
+        if valide:
+            lst_alt = [
+                "ALTER TABLE {0}.struct_config ADD COLUMN IF NOT EXISTS  zbreak DOUBLE PRECISION DEFAULT 10000;",
+                "ALTER TABLE {0}.struct_config ADD COLUMN IF NOT EXISTS  erase_flag boolean NOT NULL  DEFAULT FALSE;",
+                "ALTER TABLE {0}.links ADD COLUMN IF NOT EXISTS method_mob text;",
+                "ALTER TABLE {0}.links ADD COLUMN IF NOT EXISTS active_mob BOOLEAN;",
+                "ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS erase_flag boolean NOT NULL   DEFAULT FALSE;",
+            ]
+            for sql in lst_alt:
+                self.mdb.execute(sql.format(self.mdb.SCHEMA))

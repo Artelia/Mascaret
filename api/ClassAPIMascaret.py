@@ -25,13 +25,15 @@ import json
 try:
     # Plugin
     from .masc import Mascaret
+    from ..Structure.ClassTableStructure import get_no_keep_break
     from ..Structure.ClassFloodGate import ClassFloodGate
     from ..Structure.ClassFloodGateLk import ClassFloodGateLk
     from ..ClassMessage import ClassMessage
-except  ModuleNotFoundError:
+except  ModuleNotFoundError or ImportError:
     # autonome python
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from masc import Mascaret
+    from Structure.ClassTableStructure import get_no_keep_break
     from Structure.ClassFloodGate import ClassFloodGate
     from Structure.ClassFloodGateLk import ClassFloodGateLk
 
@@ -69,6 +71,8 @@ class ClassAPIMascaret:
         self.filelig = None
         self.info = ''
 
+        self.lst_node = {}
+
 
         self.results_api = {}
 
@@ -94,6 +98,9 @@ class ClassAPIMascaret:
         # links floodgate
         self.clfg_lk = ClassFloodGateLk(self)
         self.mobil_link = self.clfg_lk.actif_mobil_lk
+        # Break permanent
+        # Model.Weir.BrkLevel
+        # Model.Weir.State
 
 
 
@@ -112,7 +119,32 @@ class ClassAPIMascaret:
         self.init_hydro()
 
         self.init_crit_stop()
+
+        self.init_break_and_regul()
+
         return 0
+
+    def init_break_and_regul(self):
+        """
+        intialize the management break
+        :return:
+        """
+
+        param = get_no_keep_break()
+        if param :
+            size_sing = self.masc.get_var_size("Model.Weir.Name")[0]
+            dtest={ tuple(val[0]): val[1] for val in param.values()}
+
+            for i in range(size_sing):
+                name = self.masc.get("Model.Weir.Name", i)
+                node = self.masc.get("Model.Weir.Node", i)
+                abs = self.masc.get("Model.Weir.RelAbscissa",i)
+                branchnum  = self.masc.get("Model.Weir.ReachNum",i)
+                blevel = self.masc.get("Model.Weir.BrkLevel", i)
+                if (name,branchnum,abs) in dtest:
+                    self.lst_node[i]= {'node':node - 1, 'BrkLevel': blevel}  # cause fortran commence 1
+
+
 
     def init_file(self, casfile):
         """
@@ -300,6 +332,24 @@ class ClassAPIMascaret:
         txt += "**************************************\n"
         self.add_info(txt)
 
+    def check_not_to_keep_break(self):
+        """
+        Check if the break is kept
+        :return:
+        """
+        # size_sing = self.masc.get_var_size("Model.Weir.Name")[0]
+        # for i in range(size_sing):
+        #     print(self.masc.get("Model.Weir.RelAbscissa",i))
+        #     print(self.masc.get("State.Z", self.masc.get("Model.Weir.Node", i)-1 ))
+        #     print(self.masc.get("Model.Weir.State",  i))
+        #     print(self.masc.get("Model.Weir.BrkLevel", i))
+        # print('******************************')
+        if len(self.lst_node)>0:
+            for ind, item in self.lst_node.items():
+                if self.masc.get("Model.Weir.State",  ind) and \
+                        self.masc.get("State.Z",  item['node']) < item['BrkLevel']:
+                    self.masc.set("Model.Weir.State", False, ind)
+
     def compute(self):
         """compute"""
         t0 = self.tini
@@ -328,6 +378,7 @@ class ClassAPIMascaret:
         if self.mobil_link:
             self.clfg_lk.iter_fg(t0, dtp)
 
+        self.check_not_to_keep_break()
         self.masc.compute(t0, t1, dtp)
         if self.conum:
             dtp_tmp = self.masc.get("State.DT")

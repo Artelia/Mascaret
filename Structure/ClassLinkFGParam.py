@@ -75,14 +75,16 @@ class ClassLinkFGParam(object):
             "TOLREG": {"desc": "Tolerance sur les variale de regulation",
                        "desc_en": "Tolerance on regulation variables", 'typ': 'float'},
             "VBREAKREG": {"desc": "Valeur de rupture ouvrage", "desc_en": "Break value of structure", 'typ': 'float'},
-            "BPERMREG": {"desc": "Si rupture permanent", "desc_en": "If break is permanent", 'typ': 'bool'},
+            "BPERMREG": {"desc": "True Si la rupture est non permanent", "desc_en": "True If break isn't permanent",
+                         'typ': 'bool'},
             "ZFINALREG": {"desc": "Cote final weirs après rupture", "desc_en": "Final weir level after break",
                           'typ': 'float'},
             # meth_tempo
             "TIMEZ": {"desc": "Valeur Temps en s", "desc_en": "Time value in seconds", 'typ': 'float'},
             "VALUEZ": {"desc": "Valeur associé à TIME", "desc_en": "Value associated with TIME", 'typ': 'float'},
             "VBREAKT": {"desc": "Valeur de rupture ouvrage", "desc_en": "Break value of structure", 'typ': 'float'},
-            "BPERMT": {"desc": "Si rupture permanent", "desc_en": "If break is permanent", 'typ': 'bool'},
+            "BPERMT": {"desc": "True Si la rupture est non permanent", "desc_en": "True If break isn't permanent",
+                       'typ': 'bool'},
             "ZFINALT": {"desc": "Cote final weirs après rupture", "desc_en": "Final weir level after break",
                         'typ': 'float'},
             # meth_fusible
@@ -368,7 +370,6 @@ class ClassLinkFGParam(object):
                 setattr(self.param_fg, key, val)
 
             return True
-
         else:
             self.param_fg = {}
             return False

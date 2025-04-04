@@ -22,6 +22,7 @@ email                :
 import datetime
 import os
 import re
+import json
 import shutil
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
@@ -1245,7 +1246,11 @@ class ClassCreatFilesModels:
                 elif ls == "branchnum":
                     seuil[ls].append(dico_str["branchnum"][i])
                 elif ls == "z_break":
-                    seuil[ls].append(99999)
+                   if 'zbreak' in dico_str :
+                       seuil[ls].append(dico_str['zbreak'][i])
+                   else:
+                       seuil[ls].append(99999)
+
                 elif ls == "z_crest":
                     where = "id_config ='{}'".format(dico_str["id"][i])
                     zmin = self.mdb.select_min("z", "profil_struct", where)
@@ -1756,3 +1761,33 @@ class ClassCreatFilesModels:
                 err = "Error: save the dam file"
                 err += str(e)
                 self.mess.add_mess("MobGateFile", "critic", err)
+
+    def creat_file_no_keep_break(self, name=None):
+        """
+        Get the weirs is no permanent break and create json
+        Args:
+            :param name: file name, default no_keep_break.json
+         Return :
+            :return: return value to create the no_keep_break file
+
+        """
+        if not name:
+            name = os.path.join(self.dossier_file_masc, "no_keep_break.json")
+
+        param = {}
+        lst_get = [('weirs','gid'),('struct_config','id')]
+        for tab, var in lst_get :
+            sql = (
+                f"SELECT {var}, name, branchnum, abscissa, erase_flag FROM {self.mdb.SCHEMA}.{tab} "
+                f"WHERE active ORDER BY {var};"
+            )
+            rows = self.mdb.run_query(sql, fetch=True)
+            print(rows)
+            if rows:
+                for row in rows:
+                    # "name, branchnum, abscissa"
+                    if row[4]:
+                        param[row[0]] = ((row[1], row[2], row[3]),row[4])
+        if param:
+            with open(name, "w") as file:
+                json.dump(param, file)
