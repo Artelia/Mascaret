@@ -2105,3 +2105,13 @@ $BODY$;
             ]
             for sql in lst_alt:
                 self.mdb.execute(sql.format(self.mdb.SCHEMA))
+    # Pour les WEIRS convertir
+    # "ZBAS"
+    # "ZHAUT"
+    # "ZREG"
+    # "VDESC"
+    # "VMONT"
+    # "UNITVD"
+    # "UNITVH"
+    # ZVAR
+    # TIME
