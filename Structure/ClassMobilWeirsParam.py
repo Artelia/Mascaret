@@ -27,7 +27,7 @@ class ClassMobilWeirsParam(object):
     def __init__(self):
         """
         Initialize the ClassMobilWeirsParam object.
-        - Defines the list of parameters (`lst_param`) for floodgate weirs.
+        - Defines the list of parameters (`lst_param`) for mobile weirs weirs.
         - Sets up default methods (`dmeth`) for mobility handling.
         """
         self.param_fg = {}
@@ -44,9 +44,10 @@ class ClassMobilWeirsParam(object):
             # loi impacter par la modification de Singularite(ising)%CoteCrete
             # SINGULARITE_TYPE_ZAMONT_ZAVAL_Q = 1
             # SINGULARITE_TYPE_ZAMONT_Q       = 2
-            # SINGULARITE_TYPE_CRETE_COEFF    = 4
             # SINGULARITE_TYPE_PROFIL_CRETE   = 3
-            "type": {"desc": "type de weirs, 1:Zamont Zaval Q,2: Zam=f(Q) 3:Crest profile 4:Weir law", "desc_en": "type of weirs, 1:weir, 4:culvert",
+            # SINGULARITE_TYPE_CRETE_COEFF    = 4
+            "type": {"desc": "type de weirs, 1:Zamont Zaval Q,2: Zam=f(Q) 3:Crest profile 4:Weir law",
+                     "desc_en": "type of weirs, 1:Zamont Zaval Q,2: Zam=f(Q) 3:Crest profile 4:Weir law",
                      'typ': 'int'},
             # methode de régulation
             "DIRFG": {"desc": "direction si D cote monte et section diminue si U seul section diminue",

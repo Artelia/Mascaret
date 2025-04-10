@@ -22,9 +22,11 @@ import numpy as np
 
 from .ClassMobilWeirsParam import ClassMobilWeirsParam
 
-
 class ClassMobilWeirs:
-    """Class Flood Gate"""
+    """Class Flood Gate
+
+    This class manages the moving Weirs in the Mascaret model.
+    """
 
     def __init__(self, main):
         self.clapi = main
@@ -72,8 +74,7 @@ class ClassMobilWeirs:
         the parameters have changed; by default False
         """
         for param in self.param_fg.values():
-            if (param["level"] !=
-                    param["level-dt"] or force):
+            if (param["level"] != param["level-dt"] or force):
                 id_mas = param["id_mas"]
                 updates = {
                     "Model.Weir.CrestLevel": param["level"],
@@ -99,6 +100,7 @@ class ClassMobilWeirs:
         """
         Finalize the floodgate results by appending the final time and parameter values
         to the results dictionary for each link.
+
         :param tfin: Final time of the simulation.
         """
         if len(self.results_fg_weirs_mv) > 0:
@@ -110,9 +112,10 @@ class ClassMobilWeirs:
 
     def iter_fg(self, time, dtp):
         """
-        Perform floodgate treatment during a simulation iteration.
+        Perform mobile weirs treatment during a simulation iteration.
         Depending on the mobility method (`method_mob`), it applies regulation, time-based,
         or fusible logic to compute new parameter values.
+
         :param time: Current simulation time.
         :param dtp: Time step.
         """
@@ -134,11 +137,11 @@ class ClassMobilWeirs:
         
     def fill_res_and_update(self, id_weir, time, param, dnew, val_check):
         """
-        Update floodgate parameters and fill the results dictionary with the new values.
+        Update  mobile weirs parameters and fill the results dictionary with the new values.
         :param id_weir: Link ID.
         :param time: Current simulation time.
-        :param param: Floodgate parameters dictionary.
-        :param dnew: New computed values for the floodgate.
+        :param param:  mobile weirs parameters dictionary.
+        :param dnew: New computed values for the  mobile weirs.
         :param val_check: Regulation variable value to check.
         """
         param.update({
@@ -156,7 +159,7 @@ class ClassMobilWeirs:
 
     def check_param(self):
         """
-        Validate the floodgate parameters to ensure consistency.
+        Validate the  mobile weirs parameters to ensure consistency.
         Returns True if all parameters are valid, otherwise False.
         """
         for id_weir, param in self.param_fg.items():
@@ -168,7 +171,7 @@ class ClassMobilWeirs:
 
     def search_sec_control(self):
         """
-        Identify the control section for each floodgate link and determine the variable
+        Identify the control section for each  mobile weirse link and determine the variable
         to be checked for regulation. This involves mapping model coordinates to parameters.
         """
         self.model_size, _, _ = self.masc.get_var_size("Model.X")
@@ -200,7 +203,7 @@ class ClassMobilWeirs:
 
     def search_weirs_to_param_fg(self):
         """
-        Establish weirs between the Mascaret model and the floodgate parameters.
+        Establish weirs between the Mascaret model and the mobile weirs parameters.
         This includes retrieving initial values and preparing parameters for computation.
         """
         size_sing = self.masc.get_var_size("Model.Weir.Name")[0]
@@ -246,10 +249,10 @@ class ClassMobilWeirs:
 
     def fill_results_fg_mv(self, id_weir, param):
         """
-        Populate the results dictionary (`results_fg_weirs_mv`) with updated floodgate parameters
+        Populate the results dictionary (`results_fg_weirs_mv`) with updated mobile weirs parameters
         if any changes occurred during the simulation.
         :param id_weir: Link ID.
-        :param param: Floodgate parameters dictionary.
+        :param param: mobile weirs parameters dictionary.
         """
         res = self.results_fg_weirs_mv[id_weir]
 
@@ -271,7 +274,7 @@ class ClassMobilWeirs:
 
 
 class ClassMethRegul:
-    """Class for handling floodgate regulation logic."""
+    """Class for handling mobile weirs regulation logic."""
 
     def __init__(self, parent):
         """
@@ -287,8 +290,8 @@ class ClassMethRegul:
 
     def init_meth_regul(self, param, id_weir):
         """
-        Initialize the regulation parameters for a floodgate.
-        :param param: Dictionary of floodgate parameters.
+        Initialize the regulation parameters for a mobile weirs.
+        :param param: Dictionary of mobile weirs parameters.
         :param id_weir: Link ID.
         """
         param.update({
@@ -300,7 +303,7 @@ class ClassMethRegul:
         })
         # info de la vanne
         if param["DIRFG"] != "D":
-            self.add_info(f"Non-consistency type floodgate with the moving part {id_weir}.")
+            self.add_info(f"Non-consistency type mobile weirs with the moving part {id_weir}.")
         param["level"] = max(param["ZINITREG"], param["level0"])
         param["ZLIMITGATE"] = param["ZMAXFG"]
 
@@ -308,7 +311,7 @@ class ClassMethRegul:
     def check_param(self, param, id_weir):
         """
         Validate the consistency of regulation parameters, specifically `VREGOPEN` and `VREGCLOS`.
-        :param param: Dictionary of floodgate parameters.
+        :param param: Dictionary of mobile weirs parameters.
         :param id_weir: Link ID.
         :return: True if parameters are valid, False otherwise.
         """
@@ -328,8 +331,8 @@ class ClassMethRegul:
 
     def check_break(self, param, val_check):
         """
-        Check if the floodgate should break.
-        :param param: Dictionary of floodgate parameters.
+        Check if the mobile weirs should break.
+        :param param: Dictionary of mobile weirs parameters.
         :param val_check: Current value of the regulation variable.
         """
         if val_check >= param["VBREAKREG"] :
@@ -348,10 +351,10 @@ class ClassMethRegul:
 
     def state_regul(self, val_check, param_fg):
         """
-        Determine the state of the floodgate (OPEN, CLOSE, or MAINTAIN) based on the regulation variable.
+        Determine the state of the mobile weirs (OPEN, CLOSE, or MAINTAIN) based on the regulation variable.
 
         :param val_check: Current value of the regulation variable.
-        :param param_fg: Dictionary of floodgate parameters.
+        :param param_fg: Dictionary of mobile weirs parameters.
         """
         tol = param_fg["TOLREG"]
         key = param_fg["OPEN_CLOSE"]
@@ -383,10 +386,10 @@ class ClassMethRegul:
 
     def law_gate_regul(self, param, time):
         """
-        Compute the new floodgate parameters.
-        :param param: Dictionary of floodgate parameters.
+        Compute the new mobile weirs parameters.
+        :param param: Dictionary of mobile weirs parameters.
         :param time: Current simulation time.
-        :return: Dictionary of updated floodgate parameters.
+        :return: Dictionary of updated mobile weirs parameters.
         """
         if self.break_weir:
             return {
@@ -415,8 +418,8 @@ class ClassMethRegul:
 
     def comput_dz(self, vit, dt, dzlimit=0):
         """
-        Compute the displacement of the floodgate over a time step.
-        :param vit: Velocity of the floodgate movement.
+        Compute the displacement of the mobile weirs over a time step.
+        :param vit: Velocity of the mobile weirs movement.
         :param dt: Time step.
         :param dzlimit: Maximum allowable displacement.
         :return: Computed displacement.
@@ -428,10 +431,10 @@ class ClassMethRegul:
 
     def check_dt_regul(self, param_fg, dtp):
         """
-        Check if the floodgate should be treated during the current time step.
-        :param param_fg: Dictionary of floodgate parameters.
+        Check if the mobile weirs should be treated during the current time step.
+        :param param_fg: Dictionary of mobile weirs parameters.
         :param dtp: Time step.
-        :return: True if the floodgate should be treated, False otherwise.
+        :return: True if the mobile weirs should be treated, False otherwise.
         """
         crit = param_fg["CRITDTREG"]
         self.compt_dt += 1
@@ -451,7 +454,7 @@ class ClassMethRegul:
 
 
 class ClassMethTime:
-    """Class for handling time-based floodgate."""
+    """Class for handling time-based mobile weirs."""
 
     def __init__(self, parent):
         """
@@ -465,8 +468,8 @@ class ClassMethTime:
 
     def init_meth_time(self, param):
         """
-        Initialize the time-based parameters for a floodgate.
-        :param param: Dictionary of floodgate parameters.
+        Initialize the time-based parameters for a mobile weirs.
+        :param param: Dictionary of mobile weirs parameters.
         """
         param.update({
             "TIMEZ": np.array(param["TIMEZ"]),
@@ -483,8 +486,8 @@ class ClassMethTime:
 
     def check_break(self, param, val_check):
         """
-        Check if the floodgate should break.
-        :param param: Dictionary of floodgate parameters.
+        Check if the mobile weirs should break.
+        :param param: Dictionary of mobile weirs parameters.
         :param val_check: Current value of the regulation variable.
         """
         if val_check >= param["VBREAKT"]:
@@ -502,16 +505,14 @@ class ClassMethTime:
 
     def law_mth_time(self, param, time):
         """
-        Compute the new floodgate parameters.
-        :param param: Dictionary of floodgate parameters.
+        Compute the new mobile weirs parameters.
+        :param param: Dictionary of mobile weirs parameters.
         :param time: Current simulation time.
-        :return: Dictionary of updated floodgate parameters.
+        :return: Dictionary of updated mobile weirs parameters.
         """
         if self.break_weir:
             return {
                 "level": param["ZFINALT"],
             }
         dnew = { "level": np.interp(time, param["TIMEZ"], param["VALUEZ"])}
-
-
         return dnew

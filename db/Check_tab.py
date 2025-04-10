@@ -2106,12 +2106,42 @@ $BODY$;
             for sql in lst_alt:
                 self.mdb.execute(sql.format(self.mdb.SCHEMA))
     # Pour les WEIRS convertir
-    # "ZBAS"
-    # "ZHAUT"
-    # "ZREG"
-    # "VDESC"
-    # "VMONT"
-    # "UNITVD"
-    # "UNITVH"
-    # ZVAR
-    # TIME
+
+        dconversion = {'TIME' : 'TIMEZ',
+                       'ZVAR': 'VALUEZ',
+                       "ZBAS" : None, # ou  ZINITREG ou "ZFINALREG"
+                       "ZHAUT" :'ZMAXFG',
+                       "ZREG" : "VREGCLOS",
+                       "VDESC" : "VREGOPEN",
+                       "VMONT" : "VREGCLOS",
+                       "UNITVD" : "UNITVD" ,
+                       "UNITVH" : "UNITVH"
+                       }
+
+        dval_default = { '1':{
+                            'VBREAKT': 99999.,
+                            "BPERMT": False,
+                            "ZFINALT" : "z_crest"
+                            },
+                '2':{
+                    "VREGOPEN" : "VREGCLOS",
+                    "DIRFG" : 'D',
+                    "ZINITREG" : "z_crest",
+                    "VREG" : "Z",
+                    "USEPOINT" :  None,
+                     "PK" : None ,
+                     "CRITDTREG" : "NDTREG",
+                     "NDTREG" : 1,
+                     "DTREG": 0,
+                     "ZINCRFG": 9999.,
+                     "TOLREG": 0.05,
+                    # Break
+                    "VBREAKREG": 99999.,
+                    "BPERMREG": False,
+                    "ZFINALREG": "z_crest",
+                },
+        }
+        # sql = (f"SELECT id_weirs, id_order, name_var , value FROM {self.mdb.SCHEMA}.weirs_mob_val "
+        #        f"BY ORDER id_weirs, id_order;")
+        #
+        #     self.mdb.execute(sql.format())
