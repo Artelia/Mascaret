@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
  """
 import os
+import platform
 from qgis.PyQt.QtCore import *
 from qgis.PyQt import QtWidgets, uic
 from qgis.PyQt.uic import *
@@ -33,7 +34,7 @@ try:
 except AttributeError:
     qgis_version = core.Qgis.QGIS_VERSION_INT
 
-if qgis_version < 31616:
+if qgis_version < 31616 or platform.system() == 'Linux':
     FORM_CLASS, BASE = uic.loadUiType(
         os.path.join(os.path.join(os.path.dirname(__file__), "ui/edit_ks_mesh_plan31000.ui"))
     )
