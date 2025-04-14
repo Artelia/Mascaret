@@ -298,13 +298,13 @@ class ClassLinkFGParam(object):
         """
         if test["method_mob"] == 2:
             tol = test["TOLREG"]
-            if test["DIRFG"] =='D' and test["VREGOPEN"] - tol < test["VREGCLOS"] + tol:
+            if test["DIRFG"] =='D' and test["VREGOPEN"] - tol <= test["VREGCLOS"] + tol:
                     txt = (f"The opening level minus tolerance is lower than the closing level plus tolerance. "
                            f"It should always be higher in this case.\n "
                            f"The issue is for link {num}.")
                     self.mess.add_mess('chk_lk_reg', 'critic', txt)
                     return False
-            elif test["DIRFG"] == 'U' and test["VREGOPEN"] + tol > test["VREGCLOS"] - tol:
+            elif test["DIRFG"] == 'U' and test["VREGOPEN"] + tol >= test["VREGCLOS"] - tol:
                     txt = (f"The opening level plus tolerance is greater than the closing level minus tolerance. "
                            f"It should always be lower in this case.\n "
                            f"The issue is for link {num}.")

@@ -594,6 +594,7 @@ class ClassMethTime:
             "VALUEZ": np.array(param["VALUEZ"]),
             "REGVAR_VAL" : self.masc.get(param['CHECK_VAR'], param["SECCON"])
         })
+        # TODO test dans le cas hors zone interpol
         param["level"] = np.interp(param["TIME"], param["TIMEZ"], param["VALUEZ"])
         if param["type"] == 4:
             param["CSection"] = param["width0"] * min((param["ZmaxSection0"] - param["level"]), 0)
