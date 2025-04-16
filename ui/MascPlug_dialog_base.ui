@@ -54,7 +54,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsProjectionSelectionWidget" name="crsWidget">
+       <widget class="QgsProjectionSelectionWidget" name="crsWidget" native="true">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -695,7 +695,7 @@
   </action>
   <action name="actionStructures_weirs">
    <property name="text">
-    <string>Movable Dam</string>
+    <string>Movable Weirs</string>
    </property>
   </action>
   <action name="actionTest">
