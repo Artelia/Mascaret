@@ -64,13 +64,6 @@ try :
 except:
     MPLT_NEW =  False
 
-try :
-    from packaging.version import parse
-    import matplotlib
-    MPLT_NEW =  (parse(matplotlib.__version__) >= parse("3.6.3"))
-except:
-    MPLT_NEW =  False
-
 try:
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 except:
@@ -121,17 +114,23 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             flag_mass_graph = self.mgis.mass_graph
 
             if (couche == "profiles" or couche == "weirs" or couche == "links") and flag_profil_z:
-                if couche == "profiles":
-                    type_res = "struct"
-                elif couche == "weirs":
-                    type_res = "weirs"
-                elif couche == "links":
-                    type_res = "link_fg"
-
+                type_res_map = {
+                    "profiles": "struct",
+                    "weirs": "weirs",
+                    "links": "link_fg"
+                }
+                type_res = type_res_map[couche]
                 self.mgis.coucheProfils = results[0].mLayer
                 gid = results[0].mFeature["abscissa"]
-                graph_res = GraphResultDialog(self.mgis, type_res, gid)
-                graph_res.show()
+                if couche == "links":
+                    feature = results[0].mFeature
+                    links = self.mgis.mdb.select_distinct("name", "links", "active")
+                    if links and feature["name"] in links["name"]:
+                        graph_link = GraphResultDialog(self.mgis, type_res, feature["linknum"])
+                        graph_link.show()
+                else:
+                    graph_res = GraphResultDialog(self.mgis, type_res, gid)
+                    graph_res.show()
 
             if couche == "profiles" and flag_profil:
                 self.mgis.coucheProfils = results[0].mLayer

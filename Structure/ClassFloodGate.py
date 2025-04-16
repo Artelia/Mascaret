@@ -163,8 +163,8 @@ class ClassFloodGate:
         :param time: time
 
         """
-        for id_config in self.param_fg.keys():
-            self.regul(id_config, time, self.param_fg[id_config], dtp)
+        for id_config, param in self.param_fg.items():
+            self.regul(id_config, time, param , dtp)
 
     def regul(self, id_config, time, param_fg, dtp):
         if check_time_regul(time, param_fg["DTREG"], param_fg):
@@ -190,12 +190,8 @@ class ClassFloodGate:
         :param list_final: law data
         :return:
         """
-        info = np.array(list_final)
-        # trie de la colonne 0 à 2
-        info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
-        info = info[info[:, 1].argsort(kind="mergesort")]
-        info = info[info[:, 0].argsort(kind="mergesort")]
-        return info
+        info = np.asarray(list_final)  # Convert only if needed
+        return info[np.lexsort((info[:, 2], info[:, 1], info[:, 0]))]
 
     def check_regul(self, param_fg):
         """

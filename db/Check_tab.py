@@ -105,8 +105,10 @@ class CheckTab:
             "5.1.13",
             "6.0.0",
             "6.0.1",
+            "6.0.2",
             "6.1.0",
             "6.1.1",
+            "6.2.0",
         ]
         self.dico_modif = {
             "3.0.0": {
@@ -337,8 +339,13 @@ class CheckTab:
             "5.1.13": {},
             "6.0.0": {},
             "6.0.1": {},
+            "6.0.2": {},
             "6.1.0": {},
             "6.1.1": {},
+            "6.2.0": {"fct": [
+                lambda: self.update_620(),
+            ],
+            },
 
             # '3.0.x': { },
         }
@@ -378,7 +385,7 @@ class CheckTab:
 
         pos_fin = self.list_hist_version.index(version)
         tabs_no = deepcopy(tabs)
-        if len(self.list_hist_version[pos + 1 : pos_fin + 1]) > 0:
+        if len(self.list_hist_version[pos + 1: pos_fin + 1]) > 0:
             ok = self.box.yes_no_q(
                 "WARNING:\n "
                 "Do you want update tables for {} schema ?\n"
@@ -388,7 +395,7 @@ class CheckTab:
             )
             if ok:
                 list_test_ver = []
-                for ver in self.list_hist_version[pos + 1 : pos_fin + 1]:
+                for ver in self.list_hist_version[pos + 1: pos_fin + 1]:
                     list_test = []
                     if ver in self.dico_modif.keys():
                         self.mgis.add_info("version : {}".format(ver))
@@ -783,7 +790,7 @@ class CheckTab:
         info = self.mdb.select(
             "resultats",
             where="(run, scenario) = (SELECT run, scenario "
-            "FROM {}.runs WHERE id= {})".format(self.mdb.SCHEMA, id_run),
+                  "FROM {}.runs WHERE id= {})".format(self.mdb.SCHEMA, id_run),
             order="t",
             list_var=["pk", "branche", "section"],
         )
@@ -2061,10 +2068,10 @@ $BODY$;
 
         if valide:
             lst_alt = [
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT " "EXISTS  leftminbed_g FLOAT;",
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT " "EXISTS  rightminbed_g FLOAT;",
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT " "EXISTS  leftstock_g FLOAT;",
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT " "EXISTS  rightstock_g FLOAT;",
+                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  leftminbed_g FLOAT;",
+                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  rightminbed_g FLOAT;",
+                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  leftstock_g FLOAT;",
+                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  rightstock_g FLOAT;",
             ]
             for sql in lst_alt:
                 self.mdb.execute(sql.format(self.mdb.SCHEMA))
@@ -2080,5 +2087,26 @@ $BODY$;
         # TODO
         # add links_mob_val
         # modification link  table
+        self.mgis.add_info("*** Update 6.2.0  ***")
+        tabs = self.mdb.list_tables(self.mdb.SCHEMA)
+        lst_add_tab = ["links_mob_val"]
+        valide = True
+        for attr in lst_add_tab:
+            if attr not in tabs:
+                valid_add, _ = self.add_tab(getattr(Maso, attr))
+                if not valid_add:
+                    self.mgis.add_info(f"Create  the {attr} table - ERROR")
+                    valide = False
+        if valide:
+            lst_alt = [
+                "ALTER TABLE {0}.struct_config ADD COLUMN IF NOT EXISTS  zbreak DOUBLE PRECISION DEFAULT 10000;",
+                "ALTER TABLE {0}.struct_config ADD COLUMN IF NOT EXISTS  erase_flag boolean NOT NULL  DEFAULT FALSE;",
+                "ALTER TABLE {0}.links ADD COLUMN IF NOT EXISTS method_mob text;",
+                "ALTER TABLE {0}.links ADD COLUMN IF NOT EXISTS active_mob BOOLEAN;",
+                "ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS erase_flag boolean NOT NULL   DEFAULT FALSE;",
+            ]
+            # Alter colonne value en text
+            for sql in lst_alt:
+                self.mdb.execute(sql.format(self.mdb.SCHEMA))
+    # Pour les WEIRS convertir
 
-        pass

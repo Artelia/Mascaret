@@ -265,6 +265,7 @@ class ClassMethod:
 
     def get_param_fg(self):
         """get variable of the floodgate"""
+
         where = "active AND id_config in (SELECT id FROM {}.struct_config  WHERE active)".format(
             self.mdb.SCHEMA
         )

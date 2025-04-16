@@ -33,7 +33,7 @@ from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 
 from ..Graphic.GraphCommon import GraphCommon
 from ..Function import data_to_float
-from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
+from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
 from ..ui.custom_control import ClassWarningBox
 
 

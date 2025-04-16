@@ -169,6 +169,8 @@ class TaskMascInit():
                 self.add_log_mess(self.clfile.mess)
                 if self.exit_status_(self.clfile.mess):
                     return False
+            # file permanent break of singularity
+            self.clfile.creat_file_no_keep_break()
 
             # check error and warning:
             self.check_apport()

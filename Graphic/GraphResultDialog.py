@@ -87,6 +87,7 @@ class GraphResultDialog(QWidget):
             if self.typ_graph in ["struct", "weirs","link_fg"]:
                 self.typ_res = self.typ_graph
                 self.x_var = "time"
+
             elif self.typ_graph in ["hydro", "hydro_pk"]:
                 self.typ_res = "opt"
                 if self.typ_graph == "hydro_pk":
@@ -555,7 +556,7 @@ class GraphResultDialog(QWidget):
             if self.typ_graph in ["struct", "weirs", "hydro", "link_fg"]:
                 if self.typ_graph is "link_fg":
                     self.graph_obj.main_axe.title.set_text(
-                        r'Link - {0} '.format(float(txt_title)))
+                        r'Link - {0} '.format(txt_title))
                 else:
                     try:
                         self.graph_obj.main_axe.title.set_text(

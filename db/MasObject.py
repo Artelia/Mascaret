@@ -261,6 +261,7 @@ class weirs(MasObject):
             ("active", " boolean NOT NULL DEFAULT TRUE"),
             ("active_mob", "boolean NOT NULL DEFAULT FALSE"),
             ("method_mob", "text"),
+            ("erase_flag", "boolean NOT NULL DEFAULT FALSE"),
             ("CONSTRAINT weirs_pkey", " PRIMARY KEY(gid)"),
         ]
 
@@ -1844,7 +1845,9 @@ class struct_config(MasObject):
             ("abscissa", "float"),
             ("branchnum", "integer"),
             ("id_prof_ori", "integer"),
+            ("erase_flag", "boolean NOT NULL DEFAULT FALSE"),
             ("comment", "text"),
+
             ("CONSTRAINT cle_struct_conf", "PRIMARY KEY (id)"),
         ]
 

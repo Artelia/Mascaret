@@ -452,8 +452,8 @@ class Mascaret:
             ctypes.byref(val_c),
         )
         self.logger.debug("Value: val={}.".format(val_c.value))
-
-        return val_c.value == val_c.value
+        return bool(val_c.value)
+        #MDU return val_c.value == val_c.value
 
     def get_string(self, var_name, i=0, j=0, k=0):
         """Get the string value of a Mascaret variable
