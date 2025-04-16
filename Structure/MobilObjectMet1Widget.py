@@ -61,12 +61,12 @@ class ClassMobilObjectMet1Widget(QWidget):
             self.mob_table_id = 'id_links'
 
         self.d_var = {
-            "VBREAKREG": {"ctrl": self.ui.sb_break_val, "cc": self.ui.cc_break_val,
-                          "vdef": 9999., "typ": float},
-            "BPERMREG": {"ctrl": self.ui.cc_temp_break, "cc": None,
-                         "vdef": False, "typ": to_bool},
-            "ZFINALREG": {"ctrl": self.ui.sb_break_lvl, "cc": self.ui.cc_break_lvl,
-                          "vdef": 0., "typ": float}
+            "VBREAKT": {"ctrl": self.ui.sb_break_val, "cc": self.ui.cc_break_val,
+                        "vdef": 9999., "typ": float},
+            "BPERMT": {"ctrl": self.ui.cc_temp_break, "cc": None,
+                       "vdef": False, "typ": to_bool},
+            "ZFINALT": {"ctrl": self.ui.sb_break_lvl, "cc": self.ui.cc_break_lvl,
+                        "vdef": 0., "typ": float}
         }
 
         self.bg_time = QButtonGroup()
