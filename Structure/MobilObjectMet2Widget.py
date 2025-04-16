@@ -27,7 +27,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ctrl_set_value, ctrl_get_value, fill_qcombobox
+from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
 from ..Graphic.GraphCommon import GraphCommon
 from ..Function import data_to_float
 

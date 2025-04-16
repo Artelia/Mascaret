@@ -23,7 +23,7 @@ from qgis.PyQt.uic import *
 from qgis.PyQt.QtGui import QIcon
 
 
-def ctrl_set_value(ctrl, val):
+def ctrl_set_value(ctrl, val, cc_is_checked=False):
     if ctrl.metaObject().className() == "QSpinBox":
         ctrl.setValue(int(val))
     elif ctrl.metaObject().className() == "QDoubleSpinBox":
@@ -32,12 +32,15 @@ def ctrl_set_value(ctrl, val):
         ctrl.setCurrentIndex(ctrl.findData(val))
         # ctrl.setCurrentIndex(ctrl.findData(int(val)))
     elif ctrl.metaObject().className() == "QCheckBox":
-        ctrl.setCheckState(Qt.CheckState(int(val)))
+        if cc_is_checked:
+            ctrl.setChecked(val)
+        else:
+            ctrl.setCheckState(Qt.CheckState(int(val)))
     elif ctrl.metaObject().className() == "QButtonGroup":
         ctrl.button(int(val)).click()
 
 
-def ctrl_get_value(ctrl):
+def ctrl_get_value(ctrl, cc_is_checked=False):
     val = None
     if ctrl.metaObject().className() == "QLineEdit":
         val = ctrl.text()
@@ -49,7 +52,10 @@ def ctrl_get_value(ctrl):
         val = ctrl.itemData(ctrl.currentIndex())
         # val = int(ctrl.itemData(ctrl.currentIndex()))
     elif ctrl.metaObject().className() == "QCheckBox":
-        val = int(ctrl.checkState())
+        if cc_is_checked:
+            val = ctrl.isChecked()
+        else:
+            val = int(ctrl.checkState())
     elif ctrl.metaObject().className() == "QButtonGroup":
         val = ctrl.checkedId()
     return val
