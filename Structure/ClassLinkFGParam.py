@@ -61,8 +61,6 @@ class ClassLinkFGParam(object):
             "USEBASIN": {"desc": "Utilise le casier comme point de regulatinon",
                          "desc_en": "Uses the basin as a regulation point", 'typ': 'bool'},
             "NUMBASINREG": {"desc": "num basin", "desc_en": "basin number", "default": '', 'typ': 'int'},
-            "USEPOINT": {"desc": "Utilise point comme point de regulatinon",
-                         "desc_en": "Uses point as a regulation point", 'typ': 'bool'},
             "PK": {"desc": "PK de la régulation", "desc_en": "Regulation chainage", 'typ': 'float'},
             "VREGCLOS": {"desc": "valeur fermeture de la vanne", "desc_en": "gate closing value", 'typ': 'float'},
             "VREGOPEN": {"desc": "valeur d'ouverture de la vanne", "desc_en": "gate opening value", 'typ': 'float'},
@@ -100,8 +98,6 @@ class ClassLinkFGParam(object):
             "USEBASINFUS": {"desc": "Utilise le casier comme point de regulatinon",
                             "desc_en": "Uses the basin as a regulation point", 'typ': 'bool'},
             "NUMBASINFUS": {"desc": "Start or end basin", "desc_en": "Start or end basin", 'typ': 'int'},
-            "USEPOINTFUS": {"desc": "Utilise point comme point de regulatinon",
-                            "desc_en": "Uses point as a regulation point", 'typ': 'bool'},
             "PKFUS": {"desc": "PK de la régulation", "desc_en": "Regulation chainage", 'typ': 'float'},
         }
 

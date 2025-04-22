@@ -134,7 +134,7 @@ class ClassMobilObjectMet1Widget(QWidget):
                   "WHERE links.gid = {2}".format(self.mdb.SCHEMA, self.obj_table, self.cur_obj)
 
         rows = self.mdb.run_query(sql, fetch=True)
-        self.d_var["ZFINALREG"]["vdef"] = rows[0][0]
+        self.d_var["ZFINALT"]["vdef"] = rows[0][0]
 
         self.fill_controls()
         self.fill_table()

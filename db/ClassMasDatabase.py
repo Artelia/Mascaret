@@ -1148,7 +1148,7 @@ $BODY$
                     key2 = other columns and list1 values
         :param colonnes: columns list
         :param delim:
-        :param verbose:
+        :param verbose: display sql command
         :return:
         """
         tmp = [colonnes[0]]
@@ -1181,10 +1181,13 @@ $BODY$
         return err
 
     def insert2(self, table, tab, verbose=False):
-        """insert table in tableSQl"""
+        """
+        :param table: (str) table name
+        :param tab (dict): tab= {key : list_value}   key =  column name
+        :param verbose(bool): display sql command
+        """
         colonnes = sorted(tab.keys())
         var = ",".join(colonnes)
-
         valeurs = []
         for i in range(len(tab[colonnes[0]])):
             temp = []
@@ -1196,7 +1199,9 @@ $BODY$
         )
         if verbose:
             self.mgis.add_info(sql)
-        self.run_query(sql)
+
+        err = self.run_query(sql)
+        return  err
 
     def insert_res(self, table, liste_value, colonnes):
         var = ",".join(colonnes)

@@ -68,7 +68,6 @@ from .scores.ClassScoresDialog import ClassScoresDialog
 from .ui.custom_control import ClassWarningBox
 
 
-
 class MascPlugDialog(QMainWindow):
     OPT_GENERAL, OPT_mdb, OPT_DTM = range(3)
 
@@ -1090,74 +1089,10 @@ Version : {}
         #self.chkt.debug_update_vers_meta(version="5.1.5")
         # cl = ClassCreatFilesModels(self.mdb,self.dossierFileMasc)
         # cl.creat_file_no_keep_break()
-        dconversion = {'TIME': 'TIMEZ',
-                       'ZVAR': 'VALUEZ',
-                       "ZBAS": None,
-                       "ZHAUT": 'ZMAXFG',
-                       "ZREG": "VREGCLOS",
-                       "VDESC": "VREGOPEN",
-                       "VMONT": "VREGCLOS",
-                       "UNITVD": "VREGOPEN_U",
-                       "UNITVH": "VREGCLOS_U",
-                       }
-
-        dval_default = {
-                "VREGOPEN": "VREGCLOS",
-                "DIRFG": 'D',
-                "ZINITREG": "z_crest",
-                "VREG": "Z",
-                # "USEPOINT": True,
-                "PK": "abscissa",
-                "CRITDTREG": "NDTREG",
-                "NDTREG": 1,
-                "DTREG": 0,
-                "ZINCRFG": 9999.,
-                "TOLREG": 0.05,
-                # Break
-                # "VBREAKREG":  "z_break",
-                # "BPERMREG": "erase_flag",
-                "ZFINALREG": "z_crest",
-            }
-
-        sql = (f"SELECT name_var , id_weirs, id_order, value FROM {self.mdb.SCHEMA}.weirs_mob_val "
-               f"ORDER BY id_weirs, id_order;")
-        liste = []
-        rows = self.mdb.run_query(sql, fetch=True)
-        id_weirs =  self.mdb.select_distinct("id_weirs", "weirs_mob_val", ordre='id_weirs')
-        lst_id = ','.join([f"'{id}'" for id in id_weirs['id_weirs']])
-        info = self.mdb.select("weirs", where=f"gid IN ({lst_id})", order="gid",
-                               list_var=["gid", "name", "method_mob", "abscissa", "z_crest"])
-        dlvar = {}
-        if rows:
-            for row in rows:
-                var = row[0]
-                id = row[1]
-                lst_var = self.mdb.select_distinct("name_var", "weirs_mob_val", where=f'id_weirs={id}')
-                dlvar [id] =  lst_var['name_var']
-                if var in dconversion.keys():
-                    new_var = dconversion[var]
-                    if new_var and new_var not in  lst_var['name_var']:
-                        # name_var , id_weirs, id_order, value
-                        liste.append([new_var, id,row[2], row[3]])
-
-            for  id in id_weirs['id_weirs']:
-                pos = info['gid'].index(id)
-                lst_var = dlvar[id]
-                for var,item in dval_default.items():
-                    if var in lst_var:
-                        continue
-                    if item in info.keys() :
-                        liste.append([var, id, 0, info[item][pos]])
-                    else:
-                        liste.append([var, id, 0, item])
-            # if liste:
-            #     sql = (
-            #         "INSERT INTO "
-            #         "{self.mdb.SCHEMA}.weirs_mob_val(name_var, id_weirs, id_order, value) "
-            #         "VALUES (%s,%s,%s,%s); \n"
-            #     )
-            #     self.mdb.run_query(sql, many=True, list_many=liste)
-
+        self.chkt.update_version('620')
+        # from db.update_version.update_620 import ClassUpdate620
+        # ClassUpdate620(self.chkt).update620()
+        pass
 
     def update_ks_mesh_planim(self):
         """update value of the seleted profiles"""
