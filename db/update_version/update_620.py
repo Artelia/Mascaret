@@ -66,8 +66,8 @@ class ClassUpdate620:
             },
             "get_value":
                 {
-                    "ZFINALREG": "z_crest",
                     "ZINITREG": "z_crest",
+                    "ZFINALREG": "z_crest",
                     "PK": "abscissa",
                 },
             "dbl_value":
@@ -150,6 +150,7 @@ class ClassUpdate620:
             info_value = self.mdb.select(f"{typ}", where=f"gid IN ({lst_id})", order="gid",
                                          list_var=lst_typ)
             # ***************** Convert values ********************
+            d_zbas = {}
             for idx, nvar in enumerate(dsrc["name_var"]):
                 if nvar in d_conv["var_conv"].keys():
                     for col in cols:
@@ -160,6 +161,9 @@ class ClassUpdate620:
                                 dtarget[col].append('{:.0f}'.format(dsrc[col][idx]))
                             else:
                                 dtarget[col].append(dsrc[col][idx])
+                if f"{typ}" == "weirs" and nvar == "ZBAS":
+                    d_zbas[idx] = dsrc[col][idx]
+
             # ***************** Default values ********************
             for idx in id_typ:
                 for key, value in d_conv["default"].items():
@@ -181,7 +185,16 @@ class ClassUpdate620:
                     dtarget['value'].append(info_value[get_var][pos])
                     dtarget["name_var"].append(f"'{key}'")
 
-            err = self.mdb.insert2(f"{typ}_mob_val", dtarget)
+
+            print(d_zbas)
+            if f"{typ}" == "weirs" and len(d_zbas)>0 :
+                for idx, val in d_zbas.items():
+                    err = self.mdb.update(f"{typ}", {idx: {"z_crest": val}}, var="gid")
+                    if err:
+                        print('iiiii')
+                        break
+            if err:
+                err = self.mdb.insert2(f"{typ}_mob_val", dtarget)
             if err:
                 self.mgis.add_info(f"Convert the {typ}_mob_val - ERROR")
                 valide = False

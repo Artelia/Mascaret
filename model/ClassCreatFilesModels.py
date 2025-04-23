@@ -1678,7 +1678,7 @@ class ClassCreatFilesModels:
         """
 
         info = self.mdb.select(
-            "weirs", where="active_mob = true", list_var=["method_mob", "gid", "name"], order="gid"
+            "weirs", where="active_mob = true", list_var=["method_mob", "gid", "name", "z_crest"], order="gid"
         )
         if info:
             try:
@@ -1692,7 +1692,7 @@ class ClassCreatFilesModels:
                     if info["method_mob"][i] == "1":
                         rows = self.mdb.select(
                             "weirs_mob_val",
-                            where="id_weirs= {} AND (name_var='TIME' OR name_var='ZVAR')".format(
+                            where="id_weirs= {} AND (name_var='TIMEZ' OR name_var='VALUEZ')".format(
                                 idw
                             ),
                             order="name_var, id_order",
@@ -1726,7 +1726,7 @@ class ClassCreatFilesModels:
                     elif info["method_mob"][i] == "2":
                         rows = self.mdb.select(
                             "weirs_mob_val",
-                            where="id_weirs= {} AND name_var!='TIME' AND name_var!='ZVAR'".format(
+                            where="id_weirs= {} AND name_var!='TIMEZ' AND name_var!='VALUEZ'".format(
                                 idw
                             ),
                         )
@@ -1736,16 +1736,16 @@ class ClassCreatFilesModels:
                             fich.write("Zregulation Zbas Zhaut (m ngf)\n")
                             fich.write(
                                 "{} {} {}\n".format(
-                                    rows["value"][rows["name_var"].index("ZREG")],
-                                    rows["value"][rows["name_var"].index("ZBAS")],
-                                    rows["value"][rows["name_var"].index("ZHAUT")],
+                                    rows["value"][rows["name_var"].index("VREGCLOS")],
+                                    info["z_crest"][i], # ZBAS
+                                    rows["value"][rows["name_var"].index('ZMAXFG')],
                                 )
                             )
                             fich.write("Vabaissement Vrehaussement m/s\n")
                             fich.write(
                                 "{} {}\n".format(
-                                    rows["value"][rows["name_var"].index("VDESC")],
-                                    rows["value"][rows["name_var"].index("VMONT")],
+                                    rows["value"][rows["name_var"].index("VELOFGOPEN")],
+                                    rows["value"][rows["name_var"].index("VELOFGCLOSE")],
                                 )
                             )
                     else:
