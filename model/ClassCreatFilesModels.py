@@ -1258,6 +1258,15 @@ class ClassCreatFilesModels:
                 else:
                     seuil[ls].append(None)
 
+        # TODO to delete when delete exe file
+        if  any(seuil['active_mob']):
+            where = f"id_weirs in (SELECT gid FROM {self.mdb.SCHEMA}.weirs where active_mob)"
+            dico_mob = self.mdb.select("weirs_mob_val", where, "id_weirs")
+            for i, id_w in enumerate(dico_mob["id_weirs"]):
+                id_s = seuil['gid'].index(id_w)
+                id_n = dico_mob['name_var'].index('ZINITREG')
+                seuil["z_crest"][id_s] = dico_mob['value'][id_n]
+
         return seuil, loi_struct
 
     def typ_struct(self, meth):
@@ -1782,7 +1791,6 @@ class ClassCreatFilesModels:
                 f"WHERE active ORDER BY {var};"
             )
             rows = self.mdb.run_query(sql, fetch=True)
-            print(rows)
             if rows:
                 for row in rows:
                     # "name, branchnum, abscissa"

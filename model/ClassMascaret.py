@@ -36,6 +36,8 @@ from ..Function import TypeErrorModel
 from ..Function import copy_dir_to_dir
 from ..Structure.ClassPostPreFG import ClassPostPreFG
 from ..Structure.ClassLinkFGParam import ClassLinkFGParam
+from ..Structure.ClassMobilWeirsParam import ClassMobilWeirsParam
+
 from ..WaterQuality.ClassMascWQ import ClassMascWQ
 from ..ui.custom_control import ClassWarningBox
 
@@ -148,6 +150,18 @@ class ClassMascaret:
                     self.mgis.add_info("Compute is cancel.")
                     return None, None, None, None, None
             del cl_lk
+        if  noyau == "unsteady":
+            cl_w = ClassMobilWeirsParam()
+            print(cl_w.fg_actif_weirs(self.mgis.mdb), 'iiiiiiiiii')
+            if cl_w.fg_actif_weirs(self.mgis.mdb):
+                path = os.path.join(self.dossierFileMasc, "weirs_cli_fg.obj")
+                cl_w.create_cli_fg(self.mgis, path)
+                exit_status = cl_w.mess.get_critic_status()
+                self.write_mess(cl_w.mess)
+                if exit_status:
+                    self.mgis.add_info("Compute is cancel.")
+                    return None, None, None, None, None
+            del cl_w
 
         if par["presenceTraceurs"]:
             self.wq.create_filephy()

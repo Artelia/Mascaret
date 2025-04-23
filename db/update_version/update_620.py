@@ -162,7 +162,7 @@ class ClassUpdate620:
                             else:
                                 dtarget[col].append(dsrc[col][idx])
                 if f"{typ}" == "weirs" and nvar == "ZBAS":
-                    d_zbas[idx] = dsrc[col][idx]
+                    d_zbas[dsrc[f'id_{typ}'][idx]] = dsrc[col][idx]
 
             # ***************** Default values ********************
             for idx in id_typ:
@@ -185,15 +185,21 @@ class ClassUpdate620:
                     dtarget['value'].append(info_value[get_var][pos])
                     dtarget["name_var"].append(f"'{key}'")
 
-
-            print(d_zbas)
+            err = False
             if f"{typ}" == "weirs" and len(d_zbas)>0 :
+                ok = self.cht.box.yes_no_q(
+                    "WARNING:\n "
+                    "Please note, there are mobile weirs of the regulation type. "
+                    "The update will change the value of z_crest of the weirs to that of ZBAS or zbottom "
+                    "indicated as the displacement limit.\n"
+                    .format(self.mdb.SCHEMA)
+                )
+
                 for idx, val in d_zbas.items():
                     err = self.mdb.update(f"{typ}", {idx: {"z_crest": val}}, var="gid")
                     if err:
-                        print('iiiii')
                         break
-            if err:
+            if not err:
                 err = self.mdb.insert2(f"{typ}_mob_val", dtarget)
             if err:
                 self.mgis.add_info(f"Convert the {typ}_mob_val - ERROR")
