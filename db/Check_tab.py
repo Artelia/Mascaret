@@ -28,9 +28,6 @@ from . import MasObject as Maso
 from ..Function import read_version, fill_zminbed
 
 from ..ui.custom_control import ClassWarningBox
-from ..ClassUpdateBedDialog import update_all_bed_geometry
-
-
 
 class CheckTab:
     """
@@ -211,13 +208,9 @@ class CheckTab:
                         ],
                     },
                 ],
-                "fct": [lambda: self.update_tab_306(), lambda: self.add_trigger_update_306()],
+                "fct": [lambda: self.update_version("306")],
             },
-            "3.0.7": {
-                "fct": [
-                    lambda: self.update_fct_calc_abs(),
-                ]
-            },
+            "3.0.7": {},
             "3.1.0": {"del_tab": ["resultats", "resultats_basin", "resultats_links"]},
             "3.1.1": {},
             "3.1.2": {},
@@ -269,7 +262,7 @@ class CheckTab:
             "4.0.9": {},
             "4.0.10": {},
             "4.0.11": {
-                "fct": [lambda: self.update_4011()],
+                "fct": [lambda: self.update_version("4011")],
             },
             "4.0.12": {},
             "4.0.13": {
@@ -317,7 +310,7 @@ class CheckTab:
             },
             "5.1.7": {
                 "fct": [
-                    lambda: self.update_517(),
+                    lambda: self.update_version("517"),
                 ],
             },
             "5.1.8": {},
@@ -578,41 +571,6 @@ class CheckTab:
         """
         Call the update method for a given version.
         """
-        # plugin_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        #
-        # # Ajoute temporairement le chemin racine du plugin à sys.path
-        # if plugin_root not in sys.path:
-        #     sys.path.insert(0, plugin_root)
-        #
-        # file_path = os.path.join(
-        #     os.path.dirname(__file__),  # db/
-        #     'update_version',
-        #     f'update_{version}.py'
-        # )
-        #
-        # if not os.path.isfile(file_path):
-        #     raise RuntimeError(f"Fichier de mise à jour introuvable : {file_path}")
-        # class_name = f"ClassUpdate{version}"
-        # method_name = f"update{version}"
-        # try:
-        #     module_name = f"update_{version}"
-        #     spec = importlib.util.spec_from_file_location(module_name, file_path)
-        #     if spec is None or spec.loader is None:
-        #         raise RuntimeError(f"Impossible de charger le module {module_name}")
-        #
-        #     module = importlib.util.module_from_spec(spec)
-        #     spec.loader.exec_module(module)
-        #
-        #
-        #     klass = getattr(module, class_name)
-        #     return getattr(klass(self), method_name)()
-        # except (ModuleNotFoundError, AttributeError) as e:
-        #     raise RuntimeError(f"Update {version} not found: {e}")
-        # finally:
-        #     # Nettoyage : on enlève le chemin du plugin de sys.path après l'import si tu veux être clean
-        #     if plugin_root in sys.path:
-        #         sys.path.remove(plugin_root)
-
         base_dir = os.path.dirname(__file__)
         plugin_root = os.path.abspath(os.path.join(base_dir, '..'))
         file_path = os.path.join(base_dir, 'update_version', f'update_{version}.py')
@@ -623,7 +581,7 @@ class CheckTab:
         if not os.path.isfile(file_path):
             raise RuntimeError(f"Fichier de mise à jour introuvable : {file_path}")
 
-        # Ajouter temporairement le chemin racine du plugin
+        # Add temporary  the path in root path of the plugin
         if plugin_root not in sys.path:
             sys.path.insert(0, plugin_root)
 
@@ -643,7 +601,7 @@ class CheckTab:
             raise RuntimeError(f"Update {version} not found or invalid : {e}")
 
         finally:
-            # Nettoyage
+            # clear
             if plugin_root in sys.path:
                 sys.path.remove(plugin_root)
 
@@ -692,146 +650,6 @@ class CheckTab:
             version = read_version(self.mgis.masplugPath)
         self.all_version(tabs, version)
 
-    def update_tab_306(self):
-        try:
-            list_tab = [
-                "branchs",
-                "profiles",
-                "tracer_lateral_inflows",
-                "lateral_weirs",
-                "lateral_inflows",
-                "hydraulic_head",
-                "weirs",
-                "extremities",
-                "links",
-                "basins",
-                "outputs",
-                "flood_marks",
-                "laws",
-            ]
-            txt = ""
-            for tab in list_tab:
-                txt += "ALTER TABLE {0}.{1} ALTER COLUMN active " "SET DEFAULT TRUE;".format(
-                    self.mdb.SCHEMA, tab
-                )
-                txt += "\n"
-                txt += "UPDATE {0}.{1} SET active = TRUE WHERE " "active IS NULL;".format(
-                    self.mdb.SCHEMA, tab
-                )
-                txt += "\n"
-                txt += "ALTER TABLE {0}.{1} ALTER COLUMN " "active SET NOT NULL;".format(
-                    self.mdb.SCHEMA, tab
-                )
-                txt += "\n"
-                return True
-        except Exception as e:
-            self.mgis.add_info("Error update_tab_306: {}".format(str(e)))
-            return False
-
-    def add_trigger_update_306(self):
-        """
-        add trigger and fct for 3.0.6 version
-        trigger :
-        'pg_delete_visu_flood_marks',
-        'pg_create_calcul_abscisse_point_flood'
-        :return:
-        """
-        try:
-            self.update_fct_calc_abs()
-            self.mdb.add_fct_for_visu()
-
-            qry = "DROP TRIGGER IF EXISTS branchs_chstate_active " "ON {}.branchs;\n".format(
-                self.mdb.SCHEMA
-            )
-            qry += "DROP TRIGGER IF EXISTS basins_chstate_active " "ON {}.basins;\n".format(
-                self.mdb.SCHEMA
-            )
-            qry += (
-                "DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse "
-                "ON {}.flood_marks;\n".format(self.mdb.SCHEMA)
-            )
-            qry += (
-                "DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood "
-                "ON {}.flood_marks;\n".format(self.mdb.SCHEMA)
-            )
-            qry += (
-                "DROP TRIGGER IF EXISTS flood_marks_delete_point_flood "
-                "ON {}.flood_marks;\n".format(self.mdb.SCHEMA)
-            )
-            qry += "\n"
-            cl = Maso.class_fct_psql()
-            qry += cl.pg_chstate_branch()
-            qry += "\n"
-            qry += (
-                "CREATE TRIGGER branchs_chstate_active\n"
-                " AFTER UPDATE\n  ON {0}.branchs\n".format(self.mdb.SCHEMA)
-            )
-            qry += (
-                " FOR EACH ROW\n"
-                "WHEN (OLD.active IS DISTINCT FROM NEW.active)\n"
-                "EXECUTE PROCEDURE chstate_branch();\n"
-            )
-            qry += "\n"
-            qry += cl.pg_chstate_basin()
-            qry += "\n"
-            qry += (
-                "CREATE TRIGGER basins_chstate_active\n"
-                " AFTER UPDATE\n  ON {0}.basins\n".format(self.mdb.SCHEMA)
-            )
-            qry += (
-                " FOR EACH ROW\n"
-                "WHEN (OLD.active IS DISTINCT FROM NEW.active)\n"
-                "EXECUTE PROCEDURE chstate_basin();\n"
-            )
-            qry += "\n"
-            cl = Maso.flood_marks()
-            cl.schema = self.mdb.SCHEMA
-            qry += cl.pg_clear_tab()
-            qry += "\n"
-            qry += cl.pg_calcul_abscisse_flood()
-            qry += "\n"
-            self.mdb.run_query(qry)
-
-            return True
-        except Exception as e:
-            self.mgis.add_info("Error add_trigger_update_306: {}".format(str(e)))
-            return False
-
-    def add_fct_for_update_pk_old(self):
-        """add fct psql to compute abscissa"""
-        cl = Maso.class_fct_psql()
-        lfct = [
-            cl.pg_abscisse_profil(self.mdb.SCHEMA),
-            cl.pg_all_profil(self.mdb.SCHEMA),
-            cl.pg_abscisse_point(self.mdb.SCHEMA),
-            cl.pg_all_point(self.mdb.SCHEMA),
-        ]
-        qry = ""
-        for sql in lfct:
-            qry += sql()
-            qry += "\n"
-        self.mdb.run_query(qry)
-
-    def update_fct_calc_abs(self):
-        try:
-            lst_fct = [
-                "public.update_abscisse_branch(_tbl_branchs regclass)",
-                "public.update_abscisse_point" "(_tbl regclass, _tbl_branchs regclass)",
-                "public.update_abscisse_profil" "(_tbl regclass, _tbl_branchs regclass)",
-                "public.abscisse_branch" "(_tbl_branchs regclass, id_branch integer)",
-                "public.abscisse_point" "(_tbl regclass, _tbl_branchs regclass, id_point integer)",
-                "public.abscisse_profil" "(_tbl regclass, _tbl_branchs regclass, id_prof integer)",
-            ]
-            qry = ""
-            for fct in lst_fct:
-                qry += "DROP FUNCTION IF EXISTS {};\n".format(fct)
-            self.mdb.run_query(qry)
-            self.add_fct_for_update_pk_old()
-            return True
-        except Exception as e:
-            self.mgis.add_info("Error update_fct_calc_abs: {}".format(str(e)))
-            return False
-
     def clean_tab_admin(self):
         """
         clean tab in admin
@@ -870,56 +688,6 @@ class CheckTab:
             self.mgis.add_info("Error  update_400: {}".format(str(e)))
             return False
 
-    def update_4011(self):
-        sorti = True
-        lst_tab = self.mdb.list_tables()
-        err, _ = self.add_tab(Maso.results_idx, False)
-        if not err:
-            sorti = False
-        err, _ = self.add_tab(Maso.results_val, False)
-        if not err:
-            sorti = False
-        if "results_old" not in lst_tab:
-            sql = "ALTER TABLE {0}.results RENAME TO results_old;"
-            sql = sql.format(self.mdb.SCHEMA)
-            err = self.mdb.run_query(sql)
-            if err:
-                sorti = False
-        info = self.mdb.select_one("results_old")
-        if info:
-            sql = "SELECT FROM {0}.results_old"
-            # creation results_idx
-            sql = (
-                'INSERT INTO {0}.results_idx(id_runs, "time", pknum) '
-                'SELECT DISTINCT id_runs,  "time", pknum  FROM {0}.results_old;'
-            )
-            sql = sql.format(self.mdb.SCHEMA)
-            err = self.mdb.run_query(sql)
-            if err:
-                sorti = False
-            sql = (
-                "INSERT INTO {0}.results_val(idruntpk, var, val) "
-                "SELECT idruntpk, var, val   FROM {0}.results_idx "
-                "Inner join  {0}.results_old "
-                "on {0}.results_old.id_runs = {0}.results_idx.id_runs "
-                "AND {0}.results_old.time = {0}.results_idx.time "
-                "AND {0}.results_old.pknum = {0}.results_idx.pknum;"
-            )
-            sql = sql.format(self.mdb.SCHEMA)
-            err = self.mdb.run_query(sql)
-            if err:
-                sorti = False
-        sql = (
-            "CREATE OR REPLACE VIEW {0}.results "
-            'AS SELECT id_runs, "time", pknum,  var, val  FROM {0}.results_idx 	'
-            "Inner join  {0}.results_val "
-            "on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;"
-        )
-        sql = sql.format(self.mdb.SCHEMA)
-        err = self.mdb.run_query(sql)
-        if err:
-            sorti = False
-        return sorti
 
     def change_branchs_chstate_active(self):
         sql = (
@@ -1002,36 +770,4 @@ class CheckTab:
             qry += sql
             qry += "\n"
         self.mdb.run_query(qry)
-
-    def update_517(self):
-        """
-        Update 5.1.7
-        """
-        self.mgis.add_info("*** Update 5.1.7  ***")
-        tabs = self.mdb.list_tables(self.mdb.SCHEMA)
-        valide = True
-        if valide and "visu_minor_river_bed" not in tabs:
-            tabs = [Maso.visu_minor_river_bed]
-            for tab in tabs:
-                valid_add, _ = self.add_tab(tab)
-            if not valid_add:
-                self.mgis.add_info("Create  the visu_minor_river_bed table - ERROR")
-                valide = False
-
-        if valide:
-            lst_alt = [
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  leftminbed_g FLOAT;",
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  rightminbed_g FLOAT;",
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  leftstock_g FLOAT;",
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  rightstock_g FLOAT;",
-            ]
-            for sql in lst_alt:
-                self.mdb.execute(sql.format(self.mdb.SCHEMA))
-        if valide:
-            try:
-                update_all_bed_geometry(self.mdb)
-            except Exception:
-                self.mgis.add_info("erreur update_all_bed_geometry")
-
-        return valide
 

@@ -28,7 +28,7 @@ class ClassUpdate512:
         self.cht = check_tab
 
     def update512(self):
-        self.mgis.add_info("*** Update 5.1.2  ***")
+        #self.mgis.add_info("*** Update 5.1.2  ***")
         valide = True
         if valide:
             sql = "DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;".format(

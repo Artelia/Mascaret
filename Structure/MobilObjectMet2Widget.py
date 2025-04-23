@@ -372,7 +372,6 @@ class ClassMobilObjectMet2Widget(QWidget):
             rows = self.mdb.run_query(sql, fetch=True)
             for (nm_var, rang_var, value) in rows:
                 prm = self.d_var[nm_var]
-                print(prm, nm_var, value)
                 conv_value = prm["typ"](value)
                 ctrl_set_value(prm["ctrl"], conv_value, cc_is_checked=True)
                 if prm["cc"] and rang_var == 0:

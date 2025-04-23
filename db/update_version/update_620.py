@@ -141,7 +141,6 @@ class ClassUpdate620:
         dtarget = {col: [] for col in cols}
         if len(dsrc["name_var"]) > 0:
             id_typ = list(set(dsrc[f'id_{typ}']))
-            print( id_typ)
             lst_id = ','.join([f"'{id}'" for id in id_typ])
             if typ == 'weirs':
                 lst_typ = ["gid", "name", "abscissa", "z_crest"]
@@ -150,22 +149,18 @@ class ClassUpdate620:
 
             info_value = self.mdb.select(f"{typ}", where=f"gid IN ({lst_id})", order="gid",
                                          list_var=lst_typ)
-            print('**************************************************0')
+            # ***************** Convert values ********************
             for idx, nvar in enumerate(dsrc["name_var"]):
                 if nvar in d_conv["var_conv"].keys():
                     for col in cols:
                         if col == "name_var":
-                            print(d_conv["var_conv"][nvar])
                             dtarget[col].append(f"'"+f'{d_conv["var_conv"][nvar]}'+"'")
-                            print(dtarget)
                         else:
-                            #TODO
-                            if col == "value" and dsrc["name_var"][idx] == "TYPE_TIME_VELO":
-                                dtarget[col].append(int(dsrc[col][idx]))
+                            if col == "value" and dsrc["name_var"][idx] in ["TYPE_TIME_VELO", "UNITVD", "UNITVH"]:
+                                dtarget[col].append('{:.0f}'.format(dsrc[col][idx]))
                             else:
                                 dtarget[col].append(dsrc[col][idx])
-            print( dtarget)
-            print('**************************************************1')
+            # ***************** Default values ********************
             for idx in id_typ:
                 for key, value in d_conv["default"].items():
                     dtarget[f'id_{typ}'].append(idx)
@@ -178,7 +173,7 @@ class ClassUpdate620:
                             dtarget['id_order'].append(0)
                             dtarget['value'].append(value)
                             dtarget["name_var"].append(f"'{var}'")
-                print('**************************************************2')
+                #***************** Get values ********************
                 for key, get_var in d_conv["get_value"].items():
                     pos = info_value['gid'].index(idx)
                     dtarget[f'id_{typ}'].append(idx)
@@ -186,9 +181,7 @@ class ClassUpdate620:
                     dtarget['value'].append(info_value[get_var][pos])
                     dtarget["name_var"].append(f"'{key}'")
 
-            print(dtarget)
-            #TODO PB dtarget pour l'insert
-            err = self.mdb.insert2(f"{typ}_mob_val", dtarget,verbose=True)
+            err = self.mdb.insert2(f"{typ}_mob_val", dtarget)
             if err:
                 self.mgis.add_info(f"Convert the {typ}_mob_val - ERROR")
                 valide = False
