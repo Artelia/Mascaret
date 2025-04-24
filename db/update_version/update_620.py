@@ -171,12 +171,6 @@ class ClassUpdate620:
                     dtarget['id_order'].append(0)
                     dtarget['value'].append(value)
                     dtarget["name_var"].append(f"'{key}'")
-                    if key in d_conv["dbl_value"]:
-                        for var in d_conv["dbl_value"][key]:
-                            dtarget[f'id_{typ}'].append(idx)
-                            dtarget['id_order'].append(0)
-                            dtarget['value'].append(value)
-                            dtarget["name_var"].append(f"'{var}'")
                 #***************** Get values ********************
                 for key, get_var in d_conv["get_value"].items():
                     pos = info_value['gid'].index(idx)
@@ -184,7 +178,16 @@ class ClassUpdate620:
                     dtarget['id_order'].append(0)
                     dtarget['value'].append(info_value[get_var][pos])
                     dtarget["name_var"].append(f"'{key}'")
-
+                # ***************** double values ********************
+            lst_var = list(d_conv["dbl_value"].keys())
+            for idx, nvar in enumerate(dtarget["name_var"]):
+                if nvar.replace("'",'') in lst_var:
+                    lst = d_conv["dbl_value"][nvar.replace("'",'')]
+                    for nvarf in lst :
+                        dtarget[f'id_{typ}'].append(dtarget[f'id_{typ}'][idx])
+                        dtarget['id_order'].append(0)
+                        dtarget['value'].append(dtarget['value'][idx])
+                        dtarget["name_var"].append(f"'{nvarf}'")
             err = False
             if f"{typ}" == "weirs" and len(d_zbas)>0 :
                 ok = self.cht.box.yes_no_q(

@@ -241,10 +241,6 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionExport_Model_Files.triggered.connect(self.fct_creat_run)
         self.ui.actionStructures_weirs.triggered.connect(self.fct_mv_dam)
         self.ui.actionStructures_links.triggered.connect(self.fct_mv_link)
-        if self.cond_api:
-            self.ui.actionStructures_weirs.setEnabled(False)
-        else:
-            self.ui.actionStructures_weirs.setEnabled(True)
 
         # WQ
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)

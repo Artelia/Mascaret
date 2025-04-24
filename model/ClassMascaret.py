@@ -152,7 +152,6 @@ class ClassMascaret:
             del cl_lk
         if  noyau == "unsteady":
             cl_w = ClassMobilWeirsParam()
-            print(cl_w.fg_actif_weirs(self.mgis.mdb), 'iiiiiiiiii')
             if cl_w.fg_actif_weirs(self.mgis.mdb):
                 path = os.path.join(self.dossierFileMasc, "weirs_cli_fg.obj")
                 cl_w.create_cli_fg(self.mgis, path)

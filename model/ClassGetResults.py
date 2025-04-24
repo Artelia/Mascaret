@@ -554,6 +554,52 @@ class ClassGetResults:
                     self.res_fg(dico[key], id_run)
                 if key == 'LINK_FG':
                     self.res_link_fg(dico[key], id_run)
+                if key == 'WEIRS_FG':
+                    self.res_weirs_fg(dico[key], id_run)
+
+    def res_weirs_fg(self, dico_res, id_run):
+        """stock flood gate results"""
+        values = []
+        var_info = {'var': "ZSTR",
+                    'type_res': 'weirs',
+                    'name': 'Gate movement',
+                    'type_var': 'float'}
+        id_var_zlink = self.mdb.check_id_var(var_info)
+
+        var_info = {'var': 'REGVAR',
+                    'type_res': 'weirs',
+                    'name': 'Variable of regulation',
+                    'type_var': 'float'}
+        id_var_reg = self.mdb.check_id_var(var_info)
+
+        d_res = {}
+        dico_pk = {}
+        dico_time = {}
+
+        for id_link in dico_res.keys():
+            dico_pk[id_link] = id_link
+            dico_time[id_link] =  dico_res[id_link]['TIME']
+            d_res[(id_link, id_var_zlink)] = {'t': dico_res[id_link]['TIME'],
+                                            'v': dico_res[id_link]["ZSTR"]}
+
+            d_res[(id_link, id_var_reg)] = {'t': dico_res[id_link]['TIME'],
+                                            'v': dico_res[id_link]['REGVAR']}
+        for (pk, var), v in d_res.items():
+            values.append([id_run, pk, var,
+                           "{" + ','.join(str(i_t) for i_t in v['t']) + "}",
+                           "{" + ','.join(str(i_v) for i_v in v['v']) + "}"])
+        if len(values) > 0:
+            self.mdb.run_query(
+                "INSERT INTO {}.results_by_pk (id_runs, pknum, var, time, val) ".format(self.mdb.SCHEMA) +
+                "VALUES (%s, %s, %s, %s, %s)", many=True, list_many=values)
+
+        if len(dico_res.keys()) > 0:
+            list_insert = [[id_run, 'weirs_fg', 'pknum', json.dumps(dico_pk)],
+                           [id_run, 'weirs_fg', 'time', json.dumps(dico_time)],
+                           [id_run, 'weirs_fg', 'var', json.dumps([id_var_zlink, id_var_reg])]]
+            col_tab = ['id_runs', 'type_res', 'var', 'val']
+            self.mdb.insert_res('runs_graph', list_insert, col_tab)
+
 
     def res_link_fg(self, dico_res, id_run):
         """stock flood gate results"""

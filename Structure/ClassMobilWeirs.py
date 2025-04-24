@@ -38,6 +38,7 @@ class ClassMobilWeirs:
         self.size_link = 0
         self.new_z = 99
         self.arret_comput = False
+        self.break_w = False
 
         self.cl_param = ClassMobilWeirsParam()
         self.cl_param.get_param(parent=main.mgis)
@@ -58,13 +59,14 @@ class ClassMobilWeirs:
         """
         # Get Section
         self.search_sec_control()
-        self.search_link_to_param_fg()
+        self.search_weirs_to_param_fg()
         if not self.check_param():
             self.add_info("***** ERROR: the gates for the weirs\n COMPUTATION STOP")
             self.arret_comput = False
         self.init_res()
         self.update_var_mas(force=True)
         return
+
 
     def update_var_mas(self, force=False):
         """
@@ -90,7 +92,7 @@ class ClassMobilWeirs:
         self.results_fg_weirs_mv = {
             id_weir: {
                 "TIME": [params["TIME"]],
-                "ZWEIR": [params["level"]],
+                "ZSTR": [params["level"]],
                 "REGVAR": [params["REGVAR_VAL"]],
             }
             for id_weir, params in self.param_fg.items()
@@ -107,7 +109,7 @@ class ClassMobilWeirs:
             for id_weir, param in self.param_fg.items():
                 res = self.results_fg_weirs_mv[id_weir]
                 res["TIME"].append(tfin)
-                res["ZWEIR"].append(param["level"])
+                res["ZSTR"].append(param["level"])
                 res["REGVAR"].append(param["REGVAR_VAL"])
 
     def iter_fg(self, time, dtp):
@@ -120,17 +122,18 @@ class ClassMobilWeirs:
         :param dtp: Time step.
         """
         for id_weir, param in self.param_fg.items():
+            status = self.masc.get("Model.Weir.State", param['id_mas'])
+            if status:
+                continue
             if param["method_mob"] == self.dmeth["meth_regul"]:
                 if self.cl_regul.check_dt_regul(param, dtp):
                     val_check = self.masc.get(param['CHECK_VAR'],
                                               param["SECCON"])
                     self.cl_regul.state_regul(val_check, param)
-                    self.cl_regul.check_break(param, val_check)
                     dnew = self.cl_regul.law_gate_regul(param, time)
                     self.fill_res_and_update(id_weir, time, param, dnew, val_check)
             elif param["method_mob"] == self.dmeth["meth_time"]:
                 val_check = self.masc.get(param['CHECK_VAR'], param["SECCON"])
-                self.cl_time.check_break(param, val_check)
                 dnew = self.cl_time.law_mth_time(param, time)
 
                 self.fill_res_and_update(id_weir, time, param, dnew, val_check)
@@ -199,6 +202,8 @@ class ClassMobilWeirs:
                 param["SECCON"] = idx
             else:
                 self.add_info("Regulation point not found for numWeirs {}.".format(id_weir))
+
+
         del coords
 
     def search_weirs_to_param_fg(self):
@@ -206,17 +211,18 @@ class ClassMobilWeirs:
         Establish weirs between the Mascaret model and the mobile weirs parameters.
         This includes retrieving initial values and preparing parameters for computation.
         """
+
         size_sing = self.masc.get_var_size("Model.Weir.Name")[0]
         tini = self.masc.get("Model.InitTime")
+        coords = []
         lst_node = []
         lst_info = []
-        coords = []
         for id_mas_weir in range(size_sing):
             typ = self.masc.get("Model.Weir.Type", id_mas_weir)
-            if typ in [1,2,3, 4]:  # narure 1: basin-reach, typ 1 weirs, 4 culvert
-                node = self.masc.getself.masc.get("Model.Weir.Node", id_mas_weir) - 1
+            if typ in [1,2,3, 4]: # filtre les type
+                node = self.masc.get("Model.Weir.Node", id_mas_weir) - 1
                 lst_node.append(node)
-                abs =  self.masc.get("Model.Weir.RelAbscissa",id_mas_weir)
+                abs = self.masc.get("Model.Weir.RelAbscissa", id_mas_weir)
                 lst_info.append(id_mas_weir)
                 coords.append(abs)
 
@@ -224,10 +230,11 @@ class ClassMobilWeirs:
         for id_weir, param in self.param_fg.items():
             idx = (np.abs(coords - param["abscissa"])).argmin()
             if idx:
-                id_mas = lst_node[idx]
+                id_mas = lst_info[idx]
+                node = lst_node[idx]
                 param.update({
-                    "node": lst_node[idx],
-                    "id_mas": id_mas,
+                    "node" : node,
+                    "id_mas":  id_mas,
                     "level0": self.masc.get("Model.Weir.CrestLevel", id_mas),
                     "TIME0": tini,
                     "TIME": tini
@@ -245,7 +252,7 @@ class ClassMobilWeirs:
                 })
             else:
                 self.add_info("Id_mas not found for numlink {}.".format(id_weir))
-        del coords, lst_info
+        del coords
 
     def fill_results_fg_mv(self, id_weir, param):
         """
@@ -260,17 +267,17 @@ class ClassMobilWeirs:
         zweir_var_dt = 'level-dt'
         zweir_var = 'level'
 
-        if (param["level"] != param["level-dt"]) and( (res["TIME"][-1],res["ZWEIR"][-1]) !=
+        if (param["level"] != param["level-dt"]) and( (res["TIME"][-1],res["ZSTR"][-1]) !=
                                                       (param["TIME-dt"], param[zweir_var_dt])):
 
             res["TIME"].append(param["TIME-dt"])
             res["REGVAR"].append(round(param["REGVAR_VAL-dt"], 3))
-            res["ZWEIR"].append(param[zweir_var_dt])
+            res["ZSTR"].append(param[zweir_var_dt])
 
         # Update with new values
         res["TIME"].append(param["TIME"])
         res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
-        res["ZWEIR"].append(param[zweir_var])
+        res["ZSTR"].append(param[zweir_var])
 
 
 class ClassMethRegul:
@@ -318,15 +325,16 @@ class ClassMethRegul:
         valo = param["VREGOPEN"]
         valf = param["VREGCLOS"]
         tol = param["TOLREG"]
-
         if valf + tol > valo - tol:
-            self.add_info(
-                "***** ERROR: "
-                "Closing level value must be lower opening level value\n"
-                " for the {} link ".format(id_weir)
-            )
-            return False
-
+            if valf > valo:
+                self.add_info(
+                    "***** ERROR: "
+                    "Closing level value must be lower opening level value\n"
+                    " for the {} link ".format(id_weir)
+                )
+                return False
+            else:
+                param["TOLREG"] = 0
         return True
 
     def check_break(self, param, val_check):
@@ -484,24 +492,24 @@ class ClassMethTime:
 
 
 
-    def check_break(self, param, val_check):
-        """
-        Check if the mobile weirs should break.
-        :param param: Dictionary of mobile weirs parameters.
-        :param val_check: Current value of the regulation variable.
-        """
-        if val_check >= param["VBREAKT"]:
-            self.break_weir = True
-            param.update({
-                "rup_level": param["level"],
-            })
-        else:
-            # reveient à l'état avant rupture
-            if not  param["BPERMT"]:
-                self.break_weir = False
-                param.update({
-                    "level": param["rup_level"],
-                })
+    # def check_break(self, param, val_check):
+    #     """
+    #     Check if the mobile weirs should break.
+    #     :param param: Dictionary of mobile weirs parameters.
+    #     :param val_check: Current value of the regulation variable.
+    #     """
+    #     if val_check >= param["VBREAKT"]:
+    #         self.break_weir = True
+    #         param.update({
+    #             "rup_level": param["level"],
+    #         })
+    #     else:
+    #         # reveient à l'état avant rupture
+    #         if not  param["BPERMT"]:
+    #             self.break_weir = False
+    #             param.update({
+    #                 "level": param["rup_level"],
+    #             })
 
     def law_mth_time(self, param, time):
         """
@@ -510,9 +518,9 @@ class ClassMethTime:
         :param time: Current simulation time.
         :return: Dictionary of updated mobile weirs parameters.
         """
-        if self.break_weir:
-            return {
-                "level": param["ZFINALT"],
-            }
+        # if self.break_weir:
+        #     return {
+        #         "level": param["ZFINALT"],
+        #     }
         dnew = { "level": np.interp(time, param["TIMEZ"], param["VALUEZ"])}
         return dnew

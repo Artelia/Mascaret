@@ -28,6 +28,7 @@ try:
     from ..Structure.ClassTableStructure import get_no_keep_break
     from ..Structure.ClassFloodGate import ClassFloodGate
     from ..Structure.ClassFloodGateLk import ClassFloodGateLk
+    from ..Structure.ClassMobilWeirs import ClassMobilWeirs
     from ..ClassMessage import ClassMessage
 except  ModuleNotFoundError or ImportError:
     # autonome python
@@ -36,6 +37,7 @@ except  ModuleNotFoundError or ImportError:
     from Structure.ClassTableStructure import get_no_keep_break
     from Structure.ClassFloodGate import ClassFloodGate
     from Structure.ClassFloodGateLk import ClassFloodGateLk
+    from Structure.ClassMobilWeirs import ClassMobilWeirs
 
 
 def check_init(file):
@@ -98,6 +100,9 @@ class ClassAPIMascaret:
         # links floodgate
         self.clfg_lk = ClassFloodGateLk(self)
         self.mobil_link = self.clfg_lk.actif_mobil_lk
+        # weirs mobile
+        self.clfg_w = ClassMobilWeirs(self)
+        self.mobil_w = self.clfg_w.actif_mobil_weir
         # Break permanent
         # Model.Weir.BrkLevel
         # Model.Weir.State
@@ -157,6 +162,7 @@ class ClassAPIMascaret:
             initfile = True
             self.mobil_struct = False
             self.mobil_link = False
+            self.mobil_w = False
         files_name = []
         files_type = ["xcas"]
         if not os.path.isfile(casfile):
@@ -346,9 +352,11 @@ class ClassAPIMascaret:
         # print('******************************')
         if len(self.lst_node)>0:
             for ind, item in self.lst_node.items():
-                if self.masc.get("Model.Weir.State",  ind) and \
-                        self.masc.get("State.Z",  item['node']) < item['BrkLevel']:
+                stat = self.masc.get("Model.Weir.State",  ind)
+                if stat and self.masc.get("State.Z",  item['node']) < item['BrkLevel']:
                     self.masc.set("Model.Weir.State", False, ind)
+
+
 
     def compute(self):
         """compute"""
@@ -379,6 +387,9 @@ class ClassAPIMascaret:
             self.clfg_lk.iter_fg(t0, dtp)
 
         self.check_not_to_keep_break()
+        if self.mobil_w:
+            self.clfg_w.iter_fg(t0, dtp)
+
         self.masc.compute(t0, t1, dtp)
         if self.conum:
             dtp_tmp = self.masc.get("State.DT")
@@ -404,31 +415,28 @@ class ClassAPIMascaret:
             self.clfg.finalize(self.tfin)
             self.results_api["STRUCT_FG"] = self.clfg.results_fg_mv
             if self.mgis is None:
-                self.write_res_struct(self.results_api["STRUCT_FG"])
+                self.write_res_struct(self.results_api["STRUCT_FG"], "res_struct.res")
         if self.mobil_link:
             self.clfg_lk.finalize(self.tfin)
             self.results_api["LINK_FG"] = self.clfg_lk.results_fg_lk_mv
             if self.mgis is None:
-                self.write_res_link_fg(self.results_api["STRUCT_FG"])
+                self.write_res_struct(self.results_api["LINK_FG"], "res_link_fg.res")
+        if self.mobil_w:
+            self.clfg_w.finalize(self.tfin)
+            self.results_api["WEIRS_FG"] = self.clfg_w.results_fg_weirs_mv
+            if self.mgis is None:
+                self.write_res_struct(self.results_api["WEIRS_FG"], "res_weirs_fg.res")
         self.mess.export_obj(self.dossierFileMasc)
 
-    def write_res_struct(self, res):
+    def write_res_struct(self, res, filen="res_struct.res"):
         """
         Write a json file about the hydraulic structure results
         :param res: results to write f
         :return:
         """
-        with open(os.path.join(self.dossierFileMasc, "res_struct.res"), "w") as filein:
+        with open(os.path.join(self.dossierFileMasc, filen), "w") as filein:
             json.dump(res, filein)
 
-    def write_res_link_fg(self, res):
-        """
-        Write a json file about the movable link results
-        :param res:
-        :return:
-        """
-        with open(os.path.join(self.dossierFileMasc, "res_link_fg.res"), "w") as filein:
-            json.dump(res, filein)
 
     def main(self, filename, tracer=False, basin=False):
         """
@@ -447,7 +455,9 @@ class ClassAPIMascaret:
             self.clfg_lk.init_fg_links()
         else:
             self.mobil_link = False
-        if self.clfg_lk.arret_comput:
+        if self.mobil_w:
+            self.clfg_w.init_fg_weirs()
+        if self.clfg_lk.arret_comput or self.clfg_w.arret_comput:
             self.finalize()
 
         self.compute()

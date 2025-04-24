@@ -179,7 +179,7 @@ class CurveSelectorWidget(QWidget):
         self.cb_graph.clear()
         self.lst_graph.clear()
         if self.cur_scen:
-            if self.typ_graph in ["struct", "weirs"]:
+            if self.typ_graph in ["struct"]:
                 self.lst_graph = [
                     {
                         "type_res": self.typ_res,
@@ -202,6 +202,14 @@ class CurveSelectorWidget(QWidget):
                                   {"type_res": self.typ_res, "id": 'gate_area',
                                    "name": 'Opening area (culvert)', "unit": 'm2',
                                    "vars": ['CSECLINK']},
+                                  ]
+            elif self.typ_graph in ["weirs"]:
+                self.lst_graph = [{"type_res": self.typ_res, "id": 'gate_move',
+                                   "name": 'Gate movement', "unit": 'm',
+                                   "vars": ['ZSTR']},
+                                  {"type_res": self.typ_res, "id": 'reg_var',
+                                   "name": 'Variable of regulation', "unit": '',
+                                   "vars": ['REGVAR']},
                                   ]
             elif self.typ_graph in ["hydro", "hydro_pk"]:
                 self.get_lst_graph_opt()
@@ -242,7 +250,7 @@ class CurveSelectorWidget(QWidget):
                 table_map = {
                     "struct": ("profiles", "abscissa"),
                     "weirs": ("weirs", "abscissa"),
-                    "link_fg": ("links", "linknum")
+                    "link_fg": ("links", "linknum"),
                 }
 
                 table, var_test = table_map[self.typ_graph]

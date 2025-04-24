@@ -93,101 +93,101 @@ class TaskMascaret(QgsTask):
         :return boolean
         """
         self.exc_start_time = time.time()
-        try:
-            gbl_param = {'mdb': self.mdb,
-                         'dossier_file_masc': self.dossier_file_masc,
-                         'basename': self.basename,
-                         'noyau': self.noyau,
-                         'run': self.run_,
-                         'comments': self.comments,
-                         'dict_scen': self.dict_scen,
-                         'cond_api': self.cond_api,
-                         'masc': self.masc,
-                         'waterq': self.wq,
-                         }
-            param_init = {
-                          'dict_lois': self.dict_lois,
-                          'dico_loi_struct': self.dico_loi_struct
-                          }
-            self.init_task = TaskMascInit(gbl_param, param_init)
-            self.post_task = TaskMascPost(gbl_param)
+        # try:
+        gbl_param = {'mdb': self.mdb,
+                     'dossier_file_masc': self.dossier_file_masc,
+                     'basename': self.basename,
+                     'noyau': self.noyau,
+                     'run': self.run_,
+                     'comments': self.comments,
+                     'dict_scen': self.dict_scen,
+                     'cond_api': self.cond_api,
+                     'masc': self.masc,
+                     'waterq': self.wq,
+                     }
+        param_init = {
+                      'dict_lois': self.dict_lois,
+                      'dico_loi_struct': self.dico_loi_struct
+                      }
+        self.init_task = TaskMascInit(gbl_param, param_init)
+        self.post_task = TaskMascPost(gbl_param)
 
-            self.log_mess("===== BEGIN OF RUN {} =====".format(self.run_))
-            for idx, scen in enumerate(self.dict_scen["name"]):
-                t0_run = time.time()
-                self.init_task.mess.clear_derror()
-                self.post_task.mess.clear_derror()
-                self.log_mess("************** The current scenario is {} ************".format(scen))
-                self.log_mess("Kernel - Run - scenario : {} - {} - {} ".format(self.noyau, self.run_, scen))
-                self.scen_cur = scen
-                up_param = {'scen': scen,
-                            'idx': idx,
-                            'par': self.par,
-                            'id_run': None,
-                            'save_res_struct': None,
-                            'date_debut': None,
-                            }
-                stat, up_param = self.run_task(self.init_task, up_param)
+        self.log_mess("===== BEGIN OF RUN {} =====".format(self.run_))
+        for idx, scen in enumerate(self.dict_scen["name"]):
+            t0_run = time.time()
+            self.init_task.mess.clear_derror()
+            self.post_task.mess.clear_derror()
+            self.log_mess("************** The current scenario is {} ************".format(scen))
+            self.log_mess("Kernel - Run - scenario : {} - {} - {} ".format(self.noyau, self.run_, scen))
+            self.scen_cur = scen
+            up_param = {'scen': scen,
+                        'idx': idx,
+                        'par': self.par,
+                        'id_run': None,
+                        'save_res_struct': None,
+                        'date_debut': None,
+                        }
+            stat, up_param = self.run_task(self.init_task, up_param)
+            if not stat:
+                # error ignor scenario
+                self.log_mess("****** Error : File creation for {}  ******".format(scen), 'warning')
+                continue
+
+            if self.par["initialisationAuto"] and self.noyau != "steady":
+                self.log_mess("===== Run initialization =====")
+                self.comput_task = TaskMascComput(gbl_param)
+                stat, up_param = self.run_task(self.comput_task, up_param, cpt_init=True)
                 if not stat:
                     # error ignor scenario
-                    self.log_mess("****** Error : File creation for {}  ******".format(scen), 'warning')
+                    self.log_mess("****** Error : Computing Initialization  for {}_init  ******".format(scen),
+                                  'warning')
                     continue
-
-                if self.par["initialisationAuto"] and self.noyau != "steady":
-                    self.log_mess("===== Run initialization =====")
-                    self.comput_task = TaskMascComput(gbl_param)
-                    stat, up_param = self.run_task(self.comput_task, up_param, cpt_init=True)
-                    if not stat:
-                        # error ignor scenario
-                        self.log_mess("****** Error : Computing Initialization  for {}_init  ******".format(scen),
-                                      'warning')
-                        continue
-                    stat, up_param = self.run_task(self.post_task, up_param, cpt_init=True)
-                    if not stat:
-                        self.log_mess("****** Error : Postprocessing Initialization for {}_init  ******".format(scen),
-                                      'warning')
-                        continue
-                    self.comput_task.mess.clear_derror()
-                    tfin_run = time.time()
-                    self.log_mess("Initialization Execution time : {} s".format(tfin_run - t0_run))
-                    time.sleep(1)
-                    self.log_mess("===== End initialization =====")
-
-                if self.isCanceled():
-                    self.log_mess("===== CANCEL RUN {} =====".format(self.run_), 'warning')
-                    time.sleep(1)
-                    self.taskTerminated.emit()
-                    return False
-                self.comput_task = TaskMascComput(gbl_param)
-                stat, up_param = self.run_task(self.comput_task, up_param)
+                stat, up_param = self.run_task(self.post_task, up_param, cpt_init=True)
+                if not stat:
+                    self.log_mess("****** Error : Postprocessing Initialization for {}_init  ******".format(scen),
+                                  'warning')
+                    continue
                 self.comput_task.mess.clear_derror()
-                if not stat:
-                    self.log_mess("****** Error : Computing for {}  ******".format(scen), 'warning')
-                    continue
-                stat, up_param = self.run_task(self.post_task, up_param)
-                if not stat:
-                    self.log_mess("****** Error : Postprocessing for {}  ******".format(scen), 'warning')
-                    continue
                 tfin_run = time.time()
-                self.log_mess("Execution time (Init + Run) : {} s".format(tfin_run - t0_run))
-                self.log_mess("************** The End of {} ************".format(scen))
-                if self.isCanceled():
-                    self.log_mess("===== CANCEL RUN {} =====".format(self.run_), 'warning')
-                    time.sleep(1)
-                    self.taskTerminated.emit()
-                    return False
+                self.log_mess("Initialization Execution time : {} s".format(tfin_run - t0_run))
+                time.sleep(1)
+                self.log_mess("===== End initialization =====")
+
+            if self.isCanceled():
+                self.log_mess("===== CANCEL RUN {} =====".format(self.run_), 'warning')
+                time.sleep(1)
+                self.taskTerminated.emit()
+                return False
+            self.comput_task = TaskMascComput(gbl_param)
+            stat, up_param = self.run_task(self.comput_task, up_param)
+            self.comput_task.mess.clear_derror()
+            if not stat:
+                self.log_mess("****** Error : Computing for {}  ******".format(scen), 'warning')
+                continue
+            stat, up_param = self.run_task(self.post_task, up_param)
+            if not stat:
+                self.log_mess("****** Error : Postprocessing for {}  ******".format(scen), 'warning')
+                continue
             tfin_run = time.time()
-            self.log_mess("Execution time (all Run) : {} s".format(tfin_run - self.exc_start_time))
-            self.log_mess("===== END OF RUN {} =====".format(self.run_))
-            time.sleep(1)
-            self.taskCompleted.emit()
-            return True
-        except Exception as e:
-            self.error_txt = str(e)
-            self.log_mess(str(e), 'critic')
-            time.sleep(1)
-            self.taskTerminated.emit()
-            return False
+            self.log_mess("Execution time (Init + Run) : {} s".format(tfin_run - t0_run))
+            self.log_mess("************** The End of {} ************".format(scen))
+            if self.isCanceled():
+                self.log_mess("===== CANCEL RUN {} =====".format(self.run_), 'warning')
+                time.sleep(1)
+                self.taskTerminated.emit()
+                return False
+        tfin_run = time.time()
+        self.log_mess("Execution time (all Run) : {} s".format(tfin_run - self.exc_start_time))
+        self.log_mess("===== END OF RUN {} =====".format(self.run_))
+        time.sleep(1)
+        self.taskCompleted.emit()
+        return True
+        # except Exception as e:
+        #     self.error_txt = str(e)
+        #     self.log_mess(str(e), 'critic')
+        #     time.sleep(1)
+        #     self.taskTerminated.emit()
+        #     return False
 
     def finished(self, result):
         """

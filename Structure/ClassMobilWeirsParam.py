@@ -154,6 +154,8 @@ class ClassMobilWeirsParam(object):
                    "method_mob",
                    "branchnum",
                    "type",
+                   "erase_flag",
+                   'z_break',
                    ]
         sql = (
             "SELECT {1} "
@@ -173,6 +175,7 @@ class ClassMobilWeirsParam(object):
 
         for row in rows:
             id_weirs = row[0]
+            typ_ = row[4]
             if id_weirs not in self.param_fg.keys():
                 self.param_fg[id_weirs] = {}
                 self.list_actif.append(id_weirs)
@@ -180,6 +183,8 @@ class ClassMobilWeirsParam(object):
                 if var  == 'z_crest':
                     var = 'level'
                 self.param_fg[id_weirs][var] = row[pos + 1]
+
+
 
         lst_var = ["id_weirs", "name_var", "value"]
         sql = (
@@ -312,9 +317,8 @@ class ClassMobilWeirsParam(object):
         """
         lst_com = ["name", "level", "abscissa", "branchnum",  "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG",
-                    "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG", "TOLREG",
-                   "VBREAKREG", "BPERMREG", "ZFINALREG"]
-        lst_time = ["TIMEZ", "VALUEZ", "VBREAKT", "BPERMT", "ZFINALT", ]
+                    "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG", "TOLREG"]
+        lst_time = ["TIMEZ", "VALUEZ" ]
 
         dlist = { self.dmeth["meth_time"]: lst_com + lst_time,
                   self.dmeth["meth_regul"] :  lst_com + lst_reg,
