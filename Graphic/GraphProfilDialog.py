@@ -126,8 +126,14 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     feature = results[0].mFeature
                     links = self.mgis.mdb.select_distinct("name", "links", "active")
                     if links and feature["name"] in links["name"]:
-                        graph_link = GraphResultDialog(self.mgis, type_res, feature["linknum"])
-                        graph_link.show()
+                        graph_res = GraphResultDialog(self.mgis, type_res, feature["linknum"])
+                        graph_res.show()
+                elif  couche == "weirs":
+                    feature = results[0].mFeature
+                    weirs = self.mgis.mdb.select_distinct("name", "weirs", "active")
+                    if weirs:
+                        graph_res = GraphResultDialog(self.mgis, type_res, feature["gid"])
+                        graph_res.show()
                 else:
                     graph_res = GraphResultDialog(self.mgis, type_res, gid)
                     graph_res.show()

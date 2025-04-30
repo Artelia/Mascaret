@@ -41,13 +41,14 @@ from ..HydroLawsDialog import dico_typ_law
 class ClassCreatFilesModels:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, mdb, dossier_file_masc):
+    def __init__(self, mdb, dossier_file_masc, cond_api):
         self.mdb = mdb
         self.dossier_file_masc = dossier_file_masc
         self.basename = "mascaret"
         self.mess = ClassMessage()
         self.geo_file = self.basename + ".geo"
         self.casier_file = self.basename + ".casier"
+        self.cond_api = cond_api
         self.dico_basinnum = {}
         self.dico_linknum = {}
 
@@ -1259,7 +1260,7 @@ class ClassCreatFilesModels:
                     seuil[ls].append(None)
 
         # TODO to delete when delete exe file
-        if  any(seuil['active_mob']):
+        if  any(seuil['active_mob']) and not self.cond_api:
             where = f"id_weirs in (SELECT gid FROM {self.mdb.SCHEMA}.weirs where active_mob)"
             dico_mob = self.mdb.select("weirs_mob_val", where, "id_weirs")
             for i, id_w in enumerate(dico_mob["id_weirs"]):

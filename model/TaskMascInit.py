@@ -43,12 +43,13 @@ class TaskMascInit():
         self.noyau = glb_param['noyau']
         self.dict_scen = glb_param['dict_scen']
         self.dict_lois = init_param['dict_lois']
+        self.cond_api = glb_param['cond_api']
         self.dico_loi_struct = init_param['dico_loi_struct']
         self.scen = None
         self.idx = None
         self.par = None
 
-        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc)
+        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc,self.cond_api)
         self.clmeth = ClassMascStruct(self.mdb)
         self.mess = ClassMessage()
         self.date_debut = None

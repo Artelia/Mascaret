@@ -249,17 +249,18 @@ class CurveSelectorWidget(QWidget):
 
                 table_map = {
                     "struct": ("profiles", "abscissa"),
-                    "weirs": ("weirs", "abscissa"),
+                    "weirs": ("weirs", "gid"),
                     "link_fg": ("links", "linknum"),
                 }
 
                 table, var_test = table_map[self.typ_graph]
+                print(table, var_test)
                 info = self.mdb.select(
                     table,
                     where=f"{var_test} IN {list_sql(lstpk, 'float')}",
-                    list_var=[var_test, "name"]
+                    list_var=[var_test, "name"], verbose=True
                 )
-
+                print(info)
                 for pknum in lstpk:
                     if pknum in info[var_test]:
                         name = info["name"][info[var_test].index(pknum)]
@@ -325,11 +326,13 @@ class CurveSelectorWidget(QWidget):
         :return:
         """
         # self.graph_obj.update_limites = up_lim
+
         if self.cb_det.currentIndex() != -1:
             if self.typ_graph == "hydro_pk":
                 self.cur_t = self.cb_det.itemData(self.cb_det.currentIndex())
             else:
                 self.cur_pknum = self.cb_det.itemData(self.cb_det.currentIndex())
+
         self.up_lim = up_lim
         self.update_param_graph()
         self.up_lim = True
@@ -362,6 +365,18 @@ class CurveSelectorWidget(QWidget):
                         self.cb_graph.removeItem(index)
                 elif  info['type'][0] == 4  and index == -1:
                     self.cb_graph.addItem(self.lst_graph[3]["name"], self.lst_graph[3]["id"])
+        if self.typ_graph in ["weirs"]:
+
+            info = self.mdb.select_distinct( "var",
+                "results_by_pk",
+                where=f"id_runs = {self.param_graph['scen']} AND "
+            f" var IN (SELECT id FROM {self.mdb.SCHEMA}.results_var WHERE type_res='weirs' AND var='REGVAR')"
+            )
+            index = self.cb_graph.findText(self.lst_graph[1]["name"])# REGVAR
+            if not info and index != -1:
+                 self.cb_graph.removeItem(index)
+            if info and index == -1:
+                self.cb_graph.addItem(self.lst_graph[1]["name"], self.lst_graph[1]["id"])
 
         if (self.cb_graph.currentIndex() != -1) and (self.cb_det.currentIndex() != -1):
             for graph in self.lst_graph:

@@ -129,6 +129,7 @@ class ClassMobilWeirs:
                 if self.cl_regul.check_dt_regul(param, dtp):
                     val_check = self.masc.get(param['CHECK_VAR'],
                                               param["SECCON"])
+
                     self.cl_regul.state_regul(val_check, param)
                     dnew = self.cl_regul.law_gate_regul(param, time)
                     self.fill_res_and_update(id_weir, time, param, dnew, val_check)
@@ -279,7 +280,6 @@ class ClassMobilWeirs:
         res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
         res["ZSTR"].append(param[zweir_var])
 
-
 class ClassMethRegul:
     """Class for handling mobile weirs regulation logic."""
 
@@ -414,7 +414,6 @@ class ClassMethRegul:
         dz_close = self.comput_dz(param["VELOFGCLOSE"], dt, param["ZINCRFG"])
         level, level0 = param["level"], param["level0"]
         zlimit_gate = param["ZLIMITGATE"]
-
         if status == "CLOSE":
             new_level = min(level + dz_close, zlimit_gate)
         elif status == "OPEN":

@@ -423,9 +423,9 @@ class ClassAPIMascaret:
                 self.write_res_struct(self.results_api["LINK_FG"], "res_link_fg.res")
         if self.mobil_w:
             self.clfg_w.finalize(self.tfin)
-            self.results_api["WEIRS_FG"] = self.clfg_w.results_fg_weirs_mv
+            self.results_api["WEIRS"] = self.clfg_w.results_fg_weirs_mv
             if self.mgis is None:
-                self.write_res_struct(self.results_api["WEIRS_FG"], "res_weirs_fg.res")
+                self.write_res_struct(self.results_api["WEIRS"], "res_weirs_fg.res")
         self.mess.export_obj(self.dossierFileMasc)
 
     def write_res_struct(self, res, filen="res_struct.res"):

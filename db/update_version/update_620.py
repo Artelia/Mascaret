@@ -162,7 +162,7 @@ class ClassUpdate620:
                             else:
                                 dtarget[col].append(dsrc[col][idx])
                 if f"{typ}" == "weirs" and nvar == "ZBAS":
-                    d_zbas[dsrc[f'id_{typ}'][idx]] = dsrc[col][idx]
+                    d_zbas[dsrc[f'id_{typ}'][idx]] = dsrc['value'][idx]
 
             # ***************** Default values ********************
             for idx in id_typ:
