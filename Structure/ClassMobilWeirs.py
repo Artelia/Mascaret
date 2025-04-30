@@ -236,7 +236,6 @@ class ClassMobilWeirs:
                 param.update({
                     "node" : node,
                     "id_mas":  id_mas,
-                    "level0": self.masc.get("Model.Weir.CrestLevel", id_mas),
                     "TIME0": tini,
                     "TIME": tini
                 })
@@ -387,9 +386,12 @@ class ClassMethRegul:
         }
 
         for condition, action in conditions.get(key, []):
+            print(condition, key)
             if condition:
                 param_fg["OPEN_CLOSE"] = action
                 break
+        print('val_check', 'action', 'param_fg["VREGOPEN"]', 'param_fg["VREGCLOS"]', 'tol')
+        print(val_check,param_fg["OPEN_CLOSE"],  param_fg["VREGOPEN"], param_fg["VREGCLOS"],tol)
         return val_check
 
     def law_gate_regul(self, param, time):
@@ -399,12 +401,14 @@ class ClassMethRegul:
         :param time: Current simulation time.
         :return: Dictionary of updated mobile weirs parameters.
         """
+
         if self.break_weir:
             return {
                 "level": param["ZFINALREG"],
             }
 
         status = param["OPEN_CLOSE"]
+        print(param["level"], status)
         if status in [None, "INIT", "MAINT"]:
             return {
                 "level": param["level"],
@@ -418,9 +422,10 @@ class ClassMethRegul:
             new_level = min(level + dz_close, zlimit_gate)
         elif status == "OPEN":
             new_level = max(level - dz_open, level0)
-
+        print('new_level', 'dz_open', 'dz_close')
+        print( new_level, dz_open, dz_close)
         return {
-            "level": new_level,
+            "level": round(new_level,4),
         }
 
     def comput_dz(self, vit, dt, dzlimit=0):

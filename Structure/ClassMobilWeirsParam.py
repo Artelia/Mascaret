@@ -35,7 +35,7 @@ class ClassMobilWeirsParam(object):
         self.lst_param = {
             # weirs CASIER
             "name": {"desc": "nom du weirs", "desc_en": "name of the weirs", 'typ': 'str'},
-            "level": {"desc": "cote de radier (z_crest)", "desc_en": "bottom elevation (z_crest)", 'typ': 'float'},
+            "level0": {"desc": "cote de radier (z_crest)", "desc_en": "bottom elevation (z_crest)", 'typ': 'float'},
             "abscissa": {"desc": "pk du weirs", "desc_en": "chainage of the weirs", 'typ': 'float'},
             "branchnum": {"desc": "branch", "desc_en": "branch", 'typ': 'int'},
             "method_mob": {"desc": "mehtode utilisé : (0 ou NULL) ignore, meth_tempo(1), meth_regul(2)",
@@ -172,7 +172,7 @@ class ClassMobilWeirsParam(object):
         if len(rows) == 0:
             self.param_fg = {}
             return True
-
+        conv_var = {'z_crest':"level0"}
         for row in rows:
             id_weirs = row[0]
             typ_ = row[4]
@@ -180,8 +180,8 @@ class ClassMobilWeirsParam(object):
                 self.param_fg[id_weirs] = {}
                 self.list_actif.append(id_weirs)
             for pos, var in enumerate(lst_var[1:]):
-                if var  == 'z_crest':
-                    var = 'level'
+                if var in conv_var:
+                    var = conv_var[var]
                 self.param_fg[id_weirs][var] = row[pos + 1]
 
 
@@ -209,8 +209,6 @@ class ClassMobilWeirsParam(object):
         for row in rows:
             id_weirs = row[0]
             var = row[1]
-            if var == 'z_crest':
-                var = 'level'
             if var in var_tab:
                 lst_id_tab.append(id_weirs)
                 self.param_fg[id_weirs].update({var: []})
@@ -315,7 +313,7 @@ class ClassMobilWeirsParam(object):
         :param meth: Mobility method (e.g., "meth_time", "meth_regul", "meth_fus").
         :return: Dictionnary of list of required variables.
         """
-        lst_com = ["name", "level", "abscissa", "branchnum",  "method_mob"]
+        lst_com = ["name", "level0", "abscissa", "branchnum",  "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG",
                     "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG", "TOLREG"]
         lst_time = ["TIMEZ", "VALUEZ" ]

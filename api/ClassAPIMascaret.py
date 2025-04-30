@@ -384,8 +384,9 @@ class ClassAPIMascaret:
         if self.mobil_struct:
             self.clfg.iter_fg(t0, dtp)
         if self.mobil_link:
-            self.clfg_lk.iter_fg(t0, dtp)
 
+            self.clfg_lk.iter_fg(t0, dtp)
+        print(f'**** time  {t0} ****')
         self.check_not_to_keep_break()
         if self.mobil_w:
             self.clfg_w.iter_fg(t0, dtp)

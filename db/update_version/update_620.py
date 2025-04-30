@@ -19,6 +19,14 @@ email                :
 """
 from db import MasObject as Maso
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
 class ClassUpdate620:
 
     def __init__(self, check_tab):
@@ -27,8 +35,8 @@ class ClassUpdate620:
         self.cht = check_tab
 
     def update620(self):
+
         self.mgis.add_info("*** Update 6.2.0  ***")
-        valide = True
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         if "weirs_mob_val" in tabs:
             sql = f"ALTER TABLE {self.mdb.SCHEMA}.weirs_mob_val RENAME TO weirs_mob_val_old;"
@@ -36,6 +44,7 @@ class ClassUpdate620:
         if "links_mob_val" in tabs:
             sql = f"ALTER TABLE {self.mdb.SCHEMA}.links_mob_val RENAME TO links_mob_val_old;"
             self.mdb.execute(sql)
+
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         lst_add_tab = ["links_mob_val", "weirs_mob_val"]
         valide = True
@@ -45,6 +54,7 @@ class ClassUpdate620:
                 if not valid_add:
                     self.mgis.add_info(f"Create  the {attr} table - ERROR")
                     valide = False
+
         d_conv_w = {
             "var_conv": {'TIME': 'TIMEZ',
                          'ZVAR': 'VALUEZ',
@@ -81,7 +91,7 @@ class ClassUpdate620:
                 "CRITDTREG": "CRITDTREG",
                 "NDTREG": "NDTREG",
                 "DTREG": "DTREG",
-                "VELOFG": "VELOFCLOSE",
+                "VELOFG": "VELOFGCLOSE",
                 "VREG": "VREG",
                 "DIRFG": "DIRFG",
                 "ZINCRFG": "ZINCRFG",
@@ -94,7 +104,7 @@ class ClassUpdate620:
             },
             "default": {
                 "USEBASIN": False,
-                "NUMBASINREG": '',
+                "NUMBASINREG": "''",
                 "VBREAKREG": 99999.,
                 "BPERMREG": False,
             },
@@ -104,11 +114,10 @@ class ClassUpdate620:
                 },
             "dbl_value": {
                 "UNITVELO": ["UNITVELC"],
-                "VELOFCLOSE": ["VELOFGOPEN"],
+                "VELOFGCLOSE": ["VELOFGOPEN"],
             },
 
         }
-
         for typ,d_conv in [("weirs",d_conv_w), ("links",d_conv_l)]:
             if valide:
                 valide = self.conv_tab(typ, d_conv)
@@ -119,7 +128,7 @@ class ClassUpdate620:
                 "ALTER TABLE {0}.struct_config ADD COLUMN IF NOT EXISTS  erase_flag boolean NOT NULL  DEFAULT FALSE;",
                 "ALTER TABLE {0}.links ADD COLUMN IF NOT EXISTS method_mob text;",
                 "ALTER TABLE {0}.links ADD COLUMN IF NOT EXISTS active_mob BOOLEAN;",
-                "ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS erase_flag boolean NOT NULL   DEFAULT FALSE;",
+                "ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS erase_flag boolean NOT NULL  DEFAULT FALSE;",
             ]
             # Alter colonne value en text
             for sql in lst_alt:
@@ -155,12 +164,19 @@ class ClassUpdate620:
                 if nvar in d_conv["var_conv"].keys():
                     for col in cols:
                         if col == "name_var":
-                            dtarget[col].append(f"'"+f'{d_conv["var_conv"][nvar]}'+"'")
+                            dtarget[col].append("'"+f'{d_conv["var_conv"][nvar]}'+"'")
                         else:
-                            if col == "value" and dsrc["name_var"][idx] in ["TYPE_TIME_VELO", "UNITVD", "UNITVH"]:
-                                dtarget[col].append('{:.0f}'.format(dsrc[col][idx]))
+                            value = dsrc[col][idx]
+                            if col == "value" :
+                                if dsrc["name_var"][idx] in ["TYPE_TIME_VELO", "UNITVD", "UNITVH"]:
+                                    if isinstance( dsrc[col][idx], float):
+                                        dtarget[col].append('{:.0f}'.format(value))
+                                    else:
+                                        dtarget[col].append(value)
+                                else:
+                                     dtarget[col].append(f"'{value}'" if not is_number(value) else value)
                             else:
-                                dtarget[col].append(dsrc[col][idx])
+                                dtarget[col].append(value)
                 if f"{typ}" == "weirs" and nvar == "ZBAS":
                     d_zbas[dsrc[f'id_{typ}'][idx]] = dsrc['value'][idx]
 
@@ -212,4 +228,5 @@ class ClassUpdate620:
                 self.mdb.execute(sql)
             else:
                 self.cht.del_tab(f"{typ}_mob_val_old")
-            return valide
+                valide = True
+        return valide

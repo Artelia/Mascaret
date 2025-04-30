@@ -267,9 +267,6 @@ class ClassFloodGateLk:
                 id_mas = lst_info[idx]
                 param.update({
                     "id_mas": id_mas,
-                    "CSection0": self.masc.get("Model.Link.CSection", id_mas),
-                    "level0": self.masc.get("Model.Link.Level", id_mas),
-                    "width0": self.masc.get("Model.Link.Width", id_mas),
                     "TIME0": tini,
                     "TIME": tini
                 })
