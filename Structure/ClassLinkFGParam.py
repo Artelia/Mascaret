@@ -35,7 +35,8 @@ class ClassLinkFGParam(object):
         self.lst_param = {
             # LINK CASIER
             "name": {"desc": "nom du link", "desc_en": "name of the link", 'typ': 'str'},
-            "level": {"desc": "cote de radier", "desc_en": "bottom elevation", 'typ': 'float'},
+            "level0": {"desc": "cote de radier", "desc_en": "bottom elevation", 'typ': 'float'},
+            "crosssection0"
             "abscissa": {"desc": "pk du link", "desc_en": "chainage of the link", 'typ': 'float'},
             "branchnum": {"desc": "branch", "desc_en": "branch", 'typ': 'int'},
             "basinstart": {"desc": "Casier Initial", "desc_en": "Initial basin", 'typ': 'int'},
@@ -61,8 +62,6 @@ class ClassLinkFGParam(object):
             "USEBASIN": {"desc": "Utilise le casier comme point de regulatinon",
                          "desc_en": "Uses the basin as a regulation point", 'typ': 'bool'},
             "NUMBASINREG": {"desc": "num basin", "desc_en": "basin number", "default": '', 'typ': 'int'},
-            "USEPOINT": {"desc": "Utilise point comme point de regulatinon",
-                         "desc_en": "Uses point as a regulation point", 'typ': 'bool'},
             "PK": {"desc": "PK de la régulation", "desc_en": "Regulation chainage", 'typ': 'float'},
             "VREGCLOS": {"desc": "valeur fermeture de la vanne", "desc_en": "gate closing value", 'typ': 'float'},
             "VREGOPEN": {"desc": "valeur d'ouverture de la vanne", "desc_en": "gate opening value", 'typ': 'float'},
@@ -100,8 +99,6 @@ class ClassLinkFGParam(object):
             "USEBASINFUS": {"desc": "Utilise le casier comme point de regulatinon",
                             "desc_en": "Uses the basin as a regulation point", 'typ': 'bool'},
             "NUMBASINFUS": {"desc": "Start or end basin", "desc_en": "Start or end basin", 'typ': 'int'},
-            "USEPOINTFUS": {"desc": "Utilise point comme point de regulatinon",
-                            "desc_en": "Uses point as a regulation point", 'typ': 'bool'},
             "PKFUS": {"desc": "PK de la régulation", "desc_en": "Regulation chainage", 'typ': 'float'},
         }
 
@@ -167,6 +164,8 @@ class ClassLinkFGParam(object):
         lst_var = ["linknum",
                    "name",
                    "level",
+                   "crosssection",
+                   "width",
                    "abscissa",
                    "method_mob",
                    "branchnum",
@@ -189,13 +188,17 @@ class ClassLinkFGParam(object):
         if len(rows) == 0:
             self.param_fg = {}
             return True
-
+        conv_var = {'level':"level0",
+                    "crosssection":"CSection0",
+                    "width":"width0"}
         for row in rows:
             id_link = row[0]
             if id_link not in self.param_fg.keys():
                 self.param_fg[id_link] = {}
                 self.list_actif.append(id_link)
             for pos, var in enumerate(lst_var[1:]):
+                if var in conv_var:
+                    var= conv_var[var]
                 self.param_fg[id_link][var] = row[pos + 1]
 
         lst_var = ["id_links", "name_var", "value"]
@@ -333,7 +336,8 @@ class ClassLinkFGParam(object):
         :param meth: Mobility method (e.g., "meth_time", "meth_regul", "meth_fus").
         :return: Dictionnary of list of required variables.
         """
-        lst_com = ["name", "level", "abscissa", "branchnum", "basinstart", "basinend", "method_mob"]
+        lst_com = ["name", "level0","CSection0","width0", "abscissa", "branchnum",
+                   "basinstart", "basinend", "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG", "USEBASIN", "NUMBASINREG",
                     "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG", "TOLREG",
                    "VBREAKREG", "BPERMREG", "ZFINALREG"]

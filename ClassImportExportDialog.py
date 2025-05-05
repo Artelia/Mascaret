@@ -332,12 +332,12 @@ class ClassDlgImport(QDialog):
         if self.checkdict["exist_schema"]:
             self.txt_shem.setStyleSheet("color: orange")
         if self.checkdict["err"] > 0:
-            txt = "There is erreur in the metadata file (.json)\n"
+            txt = "There is an error in the metadata file (.json)\n"
             if self.checkdict["err"] == 1:
                 txt += "The plugin version doesn't exist."
                 self.txt_vplug.setStyleSheet("color: red")
 
-            QMessageBox.critical(None, "Erreur", txt)
+            QMessageBox.critical(None, "Error", txt)
 
     def check_metadata(self):
         """
@@ -473,19 +473,19 @@ class ClassDlgImport(QDialog):
             txt = ""
             if self.checkdict["err"] == 2:
                 txt = "Metafile isn't right."
-            QMessageBox.critical(None, "Erreur", "Import isn't possible.\n {}".format(txt))
+            QMessageBox.critical(None, "Error", "Import isn't possible.\n {}".format(txt))
             return
         elif self.checkdict["updat_plug"]:
             bool_import = False
             QMessageBox.critical(
-                None, "Erreur", "Import isn't possible, because the Plugin version is superior."
+                None, "Error", "Import isn't possible, because the Plugin version is superior."
             )
             return
         elif self.checkdict["updat_pgsql"]:
             # import impossible
             bool_import = False
             QMessageBox.critical(
-                None, "Erreur", "Import isn't possible, because the Postgres version is superior."
+                None, "Error", "Import isn't possible, because the Postgres version is superior."
             )
             return
 
@@ -513,9 +513,16 @@ class ClassDlgImport(QDialog):
                         self.check_name_schema()
                         if not self.checkdict["exist_schema"]:
                             bool_import = True
+                        else:
+                            txt= f'the name {newname} exists yet'
+                            QMessageBox.critical(None, "Error", "Import isn't possible.\n {}".format(txt))
+                            return
                     else:
-                        bool_import = False
+                        txt = f'the name is empty.'
+                        QMessageBox.critical(None, "Error", "Import isn't possible.\n {}".format(txt))
+                        return
                 else:
+                    QMessageBox.warning(None, "Warning", "Import is canceled.\n {}".format(txt))
                     return
 
         if bool_import:

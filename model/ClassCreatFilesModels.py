@@ -41,13 +41,14 @@ from ..HydroLawsDialog import dico_typ_law
 class ClassCreatFilesModels:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, mdb, dossier_file_masc):
+    def __init__(self, mdb, dossier_file_masc, cond_api):
         self.mdb = mdb
         self.dossier_file_masc = dossier_file_masc
         self.basename = "mascaret"
         self.mess = ClassMessage()
         self.geo_file = self.basename + ".geo"
         self.casier_file = self.basename + ".casier"
+        self.cond_api = cond_api
         self.dico_basinnum = {}
         self.dico_linknum = {}
 
@@ -422,6 +423,7 @@ class ClassCreatFilesModels:
         seuils, loi_struct = self.modif_seuil(seuils, dico_str)
         casiers = self.mdb.select("basins", "active ORDER BY basinnum ")
         liaisons = self.mdb.select("links", "active ORDER BY linknum ")
+        liaisons = self.modif_link(liaisons)
 
         # Extrémités
         numero = branches["branch"]
@@ -1215,6 +1217,14 @@ class ClassCreatFilesModels:
         return True
 
     def modif_seuil(self, seuil, dico_str):
+        """
+        Modification of dictionaries used to create in the Xcas file
+        - Add law of the hydraulic structure.
+        - Modify the initial levels of weirs when mobile weirs
+        :param seuil: dictionary of seuils
+        :param dico_str: dictionary of hydraulic structure
+        :return:
+        """
         liste = [
             "type",
             "branchnum",
@@ -1258,7 +1268,44 @@ class ClassCreatFilesModels:
                 else:
                     seuil[ls].append(None)
 
+        if  any(seuil['active_mob']) :# and not self.cond_api:
+            where = f"id_weirs in (SELECT gid FROM {self.mdb.SCHEMA}.weirs where active_mob)"
+            dico_mob = self.mdb.select("weirs_mob_val", where, "id_weirs")
+            for id_w in dico_mob["id_weirs"]:
+                try:
+                    id_s = seuil['gid'].index(id_w)
+                    id_n = dico_mob['name_var'].index('ZINITREG')
+                    seuil["z_crest"][id_s] = dico_mob['value'][id_n]
+                except ValueError:
+                    continue
+
         return seuil, loi_struct
+
+    def modif_link(self, liaisons):
+        """
+        Modification of dictionaries used to create in the Xcas file
+        - Modify the initial levels of links when mobile links
+        :param liaisons:
+        :return:
+        """
+        if any(liaisons['active_mob']) and self.cond_api:
+            where = f"id_links in (SELECT gid FROM {self.mdb.SCHEMA}.links where active_mob)"
+            dico_mob = self.mdb.select("links_mob_val", where, "id_links")
+
+            for id_lk in dico_mob["id_links"]:
+                try:
+                    id_s = liaisons['gid'].index(id_lk)
+                    id_n = dico_mob['name_var'].index('ZINITREG')
+                    lvl0 = liaisons["level"][id_s]
+                    liaisons["level"][id_s] = dico_mob['value'][id_n]
+                    if liaisons['type'][id_s]==4:
+                        htop = liaisons["crosssection"][id_s] / liaisons["width"][id_s]
+                        newsec = liaisons["width"][id_s] * (htop - max(liaisons["level"][id_s]-lvl0, 0))
+                        liaisons["crosssection"][id_s] = newsec
+                except ValueError:
+                    continue
+        return liaisons
+
 
     def typ_struct(self, meth):
         """function to know the law type"""
@@ -1678,7 +1725,7 @@ class ClassCreatFilesModels:
         """
 
         info = self.mdb.select(
-            "weirs", where="active_mob = true", list_var=["method_mob", "gid", "name"], order="gid"
+            "weirs", where="active_mob = true", list_var=["method_mob", "gid", "name", "z_crest"], order="gid"
         )
         if info:
             try:
@@ -1692,7 +1739,7 @@ class ClassCreatFilesModels:
                     if info["method_mob"][i] == "1":
                         rows = self.mdb.select(
                             "weirs_mob_val",
-                            where="id_weirs= {} AND (name_var='TIME' OR name_var='ZVAR')".format(
+                            where="id_weirs= {} AND (name_var='TIMEZ' OR name_var='VALUEZ')".format(
                                 idw
                             ),
                             order="name_var, id_order",
@@ -1726,7 +1773,7 @@ class ClassCreatFilesModels:
                     elif info["method_mob"][i] == "2":
                         rows = self.mdb.select(
                             "weirs_mob_val",
-                            where="id_weirs= {} AND name_var!='TIME' AND name_var!='ZVAR'".format(
+                            where="id_weirs= {} AND name_var!='TIMEZ' AND name_var!='VALUEZ'".format(
                                 idw
                             ),
                         )
@@ -1736,16 +1783,16 @@ class ClassCreatFilesModels:
                             fich.write("Zregulation Zbas Zhaut (m ngf)\n")
                             fich.write(
                                 "{} {} {}\n".format(
-                                    rows["value"][rows["name_var"].index("ZREG")],
-                                    rows["value"][rows["name_var"].index("ZBAS")],
-                                    rows["value"][rows["name_var"].index("ZHAUT")],
+                                    rows["value"][rows["name_var"].index("VREGCLOS")],
+                                    info["z_crest"][i], # ZBAS
+                                    rows["value"][rows["name_var"].index('ZMAXFG')],
                                 )
                             )
                             fich.write("Vabaissement Vrehaussement m/s\n")
                             fich.write(
                                 "{} {}\n".format(
-                                    rows["value"][rows["name_var"].index("VDESC")],
-                                    rows["value"][rows["name_var"].index("VMONT")],
+                                    rows["value"][rows["name_var"].index("VELOFGOPEN")],
+                                    rows["value"][rows["name_var"].index("VELOFGCLOSE")],
                                 )
                             )
                     else:
@@ -1782,7 +1829,6 @@ class ClassCreatFilesModels:
                 f"WHERE active ORDER BY {var};"
             )
             rows = self.mdb.run_query(sql, fetch=True)
-            print(rows)
             if rows:
                 for row in rows:
                     # "name, branchnum, abscissa"

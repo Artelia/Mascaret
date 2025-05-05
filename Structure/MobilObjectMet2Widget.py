@@ -65,10 +65,10 @@ class ClassMobilObjectMet2Widget(QWidget):
         self.d_var = {
             "DIRFG": {"ctrl": self.ui.cb_dir, "cc": None, "vdef": 'D', "typ": str},
             "VELOFGOPEN": {"ctrl": self.ui.sb_open_vel, "cc": None, "vdef": 1., "typ": float},
-            "VELOFGOPEN_U": {"ctrl": self.ui.cb_unit_open_vel, "cc": None, "vdef": 1, "typ": int},
+            "UNITVELO": {"ctrl": self.ui.cb_unit_open_vel, "cc": None, "vdef": 1, "typ": int},
             "VELOFGCLOSE": {"ctrl": self.ui.sb_close_vel, "cc": self.ui.cc_close_vel,
                             "cdef": self.ui.sb_open_vel, "typ": float},
-            "VELOFGCLOSE_U": {"ctrl": self.ui.cb_unit_close_vel, "cc": self.ui.cc_close_vel,
+            "UNITVELC": {"ctrl": self.ui.cb_unit_close_vel, "cc": self.ui.cc_close_vel,
                               "cdef": self.ui.cb_unit_open_vel, "typ": int},
             "ZMAXFG": {"ctrl": self.ui.sb_stop_elev, "cc": None, "vdef": 0., "typ": float},
             "ZINITREG": {"ctrl": self.ui.sb_init_lvl, "cc": self.ui.cc_init_lvl,

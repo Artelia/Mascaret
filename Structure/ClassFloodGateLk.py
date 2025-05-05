@@ -124,19 +124,21 @@ class ClassFloodGateLk:
         :param dtp: Time step.
         """
         for id_lk, param in self.param_fg.items():
+            val_break = self.masc.get(param['CHECK_VAR_BREAK'],
+                                      param["SEC_BREAK"])
             if param["method_mob"] == self.dmeth["meth_regul"]:
                 if self.cl_regul.check_dt_regul(param, dtp):
                     val_check = self.masc.get(param['CHECK_VAR'],
                                               param["SECCON"])
                     self.cl_regul.state_regul(val_check, param)
-                    self.cl_regul.check_break(param, val_check)
+
+                    self.cl_regul.check_break(param, val_break)
                     dnew = self.cl_regul.law_gate_regul(param, time)
                     self.fill_res_and_update(id_lk, time, param, dnew, val_check)
             elif param["method_mob"] == self.dmeth["meth_time"]:
                 val_check = self.masc.get(param['CHECK_VAR'], param["SECCON"])
-                self.cl_time.check_break(param, val_check)
+                self.cl_time.check_break(param, val_break)
                 dnew = self.cl_time.law_mth_time(param, time)
-
                 self.fill_res_and_update(id_lk, time, param, dnew, val_check)
             elif param["method_mob"] == self.dmeth["meth_fus"]:
                 val_check = self.masc.get(param['CHECK_VAR'],
@@ -200,13 +202,16 @@ class ClassFloodGateLk:
         coords = np.array(coords)
         for id_lk, param in self.param_fg.items():
             param['CHECK_VAR'] = "State.Z"
+            param['CHECK_VAR_BREAK'] = "State.Z"
             # 2 valeur
             # 'PK' regule
             # 'abscissa' pk link
             if param["method_mob"] == self.dmeth["meth_regul"]:
                 if param["USEBASIN"]:
                     param["SECCON"] = param["NUMBASINREG"]
+                    param["SEC_BREAK"] = param["NUMBASINREG"]
                     param['CHECK_VAR'] = "State.StoArea.Level"
+                    param['CHECK_VAR_BREAK'] = "State.StoArea.Level"
                     continue
                 var = "PK"
                 param['CHECK_VAR'] = ("State.Z" if param["VREG"] == "Z" else "State.Q")
@@ -216,7 +221,9 @@ class ClassFloodGateLk:
             elif param["method_mob"] == self.dmeth["meth_fus"]:
                 if param["USEBASINFUS"]:
                     param["SECCON"] = param["NUMBASINFUS"]
+                    param["SEC_BREAK"] = param["NUMBASINFUS"]
                     param['CHECK_VAR'] = "State.StoArea.Level"
+                    param['CHECK_VAR_BREAK'] = "State.StoArea.Level"
                     continue
                 var = "PKFUS"
                 param['CHECK_VAR'] = ("State.Z" if param["VFUS"] == "Z" else "State.Q")
@@ -229,6 +236,11 @@ class ClassFloodGateLk:
                 param["SECCON"] = idx
             else:
                 self.add_info("Regulation point not found for numlink {}.".format(id_lk))
+            idxb = (np.abs(coords - param["abscissa"])).argmin()
+            if idxb:
+                param["SEC_BREAK"] = idxb
+            else:
+                self.add_info("Abscissa point not found for numlink {}.".format(id_lk))
         del coords
 
     def search_link_to_param_fg(self):
@@ -255,9 +267,6 @@ class ClassFloodGateLk:
                 id_mas = lst_info[idx]
                 param.update({
                     "id_mas": id_mas,
-                    "CSection0": self.masc.get("Model.Link.CSection", id_mas),
-                    "level0": self.masc.get("Model.Link.Level", id_mas),
-                    "width0": self.masc.get("Model.Link.Width", id_mas),
                     "TIME0": tini,
                     "TIME": tini
                 })

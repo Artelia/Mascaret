@@ -208,7 +208,7 @@ class ClassMobilObjectDialog(QDialog):
 
             cur_met = 0
             if rows:
-                if rows["method_mob"][0]:
+                if rows["method_mob"][0] != None and rows["method_mob"][0].strip() != 'None':
                     cur_met = int(rows["method_mob"][0])
                 else:
                     cur_met = 0

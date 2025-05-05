@@ -1982,7 +1982,7 @@ class weirs_mob_val(MasObject):
             ("id_weirs", "integer"),
             ("id_order", "integer"),
             ("name_var", "text"),
-            ("value", "float"),
+            ("value", "text"),
             ("CONSTRAINT cle_weirs_mob_val", "PRIMARY KEY (id_weirs,id_order,name_var)"),
         ]
 
@@ -2135,7 +2135,7 @@ class links_mob_val(MasObject):
         self.attrs = [('id_links', 'integer'),
                       ('id_order', 'integer'),
                       ('name_var', 'text'),
-                      ('value', 'float'),
+                      ('value', 'text'),
                       ('CONSTRAINT cle_lins_mob_val',
                        'PRIMARY KEY (id_links,id_order,name_var)')]
 
