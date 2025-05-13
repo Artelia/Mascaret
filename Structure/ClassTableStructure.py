@@ -142,8 +142,10 @@ class ClassTableStructure:
 
 
 def ctrl_set_value(ctrl, val):
-    if ctrl.metaObject().className() in ("QSpinBox", "QDoubleSpinBox"):
-        ctrl.setValue(val)
+    if ctrl.metaObject().className() in ("QSpinBox"):
+        ctrl.setValue(int(val))
+    elif ctrl.metaObject().className() in ("QDoubleSpinBox"):
+        ctrl.setValue(float(val))
     elif ctrl.metaObject().className() == "QComboBox":
         ctrl.setCurrentIndex(ctrl.findData(val))
         # ctrl.setCurrentIndex(ctrl.findData(int(val)))

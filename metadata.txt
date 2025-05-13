@@ -10,7 +10,7 @@
 name=Mascaret
 description=Pre and Post-processing for Mascaret (http://www.opentelemac.org/).
 about= Plugin dedicated to the building and exploitation of Mascaret models.
-       Requires PostgreSQL and PostGIS.
+       Requires PostgreSQL, PostGIS and uses the QT5 library for the graphic interface.
        Developed by Mehdi-Pierre DAOU,  Aurélien Perrin, Christophe COULET (Artelia)
        With contribution of Philippe BAGOT (Cerema) for storage area
        Based on an initial version developped by Matthieu NICOLAS (SPC Maine Loire aval)
@@ -21,7 +21,7 @@ qgisMinimumVersion=3.22
 qgisMaximumVersion=3.99
 
 
-version=6.0.2
+version=6.0.3
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -32,6 +32,10 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    6.0.3 : Added the traceback message for the debug mode
+            Bug fixe to display the profile graph
+            Bug fixe for the dates in the hydraulic laws
+            Bug fixe to use the liminigraph and Hydrograph laws during an event
     6.0.2 : Fix the bug related to QgsDockWidget in Linux
     6.0.1 : Fix the bug for methods using several observations with different time offsets
     6.0.0 : Merge experimental version into master
@@ -40,7 +44,7 @@ changelog=
     5.1.12 : Addition of Bulk Chart Export Feature
              Addition of display weirs for the longitudinal profile
              Bug fix to work in QGIS 3.38.
-             Bug fix for teh score computing
+             Bug fix for the score computing
              Bug fix for log display in edition of hydraulic structure
              Keep zoom when using slider
              Bug Fix when using complex formula for observations with multiple time offsets

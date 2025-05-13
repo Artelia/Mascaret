@@ -1353,7 +1353,8 @@ class ClassCreatFilesModels:
                 type_ = "H"
             else:
                 continue
-
+            if not loi["formule"]:
+                continue
             valeur_init = None
 
             liste_stations = pattern.findall(loi["formule"])
@@ -1383,9 +1384,15 @@ class ClassCreatFilesModels:
                     )
                 )
                 obs[cd_hydro] = self.mdb.query_todico(sql_tab)
-
                 if not liste_date:
                     liste_date = [x - dt for x in obs[cd_hydro]["date"]]
+            if not liste_date:
+                self.mess.add_mess('NoInitSteady', 'critic',
+                                   f"Error: Please check if law for {nom} object is correct.\n "
+                                   f"No observations found for station {cd_hydro} "
+                                   "on the dates: {0:%Y-%m-%d %H:%M} - {1:%Y-%m-%d %H:%M}"
+                                   "".format(date_debut + dt, date_fin + dtmax))
+                continue
 
             fichier_loi = os.path.join(self.dossier_file_masc, del_symbol(nom) + ".loi")
 
@@ -1439,8 +1446,9 @@ class ClassCreatFilesModels:
                 self.mess.add_mess('NoInitSteady', 'Warning',
                                    "No initialisation because of no SteadyValue")
         valeur_init = None
+
         for nom, loi in dict_lois.items():
-            if not loi["type"] in (1, 2):
+            if not loi["type"] in (1, 2) or (loi["type"] in (1, 2) and not loi['formule']):
                 # create other law
                 tab = self.get_laws(
                     nom, loi["type"], obs=True, date_deb=date_debut, date_fin=date_fin
@@ -1456,7 +1464,7 @@ class ClassCreatFilesModels:
                                        "The law for {} is not create.".format(nom))
                     continue
                 # create init law
-                if loi["type"] in [4]:  # , 5]: # car 5 mascaret plante à l'init
+                if loi["type"] in [1,2,4]:  # , 5]: # car 5 mascaret plante à l'init
                     self.creer_loi(nom, tab, loi["type"], init=True)
                 elif loi["type"] in [5] and loi["couche"] == "extremites":
                     for c, d in zip(tab["z"], tab["flowrate"]):
@@ -1519,6 +1527,7 @@ class ClassCreatFilesModels:
                                  """.format(
                     name_obj, typ_law, date_deb, date_fin
                 )
+
             else:
                 condition = "geom_obj='{0}' AND id_law_type={1} AND active".format(
                     name_obj, typ_law
@@ -1553,6 +1562,57 @@ class ClassCreatFilesModels:
             self.mess.add_mess("obsLaw_{}".format(name_obj), "critic", err)
             return None
 
+    def classic_law(self,par, dict_lois):
+        """
+                files creation  for the classic law
+               Args:
+                   :param par: dict contains the parameters
+                   :param dict_lois: dict contains the law
+               Return :
+                   :return: dict (par)
+        """
+        for nom, l in dict_lois.items():
+            # dictLois.items() extremities liste
+
+            tab = self.get_laws(nom, l["type"])
+            if tab:
+                self.creer_loi(nom, tab, l["type"])
+                if "time" in tab.keys():
+                    initime = round(tab["time"][0], 3)
+                    lasttime = round(tab["time"][-1], 3)
+                    self.check_timelaw(par, nom, initime, lasttime)
+            else:
+                self.mess.add_mess('CreatLaw_{}'.format(nom), 'critic',
+                                   "The law for {} is not create.".format(nom))
+
+            if "valeurperm" not in l.keys():
+                continue
+
+            # nom = nom + "_init"
+            if l["valeurperm"] is not None:
+                if l["type"] == 1:
+                    tab = {"time": [0, 3600], "flowrate": [l["valeurperm"]] * 2}
+                    self.creer_loi(nom, tab, 1, init=True)
+                elif l["type"] == 2:
+                    tab = {"time": [0, 3600], "z": [l["valeurperm"]] * 2}
+                    self.creer_loi(nom, tab, 2, init=True)
+                elif l["type"] in [4, 5]:
+                    self.creer_loi(nom, tab, l["type"], init=True)
+                else:
+                    par["initialisationAuto"] = False
+                    self.mess.add_mess('NoInitSteady', 'Warning',
+                                       "No initialisation because of no SteadyValue")
+        else:
+                if l["type"] in [4, 5]:
+                    self.creer_loi(nom, tab, l["type"], init=True)
+                else:
+                    par["initialisationAuto"] = False
+                    txt = (
+                            'No initialisation because of no steady value set for {} condition'.format(nom) +
+                            'Set "steadyValue" in extremities layer for entity {}'.format(nom)
+                    )
+                    self.mess.add_mess(txt, 'NoInitUnsteady', 'warning')
+        return par
     # ************   LIG FILE   ********************************************************************
 
     def opt_to_lig(self, id_run, base_namefiles):

@@ -1371,7 +1371,7 @@ class ClassHydroLawsDialog(QDialog):
                 r = model.rowCount() - 1
                 if r >= 0:
                     ds = model.item(r, 0).data(0)
-                    self.de_end.setDateTime(self.ui.de_start.dateTime().addSecs(ds))
+                    self.de_end.setDateTime(self.ui.de_start.dateTime().addSecs(int(ds)))
 
     def change_date_start(self):
         """

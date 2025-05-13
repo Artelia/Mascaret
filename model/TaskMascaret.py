@@ -20,6 +20,7 @@ email                :
 """
 
 import time
+import traceback
 
 from PyQt5.QtCore import pyqtSignal
 from qgis.core import QgsTask, QgsMessageLog, Qgis
@@ -36,6 +37,7 @@ class TaskMascaret(QgsTask):
 
     def __init__(self, description, dico_task):
         super().__init__(description, QgsTask.CanCancel)
+        self.dbg = dico_task['dbg']
         self.mdb = dico_task['mdb']
         self.wq = dico_task['wq']
         self.basename = dico_task['basename']
@@ -94,7 +96,8 @@ class TaskMascaret(QgsTask):
         """
         self.exc_start_time = time.time()
         try:
-            gbl_param = {'mdb': self.mdb,
+            gbl_param = {'dbg': self.dbg,
+                         'mdb': self.mdb,
                          'dossier_file_masc': self.dossier_file_masc,
                          'basename': self.basename,
                          'noyau': self.noyau,
@@ -184,6 +187,9 @@ class TaskMascaret(QgsTask):
             return True
         except Exception as e:
             self.error_txt = str(e)
+            if self.dbg:
+                error_info = traceback.format_exc()
+                self.error_txt = self.error_txt + '\n' + error_info
             self.log_mess(str(e), 'critic')
             time.sleep(1)
             self.taskTerminated.emit()
