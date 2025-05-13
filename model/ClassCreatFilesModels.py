@@ -41,7 +41,8 @@ from ..HydroLawsDialog import dico_typ_law
 class ClassCreatFilesModels:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, mdb, dossier_file_masc, cond_api):
+    def __init__(self, mdb, dossier_file_masc, cond_api, dbg):
+        self.dbg = dbg
         self.mdb = mdb
         self.dossier_file_masc = dossier_file_masc
         self.basename = "mascaret"

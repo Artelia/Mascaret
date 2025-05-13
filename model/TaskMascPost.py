@@ -45,9 +45,9 @@ class TaskMascPost():
         self.cond_api = glb_param['cond_api']
         self.wq = glb_param['waterq']
 
-        self.cls_res = ClassGetResults(self.mdb, self.dossier_file_masc)
+        self.cls_res = ClassGetResults(self.mdb, self.dossier_file_masc, self.dbg)
         self.cls_res.wq = self.wq
-        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc,self.cond_api)
+        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc,self.cond_api, self.dbg)
 
         self.mess = ClassMessage()
         self.cpt_init = False

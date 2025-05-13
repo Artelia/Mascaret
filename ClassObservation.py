@@ -21,6 +21,7 @@ import csv
 import datetime
 import io
 import os
+import traceback
 
 import pandas as pd
 from matplotlib.dates import date2num
@@ -437,7 +438,10 @@ class ClassEventObsDialog(QDialog):
             return True, recs
         except Exception as e:
             self.mgis.add_info("Loading to observations is an echec.")
-            self.mgis.add_info(repr(e), dbg=True)
+            error_info = repr(e)
+            if self.mgis.DEBUG:
+                error_info = error_info +'\n' +traceback.format_exc()
+            self.mgis.add_info(error_info)
 
             return False, None
 
@@ -471,8 +475,10 @@ class ClassEventObsDialog(QDialog):
             return True, recs
         except Exception as e:
             self.mgis.add_info("Loading to observations is an echec.")
-            self.mgis.add_info(repr(e), dbg=True)
-
+            error_info = repr(e)
+            if self.mgis.DEBUG:
+                error_info = error_info + '\n' + traceback.format_exc()
+            self.mgis.add_info(error_info)
             return False, None
 
     @staticmethod

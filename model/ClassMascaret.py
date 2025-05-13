@@ -74,7 +74,7 @@ class ClassMascaret:
         self.err_model["timeLaw"] = TypeErrorModel("timeLaw", " ERROR : Law Time", stop=True)
         self.err_model["lInflowPos"] = TypeErrorModel("lInflowPos", "WARNING : the inflow position")
 
-        self.clfile = ClassCreatFilesModels(self.mdb, self.dossierFileMasc, self.cond_api)
+        self.clfile = ClassCreatFilesModels(self.mdb, self.dossierFileMasc, self.cond_api,self.dbg)
 
     def get_param_model(self, noyau):
         """

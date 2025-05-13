@@ -905,20 +905,17 @@ $BODY$
         self.create_spatial_index()
         self.register_existing(Maso)
         reg = [self.register[k].name for k in sorted(self.register.keys())]
-        if self.mgis.DEBUG:
-            self.mgis.add_info(
-                "Objects registered in the database:<br>  {0}".format("<br>  ".join(reg))
-            )
-            self.mgis.add_info(
-                "You can load them now using  Geometry > Load Mascaret Database Tables Into QGIS"
-            )
+
+        self.mgis.add_info(
+            "Objects registered in the database:<br>  {0}".format("<br>  ".join(reg)), dbg=True)
+        self.mgis.add_info(
+            "You can load them now using  Geometry > Load Mascaret Database Tables Into QGIS", dbg=True)
+        if reg:
+            self.mgis.add_info("There are some objects registered in the database.")
         else:
-            if reg:
-                self.mgis.add_info("There are some objects registered in the database.")
-            else:
-                self.mgis.add_info(
-                    "Mascaret database is empty.<br>Create or import your river network data."
-                )
+            self.mgis.add_info(
+                "Mascaret database is empty.<br>Create or import your river network data."
+            )
         #
         self.load_gis_layer()
 
@@ -1630,8 +1627,8 @@ $BODY$
             json.dump(js_dict, outfile, indent=4)
 
         cond = self.drop_model(dest, cascade=True, verbose=False)
-        if cond and self.mgis.DEBUG:
-            self.mgis.add_info('<br>Model "{0}" deleted.'.format(dest))
+        if cond :
+            self.mgis.add_info('<br>Model "{0}" deleted.'.format(dest), dbg=True)
 
         self.ignor_schema = list()
 

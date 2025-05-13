@@ -160,7 +160,7 @@ class ClassDeletrunDialog(QDialog):
                 sql = "run = '{0}' AND scenario IN ({1})".format(run, ",".join(scenarios))
                 self.mdb.delete("runs", sql)
                 self.delete_useless_data()
-                self.mgis.add_info("Deletion of scenarii is done", dbg=True)
+                self.mgis.add_info("Deletion of scenarii is done")
                 progress.setValue(round(i / n * 100))
 
         self.iface.messageBar().clearWidgets()

@@ -118,7 +118,7 @@ class ClassUpdatePk(QDialog):
                                         feat['branchnum'][0],
                                         gid)
         self.mdb.run_query(sql)
-        self.mgis.add_info("Update pk Done", dbg=True)
+        self.mgis.add_info("Update pk Done")
 
     def annule(self):
         """ "Cancel"""
