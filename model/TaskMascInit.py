@@ -27,6 +27,7 @@ from .ClassCreatFilesModels import ClassCreatFilesModels
 from ..ClassMessage import ClassMessage
 from ..Structure.ClassMascStruct import ClassMascStruct
 import shutil
+import traceback
 MESSAGE_CATEGORY = 'TaskMascaret'
 
 
@@ -36,6 +37,7 @@ class TaskMascInit():
     def __init__(self, glb_param, init_param):
         super().__init__()
 
+        self.dbg = glb_param['dbg']
         self.mdb = glb_param['mdb']
         self.dossier_file_masc = glb_param['dossier_file_masc']
         self.wq = glb_param['waterq']
@@ -203,8 +205,12 @@ class TaskMascInit():
                     return False
             self.log_mess('TaskMascInit End', 'info2')
             return True
-        except Exception as e:
-            self.log_mess(str(e), 'errInit', 'critic')
+        except Exception as err:
+            err = str(err)
+            if self.dbg:
+                error_info = traceback.format_exc()
+                err = err + '\n' + error_info
+            self.log_mess(err, 'errInit', 'critic')
             return False
 
     def copy_lig(self, fichiers):
@@ -312,6 +318,7 @@ class TaskMascInit():
 
         return date_debut, par
 
+
     def init_scen_trans_unsteady(self, par, dict_lois):
         """
         Initial  files creation  for unsteady scenario
@@ -328,47 +335,7 @@ class TaskMascInit():
                     self.log_mess(txt, "WQMeteo", 'critic')
                     return None
 
-        for nom, l in dict_lois.items():
-            # dictLois.items() extremities liste
-
-            tab = self.clfile.get_laws(nom, l["type"])
-            if tab:
-                self.clfile.creer_loi(nom, tab, l["type"])
-                if "time" in tab.keys():
-                    initime = round(tab["time"][0], 3)
-                    lasttime = round(tab["time"][-1], 3)
-                    self.clfile.check_timelaw(par, nom, initime, lasttime)
-            else:
-                txt = "The law for {} is not create.".format(nom)
-                self.log_mess(txt, 'CreatLaw_{}'.format(nom), 'warning')
-
-            if "valeurperm" not in l.keys():
-                continue
-
-            # nom = nom + "_init"
-            if l["valeurperm"] is not None:
-                if l["type"] == 1:
-                    tab = {"time": [0, 3600], "flowrate": [l["valeurperm"]] * 2}
-                    self.clfile.creer_loi(nom, tab, 1, init=True)
-                elif l["type"] == 2:
-                    tab = {"time": [0, 3600], "z": [l["valeurperm"]] * 2}
-                    self.clfile.creer_loi(nom, tab, 2, init=True)
-                elif l["type"] in [4, 5]:
-                    self.clfile.creer_loi(nom, tab, l["type"], init=True)
-                else:
-                    par["initialisationAuto"] = False
-                    txt = "No initialisation because of no SteadyValue"
-                    self.log_mess(txt, 'NoInitUnsteady', 'warning')
-            else:
-                if l["type"] in [4, 5]:
-                    self.clfile.creer_loi(nom, tab, l["type"], init=True)
-                else:
-                    par["initialisationAuto"] = False
-                    txt = (
-                        'No initialisation because of no steady value set for {} condition'.format(nom) +
-                        'Set "steadyValue" in extremities layer for entity {}'.format(nom)
-                    )
-                    self.log_mess(txt, 'NoInitUnsteady', 'warning')
+        par  = self.clfile.classic_law(par, dict_lois)
         return par
 
     def check_apport(self):

@@ -47,6 +47,7 @@ class ClassMascaret:
 
     def __init__(self, main, rep_run=None):
         self.mgis = main
+        self.dbg = main.DEBUG
         self.mdb = self.mgis.mdb
         self.iface = self.mgis.iface
         if not rep_run:
@@ -254,6 +255,7 @@ class ClassMascaret:
             return
 
         dict_task = {
+            'dbg':self.dbg,
             'mdb': self.mdb,
             'wq': self.wq,
             'basename': self.baseName,
