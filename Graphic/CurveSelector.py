@@ -36,7 +36,7 @@ def list_sql(liste, typ="str"):
     """
     txt = "("
     for t_res in liste:
-        if typ is "str":
+        if typ == "str":
             txt += "'{}',".format(t_res)
         elif typ == "int" or typ == "float":
             txt += "{},".format(t_res)
