@@ -99,7 +99,9 @@ class ClassMobilObjectMet2Widget(QWidget):
             "BPERMREG": {"ctrl": self.ui.cc_temp_break, "cc": None,
                          "vdef": False, "typ": to_bool},
             "ZFINALREG": {"ctrl": self.ui.sb_break_lvl, "cc": self.ui.cc_break_lvl,
-                          "vdef": 0., "typ": float}
+                          "vdef": 0., "typ": float},
+            "CLAPET": {"ctrl": self.ui.cc_clapet, "cc": None,
+                         "vdef": False, "typ": to_bool},
         }
 
         self.ui.cb_dir.currentIndexChanged.connect(self.direction_changed)

@@ -73,6 +73,8 @@ class ClassUpdate620:
                 "DTREG": 0,
                 "ZINCRFG": 9999.,
                 "TOLREG": 0.05,
+                "CLAPETT": False,
+                "CLAPET": False
             },
             "get_value":
                 {

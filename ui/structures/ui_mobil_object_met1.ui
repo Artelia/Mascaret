@@ -156,6 +156,13 @@
       <property name="bottomMargin">
        <number>6</number>
       </property>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="cc_temp_break">
+        <property name="text">
+         <string>Non permanent breaking</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0">
        <widget class="QCheckBox" name="cc_break_val">
         <property name="enabled">
@@ -178,10 +185,10 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="cc_temp_break">
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="cc_break_lvl">
         <property name="text">
-         <string>Non permanent breaking</string>
+         <string>Level after breaking</string>
         </property>
        </widget>
       </item>
@@ -207,13 +214,6 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QCheckBox" name="cc_break_lvl">
-        <property name="text">
-         <string>Level after breaking</string>
-        </property>
-       </widget>
-      </item>
       <item row="3" column="1">
        <widget class="QDoubleSpinBox" name="sb_break_lvl">
         <property name="enabled">
@@ -233,6 +233,13 @@
         </property>
         <property name="singleStep">
          <double>0.010000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="cc_clapet">
+        <property name="text">
+         <string>Clapet marée</string>
         </property>
        </widget>
       </item>

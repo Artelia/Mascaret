@@ -129,7 +129,12 @@ class ClassMobilWeirs:
                 if self.cl_regul.check_dt_regul(param, dtp):
                     val_check = self.masc.get(param['CHECK_VAR'],
                                               param["SECCON"])
-
+                    # if param['CLAPMAREE']:
+                    #     val_check = self.masc.get(param['CHECK_VAR'],
+                    #                               param["SECCON"])
+                    #     param_fg["OPEN_CLOSE"] = "CLOSE"
+                    #     dnew = self.cl_regul.law_gate_regul(param, time)
+                    # else:
                     self.cl_regul.state_regul(val_check, param)
                     dnew = self.cl_regul.law_gate_regul(param, time)
                     self.fill_res_and_update(id_weir, time, param, dnew, val_check)
@@ -203,8 +208,6 @@ class ClassMobilWeirs:
                 param["SECCON"] = idx
             else:
                 self.add_info("Regulation point not found for numWeirs {}.".format(id_weir))
-
-
         del coords
 
     def search_weirs_to_param_fg(self):
@@ -235,15 +238,20 @@ class ClassMobilWeirs:
                 node = lst_node[idx]
                 param.update({
                     "node" : node,
+                    "node-1": node - 1,
                     "id_mas":  id_mas,
                     "TIME0": tini,
                     "TIME": tini
                 })
-
                 if param["method_mob"] == self.dmeth["meth_regul"]:
                     self.cl_regul.init_meth_regul(param, id_weir)
                 elif param["method_mob"] == self.dmeth["meth_time"]:
                     self.cl_time.init_meth_time(param)
+                #hyp. Pk in order by upstream to downstream
+                if param["node-1"] < 0:
+                    param["node-1"] = param["node"]
+                    param['CLAPMAREE'] = False
+
                 # inti var time-dt
                 param.update({
                     "level-dt": param["level0"],
@@ -251,8 +259,9 @@ class ClassMobilWeirs:
                     "REGVAR_VAL-dt": param["REGVAR_VAL"]
                 })
             else:
-                self.add_info("Id_mas not found for numlink {}.".format(id_weir))
+                self.add_info("Id_mas not found for ID weirs {}.".format(id_weir))
         del coords
+
 
     def fill_results_fg_mv(self, id_weir, param):
         """
@@ -302,16 +311,15 @@ class ClassMethRegul:
         """
         param.update({
             "rup_level": param["level0"],
-        })
-        param.update({
+            'CLAPMAREE' : param["CLAPET"],
+            "ZLIMITGATE" : param["ZMAXFG"],
+            "level" :  max(param["ZINITREG"], param["level0"]),
             "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
             "OPEN_CLOSE": "INIT"
         })
         # info de la vanne
         if param["DIRFG"] != "D":
             self.add_info(f"Non-consistency type mobile weirs with the moving part {id_weir}.")
-        param["level"] = max(param["ZINITREG"], param["level0"])
-        param["ZLIMITGATE"] = param["ZMAXFG"]
 
 
     def check_param(self, param, id_weir):
@@ -486,14 +494,11 @@ class ClassMethTime:
         param.update({
             "TIMEZ": np.array(param["TIMEZ"]),
             "VALUEZ": np.array(param["VALUEZ"]),
-            "REGVAR_VAL" : self.masc.get(param['CHECK_VAR'], param["SECCON"])
-        })
-        param["level"] = np.interp(param["TIME"], param["TIMEZ"], param["VALUEZ"])
-
-        param.update({
+            "REGVAR_VAL" : self.masc.get(param['CHECK_VAR'], param["SECCON"]),
+            'CLAPMAREE': param["CLAPET"],
             "rup_level": param["level0"],
         })
-
+        param["level"] = np.interp(param["TIME"], param["TIMEZ"], param["VALUEZ"])
 
 
     # def check_break(self, param, val_check):
