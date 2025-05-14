@@ -363,18 +363,19 @@ class ClassMobilObjectMet2Widget(QWidget):
     def fill_controls(self):
         """fill table"""
         self.input_def_values()
-
         if self.cur_obj:
             l_var = list(self.d_var.keys())
             txt_var = "('{}')".format("', '".join(l_var))
-
             sql = "SELECT name_var, id_order, value FROM {0}.{1} WHERE {2} = {3} " \
                   "AND name_var IN {4}".format(self.mdb.SCHEMA, self.mob_table,
                                                self.mob_table_id, self.cur_obj, txt_var)
             rows = self.mdb.run_query(sql, fetch=True)
             for (nm_var, rang_var, value) in rows:
                 prm = self.d_var[nm_var]
-                conv_value = prm["typ"](value)
+                try :
+                    conv_value = prm["typ"](value)
+                except ValueError:
+                    conv_value = prm["typ"](float(value))
                 ctrl_set_value(prm["ctrl"], conv_value, cc_is_checked=True)
                 if prm["cc"] and rang_var == 0:
                     prm["cc"].setChecked(True)
@@ -415,6 +416,7 @@ class ClassMobilObjectMet2Widget(QWidget):
 
     def cancel_input(self):
         self.widget_closed.emit()
+
 
 
 def to_bool(txt):
