@@ -122,28 +122,33 @@ class ClassMobilWeirs:
         :param dtp: Time step.
         """
         for id_weir, param in self.param_fg.items():
+            # effacement status
             status = self.masc.get("Model.Weir.State", param['id_mas'])
             if status:
                 continue
-            if param["method_mob"] == self.dmeth["meth_regul"]:
+            val_check = self.masc.get(param['CHECK_VAR'],
+                                      param["SECCON"])
+            if self.clapet(param):
+                param["OPEN_CLOSE"] = "CLOSE"
+                dnew = {"level": round(param["ZLIMITGATE"], 4)}
+                self.fill_res_and_update(id_weir, time, param, dnew, val_check)
+            elif param["method_mob"] == self.dmeth["meth_regul"]:
                 if self.cl_regul.check_dt_regul(param, dtp):
-                    val_check = self.masc.get(param['CHECK_VAR'],
-                                              param["SECCON"])
-                    # if param['CLAPMAREE']:
-                    #     val_check = self.masc.get(param['CHECK_VAR'],
-                    #                               param["SECCON"])
-                    #     param_fg["OPEN_CLOSE"] = "CLOSE"
-                    #     dnew = self.cl_regul.law_gate_regul(param, time)
-                    # else:
                     self.cl_regul.state_regul(val_check, param)
                     dnew = self.cl_regul.law_gate_regul(param, time)
                     self.fill_res_and_update(id_weir, time, param, dnew, val_check)
             elif param["method_mob"] == self.dmeth["meth_time"]:
-                val_check = self.masc.get(param['CHECK_VAR'], param["SECCON"])
                 dnew = self.cl_time.law_mth_time(param, time)
-
                 self.fill_res_and_update(id_weir, time, param, dnew, val_check)
-        
+
+    def clapet(self, param):
+        if param['CLAPMAREE'] and param["node"] + 1 <= self.model_size:
+            aval = self.masc.get("State.Z", param["node"])
+            amont = self.masc.get("State.Z", param["node"] + 1)
+            if aval > amont:
+                return True
+        return False
+
     def fill_res_and_update(self, id_weir, time, param, dnew, val_check):
         """
         Update  mobile weirs parameters and fill the results dictionary with the new values.
@@ -238,7 +243,6 @@ class ClassMobilWeirs:
                 node = lst_node[idx]
                 param.update({
                     "node" : node,
-                    "node-1": node - 1,
                     "id_mas":  id_mas,
                     "TIME0": tini,
                     "TIME": tini
@@ -247,10 +251,6 @@ class ClassMobilWeirs:
                     self.cl_regul.init_meth_regul(param, id_weir)
                 elif param["method_mob"] == self.dmeth["meth_time"]:
                     self.cl_time.init_meth_time(param)
-                #hyp. Pk in order by upstream to downstream
-                if param["node-1"] < 0:
-                    param["node-1"] = param["node"]
-                    param['CLAPMAREE'] = False
 
                 # inti var time-dt
                 param.update({
@@ -499,6 +499,7 @@ class ClassMethTime:
             "rup_level": param["level0"],
         })
         param["level"] = np.interp(param["TIME"], param["TIMEZ"], param["VALUEZ"])
+        param["ZLIMITGATE"] = np.max(param["TIMEZ"])
 
 
     # def check_break(self, param, val_check):
