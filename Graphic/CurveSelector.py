@@ -36,7 +36,7 @@ def list_sql(liste, typ="str"):
     """
     txt = "("
     for t_res in liste:
-        if typ is "str":
+        if typ == "str":
             txt += "'{}',".format(t_res)
         elif typ == "int" or typ == "float":
             txt += "{},".format(t_res)
@@ -250,7 +250,7 @@ class CurveSelectorWidget(QWidget):
                 table_map = {
                     "struct": ("profiles", "abscissa"),
                     "weirs": ("weirs", "gid"),
-                    "link_fg": ("links", "linknum"),
+                    "link_fg": ("links", "gid"),
                 }
 
                 table, var_test = table_map[self.typ_graph]
@@ -264,7 +264,7 @@ class CurveSelectorWidget(QWidget):
                 for pknum in lstpk:
                     if pknum in info[var_test]:
                         name = info["name"][info[var_test].index(pknum)]
-                        txt = f"{pknum} : {name}" if var_test != "linknum" else name
+                        txt = f"{pknum} : {name}" if table != "links" else name
                     else:
                         txt = str(pknum)
                     self.cb_det.addItem(txt, pknum)
@@ -356,7 +356,7 @@ class CurveSelectorWidget(QWidget):
         if self.typ_graph in ["link_fg"]:
             info = self.mdb.select(
                 "links",
-                where=f"linknum={self.cur_pknum}",
+                where=f"gid={self.cur_pknum}",
                 list_var=['type']
             )
             if info:

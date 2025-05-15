@@ -21,6 +21,7 @@ import json
 import os
 import sys
 import importlib
+import traceback
 
 from copy import deepcopy
 
@@ -94,6 +95,7 @@ class CheckTab:
             "6.0.0",
             "6.0.1",
             "6.0.2",
+            "6.0.3",
             "6.1.0",
             "6.1.1",
             "6.2.0",
@@ -324,6 +326,7 @@ class CheckTab:
             "6.0.0": {},
             "6.0.1": {},
             "6.0.2": {},
+            "6.0.3":{},
             "6.1.0": {},
             "6.1.1": {},
             "6.2.0": {"fct": [

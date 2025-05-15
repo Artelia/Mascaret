@@ -88,16 +88,13 @@
           <property name="bottomMargin">
            <number>6</number>
           </property>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="cb_dir"/>
-          </item>
-          <item row="1" column="2">
-           <widget class="QComboBox" name="cb_unit_open_vel"/>
-          </item>
-          <item row="2" column="2">
-           <widget class="QComboBox" name="cb_unit_close_vel">
-            <property name="enabled">
-             <bool>false</bool>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Mobile part</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -126,6 +123,13 @@
             </property>
            </widget>
           </item>
+          <item row="2" column="2">
+           <widget class="QComboBox" name="cb_unit_close_vel">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_22">
             <property name="text">
@@ -135,6 +139,12 @@
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
             </property>
            </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="cb_dir"/>
+          </item>
+          <item row="1" column="2">
+           <widget class="QComboBox" name="cb_unit_open_vel"/>
           </item>
           <item row="2" column="1">
            <widget class="QDoubleSpinBox" name="sb_close_vel">
@@ -171,20 +181,10 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_20">
-            <property name="text">
-             <string>Mobile part</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
           <item row="3" column="0">
            <widget class="QCheckBox" name="cc_clapet">
             <property name="text">
-             <string>Clapet marée</string>
+             <string>Tidal valve</string>
             </property>
            </widget>
           </item>

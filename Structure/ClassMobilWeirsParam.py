@@ -78,6 +78,8 @@ class ClassMobilWeirsParam(object):
                          'typ': 'bool'},
             "ZFINALREG": {"desc": "Cote final weirs après rupture", "desc_en": "Final weir level after break",
                           'typ': 'float'},
+            "CLAPET": {"desc": "True Si pour éviter la remontée de la marée",
+                       "desc_en": "True If valve to prevent the tide rising", 'typ': 'bool'},
             # meth_tempo
             "TIMEZ": {"desc": "Valeur Temps en s", "desc_en": "Time value in seconds", 'typ': 'float'},
             "VALUEZ": {"desc": "Valeur associé à TIME", "desc_en": "Value associated with TIME", 'typ': 'float'},
@@ -86,6 +88,8 @@ class ClassMobilWeirsParam(object):
                        'typ': 'bool'},
             "ZFINALT": {"desc": "Cote final weirs après rupture", "desc_en": "Final weir level after break",
                         'typ': 'float'},
+            "CLAPETT": {"desc": "True Si pour éviter la remontée de la marée",
+                       "desc_en": "True If valve to prevent the tide rising", 'typ': 'bool'},
         }
 
         self.dmeth = {"meth_time": str(1),
@@ -315,8 +319,9 @@ class ClassMobilWeirsParam(object):
         """
         lst_com = ["name", "level0", "abscissa", "branchnum",  "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG",
-                    "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG", "TOLREG"]
-        lst_time = ["TIMEZ", "VALUEZ" ]
+                    "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG", "TOLREG",
+                   "CLAPET"]
+        lst_time = ["TIMEZ", "VALUEZ","CLAPETT"]
 
         dlist = { self.dmeth["meth_time"]: lst_com + lst_time,
                   self.dmeth["meth_regul"] :  lst_com + lst_reg,

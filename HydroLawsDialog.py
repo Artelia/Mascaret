@@ -398,7 +398,7 @@ class ClassHydroLawsDialog(QDialog):
                     QMessageBox.Cancel | QMessageBox.Ok,
                 )
             ) == QMessageBox.Ok:
-                self.mgis.add_info("Deletion of {} Hydro Law".format(name_law), dbg=True)
+                self.mgis.add_info("Deletion of {} Hydro Law".format(name_law))
                 self.mdb.execute(
                     "DELETE FROM {0}.law_values WHERE id_law = {1}".format(self.mdb.SCHEMA, id_law)
                 )
@@ -1371,7 +1371,7 @@ class ClassHydroLawsDialog(QDialog):
                 r = model.rowCount() - 1
                 if r >= 0:
                     ds = model.item(r, 0).data(0)
-                    self.de_end.setDateTime(self.ui.de_start.dateTime().addSecs(ds))
+                    self.de_end.setDateTime(self.ui.de_start.dateTime().addSecs(int(ds)))
 
     def change_date_start(self):
         """
@@ -1473,7 +1473,7 @@ class ClassHydroLawsDialog(QDialog):
             date_start, date_end = "Null", "Null"
 
         if self.cur_law == -1:
-            self.mgis.add_info("Addition of {} Hydro Law".format(name_law), dbg=True)
+            self.mgis.add_info("Addition of {} Hydro Law".format(name_law))
             self.mdb.execute(
                 "INSERT INTO {0}.law_config (name, geom_obj, starttime, endtime, id_law_type, active, comment) "
                 "VALUES ({1}, {2}, {3}, {4}, {5}, {6}, {7})".format(

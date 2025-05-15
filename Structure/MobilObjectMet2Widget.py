@@ -99,7 +99,9 @@ class ClassMobilObjectMet2Widget(QWidget):
             "BPERMREG": {"ctrl": self.ui.cc_temp_break, "cc": None,
                          "vdef": False, "typ": to_bool},
             "ZFINALREG": {"ctrl": self.ui.sb_break_lvl, "cc": self.ui.cc_break_lvl,
-                          "vdef": 0., "typ": float}
+                          "vdef": 0., "typ": float},
+            "CLAPET": {"ctrl": self.ui.cc_clapet, "cc": None,
+                         "vdef": False, "typ": to_bool},
         }
 
         self.ui.cb_dir.currentIndexChanged.connect(self.direction_changed)
@@ -361,7 +363,6 @@ class ClassMobilObjectMet2Widget(QWidget):
     def fill_controls(self):
         """fill table"""
         self.input_def_values()
-
         if self.cur_obj:
             l_var = list(self.d_var.keys())
             txt_var = "('{}')".format("', '".join(l_var))
@@ -376,7 +377,11 @@ class ClassMobilObjectMet2Widget(QWidget):
 
             for nm_prm, saved_prm in d_rec.items():
                 prm = self.d_var[nm_prm]
-                conv_value = prm["typ"](saved_prm["val"])
+                try:
+                    conv_value = prm["typ"](saved_prm["val"])
+                except ValueError:
+                    conv_value = prm["typ"](float(saved_prm["val"]))
+
                 if nm_prm == "VELOFGOPEN" and "UNITVELO" in d_rec.keys():
                     conv_value = conv_value / float(d_rec["UNITVELO"]["val"])
                 if nm_prm == "VELOFGCLOSE" and "UNITVELC" in d_rec.keys():
@@ -430,6 +435,7 @@ class ClassMobilObjectMet2Widget(QWidget):
 
     def cancel_input(self):
         self.widget_closed.emit()
+
 
 
 def to_bool(txt):

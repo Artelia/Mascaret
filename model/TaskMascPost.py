@@ -19,7 +19,7 @@ email                :
 
 """
 import time
-
+import traceback
 from qgis.core import QgsMessageLog, Qgis
 
 from .ClassCreatFilesModels import ClassCreatFilesModels
@@ -34,7 +34,7 @@ class TaskMascPost():
 
     def __init__(self, glb_param):
         super().__init__()
-
+        self.dbg = glb_param['dbg']
         self.mdb = glb_param['mdb']
         self.comments = glb_param['comments']
         self.dict_scen = glb_param['dict_scen']
@@ -45,9 +45,9 @@ class TaskMascPost():
         self.cond_api = glb_param['cond_api']
         self.wq = glb_param['waterq']
 
-        self.cls_res = ClassGetResults(self.mdb, self.dossier_file_masc)
+        self.cls_res = ClassGetResults(self.mdb, self.dossier_file_masc, self.dbg)
         self.cls_res.wq = self.wq
-        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc,self.cond_api)
+        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc,self.cond_api, self.dbg)
 
         self.mess = ClassMessage()
         self.cpt_init = False
@@ -175,8 +175,12 @@ class TaskMascPost():
 
             self.log_mess('TaskMascPost End', 'info2')
             return True
-        except Exception as e:
-            self.log_mess(str(e), 'errPost', 'critic')
+        except Exception as err:
+            err = str(err)
+            if self.dbg:
+                error_info = traceback.format_exc()
+                err = err + '\n' + error_info
+            self.log_mess(err, 'errPost', 'critic')
             return False
 
     def check_mobil_gate(self):

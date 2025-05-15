@@ -87,8 +87,10 @@ class ClassLinkFGParam(object):
             "ZFINALT": {"desc": "Cote final weirs après rupture", "desc_en": "Final weir level after break",
                         'typ': 'float'},
             # meth_fusible
-            "METHBREAK": {"desc": "méthode de rupture à un temps donnée time ou valeur régulation regul",
-                          "desc_en": "break method at a given time or regulation value", 'typ': 'float'},
+            "METHBREAK": {"desc": "méthode de rupture à un temps donnée time ou valeur régulation regul"
+                                  " meth_time(1), meth_val(2)",
+                          "desc_en": "break method at a given time or regulation value"
+                            " meth_time(1), meth_val(2)", 'typ': 'str'},
             "TIMEFUS": {"desc": "Valeur Temps fusible en s", "desc_en": "Fuse time value in seconds", 'typ': 'float'},
             "WIDTHFUS": {"desc": "Largeur associé à TIME", "desc_en": "Width associated with TIME", 'typ': 'float'},
             "VFUS": {"desc": "Variable regulation Z ou Q seuil fusible",
@@ -105,6 +107,8 @@ class ClassLinkFGParam(object):
         self.dmeth = {"meth_time": str(1),
                       "meth_regul": str(2),
                       "meth_fus": str(3)}
+        self.dmeth_fus = {"meth_time": str(1),
+                          "meth_val": str(2)}
         self.mess = ClassMessage()
 
     def get_param(self, parent=None, file="cli_fg_lk.obj"):
@@ -161,7 +165,7 @@ class ClassLinkFGParam(object):
         :param db: Database object.
         :return: True if parameters are successfully fetched, otherwise False.
         """
-        lst_var = ["linknum",
+        lst_var = ["gid",
                    "name",
                    "level",
                    "crosssection",
@@ -177,7 +181,7 @@ class ClassLinkFGParam(object):
             "SELECT {1} "
             "FROM {0}.links "
             "WHERE active AND type in (4,1) AND nature=1 AND active_mob "
-            "ORDER BY linknum;"
+            "ORDER BY gid;"
         ).format(db.SCHEMA, ", ".join(lst_var))
         rows = db.run_query(sql, fetch=True)
         if rows is None:

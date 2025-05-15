@@ -46,7 +46,7 @@ def list_sql(liste, typ="str"):
     """
     txt = "("
     for t_res in liste:
-        if typ is "str":
+        if typ == "str":
             txt += "'{}',".format(t_res)
         elif typ == "int" or typ == "float":
             txt += "{},".format(t_res)
@@ -302,8 +302,8 @@ class GraphProfilResultDialog(QWidget):
                 cl_geo = ClassResProfil()
                 self.cas_prt = cl_geo.cas_prt
                 txterr = cl_geo.plani_stock(self.info_graph[self.typ_res]["zmax"], self.cur_run, self.mdb)
-                if self.mgis.DEBUG and txterr:
-                    print(txterr)
+                # if self.mgis.DEBUG and txterr:
+                #     print(txterr)
                 del cl_geo
 
                 elem = self.get_run_plani(pk, get_bas=True)

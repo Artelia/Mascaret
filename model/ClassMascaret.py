@@ -47,6 +47,7 @@ class ClassMascaret:
 
     def __init__(self, main, rep_run=None):
         self.mgis = main
+        self.dbg = main.DEBUG
         self.mdb = self.mgis.mdb
         self.iface = self.mgis.iface
         if not rep_run:
@@ -73,7 +74,7 @@ class ClassMascaret:
         self.err_model["timeLaw"] = TypeErrorModel("timeLaw", " ERROR : Law Time", stop=True)
         self.err_model["lInflowPos"] = TypeErrorModel("lInflowPos", "WARNING : the inflow position")
 
-        self.clfile = ClassCreatFilesModels(self.mdb, self.dossierFileMasc, self.cond_api)
+        self.clfile = ClassCreatFilesModels(self.mdb, self.dossierFileMasc, self.cond_api,self.dbg)
 
     def get_param_model(self, noyau):
         """
@@ -254,6 +255,7 @@ class ClassMascaret:
             return
 
         dict_task = {
+            'dbg':self.dbg,
             'mdb': self.mdb,
             'wq': self.wq,
             'basename': self.baseName,

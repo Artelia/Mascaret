@@ -37,7 +37,8 @@ from ..Graphic.ClassResProfil import ClassResProfil
 class ClassGetResults:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, mdb, dossier_file_masc):
+    def __init__(self, mdb, dossier_file_masc, dbg):
+        self.dbg = dbg
         self.mdb = mdb
         self.dossier_file_masc = dossier_file_masc
         self.basename = "mascaret"
@@ -202,6 +203,7 @@ class ClassGetResults:
             except Exception as e:
                 txt = "Erreur load of mobil_gate results.\n"
                 txt += e
+
                 self.mess.add_mess('RMobGate', 'warning', txt)
 
     def new_read_opt(self, nom_fich, type_res, init_col=None):

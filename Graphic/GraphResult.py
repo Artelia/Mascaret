@@ -300,7 +300,8 @@ class GraphResult(GraphCommonNew):
                         self.main_axe.add_patch(patch)
                         break
 
-        self.main_axe.collections.remove(aire_tmp)
+        # self.main_axe.collections.remove(aire_tmp)
+        aire_tmp.remove()
         self.maj_limites()
 
     def insert_debord_curves(self, dict_debord):

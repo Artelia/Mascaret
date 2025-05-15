@@ -73,6 +73,8 @@ class ClassUpdate620:
                 "DTREG": 0,
                 "ZINCRFG": 9999.,
                 "TOLREG": 0.05,
+                "CLAPETT": False,
+                "CLAPET": False
             },
             "get_value":
                 {
@@ -104,7 +106,7 @@ class ClassUpdate620:
             },
             "default": {
                 "USEBASIN": False,
-                "NUMBASINREG": "''",
+                "NUMBASINREG": 0,
                 "VBREAKREG": 99999.,
                 "BPERMREG": False,
             },
@@ -150,6 +152,14 @@ class ClassUpdate620:
         dtarget = {col: [] for col in cols}
         if len(dsrc["name_var"]) > 0:
             id_typ = list(set(dsrc[f'id_{typ}']))
+            if typ == 'links':
+                lst_id = ','.join([f"'{id}'" for id in id_typ])
+                numlinks = self.mdb.select("links", where=f"linknum IN ({lst_id})",order=f'linknum',
+                                           list_var=['gid', 'linknum'])
+                conv = { numlink: gid for gid, numlink in zip(numlinks['gid'],numlinks['linknum'])}
+                id_typ = [conv[id] for id in id_typ]
+                dsrc[f'id_{typ}'] =[conv[id] for id in dsrc[f'id_{typ}']]
+
             lst_id = ','.join([f"'{id}'" for id in id_typ])
             if typ == 'weirs':
                 lst_typ = ["gid", "name", "abscissa", "z_crest"]
@@ -165,6 +175,8 @@ class ClassUpdate620:
                     for col in cols:
                         if col == "name_var":
                             dtarget[col].append("'"+f'{d_conv["var_conv"][nvar]}'+"'")
+                        elif col == 'id_order':
+                            dtarget[col].append(0)
                         else:
                             value = dsrc[col][idx]
                             if col == "value" :

@@ -82,11 +82,11 @@ class ClassDeletshDialog(QDialog):
             for i, model in enumerate(selection):
                 self.mdb.drop_model(model, cascade=True)
 
-                self.mgis.add_info("Deletion of {0} Model is done".format(model), dbg=True)
+                self.mgis.add_info("Deletion of {0} Model is done".format(model))
 
                 progress.setValue(round(i / n * 100))
         else:
-            self.mgis.add_info("Droping Model cancelled.", dbg=True)
+            self.mgis.add_info("Droping Model cancelled.")
 
         self.iface.messageBar().clearWidgets()
 

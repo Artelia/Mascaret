@@ -126,12 +126,12 @@ class ClassFloodGateLk:
         for id_lk, param in self.param_fg.items():
             val_break = self.masc.get(param['CHECK_VAR_BREAK'],
                                       param["SEC_BREAK"])
+
             if param["method_mob"] == self.dmeth["meth_regul"]:
                 if self.cl_regul.check_dt_regul(param, dtp):
                     val_check = self.masc.get(param['CHECK_VAR'],
                                               param["SECCON"])
                     self.cl_regul.state_regul(val_check, param)
-
                     self.cl_regul.check_break(param, val_break)
                     dnew = self.cl_regul.law_gate_regul(param, time)
                     self.fill_res_and_update(id_lk, time, param, dnew, val_check)
@@ -447,6 +447,7 @@ class ClassMethRegul:
         tol = param_fg["TOLREG"]
         key = (param_fg["OPEN_CLOSE"], param_fg["DIRFG"])
         # conditions
+        
         conditions = {
             # fermeture par le bas
             ("INIT", "D"): [(val_check >= param_fg["VREGOPEN"] - tol, "OPEN")],

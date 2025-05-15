@@ -126,7 +126,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     feature = results[0].mFeature
                     links = self.mgis.mdb.select_distinct("name", "links", "active")
                     if links and feature["name"] in links["name"]:
-                        graph_res = GraphResultDialog(self.mgis, type_res, feature["linknum"])
+                        graph_res = GraphResultDialog(self.mgis, type_res, feature["gid"])
                         graph_res.show()
                 elif  couche == "weirs":
                     feature = results[0].mFeature
@@ -244,7 +244,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     if links is not None:
                         if feature["name"] in links["name"]:
                             graph_link = GraphResultDialog(
-                                self.mgis, "hydro_link", feature["linknum"]
+                                self.mgis, "hydro_link", feature["gid"]
                             )
                             graph_link.show()
                 else:

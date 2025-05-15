@@ -59,6 +59,8 @@ class ClassMobilObjectMet1Widget(QWidget):
             self.obj_table = 'links'
             self.mob_table = 'links_mob_val'
             self.mob_table_id = 'id_links'
+            self.ui.cc_clapet.hide()
+
 
         self.d_var = {
             "VBREAKT": {"ctrl": self.ui.sb_break_val, "cc": self.ui.cc_break_val,
@@ -66,7 +68,9 @@ class ClassMobilObjectMet1Widget(QWidget):
             "BPERMT": {"ctrl": self.ui.cc_temp_break, "cc": None,
                        "vdef": False, "typ": to_bool},
             "ZFINALT": {"ctrl": self.ui.sb_break_lvl, "cc": self.ui.cc_break_lvl,
-                        "vdef": 0., "typ": float}
+                        "vdef": 0., "typ": float},
+            "CLAPETT": {"ctrl": self.ui.cc_clapet, "cc": None,
+                         "vdef": False, "typ": to_bool},
         }
 
         self.bg_time = QButtonGroup()

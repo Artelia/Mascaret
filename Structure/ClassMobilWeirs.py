@@ -122,23 +122,33 @@ class ClassMobilWeirs:
         :param dtp: Time step.
         """
         for id_weir, param in self.param_fg.items():
+            # effacement status
             status = self.masc.get("Model.Weir.State", param['id_mas'])
             if status:
                 continue
-            if param["method_mob"] == self.dmeth["meth_regul"]:
+            val_check = self.masc.get(param['CHECK_VAR'],
+                                      param["SECCON"])
+            if self.clapet(param):
+                param["OPEN_CLOSE"] = "CLOSE"
+                dnew = {"level": round(param["ZLIMITGATE"], 4)}
+                self.fill_res_and_update(id_weir, time, param, dnew, val_check)
+            elif param["method_mob"] == self.dmeth["meth_regul"]:
                 if self.cl_regul.check_dt_regul(param, dtp):
-                    val_check = self.masc.get(param['CHECK_VAR'],
-                                              param["SECCON"])
-
                     self.cl_regul.state_regul(val_check, param)
                     dnew = self.cl_regul.law_gate_regul(param, time)
                     self.fill_res_and_update(id_weir, time, param, dnew, val_check)
             elif param["method_mob"] == self.dmeth["meth_time"]:
-                val_check = self.masc.get(param['CHECK_VAR'], param["SECCON"])
                 dnew = self.cl_time.law_mth_time(param, time)
-
                 self.fill_res_and_update(id_weir, time, param, dnew, val_check)
-        
+
+    def clapet(self, param):
+        if param['CLAPMAREE'] and param["node"] + 1 <= self.model_size:
+            aval = self.masc.get("State.Z", param["node"])
+            amont = self.masc.get("State.Z", param["node"] + 1)
+            if aval > amont:
+                return True
+        return False
+
     def fill_res_and_update(self, id_weir, time, param, dnew, val_check):
         """
         Update  mobile weirs parameters and fill the results dictionary with the new values.
@@ -203,8 +213,6 @@ class ClassMobilWeirs:
                 param["SECCON"] = idx
             else:
                 self.add_info("Regulation point not found for numWeirs {}.".format(id_weir))
-
-
         del coords
 
     def search_weirs_to_param_fg(self):
@@ -239,11 +247,11 @@ class ClassMobilWeirs:
                     "TIME0": tini,
                     "TIME": tini
                 })
-
                 if param["method_mob"] == self.dmeth["meth_regul"]:
                     self.cl_regul.init_meth_regul(param, id_weir)
                 elif param["method_mob"] == self.dmeth["meth_time"]:
                     self.cl_time.init_meth_time(param)
+
                 # inti var time-dt
                 param.update({
                     "level-dt": param["level0"],
@@ -251,8 +259,9 @@ class ClassMobilWeirs:
                     "REGVAR_VAL-dt": param["REGVAR_VAL"]
                 })
             else:
-                self.add_info("Id_mas not found for numlink {}.".format(id_weir))
+                self.add_info("Id_mas not found for ID weirs {}.".format(id_weir))
         del coords
+
 
     def fill_results_fg_mv(self, id_weir, param):
         """
@@ -302,16 +311,15 @@ class ClassMethRegul:
         """
         param.update({
             "rup_level": param["level0"],
-        })
-        param.update({
+            'CLAPMAREE' : param["CLAPET"],
+            "ZLIMITGATE" : param["ZMAXFG"],
+            "level" :  max(param["ZINITREG"], param["level0"]),
             "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
             "OPEN_CLOSE": "INIT"
         })
         # info de la vanne
         if param["DIRFG"] != "D":
             self.add_info(f"Non-consistency type mobile weirs with the moving part {id_weir}.")
-        param["level"] = max(param["ZINITREG"], param["level0"])
-        param["ZLIMITGATE"] = param["ZMAXFG"]
 
 
     def check_param(self, param, id_weir):
@@ -486,14 +494,12 @@ class ClassMethTime:
         param.update({
             "TIMEZ": np.array(param["TIMEZ"]),
             "VALUEZ": np.array(param["VALUEZ"]),
-            "REGVAR_VAL" : self.masc.get(param['CHECK_VAR'], param["SECCON"])
-        })
-        param["level"] = np.interp(param["TIME"], param["TIMEZ"], param["VALUEZ"])
-
-        param.update({
+            "REGVAR_VAL" : self.masc.get(param['CHECK_VAR'], param["SECCON"]),
+            'CLAPMAREE': param["CLAPET"],
             "rup_level": param["level0"],
         })
-
+        param["level"] = np.interp(param["TIME"], param["TIMEZ"], param["VALUEZ"])
+        param["ZLIMITGATE"] = np.max(param["TIMEZ"])
 
 
     # def check_break(self, param, val_check):

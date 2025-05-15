@@ -38,17 +38,13 @@ from .ClassImport_res import ClassImportRes
 from .ClassMNT import ClassMNT
 from .model.ClassMascaret import ClassMascaret
 from .ClassParamExportDialog import  ClassParamExportDialog
-from .model.ClassCreatFilesModels import ClassCreatFilesModels
 from .ClassObservation import ClassEventObsDialog
 from .ClassParameterDialog import ClassParameterDialog
 from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, open_file_editor
 from .Graphic.FilterDialog import ClassFilterDialog
 from .Graphic.GraphProfilDialog import IdentifyFeatureTool
-
 from .HydroLawsDialog import ClassHydroLawsDialog
 from .Structure.MobilObjectDialog import ClassMobilObjectDialog
-from .Structure.MobilSingDialog import ClassMobilSingDialog
-from .Structure.FloodGateLinkDialog import ClassFloodGateLink
 from .ClassExtractBedDialog import ClassExtractBedDialog
 from .ClassUpdateBedDialog import (
     ClassUpdateBedDialog,
@@ -1016,14 +1012,11 @@ Version : {}
     def fct_mv_dam(self):
         """Running GUI of movable dam"""
 
-        # dlg = ClassMobilSingDialog(self)
         dlg = ClassMobilObjectDialog(self, 'weir')
         dlg.exec_()
 
     def fct_mv_link(self):
         """ Running GUI of movable link"""
-
-        # dlg = ClassFloodGateLink(self)
         dlg = ClassMobilObjectDialog(self, 'link')
         dlg.exec_()
 
@@ -1083,11 +1076,12 @@ Version : {}
         """Test function"""
         # get_laws
         #self.chkt.debug_update_vers_meta(version="5.1.5")
-        # cl = ClassCreatFilesModels(self.mdb,self.dossierFileMasc)
         # cl.creat_file_no_keep_break()
-        self.chkt.update_version('620')
-        # from db.update_version.update_620 import ClassUpdate620
-        # ClassUpdate620(self.chkt).update620()
+        # self.chkt.update_version('620')
+        from .Structure.ClassLinkFGParam import ClassLinkFGParam
+        self.cl_param = ClassLinkFGParam()
+        # self.cl_param.get_param(parent=self, file=)
+
         pass
 
     def update_ks_mesh_planim(self):
