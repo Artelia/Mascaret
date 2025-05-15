@@ -990,7 +990,7 @@ class ClassCreatFilesModels:
                 txte = (
                     "*** Error: The link {} " 'does not have "Basin number start"'.format(num)
                 )
-                self.mess.add_mess("LinksB_{}".format(numc, num), "critic", txte)
+                self.mess.add_mess("LinksB_{}".format( num), "critic", txte)
             # check if "basinend" is existed  before  check level
             if ste is None or ste == -1:
                 continue
