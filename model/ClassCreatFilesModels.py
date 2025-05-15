@@ -27,6 +27,8 @@ import shutil
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
+import numpy as np
+import pandas as pd
 from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
@@ -1289,20 +1291,27 @@ class ClassCreatFilesModels:
         :param liaisons:
         :return:
         """
+
         if any(liaisons['active_mob']) and self.cond_api:
             where = f"id_links in (SELECT gid FROM {self.mdb.SCHEMA}.links where active_mob)"
+            lst_gid = self.mdb.select_distinct("id_links", "links_mob_val", where)
             dico_mob = self.mdb.select("links_mob_val", where, "id_links")
-
-            for id_lk in dico_mob["id_links"]:
+            if not  lst_gid :
+                return liaisons
+            df_mob = pd.DataFrame(dico_mob)
+            for id_lk in lst_gid['id_links']:
                 try:
                     id_s = liaisons['gid'].index(id_lk)
-                    id_n = dico_mob['name_var'].index('ZINITREG')
+                    valeur = df_mob[(df_mob['id_links'] == id_lk) &
+                                     (df_mob['name_var'] == 'ZINITREG')]['value'].tolist()
+                    if valeur:
+                        valeur = valeur[0]
                     lvl0 = liaisons["level"][id_s]
-                    liaisons["level"][id_s] = dico_mob['value'][id_n]
+                    liaisons["level"][id_s] = float(valeur)
                     if liaisons['type'][id_s]==4:
-                        htop = liaisons["crosssection"][id_s] / liaisons["width"][id_s]
-                        newsec = liaisons["width"][id_s] * (htop - max(liaisons["level"][id_s]-lvl0, 0))
-                        liaisons["crosssection"][id_s] = newsec
+                         htop = liaisons["crosssection"][id_s] / liaisons["width"][id_s]
+                         newsec = max(liaisons["width"][id_s] * (htop - max(liaisons["level"][id_s]-lvl0, 0)), 1E-4)
+                         liaisons["crosssection"][id_s] = newsec
                 except ValueError:
                     continue
         return liaisons
@@ -1588,7 +1597,7 @@ class ClassCreatFilesModels:
                     name_obj, typ_law
                 )
 
-            config = self.mdb.select_one("law_config", condition, verbose=False)
+            config = self.mdb.select_one("law_config", condition)
             if config:
                 values = self.mdb.select(
                     "law_values",

@@ -1076,11 +1076,12 @@ Version : {}
         """Test function"""
         # get_laws
         #self.chkt.debug_update_vers_meta(version="5.1.5")
-        # cl = ClassCreatFilesModels(self.mdb,self.dossierFileMasc)
         # cl.creat_file_no_keep_break()
-        self.chkt.update_version('620')
-        # from db.update_version.update_620 import ClassUpdate620
-        # ClassUpdate620(self.chkt).update620()
+        # self.chkt.update_version('620')
+        from .Structure.ClassLinkFGParam import ClassLinkFGParam
+        self.cl_param = ClassLinkFGParam()
+        # self.cl_param.get_param(parent=self, file=)
+
         pass
 
     def update_ks_mesh_planim(self):

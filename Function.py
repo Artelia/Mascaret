@@ -47,7 +47,7 @@ def data_to_date(txt):
 
 def data_to_int(txt):
     try:
-        return int(txt)
+        return int(float(txt))
     except ValueError:
         return None
 

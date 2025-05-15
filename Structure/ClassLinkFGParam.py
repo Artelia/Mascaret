@@ -165,7 +165,7 @@ class ClassLinkFGParam(object):
         :param db: Database object.
         :return: True if parameters are successfully fetched, otherwise False.
         """
-        lst_var = ["linknum",
+        lst_var = ["gid",
                    "name",
                    "level",
                    "crosssection",
@@ -181,7 +181,7 @@ class ClassLinkFGParam(object):
             "SELECT {1} "
             "FROM {0}.links "
             "WHERE active AND type in (4,1) AND nature=1 AND active_mob "
-            "ORDER BY linknum;"
+            "ORDER BY gid;"
         ).format(db.SCHEMA, ", ".join(lst_var))
         rows = db.run_query(sql, fetch=True)
         if rows is None:
