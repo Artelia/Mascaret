@@ -175,8 +175,6 @@ class ClassUpdate620:
                     for col in cols:
                         if col == "name_var":
                             dtarget[col].append("'"+f'{d_conv["var_conv"][nvar]}'+"'")
-                        elif col == 'id_order':
-                            dtarget[col].append(0)
                         else:
                             value = dsrc[col][idx]
                             if col == "value" :
