@@ -149,6 +149,7 @@ class TaskMascInit():
                         self.dossier_file_masc, name + "_init", self.dico_loi_struct[name]["type"], list_final
                     )
             # initialise Law file
+            print('iiiiiiiiiiiiiiizziiiiiii', self.par["initialisationAuto"])
             self.date_debut = None
             if self.noyau == "steady":
                 exit_status = self.init_scen_steady(self.dict_lois)
@@ -159,7 +160,7 @@ class TaskMascInit():
                 # transcritical unsteady hors evenement
                 self.par = self.init_scen_trans_unsteady(self.par, self.dict_lois)
                 exit_status = self.clfile.mess.get_critic_status()
-
+            print('iiiiiiiiiiiiiiiiiiiiii', self.par["initialisationAuto"])
             self.add_log_mess(self.clfile.mess)
             if exit_status:
                 return False
@@ -187,7 +188,7 @@ class TaskMascInit():
                     id_run_init = self.dict_scen["id_run_init"][self.idx]
                 if "path_init" in self.dict_scen.keys():
                     path_init = self.dict_scen["path_init"][self.idx]
-
+                print( self.dict_scen)
                 if id_run_init is None and path_init is None:
                     txt = "Cancel run because No initial boundaries"
                     self.log_mess(txt, "ErrInit", 'critic')

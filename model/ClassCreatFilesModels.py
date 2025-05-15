@@ -1651,9 +1651,8 @@ class ClassCreatFilesModels:
 
             if "valeurperm" not in l.keys():
                 continue
-
             # nom = nom + "_init"
-            if l["valeurperm"] is not None:
+            if l["valeurperm"] :
                 if l["type"] == 1:
                     tab = {"time": [0, 3600], "flowrate": [l["valeurperm"]] * 2}
                     self.creer_loi(nom, tab, 1, init=True)
@@ -1666,16 +1665,16 @@ class ClassCreatFilesModels:
                     par["initialisationAuto"] = False
                     self.mess.add_mess('NoInitSteady', 'Warning',
                                        "No initialisation because of no SteadyValue")
-        else:
-                if l["type"] in [4, 5]:
-                    self.creer_loi(nom, tab, l["type"], init=True)
-                else:
-                    par["initialisationAuto"] = False
-                    txt = (
-                            'No initialisation because of no steady value set for {} condition'.format(nom) +
-                            'Set "steadyValue" in extremities layer for entity {}'.format(nom)
-                    )
-                    self.mess.add_mess(txt, 'NoInitUnsteady', 'warning')
+            else:
+                    if l["type"] in [4, 5]:
+                        self.creer_loi(nom, tab, l["type"], init=True)
+                    else:
+                        par["initialisationAuto"] = False
+                        txt = (
+                                'No initialisation because of no steady value set for {} condition'.format(nom) +
+                                'Set "steadyValue" in extremities layer for entity {}'.format(nom)
+                        )
+                        self.mess.add_mess(txt, 'NoInitUnsteady', 'warning')
         return par
     # ************   LIG FILE   ********************************************************************
 
