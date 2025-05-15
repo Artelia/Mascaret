@@ -366,18 +366,29 @@ class ClassMobilObjectMet2Widget(QWidget):
         if self.cur_obj:
             l_var = list(self.d_var.keys())
             txt_var = "('{}')".format("', '".join(l_var))
+
+            d_rec = dict()
             sql = "SELECT name_var, id_order, value FROM {0}.{1} WHERE {2} = {3} " \
                   "AND name_var IN {4}".format(self.mdb.SCHEMA, self.mob_table,
                                                self.mob_table_id, self.cur_obj, txt_var)
             rows = self.mdb.run_query(sql, fetch=True)
             for (nm_var, rang_var, value) in rows:
-                prm = self.d_var[nm_var]
-                try :
-                    conv_value = prm["typ"](value)
+                d_rec[nm_var] = {"def": rang_var, "val": value}
+
+            for nm_prm, saved_prm in d_rec.items():
+                prm = self.d_var[nm_prm]
+                try:
+                    conv_value = prm["typ"](saved_prm["val"])
                 except ValueError:
-                    conv_value = prm["typ"](float(value))
+                    conv_value = prm["typ"](float(saved_prm["val"]))
+
+                if nm_prm == "VELOFGOPEN" and "UNITVELO" in d_rec.keys():
+                    conv_value = conv_value / float(d_rec["UNITVELO"]["val"])
+                if nm_prm == "VELOFGCLOSE" and "UNITVELC" in d_rec.keys():
+                    conv_value = conv_value / float(d_rec["UNITVELC"]["val"])
+
                 ctrl_set_value(prm["ctrl"], conv_value, cc_is_checked=True)
-                if prm["cc"] and rang_var == 0:
+                if prm["cc"] and saved_prm["def"] == 0:
                     prm["cc"].setChecked(True)
 
     def clear_controls(self):
@@ -396,8 +407,16 @@ class ClassMobilObjectMet2Widget(QWidget):
             if prm["cc"]:
                 if not prm["cc"].isChecked():
                     idx_time = -1
-            recs.append([self.cur_obj, nm_var, idx_time,
-                         ctrl_get_value(prm["ctrl"], cc_is_checked=True)])
+
+            val = ctrl_get_value(prm["ctrl"], cc_is_checked=True)
+            if nm_var == "VELOFGOPEN":
+                unit = ctrl_get_value(self.ui.cb_unit_open_vel, cc_is_checked=True)
+                val = val * unit
+            if nm_var == "VELOFGCLOSE":
+                unit = ctrl_get_value(self.ui.cb_unit_close_vel, cc_is_checked=True)
+                val = val * unit
+
+            recs.append([self.cur_obj, idx_time, nm_var, val])
 
         sql = "DELETE FROM {0}.{1} WHERE {2} = {3} " \
               "AND name_var IN {4}".format(self.mdb.SCHEMA, self.mob_table,
@@ -405,7 +424,7 @@ class ClassMobilObjectMet2Widget(QWidget):
 
         self.mdb.execute(sql)
 
-        sql = "INSERT INTO {0}.{1} ({2}, name_var, id_order, value) " \
+        sql = "INSERT INTO {0}.{1} ({2}, id_order, name_var, value) " \
               "VALUES (%s, %s, %s, cast(%s as text))".format(self.mdb.SCHEMA,
                                                              self.mob_table,
                                                              self.mob_table_id)
