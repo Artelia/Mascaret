@@ -124,6 +124,13 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="page_4">
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <layout class="QVBoxLayout" name="lay_met3"/>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>

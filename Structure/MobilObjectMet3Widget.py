@@ -27,12 +27,11 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .FctDialog import ctrl_set_value, ctrl_get_value
+from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
 from ..Graphic.GraphCommon import GraphCommon
 from ..Function import data_to_float
 
-
-class ClassMobilObjectMet1Widget(QWidget):
+class ClassMobilObjectMet3Widget(QWidget):
     widget_closed = pyqtSignal()
 
     def __init__(self, mgis, typ_obj):
@@ -45,7 +44,7 @@ class ClassMobilObjectMet1Widget(QWidget):
         self.graph = None
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath,
-                                      "ui/structures/ui_mobil_object_met1.ui"),
+                                      "ui/structures/ui_mobil_object_met3.ui"),
                          self)
 
         if self.typ_obj == 'weir':
@@ -61,12 +60,24 @@ class ClassMobilObjectMet1Widget(QWidget):
             self.mob_table_id = 'id_links'
 
         self.d_var = {
-            "VBREAKT": {"ctrl": self.ui.sb_break_val, "cc": self.ui.cc_break_val,
-                        "vdef": 9999., "typ": float},
-            "BPERMT": {"ctrl": self.ui.cc_temp_break, "cc": None,
-                       "vdef": False, "typ": to_bool},
-            "ZFINALT": {"ctrl": self.ui.sb_break_lvl, "cc": self.ui.cc_break_lvl,
-                        "vdef": 0., "typ": float}
+            "METHBREAK": {"ctrl": self.ui.cb_break_met, "cc": self.ui.cc_method,
+                          "vdef": '1', "typ": str},
+            "TBREAKFUS": {"ctrl": self.ui.sb_break_time, "cc": self.ui.cc_break_time,
+                          "vdef": 0., "typ": float},
+            "UNITTBREAKFUS": {"ctrl": self.ui.cb_unit_break_time, "cc": self.ui.cc_break_time,
+                              "vdef": 1, "typ": int},
+            "VFUS": {"ctrl": self.ui.cb_var_break, "cc": self.ui.cc_break_var,
+                     "vdef": 'Z', "typ": str},
+            "USEBASINFUS": {"ctrl": self.ui.cb_typ_control, "cc": self.ui.cc_control,
+                            "vdef": False, "typ": to_bool},
+            "NUMBASINFUS": {"ctrl": self.ui.cb_basin, "cc": self.ui.cc_control,
+                            "vdef": 0, "typ": int},
+            "PKFUS": {"ctrl": self.ui.sb_abscissa, "cc": self.ui.cc_control,
+                      "vdef": 0., "typ": float},
+            "VBREAKFUS": {"ctrl": self.ui.sb_break_lvl, "cc": self.ui.cc_break_lvl,
+                          "vdef": 0., "typ": float},
+            "ZFINALFUS": {"ctrl": self.ui.sb_after_lvl, "cc": self.ui.cc_after_lvl,
+                          "vdef": 0., "typ": float},
         }
 
         self.bg_time = QButtonGroup()
@@ -88,8 +99,20 @@ class ClassMobilObjectMet1Widget(QWidget):
         styled_item_delegate.setItemEditorFactory(ItemEditorFactory())
         self.ui.tab_sets.setItemDelegate(styled_item_delegate)
 
-        self.ui.cc_break_val.toggled.connect(self.enab_breaking_value)
+        self.ui.cc_method.toggled.connect(self.enab_method)
+        self.ui.cb_break_met.currentIndexChanged.connect(self.method_changed)
+
+        self.ui.cc_break_time.toggled.connect(self.enab_breaking_time)
+
+        self.ui.cc_break_var.toggled.connect(self.enab_variable_break)
+        self.ui.cb_var_break.currentIndexChanged.connect(self.variable_break_changed)
+
+        self.ui.cc_control.toggled.connect(self.enab_control)
+        self.ui.cb_typ_control.currentIndexChanged.connect(self.control_type_changed)
+
         self.ui.cc_break_lvl.toggled.connect(self.enab_breaking_level)
+
+        self.ui.cc_after_lvl.toggled.connect(self.enab_after_level)
 
         self.ui.b_valid.accepted.connect(self.save_input)
         self.ui.b_valid.rejected.connect(self.cancel_input)
@@ -97,19 +120,89 @@ class ClassMobilObjectMet1Widget(QWidget):
 
     def init_ui(self):
         """initialisation gui"""
+        fill_qcombobox(self.ui.cb_break_met, [["1", "Break at a time"],
+                                              ["2", "Break at a value"]])
+
+        fill_qcombobox(self.ui.cb_unit_break_time, [[1, "Seconds"],
+                                                    [60, "Minutes"],
+                                                    [3600, "Hours"],
+                                                    [86400, "Days"]])
+
+        fill_qcombobox(self.ui.cb_var_break, [["Z", "Water level"],
+                                              ["Q", "Flow rate"]])
+
+        fill_qcombobox(self.ui.cb_typ_control, [[False, "Abscissa"],
+                                                [True, "Basin"]])
+
         mdl = self.create_tab_model()
         self.ui.tab_sets.setModel(mdl)
         self.graph = GraphMobSing(self.mgis, self.ui.lay_graph_m1)
 
-    def enab_breaking_value(self, cs):
-        self.ui.sb_break_val.setEnabled(cs)
+    def enab_method(self, cs):
+        self.ui.cb_break_met.setEnabled(cs)
         if not cs:
-            self.set_def_ctrl_value(self.ui.sb_break_val)
+            self.set_def_ctrl_value(self.ui.cb_break_met)
+
+    def method_changed(self, idx):
+        if idx == 1:
+            self.ui.cc_break_time.setChecked(False)
+            self.ui.grp_time.hide()
+            self.ui.grp_lvl.show()
+        else:
+            self.ui.cc_break_var.setChecked(False)
+            self.ui.cc_control.setChecked(False)
+            self.ui.cc_break_lvl.setChecked(False)
+            self.ui.grp_lvl.hide()
+            self.ui.grp_time.show()
+
+    def enab_breaking_time(self, cs):
+        self.ui.sb_break_time.setEnabled(cs)
+        self.ui.cb_unit_break_time.setEnabled(cs)
+        if not cs:
+            self.set_def_ctrl_value(self.ui.sb_break_time)
+            self.set_def_ctrl_value(self.ui.cb_unit_break_time)
+
+    def enab_variable_break(self, cs):
+        self.ui.cb_var_break.setEnabled(cs)
+        if not cs:
+            self.set_def_ctrl_value(self.ui.cb_var_break)
+
+    def variable_break_changed(self, idx):
+        if idx == 1:
+            self.ui.sb_break_lvl.setSuffix(" m³/s")
+        else:
+            self.ui.sb_break_lvl.setSuffix(" m")
+
+    def enab_control(self, cs):
+        self.ui.cb_typ_control.setEnabled(cs)
+        self.ui.sb_abscissa.setEnabled(cs)
+        self.ui.cb_basin.setEnabled(cs)
+        if not cs:
+            self.set_def_ctrl_value(self.ui.cb_typ_control)
+            self.set_def_ctrl_value(self.ui.sb_abscissa)
+            self.set_def_ctrl_value(self.ui.cb_basin)
+
+    def control_type_changed(self, idx):
+        self.ui.cc_break_var.setChecked(True)
+        self.ui.cc_break_var.setChecked(False)
+        if idx == 1:
+            self.ui.sb_abscissa.hide()
+            self.ui.cb_basin.show()
+            self.ui.cc_break_var.setEnabled(False)
+        else:
+            self.ui.cb_basin.hide()
+            self.ui.sb_abscissa.show()
+            self.ui.cc_break_var.setEnabled(True)
 
     def enab_breaking_level(self, cs):
         self.ui.sb_break_lvl.setEnabled(cs)
         if not cs:
             self.set_def_ctrl_value(self.ui.sb_break_lvl)
+
+    def enab_after_level(self, cs):
+        self.ui.sb_after_lvl.setEnabled(cs)
+        if not cs:
+            self.set_def_ctrl_value(self.ui.sb_after_lvl)
 
     def create_tab_model(self):
         """create table"""
@@ -118,23 +211,37 @@ class ClassMobilObjectMet1Widget(QWidget):
         for c in range(4):
             model.setHeaderData(c, 1, "time", 0)
 
-        model.setHeaderData(4, 1, "Z", 0)
+        model.setHeaderData(4, 1, "width (m)", 0)
 
         model.itemChanged.connect(self.on_tab_data_change)
         return model
 
     def load_object(self, object_id):
         self.cur_obj = object_id
-        if self.typ_obj == "weir":
-            sql = "SELECT COALESCE(z_crest, 0.) FROM {0}.{1} " \
-                  "WHERE gid = {2}".format(self.mdb.SCHEMA, self.obj_table, self.cur_obj)
 
-        elif self.typ_obj == 'link':
-            sql = "SELECT COALESCE(links.level, 0.) FROM {0}.{1} " \
+        if self.typ_obj == 'link':
+            sql = "SELECT type, nature, COALESCE(abscissa, 0.) as absc, COALESCE(links.level, 0.) as lvl, " \
+                  "basinstart, bas_sta.name, basinend , bas_end.name " \
+                  "FROM ({0}.{1} " \
+                  "LEFT JOIN {0}.basins as bas_sta on basinstart = bas_sta.gid) " \
+                  "LEFT JOIN {0}.basins as bas_end on basinend = bas_end.gid " \
                   "WHERE links.gid = {2}".format(self.mdb.SCHEMA, self.obj_table, self.cur_obj)
+            rows = self.mdb.run_query(sql, fetch=True)
+            typ_link, nat_link, cur_abs, cur_z, b_sta_id, b_sta_name, b_end_id, b_end_name = rows[0]
 
-        rows = self.mdb.run_query(sql, fetch=True)
-        self.d_var["ZFINALT"]["vdef"] = rows[0][0]
+            if str(nat_link) != '2':
+                fill_qcombobox(self.ui.cb_basin, [[b_sta_id, b_sta_name]])
+                self.d_var["USEBASINFUS"]["vdef"] = False
+                self.ui.cb_typ_control.show()
+            else:
+                fill_qcombobox(self.ui.cb_basin, [[b_sta_id, "Start basin ({})".format(b_sta_name)],
+                                                  [b_end_id, "End basin ({})".format(b_end_name)]])
+                self.d_var["USEBASINFUS"]["vdef"] = True
+                self.ui.cb_typ_control.hide()
+
+            self.d_var["ZFINALFUS"]["vdef"] = cur_z
+            self.d_var["PKFUS"]["vdef"] = cur_abs
+            self.d_var["NUMBASINFUS"]["vdef"] = b_sta_id
 
         self.fill_controls()
         self.fill_table()
@@ -161,15 +268,22 @@ class ClassMobilObjectMet1Widget(QWidget):
             l_var = list(self.d_var.keys())
             txt_var = "('{}')".format("', '".join(l_var))
 
+            d_rec = dict()
             sql = "SELECT name_var, id_order, value FROM {0}.{1} WHERE {2} = {3} " \
                   "AND name_var IN {4}".format(self.mdb.SCHEMA, self.mob_table,
                                                self.mob_table_id, self.cur_obj, txt_var)
             rows = self.mdb.run_query(sql, fetch=True)
             for (nm_var, rang_var, value) in rows:
-                prm = self.d_var[nm_var]
-                conv_value = prm["typ"](value)
+                d_rec[nm_var] = {"def": rang_var, "val": value}
+
+            for nm_prm, saved_prm in d_rec.items():
+                prm = self.d_var[nm_prm]
+                conv_value = prm["typ"](saved_prm["val"])
+                if nm_prm == "TBREAKFUS" and "UNITTBREAKFUS" in d_rec.keys():
+                    conv_value = conv_value / float(d_rec["UNITTBREAKFUS"]["val"])
+
                 ctrl_set_value(prm["ctrl"], conv_value, cc_is_checked=True)
-                if prm["cc"] and rang_var == 0:
+                if prm["cc"] and saved_prm["def"] == 0:
                     prm["cc"].setChecked(True)
 
     def clear_controls(self):
@@ -200,7 +314,7 @@ class ClassMobilObjectMet1Widget(QWidget):
             self.filling_tab = True
             mdl = self.ui.tab_sets.model()
             c = 0
-            for var in ["TIMEZ", "VALUEZ"]:
+            for var in ["TIMEFUS", "WIDTHFUS"]:
                 sql = "SELECT cast(value as float) FROM {0}.{1} " \
                       "WHERE {2} = {3} AND name_var = '{4}' " \
                       "ORDER BY id_order".format(self.mdb.SCHEMA,
@@ -211,7 +325,7 @@ class ClassMobilObjectMet1Widget(QWidget):
 
                 rows = self.mdb.run_query(sql, fetch=True)
 
-                if var == "TIMEZ":
+                if var == "TIMEFUS":
                     mdl.insertRows(0, len(rows))
                     for r, row in enumerate(rows):
                         itm = QStandardItem()
@@ -231,7 +345,7 @@ class ClassMobilObjectMet1Widget(QWidget):
     def save_input(self):
         try:
             l_var = list(self.d_var.keys())
-            l_var.extend(['VALUEZ', 'TIMEZ'])
+            l_var.extend(["TIMEFUS", "WIDTHFUS"])
             txt_var = "('{}')".format("', '".join(l_var))
 
             sql = "DELETE FROM {0}.{1} WHERE {2} = {3} " \
@@ -242,8 +356,8 @@ class ClassMobilObjectMet1Widget(QWidget):
 
             recs = []
             for row in range(self.ui.tab_sets.model().rowCount()):
-                recs.append([self.cur_obj, row, "TIMEZ", self.ui.tab_sets.model().item(row, 0).data(0)])
-                recs.append([self.cur_obj, row, "VALUEZ", self.ui.tab_sets.model().item(row, 4).data(0)])
+                recs.append([self.cur_obj, row, "TIMEFUS", self.ui.tab_sets.model().item(row, 0).data(0)])
+                recs.append([self.cur_obj, row, "WIDTHFUS", self.ui.tab_sets.model().item(row, 4).data(0)])
 
             if self.typ_obj == 'link':
                 for nm_var, prm in self.d_var.items():
@@ -251,8 +365,13 @@ class ClassMobilObjectMet1Widget(QWidget):
                     if prm["cc"]:
                         if not prm["cc"].isChecked():
                             idx_time = -1
-                    recs.append([self.cur_obj, idx_time, nm_var,
-                                 ctrl_get_value(prm["ctrl"], cc_is_checked=True)])
+
+                    val = ctrl_get_value(prm["ctrl"], cc_is_checked=True)
+                    if nm_var == "TBREAKFUS":
+                        unit = ctrl_get_value(self.ui.cb_unit_break_time, cc_is_checked=True)
+                        val = val * unit
+
+                    recs.append([self.cur_obj, idx_time, nm_var, val])
 
             sql = "INSERT INTO {0}.{1} ({2}, id_order, name_var, value) " \
                   "VALUES (%s, %s, %s, cast(%s as text))".format(self.mdb.SCHEMA,
@@ -262,6 +381,7 @@ class ClassMobilObjectMet1Widget(QWidget):
             self.mdb.run_query(sql, many=True, list_many=recs)
             self.clear_table()
             self.widget_closed.emit()
+
         except:
             self.cancel_input()
             self.mgis.add_info("Cancel of {0} information".format(self.obj_table))
@@ -487,7 +607,7 @@ class GraphMobSing(GraphCommon):
         self.axes.tick_params(axis="both", labelsize=7.0)
         self.axes.grid(True)
 
-        self.courbe, = self.axes.plot([], [], zorder=100, label="Z")
+        self.courbe, = self.axes.plot([], [], zorder=100, label="Width (m)")
         self.courbes.append(self.courbe)
 
         self.fig.canvas.mpl_connect("pick_event", self.onpick)
