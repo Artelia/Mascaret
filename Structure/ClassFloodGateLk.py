@@ -61,6 +61,7 @@ class ClassFloodGateLk:
         if not self.check_param():
             self.add_info("***** ERROR: the gates for the links\n COMPUTATION STOP")
             self.arret_comput = False
+            return
         self.init_res()
         self.update_var_mas(force=True)
         return
@@ -91,7 +92,7 @@ class ClassFloodGateLk:
         """
         self.results_fg_lk_mv = {
             id_link: {
-                "TIME": [params["TIME"]],
+                "TIME": [params['TIME']],
                 "ZLINK": [params["level"]],
                 "CSECLINK": [params["CSection"]],
                 "WIDTHLINK": [params["width"]],
@@ -160,13 +161,6 @@ class ClassFloodGateLk:
         :param val_check: Regulation variable value to check.
         """
         param.update({
-            # var time-dt
-            "CSection-dt": param["CSection"],
-            "level-dt": param["level"],
-            "width-dt": param["width"],
-            "TIME-dt": param["TIME"],
-            "ZmaxSection-dt": param["ZmaxSection"],
-            "REGVAR_VAL-dt": param["REGVAR_VAL"],
             # var update in run
             "REGVAR_VAL": val_check,
             "level": dnew['level'],
@@ -263,15 +257,14 @@ class ClassFloodGateLk:
         coords = np.array(coords)
         for id_lk, param in self.param_fg.items():
             idx = (np.abs(coords - param["abscissa"])).argmin()
-            if idx:
+            if isinstance(idx,np.int64):
                 id_mas = lst_info[idx]
                 param.update({
                     "id_mas": id_mas,
                     "TIME0": tini,
-                    "TIME": tini
+                    "TIME": tini,
                 })
                 param["ZmaxSection0"] = param["level0"] + param["CSection0"] / param["width0"]
-
                 if param["method_mob"] == self.dmeth["meth_regul"]:
                     self.cl_regul.init_meth_regul(param, id_lk)
                 elif param["method_mob"] == self.dmeth["meth_time"]:
@@ -313,7 +306,7 @@ class ClassFloodGateLk:
         if ((param["level"], param["CSection"], param["width"]) !=
                 (param["level-dt"], param["CSection-dt"], param["width-dt"])) and(
                 (res["TIME"][-1], res["CSECLINK"][-1], res["WIDTHLINK"][-1],res["ZLINK"][-1]) !=
-                (param["TIME-dt"],param["CSection-dt"],param["width-dt"], param[zlink_var_dt])):
+                (param["TIME-dt"],param["CSection-dt"],param["width-dt"], param[zlink_var_dt])) and param["TIME"]>0:
 
             res["TIME"].append(param["TIME-dt"])
             res["CSECLINK"].append(param["CSection-dt"])
@@ -327,7 +320,15 @@ class ClassFloodGateLk:
         res["WIDTHLINK"].append(param["width"])
         res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
         res["ZLINK"].append(param[zlink_var])
-
+        
+        param.update({
+            # var time-dt
+            "CSection-dt": param["CSection"],
+            "level-dt": param["level"],
+            "width-dt": param["width"],
+            "TIME-dt": param["TIME"],
+            "ZmaxSection-dt": param["ZmaxSection"],
+            "REGVAR_VAL-dt": param["REGVAR_VAL"], })
 
 class ClassMethRegul:
     """Class for handling floodgate regulation logic."""
@@ -665,7 +666,6 @@ class ClassMethTime:
             dnew["CSection"] = param["width0"] * min((param["ZmaxSection0"] - dnew["level"]), 0)
         else:
             dnew["CSection"] = 0
-
         return dnew
 
 
