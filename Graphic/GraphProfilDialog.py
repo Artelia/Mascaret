@@ -244,7 +244,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     if links is not None:
                         if feature["name"] in links["name"]:
                             graph_link = GraphResultDialog(
-                                self.mgis, "hydro_link", feature["gid"]
+                                self.mgis, "hydro_link", feature["linknum"]
                             )
                             graph_link.show()
                 else:

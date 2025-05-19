@@ -1306,12 +1306,12 @@ class ClassCreatFilesModels:
                                      (df_mob['name_var'] == 'ZINITREG')]['value'].tolist()
                     if valeur:
                         valeur = valeur[0]
-                    lvl0 = liaisons["level"][id_s]
-                    liaisons["level"][id_s] = float(valeur)
-                    if liaisons['type'][id_s]==4:
-                         htop = liaisons["crosssection"][id_s] / liaisons["width"][id_s]
-                         newsec = max(liaisons["width"][id_s] * (htop - max(liaisons["level"][id_s]-lvl0, 0)), 1E-4)
-                         liaisons["crosssection"][id_s] = newsec
+                        lvl0 = liaisons["level"][id_s]
+                        liaisons["level"][id_s] = float(valeur)
+                        if liaisons['type'][id_s]==4:
+                             htop = liaisons["crosssection"][id_s] / liaisons["width"][id_s]
+                             newsec = max(liaisons["width"][id_s] * (htop - max(liaisons["level"][id_s]-lvl0, 0)), 1E-4)
+                             liaisons["crosssection"][id_s] = newsec
                 except ValueError:
                     continue
         return liaisons
