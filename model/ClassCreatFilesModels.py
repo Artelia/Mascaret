@@ -1678,8 +1678,10 @@ class ClassCreatFilesModels:
         return par
     # ************   LIG FILE   ********************************************************************
 
-    def opt_to_lig(self, id_run, base_namefiles):
+    def opt_to_lig(self, id_run, base_namefiles, path_file=None):
         """Creation of .lig file"""
+        if not path_file:
+            path_file = self.dossier_file_masc
         result = self.get_for_lig(id_run)
         if not result:
             return None
@@ -1702,7 +1704,7 @@ class ClassCreatFilesModels:
             i1i2.append(str(i1[b]))
             i1i2.append(str(i2[b]))
 
-        with open(os.path.join(self.dossier_file_masc, base_namefiles + ".lig"), "w") as fich:
+        with open(os.path.join(path_file, base_namefiles + ".lig"), "w") as fich:
             date = datetime.datetime.utcnow()
             fich.write("RESULTATS CALCUL,DATE :  {0:%d/%m/%y %H:%M}\n".format(date))
             fich.write("FICHIER RESULTAT MASCARET{0}\n".format(" " * 47))

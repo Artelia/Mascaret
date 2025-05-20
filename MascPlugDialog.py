@@ -52,6 +52,7 @@ from .ClassUpdateBedDialog import (
     refresh_minor_bed_layer,
 )
 from .ClassCartoZi import ClassCartoZI
+from .ClassExportLigDialog import ClassExportLigDialog
 
 # # structures
 from .Structure.StructureDialog import ClassStructureDialog
@@ -80,6 +81,7 @@ class MascPlugDialog(QMainWindow):
         self.task_use = True
 
         self.curConnName = None
+        self.cond_api = False
         self.passwd = None
         self.mdb = None
         self.iface = iface
@@ -103,6 +105,7 @@ class MascPlugDialog(QMainWindow):
         self.basin_result = None
         self.profil_z = None
         self.mass_graph = None
+
 
         self.prev_tool = None
 
@@ -259,6 +262,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
 
         self.ui.action_mass_graphic_events.triggered.connect(self.mass_graph_hq)
+        self.ui.action_create_lig_file.triggered.connect(self.creat_lig)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
         self.ui.actionTest.setVisible(True)
@@ -984,7 +988,6 @@ Version : {}
     def fct_export_tracer_files(self):
         folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
 
-        self.dossier_file_masc = os.path.join(self.masplugPath, "mascaret")
         cl = ClassMascWQ(self, self.dossier_file_masc)
         try:
             # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:
@@ -1070,23 +1073,15 @@ Version : {}
         elif os.name == 'posix':  # Linux, Unix
             subprocess.call(('xdg-open', file_path))
 
-    def creat_lig(self):
-
-        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc, self.cond_api, self.dbg)
-        self.clfile.opt_to_lig(self.id_run, self.basename)
-        opt_to_lig()
-
-
     def fct_test(self):
         """Test function"""
         # get_laws
         #self.chkt.debug_update_vers_meta(version="5.1.5")
         # cl.creat_file_no_keep_break()
         # self.chkt.update_version('620')
-        from .Structure.ClassLinkFGParam import ClassLinkFGParam
-        self.cl_param = ClassLinkFGParam()
+        # from .Structure.ClassLinkFGParam import ClassLinkFGParam
+        # self.cl_param = ClassLinkFGParam()
         # self.cl_param.get_param(parent=self, file=)
-
         pass
 
     def update_ks_mesh_planim(self):
@@ -1285,3 +1280,11 @@ Version : {}
         self.map_tool.changedRasterResults.connect(self.do_something)
 
         canvas.setMapTool(self.map_tool)
+
+    def creat_lig(self):
+        """
+        Creation of the .lig file
+        :return:
+        """
+        dlgp = ClassExportLigDialog(self)
+        dlgp.exec_()
