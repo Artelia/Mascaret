@@ -106,7 +106,7 @@ class MascPlugDialog(QMainWindow):
 
         self.prev_tool = None
 
-        self.dossierFileMasc = ""
+        self.dossier_file_masc = os.path.join(self.masplugPath, "mascaret")
 
         # self.pathPostgres = self.masplug_path
         # emplacement objet sql
@@ -984,8 +984,8 @@ Version : {}
     def fct_export_tracer_files(self):
         folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
 
-        self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
-        cl = ClassMascWQ(self, self.dossierFileMasc)
+        self.dossier_file_masc = os.path.join(self.masplugPath, "mascaret")
+        cl = ClassMascWQ(self, self.dossier_file_masc)
         try:
             # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:
             #     #simul date
@@ -1040,7 +1040,7 @@ Version : {}
             clam = ClassMascaret(self, rep_run=rep_run)
             clam.fct_only_init(kernel, run, dict_export)
             #
-            with open(os.path.join(clam.dossierFileMasc, "FichierCas.txt"), "w") as fichier:
+            with open(os.path.join(clam.dossier_file_masc, "FichierCas.txt"), "w") as fichier:
                 fichier.write("'mascaret.xcas'\n")
             self.export_run(clam, folder_name_path=dict_export['path_rep'], typ_compress=dict_export['typ_compress'])
             clam.del_folder_mas()
@@ -1070,6 +1070,11 @@ Version : {}
         elif os.name == 'posix':  # Linux, Unix
             subprocess.call(('xdg-open', file_path))
 
+    def creat_lig(self):
+
+        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc, self.cond_api, self.dbg)
+        self.clfile.opt_to_lig(self.id_run, self.basename)
+        opt_to_lig()
 
 
     def fct_test(self):

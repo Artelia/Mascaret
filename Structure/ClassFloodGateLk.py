@@ -62,8 +62,8 @@ class ClassFloodGateLk:
             self.add_info("***** ERROR: the gates for the links\n COMPUTATION STOP")
             self.arret_comput = False
             return
-        self.init_res()
         self.update_var_mas(force=True)
+        self.init_res()
         return
 
     def update_var_mas(self, force=False):
@@ -82,6 +82,7 @@ class ClassFloodGateLk:
                     "Model.Link.CSection": param["CSection"],
                     "Model.Link.Width": param["width"]
                 }
+                # print(updates, param['TIME'],param["REGVAR_VAL"], force)
                 for key, value in updates.items():
                     self.masc.set(key, value, id_mas)
 
@@ -169,8 +170,9 @@ class ClassFloodGateLk:
             "ZmaxSection": dnew["ZmaxSection"],
             "TIME": time
         })
-        self.fill_results_fg_mv(id_lk, param)
         self.update_var_mas()
+        self.fill_results_fg_mv(id_lk, param)
+
 
     def check_param(self):
         """
@@ -382,7 +384,7 @@ class ClassMethRegul:
             param["ZLIMITGATE"] = min(param["ZMAXFG"], param["level0"])
         else:
             self.add_info(f"Non-consistency type floodgate with the moving part {id_lk}.")
-
+        # print(param)
     def check_param(self, param, id_lk):
         """
         Validate the consistency of regulation parameters, specifically `VREGOPEN` and `VREGCLOS`.
@@ -428,7 +430,7 @@ class ClassMethRegul:
             })
         else:
             # reveient à l'état avant rupture
-            if not param["BPERMREG"]:
+            if not param["BPERMREG"] and self.break_lk:
                 self.break_lk = False
                 param.update({
                     "level": param["rup_level"],
@@ -487,6 +489,8 @@ class ClassMethRegul:
             if condition:
                 param_fg["OPEN_CLOSE"] = action
                 break
+        # print("status", param_fg["OPEN_CLOSE"])
+        # print(val_check, param_fg["VREGOPEN"],param_fg["VREGCLOS"], tol)
         return val_check
 
     def law_gate_regul(self, param, time):
@@ -505,6 +509,7 @@ class ClassMethRegul:
             }
 
         status = param["OPEN_CLOSE"]
+
         if status in [None, "INIT", "MAINT"]:
             return {
                 "level": param["level"],
@@ -520,7 +525,7 @@ class ClassMethRegul:
         zmax_section, zmax_section0 = param["ZmaxSection"], param["ZmaxSection0"]
         zlimit_gate = param["ZLIMITGATE"]
         width = param["width0"]
-
+        new_section = 0.
         if dir_fg == "D":
             new_level_max = zmax_section0
             if status == "CLOSE":
@@ -533,8 +538,9 @@ class ClassMethRegul:
                 new_level_max = min(zmax_section + dz_close, zlimit_gate)
             elif status == "OPEN":
                 new_level_max = max(zmax_section - dz_open, zmax_section0)
-
-        new_section = width * (new_level_max - new_level)
+        if param["type"] == 4:
+            new_section = width * (new_level_max - new_level)
+        # print(new_level, level, dz_close, dz_open , level0, zlimit_gate)
         return {
             "level": new_level,
             "CSection": new_section,
@@ -637,7 +643,7 @@ class ClassMethTime:
             })
         else:
             # reveient à l'état avant rupture
-            if not  param["BPERMT"]:
+            if not  param["BPERMT"] and self.break_lk :
                 self.break_lk = False
                 param.update({
                     "level": param["rup_level"],

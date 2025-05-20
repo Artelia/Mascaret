@@ -254,13 +254,11 @@ class CurveSelectorWidget(QWidget):
                 }
 
                 table, var_test = table_map[self.typ_graph]
-                print(table, var_test)
                 info = self.mdb.select(
                     table,
                     where=f"{var_test} IN {list_sql(lstpk, 'float')}",
-                    list_var=[var_test, "name"], verbose=True
+                    list_var=[var_test, "name"]
                 )
-                print(info)
                 for pknum in lstpk:
                     if pknum in info[var_test]:
                         name = info["name"][info[var_test].index(pknum)]

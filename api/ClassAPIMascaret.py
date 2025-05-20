@@ -83,13 +83,13 @@ class ClassAPIMascaret:
         if isinstance(main, dict):
             self.clmas = None
             self.mgis = None
-            self.dossierFileMasc = main["RUN_REP"]
+            self.dossier_file_masc = main["RUN_REP"]
             os.chdir(main["RUN_REP"])
             self.baseName = main["BASE_NAME"]
         else:
             self.clmas = main
             self.mgis = self.clmas.mgis
-            self.dossierFileMasc = self.clmas.dossierFileMasc
+            self.dossier_file_masc = self.clmas.dossier_file_masc
             self.baseName = self.clmas.baseName
 
         self.mess = ClassMessage()
@@ -426,7 +426,7 @@ class ClassAPIMascaret:
             self.results_api["WEIRS"] = self.clfg_w.results_fg_weirs_mv
             if self.mgis is None:
                 self.write_res_struct(self.results_api["WEIRS"], "res_weirs_fg.res")
-        self.mess.export_obj(self.dossierFileMasc)
+        self.mess.export_obj(self.dossier_file_masc)
 
     def write_res_struct(self, res, filen="res_struct.res"):
         """
@@ -434,7 +434,7 @@ class ClassAPIMascaret:
         :param res: results to write f
         :return:
         """
-        with open(os.path.join(self.dossierFileMasc, filen), "w") as filein:
+        with open(os.path.join(self.dossier_file_masc, filen), "w") as filein:
             json.dump(res, filein)
 
 

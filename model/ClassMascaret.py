@@ -51,13 +51,13 @@ class ClassMascaret:
         self.mdb = self.mgis.mdb
         self.iface = self.mgis.iface
         if not rep_run:
-            self.dossierFileMasc = os.path.join(self.mgis.masplugPath, "mascaret")
+            self.dossier_file_masc = os.path.join(self.mgis.masplugPath, "mascaret")
         else:
-            self.dossierFileMasc = rep_run
+            self.dossier_file_masc = rep_run
 
-        if not os.path.isdir(self.dossierFileMasc):
-            os.mkdir(self.dossierFileMasc)
-        self.dossierFileMascOri = os.path.join(self.mgis.masplugPath, "mascaret_ori")
+        if not os.path.isdir(self.dossier_file_masc):
+            os.mkdir(self.dossier_file_masc)
+        self.dossier_file_masc_ori = os.path.join(self.mgis.masplugPath, "mascaret_ori")
         self.dossierFile_bin = os.path.join(self.mgis.masplugPath, "bin")
         self.baseName = "mascaret"
         self.box = ClassWarningBox()
@@ -66,7 +66,7 @@ class ClassMascaret:
         # kernel list
         self.Klist = ["steady", "unsteady", "transcritical"]
 
-        self.wq = ClassMascWQ(self.mgis, self.dossierFileMasc)
+        self.wq = ClassMascWQ(self.mgis, self.dossier_file_masc)
         self.cond_api = self.mgis.cond_api
         self.save_res_struct = None
 
@@ -74,7 +74,7 @@ class ClassMascaret:
         self.err_model["timeLaw"] = TypeErrorModel("timeLaw", " ERROR : Law Time", stop=True)
         self.err_model["lInflowPos"] = TypeErrorModel("lInflowPos", "WARNING : the inflow position")
 
-        self.clfile = ClassCreatFilesModels(self.mdb, self.dossierFileMasc, self.cond_api,self.dbg)
+        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc, self.cond_api, self.dbg)
 
     def get_param_model(self, noyau):
         """
@@ -143,7 +143,7 @@ class ClassMascaret:
 
             cl_lk = ClassLinkFGParam()
             if cl_lk.fg_actif_lk(self.mgis.mdb):
-                path = os.path.join(self.dossierFileMasc, "links_cli_fg.obj")
+                path = os.path.join(self.dossier_file_masc, "links_cli_fg.obj")
                 cl_lk.create_cli_fg(self.mgis,path)
                 exit_status = cl_lk.mess.get_critic_status()
                 self.write_mess(cl_lk.mess)
@@ -154,7 +154,7 @@ class ClassMascaret:
         if  noyau == "unsteady":
             cl_w = ClassMobilWeirsParam()
             if cl_w.fg_actif_weirs(self.mgis.mdb):
-                path = os.path.join(self.dossierFileMasc, "weirs_cli_fg.obj")
+                path = os.path.join(self.dossier_file_masc, "weirs_cli_fg.obj")
                 cl_w.create_cli_fg(self.mgis, path)
                 exit_status = cl_w.mess.get_critic_status()
                 self.write_mess(cl_w.mess)
@@ -259,7 +259,7 @@ class ClassMascaret:
             'mdb': self.mdb,
             'wq': self.wq,
             'basename': self.baseName,
-            'dossier_file_masc': self.dossierFileMasc,
+            'dossier_file_masc': self.dossier_file_masc,
             'par': par,
             'dict_scen': dict_scen,
             'comments': comments,
@@ -374,7 +374,7 @@ class ClassMascaret:
     #         None,
     #         "File Selection",
     #         self.mgis.repProject,
-    #         # self.dossierFileMasc,
+    #         # self.dossier_file_masc,
     #         "File (*.lig)",
     #     )
     #     try:
@@ -385,7 +385,7 @@ class ClassMascaret:
     #         return
     #
     #     try:
-    #         shutil.copy(fichiers, os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
+    #         shutil.copy(fichiers, os.path.join(self.dossier_file_masc, self.baseName + ".lig"))
     #     except Exception as e:
     #         self.mgis.add_info("Error copying file")
     #         self.mgis.add_info("{}".format(e))
@@ -397,7 +397,7 @@ class ClassMascaret:
             None,
             "File Selection",
             self.mgis.repProject,
-            # self.dossierFileMasc,
+            # self.dossier_file_masc,
             "File (*.lig)",
         )
         try:
@@ -413,25 +413,25 @@ class ClassMascaret:
           :param fichiers: (str) path of the file to copy
           """
         try:
-            shutil.copyfile(fichiers, os.path.join(self.dossierFileMasc, self.baseName + ".lig"))
+            shutil.copyfile(fichiers, os.path.join(self.dossier_file_masc, self.baseName + ".lig"))
         except Exception as e:
             self.mgis.add_info("Error copying file")
             self.mgis.add_info("{}".format(e))
 
     def clean_rep(self):
         """Clean the run folder and copy the essential files to run mascaret"""
-        files = os.listdir(self.dossierFileMasc)
+        files = os.listdir(self.dossier_file_masc)
         for i in range(0, len(files)):
             try:
-                os.remove(os.path.join(self.dossierFileMasc, files[i]))
+                os.remove(os.path.join(self.dossier_file_masc, files[i]))
             except (PermissionError, FileNotFoundError) as e:
                 self.mgis.add_info(f"Impossible to delete  {files[i]} : {e}")
 
-        copy_dir_to_dir(self.dossierFileMascOri, self.dossierFileMasc)
+        copy_dir_to_dir(self.dossier_file_masc_ori, self.dossier_file_masc)
         if not self.check_exe():
             self.mgis.download_bin()
 
-        copy_dir_to_dir(self.dossierFile_bin, self.dossierFileMasc)
+        copy_dir_to_dir(self.dossierFile_bin, self.dossier_file_masc)
 
     def check_exe(self):
         """
@@ -452,22 +452,22 @@ class ClassMascaret:
 
     def clean_res(self):
         """Clean the run folder and copy the essential files to run mascaret"""
-        files = os.listdir(self.dossierFileMasc)
+        files = os.listdir(self.dossier_file_masc)
         listsup = [".opt", ".lig", ".cas_opt", ".liai_opt", ".tra_opt"]
         for i in range(0, len(files)):
             ext = os.path.splitext(files[i])[1]
             # self.mgis.add_info('delet file rr{}rr {}'.format(ext,(ext in listsup)))
             if ext in listsup:
-                os.remove(os.path.join(self.dossierFileMasc, files[i]))
+                os.remove(os.path.join(self.dossier_file_masc, files[i]))
                 self.mgis.add_info("delete file {}".format(files[i]), dbg=True)
 
     def del_folder_mas(self):
         """Delete the copy folder"""
         try:
-            shutil.rmtree(self.dossierFileMasc)
+            shutil.rmtree(self.dossier_file_masc)
         except Exception as e:
             self.mgis.add_info(
-                "Failed to delete {}. Reason: {}".format(self.dossierFileMasc, e), dbg=True
+                "Failed to delete {}. Reason: {}".format(self.dossier_file_masc, e), dbg=True
             )
 
     def compress_run_file(self, rep, typ_compress="zip"):
@@ -479,8 +479,8 @@ class ClassMascaret:
         """
         try:
             tar_local = shutil.make_archive(
-                os.path.join(rep, os.path.basename(self.dossierFileMasc)), typ_compress, os.path.dirname(self.dossierFileMasc),
-                os.path.basename(self.dossierFileMasc)
+                os.path.join(rep, os.path.basename(self.dossier_file_masc)), typ_compress, os.path.dirname(self.dossier_file_masc),
+                os.path.basename(self.dossier_file_masc)
             )
             return True
 
@@ -494,25 +494,25 @@ class ClassMascaret:
         """
         # self.mgis.add_info('{}'.format(rep))
         if case == "xcas":
-            file = os.path.join(self.dossierFileMasc, self.baseName + ".xcas")
+            file = os.path.join(self.dossier_file_masc, self.baseName + ".xcas")
             if os.path.isfile(file):
                 shutil.copy2(file, rep)
             else:
                 self.mgis.add_info("{} not found".format(file))
         elif case == "geo":
-            file = os.path.join(self.dossierFileMasc, self.baseName + ".geo")
+            file = os.path.join(self.dossier_file_masc, self.baseName + ".geo")
             if os.path.isfile(file):
                 shutil.copy2(file, rep)
             else:
                 self.mgis.add_info("{} not found".format(file))
         elif case == "georef":
-            file = os.path.join(self.dossierFileMasc, self.baseName + ".georef")
+            file = os.path.join(self.dossier_file_masc, self.baseName + ".georef")
             if os.path.isfile(file):
                 shutil.copy2(file, rep)
             else:
                 self.mgis.add_info("{} not found".format(file))
         elif case == "casier":
-            file = os.path.join(self.dossierFileMasc, self.baseName + ".casier")
+            file = os.path.join(self.dossier_file_masc, self.baseName + ".casier")
             if os.path.isfile(file):
                 shutil.copy2(file, rep)
             else:
@@ -638,7 +638,7 @@ class ClassMascaret:
         scen = dict_scen["name"][idx]
 
         gbl_param = {'mdb': self.mdb,
-                     'dossier_file_masc': self.dossierFileMasc,
+                     'dossier_file_masc': self.dossier_file_masc,
                      'basename': self.baseName,
                      'noyau': noyau,
                      'run': run,
@@ -664,15 +664,15 @@ class ClassMascaret:
                 self.copy_lig_only(dict_exp['path_copy'])
 
         # delete "initialisationAuto" file
-        for file in os.listdir(self.dossierFileMasc):
+        for file in os.listdir(self.dossier_file_masc):
             if "_init.loi" in file or "_init.xcas" in file or "mascaret_linux" in file \
                     or "mascaret.exe" in file:
-                path = os.path.join(self.dossierFileMasc, file)
+                path = os.path.join(self.dossier_file_masc, file)
                 if os.path.isfile(path):
                     os.remove(path)
 
         cl = ClassPostPreFG(self.mgis)
-        path = os.path.join(self.dossierFileMasc, "cli_fg.obj")
+        path = os.path.join(self.dossier_file_masc, "cli_fg.obj")
         cl.create_cli_fg(path)
         del cl
 

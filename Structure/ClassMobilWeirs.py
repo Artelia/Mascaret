@@ -357,7 +357,7 @@ class ClassMethRegul:
             })
         else:
             # reveient à l'état avant rupture
-            if not param["BPERMREG"]:
+            if not param["BPERMREG"] and self.break_weir:
                 self.break_weir = False
                 param.update({
                     "level": param["rup_level"],
@@ -515,7 +515,7 @@ class ClassMethTime:
     #         })
     #     else:
     #         # reveient à l'état avant rupture
-    #         if not  param["BPERMT"]:
+    #         if not  param["BPERMT"] and self.break_weir:
     #             self.break_weir = False
     #             param.update({
     #                 "level": param["rup_level"],
