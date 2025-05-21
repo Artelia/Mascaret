@@ -211,19 +211,7 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QCheckBox" name="cc_break_time">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>200</width>
-             <height>0</height>
-            </size>
-           </property>
+          <widget class="QLabel" name="label">
            <property name="text">
             <string>Time of the break</string>
            </property>
@@ -232,7 +220,7 @@
          <item>
           <widget class="QDoubleSpinBox" name="sb_break_time">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="decimals">
             <number>3</number>
@@ -251,7 +239,7 @@
          <item>
           <widget class="QComboBox" name="cb_unit_break_time">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -279,6 +267,35 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
+         <item row="1" column="2">
+          <widget class="QComboBox" name="cb_var_break">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QDoubleSpinBox" name="sb_break_lvl">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="suffix">
+            <string> m</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="minimum">
+            <double>-1000000000.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>10000000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+          </widget>
+         </item>
          <item row="1" column="0">
           <widget class="QCheckBox" name="cc_break_var">
            <property name="enabled">
@@ -295,50 +312,7 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="cb_var_break">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <layout class="QVBoxLayout" name="verticalLayout_4">
-           <item>
-            <widget class="QCheckBox" name="cc_control">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>200</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Control point</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="verticalSpacer">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Maximum</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>30</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </item>
-         <item row="2" column="1">
+         <item row="2" column="2">
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
             <widget class="QComboBox" name="cb_typ_control">
@@ -379,47 +353,46 @@
            </item>
           </layout>
          </item>
-         <item row="3" column="0">
-          <widget class="QCheckBox" name="cc_break_lvl">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>200</width>
-             <height>0</height>
-            </size>
-           </property>
+         <item row="2" column="0">
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <item>
+            <widget class="QCheckBox" name="cc_control">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>200</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Control point</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Maximum</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>30</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_2">
            <property name="text">
             <string>Break value</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QDoubleSpinBox" name="sb_break_lvl">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="suffix">
-            <string> m</string>
-           </property>
-           <property name="decimals">
-            <number>3</number>
-           </property>
-           <property name="minimum">
-            <double>-1000000000.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>10000000.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>0.010000000000000</double>
            </property>
           </widget>
          </item>
@@ -429,19 +402,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
-         <widget class="QCheckBox" name="cc_after_lvl">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>200</width>
-            <height>0</height>
-           </size>
-          </property>
+         <widget class="QLabel" name="label_3">
           <property name="text">
            <string>Level after breaking</string>
           </property>
@@ -450,7 +411,7 @@
         <item>
          <widget class="QDoubleSpinBox" name="sb_after_lvl">
           <property name="enabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="suffix">
            <string> m</string>
@@ -513,9 +474,6 @@
      </item>
     </layout>
    </item>
-   <item row="2" column="1">
-    <layout class="QVBoxLayout" name="lay_graph_m1"/>
-   </item>
    <item row="3" column="1">
     <widget class="QDialogButtonBox" name="b_valid">
      <property name="locale">
@@ -528,6 +486,9 @@
       <bool>false</bool>
      </property>
     </widget>
+   </item>
+   <item row="0" column="1" rowspan="3">
+    <layout class="QVBoxLayout" name="lay_graph_m1"/>
    </item>
   </layout>
   <action name="actionB_delete">

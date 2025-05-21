@@ -82,7 +82,6 @@ class ClassFloodGateLk:
                     "Model.Link.CSection": param["CSection"],
                     "Model.Link.Width": param["width"]
                 }
-                # print(updates, param['TIME'],param["REGVAR_VAL"], force)
                 for key, value in updates.items():
                     self.masc.set(key, value, id_mas)
 
@@ -91,16 +90,16 @@ class ClassFloodGateLk:
         Initialize the results dictionary (`results_fg_lk_mv`) for storing floodgate movement data.
         This includes time, level, cross-section, width, and regulation variable values.
         """
-        self.results_fg_lk_mv = {
-            id_link: {
-                "TIME": [params['TIME']],
-                "ZLINK": [params["level"]],
-                "CSECLINK": [params["CSection"]],
-                "WIDTHLINK": [params["width"]],
-                "REGVAR": [params["REGVAR_VAL"]],
-            }
-            for id_link, params in self.param_fg.items()
-        }
+        self.results_fg_lk_mv = { }
+        for id_link, params in self.param_fg.items() :
+            self.results_fg_lk_mv[id_link] = {
+                    "TIME": [params['TIME']],
+                    "ZLINK": [params["level"]],
+                    "CSECLINK": [params["CSection"]],
+                    "WIDTHLINK": [params["width"]],
+                    "REGVAR": [params["REGVAR_VAL"]],
+                }
+
 
     def finalize(self, tfin):
         """
@@ -145,13 +144,32 @@ class ClassFloodGateLk:
             elif param["method_mob"] == self.dmeth["meth_fus"]:
                 val_check = self.masc.get(param['CHECK_VAR'],
                                           param["SECCON"])
+
                 self.cl_fusible.check_break_fus(param, val_check, time)
-                if self.cl_fusible.break_lk:
+                if param["break"]:
                     dnew = self.cl_fusible.law_mth_fus(param, time)
-                    self.fill_res_and_update(id_lk, time, param, dnew, val_check)
-                param.update({"TIME": time,
-                              "REGVAR_VAL": val_check})
-        
+                    param.update({
+                        # var update in run
+                        "REGVAR_VAL": val_check,
+                        "level": dnew['level'],
+                        "CSection": dnew["CSection"],
+                        "width": dnew["width"],
+                        "ZmaxSection": dnew["ZmaxSection"],
+                        "TIME": time
+                    })
+                    self.update_var_mas()
+                else:
+                    param.update({
+                        # var update in run
+                        "REGVAR_VAL": val_check,
+                        "level": param['level-dt'],
+                        "CSection": param["CSection-dt"],
+                        "width": param["width-dt"],
+                        "ZmaxSection": param["ZmaxSection-dt"],
+                        "TIME": time
+                    })
+                self.fill_results_fg_mv(id_lk, param)
+
     def fill_res_and_update(self, id_lk, time, param, dnew, val_check):
         """
         Update floodgate parameters and fill the results dictionary with the new values.
@@ -199,6 +217,7 @@ class ClassFloodGateLk:
         for id_lk, param in self.param_fg.items():
             param['CHECK_VAR'] = "State.Z"
             param['CHECK_VAR_BREAK'] = "State.Z"
+            param['break'] = False
             # 2 valeur
             # 'PK' regule
             # 'abscissa' pk link
@@ -264,7 +283,7 @@ class ClassFloodGateLk:
                 param.update({
                     "id_mas": id_mas,
                     "TIME0": tini,
-                    "TIME": tini,
+                    "TIME": tini
                 })
                 param["ZmaxSection0"] = param["level0"] + param["CSection0"] / param["width0"]
                 if param["method_mob"] == self.dmeth["meth_regul"]:
@@ -280,7 +299,7 @@ class ClassFloodGateLk:
                     "width-dt": param["width0"],
                     "TIME-dt": tini,
                     "ZmaxSection-dt": param["ZmaxSection0"],
-                    "REGVAR_VAL-dt": param["REGVAR_VAL"]
+                    "REGVAR_VAL-dt": param["REGVAR_VAL"],
                 })
             else:
                 self.add_info("Id_mas not found for numlink {}.".format(id_lk))
@@ -305,24 +324,15 @@ class ClassFloodGateLk:
             else:
                 zlink_var_dt  = "ZmaxSection-dt"
                 zlink_var = "ZmaxSection"
-        if ((param["level"], param["CSection"], param["width"]) !=
-                (param["level-dt"], param["CSection-dt"], param["width-dt"])) and(
-                (res["TIME"][-1], res["CSECLINK"][-1], res["WIDTHLINK"][-1],res["ZLINK"][-1]) !=
-                (param["TIME-dt"],param["CSection-dt"],param["width-dt"], param[zlink_var_dt])) and param["TIME"]>0:
+        # if there is a change of parameters and not "meth_fus"
+        if param["TIME"] != param["TIME0"]:
+            # Update with new values
+            res["TIME"].append(param["TIME"])
+            res["CSECLINK"].append(param["CSection"])
+            res["WIDTHLINK"].append(param["width"])
+            res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
+            res["ZLINK"].append(param[zlink_var])
 
-            res["TIME"].append(param["TIME-dt"])
-            res["CSECLINK"].append(param["CSection-dt"])
-            res["WIDTHLINK"].append(param["width-dt"])
-            res["REGVAR"].append(round(param["REGVAR_VAL-dt"], 3))
-            res["ZLINK"].append(param[zlink_var_dt])
-
-        # Update with new values
-        res["TIME"].append(param["TIME"])
-        res["CSECLINK"].append(param["CSection"])
-        res["WIDTHLINK"].append(param["width"])
-        res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
-        res["ZLINK"].append(param[zlink_var])
-        
         param.update({
             # var time-dt
             "CSection-dt": param["CSection"],
@@ -345,7 +355,6 @@ class ClassMethRegul:
         self.add_info = parent.add_info
         self.masc = parent.masc
         self.compt_dt = 0
-        self.break_lk = False
 
     def init_meth_regul(self, param, id_lk):
         """
@@ -384,7 +393,6 @@ class ClassMethRegul:
             param["ZLIMITGATE"] = min(param["ZMAXFG"], param["level0"])
         else:
             self.add_info(f"Non-consistency type floodgate with the moving part {id_lk}.")
-        # print(param)
     def check_param(self, param, id_lk):
         """
         Validate the consistency of regulation parameters, specifically `VREGOPEN` and `VREGCLOS`.
@@ -421,22 +429,22 @@ class ClassMethRegul:
         :param val_check: Current value of the regulation variable.
         """
         if val_check >= param["VBREAKREG"] :
-            self.break_lk = True
             param.update({
                 "rup_level": param["level"],
                 "rup_CSection": param["CSection"],
                 "rup_ZmaxSection": param["ZmaxSection"],
-                "rup_width": param["width"]
+                "rup_width": param["width"],
+                "break": True
             })
         else:
             # reveient à l'état avant rupture
-            if not param["BPERMREG"] and self.break_lk:
-                self.break_lk = False
+            if not param["BPERMREG"] and param['break']:
                 param.update({
                     "level": param["rup_level"],
                     "CSection": param["rup_CSection"],
                     "ZmaxSection": param["rup_ZmaxSection"],
-                    "width": param["rup_width"]
+                    "width": param["rup_width"],
+                    "break": False
                 })
 
 
@@ -489,8 +497,7 @@ class ClassMethRegul:
             if condition:
                 param_fg["OPEN_CLOSE"] = action
                 break
-        # print("status", param_fg["OPEN_CLOSE"])
-        # print(val_check, param_fg["VREGOPEN"],param_fg["VREGCLOS"], tol)
+
         return val_check
 
     def law_gate_regul(self, param, time):
@@ -500,7 +507,7 @@ class ClassMethRegul:
         :param time: Current simulation time.
         :return: Dictionary of updated floodgate parameters.
         """
-        if self.break_lk:
+        if param['break']:
             return {
                 "level": param["ZFINALREG"],
                 "CSection": param["width0"] * min((param["ZmaxSection0"] - param["ZFINALREG"]), 0),
@@ -540,7 +547,6 @@ class ClassMethRegul:
                 new_level_max = max(zmax_section - dz_open, zmax_section0)
         if param["type"] == 4:
             new_section = width * (new_level_max - new_level)
-        # print(new_level, level, dz_close, dz_open , level0, zlimit_gate)
         return {
             "level": new_level,
             "CSection": new_section,
@@ -596,7 +602,6 @@ class ClassMethTime:
         self.arret_comput = parent.arret_comput
         self.add_info = parent.add_info
         self.masc = parent.masc
-        self.break_lk = False
 
     def init_meth_time(self, param):
         """
@@ -634,22 +639,22 @@ class ClassMethTime:
         :param val_check: Current value of the regulation variable.
         """
         if val_check >= param["VBREAKT"]:
-            self.break_lk = True
             param.update({
                 "rup_level": param["level"],
                 "rup_CSection": param["CSection"],
                 "rup_ZmaxSection": param["ZmaxSection"],
-                "rup_width": param["width"]
+                "rup_width": param["width"],
+                "break" : True
             })
         else:
             # reveient à l'état avant rupture
-            if not  param["BPERMT"] and self.break_lk :
-                self.break_lk = False
+            if not  param["BPERMT"] and param['break'] :
                 param.update({
                     "level": param["rup_level"],
                     "CSection": param["rup_CSection"],
                     "ZmaxSection": param["rup_ZmaxSection"],
-                    "width": param["rup_width"]
+                    "width": param["rup_width"],
+                    "break": param['break']
                 })
 
     def law_mth_time(self, param, time):
@@ -659,7 +664,7 @@ class ClassMethTime:
         :param time: Current simulation time.
         :return: Dictionary of updated floodgate parameters.
         """
-        if self.break_lk:
+        if param['break']:
             return {
                 "level": param["ZFINALT"],
                 "CSection": param["width0"] * min((param["ZmaxSection0"] - param["ZFINALT"]), 0),
@@ -686,7 +691,8 @@ class ClassMethFusible:
         self.arret_comput = parent.arret_comput
         self.add_info = parent.add_info
         self.masc = parent.masc
-        self.break_lk = False
+        self.dmeth_fus = {"meth_time": str(1),
+                          "meth_val": str(2)}
 
     def init_meth_fusible(self, param):
         """
@@ -705,6 +711,7 @@ class ClassMethFusible:
 
         })
 
+
     def check_break_fus(self, param, val_check, time):
         """
         Check if the floodgate should break.
@@ -712,14 +719,15 @@ class ClassMethFusible:
         :param val_check: Current value of the regulation variable.
         :param time: Current simulation time.
         """
-        if self.break_lk:
+        if param["break"]:
             return
-        if param["METHBREAK"] == 'regul' and val_check >= param["VBREAKFUS"]:
-            self.break_lk = True
+        if param["METHBREAK"] ==  self.dmeth_fus["meth_val"] and val_check >= param["VBREAKFUS"]:
             param["break_time"] = time
-        elif time >= param["TBREAKFUS"]:
-            self.break_lk = True
+            param["break"] = True
+        elif param["METHBREAK"] ==  self.dmeth_fus["meth_time"] and time >= param["TBREAKFUS"]:
             param["break_time"] = time
+            param["break"] = True
+
 
     def law_mth_fus(self, param, time):
         """

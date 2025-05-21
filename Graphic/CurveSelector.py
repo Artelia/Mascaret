@@ -357,12 +357,27 @@ class CurveSelectorWidget(QWidget):
                 where=f"gid={self.cur_pknum}",
                 list_var=['type']
             )
+            meth_mob = '1'
+            if self.typ_res in  self.info_graph:
+                if  'method_mob' in self.info_graph[self.typ_res]:
+                    meth_mob = self.info_graph[self.typ_res]['method_mob'][f'{self.cur_pknum}']
+            # affiche ou non la variablee
             if info:
                 index = self.cb_graph.findText(self.lst_graph[3]["name"])
+                # Delete CSsection( if it's not culvert)
                 if info['type'][0] != 4 and index != -1:
                         self.cb_graph.removeItem(index)
                 elif  info['type'][0] == 4  and index == -1:
                     self.cb_graph.addItem(self.lst_graph[3]["name"], self.lst_graph[3]["id"])
+                # Delete WIDTH( if the methode 3)
+
+                index2 = self.cb_graph.findText(self.lst_graph[1]["name"])
+                if meth_mob != '3'  and index2 != -1:
+                    self.cb_graph.removeItem(index2)
+                elif  meth_mob == '3'  and index2 == -1:
+                    self.cb_graph.addItem(self.lst_graph[1]["name"], self.lst_graph[1]["id"])
+
+
         if self.typ_graph in ["weirs"]:
 
             info = self.mdb.select_distinct( "var",

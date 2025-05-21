@@ -62,9 +62,9 @@ class ClassMobilObjectMet3Widget(QWidget):
         self.d_var = {
             "METHBREAK": {"ctrl": self.ui.cb_break_met, "cc": self.ui.cc_method,
                           "vdef": '1', "typ": str},
-            "TBREAKFUS": {"ctrl": self.ui.sb_break_time, "cc": self.ui.cc_break_time,
+            "TBREAKFUS": {"ctrl": self.ui.sb_break_time, "cc": None,
                           "vdef": 0., "typ": float},
-            "UNITTBREAKFUS": {"ctrl": self.ui.cb_unit_break_time, "cc": self.ui.cc_break_time,
+            "UNITTBREAKFUS": {"ctrl": self.ui.cb_unit_break_time, "cc": None,
                               "vdef": 1, "typ": int},
             "VFUS": {"ctrl": self.ui.cb_var_break, "cc": self.ui.cc_break_var,
                      "vdef": 'Z', "typ": str},
@@ -74,9 +74,9 @@ class ClassMobilObjectMet3Widget(QWidget):
                             "vdef": 0, "typ": int},
             "PKFUS": {"ctrl": self.ui.sb_abscissa, "cc": self.ui.cc_control,
                       "vdef": 0., "typ": float},
-            "VBREAKFUS": {"ctrl": self.ui.sb_break_lvl, "cc": self.ui.cc_break_lvl,
+            "VBREAKFUS": {"ctrl": self.ui.sb_break_lvl, "cc": None,
                           "vdef": 0., "typ": float},
-            "ZFINALFUS": {"ctrl": self.ui.sb_after_lvl, "cc": self.ui.cc_after_lvl,
+            "ZFINALFUS": {"ctrl": self.ui.sb_after_lvl, "cc": None,
                           "vdef": 0., "typ": float},
         }
 
@@ -102,17 +102,13 @@ class ClassMobilObjectMet3Widget(QWidget):
         self.ui.cc_method.toggled.connect(self.enab_method)
         self.ui.cb_break_met.currentIndexChanged.connect(self.method_changed)
 
-        self.ui.cc_break_time.toggled.connect(self.enab_breaking_time)
-
+        #
         self.ui.cc_break_var.toggled.connect(self.enab_variable_break)
         self.ui.cb_var_break.currentIndexChanged.connect(self.variable_break_changed)
 
         self.ui.cc_control.toggled.connect(self.enab_control)
         self.ui.cb_typ_control.currentIndexChanged.connect(self.control_type_changed)
 
-        self.ui.cc_break_lvl.toggled.connect(self.enab_breaking_level)
-
-        self.ui.cc_after_lvl.toggled.connect(self.enab_after_level)
 
         self.ui.b_valid.accepted.connect(self.save_input)
         self.ui.b_valid.rejected.connect(self.cancel_input)
@@ -145,22 +141,14 @@ class ClassMobilObjectMet3Widget(QWidget):
 
     def method_changed(self, idx):
         if idx == 1:
-            self.ui.cc_break_time.setChecked(False)
             self.ui.grp_time.hide()
             self.ui.grp_lvl.show()
         else:
-            self.ui.cc_break_var.setChecked(False)
             self.ui.cc_control.setChecked(False)
-            self.ui.cc_break_lvl.setChecked(False)
+
             self.ui.grp_lvl.hide()
             self.ui.grp_time.show()
 
-    def enab_breaking_time(self, cs):
-        self.ui.sb_break_time.setEnabled(cs)
-        self.ui.cb_unit_break_time.setEnabled(cs)
-        if not cs:
-            self.set_def_ctrl_value(self.ui.sb_break_time)
-            self.set_def_ctrl_value(self.ui.cb_unit_break_time)
 
     def enab_variable_break(self, cs):
         self.ui.cb_var_break.setEnabled(cs)
@@ -194,15 +182,6 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.ui.sb_abscissa.show()
             self.ui.cc_break_var.setEnabled(True)
 
-    def enab_breaking_level(self, cs):
-        self.ui.sb_break_lvl.setEnabled(cs)
-        if not cs:
-            self.set_def_ctrl_value(self.ui.sb_break_lvl)
-
-    def enab_after_level(self, cs):
-        self.ui.sb_after_lvl.setEnabled(cs)
-        if not cs:
-            self.set_def_ctrl_value(self.ui.sb_after_lvl)
 
     def create_tab_model(self):
         """create table"""

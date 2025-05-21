@@ -631,12 +631,16 @@ class ClassGetResults:
                     'type_var': 'float'}
         id_var_reg = self.mdb.check_id_var(var_info)
 
+
         d_res = {}
         dico_pk = {}
         dico_time = {}
+        dico_meth = {}
 
         for id_link in dico_res.keys():
             dico_pk[id_link] = id_link
+            info = self.mdb.select_one('links', where=f'gid={id_link}',list_var=['method_mob'])
+            dico_meth[id_link] = info['method_mob']
             dico_time[id_link] =  dico_res[id_link]['TIME']
             d_res[(id_link, id_var_zlink)] = {'t': dico_res[id_link]['TIME'],
                                             'v': dico_res[id_link]['ZLINK']}
@@ -647,6 +651,7 @@ class ClassGetResults:
 
             d_res[(id_link, id_var_reg)] = {'t': dico_res[id_link]['TIME'],
                                             'v': dico_res[id_link]['REGVAR']}
+
         for (pk, var), v in d_res.items():
             values.append([id_run, pk, var,
                            "{" + ','.join(str(i_t) for i_t in v['t']) + "}",
@@ -659,7 +664,9 @@ class ClassGetResults:
         if len(dico_res.keys()) > 0:
             list_insert = [[id_run, 'link_fg', 'pknum', json.dumps(dico_pk)],
                            [id_run, 'link_fg', 'time', json.dumps(dico_time)],
-                           [id_run, 'link_fg', 'var', json.dumps([id_var_zlink, id_var_csec, id_var_width, id_var_reg])]]
+                           [id_run, 'link_fg', 'var', json.dumps([id_var_zlink, id_var_csec, id_var_width, id_var_reg])],
+                           [id_run, 'link_fg', 'method_mob', json.dumps(dico_meth)]
+                           ]
             col_tab = ['id_runs', 'type_res', 'var', 'val']
             self.mdb.insert_res('runs_graph', list_insert, col_tab)
 
