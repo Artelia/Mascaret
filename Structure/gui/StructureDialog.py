@@ -26,7 +26,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure
+from ..ClassTableStructure import ClassTableStructure
 from .GraphStructure import GraphStructure
 from .StructureCreateDialog import ClassStructureCreateDialog
 from .StructureEditDialog import ClassStructureEditDialog

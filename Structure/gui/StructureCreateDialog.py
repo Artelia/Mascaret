@@ -26,7 +26,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, update_etat_struct
+from ..ClassTableStructure import ClassTableStructure, update_etat_struct
 
 
 class ClassStructureCreateDialog(QDialog):

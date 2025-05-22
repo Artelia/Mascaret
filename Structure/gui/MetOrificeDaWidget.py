@@ -26,18 +26,18 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure
+from ..ClassTableStructure import ClassTableStructure
 from .FctDialog import ctrl_get_value, fill_qcombobox
 
 
-class MetOrificePcWidget(QWidget):
+class MetOrificeDaWidget(QWidget):
     def __init__(self, mgis, id_struct=None):
         QWidget.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
         self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, "ui/structures/ui_orifice_pc.ui"), self
+            os.path.join(self.mgis.masplugPath, "ui/structures/ui_orifice_da.ui"), self
         )
         self.id_struct = id_struct
 
@@ -46,16 +46,13 @@ class MetOrificePcWidget(QWidget):
         self.progress.setValue(0)
 
         self.sb_nb_trav.valueChanged.connect(self.change_ntrav)
-        self.dsb_larg_pil.valueChanged.connect(self.update_piles)
         self.dsb_h_pas.valueChanged.connect(self.update_min_h_max)
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
-        self.tab_trav.itemChanged.connect(self.verif_larg_trav)
+        self.tab_trav.itemChanged.connect(self.verif_param_trav)
 
         self.dico_ctrl = {
             "FIRSTWD": [self.dsb_abs_cul_rg],
             "ZTOPTAB": [self.dsb_cote_tab],
-            "EPAITAB": [self.dsb_epai_tab],
-            "LARGPIL": [self.dsb_larg_pil],
             "PASH": [self.dsb_h_pas],
             "MINH": [self.dsb_h_min],
             "MAXH": [self.dsb_h_max],
@@ -69,12 +66,16 @@ class MetOrificePcWidget(QWidget):
             self.tab_trav: {
                 "type": 0,
                 "id": "({}*2) + 1",
-                "col": [{"fld": "LARGTRA", "cb": None, "valdef": 1.0}],
+                "col": [
+                    {"fld": "COTERAD", "cb": None, "valdef": 1.0},
+                    {"fld": "HAUTDAL", "cb": None, "valdef": 1.0},
+                    {"fld": "LARGTRA", "cb": None, "valdef": 1.0},
+                ],
             },
             self.tab_pile: {
                 "type": 1,
                 "id": "({}*2) + 2",
-                "col": [{"fld": "LARGPIL", "cb": None, "valdef": self.dsb_larg_pil}],
+                "col": [{"fld": "LARGPIL", "cb": None, "valdef": 1.0}],
             },
         }
 
@@ -110,16 +111,13 @@ class MetOrificePcWidget(QWidget):
                 itm.setData(0, val)
                 tab.setItem(row, c, itm)
 
-    def update_piles(self):
-        for row in range(self.tab_pile.rowCount()):
-            self.tab_pile.item(row, 0).setData(0, self.dsb_larg_pil.value())
-
     def update_min_h_max(self):
         self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
 
-    def verif_larg_trav(self, itm):
-        if itm.data(0) <= 0.0:
-            itm.setData(0, 1.0)
+    def verif_param_trav(self, itm):
+        if itm.column() in [1, 2]:
+            if itm.data(0) <= 0.0:
+                itm.setData(0, 1.0)
 
     def progress_bar(self, val):
         self.completed += val

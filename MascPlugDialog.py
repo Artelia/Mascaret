@@ -44,7 +44,6 @@ from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, 
 from .Graphic.FilterDialog import ClassFilterDialog
 from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .HydroLawsDialog import ClassHydroLawsDialog
-from .Structure.MobilObjectDialog import ClassMobilObjectDialog
 from .ClassExtractBedDialog import ClassExtractBedDialog
 from .ClassUpdateBedDialog import (
     ClassUpdateBedDialog,
@@ -55,10 +54,13 @@ from .ClassCartoZi import ClassCartoZI
 from .ClassExportLigDialog import ClassExportLigDialog
 
 # # structures
-from .Structure.StructureDialog import ClassStructureDialog
+from .Structure.gui.StructureDialog import ClassStructureDialog
+from .Structure.gui.MobilObjectDialog import ClassMobilObjectDialog
+# water quality
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
+
 from .db.Check_tab import CheckTab
 from .db.ClassMasDatabase import ClassMasDatabase
 from .scores.ClassScoresDialog import ClassScoresDialog

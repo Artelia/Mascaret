@@ -20,26 +20,24 @@ email                :
 import os
 
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure
+from ..ClassTableStructure import ClassTableStructure
 from .FctDialog import ctrl_get_value, fill_qcombobox
 
 
-class MetBradleyPcWidget(QWidget):
-    def __init__(self, mgis, met=None, id_struct=None):
+class MetOrificePcWidget(QWidget):
+    def __init__(self, mgis, id_struct=None):
         QWidget.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
         self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, "ui/structures/ui_bradley_pc.ui"), self
+            os.path.join(self.mgis.masplugPath, "ui/structures/ui_orifice_pc.ui"), self
         )
         self.id_struct = id_struct
 
@@ -47,65 +45,21 @@ class MetBradleyPcWidget(QWidget):
         self.progress = self.ui.progressBar
         self.progress.setValue(0)
 
-        self.dico_pile = ["1", "2", "3", "4", "5_1", "5_2", "6", "7", "8"]
-
-        self.frm_orient_mur.hide()
-        self.frm_pente_tal.hide()
-
-        self.gb_form_cul = QButtonGroup()
-        self.gb_form_cul.addButton(self.rb_form_cul0, 0)
-        self.rb_form_cul0.setIcon(
-            QIcon(os.path.join(self.mgis.masplugPath, "Structure/images/culees/culee1.png"))
-        )
-        self.gb_form_cul.addButton(self.rb_form_cul1, 1)
-        self.rb_form_cul1.setIcon(
-            QIcon(os.path.join(self.mgis.masplugPath, "Structure/images/culees/culee2.png"))
-        )
-        self.gb_form_cul.addButton(self.rb_form_cul2, 2)
-        self.rb_form_cul2.setIcon(
-            QIcon(os.path.join(self.mgis.masplugPath, "Structure/images/culees/culee3.png"))
-        )
-
         self.sb_nb_trav.valueChanged.connect(self.change_ntrav)
-        self.cb_form_pil.currentIndexChanged.connect(self.update_piles)
         self.dsb_larg_pil.valueChanged.connect(self.update_piles)
-        self.dsb_long_pil.valueChanged.connect(self.update_piles)
         self.dsb_h_pas.valueChanged.connect(self.update_min_h_max)
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
-        self.dsb_q_pas.valueChanged.connect(self.update_min_q_max)
-        self.dsb_q_min.valueChanged.connect(self.update_min_q_max)
         self.tab_trav.itemChanged.connect(self.verif_larg_trav)
-
-        if met == "72":
-            self.gb_form_cul.buttonClicked[int].connect(self.change_opt_culee)
-
-        fill_qcombobox(
-            self.cb_form_pil,
-            [[f, "Forme {}".format(f[0])] for f in self.dico_pile],
-            icn=os.path.join(self.mgis.masplugPath, "Structure/images/piles/pile{}.png"),
-        )
-        fill_qcombobox(self.cb_orient_mur, [[30, "30°"], [45, "45°"], [60, "60°"]])
-        fill_qcombobox(self.cb_pente_tal, [[0, "1/1"], [1, "1.5/1"], [2, "2/1"]])
 
         self.dico_ctrl = {
             "FIRSTWD": [self.dsb_abs_cul_rg],
             "ZTOPTAB": [self.dsb_cote_tab],
             "EPAITAB": [self.dsb_epai_tab],
-            "BIAIOUV": [self.dsb_biai_ouv],
-            "BIAICUL": [self.cc_biai_cul],
-            "BIAIPIL": [self.cc_biai_pil],
-            "FORMCUL": [self.gb_form_cul],
-            "ORIENTM": [self.cb_orient_mur],
-            "PENTTAL": [self.cb_pente_tal],
-            "FORMPIL": [self.cb_form_pil],
             "LARGPIL": [self.dsb_larg_pil],
-            "LONGPIL": [self.dsb_long_pil],
             "PASH": [self.dsb_h_pas],
             "MINH": [self.dsb_h_min],
             "MAXH": [self.dsb_h_max],
             "PASQ": [self.dsb_q_pas],
-            "MINQ": [self.dsb_q_min],
-            "MAXQ": [self.dsb_q_max],
             "NBTRAVE": [self.sb_nb_trav],
             "COEFDS": [self.dsb_ds],
             "COEFDO": [self.dsb_do],
@@ -120,15 +74,7 @@ class MetBradleyPcWidget(QWidget):
             self.tab_pile: {
                 "type": 1,
                 "id": "({}*2) + 2",
-                "col": [
-                    {
-                        "fld": "FORMPIL",
-                        "cb": [[f, "Forme {}".format(f[0])] for f in self.dico_pile],
-                        "valdef": self.cb_form_pil,
-                    },
-                    {"fld": "LARGPIL", "cb": None, "valdef": self.dsb_larg_pil},
-                    {"fld": "LONGPIL", "cb": None, "valdef": self.dsb_long_pil},
-                ],
+                "col": [{"fld": "LARGPIL", "cb": None, "valdef": self.dsb_larg_pil}],
             },
         }
 
@@ -146,17 +92,6 @@ class MetBradleyPcWidget(QWidget):
         else:
             for p in range(nrow_pile, nb_pile):
                 self.insert_elem(self.tab_pile, p)
-
-    def change_opt_culee(self, idx):
-        if idx == 0:
-            self.frm_orient_mur.hide()
-            self.frm_pente_tal.hide()
-        elif idx == 1:
-            self.frm_orient_mur.show()
-            self.frm_pente_tal.hide()
-        elif idx == 2:
-            self.frm_orient_mur.hide()
-            self.frm_pente_tal.show()
 
     def insert_elem(self, tab, row):
         tab.insertRow(row)
@@ -177,15 +112,10 @@ class MetBradleyPcWidget(QWidget):
 
     def update_piles(self):
         for row in range(self.tab_pile.rowCount()):
-            self.tab_pile.cellWidget(row, 0).setCurrentIndex(self.cb_form_pil.currentIndex())
-            self.tab_pile.item(row, 1).setData(0, self.dsb_larg_pil.value())
-            self.tab_pile.item(row, 2).setData(0, self.dsb_long_pil.value())
+            self.tab_pile.item(row, 0).setData(0, self.dsb_larg_pil.value())
 
     def update_min_h_max(self):
         self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
-
-    def update_min_q_max(self):
-        self.dsb_q_max.setMinimum(self.dsb_q_min.value() + self.dsb_q_pas.value())
 
     def verif_larg_trav(self, itm):
         if itm.data(0) <= 0.0:

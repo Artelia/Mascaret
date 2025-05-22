@@ -55,7 +55,7 @@ from ..ClassUpdateBedDialog import (
 )
 from ..Function import tw_to_txt, filter_pr_fct, filter_dist_perpendiculaire
 from ..Structure.ClassPolygone import ClassPolygone
-from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
+from ..Structure.gui.StructureCreateDialog import ClassStructureCreateDialog
 
 try :
     from packaging.version import parse
