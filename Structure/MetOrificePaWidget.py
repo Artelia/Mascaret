@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
@@ -26,7 +27,7 @@ from qgis.gui import *
 from qgis.utils import *
 
 from .ClassTableStructure import ClassTableStructure
-from .FctDialog import  ctrl_get_value, fill_qcombobox
+from .FctDialog import ctrl_get_value, fill_qcombobox
 
 
 class MetOrificePaWidget(QWidget):

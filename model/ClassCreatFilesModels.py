@@ -27,7 +27,6 @@ import shutil
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
-import numpy as np
 import pandas as pd
 from qgis.PyQt.QtWidgets import *
 from qgis.core import *
@@ -174,10 +173,10 @@ class ClassCreatFilesModels:
                                 tab_x.append(self.around(var1))
                                 tab_z.append(self.around(var2))
                             points = geom.asMultiPolyline()[0]
-                            (cood1X, cood1Y) = points[0]
-                            (cood2X, cood2Y) = points[1]
-                            cood_axe_x = cood1X + (cood2X - cood1X) / 2.0
-                            cood_axe_y = cood1Y + (cood2Y - cood1Y) / 2.0
+                            (cood1_x, cood1_y) = points[0]
+                            (cood2_x, cood2_y) = points[1]
+                            cood_axe_x = cood1_x + (cood2_x - cood1_x) / 2.0
+                            cood_axe_y = cood1_y + (cood2_y - cood1_y) / 2.0
 
                             fich.write(
                                 "PROFIL Bief_{0} {1} {2} {3} {4} {5} {6} "
@@ -185,10 +184,10 @@ class ClassCreatFilesModels:
                                     branche,
                                     nom,
                                     abs,
-                                    cood1X,
-                                    cood1Y,
-                                    cood2X,
-                                    cood2Y,
+                                    cood1_x,
+                                    cood1_y,
+                                    cood2_x,
+                                    cood2_y,
                                     cood_axe_x,
                                     cood_axe_y,
                                 )
@@ -352,7 +351,7 @@ class ClassCreatFilesModels:
         """To create xcas file
         Args:
         :param noyau: (str) kernel
-        :param par_init (optionel) : (dict) initial parameters , default None
+        :param par_init : (dict) initial parameters , default None
         Return :
             return : (dict) dict_lois, (dict)  dico_loi_struct
         """
@@ -1537,8 +1536,8 @@ class ClassCreatFilesModels:
                                     somme - debit_prec
                             ) + cote_prec
                             break
-                        else:
-                            cote_prec, debit_prec = c, d
+                        cote_prec, debit_prec = c, d
+
                     if valeur_init is not None:
                         tab = {"time": [0, 3600], "z": [valeur_init, valeur_init]}
                         self.creer_loi(nom, tab, 2, init=True)

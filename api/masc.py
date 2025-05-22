@@ -14,6 +14,7 @@ import sys
 import numpy as np
 #Artelia
 from io import StringIO
+from datetime import datetime
 # end
 # from execution.mascaret_cas import MascaretCas
 # from utils.exceptions import TelemacException

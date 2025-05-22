@@ -18,9 +18,9 @@ email                :
  ***************************************************************************/
 """
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
-from qgis.PyQt.QtGui import QIcon
 
 
 def ctrl_set_value(ctrl, val, cc_is_checked=False):

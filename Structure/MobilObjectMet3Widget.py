@@ -20,16 +20,17 @@ email                :
 import os
 
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
 from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
-from ..Graphic.GraphCommon import GraphCommon
 from ..Function import data_to_float
+from ..Graphic.GraphCommon import GraphCommon
+
 
 class ClassMobilObjectMet3Widget(QWidget):
     widget_closed = pyqtSignal()
@@ -109,7 +110,6 @@ class ClassMobilObjectMet3Widget(QWidget):
         self.ui.cc_control.toggled.connect(self.enab_control)
         self.ui.cb_typ_control.currentIndexChanged.connect(self.control_type_changed)
 
-
         self.ui.b_valid.accepted.connect(self.save_input)
         self.ui.b_valid.rejected.connect(self.cancel_input)
         self.init_ui()
@@ -149,7 +149,6 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.ui.grp_lvl.hide()
             self.ui.grp_time.show()
 
-
     def enab_variable_break(self, cs):
         self.ui.cb_var_break.setEnabled(cs)
         if not cs:
@@ -181,7 +180,6 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.ui.cb_basin.hide()
             self.ui.sb_abscissa.show()
             self.ui.cc_break_var.setEnabled(True)
-
 
     def create_tab_model(self):
         """create table"""
@@ -361,7 +359,7 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.clear_table()
             self.widget_closed.emit()
 
-        except:
+        except Exception:
             self.cancel_input()
             self.mgis.add_info("Cancel of {0} information".format(self.obj_table))
 

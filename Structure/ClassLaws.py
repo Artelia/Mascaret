@@ -19,7 +19,9 @@ email                :
 """
 import math as m
 import os
+
 import numpy as np
+
 from .ClassPolygone import ClassPolygone
 from .ClassPostPreFG import ClassPostPreFG
 
@@ -293,9 +295,9 @@ class ClassLaws:
         self.list_e = sorted(self.list_e)
 
         self.coef_cor_biais = (
-            self.param_g["LONGPIL"] * m.sin(self.param_g["BIAIOUVRAD"])
-            + self.param_g["LARGPIL"] * m.cos(self.param_g["BIAIOUVRAD"])
-        ) / self.param_g["LARGPIL"]
+                                      self.param_g["LONGPIL"] * m.sin(self.param_g["BIAIOUVRAD"])
+                                      + self.param_g["LARGPIL"] * m.cos(self.param_g["BIAIOUVRAD"])
+                              ) / self.param_g["LARGPIL"]
 
     def meth_brad(self, zav, q, coef_cor_biais, type_kb, list_ph, list_e):
         """
@@ -328,9 +330,9 @@ class ClassLaws:
         # print("area_pil_proj",area_pil_proj)
         # print("area_pil",area_pil)
         left_bank = (
-            self.param_g["FIRSTWD"]
-            + self.param_g["TOTALOUV"]
-            + self.param_g["LARGPIL"] * len(self.list_poly_pil)
+                self.param_g["FIRSTWD"]
+                + self.param_g["TOTALOUV"]
+                + self.param_g["LARGPIL"] * len(self.list_poly_pil)
         )
         ssoh = self.clpoly.coup_poly_v(
             poly_wet, [self.param_g["FIRSTWD"], left_bank], typ="LR"
@@ -430,13 +432,13 @@ class ClassLaws:
                 dks = 0
         # print("dks",dks)
 
-        term1 = (kb + dkp + dke + dks) * va**2 / (2.0 * self.grav) * alpha2
+        term1 = (kb + dkp + dke + dks) * va ** 2 / (2.0 * self.grav) * alpha2
         # print("term1 Remout",term1)
         hmon = zav + term1
         poly_wet = self.clpoly.coup_poly_h(self.poly_p, hmon)
         area_amont = poly_wet.area
         term2 = (
-            alpha1 * ((s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va**2 / (2.0 * self.grav)
+                alpha1 * ((s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (2.0 * self.grav)
         )
         # print("term2 Remout", term2)
         remout = term1 + term2
@@ -522,7 +524,7 @@ class ClassLaws:
             if brad_lim:
                 q_tmp = [list_brad[-1, 0], brad_lim[0]]
                 zam_tmp = [list_brad[-1, 2], brad_lim[2]]
-                q_new = np.interp(ztransi,zam_tmp ,q_tmp)
+                q_new = np.interp(ztransi, zam_tmp, q_tmp)
                 list_ori.append([q_new, zav, ztransi])
                 za = ztransi
             else:
@@ -594,14 +596,12 @@ class ClassLaws:
         :param transi:  z transition stream
         :return: new list of law values
         """
-        list_add = []
         if not transi:
             return list_final
 
         list_add = sum((self.calc_transi_borda(list_final, tmp) for tmp in transi), [])
 
         return list_final + list_add
-
 
     def calc_transi_borda(self, list_final, transi):
         """
@@ -666,7 +666,7 @@ class ClassLaws:
                         ecart1 = ecartmoy
 
                     z1, z2 = (tab_tmp[1] + 2 * zmoy) / 3, (tab_tmp1[1] + 2 * zmoy) / 3
-                    list_add.extend([[deb, z1,  z1 + ecart1], [deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2],
+                    list_add.extend([[deb, z1, z1 + ecart1], [deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2],
                                      [deb, z2, z2 + ecart2]])
 
         return list_add
@@ -721,6 +721,8 @@ class ClassLaws:
         :param method: compute method
         :return:
         """
+        # defaut 1
+        type_kb = "type1"
         if method == "Bradley 78":
             if self.param_g["TOTALOUV"] > 60 and self.param_g["FORMCUL"] == 1:
                 type_kb = "Others"
@@ -747,10 +749,7 @@ class ClassLaws:
                     type_kb = "type3_1.5:1"
                 else:
                     type_kb = "type3_2:1"
-            else:
-                # defaut 1
-                type_kb = "type1"
-                # list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, "kb_abac", 'M', type_kb)
+
         return type_kb
 
     def meth_seuil(self, zam, zav, zcret, cf, larg):
@@ -923,7 +922,7 @@ class ClassLaws:
         debut = min_elem
         fin = self.list_zav[-1]
         ecart = fin - debut
-
+        zam_tmp = 0.
         while ecart > prec:
             zam_tmp = (debut + fin) / 2
             qnew = 0
@@ -1022,7 +1021,7 @@ class ClassLaws:
 
         idx = np.where(self.list_zam > za)[0]
         if len(idx) > 0:
-            for zam in self.list_zam[idx[0] :]:
+            for zam in self.list_zam[idx[0]:]:
                 if zav != zam:
                     q_seuil = 0
                     q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam, zav)
@@ -1045,7 +1044,7 @@ class ClassLaws:
         if len(list_ori) > 1:
             idx = np.where(np.array(self.list_q) > list_ori[0][0])[0]
             if len(idx) > 0:
-                list_q_tmp = self.list_q[idx[0] :]
+                list_q_tmp = self.list_q[idx[0]:]
             else:
                 list_q_tmp = self.list_q
             q_tmp = np.array(list_ori)[:, 0]
@@ -1138,7 +1137,7 @@ class ClassLaws:
                     value = [self.deb_min, zav, self.list_zam[idx[0] - 1]]
                     list_final.append(value)
 
-                for zam in self.list_zam[idx[0] :]:
+                for zam in self.list_zam[idx[0]:]:
                     q_seuil = 0
                     q_ori = 0
 

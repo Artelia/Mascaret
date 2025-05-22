@@ -21,8 +21,8 @@ import os
 
 import numpy as np
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
@@ -33,24 +33,19 @@ from .ClassLaws import ClassLaws
 from .ClassMethod import ClassMethod
 from .ClassTableStructure import ClassTableStructure, update_etat_struct
 from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
-
 # Widgets Buse
 from .MetBordaBuWidget import MetBordaBuWidget
-
 # Widgets Dalot
 from .MetBordaDaWidget import MetBordaDaWidget
-
 # Widgets Pont arche
 from .MetBordaPaWidget import MetBordaPaWidget
 from .MetBordaPcWidget import MetBordaPcWidget
-
 # Widgets Pont cadre
 from .MetBradleyPcWidget import MetBradleyPcWidget
 from .MetOrificeBuWidget import MetOrificeBuWidget
 from .MetOrificeDaWidget import MetOrificeDaWidget
 from .MetOrificePaWidget import MetOrificePaWidget
 from .MetOrificePcWidget import MetOrificePcWidget
-
 # FloodGate
 from .StructureFgDialog import StructureFgDialog
 
@@ -112,7 +107,6 @@ class ClassStructureEditDialog(QDialog):
             self.id_prof_ori = rows[0][4]
             self.typ_struct = rows[0][1]
 
-
             for m in self.tbst.dico_struc_typ[self.typ_struct]["meth_calc"]:
                 self.lst_meth_calc.append([m, self.tbst.dico_meth_calc[m]])
 
@@ -121,7 +115,7 @@ class ClassStructureEditDialog(QDialog):
             self.txt_comm.setText(rows[0][5])
             self.cc_active.setChecked(rows[0][3])
             self.ch_bperm.setChecked(rows[0][7])
-            self.dbs_zbreak.setValue( rows[0][6])
+            self.dbs_zbreak.setValue(rows[0][6])
 
             if not self.mgis.cond_api:
                 self.ch_bperm.setEnabled(False)
@@ -171,19 +165,19 @@ class ClassStructureEditDialog(QDialog):
 
         self.mdb.delete("profil_struct", where="id_config = {}".format(self.id_struct))
         self.mdb.insert_res("profil_struct", values, colonnes)
-        absc= feature["abscissa"][0]
-        tab = {self.id_struct:{"abscissa" : absc}}
-        self.mdb.update("struct_config", tab , var="id")
+        absc = feature["abscissa"][0]
+        tab = {self.id_struct: {"abscissa": absc}}
+        self.mdb.update("struct_config", tab, var="id")
 
-    def change_met_calc(self, idx):
+    def change_met_calc(self):
         if not self.is_loading:
             if (
-                QMessageBox.question(
-                    self,
-                    "Warning",
-                    "Save current parameters ?",
-                    QMessageBox.Cancel | QMessageBox.Ok,
-                )
+                    QMessageBox.question(
+                        self,
+                        "Warning",
+                        "Save current parameters ?",
+                        QMessageBox.Cancel | QMessageBox.Ok,
+                    )
             ) == QMessageBox.Ok:
                 self.save_struct()
         self.txt_name.setFocus()
@@ -295,7 +289,7 @@ class ClassStructureEditDialog(QDialog):
             sql = (
                 "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4}, comment= '{5}', "
                 "zbreak = {6}, erase_flag = {7} WHERE id = {1}".format(
-                    self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active, comm, zbreak,bperm
+                    self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active, comm, zbreak, bperm
                 )
             )
             self.mdb.execute(sql)
@@ -545,7 +539,7 @@ class ClassStructureEditDialog(QDialog):
             forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
             if forme_arche == 2:
                 if self.wgt_met.tab_trav.item(r, 2).data(0) >= self.wgt_met.tab_trav.item(
-                    r, 3
+                        r, 3
                 ).data(0):
                     arche_err.append(r + 1)
 
@@ -564,7 +558,7 @@ class ClassStructureEditDialog(QDialog):
             forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
             if forme_arche == 1:
                 z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (
-                    self.wgt_met.tab_trav.item(r, 1).data(0) / 2
+                        self.wgt_met.tab_trav.item(r, 1).data(0) / 2
                 )
             elif forme_arche == 2:
                 z_top = self.wgt_met.tab_trav.item(r, 3).data(0)
@@ -590,7 +584,7 @@ class ClassStructureEditDialog(QDialog):
                 forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
                 if forme_arche == 1:
                     z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (
-                        self.wgt_met.tab_trav.item(r, 1).data(0) / 2
+                            self.wgt_met.tab_trav.item(r, 1).data(0) / 2
                     )
                 elif forme_arche == 2:
                     z_top = self.wgt_met.tab_trav.item(r, 3).data(0)

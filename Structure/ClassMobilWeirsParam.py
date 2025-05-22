@@ -20,8 +20,10 @@ email                :
 # import pickle
 import json
 import os
-from ..Function import str2bool,data_to_float,data_to_int
+
 from ..ClassMessage import ClassMessage
+from ..Function import str2bool, data_to_float, data_to_int
+
 
 class ClassMobilWeirsParam(object):
     def __init__(self):
@@ -89,7 +91,7 @@ class ClassMobilWeirsParam(object):
             "ZFINALT": {"desc": "Cote final weirs après rupture", "desc_en": "Final weir level after break",
                         'typ': 'float'},
             "CLAPETT": {"desc": "True Si pour éviter la remontée de la marée",
-                       "desc_en": "True If valve to prevent the tide rising", 'typ': 'bool'},
+                        "desc_en": "True If valve to prevent the tide rising", 'typ': 'bool'},
         }
 
         self.dmeth = {"meth_time": str(1),
@@ -133,7 +135,7 @@ class ClassMobilWeirsParam(object):
             self.mess.add_mess('export_weirs_fg', 'critic', txt)
             return False
         complet = self.fill_param_to_db(parent.mdb)
-        if not complet :
+        if not complet:
             return False
         if not self.check_param():
             txt = self.mess.get_mess('chk_weirs_fg')
@@ -176,10 +178,9 @@ class ClassMobilWeirsParam(object):
         if len(rows) == 0:
             self.param_fg = {}
             return True
-        conv_var = {'z_crest':"level0"}
+        conv_var = {'z_crest': "level0"}
         for row in rows:
             id_weirs = row[0]
-            typ_ = row[4]
             if id_weirs not in self.param_fg.keys():
                 self.param_fg[id_weirs] = {}
                 self.list_actif.append(id_weirs)
@@ -187,8 +188,6 @@ class ClassMobilWeirsParam(object):
                 if var in conv_var:
                     var = conv_var[var]
                 self.param_fg[id_weirs][var] = row[pos + 1]
-
-
 
         lst_var = ["id_weirs", "name_var", "value"]
         sql = (
@@ -223,13 +222,13 @@ class ClassMobilWeirsParam(object):
                 self.param_fg[id_weirs][var] = row[2]
 
         lst_id_tab = list(set(lst_id_tab))
-        if len(lst_id_tab) > 0 :
+        if len(lst_id_tab) > 0:
             lst_var = ["id_weirs", "name_var", "value", "id_order"]
             sql = (
                 "SELECT {1} " "FROM {0}.weirs_mob_val " "WHERE id_weirs in ({2}) AND name_var in ({3})"
                 "ORDER BY id_weirs,id_order;"
             ).format(db.SCHEMA, ", ".join(lst_var), ", ".join([str(v) for v in lst_id_tab]),
-                                                              ", ".join([f"'{v}'" for v in var_tab]))
+                     ", ".join([f"'{v}'" for v in var_tab]))
             # print(sql)
             rows = db.run_query(sql, fetch=True)
             if not (rows is None or len(rows) == 0):
@@ -237,7 +236,7 @@ class ClassMobilWeirsParam(object):
                     id_weirs = row[0]
                     var = row[1]
                     if var in var_tab:
-                        self.param_fg[id_weirs][var].append(self.typ_to_val('float',row[2]))
+                        self.param_fg[id_weirs][var].append(self.typ_to_val('float', row[2]))
 
         return True
 
@@ -249,28 +248,29 @@ class ClassMobilWeirsParam(object):
         :param val: The value to be converted.
         :return: The converted value.
         """
-        if typ =='bool':
-            return  str2bool(val)
-        elif typ =='int':
-            return  data_to_int(val)
+        if typ == 'bool':
+            return str2bool(val)
+        elif typ == 'int':
+            return data_to_int(val)
         elif typ == 'float':
             return data_to_float(val)
         else:
             return val
 
-    def check_lst_param(self, num,test,dlist):
+    def check_lst_param(self, num, test, dlist):
         """
         Verify that all required variables are present in the `param_fg` dictionary.
         - Ensures that each weirs has the necessary parameters based on its mobility method.
         :param num: weirs number.
         :param test: Dictionary containing the parameters to be tested.
+        :param dlist: dictionnary conatine the list of parameters for each method
         :return: True if all variables are present, otherwise False.
         """
         lst_test = dlist[test["method_mob"]]
         missing_vars = [var for var in lst_test if var not in test]
         if missing_vars:
             txt = f"The variable <{', '.join(missing_vars)}> wasn't found for weirs {num}.\n"
-            for  var in missing_vars:
+            for var in missing_vars:
                 try:
                     txt += f"  - {var} : {self.lst_param[var]['desc_en']}\n"
                 except KeyError:
@@ -289,13 +289,12 @@ class ClassMobilWeirsParam(object):
         if test["method_mob"] == 2:
             tol = test["TOLREG"]
             if test["VREGOPEN"] - tol < test["VREGCLOS"] + tol:
-                    txt = (f"The opening level minus tolerance is lower than the closing level plus tolerance. "
-                           f"It should always be higher in this case.\n "
-                           f"The issue is for weirs {num}.")
-                    self.mess.add_mess('chk_weirs_reg', 'critic', txt)
-                    return False
+                txt = (f"The opening level minus tolerance is lower than the closing level plus tolerance. "
+                       f"It should always be higher in this case.\n "
+                       f"The issue is for weirs {num}.")
+                self.mess.add_mess('chk_weirs_reg', 'critic', txt)
+                return False
         return True
-
 
     def check_param(self):
         """
@@ -305,27 +304,26 @@ class ClassMobilWeirsParam(object):
         dlist = self.create_lst_test()
         for num, test in self.param_fg.items():
             # code-err= 'chk_weirs_fg'
-            if not self.check_lst_param(num,test,dlist):
+            if not self.check_lst_param(num, test, dlist):
                 return False
             # code-err= 'chk_weirs_reg'
-            if  not self.check_regul(num,test):
+            if not self.check_regul(num, test):
                 return False
 
     def create_lst_test(self):
         """
         Create a dictionnary of required variables for a given mobility method.
-        :param meth: Mobility method (e.g., "meth_time", "meth_regul", "meth_fus").
         :return: Dictionnary of list of required variables.
         """
-        lst_com = ["name", "level0", "abscissa", "branchnum",  "method_mob"]
+        lst_com = ["name", "level0", "abscissa", "branchnum", "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG",
-                    "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG", "TOLREG",
+                   "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG", "TOLREG",
                    "CLAPET"]
-        lst_time = ["TIMEZ", "VALUEZ","CLAPETT"]
+        lst_time = ["TIMEZ", "VALUEZ", "CLAPETT"]
 
-        dlist = { self.dmeth["meth_time"]: lst_com + lst_time,
-                  self.dmeth["meth_regul"] :  lst_com + lst_reg,
-                  }
+        dlist = {self.dmeth["meth_time"]: lst_com + lst_time,
+                 self.dmeth["meth_regul"]: lst_com + lst_reg,
+                 }
         return dlist
 
     def export_cl(self, name="cli_fg_weirs.obj"):

@@ -17,8 +17,9 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import os
 import json
+import os
+
 
 class ClassTableStructure:
     def __init__(self):
@@ -177,6 +178,7 @@ def update_etat_struct(mdb):
     )
 
     mdb.run_query(sql)
+
 
 def get_no_keep_break(file="no_keep_break.json"):
     """

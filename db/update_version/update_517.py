@@ -38,9 +38,9 @@ class ClassUpdate517:
             tabs = [Maso.visu_minor_river_bed]
             for tab in tabs:
                 valid_add, _ = self.cht.add_tab(tab)
-            if not valid_add:
-                self.mgis.add_info("Create  the visu_minor_river_bed table - ERROR")
-                valide = False
+                if not valid_add:
+                    self.mgis.add_info("Create  the visu_minor_river_bed table - ERROR")
+                    valide = False
 
         if valide:
             lst_alt = [

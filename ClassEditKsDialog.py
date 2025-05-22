@@ -86,9 +86,13 @@ class ClassEditKsDialog(BASE, FORM_CLASS):
         """Delete selection function"""
 
         tempo = QgsProject.instance().mapLayers().values()
+        profil = None
         for couche in tempo:
             if couche.name() == "profiles":
                 profil = couche
+        if not profil :
+            self.box.info("Please, selection the profiles", title="Message")
+            return
         if len(profil.selectedFeatures()) == 0:
             self.box.info("Please, selection the profiles", title="Message")
             return

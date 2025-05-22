@@ -18,9 +18,9 @@ email                :
  ***************************************************************************/
 """
 import json
-from matplotlib.patches import Polygon as mpoly
 
-# from shapely.geometry import Polygon as spoly
+from matplotlib.patches import Polygon as mpoly
+from shapely.geometry import Polygon as spoly
 from shapely import geometry
 
 from ..Graphic.GraphCommon import GraphCommon
@@ -144,17 +144,18 @@ class GraphStructure(GraphCommon):
                 for e, elem in enumerate(lst_elem):
                     if elem[1] == 0:
                         poly = geometry.shape(json.loads(elem[2]))
-                        poly_coord = [pt for pt in poly.exterior.coords]
-                        self.courbes["elem"].append(
-                            mpoly(
-                                poly_coord,
-                                zorder=90 - e,
-                                facecolor="w",
-                                edgecolor="black",
-                                alpha=1.0,
+                        if isinstance(poly, spoly):
+                            poly_coord = [pt for pt in poly.exterior.coords]
+                            self.courbes["elem"].append(
+                                mpoly(
+                                    poly_coord,
+                                    zorder=90 - e,
+                                    facecolor="w",
+                                    edgecolor="black",
+                                    alpha=1.0,
+                                )
                             )
-                        )
-                        self.axes.add_patch(self.courbes["elem"][-1])
+                            self.axes.add_patch(self.courbes["elem"][-1])
 
                 self.update_limites(minx, miny, maxx, maxy)
 

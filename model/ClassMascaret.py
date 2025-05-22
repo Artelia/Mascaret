@@ -239,7 +239,6 @@ class ClassMascaret:
         Args:
             :param noyau: kernel
             :param run: name run
-            :param only_init: if only intialisation is true
         :return:
         """
         # Ensure that other task Mascaret are not running
@@ -441,10 +440,12 @@ class ClassMascaret:
         if not os.path.isdir(self.dossierFile_bin):
             return False
         test = sys.platform
+        soft = None
         if "linux" in test or test == "cygwin":
             soft = "mascaret_linux"
         elif test == "win32":
             soft = "mascaret.exe"
+
         if not os.path.isfile(os.path.join(self.dossierFile_bin, soft)):
             return False
 
@@ -474,6 +475,7 @@ class ClassMascaret:
         """Compress folder "rep" path
         Args:
             :param rep : Model folder
+            :param typ_compress: directory compression type
         Return :
             :return (boolean) exit status
         """

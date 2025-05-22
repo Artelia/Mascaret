@@ -20,16 +20,16 @@ email                :
 import os
 
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
 from .FctDialog import ctrl_set_value, ctrl_get_value
-from ..Graphic.GraphCommon import GraphCommon
 from ..Function import data_to_float
+from ..Graphic.GraphCommon import GraphCommon
 
 
 class ClassMobilObjectMet1Widget(QWidget):
@@ -61,7 +61,6 @@ class ClassMobilObjectMet1Widget(QWidget):
             self.mob_table_id = 'id_links'
             self.ui.cc_clapet.hide()
 
-
         self.d_var = {
             "VBREAKT": {"ctrl": self.ui.sb_break_val, "cc": self.ui.cc_break_val,
                         "vdef": 9999., "typ": float},
@@ -70,7 +69,7 @@ class ClassMobilObjectMet1Widget(QWidget):
             "ZFINALT": {"ctrl": self.ui.sb_break_lvl, "cc": self.ui.cc_break_lvl,
                         "vdef": 0., "typ": float},
             "CLAPETT": {"ctrl": self.ui.cc_clapet, "cc": None,
-                         "vdef": False, "typ": to_bool},
+                        "vdef": False, "typ": to_bool},
         }
 
         self.bg_time = QButtonGroup()
@@ -266,7 +265,7 @@ class ClassMobilObjectMet1Widget(QWidget):
             self.mdb.run_query(sql, many=True, list_many=recs)
             self.clear_table()
             self.widget_closed.emit()
-        except:
+        except Exception :
             self.cancel_input()
             self.mgis.add_info("Cancel of {0} information".format(self.obj_table))
 

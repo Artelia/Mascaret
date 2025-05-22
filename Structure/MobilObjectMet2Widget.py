@@ -20,16 +20,14 @@ email                :
 import os
 
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
 from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
-from ..Graphic.GraphCommon import GraphCommon
-from ..Function import data_to_float
 
 
 class ClassMobilObjectMet2Widget(QWidget):
@@ -69,7 +67,7 @@ class ClassMobilObjectMet2Widget(QWidget):
             "VELOFGCLOSE": {"ctrl": self.ui.sb_close_vel, "cc": self.ui.cc_close_vel,
                             "cdef": self.ui.sb_open_vel, "typ": float},
             "UNITVELC": {"ctrl": self.ui.cb_unit_close_vel, "cc": self.ui.cc_close_vel,
-                              "cdef": self.ui.cb_unit_open_vel, "typ": int},
+                         "cdef": self.ui.cb_unit_open_vel, "typ": int},
             "ZMAXFG": {"ctrl": self.ui.sb_stop_elev, "cc": None, "vdef": 0., "typ": float},
             "ZINITREG": {"ctrl": self.ui.sb_init_lvl, "cc": self.ui.cc_init_lvl,
                          "vdef": 0., "typ": float},
@@ -101,7 +99,7 @@ class ClassMobilObjectMet2Widget(QWidget):
             "ZFINALREG": {"ctrl": self.ui.sb_break_lvl, "cc": self.ui.cc_break_lvl,
                           "vdef": 0., "typ": float},
             "CLAPET": {"ctrl": self.ui.cc_clapet, "cc": None,
-                         "vdef": False, "typ": to_bool},
+                       "vdef": False, "typ": to_bool},
         }
 
         self.ui.cb_dir.currentIndexChanged.connect(self.direction_changed)
@@ -435,7 +433,6 @@ class ClassMobilObjectMet2Widget(QWidget):
 
     def cancel_input(self):
         self.widget_closed.emit()
-
 
 
 def to_bool(txt):

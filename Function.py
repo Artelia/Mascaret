@@ -98,7 +98,7 @@ def get_couche(nom, iface):
 def open_file_editor(filename):
     """
      Open file with default Editor
-    :param file_: file_path
+    :param filename: file_path
     """
     if sys.platform == "win32":
         os.startfile(filename)
@@ -486,14 +486,14 @@ def proper_rdp(points, epsilon):
     :param epsilon: limit distance
     :return: filters points
     """
-    firstPoint = points[0]
-    lastPoint = points[-1]
+    first_point = points[0]
+    last_point = points[-1]
     if len(points) < 3:
         return points
     index = -1
     dist = 0.0
     for i in range(1, len(points) - 2):
-        cDist = find_perpendicular_distance(points[i], firstPoint, lastPoint)
+        cDist = find_perpendicular_distance(points[i], first_point, last_point)
         if cDist > dist:
             dist = cDist
             index = i
@@ -507,7 +507,7 @@ def proper_rdp(points, epsilon):
         rs = r1[0:-1] + r2
         return rs
     else:
-        return [firstPoint, lastPoint]
+        return [first_point, last_point]
 
 
 def filter_dist_perpendiculaire(pr_x, pr_z, seuil, fixe_x=[], dist_detection_vert=0.2):
@@ -636,7 +636,7 @@ class TypeErrorModel:
         Args:
             :param description: str Type Name
             :param description:str description of error
-            :param status: boolean status default of erro (True exist False: not exist)
+            :param stopt: boolean stop ot not the running
         """
         self.name = ""
         if isinstance(name, str):

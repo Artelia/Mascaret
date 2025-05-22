@@ -128,6 +128,7 @@ class ClassExportDataRun(QDialog):
         :return : None
         """
         model = self.mod_lst_var
+        obj = None
         if model is None:
             return
         elif model == "CSV":
@@ -146,6 +147,7 @@ class ClassExportDataRun(QDialog):
         :return : None
         """
         model = self.mod_lst_var
+        obj = None
         if model is None:
             return
         elif model == "CSV":
@@ -284,6 +286,7 @@ class ClassExportDataRun(QDialog):
         :param model: (object) QStandardItemModel
         :return : (list)  the rows list for a model
         """
+        obj = None
         if model is None:
             return
         elif model == "Profiles":
@@ -308,8 +311,10 @@ class ClassExportDataRun(QDialog):
         """
         Get the rows list for a model
         :param model: (object) QStandardItemModel
+        :param var:(str) variable name
         :return : (list)  the rows list for a model
         """
+        obj = None
         if model is None:
             return
         elif model == "Profiles":
@@ -456,6 +461,7 @@ class ClassExportDataRun(QDialog):
         :param model: (object) QStandardItemModel
         :return : None
         """
+        obj = None
         if model is None:
             return
         elif model == "Profiles":
@@ -476,6 +482,7 @@ class ClassExportDataRun(QDialog):
         :param model: (object) QStandardItemModel
         :return : None
         """
+        obj = None
         if model is None:
             return
         elif model == "Profiles":
@@ -498,10 +505,10 @@ class ClassExportDataRun(QDialog):
                   (dict) dict[row]={'id': index runs},
         """
         self.d_run2id = {}
-        treeModel = QStandardItemModel()
+        tree_model = QStandardItemModel()
         dtmp = self.mdb.select_distinct('run', "runs")
         if dtmp is None:
-            return treeModel, None
+            return tree_model, None
         lst_runs = dtmp['run']
         id_to_run = {}
         for row, run in enumerate(lst_runs):
@@ -521,8 +528,8 @@ class ClassExportDataRun(QDialog):
                 item.appendRow(run_item)
                 id_to_run[(row, cmpt)] = {'id': dtmp['id'][id]}
                 cmpt += 1
-            treeModel.appendRow(item)
-        return treeModel, id_to_run
+            tree_model.appendRow(item)
+        return tree_model, id_to_run
 
     def profil_mod(self, lst_runs=[]):
         """
@@ -660,6 +667,7 @@ class ClassExportDataRun(QDialog):
         :param model: (object) QStandardItemModel
         :return: None
         """
+        obj = None
         if model is None:
             return
         elif model == "Profiles":
@@ -729,14 +737,14 @@ class ClassExportDataRun(QDialog):
         lst_run = self.get_list_runs()
         lst_var = self.get_mod(self.mod_lst_var)
         lst_pr = self.get_mod(self.mod_lst)
-
+        dico_mod = None
         if self.mod_lst == "Profiles":
             dico_mod = self.id_to_name_prof
         elif self.mod_lst == "Outputs":
             dico_mod = self.id_to_name_out
         elif self.mod_lst == "Stations":
             dico_mod = self.id_to_name_sta
-
+        dico_var = None
         if self.mod_lst_var == "CSV":
             dico_var = self.row_to_name_var
         elif self.mod_lst_var == "OTAMIN":

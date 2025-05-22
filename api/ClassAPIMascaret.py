@@ -432,6 +432,7 @@ class ClassAPIMascaret:
         """
         Write a json file about the hydraulic structure results
         :param res: results to write f
+        :param filen: file name , default res_struct.res
         :return:
         """
         with open(os.path.join(self.dossier_file_masc, filen), "w") as filein:

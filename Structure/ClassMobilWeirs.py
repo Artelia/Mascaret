@@ -22,6 +22,7 @@ import numpy as np
 
 from .ClassMobilWeirsParam import ClassMobilWeirsParam
 
+
 class ClassMobilWeirs:
     """Class Flood Gate
 
@@ -38,7 +39,6 @@ class ClassMobilWeirs:
         self.size_link = 0
         self.new_z = 99
         self.arret_comput = False
-        self.break_w = False
 
         self.cl_param = ClassMobilWeirsParam()
         self.cl_param.get_param(parent=main.mgis)
@@ -63,10 +63,9 @@ class ClassMobilWeirs:
         if not self.check_param():
             self.add_info("***** ERROR: the gates for the weirs\n COMPUTATION STOP")
             self.arret_comput = False
-        self.init_res()
         self.update_var_mas(force=True)
+        self.init_res()
         return
-
 
     def update_var_mas(self, force=False):
         """
@@ -76,7 +75,7 @@ class ClassMobilWeirs:
         the parameters have changed; by default False
         """
         for param in self.param_fg.values():
-            if (param["level"] != param["level-dt"] or force):
+            if param["level"] != param["level-dt"] or force:
                 id_mas = param["id_mas"]
                 updates = {
                     "Model.Weir.CrestLevel": param["level"],
@@ -159,17 +158,13 @@ class ClassMobilWeirs:
         :param val_check: Regulation variable value to check.
         """
         param.update({
-            # var time-dt
-            "level-dt": param["level"],
-            "TIME-dt": param["TIME"],
-            "REGVAR_VAL-dt": param["REGVAR_VAL"],
             # var update in run
             "REGVAR_VAL": val_check,
             "level": dnew['level'],
             "TIME": time
         })
-        self.fill_results_fg_mv(id_weir, param)
         self.update_var_mas()
+        self.fill_results_fg_mv(id_weir, param)
 
     def check_param(self):
         """
@@ -205,7 +200,6 @@ class ClassMobilWeirs:
                 var = "abscissa"
                 param['CHECK_VAR'] = "State.Z"
             else:
-                var = None
                 self.add_info(f"Method {param['method_mob']} doesn't exist for numWeir {id_weir}")
                 continue
             idx = (np.abs(coords - param[var])).argmin()
@@ -228,7 +222,7 @@ class ClassMobilWeirs:
         lst_info = []
         for id_mas_weir in range(size_sing):
             typ = self.masc.get("Model.Weir.Type", id_mas_weir)
-            if typ in [1,2,3, 4]: # filtre les type
+            if typ in [1, 2, 3, 4]:  # filtre les type
                 node = self.masc.get("Model.Weir.Node", id_mas_weir) - 1
                 lst_node.append(node)
                 abs = self.masc.get("Model.Weir.RelAbscissa", id_mas_weir)
@@ -238,14 +232,15 @@ class ClassMobilWeirs:
         coords = np.array(coords)
         for id_weir, param in self.param_fg.items():
             idx = (np.abs(coords - param["abscissa"])).argmin()
-            if idx:
+            if isinstance(idx, np.int64):
                 id_mas = lst_info[idx]
                 node = lst_node[idx]
                 param.update({
-                    "node" : node,
-                    "id_mas":  id_mas,
+                    "node": node,
+                    "id_mas": id_mas,
                     "TIME0": tini,
-                    "TIME": tini
+                    "TIME": tini,
+                    'break': False
                 })
                 if param["method_mob"] == self.dmeth["meth_regul"]:
                     self.cl_regul.init_meth_regul(param, id_weir)
@@ -262,7 +257,6 @@ class ClassMobilWeirs:
                 self.add_info("Id_mas not found for ID weirs {}.".format(id_weir))
         del coords
 
-
     def fill_results_fg_mv(self, id_weir, param):
         """
         Populate the results dictionary (`results_fg_weirs_mv`) with updated mobile weirs parameters
@@ -273,20 +267,21 @@ class ClassMobilWeirs:
         res = self.results_fg_weirs_mv[id_weir]
 
         # Check if any parameter has changed
-        zweir_var_dt = 'level-dt'
+
         zweir_var = 'level'
 
-        if (param["level"] != param["level-dt"]) and( (res["TIME"][-1],res["ZSTR"][-1]) !=
-                                                      (param["TIME-dt"], param[zweir_var_dt])):
+        if param["TIME"] != param["TIME0"]:
+            # Update with new values
+            res["TIME"].append(param["TIME"])
+            res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
+            res["ZSTR"].append(param[zweir_var])
+        param.update({
+            # var time-dt
+            "level-dt": param["level"],
+            "TIME-dt": param["TIME"],
+            "REGVAR_VAL-dt": param["REGVAR_VAL"],
+        })
 
-            res["TIME"].append(param["TIME-dt"])
-            res["REGVAR"].append(round(param["REGVAR_VAL-dt"], 3))
-            res["ZSTR"].append(param[zweir_var_dt])
-
-        # Update with new values
-        res["TIME"].append(param["TIME"])
-        res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
-        res["ZSTR"].append(param[zweir_var])
 
 class ClassMethRegul:
     """Class for handling mobile weirs regulation logic."""
@@ -301,7 +296,6 @@ class ClassMethRegul:
         self.add_info = parent.add_info
         self.masc = parent.masc
         self.compt_dt = 0
-        self.break_weir = False
 
     def init_meth_regul(self, param, id_weir):
         """
@@ -311,16 +305,15 @@ class ClassMethRegul:
         """
         param.update({
             "rup_level": param["level0"],
-            'CLAPMAREE' : param["CLAPET"],
-            "ZLIMITGATE" : param["ZMAXFG"],
-            "level" :  max(param["ZINITREG"], param["level0"]),
+            'CLAPMAREE': param["CLAPET"],
+            "ZLIMITGATE": param["ZMAXFG"],
+            "level": max(param["ZINITREG"], param["level0"]),
             "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
             "OPEN_CLOSE": "INIT"
         })
         # info de la vanne
         if param["DIRFG"] != "D":
             self.add_info(f"Non-consistency type mobile weirs with the moving part {id_weir}.")
-
 
     def check_param(self, param, id_weir):
         """
@@ -344,26 +337,6 @@ class ClassMethRegul:
                 param["TOLREG"] = 0
         return True
 
-    def check_break(self, param, val_check):
-        """
-        Check if the mobile weirs should break.
-        :param param: Dictionary of mobile weirs parameters.
-        :param val_check: Current value of the regulation variable.
-        """
-        if val_check >= param["VBREAKREG"] :
-            self.break_weir = True
-            param.update({
-                "rup_level": param["level"],
-            })
-        else:
-            # reveient à l'état avant rupture
-            if not param["BPERMREG"] and self.break_weir:
-                self.break_weir = False
-                param.update({
-                    "level": param["rup_level"],
-                })
-
-
     def state_regul(self, val_check, param_fg):
         """
         Determine the state of the mobile weirs (OPEN, CLOSE, or MAINTAIN) based on the regulation variable.
@@ -376,17 +349,17 @@ class ClassMethRegul:
         # conditions
         conditions = {
             # fermeture par le bas
-            ("INIT"): [(val_check >= param_fg["VREGOPEN"] - tol, "OPEN")],
-            ("OPEN"): [
+            "INIT": [(val_check >= param_fg["VREGOPEN"] - tol, "OPEN")],
+            "OPEN": [
                 (val_check <= param_fg["VREGCLOS"] + tol, "CLOSE"),
                 (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
 
             ],
-            ("CLOSE"): [
+            "CLOSE": [
                 (val_check >= param_fg["VREGOPEN"] - tol, "OPEN"),
                 (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
             ],
-            ("MAINT"): [
+            "MAINT": [
                 (val_check >= param_fg["VREGOPEN"] - tol, "OPEN"),
                 (val_check <= param_fg["VREGCLOS"] + tol, "CLOSE"),
                 (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
@@ -394,12 +367,12 @@ class ClassMethRegul:
         }
 
         for condition, action in conditions.get(key, []):
-            print(condition, key)
+            # print(condition, key)
             if condition:
                 param_fg["OPEN_CLOSE"] = action
                 break
-        print('val_check', 'action', 'param_fg["VREGOPEN"]', 'param_fg["VREGCLOS"]', 'tol')
-        print(val_check,param_fg["OPEN_CLOSE"],  param_fg["VREGOPEN"], param_fg["VREGCLOS"],tol)
+        # print('val_check', 'action', 'param_fg["VREGOPEN"]', 'param_fg["VREGCLOS"]', 'tol')
+        # print(val_check,param_fg["OPEN_CLOSE"],  param_fg["VREGOPEN"], param_fg["VREGCLOS"],tol)
         return val_check
 
     def law_gate_regul(self, param, time):
@@ -410,13 +383,13 @@ class ClassMethRegul:
         :return: Dictionary of updated mobile weirs parameters.
         """
 
-        if self.break_weir:
+        if param['break']:
             return {
                 "level": param["ZFINALREG"],
             }
 
         status = param["OPEN_CLOSE"]
-        print(param["level"], status)
+        # print(param["level"], status)
         if status in [None, "INIT", "MAINT"]:
             return {
                 "level": param["level"],
@@ -430,10 +403,10 @@ class ClassMethRegul:
             new_level = min(level + dz_close, zlimit_gate)
         elif status == "OPEN":
             new_level = max(level - dz_open, level0)
-        print('new_level', 'dz_open', 'dz_close')
-        print( new_level, dz_open, dz_close)
+        # print('new_level', 'dz_open', 'dz_close')
+        # print( new_level, dz_open, dz_close)
         return {
-            "level": round(new_level,4),
+            "level": round(new_level, 4),
         }
 
     def comput_dz(self, vit, dt, dzlimit=0):
@@ -484,7 +457,6 @@ class ClassMethTime:
         self.arret_comput = parent.arret_comput
         self.add_info = parent.add_info
         self.masc = parent.masc
-        self.break_weir = False
 
     def init_meth_time(self, param):
         """
@@ -494,32 +466,12 @@ class ClassMethTime:
         param.update({
             "TIMEZ": np.array(param["TIMEZ"]),
             "VALUEZ": np.array(param["VALUEZ"]),
-            "REGVAR_VAL" : self.masc.get(param['CHECK_VAR'], param["SECCON"]),
+            "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
             'CLAPMAREE': param["CLAPET"],
             "rup_level": param["level0"],
         })
         param["level"] = np.interp(param["TIME"], param["TIMEZ"], param["VALUEZ"])
         param["ZLIMITGATE"] = np.max(param["TIMEZ"])
-
-
-    # def check_break(self, param, val_check):
-    #     """
-    #     Check if the mobile weirs should break.
-    #     :param param: Dictionary of mobile weirs parameters.
-    #     :param val_check: Current value of the regulation variable.
-    #     """
-    #     if val_check >= param["VBREAKT"]:
-    #         self.break_weir = True
-    #         param.update({
-    #             "rup_level": param["level"],
-    #         })
-    #     else:
-    #         # reveient à l'état avant rupture
-    #         if not  param["BPERMT"] and self.break_weir:
-    #             self.break_weir = False
-    #             param.update({
-    #                 "level": param["rup_level"],
-    #             })
 
     def law_mth_time(self, param, time):
         """
@@ -528,9 +480,5 @@ class ClassMethTime:
         :param time: Current simulation time.
         :return: Dictionary of updated mobile weirs parameters.
         """
-        # if self.break_weir:
-        #     return {
-        #         "level": param["ZFINALT"],
-        #     }
-        dnew = { "level": np.interp(time, param["TIMEZ"], param["VALUEZ"])}
+        dnew = {"level": np.interp(time, param["TIMEZ"], param["VALUEZ"])}
         return dnew

@@ -37,9 +37,10 @@ from ..Graphic.ClassResProfil import ClassResProfil
 class ClassGetResults:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, mdb, dossier_file_masc, dbg):
+    def __init__(self, mdb, dossier_file_masc,wq, dbg):
         self.dbg = dbg
         self.mdb = mdb
+        self.wq = wq
         self.dossier_file_masc = dossier_file_masc
         self.basename = "mascaret"
         self.mess = ClassMessage()
@@ -326,10 +327,11 @@ class ClassGetResults:
         # delete doublon list(set(my_list))
         list_insert.append([id_run, typ_res, "var", json.dumps(sorted(list_var))])
         list_insert.append([id_run, typ_res, "time", json.dumps(sorted(list(set(val["TIME"]))))])
-
+        key_pknum = "PK"
         if typ_res == "opt":
             var_info = {"var": "ZMAX", "type_res": "opt"}
             id_zmax = self.mdb.check_id_var(var_info)
+            dico_zmax = {}
             # if zmax exist
             if id_zmax in list_var:
                 dico_zmax = {}
@@ -341,12 +343,10 @@ class ClassGetResults:
                         break
 
                 list_insert.append([id_run, typ_res, "zmax", json.dumps(dico_zmax)])
-                key_pknum = "PK"
             else:
                 var_info = {"var": "Z", "type_res": "opt"}
                 id_z = self.mdb.check_id_var(var_info)
                 if id_z in list_var and max:
-                    dico_zmax = {}
                     for pknum in list(set(val["PK"])):
                         sql = (
                             "SELECT MAX(val) FROM {0}.results "
@@ -362,7 +362,6 @@ class ClassGetResults:
                             dico_zmax[pknum] = None
 
                     list_insert.append([id_run, typ_res, "zmax", json.dumps(dico_zmax)])
-                    key_pknum = "PK"
             # add stockage plani
             if dico_zmax:
                 cl_geo = ClassResProfil()
@@ -375,8 +374,6 @@ class ClassGetResults:
             key_pknum = "BNUM"
         elif typ_res == "link":
             key_pknum = "LNUM"
-        elif "tracer_" in typ_res:
-            key_pknum = "PK"
         list_insert.append(
             [id_run, typ_res, "pknum", json.dumps(sorted(list(set(val[key_pknum]))))]
         )
@@ -397,6 +394,8 @@ class ClassGetResults:
         :param comments: comments
         :param tracer: if tracers are actived
         :param casier: if basins are actived
+        :param  cond_api: if api are used
+        :param save_res_struct : results when ther are hydraulic structur
         :return:
         """
         nom_fich = os.path.join(self.dossier_file_masc, base_namefile + ".opt")
@@ -477,6 +476,7 @@ class ClassGetResults:
         :return: True
         """
         val_keys = val.keys()
+        lpk =list()
         if "PK" in val_keys:
             lpk = val["PK"]
         elif "BNUM" in val_keys:

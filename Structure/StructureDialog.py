@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
@@ -27,8 +28,8 @@ from qgis.utils import *
 
 from .ClassTableStructure import ClassTableStructure
 from .GraphStructure import GraphStructure
-from .StructureEditDialog import ClassStructureEditDialog
 from .StructureCreateDialog import ClassStructureCreateDialog
+from .StructureEditDialog import ClassStructureEditDialog
 
 
 class ClassStructureDialog(QDialog):

@@ -22,7 +22,7 @@ email                :
 import time
 import traceback
 
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal
 from qgis.core import QgsTask, QgsMessageLog, Qgis
 
 from .TaskMascComput import TaskMascComput
@@ -31,12 +31,14 @@ from .TaskMascPost import TaskMascPost
 
 MESSAGE_CATEGORY = 'TaskMascaret'
 
+class TaskSignals(QObject):
+    message = pyqtSignal(str)
 
 class TaskMascaret(QgsTask):
-    message = pyqtSignal(str)
 
     def __init__(self, description, dico_task):
         super().__init__(description, QgsTask.CanCancel)
+        self.signal = TaskSignals()
         self.dbg = dico_task['dbg']
         self.mdb = dico_task['mdb']
         self.wq = dico_task['wq']
@@ -74,7 +76,7 @@ class TaskMascaret(QgsTask):
             task.update_inputs(up_param)
         completed_status = task.run()
         up_param = task.maj_param(up_param)
-        self.message.emit(task.mess.message())
+        self.signal.message.emit(task.mess.message())
         return completed_status, up_param
 
     def log_mess(self, txt, typ='info'):
@@ -82,7 +84,7 @@ class TaskMascaret(QgsTask):
             :param txt : (str) text
             :param typ :(str) message typ
         """
-        self.message.emit(txt)
+        self.signal.message.emit(txt)
         if typ == 'warning':
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Warning)
         elif typ == 'critic':

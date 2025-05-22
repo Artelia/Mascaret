@@ -23,9 +23,10 @@ import json
 import numpy as np
 from shapely.geometry import *
 
-from .ClassTableStructure import ClassTableStructure
 from .ClassPolygone import ClassPolygone
+from .ClassTableStructure import ClassTableStructure
 from ..ClassMessage import ClassMessage
+
 
 class ClassMethod:
     def __init__(self, mgis):
@@ -332,10 +333,10 @@ class ClassMethod:
         if order:
             order = " ORDER BY " + order
         sql = "SELECT ST_AsGeoJSON(Polygon)  AS Polygon  FROM {0}.{1} {2} {3};"
-        (results, namCol) = self.mdb.run_query(
+        (results, nam_col) = self.mdb.run_query(
             sql.format(self.mdb.SCHEMA, table, where, order), fetch=True, namvar=True
         )
-        cols = [col[0] for col in namCol]
+        cols = [col[0] for col in nam_col]
         dico = {}
         for col in cols:
             dico[col] = []

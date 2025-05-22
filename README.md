@@ -9,4 +9,4 @@ Please note, it is not necessary to activate the PostGIS extension in the databa
 ## License
 Mascaret plugin is free software.
 You can redistribute it anf/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.
-
+[LICENSE](LICENSE)

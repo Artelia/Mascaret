@@ -84,7 +84,7 @@ class ClassFloodGate:
     def info_init_poly(self):
         """Get information of polygones"""
         for id_config in self.param_fg.keys():
-            param  = self.param_fg[id_config]
+            param = self.param_fg[id_config]
             list_poly_trav = self.init_var.select_poly_elem(id_config, 0)
             list_miny = []
             list_maxy = []
@@ -95,8 +95,8 @@ class ClassFloodGate:
             zmin = min(list_miny)
             zmax = max(list_maxy)
 
-            param.update({"MINZ0" : zmin,
-                          "MAXZ0" : zmax
+            param.update({"MINZ0": zmin,
+                          "MAXZ0": zmax
                           })
             if param["DIRFG"] == "D":
                 param["ZOLD"] = zmin
@@ -164,7 +164,7 @@ class ClassFloodGate:
 
         """
         for id_config, param in self.param_fg.items():
-            self.regul(id_config, time, param , dtp)
+            self.regul(id_config, time, param, dtp)
 
     def regul(self, id_config, time, param_fg, dtp):
         if check_time_regul(time, param_fg["DTREG"], param_fg):
@@ -235,11 +235,11 @@ class ClassFloodGate:
             # dzf = min(param_fg['ZINCRFG'], dz_velo)
             znew = 99.0
             if (param_fg["DIRFG"] == "D" and state == 1) or (
-                param_fg["DIRFG"] == "U" and state == 2
+                    param_fg["DIRFG"] == "U" and state == 2
             ):
                 znew = param_fg["ZOLD"] + dzf
             elif (param_fg["DIRFG"] == "D" and state == 2) or (
-                param_fg["DIRFG"] == "U" and state == 1
+                    param_fg["DIRFG"] == "U" and state == 1
             ):
                 znew = param_fg["ZOLD"] - dzf
             # check Znew
@@ -250,7 +250,7 @@ class ClassFloodGate:
                 znew = param_fg["MAXZ0"]
                 param_fg["ZRESI"] = 0
             if (param_fg["DIRFG"] == "D" and znew >= param_fg["ZMAXFG"]) or (
-                param_fg["DIRFG"] == "U" and znew <= param_fg["ZMAXFG"]
+                    param_fg["DIRFG"] == "U" and znew <= param_fg["ZMAXFG"]
             ):
                 znew = param_fg["ZMAXFG"]
                 param_fg["ZRESI"] = 0

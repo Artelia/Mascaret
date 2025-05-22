@@ -27,7 +27,6 @@ from qgis.utils import *
 from qgis.core import NULL as qgis_null
 
 from datetime import timedelta
-from shapely.wkt import loads as wkt_loads
 from scipy import interpolate
 
 D_PARAM = {"z": {"txt": "Water level", "var_profil": "Z", "var_basin": "ZCAS"},

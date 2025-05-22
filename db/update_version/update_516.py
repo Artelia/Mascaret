@@ -65,9 +65,9 @@ class ClassUpdate516:
             tabs = [Maso.results_by_pk, Maso.results_sect, Maso.observations]
             for tab in tabs:
                 valid_add, _ = self.cht.add_tab(tab)
-            if not valid_add:
-                self.mgis.add_info("Create  the new reuslts table - ERROR")
-                valide = False
+                if not valid_add:
+                    self.mgis.add_info("Create  the new reuslts table - ERROR")
+                    valide = False
             else:
                 self.mgis.add_info("Create  the new reuslts table - OK", dbg=True)
 
@@ -145,6 +145,7 @@ class ClassUpdate516:
 
                 err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
             elif test in ["fill_res", "fill_res_sect", "create", "fill_obs"]:
+
                 if test != "create":
                     t_sec = self.mdb.drop_table("results_sect", cascade=True)
                     t_pk = self.mdb.drop_table("results_by_pk", cascade=True)
