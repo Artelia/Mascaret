@@ -110,6 +110,7 @@ class ClassMobilWeirs:
                 res["TIME"].append(tfin)
                 res["ZSTR"].append(param["level"])
                 res["REGVAR"].append(param["REGVAR_VAL"])
+                print(res)
 
     def iter_fg(self, time, dtp):
         """
@@ -268,13 +269,11 @@ class ClassMobilWeirs:
 
         # Check if any parameter has changed
 
-        zweir_var = 'level'
-
         if param["TIME"] != param["TIME0"]:
             # Update with new values
             res["TIME"].append(param["TIME"])
             res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
-            res["ZSTR"].append(param[zweir_var])
+            res["ZSTR"].append(param['level'])
         param.update({
             # var time-dt
             "level-dt": param["level"],
@@ -349,20 +348,20 @@ class ClassMethRegul:
         # conditions
         conditions = {
             # fermeture par le bas
-            "INIT": [(val_check >= param_fg["VREGOPEN"] - tol, "OPEN")],
+            "INIT": [(val_check > param_fg["VREGOPEN"] - tol, "OPEN")],
             "OPEN": [
-                (val_check <= param_fg["VREGCLOS"] + tol, "CLOSE"),
-                (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
+                (val_check < param_fg["VREGCLOS"] + tol, "CLOSE"),
+                (param_fg["VREGOPEN"] - tol >= val_check >= param_fg["VREGCLOS"] + tol, "MAINT"),
 
             ],
             "CLOSE": [
-                (val_check >= param_fg["VREGOPEN"] - tol, "OPEN"),
-                (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
+                (val_check > param_fg["VREGOPEN"] - tol, "OPEN"),
+                (param_fg["VREGOPEN"] - tol >= val_check >= param_fg["VREGCLOS"] + tol, "MAINT"),
             ],
             "MAINT": [
-                (val_check >= param_fg["VREGOPEN"] - tol, "OPEN"),
-                (val_check <= param_fg["VREGCLOS"] + tol, "CLOSE"),
-                (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
+                (val_check > param_fg["VREGOPEN"] - tol, "OPEN"),
+                (val_check < param_fg["VREGCLOS"] + tol, "CLOSE"),
+                (param_fg["VREGOPEN"] - tol >= val_check >= param_fg["VREGCLOS"] + tol, "MAINT"),
             ],
         }
 
@@ -480,5 +479,8 @@ class ClassMethTime:
         :param time: Current simulation time.
         :return: Dictionary of updated mobile weirs parameters.
         """
+
         dnew = {"level": np.interp(time, param["TIMEZ"], param["VALUEZ"])}
+        print(time, dnew)
+        print(param["TIMEZ"], param["VALUEZ"])
         return dnew

@@ -407,6 +407,7 @@ class ClassAPIMascaret:
         - Display the end information
         :return:
         """
+        print(self.tfin)
         info = self.masc.log_stream.getvalue()
         self.add_info(info)
         self.masc.delete_mascaret()

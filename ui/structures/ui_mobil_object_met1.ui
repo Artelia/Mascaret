@@ -6,15 +6,162 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>920</width>
-    <height>564</height>
+    <width>916</width>
+    <height>555</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="2" column="0">
+   <item row="1" column="0">
+    <widget class="QGroupBox" name="grp_break">
+     <property name="title">
+      <string/>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_8">
+      <property name="topMargin">
+       <number>6</number>
+      </property>
+      <property name="bottomMargin">
+       <number>6</number>
+      </property>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="cc_temp_break">
+        <property name="text">
+         <string>Non permanent breaking</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="cc_break_val">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Breaking value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="cc_break_lvl">
+        <property name="text">
+         <string>Level after breaking</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="sb_break_val">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="suffix">
+         <string> m</string>
+        </property>
+        <property name="decimals">
+         <number>3</number>
+        </property>
+        <property name="minimum">
+         <double>-1000000000.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.010000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QDoubleSpinBox" name="sb_break_lvl">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="suffix">
+         <string> m</string>
+        </property>
+        <property name="decimals">
+         <number>3</number>
+        </property>
+        <property name="minimum">
+         <double>-1000000000.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.010000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QDialogButtonBox" name="b_valid">
+     <property name="locale">
+      <locale language="English" country="UnitedStates"/>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QLabel" name="tit_break">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Breaking Parameters</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Line" name="line_break">
+       <property name="frameShadow">
+        <enum>QFrame::Plain</enum>
+       </property>
+       <property name="lineWidth">
+        <number>10</number>
+       </property>
+       <property name="midLineWidth">
+        <number>4</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="4" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -136,7 +283,7 @@
           <number>50</number>
          </attribute>
          <attribute name="verticalHeaderDefaultSectionSize">
-          <number>22</number>
+          <number>26</number>
          </attribute>
         </widget>
        </item>
@@ -144,12 +291,15 @@
      </item>
     </layout>
    </item>
-   <item row="1" column="0">
-    <widget class="QGroupBox" name="grp_break">
+   <item row="0" column="1" rowspan="5">
+    <layout class="QVBoxLayout" name="lay_graph_m1"/>
+   </item>
+   <item row="3" column="0">
+    <widget class="QGroupBox" name="grp_clapet">
      <property name="title">
       <string/>
      </property>
-     <layout class="QGridLayout" name="gridLayout_8">
+     <layout class="QGridLayout" name="gridLayout_9">
       <property name="topMargin">
        <number>6</number>
       </property>
@@ -157,86 +307,6 @@
        <number>6</number>
       </property>
       <item row="1" column="0">
-       <widget class="QCheckBox" name="cc_temp_break">
-        <property name="text">
-         <string>Non permanent breaking</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QCheckBox" name="cc_break_val">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>200</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Breaking value</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QCheckBox" name="cc_break_lvl">
-        <property name="text">
-         <string>Level after breaking</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QDoubleSpinBox" name="sb_break_val">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="suffix">
-         <string> m</string>
-        </property>
-        <property name="decimals">
-         <number>3</number>
-        </property>
-        <property name="minimum">
-         <double>-1000000000.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>10000000.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.010000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QDoubleSpinBox" name="sb_break_lvl">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="suffix">
-         <string> m</string>
-        </property>
-        <property name="decimals">
-         <number>3</number>
-        </property>
-        <property name="minimum">
-         <double>-1000000000.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>10000000.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.010000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
        <widget class="QCheckBox" name="cc_clapet">
         <property name="text">
          <string>Clapet marée</string>
@@ -246,10 +316,10 @@
      </layout>
     </widget>
    </item>
-   <item row="0" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_7">
+   <item row="2" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_8">
      <item>
-      <widget class="QLabel" name="tit_break">
+      <widget class="QLabel" name="tit_clap">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
          <horstretch>0</horstretch>
@@ -263,12 +333,12 @@
         </font>
        </property>
        <property name="text">
-        <string>Breaking Parameters</string>
+        <string>Settings</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="Line" name="line_break">
+      <widget class="Line" name="line_clap">
        <property name="frameShadow">
         <enum>QFrame::Plain</enum>
        </property>
@@ -284,22 +354,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item row="3" column="1">
-    <widget class="QDialogButtonBox" name="b_valid">
-     <property name="locale">
-      <locale language="English" country="UnitedStates"/>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-     <property name="centerButtons">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1" rowspan="3">
-    <layout class="QVBoxLayout" name="lay_graph_m1"/>
    </item>
   </layout>
   <action name="actionB_delete">

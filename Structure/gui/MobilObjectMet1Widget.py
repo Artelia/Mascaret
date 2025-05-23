@@ -59,7 +59,10 @@ class ClassMobilObjectMet1Widget(QWidget):
             self.obj_table = 'links'
             self.mob_table = 'links_mob_val'
             self.mob_table_id = 'id_links'
-            self.ui.cc_clapet.hide()
+            self.ui.tit_clap.hide()
+            self.ui.line_clap.hide()
+            self.ui.grp_clapet.hide()
+
 
         self.d_var = {
             "VBREAKT": {"ctrl": self.ui.sb_break_val, "cc": self.ui.cc_break_val,
@@ -248,14 +251,13 @@ class ClassMobilObjectMet1Widget(QWidget):
                 recs.append([self.cur_obj, row, "TIMEZ", self.ui.tab_sets.model().item(row, 0).data(0)])
                 recs.append([self.cur_obj, row, "VALUEZ", self.ui.tab_sets.model().item(row, 4).data(0)])
 
-            if self.typ_obj == 'link':
-                for nm_var, prm in self.d_var.items():
-                    idx_time = 0
-                    if prm["cc"]:
-                        if not prm["cc"].isChecked():
-                            idx_time = -1
-                    recs.append([self.cur_obj, idx_time, nm_var,
-                                 ctrl_get_value(prm["ctrl"], cc_is_checked=True)])
+            for nm_var, prm in self.d_var.items():
+                idx_time = 0
+                if prm["cc"]:
+                    if not prm["cc"].isChecked():
+                        idx_time = -1
+                recs.append([self.cur_obj, idx_time, nm_var,
+                             ctrl_get_value(prm["ctrl"], cc_is_checked=True)])
 
             sql = "INSERT INTO {0}.{1} ({2}, id_order, name_var, value) " \
                   "VALUES (%s, %s, %s, cast(%s as text))".format(self.mdb.SCHEMA,

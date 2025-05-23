@@ -459,35 +459,35 @@ class ClassMethRegul:
 
         conditions = {
             # fermeture par le bas
-            ("INIT", "D"): [(val_check >= param_fg["VREGOPEN"] - tol, "OPEN")],
+            ("INIT", "D"): [(val_check > param_fg["VREGOPEN"] - tol, "OPEN")],
             ("OPEN", "D"): [
-                (val_check <= param_fg["VREGCLOS"] + tol, "CLOSE"),
-                (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
+                (val_check < param_fg["VREGCLOS"] + tol, "CLOSE"),
+                (param_fg["VREGOPEN"] - tol >= val_check >= param_fg["VREGCLOS"] + tol, "MAINT"),
 
             ],
             ("CLOSE", "D"): [
                 (val_check >= param_fg["VREGOPEN"] - tol, "OPEN"),
-                (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
+                (param_fg["VREGOPEN"]  - tol > val_check > param_fg["VREGCLOS"], "MAINT"),
             ],
             ("MAINT", "D"): [
-                (val_check >= param_fg["VREGOPEN"] - tol, "OPEN"),
-                (val_check <= param_fg["VREGCLOS"] + tol, "CLOSE"),
-                (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
+                (val_check > param_fg["VREGOPEN"] - tol, "OPEN"),
+                (val_check < param_fg["VREGCLOS"] + tol, "CLOSE"),
+                (param_fg["VREGOPEN"] - tol >= val_check >= param_fg["VREGCLOS"] + tol, "MAINT"),
             ],
             # fermeture par le haut
-            ("INIT", "U"): [(val_check >= param_fg["VREGCLOS"] - tol, "CLOSE")],
+            ("INIT", "U"): [(val_check > param_fg["VREGCLOS"] - tol, "CLOSE")],
             ("CLOSE", "U"): [
-                (val_check <= param_fg["VREGOPEN"] + tol, "OPEN"),
-                (param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"], "MAINT"),
+                (val_check < param_fg["VREGOPEN"] + tol, "OPEN"),
+                (param_fg["VREGOPEN"] + tol <= val_check <= param_fg["VREGCLOS"] - tol, "MAINT"),
             ],
             ("OPEN", "U"): [
-                (val_check >= param_fg["VREGCLOS"] - tol, "CLOSE"),
-                (param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"], "MAINT"),
+                (val_check > param_fg["VREGCLOS"] - tol, "CLOSE"),
+                (param_fg["VREGOPEN"] + tol <= val_check <= param_fg["VREGCLOS"] - tol, "MAINT"),
             ],
             ("MAINT", "U"): [
-                (val_check <= param_fg["VREGOPEN"] + tol, "OPEN"),
-                (val_check >= param_fg["VREGCLOS"] - tol, "CLOSE"),
-                (param_fg["VREGOPEN"] < val_check < param_fg["VREGCLOS"], "MAINT"),
+                (val_check < param_fg["VREGOPEN"] + tol, "OPEN"),
+                (val_check > param_fg["VREGCLOS"] - tol, "CLOSE"),
+                (param_fg["VREGOPEN"] + tol <= val_check <= param_fg["VREGCLOS"] - tol, "MAINT"),
             ]
         }
 
