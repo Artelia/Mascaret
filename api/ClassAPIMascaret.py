@@ -338,61 +338,78 @@ class ClassAPIMascaret:
         txt += "**************************************\n"
         self.add_info(txt)
 
-    def check_not_to_keep_break(self):
+    def check_not_to_keep_break(self, masc):
         """
         Check if the break is kept
         :return:
         """
-        # size_sing = self.masc.get_var_size("Model.Weir.Name")[0]
-        # for i in range(size_sing):
-        #     print(self.masc.get("Model.Weir.RelAbscissa",i))
-        #     print(self.masc.get("State.Z", self.masc.get("Model.Weir.Node", i)-1 ))
-        #     print(self.masc.get("Model.Weir.State",  i))
-        #     print(self.masc.get("Model.Weir.BrkLevel", i))
-        # print('******************************')
-        if len(self.lst_node)>0:
-            for ind, item in self.lst_node.items():
-                stat = self.masc.get("Model.Weir.State",  ind)
-                if stat and self.masc.get("State.Z",  item['node']) < item['BrkLevel']:
+        # Optimisation: regrouper les accès à masc.get pour limiter les appels coûteux
+        lst_node = self.lst_node
+        if len(lst_node) > 0:
+            items = list(lst_node.items())  # évite multiples itérations
+            weir_states = [masc.get("Model.Weir.State", ind) for ind, _ in items]
+            state_z = [masc.get("State.Z", item['node']) for _, item in items]
+            brk_levels = [item['BrkLevel'] for _, item in items]
+            for idx, (ind, item) in enumerate(items):
+                if weir_states[idx] and state_z[idx] < brk_levels[idx]:
                     self.masc.set("Model.Weir.State", False, ind)
-
-
 
     def compute(self):
         """compute"""
         t0 = self.tini
         dtp = self.dt
         t1 = t0 + dtp
+        tfin = self.tfin
+        conum =  self.conum
+        clfg = self.clfg
+        clfg_lk = self.clfg_lk
+        clfg_w = self.clfg_w
+        masc = self.masc
+        mobil_struct = self.mobil_struct
+        mobil_link = self.mobil_link
+        mobil_w = self.mobil_w
+        sect_co = self.sect_co
         if self.stpcrit == 1:
-            while t0 < self.tfin:
-                if t1 > self.tfin and self.conum:
-                    t1 = self.tfin
+            while t0 < tfin:
+                if t1 > tfin and conum:
+                    t1 = tfin
                     dtp = t1 - t0
-                t0, t1, dtp = self.one_iter(t0, t1, dtp)
+                t0, t1, dtp = self.one_iter(t0, t1, dtp, 
+                                             masc, conum, clfg, clfg_lk, clfg_w, 
+                                             mobil_struct, mobil_link, mobil_w)
 
         elif self.stpcrit == 2:
             for cmpt in range(self.tmaxiter):
-                t0, t1, dtp = self.one_iter(t0, t1, dtp)
+                t0, t1, dtp = self.one_iter(t0, t1, dtp, 
+                                             masc, conum, clfg, clfg_lk, clfg_w, 
+                                             mobil_struct, mobil_link, mobil_w)
         elif self.stpcrit == 3:
-            z_arret = self.masc.get("State.Z", self.sect_co - 1)
+            z_arret = self.masc.get("State.Z", sect_co - 1)
             while not z_arret > self.zmax_co:
-                t0, t1, dtp = self.one_iter(t0, t1, dtp)
-                z_arret = self.masc.get("State.Z", self.sect_co - 1)
+                t0, t1, dtp = self.one_iter(t0, t1, dtp, 
+                                             masc, conum, clfg, clfg_lk, clfg_w, 
+                                             mobil_struct, mobil_link, mobil_w)
+                z_arret = self.masc.get("State.Z", sect_co - 1)
         self.tfin = self.masc.get("State.PreviousTime")
 
-    def one_iter(self, t0, t1, dtp):
-        if self.mobil_struct:
-            self.clfg.iter_fg(t0, dtp)
-        if self.mobil_link:
-            self.clfg_lk.iter_fg(t0, dtp)
-        #print(f'**** time  {t0} ****')
-        self.check_not_to_keep_break()
-        if self.mobil_w:
-            self.clfg_w.iter_fg(t0, dtp)
+    def one_iter(self, t0, t1, dtp, 
+                masc,conum, clfg, clfg_lk, clfg_w, 
+                mobil_struct, mobil_link, mobil_w):
+        # Optimisation: stocker les méthodes dans des variables locales
+    
+        if mobil_struct:
+            clfg.iter_fg(t0, dtp)
+        if mobil_link:
+            clfg_lk.iter_fg(t0, dtp)
+        self.check_not_to_keep_break(masc)
+        if mobil_w:
+            clfg_w.iter_fg(t0, dtp)
+            # Suppression du print inutile pour accélérer la boucle
+            # print('1iter', time.perf_counter() - a)
 
-        self.masc.compute(t0, t1, dtp)
-        if self.conum:
-            dtp_tmp = self.masc.get("State.DT")
+        masc.compute(t0, t1, dtp)
+        if conum:
+            dtp_tmp = masc.get("State.DT")
             if dtp_tmp != 0:
                 dtp = dtp_tmp
         t0 = t1
@@ -407,7 +424,6 @@ class ClassAPIMascaret:
         - Display the end information
         :return:
         """
-        print(self.tfin)
         info = self.masc.log_stream.getvalue()
         self.add_info(info)
         self.masc.delete_mascaret()

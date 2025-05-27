@@ -19,7 +19,6 @@ email                :
 
 """
 import numpy as np
-
 from .ClassMobilWeirsParam import ClassMobilWeirsParam
 
 
@@ -110,7 +109,7 @@ class ClassMobilWeirs:
                 res["TIME"].append(tfin)
                 res["ZSTR"].append(param["level"])
                 res["REGVAR"].append(param["REGVAR_VAL"])
-                print(res)
+
 
     def iter_fg(self, time, dtp):
         """
@@ -402,8 +401,7 @@ class ClassMethRegul:
             new_level = min(level + dz_close, zlimit_gate)
         elif status == "OPEN":
             new_level = max(level - dz_open, level0)
-        # print('new_level', 'dz_open', 'dz_close')
-        # print( new_level, dz_open, dz_close)
+
         return {
             "level": round(new_level, 4),
         }
@@ -481,6 +479,4 @@ class ClassMethTime:
         """
 
         dnew = {"level": np.interp(time, param["TIMEZ"], param["VALUEZ"])}
-        print(time, dnew)
-        print(param["TIMEZ"], param["VALUEZ"])
         return dnew

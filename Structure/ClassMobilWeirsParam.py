@@ -268,7 +268,6 @@ class ClassMobilWeirsParam(object):
         """
         lst_test = dlist[test["method_mob"]]
         missing_vars = [var for var in lst_test if var not in test]
-        print(lst_test, test)
         if missing_vars:
             txt = f"The variable <{', '.join(missing_vars)}> wasn't found for weirs {num}.\n"
             for var in missing_vars:
