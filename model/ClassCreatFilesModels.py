@@ -1343,9 +1343,7 @@ class ClassCreatFilesModels:
         pattern = re.compile("(\\w+)\\[t([+-][0-9]+)?\\]")
         somme = 0
         debit_prec = 0
-        obs = {}
-        # duree = int((date_fin - date_debut).total_seconds() / 3600)
-        # liste_date = [date_debut + datetime.timedelta(hours=x) for x in range(duree)]
+
         for nom, loi in dict_lois.items():
             if loi["type"] == 1:
                 type_ = "Q"
@@ -1353,24 +1351,16 @@ class ClassCreatFilesModels:
                 type_ = "H"
             else:
                 continue
-            if not loi["formule"]:
+            if not loi.get("formule"):
                 continue
+
             valeur_init = None
-
             liste_stations = pattern.findall(loi["formule"])
-
-            dt = datetime.timedelta(hours=int(99999999))
-            dtmax = datetime.timedelta(hours=int(-99999999))
+            # get observation each station
+            obs_stations = {}
             for cd_hydro, delta in liste_stations:
-                if not delta:
-                    delta = "0"
-                dt = min(dt,datetime.timedelta(hours=int(delta)))
-                dtmax = max(dtmax,abs(datetime.timedelta(hours=int(delta))))
-            liste_date = None
-            for cd_hydro, delta in liste_stations:
-                # if not delta:
-                #     delta = "0"
-                #dt = datetime.timedelta(hours=int(delta))
+                delta_h = int(delta) if delta else 0
+                dt =  datetime.timedelta(hours=delta_h)
                 sql_tab = (
                     "SELECT * FROM "
                     "(SELECT code,type, UNNEST(date)as date, "
@@ -1380,22 +1370,23 @@ class ClassCreatFilesModels:
                     "WHERE date >= '{3:%Y-%m-%d %H:%M}' "
                     "AND date <= '{4:%Y-%m-%d %H:%M}' "
                     "ORDER BY date ".format(
-                        self.mdb.SCHEMA, cd_hydro, type_, date_debut + dt, date_fin + dtmax
+                        self.mdb.SCHEMA, cd_hydro, type_, date_debut + dt, date_fin + dt
                     )
                 )
-                obs[cd_hydro] = self.mdb.query_todico(sql_tab)
-                if not liste_date:
-                    liste_date = [x - dt for x in obs[cd_hydro]["date"]]
-            if not liste_date:
-                self.mess.add_mess('NoInitSteady', 'critic',
-                                   f"Error: Please check if law for {nom} object is correct.\n "
-                                   f"No observations found for station {cd_hydro} "
-                                   "on the dates: {0:%Y-%m-%d %H:%M} - {1:%Y-%m-%d %H:%M}"
-                                   "".format(date_debut + dt, date_fin + dtmax))
-                continue
+                obs_stations[cd_hydro] = self.mdb.query_todico(sql_tab)
+                if not obs_stations[cd_hydro]["date"]:
+                    self.mess.add_mess('NoInitSteady', 'critic',
+                                       f"Error: Please check if law for {nom} object is correct.\n "
+                                       f"No observations found for station {ref_station} "
+                                       "on the dates: {0:%Y-%m-%d %H:%M} - {1:%Y-%m-%d %H:%M}"
+                                       "".format(date_debut + dt, date_fin + dt))
+                    continue
+            # ref dates and station (first station)
+            ref_station, ref_delta = liste_stations[0]
+            ref_delta_h = int(ref_delta) if ref_delta else 0
+            ref_dates = [d - datetime.timedelta(hours=ref_delta_h) for d in obs_stations[ref_station]["date"]]
 
             fichier_loi = os.path.join(self.dossier_file_masc, del_symbol(nom) + ".loi")
-
             with open(fichier_loi, "w") as fich_sortie:
                 fich_sortie.write("# {0}\n".format(nom))
                 if type_ == "Q":
@@ -1403,17 +1394,15 @@ class ClassCreatFilesModels:
                 else:
                     fich_sortie.write("# Temps (H) Hauteur\n")
                 fich_sortie.write(" H \n")
-                for t in liste_date:
+                for t in ref_dates:
                     calc = loi["formule"]
                     for cd_hydro, delta in liste_stations:
-                        if not delta:
-                            delta = "0"
-                        t2 = t + datetime.timedelta(hours=int(delta))
-                        if t2 in obs[cd_hydro]["date"]:
-                            i = obs[cd_hydro]["date"].index(t2)
-                            val = obs[cd_hydro]["valeur"][i]
-                        else:
-                            val = None
+                        delta_h = int(delta) if delta else 0
+                        t2 = t + datetime.timedelta(hours=delta_h)
+                        val = None
+                        if t2 in obs_stations[cd_hydro]["date"]:
+                            i = obs_stations[cd_hydro]["date"].index(t2)
+                            val = obs_stations[cd_hydro]["valeur"][i]
                         calc = pattern.sub(str(val), calc, 1)
                     try:
                         resultat = eval(calc)
@@ -1429,9 +1418,8 @@ class ClassCreatFilesModels:
                         fich_sortie.write(chaine.format(tps, resultat))
 
             # check law after write
-            initime = round((liste_date[0] - date_debut).total_seconds() / 3600, 3) * 3600
-            lasttime = round(tps, 3) * 3600
-            #round((liste_date[-1] - date_debut).total_seconds() / 3600, 3) * 3600
+            initime = round((ref_dates[0] - date_debut).total_seconds() / 3600, 3) * 3600
+            lasttime = round((ref_dates[-1] - date_debut).total_seconds() / 3600, 3) * 3600
             self.check_timelaw(par, nom, initime, lasttime)
 
             if valeur_init is not None:
@@ -1445,6 +1433,7 @@ class ClassCreatFilesModels:
                 par["initialisationAuto"] = False
                 self.mess.add_mess('NoInitSteady', 'Warning',
                                    "No initialisation because of no SteadyValue")
+
         valeur_init = None
 
         for nom, loi in dict_lois.items():
