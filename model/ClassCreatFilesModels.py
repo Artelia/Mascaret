@@ -407,8 +407,8 @@ class ClassCreatFilesModels:
         var = "branch, startb, endb"
         branches = self.mdb.select_distinct(var, "branchs", "active")
         deversoirs = self.mdb.select("lateral_weirs", "active", "abscissa")
-        noeuds = self.mdb.select("extremities", "type=10", "active")
-        libres = self.mdb.select("extremities", "type!=10 ", "active")
+        noeuds = self.mdb.select("extremities", "type=10  and active")
+        libres = self.mdb.select("extremities", "type!=10 and active")
         pertescharg = self.mdb.select("hydraulic_head", "active", "abscissa")
         profils = self.mdb.select("profiles", "active", "abscissa")
         prof_seuil = self.mdb.select("profiles", "NOT active", "abscissa")
