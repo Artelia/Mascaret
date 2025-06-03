@@ -81,7 +81,7 @@ def interpole(a, l1, l2):
 
 def str2bool(s):
     """string to bool"""
-    if "True" in s or "TRUE" in s:
+    if "True" in s or "true".upper() in s or "true" in s:
         return True
     else:
         return False

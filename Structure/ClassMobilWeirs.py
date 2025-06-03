@@ -142,8 +142,8 @@ class ClassMobilWeirs:
 
     def clapet(self, param):
         if param['CLAPMAREE'] and param["node"] + 1 <= self.model_size:
-            aval = self.masc.get("State.Z", param["node"])
-            amont = self.masc.get("State.Z", param["node"] + 1)
+            amont = self.masc.get("State.Z", param["node"])
+            aval = self.masc.get("State.Z", param["node"] + 1)
             if aval > amont:
                 return True
         return False
@@ -464,7 +464,7 @@ class ClassMethTime:
             "TIMEZ": np.array(param["TIMEZ"]),
             "VALUEZ": np.array(param["VALUEZ"]),
             "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
-            'CLAPMAREE': param["CLAPET"],
+            'CLAPMAREE': param["CLAPETT"],
             "rup_level": param["level0"],
         })
         param["level"] = np.interp(param["TIME"], param["TIMEZ"], param["VALUEZ"])

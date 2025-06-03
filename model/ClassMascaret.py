@@ -272,7 +272,7 @@ class ClassMascaret:
         if self.mgis.task_use:
 
             task_mas = TaskMascaret('TaskMascaret', dict_task)
-            task_mas.message.connect(self.print_info)
+            task_mas.signal.message.connect(self.print_info)
             task_id = QgsApplication.taskManager().addTask(task_mas)
             task = QgsApplication.taskManager().task(task_id)
             # obligatoir  sinon task ignorer

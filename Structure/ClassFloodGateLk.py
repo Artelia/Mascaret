@@ -124,26 +124,20 @@ class ClassFloodGateLk:
         :param dtp: Time step.
         """
         for id_lk, param in self.param_fg.items():
-            val_break = self.masc.get(param['CHECK_VAR_BREAK'],
-                                      param["SEC_BREAK"])
-
-            if param["method_mob"] == self.dmeth["meth_regul"]:
+            val_break = self.masc.get(param['CHECK_VAR_BREAK'], param["SEC_BREAK"])
+            val_check = self.masc.get(param['CHECK_VAR'], param["SECCON"])
+            if (param["method_mob"] == self.dmeth["meth_regul"] and
+                    not self.check_break(param, val_break, id_lk, time, val_check)):
                 if self.cl_regul.check_dt_regul(param, dtp):
-                    val_check = self.masc.get(param['CHECK_VAR'],
-                                              param["SECCON"])
+
                     self.cl_regul.state_regul(val_check, param)
-                    self.cl_regul.check_break(param, val_break)
                     dnew = self.cl_regul.law_gate_regul(param, time)
                     self.fill_res_and_update(id_lk, time, param, dnew, val_check)
-            elif param["method_mob"] == self.dmeth["meth_time"]:
-                val_check = self.masc.get(param['CHECK_VAR'], param["SECCON"])
-                self.cl_time.check_break(param, val_break)
+            elif param["method_mob"] == self.dmeth["meth_time"]and not self.check_break(param, val_break, id_lk, time):
+
                 dnew = self.cl_time.law_mth_time(param, time)
                 self.fill_res_and_update(id_lk, time, param, dnew, val_check)
             elif param["method_mob"] == self.dmeth["meth_fus"]:
-                val_check = self.masc.get(param['CHECK_VAR'],
-                                          param["SECCON"])
-
                 self.cl_fusible.check_break_fus(param, val_check, time)
                 if param["break"]:
                     dnew = self.cl_fusible.law_mth_fus(param, time)
@@ -338,6 +332,41 @@ class ClassFloodGateLk:
             "REGVAR_VAL-dt": param["REGVAR_VAL"], })
 
 
+    def check_break(self, param, val_b, id_lk, time,val_c):
+        """
+        Check if the floodgate should break.
+        :param param: Dictionary of floodgate parameters.
+        :param val_v: Current value of the breaking variable.
+        :param val_c: Current value of the regulation variable.
+        """
+        if val_b >= param["VAL_BREAK"]:
+            param.update({
+                "rup_level": param["level"],
+                "rup_CSection": param["CSection"],
+                "rup_ZmaxSection": param["ZmaxSection"],
+                "rup_width": param["width"],
+                "break": True
+            })
+            dnew = {
+                "level": param["ZFINAL_BREAK"],
+                "CSection": param["width0"] * min((param["ZmaxSection0"] - param["ZFINAL_BREAK"]), 0),
+                "ZmaxSection": param["ZmaxSection0"],
+                "width": param["width0"]
+            }
+            self.fill_res_and_update(id_lk, time, param, dnew, val_c)
+        else:
+            # reveient à l'état avant rupture
+            if param["BPERM"] and param['break']:
+                param.update({
+                    "level": param["rup_level"],
+                    "CSection": param["rup_CSection"],
+                    "ZmaxSection": param["rup_ZmaxSection"],
+                    "width": param["rup_width"],
+                    "break": False
+                })
+        return param['break']
+
+
 class ClassMethRegul:
     """Class for handling floodgate regulation logic."""
 
@@ -368,7 +397,10 @@ class ClassMethRegul:
             "width": param["width0"],
             "CSection": param["CSection0"],
             "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
-            "OPEN_CLOSE": "INIT"
+            "OPEN_CLOSE": "INIT",
+            "VAL_BREAK" :param["VBREAKREG"],
+            "BPERM" : param['BPERMREG'],
+            "ZFINAL_BREAK": param['ZFINALREG']
         })
         # info de la vanne
         if param["DIRFG"] == "D":
@@ -419,31 +451,6 @@ class ClassMethRegul:
                 return False
         return True
 
-    @staticmethod
-    def check_break(param, val_check):
-        """
-        Check if the floodgate should break.
-        :param param: Dictionary of floodgate parameters.
-        :param val_check: Current value of the regulation variable.
-        """
-        if val_check >= param["VBREAKREG"]:
-            param.update({
-                "rup_level": param["level"],
-                "rup_CSection": param["CSection"],
-                "rup_ZmaxSection": param["ZmaxSection"],
-                "rup_width": param["width"],
-                "break": True
-            })
-        else:
-            # reveient à l'état avant rupture
-            if not param["BPERMREG"] and param['break']:
-                param.update({
-                    "level": param["rup_level"],
-                    "CSection": param["rup_CSection"],
-                    "ZmaxSection": param["rup_ZmaxSection"],
-                    "width": param["rup_width"],
-                    "break": False
-                })
 
     @staticmethod
     def state_regul( val_check, param_fg):
@@ -505,14 +512,6 @@ class ClassMethRegul:
         :param time: Current simulation time.
         :return: Dictionary of updated floodgate parameters.
         """
-        if param['break']:
-            return {
-                "level": param["ZFINALREG"],
-                "CSection": param["width0"] * min((param["ZmaxSection0"] - param["ZFINALREG"]), 0),
-                "ZmaxSection": param["ZmaxSection0"],
-                "width": param["width0"]
-            }
-
         status = param["OPEN_CLOSE"]
 
         if status in [None, "INIT", "MAINT"]:
@@ -613,7 +612,10 @@ class ClassMethTime:
             "ZmaxSection": param["ZmaxSection0"],
             "TIMEZ": np.array(param["TIMEZ"]),
             "VALUEZ": np.array(param["VALUEZ"]),
-            "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"])
+            "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
+            "VAL_BREAK": param["VBREAKT"],
+            "BPERM": param['BPERMT'],
+            "ZFINAL_BREAK": param['ZFINALT']
         })
         # TODO test dans le cas hors zone interpol
         param["level"] = np.interp(param["TIME"], param["TIMEZ"], param["VALUEZ"])
@@ -629,31 +631,6 @@ class ClassMethTime:
             "rup_width": param["width0"]
         })
 
-    @staticmethod
-    def check_break(param, val_check):
-        """
-        Check if the floodgate should break.
-        :param param: Dictionary of floodgate parameters.
-        :param val_check: Current value of the regulation variable.
-        """
-        if val_check >= param["VBREAKT"]:
-            param.update({
-                "rup_level": param["level"],
-                "rup_CSection": param["CSection"],
-                "rup_ZmaxSection": param["ZmaxSection"],
-                "rup_width": param["width"],
-                "break": True
-            })
-        else:
-            # reveient à l'état avant rupture
-            if not param["BPERMT"] and param['break']:
-                param.update({
-                    "level": param["rup_level"],
-                    "CSection": param["rup_CSection"],
-                    "ZmaxSection": param["rup_ZmaxSection"],
-                    "width": param["rup_width"],
-                    "break": param['break']
-                })
 
     @staticmethod
     def law_mth_time(param, time):
@@ -665,8 +642,8 @@ class ClassMethTime:
         """
         if param['break']:
             return {
-                "level": param["ZFINALT"],
-                "CSection": param["width0"] * min((param["ZmaxSection0"] - param["ZFINALT"]), 0),
+                "level": param["ZFINAL_BREAK"],
+                "CSection": param["width0"] * min((param["ZmaxSection0"] - param["ZFINAL_BREAK"]), 0),
                 "ZmaxSection": param["ZmaxSection0"],
                 "width": param["width0"]
             }
