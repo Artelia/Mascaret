@@ -42,6 +42,7 @@ changelog=
             Bug fixe to display the profile graph
             Bug fixe for the dates in the hydraulic laws
             Bug fixe to use the liminigraph and Hydrograph laws during an event
+            Fix the bug to calculate volume law for multiple basins
     6.0.2 : Fix the bug related to QgsDockWidget in Linux
     6.0.1 : Fix the bug for methods using several observations with different time offsets
     6.0.0 : Merge experimental version into master
