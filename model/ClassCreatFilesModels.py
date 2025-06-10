@@ -1377,7 +1377,7 @@ class ClassCreatFilesModels:
                 if not obs_stations[cd_hydro]["date"]:
                     self.mess.add_mess('NoInitSteady', 'critic',
                                        f"Error: Please check if law for {nom} object is correct.\n "
-                                       f"No observations found for station {ref_station} "
+                                       f"No observations found for station {cd_hydro} "
                                        "on the dates: {0:%Y-%m-%d %H:%M} - {1:%Y-%m-%d %H:%M}"
                                        "".format(date_debut + dt, date_fin + dt))
                     continue
