@@ -61,6 +61,7 @@ class ClassMobilObjectMet2Widget(QWidget):
             self.obj_table = 'links'
             self.mob_table = 'links_mob_val'
             self.mob_table_id = 'id_links'
+            self.ui.cc_temp_break.hide()
             self.ui.cc_clapet.hide()
 
         self.d_var = {
@@ -93,8 +94,6 @@ class ClassMobilObjectMet2Widget(QWidget):
                       "vdef": 0., "typ": float},
             "ZINCRFG": {"ctrl": self.ui.sb_z_inc, "cc": self.ui.cc_z_inc,
                         "vdef": 999., "typ": float},
-            "TOLREG": {"ctrl": self.ui.sb_tol, "cc": self.ui.cc_tol,
-                       "vdef": 0.05, "typ": float},
             "VBREAKREG": {"ctrl": self.ui.sb_break_val, "cc": self.ui.cc_break_val,
                           "vdef": 9999., "typ": float},
             "BPERMREG": {"ctrl": self.ui.cc_temp_break, "cc": None,
@@ -122,7 +121,6 @@ class ClassMobilObjectMet2Widget(QWidget):
         self.ui.cb_step_time.currentIndexChanged.connect(self.step_time_type_changed)
 
         self.ui.cc_z_inc.toggled.connect(self.enab_max_increment)
-        self.ui.cc_tol.toggled.connect(self.enab_tolerance)
 
         self.ui.cc_var_regul.toggled.connect(self.enab_variable_regulation)
         self.ui.cb_var_regul.currentIndexChanged.connect(self.variable_regulation_changed)
@@ -295,10 +293,6 @@ class ClassMobilObjectMet2Widget(QWidget):
         if not cs:
             self.set_def_ctrl_value(self.ui.sb_z_inc)
 
-    def enab_tolerance(self, cs):
-        self.ui.sb_tol.setEnabled(cs)
-        if not cs:
-            self.set_def_ctrl_value(self.ui.sb_tol)
 
     def enab_breaking_value(self, cs):
         self.ui.sb_break_val.setEnabled(cs)
