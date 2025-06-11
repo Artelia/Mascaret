@@ -133,7 +133,8 @@ class ClassFloodGateLk:
                     self.cl_regul.state_regul(val_check, param)
                     dnew = self.cl_regul.law_gate_regul(param, time)
                     self.fill_res_and_update(id_lk, time, param, dnew, val_check)
-            elif param["method_mob"] == self.dmeth["meth_time"]and not self.check_break(param, val_break, id_lk, time):
+            elif param["method_mob"] == self.dmeth["meth_time"]and not self.check_break(param, val_break,
+                                                                                        id_lk, time, val_check):
 
                 dnew = self.cl_time.law_mth_time(param, time)
                 self.fill_res_and_update(id_lk, time, param, dnew, val_check)

@@ -353,6 +353,7 @@ class ClassAPIMascaret:
             for idx, (ind, item) in enumerate(items):
                 if weir_states[idx] and state_z[idx] < brk_levels[idx]:
                     self.masc.set("Model.Weir.State", False, ind)
+                    # TODO intergrer dans les graph
 
     def compute(self):
         """compute"""
