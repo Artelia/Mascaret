@@ -72,9 +72,9 @@ class ClassUpdate620:
                 "NDTREG": 1,
                 "DTREG": 0,
                 "ZINCRFG": 9999.,
-                "TOLREG": 0.05,
                 "CLAPETT": False,
-                "CLAPET": False
+                "CLAPET": False,
+                "MAINTFIRST": True
             },
             "get_value":
                 {
@@ -99,7 +99,6 @@ class ClassUpdate620:
                 "ZINCRFG": "ZINCRFG",
                 "VREGCLOS": "VREGCLOS",
                 "VREGOPEN": "VREGOPEN",
-                "TOLREG": "TOLREG",
                 "PK": "PK",
                 "ZINITREG": "ZINITREG",
                 "ZMAXFG": "ZMAXFG"
@@ -109,6 +108,7 @@ class ClassUpdate620:
                 "NUMBASINREG": 0,
                 "VBREAKREG": 99999.,
                 "BPERMREG": False,
+                "MAINTFIRST": True
             },
             "get_value":
                 {

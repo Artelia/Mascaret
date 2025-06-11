@@ -113,6 +113,10 @@ class ClassLinkFGParam(object):
                 "desc": "Tolerance sur les variale de regulation",
                 "desc_en": "Tolerance on regulation variables", 'typ': 'float'
             },
+            "MAINTFIRST": {
+                "desc": "Maintenir le niveau initial jusqu'à la première ouverture",
+                "desc_en": "Hold Initial level until first openings", 'typ': 'bool'
+            },
             "VBREAKREG": {
                 "desc": "Valeur de rupture ouvrage", "desc_en": "Break value of structure", 'typ': 'float'
             },
@@ -388,14 +392,13 @@ class ClassLinkFGParam(object):
         :return: True if the regulation parameters are valid, False otherwise.
         """
         if test["method_mob"] == 2:
-            tol = test["TOLREG"]
-            if test["DIRFG"] == 'D' and test["VREGOPEN"] - tol <= test["VREGCLOS"] + tol:
+            if test["DIRFG"] == 'D' and test["VREGOPEN"]  <= test["VREGCLOS"] :
                 txt = (f"The opening level minus tolerance is lower than the closing level plus tolerance. "
                        f"It should always be higher in this case.\n "
                        f"The issue is for link {num}.")
                 self.mess.add_mess('chk_lk_reg', 'critic', txt)
                 return False
-            elif test["DIRFG"] == 'U' and test["VREGOPEN"] + tol >= test["VREGCLOS"] - tol:
+            elif test["DIRFG"] == 'U' and test["VREGOPEN"]  >= test["VREGCLOS"] :
                 txt = (f"The opening level plus tolerance is greater than the closing level minus tolerance. "
                        f"It should always be lower in this case.\n "
                        f"The issue is for link {num}.")
@@ -426,7 +429,7 @@ class ClassLinkFGParam(object):
         lst_com = ["name", "level0", "CSection0", "width0", "abscissa", "branchnum",
                    "basinstart", "basinend", "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG", "USEBASIN", "NUMBASINREG",
-                   "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG", "TOLREG",
+                   "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG",
                    "VBREAKREG", "BPERMREG", "ZFINALREG"]
         lst_time = ["TIMEZ", "VALUEZ", "VBREAKT", "BPERMT", "ZFINALT", ]
         lst_fus = ["METHBREAK", "TIMEFUS", "WIDTHFUS", "VFUS", "VBREAKFUS", "TBREAKFUS", "ZFINALFUS", "USEBASINFUS",

@@ -103,6 +103,9 @@ class ClassMobilObjectMet2Widget(QWidget):
                           "vdef": 0., "typ": float},
             "CLAPET": {"ctrl": self.ui.cc_clapet, "cc": None,
                        "vdef": False, "typ": to_bool},
+            "MAINTFIRST":  {"ctrl": self.ui.cc_maint_first, "cc": None,
+                       "vdef": True, "typ": to_bool},
+
         }
 
         self.ui.cb_dir.currentIndexChanged.connect(self.direction_changed)

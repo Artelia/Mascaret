@@ -403,6 +403,9 @@ class ClassMethRegul:
             "BPERM" : param['BPERMREG'],
             "ZFINAL_BREAK": param['ZFINALREG']
         })
+        if "MAINTFIRST" in param.keys():
+            if not param["MAINTFIRST"]:
+                param["OPEN_CLOSE"] = "MAINT"
         # info de la vanne
         if param["DIRFG"] == "D":
             param["level"] = max(param["ZINITREG"], param["level0"])
@@ -432,10 +435,10 @@ class ClassMethRegul:
         """
         valo = param["VREGOPEN"]
         valf = param["VREGCLOS"]
-        tol = param["TOLREG"]
+
 
         if param["DIRFG"] == "D":  # bas
-            if valf + tol > valo - tol:
+            if valf > valo:
                 self.add_info(
                     "***** ERROR: "
                     "Closing level value must be lower opening level value\n"
@@ -443,7 +446,7 @@ class ClassMethRegul:
                 )
                 return False
         else:
-            if valo - tol > valf + tol:
+            if valo  > valf :
                 self.add_info(
                     "***** ERROR:"
                     "Opening level value must be lower closing level value\n"
@@ -461,41 +464,40 @@ class ClassMethRegul:
         :param val_check: Current value of the regulation variable.
         :param param_fg: Dictionary of floodgate parameters.
         """
-        tol = param_fg["TOLREG"]
         key = (param_fg["OPEN_CLOSE"], param_fg["DIRFG"])
         # conditions
 
         conditions = {
             # fermeture par le bas
-            ("INIT", "D"): [(val_check > param_fg["VREGOPEN"] - tol, "OPEN")],
+            ("INIT", "D"): [(val_check > param_fg["VREGOPEN"] , "OPEN")],
             ("OPEN", "D"): [
-                (val_check < param_fg["VREGCLOS"] + tol, "CLOSE"),
-                (param_fg["VREGOPEN"] - tol >= val_check >= param_fg["VREGCLOS"] + tol, "MAINT"),
+                (val_check < param_fg["VREGCLOS"] , "CLOSE"),
+                (param_fg["VREGOPEN"]  >= val_check >= param_fg["VREGCLOS"] , "MAINT"),
 
             ],
             ("CLOSE", "D"): [
-                (val_check >= param_fg["VREGOPEN"] - tol, "OPEN"),
-                (param_fg["VREGOPEN"]  - tol > val_check > param_fg["VREGCLOS"], "MAINT"),
+                (val_check >= param_fg["VREGOPEN"] , "OPEN"),
+                (param_fg["VREGOPEN"]   > val_check > param_fg["VREGCLOS"], "MAINT"),
             ],
             ("MAINT", "D"): [
-                (val_check > param_fg["VREGOPEN"] - tol, "OPEN"),
-                (val_check < param_fg["VREGCLOS"] + tol, "CLOSE"),
-                (param_fg["VREGOPEN"] - tol >= val_check >= param_fg["VREGCLOS"] + tol, "MAINT"),
+                (val_check > param_fg["VREGOPEN"] , "OPEN"),
+                (val_check < param_fg["VREGCLOS"] , "CLOSE"),
+                (param_fg["VREGOPEN"]  >= val_check >= param_fg["VREGCLOS"] , "MAINT"),
             ],
             # fermeture par le haut
-            ("INIT", "U"): [(val_check > param_fg["VREGCLOS"] - tol, "CLOSE")],
+            ("INIT", "U"): [(val_check > param_fg["VREGCLOS"] , "CLOSE")],
             ("CLOSE", "U"): [
-                (val_check < param_fg["VREGOPEN"] + tol, "OPEN"),
-                (param_fg["VREGOPEN"] + tol <= val_check <= param_fg["VREGCLOS"] - tol, "MAINT"),
+                (val_check < param_fg["VREGOPEN"] , "OPEN"),
+                (param_fg["VREGOPEN"]  <= val_check <= param_fg["VREGCLOS"] , "MAINT"),
             ],
             ("OPEN", "U"): [
-                (val_check > param_fg["VREGCLOS"] - tol, "CLOSE"),
-                (param_fg["VREGOPEN"] + tol <= val_check <= param_fg["VREGCLOS"] - tol, "MAINT"),
+                (val_check > param_fg["VREGCLOS"] , "CLOSE"),
+                (param_fg["VREGOPEN"]  <= val_check <= param_fg["VREGCLOS"] , "MAINT"),
             ],
             ("MAINT", "U"): [
-                (val_check < param_fg["VREGOPEN"] + tol, "OPEN"),
-                (val_check > param_fg["VREGCLOS"] - tol, "CLOSE"),
-                (param_fg["VREGOPEN"] + tol <= val_check <= param_fg["VREGCLOS"] - tol, "MAINT"),
+                (val_check < param_fg["VREGOPEN"] , "OPEN"),
+                (val_check > param_fg["VREGCLOS"] , "CLOSE"),
+                (param_fg["VREGOPEN"]  <= val_check <= param_fg["VREGCLOS"] , "MAINT"),
             ]
         }
 

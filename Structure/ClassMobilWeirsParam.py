@@ -75,6 +75,10 @@ class ClassMobilWeirsParam(object):
             "ZINCRFG": {"desc": "max d'incrementation", "desc_en": "maximum increment", 'typ': 'float'},
             "TOLREG": {"desc": "Tolerance sur les variale de regulation",
                        "desc_en": "Tolerance on regulation variables", 'typ': 'float'},
+            "MAINTFIRST": {
+                "desc": "Maintenir le niveau initial jusqu'à la première ouverture",
+                "desc_en": "Hold Initial level until first openings", 'typ': 'bool'
+            },
             "VBREAKREG": {"desc": "Valeur de rupture ouvrage", "desc_en": "Break value of structure", 'typ': 'float'},
             "BPERMREG": {"desc": "True Si la rupture est non permanent", "desc_en": "True If break isn't permanent",
                          'typ': 'bool'},
@@ -287,8 +291,7 @@ class ClassMobilWeirsParam(object):
             :return: True if the regulation parameters are valid, False otherwise.
         """
         if test["method_mob"] == 2:
-            tol = test["TOLREG"]
-            if test["VREGOPEN"] - tol < test["VREGCLOS"] + tol:
+            if test["VREGOPEN"]  < test["VREGCLOS"] :
                 txt = (f"The opening level minus tolerance is lower than the closing level plus tolerance. "
                        f"It should always be higher in this case.\n "
                        f"The issue is for weirs {num}.")
@@ -317,8 +320,8 @@ class ClassMobilWeirsParam(object):
         """
         lst_com = ["name", "level0", "abscissa", "branchnum", "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG",
-                   "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG", "TOLREG",
-                   "CLAPET"]
+                   "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG",
+                   "CLAPET", "MAINTFIRST"]
         lst_time = ["TIMEZ", "VALUEZ", "CLAPETT"]
 
         dlist = {self.dmeth["meth_time"]: lst_com + lst_time,

@@ -309,6 +309,9 @@ class ClassMethRegul:
             "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
             "OPEN_CLOSE": "INIT"
         })
+        if "MAINTFIRST" in param.keys():
+            if not param["MAINTFIRST"]:
+                param["OPEN_CLOSE"] = "MAINT"
         # info de la vanne
         if param["DIRFG"] != "D":
             self.add_info(f"Non-consistency type mobile weirs with the moving part {id_weir}.")
@@ -322,17 +325,15 @@ class ClassMethRegul:
         """
         valo = param["VREGOPEN"]
         valf = param["VREGCLOS"]
-        tol = param["TOLREG"]
-        if valf + tol > valo - tol:
-            if valf > valo:
-                self.add_info(
-                    "***** ERROR: "
-                    "Closing level value must be lower opening level value\n"
-                    " for the {} link ".format(id_weir)
-                )
-                return False
-            else:
-                param["TOLREG"] = 0
+
+
+        if valf > valo:
+            self.add_info(
+                "***** ERROR: "
+                "Closing level value must be lower opening level value\n"
+                " for the {} link ".format(id_weir)
+            )
+            return False
         return True
 
     def state_regul(self, val_check, param_fg):
@@ -342,25 +343,27 @@ class ClassMethRegul:
         :param val_check: Current value of the regulation variable.
         :param param_fg: Dictionary of mobile weirs parameters.
         """
-        tol = param_fg["TOLREG"]
+
         key = param_fg["OPEN_CLOSE"]
+
+
         # conditions
         conditions = {
             # fermeture par le bas
-            "INIT": [(val_check > param_fg["VREGOPEN"] - tol, "OPEN")],
+            "INIT": [(val_check > param_fg["VREGOPEN"] , "OPEN")],
             "OPEN": [
-                (val_check < param_fg["VREGCLOS"] + tol, "CLOSE"),
-                (param_fg["VREGOPEN"] - tol >= val_check >= param_fg["VREGCLOS"] + tol, "MAINT"),
+                (val_check < param_fg["VREGCLOS"] , "CLOSE"),
+                (param_fg["VREGOPEN"]  >= val_check >= param_fg["VREGCLOS"] , "MAINT"),
 
             ],
             "CLOSE": [
-                (val_check > param_fg["VREGOPEN"] - tol, "OPEN"),
-                (param_fg["VREGOPEN"] - tol >= val_check >= param_fg["VREGCLOS"] + tol, "MAINT"),
+                (val_check > param_fg["VREGOPEN"] , "OPEN"),
+                (param_fg["VREGOPEN"]  >= val_check >= param_fg["VREGCLOS"] , "MAINT"),
             ],
             "MAINT": [
-                (val_check > param_fg["VREGOPEN"] - tol, "OPEN"),
-                (val_check < param_fg["VREGCLOS"] + tol, "CLOSE"),
-                (param_fg["VREGOPEN"] - tol >= val_check >= param_fg["VREGCLOS"] + tol, "MAINT"),
+                (val_check > param_fg["VREGOPEN"] , "OPEN"),
+                (val_check < param_fg["VREGCLOS"] , "CLOSE"),
+                (param_fg["VREGOPEN"]  >= val_check >= param_fg["VREGCLOS"] , "MAINT"),
             ],
         }
 
@@ -369,8 +372,8 @@ class ClassMethRegul:
             if condition:
                 param_fg["OPEN_CLOSE"] = action
                 break
-        # print('val_check', 'action', 'param_fg["VREGOPEN"]', 'param_fg["VREGCLOS"]', 'tol')
-        # print(val_check,param_fg["OPEN_CLOSE"],  param_fg["VREGOPEN"], param_fg["VREGCLOS"],tol)
+        # print('val_check', 'action', 'param_fg["VREGOPEN"]', 'param_fg["VREGCLOS"]')
+        # print(val_check,param_fg["OPEN_CLOSE"],  param_fg["VREGOPEN"], param_fg["VREGCLOS"])
         return val_check
 
     def law_gate_regul(self, param, time):
