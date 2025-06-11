@@ -204,7 +204,7 @@ class ClassMobilWeirs:
                 continue
             idx = (np.abs(coords - param[var])).argmin()
             if idx:
-                param["SECCON"] = idx
+                param["SECCON"] = idx - 1
             else:
                 self.add_info("Regulation point not found for numWeirs {}.".format(id_weir))
         del coords

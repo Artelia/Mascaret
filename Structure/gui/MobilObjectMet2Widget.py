@@ -55,6 +55,8 @@ class ClassMobilObjectMet2Widget(QWidget):
             self.ui.tit_break.hide()
             self.ui.line_break.hide()
             self.ui.grp_break.hide()
+            self.ui.cb_dir.hide()
+            self.ui.lbl_dir.hide()
         elif self.typ_obj == 'link':
             self.obj_table = 'links'
             self.mob_table = 'links_mob_val'
