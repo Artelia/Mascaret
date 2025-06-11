@@ -430,8 +430,8 @@ class ClassLinkFGParam(object):
                    "basinstart", "basinend", "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG", "USEBASIN", "NUMBASINREG",
                    "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG",
-                   "VBREAKREG", "BPERMREG", "ZFINALREG"]
-        lst_time = ["TIMEZ", "VALUEZ", "VBREAKT", "BPERMT", "ZFINALT", ]
+                   "VBREAKREG",  "ZFINALREG"]
+        lst_time = ["TIMEZ", "VALUEZ", "VBREAKT", "ZFINALT", ]
         lst_fus = ["METHBREAK", "TIMEFUS", "WIDTHFUS", "VFUS", "VBREAKFUS", "TBREAKFUS", "ZFINALFUS", "USEBASINFUS",
                    "NUMBASINFUS", "PKFUS"]
 

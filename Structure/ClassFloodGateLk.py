@@ -355,16 +355,16 @@ class ClassFloodGateLk:
                 "width": param["width0"]
             }
             self.fill_res_and_update(id_lk, time, param, dnew, val_c)
-        else:
+        # else:
             # reveient à l'état avant rupture
-            if param["BPERM"] and param['break']:
-                param.update({
-                    "level": param["rup_level"],
-                    "CSection": param["rup_CSection"],
-                    "ZmaxSection": param["rup_ZmaxSection"],
-                    "width": param["rup_width"],
-                    "break": False
-                })
+            # if param["BPERM"] and param['break']:
+            #     param.update({
+            #         "level": param["rup_level"],
+            #         "CSection": param["rup_CSection"],
+            #         "ZmaxSection": param["rup_ZmaxSection"],
+            #         "width": param["rup_width"],
+            #         "break": False
+            #     })
         return param['break']
 
 
@@ -400,7 +400,7 @@ class ClassMethRegul:
             "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
             "OPEN_CLOSE": "INIT",
             "VAL_BREAK" :param["VBREAKREG"],
-            "BPERM" : param['BPERMREG'],
+            # "BPERM" : param['BPERMREG'],
             "ZFINAL_BREAK": param['ZFINALREG']
         })
         if "MAINTFIRST" in param.keys():
@@ -617,7 +617,7 @@ class ClassMethTime:
             "VALUEZ": np.array(param["VALUEZ"]),
             "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
             "VAL_BREAK": param["VBREAKT"],
-            "BPERM": param['BPERMT'],
+            # "BPERM": param['BPERMT'],
             "ZFINAL_BREAK": param['ZFINALT']
         })
         # TODO test dans le cas hors zone interpol

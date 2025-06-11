@@ -74,7 +74,7 @@ class ClassUpdate620:
                 "ZINCRFG": 9999.,
                 "CLAPETT": False,
                 "CLAPET": False,
-                "MAINTFIRST": True
+                "MAINTFIRST": False
             },
             "get_value":
                 {
