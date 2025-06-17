@@ -332,8 +332,8 @@ class ClassMobilObjectMet2Widget(QWidget):
                       "COALESCE(crosssection, 0.) as cs_l, COALESCE(width, 1.) as w_l, " \
                       "basinstart, bas_sta.name, basinend , bas_end.name " \
                       "FROM ({0}.{1} " \
-                      "LEFT JOIN {0}.basins as bas_sta on basinstart = bas_sta.gid) " \
-                      "LEFT JOIN {0}.basins as bas_end on basinend = bas_end.gid " \
+                      "LEFT JOIN {0}.basins as bas_sta on basinstart = bas_sta.basinnum) " \
+                      "LEFT JOIN {0}.basins as bas_end on basinend = bas_end.basinnum " \
                       "WHERE links.gid = {2}".format(self.mdb.SCHEMA, self.obj_table, self.cur_obj)
                 rows = self.mdb.run_query(sql, fetch=True)
                 typ_link, nat_link, cur_abs, cur_z, cs_link, wid_link, \

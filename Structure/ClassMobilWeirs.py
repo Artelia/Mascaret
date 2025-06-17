@@ -19,6 +19,7 @@ email                :
 
 """
 import numpy as np
+import traceback
 from .ClassMobilWeirsParam import ClassMobilWeirsParam
 
 
@@ -57,13 +58,18 @@ class ClassMobilWeirs:
         linking parameters to the model, and initializing results.
         """
         # Get Section
-        self.search_sec_control()
-        self.search_weirs_to_param_fg()
-        if not self.check_param():
-            self.add_info("***** ERROR: the gates for the weirs\n COMPUTATION STOP")
-            self.arret_comput = False
-        self.update_var_mas(force=True)
-        self.init_res()
+        try:
+            self.search_sec_control()
+            self.search_weirs_to_param_fg()
+            if not self.check_param():
+                self.add_info("***** ERROR: the gates for the weirs\n COMPUTATION STOP")
+                self.arret_comput = False
+            self.update_var_mas(force=True)
+            self.init_res()
+        except Exception:
+            self.arret_comput = True
+            error_info = traceback.format_exc()
+            self.add_info(f"***** ERROR: the gates for the weirs\n COMPUTATION STOP \n {error_info}")
         return
 
     def update_var_mas(self, force=False):
@@ -120,25 +126,30 @@ class ClassMobilWeirs:
         :param time: Current simulation time.
         :param dtp: Time step.
         """
-        for id_weir, param in self.param_fg.items():
-            # effacement status
-            status = self.masc.get("Model.Weir.State", param['id_mas'])
-            if status:
-                continue
-            val_check = self.masc.get(param['CHECK_VAR'],
-                                      param["SECCON"])
-            if self.clapet(param):
-                param["OPEN_CLOSE"] = "CLOSE"
-                dnew = {"level": round(param["ZLIMITGATE"], 4)}
-                self.fill_res_and_update(id_weir, time, param, dnew, val_check)
-            elif param["method_mob"] == self.dmeth["meth_regul"]:
-                if self.cl_regul.check_dt_regul(param, dtp):
-                    self.cl_regul.state_regul(val_check, param)
-                    dnew = self.cl_regul.law_gate_regul(param, time)
+        try :
+            for id_weir, param in self.param_fg.items():
+                # effacement status
+                status = self.masc.get("Model.Weir.State", param['id_mas'])
+                if status:
+                    continue
+                val_check = self.masc.get(param['CHECK_VAR'],
+                                          param["SECCON"])
+                if self.clapet(param):
+                    param["OPEN_CLOSE"] = "CLOSE"
+                    dnew = {"level": round(param["ZLIMITGATE"], 4)}
                     self.fill_res_and_update(id_weir, time, param, dnew, val_check)
-            elif param["method_mob"] == self.dmeth["meth_time"]:
-                dnew = self.cl_time.law_mth_time(param, time)
-                self.fill_res_and_update(id_weir, time, param, dnew, val_check)
+                elif param["method_mob"] == self.dmeth["meth_regul"]:
+                    if self.cl_regul.check_dt_regul(param, dtp):
+                        self.cl_regul.state_regul(val_check, param)
+                        dnew = self.cl_regul.law_gate_regul(param, time)
+                        self.fill_res_and_update(id_weir, time, param, dnew, val_check)
+                elif param["method_mob"] == self.dmeth["meth_time"]:
+                    dnew = self.cl_time.law_mth_time(param, time)
+                    self.fill_res_and_update(id_weir, time, param, dnew, val_check)
+        except Exception:
+            self.arret_comput = True
+            error_info = traceback.format_exc()
+            self.add_info(f"***** ERROR: the gates for the weirs\n COMPUTATION STOP \n {error_info}")
 
     def clapet(self, param):
         if param['CLAPMAREE'] and param["node"] + 1 <= self.model_size:
@@ -204,7 +215,7 @@ class ClassMobilWeirs:
                 continue
             idx = (np.abs(coords - param[var])).argmin()
             if idx:
-                param["SECCON"] = idx - 1
+                param["SECCON"] = max(idx - 1,0)
             else:
                 self.add_info("Regulation point not found for numWeirs {}.".format(id_weir))
         del coords

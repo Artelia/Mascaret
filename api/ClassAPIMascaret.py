@@ -22,6 +22,7 @@ import os
 import sys
 import json
 
+
 try:
     # Plugin
     from .masc import Mascaret
@@ -370,9 +371,10 @@ class ClassAPIMascaret:
         mobil_link = self.mobil_link
         mobil_w = self.mobil_w
         sect_co = self.sect_co
+
         if self.stpcrit == 1:
-            while t0 < tfin:
-                if t1 > tfin and conum:
+            while t0 < tfin and not any([clfg_lk.arret_comput,clfg_w.arret_comput]) :
+                if t1 > tfin and conum :
                     t1 = tfin
                     dtp = t1 - t0
                 t0, t1, dtp = self.one_iter(t0, t1, dtp, 
@@ -384,6 +386,8 @@ class ClassAPIMascaret:
                 t0, t1, dtp = self.one_iter(t0, t1, dtp, 
                                              masc, conum, clfg, clfg_lk, clfg_w, 
                                              mobil_struct, mobil_link, mobil_w)
+                if  any([clfg_lk.arret_comput,clfg_w.arret_comput]):
+                    break
         elif self.stpcrit == 3:
             z_arret = self.masc.get("State.Z", sect_co - 1)
             while not z_arret > self.zmax_co:
@@ -391,6 +395,9 @@ class ClassAPIMascaret:
                                              masc, conum, clfg, clfg_lk, clfg_w, 
                                              mobil_struct, mobil_link, mobil_w)
                 z_arret = self.masc.get("State.Z", sect_co - 1)
+                if  any([clfg_lk.arret_comput,clfg_w.arret_comput]):
+                    break
+
         self.tfin = self.masc.get("State.PreviousTime")
 
     def one_iter(self, t0, t1, dtp, 

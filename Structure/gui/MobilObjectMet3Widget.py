@@ -60,6 +60,7 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.mob_table = 'links_mob_val'
             self.mob_table_id = 'id_links'
 
+
         self.d_var = {
             "METHBREAK": {"ctrl": self.ui.cb_break_met, "cc": self.ui.cc_method,
                           "vdef": '1', "typ": str},
@@ -200,8 +201,8 @@ class ClassMobilObjectMet3Widget(QWidget):
             sql = "SELECT type, nature, COALESCE(abscissa, 0.) as absc, COALESCE(links.level, 0.) as lvl, " \
                   "basinstart, bas_sta.name, basinend , bas_end.name " \
                   "FROM ({0}.{1} " \
-                  "LEFT JOIN {0}.basins as bas_sta on basinstart = bas_sta.gid) " \
-                  "LEFT JOIN {0}.basins as bas_end on basinend = bas_end.gid " \
+                  "LEFT JOIN {0}.basins as bas_sta on basinstart = bas_sta.basinnum) " \
+                  "LEFT JOIN {0}.basins as bas_end on basinend = bas_end.basinnum " \
                   "WHERE links.gid = {2}".format(self.mdb.SCHEMA, self.obj_table, self.cur_obj)
             rows = self.mdb.run_query(sql, fetch=True)
             typ_link, nat_link, cur_abs, cur_z, b_sta_id, b_sta_name, b_end_id, b_end_name = rows[0]

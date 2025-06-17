@@ -41,6 +41,7 @@ class ClassLinkFGParam(object):
             # LINK CASIER
             "name": {"desc": "nom du link", "desc_en": "name of the link", 'typ': 'str'},
             "level0": {"desc": "cote de radier", "desc_en": "bottom elevation", 'typ': 'float'},
+            "nature":{"desc": "Type casier-bief=1 ou casier-casier=2", "desc_en": "Type basin-branch=1 ou basin-basin=2", 'typ': 'float'},
             "crosssection0": {"desc": "Aire initial", "desc_en": "Initial cross sectino", 'typ': 'float'},
             "abscissa": {"desc": "pk du link", "desc_en": "chainage of the link", 'typ': 'float'},
             "branchnum": {"desc": "branch", "desc_en": "branch", 'typ': 'int'},
@@ -127,6 +128,13 @@ class ClassLinkFGParam(object):
             "ZFINALREG": {
                 "desc": "Cote final weirs après rupture",
                 "desc_en": "Final weir level after break", 'typ': 'float'
+            },
+            "USEBASINT": {
+                "desc": "Utilise le casier comme point de regulatinon",
+                "desc_en": "Uses the basin as a regulation point", 'typ': 'bool'
+            },
+            "NUMBASINT": {
+                "desc": "Start or end basin", "desc_en": "Start or end basin", 'typ': 'int'
             },
             # meth_tempo
             "TIMEZ": {
@@ -257,15 +265,21 @@ class ClassLinkFGParam(object):
 
         :param db: Database object.
         :return: True if parameters are successfully fetched, otherwise False.
+
         """
+        casiers = db.select("basins", "active ORDER BY basinnum ",list_var=['basinnum'])
+        links = db.select("links", "active ORDER BY linknum ", list_var=['linknum'])
+        conv_casier={str(basinnum) : int(id_cas_mas) for id_cas_mas, basinnum in enumerate(casiers['basinnum'])}
+        conv_links = {str(linknum): int(id_lk_mas) for id_lk_mas, linknum in enumerate(links['linknum'])}
+        # Get base Variable
         lst_var = [
-            "gid", "name", "level", "crosssection", "width", "abscissa",
+            "gid", "linknum","name", "level", "nature","crosssection", "width", "abscissa",
             "method_mob", "branchnum", "type", "basinstart", "basinend"
         ]
         sql = (
             "SELECT {fields} "
             "FROM {schema}.links "
-            "WHERE active AND type in (4,1) AND nature=1 AND active_mob "
+            "WHERE active AND type in (4,1) AND active_mob "
             "ORDER BY gid;"
         ).format(schema=db.SCHEMA, fields=", ".join(lst_var))
         rows = db.run_query(sql, fetch=True)
@@ -277,17 +291,18 @@ class ClassLinkFGParam(object):
         if len(rows) == 0:
             self.param_fg = {}
             return True
+        # varible conversion
         conv_var = {'level': "level0", "crosssection": "CSection0", "width": "width0"}
+
         for row in rows:
             id_link = row[0]
             if id_link not in self.param_fg:
-                self.param_fg[id_link] = {}
+                self.param_fg[id_link] = {'id_mas' : conv_links[str(row[1])]}
                 self.list_actif.append(id_link)
-            for pos, var in enumerate(lst_var[1:]):
+            for pos, var in enumerate(lst_var[2:]):
                 if var in conv_var:
                     var = conv_var[var]
-                self.param_fg[id_link][var] = row[pos + 1]
-
+                self.param_fg[id_link][var] = row[pos + 2]
         # Get mobility-specific values
         lst_var = ["id_links", "name_var", "value"]
         id_list = ", ".join(str(v) for v in self.list_actif)
@@ -315,11 +330,14 @@ class ClassLinkFGParam(object):
                 lst_id_tab.append(id_link)
                 self.param_fg[id_link][var] = []
                 continue
+            # Get mobile variable
             if var in self.lst_param:
                 self.param_fg[id_link][var] = self.typ_to_val(self.lst_param[var]['typ'], value)
+                if 'NUMBASIN' in var:
+                    self.param_fg[id_link][var] = conv_casier[str(self.param_fg[id_link][var])]
             else:
                 self.param_fg[id_link][var] = value
-
+        # Get the Table variable
         lst_id_tab = list(set(lst_id_tab))
         if len(lst_id_tab) > 0:
             lst_var = ["id_links", "name_var", "value", "id_order"]
@@ -339,6 +357,8 @@ class ClassLinkFGParam(object):
                     id_link, var, value, _ = row
                     if var in var_tab:
                         self.param_fg[id_link][var].append(self.typ_to_val('float', value))
+
+
 
         return True
 
@@ -426,12 +446,12 @@ class ClassLinkFGParam(object):
 
         :return: Dictionary of list of required variables.
         """
-        lst_com = ["name", "level0", "CSection0", "width0", "abscissa", "branchnum",
+        lst_com = ["name", "level0","nature", "CSection0", "width0", "abscissa", "branchnum",
                    "basinstart", "basinend", "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG", "USEBASIN", "NUMBASINREG",
                    "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG",
                    "VBREAKREG",  "ZFINALREG"]
-        lst_time = ["TIMEZ", "VALUEZ", "VBREAKT", "ZFINALT", ]
+        lst_time = ["TIMEZ", "VALUEZ", "VBREAKT", "ZFINALT" ]
         lst_fus = ["METHBREAK", "TIMEFUS", "WIDTHFUS", "VFUS", "VBREAKFUS", "TBREAKFUS", "ZFINALFUS", "USEBASINFUS",
                    "NUMBASINFUS", "PKFUS"]
 
