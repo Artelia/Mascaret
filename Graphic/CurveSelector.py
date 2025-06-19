@@ -357,10 +357,13 @@ class CurveSelectorWidget(QWidget):
                 where=f"gid={self.cur_pknum}",
                 list_var=['type']
             )
-            meth_mob = '1'
+            meth_mob = '2'
             if self.typ_res in  self.info_graph:
                 if  'method_mob' in self.info_graph[self.typ_res]:
-                    meth_mob = self.info_graph[self.typ_res]['method_mob'][f'{self.cur_pknum}']
+                    try:
+                        meth_mob = self.info_graph[self.typ_res]['method_mob'][f'{self.cur_pknum}']
+                    except KeyError:
+                        pass
             # affiche ou non la variablee
             if info:
                 index = self.cb_graph.findText(self.lst_graph[3]["name"])
