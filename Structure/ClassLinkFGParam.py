@@ -334,7 +334,10 @@ class ClassLinkFGParam(object):
             if var in self.lst_param:
                 self.param_fg[id_link][var] = self.typ_to_val(self.lst_param[var]['typ'], value)
                 if 'NUMBASIN' in var:
-                    self.param_fg[id_link][var] = conv_casier[str(self.param_fg[id_link][var])]
+                    try:
+                        self.param_fg[id_link][var] = conv_casier[str(self.param_fg[id_link][var])]
+                    except KeyError:
+                        self.param_fg[id_link][var] =-1
             else:
                 self.param_fg[id_link][var] = value
         # Get the Table variable
