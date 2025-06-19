@@ -1940,7 +1940,7 @@ $BODY$;
 
         # update executable
         old_vers = self.check_v_masc()
-        if old_vers == "8.4":
+        if old_vers != "8.4":
             ok = self.box.yes_no_q(
                 "WARNING:\n "
                 "Please note that the mascaret executable is updated. \n"
