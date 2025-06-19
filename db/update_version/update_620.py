@@ -17,6 +17,7 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+import json
 from db import MasObject as Maso
 
 def is_number(s):
@@ -135,6 +136,37 @@ class ClassUpdate620:
             # Alter colonne value en text
             for sql in lst_alt:
                 self.mdb.execute(sql.format(self.mdb.SCHEMA))
+        # update resultats existant pour link_mob
+        if valide:
+            sql = f"""SELECT idrunpkvar,  pknum FROM {self.mdb.SCHEMA}.results_by_pk WHERE  pknum IN (
+            	            SELECT linknum  FROM {self.mdb.SCHEMA}.links WHERE gid in (
+            	                SELECT DISTINCT id_links FROM {self.mdb.SCHEMA}.links_mob_val)) 
+            	            AND var IN (SELECT id FROM {self.mdb.SCHEMA}.results_var WHERE type_res='link_fg'
+            	            );"""
+            vars = self.mdb.run_query(sql, fetch=True)
+            var2 = list(set([int(var[1]) for var in vars]))
+            links = self.mdb.select("links", where=f'linknum in ({','.join([f"'{id}'" for id in var2])})',
+                                    order="linknum ", list_var=['gid,linknum'])
+            if links and vars:
+                conv_links = {int(linknum): int(gid) for gid, linknum in zip(links['gid'], links['linknum'])}
+                tab_up = {var[0]:{"pknum": conv_links[int(var[1])]} for var in vars}
+                self.mdb.update("results_by_pk", tab_up, var="idrunpkvar")
+
+                sql = f"""SELECT id, var, val FROM {self.mdb.SCHEMA}.runs_graph 
+                        WHERE type_res='link_fg' and var in ('pknum','time');"""
+                vars = self.mdb.run_query(sql, fetch=True)
+                tab_up = {}
+                for idx, nvar, val in vars:
+                    nval = {}
+                    for key, itm in val.items():
+                        tmp = conv_links[int(key)]
+                        if nvar == 'pknum':
+                            nval[str(tmp)] = tmp
+                        elif nvar == 'time':
+                            nval[str(tmp)] = itm
+                    if nval:
+                        tab_up[idx] = {'val':  json.dumps(nval)}
+                self.mdb.update("runs_graph", tab_up, var="id")
         return  valide
 
     def conv_tab(self, typ, d_conv):
