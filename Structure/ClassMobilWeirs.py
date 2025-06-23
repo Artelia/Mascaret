@@ -39,7 +39,7 @@ class ClassMobilWeirs:
         self.size_link = 0
         self.new_z = 99
         self.arret_comput = False
-        self.cpt_w = 0
+        self.cpt_w = {}
 
         self.cl_param = ClassMobilWeirsParam()
         self.cl_param.get_param(parent=main.mgis)
@@ -84,7 +84,7 @@ class ClassMobilWeirs:
             if param["level"] != param["level-dt"] or force:
                 id_mas = param["id_mas"]
                 updates = {
-                    "Model.Weir.CrestLevel": param["level"],
+                    "Model.Weir.CrestLevel": param["level"]
                 }
                 for key, value in updates.items():
                     self.masc.set(key, value, id_mas)
@@ -94,12 +94,13 @@ class ClassMobilWeirs:
         Initialize the results dictionary (`results_fg_weirs_mv`) for storing floodgate movement data.
         This includes time, level, cross-section, width, and regulation variable values.
         """
-        self.cpt_w = 0
+        self.cpt_w = { id_weir: 1 for id_weir in self.param_fg.keys()}
         self.results_fg_weirs_mv = {
             id_weir: {
                 "TIME": [params["TIME"]],
                 "ZSTR": [params["level"]],
                 "REGVAR": [params["REGVAR_VAL"]],
+                "STAT_EFF": [params["stat_eff"]],
             }
             for id_weir, params in self.param_fg.items()
         }
@@ -117,6 +118,7 @@ class ClassMobilWeirs:
                 res["TIME"].append(tfin)
                 res["ZSTR"].append(param["level"])
                 res["REGVAR"].append(param["REGVAR_VAL"])
+                res["STAT_EFF"].append(param["stat_eff"])
 
 
     def iter_fg(self, time, dtp):
@@ -130,24 +132,43 @@ class ClassMobilWeirs:
         """
         try :
             for id_weir, param in self.param_fg.items():
+                self.cpt_w[id_weir] += 1
                 # effacement status
                 status = self.masc.get("Model.Weir.State", param['id_mas'])
-                if status:
-                    continue
                 val_check = self.masc.get(param['CHECK_VAR'],
                                           param["SECCON"])
+                if status:
+                    param.update({
+                        # var update in run
+                        "REGVAR_VAL": val_check,
+                        "level": param["level"],
+                        "TIME": time + dtp,
+                        "stat_eff": float(status)
+                    })
+                    self.fill_results_fg_mv(id_weir, param)
+                    continue
+
                 if self.clapet(param):
                     param["OPEN_CLOSE"] = "CLOSE"
                     dnew = {"level": round(param["ZLIMITGATE"], 4)}
-                    self.fill_res_and_update(id_weir, time + dtp, param, dnew, val_check)
+                    self.fill_res_and_update(id_weir, time + dtp, param, dnew, val_check, status)
                 elif param["method_mob"] == self.dmeth["meth_regul"]:
                     if self.cl_regul.check_dt_regul(param, dtp):
                         self.cl_regul.state_regul(val_check, param)
                         dnew = self.cl_regul.law_gate_regul(param, time)
-                        self.fill_res_and_update(id_weir, time + dtp, param, dnew, val_check)
+                        self.fill_res_and_update(id_weir, time + dtp, param, dnew, val_check, status)
+                    else:
+                        param.update({
+                            # var update in run
+                            "REGVAR_VAL": val_check,
+                            "level": param["level"],
+                            "TIME": time + dtp,
+                            "stat_eff": float(status)
+                        })
+                        self.fill_results_fg_mv(id_weir, param)
                 elif param["method_mob"] == self.dmeth["meth_time"]:
                     dnew = self.cl_time.law_mth_time(param, time)
-                    self.fill_res_and_update(id_weir, time + dtp, param, dnew, val_check)
+                    self.fill_res_and_update(id_weir, time + dtp, param, dnew, val_check, status)
         except Exception:
             self.arret_comput = True
             error_info = traceback.format_exc()
@@ -161,7 +182,7 @@ class ClassMobilWeirs:
                 return True
         return False
 
-    def fill_res_and_update(self, id_weir, time, param, dnew, val_check):
+    def fill_res_and_update(self, id_weir, time, param, dnew, val_check, status):
         """
         Update  mobile weirs parameters and fill the results dictionary with the new values.
         :param id_weir: Link ID.
@@ -174,7 +195,8 @@ class ClassMobilWeirs:
             # var update in run
             "REGVAR_VAL": val_check,
             "level": dnew['level'],
-            "TIME": time
+            "TIME": time,
+            "stat_eff" : float(status)
         })
         self.update_var_mas()
         self.fill_results_fg_mv(id_weir, param)
@@ -253,8 +275,10 @@ class ClassMobilWeirs:
                     "id_mas": id_mas,
                     "TIME0": tini,
                     "TIME": tini,
-                    'break': False
+                    'break': False,
+                    "stat_eff" : float(self.masc.get("Model.Weir.State", id_mas))
                 })
+
                 if param["method_mob"] == self.dmeth["meth_regul"]:
                     self.cl_regul.init_meth_regul(param, id_weir)
                 elif param["method_mob"] == self.dmeth["meth_time"]:
@@ -279,19 +303,20 @@ class ClassMobilWeirs:
         """
         res = self.results_fg_weirs_mv[id_weir]
 
-        self.cpt_w += 1
-        if param["TIME"] != param["TIME0"] and  self.cpt_w > param["WRITE"]:
+        if param["TIME"] != param["TIME0"] and  self.cpt_w[id_weir] > param["WRITE"]:
             # Update with new values
-            self.cpt_w = 1
+            self.cpt_w[id_weir] = 1
             res["TIME"].append(param["TIME"])
             res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
             res["ZSTR"].append(param['level'])
+            res['STAT_EFF'].append(param['stat_eff'])
 
         param.update({
             # var time-dt
             "level-dt": param["level"],
             "TIME-dt": param["TIME"],
             "REGVAR_VAL-dt": param["REGVAR_VAL"],
+            'STAT_EFF-dt': param['stat_eff']
         })
 
 

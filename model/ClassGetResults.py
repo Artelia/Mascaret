@@ -575,18 +575,28 @@ class ClassGetResults:
                     'type_var': 'float'}
         id_var_reg = self.mdb.check_id_var(var_info)
 
+        var_info = {
+            "var": 'STAT_EFF',
+            "type_res": "weirs",
+            "name": 'Weir Erasure Status',
+            "type_var": "float",
+        }
+        id_var_eff = self.mdb.check_id_var(var_info)
+
         d_res = {}
         dico_pk = {}
         dico_time = {}
 
-        for id_link in dico_res.keys():
-            dico_pk[id_link] = id_link
-            dico_time[id_link] =  dico_res[id_link]['TIME']
-            d_res[(id_link, id_var_zlink)] = {'t': dico_res[id_link]['TIME'],
-                                            'v': dico_res[id_link]["ZSTR"]}
+        for id_w in dico_res.keys():
+            dico_pk[id_w] = id_w
+            dico_time[id_w] =  dico_res[id_w]['TIME']
+            d_res[(id_w, id_var_zlink)] = {'t': dico_res[id_w]['TIME'],
+                                            'v': dico_res[id_w]["ZSTR"]}
 
-            d_res[(id_link, id_var_reg)] = {'t': dico_res[id_link]['TIME'],
-                                            'v': dico_res[id_link]['REGVAR']}
+            d_res[(id_w, id_var_reg)] = {'t': dico_res[id_w]['TIME'],
+                                            'v': dico_res[id_w]['REGVAR']}
+            d_res[(id_w, id_var_eff)] = {'t': dico_res[id_w]['TIME'],
+                                            'v': dico_res[id_w]['STAT_EFF']}
         for (pk, var), v in d_res.items():
             values.append([id_run, pk, var,
                            "{" + ','.join(str(i_t) for i_t in v['t']) + "}",

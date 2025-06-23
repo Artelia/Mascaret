@@ -210,6 +210,9 @@ class CurveSelectorWidget(QWidget):
                                   {"type_res": self.typ_res, "id": 'reg_var',
                                    "name": 'Variable of regulation', "unit": '',
                                    "vars": ['REGVAR']},
+                                  {"type_res": self.typ_res, "id": 'stat_var',
+                                   "name": 'Weir Erasure Status', "unit": '',
+                                   "vars": ['STAT_EFF']},
                                   ]
             elif self.typ_graph in ["hydro", "hydro_pk"]:
                 self.get_lst_graph_opt()
