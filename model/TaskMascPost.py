@@ -47,7 +47,7 @@ class TaskMascPost():
 
         self.cls_res = ClassGetResults(self.mdb, self.dossier_file_masc, self.wq, self.dbg)
 
-        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc,self.cond_api, self.dbg)
+        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc, self.cond_api, self.dbg)
 
         self.mess = ClassMessage()
         self.cpt_init = False
@@ -171,7 +171,6 @@ class TaskMascPost():
                     self.add_log_mess(self.cls_res.mess)
                     if self.exit_status_(self.cls_res.mess):
                         return False
-
 
             self.log_mess('TaskMascPost End', 'info2')
             return True

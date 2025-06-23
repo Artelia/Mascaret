@@ -318,8 +318,8 @@ class GraphBCObs(QWidget):
                         "WHERE code = '{0}' AND type='{3}') t "
                         " WHERE date>='{1}' AND date<='{2}' AND valeur > -999.9 "
                         "ORDER BY date".format(
-                            cd_hydro,  self.events[self.cur_event]["starttime"] + dt,
-                            self.events[self.cur_event]["endtime"] + dt,
+                            cd_hydro, self.events[self.cur_event]["starttime"] + dt,
+                                      self.events[self.cur_event]["endtime"] + dt,
                             type, self.mdb.SCHEMA
                         )
                     )

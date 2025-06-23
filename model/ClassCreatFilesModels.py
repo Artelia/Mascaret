@@ -937,8 +937,8 @@ class ClassCreatFilesModels:
         for idc, num in enumerate(casiers["basinnum"]):
             if float(casiers["initlevel"][idc]) < min([float(val) for val in casiers["level"][idc].split()]):
                 txte = ('*** Error: The "Reference level" for the basins {} '
-                                   'which must be greater than or equal to '
-                                   'the minimum level of the height volume law'.format(num))
+                        'which must be greater than or equal to '
+                        'the minimum level of the height volume law'.format(num))
                 self.mess.add_mess("BasinErr_{}".format(num), "critic", txte)
 
         check_typ_link = {
@@ -989,7 +989,7 @@ class ClassCreatFilesModels:
                 txte = (
                     "*** Error: The link {} " 'does not have "Basin number start"'.format(num)
                 )
-                self.mess.add_mess("LinksB_{}".format( num), "critic", txte)
+                self.mess.add_mess("LinksB_{}".format(num), "critic", txte)
             # check if "basinend" is existed  before  check level
             if ste is None or ste == -1:
                 continue
@@ -1186,7 +1186,7 @@ class ClassCreatFilesModels:
         lois = SubElement(tracer_law, "loisTracer")
         if nb > 0:
             for name in list_loi:
-                try :
+                try:
                     struct = SubElement(lois, "structureSParametresLoiTraceur")
                     SubElement(struct, "nom").text = name
                     SubElement(struct, "modeEntree").text = "1"
@@ -1258,10 +1258,10 @@ class ClassCreatFilesModels:
                 elif ls == "branchnum":
                     seuil[ls].append(dico_str["branchnum"][i])
                 elif ls == "z_break":
-                   if 'zbreak' in dico_str :
-                       seuil[ls].append(dico_str['zbreak'][i])
-                   else:
-                       seuil[ls].append(99999)
+                    if 'zbreak' in dico_str:
+                        seuil[ls].append(dico_str['zbreak'][i])
+                    else:
+                        seuil[ls].append(99999)
 
                 elif ls == "z_crest":
                     where = "id_config ='{}'".format(dico_str["id"][i])
@@ -1270,7 +1270,7 @@ class ClassCreatFilesModels:
                 else:
                     seuil[ls].append(None)
 
-        if  any(seuil['active_mob']) :# and not self.cond_api:
+        if any(seuil['active_mob']):  # and not self.cond_api:
             where = f"id_weirs in (SELECT gid FROM {self.mdb.SCHEMA}.weirs where active_mob)"
             dico_mob = self.mdb.select("weirs_mob_val", where, "id_weirs")
             for id_w in dico_mob["id_weirs"]:
@@ -1295,26 +1295,26 @@ class ClassCreatFilesModels:
             where = f"id_links in (SELECT gid FROM {self.mdb.SCHEMA}.links where active_mob)"
             lst_gid = self.mdb.select_distinct("id_links", "links_mob_val", where)
             dico_mob = self.mdb.select("links_mob_val", where, "id_links")
-            if not  lst_gid :
+            if not lst_gid:
                 return liaisons
             df_mob = pd.DataFrame(dico_mob)
             for id_lk in lst_gid['id_links']:
                 try:
                     id_s = liaisons['gid'].index(id_lk)
                     valeur = df_mob[(df_mob['id_links'] == id_lk) &
-                                     (df_mob['name_var'] == 'ZINITREG')]['value'].tolist()
+                                    (df_mob['name_var'] == 'ZINITREG')]['value'].tolist()
                     if valeur:
                         valeur = valeur[0]
                         lvl0 = liaisons["level"][id_s]
                         liaisons["level"][id_s] = float(valeur)
-                        if liaisons['type'][id_s]==4:
-                             htop = liaisons["crosssection"][id_s] / liaisons["width"][id_s]
-                             newsec = max(liaisons["width"][id_s] * (htop - max(liaisons["level"][id_s]-lvl0, 0)), 1E-4)
-                             liaisons["crosssection"][id_s] = newsec
+                        if liaisons['type'][id_s] == 4:
+                            htop = liaisons["crosssection"][id_s] / liaisons["width"][id_s]
+                            newsec = max(liaisons["width"][id_s] * (htop - max(liaisons["level"][id_s] - lvl0, 0)),
+                                         1E-4)
+                            liaisons["crosssection"][id_s] = newsec
                 except ValueError:
                     continue
         return liaisons
-
 
     def typ_struct(self, meth):
         """function to know the law type"""
@@ -1424,7 +1424,7 @@ class ClassCreatFilesModels:
             obs_stations = {}
             for cd_hydro, delta in liste_stations:
                 delta_h = int(delta) if delta else 0
-                dt =  datetime.timedelta(hours=delta_h)
+                dt = datetime.timedelta(hours=delta_h)
                 sql_tab = (
                     "SELECT * FROM "
                     "(SELECT code,type, UNNEST(date)as date, "
@@ -1517,7 +1517,7 @@ class ClassCreatFilesModels:
                                        "The law for {} is not create.".format(nom))
                     continue
                 # create init law
-                if loi["type"] in [1,2,4]:  # , 5]: # car 5 mascaret plante à l'init
+                if loi["type"] in [1, 2, 4]:  # , 5]: # car 5 mascaret plante à l'init
                     self.creer_loi(nom, tab, loi["type"], init=True)
                 elif loi["type"] in [5] and loi["couche"] == "extremites":
                     for c, d in zip(tab["z"], tab["flowrate"]):
@@ -1615,7 +1615,7 @@ class ClassCreatFilesModels:
             self.mess.add_mess("obsLaw_{}".format(name_obj), "critic", err)
             return None
 
-    def classic_law(self,par, dict_lois):
+    def classic_law(self, par, dict_lois):
         """
                 files creation  for the classic law
                Args:
@@ -1641,7 +1641,7 @@ class ClassCreatFilesModels:
             if "valeurperm" not in l.keys():
                 continue
             # nom = nom + "_init"
-            if l["valeurperm"] :
+            if l["valeurperm"]:
                 if l["type"] == 1:
                     tab = {"time": [0, 3600], "flowrate": [l["valeurperm"]] * 2}
                     self.creer_loi(nom, tab, 1, init=True)
@@ -1655,16 +1655,17 @@ class ClassCreatFilesModels:
                     self.mess.add_mess('NoInitSteady', 'Warning',
                                        "No initialisation because of no SteadyValue")
             else:
-                    if l["type"] in [4, 5]:
-                        self.creer_loi(nom, tab, l["type"], init=True)
-                    else:
-                        par["initialisationAuto"] = False
-                        txt = (
-                                'No initialisation because of no steady value set for {} condition'.format(nom) +
-                                'Set "steadyValue" in extremities layer for entity {}'.format(nom)
-                        )
-                        self.mess.add_mess(txt, 'NoInitUnsteady', 'warning')
+                if l["type"] in [4, 5]:
+                    self.creer_loi(nom, tab, l["type"], init=True)
+                else:
+                    par["initialisationAuto"] = False
+                    txt = (
+                            'No initialisation because of no steady value set for {} condition'.format(nom) +
+                            'Set "steadyValue" in extremities layer for entity {}'.format(nom)
+                    )
+                    self.mess.add_mess(txt, 'NoInitUnsteady', 'warning')
         return par
+
     # ************   LIG FILE   ********************************************************************
 
     def opt_to_lig(self, id_run, base_namefiles, path_file=None):
@@ -1844,7 +1845,7 @@ class ClassCreatFilesModels:
                             fich.write(
                                 "{} {} {}\n".format(
                                     rows["value"][rows["name_var"].index("VREGCLOS")],
-                                    info["z_crest"][i], # ZBAS
+                                    info["z_crest"][i],  # ZBAS
                                     rows["value"][rows["name_var"].index('ZMAXFG')],
                                 )
                             )
@@ -1882,8 +1883,8 @@ class ClassCreatFilesModels:
             name = os.path.join(self.dossier_file_masc, "no_keep_break.json")
 
         param = {}
-        lst_get = [('weirs','gid'),('struct_config','id')]
-        for tab, var in lst_get :
+        lst_get = [('weirs', 'gid'), ('struct_config', 'id')]
+        for tab, var in lst_get:
             sql = (
                 f"SELECT {var}, name, branchnum, abscissa, erase_flag FROM {self.mdb.SCHEMA}.{tab} "
                 f"WHERE active ORDER BY {var};"
@@ -1893,7 +1894,7 @@ class ClassCreatFilesModels:
                 for row in rows:
                     # "name, branchnum, abscissa"
                     if row[4]:
-                        param[row[0]] = ((row[1], row[2], row[3]),row[4])
+                        param[row[0]] = ((row[1], row[2], row[3]), row[4])
         if param:
             with open(name, "w") as file:
                 json.dump(param, file)

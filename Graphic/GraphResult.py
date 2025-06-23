@@ -21,6 +21,7 @@ email                :
 import matplotlib.lines as mlines
 import numpy as np
 from matplotlib import patches
+
 try:
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QTAgg as NavigationToolbar
 except:
@@ -28,10 +29,7 @@ except:
 
 from .GraphCommon import GraphCommonNew
 
-
-
 MPL_LINE_STYLE = {0: "-", 1: ":", 2: "--", 3: "-."}
-
 
 
 class GraphResult(GraphCommonNew):

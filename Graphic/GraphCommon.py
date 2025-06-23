@@ -47,6 +47,7 @@ from datetime import datetime
 try:
     _encoding = QApplication.UnicodeUTF8
 
+
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig, _encoding)
 
@@ -226,6 +227,7 @@ class DraggableLegend:
         if self.gotLegend:
             self.gotLegend = False
 
+
 class CustNavigationToolbar(NavigationToolbar):
     def __init__(self, canvas, window, parent):
         super().__init__(canvas, window, parent)
@@ -233,17 +235,18 @@ class CustNavigationToolbar(NavigationToolbar):
         self.par = parent
         self.update_limites = True
         if hasattr(self.par, 'update_limites'):
-            self.update_limites =  self.par.update_limites
+            self.update_limites = self.par.update_limites
 
     def home(self, *args):
         if not self.par.update_limites:
-           self.par.update_limites=True
-           self.par.maj_limites()
-           self.par.update_limites = False
+            self.par.update_limites = True
+            self.par.maj_limites()
+            self.par.update_limites = False
         else:
             self._nav_stack.home()
             self.set_history_buttons()
             self._update_view()
+
 
 class GraphCommonNew:
     def __init__(self, wgt=None, lay=None, lay_toolbar=None):
@@ -266,7 +269,7 @@ class GraphCommonNew:
         self.courbeLaisses = []
         self.etiquetteLaisses = []
         self.courbe_weirs = []
-        self.etiquetteweirs = []                                                              
+        self.etiquetteweirs = []
         self.flag = False
         self.leg = None
         self.lined = dict()
@@ -318,7 +321,7 @@ class GraphCommonNew:
                     if courbe.get_label() == "Flood marks":
                         for e in self.etiquetteLaisses:
                             e.set_visible(True)
-                    elif  courbe.get_label() == "Geo Weirs (orange) or Weir Laws (brown)":
+                    elif courbe.get_label() == "Geo Weirs (orange) or Weir Laws (brown)":
                         for e in self.etiquetteweirs:
                             e.set_visible(True)
                 else:
@@ -326,7 +329,7 @@ class GraphCommonNew:
                     if courbe.get_label() == "Flood marks":
                         for e in self.etiquetteLaisses:
                             e.set_visible(False)
-                    elif  courbe.get_label() == "Geo Weirs (orange) or Weir Laws (brown)":
+                    elif courbe.get_label() == "Geo Weirs (orange) or Weir Laws (brown)":
                         for e in self.etiquetteweirs:
                             e.set_visible(False)
                 self.maj_limites()
@@ -506,7 +509,6 @@ class GraphCommonNew:
                 self.main_axe.set_xlim(mini_x, maxi_x)
         self.fig.autofmt_xdate()
         self.canvas.draw()
-
 
 # class DraggableLegendNew:
 #     def __init__(self, axes):

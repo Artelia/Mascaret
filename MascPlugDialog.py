@@ -30,42 +30,39 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassExportDataRun import ClassExportDataRun
+from .ClassCartoZi import ClassCartoZI
 from .ClassDownload import ClassDownloadMasc
 from .ClassEditKsDialog import ClassEditKsDialog
+from .ClassExportDataRun import ClassExportDataRun
+from .ClassExportLigDialog import ClassExportLigDialog
+from .ClassExtractBedDialog import ClassExtractBedDialog
 from .ClassImportExportDialog import ClassDlgExport, ClassDlgImport, CloneTask
 from .ClassImport_res import ClassImportRes
 from .ClassMNT import ClassMNT
-from .model.ClassMascaret import ClassMascaret
-from .ClassParamExportDialog import  ClassParamExportDialog
 from .ClassObservation import ClassEventObsDialog
+from .ClassParamExportDialog import ClassParamExportDialog
 from .ClassParameterDialog import ClassParameterDialog
-from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, open_file_editor
-from .Graphic.FilterDialog import ClassFilterDialog
-from .Graphic.GraphProfilDialog import IdentifyFeatureTool
-from .HydroLawsDialog import ClassHydroLawsDialog
-
-from .ClassExtractBedDialog import ClassExtractBedDialog
 from .ClassUpdateBedDialog import (
     ClassUpdateBedDialog,
     update_all_bed_geometry,
     refresh_minor_bed_layer,
 )
-from .ClassCartoZi import ClassCartoZI
-from .ClassExportLigDialog import ClassExportLigDialog
-
-# # structures
-from .Structure.gui.StructureDialog import ClassStructureDialog
+from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, open_file_editor
+from .Graphic.FilterDialog import ClassFilterDialog
+from .Graphic.GraphProfilDialog import IdentifyFeatureTool
+from .HydroLawsDialog import ClassHydroLawsDialog
 from .Structure.gui.MobilObjectDialog import ClassMobilObjectDialog
 # old
-from  .Structure.gui.MobilSingDialog import ClassMobilSingDialog
+from .Structure.gui.MobilSingDialog import ClassMobilSingDialog
+# # structures
+from .Structure.gui.StructureDialog import ClassStructureDialog
 # water quality
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
-
 from .db.Check_tab import CheckTab
 from .db.ClassMasDatabase import ClassMasDatabase
+from .model.ClassMascaret import ClassMascaret
 from .scores.ClassScoresDialog import ClassScoresDialog
 from .ui.custom_control import ClassWarningBox
 
@@ -110,7 +107,6 @@ class MascPlugDialog(QMainWindow):
         self.basin_result = None
         self.profil_z = None
         self.mass_graph = None
-
 
         self.prev_tool = None
 
@@ -251,7 +247,6 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionStructures_links.setVisible(self.cond_api)
         self.ui.actionStructures_weirs_old.setVisible(not self.cond_api)
 
-
         # WQ
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
         self.ui.action_update_bin.triggered.connect(self.download_bin)
@@ -276,7 +271,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.action_create_lig_file.triggered.connect(self.creat_lig)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(True)
+        self.ui.actionTest.setVisible(False)
 
         self.ui.actionReadLisFile.triggered.connect(self.read_lis_file)
 
@@ -722,10 +717,10 @@ class MascPlugDialog(QMainWindow):
     #    SETTINGS
     # *******************************
 
-    def export_run(self, clam=None,folder_name_path= None, typ_compress="zip"):
+    def export_run(self, clam=None, folder_name_path=None, typ_compress="zip"):
         if not clam:
             clam = ClassMascaret(self)
-        if not folder_name_path :
+        if not folder_name_path:
             folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
 
         if clam.compress_run_file(folder_name_path, typ_compress):
@@ -743,7 +738,6 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionStructures_weirs.setVisible(self.cond_api)
         self.ui.actionStructures_links.setVisible(self.cond_api)
         self.ui.actionStructures_weirs_old.setVisible(not self.cond_api)
-
 
     def read_settings(self, defaults=False):
         """read Option"""
@@ -1052,7 +1046,7 @@ Version : {}
         """
         case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
         if ok:
-            kernel  = self.Klist[self.listeState.index(case)]
+            kernel = self.Klist[self.listeState.index(case)]
             dlgp = ClassParamExportDialog(self, kernel)
             dlgp.exec_()
             if dlgp.complet:
@@ -1085,7 +1079,7 @@ Version : {}
         del dlg
         del clam
 
-    def open_with_default_editor(self,file_path):
+    def open_with_default_editor(self, file_path):
         import subprocess
         import sys
         if sys.platform.startswith('darwin'):  # macOS
@@ -1098,7 +1092,7 @@ Version : {}
     def fct_test(self):
         """Test function"""
         # get_laws
-        #self.chkt.debug_update_vers_meta(version="5.1.5")
+        # self.chkt.debug_update_vers_meta(version="5.1.5")
         # cl.creat_file_no_keep_break()
         # self.chkt.update_version('620')
         # from .Structure.ClassLinkFGParam import ClassLinkFGParam
@@ -1282,7 +1276,7 @@ Version : {}
         Open listing file
         """
         model_path = os.path.join(self.masplugPath, "mascaret")
-        file_path =os.path.join(model_path, 'mascaret.lis')
+        file_path = os.path.join(model_path, 'mascaret.lis')
         if os.path.exists(file_path):
             # openfile
             open_file_editor(file_path)

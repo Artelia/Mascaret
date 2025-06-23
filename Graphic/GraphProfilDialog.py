@@ -57,12 +57,13 @@ from ..Function import tw_to_txt, filter_pr_fct, filter_dist_perpendiculaire
 from ..Structure.ClassPolygone import ClassPolygone
 from ..Structure.gui.StructureCreateDialog import ClassStructureCreateDialog
 
-try :
+try:
     from packaging.version import parse
     import matplotlib
-    MPLT_NEW =  (parse(matplotlib.__version__) >= parse("3.6.3"))
+
+    MPLT_NEW = (parse(matplotlib.__version__) >= parse("3.6.3"))
 except:
-    MPLT_NEW =  False
+    MPLT_NEW = False
 
 try:
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -86,8 +87,6 @@ except AttributeError:
 
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig)
-
-
 
 
 class IdentifyFeatureTool(QgsMapToolIdentify):
@@ -128,7 +127,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     if links and feature["name"] in links["name"]:
                         graph_res = GraphResultDialog(self.mgis, type_res, feature["gid"])
                         graph_res.show()
-                elif  couche == "weirs":
+                elif couche == "weirs":
                     feature = results[0].mFeature
                     weirs = self.mgis.mdb.select_distinct("name", "weirs", "active")
                     if weirs:
@@ -427,7 +426,7 @@ class GraphProfil(GraphCommon):
 
         self.RS = RectangleSelector(self.axes, self.onselect)
         self.RS.set_active(False)
-        if not MPLT_NEW :
+        if not MPLT_NEW:
             self.span = SpanSelector(
                 self.axes,
                 self.onselect_zone,

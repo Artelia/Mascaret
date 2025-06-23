@@ -23,6 +23,7 @@ import numpy as np
 from .ClassLinkFGParam import ClassLinkFGParam
 import traceback
 
+
 class ClassFloodGateLk:
     """Class Flood Gate"""
 
@@ -99,7 +100,7 @@ class ClassFloodGateLk:
         """
         self.results_fg_lk_mv = {}
         for id_link, params in self.param_fg.items():
-            self.cpt_w[id_link] =  1
+            self.cpt_w[id_link] = 1
             self.results_fg_lk_mv[id_link] = {
                 "TIME": [params['TIME']],
                 "ZLINK": [params["level"]],
@@ -131,7 +132,7 @@ class ClassFloodGateLk:
         :param time: Current simulation time.
         :param dtp: Time step.
         """
-        try :
+        try:
             for id_lk, param in self.param_fg.items():
                 self.cpt_w[id_lk] += 1
                 val_break = self.masc.get(param['CHECK_VAR_BREAK'], param["SEC_BREAK"])
@@ -153,8 +154,8 @@ class ClassFloodGateLk:
                             "TIME": time + dtp
                         })
                         self.fill_results_fg_mv(id_lk, param)
-                elif param["method_mob"] == self.dmeth["meth_time"]and not self.check_break(param, val_break,
-                                                                                            id_lk, time, val_check):
+                elif param["method_mob"] == self.dmeth["meth_time"] and not self.check_break(param, val_break,
+                                                                                             id_lk, time, val_check):
                     dnew = self.cl_time.law_mth_time(param, time)
                     self.fill_res_and_update(id_lk, time + dtp, param, dnew, val_check)
                 elif param["method_mob"] == self.dmeth["meth_fus"]:
@@ -186,7 +187,6 @@ class ClassFloodGateLk:
             error_info = traceback.format_exc()
             self.add_info(f"***** ERROR: the gates for the links\n COMPUTATION STOP \n {error_info}")
             self.arret_comput = True
-
 
     def fill_res_and_update(self, id_lk, time, param, dnew, val_check):
         """
@@ -298,7 +298,7 @@ class ClassFloodGateLk:
             if param["type"] == 4:
                 param["ZmaxSection0"] = param["level0"] + param["CSection0"] / param["width0"]
             else:
-                param["ZmaxSection0"] = param["level0"]+ 999999.
+                param["ZmaxSection0"] = param["level0"] + 999999.
             if param["method_mob"] == self.dmeth["meth_regul"]:
                 self.cl_regul.init_meth_regul(param, id_lk)
             elif param["method_mob"] == self.dmeth["meth_time"]:
@@ -349,8 +349,7 @@ class ClassFloodGateLk:
             "ZmaxSection-dt": param["ZmaxSection"],
             "REGVAR_VAL-dt": param["REGVAR_VAL"], })
 
-
-    def check_break(self, param, val_b, id_lk, time,val_c):
+    def check_break(self, param, val_b, id_lk, time, val_c):
         """
         Check if the floodgate should break.
         :param param: Dictionary of floodgate parameters.
@@ -373,15 +372,15 @@ class ClassFloodGateLk:
             }
             self.fill_res_and_update(id_lk, time, param, dnew, val_c)
         # else:
-            # reveient à l'état avant rupture
-            # if param["BPERM"] and param['break']:
-            #     param.update({
-            #         "level": param["rup_level"],
-            #         "CSection": param["rup_CSection"],
-            #         "ZmaxSection": param["rup_ZmaxSection"],
-            #         "width": param["rup_width"],
-            #         "break": False
-            #     })
+        # reveient à l'état avant rupture
+        # if param["BPERM"] and param['break']:
+        #     param.update({
+        #         "level": param["rup_level"],
+        #         "CSection": param["rup_CSection"],
+        #         "ZmaxSection": param["rup_ZmaxSection"],
+        #         "width": param["rup_width"],
+        #         "break": False
+        #     })
         return param['break']
 
 
@@ -417,7 +416,7 @@ class ClassMethRegul:
             "CSection": param["CSection0"],
             "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
             "OPEN_CLOSE": "INIT",
-            "VAL_BREAK" :param["VBREAKREG"],
+            "VAL_BREAK": param["VBREAKREG"],
             # "BPERM" : param['BPERMREG'],
             "ZFINAL_BREAK": param['ZFINALREG']
         })
@@ -449,9 +448,6 @@ class ClassMethRegul:
         else:
             param["WRITE"] = param["WRITEREG"]
 
-
-
-
     def check_param(self, param, id_lk):
         """
         Validate the consistency of regulation parameters, specifically `VREGOPEN` and `VREGCLOS`.
@@ -462,7 +458,6 @@ class ClassMethRegul:
         valo = param["VREGOPEN"]
         valf = param["VREGCLOS"]
 
-
         if param["DIRFG"] == "D":  # bas
             if valf > valo:
                 self.add_info(
@@ -472,7 +467,7 @@ class ClassMethRegul:
                 )
                 return False
         else:
-            if valo  > valf :
+            if valo > valf:
                 self.add_info(
                     "***** ERROR:"
                     "Opening level value must be lower closing level value\n"
@@ -481,9 +476,8 @@ class ClassMethRegul:
                 return False
         return True
 
-
     @staticmethod
-    def state_regul( val_check, param_fg):
+    def state_regul(val_check, param_fg):
         """
         Determine the state of the floodgate (OPEN, CLOSE, or MAINTAIN) based on the regulation variable.
 
@@ -495,35 +489,35 @@ class ClassMethRegul:
 
         conditions = {
             # fermeture par le bas
-            ("INIT", "D"): [(val_check > param_fg["VREGOPEN"] , "OPEN")],
+            ("INIT", "D"): [(val_check > param_fg["VREGOPEN"], "OPEN")],
             ("OPEN", "D"): [
-                (val_check < param_fg["VREGCLOS"] , "CLOSE"),
-                (param_fg["VREGOPEN"]  >= val_check >= param_fg["VREGCLOS"] , "MAINT"),
+                (val_check < param_fg["VREGCLOS"], "CLOSE"),
+                (param_fg["VREGOPEN"] >= val_check >= param_fg["VREGCLOS"], "MAINT"),
 
             ],
             ("CLOSE", "D"): [
-                (val_check >= param_fg["VREGOPEN"] , "OPEN"),
-                (param_fg["VREGOPEN"]   > val_check > param_fg["VREGCLOS"], "MAINT"),
+                (val_check >= param_fg["VREGOPEN"], "OPEN"),
+                (param_fg["VREGOPEN"] > val_check > param_fg["VREGCLOS"], "MAINT"),
             ],
             ("MAINT", "D"): [
-                (val_check > param_fg["VREGOPEN"] , "OPEN"),
-                (val_check < param_fg["VREGCLOS"] , "CLOSE"),
-                (param_fg["VREGOPEN"]  >= val_check >= param_fg["VREGCLOS"] , "MAINT"),
+                (val_check > param_fg["VREGOPEN"], "OPEN"),
+                (val_check < param_fg["VREGCLOS"], "CLOSE"),
+                (param_fg["VREGOPEN"] >= val_check >= param_fg["VREGCLOS"], "MAINT"),
             ],
             # fermeture par le haut
-            ("INIT", "U"): [(val_check > param_fg["VREGCLOS"] , "CLOSE")],
+            ("INIT", "U"): [(val_check > param_fg["VREGCLOS"], "CLOSE")],
             ("CLOSE", "U"): [
-                (val_check < param_fg["VREGOPEN"] , "OPEN"),
-                (param_fg["VREGOPEN"]  <= val_check <= param_fg["VREGCLOS"] , "MAINT"),
+                (val_check < param_fg["VREGOPEN"], "OPEN"),
+                (param_fg["VREGOPEN"] <= val_check <= param_fg["VREGCLOS"], "MAINT"),
             ],
             ("OPEN", "U"): [
-                (val_check > param_fg["VREGCLOS"] , "CLOSE"),
-                (param_fg["VREGOPEN"]  <= val_check <= param_fg["VREGCLOS"] , "MAINT"),
+                (val_check > param_fg["VREGCLOS"], "CLOSE"),
+                (param_fg["VREGOPEN"] <= val_check <= param_fg["VREGCLOS"], "MAINT"),
             ],
             ("MAINT", "U"): [
-                (val_check < param_fg["VREGOPEN"] , "OPEN"),
-                (val_check > param_fg["VREGCLOS"] , "CLOSE"),
-                (param_fg["VREGOPEN"]  <= val_check <= param_fg["VREGCLOS"] , "MAINT"),
+                (val_check < param_fg["VREGOPEN"], "OPEN"),
+                (val_check > param_fg["VREGCLOS"], "CLOSE"),
+                (param_fg["VREGOPEN"] <= val_check <= param_fg["VREGCLOS"], "MAINT"),
             ]
         }
 
@@ -663,7 +657,6 @@ class ClassMethTime:
             param["WRITE"] = 1
         else:
             param["WRITE"] = param["WRITET"]
-
 
     @staticmethod
     def law_mth_time(param, time):

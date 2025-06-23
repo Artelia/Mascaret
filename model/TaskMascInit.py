@@ -28,6 +28,7 @@ from ..ClassMessage import ClassMessage
 from ..Structure.ClassMascStruct import ClassMascStruct
 import shutil
 import traceback
+
 MESSAGE_CATEGORY = 'TaskMascaret'
 
 
@@ -51,7 +52,7 @@ class TaskMascInit():
         self.idx = None
         self.par = None
 
-        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc,self.cond_api, self.dbg)
+        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc, self.cond_api, self.dbg)
         self.clmeth = ClassMascStruct(self.mdb)
         self.mess = ClassMessage()
         self.date_debut = None
@@ -219,7 +220,7 @@ class TaskMascInit():
             txt = "Error: copying .lig file \n {}".format(e)
             if self.dbg:
                 error_info = traceback.format_exc()
-                txt = txt  + '\n' + error_info
+                txt = txt + '\n' + error_info
             self.log_mess(txt, 'ErrInit', 'critic')
 
     def init_scen_steady(self, dict_lois):
@@ -256,7 +257,7 @@ class TaskMascInit():
                     err = "erreur crit, {}".format(str(e))
                     if self.dbg:
                         error_info = traceback.format_exc()
-                        err= err + '\n' + error_info
+                        err = err + '\n' + error_info
                     self.log_mess(err, "law_{}".format(nom), 'critic')
                     exit_status = True
                     return exit_status
@@ -302,7 +303,7 @@ class TaskMascInit():
         # transcritical unsteady evenement
         date_debut = dict_scen["starttime"][idx]
         date_fin = dict_scen["endtime"][idx]
-        duree = int((date_fin - date_debut).total_seconds()) #- 3600
+        duree = int((date_fin - date_debut).total_seconds())  # - 3600
 
         tab = {
             "tempsMax": {"valeur": str(duree), "balise1": "parametresTemporels"},
@@ -323,7 +324,6 @@ class TaskMascInit():
 
         return date_debut, par
 
-
     def init_scen_trans_unsteady(self, par, dict_lois):
         """
         Initial  files creation  for unsteady scenario
@@ -340,7 +340,7 @@ class TaskMascInit():
                     self.log_mess(txt, "WQMeteo", 'critic')
                     return None
 
-        par  = self.clfile.classic_law(par, dict_lois)
+        par = self.clfile.classic_law(par, dict_lois)
         return par
 
     def check_apport(self):

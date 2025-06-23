@@ -144,14 +144,14 @@ class ClassMascaret:
             cl_lk = ClassLinkFGParam()
             if cl_lk.fg_actif_lk(self.mgis.mdb):
                 path = os.path.join(self.dossier_file_masc, "links_cli_fg.obj")
-                cl_lk.create_cli_fg(self.mgis,path)
+                cl_lk.create_cli_fg(self.mgis, path)
                 exit_status = cl_lk.mess.get_critic_status()
                 self.write_mess(cl_lk.mess)
-                if  exit_status:
+                if exit_status:
                     self.mgis.add_info("Compute is cancel.")
                     return None, None, None, None, None
             del cl_lk
-        if  noyau == "unsteady":
+        if noyau == "unsteady":
             cl_w = ClassMobilWeirsParam()
             if cl_w.fg_actif_weirs(self.mgis.mdb):
                 path = os.path.join(self.dossier_file_masc, "weirs_cli_fg.obj")
@@ -254,7 +254,7 @@ class ClassMascaret:
             return
 
         dict_task = {
-            'dbg':self.dbg,
+            'dbg': self.dbg,
             'mdb': self.mdb,
             'wq': self.wq,
             'basename': self.baseName,
@@ -481,7 +481,8 @@ class ClassMascaret:
         """
         try:
             tar_local = shutil.make_archive(
-                os.path.join(rep, os.path.basename(self.dossier_file_masc)), typ_compress, os.path.dirname(self.dossier_file_masc),
+                os.path.join(rep, os.path.basename(self.dossier_file_masc)), typ_compress,
+                os.path.dirname(self.dossier_file_masc),
                 os.path.basename(self.dossier_file_masc)
             )
             return True
@@ -651,9 +652,9 @@ class ClassMascaret:
                      'cond_api': self.cond_api,
                      }
         param_init = {
-                      'dict_lois': dict_lois,
-                      'dico_loi_struct': dico_loi_struct
-                      }
+            'dict_lois': dict_lois,
+            'dico_loi_struct': dico_loi_struct
+        }
         init_task_ = TaskMascInit(gbl_param, param_init)
         up_param = {'scen': scen,
                     'idx': idx,
@@ -677,5 +678,3 @@ class ClassMascaret:
         path = os.path.join(self.dossier_file_masc, "cli_fg.obj")
         cl.create_cli_fg(path)
         del cl
-
-

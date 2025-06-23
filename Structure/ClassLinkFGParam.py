@@ -41,7 +41,8 @@ class ClassLinkFGParam(object):
             # LINK CASIER
             "name": {"desc": "nom du link", "desc_en": "name of the link", 'typ': 'str'},
             "level0": {"desc": "cote de radier", "desc_en": "bottom elevation", 'typ': 'float'},
-            "nature":{"desc": "Type casier-bief=1 ou casier-casier=2", "desc_en": "Type basin-branch=1 ou basin-basin=2", 'typ': 'float'},
+            "nature": {"desc": "Type casier-bief=1 ou casier-casier=2",
+                       "desc_en": "Type basin-branch=1 ou basin-basin=2", 'typ': 'float'},
             "crosssection0": {"desc": "Aire initial", "desc_en": "Initial cross sectino", 'typ': 'float'},
             "abscissa": {"desc": "pk du link", "desc_en": "chainage of the link", 'typ': 'float'},
             "branchnum": {"desc": "branch", "desc_en": "branch", 'typ': 'int'},
@@ -157,7 +158,7 @@ class ClassLinkFGParam(object):
                 "desc_en": "Final weir level after break", 'typ': 'float'
             },
             "WRITET": {"desc": "Nombre pas de temps pour l'ecriture",
-                         "desc_en": "Number of time steps for writing", 'typ': 'int'},
+                       "desc_en": "Number of time steps for writing", 'typ': 'int'},
             # meth_fusible
             "METHBREAK": {
                 "desc": "méthode de rupture à un temps donnée time ou valeur régulation regul"
@@ -273,13 +274,13 @@ class ClassLinkFGParam(object):
         :return: True if parameters are successfully fetched, otherwise False.
 
         """
-        casiers = db.select("basins", "active ORDER BY basinnum ",list_var=['basinnum'])
+        casiers = db.select("basins", "active ORDER BY basinnum ", list_var=['basinnum'])
         links = db.select("links", "active ORDER BY linknum ", list_var=['linknum'])
-        conv_casier={str(basinnum) : int(id_cas_mas) for id_cas_mas, basinnum in enumerate(casiers['basinnum'])}
+        conv_casier = {str(basinnum): int(id_cas_mas) for id_cas_mas, basinnum in enumerate(casiers['basinnum'])}
         conv_links = {str(linknum): int(id_lk_mas) for id_lk_mas, linknum in enumerate(links['linknum'])}
         # Get base Variable
         lst_var = [
-            "gid", "linknum","name", "level", "nature","crosssection", "width", "abscissa",
+            "gid", "linknum", "name", "level", "nature", "crosssection", "width", "abscissa",
             "method_mob", "branchnum", "type", "basinstart", "basinend"
         ]
         sql = (
@@ -303,7 +304,7 @@ class ClassLinkFGParam(object):
         for row in rows:
             id_link = row[0]
             if id_link not in self.param_fg:
-                self.param_fg[id_link] = {'id_mas' : conv_links[str(row[1])]}
+                self.param_fg[id_link] = {'id_mas': conv_links[str(row[1])]}
                 self.list_actif.append(id_link)
             for pos, var in enumerate(lst_var[2:]):
                 if var in conv_var:
@@ -343,7 +344,7 @@ class ClassLinkFGParam(object):
                     try:
                         self.param_fg[id_link][var] = conv_casier[str(self.param_fg[id_link][var])]
                     except KeyError:
-                        self.param_fg[id_link][var] =-1
+                        self.param_fg[id_link][var] = -1
             else:
                 self.param_fg[id_link][var] = value
         # Get the Table variable
@@ -366,8 +367,6 @@ class ClassLinkFGParam(object):
                     id_link, var, value, _ = row
                     if var in var_tab:
                         self.param_fg[id_link][var].append(self.typ_to_val('float', value))
-
-
 
         return True
 
@@ -423,13 +422,13 @@ class ClassLinkFGParam(object):
         :return: True if the regulation parameters are valid, False otherwise.
         """
         if test["method_mob"] == 2:
-            if test["DIRFG"] == 'D' and test["VREGOPEN"]  <= test["VREGCLOS"] :
+            if test["DIRFG"] == 'D' and test["VREGOPEN"] <= test["VREGCLOS"]:
                 txt = (f"The opening level minus tolerance is lower than the closing level plus tolerance. "
                        f"It should always be higher in this case.\n "
                        f"The issue is for link {num}.")
                 self.mess.add_mess('chk_lk_reg', 'critic', txt)
                 return False
-            elif test["DIRFG"] == 'U' and test["VREGOPEN"]  >= test["VREGCLOS"] :
+            elif test["DIRFG"] == 'U' and test["VREGOPEN"] >= test["VREGCLOS"]:
                 txt = (f"The opening level plus tolerance is greater than the closing level minus tolerance. "
                        f"It should always be lower in this case.\n "
                        f"The issue is for link {num}.")
@@ -457,12 +456,12 @@ class ClassLinkFGParam(object):
 
         :return: Dictionary of list of required variables.
         """
-        lst_com = ["name", "level0","nature", "CSection0", "width0", "abscissa", "branchnum",
+        lst_com = ["name", "level0", "nature", "CSection0", "width0", "abscissa", "branchnum",
                    "basinstart", "basinend", "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG", "USEBASIN", "NUMBASINREG",
                    "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG",
-                   "VBREAKREG",  "ZFINALREG"]
-        lst_time = ["TIMEZ", "VALUEZ", "VBREAKT", "ZFINALT" ]
+                   "VBREAKREG", "ZFINALREG"]
+        lst_time = ["TIMEZ", "VALUEZ", "VBREAKT", "ZFINALT"]
         lst_fus = ["METHBREAK", "TIMEFUS", "WIDTHFUS", "VFUS", "VBREAKFUS", "TBREAKFUS", "ZFINALFUS", "USEBASINFUS",
                    "NUMBASINFUS", "PKFUS"]
 

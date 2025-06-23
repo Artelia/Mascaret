@@ -37,7 +37,7 @@ from ..Graphic.ClassResProfil import ClassResProfil
 class ClassGetResults:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, mdb, dossier_file_masc,wq, dbg):
+    def __init__(self, mdb, dossier_file_masc, wq, dbg):
         self.dbg = dbg
         self.mdb = mdb
         self.wq = wq
@@ -476,7 +476,7 @@ class ClassGetResults:
         :return: True
         """
         val_keys = val.keys()
-        lpk =list()
+        lpk = list()
         if "PK" in val_keys:
             lpk = val["PK"]
         elif "BNUM" in val_keys:
@@ -589,14 +589,14 @@ class ClassGetResults:
 
         for id_w in dico_res.keys():
             dico_pk[id_w] = id_w
-            dico_time[id_w] =  dico_res[id_w]['TIME']
+            dico_time[id_w] = dico_res[id_w]['TIME']
             d_res[(id_w, id_var_zlink)] = {'t': dico_res[id_w]['TIME'],
-                                            'v': dico_res[id_w]["ZSTR"]}
+                                           'v': dico_res[id_w]["ZSTR"]}
 
             d_res[(id_w, id_var_reg)] = {'t': dico_res[id_w]['TIME'],
-                                            'v': dico_res[id_w]['REGVAR']}
+                                         'v': dico_res[id_w]['REGVAR']}
             d_res[(id_w, id_var_eff)] = {'t': dico_res[id_w]['TIME'],
-                                            'v': dico_res[id_w]['STAT_EFF']}
+                                         'v': dico_res[id_w]['STAT_EFF']}
         for (pk, var), v in d_res.items():
             values.append([id_run, pk, var,
                            "{" + ','.join(str(i_t) for i_t in v['t']) + "}",
@@ -612,7 +612,6 @@ class ClassGetResults:
                            [id_run, 'weirs', 'var', json.dumps([id_var_zlink, id_var_reg])]]
             col_tab = ['id_runs', 'type_res', 'var', 'val']
             self.mdb.insert_res('runs_graph', list_insert, col_tab)
-
 
     def res_link_fg(self, dico_res, id_run):
         """stock flood gate results"""
@@ -641,7 +640,6 @@ class ClassGetResults:
                     'type_var': 'float'}
         id_var_reg = self.mdb.check_id_var(var_info)
 
-
         d_res = {}
         dico_pk = {}
         dico_time = {}
@@ -649,15 +647,15 @@ class ClassGetResults:
 
         for id_link in dico_res.keys():
             dico_pk[id_link] = id_link
-            info = self.mdb.select_one('links', where=f'gid={id_link}',list_var=['method_mob'])
+            info = self.mdb.select_one('links', where=f'gid={id_link}', list_var=['method_mob'])
             dico_meth[id_link] = info['method_mob']
-            dico_time[id_link] =  dico_res[id_link]['TIME']
+            dico_time[id_link] = dico_res[id_link]['TIME']
             d_res[(id_link, id_var_zlink)] = {'t': dico_res[id_link]['TIME'],
-                                            'v': dico_res[id_link]['ZLINK']}
+                                              'v': dico_res[id_link]['ZLINK']}
             d_res[(id_link, id_var_csec)] = {'t': dico_res[id_link]['TIME'],
-                                              'v': dico_res[id_link]['CSECLINK']}
+                                             'v': dico_res[id_link]['CSECLINK']}
             d_res[(id_link, id_var_width)] = {'t': dico_res[id_link]['TIME'],
-                                             'v': dico_res[id_link]['WIDTHLINK']}
+                                              'v': dico_res[id_link]['WIDTHLINK']}
 
             d_res[(id_link, id_var_reg)] = {'t': dico_res[id_link]['TIME'],
                                             'v': dico_res[id_link]['REGVAR']}
@@ -674,12 +672,12 @@ class ClassGetResults:
         if len(dico_res.keys()) > 0:
             list_insert = [[id_run, 'link_fg', 'pknum', json.dumps(dico_pk)],
                            [id_run, 'link_fg', 'time', json.dumps(dico_time)],
-                           [id_run, 'link_fg', 'var', json.dumps([id_var_zlink, id_var_csec, id_var_width, id_var_reg])],
+                           [id_run, 'link_fg', 'var',
+                            json.dumps([id_var_zlink, id_var_csec, id_var_width, id_var_reg])],
                            [id_run, 'link_fg', 'method_mob', json.dumps(dico_meth)]
                            ]
             col_tab = ['id_runs', 'type_res', 'var', 'val']
             self.mdb.insert_res('runs_graph', list_insert, col_tab)
-
 
     def res_fg(self, dico_res, id_run):
         """stock flood gate results"""

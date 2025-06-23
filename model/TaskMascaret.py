@@ -31,8 +31,10 @@ from .TaskMascPost import TaskMascPost
 
 MESSAGE_CATEGORY = 'TaskMascaret'
 
+
 class TaskSignals(QObject):
     message = pyqtSignal(str)
+
 
 class TaskMascaret(QgsTask):
 
@@ -111,9 +113,9 @@ class TaskMascaret(QgsTask):
                          'waterq': self.wq,
                          }
             param_init = {
-                          'dict_lois': self.dict_lois,
-                          'dico_loi_struct': self.dico_loi_struct
-                          }
+                'dict_lois': self.dict_lois,
+                'dico_loi_struct': self.dico_loi_struct
+            }
             self.init_task = TaskMascInit(gbl_param, param_init)
             self.post_task = TaskMascPost(gbl_param)
 

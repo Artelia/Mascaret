@@ -22,7 +22,6 @@ import os
 import sys
 import json
 
-
 try:
     # Plugin
     from .masc import Mascaret
@@ -76,7 +75,6 @@ class ClassAPIMascaret:
 
         self.lst_node = {}
 
-
         self.results_api = {}
 
         self.masc = Mascaret(log_level="INFO")
@@ -108,8 +106,6 @@ class ClassAPIMascaret:
         # Model.Weir.BrkLevel
         # Model.Weir.State
 
-
-
     def initial(self, casfile):
         """
         Initialisation mascaret model with
@@ -137,20 +133,18 @@ class ClassAPIMascaret:
         """
 
         param = get_no_keep_break()
-        if param :
+        if param:
             size_sing = self.masc.get_var_size("Model.Weir.Name")[0]
-            dtest={ tuple(val[0]): val[1] for val in param.values()}
+            dtest = {tuple(val[0]): val[1] for val in param.values()}
 
             for i in range(size_sing):
                 name = self.masc.get("Model.Weir.Name", i)
                 node = self.masc.get("Model.Weir.Node", i)
-                abs = self.masc.get("Model.Weir.RelAbscissa",i)
-                branchnum  = self.masc.get("Model.Weir.ReachNum",i)
+                abs = self.masc.get("Model.Weir.RelAbscissa", i)
+                branchnum = self.masc.get("Model.Weir.ReachNum", i)
                 blevel = self.masc.get("Model.Weir.BrkLevel", i)
-                if (name,branchnum,abs) in dtest:
-                    self.lst_node[i]= {'node':node - 1, 'BrkLevel': blevel}  # cause fortran commence 1
-
-
+                if (name, branchnum, abs) in dtest:
+                    self.lst_node[i] = {'node': node - 1, 'BrkLevel': blevel}  # cause fortran commence 1
 
     def init_file(self, casfile):
         """
@@ -362,7 +356,7 @@ class ClassAPIMascaret:
         dtp = self.dt
         t1 = t0 + dtp
         tfin = self.tfin
-        conum =  self.conum
+        conum = self.conum
         clfg = self.clfg
         clfg_lk = self.clfg_lk
         clfg_w = self.clfg_w
@@ -373,38 +367,38 @@ class ClassAPIMascaret:
         sect_co = self.sect_co
 
         if self.stpcrit == 1:
-            while t0 < tfin and not any([clfg_lk.arret_comput,clfg_w.arret_comput]) :
-                if t1 > tfin and conum :
+            while t0 < tfin and not any([clfg_lk.arret_comput, clfg_w.arret_comput]):
+                if t1 > tfin and conum:
                     t1 = tfin
                     dtp = t1 - t0
-                t0, t1, dtp = self.one_iter(t0, t1, dtp, 
-                                             masc, conum, clfg, clfg_lk, clfg_w, 
-                                             mobil_struct, mobil_link, mobil_w)
+                t0, t1, dtp = self.one_iter(t0, t1, dtp,
+                                            masc, conum, clfg, clfg_lk, clfg_w,
+                                            mobil_struct, mobil_link, mobil_w)
 
         elif self.stpcrit == 2:
             for cmpt in range(self.tmaxiter):
-                t0, t1, dtp = self.one_iter(t0, t1, dtp, 
-                                             masc, conum, clfg, clfg_lk, clfg_w, 
-                                             mobil_struct, mobil_link, mobil_w)
-                if  any([clfg_lk.arret_comput,clfg_w.arret_comput]):
+                t0, t1, dtp = self.one_iter(t0, t1, dtp,
+                                            masc, conum, clfg, clfg_lk, clfg_w,
+                                            mobil_struct, mobil_link, mobil_w)
+                if any([clfg_lk.arret_comput, clfg_w.arret_comput]):
                     break
         elif self.stpcrit == 3:
             z_arret = self.masc.get("State.Z", sect_co - 1)
             while not z_arret > self.zmax_co:
-                t0, t1, dtp = self.one_iter(t0, t1, dtp, 
-                                             masc, conum, clfg, clfg_lk, clfg_w, 
-                                             mobil_struct, mobil_link, mobil_w)
+                t0, t1, dtp = self.one_iter(t0, t1, dtp,
+                                            masc, conum, clfg, clfg_lk, clfg_w,
+                                            mobil_struct, mobil_link, mobil_w)
                 z_arret = self.masc.get("State.Z", sect_co - 1)
-                if  any([clfg_lk.arret_comput,clfg_w.arret_comput]):
+                if any([clfg_lk.arret_comput, clfg_w.arret_comput]):
                     break
 
         self.tfin = self.masc.get("State.PreviousTime")
 
-    def one_iter(self, t0, t1, dtp, 
-                masc,conum, clfg, clfg_lk, clfg_w, 
-                mobil_struct, mobil_link, mobil_w):
+    def one_iter(self, t0, t1, dtp,
+                 masc, conum, clfg, clfg_lk, clfg_w,
+                 mobil_struct, mobil_link, mobil_w):
         # Optimisation: stocker les méthodes dans des variables locales
-    
+
         if mobil_struct:
             clfg.iter_fg(t0, dtp)
         if mobil_link:
@@ -462,7 +456,6 @@ class ClassAPIMascaret:
         """
         with open(os.path.join(self.dossier_file_masc, filen), "w") as filein:
             json.dump(res, filein)
-
 
     def main(self, filename, tracer=False, basin=False):
         """

@@ -361,8 +361,8 @@ class CurveSelectorWidget(QWidget):
                 list_var=['type']
             )
             meth_mob = '2'
-            if self.typ_res in  self.info_graph:
-                if  'method_mob' in self.info_graph[self.typ_res]:
+            if self.typ_res in self.info_graph:
+                if 'method_mob' in self.info_graph[self.typ_res]:
                     try:
                         meth_mob = self.info_graph[self.typ_res]['method_mob'][f'{self.cur_pknum}']
                     except KeyError:
@@ -372,28 +372,27 @@ class CurveSelectorWidget(QWidget):
                 index = self.cb_graph.findText(self.lst_graph[3]["name"])
                 # Delete CSsection( if it's not culvert)
                 if info['type'][0] != 4 and index != -1:
-                        self.cb_graph.removeItem(index)
-                elif  info['type'][0] == 4  and index == -1:
+                    self.cb_graph.removeItem(index)
+                elif info['type'][0] == 4 and index == -1:
                     self.cb_graph.addItem(self.lst_graph[3]["name"], self.lst_graph[3]["id"])
                 # Delete WIDTH( if the methode 3)
 
                 index2 = self.cb_graph.findText(self.lst_graph[1]["name"])
-                if meth_mob != '3'  and index2 != -1:
+                if meth_mob != '3' and index2 != -1:
                     self.cb_graph.removeItem(index2)
-                elif  meth_mob == '3'  and index2 == -1:
+                elif meth_mob == '3' and index2 == -1:
                     self.cb_graph.addItem(self.lst_graph[1]["name"], self.lst_graph[1]["id"])
-
 
         if self.typ_graph in ["weirs"]:
 
-            info = self.mdb.select_distinct( "var",
-                "results_by_pk",
-                where=f"id_runs = {self.param_graph['scen']} AND "
-            f" var IN (SELECT id FROM {self.mdb.SCHEMA}.results_var WHERE type_res='weirs' AND var='REGVAR')"
-            )
-            index = self.cb_graph.findText(self.lst_graph[1]["name"])# REGVAR
+            info = self.mdb.select_distinct("var",
+                                            "results_by_pk",
+                                            where=f"id_runs = {self.param_graph['scen']} AND "
+                                                  f" var IN (SELECT id FROM {self.mdb.SCHEMA}.results_var WHERE type_res='weirs' AND var='REGVAR')"
+                                            )
+            index = self.cb_graph.findText(self.lst_graph[1]["name"])  # REGVAR
             if not info and index != -1:
-                 self.cb_graph.removeItem(index)
+                self.cb_graph.removeItem(index)
             if info and index == -1:
                 self.cb_graph.addItem(self.lst_graph[1]["name"], self.lst_graph[1]["id"])
 
@@ -546,15 +545,15 @@ class SlideCurveSelectorWidget(CurveSelectorWidget):
     """
 
     def __init__(
-        self,
-        mgis=None,
-        row=None,
-        typ_graph=None,
-        typ_res=None,
-        x_var=None,
-        dict_run=None,
-        cur_pknum=None,
-        cur_branch=None,
+            self,
+            mgis=None,
+            row=None,
+            typ_graph=None,
+            typ_res=None,
+            x_var=None,
+            dict_run=None,
+            cur_pknum=None,
+            cur_branch=None,
     ):
         CurveSelectorWidget.__init__(
             self, mgis, "slide", row, typ_graph, typ_res, x_var, dict_run, cur_pknum, cur_branch
@@ -594,15 +593,15 @@ class SlideCurveSelectorWidget(CurveSelectorWidget):
 
 class CompareCurveSelectorWidget(CurveSelectorWidget):
     def __init__(
-        self,
-        mgis=None,
-        row=None,
-        typ_graph=None,
-        typ_res=None,
-        x_var=None,
-        dict_run=None,
-        cur_pknum=None,
-        cur_branch=None,
+            self,
+            mgis=None,
+            row=None,
+            typ_graph=None,
+            typ_res=None,
+            x_var=None,
+            dict_run=None,
+            cur_pknum=None,
+            cur_branch=None,
     ):
         CurveSelectorWidget.__init__(
             self, mgis, "compare", row, typ_graph, typ_res, x_var, dict_run, cur_pknum, cur_branch

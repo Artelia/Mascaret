@@ -60,7 +60,6 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.mob_table = 'links_mob_val'
             self.mob_table_id = 'id_links'
 
-
         self.d_var = {
             "METHBREAK": {"ctrl": self.ui.cb_break_met, "cc": self.ui.cc_method,
                           "vdef": '1', "typ": str},
@@ -81,7 +80,7 @@ class ClassMobilObjectMet3Widget(QWidget):
             "ZFINALFUS": {"ctrl": self.ui.sb_after_lvl, "cc": None,
                           "vdef": 0., "typ": float},
             "WRITEFUS": {"ctrl": self.ui.sb_step_write, "cc": self.ui.cc_write,
-                       "vdef": 1, "typ": int},
+                         "vdef": 1, "typ": int},
         }
 
         self.bg_time = QButtonGroup()

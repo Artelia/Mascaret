@@ -65,7 +65,6 @@ class ClassMobilObjectMet1Widget(QWidget):
             self.ui.grp_clapet.hide()
             self.ui.cc_temp_break.hide()
 
-
         self.d_var = {
             "VBREAKT": {"ctrl": self.ui.sb_break_val, "cc": self.ui.cc_break_val,
                         "vdef": 9999., "typ": float},
@@ -75,12 +74,12 @@ class ClassMobilObjectMet1Widget(QWidget):
                         "vdef": 0., "typ": float},
             "CLAPETT": {"ctrl": self.ui.cc_clapet, "cc": None,
                         "vdef": False, "typ": to_bool},
-            "WRITET": {"ctrl": self.ui.sb_step_write, "cc":self.ui.cc_write ,
-                        "vdef": 1, "typ": int},
+            "WRITET": {"ctrl": self.ui.sb_step_write, "cc": self.ui.cc_write,
+                       "vdef": 1, "typ": int},
             "USEBASINT": {"ctrl": None, "cc": None,
-                         "vdef": False, "typ": to_bool},
+                          "vdef": False, "typ": to_bool},
             "NUMBASINT": {"ctrl": self.ui.cb_basin, "cc": self.ui.cc_control,
-                            "vdef": 0, "typ": int},
+                          "vdef": 0, "typ": int},
         }
 
         self.bg_time = QButtonGroup()
@@ -168,7 +167,7 @@ class ClassMobilObjectMet1Widget(QWidget):
                   "LEFT JOIN {0}.basins as bas_end on basinend = bas_end.basinnum " \
                   "WHERE links.gid = {2}".format(self.mdb.SCHEMA, self.obj_table, self.cur_obj)
             rows = self.mdb.run_query(sql, fetch=True)
-            nat_link,  cur_z, b_sta_id, b_sta_name, b_end_id, b_end_name = rows[0]
+            nat_link, cur_z, b_sta_id, b_sta_name, b_end_id, b_end_name = rows[0]
             self.d_var["ZFINALT"]["vdef"] = cur_z
             if str(nat_link) == '2':
                 fill_qcombobox(self.ui.cb_basin, [[b_sta_id, "Start basin ({})".format(b_sta_name)],
@@ -177,7 +176,6 @@ class ClassMobilObjectMet1Widget(QWidget):
                 self.d_var["NUMBASINT"]["vdef"] = b_sta_id
                 self.ui.cc_control.show()
                 self.ui.cb_basin.show()
-
 
         self.fill_controls()
         self.fill_table()
@@ -294,9 +292,9 @@ class ClassMobilObjectMet1Widget(QWidget):
                 if prm["cc"]:
                     if not prm["cc"].isChecked():
                         idx_time = -1
-                if nm_var == "USEBASINT" :
+                if nm_var == "USEBASINT":
                     conv_value = self.d_var["USEBASINT"]["vdef"]
-                else :
+                else:
                     conv_value = ctrl_get_value(prm["ctrl"], cc_is_checked=True)
 
                 recs.append([self.cur_obj, idx_time, nm_var,
@@ -309,12 +307,12 @@ class ClassMobilObjectMet1Widget(QWidget):
             self.mdb.run_query(sql, many=True, list_many=recs)
             self.clear_table()
             self.widget_closed.emit()
-        except Exception :
+        except Exception:
             self.cancel_input()
-            error_info =''
+            error_info = ''
             if self.mgis.DEBUG:
                 error_info = '\n' + traceback.format_exc()
-            self.mgis.add_info("Cancel of {0} information {1}".format(self.obj_table,error_info))
+            self.mgis.add_info("Cancel of {0} information {1}".format(self.obj_table, error_info))
 
     def cancel_input(self):
         self.clear_table()

@@ -42,8 +42,8 @@ class ClassMobilObjectMet2Widget(QWidget):
         self.filling_tab = False
         self.graph = None
         self.lvls = [int(), int()]
-        self.dvelo ={'open':{'old_unit': 1,  'val':1.},
-                     'close':{'old_unit': 1,  'val':1.}}
+        self.dvelo = {'open': {'old_unit': 1, 'val': 1.},
+                      'close': {'old_unit': 1, 'val': 1.}}
         self.ui = loadUi(os.path.join(self.mgis.masplugPath,
                                       "ui/structures/ui_mobil_object_met2.ui"),
                          self)
@@ -102,8 +102,8 @@ class ClassMobilObjectMet2Widget(QWidget):
                           "vdef": 0., "typ": float},
             "CLAPET": {"ctrl": self.ui.cc_clapet, "cc": None,
                        "vdef": False, "typ": to_bool},
-            "MAINTFIRST":  {"ctrl": self.ui.cc_maint_first, "cc": None,
-                       "vdef": True, "typ": to_bool},
+            "MAINTFIRST": {"ctrl": self.ui.cc_maint_first, "cc": None,
+                           "vdef": True, "typ": to_bool},
             "WRITEREG": {"ctrl": self.ui.sb_step_write, "cc": self.ui.cc_write,
                          "vdef": 1, "typ": int},
 
@@ -202,19 +202,21 @@ class ClassMobilObjectMet2Widget(QWidget):
             self.set_def_ctrl_value(self.ui.sb_close_vel)
 
     def open_velocity_unit_changed(self):
-        val_unit = ctrl_get_value( self.ui.cb_unit_open_vel)
+        val_unit = ctrl_get_value(self.ui.cb_unit_open_vel)
         val = self.dvelo['open']['val'] / self.dvelo['open']['old_unit'] * val_unit
         ctrl_set_value(self.ui.sb_open_vel, val)
         if not self.ui.cc_close_vel.isChecked():
             self.set_def_ctrl_value(self.ui.cb_unit_close_vel)
         self.dvelo['open'].update({'old_unit': val_unit,
                                    'val': val})
+
     def close_velocity_unit_changed(self):
         val_unit = ctrl_get_value(self.ui.cb_unit_close_vel)
         val = self.dvelo['close']['val'] / self.dvelo['close']['old_unit'] * val_unit
         ctrl_set_value(self.ui.sb_close_vel, val)
         self.dvelo['close'].update({'old_unit': val_unit,
-                                   'val': val})
+                                    'val': val})
+
     def enab_initial_level(self, cs):
         self.ui.sb_init_lvl.setEnabled(cs)
         if not cs:
@@ -300,7 +302,6 @@ class ClassMobilObjectMet2Widget(QWidget):
         self.ui.sb_z_inc.setEnabled(cs)
         if not cs:
             self.set_def_ctrl_value(self.ui.sb_z_inc)
-
 
     def enab_breaking_value(self, cs):
         self.ui.sb_break_val.setEnabled(cs)
@@ -403,14 +404,13 @@ class ClassMobilObjectMet2Widget(QWidget):
 
                 if nm_prm == "VELOFGOPEN" and "UNITVELO" in d_rec.keys():
                     conv_value = conv_value * float(d_rec["UNITVELO"]["val"])
-                    self.dvelo['open'].update({'old_unit':  float(d_rec["UNITVELO"]["val"]),
-                                          'val': conv_value})
+                    self.dvelo['open'].update({'old_unit': float(d_rec["UNITVELO"]["val"]),
+                                               'val': conv_value})
 
                 if nm_prm == "VELOFGCLOSE" and "UNITVELC" in d_rec.keys():
                     conv_value = conv_value * float(d_rec["UNITVELC"]["val"])
-                    self.dvelo['close'].update({'old_unit':  float(d_rec["UNITVELC"]["val"]),
-                                          'val': conv_value})
-
+                    self.dvelo['close'].update({'old_unit': float(d_rec["UNITVELC"]["val"]),
+                                                'val': conv_value})
 
                 ctrl_set_value(prm["ctrl"], conv_value, cc_is_checked=True)
                 if prm["cc"] and saved_prm["def"] == 0:

@@ -94,7 +94,7 @@ class ClassMobilWeirs:
         Initialize the results dictionary (`results_fg_weirs_mv`) for storing floodgate movement data.
         This includes time, level, cross-section, width, and regulation variable values.
         """
-        self.cpt_w = { id_weir: 1 for id_weir in self.param_fg.keys()}
+        self.cpt_w = {id_weir: 1 for id_weir in self.param_fg.keys()}
         self.results_fg_weirs_mv = {
             id_weir: {
                 "TIME": [params["TIME"]],
@@ -120,7 +120,6 @@ class ClassMobilWeirs:
                 res["REGVAR"].append(param["REGVAR_VAL"])
                 res["STAT_EFF"].append(param["stat_eff"])
 
-
     def iter_fg(self, time, dtp):
         """
         Perform mobile weirs treatment during a simulation iteration.
@@ -130,7 +129,7 @@ class ClassMobilWeirs:
         :param time: Current simulation time.
         :param dtp: Time step.
         """
-        try :
+        try:
             for id_weir, param in self.param_fg.items():
                 self.cpt_w[id_weir] += 1
                 # effacement status
@@ -196,7 +195,7 @@ class ClassMobilWeirs:
             "REGVAR_VAL": val_check,
             "level": dnew['level'],
             "TIME": time,
-            "stat_eff" : float(status)
+            "stat_eff": float(status)
         })
         self.update_var_mas()
         self.fill_results_fg_mv(id_weir, param)
@@ -239,7 +238,7 @@ class ClassMobilWeirs:
                 continue
             idx = (np.abs(coords - param[var])).argmin()
             if idx:
-                param["SECCON"] = max(idx - 1,0)
+                param["SECCON"] = max(idx - 1, 0)
             else:
                 self.add_info("Regulation point not found for numWeirs {}.".format(id_weir))
         del coords
@@ -276,7 +275,7 @@ class ClassMobilWeirs:
                     "TIME0": tini,
                     "TIME": tini,
                     'break': False,
-                    "stat_eff" : float(self.masc.get("Model.Weir.State", id_mas))
+                    "stat_eff": float(self.masc.get("Model.Weir.State", id_mas))
                 })
 
                 if param["method_mob"] == self.dmeth["meth_regul"]:
@@ -303,7 +302,7 @@ class ClassMobilWeirs:
         """
         res = self.results_fg_weirs_mv[id_weir]
 
-        if param["TIME"] != param["TIME0"] and  self.cpt_w[id_weir] > param["WRITE"]:
+        if param["TIME"] != param["TIME0"] and self.cpt_w[id_weir] > param["WRITE"]:
             # Update with new values
             self.cpt_w[id_weir] = 1
             res["TIME"].append(param["TIME"])
@@ -359,7 +358,6 @@ class ClassMethRegul:
         else:
             param["WRITE"] = param["WRITEREG"]
 
-
     def check_param(self, param, id_weir):
         """
         Validate the consistency of regulation parameters, specifically `VREGOPEN` and `VREGCLOS`.
@@ -388,24 +386,23 @@ class ClassMethRegul:
 
         key = param_fg["OPEN_CLOSE"]
 
-
         # conditions
         conditions = {
             # fermeture par le bas
-            "INIT": [(val_check > param_fg["VREGOPEN"] , "OPEN")],
+            "INIT": [(val_check > param_fg["VREGOPEN"], "OPEN")],
             "OPEN": [
-                (val_check < param_fg["VREGCLOS"] , "CLOSE"),
-                (param_fg["VREGOPEN"]  >= val_check >= param_fg["VREGCLOS"] , "MAINT"),
+                (val_check < param_fg["VREGCLOS"], "CLOSE"),
+                (param_fg["VREGOPEN"] >= val_check >= param_fg["VREGCLOS"], "MAINT"),
 
             ],
             "CLOSE": [
-                (val_check > param_fg["VREGOPEN"] , "OPEN"),
-                (param_fg["VREGOPEN"]  >= val_check >= param_fg["VREGCLOS"] , "MAINT"),
+                (val_check > param_fg["VREGOPEN"], "OPEN"),
+                (param_fg["VREGOPEN"] >= val_check >= param_fg["VREGCLOS"], "MAINT"),
             ],
             "MAINT": [
-                (val_check > param_fg["VREGOPEN"] , "OPEN"),
-                (val_check < param_fg["VREGCLOS"] , "CLOSE"),
-                (param_fg["VREGOPEN"]  >= val_check >= param_fg["VREGCLOS"] , "MAINT"),
+                (val_check > param_fg["VREGOPEN"], "OPEN"),
+                (val_check < param_fg["VREGCLOS"], "CLOSE"),
+                (param_fg["VREGOPEN"] >= val_check >= param_fg["VREGCLOS"], "MAINT"),
             ],
         }
 

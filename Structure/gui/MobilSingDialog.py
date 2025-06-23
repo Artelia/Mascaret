@@ -31,6 +31,7 @@ from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
 from ...Function import data_to_float
 from ...Graphic.GraphCommon import GraphCommon
 
+
 class ClassMobilSingDialog(QDialog):
     def __init__(self, mgis):
         QDialog.__init__(self)
@@ -53,10 +54,10 @@ class ClassMobilSingDialog(QDialog):
             "VELOFGOPEN": [self.sb_vd],
             "VELOFGCLOSE": [self.sb_va],
             "UNITVELO": [self.cb_uvb],
-            "UNITVELC" :[self.cb_uvh],
+            "UNITVELC": [self.cb_uvh],
         }
         self.sb_zbas.setEnabled(False)
-        self.d_val={
+        self.d_val = {
             "DIRFG": "'D'",
             "VREG": "'Z'",
             "CRITDTREG": "'NDTREG'",
@@ -201,14 +202,14 @@ class ClassMobilSingDialog(QDialog):
         self.ui.cb_method.setDisabled(False)
 
         rows = self.mdb.select(
-            "weirs", where="name = '{0}'".format(self.name_cur), list_var=["method_mob", "gid",'z_crest', "abscissa"]
+            "weirs", where="name = '{0}'".format(self.name_cur), list_var=["method_mob", "gid", 'z_crest', "abscissa"]
         )
         if rows:
             self.id = rows["gid"][0]
             ctrl_set_value(self.cb_method, rows["method_mob"][0])
-            self.d_val.update({"PK":rows["abscissa"][0],
-                     "ZFINALREG": rows["z_crest"][0] ,
-                     })
+            self.d_val.update({"PK": rows["abscissa"][0],
+                               "ZFINALREG": rows["z_crest"][0],
+                               })
             ctrl_set_value(self.sb_zbas, rows["z_crest"][0])
 
     def import_csv(self):
@@ -379,7 +380,7 @@ class ClassMobilSingDialog(QDialog):
             # contrôl
             for var, ctrls in self.dico_ctrl.items():
                 val = float(ctrl_get_value(ctrls[0]))
-                if var in ["UNITVELO","UNITVELC"]:
+                if var in ["UNITVELO", "UNITVELC"]:
                     val = int(ctrl_get_value(self.dico_ctrl[var][0]))
                 elif var == "VELOFGOPEN":
                     fact_t = int(ctrl_get_value(self.dico_ctrl["UNITVELO"][0]))
@@ -392,7 +393,7 @@ class ClassMobilSingDialog(QDialog):
                 if var == "VREGCLOS":
                     self.d_val["VREGOPEN"] = val
                     self.d_val.update({"VREGOPEN": val})
-                self.d_val.update({var:val})
+                self.d_val.update({var: val})
             # save
             for var, val in self.d_val.items():
                 sql = "SELECT * FROM {0}.weirs_mob_val WHERE id_weirs= {1} AND  name_var = '{2}' ".format(
