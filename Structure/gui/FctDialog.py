@@ -61,7 +61,7 @@ def ctrl_get_value(ctrl, cc_is_checked=False):
     return val
 
 
-def fill_qcombobox(cb, lst, val_def=None, icn=None):
+def fill_qcombobox(cb, lst, val_def=None, icn=None, size=None):
     cb.blockSignals(True)
     cb.clear()
 
@@ -70,7 +70,8 @@ def fill_qcombobox(cb, lst, val_def=None, icn=None):
             cb.blockSignals(False)
     else:
         cb.blockSignals(False)
-
+    if size :
+        cb.setIconSize(QSize(size, size))
     for elem in lst:
         if icn:
             cb.addItem(QIcon(icn.format(elem[0])), elem[1], elem[0])

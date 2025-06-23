@@ -318,8 +318,9 @@ class ClassMobilObjectMet2Widget(QWidget):
         if self.cur_obj:
 
             if self.typ_obj == "weir":
-                fill_qcombobox(self.ui.cb_dir, [["D", "bottom"]])
 
+                fill_qcombobox(self.ui.cb_dir, [["D", "bottom"]],
+                               icn=os.path.join(self.mgis.masplugPath, "Structure/images/{}_fg.png"), size=32)
                 sql = "SELECT COALESCE(abscissa, 0.) as absc, COALESCE(z_crest, 0.) as lvl FROM {0}.{1} " \
                       "WHERE gid = {2}".format(self.mdb.SCHEMA, self.obj_table, self.cur_obj)
                 rows = self.mdb.run_query(sql, fetch=True)
@@ -359,7 +360,8 @@ class ClassMobilObjectMet2Widget(QWidget):
                     self.ui.cb_typ_control.hide()
 
                 if str(typ_link) != '4':
-                    fill_qcombobox(self.ui.cb_dir, [["D", "bottom"]])
+                    fill_qcombobox(self.ui.cb_dir, [["D", "bottom"]],
+                                   icn=os.path.join(self.mgis.masplugPath, "Structure/images/{}_fg.png"), size=32)
                     self.lvls = [cur_z, cur_z]
                     self.d_var["ZMAXFG"]["vdef"] = cur_z
                     self.d_var["ZINITREG"]["vdef"] = cur_z
@@ -370,7 +372,8 @@ class ClassMobilObjectMet2Widget(QWidget):
                 else:
                     self.lvls = [cur_z, cur_z + (cs_link / wid_link)]
                     fill_qcombobox(self.ui.cb_dir, [["D", "bottom"],
-                                                    ["U", "top"]])
+                                                    ["U", "top"]],
+                                   icn = os.path.join(self.mgis.masplugPath, "Structure/images/{}_fg.png"), size=32)
                     self.d_var["ZMAXFG"]["vdef"] = cur_z
                     self.d_var["ZINITREG"]["vdef"] = cur_z
                     self.d_var["VREGCLOS"]["vdef"] = cur_z

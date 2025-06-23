@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>909</width>
-    <height>476</height>
+    <height>481</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -140,9 +140,6 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="cb_dir"/>
-          </item>
           <item row="1" column="2">
            <widget class="QComboBox" name="cb_unit_open_vel"/>
           </item>
@@ -185,6 +182,16 @@
            <widget class="QCheckBox" name="cc_clapet">
             <property name="text">
              <string>Tidal valve</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="cb_dir">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
             </property>
            </widget>
           </item>
