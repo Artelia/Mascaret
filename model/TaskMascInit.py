@@ -167,11 +167,11 @@ class TaskMascInit():
             if self.exit_status_(self.mess):
                 return False
             # creation file for executable
-            # if self.check_mobil_gate() and self.noyau == "unsteady":
-            #     self.clfile.create_mobil_gate_file()
-            #     self.add_log_mess(self.clfile.mess)
-            #     if self.exit_status_(self.clfile.mess):
-            #         return False
+            if self.check_mobil_gate() and self.noyau == "unsteady" and not self.cond_api:
+                self.clfile.create_mobil_gate_file()
+                self.add_log_mess(self.clfile.mess)
+                if self.exit_status_(self.clfile.mess):
+                    return False
             # file permanent break of singularity
             self.clfile.creat_file_no_keep_break()
 

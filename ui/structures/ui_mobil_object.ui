@@ -63,21 +63,21 @@
               <item>
                <widget class="QRadioButton" name="rb_met_1">
                 <property name="text">
-                 <string>Régulation par une loi temporelle</string>
+                 <string>Regulation by a time law</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QRadioButton" name="rb_met_2">
                 <property name="text">
-                 <string>Régulation à partir d'une valeur</string>
+                 <string>Regulation based on a value</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QRadioButton" name="rb_met_3">
                 <property name="text">
-                 <string>Seuil fusible</string>
+                 <string>Fuse weirs</string>
                 </property>
                </widget>
               </item>

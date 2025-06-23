@@ -44,6 +44,7 @@ from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, 
 from .Graphic.FilterDialog import ClassFilterDialog
 from .Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .HydroLawsDialog import ClassHydroLawsDialog
+
 from .ClassExtractBedDialog import ClassExtractBedDialog
 from .ClassUpdateBedDialog import (
     ClassUpdateBedDialog,
@@ -56,6 +57,8 @@ from .ClassExportLigDialog import ClassExportLigDialog
 # # structures
 from .Structure.gui.StructureDialog import ClassStructureDialog
 from .Structure.gui.MobilObjectDialog import ClassMobilObjectDialog
+# old
+from  .Structure.gui.MobilSingDialog import ClassMobilSingDialog
 # water quality
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
@@ -240,8 +243,14 @@ class MascPlugDialog(QMainWindow):
         # Structures
         self.ui.actionStructures.triggered.connect(self.fct_structures)
         self.ui.actionExport_Model_Files.triggered.connect(self.fct_creat_run)
+        self.ui.actionStructures_weirs_old.triggered.connect(self.fct_mv_dam_old)
         self.ui.actionStructures_weirs.triggered.connect(self.fct_mv_dam)
         self.ui.actionStructures_links.triggered.connect(self.fct_mv_link)
+
+        self.ui.actionStructures_weirs.setVisible(self.cond_api)
+        self.ui.actionStructures_links.setVisible(self.cond_api)
+        self.ui.actionStructures_weirs_old.setVisible(not self.cond_api)
+
 
         # WQ
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
@@ -731,6 +740,11 @@ class MascPlugDialog(QMainWindow):
         dlg = ClassSettingsDialog(self)
         dlg.exec_()
 
+        self.ui.actionStructures_weirs.setVisible(self.cond_api)
+        self.ui.actionStructures_links.setVisible(self.cond_api)
+        self.ui.actionStructures_weirs_old.setVisible(not self.cond_api)
+
+
     def read_settings(self, defaults=False):
         """read Option"""
         s_file = os.path.join(self.masplugPath, "settings.json")
@@ -1012,6 +1026,12 @@ Version : {}
     def fct_structures(self):
         dlg = ClassStructureDialog(self)
         dlg.setModal(False)
+        dlg.exec_()
+
+    def fct_mv_dam_old(self):
+        """Running GUI of movable dam"""
+
+        dlg = ClassMobilSingDialog(self)
         dlg.exec_()
 
     def fct_mv_dam(self):

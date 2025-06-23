@@ -177,7 +177,7 @@
      <x>0</x>
      <y>0</y>
      <width>805</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -221,6 +221,7 @@
     <addaction name="actionStructures"/>
     <addaction name="actionStructures_weirs"/>
     <addaction name="actionStructures_links"/>
+    <addaction name="actionStructures_weirs_old"/>
     <addaction name="actionTest"/>
     <addaction name="separator"/>
     <addaction name="actionUpdate_all_PK"/>
@@ -856,6 +857,14 @@
   <action name="action_create_lig_file">
    <property name="text">
     <string>Export .lig File</string>
+   </property>
+  </action>
+  <action name="actionStructures_weirs_old">
+   <property name="text">
+    <string>Movable Dam</string>
+   </property>
+   <property name="whatsThis">
+    <string>Old version of mobile dam</string>
    </property>
   </action>
  </widget>

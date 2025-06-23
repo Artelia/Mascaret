@@ -395,11 +395,6 @@ class ClassMethRegul:
         :return: Dictionary of updated mobile weirs parameters.
         """
 
-        if param['break']:
-            return {
-                "level": param["ZFINALREG"],
-            }
-
         status = param["OPEN_CLOSE"]
         # print(param["level"], status)
         if status in [None, "INIT", "MAINT"]:
