@@ -39,6 +39,7 @@ class ClassMobilWeirs:
         self.size_link = 0
         self.new_z = 99
         self.arret_comput = False
+        self.cpt_w = 0
 
         self.cl_param = ClassMobilWeirsParam()
         self.cl_param.get_param(parent=main.mgis)
@@ -93,6 +94,7 @@ class ClassMobilWeirs:
         Initialize the results dictionary (`results_fg_weirs_mv`) for storing floodgate movement data.
         This includes time, level, cross-section, width, and regulation variable values.
         """
+        self.cpt_w = 0
         self.results_fg_weirs_mv = {
             id_weir: {
                 "TIME": [params["TIME"]],
@@ -137,15 +139,15 @@ class ClassMobilWeirs:
                 if self.clapet(param):
                     param["OPEN_CLOSE"] = "CLOSE"
                     dnew = {"level": round(param["ZLIMITGATE"], 4)}
-                    self.fill_res_and_update(id_weir, time, param, dnew, val_check)
+                    self.fill_res_and_update(id_weir, time + dtp, param, dnew, val_check)
                 elif param["method_mob"] == self.dmeth["meth_regul"]:
                     if self.cl_regul.check_dt_regul(param, dtp):
                         self.cl_regul.state_regul(val_check, param)
                         dnew = self.cl_regul.law_gate_regul(param, time)
-                        self.fill_res_and_update(id_weir, time, param, dnew, val_check)
+                        self.fill_res_and_update(id_weir, time + dtp, param, dnew, val_check)
                 elif param["method_mob"] == self.dmeth["meth_time"]:
                     dnew = self.cl_time.law_mth_time(param, time)
-                    self.fill_res_and_update(id_weir, time, param, dnew, val_check)
+                    self.fill_res_and_update(id_weir, time + dtp, param, dnew, val_check)
         except Exception:
             self.arret_comput = True
             error_info = traceback.format_exc()
@@ -277,13 +279,14 @@ class ClassMobilWeirs:
         """
         res = self.results_fg_weirs_mv[id_weir]
 
-        # Check if any parameter has changed
-
-        if param["TIME"] != param["TIME0"]:
+        self.cpt_w += 1
+        if param["TIME"] != param["TIME0"] and  self.cpt_w > param["WRITE"]:
             # Update with new values
+            self.cpt_w = 1
             res["TIME"].append(param["TIME"])
             res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
             res["ZSTR"].append(param['level'])
+
         param.update({
             # var time-dt
             "level-dt": param["level"],
@@ -326,6 +329,11 @@ class ClassMethRegul:
         # info de la vanne
         if param["DIRFG"] != "D":
             self.add_info(f"Non-consistency type mobile weirs with the moving part {id_weir}.")
+        if "WRITEREG" not in param:
+            param["WRITE"] = 1
+        else:
+            param["WRITE"] = param["WRITEREG"]
+
 
     def check_param(self, param, id_weir):
         """
@@ -336,8 +344,6 @@ class ClassMethRegul:
         """
         valo = param["VREGOPEN"]
         valf = param["VREGCLOS"]
-
-
         if valf > valo:
             self.add_info(
                 "***** ERROR: "
@@ -478,6 +484,10 @@ class ClassMethTime:
         })
         param["level"] = np.interp(param["TIME"], param["TIMEZ"], param["VALUEZ"])
         param["ZLIMITGATE"] = np.max(param["TIMEZ"])
+        if "WRITET" not in param:
+            param["WRITE"] = 1
+        else:
+            param["WRITE"] = param["WRITET"]
 
     def law_mth_time(self, param, time):
         """

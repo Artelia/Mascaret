@@ -396,6 +396,26 @@
            </property>
           </widget>
          </item>
+         <item row="3" column="0">
+          <widget class="QCheckBox" name="cc_write">
+           <property name="text">
+            <string>Write results all N time steps</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QSpinBox" name="sb_step_write">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>999999999</number>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>

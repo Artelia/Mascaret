@@ -36,6 +36,7 @@ class ClassFloodGateLk:
         self.size_link = 0
         self.new_z = 99
         self.arret_comput = False
+        self.cpt_w = 1
 
         self.cl_param = ClassLinkFGParam()
         self.cl_param.get_param(parent=main.mgis)
@@ -98,7 +99,6 @@ class ClassFloodGateLk:
         """
         self.results_fg_lk_mv = {}
         for id_link, params in self.param_fg.items():
-
             self.results_fg_lk_mv[id_link] = {
                 "TIME": [params['TIME']],
                 "ZLINK": [params["level"]],
@@ -137,15 +137,14 @@ class ClassFloodGateLk:
                 if (param["method_mob"] == self.dmeth["meth_regul"] and
                         not self.check_break(param, val_break, id_lk, time, val_check)):
                     if self.cl_regul.check_dt_regul(param, dtp):
-
                         self.cl_regul.state_regul(val_check, param)
                         dnew = self.cl_regul.law_gate_regul(param, time)
-                        self.fill_res_and_update(id_lk, time, param, dnew, val_check)
+                        self.fill_res_and_update(id_lk, time + dtp, param, dnew, val_check)
                 elif param["method_mob"] == self.dmeth["meth_time"]and not self.check_break(param, val_break,
                                                                                             id_lk, time, val_check):
 
                     dnew = self.cl_time.law_mth_time(param, time)
-                    self.fill_res_and_update(id_lk, time, param, dnew, val_check)
+                    self.fill_res_and_update(id_lk, time + dtp, param, dnew, val_check)
                 elif param["method_mob"] == self.dmeth["meth_fus"]:
                     self.cl_fusible.check_break_fus(param, val_check, time)
                     if param["break"]:
@@ -157,7 +156,7 @@ class ClassFloodGateLk:
                             "CSection": dnew["CSection"],
                             "width": dnew["width"],
                             "ZmaxSection": dnew["ZmaxSection"],
-                            "TIME": time
+                            "TIME": time + dtp
                         })
                         self.update_var_mas()
                     else:
@@ -168,7 +167,7 @@ class ClassFloodGateLk:
                             "CSection": param["CSection-dt"],
                             "width": param["width-dt"],
                             "ZmaxSection": param["ZmaxSection-dt"],
-                            "TIME": time
+                            "TIME": time + dtp
                         })
                     self.fill_results_fg_mv(id_lk, param)
         except Exception:
@@ -320,8 +319,11 @@ class ClassFloodGateLk:
                 zlink_var = 'level'
             else:
                 zlink_var = "ZmaxSection"
-        # if there is a change of parameters and not "meth_fus"
-        if param["TIME"] != param["TIME0"]:
+        if param["TIME"] == param["TIME0"]:
+            self.cpt_w = 0
+        self.cpt_w += 1
+        if self.cpt_w > param["WRITE"]:
+            self.cpt_w = 1
             # Update with new values
             res["TIME"].append(param["TIME"])
             res["CSECLINK"].append(param["CSection"])
@@ -432,6 +434,11 @@ class ClassMethRegul:
             param["ZLIMITGATE"] = min(param["ZMAXFG"], param["level0"])
         else:
             self.add_info(f"Non-consistency type floodgate with the moving part {id_lk}.")
+
+        if "WRITEREG" not in param:
+            param["WRITE"] = 1
+        else:
+            param["WRITE"] = param["WRITEREG"]
 
     def check_param(self, param, id_lk):
         """
@@ -583,6 +590,7 @@ class ClassMethRegul:
         :return: True if the floodgate should be treated, False otherwise.
         """
         crit = param_fg["CRITDTREG"]
+
         self.compt_dt += 1
         if crit == "NDTREG":
             if self.compt_dt == param_fg["NDTREG"]:
@@ -640,6 +648,10 @@ class ClassMethTime:
             "rup_ZmaxSection": param["ZmaxSection0"],
             "rup_width": param["width0"]
         })
+        if "WRITET" not in param:
+            param["WRITE"] = 1
+        else:
+            param["WRITE"] = param["WRITET"]
 
 
     @staticmethod
@@ -696,6 +708,10 @@ class ClassMethFusible:
             "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"])
 
         })
+        if "WRITEFUS" not in param:
+            param["WRITE"] = 1
+        else:
+            param["WRITE"] = param["WRITEFUS"]
 
     def check_break_fus(self, param, val_check, time):
         """

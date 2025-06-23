@@ -340,39 +340,32 @@
           <property name="bottomMargin">
            <number>6</number>
           </property>
-          <item row="0" column="0">
-           <widget class="QCheckBox" name="cc_step_time">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>200</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Step time criterion</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="1">
            <widget class="QSpinBox" name="sb_step_count">
             <property name="enabled">
              <bool>false</bool>
             </property>
+            <property name="maximum">
+             <number>9999999</number>
+            </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="cb_step_time">
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="sb_step_time">
             <property name="enabled">
              <bool>false</bool>
+            </property>
+            <property name="suffix">
+             <string> s</string>
+            </property>
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="maximum">
+             <double>999999999.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>60.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -395,6 +388,13 @@
             </property>
            </widget>
           </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="cb_step_time">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="0">
            <widget class="QLabel" name="lbl_step_time">
             <property name="enabled">
@@ -414,19 +414,45 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="sb_step_time">
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="cc_step_time">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>200</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Step time criterion</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QCheckBox" name="cc_write">
+            <property name="text">
+             <string>Write results all N time steps</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="sb_step_write">
             <property name="enabled">
              <bool>false</bool>
             </property>
-            <property name="suffix">
-             <string> s</string>
+            <property name="minimum">
+             <number>1</number>
             </property>
-            <property name="decimals">
-             <number>3</number>
-            </property>
-            <property name="value">
-             <double>60.000000000000000</double>
+            <property name="maximum">
+             <number>999999999</number>
             </property>
            </widget>
           </item>
@@ -445,22 +471,6 @@
           <property name="bottomMargin">
            <number>6</number>
           </property>
-          <item row="0" column="0">
-           <widget class="QCheckBox" name="cc_z_inc">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Max. increment of each movement</string>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="1">
            <widget class="QDoubleSpinBox" name="sb_z_inc">
             <property name="enabled">
@@ -483,6 +493,22 @@
             </property>
             <property name="value">
              <double>999.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="cc_z_inc">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Max. increment of each movement</string>
             </property>
            </widget>
           </item>

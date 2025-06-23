@@ -80,6 +80,8 @@ class ClassMobilObjectMet3Widget(QWidget):
                           "vdef": 0., "typ": float},
             "ZFINALFUS": {"ctrl": self.ui.sb_after_lvl, "cc": None,
                           "vdef": 0., "typ": float},
+            "WRITEFUS": {"ctrl": self.ui.sb_step_write, "cc": self.ui.cc_write,
+                       "vdef": 1, "typ": int},
         }
 
         self.bg_time = QButtonGroup()
@@ -103,6 +105,7 @@ class ClassMobilObjectMet3Widget(QWidget):
 
         self.ui.cc_method.toggled.connect(self.enab_method)
         self.ui.cb_break_met.currentIndexChanged.connect(self.method_changed)
+        self.ui.cc_write.toggled.connect(self.enab_write)
 
         #
         self.ui.cc_break_var.toggled.connect(self.enab_variable_break)
@@ -134,6 +137,11 @@ class ClassMobilObjectMet3Widget(QWidget):
         mdl = self.create_tab_model()
         self.ui.tab_sets.setModel(mdl)
         self.graph = GraphMobSing(self.mgis, self.ui.lay_graph_m1)
+
+    def enab_write(self, cs):
+        self.ui.sb_step_write.setEnabled(cs)
+        if not cs:
+            self.set_def_ctrl_value(self.ui.sb_step_write)
 
     def enab_method(self, cs):
         self.ui.cb_break_met.setEnabled(cs)

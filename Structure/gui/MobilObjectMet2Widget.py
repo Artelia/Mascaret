@@ -104,6 +104,8 @@ class ClassMobilObjectMet2Widget(QWidget):
                        "vdef": False, "typ": to_bool},
             "MAINTFIRST":  {"ctrl": self.ui.cc_maint_first, "cc": None,
                        "vdef": True, "typ": to_bool},
+            "WRITEREG": {"ctrl": self.ui.sb_step_write, "cc": self.ui.cc_write,
+                         "vdef": 1, "typ": int},
 
         }
 
@@ -112,6 +114,7 @@ class ClassMobilObjectMet2Widget(QWidget):
         self.ui.cc_close_vel.toggled.connect(self.enab_close_velocity)
         self.ui.sb_open_vel.valueChanged.connect(self.open_velocity_changed)
         self.ui.cb_unit_open_vel.currentIndexChanged.connect(self.open_velocity_unit_changed)
+        self.ui.cc_write.toggled.connect(self.enab_write)
 
         self.ui.cb_unit_close_vel.currentIndexChanged.connect(self.close_velocity_unit_changed)
 
@@ -180,6 +183,11 @@ class ClassMobilObjectMet2Widget(QWidget):
         if not self.ui.cc_init_lvl.isChecked():
             self.ui.cc_init_lvl.setChecked(True)
             self.ui.cc_init_lvl.setChecked(False)
+
+    def enab_write(self, cs):
+        self.ui.sb_step_write.setEnabled(cs)
+        if not cs:
+            self.set_def_ctrl_value(self.ui.sb_step_write)
 
     def enab_close_velocity(self, cs):
         self.ui.sb_close_vel.setEnabled(cs)

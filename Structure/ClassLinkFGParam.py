@@ -136,6 +136,8 @@ class ClassLinkFGParam(object):
             "NUMBASINT": {
                 "desc": "Start or end basin", "desc_en": "Start or end basin", 'typ': 'int'
             },
+            "WRITEREG": {"desc": "Nombre pas de temps pour l'ecriture",
+                         "desc_en": "Number of time steps for writing", 'typ': 'int'},
             # meth_tempo
             "TIMEZ": {
                 "desc": "Valeur Temps en s", "desc_en": "Time value in seconds", 'typ': 'float'
@@ -154,6 +156,8 @@ class ClassLinkFGParam(object):
                 "desc": "Cote final weirs après rupture",
                 "desc_en": "Final weir level after break", 'typ': 'float'
             },
+            "WRITET": {"desc": "Nombre pas de temps pour l'ecriture",
+                         "desc_en": "Number of time steps for writing", 'typ': 'int'},
             # meth_fusible
             "METHBREAK": {
                 "desc": "méthode de rupture à un temps donnée time ou valeur régulation regul"
@@ -190,6 +194,8 @@ class ClassLinkFGParam(object):
             "PKFUS": {
                 "desc": "PK de la régulation", "desc_en": "Regulation chainage", 'typ': 'float'
             },
+            "WRITEFUS": {"desc": "Nombre pas de temps pour l'ecriture",
+                         "desc_en": "Number of time steps for writing", 'typ': 'int'},
         }
 
         self.dmeth = {
@@ -374,6 +380,8 @@ class ClassLinkFGParam(object):
         :param val: The value to be converted.
         :return: The converted value.
         """
+        if not val:
+            return val
         if typ == 'bool':
             return str2bool(val)
         if typ == 'int':

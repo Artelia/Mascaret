@@ -62,8 +62,6 @@ class ClassMobilObjectMet1Widget(QWidget):
             self.obj_table = 'links'
             self.mob_table = 'links_mob_val'
             self.mob_table_id = 'id_links'
-            self.ui.tit_clap.hide()
-            self.ui.line_clap.hide()
             self.ui.grp_clapet.hide()
             self.ui.cc_temp_break.hide()
 
@@ -77,6 +75,8 @@ class ClassMobilObjectMet1Widget(QWidget):
                         "vdef": 0., "typ": float},
             "CLAPETT": {"ctrl": self.ui.cc_clapet, "cc": None,
                         "vdef": False, "typ": to_bool},
+            "WRITET": {"ctrl": self.ui.sb_step_write, "cc":self.ui.cc_write ,
+                        "vdef": 1, "typ": int},
             "USEBASINT": {"ctrl": None, "cc": None,
                          "vdef": False, "typ": to_bool},
             "NUMBASINT": {"ctrl": self.ui.cb_basin, "cc": self.ui.cc_control,
@@ -103,6 +103,7 @@ class ClassMobilObjectMet1Widget(QWidget):
         self.ui.tab_sets.setItemDelegate(styled_item_delegate)
 
         self.ui.cc_control.toggled.connect(self.enab_control)
+        self.ui.cc_write.toggled.connect(self.enab_write)
 
         self.ui.cc_break_val.toggled.connect(self.enab_breaking_value)
         self.ui.cc_break_lvl.toggled.connect(self.enab_breaking_level)
@@ -116,6 +117,11 @@ class ClassMobilObjectMet1Widget(QWidget):
         mdl = self.create_tab_model()
         self.ui.tab_sets.setModel(mdl)
         self.graph = GraphMobSing(self.mgis, self.ui.lay_graph_m1)
+
+    def enab_write(self, cs):
+        self.ui.sb_step_write.setEnabled(cs)
+        if not cs:
+            self.set_def_ctrl_value(self.ui.sb_step_write)
 
     def enab_control(self, cs):
         self.ui.cb_basin.setEnabled(cs)
@@ -204,8 +210,8 @@ class ClassMobilObjectMet1Widget(QWidget):
             rows = self.mdb.run_query(sql, fetch=True)
             for (nm_var, rang_var, value) in rows:
                 prm = self.d_var[nm_var]
-                conv_value = prm["typ"](value)
                 if prm["ctrl"]:
+                    conv_value = prm["typ"](value)
                     ctrl_set_value(prm["ctrl"], conv_value, cc_is_checked=True)
                     if prm["cc"] and rang_var == 0:
                         prm["cc"].setChecked(True)

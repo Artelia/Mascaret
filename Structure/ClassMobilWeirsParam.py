@@ -86,6 +86,8 @@ class ClassMobilWeirsParam(object):
                           'typ': 'float'},
             "CLAPET": {"desc": "True Si pour éviter la remontée de la marée",
                        "desc_en": "True If valve to prevent the tide rising", 'typ': 'bool'},
+            "WRITEREG":{"desc": "Nombre pas de temps pour l'ecriture",
+                        "desc_en": "Number of time steps for writing", 'typ': 'int'},
             # meth_tempo
             "TIMEZ": {"desc": "Valeur Temps en s", "desc_en": "Time value in seconds", 'typ': 'float'},
             "VALUEZ": {"desc": "Valeur associé à TIME", "desc_en": "Value associated with TIME", 'typ': 'float'},
@@ -96,6 +98,8 @@ class ClassMobilWeirsParam(object):
                         'typ': 'float'},
             "CLAPETT": {"desc": "True Si pour éviter la remontée de la marée",
                         "desc_en": "True If valve to prevent the tide rising", 'typ': 'bool'},
+            "WRITET":{"desc": "Nombre pas de temps pour l'ecriture",
+                        "desc_en": "Number of time steps for writing", 'typ': 'int'},
         }
 
         self.dmeth = {"meth_time": str(1),
