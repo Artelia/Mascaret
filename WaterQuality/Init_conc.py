@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from qgis.PyQt.QtWidgets import *
@@ -28,9 +29,6 @@ from qgis.utils import *
 
 from .ClassTableWQ import ClassTableWQ
 from .Graph_WQ import GraphInitConc
-
-
-
 
 
 class InitConcDialog(QDialog):

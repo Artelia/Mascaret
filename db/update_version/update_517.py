@@ -17,8 +17,9 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-from db import MasObject as Maso
 from ClassUpdateBedDialog import update_all_bed_geometry
+from db import MasObject as Maso
+
 
 class ClassUpdate517:
 
@@ -31,7 +32,7 @@ class ClassUpdate517:
         """
         Update 5.1.7
         """
-        #self.mgis.add_info("*** Update 5.1.7  ***")
+        # self.mgis.add_info("*** Update 5.1.7  ***")
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         valide = True
         if valide and "visu_minor_river_bed" not in tabs:
@@ -58,4 +59,3 @@ class ClassUpdate517:
                 self.mgis.add_info("erreur update_all_bed_geometry")
 
         return valide
-

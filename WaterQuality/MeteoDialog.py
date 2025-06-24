@@ -19,6 +19,7 @@ email                :
 """
 import os
 from datetime import datetime, timedelta
+
 from matplotlib.dates import date2num
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
@@ -31,8 +32,6 @@ from qgis.utils import *
 from .ClassTableWQ import ClassTableWQ
 from .Graph_WQ import GraphMeteo
 from ..Function import data_to_float, data_to_date
-
-
 
 
 class ClassMeteoDialog(QDialog):
@@ -458,12 +457,12 @@ class ClassMeteoDialog(QDialog):
             id_set = self.ui.lst_sets.model().item(l, 0).text()
             name_set = self.ui.lst_sets.model().item(l, 1).text()
             if (
-                QMessageBox.question(
-                    self,
-                    "Meteo Settings",
-                    "Delete {} ?".format(name_set),
-                    QMessageBox.Cancel | QMessageBox.Ok,
-                )
+                    QMessageBox.question(
+                        self,
+                        "Meteo Settings",
+                        "Delete {} ?".format(name_set),
+                        QMessageBox.Cancel | QMessageBox.Ok,
+                    )
             ) == QMessageBox.Ok:
                 self.mgis.add_info("Deletion of {} Meteo Setting".format(name_set), dbg=True)
                 self.mdb.execute(

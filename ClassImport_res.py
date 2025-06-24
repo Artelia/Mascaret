@@ -17,17 +17,18 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import os
 import datetime
+import os
 
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.uic import *
 from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
 from .ui.custom_control import ClassWarningBox
+
 
 class ClassImportRes(QDialog):
     def __init__(self, clmas=None):

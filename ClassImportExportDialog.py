@@ -47,7 +47,7 @@ class ClassDlgExport(QDialog):
 
         if self.cond_com:
             for run, scen, date, comments in zip(
-                dico["run"], dico["scenario"], dico["date"], dico["comments"]
+                    dico["run"], dico["scenario"], dico["date"], dico["comments"]
             ):
                 if run not in self.listeRuns:
                     self.listeRuns.append(run)
@@ -514,7 +514,7 @@ class ClassDlgImport(QDialog):
                         if not self.checkdict["exist_schema"]:
                             bool_import = True
                         else:
-                            txt= f'the name {newname} exists yet'
+                            txt = f'the name {newname} exists yet'
                             QMessageBox.critical(None, "Error", "Import isn't possible.\n {}".format(txt))
                             return
                     else:

@@ -21,10 +21,9 @@ email                :
 import os
 import posixpath
 
-from qgis.core import QgsNetworkAccessManager
-
 from PyQt5.QtCore import QUrl, QEventLoop, QTimer
 from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply
+from qgis.core import QgsNetworkAccessManager
 
 
 class ClassDownloadMasc:

@@ -18,7 +18,9 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from db import MasObject as Maso
+
 
 class ClassUpdate515:
 
@@ -27,12 +29,11 @@ class ClassUpdate515:
         self.mgis = check_tab.mgis
         self.cht = check_tab
 
-
     def update515(self):
         """
         Action update version 5.1.5
         """
-        #self.mgis.add_info("*** Update 5.1.5  ***")
+        # self.mgis.add_info("*** Update 5.1.5  ***")
         old_vers = self.cht.check_v_masc()
         if old_vers != "8.4":
             ok = self.cht.box.yes_no_q(

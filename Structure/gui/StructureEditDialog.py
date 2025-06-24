@@ -29,9 +29,6 @@ from qgis.gui import *
 from qgis.utils import *
 from shapely.geometry import Point
 
-from ..ClassLaws import ClassLaws
-from ..ClassMethod import ClassMethod
-from ..ClassTableStructure import ClassTableStructure, update_etat_struct
 from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
 # Widgets Buse
 from .MetBordaBuWidget import MetBordaBuWidget
@@ -48,6 +45,9 @@ from .MetOrificePaWidget import MetOrificePaWidget
 from .MetOrificePcWidget import MetOrificePcWidget
 # FloodGate
 from .StructureFgDialog import StructureFgDialog
+from ..ClassLaws import ClassLaws
+from ..ClassMethod import ClassMethod
+from ..ClassTableStructure import ClassTableStructure, update_etat_struct
 
 
 class ClassStructureEditDialog(QDialog):

@@ -20,6 +20,7 @@ comment:
 
 """
 import os
+
 from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
@@ -27,6 +28,7 @@ from qgis.utils import *
 
 from .ClassTableWQ import ClassTableWQ
 from ..Function import interpole, del_symbol
+
 
 class ClassMascWQ:
     def __init__(self, main, file):
@@ -237,7 +239,7 @@ class ClassMascWQ:
                 return exit_satus, txt
             dif_time = int((datefirst - meteo_trac["starttime"][0]).total_seconds())
             if dif_time < 0:
-                txt =("Date for meteo law aren't correct.")
+                txt = ("Date for meteo law aren't correct.")
                 exit_satus = True
                 return exit_satus, txt
             deb_time = dif_time

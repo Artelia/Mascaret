@@ -19,7 +19,6 @@ email                :
  """
 
 import os
-import numpy as np
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *

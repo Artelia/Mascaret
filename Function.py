@@ -20,12 +20,14 @@ email                :
 import math
 import os
 import re
-from shutil import copy2
-import numpy as np
-import dateutil
 import string as st
-import sys
 import subprocess
+import sys
+from shutil import copy2
+
+import dateutil
+import numpy as np
+
 
 def del_2space(txt):
     return re.sub(" +", " ", txt)
@@ -105,6 +107,7 @@ def open_file_editor(filename):
     else:
         opener = "open" if sys.platform == "darwin" else "xdg-open"
         subprocess.call([opener, filename])
+
 
 def calcul_abscisses(liste_couches, riviere, iface, dossier):
     couche_riv = get_couche(riviere, iface)
@@ -276,6 +279,7 @@ def del_symbol(ligne):
         for accented_char in accented_chars:
             ligne = ligne.replace(accented_char, char)
     return ligne
+
 
 def del_symbolv2(txt, exclud=[]):
     """
@@ -499,7 +503,7 @@ def proper_rdp(points, epsilon):
             index = i
     if dist > epsilon:
         ##iterate
-        l1 = points[0 : index + 1]
+        l1 = points[0: index + 1]
         l2 = points[index:]
         r1 = proper_rdp(l1, epsilon)
         r2 = proper_rdp(l2, epsilon)
@@ -728,6 +732,3 @@ class TypeErrorModel:
 
     def clear_err(self):
         self.dicterr = {}
-
-
-

@@ -17,18 +17,16 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+import importlib
 import json
 import os
 import sys
-import importlib
-import traceback
-
 from copy import deepcopy
 
 from . import MasObject as Maso
 from ..Function import read_version, fill_zminbed
-
 from ..ui.custom_control import ClassWarningBox
+
 
 class CheckTab:
     """
@@ -292,7 +290,7 @@ class CheckTab:
             },
             "5.1.2": {
                 "fct": [
-                    lambda:self.update_version("512"),
+                    lambda: self.update_version("512"),
                 ]
             },
             "5.1.3": {
@@ -326,7 +324,7 @@ class CheckTab:
             "6.0.0": {},
             "6.0.1": {},
             "6.0.2": {},
-            "6.0.3":{},
+            "6.0.3": {},
             "6.1.0": {},
             "6.1.1": {},
             "6.2.0": {"fct": [
@@ -693,7 +691,6 @@ class CheckTab:
             self.mgis.add_info("Error  update_400: {}".format(str(e)))
             return False
 
-
     def change_branchs_chstate_active(self):
         sql = (
             "DROP TRIGGER IF EXISTS branchs_chstate_active "
@@ -775,4 +772,3 @@ class CheckTab:
             qry += sql
             qry += "\n"
         self.mdb.run_query(qry)
-

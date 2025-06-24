@@ -18,7 +18,9 @@ email                :
  ***************************************************************************/
 """
 import json
+
 from db import MasObject as Maso
+
 
 def is_number(s):
     try:
@@ -57,36 +59,35 @@ class ClassUpdate620:
                     valide = False
 
         d_conv_w = {
-            "var_conv": {'TIME': 'TIMEZ',
-                         'ZVAR': 'VALUEZ',
-                         "ZHAUT": 'ZMAXFG',
-                         "ZREG": "VREGCLOS",
-                         "VDESC": "VELOFGOPEN",
-                         "VMONT": "VELOFGCLOSE",
-                         "UNITVD": "UNITVELO",
-                         "UNITVH": "UNITVELC",
-                         },
+            "var_conv": {
+                "TIME": "TIMEZ",
+                "ZVAR": "VALUEZ",
+                "ZHAUT": "ZMAXFG",
+                "ZREG": "VREGCLOS",
+                "VDESC": "VELOFGOPEN",
+                "VMONT": "VELOFGCLOSE",
+                "UNITVD": "UNITVELO",
+                "UNITVH": "UNITVELC",
+            },
             "default": {
                 "DIRFG": "'D'",
                 "VREG": "'Z'",
                 "CRITDTREG": "'NDTREG'",
                 "NDTREG": 1,
                 "DTREG": 0,
-                "ZINCRFG": 9999.,
+                "ZINCRFG": 9999.0,
                 "CLAPETT": False,
                 "CLAPET": False,
-                "MAINTFIRST": False
+                "MAINTFIRST": False,
             },
-            "get_value":
-                {
-                    "ZINITREG": "z_crest",
-                    "ZFINALREG": "z_crest",
-                    "PK": "abscissa",
-                },
-            "dbl_value":
-                {
-                    "VREGCLOS": ["VREGOPEN"],
-                },
+            "get_value": {
+                "ZINITREG": "z_crest",
+                "ZFINALREG": "z_crest",
+                "PK": "abscissa",
+            },
+            "dbl_value": {
+                "VREGCLOS": ["VREGOPEN"],
+            },
         }
         d_conv_l = {
             "var_conv": {
@@ -102,26 +103,22 @@ class ClassUpdate620:
                 "VREGOPEN": "VREGOPEN",
                 "PK": "PK",
                 "ZINITREG": "ZINITREG",
-                "ZMAXFG": "ZMAXFG"
+                "ZMAXFG": "ZMAXFG",
             },
             "default": {
                 "USEBASIN": False,
                 "NUMBASINREG": 0,
-                "VBREAKREG": 99999.,
+                "VBREAKREG": 99999.0,
                 "BPERMREG": False,
-                "MAINTFIRST": True
+                "MAINTFIRST": True,
             },
-            "get_value":
-                {
-                    "ZFINALREG": "level"
-                },
+            "get_value": {"ZFINALREG": "level"},
             "dbl_value": {
                 "UNITVELO": ["UNITVELC"],
                 "VELOFGCLOSE": ["VELOFGOPEN"],
             },
-
         }
-        for typ,d_conv in [("weirs",d_conv_w), ("links",d_conv_l)]:
+        for typ, d_conv in [("weirs", d_conv_w), ("links", d_conv_l)]:
             if valide:
                 valide = self.conv_tab(typ, d_conv)
 
@@ -145,29 +142,36 @@ class ClassUpdate620:
             	            );"""
             vars = self.mdb.run_query(sql, fetch=True)
             var2 = list(set([int(var[1]) for var in vars]))
-            links = self.mdb.select("links", where=f'linknum in ({','.join([f"'{id}'" for id in var2])})',
-                                    order="linknum ", list_var=['gid,linknum'])
-            if links and vars:
-                conv_links = {int(linknum): int(gid) for gid, linknum in zip(links['gid'], links['linknum'])}
-                tab_up = {var[0]:{"pknum": conv_links[int(var[1])]} for var in vars}
-                self.mdb.update("results_by_pk", tab_up, var="idrunpkvar")
+            if var2 :
+                links = self.mdb.select(
+                    "links",
+                    where=f'linknum in ({",".join([f"'{id}'" for id in var2])})',
+                    order="linknum ",
+                    list_var=["gid,linknum"],verbose=True
+                )
+                if links and vars:
+                    conv_links = {
+                        int(linknum): int(gid) for gid, linknum in zip(links["gid"], links["linknum"])
+                    }
+                    tab_up = {var[0]: {"pknum": conv_links[int(var[1])]} for var in vars}
+                    self.mdb.update("results_by_pk", tab_up, var="idrunpkvar")
 
-                sql = f"""SELECT id, var, val FROM {self.mdb.SCHEMA}.runs_graph 
-                        WHERE type_res='link_fg' and var in ('pknum','time');"""
-                vars = self.mdb.run_query(sql, fetch=True)
-                tab_up = {}
-                for idx, nvar, val in vars:
-                    nval = {}
-                    for key, itm in val.items():
-                        tmp = conv_links[int(key)]
-                        if nvar == 'pknum':
-                            nval[str(tmp)] = tmp
-                        elif nvar == 'time':
-                            nval[str(tmp)] = itm
-                    if nval:
-                        tab_up[idx] = {'val':  json.dumps(nval)}
-                self.mdb.update("runs_graph", tab_up, var="id")
-        return  valide
+                    sql = f"""SELECT id, var, val FROM {self.mdb.SCHEMA}.runs_graph 
+                            WHERE type_res='link_fg' and var in ('pknum','time');"""
+                    vars = self.mdb.run_query(sql, fetch=True)
+                    tab_up = {}
+                    for idx, nvar, val in vars:
+                        nval = {}
+                        for key, itm in val.items():
+                            tmp = conv_links[int(key)]
+                            if nvar == "pknum":
+                                nval[str(tmp)] = tmp
+                            elif nvar == "time":
+                                nval[str(tmp)] = itm
+                        if nval:
+                            tab_up[idx] = {"val": json.dumps(nval)}
+                    self.mdb.update("runs_graph", tab_up, var="id")
+        return valide
 
     def conv_tab(self, typ, d_conv):
         """
@@ -176,84 +180,90 @@ class ClassUpdate620:
         :return:
         """
         valide = True
-        cols = ['name_var', f'id_{typ}', 'id_order', 'value']
+        cols = ["name_var", f"id_{typ}", "id_order", "value"]
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         if f"{typ}_mob_val_old" not in tabs:
             return valide
-        dsrc = self.mdb.select(f"{typ}_mob_val_old", order=f'id_{typ}, id_order')
+        dsrc = self.mdb.select(f"{typ}_mob_val_old", order=f"id_{typ}, id_order")
         dtarget = {col: [] for col in cols}
         if len(dsrc["name_var"]) > 0:
-            id_typ = list(set(dsrc[f'id_{typ}']))
-            if typ == 'links':
-                lst_id = ','.join([f"'{id}'" for id in id_typ])
-                numlinks = self.mdb.select("links", where=f"linknum IN ({lst_id})",order=f'linknum',
-                                           list_var=['gid', 'linknum'])
-                conv = { numlink: gid for gid, numlink in zip(numlinks['gid'],numlinks['linknum'])}
+            id_typ = list(set(dsrc[f"id_{typ}"]))
+            if typ == "links":
+                lst_id = ",".join([f"'{id}'" for id in id_typ])
+                numlinks = self.mdb.select(
+                    "links",
+                    where=f"linknum IN ({lst_id})",
+                    order="linknum",
+                    list_var=["gid", "linknum"],
+                )
+                conv = {numlink: gid for gid, numlink in zip(numlinks["gid"], numlinks["linknum"])}
                 id_typ = [conv[id] for id in id_typ]
-                dsrc[f'id_{typ}'] =[conv[id] for id in dsrc[f'id_{typ}']]
+                dsrc[f"id_{typ}"] = [conv[id] for id in dsrc[f"id_{typ}"]]
 
-            lst_id = ','.join([f"'{id}'" for id in id_typ])
-            if typ == 'weirs':
+            lst_id = ",".join([f"'{id}'" for id in id_typ])
+            if typ == "weirs":
                 lst_typ = ["gid", "name", "abscissa", "z_crest"]
             else:
                 lst_typ = ["gid", "name", "level"]
 
-            info_value = self.mdb.select(f"{typ}", where=f"gid IN ({lst_id})", order="gid",
-                                         list_var=lst_typ)
+            info_value = self.mdb.select(
+                f"{typ}", where=f"gid IN ({lst_id})", order="gid", list_var=lst_typ
+            )
             # ***************** Convert values ********************
             d_zbas = {}
             for idx, nvar in enumerate(dsrc["name_var"]):
                 if nvar in d_conv["var_conv"].keys():
                     for col in cols:
                         if col == "name_var":
-                            dtarget[col].append("'"+f'{d_conv["var_conv"][nvar]}'+"'")
+                            dtarget[col].append("'" + f'{d_conv["var_conv"][nvar]}' + "'")
                         else:
                             value = dsrc[col][idx]
-                            if col == "value" :
+                            if col == "value":
                                 if dsrc["name_var"][idx] in ["TYPE_TIME_VELO", "UNITVD", "UNITVH"]:
-                                    if isinstance( dsrc[col][idx], float):
-                                        dtarget[col].append('{:.0f}'.format(value))
+                                    if isinstance(dsrc[col][idx], float):
+                                        dtarget[col].append("{:.0f}".format(value))
                                     else:
                                         dtarget[col].append(value)
                                 else:
-                                     dtarget[col].append(f"'{value}'" if not is_number(value) else value)
+                                    dtarget[col].append(
+                                        f"'{value}'" if not is_number(value) else value
+                                    )
                             else:
                                 dtarget[col].append(value)
                 if f"{typ}" == "weirs" and nvar == "ZBAS":
-                    d_zbas[dsrc[f'id_{typ}'][idx]] = dsrc['value'][idx]
+                    d_zbas[dsrc[f"id_{typ}"][idx]] = dsrc["value"][idx]
 
             # ***************** Default values ********************
             for idx in id_typ:
                 for key, value in d_conv["default"].items():
-                    dtarget[f'id_{typ}'].append(idx)
-                    dtarget['id_order'].append(0)
-                    dtarget['value'].append(value)
+                    dtarget[f"id_{typ}"].append(idx)
+                    dtarget["id_order"].append(0)
+                    dtarget["value"].append(value)
                     dtarget["name_var"].append(f"'{key}'")
-                #***************** Get values ********************
+                # ***************** Get values ********************
                 for key, get_var in d_conv["get_value"].items():
-                    pos = info_value['gid'].index(idx)
-                    dtarget[f'id_{typ}'].append(idx)
-                    dtarget['id_order'].append(0)
-                    dtarget['value'].append(info_value[get_var][pos])
+                    pos = info_value["gid"].index(idx)
+                    dtarget[f"id_{typ}"].append(idx)
+                    dtarget["id_order"].append(0)
+                    dtarget["value"].append(info_value[get_var][pos])
                     dtarget["name_var"].append(f"'{key}'")
                 # ***************** double values ********************
             lst_var = list(d_conv["dbl_value"].keys())
             for idx, nvar in enumerate(dtarget["name_var"]):
-                if nvar.replace("'",'') in lst_var:
-                    lst = d_conv["dbl_value"][nvar.replace("'",'')]
-                    for nvarf in lst :
-                        dtarget[f'id_{typ}'].append(dtarget[f'id_{typ}'][idx])
-                        dtarget['id_order'].append(0)
-                        dtarget['value'].append(dtarget['value'][idx])
+                if nvar.replace("'", "") in lst_var:
+                    lst = d_conv["dbl_value"][nvar.replace("'", "")]
+                    for nvarf in lst:
+                        dtarget[f"id_{typ}"].append(dtarget[f"id_{typ}"][idx])
+                        dtarget["id_order"].append(0)
+                        dtarget["value"].append(dtarget["value"][idx])
                         dtarget["name_var"].append(f"'{nvarf}'")
             err = False
-            if f"{typ}" == "weirs" and len(d_zbas)>0 :
+            if f"{typ}" == "weirs" and len(d_zbas) > 0:
                 ok = self.cht.box.yes_no_q(
                     "WARNING:\n "
                     "Please note, there are mobile weirs of the regulation type. "
                     "The update will change the value of z_crest of the weirs to that of ZBAS or zbottom "
                     "indicated as the displacement limit.\n"
-                    .format(self.mdb.SCHEMA)
                 )
 
                 for idx, val in d_zbas.items():

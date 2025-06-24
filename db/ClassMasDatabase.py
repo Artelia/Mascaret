@@ -26,18 +26,15 @@ from datetime import datetime
 import numpy as np
 import psycopg2
 import psycopg2.extras
+from qgis.core import QgsDataSourceUri
 from qgis.core import QgsVectorLayer, QgsProject
+from qgis.gui import QgsMessageBar
 
 from . import MasObject as Maso
 from .Check_tab import CheckTab
 from ..Function import read_version
 from ..WaterQuality import ClassTableWQ
 from ..ui.custom_control import ClassWarningBox
-
-from qgis.core import QgsDataSourceUri
-
-
-from qgis.gui import QgsMessageBar
 
 
 class ClassMasDatabase(object):
@@ -129,14 +126,14 @@ class ClassMasDatabase(object):
         self.con.commit()
 
     def run_query(
-        self,
-        qry,
-        fetch=False,
-        arraysize=-1,
-        be_quiet=False,
-        namvar=False,
-        many=False,
-        list_many=None,
+            self,
+            qry,
+            fetch=False,
+            arraysize=-1,
+            be_quiet=False,
+            namvar=False,
+            many=False,
+            list_many=None,
     ):
         """
         Running PostgreSQL queries
@@ -1202,7 +1199,7 @@ $BODY$
             self.mgis.add_info(sql)
 
         err = self.run_query(sql)
-        return  err
+        return err
 
     def insert_res(self, table, liste_value, colonnes):
         var = ",".join(colonnes)
@@ -1631,7 +1628,7 @@ $BODY$
             json.dump(js_dict, outfile, indent=4)
 
         cond = self.drop_model(dest, cascade=True, verbose=False)
-        if cond :
+        if cond:
             self.mgis.add_info('<br>Model "{0}" deleted.'.format(dest), dbg=True)
 
         self.ignor_schema = list()

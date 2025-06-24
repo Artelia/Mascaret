@@ -19,17 +19,18 @@ email                :
 
 """
 
+import datetime
 import os
 import re
-import datetime
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
-from .GraphHydro import GraphHydroLaw
 
+from .GraphHydro import GraphHydroLaw
 from ..HydroLawsDialog import dico_typ_law
 
 

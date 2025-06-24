@@ -26,7 +26,6 @@ from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 
-
 from .Function import del_accent, del_symbolv2
 from .model.ClassCreatFilesModels import ClassCreatFilesModels
 
@@ -57,14 +56,13 @@ class ClassExportLigDialog(QDialog):
         self.fill_cb_init_cas()
         self.lname_export.setText("mascaret")
 
-
     def fill_cb_init_run(self):
         """
         Fill cb_init_run comboBox
         """
         dico_run = self.mdb.select_distinct("run", "runs")
-        if  dico_run :
-            if dico_run != {} :
+        if dico_run:
+            if dico_run != {}:
                 liste_run = ["{}".format(v) for v in dico_run["run"]]
             else:
                 liste_run = []

@@ -19,7 +19,7 @@ email                :
  ***************************************************************************/
 """
 import os
-import sys
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *

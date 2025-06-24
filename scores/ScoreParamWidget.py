@@ -19,7 +19,6 @@ email                :
  """
 
 import os
-import numpy as np
 from datetime import datetime, timedelta
 
 from qgis.PyQt.QtCore import *
@@ -42,9 +41,9 @@ class ScoreParamWidget(QWidget):
     """
 
     def __init__(
-        self,
-        windmain,
-        all=True,
+            self,
+            windmain,
+            all=True,
     ):
         """
         Class constructor
@@ -999,7 +998,7 @@ class ScoreParamWidget(QWidget):
             val = self.mdb.select(
                 "results",
                 where="id_runs={0} AND pknum= {1} "
-                "and var = {2}".format(id_run, pk, dict_model["var"][var]),
+                      "and var = {2}".format(id_run, pk, dict_model["var"][var]),
                 order="time",
                 list_var=["val"],
                 verbose=False,
@@ -1049,11 +1048,10 @@ class ScoreParamWidget(QWidget):
         self.data[id_run][pk][code]["h_obs"] = obs_var
 
         z = self.data[id_run][pk][code]["h_mod_ori"]
-        time_mod  = self.model[id_run]["times"]
+        time_mod = self.model[id_run]["times"]
         self.data[id_run][pk][code]["h_mod"] = self.interpol_date(
-            obs_time,time_mod, z
+            obs_time, time_mod, z
         )
-
 
     def resample_model_q(self, id_run, pk, code):
         """
@@ -1118,7 +1116,7 @@ class ScoreParamWidget(QWidget):
                 )
                 dic_tmp = {"h_obs_ori": z, "h_obs_date_ori": tmp_dict["date"], "h_obs_time_ori": obs_time,
                            "h_obs": z, "h_obs_time": obs_time}
-                #self print(dic_tmp)
+                # self print(dic_tmp)
                 if code in self.data[id_run][pk].keys():
                     self.data[id_run][pk][code].update(dic_tmp)
                 else:
@@ -1175,9 +1173,9 @@ class ScoreParamWidget(QWidget):
         info = self.mdb.select(
             "runs_graph",
             where="id_runs={} "
-            "AND type_res='opt'"
-            "AND var in "
-            "('var','time','pknum')".format(id_run),
+                  "AND type_res='opt'"
+                  "AND var in "
+                  "('var','time','pknum')".format(id_run),
             list_var=["var", "val"],
         )
         if len(info["var"]) > 0:
@@ -1353,8 +1351,8 @@ class ScoreParamWidget(QWidget):
                 self.cmpt_var[id_run][pk][code] = {}
 
             if (
-                "h_obs" in self.data[id_run][pk][code].keys()
-                and "h_mod_ori" in self.data[id_run][pk][code].keys()
+                    "h_obs" in self.data[id_run][pk][code].keys()
+                    and "h_mod_ori" in self.data[id_run][pk][code].keys()
             ):
                 self.cmpt_var[id_run][pk][code]["H"] = True
                 self.resample_model_h(id_run, pk, code)
@@ -1366,8 +1364,8 @@ class ScoreParamWidget(QWidget):
                     self.cmpt_var[id_run][pk][code]["H"] = False
 
             if (
-                "q_obs" in self.data[id_run][pk][code].keys()
-                and "q_mod_ori" in self.data[id_run][pk][code].keys()
+                    "q_obs" in self.data[id_run][pk][code].keys()
+                    and "q_mod_ori" in self.data[id_run][pk][code].keys()
             ):
                 self.cmpt_var[id_run][pk][code]["Q"] = True
                 self.resample_model_q(id_run, pk, code)
@@ -1395,8 +1393,8 @@ class ScoreParamWidget(QWidget):
 
     def ch_date_limit(self, newDate):
         """check limit"""
-        date_comp = newDate.toPyDateTime()
-        ctrl = self.sender()
+        # date_comp = newDate.toPyDateTime()
+        # ctrl = self.sender()
         self.check_lim()
 
     def get_parameter(self):

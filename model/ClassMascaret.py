@@ -34,10 +34,9 @@ from .TaskMascInit import TaskMascInit
 from .TaskMascaret import TaskMascaret
 from ..Function import TypeErrorModel
 from ..Function import copy_dir_to_dir
-from ..Structure.ClassPostPreFG import ClassPostPreFG
 from ..Structure.ClassLinkFGParam import ClassLinkFGParam
 from ..Structure.ClassMobilWeirsParam import ClassMobilWeirsParam
-
+from ..Structure.ClassPostPreFG import ClassPostPreFG
 from ..WaterQuality.ClassMascWQ import ClassMascWQ
 from ..ui.custom_control import ClassWarningBox
 
@@ -74,7 +73,9 @@ class ClassMascaret:
         self.err_model["timeLaw"] = TypeErrorModel("timeLaw", " ERROR : Law Time", stop=True)
         self.err_model["lInflowPos"] = TypeErrorModel("lInflowPos", "WARNING : the inflow position")
 
-        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc, self.cond_api, self.dbg)
+        self.clfile = ClassCreatFilesModels(
+            self.mdb, self.dossier_file_masc, self.cond_api, self.dbg
+        )
 
     def get_param_model(self, noyau):
         """
@@ -106,12 +107,12 @@ class ClassMascaret:
 
     def mascaret_init(self, noyau, run, only_init=False):
         """
-              creation file and to run mascaret
-              Args:
-                  :param noyau: kernel
-                  :param run: name run
-                  :param only_init: if only intialisation is true
-              :return:
+        creation file and to run mascaret
+        Args:
+            :param noyau: kernel
+            :param run: name run
+            :param only_init: if only intialisation is true
+        :return:
         """
         # var
         comments = ""
@@ -182,7 +183,7 @@ class ClassMascaret:
         return par, dict_scen, comments, dict_lois, dico_loi_struct
 
     def creat_dict_scen(self, par, noyau, run):
-        """ Create scen dictionnary
+        """Create scen dictionnary
         Args:
             :param par : parameters
             :param noyau: kernel
@@ -244,8 +245,12 @@ class ClassMascaret:
         # Ensure that other task Mascaret are not running
         if QgsApplication.taskManager().activeTasks():
             self.mgis.add_info("**** Warning : Please wait before starting a new task.")
-            QMessageBox.warning(None, "Warning", "There are tasks in progress. \n "
-                                                 "Wait for them to complete before starting a new task.")
+            QMessageBox.warning(
+                None,
+                "Warning",
+                "There are tasks in progress. \n "
+                "Wait for them to complete before starting a new task.",
+            )
             return
         par, dict_scen, comments, dict_lois, dico_loi_struct = self.mascaret_init(noyau, run)
 
@@ -254,39 +259,39 @@ class ClassMascaret:
             return
 
         dict_task = {
-            'dbg': self.dbg,
-            'mdb': self.mdb,
-            'wq': self.wq,
-            'basename': self.baseName,
-            'dossier_file_masc': self.dossier_file_masc,
-            'par': par,
-            'dict_scen': dict_scen,
-            'comments': comments,
-            'dict_lois': dict_lois,
-            'dico_loi_struct': dico_loi_struct,
-            'noyau': noyau,
-            'run': run,
-            'masc': self,
-            'cond_api': self.cond_api
+            "dbg": self.dbg,
+            "mdb": self.mdb,
+            "wq": self.wq,
+            "basename": self.baseName,
+            "dossier_file_masc": self.dossier_file_masc,
+            "par": par,
+            "dict_scen": dict_scen,
+            "comments": comments,
+            "dict_lois": dict_lois,
+            "dico_loi_struct": dico_loi_struct,
+            "noyau": noyau,
+            "run": run,
+            "masc": self,
+            "cond_api": self.cond_api,
         }
         if self.mgis.task_use:
 
-            task_mas = TaskMascaret('TaskMascaret', dict_task)
+            task_mas = TaskMascaret("TaskMascaret", dict_task)
             task_mas.signal.message.connect(self.print_info)
             task_id = QgsApplication.taskManager().addTask(task_mas)
             task = QgsApplication.taskManager().task(task_id)
             # obligatoir  sinon task ignorer
-            QgsMessageLog.logMessage(f'Send Task {task_id}', 'TaskMascaret', Qgis.Info)
-            print('Send Task', task_id)
+            QgsMessageLog.logMessage(f"Send Task {task_id}", "TaskMascaret", Qgis.Info)
+            print("Send Task", task_id)
             # Sassurer que la task part bien # bug Qgis demarre pas toujours
             if not task.isActive():
                 while task.isActive():
                     task_id = QgsApplication.taskManager().addTask(task_mas)
                     task = QgsApplication.taskManager().task(task_id)
-                    QgsMessageLog.logMessage(f'Send Task {task_id}', 'TaskMascaret', Qgis.Info)
-                    print('Send Task', task_id)
+                    QgsMessageLog.logMessage(f"Send Task {task_id}", "TaskMascaret", Qgis.Info)
+                    print("Send Task", task_id)
         else:
-            task_mas = TaskMascaret('TaskMascaret', dict_task)
+            task_mas = TaskMascaret("TaskMascaret", dict_task)
             task_mas.run()
         return
 
@@ -410,7 +415,7 @@ class ClassMascaret:
         """Load .lig file in run model when exporting
         Args:
           :param fichiers: (str) path of the file to copy
-          """
+        """
         try:
             shutil.copyfile(fichiers, os.path.join(self.dossier_file_masc, self.baseName + ".lig"))
         except Exception as e:
@@ -481,14 +486,15 @@ class ClassMascaret:
         """
         try:
             tar_local = shutil.make_archive(
-                os.path.join(rep, os.path.basename(self.dossier_file_masc)), typ_compress,
+                os.path.join(rep, os.path.basename(self.dossier_file_masc)),
+                typ_compress,
                 os.path.dirname(self.dossier_file_masc),
-                os.path.basename(self.dossier_file_masc)
+                os.path.basename(self.dossier_file_masc),
             )
             return True
 
         except Exception as err:
-            self.mgis.add_info('**** Error : {}'.format(str(err)))
+            self.mgis.add_info("**** Error : {}".format(str(err)))
             return False
 
     def copy_file_model(self, rep, case=None):
@@ -617,20 +623,22 @@ class ClassMascaret:
         :return:
         """
         self.mgis.add_info("**** Creation File ****")
-        par, dict_scen, comments, dict_lois, dico_loi_struct = self.mascaret_init(noyau, run, only_init=True)
+        par, dict_scen, comments, dict_lois, dico_loi_struct = self.mascaret_init(
+            noyau, run, only_init=True
+        )
         # update  dict_scen
-        dict_scen = dict_exp['dict_scen']
+        dict_scen = dict_exp["dict_scen"]
         dict_scen["id_run_init"] = None
-        if dict_exp['lig_eau_init']:
-            if not dict_exp['lig']:
+        if dict_exp["lig_eau_init"]:
+            if not dict_exp["lig"]:
                 dict_scen["id_run_init"] = dict_exp["id_run_init"]
 
         # update  par
-        for key, item in dict_exp['par'].items():
+        for key, item in dict_exp["par"].items():
             if key in par.keys():
                 par[key] = item
 
-        self.clfile.creer_xcas(noyau, par_init=dict_exp['par'])
+        self.clfile.creer_xcas(noyau, par_init=dict_exp["par"])
         par["initialisationAuto"] = False
 
         if not par or not dict_scen or not dict_lois:
@@ -640,37 +648,37 @@ class ClassMascaret:
         idx = 0
         scen = dict_scen["name"][idx]
 
-        gbl_param = {'dbg': self.dbg,
-                     'mdb': self.mdb,
-                     'dossier_file_masc': self.dossier_file_masc,
-                     'basename': self.baseName,
-                     'noyau': noyau,
-                     'run': run,
-                     'comments': comments,
-                     'dict_scen': dict_scen,
-                     'waterq': self.wq,
-                     'masc': self,
-                     'cond_api': self.cond_api,
-                     }
-        param_init = {
-            'dict_lois': dict_lois,
-            'dico_loi_struct': dico_loi_struct
+        gbl_param = {
+            "dbg": self.dbg,
+            "mdb": self.mdb,
+            "dossier_file_masc": self.dossier_file_masc,
+            "basename": self.baseName,
+            "noyau": noyau,
+            "run": run,
+            "comments": comments,
+            "dict_scen": dict_scen,
+            "waterq": self.wq,
+            "masc": self,
+            "cond_api": self.cond_api,
         }
+        param_init = {"dict_lois": dict_lois, "dico_loi_struct": dico_loi_struct}
         init_task_ = TaskMascInit(gbl_param, param_init)
-        up_param = {'scen': scen,
-                    'idx': idx,
-                    'par': par}
+        up_param = {"scen": scen, "idx": idx, "par": par}
         init_task_.update_inputs(up_param)
         init_task_.run()
         self.mgis.add_info(init_task_.mess.message())
-        if dict_exp['lig_eau_init']:
-            if dict_exp['lig']:
-                self.copy_lig_only(dict_exp['path_copy'])
+        if dict_exp["lig_eau_init"]:
+            if dict_exp["lig"]:
+                self.copy_lig_only(dict_exp["path_copy"])
 
         # delete "initialisationAuto" file
         for file in os.listdir(self.dossier_file_masc):
-            if "_init.loi" in file or "_init.xcas" in file or "mascaret_linux" in file \
-                    or "mascaret.exe" in file:
+            if (
+                    "_init.loi" in file
+                    or "_init.xcas" in file
+                    or "mascaret_linux" in file
+                    or "mascaret.exe" in file
+            ):
                 path = os.path.join(self.dossier_file_masc, file)
                 if os.path.isfile(path):
                     os.remove(path)

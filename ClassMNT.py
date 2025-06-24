@@ -23,6 +23,7 @@ import numpy as np
 from qgis.PyQt.QtCore import *
 from qgis.core import *
 from qgis.gui import *
+
 from .ClassUpdateBedDialog import update_all_bed_geometry, refresh_minor_bed_layer
 
 

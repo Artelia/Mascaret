@@ -19,12 +19,15 @@ email                :
  """
 import os
 from datetime import datetime
+
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
-from qgis.PyQt.QtWidgets import *
+
 from .ui.custom_control import ClassWarningBox
+
 
 class ClassDeletrunDialog(QDialog):
     """
@@ -59,7 +62,7 @@ class ClassDeletrunDialog(QDialog):
 
         if self.cond_com:
             for run, scen, date, comments in zip(
-                dico["run"], dico["scenario"], dico["date"], dico["comments"]
+                    dico["run"], dico["scenario"], dico["date"], dico["comments"]
             ):
                 if run not in self.listeRuns:
                     self.listeRuns.append(run)

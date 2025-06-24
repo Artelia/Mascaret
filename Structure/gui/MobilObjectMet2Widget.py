@@ -481,7 +481,7 @@ class ClassMobilObjectMet2Widget(QWidget):
                     self.lvls = [cur_z, cur_z + (cs_link / wid_link)]
                     fill_qcombobox(self.ui.cb_dir, [["D", "bottom"],
                                                     ["U", "top"]],
-                                   icn = os.path.join(self.mgis.masplugPath, "Structure/images/{}_fg.png"), size=32)
+                                   icn=os.path.join(self.mgis.masplugPath, "Structure/images/{}_fg.png"), size=32)
                     self.d_var["ZMAXFG"]["vdef"] = cur_z
                     self.d_var["ZINITREG"]["vdef"] = cur_z
                     self.d_var["VREGCLOS"]["vdef"] = cur_z

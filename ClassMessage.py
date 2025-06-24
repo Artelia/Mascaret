@@ -20,6 +20,7 @@ email                :
 import os
 import pickle
 
+
 class ClassMessage:
     """Class contain  model files creation and run model mascaret"""
 
@@ -113,9 +114,9 @@ class ClassMessage:
         return fill
 
     def export_obj(self, rep=''):
-        with open(os.path.join(rep,'derror.pkl'), 'wb') as file:
+        with open(os.path.join(rep, 'derror.pkl'), 'wb') as file:
             pickle.dump(self.derror, file)
 
     def load_obj(self, rep=''):
-        with open(os.path.join(rep,'derror.pkl'), 'rb') as file:
+        with open(os.path.join(rep, 'derror.pkl'), 'rb') as file:
             self.derror = pickle.load(file)

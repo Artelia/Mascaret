@@ -2126,6 +2126,7 @@ class law_values(MasObject):
             ("CONSTRAINT law_values_pkey", "PRIMARY KEY (id_law, id_var, id_order)"),
         ]
 
+
 class links_mob_val(MasObject):
     # valeur des variable float
     def __init__(self):
@@ -2138,6 +2139,7 @@ class links_mob_val(MasObject):
                       ('value', 'text'),
                       ('CONSTRAINT cle_lins_mob_val',
                        'PRIMARY KEY (id_links,id_order,name_var)')]
+
 
 # ****************************************************************************
 # *****************************************
@@ -2328,6 +2330,5 @@ class observations_old(MasObject):
         )
         qry += "\n"
         return qry
-
 
 # *****************************************

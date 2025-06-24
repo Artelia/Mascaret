@@ -92,7 +92,7 @@ def fill_qcombobox(cb, lst, val_def=None, icn=None, size=None):
             cb.blockSignals(False)
     else:
         cb.blockSignals(False)
-    if size :
+    if size:
         cb.setIconSize(QSize(size, size))
     for elem in lst:
         if icn:

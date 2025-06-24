@@ -17,9 +17,9 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import os
 import csv
 import io
+import os
 from datetime import timedelta
 
 import numpy as np
@@ -37,8 +37,6 @@ from qgis.utils import *
 # from .table_WQ import table_WQ
 from .Function import data_to_float, data_to_date, del_2space
 from .Graphic.GraphHydro import GraphHydroLaw
-
-
 
 dico_typ_law = {
     1: {
@@ -391,12 +389,12 @@ class ClassHydroLawsDialog(QDialog):
             id_law = itm.data(0, 32)
             name_law = itm.text(0)
             if (
-                QMessageBox.question(
-                    self,
-                    "Law Settings",
-                    "Delete {} ?".format(name_law),
-                    QMessageBox.Cancel | QMessageBox.Ok,
-                )
+                    QMessageBox.question(
+                        self,
+                        "Law Settings",
+                        "Delete {} ?".format(name_law),
+                        QMessageBox.Cancel | QMessageBox.Ok,
+                    )
             ) == QMessageBox.Ok:
                 self.mgis.add_info("Deletion of {} Hydro Law".format(name_law))
                 self.mdb.execute(

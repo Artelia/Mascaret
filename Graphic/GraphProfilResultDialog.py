@@ -19,22 +19,24 @@ email                :
 
 """
 
-import os
 import json
+import os
+from datetime import timedelta
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
-from .GraphResult import GraphResult
-from ..Function import tw_to_txt, fill_zminbed
-from datetime import timedelta
-from .ClassResProfil import ClassResProfil, get_valeurs
-from shapely.geometry import shape
-from .WidgetProfResultDialog import WidgetProfResultDialog
-from shapely.ops import unary_union
 from shapely.geometry import GeometryCollection
+from shapely.geometry import shape
+from shapely.ops import unary_union
+
+from .ClassResProfil import ClassResProfil, get_valeurs
+from .GraphResult import GraphResult
+from .WidgetProfResultDialog import WidgetProfResultDialog
+from ..Function import tw_to_txt, fill_zminbed
 
 
 def list_sql(liste, typ="str"):

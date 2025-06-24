@@ -19,47 +19,49 @@ email                :
 
 """
 import os
+import shutil
 import time
+import traceback
 
 from qgis.core import QgsMessageLog, Qgis
 
 from .ClassCreatFilesModels import ClassCreatFilesModels
 from ..ClassMessage import ClassMessage
 from ..Structure.ClassMascStruct import ClassMascStruct
-import shutil
-import traceback
 
-MESSAGE_CATEGORY = 'TaskMascaret'
+MESSAGE_CATEGORY = "TaskMascaret"
 
 
-class TaskMascInit():
+class TaskMascInit:
     """Task of the Creating model initial files"""
 
     def __init__(self, glb_param, init_param):
         super().__init__()
 
-        self.dbg = glb_param['dbg']
-        self.mdb = glb_param['mdb']
-        self.dossier_file_masc = glb_param['dossier_file_masc']
-        self.wq = glb_param['waterq']
-        self.basename = glb_param['basename']
-        self.noyau = glb_param['noyau']
-        self.dict_scen = glb_param['dict_scen']
-        self.dict_lois = init_param['dict_lois']
-        self.cond_api = glb_param['cond_api']
-        self.dico_loi_struct = init_param['dico_loi_struct']
+        self.dbg = glb_param["dbg"]
+        self.mdb = glb_param["mdb"]
+        self.dossier_file_masc = glb_param["dossier_file_masc"]
+        self.wq = glb_param["waterq"]
+        self.basename = glb_param["basename"]
+        self.noyau = glb_param["noyau"]
+        self.dict_scen = glb_param["dict_scen"]
+        self.dict_lois = init_param["dict_lois"]
+        self.cond_api = glb_param["cond_api"]
+        self.dico_loi_struct = init_param["dico_loi_struct"]
         self.scen = None
         self.idx = None
         self.par = None
 
-        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc, self.cond_api, self.dbg)
+        self.clfile = ClassCreatFilesModels(
+            self.mdb, self.dossier_file_masc, self.cond_api, self.dbg
+        )
         self.clmeth = ClassMascStruct(self.mdb)
         self.mess = ClassMessage()
         self.date_debut = None
 
         # Task info
         self.exc_start_time = time.time()
-        self.description = 'Creating model initial files'
+        self.description = "Creating model initial files"
 
     def update_inputs(self, up_dict):
         """
@@ -67,19 +69,19 @@ class TaskMascInit():
         Args:
             :param  up_dict: (dict) new parameters
         """
-        self.idx = up_dict['idx']
-        self.scen = up_dict['scen']
-        self.par = up_dict['par']
+        self.idx = up_dict["idx"]
+        self.scen = up_dict["scen"]
+        self.par = up_dict["par"]
 
     def maj_param(self, up_dict):
-        """"
+        """ "
         Updating the information transfer dictionary
         Args:
             :param  up_dict: (dict) transfer dictionary
             :return: (dict)
         """
-        up_dict['par'] = self.par
-        up_dict['date_debut'] = self.date_debut
+        up_dict["par"] = self.par
+        up_dict["date_debut"] = self.date_debut
         return up_dict
 
     def exit_status_(self, obj):
@@ -97,9 +99,9 @@ class TaskMascInit():
             if ext in listsup:
                 os.remove(os.path.join(self.dossier_file_masc, files[i]))
                 txt = "delete file {}".format(files[i])
-                self.log_mess(txt, 'CleanRes', 'debug')
+                self.log_mess(txt, "CleanRes", "debug")
 
-    def log_mess(self, txt, flag, typ='info'):
+    def log_mess(self, txt, flag, typ="info"):
         """Manage message
         Args:
             :param txt : (str) text
@@ -107,9 +109,9 @@ class TaskMascInit():
             :param typ :(str) message typ
         """
         self.mess.add_mess(flag, typ, txt)
-        if typ == 'warning':
+        if typ == "warning":
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Warning)
-        elif typ == 'critic':
+        elif typ == "critic":
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Critical)
         else:
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
@@ -123,12 +125,12 @@ class TaskMascInit():
         fill_d = self.mess.mess_fill_other_obj(obj)
         if fill_d:
             for key, item in fill_d.items():
-                if item['type'] == 'warning':
-                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Warning)
-                elif item['type'] == 'critic':
-                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Critical)
+                if item["type"] == "warning":
+                    QgsMessageLog.logMessage(item["message"], MESSAGE_CATEGORY, Qgis.Warning)
+                elif item["type"] == "critic":
+                    QgsMessageLog.logMessage(item["message"], MESSAGE_CATEGORY, Qgis.Critical)
                 else:
-                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Info)
+                    QgsMessageLog.logMessage(item["message"], MESSAGE_CATEGORY, Qgis.Info)
 
     def run(self):
         """
@@ -137,7 +139,7 @@ class TaskMascInit():
         """
         try:
             self.clfile.mess.clear_derror()
-            self.log_mess('TaskMascInit Begin', 'info1')
+            self.log_mess("TaskMascInit Begin", "info1")
             self.clean_res()
             if self.dico_loi_struct.keys():
                 for name in self.dico_loi_struct.keys():
@@ -147,14 +149,19 @@ class TaskMascInit():
                         self.dossier_file_masc, name, self.dico_loi_struct[name]["type"], list_final
                     )
                     self.clmeth.create_law(
-                        self.dossier_file_masc, name + "_init", self.dico_loi_struct[name]["type"], list_final
+                        self.dossier_file_masc,
+                        name + "_init",
+                        self.dico_loi_struct[name]["type"],
+                        list_final,
                     )
             # initialise Law file
             self.date_debut = None
             if self.noyau == "steady":
                 exit_status = self.init_scen_steady(self.dict_lois)
             elif self.par["evenement"]:
-                self.date_debut, self.par = self.init_scen_even(self.par, self.dict_lois, self.idx, self.dict_scen)
+                self.date_debut, self.par = self.init_scen_even(
+                    self.par, self.dict_lois, self.idx, self.dict_scen
+                )
                 exit_status = self.clfile.mess.get_critic_status()
             else:
                 # transcritical unsteady hors evenement
@@ -181,7 +188,11 @@ class TaskMascInit():
             if self.exit_status_(self.mess):
                 return False
 
-            if self.par["LigEauInit"] and not self.par["initialisationAuto"] and self.noyau != "steady":
+            if (
+                    self.par["LigEauInit"]
+                    and not self.par["initialisationAuto"]
+                    and self.noyau != "steady"
+            ):
                 id_run_init = None
                 path_init = None
                 if "id_run_init" in self.dict_scen.keys():
@@ -190,7 +201,7 @@ class TaskMascInit():
                     path_init = self.dict_scen["path_init"][self.idx]
                 if id_run_init is None and path_init is None:
                     txt = "Cancel run because No initial boundaries"
-                    self.log_mess(txt, "ErrInit", 'critic')
+                    self.log_mess(txt, "ErrInit", "critic")
                     return False
                 if id_run_init is not None:
                     self.clfile.opt_to_lig(id_run_init, self.basename)
@@ -201,16 +212,16 @@ class TaskMascInit():
                     self.copy_lig(path_init)
                 else:
                     txt = "Cancel run because No initial boundaries"
-                    self.log_mess(txt, "ErrInit", 'critic')
+                    self.log_mess(txt, "ErrInit", "critic")
                     return False
-            self.log_mess('TaskMascInit End', 'info2')
+            self.log_mess("TaskMascInit End", "info2")
             return True
         except Exception as err:
             err = str(err)
             if self.dbg:
                 error_info = traceback.format_exc()
-                err = err + '\n' + error_info
-            self.log_mess(err, 'errInit', 'critic')
+                err = err + "\n" + error_info
+            self.log_mess(err, "errInit", "critic")
             return False
 
     def copy_lig(self, fichiers):
@@ -225,8 +236,8 @@ class TaskMascInit():
             txt = "Error: copying .lig file \n {}".format(e)
             if self.dbg:
                 error_info = traceback.format_exc()
-                txt = txt + '\n' + error_info
-            self.log_mess(txt, 'ErrInit', 'critic')
+                txt = txt + "\n" + error_info
+            self.log_mess(txt, "ErrInit", "critic")
 
     def init_scen_steady(self, dict_lois):
         """
@@ -247,7 +258,7 @@ class TaskMascInit():
                     self.clfile.creer_loi(nom, tab, l["type"])
                 else:
                     txt = "The law for {} is not create.".format(nom)
-                    self.log_mess(txt, "law_{}".format(nom), 'critic')
+                    self.log_mess(txt, "law_{}".format(nom), "critic")
                     exit_status = True
                     return exit_status
             else:
@@ -262,8 +273,8 @@ class TaskMascInit():
                     err = "erreur crit, {}".format(str(e))
                     if self.dbg:
                         error_info = traceback.format_exc()
-                        err = err + '\n' + error_info
-                    self.log_mess(err, "law_{}".format(nom), 'critic')
+                        err = err + "\n" + error_info
+                    self.log_mess(err, "law_{}".format(nom), "critic")
                     exit_status = True
                     return exit_status
                 if temp_dic["critereArret"] == 1:
@@ -289,7 +300,7 @@ class TaskMascInit():
                     self.clfile.creer_loi(nom, tab, l["type"])
                 else:
                     txt = "The law for {} is not create.".format(nom)
-                    self.log_mess(txt, "law_{}".format(nom), 'critic')
+                    self.log_mess(txt, "law_{}".format(nom), "critic")
                     exit_status = True
                     return exit_status
         return exit_status
@@ -321,9 +332,11 @@ class TaskMascInit():
         par["tempsMax"] = duree
         if par["presenceTraceurs"]:
             if self.wq.dico_phy[self.wq.cur_wq_mod]["meteo"]:
-                exit_status, txt = self.wq.create_filemet(typ_time="date", datefirst=date_debut, dateend=date_fin)
+                exit_status, txt = self.wq.create_filemet(
+                    typ_time="date", datefirst=date_debut, dateend=date_fin
+                )
                 if exit_status:
-                    self.log_mess(txt, "WQMeteo", 'critic')
+                    self.log_mess(txt, "WQMeteo", "critic")
 
         par = self.clfile.obs_to_loi(dict_lois, date_debut, date_fin, par)
 
@@ -342,7 +355,7 @@ class TaskMascInit():
             if self.wq.dico_phy[self.wq.cur_wq_mod]["meteo"]:
                 exit_status, txt = self.wq.create_filemet()
                 if exit_status:
-                    self.log_mess(txt, "WQMeteo", 'critic')
+                    self.log_mess(txt, "WQMeteo", "critic")
                     return None
 
         par = self.clfile.classic_law(par, dict_lois)
@@ -361,8 +374,10 @@ class TaskMascInit():
             )
             comp = branches["abs_start"] + branches["mesh"]
             if apports["abscissa"][i] < comp:
-                err = ("{} is located before the first mesh. Ignore in the model".format(apports["name"][i]))
-                self.log_mess(err, "lInflowPos_{}".format(apports["name"][i]), 'warning')
+                err = "{} is located before the first mesh. Ignore in the model".format(
+                    apports["name"][i]
+                )
+                self.log_mess(err, "lInflowPos_{}".format(apports["name"][i]), "warning")
 
     def check_mobil_gate(self):
         """

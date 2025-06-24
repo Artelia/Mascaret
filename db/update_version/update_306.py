@@ -27,7 +27,6 @@ class ClassUpdate306:
         self.mgis = check_tab.mgis
         self.cht = check_tab
 
-
     def update306(self):
         """add new table law and convert"""
         self.update_tab_306()

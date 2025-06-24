@@ -19,13 +19,13 @@ email                :
 """
 from db import MasObject as Maso
 
+
 class ClassUpdate4011:
 
     def __init__(self, check_tab):
         self.mdb = check_tab.mdb
         self.mgis = check_tab.mgis
         self.cht = check_tab
-
 
     def update4011(self):
         sorti = True

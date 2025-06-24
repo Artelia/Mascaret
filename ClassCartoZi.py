@@ -18,15 +18,15 @@ email                :
  ***************************************************************************/
 """
 import os
+from datetime import timedelta
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
+from qgis.core import NULL as qgis_null
 from qgis.gui import *
 from qgis.utils import *
-from qgis.core import NULL as qgis_null
-
-from datetime import timedelta
 from scipy import interpolate
 
 D_PARAM = {"z": {"txt": "Water level", "var_profil": "Z", "var_basin": "ZCAS"},

@@ -19,19 +19,19 @@ email                :
 
 """
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis
+import copy
+import datetime
 import os
 import subprocess
 import sys
-import copy
-import datetime
-
-from ..api.ClassAPIMascaret import ClassAPIMascaret
-from ..ClassMessage import ClassMessage
-
 import time
 
-MESSAGE_CATEGORY = 'TaskMascaret'
+from qgis.core import QgsTask, QgsMessageLog, Qgis
+
+from ..ClassMessage import ClassMessage
+from ..api.ClassAPIMascaret import ClassAPIMascaret
+
+MESSAGE_CATEGORY = "TaskMascaret"
 
 
 class TaskMascComput(QgsTask):
@@ -42,14 +42,14 @@ class TaskMascComput(QgsTask):
     def __init__(self, glb_param):
         super().__init__()
 
-        self.mdb = glb_param['mdb']
-        self.cond_api = glb_param['cond_api']
-        self.run_ = glb_param['run']
-        self.noyau = glb_param['noyau']
-        self.masc = glb_param['masc']
+        self.mdb = glb_param["mdb"]
+        self.cond_api = glb_param["cond_api"]
+        self.run_ = glb_param["run"]
+        self.noyau = glb_param["noyau"]
+        self.masc = glb_param["masc"]
 
-        self.dossier_file_masc = glb_param['dossier_file_masc']
-        self.base_name = glb_param['basename']
+        self.dossier_file_masc = glb_param["dossier_file_masc"]
+        self.base_name = glb_param["basename"]
 
         self.id_run = None
         self.save_res_struct = None
@@ -60,9 +60,9 @@ class TaskMascComput(QgsTask):
         self.mess = ClassMessage()
         # Task info
         self.exc_start_time = time.time()
-        self.description = 'Computing model'
+        self.description = "Computing model"
 
-    def log_mess(self, txt, flag, typ='info'):
+    def log_mess(self, txt, flag, typ="info"):
         """Manage message
         :param txt : (str) text
         :param flag : (str) error flag
@@ -70,9 +70,9 @@ class TaskMascComput(QgsTask):
         :return: None
         """
         self.mess.add_mess(flag, typ, txt)
-        if typ == 'warning':
+        if typ == "warning":
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Warning)
-        elif typ == 'critic':
+        elif typ == "critic":
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Critical)
         else:
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
@@ -86,12 +86,12 @@ class TaskMascComput(QgsTask):
         fill_d = self.mess.mess_fill_other_obj(obj)
         if fill_d:
             for key, item in fill_d.items():
-                if item['type'] == 'warning':
-                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Warning)
-                elif item['type'] == 'critic':
-                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Critical)
+                if item["type"] == "warning":
+                    QgsMessageLog.logMessage(item["message"], MESSAGE_CATEGORY, Qgis.Warning)
+                elif item["type"] == "critic":
+                    QgsMessageLog.logMessage(item["message"], MESSAGE_CATEGORY, Qgis.Critical)
                 else:
-                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Info)
+                    QgsMessageLog.logMessage(item["message"], MESSAGE_CATEGORY, Qgis.Info)
 
     def update_inputs(self, up_dict, cpt_init=False):
         """
@@ -100,18 +100,18 @@ class TaskMascComput(QgsTask):
         :param cpt_init : (boolean) if inialisation phase or not
         :return: None
         """
-        self.par = up_dict['par']
-        self.scen = up_dict['scen']
+        self.par = up_dict["par"]
+        self.scen = up_dict["scen"]
         self.cpt_init = cpt_init
 
     def maj_param(self, up_dict):
-        """"
+        """ "
         Updating the information transfer dictionary
         :param  up_dict: (dict) transfer dictionary
         :return : (dict) updated transfer dictionary
         """
-        up_dict['id_run'] = self.id_run
-        up_dict['save_res_struct'] = self.save_res_struct
+        up_dict["id_run"] = self.id_run
+        up_dict["save_res_struct"] = self.save_res_struct
         return up_dict
 
     def run(self):
@@ -125,7 +125,7 @@ class TaskMascComput(QgsTask):
             finish = self.lance_mascaret(self.base_name + "_init.xcas", self.id_run)
 
             if not finish:
-                self.log_mess("Init Simulation error", "ErrSim", 'warning')
+                self.log_mess("Init Simulation error", "ErrSim", "warning")
                 return False
 
         else:
@@ -137,22 +137,22 @@ class TaskMascComput(QgsTask):
                 self.base_name + ".xcas", self.id_run, self.par["presenceTraceurs"], cond_casier
             )
             if not finish:
-                self.log_mess("Simulation error", "ErrSim", 'warning')
+                self.log_mess("Simulation error", "ErrSim", "warning")
                 return False
-        QgsMessageLog.logMessage('END Run', MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("END Run", MESSAGE_CATEGORY, Qgis.Info)
         return True
 
     def lance_mascaret(self, fichier_cas, id_run, tracer=False, casier=False):
         """
         Run mascaret
-      
+
         :param fichier_cas (str): file name of the cas file
         :param id_run (int): run id
         :param tracer (boolean): if tracer is present
         :param casier (boolean): if casier is present
         :return (boolean): True if success, False if error
         """
-        self.log_mess('TaskMascComput Begin', 'info1')
+        self.log_mess("TaskMascComput Begin", "info1")
         os.chdir(self.dossier_file_masc)
         with open("FichierCas.txt", "w") as fichier:
             fichier.write("'" + fichier_cas + "'\n")
@@ -163,8 +163,8 @@ class TaskMascComput(QgsTask):
             elif test == "win32":
                 soft = "mascaret.exe"
             else:
-                txt = ("{0} platform  doesn't allow to run simulation.".format(test))
-                self.log_mess(txt, 'ErrPlatform', 'critic')
+                txt = "{0} platform  doesn't allow to run simulation.".format(test)
+                self.log_mess(txt, "ErrPlatform", "critic")
                 return False
 
             # Linux(2.x and 3.x) ='linux2' or 'linux'
@@ -181,9 +181,9 @@ class TaskMascComput(QgsTask):
             p.wait()
             txt = "{0}".format(p.communicate()[0].decode("utf-8"))
             txt1 = "{0}".format(p.communicate()[1].decode("utf-8"))
-            self.log_mess(txt, 'InfoRun')
-            self.log_mess(txt1, 'InfoRun1')
-            self.log_mess('TaskMascComput End', 'info2')
+            self.log_mess(txt, "InfoRun")
+            self.log_mess(txt1, "InfoRun1")
+            self.log_mess("TaskMascComput End", "info2")
             return True
         else:
             pwd = os.getcwd()
@@ -197,7 +197,7 @@ class TaskMascComput(QgsTask):
             del clapi
 
             os.chdir(pwd)
-            self.log_mess('TaskMascComput End', 'info2')
+            self.log_mess("TaskMascComput End", "info2")
             return True
 
     def insert_id_run(self, run_, scen):

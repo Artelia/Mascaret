@@ -26,17 +26,16 @@ import traceback
 import pandas as pd
 from matplotlib.dates import date2num
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
 from .Graphic.GraphCommon import GraphCommon
-
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.QtCore import Qt
 
 
 class ClassEventObsDialog(QDialog):
@@ -328,7 +327,7 @@ class ClassEventObsDialog(QDialog):
                     break
 
             txt_mess = (
-                "Duplicates exist for these configurations (the first 5) : \n" + txt_sta + "\n"
+                    "Duplicates exist for these configurations (the first 5) : \n" + txt_sta + "\n"
             )
             dlg = ClassObsDuplicDialog(self.mgis, txt_mess)
             if dlg.exec_():
@@ -440,7 +439,7 @@ class ClassEventObsDialog(QDialog):
             self.mgis.add_info("Loading to observations is an echec.")
             error_info = repr(e)
             if self.mgis.DEBUG:
-                error_info = error_info +'\n' +traceback.format_exc()
+                error_info = error_info + '\n' + traceback.format_exc()
             self.mgis.add_info(error_info)
 
             return False, None
@@ -463,8 +462,8 @@ class ClassEventObsDialog(QDialog):
                     )
 
                     df_tmp["comment"] = [
-                        self.fmt_col(os.path.splitext(os.path.basename(file))[0])
-                    ] * df_tmp.count()[0]
+                                            self.fmt_col(os.path.splitext(os.path.basename(file))[0])
+                                        ] * df_tmp.count()[0]
                     df_tmp["fichier"] = [os.path.basename(file)] * df_tmp.count()[0]
 
                     tmp = pd.concat([tmp, df_tmp])
@@ -560,12 +559,12 @@ class ClassEventObsDialog(QDialog):
                 station = tab.model().data(tab.model().index(row - sup_ind, 0))
 
                 if (
-                    QMessageBox.question(
-                        self,
-                        "Observations of Events",
-                        "Delete {} observations ?".format(str(station).strip()),
-                        QMessageBox.Cancel | QMessageBox.Ok,
-                    )
+                        QMessageBox.question(
+                            self,
+                            "Observations of Events",
+                            "Delete {} observations ?".format(str(station).strip()),
+                            QMessageBox.Cancel | QMessageBox.Ok,
+                        )
                 ) == QMessageBox.Ok:
                     self.mgis.add_info(
                         "Deletion of {} Observations of Events".format(station), dbg=True
@@ -583,14 +582,14 @@ class ClassEventObsDialog(QDialog):
         # changer de page
         if self.cur_station:
             if (
-                QMessageBox.question(
-                    self,
-                    "Observations of Events",
-                    "Delete {0} values for {1} station ?".format(
-                        self.cur_var, self.cur_station.strip()
-                    ),
-                    QMessageBox.Cancel | QMessageBox.Ok,
-                )
+                    QMessageBox.question(
+                        self,
+                        "Observations of Events",
+                        "Delete {0} values for {1} station ?".format(
+                            self.cur_var, self.cur_station.strip()
+                        ),
+                        QMessageBox.Cancel | QMessageBox.Ok,
+                    )
             ) == QMessageBox.Ok:
                 self.mgis.add_info(
                     "Deletion of {} Observations of Events".format(self.cur_station), dbg=True

@@ -69,7 +69,7 @@ class ClassParameterDialog(QDialog):
             "code": {1: "Steady", 2: "Unsteady", 3: "Transcritical"},
             "compositionLits": {0: "Aucun", 1: "Debord", 2: "fond/berge"},
             "option": {1: "Sections de calcul", 2: "couche Points de sortie",
-                       3:"couche profils + amont/aval singularite"},
+                       3: "couche profils + amont/aval singularite"},
             "postProcesseur": {1: "Rubens", 2: "Opthyca"},
             "critereArret": {
                 1: "Temps maximum",
@@ -292,9 +292,9 @@ class ClassParameterDialog(QDialog):
                 if param in self.exclusion[self.kernel]:
                     obj.hide()
                     if (
-                        isinstance(obj, QSpinBox)
-                        or isinstance(obj, QDoubleSpinBox)
-                        or isinstance(obj, QComboBox)
+                            isinstance(obj, QSpinBox)
+                            or isinstance(obj, QDoubleSpinBox)
+                            or isinstance(obj, QComboBox)
                     ):
                         getattr(self.ui, "label_" + param).hide()
 
@@ -337,9 +337,9 @@ class ClassParameterDialog(QDialog):
                     elif isinstance(obj, QComboBox):
                         val = obj.currentIndex()
                         if (
-                            param == "option"
-                            or param == "critereArret"
-                            or param == "postProcesseur"
+                                param == "option"
+                                or param == "critereArret"
+                                or param == "postProcesseur"
                         ):
                             val = val + 1
                         elif param == "compositionLits":

@@ -18,12 +18,11 @@ email                :
  ***************************************************************************/
 """
 
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
-from qgis.PyQt.uic import *
-from qgis.PyQt.QtCore import *
-
-from qgis.PyQt.QtWidgets import *
 
 try:
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -35,7 +34,6 @@ try:
 except:
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
-from matplotlib import pyplot
 from matplotlib.figure import Figure
 import matplotlib.dates as mdates
 import matplotlib.ticker as ticker

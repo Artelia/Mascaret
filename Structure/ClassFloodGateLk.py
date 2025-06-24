@@ -18,10 +18,11 @@ email                :
  ***************************************************************************/
 
 """
+import traceback
+
 import numpy as np
 
 from .ClassLinkFGParam import ClassLinkFGParam
-import traceback
 
 
 class ClassFloodGateLk:

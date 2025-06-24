@@ -20,11 +20,11 @@ email                :
 """
 
 import os
-from qgis.PyQt.QtCore import pyqtSignal, Qt
-from qgis.PyQt.uic import *
-from qgis.PyQt.QtWidgets import *
+from datetime import timedelta
 
-from datetime import date, timedelta, datetime
+from qgis.PyQt.QtCore import pyqtSignal, Qt
+from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.uic import *
 
 
 def list_sql(liste, typ="str"):
@@ -460,7 +460,7 @@ class CurveSelectorWidget(QWidget):
         }
         list_vars = []
         if self.cur_scen:
-            
+
             for typ_res in list_typ_res:
                 if typ_res in self.info_graph.keys():
                     list_vars.extend(self.info_graph[typ_res]["var"])

@@ -74,7 +74,6 @@ class ClassParamExportDialog(QDialog):
         self.cb_init_run.currentIndexChanged.connect(self.fill_cb_init_cas)
         self.lname_export.editingFinished.connect(self.check_str)
 
-
     def init_ui(self):
         """initialisation variable of GUI"""
         self.combo = {
@@ -199,8 +198,8 @@ class ClassParamExportDialog(QDialog):
                 "nbCourant",
             ],
         }
-        self.d_type = {"*.zip" : "zip",
-                        "*.tar.gz": "gztar"}
+        self.d_type = {"*.zip": "zip",
+                       "*.tar.gz": "gztar"}
         self.create_dico_para()
         self.init_gui()
         self.lname_export.setText("model_masc")
@@ -305,8 +304,8 @@ class ClassParamExportDialog(QDialog):
 
         # if lig_eau
         lst_lig = [self.cb_init_run, self.cb_init_scen, self.rb_init, self.rb_init_lig,
-                   self.label_init_cas, self.lbl_lig, self.bt_lig, self.label_init_lig, self.gb_init ]
-        if not self.lig_eau_init :
+                   self.label_init_cas, self.lbl_lig, self.bt_lig, self.label_init_lig, self.gb_init]
+        if not self.lig_eau_init:
             self.hide_lstobj(lst_lig)
         else:
             self.show_lstobj(lst_lig)
@@ -325,8 +324,8 @@ class ClassParamExportDialog(QDialog):
         Fill cb_init_run comboBox
         """
         dico_run = self.mdb.select_distinct("run", "runs")
-        if  dico_run :
-            if dico_run != {} :
+        if dico_run:
+            if dico_run != {}:
                 liste_run = ["{}".format(v) for v in dico_run["run"]]
             else:
                 liste_run = []

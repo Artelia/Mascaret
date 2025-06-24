@@ -20,15 +20,14 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import numpy as np
 import re
 
+import numpy as np
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-
 from qgis.PyQt.QtGui import QValidator
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtWidgets import QMessageBox, QDoubleSpinBox
+from qgis.PyQt.uic import *
 
 
 # *******************************************************************************

@@ -18,18 +18,17 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QColor, QBrush
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
-
-from shapely.ops import unary_union, linemerge, substring
 from shapely.geometry import LineString
+from shapely.ops import unary_union, linemerge, substring
 from shapely.wkt import loads as wkt_loads
-
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QColor, QBrush
 
 D_TYP_BED = {0: "bed", 1: "stock"}
 D_FLD_BED = {0: "minbed", 1: "stock"}
@@ -96,8 +95,8 @@ class ClassUpdateBedDialog(QDialog):
         l_child = mas_group.children()
         for child in l_child:
             if (
-                child.nodeType() == 1
-                and "dbname='{}'".format(self.mdb.dbname) in child.layer().source()
+                    child.nodeType() == 1
+                    and "dbname='{}'".format(self.mdb.dbname) in child.layer().source()
             ):
                 if 'table="{}"."profiles"'.format(self.mdb.SCHEMA) in child.layer().source():
                     p_lay = child.layer()
@@ -321,8 +320,8 @@ class ClassUpdateBedDialog(QDialog):
 def interpolate_x_val(new_x, lx, lz):
     for i, x in enumerate(lx):
         if x > new_x:
-            x0, x1 = lx[i - 1 : i + 1]
-            z0, z1 = lz[i - 1 : i + 1]
+            x0, x1 = lx[i - 1: i + 1]
+            z0, z1 = lz[i - 1: i + 1]
             new_z = z0 + (z1 - z0) / (x1 - x0) * (new_x - x0)
             lx.insert(i, new_x)
             lz.insert(i, new_z)

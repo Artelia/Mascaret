@@ -20,13 +20,13 @@ email                :
 from HydroLawsDialog import dico_typ_law
 from db import MasObject as Maso
 
+
 class ClassUpdate402:
 
     def __init__(self, check_tab):
         self.mdb = check_tab.mdb
         self.mgis = check_tab.mgis
         self.cht = check_tab
-
 
     def update402(self):
         """add new table law and convert"""
@@ -77,7 +77,7 @@ class ClassUpdate402:
                         elif key == "name":
                             for id, val in enumerate(item):
                                 if val in [
-                                    tmp["name"] for tmp in tab.values() if "name" is tmp.keys()
+                                    tmp["name"] for tmp in tab.values() if "name" == tmp.keys()
                                 ]:
                                     tab[id]["name"] = val + "{}".format(cmpt)
                                     cmpt += 1

@@ -18,11 +18,11 @@ email                :
  ***************************************************************************/
  """
 
+import json
+
+import numpy as np
 from shapely.geometry import *
 from shapely.ops import unary_union
-import matplotlib.pyplot as plt
-import numpy as np
-import json
 
 
 class ClassResProfil:

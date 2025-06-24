@@ -18,8 +18,10 @@ email                :
  ***************************************************************************/
 
 """
-import numpy as np
 import traceback
+
+import numpy as np
+
 from .ClassMobilWeirsParam import ClassMobilWeirsParam
 
 

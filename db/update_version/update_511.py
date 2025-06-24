@@ -19,13 +19,13 @@ email                :
 """
 from db import MasObject as Maso
 
+
 class ClassUpdate511:
 
     def __init__(self, check_tab):
         self.mdb = check_tab.mdb
         self.mgis = check_tab.mgis
         self.cht = check_tab
-
 
     def update511(self):
         """
@@ -49,42 +49,52 @@ class ClassUpdate511:
         if valid:
             lst_trigger_b = self.mdb.list_trigger("branchs", self.mdb.SCHEMA)
             #  RENAME old branchs table
-            sql = "ALTER TABLE IF EXISTS {0}.branchs RENAME TO branchs_old;".format(self.mdb.SCHEMA)
-            sql += "\n"
-            sql += "ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT branchs_pkey TO branchs_old_pkey;".format(
-                self.mdb.SCHEMA
-            )
-            sql += "\n"
-            sql += "ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT cle_debut TO cle_debut_old;".format(
-                self.mdb.SCHEMA
-            )
-            sql += "\n"
-            sql += "ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT cle_fin TO cle_fin_old;".format(
+            sql = "ALTER TABLE IF EXISTS {0}.branchs RENAME TO branchs_old;".format(
                 self.mdb.SCHEMA
             )
             sql += "\n"
             sql += (
-                "ALTER INDEX IF EXISTS {0}.branchs_geom_idx RENAME TO branchs_old_geom_idx;".format(
-                    self.mdb.SCHEMA
-                )
+                "ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT "
+                "branchs_pkey TO branchs_old_pkey;".format(self.mdb.SCHEMA)
             )
             sql += "\n"
-            sql += "ALTER SEQUENCE IF EXISTS  {0}.branchs_gid_seq RENAME TO branchs_old_gid_seq;".format(
-                self.mdb.SCHEMA
+            sql += (
+                "ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT "
+                "cle_debut TO cle_debut_old;".format(self.mdb.SCHEMA)
+            )
+            sql += "\n"
+            sql += (
+                "ALTER TABLE IF EXISTS {0}.branchs_old RENAME CONSTRAINT "
+                "cle_fin TO cle_fin_old;".format(self.mdb.SCHEMA)
+            )
+            sql += "\n"
+            sql += (
+                "ALTER INDEX IF EXISTS {0}.branchs_geom_idx RENAME TO "
+                "branchs_old_geom_idx;".format(self.mdb.SCHEMA)
+            )
+            sql += "\n"
+            sql += (
+                "ALTER SEQUENCE IF EXISTS  {0}.branchs_gid_seq RENAME TO "
+                "branchs_old_gid_seq;".format(self.mdb.SCHEMA)
             )
             sql += "\n"
             # delete TRIGGER
             if "branchs_calcul_abscisse" in lst_trigger_b:
-                # sql += "DROP TRIGGER IF EXISTS branchs_calcul_abscisse ON {}.branchs_old;".format(self.mdb.SCHEMA)
-                sql += "ALTER TABLE {}.branchs_old DISABLE TRIGGER branchs_calcul_abscisse;".format(
-                    self.mdb.SCHEMA
+                # sql += "DROP TRIGGER IF EXISTS branchs_calcul_abscisse
+                # ON {}.branchs_old;".format(self.mdb.SCHEMA)
+                sql += (
+                    "ALTER TABLE {}.branchs_old DISABLE TRIGGER "
+                    "branchs_calcul_abscisse;".format(self.mdb.SCHEMA)
                 )
                 sql += "\n"
             if "branchs_chstate_active" in lst_trigger_b:
-                # sql += "DROP TRIGGER IF EXISTS branchs_chstate_active ON {}.branchs_old;".format(self.mdb.SCHEMA)
-                sql += "ALTER TABLE {}.branchs_old DISABLE TRIGGER branchs_chstate_active;".format(
-                    self.mdb.SCHEMA
+                # sql += "DROP TRIGGER IF EXISTS branchs_chstate_active
+                # ON {}.branchs_old;".format(self.mdb.SCHEMA)
+                sql += (
+                    "ALTER TABLE {}.branchs_old DISABLE TRIGGER "
+                    "branchs_chstate_active;".format(self.mdb.SCHEMA)
                 )
+
             err = self.mdb.run_query(sql)
             if err:
                 self.mgis.add_info("Rename table branchs - ERROR")
@@ -225,20 +235,23 @@ $BODY$;
                 self.mgis.add_info("Fill new branchs table - OK")
         if valid:
             # TRIGGER
-            sql = "DROP TRIGGER IF EXISTS flood_marks_delete_point_flood ON {}.flood_marks;".format(
-                self.mdb.SCHEMA
+            sql = (
+                "DROP TRIGGER IF EXISTS flood_marks_delete_point_flood "
+                "ON {}.flood_marks;".format(self.mdb.SCHEMA)
             )
             sql += "\n"
-            sql += "DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood ON {}.flood_marks;".format(
-                self.mdb.SCHEMA
+            sql += (
+                "DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood "
+                "ON {}.flood_marks;".format(self.mdb.SCHEMA)
             )
             sql += "\n"
             sql += "DROP TRIGGER IF EXISTS weirs_calcul_abscisse ON {}.weirs;".format(
                 self.mdb.SCHEMA
             )
             sql += "\n"
-            sql += "DROP TRIGGER IF EXISTS tracer_lateral_inflows_calcul_abscisse ON {}.tracer_lateral_inflows;".format(
-                self.mdb.SCHEMA
+            sql += (
+                "DROP TRIGGER IF EXISTS tracer_lateral_inflows_calcul_abscisse "
+                "ON {}.tracer_lateral_inflows;".format(self.mdb.SCHEMA)
             )
             sql += "\n"
             sql += "DROP TRIGGER IF EXISTS profiles_calcul_abscisse ON {}.profiles;".format(
@@ -254,17 +267,18 @@ $BODY$;
             )
             sql += "\n"
             sql += (
-                "DROP TRIGGER IF EXISTS lateral_weirs_calcul_abscisse ON {}.lateral_weirs;".format(
-                    self.mdb.SCHEMA
-                )
+                "DROP TRIGGER IF EXISTS lateral_weirs_calcul_abscisse "
+                "ON {}.lateral_weirs;".format(self.mdb.SCHEMA)
             )
             sql += "\n"
-            sql += "DROP TRIGGER IF EXISTS lateral_inflows_calcul_abscisse ON {}.lateral_inflows;".format(
-                self.mdb.SCHEMA
+            sql += (
+                "DROP TRIGGER IF EXISTS lateral_inflows_calcul_abscisse "
+                "ON {}.lateral_inflows;".format(self.mdb.SCHEMA)
             )
             sql += "\n"
-            sql += "DROP TRIGGER IF EXISTS hydraulic_head_calcul_abscisse ON {}.hydraulic_head;".format(
-                self.mdb.SCHEMA
+            sql += (
+                "DROP TRIGGER IF EXISTS hydraulic_head_calcul_abscisse "
+                "ON {}.hydraulic_head;".format(self.mdb.SCHEMA)
             )
             sql += "\n"
             sql += "DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;".format(
@@ -323,28 +337,34 @@ $BODY$;
                     sql = "DROP TABLE IF EXISTS  {0}.branchs;".format(self.mdb.SCHEMA)
                     err = self.mdb.run_query(sql)
 
-                sql = "ALTER TABLE IF EXISTS {0}.branchs_old RENAME TO branchs;".format(
-                    self.mdb.SCHEMA
+                sql = (
+                    "ALTER TABLE IF EXISTS {0}.branchs_old RENAME "
+                    "TO branchs;".format(self.mdb.SCHEMA)
                 )
                 sql += "\n"
-                sql += "ALTER TABLE IF EXISTS {0}.branchs RENAME CONSTRAINT branchs_old_pkey TO branchs_pkey;".format(
-                    self.mdb.SCHEMA
+                sql += (
+                    "ALTER TABLE IF EXISTS {0}.branchs RENAME "
+                    "CONSTRAINT branchs_old_pkey TO branchs_pkey;".format(self.mdb.SCHEMA)
                 )
                 sql += "\n"
-                sql += "ALTER TABLE IF EXISTS {0}.branchs RENAME CONSTRAINT cle_debut_old TO cle_debut;".format(
-                    self.mdb.SCHEMA
+                sql += (
+                    "ALTER TABLE IF EXISTS {0}.branchs RENAME  "
+                    "CONSTRAINT cle_debut_old TO cle_debut;".format(self.mdb.SCHEMA)
                 )
                 sql += "\n"
-                sql += "ALTER TABLE IF EXISTS {0}.branchs  RENAME CONSTRAINT cle_fin_old TO cle_fin;".format(
-                    self.mdb.SCHEMA
+                sql += (
+                    "ALTER TABLE IF EXISTS {0}.branchs  RENAME "
+                    "CONSTRAINT cle_fin_old TO cle_fin;".format(self.mdb.SCHEMA)
                 )
                 sql += "\n"
-                sql += "ALTER INDEX IF EXISTS {0}.branchs_old_geom_idx RENAME TO branchs_geom_idx;".format(
-                    self.mdb.SCHEMA
+                sql += (
+                    "ALTER INDEX IF EXISTS {0}.branchs_old_geom_idx "
+                    "RENAME TO branchs_geom_idx;".format(self.mdb.SCHEMA)
                 )
                 sql += "\n"
-                sql += "ALTER SEQUENCE IF EXISTS  {0}.branchs_old_gid_seq RENAME TO branchs_gid_seq;".format(
-                    self.mdb.SCHEMA
+                sql += (
+                    "ALTER SEQUENCE IF EXISTS  {0}.branchs_old_gid_seq "
+                    "RENAME TO branchs_gid_seq;".format(self.mdb.SCHEMA)
                 )
                 err = self.mdb.run_query(sql)
         if len(lst_profil_err) > 0:

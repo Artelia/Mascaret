@@ -19,6 +19,7 @@ email                :
 """
 from db import MasObject as Maso
 
+
 class ClassUpdate516:
 
     def __init__(self, check_tab):
@@ -213,7 +214,6 @@ class ClassUpdate516:
             self.mgis.download_bin()
 
         return valide
-
 
     def up_trigger(self, ref=True):
         """

@@ -17,9 +17,10 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import os
 import json
+import os
 from datetime import datetime
+
 
 def list_sql(liste):
     """
@@ -41,7 +42,6 @@ class ClassUpdate302:
         self.mgis = check_tab.mgis
         self.cht = check_tab
 
-
     def update302(self):
         """add new table law and convert"""
         self.create_var_result()
@@ -58,7 +58,7 @@ class ClassUpdate302:
         conversion between the previous results
         table format to the new for all results
         """
-        convert = False
+
         try:
             rows = self.mdb.run_query(
                 "SELECT DISTINCT type_res FROM {0}.results_var".format(self.mdb.SCHEMA), fetch=True
@@ -172,7 +172,6 @@ class ClassUpdate302:
                     )
 
                     self.mdb.run_query(sql, many=True, list_many=list_value)
-            convert = True
         except Exception as e:
             self.mgis.add_info("Error convert_all_result : {}".format(str(e)))
             return False
@@ -205,7 +204,6 @@ class ClassUpdate302:
         except Exception as e:
             self.mgis.add_info("Error fill_init_date_runs: {}".format(str(e)))
             return False
-
 
     def convert_result(self, id_run, typ_res):
         """
@@ -258,7 +256,7 @@ class ClassUpdate302:
 
         rows = self.mdb.run_query(
             "SELECT id, var FROM {0}.results_var "
-            "WHERE type_res = '{2}' ORDER BY id".format(self.mdb.SCHEMA, tab_src, typ_res),
+            "WHERE type_res = '{1}' ORDER BY id".format(self.mdb.SCHEMA, typ_res),
             fetch=True,
         )
         if typ_res.split("_")[0] == "tracer":
@@ -285,8 +283,6 @@ class ClassUpdate302:
                     )
                 )
                 self.mdb.execute(sql)
-
-
 
     def fill_result_sect(self, id_run):
         """
