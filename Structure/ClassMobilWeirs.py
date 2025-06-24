@@ -30,6 +30,11 @@ class ClassMobilWeirs:
     """
 
     def __init__(self, main):
+        """
+        Initialize the ClassMobilWeirs instance.
+        :param main (object): Main application or API object
+        :return: None
+        """
         self.clapi = main
         self.add_info = self.clapi.add_info
         self.masc = main.masc
@@ -57,6 +62,7 @@ class ClassMobilWeirs:
         Initialize floodgate weirs by gathering necessary information, validating parameters,
         and preparing variables for computation. This includes searching for control sections,
         linking parameters to the model, and initializing results.
+        :return: None
         """
         # Get Section
         try:
@@ -76,9 +82,8 @@ class ClassMobilWeirs:
     def update_var_mas(self, force=False):
         """
         Update the Mascaret model variables with the current floodgate parameters.
-       
-        :param  force :  If `force` is True, updates are applied regardless of whether 
-        the parameters have changed; by default False
+        :param force (bool): If True, force update even if values did not change
+        :return: None
         """
         for param in self.param_fg.values():
             if param["level"] != param["level-dt"] or force:
@@ -93,6 +98,7 @@ class ClassMobilWeirs:
         """
         Initialize the results dictionary (`results_fg_weirs_mv`) for storing floodgate movement data.
         This includes time, level, cross-section, width, and regulation variable values.
+        :return: None
         """
         self.cpt_w = {id_weir: 1 for id_weir in self.param_fg.keys()}
         self.results_fg_weirs_mv = {
@@ -109,8 +115,8 @@ class ClassMobilWeirs:
         """
         Finalize the floodgate results by appending the final time and parameter values
         to the results dictionary for each link.
-
-        :param tfin: Final time of the simulation.
+        :param tfin (float): Final time of the simulation
+        :return: None
         """
         if len(self.results_fg_weirs_mv) > 0:
             for id_weir, param in self.param_fg.items():
@@ -125,9 +131,9 @@ class ClassMobilWeirs:
         Perform mobile weirs treatment during a simulation iteration.
         Depending on the mobility method (`method_mob`), it applies regulation, time-based,
         or fusible logic to compute new parameter values.
-
-        :param time: Current simulation time.
-        :param dtp: Time step.
+        :param time (float): Current simulation time
+        :param dtp (float): Time step
+        :return: None
         """
         try:
             for id_weir, param in self.param_fg.items():
@@ -174,6 +180,11 @@ class ClassMobilWeirs:
             self.add_info(f"***** ERROR: the gates for the weirs\n COMPUTATION STOP \n {error_info}")
 
     def clapet(self, param):
+        """
+        Check if the clapet (flap gate) condition is met.
+        :param param (dict): Parameters for the weir
+        :return: (bool) True if clapet condition is met, False otherwise
+        """
         if param['CLAPMAREE'] and param["node"] + 1 <= self.model_size:
             amont = self.masc.get("State.Z", param["node"])
             aval = self.masc.get("State.Z", param["node"] + 1)
@@ -184,11 +195,13 @@ class ClassMobilWeirs:
     def fill_res_and_update(self, id_weir, time, param, dnew, val_check, status):
         """
         Update  mobile weirs parameters and fill the results dictionary with the new values.
-        :param id_weir: Link ID.
-        :param time: Current simulation time.
-        :param param:  mobile weirs parameters dictionary.
-        :param dnew: New computed values for the  mobile weirs.
-        :param val_check: Regulation variable value to check.
+        :param id_weir (int): Link ID
+        :param time (float): Current simulation time
+        :param param (dict):  mobile weirs parameters dictionary
+        :param dnew (dict): New computed values for the  mobile weirs
+        :param val_check (float): Regulation variable value to check
+        :param status (any): Status of the weir
+        :return: None
         """
         param.update({
             # var update in run
@@ -204,6 +217,7 @@ class ClassMobilWeirs:
         """
         Validate the  mobile weirs parameters to ensure consistency.
         Returns True if all parameters are valid, otherwise False.
+        :return: (bool) True if all parameters are valid, False otherwise
         """
         for id_weir, param in self.param_fg.items():
             if param["method_mob"] == self.dmeth["meth_regul"]:
@@ -216,6 +230,7 @@ class ClassMobilWeirs:
         """
         Identify the control section for each  mobile weirse link and determine the variable
         to be checked for regulation. This involves mapping model coordinates to parameters.
+        :return: None
         """
         self.model_size, _, _ = self.masc.get_var_size("Model.X")
         coords = []
@@ -247,6 +262,7 @@ class ClassMobilWeirs:
         """
         Establish weirs between the Mascaret model and the mobile weirs parameters.
         This includes retrieving initial values and preparing parameters for computation.
+        :return: None
         """
 
         size_sing = self.masc.get_var_size("Model.Weir.Name")[0]
@@ -297,8 +313,9 @@ class ClassMobilWeirs:
         """
         Populate the results dictionary (`results_fg_weirs_mv`) with updated mobile weirs parameters
         if any changes occurred during the simulation.
-        :param id_weir: Link ID.
-        :param param: mobile weirs parameters dictionary.
+        :param id_weir (int): Link ID
+        :param param (dict): mobile weirs parameters dictionary
+        :return: None
         """
         res = self.results_fg_weirs_mv[id_weir]
 
@@ -326,6 +343,7 @@ class ClassMethRegul:
         """
         Initialize the regulation class.
         :param parent: Reference to the parent `ClassMobilWeirs` instance.
+        :return: None
         """
         self.prt = parent
         self.arret_comput = parent.arret_comput
@@ -336,8 +354,9 @@ class ClassMethRegul:
     def init_meth_regul(self, param, id_weir):
         """
         Initialize the regulation parameters for a mobile weirs.
-        :param param: Dictionary of mobile weirs parameters.
-        :param id_weir: Link ID.
+        :param param (dict): Dictionary of mobile weirs parameters
+        :param id_weir (int): Link ID
+        :return: None
         """
         param.update({
             "rup_level": param["level0"],
@@ -361,9 +380,9 @@ class ClassMethRegul:
     def check_param(self, param, id_weir):
         """
         Validate the consistency of regulation parameters, specifically `VREGOPEN` and `VREGCLOS`.
-        :param param: Dictionary of mobile weirs parameters.
-        :param id_weir: Link ID.
-        :return: True if parameters are valid, False otherwise.
+        :param param (dict): Dictionary of mobile weirs parameters
+        :param id_weir (int): Link ID
+        :return: (bool) True if parameters are valid, False otherwise
         """
         valo = param["VREGOPEN"]
         valf = param["VREGCLOS"]
@@ -379,9 +398,9 @@ class ClassMethRegul:
     def state_regul(self, val_check, param_fg):
         """
         Determine the state of the mobile weirs (OPEN, CLOSE, or MAINTAIN) based on the regulation variable.
-
-        :param val_check: Current value of the regulation variable.
-        :param param_fg: Dictionary of mobile weirs parameters.
+        :param val_check (float): Current value of the regulation variable
+        :param param_fg (dict): Dictionary of mobile weirs parameters
+        :return: val_check (float)
         """
 
         key = param_fg["OPEN_CLOSE"]
@@ -418,9 +437,9 @@ class ClassMethRegul:
     def law_gate_regul(self, param, time):
         """
         Compute the new mobile weirs parameters.
-        :param param: Dictionary of mobile weirs parameters.
-        :param time: Current simulation time.
-        :return: Dictionary of updated mobile weirs parameters.
+        :param param (dict): Dictionary of mobile weirs parameters
+        :param time (float): Current simulation time
+        :return: (dict) Dictionary of updated mobile weirs parameters
         """
 
         status = param["OPEN_CLOSE"]
@@ -446,10 +465,10 @@ class ClassMethRegul:
     def comput_dz(self, vit, dt, dzlimit=0):
         """
         Compute the displacement of the mobile weirs over a time step.
-        :param vit: Velocity of the mobile weirs movement.
-        :param dt: Time step.
-        :param dzlimit: Maximum allowable displacement.
-        :return: Computed displacement.
+        :param vit (float): Velocity of the mobile weirs movement
+        :param dt (float): Time step
+        :param dzlimit (float): Maximum allowable displacement
+        :return: (float) Computed displacement
         """
         dz = 0.0
         if dt > 0:
@@ -459,9 +478,9 @@ class ClassMethRegul:
     def check_dt_regul(self, param_fg, dtp):
         """
         Check if the mobile weirs should be treated during the current time step.
-        :param param_fg: Dictionary of mobile weirs parameters.
-        :param dtp: Time step.
-        :return: True if the mobile weirs should be treated, False otherwise.
+        :param param_fg (dict): Dictionary of mobile weirs parameters
+        :param dtp (float): Time step
+        :return: (bool) True if the mobile weirs should be treated, False otherwise
         """
         crit = param_fg["CRITDTREG"]
         self.compt_dt += 1
@@ -487,6 +506,7 @@ class ClassMethTime:
         """
         Initialize the time-based movable "link" class 
         :param parent: Reference to the parent `ClassMobilWeirs` instance.
+        :return: None
         """
         self.arret_comput = parent.arret_comput
         self.add_info = parent.add_info
@@ -495,7 +515,8 @@ class ClassMethTime:
     def init_meth_time(self, param):
         """
         Initialize the time-based parameters for a mobile weirs.
-        :param param: Dictionary of mobile weirs parameters.
+        :param param (dict): Dictionary of mobile weirs parameters
+        :return: None
         """
         param.update({
             "TIMEZ": np.array(param["TIMEZ"]),
@@ -514,9 +535,9 @@ class ClassMethTime:
     def law_mth_time(self, param, time):
         """
         Compute the new mobile weirs parameters.
-        :param param: Dictionary of mobile weirs parameters.
-        :param time: Current simulation time.
-        :return: Dictionary of updated mobile weirs parameters.
+        :param param (dict): Dictionary of mobile weirs parameters
+        :param time (float): Current simulation time
+        :return: (dict) Dictionary of updated mobile weirs parameters
         """
 
         dnew = {"level": np.interp(time, param["TIMEZ"], param["VALUEZ"])}

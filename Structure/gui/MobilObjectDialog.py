@@ -39,6 +39,11 @@ D_TYP_LINKS = {1: "Weir",
 
 class ClassMobilObjectDialog(QDialog):
     def __init__(self, mgis, typ_obj):
+        """
+        Initialize the dialog for managing movable objects.
+        :param mgis (object): Main GUI object
+        :param typ_obj (str): Type of object ('weir' or 'link')
+        """
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
@@ -92,15 +97,26 @@ class ClassMobilObjectDialog(QDialog):
         self.init_ui()
 
     def init_ui(self):
-        """initialisation gui"""
+        """
+        Initialize the user interface and fill the object list.
+        :return: None
+        """
         self.delete_useless_data()
         self.ui.main_sw.setCurrentIndex(0)
         self.fill_lst_objects()
 
     def sub_widget_closed(self):
+        """
+        Handle the closing of a sub-widget and return to the main view.
+        :return: None
+        """
         self.ui.main_sw.setCurrentIndex(0)
 
     def delete_useless_data(self):
+        """
+        Delete data in the mobility table that does not correspond to existing objects.
+        :return: None
+        """
         sql = "DELETE FROM {0}.{2} WHERE {3} NOT IN " \
               "(SELECT gid FROM {0}.{1})".format(self.mdb.SCHEMA,
                                                  self.obj_table,
@@ -109,7 +125,11 @@ class ClassMobilObjectDialog(QDialog):
         self.mdb.run_query(sql)
 
     def fill_lst_objects(self, def_id=None):
-        """fill configuration list"""
+        """
+        Fill the list of movable objects in the GUI.
+        :param def_id (int): Optional, ID of the object to select by default
+        :return: None
+        """
 
         mdl = QStandardItemModel()
         mdl.setColumnCount(1)
@@ -144,6 +164,11 @@ class ClassMobilObjectDialog(QDialog):
                     break
 
     def cur_object_changed(self):
+        """
+        Handle the event when the selected object changes.
+        Updates the method selection and enables/disables controls accordingly.
+        :return: None
+        """
         self.updating_info = True
         self.ui.gbox_method.setEnabled(True)
         if self.ui.lst_obj.selectionModel().selectedIndexes():
@@ -170,6 +195,11 @@ class ClassMobilObjectDialog(QDialog):
         self.updating_info = False
 
     def cur_method_changed(self):
+        """
+        Handle the event when the selected mobility method changes.
+        Updates the database and enables/disables the edit button.
+        :return: None
+        """
         cur_method = self.bg_method.checkedId()
         if cur_method == 0:
             self.bt_edit.setEnabled(False)
@@ -185,7 +215,10 @@ class ClassMobilObjectDialog(QDialog):
 
     def cur_object_status_changed(self, itm):
         """
-        Select configuration
+        Handle the event when the active/movable status of an object is changed.
+        Updates the database accordingly.
+        :param itm (QStandardItem): The item whose status changed
+        :return: None
         """
         if itm.checkState() == 2:
             cur_val = 't'
@@ -199,6 +232,10 @@ class ClassMobilObjectDialog(QDialog):
         self.mdb.run_query(sql)
 
     def edit_object(self):
+        """
+        Open the appropriate widget for editing the selected object and method.
+        :return: None
+        """
         if self.cur_obj:
             cur_method = self.bg_method.checkedId()
             if cur_method == 1:

@@ -214,6 +214,11 @@ class TaskMascInit():
             return False
 
     def copy_lig(self, fichiers):
+        """
+        Copy the .lig file to the run folder
+        :param fichiers: (str) path to the .lig file
+        :return: None
+        """
         try:
             shutil.copy(fichiers, os.path.join(self.dossier_file_masc, self.basename + ".lig"))
         except Exception as e:

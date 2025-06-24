@@ -36,6 +36,11 @@ class ClassMobilObjectMet3Widget(QWidget):
     widget_closed = pyqtSignal()
 
     def __init__(self, mgis, typ_obj):
+        """
+        Initialize the widget for mobile object method 3.
+        :param mgis (object): Main GUI object
+        :param typ_obj (str): Type of object ('weir' or 'link')
+        """
         QWidget.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
@@ -118,7 +123,10 @@ class ClassMobilObjectMet3Widget(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        """initialisation gui"""
+        """
+        Initialize the user interface.
+        :return: None
+        """
         fill_qcombobox(self.ui.cb_break_met, [["1", "Break at a time"],
                                               ["2", "Break at a value"]])
 
@@ -138,16 +146,31 @@ class ClassMobilObjectMet3Widget(QWidget):
         self.graph = GraphMobSing(self.mgis, self.ui.lay_graph_m1)
 
     def enab_write(self, cs):
+        """
+        Enable or disable the write step control.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.sb_step_write.setEnabled(cs)
         if not cs:
             self.set_def_ctrl_value(self.ui.sb_step_write)
 
     def enab_method(self, cs):
+        """
+        Enable or disable the method selection control.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.cb_break_met.setEnabled(cs)
         if not cs:
             self.set_def_ctrl_value(self.ui.cb_break_met)
 
     def method_changed(self, idx):
+        """
+        Handle change in method selection.
+        :param idx (int): Index of the selected method
+        :return: None
+        """
         if idx == 1:
             self.ui.grp_time.hide()
             self.ui.grp_lvl.show()
@@ -158,17 +181,32 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.ui.grp_time.show()
 
     def enab_variable_break(self, cs):
+        """
+        Enable or disable the variable break control.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.cb_var_break.setEnabled(cs)
         if not cs:
             self.set_def_ctrl_value(self.ui.cb_var_break)
 
     def variable_break_changed(self, idx):
+        """
+        Handle change in variable break selection.
+        :param idx (int): Index of the selected variable
+        :return: None
+        """
         if idx == 1:
             self.ui.sb_break_lvl.setSuffix(" m³/s")
         else:
             self.ui.sb_break_lvl.setSuffix(" m")
 
     def enab_control(self, cs):
+        """
+        Enable or disable the control selection.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.cb_typ_control.setEnabled(cs)
         self.ui.sb_abscissa.setEnabled(cs)
         self.ui.cb_basin.setEnabled(cs)
@@ -178,6 +216,11 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.set_def_ctrl_value(self.ui.cb_basin)
 
     def control_type_changed(self, idx):
+        """
+        Handle change in control type selection.
+        :param idx (int): Index of the selected control type
+        :return: None
+        """
         self.ui.cc_break_var.setChecked(True)
         self.ui.cc_break_var.setChecked(False)
         if idx == 1:
@@ -190,7 +233,10 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.ui.cc_break_var.setEnabled(True)
 
     def create_tab_model(self):
-        """create table"""
+        """
+        Create the table model for time and width.
+        :return: (QStandardItemModel) The table model
+        """
         model = QStandardItemModel()
         model.insertColumns(0, 5)
         for c in range(4):
@@ -202,6 +248,11 @@ class ClassMobilObjectMet3Widget(QWidget):
         return model
 
     def load_object(self, object_id):
+        """
+        Load the object data into the widget.
+        :param object_id (int): Object identifier
+        :return: None
+        """
         self.cur_obj = object_id
 
         if self.typ_obj == 'link':
@@ -232,12 +283,21 @@ class ClassMobilObjectMet3Widget(QWidget):
         self.fill_table()
 
     def input_def_values(self):
+        """
+        Set default values for controls.
+        :return: None
+        """
         self.clear_controls()
         for k, prm in self.d_var.items():
             if prm["cc"]:
                 prm["cc"].setChecked(False)
 
     def set_def_ctrl_value(self, ctrl):
+        """
+        Set the default value for a control.
+        :param ctrl (QWidget): The control widget
+        :return: None
+        """
         for prm in self.d_var.values():
             if prm["ctrl"] == ctrl:
                 if "vdef" in prm.keys():
@@ -246,7 +306,10 @@ class ClassMobilObjectMet3Widget(QWidget):
                     ctrl_set_value(ctrl, ctrl_get_value(prm["cdef"], cc_is_checked=True))
 
     def fill_controls(self):
-        """fill table"""
+        """
+        Fill the controls with data from the database.
+        :return: None
+        """
         self.input_def_values()
 
         if self.cur_obj:
@@ -272,16 +335,28 @@ class ClassMobilObjectMet3Widget(QWidget):
                     prm["cc"].setChecked(True)
 
     def clear_controls(self):
+        """
+        Reset all controls to their default values.
+        :return: None
+        """
         for k, prm in self.d_var.items():
             if prm["cc"]:
                 prm["cc"].setChecked(True)
             self.set_def_ctrl_value(prm["ctrl"])
 
     def unload_object(self):
+        """
+        Unload the current object and clear the table.
+        :return: None
+        """
         self.cur_obj = int()
         self.clear_table()
 
     def clear_table(self):
+        """
+        Clear the table of all rows.
+        :return: None
+        """
         self.filling_tab = True
         mdl = self.ui.tab_sets.model()
         list_id = sorted(range(mdl.rowCount()), reverse=True)
@@ -292,7 +367,10 @@ class ClassMobilObjectMet3Widget(QWidget):
         self.update_courbe()
 
     def fill_table(self):
-        """fill table"""
+        """
+        Fill the table with time and width data from the database.
+        :return: None
+        """
         self.clear_table()
 
         if self.cur_obj:
@@ -328,6 +406,10 @@ class ClassMobilObjectMet3Widget(QWidget):
         self.rb_sec.click()
 
     def save_input(self):
+        """
+        Save the input data to the database.
+        :return: None
+        """
         try:
             l_var = list(self.d_var.keys())
             l_var.extend(["TIMEFUS", "WIDTHFUS"])
@@ -372,10 +454,19 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.mgis.add_info("Cancel of {0} information".format(self.obj_table))
 
     def cancel_input(self):
+        """
+        Cancel the input and close the widget.
+        :return: None
+        """
         self.clear_table()
         self.widget_closed.emit()
 
     def chg_time(self, v):
+        """
+        Change the time unit for the table columns.
+        :param v (int): Index of the selected time unit
+        :return: None
+        """
         unit = ["s", "min", "h", "day"]
         for i in range(4):
             if i == v:
@@ -388,6 +479,10 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.update_courbe()
 
     def new_time(self):
+        """
+        Add a new time row to the table.
+        :return: None
+        """
         self.filling_tab = True
 
         mdl = self.ui.tab_sets.model()
@@ -410,6 +505,10 @@ class ClassMobilObjectMet3Widget(QWidget):
         self.update_courbe()
 
     def delete_time(self):
+        """
+        Delete selected time rows from the table.
+        :return: None
+        """
         if self.ui.tab_sets.selectedIndexes():
             rows = [idx.row() for idx in self.ui.tab_sets.selectedIndexes()]
             rows = list(set(rows))
@@ -421,7 +520,8 @@ class ClassMobilObjectMet3Widget(QWidget):
 
     def short_cut_row_del(self):
         """
-        cut row
+        Clear selected cells in the table.
+        :return: None
         """
         if self.ui.tab_sets.hasFocus():
             self.filling_tab = True
@@ -435,7 +535,10 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.update_courbe()
 
     def import_csv(self):
-        """Import csv file"""
+        """
+        Import time and width data from a CSV file.
+        :return: None
+        """
         nb_col = 2
         first_ligne = True
         listf, _ = QFileDialog.getOpenFileNames(
@@ -480,6 +583,11 @@ class ClassMobilObjectMet3Widget(QWidget):
                 self.mgis.add_info("Import failed ({})".format(listf[0]), dbg=True)
 
     def on_tab_data_change(self, itm):
+        """
+        Handle changes in the table data.
+        :param itm (QStandardItem): The changed item
+        :return: None
+        """
         if itm.column() < 4:
             model = itm.model()
             if itm.data(0) or itm.data(0) == 0.0:
@@ -541,6 +649,10 @@ class ClassMobilObjectMet3Widget(QWidget):
             self.update_courbe()
 
     def update_courbe(self):
+        """
+        Update the plot with the current table data.
+        :return: None
+        """
         data = {}
 
         col_x = self.bg_time.checkedId()
@@ -562,9 +674,19 @@ class ItemEditorFactory(QItemEditorFactory):
     # without the use of an editor item factory. In this case, the following virtual
     # functions must be reimplemented:
     def __init__(self):
+        """
+        Initialize the item editor factory.
+        :return: None
+        """
         QItemEditorFactory.__init__(self)
 
     def createEditor(self, user_type, parent):
+        """
+        Create an editor widget for the given user type.
+        :param user_type (QVariant.Type): The type of the data
+        :param parent (QWidget): The parent widget
+        :return: (QWidget) The editor widget
+        """
         if user_type == QVariant.Double or user_type == 0:
             double_spin_box = QDoubleSpinBox(parent)
             double_spin_box.setDecimals(10)
@@ -579,6 +701,12 @@ class GraphMobSing(GraphCommon):
     """class Dialog"""
 
     def __init__(self, mgis=None, lay=None):
+        """
+        Initialize the graph for mobile singularity.
+        :param mgis (object): Main GUI object
+        :param lay (QWidget): Layout widget for the graph
+        :return: None
+        """
         GraphCommon.__init__(self, mgis)
         self.mdb = self.mgis.mdb
         self.init_ui_common_p()
@@ -588,6 +716,10 @@ class GraphMobSing(GraphCommon):
         self.init_ui()
 
     def init_ui(self):
+        """
+        Initialize the graph UI.
+        :return: None
+        """
         self.axes = self.fig.add_subplot(111)
         self.axes.tick_params(axis="both", labelsize=7.0)
         self.axes.grid(True)
@@ -600,4 +732,9 @@ class GraphMobSing(GraphCommon):
 
 
 def to_bool(txt):
+    """
+    Convert a string to boolean.
+    :param txt (str): Input string
+    :return: (bool) True if txt is 'true', False otherwise
+    """
     return txt.lower() == "true"

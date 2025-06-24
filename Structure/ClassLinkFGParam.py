@@ -34,6 +34,7 @@ class ClassLinkFGParam(object):
         """
         Constructor for ClassLinkFGParam.
         Initializes parameter dictionaries and default values.
+        :return: None
         """
         self.param_fg = {}
         self.list_actif = []
@@ -217,9 +218,9 @@ class ClassLinkFGParam(object):
         If `parent` is provided, fetch parameters from the database.
         Otherwise, import parameters from a file.
 
-        :param parent: Parent class (optional).
-        :param file_name: Name of the file to import parameters from (default: "cli_fg_lk.obj").
-        :return: True if parameters are valid, False otherwise.
+        :param parent (object): Parent class (optional).
+        :param file (str): Name of the file to import parameters from (default: "cli_fg_lk.obj").  
+        :return: (bool) True if parameters are valid, False otherwise
         """
         if not parent:
             path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../mascaret"))
@@ -241,9 +242,9 @@ class ClassLinkFGParam(object):
         """
         Export parameters for mobile links.
 
-        :param parent: Parent class (optional).
-        :param file_name: Name of the file to export parameters to (default: "cli_fg_lk.obj").
-        :return: True if export is successful, False otherwise.
+        :param parent (object): Parent class (optional).
+        :param file (str): Name of the file to import parameters from (default: "cli_fg_lk.obj").
+        :return: (bool) True if export is successful, False otherwise.
         """
         if not parent:
             txt = "Error No parent"
@@ -270,8 +271,8 @@ class ClassLinkFGParam(object):
         Fetches general link information from the `links` table and
         mobility-specific values from the `links_mob_val` table.
 
-        :param db: Database object.
-        :return: True if parameters are successfully fetched, otherwise False.
+        :param db (object): Database object.
+        :return:(bool) True if parameters are successfully fetched, otherwise False.
 
         """
         casiers = db.select("basins", "active ORDER BY basinnum ", list_var=['basinnum'])
@@ -375,8 +376,8 @@ class ClassLinkFGParam(object):
         """
         Convert a value to its specified type.
 
-        :param typ: The target type (e.g., 'bool', 'int', 'float').
-        :param val: The value to be converted.
+        :param typ (str): The target type (e.g., 'bool', 'int', 'float').
+        :param val (str): The value to be converted.
         :return: The converted value.
         """
         if not val:
@@ -395,10 +396,10 @@ class ClassLinkFGParam(object):
 
         Ensures that each link has the necessary parameters based on its mobility method.
 
-        :param num: Link number.
-        :param test: Dictionary containing the parameters to be tested.
-        :param dlist: Dictionary of required parameters per method.
-        :return: True if all variables are present, otherwise False.
+        :param num (int): Link number.
+        :param test (dict): Dictionary containing the parameters to be tested.
+        :param dlist (dict): Dictionary of required parameters per method.
+        :return: (bool) True if all variables are present, otherwise False.
         """
         lst_test = dlist[test["method_mob"]]
         missing_vars = [var for var in lst_test if var not in test]
@@ -417,9 +418,9 @@ class ClassLinkFGParam(object):
         """
         Check the regulation parameters.
 
-        :param num: Link number.
-        :param test: Dictionary containing the parameters to be tested.
-        :return: True if the regulation parameters are valid, False otherwise.
+        :param num (int): Link number.
+        :param test (dict): Dictionary containing the parameters to be tested.
+        :return: (bool) True if the regulation parameters are valid, False otherwise.
         """
         if test["method_mob"] == 2:
             if test["DIRFG"] == 'D' and test["VREGOPEN"] <= test["VREGCLOS"]:
@@ -440,7 +441,7 @@ class ClassLinkFGParam(object):
         """
         Verify that all is OK to run the model.
 
-        :return: True if all is OK, otherwise False.
+        :return: (bool) True if all is OK, otherwise False.
         """
         dlist = self.create_lst_test()
         for num, test in self.param_fg.items():
@@ -454,7 +455,7 @@ class ClassLinkFGParam(object):
         """
         Create a dictionary of required variables for a given mobility method.
 
-        :return: Dictionary of list of required variables.
+        :return:(dict) Dictionary of list of required variables.
         """
         lst_com = ["name", "level0", "nature", "CSection0", "width0", "abscissa", "branchnum",
                    "basinstart", "basinend", "method_mob"]
@@ -474,7 +475,7 @@ class ClassLinkFGParam(object):
     def export_cl(self, name="cli_fg_lk.obj"):
         """
         Export the `param_fg` dictionary to a JSON file.
-        :param name: Name of the output file (default: "cli_fg_lk.obj").
+        :param name (str): Name of the output file (default: "cli_fg_lk.obj").
         """
         with open(name, "w") as file:
             json.dump(self.param_fg, file)
@@ -483,7 +484,7 @@ class ClassLinkFGParam(object):
     def import_cl(self, name="cli_fg_lk.obj"):
         """
         Import parameters from a JSON file into the `param_fg` dictionary.
-        :param name: Name of the input file (default: "cli_fg_lk.obj").
+        :param name (str): Name of the input file (default: "cli_fg_lk.obj").
         :return: True if the file is successfully loaded, otherwise False.
         """
         if os.path.isfile(name):

@@ -41,6 +41,11 @@ except  ModuleNotFoundError or ImportError:
 
 
 def check_init(file):
+    """
+    Check if the file is an initialization file.
+    :param file (str): File name
+    :return: (bool) True if file is an init file, False otherwise
+    """
     if "_init." in file:
         return True
     return False
@@ -50,6 +55,12 @@ class ClassAPIMascaret:
     """Class contain  model files creation and run model mascaret"""
 
     def __init__(self, main, dbg=False):
+        """
+        Initialize the API Mascaret class.
+        :param main (object or dict): Main object or configuration dictionary
+        :param dbg (bool): Debug mode
+        :return: None
+        """
         # def __init__(self):
         self.DEBUG = dbg
 
@@ -108,8 +119,9 @@ class ClassAPIMascaret:
 
     def initial(self, casfile):
         """
-        Initialisation mascaret model with
-        :return:
+        Initialize the Mascaret model with the given case file.
+        :param casfile (str): Path to the xcas file
+        :return: (int) 0 if successful, 1 otherwise
         """
         study_files = self.init_file(casfile)
         # print(len(study_files[0]), len(study_files[1]))
@@ -128,8 +140,8 @@ class ClassAPIMascaret:
 
     def init_break_and_regul(self):
         """
-        intialize the management break
-        :return:
+        Initialize the management of breaks for weirs.
+        :return: None
         """
 
         param = get_no_keep_break()
@@ -148,9 +160,9 @@ class ClassAPIMascaret:
 
     def init_file(self, casfile):
         """
-        Get file for compute
-        :param casfile: xcas file
-        :return: list of type and of file
+        Get files for computation.
+        :param casfile (str): xcas file
+        :return: (list) List of file names and types, or None if not found
         """
         initfile = False
         if "_init." in casfile:
@@ -259,8 +271,8 @@ class ClassAPIMascaret:
 
     def init_hydro(self):
         """
-        Initialize hydraulic
-        :return:
+        Initialize hydraulic state for Mascaret.
+        :return: None
         """
         self.npoin = self.masc.get_var_size("Model.X")[0]
         if self.filelig is None:
@@ -274,8 +286,8 @@ class ClassAPIMascaret:
 
     def init_crit_stop(self):
         """
-        Initializes the variables  for the different stop criteriae
-        :return:
+        Initialize variables for the different stop criteria.
+        :return: None
         """
         self.dt = self.masc.get("Model.DT")
         self.tini = self.masc.get("Model.InitTime")
@@ -291,7 +303,10 @@ class ClassAPIMascaret:
         self.mess_crit_stop()
 
     def mess_crit_stop(self):
-        """Print the criteria information"""
+        """
+        Print the criteria information.
+        :return: None
+        """
         txt = "**************************************\n"
         if self.stpcrit == 1:
             txt += (
@@ -335,8 +350,9 @@ class ClassAPIMascaret:
 
     def check_not_to_keep_break(self, masc):
         """
-        Check if the break is kept
-        :return:
+        Check if the break is kept for each weir.
+        :param masc (Mascaret): Mascaret model object
+        :return: None
         """
         # Optimisation: regrouper les accès à masc.get pour limiter les appels coûteux
         lst_node = self.lst_node
@@ -351,7 +367,10 @@ class ClassAPIMascaret:
                     # TODO intergrer dans les graph
 
     def compute(self):
-        """compute"""
+        """
+        Run the Mascaret computation loop according to stop criteria.
+        :return: None
+        """
         t0 = self.tini
         dtp = self.dt
         t1 = t0 + dtp
@@ -397,6 +416,21 @@ class ClassAPIMascaret:
     def one_iter(self, t0, t1, dtp,
                  masc, conum, clfg, clfg_lk, clfg_w,
                  mobil_struct, mobil_link, mobil_w):
+        """
+        Perform one iteration of the Mascaret computation.
+        :param t0 (float): Current time
+        :param t1 (float): Next time
+        :param dtp (float): Time step
+        :param masc (Mascaret): Mascaret model object
+        :param conum (bool): Variable time step flag
+        :param clfg (ClassFloodGate): FloodGate structure handler
+        :param clfg_lk (ClassFloodGateLk): FloodGate link handler
+        :param clfg_w (ClassMobilWeirs): Mobile weirs handler
+        :param mobil_struct (bool): Structure mobility flag
+        :param mobil_link (bool): Link mobility flag
+        :param mobil_w (bool): Weir mobility flag
+        :return: (tuple) Updated t0, t1, dtp
+        """
         # Optimisation: stocker les méthodes dans des variables locales
 
         if mobil_struct:
@@ -420,11 +454,11 @@ class ClassAPIMascaret:
 
     def finalize(self):
         """
-        Finalize the computing :
-        - store results
-        - close masc object
-        - Display the end information
-        :return:
+        Finalize the computation:
+        - Store results
+        - Close Mascaret object
+        - Display end information
+        :return: None
         """
         info = self.masc.log_stream.getvalue()
         self.add_info(info)
@@ -449,21 +483,21 @@ class ClassAPIMascaret:
 
     def write_res_struct(self, res, filen="res_struct.res"):
         """
-        Write a json file about the hydraulic structure results
-        :param res: results to write f
-        :param filen: file name , default res_struct.res
-        :return:
+        Write a JSON file about the hydraulic structure results.
+        :param res (dict): Results to write
+        :param filen (str): File name, default "res_struct.res"
+        :return: None
         """
         with open(os.path.join(self.dossier_file_masc, filen), "w") as filein:
             json.dump(res, filein)
 
     def main(self, filename, tracer=False, basin=False):
         """
-         Main programme which run model
-        :param filename: Xcas file
-        :param tracer: if there is the tracers
-        :param basin: if there is the basins
-        :return:
+        Main program which runs the model.
+        :param filename (str): Xcas file
+        :param tracer (bool): If there are tracers
+        :param basin (bool): If there are basins
+        :return: None
         """
         self.tracer = tracer
         self.basin = basin
@@ -484,9 +518,9 @@ class ClassAPIMascaret:
 
     def add_info(self, txt):
         """
-        Display text
-        :param txt: Text to display
-        :return:
+        Display text information.
+        :param txt (str): Text to display
+        :return: None
         """
         self.mess.add_mess('api_{}'.format(self.num_mess), 'info', txt)
         self.num_mess += 1

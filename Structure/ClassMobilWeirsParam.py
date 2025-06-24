@@ -29,9 +29,9 @@ class ClassMobilWeirsParam(object):
     def __init__(self):
         """
         Initialize the ClassMobilWeirsParam object.
-        - Defines the list of parameters (`lst_param`) for mobile weirs weirs.
-        - Sets up default methods (`dmeth`) for mobility handling.
         """
+        # Defines the list of parameters (`lst_param`) for mobile weirs weirs.
+        # Sets up default methods (`dmeth`) for mobility handling.
         self.param_fg = {}
         self.list_actif = []
         self.lst_param = {
@@ -110,11 +110,9 @@ class ClassMobilWeirsParam(object):
     def get_param(self, parent=None, file="cli_fg_weirs.obj"):
         """
         Retrieve parameters for mobile weirs.
-        - If `parent` is provided, fetch parameters from the database.
-        - Otherwise, import parameters from a file.
-
-        :param parent: Parent class (optional).
-        :param file: Name of the file to import parameters from (default: "cli_fg_weirs.obj").
+        :param parent (object): Parent class (optional)
+        :param file (str): Name of the file to import parameters from
+        :return: (bool) True if parameters are valid, False otherwise
         """
         if not parent:
             path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../mascaret"))
@@ -134,9 +132,10 @@ class ClassMobilWeirsParam(object):
 
     def create_cli_fg(self, parent=None, file="cli_fg_weirs.obj"):
         """
-               Export parameters for mobile weirs.
-               :param parent: Parent class (optional).
-               :param file: Name of the file to import parameters from (default: "cli_weirs_weirs.obj").
+        Export parameters for mobile weirs.
+        :param parent (object): Parent class (optional)
+        :param file (str): Name of the file to export parameters to
+        :return: (bool) True if export is successful, False otherwise
         """
         if not parent:
             txt = "Error No parent"
@@ -154,12 +153,9 @@ class ClassMobilWeirsParam(object):
 
     def fill_param_to_db(self, db):
         """
-        Populate the `param_fg` dictionary with parameters from the database.
-        - Fetches general weirs information from the `weirs` table.
-        - Fetches mobility-specific values from the `weirs_mob_val` table.
-
-        :param db: Database object.
-        :return: True if parameters are successfully fetched, otherwise False.
+        Populate the param_fg dictionary with parameters from the database.
+        :param db (object): Database object
+        :return: (bool) True if parameters are successfully fetched, otherwise False
         """
         lst_var = ["gid",
                    "name",
@@ -252,9 +248,9 @@ class ClassMobilWeirsParam(object):
     def typ_to_val(typ, val):
         """
         Convert a value to its specified type.
-        :param typ: The target type (e.g., 'bool', 'int', 'float').
-        :param val: The value to be converted.
-        :return: The converted value.
+        :param typ (str): The target type (e.g., 'bool', 'int', 'float')
+        :param val (any): The value to be converted
+        :return: (any) The converted value
         """
         if typ == 'bool':
             return str2bool(val)
@@ -267,12 +263,11 @@ class ClassMobilWeirsParam(object):
 
     def check_lst_param(self, num, test, dlist):
         """
-        Verify that all required variables are present in the `param_fg` dictionary.
-        - Ensures that each weirs has the necessary parameters based on its mobility method.
-        :param num: weirs number.
-        :param test: Dictionary containing the parameters to be tested.
-        :param dlist: dictionnary conatine the list of parameters for each method
-        :return: True if all variables are present, otherwise False.
+        Verify that all required variables are present in the param_fg dictionary.
+        :param num (int): weirs number
+        :param test (dict): Dictionary containing the parameters to be tested
+        :param dlist (dict): Dictionary containing the list of parameters for each method
+        :return: (bool) True if all variables are present, otherwise False
         """
         lst_test = dlist[test["method_mob"]]
         missing_vars = [var for var in lst_test if var not in test]
@@ -289,10 +284,10 @@ class ClassMobilWeirsParam(object):
 
     def check_regul(self, num, test):
         """
-            Check the regulation parameters.
-            :param num: weirs number.
-            :param test: Dictionary containing the parameters to be tested.
-            :return: True if the regulation parameters are valid, False otherwise.
+        Check the regulation parameters.
+        :param num (int): weirs number
+        :param test (dict): Dictionary containing the parameters to be tested
+        :return: (bool) True if the regulation parameters are valid, False otherwise
         """
         if test["method_mob"] == 2:
             if test["VREGOPEN"] < test["VREGCLOS"]:
@@ -306,7 +301,7 @@ class ClassMobilWeirsParam(object):
     def check_param(self):
         """
             Verify that all is OK to run the model.
-            :return: True if all is OK, otherwise False.
+            :return: (bool) True if all is OK, otherwise False
         """
         dlist = self.create_lst_test()
         for num, test in self.param_fg.items():
@@ -319,8 +314,8 @@ class ClassMobilWeirsParam(object):
 
     def create_lst_test(self):
         """
-        Create a dictionnary of required variables for a given mobility method.
-        :return: Dictionnary of list of required variables.
+        Create a dictionary of required variables for a given mobility method.
+        :return: (dict) Dictionary of list of required variables
         """
         lst_com = ["name", "level0", "abscissa", "branchnum", "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG",
@@ -335,8 +330,9 @@ class ClassMobilWeirsParam(object):
 
     def export_cl(self, name="cli_fg_weirs.obj"):
         """
-        Export the `param_fg` dictionary to a JSON file.
-        :param name: Name of the output file (default: "cli_fg_weirs.obj").
+        Export the param_fg dictionary to a JSON file.
+        :param name (str): Name of the output file
+        :return: None
         """
         with open(name, "w") as file:
             json.dump(self.param_fg, file)
@@ -344,9 +340,9 @@ class ClassMobilWeirsParam(object):
 
     def import_cl(self, name="cli_fg_weirs.obj"):
         """
-        Import parameters from a JSON file into the `param_fg` dictionary.
-        :param name: Name of the input file (default: "cli_fg_weirs.obj").
-        :return: True if the file is successfully loaded, otherwise False.
+        Import parameters from a JSON file into the param_fg dictionary.
+        :param name (str): Name of the input file
+        :return: (bool) True if the file is successfully loaded, otherwise False
         """
         if os.path.isfile(name):
             with open(name, "r") as file:
@@ -363,7 +359,8 @@ class ClassMobilWeirsParam(object):
     def fg_actif_weirs(self, db=None):
         """
         Check if there are any active mobile weirs.
-        :return: True if there are active weirs, otherwise False.
+        :param db (object): Database object (optional)
+        :return: (bool) True if there are active weirs, otherwise False
         """
         if db:
             sql = f"SELECT EXISTS (SELECT 1 FROM {db.SCHEMA}.weirs WHERE active_mob = TRUE and active= TRUE );"

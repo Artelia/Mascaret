@@ -136,6 +136,12 @@ class ClassTableStructure:
 
 
 def update_etat_struct(mdb):
+    """
+    Update the state of structures in the database.
+
+    :param mdb (object): Database connection object
+    :return: None
+    """
     sql = "SELECT gid FROM {0}.profiles ".format(mdb.SCHEMA)
 
     rows = mdb.run_query(sql, fetch=True)
@@ -184,7 +190,8 @@ def get_no_keep_break(file="no_keep_break.json"):
     """
     Retrieve parameters for the permanent break or not.
 
-    :param file: Name of the file to import parameters from (default: "no_keep_breakk.json").
+    :param file (str): Name of the file to import parameters from (default: "no_keep_break.json")
+    :return: param (dict): Parameters dictionary
     """
     param = {}
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../mascaret"))

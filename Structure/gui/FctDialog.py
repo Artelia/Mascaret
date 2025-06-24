@@ -24,6 +24,13 @@ from qgis.PyQt.uic import *
 
 
 def ctrl_set_value(ctrl, val, cc_is_checked=False):
+    """
+    Set the value of a Qt control widget.
+    :param ctrl (QWidget): The control widget
+    :param val (any): The value to set
+    :param cc_is_checked (bool): If True, use isChecked for QCheckBox
+    :return: None
+    """
     if ctrl.metaObject().className() == "QSpinBox":
         ctrl.setValue(int(val))
     elif ctrl.metaObject().className() == "QDoubleSpinBox":
@@ -41,6 +48,12 @@ def ctrl_set_value(ctrl, val, cc_is_checked=False):
 
 
 def ctrl_get_value(ctrl, cc_is_checked=False):
+    """
+    Get the value from a Qt control widget.
+    :param ctrl (QWidget): The control widget
+    :param cc_is_checked (bool): If True, use isChecked for QCheckBox
+    :return: val (any): The value of the control
+    """
     val = None
     if ctrl.metaObject().className() == "QLineEdit":
         val = ctrl.text()
@@ -62,6 +75,15 @@ def ctrl_get_value(ctrl, cc_is_checked=False):
 
 
 def fill_qcombobox(cb, lst, val_def=None, icn=None, size=None):
+    """
+    Fill a QComboBox with items.
+    :param cb (QComboBox): The combo box to fill
+    :param lst (list): List of [data, display] pairs
+    :param val_def (any): Default value to select
+    :param icn (str): Icon path format string
+    :param size (int): Icon size
+    :return: None
+    """
     cb.blockSignals(True)
     cb.clear()
 

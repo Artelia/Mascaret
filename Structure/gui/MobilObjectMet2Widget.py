@@ -34,6 +34,11 @@ class ClassMobilObjectMet2Widget(QWidget):
     widget_closed = pyqtSignal()
 
     def __init__(self, mgis, typ_obj):
+        """
+        Initialize the widget for mobile object method 2.
+        :param mgis (object): Main GUI object
+        :param typ_obj (str): Type of object ('weir' or 'link')
+        """
         QWidget.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
@@ -148,7 +153,10 @@ class ClassMobilObjectMet2Widget(QWidget):
         self.clear_controls()
 
     def init_ui(self):
-        """initialisation gui"""
+        """
+        Initialize the user interface.
+        :return: None
+        """
         fill_qcombobox(self.ui.cb_step_time, [["NDTREG", "N Time Step"],
                                               ["DTREG", "Time Step"]])
 
@@ -164,12 +172,21 @@ class ClassMobilObjectMet2Widget(QWidget):
                                               ["Q", "Flow rate"]])
 
     def input_def_values(self):
+        """
+        Set default values for controls.
+        :return: None
+        """
         self.clear_controls()
         for k, prm in self.d_var.items():
             if prm["cc"]:
                 prm["cc"].setChecked(False)
 
     def set_def_ctrl_value(self, ctrl):
+        """
+        Set the default value for a control.
+        :param ctrl (QWidget): The control widget
+        :return: None
+        """
         for prm in self.d_var.values():
             if prm["ctrl"] == ctrl:
                 if "vdef" in prm.keys():
@@ -179,17 +196,32 @@ class ClassMobilObjectMet2Widget(QWidget):
                 break
 
     def direction_changed(self, idx):
+        """
+        Handle change in direction selection.
+        :param idx (int): Index of the selected direction
+        :return: None
+        """
         self.d_var["ZINITREG"]["vdef"] = self.lvls[idx]
         if not self.ui.cc_init_lvl.isChecked():
             self.ui.cc_init_lvl.setChecked(True)
             self.ui.cc_init_lvl.setChecked(False)
 
     def enab_write(self, cs):
+        """
+        Enable or disable the write step control.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.sb_step_write.setEnabled(cs)
         if not cs:
             self.set_def_ctrl_value(self.ui.sb_step_write)
 
     def enab_close_velocity(self, cs):
+        """
+        Enable or disable the close velocity controls.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.sb_close_vel.setEnabled(cs)
         self.ui.cb_unit_close_vel.setEnabled(cs)
         if not cs:
@@ -197,11 +229,19 @@ class ClassMobilObjectMet2Widget(QWidget):
             self.set_def_ctrl_value(self.ui.cb_unit_close_vel)
 
     def open_velocity_changed(self):
+        """
+        Handle change in open velocity value.
+        :return: None
+        """
         # value default if cc_close False
         if not self.ui.cc_close_vel.isChecked():
             self.set_def_ctrl_value(self.ui.sb_close_vel)
 
     def open_velocity_unit_changed(self):
+        """
+        Handle change in open velocity unit.
+        :return: None
+        """
         val_unit = ctrl_get_value(self.ui.cb_unit_open_vel)
         val = self.dvelo['open']['val'] / self.dvelo['open']['old_unit'] * val_unit
         ctrl_set_value(self.ui.sb_open_vel, val)
@@ -211,6 +251,10 @@ class ClassMobilObjectMet2Widget(QWidget):
                                    'val': val})
 
     def close_velocity_unit_changed(self):
+        """
+        Handle change in close velocity unit.
+        :return: None
+        """
         val_unit = ctrl_get_value(self.ui.cb_unit_close_vel)
         val = self.dvelo['close']['val'] / self.dvelo['close']['old_unit'] * val_unit
         ctrl_set_value(self.ui.sb_close_vel, val)
@@ -218,20 +262,39 @@ class ClassMobilObjectMet2Widget(QWidget):
                                     'val': val})
 
     def enab_initial_level(self, cs):
+        """
+        Enable or disable the initial level control.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.sb_init_lvl.setEnabled(cs)
         if not cs:
             self.set_def_ctrl_value(self.ui.sb_init_lvl)
 
     def close_level_changed(self):
+        """
+        Handle change in close level value.
+        :return: None
+        """
         if not self.ui.cc_open_lvl.isChecked():
             self.set_def_ctrl_value(self.ui.sb_open_lvl)
 
     def enab_variable_regulation(self, cs):
+        """
+        Enable or disable the variable regulation control.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.cb_var_regul.setEnabled(cs)
         if not cs:
             self.set_def_ctrl_value(self.ui.cb_var_regul)
 
     def variable_regulation_changed(self, idx):
+        """
+        Handle change in variable regulation selection.
+        :param idx (int): Index of the selected variable
+        :return: None
+        """
         if idx == 1:
             self.ui.sb_open_lvl.setSuffix(" m³/s")
             self.ui.sb_close_lvl.setSuffix(" m³/s")
@@ -246,6 +309,11 @@ class ClassMobilObjectMet2Widget(QWidget):
         self.set_def_ctrl_value(self.ui.sb_close_lvl)
 
     def enab_control(self, cs):
+        """
+        Enable or disable the control selection.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.cb_typ_control.setEnabled(cs)
         self.ui.sb_abscissa.setEnabled(cs)
         self.ui.cb_basin.setEnabled(cs)
@@ -255,11 +323,21 @@ class ClassMobilObjectMet2Widget(QWidget):
             self.set_def_ctrl_value(self.ui.cb_basin)
 
     def enab_opening_level(self, cs):
+        """
+        Enable or disable the opening level control.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.sb_open_lvl.setEnabled(cs)
         if not cs:
             self.set_def_ctrl_value(self.ui.sb_open_lvl)
 
     def control_type_changed(self, idx):
+        """
+        Handle change in control type selection.
+        :param idx (int): Index of the selected control type
+        :return: None
+        """
         self.ui.cc_var_regul.setChecked(True)
         self.ui.cc_var_regul.setChecked(False)
         if idx == 1:
@@ -272,6 +350,11 @@ class ClassMobilObjectMet2Widget(QWidget):
             self.ui.cc_var_regul.setEnabled(True)
 
     def enab_step_time(self, cs):
+        """
+        Enable or disable the step time controls.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.cb_step_time.setEnabled(cs)
         self.ui.lbl_step_count.setEnabled(cs)
         self.ui.sb_step_count.setEnabled(cs)
@@ -283,6 +366,11 @@ class ClassMobilObjectMet2Widget(QWidget):
             self.set_def_ctrl_value(self.ui.sb_step_time)
 
     def step_time_type_changed(self, idx):
+        """
+        Handle change in step time type selection.
+        :param idx (int): Index of the selected step time type
+        :return: None
+        """
         if idx == 1:
             self.ui.sb_step_time.setValue(1.)
             self.ui.lbl_step_count.hide()
@@ -299,21 +387,41 @@ class ClassMobilObjectMet2Widget(QWidget):
             self.ui.sb_step_time.setValue(0.)
 
     def enab_max_increment(self, cs):
+        """
+        Enable or disable the max increment control.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.sb_z_inc.setEnabled(cs)
         if not cs:
             self.set_def_ctrl_value(self.ui.sb_z_inc)
 
     def enab_breaking_value(self, cs):
+        """
+        Enable or disable the breaking value control.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.sb_break_val.setEnabled(cs)
         if not cs:
             self.set_def_ctrl_value(self.ui.sb_break_val)
 
     def enab_breaking_level(self, cs):
+        """
+        Enable or disable the breaking level control.
+        :param cs (bool): Checked state
+        :return: None
+        """
         self.ui.sb_break_lvl.setEnabled(cs)
         if not cs:
             self.set_def_ctrl_value(self.ui.sb_break_lvl)
 
     def load_object(self, object_id):
+        """
+        Load the object data into the widget.
+        :param object_id (int): Object identifier
+        :return: None
+        """
         self.cur_obj = object_id
         if self.cur_obj:
 
@@ -420,12 +528,20 @@ class ClassMobilObjectMet2Widget(QWidget):
                     prm["cc"].setChecked(True)
 
     def clear_controls(self):
+        """
+        Reset all controls to their default values.
+        :return: None
+        """
         for k, prm in self.d_var.items():
             if prm["cc"]:
                 prm["cc"].setChecked(True)
             self.set_def_ctrl_value(prm["ctrl"])
 
     def save_input(self):
+        """
+        Save the input data to the database.
+        :return: None
+        """
         recs = []
         l_var = list(self.d_var.keys())
         txt_var = "('{}')".format("', '".join(l_var))
@@ -462,8 +578,17 @@ class ClassMobilObjectMet2Widget(QWidget):
         self.widget_closed.emit()
 
     def cancel_input(self):
+        """
+        Cancel the input and close the widget.
+        :return: None
+        """
         self.widget_closed.emit()
 
 
 def to_bool(txt):
+    """
+    Convert a string to boolean.
+    :param txt (str): Input string
+    :return: (bool) True if txt is 'true', False otherwise
+    """
     return txt.lower() == "true"

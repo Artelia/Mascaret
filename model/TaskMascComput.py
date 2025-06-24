@@ -64,10 +64,10 @@ class TaskMascComput(QgsTask):
 
     def log_mess(self, txt, flag, typ='info'):
         """Manage message
-        Args:
-            :param txt : (str) text
-            :param flag : (str) error flag
-            :param typ :(str) message typ
+        :param txt : (str) text
+        :param flag : (str) error flag
+        :param typ :(str) message typ
+        :return: None
         """
         self.mess.add_mess(flag, typ, txt)
         if typ == 'warning':
@@ -80,8 +80,8 @@ class TaskMascComput(QgsTask):
     def add_log_mess(self, obj):
         """
         Add log message to classMessage object
-        Args:
-            :param obj : (object) ClassMessage
+        :param obj : (object) ClassMessage
+        :return: None
         """
         fill_d = self.mess.mess_fill_other_obj(obj)
         if fill_d:
@@ -96,9 +96,9 @@ class TaskMascComput(QgsTask):
     def update_inputs(self, up_dict, cpt_init=False):
         """
         Updating class parameters
-        Args:
-            :param  up_dict: (dict) new parameters
-            :param cpt_init : (boolean) if inialisation phase or not
+        :param  up_dict: (dict) new parameters
+        :param cpt_init : (boolean) if inialisation phase or not
+        :return: None
         """
         self.par = up_dict['par']
         self.scen = up_dict['scen']
@@ -107,10 +107,8 @@ class TaskMascComput(QgsTask):
     def maj_param(self, up_dict):
         """"
         Updating the information transfer dictionary
-        Args:
-            :param  up_dict: (dict) transfer dictionary
-        Return :
-            :return: (dict)
+        :param  up_dict: (dict) transfer dictionary
+        :return : (dict) updated transfer dictionary
         """
         up_dict['id_run'] = self.id_run
         up_dict['save_res_struct'] = self.save_res_struct
@@ -119,8 +117,7 @@ class TaskMascComput(QgsTask):
     def run(self):
         """
         Run task
-        Return :
-            :return boolean
+        :return (boolean): True if success, False if error
         """
         if self.cpt_init:
             sceninit = self.scen + "_init"
@@ -148,12 +145,12 @@ class TaskMascComput(QgsTask):
     def lance_mascaret(self, fichier_cas, id_run, tracer=False, casier=False):
         """
         Run mascaret
-        Args:
-            :param fichier_cas:
-            :param id_run:
-            :param tracer:
-            :param casier:
-        :return:
+      
+        :param fichier_cas (str): file name of the cas file
+        :param id_run (int): run id
+        :param tracer (boolean): if tracer is present
+        :param casier (boolean): if casier is present
+        :return (boolean): True if success, False if error
         """
         self.log_mess('TaskMascComput Begin', 'info1')
         os.chdir(self.dossier_file_masc)
@@ -206,10 +203,9 @@ class TaskMascComput(QgsTask):
     def insert_id_run(self, run_, scen):
         """
         creation run line in runs table
-        Args:
-            :param run_: run name
-            :param scen: scenario name
-        :return:
+        :param run_: run name
+        :param scen: scenario name
+        :return (id_run): run id
         """
 
         maintenant = datetime.datetime.utcnow()

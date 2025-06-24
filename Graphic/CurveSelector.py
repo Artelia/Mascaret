@@ -29,10 +29,10 @@ from datetime import date, timedelta, datetime
 
 def list_sql(liste, typ="str"):
     """
-    list to srting for sql script
-    :param liste: element list
-    :param typ : element type
-    :return:
+    Convert a list to a SQL tuple string for use in SQL queries.
+    :param liste (list): List of elements to convert
+    :param typ (str): Type of elements ('str', 'int', or 'float')
+    :return: txt (str): SQL tuple string
     """
     txt = "("
     for t_res in liste:
@@ -458,15 +458,15 @@ class CurveSelectorWidget(QWidget):
             "ZMAX": False,
             "CHAR": False,
         }
-
+        list_vars = []
         if self.cur_scen:
-            list_vars = []
+            
             for typ_res in list_typ_res:
                 if typ_res in self.info_graph.keys():
                     list_vars.extend(self.info_graph[typ_res]["var"])
-            sql = "SELECT * FROM {0}.results_var WHERE id in {1}".format(
-                self.mdb.SCHEMA, list_sql(list_vars)
-            )
+        sql = "SELECT * FROM {0}.results_var WHERE id in {1}".format(
+            self.mdb.SCHEMA, list_sql(list_vars)
+        )
         # else:
         #     sql = "SELECT DISTINCT * FROM {0}.results_var WHERE type_res in {1}".format(self.mdb.SCHEMA, list_sql(self.list_typ_res))
 
