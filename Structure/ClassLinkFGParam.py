@@ -211,7 +211,7 @@ class ClassLinkFGParam(object):
         }
         self.mess = ClassMessage()
 
-    def get_param(self, parent=None, file_name="cli_fg_lk.obj"):
+    def get_param(self, parent=None, file_name="links_cli_fg.obj"):
         """
         Retrieve parameters for mobile links.
 
@@ -219,11 +219,11 @@ class ClassLinkFGParam(object):
         Otherwise, import parameters from a file.
 
         :param parent (object): Parent class (optional).
-        :param file (str): Name of the file to import parameters from (default: "cli_fg_lk.obj").  
+        :param file (str): Name of the file to import parameters from (default: "links_cli_fg.obj").
         :return: (bool) True if parameters are valid, False otherwise
         """
         if not parent:
-            path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../mascaret"))
+            path = os.path.abspath(os.getcwd())
             path = os.path.join(path, file_name)
             complet = self.import_cl(path)
         else:
@@ -238,12 +238,12 @@ class ClassLinkFGParam(object):
 
         return self.check_param()
 
-    def create_cli_fg(self, parent=None, file_name="cli_fg_lk.obj"):
+    def create_cli_fg(self, parent=None, file_name="links_cli_fg.obj"):
         """
         Export parameters for mobile links.
 
         :param parent (object): Parent class (optional).
-        :param file (str): Name of the file to import parameters from (default: "cli_fg_lk.obj").
+        :param file (str): Name of the file to import parameters from (default: "links_cli_fg.obj").
         :return: (bool) True if export is successful, False otherwise.
         """
         if not parent:
@@ -472,19 +472,19 @@ class ClassLinkFGParam(object):
                  }
         return dlist
 
-    def export_cl(self, name="cli_fg_lk.obj"):
+    def export_cl(self, name="links_cli_fg.obj"):
         """
         Export the `param_fg` dictionary to a JSON file.
-        :param name (str): Name of the output file (default: "cli_fg_lk.obj").
+        :param name (str): Name of the output file (default: "links_cli_fg.obj").
         """
         with open(name, "w") as file:
             json.dump(self.param_fg, file)
         # if debug, indent=4)
 
-    def import_cl(self, name="cli_fg_lk.obj"):
+    def import_cl(self, name="links_cli_fg.obj"):
         """
         Import parameters from a JSON file into the `param_fg` dictionary.
-        :param name (str): Name of the input file (default: "cli_fg_lk.obj").
+        :param name (str): Name of the input file (default: "links_cli_fg.obj").
         :return: True if the file is successfully loaded, otherwise False.
         """
         if os.path.isfile(name):
@@ -492,7 +492,7 @@ class ClassLinkFGParam(object):
                 obj = json.load(file)
 
             for key, val in obj.items():
-                setattr(self.param_fg, key, val)
+                self.param_fg[key] = val
 
             return True
         else:

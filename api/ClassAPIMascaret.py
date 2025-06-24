@@ -38,6 +38,7 @@ except  ModuleNotFoundError or ImportError:
     from Structure.ClassFloodGate import ClassFloodGate
     from Structure.ClassFloodGateLk import ClassFloodGateLk
     from Structure.ClassMobilWeirs import ClassMobilWeirs
+    from .ClassMessage import ClassMessage
 
 
 def check_init(file):

@@ -107,7 +107,7 @@ class ClassMobilWeirsParam(object):
                       }
         self.mess = ClassMessage()
 
-    def get_param(self, parent=None, file="cli_fg_weirs.obj"):
+    def get_param(self, parent=None, file="weirs_cli_fg.obj"):
         """
         Retrieve parameters for mobile weirs.
         :param parent (object): Parent class (optional)
@@ -115,7 +115,7 @@ class ClassMobilWeirsParam(object):
         :return: (bool) True if parameters are valid, False otherwise
         """
         if not parent:
-            path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../mascaret"))
+            path = os.path.abspath(os.getcwd())
             path = os.path.join(path, file)
             complet = self.import_cl(path)
         else:
@@ -130,7 +130,7 @@ class ClassMobilWeirsParam(object):
 
         return self.check_param()
 
-    def create_cli_fg(self, parent=None, file="cli_fg_weirs.obj"):
+    def create_cli_fg(self, parent=None, file="weirs_cli_fg.obj"):
         """
         Export parameters for mobile weirs.
         :param parent (object): Parent class (optional)
@@ -311,6 +311,7 @@ class ClassMobilWeirsParam(object):
             # code-err= 'chk_weirs_reg'
             if not self.check_regul(num, test):
                 return False
+        return True
 
     def create_lst_test(self):
         """
@@ -320,7 +321,7 @@ class ClassMobilWeirsParam(object):
         lst_com = ["name", "level0", "abscissa", "branchnum", "method_mob"]
         lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG",
                    "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG",
-                   "CLAPET", "MAINTFIRST"]
+                   "CLAPET"]
         lst_time = ["TIMEZ", "VALUEZ", "CLAPETT"]
 
         dlist = {self.dmeth["meth_time"]: lst_com + lst_time,
@@ -328,7 +329,7 @@ class ClassMobilWeirsParam(object):
                  }
         return dlist
 
-    def export_cl(self, name="cli_fg_weirs.obj"):
+    def export_cl(self, name="weirs_cli_fg.obj"):
         """
         Export the param_fg dictionary to a JSON file.
         :param name (str): Name of the output file
@@ -338,7 +339,7 @@ class ClassMobilWeirsParam(object):
             json.dump(self.param_fg, file)
         # if debug, indent=4)
 
-    def import_cl(self, name="cli_fg_weirs.obj"):
+    def import_cl(self, name="weirs_cli_fg.obj"):
         """
         Import parameters from a JSON file into the param_fg dictionary.
         :param name (str): Name of the input file
@@ -349,7 +350,7 @@ class ClassMobilWeirsParam(object):
                 obj = json.load(file)
 
             for key, val in obj.items():
-                setattr(self.param_fg, key, val)
+                self.param_fg[key] = val
 
             return True
         else:

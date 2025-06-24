@@ -120,13 +120,14 @@ class ClassMobilWeirs:
         :param tfin (float): Final time of the simulation
         :return: None
         """
-        if len(self.results_fg_weirs_mv) > 0:
-            for id_weir, param in self.param_fg.items():
-                res = self.results_fg_weirs_mv[id_weir]
-                res["TIME"].append(tfin)
-                res["ZSTR"].append(param["level"])
-                res["REGVAR"].append(param["REGVAR_VAL"])
-                res["STAT_EFF"].append(param["stat_eff"])
+        pass
+        # if len(self.results_fg_weirs_mv) > 0:
+        #     for id_weir, param in self.param_fg.items():
+        #         res = self.results_fg_weirs_mv[id_weir]
+        #         res["TIME"].append(tfin)
+        #         res["ZSTR"].append(param["level"])
+        #         res["REGVAR"].append(param["REGVAR_VAL"])
+        #         res["STAT_EFF"].append(param["stat_eff"])
 
     def iter_fg(self, time, dtp):
         """
@@ -142,16 +143,18 @@ class ClassMobilWeirs:
                 self.cpt_w[id_weir] += 1
                 # effacement status
                 status = self.masc.get("Model.Weir.State", param['id_mas'])
-                val_check = self.masc.get(param['CHECK_VAR'],
-                                          param["SECCON"])
+                val_check = self.masc.get(param['CHECK_VAR'], param["SECCON"])
                 if status:
                     param.update({
                         # var update in run
                         "REGVAR_VAL": val_check,
                         "level": param["level"],
                         "TIME": time + dtp,
+                        "TIME_SAVE": time,
                         "stat_eff": float(status)
                     })
+                    if param["method_mob"] == self.dmeth["meth_regul"]:
+                        param["OPEN_CLOSE"] = "MAINT"
                     self.fill_results_fg_mv(id_weir, param)
                     continue
 
@@ -292,6 +295,7 @@ class ClassMobilWeirs:
                     "id_mas": id_mas,
                     "TIME0": tini,
                     "TIME": tini,
+                    "TIME_SAVE": tini,
                     'break': False,
                     "stat_eff": float(self.masc.get("Model.Weir.State", id_mas))
                 })
@@ -366,7 +370,7 @@ class ClassMethRegul:
             "ZLIMITGATE": param["ZMAXFG"],
             "level": max(param["ZINITREG"], param["level0"]),
             "REGVAR_VAL": self.masc.get(param['CHECK_VAR'], param["SECCON"]),
-            "OPEN_CLOSE": "INIT"
+            "OPEN_CLOSE": "INIT",
         })
         if "MAINTFIRST" in param.keys():
             if not param["MAINTFIRST"]:
@@ -447,10 +451,12 @@ class ClassMethRegul:
         status = param["OPEN_CLOSE"]
         # print(param["level"], status)
         if status in [None, "INIT", "MAINT"]:
+            param['TIME_SAVE'] = time
             return {
                 "level": param["level"],
             }
-        dt = time - param["TIME"]
+        dt = time - param['TIME_SAVE']
+        param['TIME_SAVE'] = time
         dz_open = self.comput_dz(param["VELOFGOPEN"], dt, param["ZINCRFG"])
         dz_close = self.comput_dz(param["VELOFGCLOSE"], dt, param["ZINCRFG"])
         level, level0 = param["level"], param["level0"]

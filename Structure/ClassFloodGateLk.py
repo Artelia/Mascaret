@@ -116,14 +116,15 @@ class ClassFloodGateLk:
         to the results dictionary for each link.
         :param tfin: Final time of the simulation.
         """
-        if len(self.results_fg_lk_mv) > 0:
-            for id_link, param in self.param_fg.items():
-                res = self.results_fg_lk_mv[id_link]
-                res["TIME"].append(tfin)
-                res["ZLINK"].append(param["level"])
-                res["CSECLINK"].append(param["CSection"])
-                res["WIDTHLINK"].append(param["width"])
-                res["REGVAR"].append(param["REGVAR_VAL"])
+        pass
+        # if len(self.results_fg_lk_mv) > 0:
+        #     for id_link, param in self.param_fg.items():
+        #         res = self.results_fg_lk_mv[id_link]
+        #         res["TIME"].append(tfin)
+        #         res["ZLINK"].append(param["level"])
+        #         res["CSECLINK"].append(param["CSection"])
+        #         res["WIDTHLINK"].append(param["width"])
+        #         res["REGVAR"].append(param["REGVAR_VAL"])
 
     def iter_fg(self, time, dtp):
         """
@@ -292,7 +293,8 @@ class ClassFloodGateLk:
             param.update({
                 # "id_mas": id_mas,
                 "TIME0": tini,
-                "TIME": tini
+                "TIME": tini,
+                "TIME_SAVE": tini,
             })
             if not param["CSection0"]:
                 param["CSection0"] = 0.0
@@ -363,8 +365,11 @@ class ClassFloodGateLk:
                 "rup_CSection": param["CSection"],
                 "rup_ZmaxSection": param["ZmaxSection"],
                 "rup_width": param["width"],
-                "break": True
+                "break": True,
+                "TIME_SAVE": time
             })
+            if param["method_mob"] == self.dmeth["meth_regul"]:
+                 param["OPEN_CLOSE"] = "MAINT"
             dnew = {
                 "level": param["ZFINAL_BREAK"],
                 "CSection": param["width0"] * min((param["ZmaxSection0"] - param["ZFINAL_BREAK"]), 0),
@@ -410,7 +415,7 @@ class ClassMethRegul:
             "rup_level": param["level0"],
             "rup_CSection": param["CSection0"],
             "rup_ZmaxSection": param["ZmaxSection0"],
-            "rup_width": param["width0"]
+            "rup_width": param["width0"],
         })
         param.update({
             "width": param["width0"],
@@ -539,13 +544,15 @@ class ClassMethRegul:
         status = param["OPEN_CLOSE"]
 
         if status in [None, "INIT", "MAINT"]:
+            param['TIME_SAVE'] = time
             return {
                 "level": param["level"],
                 "CSection": param["CSection"],
                 "ZmaxSection": param["ZmaxSection"],
                 "width": param["width"]
             }
-        dt = time - param["TIME"]
+        dt = time - param["TIME_SAVE"]
+        param["TIME_SAVE"]= time
         dz_open = self.__class__.comput_dz(param["VELOFGOPEN"], dt, param["ZINCRFG"])
         dz_close = self.__class__.comput_dz(param["VELOFGCLOSE"], dt, param["ZINCRFG"])
         dir_fg = param["DIRFG"]
