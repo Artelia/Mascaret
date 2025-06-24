@@ -405,7 +405,7 @@ class GraphCommonNew:
                 else:
                     annot.set_visible(False)
                 idx_c += 1
-
+        absc = [absc.tolist()]
         self.v_line.set_xdata(absc)
         self.v_line.set_visible(True)
         self.canvas.draw()
