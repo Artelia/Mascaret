@@ -206,14 +206,23 @@ class CurveSelectorWidget(QWidget):
             elif self.typ_graph in ["weirs"]:
                 self.lst_graph = [{"type_res": self.typ_res, "id": 'gate_move',
                                    "name": 'Gate movement', "unit": 'm',
-                                   "vars": ['ZSTR']},
-                                  {"type_res": self.typ_res, "id": 'reg_var',
-                                   "name": 'Variable of regulation', "unit": '',
-                                   "vars": ['REGVAR']},
-                                  {"type_res": self.typ_res, "id": 'stat_var',
-                                   "name": 'Weir Erasure Status', "unit": '',
-                                   "vars": ['STAT_EFF']},
-                                  ]
+                                   "vars": ['ZSTR']}, ]
+                lst_add = {'REGVAR': {"type_res": self.typ_res, "id": 'reg_var',
+                                      "name": 'Variable of regulation', "unit": '',
+                                      "vars": ['REGVAR']},
+                           'STAT_EFF': {"type_res": self.typ_res, "id": 'stat_var',
+                                        "name": 'Weir Erasure Status', "unit": '',
+                                        "vars": ['STAT_EFF']}}
+                for var in ['REGVAR', 'STAT_EFF']:
+                    sql = (f"SELECT  var FROM {self.mdb.SCHEMA}.results_by_pk "
+                           f"WHERE id_runs={self.cur_scen} AND "
+                           f"var IN (SELECT id FROM {self.mdb.SCHEMA}.results_var WHERE type_res='weirs' AND var='{var}') "
+                           "LIMIT 1;")
+                    rows = self.mdb.run_query(sql, fetch=True)
+                    if rows:
+                        self.lst_graph.append(lst_add[var])
+
+
             elif self.typ_graph in ["hydro", "hydro_pk"]:
                 self.get_lst_graph_opt()
             elif self.typ_graph in ["hydro_basin", "hydro_link"]:
@@ -382,19 +391,6 @@ class CurveSelectorWidget(QWidget):
                     self.cb_graph.removeItem(index2)
                 elif meth_mob == '3' and index2 == -1:
                     self.cb_graph.addItem(self.lst_graph[1]["name"], self.lst_graph[1]["id"])
-
-        if self.typ_graph in ["weirs"]:
-
-            info = self.mdb.select_distinct("var",
-                                            "results_by_pk",
-                                            where=f"id_runs = {self.param_graph['scen']} AND "
-                                                  f" var IN (SELECT id FROM {self.mdb.SCHEMA}.results_var WHERE type_res='weirs' AND var='REGVAR')"
-                                            )
-            index = self.cb_graph.findText(self.lst_graph[1]["name"])  # REGVAR
-            if not info and index != -1:
-                self.cb_graph.removeItem(index)
-            if info and index == -1:
-                self.cb_graph.addItem(self.lst_graph[1]["name"], self.lst_graph[1]["id"])
 
         if (self.cb_graph.currentIndex() != -1) and (self.cb_det.currentIndex() != -1):
             for graph in self.lst_graph:
