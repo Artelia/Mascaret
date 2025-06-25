@@ -1459,12 +1459,6 @@ class ClassCreatFilesModels:
             if not loi.get("formule"):
                 continue
             valeur_init = None
-
-            if not loi["formule"]:
-                self.mess.add_mess('NoFormule', 'critic',
-                                   f"No Formul to the {nom} law.")
-                return None
-
             liste_stations = pattern.findall(loi["formule"])
             # get observation each station
             obs_stations = {}
@@ -1488,7 +1482,7 @@ class ClassCreatFilesModels:
                 if not obs_stations[cd_hydro]["date"]:
                     self.mess.add_mess('NoInitSteady', 'critic',
                                        f"Error: Please check if law for {nom} object is correct.\n "
-                                       f"No observations found for station {ref_station} "
+                                       f"No observations found for station {cd_hydro} "
                                        "on the dates: {0:%Y-%m-%d %H:%M} - {1:%Y-%m-%d %H:%M}"
                                        "".format(date_debut + dt, date_fin + dt))
                     continue
