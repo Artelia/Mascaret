@@ -17,13 +17,8 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+import os
+import pickle
 
 
 class ClassMessage:
@@ -77,7 +72,9 @@ class ClassMessage:
         Returns:
             :return  message : message
         """
-        return self.derror[code_err]["message"]
+        if code_err in self.derror:
+            return self.derror[code_err]["message"]
+        return ''
 
     def get_type(self, code_err):
         """
@@ -87,7 +84,9 @@ class ClassMessage:
         Returns:
             :return  type : type
         """
-        return self.derror[code_err]["type"]
+        if code_err in self.derror:
+            return self.derror[code_err]["type"]
+        return ''
 
     def message(self):
         txt = ''
@@ -113,3 +112,11 @@ class ClassMessage:
                 self.derror[key] = item
                 fill[key] = item
         return fill
+
+    def export_obj(self, rep=''):
+        with open(os.path.join(rep, 'derror.pkl'), 'wb') as file:
+            pickle.dump(self.derror, file)
+
+    def load_obj(self, rep=''):
+        with open(os.path.join(rep, 'derror.pkl'), 'rb') as file:
+            self.derror = pickle.load(file)

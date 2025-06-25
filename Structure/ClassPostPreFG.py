@@ -20,8 +20,10 @@ email                :
 # import pickle
 import json
 import os
-from .ClassMethod import ClassMethod
+
 import shapely.wkt
+
+from .ClassMethod import ClassMethod
 
 
 class ClassInfoParamFG(object):

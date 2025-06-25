@@ -20,6 +20,7 @@ comment:
 
 """
 import os
+
 from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
@@ -27,6 +28,7 @@ from qgis.utils import *
 
 from .ClassTableWQ import ClassTableWQ
 from ..Function import interpole, del_symbol
+
 
 class ClassMascWQ:
     def __init__(self, main, file):
@@ -43,7 +45,7 @@ class ClassMascWQ:
 
         self.tbwq = ClassTableWQ(self.mgis, self.mdb)
         self.dico_phy = self.tbwq.dico_phy
-        self.dossierFileMasc = file
+        self.dossier_file_masc = file
 
         sql = "SELECT {} FROM {}.parametres WHERE parametre = 'modeleQualiteEau'".format(
             "steady", self.schema
@@ -60,13 +62,13 @@ class ClassMascWQ:
     def create_filephy(self, dossier=None):
         """creation .phy file"""
         if dossier is None:
-            dossier = self.dossierFileMasc
+            dossier = self.dossier_file_masc
         where = "type = '{}'".format(self.cur_wq_mod)
         order = "id"
         result = self.mdb.select("tracer_physic", where, order)
         # entetfr = u": NOMBRE DE PARAMETRES PHYSIQUES"
         entet = ": NUMBER OF PHYSICAL PARAMETERS"
-        # with open(os.path.join(self.dossierFileMasc, self.cur_wq_mod.lower() + '.phy'), 'w') as fich:
+        # with open(os.path.join(self.dossier_file_masc, self.cur_wq_mod.lower() + '.phy'), 'w') as fich:
         with open(os.path.join(dossier, "mascaret.phy"), "w") as fich:
             fich.write("{} {}\n".format(len(self.dico_phy[self.cur_wq_mod]["physic"]), entet))
             for i, phy in enumerate(self.dico_phy[self.cur_wq_mod]["physic"]):
@@ -76,7 +78,7 @@ class ClassMascWQ:
     def law_tracer(self, dossier=None):
         """creation of law file for tracer"""
         if dossier is None:
-            dossier = self.dossierFileMasc
+            dossier = self.dossier_file_masc
         # init_case=True
 
         extrem = self.mdb.select("extremities")
@@ -170,7 +172,7 @@ class ClassMascWQ:
     def init_conc_tracer(self, dossier=None):
         """creation of initial concentration file for tracer"""
         if dossier is None:
-            dossier = self.dossierFileMasc
+            dossier = self.dossier_file_masc
         order = "id"
         where = "type = '{}' AND active=true".format(self.cur_wq_mod_int)
         init_trac = self.mdb.select("init_conc_config", where, order)
@@ -187,7 +189,7 @@ class ClassMascWQ:
         if init_val == [] or init_val is None:
             self.mgis.add_info("Warning: Please fill the initial conditions for tracers")
             return
-        # fich = open(os.path.join(self.dossierFileMasc, self.cur_wq_mod.lower() + '.conc'), 'w')
+        # fich = open(os.path.join(self.dossier_file_masc, self.cur_wq_mod.lower() + '.conc'), 'w')
         fich = open(os.path.join(dossier, "mascaret.conc"), "w")
 
         fich.write("[variables]\n")
@@ -219,7 +221,7 @@ class ClassMascWQ:
         """creation .met file"""
         exit_satus = False
         if dossier is None:
-            dossier = self.dossierFileMasc
+            dossier = self.dossier_file_masc
         order = "id"
         where = "active=true"
         meteo_trac = self.mdb.select("meteo_config", where, order)
@@ -237,7 +239,7 @@ class ClassMascWQ:
                 return exit_satus, txt
             dif_time = int((datefirst - meteo_trac["starttime"][0]).total_seconds())
             if dif_time < 0:
-                txt =("Date for meteo law aren't correct.")
+                txt = ("Date for meteo law aren't correct.")
                 exit_satus = True
                 return exit_satus, txt
             deb_time = dif_time

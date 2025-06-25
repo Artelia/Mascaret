@@ -88,7 +88,6 @@ class ClassExportDataRun(QDialog):
         self.model_sta, self.id_to_name_sta = self.stations_mod()
         self.model_scen, self.id_to_run = self.run_scenar_mod()
 
-
         self.model_var = None
         self.model_obs = None
         # default
@@ -128,6 +127,7 @@ class ClassExportDataRun(QDialog):
         :return : None
         """
         model = self.mod_lst_var
+        obj = None
         if model is None:
             return
         elif model == "CSV":
@@ -146,6 +146,7 @@ class ClassExportDataRun(QDialog):
         :return : None
         """
         model = self.mod_lst_var
+        obj = None
         if model is None:
             return
         elif model == "CSV":
@@ -284,6 +285,7 @@ class ClassExportDataRun(QDialog):
         :param model: (object) QStandardItemModel
         :return : (list)  the rows list for a model
         """
+        obj = None
         if model is None:
             return
         elif model == "Profiles":
@@ -308,8 +310,10 @@ class ClassExportDataRun(QDialog):
         """
         Get the rows list for a model
         :param model: (object) QStandardItemModel
+        :param var:(str) variable name
         :return : (list)  the rows list for a model
         """
+        obj = None
         if model is None:
             return
         elif model == "Profiles":
@@ -456,6 +460,7 @@ class ClassExportDataRun(QDialog):
         :param model: (object) QStandardItemModel
         :return : None
         """
+        obj = None
         if model is None:
             return
         elif model == "Profiles":
@@ -476,6 +481,7 @@ class ClassExportDataRun(QDialog):
         :param model: (object) QStandardItemModel
         :return : None
         """
+        obj = None
         if model is None:
             return
         elif model == "Profiles":
@@ -498,10 +504,10 @@ class ClassExportDataRun(QDialog):
                   (dict) dict[row]={'id': index runs},
         """
         self.d_run2id = {}
-        treeModel = QStandardItemModel()
+        tree_model = QStandardItemModel()
         dtmp = self.mdb.select_distinct('run', "runs")
         if dtmp is None:
-            return treeModel, None
+            return tree_model, None
         lst_runs = dtmp['run']
         id_to_run = {}
         for row, run in enumerate(lst_runs):
@@ -521,8 +527,8 @@ class ClassExportDataRun(QDialog):
                 item.appendRow(run_item)
                 id_to_run[(row, cmpt)] = {'id': dtmp['id'][id]}
                 cmpt += 1
-            treeModel.appendRow(item)
-        return treeModel, id_to_run
+            tree_model.appendRow(item)
+        return tree_model, id_to_run
 
     def profil_mod(self, lst_runs=[]):
         """
@@ -660,6 +666,7 @@ class ClassExportDataRun(QDialog):
         :param model: (object) QStandardItemModel
         :return: None
         """
+        obj = None
         if model is None:
             return
         elif model == "Profiles":
@@ -729,14 +736,14 @@ class ClassExportDataRun(QDialog):
         lst_run = self.get_list_runs()
         lst_var = self.get_mod(self.mod_lst_var)
         lst_pr = self.get_mod(self.mod_lst)
-
+        dico_mod = None
         if self.mod_lst == "Profiles":
             dico_mod = self.id_to_name_prof
         elif self.mod_lst == "Outputs":
             dico_mod = self.id_to_name_out
         elif self.mod_lst == "Stations":
             dico_mod = self.id_to_name_sta
-
+        dico_var = None
         if self.mod_lst_var == "CSV":
             dico_var = self.row_to_name_var
         elif self.mod_lst_var == "OTAMIN":
@@ -748,7 +755,6 @@ class ClassExportDataRun(QDialog):
             self.csv_file(dico_mod, dico_var, lst_var, lst_pr, lst_run, folder_name_path)
 
         self.close()
-
 
     def otamin(self, dico_mod, lst_pr, lst_run, dico_var, folder_name_path):
         """
@@ -833,18 +839,17 @@ class ClassExportDataRun(QDialog):
                                                                  val_obs, val_mod))
                     self.mgis.add_info('{} : Model: {}-{}, Code: {}, '
                                        'Type: {}, Output: {}'.format(name_file, run,
-                                                                    scen,
-                                                                    dico_mod[stat]['code'],
-                                                                    var, dico_mod[stat]['name']))
+                                                                     scen,
+                                                                     dico_mod[stat]['code'],
+                                                                     var, dico_mod[stat]['name']))
 
-
-    def csv_file(self,dico_mod, dico_var, lst_var, lst_pr, lst_run, folder_name_path) :
+    def csv_file(self, dico_mod, dico_var, lst_var, lst_pr, lst_run, folder_name_path):
         """ Creat csv file"""
-        #Run; Scenario; Variable , date; Valeur
+        # Run; Scenario; Variable , date; Valeur
         self.mgis.add_info('Create files :')
         for idx in lst_pr:
             nam_pk = dico_mod[idx]['name']
-            abs =  dico_mod[idx]['abscissa']
+            abs = dico_mod[idx]['abscissa']
             name_file = '{}-{}.csv'.format(nam_pk, abs)
 
             with open(os.path.join(folder_name_path, name_file), 'w') as filein:
@@ -855,32 +860,33 @@ class ClassExportDataRun(QDialog):
                     run = drun['run'][0]
                     init_date = drun['init_date'][0]
                     date_var = False
-                    if init_date  is not None:
+                    if init_date is not None:
                         date_var = True
 
                     lst_obs_var = [dico_var[idx]['var'] for idx in lst_var if dico_var[idx]['obs']]
-                    if  date_var :
+                    if date_var:
                         filein.write("# Run; Scenario; Variables; Dates; Values \n")
                     else:
                         filein.write("# Run; Scenario; Variables; Times; Values \n")
-                    for row in  lst_var:
+                    for row in lst_var:
                         if not dico_var[row]['obs']:
-                            where = "id_runs={} AND var={} AND pknum={}".format(id_run,  dico_var[row]['id'],
+                            where = "id_runs={} AND var={} AND pknum={}".format(id_run, dico_var[row]['id'],
                                                                                 abs)
                             dmodel = self.mdb.select("results", where=where, list_var=['time', 'val'])
-                            if len(dmodel['time']) ==0 :
+                            if len(dmodel['time']) == 0:
                                 continue
                             for idt, tps in enumerate(dmodel['time']):
-                                if  date_var :
+                                if date_var:
                                     date_w = init_date + timedelta(seconds=tps)
                                     filein.write(
                                         '{};{};{};{};{} \n'.format(run, scen, dico_var[row]['var'],
-                                                                date_w.strftime("%m-%d-%Y %H:%M"), dmodel['val'][idt]))
+                                                                   date_w.strftime("%m-%d-%Y %H:%M"),
+                                                                   dmodel['val'][idt]))
                                 else:
                                     filein.write('{};{};{};{};{} \n'.format(run, scen, dico_var[row]['var'],
-                                                                           tps, dmodel['val'][idt]))
+                                                                            tps, dmodel['val'][idt]))
 
-                    if  date_var :
+                    if date_var:
                         where = "id_runs={} AND pknum={}".format(id_run, abs)
                         lst_time = self.mdb.select_distinct('time', "results", where=where, ordre='time')
 
@@ -895,15 +901,15 @@ class ClassExportDataRun(QDialog):
                                 "WHERE code = (SELECT DISTINCT code FROM {3}.outputs WHERE active AND name='{4}' AND abscissa={5}) AND type='{2}') t "
                                 " WHERE date>='{0}' AND date<='{1}' AND valeur > -999.9 "
                                 "ORDER BY date".format(
-                                   lst_date[0],lst_date[-1] , var, self.mdb.SCHEMA, nam_pk, abs
+                                    lst_date[0], lst_date[-1], var, self.mdb.SCHEMA, nam_pk, abs
                                 )
                             )
-                           # print(sql_query)
+                            # print(sql_query)
                             obs_val = self.mdb.query_todico(sql_query)
                             if len(obs_val['valeur']) == 0:
                                 continue
 
                             for idt, tps in enumerate(obs_val['date']):
                                 filein.write(
-                                    '{};{};{};{};{} \n'.format(run, scen, '{}-{}'.format(var,'obs'),
-                                                              tps.strftime("%m-%d-%Y %H:%M"), obs_val['valeur'][idt]))
+                                    '{};{};{};{};{} \n'.format(run, scen, '{}-{}'.format(var, 'obs'),
+                                                               tps.strftime("%m-%d-%Y %H:%M"), obs_val['valeur'][idt]))

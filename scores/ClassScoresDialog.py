@@ -19,18 +19,18 @@ email                :
  """
 
 import os
+
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from qgis.PyQt.QtWidgets import *
-
-from .SelectWidget import SelectWidget
+from .ScoreDistWidget import ScoreDistWidget
 from .ScoreParamWidget import ScoreParamWidget
 from .ScoreResallWidget import ScoreResallWidget
-from .ScoreDistWidget import ScoreDistWidget
+from .SelectWidget import SelectWidget
 
 
 class ClassScoresDialog(QDialog):

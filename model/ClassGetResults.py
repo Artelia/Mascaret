@@ -23,8 +23,8 @@ import datetime
 import json
 import os
 import re
-import pandas as pd
 
+import pandas as pd
 from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
@@ -37,8 +37,10 @@ from ..Graphic.ClassResProfil import ClassResProfil
 class ClassGetResults:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, mdb, dossier_file_masc):
+    def __init__(self, mdb, dossier_file_masc, wq, dbg):
+        self.dbg = dbg
         self.mdb = mdb
+        self.wq = wq
         self.dossier_file_masc = dossier_file_masc
         self.basename = "mascaret"
         self.mess = ClassMessage()
@@ -109,7 +111,14 @@ class ClassGetResults:
             cond_casier = True
 
         id_run = self.insert_id_run(run, scen)
-        self.lit_opt_new(id_run, date_debut, self.basename, comments=comments, tracer=cond_tra, casier=cond_casier)
+        self.lit_opt_new(
+            id_run,
+            date_debut,
+            self.basename,
+            comments=comments,
+            tracer=cond_tra,
+            casier=cond_casier,
+        )
 
         if os.path.isfile(os.path.join(path, "Fichier_Crete.csv")):
             self.read_mobil_gate_res(id_run)
@@ -163,12 +172,12 @@ class ClassGetResults:
                         info = self.mdb.select(
                             "weirs", where=where, list_var=["gid", "abscissa"], order="gid"
                         )
-                    pknum = info["abscissa"][0]
+                    pknum = info["gid"][0]
                     d_res[(pknum, id_var)] = {
                         "t": dico_res[name]["TIME"],
                         "v": dico_res[name]["ZSTR"],
                     }
-                    dico_pk[name] = info["abscissa"][0]
+                    dico_pk[name] = pknum
                     dico_time[name] = dico_res[name]["TIME"]
 
                 for (pk, var), v in d_res.items():
@@ -202,7 +211,8 @@ class ClassGetResults:
             except Exception as e:
                 txt = "Erreur load of mobil_gate results.\n"
                 txt += e
-                self.mess.add_mess('RMobGate', 'warning', txt)
+
+                self.mess.add_mess("RMobGate", "warning", txt)
 
     def new_read_opt(self, nom_fich, type_res, init_col=None):
         """
@@ -278,9 +288,9 @@ class ClassGetResults:
             for key in col_tmp:
                 dico_val[key] = []
 
-            data = pd.read_csv(source, delimiter=';', names=col_tmp)
+            data = pd.read_csv(source, delimiter=";", names=col_tmp)
             data = data.drop_duplicates()
-            data = data.to_dict(orient='records')
+            data = data.to_dict(orient="records")
             int_val = ["BRANCHE", "SECTION"]
 
             for ligne in data:
@@ -324,10 +334,11 @@ class ClassGetResults:
         # delete doublon list(set(my_list))
         list_insert.append([id_run, typ_res, "var", json.dumps(sorted(list_var))])
         list_insert.append([id_run, typ_res, "time", json.dumps(sorted(list(set(val["TIME"]))))])
-
+        key_pknum = "PK"
         if typ_res == "opt":
             var_info = {"var": "ZMAX", "type_res": "opt"}
             id_zmax = self.mdb.check_id_var(var_info)
+            dico_zmax = {}
             # if zmax exist
             if id_zmax in list_var:
                 dico_zmax = {}
@@ -339,12 +350,10 @@ class ClassGetResults:
                         break
 
                 list_insert.append([id_run, typ_res, "zmax", json.dumps(dico_zmax)])
-                key_pknum = "PK"
             else:
                 var_info = {"var": "Z", "type_res": "opt"}
                 id_z = self.mdb.check_id_var(var_info)
                 if id_z in list_var and max:
-                    dico_zmax = {}
                     for pknum in list(set(val["PK"])):
                         sql = (
                             "SELECT MAX(val) FROM {0}.results "
@@ -360,21 +369,18 @@ class ClassGetResults:
                             dico_zmax[pknum] = None
 
                     list_insert.append([id_run, typ_res, "zmax", json.dumps(dico_zmax)])
-                    key_pknum = "PK"
             # add stockage plani
             if dico_zmax:
                 cl_geo = ClassResProfil()
                 dico_zmax = {str(key): item for key, item in dico_zmax.items()}
                 txterr = cl_geo.plani_stock(dico_zmax, id_run, self.mdb)
                 if txterr:
-                    self.mess.add_mess('ClGeoPlani', 'debug', txterr)
+                    self.mess.add_mess("ClGeoPlani", "debug", txterr)
                 del cl_geo
         elif typ_res == "basin":
             key_pknum = "BNUM"
         elif typ_res == "link":
             key_pknum = "LNUM"
-        elif "tracer_" in typ_res:
-            key_pknum = "PK"
         list_insert.append(
             [id_run, typ_res, "pknum", json.dumps(sorted(list(set(val[key_pknum]))))]
         )
@@ -384,8 +390,15 @@ class ClassGetResults:
             self.mdb.insert_res("runs_graph", list_insert, col_tab)
 
     def lit_opt_new(
-            self, id_run, date_debut, base_namefile, comments="", tracer=False, casier=False,
-            cond_api=False, save_res_struct=[]
+            self,
+            id_run,
+            date_debut,
+            base_namefile,
+            comments="",
+            tracer=False,
+            casier=False,
+            cond_api=False,
+            save_res_struct=[],
     ):
         """
         Read opt files and save in results table
@@ -395,13 +408,15 @@ class ClassGetResults:
         :param comments: comments
         :param tracer: if tracers are actived
         :param casier: if basins are actived
+        :param  cond_api: if api are used
+        :param save_res_struct : results when ther are hydraulic structur
         :return:
         """
         nom_fich = os.path.join(self.dossier_file_masc, base_namefile + ".opt")
-        self.mess.add_mess('LoadOpt1', 'info', "Load data ....")
+        self.mess.add_mess("LoadOpt1", "info", "Load data ....")
         if not os.path.isfile(nom_fich):
             txt = "Simulation Error: there aren't results"
-            self.mess.add_mess('LoadOptFile', 'critic', txt)
+            self.mess.add_mess("LoadOptFile", "critic", txt)
             self.mdb.delete("runs", "id={}".format(id_run))
             return False
         # update do old results
@@ -426,7 +441,7 @@ class ClassGetResults:
             nom_fich_bas = os.path.join(self.dossier_file_masc, base_namefile + ".cas_opt")
             if not os.path.isfile(nom_fich_bas):
                 txt = "Simulation Error: there aren't basin results"
-                self.mess.add_mess('LoadOptCas', 'warning', txt)
+                self.mess.add_mess("LoadOptCas", "warning", txt)
             else:
 
                 type_res = "basin"
@@ -441,7 +456,7 @@ class ClassGetResults:
             nom_fich_link = os.path.join(self.dossier_file_masc, base_namefile + ".liai_opt")
             if not os.path.isfile(nom_fich_link):
                 txt = "Simulation Error: there aren't link results"
-                self.mess.add_mess('LoadOptLink', 'warning', txt)
+                self.mess.add_mess("LoadOptLink", "warning", txt)
             else:
                 type_res = "link"
                 init_col = ["TIME", "LNUM"]
@@ -454,7 +469,7 @@ class ClassGetResults:
             nom_fich_tra = os.path.join(self.dossier_file_masc, base_namefile + ".tra_opt")
             if not os.path.isfile(nom_fich_tra):
                 txt = "Simulation Error: there aren't basin results"
-                self.mess.add_mess('LoadOptWQ', 'warning', txt)
+                self.mess.add_mess("LoadOptWQ", "warning", txt)
             else:
                 init_col = ["TIME", "BRANCH", "SECTION", "PK"]
                 type_res = "tracer_{}".format(self.wq.cur_wq_mod)
@@ -475,6 +490,7 @@ class ClassGetResults:
         :return: True
         """
         val_keys = val.keys()
+        lpk = list()
         if "PK" in val_keys:
             lpk = val["PK"]
         elif "BNUM" in val_keys:
@@ -535,7 +551,9 @@ class ClassGetResults:
                     "{" + ",".join(str(i) for i in v["pk"]) + "}",
                 ]
             )
-        rows = self.mdb.select_one("results_sect", where="id_runs={}".format(id_run), list_var=["id_runs"])
+        rows = self.mdb.select_one(
+            "results_sect", where="id_runs={}".format(id_run), list_var=["id_runs"]
+        )
         if len(values) > 0 and rows is None:
             self.mdb.run_query(
                 "INSERT INTO {}.results_sect(id_runs, branch, section, pk) ".format(self.mdb.SCHEMA)
@@ -552,6 +570,179 @@ class ClassGetResults:
             for key in dico.keys():
                 if key == "STRUCT_FG":
                     self.res_fg(dico[key], id_run)
+                if key == "LINK_FG":
+                    self.res_link_fg(dico[key], id_run)
+                if key == "WEIRS":
+                    self.res_weirs_fg(dico[key], id_run)
+
+    def res_weirs_fg(self, dico_res, id_run):
+        """stock flood gate results"""
+
+        values = []
+        var_info = {
+            "var": "ZSTR",
+            "type_res": "weirs",
+            "name": "Gate movement",
+            "type_var": "float",
+        }
+        id_var_zlink = self.mdb.check_id_var(var_info)
+
+        var_info = {
+            "var": "REGVAR",
+            "type_res": "weirs",
+            "name": "Variable of regulation",
+            "type_var": "float",
+        }
+        id_var_reg = self.mdb.check_id_var(var_info)
+
+        var_info = {
+            "var": "STAT_EFF",
+            "type_res": "weirs",
+            "name": "Weir Erasure Status",
+            "type_var": "float",
+        }
+        id_var_eff = self.mdb.check_id_var(var_info)
+
+        d_res = {}
+        dico_pk = {}
+        dico_time = {}
+
+        for id_w in dico_res.keys():
+            dico_pk[id_w] = id_w
+            dico_time[id_w] = dico_res[id_w]["TIME"]
+            d_res[(id_w, id_var_zlink)] = {"t": dico_res[id_w]["TIME"], "v": dico_res[id_w]["ZSTR"]}
+
+            d_res[(id_w, id_var_reg)] = {"t": dico_res[id_w]["TIME"], "v": dico_res[id_w]["REGVAR"]}
+            d_res[(id_w, id_var_eff)] = {
+                "t": dico_res[id_w]["TIME"],
+                "v": dico_res[id_w]["STAT_EFF"],
+            }
+        for (pk, var), v in d_res.items():
+            values.append(
+                [
+                    id_run,
+                    pk,
+                    var,
+                    "{" + ",".join(str(i_t) for i_t in v["t"]) + "}",
+                    "{" + ",".join(str(i_v) for i_v in v["v"]) + "}",
+                ]
+            )
+        if len(values) > 0:
+            self.mdb.run_query(
+                "INSERT INTO {}.results_by_pk (id_runs, pknum, var, time, val) ".format(
+                    self.mdb.SCHEMA
+                )
+                + "VALUES (%s, %s, %s, %s, %s)",
+                many=True,
+                list_many=values,
+            )
+
+        if len(dico_res.keys()) > 0:
+            list_insert = [
+                [id_run, "weirs", "pknum", json.dumps(dico_pk)],
+                [id_run, "weirs", "time", json.dumps(dico_time)],
+                [id_run, "weirs", "var", json.dumps([id_var_zlink, id_var_reg])],
+            ]
+            col_tab = ["id_runs", "type_res", "var", "val"]
+            self.mdb.insert_res("runs_graph", list_insert, col_tab)
+
+    def res_link_fg(self, dico_res, id_run):
+        """stock flood gate results"""
+        values = []
+        var_info = {
+            "var": "ZLINK",
+            "type_res": "link_fg",
+            "name": "Gate movement",
+            "type_var": "float",
+        }
+        id_var_zlink = self.mdb.check_id_var(var_info)
+
+        var_info = {
+            "var": "CSECLINK",
+            "type_res": "link_fg",
+            "name": "Opening section of Gate for culvert",
+            "type_var": "float",
+        }
+        id_var_csec = self.mdb.check_id_var(var_info)
+
+        var_info = {
+            "var": "WIDTHLINK",
+            "type_res": "link_fg",
+            "name": "Width link",
+            "type_var": "float",
+        }
+        id_var_width = self.mdb.check_id_var(var_info)
+
+        var_info = {
+            "var": "REGVAR",
+            "type_res": "link_fg",
+            "name": "Variable of regulation",
+            "type_var": "float",
+        }
+        id_var_reg = self.mdb.check_id_var(var_info)
+
+        d_res = {}
+        dico_pk = {}
+        dico_time = {}
+        dico_meth = {}
+
+        for id_link in dico_res.keys():
+            dico_pk[id_link] = id_link
+            info = self.mdb.select_one("links", where=f"gid={id_link}", list_var=["method_mob"])
+            dico_meth[id_link] = info["method_mob"]
+            dico_time[id_link] = dico_res[id_link]["TIME"]
+            d_res[(id_link, id_var_zlink)] = {
+                "t": dico_res[id_link]["TIME"],
+                "v": dico_res[id_link]["ZLINK"],
+            }
+            d_res[(id_link, id_var_csec)] = {
+                "t": dico_res[id_link]["TIME"],
+                "v": dico_res[id_link]["CSECLINK"],
+            }
+            d_res[(id_link, id_var_width)] = {
+                "t": dico_res[id_link]["TIME"],
+                "v": dico_res[id_link]["WIDTHLINK"],
+            }
+
+            d_res[(id_link, id_var_reg)] = {
+                "t": dico_res[id_link]["TIME"],
+                "v": dico_res[id_link]["REGVAR"],
+            }
+
+        for (pk, var), v in d_res.items():
+            values.append(
+                [
+                    id_run,
+                    pk,
+                    var,
+                    "{" + ",".join(str(i_t) for i_t in v["t"]) + "}",
+                    "{" + ",".join(str(i_v) for i_v in v["v"]) + "}",
+                ]
+            )
+        if len(values) > 0:
+            self.mdb.run_query(
+                "INSERT INTO {}.results_by_pk (id_runs, pknum, var, time, val) ".format(
+                    self.mdb.SCHEMA
+                )
+                + "VALUES (%s, %s, %s, %s, %s)",
+                many=True,
+                list_many=values,
+            )
+
+        if len(dico_res.keys()) > 0:
+            list_insert = [
+                [id_run, "link_fg", "pknum", json.dumps(dico_pk)],
+                [id_run, "link_fg", "time", json.dumps(dico_time)],
+                [
+                    id_run,
+                    "link_fg",
+                    "var",
+                    json.dumps([id_var_zlink, id_var_csec, id_var_width, id_var_reg]),
+                ],
+                [id_run, "link_fg", "method_mob", json.dumps(dico_meth)],
+            ]
+            col_tab = ["id_runs", "type_res", "var", "val"]
+            self.mdb.insert_res("runs_graph", list_insert, col_tab)
 
     def res_fg(self, dico_res, id_run):
         """stock flood gate results"""

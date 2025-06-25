@@ -27,6 +27,7 @@ from qgis.gui import *
 
 from .ui.custom_control import ClassWarningBox
 
+
 class ClassUpdatePk(QDialog):
     """
     Class allow to update pk of the selected tables
@@ -84,7 +85,7 @@ class ClassUpdatePk(QDialog):
         self.close()
 
         if not self.mdb.check_fct(
-            ["update_abscisse_profil", "abscisse_profil", "update_abscisse_point", "abscisse_point"]
+                ["update_abscisse_profil", "abscisse_profil", "update_abscisse_point", "abscisse_point"]
         ):
             self.mdb.add_fct_for_update_pk()
 
@@ -118,7 +119,7 @@ class ClassUpdatePk(QDialog):
                                         feat['branchnum'][0],
                                         gid)
         self.mdb.run_query(sql)
-        self.mgis.add_info("Update pk Done", dbg=True)
+        self.mgis.add_info("Update pk Done")
 
     def annule(self):
         """ "Cancel"""

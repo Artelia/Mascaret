@@ -72,3 +72,7 @@ id;type_res;var;name;type_var
 71;tracer_MICROPOLE;C_SED;Concentration in sediments;float
 72;struct;ZSTR;valve movement;float
 73;weirs;ZSTR;valve movement;float
+74;link_fg;ZLINK;Gate movement;float
+75;link_fg;CSECLINK;Opening section of Gate for culvert;float
+76;link_fg;REGVAR;Variable of regulation;float
+77;link_fg;WIDTHLINK;The width gate;float

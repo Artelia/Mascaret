@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
@@ -522,11 +523,11 @@ class ClassWaterQualityDialog(QDialog):
                 elif isinstance(obj, QComboBox):
                     val = obj.currentIndex()
                     if (
-                        param == "optionConvection"
-                        or param == "modeleQualiteEau"
-                        or param == "optionCalculDiffusion"
-                        or param == "LimitPente"
-                        or param == "ordreSchemaConvec"
+                            param == "optionConvection"
+                            or param == "modeleQualiteEau"
+                            or param == "optionCalculDiffusion"
+                            or param == "LimitPente"
+                            or param == "ordreSchemaConvec"
                     ):
                         if param == "LimitPente":
                             if val == 0 and self.ui.LimitPente.isEnabled():

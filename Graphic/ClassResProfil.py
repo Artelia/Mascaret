@@ -18,11 +18,11 @@ email                :
  ***************************************************************************/
  """
 
+import json
+
+import numpy as np
 from shapely.geometry import *
 from shapely.ops import unary_union
-import matplotlib.pyplot as plt
-import numpy as np
-import json
 
 
 class ClassResProfil:
@@ -51,19 +51,19 @@ class ClassResProfil:
         self.id_run = None
 
     def init_cl(
-        self,
-        pk,
-        prof,
-        branch,
-        min_bed,
-        maj_bed,
-        id_run,
-        database=None,
-        plani=None,
-        ksmaj=None,
-        ksmin=None,
-        zmax=None,
-        dico_plani=None,
+            self,
+            pk,
+            prof,
+            branch,
+            min_bed,
+            maj_bed,
+            id_run,
+            database=None,
+            plani=None,
+            ksmaj=None,
+            ksmin=None,
+            zmax=None,
+            dico_plani=None,
     ):
         self.pk = pk
         self.id_run = id_run
@@ -233,7 +233,7 @@ class ClassResProfil:
         if id_d == -1:
             limit_pr = pr[id_g:]
         else:
-            limit_pr = pr[id_g : id_d + 1]
+            limit_pr = pr[id_g: id_d + 1]
 
         wow = []
         pzmax = max(zmax, pr[id_g, 1])
@@ -410,12 +410,12 @@ class ClassResProfil:
                     except Exception as err:
                         if self.debug:
                             txt = ("Warning Plani \n" + err)
-                            return  txt
+                            return txt
             if self.mdb:
                 if point_bas:
                     list_pt_bas = [[id_run, "opt", "pt_bas", json.dumps(point_bas)]]
                 self.insert_lst_mdb(list_insert_plani, list_pt_bas)
-            return  None
+            return None
 
     def insert_lst_mdb(self, list_insert, point_bas):
         if list_insert:

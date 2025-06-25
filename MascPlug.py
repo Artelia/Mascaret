@@ -18,12 +18,11 @@ email                :
  ***************************************************************************/
 """
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QApplication, QAction
 from qgis.PyQt.uic import *
 
 from .MascPlugDialog import MascPlugDialog
-
-from qgis.PyQt.QtWidgets import QApplication, QAction
-from qgis.PyQt.QtGui import QIcon
 
 try:
     from . import resourcesQT5

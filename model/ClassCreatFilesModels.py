@@ -20,9 +20,11 @@ email                :
 """
 
 import datetime
+import json
 import os
 import re
 import shutil
+import pandas as pd
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
@@ -40,8 +42,10 @@ from ..HydroLawsDialog import dico_typ_law
 class ClassCreatFilesModels:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, mdb, dossier_file_masc):
+    def __init__(self, mdb, dossier_file_masc, cond_api, dbg):
+        self.dbg = dbg
         self.mdb = mdb
+        self.cond_api = cond_api
         self.dossier_file_masc = dossier_file_masc
         self.basename = "mascaret"
         self.mess = ClassMessage()
@@ -52,18 +56,31 @@ class ClassCreatFilesModels:
 
     @staticmethod
     def around(x):
-        """around x"""
+        """
+        Round a value to two decimal places.
+        :param x (float): Value to round
+        :return: (float) Rounded value
+        """
         x = round(float(x), 2)
         return x
 
     @staticmethod
     def fmt(liste):
+        """
+        Convert a list to a space-separated string.
+        :param liste (list): List of values
+        :return: (str) Space-separated string
+        """
         # list(map(str, liste))
         return " ".join([str(var) for var in liste])
 
     @staticmethod
     def check_none(liste):
-        """Check if None is list"""
+        """
+        Check if any element in the list is None.
+        :param liste (list): List to check
+        :return: (bool) True if any element is None, False otherwise
+        """
         for val in liste:
             if str(val) == "None":
                 return True
@@ -71,7 +88,10 @@ class ClassCreatFilesModels:
 
     # ************   GEO FILE   ********************************************************************
     def creer_geo(self):
-        """creation of gemoetry file"""
+        """
+        Create the geometry file (.geo) for the model.
+        :return: None
+        """
         try:
             nomfich = os.path.join(self.dossier_file_masc, self.geo_file)
 
@@ -107,14 +127,17 @@ class ClassCreatFilesModels:
 
                             fich.write("{0:.2f} {1:.2f} {2}\n".format(x, z, type))
 
-            self.mess.add_mess('creatGeo', 'info', "Creation the geometry is done")
+            self.mess.add_mess("creatGeo", "info", "Creation the geometry is done")
         except Exception as e:
             err = "Error: save the geometry .\n"
             err += str(e)
-            self.mess.add_mess('creatGeo', 'critic', err)
+            self.mess.add_mess("creatGeo", "critic", err)
 
     def creer_geo_ref(self):
-        """creation of gemoetry file"""
+        """
+        Create the reference geometry file (.geo) with projection and coordinates.
+        :return: None
+        """
         try:
             branche, nom = None, None
             nomfich = os.path.join(self.dossier_file_masc, self.geo_file)
@@ -212,15 +235,16 @@ class ClassCreatFilesModels:
                                     "{4}\n".format(x, z, type, dpoint[0], dpoint[1])
                                 )
 
-            self.mess.add_mess('creatGeoRef', 'info', "Creation the geometry is done")
+            self.mess.add_mess("creatGeoRef", "info", "Creation the geometry is done")
         except Exception as e:
             err = "Error: save the geometry {}-{}".format(branche, nom)
             err += str(e)
-            self.mess.add_mess('creatGeoRef', 'critic', err)
+            self.mess.add_mess("creatGeoRef", "critic", err)
 
     def creer_geo_casier(self):
         """
-         Fonction de creation du fichier .casier avec la loi surface-volume
+        Create the .casier file with the surface-volume law for basins.
+        :return: None
         """
         try:
             nomfich = os.path.join(self.dossier_file_masc, self.casier_file)
@@ -249,36 +273,31 @@ class ClassCreatFilesModels:
                             )
                         )
             if len(lst_err) > 0:
-                raise Exception('ErrBasin', 'Basins law not specified. Id: '
-                                            '{}'.format(lst_err))
-            self.mess.add_mess('creatBasin', 'info', "Creation of the basin file is done")
+                raise Exception("ErrBasin", "Basins law not specified. Id: " "{}".format(lst_err))
+            self.mess.add_mess("creatBasin", "info", "Creation of the basin file is done")
         except Exception as e:
             err = "Error: save the basin file"
             err += str(e)
-            self.mess.add_mess('creatBasin', 'critic', err)
+            self.mess.add_mess("creatBasin", "critic", err)
 
-    # ************   XCAS FILE   ********************************************************************
+    # ************   XCAS FILE   *******************************
     def fmt_sans_none(self, liste, remplace_none):
         """
-        Function to replace None in list with value
-        Args:
-            :param remplace_none : replacement value
-            :param liste : list
-        Returns:
-            :return string list
-            """
+        Replace None values in a list with a given value and return as string.
+        :param liste (list): List to process
+        :param remplace_none (any): Value to replace None
+        :return: (str) Space-separated string
+        """
         liste = [remplace_none if var is None else var for var in liste]
         return " ".join([str(var) for var in liste])
 
     def fmt_num_basin(self, liste, dico_num, remplace_none):
         """
-        Basin/link number list transformation function under
-        Args:
-            :param remplace_none : replacement value
-            :param dico_num : dico which links the mascaret number to the Qgis number
-            :param liste : list
-        Returns:
-            :return string list
+        Transform a list of basin/link numbers using a mapping dictionary.
+        :param liste (list): List of QGIS numbers
+        :param dico_num (dict): Mapping from QGIS to Mascaret numbers
+        :param remplace_none (any): Value to replace None
+        :return: (str) Space-separated string
         """
         # Qgis en une chaine de numeros pour le moteur Mascaret
         liste_num_masca = []
@@ -294,16 +313,14 @@ class ClassCreatFilesModels:
                     liste_num_masca.append(dico_num[num_qgis])
                 except KeyError:
                     txterr = "Error, the basin {} does not exist".format(num_qgis)
-                    self.mess.add_mess('CreatBasinNoNum', 'critic', txterr)
+                    self.mess.add_mess("CreatBasinNoNum", "critic", txterr)
         return " ".join([str(var) for var in liste_num_masca])
 
     def fmt_plani_casier(self, liste):
         """
-        Function for calculating the planning between 2 levels of the surface law
-        Args:
-            :param liste : list
-        Returns:
-            :return string list
+        Calculate the planimetry between two levels of the surface law.
+        :param liste (list): List of level strings
+        :return: (str) Space-separated string
         """
 
         # volume du casier
@@ -317,17 +334,18 @@ class ClassCreatFilesModels:
                 plani_decimale = int((float(liste_z[1]) - float(liste_z[0])) % 1)
                 if plani_decimale > 0:
                     txt = "Simulation Error: the basin planimetry has " "to be an integer value"
-                    self.mess.add_mess('CreatBasinPlani', 'critic', txt)
+                    self.mess.add_mess("CreatBasinPlani", "critic", txt)
             except Exception:
                 txt = "Simulation Error: the basin planimetry is not correct"
-                self.mess.add_mess('CreatBasinPlani', 'critic', txt)
+                self.mess.add_mess("CreatBasinPlani", "critic", txt)
         return " ".join([str(var) for var in liste_plani])
 
     def indent(self, elem, level=0):
-        """indentation auto
-        Args:
-            :param elem : items
-            :param level : indentation level
+        """
+        Indent XML elements for pretty printing.
+        :param elem (Element): XML element
+        :param level (int): Indentation level
+        :return: None
         """
         i = "\n" + level * "  "
         if len(elem):
@@ -344,12 +362,11 @@ class ClassCreatFilesModels:
             elem.tail = i
 
     def creer_xcas(self, noyau, par_init=None):
-        """To create xcas file
-        Args:
-        :param noyau: (str) kernel
-        :param par_init (optionel) : (dict) initial parameters , default None
-        Return :
-            return : (dict) dict_lois, (dict)  dico_loi_struct
+        """
+        Create the xcas file for the model.
+        :param noyau (str): Kernel name
+        :param par_init (dict): Optional initial parameters
+        :return: (dict, dict) dict_lois, dico_loi_struct
         """
         dict_lois = {}
         # try:
@@ -407,8 +424,8 @@ class ClassCreatFilesModels:
         var = "branch, startb, endb"
         branches = self.mdb.select_distinct(var, "branchs", "active")
         deversoirs = self.mdb.select("lateral_weirs", "active", "abscissa")
-        noeuds = self.mdb.select("extremities", "type=10", "active")
-        libres = self.mdb.select("extremities", "type!=10 ", "active")
+        noeuds = self.mdb.select("extremities", "type=10  and active")
+        libres = self.mdb.select("extremities", "type!=10 and active")
         pertescharg = self.mdb.select("hydraulic_head", "active", "abscissa")
         profils = self.mdb.select("profiles", "active", "abscissa")
         prof_seuil = self.mdb.select("profiles", "NOT active", "abscissa")
@@ -421,6 +438,7 @@ class ClassCreatFilesModels:
         seuils, loi_struct = self.modif_seuil(seuils, dico_str)
         casiers = self.mdb.select("basins", "active ORDER BY basinnum ")
         liaisons = self.mdb.select("links", "active ORDER BY linknum ")
+        liaisons = self.modif_link(liaisons)
 
         # Extrémités
         numero = branches["branch"]
@@ -518,8 +536,9 @@ class ClassCreatFilesModels:
             try:
                 nb_pas = max(int(diff / float(planim_val)) + 1, nb_pas)
             except Exception:
-                self.mess.add_mess("CheckPlani_{}".format(str(j)), "warning",
-                                   "Check planim abs:{}".format(abs))
+                self.mess.add_mess(
+                    "CheckPlani_{}".format(str(j)), "warning", "Check planim abs:{}".format(abs)
+                )
 
             if sg or sd:
                 if sg:
@@ -590,7 +609,8 @@ class ClassCreatFilesModels:
         SubElement(extr_libres, "typeCond").text = self.fmt(dict_libres["typeCond"])
         # temp=[]
         # for nom in liste:
-        #     if nom in libres["name"] and (dictLois[nom]['type'] == 6 or dictLois[nom]['type'] == 7):
+        #     if nom in libres["name"] and (dictLois[nom]['type'] == 6 \
+        #                   or dictLois[nom]['type'] == 7):
         #             temp.append(1)
         #     else:
         #             temp.append(sorted(dictLois.keys()).index(nom) + 1)
@@ -732,12 +752,12 @@ class ClassCreatFilesModels:
 
         SubElement(e_tapports, "numBranche").text = self.fmt(apports["branchnum"])
         if self.check_none(apports["abscissa"]):
-            self.mess.add_mess("LatInflowAbs", "warning",
-                               "Geometric object for lateral inflows is not found")
+            self.mess.add_mess(
+                "LatInflowAbs", "warning", "Geometric object for lateral inflows is not found"
+            )
         SubElement(e_tapports, "abscisses").text = self.fmt(apports["abscissa"])
         if self.check_none(apports["length"]):
-            self.mess.add_mess("LatInflowLen", "warning",
-                               "Lenght for lateral inflows is not found")
+            self.mess.add_mess("LatInflowLen", "warning", "Lenght for lateral inflows is not found")
         SubElement(e_tapports, "longueurs").text = self.fmt(apports["length"])
         temp = [sorted(dict_lois.keys()).index(nom) + 1 for nom in apports["name"]]
         SubElement(e_tapports, "numLoi").text = self.fmt(temp)
@@ -752,7 +772,9 @@ class ClassCreatFilesModels:
         SubElement(devers_late, "type").text = self.fmt(deversoirs["type"])
 
         l_en = ["branchnum", "abscissa", "length", "z_crest", "flowratecoef"]
-        for kk, len_n in enumerate(["numBranche", "abscisse", "longueur", "coteCrete", "coeffDebit"]):
+        for kk, len_n in enumerate(
+                ["numBranche", "abscisse", "longueur", "coteCrete", "coeffDebit"]
+        ):
             SubElement(devers_late, len_n).text = self.fmt(deversoirs[l_en[kk].lower()])
 
         temp = []
@@ -792,14 +814,15 @@ class ClassCreatFilesModels:
             ):
                 # les types sont ceux de
                 if dict_lois[nom]["type"] == 6:
-                    # TODO and noyau!='transcritical'
                     dict_lois[nom]["type"] = 1
-                    self.mess.add_mess("LawChang_" + nom, "debug",
-                                       "The  {} law changes type 6 => 1".format(nom))
+                    self.mess.add_mess(
+                        "LawChang_" + nom, "debug", "The  {} law changes type 6 => 1".format(nom)
+                    )
                 elif dict_lois[nom]["type"] == 7:
                     dict_lois[nom]["type"] = 2
-                    self.mess.add_mess("LawChang_" + nom, "debug",
-                                       "The  {} law changes type 7 => 2".format(nom))
+                    self.mess.add_mess(
+                        "LawChang_" + nom, "debug", "The  {} law changes type 7 => 2".format(nom)
+                    )
 
         nb = len(dict_lois.keys())
         SubElement(hydrauliques, "nb").text = str(nb)
@@ -811,7 +834,8 @@ class ClassCreatFilesModels:
             SubElement(struct, "type").text = str(dict_lois[nom]["type"])
             donnees = SubElement(struct, "donnees")
             SubElement(donnees, "modeEntree").text = "1"
-            # WARNING The law must be sorted because of the order of law must be the same than order File.law for API
+            # WARNING The law must be sorted because of the order of
+            # law must be the same than order File.law for API
             # SubElement(donnees, "fichier").text = '{}.loi'.format(
             #    del_symbol(self.geom_obj_toname(nom, dict_lois[nom]['type'])))
             SubElement(donnees, "fichier").text = "{}.loi".format(del_symbol(nom))
@@ -849,8 +873,7 @@ class ClassCreatFilesModels:
         self.indent(fichier_cas)
         arbre = ElementTree(fichier_cas)
         arbre.write(fichier_sortie)
-        self.mess.add_mess("CreatXcas", "info",
-                           "Save the Xcas file is done")
+        self.mess.add_mess("CreatXcas", "info", "Save the Xcas file is done")
         # ****** XCAS initialisation **********
         temps_max = 3600
         np_pas_temps_init = 2
@@ -906,8 +929,7 @@ class ClassCreatFilesModels:
         arbre = ElementTree(fichier_cas)
         arbre.write(os.path.join(self.dossier_file_masc, fich_xcas))
 
-        self.mess.add_mess("CreatXcasInit", "info",
-                           "Save the init. Xcas file  is done")
+        self.mess.add_mess("CreatXcasInit", "info", "Save the init. Xcas file  is done")
 
         # except Exception as e:
         #     err = 'save Xcas file\n'
@@ -928,13 +950,21 @@ class ClassCreatFilesModels:
 
     def check_basin(self, liaisons, casiers, dico_basinnum):
         """
-        Check if links is correctly defined
+        Check if links and basins are correctly defined.
+        :param liaisons (dict): Link data
+        :param casiers (dict): Basin data
+        :param dico_basinnum (dict): Mapping of basin numbers
+        :return: None
         """
         for idc, num in enumerate(casiers["basinnum"]):
-            if float(casiers["initlevel"][idc]) < min([float(val) for val in casiers["level"][idc].split()]):
-                txte = ('*** Error: The "Reference level" for the basins {} '
-                                   'which must be greater than or equal to '
-                                   'the minimum level of the height volume law'.format(num))
+            if float(casiers["initlevel"][idc]) < min(
+                    [float(val) for val in casiers["level"][idc].split()]
+            ):
+                txte = (
+                    '*** Error: The "Reference level" for the basins {} '
+                    "which must be greater than or equal to "
+                    "the minimum level of the height volume law".format(num)
+                )
                 self.mess.add_mess("BasinErr_{}".format(num), "critic", txte)
 
         check_typ_link = {
@@ -959,14 +989,16 @@ class ClassCreatFilesModels:
             ste = liaisons["basinend"][idl]
             # check "Basin-Reach" have an abscissa
             if nat == 1 and (abs is None or abs == -1):
-                txte = ('*** Error: The "Basin-Reach" type link {} '
-                        'does not have an abscissa on the reach'.format(num))
+                txte = (
+                    '*** Error: The "Basin-Reach" type link {} '
+                    "does not have an abscissa on the reach".format(num)
+                )
                 self.mess.add_mess("LinkBR_{}".format(num), "critic", txte)
             # check coherent between variable and typ
             for key in check_typ_link[tupl]:
                 val = liaisons[key][idl]
                 if val is None:
-                    txte = ('*** Error: Link {} is not type coherent.'.format(num))
+                    txte = "*** Error: Link {} is not type coherent.".format(num)
                     self.mess.add_mess("LinkErr_{}".format(num), "critic", txte)
                     break
 
@@ -982,10 +1014,8 @@ class ClassCreatFilesModels:
                     )
                     self.mess.add_mess("Links_{}_{}".format(numc, num), "warning", txtw)
             else:
-                txte = (
-                    "*** Error: The link {} " 'does not have "Basin number start"'.format(num)
-                )
-                self.mess.add_mess("LinksB_{}".format(numc, num), "critic", txte)
+                txte = "*** Error: The link {} " 'does not have "Basin number start"'.format(num)
+                self.mess.add_mess("LinksB_{}".format(num), "critic", txte)
             # check if "basinend" is existed  before  check level
             if ste is None or ste == -1:
                 continue
@@ -1003,12 +1033,17 @@ class ClassCreatFilesModels:
                     self.mess.add_mess("Links1_{}_{}".format(numc, num), "warning", txtw)
 
             else:
-                txte = (
-                    "*** Error: The link {} " 'does not have "Basin number End"'.format(num)
-                )
-                self.mess.add_mess("LinksB1_{}".format(numc, num), "critic", txte)
+                txte = "*** Error: The link {} " 'does not have "Basin number End"'.format(num)
+                self.mess.add_mess("LinksB1_{}".format(num), "critic", txte)
 
     def add_basin_xcas(self, fichier_cas, casiers, liaisons):
+        """
+        Add basin and link information to the xcas XML structure.
+        :param fichier_cas (ElementTree): XML tree
+        :param casiers (dict): Basin data
+        :param liaisons (dict): Link data
+        :return: None
+        """
         # Creation du dictionnaire de numero de casier entre mascaret (cle)
         # et qgis (valeur)
         self.dico_basinnum = {}
@@ -1069,7 +1104,13 @@ class ClassCreatFilesModels:
         SubElement(et_liaisons, "abscBief").text = self.fmt_sans_none(liaisons["abscissa"], "-1.0")
 
     def add_wq_xcas(self, fichier_cas, noyau, dict_libres):
-        """Modification of xcas for Water Quality"""
+        """
+        Modify xcas for Water Quality (WQ) parameters.
+        :param fichier_cas (ElementTree): XML tree
+        :param noyau (str): Kernel name
+        :param dict_libres (dict): Dictionary of free extremities
+        :return: (bool) True if successful, False otherwise
+        """
         # requête pour récupérer les paramètres
 
         cas = fichier_cas.find("parametresCas")
@@ -1131,7 +1172,7 @@ class ClassCreatFilesModels:
                 }
                 list_loi.append(lateral["law_wq"][i])
         if not len(list_loi) > 0:
-            txt = ("Please enter water quality laws")
+            txt = "Please enter water quality laws"
             self.mess.add_mess("WQLoi", "critic", txt)
             return False
         list_loi = list(set(list_loi))
@@ -1164,13 +1205,11 @@ class ClassCreatFilesModels:
         SubElement(tracer_source, "typeSources").text = self.fmt(typ)
         SubElement(tracer_source, "numBranche").text = self.fmt(numb)
         if self.check_none(abs):
-            txt = (
-                "Geometric object for tracer lateral inflows " "is not found"
-            )
+            txt = "Geometric object for tracer lateral inflows " "is not found"
             self.mess.add_mess("WQGeoLatInflow", "warning", txt)
         SubElement(tracer_source, "abscisses").text = self.fmt(abs)
         if self.check_none(leng):
-            txt = ("Warning : Lenght for tracer lateral inflows is not found")
+            txt = "Warning : Lenght for tracer lateral inflows is not found"
             self.mess.add_mess("WQLenghtLatInflow", "warning", txt)
         SubElement(tracer_source, "longueurs").text = self.fmt(leng)
         SubElement(tracer_source, "numLoi").text = self.fmt(numl)
@@ -1182,11 +1221,13 @@ class ClassCreatFilesModels:
         lois = SubElement(tracer_law, "loisTracer")
         if nb > 0:
             for name in list_loi:
-                try :
+                try:
                     struct = SubElement(lois, "structureSParametresLoiTraceur")
                     SubElement(struct, "nom").text = name
                     SubElement(struct, "modeEntree").text = "1"
-                    SubElement(struct, "fichier").text = "{}_tra.loi".format(del_symbol(name.lower()))
+                    SubElement(struct, "fichier").text = "{}_tra.loi".format(
+                        del_symbol(name.lower())
+                    )
                     SubElement(struct, "uniteTps").text = "-0"
                     SubElement(struct, "nbPoints").text = "-0"
                 except Exception as err:
@@ -1215,6 +1256,12 @@ class ClassCreatFilesModels:
         return True
 
     def modif_seuil(self, seuil, dico_str):
+        """
+        Modify weir (seuil) data with structure configuration.
+        :param seuil (dict): Weir data
+        :param dico_str (dict): Structure configuration
+        :return: (dict, dict) seuil, loi_struct
+        """
         liste = [
             "type",
             "branchnum",
@@ -1246,18 +1293,66 @@ class ClassCreatFilesModels:
                 elif ls == "branchnum":
                     seuil[ls].append(dico_str["branchnum"][i])
                 elif ls == "z_break":
-                    seuil[ls].append(99999)
+                    if 'zbreak' in dico_str:
+                        seuil[ls].append(dico_str['zbreak'][i])
+                    else:
+                        seuil[ls].append(99999)
                 elif ls == "z_crest":
                     where = "id_config ='{}'".format(dico_str["id"][i])
                     zmin = self.mdb.select_min("z", "profil_struct", where)
                     seuil[ls].append(zmin)
                 else:
                     seuil[ls].append(None)
-
+        if any(seuil['active_mob']):  # and not self.cond_api:
+            where = f"id_weirs in (SELECT gid FROM {self.mdb.SCHEMA}.weirs where active_mob)"
+            dico_mob = self.mdb.select("weirs_mob_val", where, "id_weirs")
+            for id_w in dico_mob["id_weirs"]:
+                try:
+                    id_s = seuil['gid'].index(id_w)
+                    id_n = dico_mob['name_var'].index('ZINITREG')
+                    seuil["z_crest"][id_s] = dico_mob['value'][id_n]
+                except ValueError:
+                    continue
         return seuil, loi_struct
 
+    def modif_link(self, liaisons):
+        """
+        Modification of dictionaries used to create in the Xcas file
+        - Modify the initial levels of links when mobile links
+        :param liaisons:
+        :return:
+        """
+        if any(liaisons['active_mob']) and self.cond_api:
+            where = f"id_links in (SELECT gid FROM {self.mdb.SCHEMA}.links where active_mob)"
+            lst_gid = self.mdb.select_distinct("id_links", "links_mob_val", where)
+            dico_mob = self.mdb.select("links_mob_val", where, "id_links")
+            if not lst_gid:
+                return liaisons
+            df_mob = pd.DataFrame(dico_mob)
+            for id_lk in lst_gid['id_links']:
+                try:
+                    id_s = liaisons['gid'].index(id_lk)
+                    valeur = df_mob[(df_mob['id_links'] == id_lk) &
+                                    (df_mob['name_var'] == 'ZINITREG')]['value'].tolist()
+                    if valeur:
+                        valeur = valeur[0]
+                        lvl0 = liaisons["level"][id_s]
+                        liaisons["level"][id_s] = float(valeur)
+                        if liaisons['type'][id_s] == 4:
+                            htop = liaisons["crosssection"][id_s] / liaisons["width"][id_s]
+                            newsec = max(liaisons["width"][id_s] * (htop - max(liaisons["level"][id_s] - lvl0, 0)),
+                                         1E-4)
+                            liaisons["crosssection"][id_s] = newsec
+                except ValueError:
+                    continue
+        return liaisons
+
     def typ_struct(self, meth):
-        """function to know the law type"""
+        """
+        Get the law type for a given method.
+        :param meth (int): Method code
+        :return: (int or None) Law type
+        """
 
         if meth == 0 or meth == 4 or meth == 1 or meth == 5 or meth == 3:
             return 1
@@ -1265,6 +1360,13 @@ class ClassCreatFilesModels:
             return None
 
     def modif_xcas(self, parametres, xcasfile, fich_sortie=None):
+        """
+        Modify an existing xcas file with new parameters.
+        :param parametres (dict): Parameters to update
+        :param xcasfile (str): xcas filename
+        :param fich_sortie (str): Optional output filename
+        :return: None
+        """
         fich_entree = os.path.join(self.dossier_file_masc, xcasfile)
         arbre = et_parse(fich_entree)
         racine = arbre.getroot()
@@ -1285,9 +1387,15 @@ class ClassCreatFilesModels:
         else:
             arbre.write(fich_entree)
 
-    # ************   LAW FILE   ********************************************************************
-
     def creer_loi(self, nom, tab, type_, init=False):
+        """
+        Create a law file (.loi) with the given name and data.
+        :param nom (str): Law name
+        :param tab (dict): Law data
+        :param type_ (int): Law type
+        :param init (bool): If True, the computation is an initialization (default: False)
+        :return: None
+        """
         # nom = self.geom_obj_toname(nom, type_)
         if init:
             nom = nom + "_init"
@@ -1330,22 +1438,17 @@ class ClassCreatFilesModels:
 
     def obs_to_loi(self, dict_lois, date_debut, date_fin, par):
         """
-        Creation law with observation data
-        Args:
-            :param dict_lois: dict of law
-            :param date_debut: start date
-            :param date_fin: last date
-            :param par : dict of parameters
-        Return :
-            :return:
+        Create a law file from observation data.
+        :param dict_lois (dict): Dictionary of law definitions
+        :param date_debut (datetime): Start date for observation
+        :param date_fin (datetime): End date for observation
+        :param par (dict): Parameters dictionary
+        :return: par (dict): Updated parameters dictionary
         """
         # pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
         pattern = re.compile("(\\w+)\\[t([+-][0-9]+)?\\]")
         somme = 0
         debit_prec = 0
-        obs = {}
-        # duree = int((date_fin - date_debut).total_seconds() / 3600)
-        # liste_date = [date_debut + datetime.timedelta(hours=x) for x in range(duree)]
         for nom, loi in dict_lois.items():
             if loi["type"] == 1:
                 type_ = "Q"
@@ -1353,23 +1456,22 @@ class ClassCreatFilesModels:
                 type_ = "H"
             else:
                 continue
-
+            if not loi.get("formule"):
+                continue
             valeur_init = None
 
-            liste_stations = pattern.findall(loi["formule"])
+            if not loi["formule"]:
+                self.mess.add_mess('NoFormule', 'critic',
+                                   f"No Formul to the {nom} law.")
+                return None
 
-            dt = datetime.timedelta(hours=int(99999999))
-            dtmax = datetime.timedelta(hours=int(-99999999))
+            liste_stations = pattern.findall(loi["formule"])
+            # get observation each station
+            obs_stations = {}
+
             for cd_hydro, delta in liste_stations:
-                if not delta:
-                    delta = "0"
-                dt = min(dt,datetime.timedelta(hours=int(delta)))
-                dtmax = max(dtmax,abs(datetime.timedelta(hours=int(delta))))
-            liste_date = None
-            for cd_hydro, delta in liste_stations:
-                # if not delta:
-                #     delta = "0"
-                #dt = datetime.timedelta(hours=int(delta))
+                delta_h = int(delta) if delta else 0
+                dt = datetime.timedelta(hours=delta_h)
                 sql_tab = (
                     "SELECT * FROM "
                     "(SELECT code,type, UNNEST(date)as date, "
@@ -1379,13 +1481,21 @@ class ClassCreatFilesModels:
                     "WHERE date >= '{3:%Y-%m-%d %H:%M}' "
                     "AND date <= '{4:%Y-%m-%d %H:%M}' "
                     "ORDER BY date ".format(
-                        self.mdb.SCHEMA, cd_hydro, type_, date_debut + dt, date_fin + dtmax
+                        self.mdb.SCHEMA, cd_hydro, type_, date_debut + dt, date_fin + dt
                     )
                 )
-                obs[cd_hydro] = self.mdb.query_todico(sql_tab)
-
-                if not liste_date:
-                    liste_date = [x - dt for x in obs[cd_hydro]["date"]]
+                obs_stations[cd_hydro] = self.mdb.query_todico(sql_tab)
+                if not obs_stations[cd_hydro]["date"]:
+                    self.mess.add_mess('NoInitSteady', 'critic',
+                                       f"Error: Please check if law for {nom} object is correct.\n "
+                                       f"No observations found for station {ref_station} "
+                                       "on the dates: {0:%Y-%m-%d %H:%M} - {1:%Y-%m-%d %H:%M}"
+                                       "".format(date_debut + dt, date_fin + dt))
+                    continue
+                # ref dates and station (first station)
+            ref_station, ref_delta = liste_stations[0]
+            ref_delta_h = int(ref_delta) if ref_delta else 0
+            ref_dates = [d - datetime.timedelta(hours=ref_delta_h) for d in obs_stations[ref_station]["date"]]
 
             fichier_loi = os.path.join(self.dossier_file_masc, del_symbol(nom) + ".loi")
 
@@ -1396,17 +1506,15 @@ class ClassCreatFilesModels:
                 else:
                     fich_sortie.write("# Temps (H) Hauteur\n")
                 fich_sortie.write(" H \n")
-                for t in liste_date:
+                for t in ref_dates:
                     calc = loi["formule"]
                     for cd_hydro, delta in liste_stations:
-                        if not delta:
-                            delta = "0"
-                        t2 = t + datetime.timedelta(hours=int(delta))
-                        if t2 in obs[cd_hydro]["date"]:
-                            i = obs[cd_hydro]["date"].index(t2)
-                            val = obs[cd_hydro]["valeur"][i]
-                        else:
-                            val = None
+                        delta_h = int(delta) if delta else 0
+                        t2 = t + datetime.timedelta(hours=delta_h)
+                        val = None
+                        if t2 in obs_stations[cd_hydro]["date"]:
+                            i = obs_stations[cd_hydro]["date"].index(t2)
+                            val = obs_stations[cd_hydro]["valeur"][i]
                         calc = pattern.sub(str(val), calc, 1)
                     try:
                         resultat = eval(calc)
@@ -1422,9 +1530,9 @@ class ClassCreatFilesModels:
                         fich_sortie.write(chaine.format(tps, resultat))
 
             # check law after write
-            initime = round((liste_date[0] - date_debut).total_seconds() / 3600, 3) * 3600
-            lasttime = round(tps, 3) * 3600
-            #round((liste_date[-1] - date_debut).total_seconds() / 3600, 3) * 3600
+            initime = round((ref_dates[0] - date_debut).total_seconds() / 3600, 3) * 3600
+            lasttime = round((ref_dates[-1] - date_debut).total_seconds() / 3600, 3) * 3600
+
             self.check_timelaw(par, nom, initime, lasttime)
 
             if valeur_init is not None:
@@ -1436,11 +1544,13 @@ class ClassCreatFilesModels:
                     self.creer_loi(nom, tab, 2, init=True)
             else:
                 par["initialisationAuto"] = False
-                self.mess.add_mess('NoInitSteady', 'Warning',
-                                   "No initialisation because of no SteadyValue")
+                self.mess.add_mess(
+                    "NoInitSteady", "Warning", "No initialisation because of no SteadyValue"
+                )
         valeur_init = None
+
         for nom, loi in dict_lois.items():
-            if not loi["type"] in (1, 2):
+            if not loi["type"] in (1, 2) or (loi["type"] in (1, 2) and not loi["formule"]):
                 # create other law
                 tab = self.get_laws(
                     nom, loi["type"], obs=True, date_deb=date_debut, date_fin=date_fin
@@ -1452,11 +1562,14 @@ class ClassCreatFilesModels:
                         lasttime = round(tab["time"][-1], 3)
                         self.check_timelaw(par, nom, initime, lasttime)
                 else:
-                    self.mess.add_mess('CreatLaw_{}'.format(nom), 'critic',
-                                       "The law for {} is not create.".format(nom))
+                    self.mess.add_mess(
+                        "CreatLaw_{}".format(nom),
+                        "critic",
+                        "The law for {} is not create.".format(nom),
+                    )
                     continue
                 # create init law
-                if loi["type"] in [4]:  # , 5]: # car 5 mascaret plante à l'init
+                if loi["type"] in [1, 2, 4]:  # , 5]: # car 5 mascaret plante à l'init
                     self.creer_loi(nom, tab, loi["type"], init=True)
                 elif loi["type"] in [5] and loi["couche"] == "extremites":
                     for c, d in zip(tab["z"], tab["flowrate"]):
@@ -1465,48 +1578,59 @@ class ClassCreatFilesModels:
                                     somme - debit_prec
                             ) + cote_prec
                             break
-                        else:
-                            cote_prec, debit_prec = c, d
+                        cote_prec, debit_prec = c, d
                     if valeur_init is not None:
                         tab = {"time": [0, 3600], "z": [valeur_init, valeur_init]}
                         self.creer_loi(nom, tab, 2, init=True)
                 else:
                     par["initialisationAuto"] = False
-                    self.mess.add_mess('NoInitSteady', 'Warning',
-                                       "No initialisation because of no SteadyValue")
+                    self.mess.add_mess(
+                        "NoInitSteady", "Warning", "No initialisation because of no SteadyValue"
+                    )
         return par
 
     def check_timelaw(self, par, name, initime, lasttime):
+        """_
+        Check the time law for initialization and last time.
+        :param par (dict): Parameters dictionary
+        :param name (str): Name of the law
+        :param initime (float): Initial time in seconds
+        :param lasttime (float): Last time in seconds
+        :return: (bool) True if there is an error, False otherwise
+        """
         cond = False
         if par["tempsInit"] < initime:
-            self.mess.add_mess("tLaw_{}".format(name), "critic",
-                               " Error law {} on the Initial Time".format(name))
+            self.mess.add_mess(
+                "tLaw_{}".format(name), "critic", " Error law {} on the Initial Time".format(name)
+            )
             cond = True
         if par["critereArret"] == 1:
             # tmax
             if par["tempsMax"] > lasttime:
-                self.mess.add_mess("tLaw_{}".format(name), "critic",
-                                   " Error law {} on the Last Time".format(name))
+                self.mess.add_mess(
+                    "tLaw_{}".format(name), "critic", " Error law {} on the Last Time".format(name)
+                )
                 cond = True
         elif par["critereArret"] == 2:
             # nb iterration
             if par["nbPasTemps"] * par["pasTemps"] > lasttime:
-                self.mess.add_mess("tLaw_{}".format(name), "critic",
-                                   " Error law {} on the Last Time".format(name))
+                self.mess.add_mess(
+                    "tLaw_{}".format(name), "critic", " Error law {} on the Last Time".format(name)
+                )
                 cond = True
 
         return cond
 
     def get_laws(self, name_obj, typ_law, obs=False, date_deb=None, date_fin=None):
         """
-        Get law
-        Args:
-            :param name_obj:
-            :param typ_law:
-            :param obs:
-            :param date_deb:
-            :param date_fin:
-        :return:
+        Get the law for a given object and type.
+        If obs is True, it will filter by date_deb and date_fin.
+        :param name_obj (object): Name of the object
+        :param typ_law (str): Type of the law
+        :param obs (bool): If True, filter by date
+        :param date_deb (datetime): Start date for filtering
+        :param date_fin (datetime): End date for filtering
+        :return: (dict) Law data or None if not found
         """
 
         try:
@@ -1519,12 +1643,13 @@ class ClassCreatFilesModels:
                                  """.format(
                     name_obj, typ_law, date_deb, date_fin
                 )
+
             else:
                 condition = "geom_obj='{0}' AND id_law_type={1} AND active".format(
                     name_obj, typ_law
                 )
 
-            config = self.mdb.select_one("law_config", condition, verbose=False)
+            config = self.mdb.select_one("law_config", condition)
             if config:
                 values = self.mdb.select(
                     "law_values",
@@ -1553,10 +1678,67 @@ class ClassCreatFilesModels:
             self.mess.add_mess("obsLaw_{}".format(name_obj), "critic", err)
             return None
 
+    def classic_law(self, par, dict_lois):
+        """
+        Create the law for the classic case
+        :param par: dict contains the parameters
+        :param dict_lois: dict contains the law
+        :return: dict (par)
+        """
+        for nom, l in dict_lois.items():
+            # dictLois.items() extremities liste
+
+            tab = self.get_laws(nom, l["type"])
+            if tab:
+                self.creer_loi(nom, tab, l["type"])
+                if "time" in tab.keys():
+                    initime = round(tab["time"][0], 3)
+                    lasttime = round(tab["time"][-1], 3)
+                    self.check_timelaw(par, nom, initime, lasttime)
+            else:
+                self.mess.add_mess(
+                    "CreatLaw_{}".format(nom), "critic", "The law for {} is not create.".format(nom)
+                )
+
+            if "valeurperm" not in l.keys():
+                continue
+
+            # nom = nom + "_init"
+            if l["valeurperm"]:
+                if l["type"] == 1:
+                    tab = {"time": [0, 3600], "flowrate": [l["valeurperm"]] * 2}
+                    self.creer_loi(nom, tab, 1, init=True)
+                elif l["type"] == 2:
+                    tab = {"time": [0, 3600], "z": [l["valeurperm"]] * 2}
+                    self.creer_loi(nom, tab, 2, init=True)
+                elif l["type"] in [4, 5]:
+                    self.creer_loi(nom, tab, l["type"], init=True)
+                else:
+                    par["initialisationAuto"] = False
+                    self.mess.add_mess(
+                        "NoInitSteady", "Warning", "No initialisation because of no SteadyValue"
+                    )
+            else:
+                if l["type"] in [4, 5]:
+                    self.creer_loi(nom, tab, l["type"], init=True)
+                else:
+                    par["initialisationAuto"] = False
+                    txt = "No initialisation because of no steady value set for {} condition".format(
+                        nom
+                    ) + 'Set "steadyValue" in extremities layer for entity {}'.format(nom)
+                    self.mess.add_mess(txt, "NoInitUnsteady", "warning")
+        return par
+
     # ************   LIG FILE   ********************************************************************
 
-    def opt_to_lig(self, id_run, base_namefiles):
-        """Creation of .lig file"""
+    def opt_to_lig(self, id_run, base_namefiles, path_file=None):
+        """
+        Creation of .lig file
+        :param id_run (int): run index
+        :param base_namefiles (str): base name for the lig file
+        :return: None"""
+        if not path_file:
+            path_file = self.dossier_file_masc
         result = self.get_for_lig(id_run)
         if not result:
             return None
@@ -1579,7 +1761,7 @@ class ClassCreatFilesModels:
             i1i2.append(str(i1[b]))
             i1i2.append(str(i2[b]))
 
-        with open(os.path.join(self.dossier_file_masc, base_namefiles + ".lig"), "w") as fich:
+        with open(os.path.join(path_file, base_namefiles + ".lig"), "w") as fich:
             date = datetime.datetime.utcnow()
             fich.write("RESULTATS CALCUL,DATE :  {0:%d/%m/%y %H:%M}\n".format(date))
             fich.write("FICHIER RESULTAT MASCARET{0}\n".format(" " * 47))
@@ -1612,11 +1794,9 @@ class ClassCreatFilesModels:
 
     def get_for_lig(self, id_run):
         """
-         Get value to create the lig file
-         Args:
-            :param id_run: run index
-         Return :
-            :return: return value to create the lig file
+        Get value to create the lig file
+           :param id_run (int): run index
+           :return: (dict) return value to create the lig file
         """
         result = {}
         try:
@@ -1627,7 +1807,7 @@ class ClassCreatFilesModels:
                 "time", "results", "var = {}  AND id_runs = {} ".format(idz, id_run)
             )
             if t_max is None:
-                txt = ("No previous results to create the .lig file.")
+                txt = "No previous results to create the .lig file."
                 self.mess.add_mess("LigFile", "critic", txt)
                 return None
             value = self.mdb.select(
@@ -1657,7 +1837,7 @@ class ClassCreatFilesModels:
                 result["branche"] += value["branch"] * len(pk)
             del value
         except Exception:
-            txt = ("No results for initialisation")
+            txt = "No results for initialisation"
             self.mess.add_mess("LigFile", "critic", txt)
             return None
 
@@ -1671,7 +1851,7 @@ class ClassCreatFilesModels:
         """
 
         info = self.mdb.select(
-            "weirs", where="active_mob = true", list_var=["method_mob", "gid", "name"], order="gid"
+            "weirs", where="active_mob = true", list_var=["method_mob", "gid", "name", "z_crest"], order="gid"
         )
         if info:
             try:
@@ -1685,7 +1865,7 @@ class ClassCreatFilesModels:
                     if info["method_mob"][i] == "1":
                         rows = self.mdb.select(
                             "weirs_mob_val",
-                            where="id_weirs= {} AND (name_var='TIME' OR name_var='ZVAR')".format(
+                            where="id_weirs= {} AND (name_var='TIMEZ' OR name_var='VALUEZ')".format(
                                 idw
                             ),
                             order="name_var, id_order",
@@ -1709,17 +1889,17 @@ class ClassCreatFilesModels:
                                     "for {} weirs.\n"
                                     "The weir is ignored.".format(info["name"][i])
                                 )
-                                self.mess.add_mess("MobGate_{}".format(info["name"][i]), "warning", txt)
+                                self.mess.add_mess(
+                                    "MobGate_{}".format(info["name"][i]), "warning", txt
+                                )
                         else:
-                            txt = (
-                                "There aren't value in {} weirs".format(info["name"][i])
-                            )
+                            txt = "There aren't value in {} weirs".format(info["name"][i])
                             self.mess.add_mess("MobGate_{}".format(info["name"][i]), "warning", txt)
 
                     elif info["method_mob"][i] == "2":
                         rows = self.mdb.select(
                             "weirs_mob_val",
-                            where="id_weirs= {} AND name_var!='TIME' AND name_var!='ZVAR'".format(
+                            where="id_weirs= {} AND name_var!='TIMEZ' AND name_var!='VALUEZ'".format(
                                 idw
                             ),
                         )
@@ -1729,22 +1909,20 @@ class ClassCreatFilesModels:
                             fich.write("Zregulation Zbas Zhaut (m ngf)\n")
                             fich.write(
                                 "{} {} {}\n".format(
-                                    rows["value"][rows["name_var"].index("ZREG")],
-                                    rows["value"][rows["name_var"].index("ZBAS")],
-                                    rows["value"][rows["name_var"].index("ZHAUT")],
+                                    rows["value"][rows["name_var"].index("VREGCLOS")],
+                                    info["z_crest"][i],  # ZBAS
+                                    rows["value"][rows["name_var"].index('ZMAXFG')],
                                 )
                             )
                             fich.write("Vabaissement Vrehaussement m/s\n")
                             fich.write(
                                 "{} {}\n".format(
-                                    rows["value"][rows["name_var"].index("VDESC")],
-                                    rows["value"][rows["name_var"].index("VMONT")],
+                                    rows["value"][rows["name_var"].index("VELOFGOPEN")],
+                                    rows["value"][rows["name_var"].index("VELOFGCLOSE")],
                                 )
                             )
                     else:
-                        txt = (
-                            "There aren't value in {} weirs".format(info["name"][i])
-                        )
+                        txt = "There aren't value in {} weirs".format(info["name"][i])
                         self.mess.add_mess("MobGate_{}".format(info["name"][i]), "warning", txt)
 
                 fich.close()
@@ -1754,3 +1932,32 @@ class ClassCreatFilesModels:
                 err = "Error: save the dam file"
                 err += str(e)
                 self.mess.add_mess("MobGateFile", "critic", err)
+
+    def creat_file_no_keep_break(self, name=None):
+        """
+        Get the weirs is no permanent break and create json
+        Args:
+            :param name: file name, default no_keep_break.json
+         Return :
+            :return: return value to create the no_keep_break file
+
+        """
+        if not name:
+            name = os.path.join(self.dossier_file_masc, "no_keep_break.json")
+
+        param = {}
+        lst_get = [('weirs', 'gid'), ('struct_config', 'id')]
+        for tab, var in lst_get:
+            sql = (
+                f"SELECT {var}, name, branchnum, abscissa, erase_flag FROM {self.mdb.SCHEMA}.{tab} "
+                f"WHERE active ORDER BY {var};"
+            )
+            rows = self.mdb.run_query(sql, fetch=True)
+            if rows:
+                for row in rows:
+                    # "name, branchnum, abscissa"
+                    if row[4]:
+                        param[row[0]] = ((row[1], row[2], row[3]), row[4])
+        if param:
+            with open(name, "w") as file:
+                json.dump(param, file)

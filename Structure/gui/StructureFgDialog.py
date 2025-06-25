@@ -18,17 +18,18 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
-
-from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import *
+from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
+from ..ClassTableStructure import ClassTableStructure
 
 
 class StructureFgDialog(QDialog):

@@ -20,12 +20,14 @@ email                :
 import math
 import os
 import re
-from shutil import copy2
-import numpy as np
-import dateutil
 import string as st
-import sys
 import subprocess
+import sys
+from shutil import copy2
+
+import dateutil
+import numpy as np
+
 
 def del_2space(txt):
     return re.sub(" +", " ", txt)
@@ -33,7 +35,6 @@ def del_2space(txt):
 
 def data_to_float(txt):
     try:
-        float(txt)
         return float(txt)
     except ValueError:
         return None
@@ -41,7 +42,6 @@ def data_to_float(txt):
 
 def data_to_date(txt):
     try:
-        dateutil.parser.parse(txt, dayfirst=True)
         return dateutil.parser.parse(txt, dayfirst=True)
     except ValueError:
         return None
@@ -49,8 +49,7 @@ def data_to_date(txt):
 
 def data_to_int(txt):
     try:
-        int(txt)
-        return int(txt)
+        return int(float(txt))
     except ValueError:
         return None
 
@@ -84,7 +83,7 @@ def interpole(a, l1, l2):
 
 def str2bool(s):
     """string to bool"""
-    if "True" in s or "TRUE" in s:
+    if "True" in s or "true".upper() in s or "true" in s:
         return True
     else:
         return False
@@ -101,13 +100,14 @@ def get_couche(nom, iface):
 def open_file_editor(filename):
     """
      Open file with default Editor
-    :param file_: file_path
+    :param filename: file_path
     """
     if sys.platform == "win32":
         os.startfile(filename)
     else:
         opener = "open" if sys.platform == "darwin" else "xdg-open"
         subprocess.call([opener, filename])
+
 
 def calcul_abscisses(liste_couches, riviere, iface, dossier):
     couche_riv = get_couche(riviere, iface)
@@ -279,6 +279,7 @@ def del_symbol(ligne):
         for accented_char in accented_chars:
             ligne = ligne.replace(accented_char, char)
     return ligne
+
 
 def del_symbolv2(txt, exclud=[]):
     """
@@ -489,20 +490,20 @@ def proper_rdp(points, epsilon):
     :param epsilon: limit distance
     :return: filters points
     """
-    firstPoint = points[0]
-    lastPoint = points[-1]
+    first_point = points[0]
+    last_point = points[-1]
     if len(points) < 3:
         return points
     index = -1
     dist = 0.0
     for i in range(1, len(points) - 2):
-        cDist = find_perpendicular_distance(points[i], firstPoint, lastPoint)
+        cDist = find_perpendicular_distance(points[i], first_point, last_point)
         if cDist > dist:
             dist = cDist
             index = i
     if dist > epsilon:
         ##iterate
-        l1 = points[0 : index + 1]
+        l1 = points[0: index + 1]
         l2 = points[index:]
         r1 = proper_rdp(l1, epsilon)
         r2 = proper_rdp(l2, epsilon)
@@ -510,7 +511,7 @@ def proper_rdp(points, epsilon):
         rs = r1[0:-1] + r2
         return rs
     else:
-        return [firstPoint, lastPoint]
+        return [first_point, last_point]
 
 
 def filter_dist_perpendiculaire(pr_x, pr_z, seuil, fixe_x=[], dist_detection_vert=0.2):
@@ -639,7 +640,7 @@ class TypeErrorModel:
         Args:
             :param description: str Type Name
             :param description:str description of error
-            :param status: boolean status default of erro (True exist False: not exist)
+            :param stopt: boolean stop ot not the running
         """
         self.name = ""
         if isinstance(name, str):
@@ -731,6 +732,3 @@ class TypeErrorModel:
 
     def clear_err(self):
         self.dicterr = {}
-
-
-

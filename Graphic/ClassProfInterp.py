@@ -18,11 +18,11 @@ email                :
  ***************************************************************************/
  """
 
-from shapely.geometry import *
-
 # import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from shapely.geometry import *
+
 
 # import time
 
@@ -217,7 +217,6 @@ class ClassProfInterp:
             pr_am, x_am_fond, zmin_am, pas=pas, id_g=id_am_f[0], id_d=-1, cond_pas_z=cond_pas_z
         )
 
-
         av_g = self.discret_pr_lg(
             pr_av, x_av_fond, zmin_av, pas=pas, id_g=0, id_d=id_av_f[0], cond_pas_z=cond_pas_z
         )
@@ -277,11 +276,11 @@ class ClassProfInterp:
         df_g = pd.DataFrame(list_points_g, columns=["x", "z"])
         df_d = pd.DataFrame(list_points_d, columns=["x", "z"])
         prof_final = (
-            [(x_g, z_g)]
-            + df_g.sort_values(["x"]).values.tolist()
-            + [(x_f, z_f)]
-            + df_d.sort_values(["x"]).values.tolist()
-            + [(x_d, z_d)]
+                [(x_g, z_g)]
+                + df_g.sort_values(["x"]).values.tolist()
+                + [(x_f, z_f)]
+                + df_d.sort_values(["x"]).values.tolist()
+                + [(x_d, z_d)]
         )
         limx = [x_g, x_d]
         prof_final = LineString(prof_final)
@@ -310,7 +309,7 @@ class ClassProfInterp:
         if id_d == -1:
             limit_pr = pr[id_g:]
         else:
-            limit_pr = pr[id_g : id_d + 1]
+            limit_pr = pr[id_g: id_d + 1]
 
         wow = []
         pzmax = pr[id_g, 1]
@@ -335,7 +334,7 @@ class ClassProfInterp:
             pasz = (zmax - zmin) / pas
 
         z_level = zmin
-        if pasz == 0 :
+        if pasz == 0:
             return lst_line_disc
 
         while z_level + pasz <= zmax and pasz != 0.:

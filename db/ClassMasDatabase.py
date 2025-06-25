@@ -26,18 +26,15 @@ from datetime import datetime
 import numpy as np
 import psycopg2
 import psycopg2.extras
+from qgis.core import QgsDataSourceUri
 from qgis.core import QgsVectorLayer, QgsProject
+from qgis.gui import QgsMessageBar
 
 from . import MasObject as Maso
 from .Check_tab import CheckTab
 from ..Function import read_version
 from ..WaterQuality import ClassTableWQ
 from ..ui.custom_control import ClassWarningBox
-
-from qgis.core import QgsDataSourceUri
-
-
-from qgis.gui import QgsMessageBar
 
 
 class ClassMasDatabase(object):
@@ -129,14 +126,14 @@ class ClassMasDatabase(object):
         self.con.commit()
 
     def run_query(
-        self,
-        qry,
-        fetch=False,
-        arraysize=-1,
-        be_quiet=False,
-        namvar=False,
-        many=False,
-        list_many=None,
+            self,
+            qry,
+            fetch=False,
+            arraysize=-1,
+            be_quiet=False,
+            namvar=False,
+            many=False,
+            list_many=None,
     ):
         """
         Running PostgreSQL queries
@@ -254,7 +251,7 @@ class ClassMasDatabase(object):
             :param pg_method: (str) String representation of method that will be called on the masobject class.
             :param schema: (str) Schema where tables will be created or processed.
             :param srid: (int) A Spatial Reference System Identifier.
-            :param **kwargs: (dict) Additional keyword arguments passed to pg_method.
+            :param kwargs: (dict) Additional keyword arguments passed to pg_method.
 
         Returns:
             :return obj: Instance of Mascaret class object
@@ -491,6 +488,7 @@ class ClassMasDatabase(object):
                 Maso.struct_fg,
                 Maso.struct_fg_val,
                 Maso.weirs_mob_val,
+                Maso.links_mob_val,
                 # OLD results
                 Maso.runs_graph,
                 Maso.results_var,
@@ -802,7 +800,9 @@ class ClassMasDatabase(object):
         Delete tables inside PostgreSQL database.
 
         Args:
-            table_name (str): Name of the table which will be deleted.
+            :param table_name (str): Name of the table which will be deleted.
+            :param  cascade (bool) : If CASCADE DROP
+            :param verbose: (bool) display sql commande
         """
         casc = ""
         if cascade is True:
@@ -904,20 +904,17 @@ $BODY$
         self.create_spatial_index()
         self.register_existing(Maso)
         reg = [self.register[k].name for k in sorted(self.register.keys())]
-        if self.mgis.DEBUG:
-            self.mgis.add_info(
-                "Objects registered in the database:<br>  {0}".format("<br>  ".join(reg))
-            )
-            self.mgis.add_info(
-                "You can load them now using  Geometry > Load Mascaret Database Tables Into QGIS"
-            )
+
+        self.mgis.add_info(
+            "Objects registered in the database:<br>  {0}".format("<br>  ".join(reg)), dbg=True)
+        self.mgis.add_info(
+            "You can load them now using  Geometry > Load Mascaret Database Tables Into QGIS", dbg=True)
+        if reg:
+            self.mgis.add_info("There are some objects registered in the database.")
         else:
-            if reg:
-                self.mgis.add_info("There are some objects registered in the database.")
-            else:
-                self.mgis.add_info(
-                    "Mascaret database is empty.<br>Create or import your river network data."
-                )
+            self.mgis.add_info(
+                "Mascaret database is empty.<br>Create or import your river network data."
+            )
         #
         self.load_gis_layer()
 
@@ -960,12 +957,12 @@ $BODY$
         """
         if verbose:
             self.mgis.add_info(sql_query)
-        (results, namCol) = self.run_query(sql_query, fetch=True, namvar=True)
-        if results is None or namCol is None:
+        (results, nam_col) = self.run_query(sql_query, fetch=True, namvar=True)
+        if results is None or nam_col is None:
             self.mgis.add_info("error : ")
             self.mgis.add_info(sql_query)
             return None
-        cols = [col[0] for col in namCol]
+        cols = [col[0] for col in nam_col]
         dico = {}
         for col in cols:
             dico[col] = []
@@ -984,7 +981,7 @@ $BODY$
         :param table: (str) table name
         :param where: (str)  condition
         :param order: (str) name variables to sort
-        :param list_var: list of variables
+        :param list_var: (list) list of variables
         :param verbose: (bool) display sql commande
         :return:
         """
@@ -1008,6 +1005,7 @@ $BODY$
         :param table: (str) table name
         :param where: (str)  condition
         :param order: (str) name variables to sort
+        :param  list_var : (list) list of variables
         :param verbose: (bool) display sql commande
         """
 
@@ -1025,16 +1023,16 @@ $BODY$
         if verbose:
             self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
         # self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
-        (results, namCol) = self.run_query(
+        (results, nam_col) = self.run_query(
             sql.format(self.SCHEMA, table, where, order, lvar), fetch=True, arraysize=1, namvar=True
         )
 
-        if results is None or namCol is None:
+        if results is None or nam_col is None:
             self.mgis.add_info("error : ")
             self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
             return None
 
-        cols = [col[0] for col in namCol]
+        cols = [col[0] for col in nam_col]
         results = [col[0] for col in results]
         if not results:
             return None
@@ -1062,13 +1060,13 @@ $BODY$
         if where:
             where = "WHERE " + where
         sql = "SELECT DISTINCT {0} FROM {1}.{2} {3} ORDER BY {4};"
-        (results, namCol) = self.run_query(
+        (results, nam_col) = self.run_query(
             sql.format(var, self.SCHEMA, table, where, ordre), fetch=True, namvar=True
         )
         if verbose:
             self.mgis.add_info(sql.format(var, self.SCHEMA, table, where, ordre))
-        if namCol and results:
-            cols = [col[0] for col in namCol]
+        if nam_col and results:
+            cols = [col[0] for col in nam_col]
             dico = {}
             for row in results:
                 for i, val in enumerate(row):
@@ -1130,6 +1128,7 @@ $BODY$
         Delete table information
         :param table : table name
         :param  where : condition
+        :param verbose: (bool) display sql commande
         """
         if where:
             where = "WHERE {0}".format(where)
@@ -1147,7 +1146,7 @@ $BODY$
                     key2 = other columns and list1 values
         :param colonnes: columns list
         :param delim:
-        :param verbose:
+        :param verbose: display sql command
         :return:
         """
         tmp = [colonnes[0]]
@@ -1180,10 +1179,13 @@ $BODY$
         return err
 
     def insert2(self, table, tab, verbose=False):
-        """insert table in tableSQl"""
+        """
+        :param table: (str) table name
+        :param tab :(dict) tab= {key : list_value}   key =  column name
+        :param verbose: (bool) display sql commande
+        """
         colonnes = sorted(tab.keys())
         var = ",".join(colonnes)
-
         valeurs = []
         for i in range(len(tab[colonnes[0]])):
             temp = []
@@ -1195,7 +1197,9 @@ $BODY$
         )
         if verbose:
             self.mgis.add_info(sql)
-        self.run_query(sql)
+
+        err = self.run_query(sql)
+        return err
 
     def insert_res(self, table, liste_value, colonnes):
         var = ",".join(colonnes)
@@ -1624,8 +1628,8 @@ $BODY$
             json.dump(js_dict, outfile, indent=4)
 
         cond = self.drop_model(dest, cascade=True, verbose=False)
-        if cond and self.mgis.DEBUG:
-            self.mgis.add_info('<br>Model "{0}" deleted.'.format(dest))
+        if cond:
+            self.mgis.add_info('<br>Model "{0}" deleted.'.format(dest), dbg=True)
 
         self.ignor_schema = list()
 
@@ -1904,7 +1908,7 @@ FROM
 WHERE minp != bp1 or bp1 is NULL
             """
 
-        (results, namCol) = self.run_query(sql.format(self.SCHEMA), fetch=True, namvar=True)
+        (results, nam_col) = self.run_query(sql.format(self.SCHEMA), fetch=True, namvar=True)
         dico_planim = {"pas": [], "min": [], "max": [], "absmin": [], "absmax": []}
         for pas, branch, minp, maxp, absmin, absmax in results:
             dico_planim["pas"].append(pas)
@@ -1947,7 +1951,7 @@ WHERE minp != bp1 or bp1 is NULL
             ON t3.mesh =t4.mesh and t3.branchnum =t4.branchnum  WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
         WHERE (minp != bp1 or bp1 is NULL) and minp !=maxp
         """
-        (results, namCol) = self.run_query(sql.format(self.SCHEMA), fetch=True, namvar=True)
+        (results, nam_col) = self.run_query(sql.format(self.SCHEMA), fetch=True, namvar=True)
 
         dico_mesh = {"pas": [], "min": [], "max": []}
         for pas, branch, minp, maxp in results:
@@ -2031,7 +2035,7 @@ FROM
 WHERE (num2 != numm1 OR numm1 is NULL)
 
         """
-        (results, namCol) = self.run_query(sql.format(self.SCHEMA), fetch=True, namvar=True)
+        (results, nam_col) = self.run_query(sql.format(self.SCHEMA), fetch=True, namvar=True)
 
         dico_ks = {
             "branch": [],

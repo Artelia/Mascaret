@@ -19,8 +19,8 @@ email                :
 """
 
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
@@ -29,6 +29,7 @@ from qgis.utils import *
 from .ClassTableWQ import ClassTableWQ
 from .Graph_WQ import GraphInitConc
 from .Init_conc import InitConcDialog
+
 
 class ClassTracerInitDialog:
     def __init__(self, obj):
@@ -165,12 +166,12 @@ class ClassTracerInitDialog:
             id_law = self.ui.lst_laws.model().item(l, 0).text()
             name_law = self.ui.lst_laws.model().item(l, 1).text()
             if (
-                QMessageBox.question(
-                    self.paramTr,
-                    "Tracer Initial Concentration",
-                    "Delete {} ?".format(name_law),
-                    QMessageBox.Cancel | QMessageBox.Ok,
-                )
+                    QMessageBox.question(
+                        self.paramTr,
+                        "Tracer Initial Concentration",
+                        "Delete {} ?".format(name_law),
+                        QMessageBox.Cancel | QMessageBox.Ok,
+                    )
             ) == QMessageBox.Ok:
                 self.mgis.add_info("Deletion of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(
