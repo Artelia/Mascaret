@@ -21,7 +21,7 @@ qgisMinimumVersion=3.22
 qgisMaximumVersion=3.99
 
 
-version=6.0.3
+version=6.0.4
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
