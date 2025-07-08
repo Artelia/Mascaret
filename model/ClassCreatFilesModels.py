@@ -1462,7 +1462,7 @@ class ClassCreatFilesModels:
             liste_stations = pattern.findall(loi["formule"])
             # get observation each station
             obs_stations = {}
-
+            err_critic = False
             for cd_hydro, delta in liste_stations:
                 delta_h = int(delta) if delta else 0
                 dt = datetime.timedelta(hours=delta_h)
@@ -1485,7 +1485,10 @@ class ClassCreatFilesModels:
                                        f"No observations found for station {cd_hydro} "
                                        "on the dates: {0:%Y-%m-%d %H:%M} - {1:%Y-%m-%d %H:%M}"
                                        "".format(date_debut + dt, date_fin + dt))
+                    err_critic = True
                     continue
+            if err_critic:
+                return
                 # ref dates and station (first station)
             ref_station, ref_delta = liste_stations[0]
             ref_delta_h = int(ref_delta) if ref_delta else 0
