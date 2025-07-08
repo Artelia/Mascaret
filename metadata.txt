@@ -32,6 +32,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    6.0.4 : Adjust the observation time window for the creation of observation law
     6.0.3 : Added the traceback message for the debug mode
             Bug fixe to display the profile graph
             Bug fixe for the dates in the hydraulic laws
