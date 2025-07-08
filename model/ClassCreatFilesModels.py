@@ -1358,21 +1358,25 @@ class ClassCreatFilesModels:
             liste_stations = pattern.findall(loi["formule"])
             # get observation each station
             obs_stations = {}
+            err_critic = False
             for cd_hydro, delta in liste_stations:
                 delta_h = int(delta) if delta else 0
                 dt =  datetime.timedelta(hours=delta_h)
-                sql_tab = (
-                    "SELECT * FROM "
-                    "(SELECT code,type, UNNEST(date)as date, "
-                    "UNNEST(valeur)as valeur "
-                    "FROM {0}.observations "
-                    "WHERE code='{1}' and type='{2}') t "
-                    "WHERE date >= '{3:%Y-%m-%d %H:%M}' "
-                    "AND date <= '{4:%Y-%m-%d %H:%M}' "
-                    "ORDER BY date ".format(
+                sql_tab = ("SELECT o.code, o.type, d.date, d.valeur "
+                           "FROM {0}.observations o, "
+                           "LATERAL UNNEST(o.date, o.valeur) AS d(date, valeur) "
+                           "WHERE o.code = '{1}' AND o.type = '{2}' "
+                           "AND d.date >= '{3:%Y-%m-%d %H:%M}' "
+                           " AND d.date <= COALESCE(( "
+                           " SELECT MIN(d2.date) "
+                           " FROM {0}.observations o2, "
+                           "LATERAL UNNEST(o2.date) AS d2(date) "
+                           "WHERE o2.code = '{1}' AND o2.type = '{2}' "
+                           " AND d2.date >= '{4:%Y-%m-%d %H:%M}' "
+                           " ), '{4:%Y-%m-%d %H:%M}') "
+                           "ORDER BY d.date;".format(
                         self.mdb.SCHEMA, cd_hydro, type_, date_debut + dt, date_fin + dt
-                    )
-                )
+                    ))
                 obs_stations[cd_hydro] = self.mdb.query_todico(sql_tab)
                 if not obs_stations[cd_hydro]["date"]:
                     self.mess.add_mess('NoInitSteady', 'critic',
@@ -1380,7 +1384,10 @@ class ClassCreatFilesModels:
                                        f"No observations found for station {cd_hydro} "
                                        "on the dates: {0:%Y-%m-%d %H:%M} - {1:%Y-%m-%d %H:%M}"
                                        "".format(date_debut + dt, date_fin + dt))
+                    err_critic = True
                     continue
+            if err_critic:
+                return
             # ref dates and station (first station)
             ref_station, ref_delta = liste_stations[0]
             ref_delta_h = int(ref_delta) if ref_delta else 0
