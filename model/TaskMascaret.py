@@ -171,41 +171,41 @@ class TaskMascaret(QgsTask):
                     time.sleep(1)
                     self.log_mess("===== End initialization =====")
 
-                    if self.isCanceled():
-                        self.log_mess("===== CANCEL RUN {} =====".format(self.run_), "warning")
-                        time.sleep(1)
-                        self.taskTerminated.emit()
-                        return False
-                    self.comput_task = TaskMascComput(gbl_param)
-                    stat, up_param = self.run_task(self.comput_task, up_param)
-                    self.comput_task.mess.clear_derror()
-                    if not stat:
-                        self.log_mess(
-                            "****** Error : Computing for {}  ******".format(scen), "warning"
-                        )
-                        continue
-                    stat, up_param = self.run_task(self.post_task, up_param)
-                    if not stat:
-                        self.log_mess(
-                            "****** Error : Postprocessing for {}  ******".format(scen), "warning"
-                        )
-                        continue
-                    tfin_run = time.time()
-                    self.log_mess("Execution time (Init + Run) : {} s".format(tfin_run - t0_run))
-                    self.log_mess("************** The End of {} ************".format(scen))
-                    if self.isCanceled():
-                        self.log_mess("===== CANCEL RUN {} =====".format(self.run_), "warning")
-                        time.sleep(1)
-                        self.taskTerminated.emit()
-                        return False
+                if self.isCanceled():
+                    self.log_mess("===== CANCEL RUN {} =====".format(self.run_), "warning")
+                    time.sleep(1)
+                    self.taskTerminated.emit()
+                    return False
+                self.comput_task = TaskMascComput(gbl_param)
+                stat, up_param = self.run_task(self.comput_task, up_param)
+                self.comput_task.mess.clear_derror()
+                if not stat:
+                    self.log_mess(
+                        "****** Error : Computing for {}  ******".format(scen), "warning"
+                    )
+                    continue
+                stat, up_param = self.run_task(self.post_task, up_param)
+                if not stat:
+                    self.log_mess(
+                        "****** Error : Postprocessing for {}  ******".format(scen), "warning"
+                    )
+                    continue
                 tfin_run = time.time()
-                self.log_mess(
-                    "Execution time (all Run) : {} s".format(tfin_run - self.exc_start_time)
-                )
-                self.log_mess("===== END OF RUN {} =====".format(self.run_))
-                time.sleep(1)
-                self.taskCompleted.emit()
-                return True
+                self.log_mess("Execution time (Init + Run) : {} s".format(tfin_run - t0_run))
+                self.log_mess("************** The End of {} ************".format(scen))
+                if self.isCanceled():
+                    self.log_mess("===== CANCEL RUN {} =====".format(self.run_), "warning")
+                    time.sleep(1)
+                    self.taskTerminated.emit()
+                    return False
+            tfin_run = time.time()
+            self.log_mess(
+                "Execution time (all Run) : {} s".format(tfin_run - self.exc_start_time)
+            )
+            self.log_mess("===== END OF RUN {} =====".format(self.run_))
+            time.sleep(1)
+            self.taskCompleted.emit()
+            return True
         except Exception as e:
             self.error_txt = str(e)
             if self.dbg:
