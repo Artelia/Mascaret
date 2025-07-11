@@ -33,6 +33,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 # Uncomment the following line and add your changelog:
 changelog=
     6.2.1 : Adjust the observation time window for the creation of observation law
+            Fix the bug on the initialization with previous Run
     6.2.0 : Added the hydraulic mobile structure with API (links, weirs)
             Fix the bug to calculate volume law for multiple basins
             Addition of the export function for the .lig file
