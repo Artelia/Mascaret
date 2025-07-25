@@ -386,36 +386,43 @@ class ClassAPIMascaret:
         mobil_w = self.mobil_w
         sect_co = self.sect_co
 
+
         if self.stpcrit == 1:
-            while t0 < tfin and not any([clfg_lk.arret_comput, clfg_w.arret_comput]):
+            arret_comput = False
+            while t0 < tfin and not arret_comput:
                 if t1 > tfin and conum:
                     t1 = tfin
                     dtp = t1 - t0
                 t0, t1, dtp = self.one_iter(t0, t1, dtp,
-                                            masc, conum, clfg, clfg_lk, clfg_w,
+                                            masc, conum,
+                                            clfg, clfg_lk, clfg_w,
                                             mobil_struct, mobil_link, mobil_w)
+                arret_comput = any([clfg_lk.arret_comput, clfg_w.arret_comput, bool(masc.error)])
 
         elif self.stpcrit == 2:
             for cmpt in range(self.tmaxiter):
                 t0, t1, dtp = self.one_iter(t0, t1, dtp,
-                                            masc, conum, clfg, clfg_lk, clfg_w,
+                                            masc, conum,
+                                            clfg, clfg_lk, clfg_w,
                                             mobil_struct, mobil_link, mobil_w)
-                if any([clfg_lk.arret_comput, clfg_w.arret_comput]):
+                if any([clfg_lk.arret_comput, clfg_w.arret_comput, bool(masc.error)]):
                     break
         elif self.stpcrit == 3:
             z_arret = self.masc.get("State.Z", sect_co - 1)
             while not z_arret > self.zmax_co:
                 t0, t1, dtp = self.one_iter(t0, t1, dtp,
-                                            masc, conum, clfg, clfg_lk, clfg_w,
+                                            masc, conum,
+                                            clfg, clfg_lk, clfg_w,
                                             mobil_struct, mobil_link, mobil_w)
                 z_arret = self.masc.get("State.Z", sect_co - 1)
-                if any([clfg_lk.arret_comput, clfg_w.arret_comput]):
+                if any([clfg_lk.arret_comput, clfg_w.arret_comput, bool(masc.error)]):
                     break
 
         self.tfin = self.masc.get("State.PreviousTime")
 
     def one_iter(self, t0, t1, dtp,
-                 masc, conum, clfg, clfg_lk, clfg_w,
+                 masc, conum,
+                 clfg, clfg_lk, clfg_w,
                  mobil_struct, mobil_link, mobil_w):
         """
         Perform one iteration of the Mascaret computation.
@@ -445,12 +452,14 @@ class ClassAPIMascaret:
             # print('1iter', time.perf_counter() - a)
 
         masc.compute(t0, t1, dtp)
+
         if conum:
             dtp_tmp = masc.get("State.DT")
             if dtp_tmp != 0:
                 dtp = dtp_tmp
         t0 = t1
         t1 += dtp
+
         return t0, t1, dtp
 
     def finalize(self):

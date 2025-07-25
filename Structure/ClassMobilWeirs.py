@@ -161,6 +161,7 @@ class ClassMobilWeirs:
                 if self.clapet(param):
                     param["OPEN_CLOSE"] = "CLOSE"
                     dnew = {"level": round(param["ZLIMITGATE"], 4)}
+                    param['TIME_SAVE'] = time
                     self.fill_res_and_update(id_weir, time + dtp, param, dnew, val_check, status)
                 elif param["method_mob"] == self.dmeth["meth_regul"]:
                     if self.cl_regul.check_dt_regul(param, dtp):
@@ -432,12 +433,9 @@ class ClassMethRegul:
         }
 
         for condition, action in conditions.get(key, []):
-            # print(condition, key)
             if condition:
                 param_fg["OPEN_CLOSE"] = action
                 break
-        # print('val_check', 'action', 'param_fg["VREGOPEN"]', 'param_fg["VREGCLOS"]')
-        # print(val_check,param_fg["OPEN_CLOSE"],  param_fg["VREGOPEN"], param_fg["VREGCLOS"])
         return val_check
 
     def law_gate_regul(self, param, time):
@@ -449,7 +447,6 @@ class ClassMethRegul:
         """
 
         status = param["OPEN_CLOSE"]
-        # print(param["level"], status)
         if status in [None, "INIT", "MAINT"]:
             param['TIME_SAVE'] = time
             return {
@@ -465,7 +462,6 @@ class ClassMethRegul:
             new_level = min(level + dz_close, zlimit_gate)
         elif status == "OPEN":
             new_level = max(level - dz_open, level0)
-
         return {
             "level": round(new_level, 4),
         }
