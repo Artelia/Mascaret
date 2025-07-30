@@ -21,7 +21,7 @@ qgisMinimumVersion=3.22
 qgisMaximumVersion=3.99
 
 
-version=6.2.1
+version=6.2.2
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -32,6 +32,9 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    6.2.2 : Update branch style to limit extremities
+            Fixed the data acquisition of thickness in the style of weirs for the weir law
+            Fixed the floodgate rise speed with the tide option
     6.2.1 : Adjust the observation time window for the creation of observation law
             Fix the bug on the initialization with previous Run
     6.2.0 : Added the hydraulic mobile structure with API (links, weirs)
