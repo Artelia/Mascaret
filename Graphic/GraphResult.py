@@ -287,7 +287,10 @@ class GraphResult(GraphCommonNew):
 
         for patch in self.aire:
             if patch in self.main_axe.patches:
-                self.main_axe.patches.remove(patch)
+                try:
+                    self.main_axe.patches.remove(patch)
+                except:
+                    patch.remove()
 
         if data["x"] and data["leftminbed"] and data["rightminbed"]:
             self.litMineur.set_x(data["leftminbed"])
