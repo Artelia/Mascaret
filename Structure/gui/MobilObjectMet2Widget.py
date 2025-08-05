@@ -299,11 +299,15 @@ class ClassMobilObjectMet2Widget(QWidget):
             self.ui.sb_open_lvl.setSuffix(" m³/s")
             self.ui.sb_close_lvl.setSuffix(" m³/s")
             self.ui.sb_break_val.setSuffix(" m³/s")
+            self.ui.lbl_close_lvl.setText('Closing flowrate value')
+            self.ui.cc_open_lvl.setText('Opening flowrate value')
             self.d_var["VREGCLOS"]["vdef"] = 0.
         else:
             self.ui.sb_open_lvl.setSuffix(" m")
             self.ui.sb_close_lvl.setSuffix(" m")
             self.ui.sb_break_val.setSuffix(" m")
+            self.ui.lbl_close_lvl.setText('Closing level value')
+            self.ui.cc_open_lvl.setText('Opening level value')
             self.d_var["VREGCLOS"]["vdef"] = self.lvls[0]
 
         self.set_def_ctrl_value(self.ui.sb_close_lvl)
