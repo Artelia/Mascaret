@@ -35,7 +35,6 @@ class ClassExportLigDialog(QDialog):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-        print(os.path.join(self.mgis.masplugPath, "ui/ui_export_lig.ui"))
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_export_lig.ui"), self)
 
         self.init_gui()
