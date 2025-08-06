@@ -145,7 +145,7 @@ class ClassUpdate620:
             if var2 :
                 links = self.mdb.select(
                     "links",
-                    where=f'linknum in ({",".join([f"'{id}'" for id in var2])})',
+                    where=f"""linknum in ({",".join([f"'{id}'" for id in var2])})""",
                     order="linknum ",
                     list_var=["gid,linknum"],verbose=True
                 )
