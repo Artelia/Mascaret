@@ -365,7 +365,6 @@ class ClassAPIMascaret:
             for idx, (ind, item) in enumerate(items):
                 if weir_states[idx] and state_z[idx] < brk_levels[idx]:
                     self.masc.set("Model.Weir.State", False, ind)
-                    # TODO intergrer dans les graph
 
     def compute(self):
         """
@@ -448,8 +447,6 @@ class ClassAPIMascaret:
         self.check_not_to_keep_break(masc)
         if mobil_w:
             clfg_w.iter_fg(t0, dtp)
-            # Suppression du print inutile pour accélérer la boucle
-            # print('1iter', time.perf_counter() - a)
 
         masc.compute(t0, t1, dtp)
 
