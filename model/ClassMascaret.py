@@ -613,7 +613,9 @@ class ClassMascaret:
         idx = 0
         scen = dict_scen["name"][idx]
 
-        gbl_param = {'mdb': self.mdb,
+        gbl_param = {
+                     'dbg': self.dbg,
+                     'mdb': self.mdb,
                      'dossier_file_masc': self.dossierFileMasc,
                      'basename': self.baseName,
                      'noyau': noyau,
