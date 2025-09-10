@@ -26,12 +26,11 @@ from qgis.PyQt.QtCore import Qt, QSettings, qVersion
 from qgis.PyQt.QtGui import QIcon,  QAction
 from qgis.PyQt.QtWidgets import (
     QMainWindow, QMenu, QToolBar, QToolButton, QInputDialog, QMessageBox, QFileDialog,
-    QApplication
+    QApplication, QWidget
 )
 from qgis.PyQt.uic import loadUi
 from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsRasterLayer,QgsApplication
-#from qgis.gui import *
-#from qgis.utils import *
+
 
 from .ClassCartoZi import ClassCartoZI
 from .ClassDownload import ClassDownloadMasc
@@ -81,7 +80,7 @@ class MascPlugDialog(QMainWindow):
         if QApplication.overrideCursor():
             QApplication.restoreOverrideCursor()
 
-        if qt_version[0]>=5:
+        if qt_version[0]>5:
             self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         else:
             self.setAttribute(Qt.WA_DeleteOnClose)
@@ -1116,7 +1115,6 @@ Version : {}
 
         self.dockwidgetKs = ClassEditKsDialog(self, self.iface)
         # connect to provide cleanup on closing of dockwidget
-        print(qt_version)
         if qt_version[0] > 5:
             try:
                 self.iface.addTabifiedDockWidget(
