@@ -25,12 +25,22 @@ import posixpath
 from qgis.PyQt.QtCore import Qt, QSettings, qVersion
 from qgis.PyQt.QtGui import QIcon,  QAction
 from qgis.PyQt.QtWidgets import (
-    QMainWindow, QMenu, QToolBar, QToolButton, QInputDialog, QMessageBox, QFileDialog,
-    QApplication, QWidget
-)
+                        QMainWindow, 
+                        QMenu,
+                        QToolBar, 
+                        QToolButton, 
+                        QInputDialog, 
+                        QMessageBox,
+                        QFileDialog,
+                        QApplication,
+                        QWidget
+                    )
 from qgis.PyQt.uic import loadUi
-from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsRasterLayer,QgsApplication
-
+from qgis.core import (QgsCoordinateReferenceSystem,
+                       QgsProject,
+                       QgsRasterLayer,
+                       QgsApplication,
+                       QgsAuthMethodConfig)
 
 from .ClassCartoZi import ClassCartoZI
 from .ClassDownload import ClassDownloadMasc
