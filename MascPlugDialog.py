@@ -22,13 +22,16 @@ import math
 import os
 import posixpath
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import Qt, QSettings, qVersion
+from qgis.PyQt.QtGui import QIcon,  QAction
+from qgis.PyQt.QtWidgets import (
+    QMainWindow, QMenu, QToolBar, QToolButton, QInputDialog, QMessageBox, QFileDialog,
+    QApplication
+)
+from qgis.PyQt.uic import loadUi
+from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsRasterLayer,QgsApplication
+#from qgis.gui import *
+#from qgis.utils import *
 
 from .ClassCartoZi import ClassCartoZI
 from .ClassDownload import ClassDownloadMasc
@@ -66,6 +69,9 @@ from .model.ClassMascaret import ClassMascaret
 from .scores.ClassScoresDialog import ClassScoresDialog
 from .ui.custom_control import ClassWarningBox
 
+qt_version = [int(v) for v in qVersion().split('.')]
+
+
 
 class MascPlugDialog(QMainWindow):
     OPT_GENERAL, OPT_mdb, OPT_DTM = range(3)
@@ -74,7 +80,12 @@ class MascPlugDialog(QMainWindow):
         QMainWindow.__init__(self, parent)
         if QApplication.overrideCursor():
             QApplication.restoreOverrideCursor()
-        self.setAttribute(Qt.WA_DeleteOnClose)
+
+        if qt_version[0]>=5:
+            self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        else:
+            self.setAttribute(Qt.WA_DeleteOnClose)
+        
 
         self.masplugPath = os.path.dirname(__file__)
         self.ui = loadUi(os.path.join(self.masplugPath, "ui/MascPlug_dialog_base.ui"), self)
@@ -1105,12 +1116,21 @@ Version : {}
 
         self.dockwidgetKs = ClassEditKsDialog(self, self.iface)
         # connect to provide cleanup on closing of dockwidget
-        try:
-            self.iface.addTabifiedDockWidget(
-                Qt.RightDockWidgetArea, self.dockwidgetKs, raiseTab=True
-            )
-        except AttributeError:
-            self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidgetKs)
+        print(qt_version)
+        if qt_version[0] > 5:
+            try:
+                self.iface.addTabifiedDockWidget(
+                    Qt.DockWidgetArea.RightDockWidgetArea, self.dockwidgetKs, raiseTab=True
+                )
+            except AttributeError:
+                self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockwidgetKs)
+        else:
+            try:
+                self.iface.addTabifiedDockWidget(
+                    Qt.RightDockWidgetArea, self.dockwidgetKs, raiseTab=True
+                )
+            except AttributeError:
+                self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidgetKs)
 
     def update_pk(self):
         """

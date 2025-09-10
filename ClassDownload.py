@@ -21,8 +21,8 @@ email                :
 import os
 import posixpath
 
-from PyQt5.QtCore import QUrl, QEventLoop, QTimer
-from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply
+from qgis.PyQt.QtCore import QUrl, QEventLoop, QTimer
+from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
 from qgis.core import QgsNetworkAccessManager
 
 

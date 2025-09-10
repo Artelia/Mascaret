@@ -22,7 +22,7 @@ email                :
 import time
 import traceback
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from qgis.PyQt.QtCore import QObject, pyqtSignal
 from qgis.core import QgsTask, QgsMessageLog, Qgis
 
 from .TaskMascComput import TaskMascComput
