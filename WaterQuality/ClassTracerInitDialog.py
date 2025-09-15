@@ -29,7 +29,9 @@ from qgis.utils import *
 from .ClassTableWQ import ClassTableWQ
 from .Graph_WQ import GraphInitConc
 from .Init_conc import InitConcDialog
+from ..ui.custom_control import _qt_is_checked
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassTracerInitDialog:
     def __init__(self, obj):
@@ -46,7 +48,7 @@ class ClassTracerInitDialog:
         self.ui.actionB_edit.triggered.connect(self.edit_law)
         self.ui.actionB_new.triggered.connect(self.new_law)
         self.ui.actionB_delete.triggered.connect(self.delete_law)
-        self.ui.cb_bief_home.currentIndexChanged[int].connect(self.change_bief_home)
+        self.ui.cb_bief_home.currentIndexChanged.connect(self.change_bief_home)
         self.init_ui()
 
     def init_ui(self):
@@ -61,6 +63,13 @@ class ClassTracerInitDialog:
 
     def fill_lst_conf(self, id=None):
         """fill list configuration"""
+        if QT_VERSION > 5:
+            qt_check = Qt.CheckState.Checked
+            qt_ucheck = Qt.CheckState.Unchecked
+        else:
+            qt_check = Qt.Checked
+            qt_ucheck = Qt.Unchecked
+
         model = QStandardItemModel()
         model.setColumnCount(2)
         self.ui.lst_laws.setModel(model)
@@ -79,9 +88,9 @@ class ClassTracerInitDialog:
                     if j == 1:
                         new_itm.setCheckable(True)
                         if not row[3]:
-                            new_itm.setCheckState(0)
+                            new_itm.setCheckState(qt_ucheck)
                         elif row[3]:
-                            new_itm.setCheckState(2)
+                            new_itm.setCheckState(qt_check)
                     self.ui.lst_laws.model().setItem(i, j, new_itm)
 
         self.ui.lst_laws.model().itemChanged.connect(self.sel_config_def)
@@ -123,17 +132,21 @@ class ClassTracerInitDialog:
             self.graph_home.init_graph(None, None)
 
     def sel_config_def(self, itm):
+        if QT_VERSION > 5:
+            qt_ucheck = Qt.CheckState.Unchecked
+        else:
+            qt_ucheck = Qt.Unchecked
         self.ui.lst_laws.model().blockSignals(True)
         for r in range(self.ui.lst_laws.model().rowCount()):
             if r != itm.row():
-                self.ui.lst_laws.model().item(r, 1).setCheckState(0)
+                self.ui.lst_laws.model().item(r, 1).setCheckState(qt_ucheck)
         self.ui.lst_laws.model().blockSignals(False)
 
         sql = "UPDATE {0}.init_conc_config SET active = 'f' WHERE type = {1}".format(
             self.mdb.SCHEMA, self.cur_wq_mod
         )
         self.mdb.run_query(sql)
-        if itm.checkState() == 2:
+        if _qt_is_checked(itm, check_level="full") :
             id = str(self.ui.lst_laws.model().item(itm.row(), 0).text())
             sql = "UPDATE {0}.init_conc_config SET active = 't' WHERE id = {1}".format(
                 self.mdb.SCHEMA, id
@@ -143,8 +156,15 @@ class ClassTracerInitDialog:
     def new_law(self):
         self.cur_wq_law = -1
         dlg = InitConcDialog(self.paramTr, self.cur_wq_law, "")
-        dlg.setWindowModality(2)
-        if dlg.exec_():
+
+        if QT_VERSION > 5:
+            dlg.setWindowModality(Qt.WindowModality.ApplicationModal)
+            ret = dlg.exec()  # PyQt6
+        else:
+            dlg.setWindowModality(Qt.ApplicationModal)
+            ret = dlg.exec_()
+            # PyQt5
+        if ret:
             self.fill_lst_conf(dlg.cur_wq_law)
 
     def edit_law(self):
@@ -154,9 +174,15 @@ class ClassTracerInitDialog:
             dlg = InitConcDialog(
                 self.paramTr, self.cur_wq_law, self.ui.lst_laws.model().item(l, 1).text()
             )
-            dlg.setWindowModality(2)
-            if dlg.exec_():
+            if QT_VERSION > 5:
+                dlg.setWindowModality(Qt.WindowModality.ApplicationModal)
+                ret = dlg.exec()  # PyQt6
+            else:
+                dlg.setWindowModality(Qt.ApplicationModal)
+                ret = dlg.exec_()  # PyQt5
+            if ret:
                 self.fill_lst_conf(dlg.cur_wq_law)
+
 
     def delete_law(self):
         # charger les informations
@@ -165,14 +191,20 @@ class ClassTracerInitDialog:
             l = self.ui.lst_laws.selectedIndexes()[0].row()
             id_law = self.ui.lst_laws.model().item(l, 0).text()
             name_law = self.ui.lst_laws.model().item(l, 1).text()
+            if QT_VERSION > 5:
+                ok_button = QMessageBox.StandardButton.Ok
+                cancel_button = QMessageBox.StandardButton.Cancel
+            else:
+                ok_button = QMessageBox.Ok
+                cancel_button = QMessageBox.Cancel
             if (
                     QMessageBox.question(
                         self.paramTr,
                         "Tracer Initial Concentration",
                         "Delete {} ?".format(name_law),
-                        QMessageBox.Cancel | QMessageBox.Ok,
+                        cancel_button | ok_button,
                     )
-            ) == QMessageBox.Ok:
+            ) == ok_button:
                 self.mgis.add_info("Deletion of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(
                     "DELETE FROM {0}.init_conc_wq WHERE id_config = {1}".format(

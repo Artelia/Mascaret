@@ -142,10 +142,13 @@ class MetBordaPaWidget(QWidget):
         tw = self.sender().parent().parent()
         cb = self.sender()
         r = cb.property("row")
-
+        if QT_VERSION > 5:
+            qt_itm_sel = Qt.ItemFlag.ItemIsSelectable
+        else:
+            qt_itm_sel = Qt.ItemIsSelectable
         itm = QTableWidgetItem()
         if ctrl_get_value(cb) == 1:  # cercle
-            itm.setFlags(Qt.ItemIsSelectable)
+            itm.setFlags(qt_itm_sel)
         elif ctrl_get_value(cb) == 2:  # ellipse
             itm.setData(0, self.dico_tab[tw]["col"][2]["valdef"])
         tw.setItem(r, 3, itm)

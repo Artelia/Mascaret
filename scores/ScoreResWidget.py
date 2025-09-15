@@ -28,6 +28,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ScoreResWidget(QWidget):
     def __init__(self, windmain):
@@ -63,6 +64,15 @@ class ScoreResWidget(QWidget):
     def fill_tab(self):
         """fill table"""
         self.clear_tab()
+        if QT_VERSION > 5:
+            qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
+            qt_alig_vcentre = Qt.AlignmentFlag.AlignVCenter
+            qt_alig_hcentre = Qt.AlignmentFlag.AlignHCenter
+        else:
+            qt_itm_ena = Qt.ItemIsEnabled
+            qt_alig_vcentre = Qt.AlignVCenter
+            qt_alig_hcentre = Qt.AlignHCenter
+
         err_typ_lst = [err for err in self.res.keys() if err != "quantil"]
         id_lst = []
         for err in err_typ_lst:
@@ -120,8 +130,8 @@ class ScoreResWidget(QWidget):
                         item = QTableWidgetItem("{:e}".format(val))
                     else:
                         item = QTableWidgetItem("{:.3f}".format(val))
-                    item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                    item.setFlags(Qt.ItemIsEnabled)
+                    item.setTextAlignment(qt_alig_hcentre | qt_alig_vcentre)
+                    item.setFlags(qt_itm_ena)
                     col = columns.index(tmp)
                     self.table_res.setItem(row, col, item)
 

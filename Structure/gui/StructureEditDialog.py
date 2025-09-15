@@ -88,7 +88,7 @@ class ClassStructureEditDialog(QDialog):
         self.lst_meth_calc = []
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_structure_edit.ui"), self)
 
-        self.cb_met_calc.currentIndexChanged[int].connect(self.change_met_calc)
+        self.cb_met_calc.currentIndexChanged.connect(self.change_met_calc)
         self.b_ok.accepted.connect(self.accept_page)
         self.b_ok.rejected.connect(self.reject_page)
         self.b_up_prof.clicked.connect(self.update_profil)
@@ -171,14 +171,20 @@ class ClassStructureEditDialog(QDialog):
 
     def change_met_calc(self):
         if not self.is_loading:
+            if QT_VERSION > 5:
+                ok_button = QMessageBox.StandardButton.Ok
+                cancel_button = QMessageBox.StandardButton.Cancel
+            else:
+                ok_button = QMessageBox.Ok
+                cancel_button = QMessageBox.Cancel
             if (
                     QMessageBox.question(
                         self,
                         "Warning",
                         "Save current parameters ?",
-                        QMessageBox.Cancel | QMessageBox.Ok,
+                        cancel_button | ok_button,
                     )
-            ) == QMessageBox.Ok:
+            ) == ok_button:
                 self.save_struct()
         self.txt_name.setFocus()
         self.met_calc = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
@@ -730,7 +736,10 @@ class ClassStructureEditDialog(QDialog):
 
     def get_param_fg(self):
         wfg = StructureFgDialog(self.mgis, self.id_struct)
-        wfg.exec_()
+        if QT_VERSION > 5:
+            wfg.exec()  # PyQt6
+        else:
+            wfg.exec_()  # PyQt5
         del wfg
 
     def sav_meth(self, id_config, idmethod, ui):

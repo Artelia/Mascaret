@@ -29,6 +29,9 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
+from ..ui.custom_control import _qt_is_checked
+
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class SelectWidget(QWidget):
     """
@@ -62,6 +65,14 @@ class SelectWidget(QWidget):
         initialize GUI
         :return:
         """
+        if QT_VERSION > 5:
+            qt_tris = Qt.ItemFlag.ItemIsAutoTristate
+            qt_item_check = Qt.ItemFlag.ItemIsUserCheckable
+            qt_ucheck = Qt.CheckState.Unchecked
+        else:
+            qt_tris = Qt.ItemIsAutoTristate
+            qt_item_check = Qt.ItemIsUserCheckable
+            qt_ucheck = Qt.Unchecked
         dico = self.mdb.select("runs", "", "date")
         for run, scen, date, comments in zip(
                 dico["run"], dico["scenario"], dico["date"], dico["comments"]
@@ -79,9 +90,8 @@ class SelectWidget(QWidget):
             for run in self.listeRuns:
                 self.parent[run] = QTreeWidgetItem(self.tw_runs)
                 self.parent[run].setText(0, run)
-                self.parent[run].setFlags(
-                    self.parent[run].flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable
-                )
+                item_flag = self.parent[run]
+                item_flag.setFlags(item_flag.flags() | qt_tris | qt_item_check)
 
                 lbl = QLabel("")
                 self.tw_runs.setItemWidget(self.parent[run], 3, lbl)
@@ -93,13 +103,10 @@ class SelectWidget(QWidget):
 
                 for scen, date, comments in self.listeScen[run]:
                     self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                    self.child[run][scen].setFlags(
-                        self.child[run][scen].flags() | Qt.ItemIsUserCheckable
-                    )
-                    self.child[run][scen].setText(0, scen)
-
-                    self.child[run][scen].setCheckState(0, Qt.Unchecked)
-
+                    item_flag =  self.child[run][scen]
+                    item_flag.setFlags(item_flag.flags()  | qt_item_check)
+                    item_flag.setText(0, scen)
+                    item_flag.setCheckState(0, qt_ucheck)  # qt6
                     lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
                     self.tw_runs.setItemWidget(self.child[run][scen], 1, lbl)
                     maxi = max(maxi, date)
@@ -122,18 +129,24 @@ class SelectWidget(QWidget):
     def clean(self):
         """clean selection"""
         for run in self.listeRuns:
-            if self.parent[run].checkState(0) > 0:
+
+            is_checked = _qt_is_checked(self.parent[run],  check_level="any")
+            if QT_VERSION > 5:
+                qt_ucheck = Qt.CheckState.Unchecked
+            else:
+                qt_ucheck = Qt.Unchecked
+            if is_checked:
                 for scen, date, comments in self.listeScen[run]:
-                    self.child[run][scen].setCheckState(0, Qt.Unchecked)
+                    self.child[run][scen].setCheckState(0, qt_ucheck)
 
     def get_selection(self):
         """get selectioned runs"""
         selection = {}
         for run in self.listeRuns:
-            if self.parent[run].checkState(0) > 0:
+            if _qt_is_checked(self.parent[run], check_level="any"):
                 selection[run] = []
                 for scen, date, comments in self.listeScen[run]:
-                    if self.child[run][scen].checkState(0) > 1:
+                    if _qt_is_checked(self.child[run][scen],  check_level="partial_or_full"):
                         selection[run].append("'{}'".format(scen))
         list_id_select = self.mdb.get_id_run(selection)
         return list_id_select

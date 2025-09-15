@@ -78,9 +78,7 @@ from .model.ClassMascaret import ClassMascaret
 from .scores.ClassScoresDialog import ClassScoresDialog
 from .ui.custom_control import ClassWarningBox
 
-qt_version = [int(v) for v in qVersion().split('.')]
-
-
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class MascPlugDialog(QMainWindow):
     OPT_GENERAL, OPT_mdb, OPT_DTM = range(3)
@@ -90,7 +88,7 @@ class MascPlugDialog(QMainWindow):
         if QApplication.overrideCursor():
             QApplication.restoreOverrideCursor()
 
-        if qt_version[0]>5:
+        if QT_VERSION > 5:
             self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         else:
             self.setAttribute(Qt.WA_DeleteOnClose)
@@ -173,7 +171,7 @@ class MascPlugDialog(QMainWindow):
 
         # DB
         self.ui.actionTo_clone_Model.triggered.connect(self.clone_model)
-        self.ui.actionRefresh_Database.triggered.connect(self.conn_changed)
+        self.ui.actionRefresh_Database.triggered.connect(lambda x :self.conn_changed(old_sh=True))
         self.ui.actionCreate_New_Model.triggered.connect(self.db_create_model)
         self.ui.actionDeleteModel.triggered.connect(self.db_delete_model)
         self.ui.action_table_reconstruction_vacuum_full.triggered.connect(self.schema_vacuum)
@@ -278,7 +276,7 @@ class MascPlugDialog(QMainWindow):
         # scores
         self.ui.actionScores.triggered.connect(self.fct_scores)
 
-        # scores
+        # carto ZI
         self.ui.actionCartoZI.triggered.connect(self.fct_carto_zi)
 
         # Laws
@@ -406,10 +404,14 @@ class MascPlugDialog(QMainWindow):
             self.dockwidgetKs.close()
         QMainWindow.closeEvent(self, e)
 
-    def conn_changed(self, conn_name="toto"):
-        """change the data base"""
+    def conn_changed(self, conn_name="toto", old_sh=False):
+        """change the data base
+            old_sh : if old schemas is possible"""
         # close any existing connection to a MascPlug database
+        old_schema = None
         if self.mdb:
+            if old_sh :
+                old_schema = self.mdb.SCHEMA
             self.add_info(
                 "Closing existing connection to {0}@{1} Mascaret database".format(
                     self.mdb.dbname, self.mdb.host
@@ -477,6 +479,10 @@ class MascPlugDialog(QMainWindow):
         else:
             self.disable_actions_model()
 
+        if old_sh:
+            if old_schema in self.mdb.list_schema():
+                self.db_load(schema_info=old_schema)
+
     def db_create_model(self):
         """Model creation"""
         lst_schema = self.mdb.list_schema()
@@ -513,7 +519,10 @@ class MascPlugDialog(QMainWindow):
         from .ClassDeletshDialog import ClassDeletshDialog
 
         dlg = ClassDeletshDialog(self, self.iface)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def db_load(self, schema_info=None):
         """load model"""
@@ -601,24 +610,37 @@ class MascPlugDialog(QMainWindow):
         dlg = ClassExtractBedDialog(self)
         dlg.setModal(False)
         if not dlg.load_error:
-            dlg.exec_()
+            if QT_VERSION > 5:
+                dlg.exec()  # PyQt6
+            else:
+                dlg.exec_()  # PyQt5
         else:
             del dlg
 
     def fct_update_beds(self):
         dlg = ClassUpdateBedDialog(self)
         dlg.setModal(False)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def fct_update_beds_geom(self):
         update_all_bed_geometry(self.mdb)
         refresh_minor_bed_layer(self.mdb, self.iface)
-        QMessageBox.information(self, "Information", "Update successful", QMessageBox.Ok)
+        if QT_VERSION > 5:
+            ok_button = QMessageBox.StandardButton.Ok
+        else:
+            ok_button = QMessageBox.Ok
+        QMessageBox.information(self, "Information", "Update successful", ok_button)
 
     def fct_carto_zi(self):
         dlg = ClassCartoZI(self)
         dlg.setModal(False)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def fct_parametres(self):
         """
@@ -632,7 +654,10 @@ class MascPlugDialog(QMainWindow):
             if self.DEBUG:
                 self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
             dlg = ClassParameterDialog(self, self.Klist[self.listeState.index(case)])
-            dlg.exec_()
+            if QT_VERSION > 5:
+                dlg.exec()  # PyQt6
+            else:
+                dlg.exec_()  # PyQt5
 
     def fct_create_xcas(self):
         """create Xcas"""
@@ -731,7 +756,10 @@ class MascPlugDialog(QMainWindow):
         from .ClassDeletrunDialog import ClassDeletrunDialog
 
         dlg = ClassDeletrunDialog(self, self.iface)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     #  *******************************
     #    SETTINGS
@@ -742,18 +770,23 @@ class MascPlugDialog(QMainWindow):
             clam = ClassMascaret(self)
         if not folder_name_path:
             folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
-
-        if clam.compress_run_file(folder_name_path, typ_compress):
-            self.add_info("Export is done.")
+        if folder_name_path:
+            if clam.compress_run_file(folder_name_path, typ_compress):
+                self.add_info("Export is done.")
+            else:
+                self.add_info("Export failed.")
         else:
-            self.add_info("Export failed.")
+            self.add_info("Export Cancel.")
 
     def options(self, widget):
         """GUI option"""
         from .ClassSettingsDialog import ClassSettingsDialog
 
         dlg = ClassSettingsDialog(self)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
         self.ui.actionStructures_weirs.setVisible(self.cond_api)
         self.ui.actionStructures_links.setVisible(self.cond_api)
@@ -808,8 +841,10 @@ class MascPlugDialog(QMainWindow):
             self.add_info("The export is not running\n")
             return
         dlg = ClassDlgExport(self)
-        if dlg.exec_():
-            pass
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
         return
 
@@ -819,8 +854,10 @@ class MascPlugDialog(QMainWindow):
             self.add_info("The import is not running\n")
             return
         dlg = ClassDlgImport(self)
-        if dlg.exec_():
-            pass
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
         return
 
     def import_old_model_dgl(self):
@@ -967,8 +1004,17 @@ class MascPlugDialog(QMainWindow):
             QIcon(os.path.join(os.path.join(self.masplugPath, "icones"), "icon_base.png"))
         )
         msg.setText(txt)
-        msg.setStandardButtons(QMessageBox.Ok)
-        retval = msg.exec_()
+        if QT_VERSION > 5 :
+            ok_button = QMessageBox.StandardButton.Ok
+        else:
+            ok_button = QMessageBox.Ok
+        msg.setStandardButtons(ok_button)
+
+        if QT_VERSION > 5:
+            retval = msg.exec() # PyQt6
+        else:
+            retval = msg.exec_()  # PyQt5
+
 
     def about(self):
         val = read_version(self.masplugPath)
@@ -1005,34 +1051,43 @@ Version : {}
     # *******************************
     def fct_tracer_laws(self):
         dlg = ClassTracerLawsDialog(self)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def fct_parameters_wq(self):
         dlg = ClassWaterQualityDialog(self)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def fct_event_obs(self):
         dlg = ClassEventObsDialog(self)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def fct_export_tracer_files(self):
         folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
+        if folder_name_path:
+            cl = ClassMascWQ(self, self.dossier_file_masc)
+            try:
+                # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:
+                #     #simul date
+                #     # dat1=datetime.datetime(2019, 1, 13, 13, 35, 12)
+                #     # dat2=datetime.datetime(2019, 1, 10, 13, 35, 12)
+                #     # cl.create_filemet(dossier=folder_name_path,typ_time='date',datefirst=dat2, dateend=dat1)
+                #     cl.create_filemet(dossier=folder_name_path)
+                cl.init_conc_tracer(dossier=folder_name_path)
+                cl.create_filephy(dossier=folder_name_path)
+                cl.law_tracer(dossier=folder_name_path)
 
-        cl = ClassMascWQ(self, self.dossier_file_masc)
-        try:
-            # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:
-            #     #simul date
-            #     # dat1=datetime.datetime(2019, 1, 13, 13, 35, 12)
-            #     # dat2=datetime.datetime(2019, 1, 10, 13, 35, 12)
-            #     # cl.create_filemet(dossier=folder_name_path,typ_time='date',datefirst=dat2, dateend=dat1)
-            #     cl.create_filemet(dossier=folder_name_path)
-            cl.init_conc_tracer(dossier=folder_name_path)
-            cl.create_filephy(dossier=folder_name_path)
-            cl.law_tracer(dossier=folder_name_path)
-
-            self.add_info("Export is done.")
-        except Exception:
-            self.add_info("Export failed.")
+                self.add_info("Export is done.")
+            except Exception:
+                self.add_info("Export failed.")
 
     # *******************************
     #    Structures
@@ -1040,24 +1095,36 @@ Version : {}
     def fct_structures(self):
         dlg = ClassStructureDialog(self)
         dlg.setModal(False)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def fct_mv_dam_old(self):
         """Running GUI of movable dam"""
 
         dlg = ClassMobilSingDialog(self)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def fct_mv_dam(self):
         """Running GUI of movable dam"""
 
         dlg = ClassMobilObjectDialog(self, 'weir')
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def fct_mv_link(self):
         """ Running GUI of movable link"""
         dlg = ClassMobilObjectDialog(self, 'link')
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def fct_creat_run(self):
         """
@@ -1068,7 +1135,10 @@ Version : {}
         if ok:
             kernel = self.Klist[self.listeState.index(case)]
             dlgp = ClassParamExportDialog(self, kernel)
-            dlgp.exec_()
+            if QT_VERSION > 5:
+                dlgp.exec()  # PyQt6
+            else:
+                dlgp.exec_()  # PyQt5
             if dlgp.complet:
                 dict_export = dlgp.dict_accept.copy()
             else:
@@ -1091,7 +1161,10 @@ Version : {}
         """
         clam = ClassMascaret(self)
         dlg = ClassImportRes(clam)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
         if dlg.complet:
             clam.import_results(
                 dlg.run, dlg.scen, dlg.comments, dlg.path_model, date_debut=dlg.date
@@ -1125,7 +1198,7 @@ Version : {}
 
         self.dockwidgetKs = ClassEditKsDialog(self, self.iface)
         # connect to provide cleanup on closing of dockwidget
-        if qt_version[0] > 5:
+        if QT_VERSION > 5:
             try:
                 self.iface.addTabifiedDockWidget(
                     Qt.DockWidgetArea.RightDockWidgetArea, self.dockwidgetKs, raiseTab=True
@@ -1148,7 +1221,11 @@ Version : {}
         from .ClassUpdatePk import ClassUpdatePk
 
         dlg = ClassUpdatePk(self, self.iface)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
+
 
     def download_bin(self):
         """download the Mascaret executable"""
@@ -1165,7 +1242,10 @@ Version : {}
 
     def fct_scores(self):
         dlg = ClassScoresDialog(self)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
         # dlg.show()
 
     def up_rep_project(self, file_):
@@ -1181,7 +1261,10 @@ Version : {}
 
     def fct_hydro_laws(self):
         dlg = ClassHydroLawsDialog(self)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def clone_model(self):
         """Action clone schema (model)"""
@@ -1223,7 +1306,10 @@ Version : {}
         """
         err = ""
         dlg = ClassFilterDialog(self)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
         if not dlg.valid:
             self.add_info("The filter is cancel")
             return
@@ -1297,7 +1383,10 @@ Version : {}
         Export Results
         """
         dlg = ClassExportDataRun(self)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def read_lis_file(self):
         """
@@ -1331,4 +1420,7 @@ Version : {}
         :return:
         """
         dlgp = ClassExportLigDialog(self)
-        dlgp.exec_()
+        if QT_VERSION > 5:
+            dlgp.exec()  # PyQt6
+        else:
+            dlgp.exec_()  # PyQt5

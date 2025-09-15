@@ -29,6 +29,8 @@ from qgis.gui import *
 from qgis.utils import *
 from scipy import interpolate
 
+from .ui.custom_control import ClassWarningBox
+
 D_PARAM = {"z": {"txt": "Water level", "var_profil": "Z", "var_basin": "ZCAS"},
            "char": {"txt": "Hydraulic head", "var_profil": "CHAR", "var_basin": None}}
 
@@ -42,13 +44,14 @@ class ClassCartoZI(QDialog):
 
         self.load_error = False
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_carto_zi.ui"), self)
+        self.box = ClassWarningBox()
 
         self.bg_value = QButtonGroup()
         self.bg_value.addButton(self.rb_time, 0)
         self.bg_value.addButton(self.rb_max, 1)
         self.bg_value.addButton(self.rb_min, 2)
 
-        self.bg_value.buttonClicked[int].connect(self.value_changed)
+        self.bg_value.buttonClicked.connect(self.value_changed)
         self.cb_param.currentIndexChanged.connect(self.param_changed)
         self.cb_run.currentIndexChanged.connect(self.run_changed)
         self.cb_scen.currentIndexChanged.connect(self.scen_changed)
@@ -164,15 +167,12 @@ class ClassCartoZI(QDialog):
             enable_profil = False
             self.cc_profil.setText("Profiles")
 
-        if enable_profil:
-            self.cc_profil.setCheckState(2)
-            self.cc_profil.setEnabled(True)
-            self.fra_lay_prof.setEnabled(True)
-        else:
-            self.cc_profil.setCheckState(0)
-            self.cc_profil.setEnabled(False)
-            self.cc_lay_profil.setCheckState(0)
-            self.fra_lay_prof.setEnabled(False)
+        self.cc_profil.setChecked(enable_profil)
+        self.cc_profil.setEnabled(enable_profil)
+        self.fra_lay_prof.setEnabled(enable_profil)
+        if not enable_profil:
+            self.cc_lay_profil.setChecked(enable_profil)
+
 
         if self.cur_scen:
             if self.basin_cnt == 0:
@@ -194,14 +194,12 @@ class ClassCartoZI(QDialog):
             enable_basin = False
             self.cc_basin.setText("Basins")
 
-        if enable_basin:
-            self.cc_basin.setCheckState(2)
-            self.cc_basin.setEnabled(True)
-        else:
-            self.cc_basin.setCheckState(0)
-            self.cc_basin.setEnabled(False)
+        self.cc_basin.setChecked(enable_basin)
+        self.cc_basin.setEnabled(enable_basin)
 
-    def value_changed(self, ib_button):
+
+    def value_changed(self, v_button):
+        ib_button = self.bg_value.id(v_button)
         if ib_button == 0:
             self.cb_time.setEnabled(True)
         else:
@@ -259,9 +257,7 @@ class ClassCartoZI(QDialog):
         basin_file = os.path.join(rep_out, "cartozi_basins.shp")
 
         if os.path.exists(profil_file) or os.path.exists(basin_file):
-            if QMessageBox.question(None, "Warning",
-                                    "Layers already exist. Erase them ?",
-                                    QMessageBox.No | QMessageBox.Yes) != QMessageBox.Yes:
+            if self.box.yes_no_q("Layers already exist. Erase them ?", title="Warning"):
                 return
             else:
                 for _lay_id in QgsProject.instance().mapLayers():
@@ -299,7 +295,7 @@ class ClassCartoZI(QDialog):
             _mlay = QgsProject.instance().addMapLayer(_lay, False)
             QgsProject.instance().layerTreeRoot().insertLayer(0, _mlay)
 
-        QMessageBox.information(self, "Information", "Export successful", QMessageBox.Ok)
+        QMessageBox.information(self, "Information", "Export successful")
 
 
 def get_layers_cnt(mdb):

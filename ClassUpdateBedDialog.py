@@ -33,6 +33,7 @@ from shapely.wkt import loads as wkt_loads
 D_TYP_BED = {0: "bed", 1: "stock"}
 D_FLD_BED = {0: "minbed", 1: "stock"}
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class Profile:
     def __init__(self, row):
@@ -118,13 +119,13 @@ class ClassUpdateBedDialog(QDialog):
                         self.lst_sel_profiles.append(ft["gid"])
 
                 self.cc_profil_sel.setEnabled(True)
-                self.cc_profil_sel.setCheckState(2)
+                self.cc_profil_sel.setChecked(True)
 
     def change_typ_bed(self):
         typ_bed = self.cb_typ_bed.currentData()
         if typ_bed in ["lmrb", "rmrb", "mrb"]:
             self.cc_null_value.hide()
-            self.cc_null_value.setCheckState(0)
+            self.cc_null_value.setChecked(False)
         else:
             self.cc_null_value.show()
 
@@ -133,16 +134,32 @@ class ClassUpdateBedDialog(QDialog):
 
         mdl = QStandardItemModel()
         self.itm_val = QStandardItem("Valid")
-        self.itm_val.setFlags(Qt.ItemIsEnabled)
         self.itm_val.setForeground(QBrush(QColor(60, 155, 60)))
         self.itm_warn = QStandardItem("Warning")
-        self.itm_warn.setFlags(Qt.ItemIsEnabled)
+
         self.itm_warn.setForeground(QBrush(QColor(255, 100, 0)))
         self.itm_err = QStandardItem("Error")
-        self.itm_err.setFlags(Qt.ItemIsEnabled)
         self.itm_err.setForeground(QBrush(QColor(255, 0, 0)))
         self.itm_no_val = QStandardItem("No data")
-        self.itm_no_val.setFlags(Qt.ItemIsEnabled)
+        if QT_VERSION > 5:
+            qt_disr = Qt.ItemDataRole.DisplayRole
+            qt_usr = Qt.ItemDataRole.UserRole
+            qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
+            qt_itm_sel = Qt.ItemFlag.ItemIsSelectable
+            qt_check = Qt.CheckState
+        else:
+            # QT5
+            qt_disr = Qt.DisplayRole
+            qt_usr = Qt.UserRole
+            qt_itm_ena = Qt.ItemIsEnabled
+            qt_itm_sel = Qt.ItemIsSelectable
+            qt_check = Qt
+
+        self.itm_warn.setFlags(qt_itm_ena)
+        self.itm_err.setFlags(qt_itm_ena)
+        self.itm_val.setFlags(qt_itm_ena)
+        self.itm_no_val.setFlags(qt_itm_ena)
+
         if self.cc_null_value.isChecked():
             self.itm_no_val.setForeground(QBrush(QColor(60, 155, 60)))
         else:
@@ -209,31 +226,31 @@ class ClassUpdateBedDialog(QDialog):
             if prof.status == "e":
                 idx = self.itm_err.rowCount()
                 itm = QStandardItem()
-                itm.setData("{} : {}".format(prof.name, prof.mess), Qt.DisplayRole)
-                itm.setData(prof.id, Qt.UserRole)
-                itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                itm.setData("{} : {}".format(prof.name, prof.mess), qt_disr)
+                itm.setData(prof.id, qt_usr)
+                itm.setFlags(qt_itm_ena | qt_itm_sel)
                 self.itm_err.setChild(idx, itm)
             elif prof.status == "w":
                 idx = self.itm_warn.rowCount()
                 itm = QStandardItem()
-                itm.setData("{} : {}".format(prof.name, prof.mess), Qt.DisplayRole)
-                itm.setData(prof.id, Qt.UserRole)
-                itm.setCheckState(2)
+                itm.setData("{} : {}".format(prof.name, prof.mess), qt_disr)
+                itm.setData(prof.id, qt_usr)
+                itm.setCheckState(qt_check.CheckState)
                 itm.setCheckable(True)
                 self.itm_warn.setChild(idx, itm)
             elif prof.status == "v":
                 idx = self.itm_val.rowCount()
                 itm = QStandardItem()
-                itm.setData("{}".format(prof.name), Qt.DisplayRole)
-                itm.setData(prof.id, Qt.UserRole)
-                itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                itm.setData("{}".format(prof.name), qt_disr)
+                itm.setData(prof.id, qt_usr)
+                itm.setFlags(qt_itm_ena | qt_itm_sel)
                 self.itm_val.setChild(idx, itm)
             elif prof.status == "n":
                 idx = self.itm_no_val.rowCount()
                 itm = QStandardItem()
-                itm.setData("{}".format(prof.name), Qt.DisplayRole)
-                itm.setData(prof.id, Qt.UserRole)
-                itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                itm.setData("{}".format(prof.name), qt_disr)
+                itm.setData(prof.id, qt_usr)
+                itm.setFlags(qt_itm_ena | qt_itm_sel)
                 self.itm_no_val.setChild(idx, itm)
 
         self.itm_err.setText("Error [{}]".format(self.itm_err.rowCount()))
@@ -255,22 +272,28 @@ class ClassUpdateBedDialog(QDialog):
         self.fra_sel.setEnabled(True)
 
     def save_analysis(self):
+        if QT_VERSION > 5:
+            ok_button = QMessageBox.StandardButton.Ok
+            qt_usr = Qt.ItemDataRole.UserRole
+        else:
+            ok_button = QMessageBox.Ok
+            qt_usr =  Qt.UserRole
         l_prof_to_edit = list()
         branch = self.cb_branch.currentData()
         typ_bed = self.cb_typ_bed.currentData()
 
         for r in range(self.itm_val.rowCount()):
-            p = self.d_profiles[self.itm_val.child(r, 0).data(Qt.UserRole)]
+            p = self.d_profiles[self.itm_val.child(r, 0).data(qt_usr)]
             l_prof_to_edit.append(p)
 
         for r in range(self.itm_warn.rowCount()):
-            if self.itm_warn.child(r, 0).checkState() == 2:
-                p = self.d_profiles[self.itm_warn.child(r, 0).data(Qt.UserRole)]
+            if _qt_is_checked(self.itm_warn.child(r, 0), check_level="full"):
+                p = self.d_profiles[self.itm_warn.child(r, 0).data(qt_usr)]
                 l_prof_to_edit.append(p)
 
         if self.cc_null_value.isChecked():
             for r in range(self.itm_no_val.rowCount()):
-                p = self.d_profiles[self.itm_no_val.child(r, 0).data(Qt.UserRole)]
+                p = self.d_profiles[self.itm_no_val.child(r, 0).data(qt_usr)]
                 l_prof_to_edit.append(p)
 
         recs = dict()
@@ -313,7 +336,7 @@ class ClassUpdateBedDialog(QDialog):
             update_bed_geometry(self.mdb, branch, ["leftminbed", "rightminbed"])
 
         refresh_minor_bed_layer(self.mdb, self.iface)
-        QMessageBox.information(self, "Information", "Update successful", QMessageBox.Ok)
+        QMessageBox.information(self, "Information", "Update successful", ok_button)
         self.cancel_analysis()
 
 

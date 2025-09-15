@@ -23,12 +23,13 @@ from qgis.PyQt.QtCore import Qt, qVersion
 
 from .MascPlugDialog import MascPlugDialog
 
-qt_version = [int(v) for v in qVersion().split('.')]
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 try:
-    if qt_version[0] > 5:
+    if QT_VERSION > 5:
         from . import resourcesQT6
     else:
-        from . import resourcesQT5  
+        from . import resourcesQT5
+
 except ImportError:
     pass
 
@@ -77,7 +78,7 @@ class MascPlug:
             # QObject.connect(self.dlg, SIGNAL('destroyed(QObject *)'), self.on_destroyed)
         self.dlg.show()
         self.dlg.raise_()
-        if qt_version[0]>5:
+        if QT_VERSION > 5:
             self.dlg.setWindowState(self.dlg.windowState() & ~Qt.WindowState.WindowMinimized)
         else:
             self.dlg.setWindowState(self.dlg.windowState() & ~Qt.WindowMinimized)

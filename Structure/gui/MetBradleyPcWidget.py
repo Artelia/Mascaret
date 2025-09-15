@@ -77,7 +77,7 @@ class MetBradleyPcWidget(QWidget):
         self.tab_trav.itemChanged.connect(self.verif_larg_trav)
 
         if met == "72":
-            self.gb_form_cul.buttonClicked[int].connect(self.change_opt_culee)
+            self.gb_form_cul.buttonClicked.connect(self.change_opt_culee)
 
         fill_qcombobox(
             self.cb_form_pil,

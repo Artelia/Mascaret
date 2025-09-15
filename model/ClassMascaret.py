@@ -626,6 +626,10 @@ class ClassMascaret:
         par, dict_scen, comments, dict_lois, dico_loi_struct = self.mascaret_init(
             noyau, run, only_init=True
         )
+        if not par or not dict_lois:
+            self.mgis.add_info("**** Error : Error at data for model initilisation")
+            return
+
         # update  dict_scen
         dict_scen = dict_exp["dict_scen"]
         dict_scen["id_run_init"] = None

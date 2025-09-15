@@ -25,18 +25,29 @@ import traceback
 
 import pandas as pd
 from matplotlib.dates import date2num
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import Qt, QDateTime, QVariant, qVersion
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QColor,QPalette
+from qgis.PyQt.QtWidgets import (QApplication,
+                                 QDialog,
+                                 QFileDialog,
+                                 QMessageBox,
+                                 QComboBox,
+                                 QLineEdit,
+                                 QLabel,
+                                 QDialogButtonBox,
+                                 QShortcut,
+                                 QAbstractItemView,
+                                 QItemEditorFactory,
+                                 QFormLayout,
+                                 QDoubleSpinBox,
+                                 QStyledItemDelegate,
+                                 QStyle )
 
+from qgis.PyQt.uic import loadUi
 from .Graphic.GraphCommon import GraphCommon
+from .ui.custom_control import ClassWarningBox
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassEventObsDialog(QDialog):
     def __init__(self, mgis):
@@ -48,6 +59,7 @@ class ClassEventObsDialog(QDialog):
         self.cur_station = ""
 
         self.cur_var = ""
+        self.box = ClassWarningBox()
 
         self.graph_home = None
         self.graph_edit = None
@@ -74,8 +86,10 @@ class ClassEventObsDialog(QDialog):
         self.ui.b_OK_page2.rejected.connect(self.reject_page2)
         self.ui.b_OK_page1.accepted.connect(self.reject)
         self.ui.cb_var.currentIndexChanged.connect(self.var_changed)
-
-        self.ui.tab_stations.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        if QT_VERSION > 5:
+            self.ui.tab_stations.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        else:
+            self.ui.tab_stations.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.seld = SelectDelegate(self)
         self.ui.tab_stations.setItemDelegate(self.seld)
         self.init_ui()
@@ -101,7 +115,14 @@ class ClassEventObsDialog(QDialog):
         self.ui.tab_stations.setColumnWidth(1, 10)
         self.ui.tab_stations.setColumnWidth(2, 10)
         self.ui.tab_stations.selectionModel().selectionChanged.connect(self.station_changed)
-
+        if QT_VERSION > 5:
+            qt_alig_left = Qt.AlignmentFlag.AlignLeft
+            qt_alig_vcentre = Qt.AlignmentFlag.AlignVCenter
+            qt_alig_hcentre = Qt.AlignmentFlag.AlignHCenter
+        else:
+            qt_alig_left = Qt.AlignLeft
+            qt_alig_vcentre = Qt.AlignVCenter
+            qt_alig_hcentre = Qt.AlignHCenter
         sql = (
             "SELECT DISTINCT sta.code, not cnt_h isNull as h, not cnt_q isNull as q "
             "FROM ({0}.observations as sta LEFT JOIN (SELECT code, count(*) as cnt_h FROM {0}.observations "
@@ -110,17 +131,16 @@ class ClassEventObsDialog(QDialog):
             "WHERE type = 'Q' GROUP BY code) as sta_q ON sta.code = sta_q.code "
             "ORDER BY sta.code".format(self.mdb.SCHEMA)
         )
-
         rows = self.mdb.run_query(sql, fetch=True)
-
         for i, row in enumerate(rows):
             for j, field in enumerate(row):
                 new_itm = QStandardItem()
                 if j == 0:
-                    new_itm.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+                    new_itm.setTextAlignment(qt_alig_left | qt_alig_vcentre)
+
                     txt = str(row[j]).strip()
                 else:
-                    new_itm.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    new_itm.setTextAlignment(qt_alig_hcentre |qt_alig_vcentre)
                     if row[j] is True:
                         txt = "X"
                     else:
@@ -184,9 +204,14 @@ class ClassEventObsDialog(QDialog):
         """create model table"""
         model = QStandardItemModel()
         model.insertColumns(0, 3)
-        model.setHeaderData(0, 1, "Date", 0)
-        model.setHeaderData(1, 1, cur_var, 0)
-        model.setHeaderData(2, 1, "Comment", 0)
+        if QT_VERSION > 5:
+            qt_hori = Qt.Orientation.Horizontal
+            qt_disr = Qt.ItemDataRole.DisplayRole
+        else:
+            qt_hori = Qt.Horizontal
+            qt_disr = Qt.DisplayRole
+        for idcol, ncol in enumerate(["Date", cur_var, "Comment"]):
+            model.setHeaderData(idcol, qt_hori, ncol, qt_disr)
         model.itemChanged.connect(self.on_tab_data_change)
         return model
 
@@ -251,8 +276,10 @@ class ClassEventObsDialog(QDialog):
     def import_csv(self):
         """import CSV file"""
         dlg = ClassObsImportDialog(self.mgis)
-        if dlg.exec_():
-            pass
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
         if dlg.result() == 0:
             return False
         typ_f = dlg.type_f
@@ -269,9 +296,10 @@ class ClassEventObsDialog(QDialog):
             succes, recs = self.read_octave(file_name_path)
         else:
             succes, recs = self.read_csv(file_name_path)
+
         # recs data frame
         dbls = None
-        if succes:
+        if succes :
             duplic = recs[recs.duplicated(subset=["code", "type", "date"])]
             if len(duplic):
                 txt_lst = [
@@ -305,7 +333,12 @@ class ClassEventObsDialog(QDialog):
                 self.mdb.SCHEMA, "{}, {}, {}, {}, {}", ",".join(recs.columns.tolist())
             )
             for rec in recs.values.tolist():
-                self.mdb.execute(sql.format(*rec))
+                try:
+                    self.mdb.execute(sql.format(*rec))
+                except Exception:
+                    msg = "Incorrect format for observations"
+                    ok = QMessageBox.warning(None, "WARNING:", msg)
+                    return
 
             # check if type and code existant
             dbls = self.mdb.run_query(
@@ -330,8 +363,10 @@ class ClassEventObsDialog(QDialog):
                     "Duplicates exist for these configurations (the first 5) : \n" + txt_sta + "\n"
             )
             dlg = ClassObsDuplicDialog(self.mgis, txt_mess)
-            if dlg.exec_():
-                pass
+            if QT_VERSION > 5:
+                dlg.exec()  # PyQt6
+            else:
+                dlg.exec_()  # PyQt5
             if dlg.result() == 0:
                 return False
             typ_s = dlg.type_save
@@ -401,6 +436,12 @@ class ClassEventObsDialog(QDialog):
 
         self.fill_lst_stations(self.cur_station)
 
+    def safe_float(self, val, default=-99.99):
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return default
+
     def read_csv(self, data_file):
         """
         Read the default CSV  format
@@ -410,24 +451,33 @@ class ClassEventObsDialog(QDialog):
         try:
             recs = []
             for file in data_file:
-                if os.path.isfile(file):
-                    with open(file, "r") as fichier:
-                        codes = fichier.readline().strip().split(";")[1:]
-                        types = fichier.readline().strip().split(";")[1:]
-                        nom_stat = fichier.readline().strip().split(";")[1:]
-                        for ligne in fichier:
-                            temp = ligne.strip().split(";")
-                            for i, val in enumerate(temp[1:]):
-                                if val != "":
-                                    if float(val) != -99.99:
-                                        rec = list()
-                                        rec.append(self.fmt_col(codes[i]))
-                                        rec.append(self.fmt_col(self.fmt_date(temp[0])))
-                                        rec.append(self.fmt_col(types[i]))
-                                        rec.append(self.fmt_col(nom_stat[i]))
-                                        rec.append(val)
-                                        rec.append(os.path.basename(file))
-                                        recs.append(rec)
+                if not os.path.isfile(file):
+                    continue
+                with open(file, "r") as fichier:
+                    codes = fichier.readline().strip().split(";")[1:]
+                    types = fichier.readline().strip().split(";")[1:]
+                    nom_stat = fichier.readline().strip().split(";")[1:]
+                    for ligne in fichier:
+                        temp = ligne.strip().split(";")
+                        for i, val in enumerate(temp[1:]):
+                            if val == "":
+                                continue
+                            if self.safe_float(val) == -99.99:
+                                continue
+                            rec = list()
+                            rec.append(self.fmt_col(codes[i]))
+                            date = self.fmt_date(temp[0])
+                            if date:
+                                rec.append(self.fmt_col(date))
+                            else:
+                                msg = f"Error in date format for file : '{file}')"
+                                ok = QMessageBox.warning(None, "WARNING:", msg)
+                                return False, None
+                            rec.append(self.fmt_col(types[i]))
+                            rec.append(self.fmt_col(nom_stat[i]))
+                            rec.append(val)
+                            rec.append(os.path.basename(file))
+                            recs.append(rec)
             tmp = pd.DataFrame(
                 recs, columns=["code", "date", "type", "comment", "valeur", "fichier"]
             )
@@ -470,7 +520,6 @@ class ClassEventObsDialog(QDialog):
             # supprime les lignes en double
             recs = tmp.drop_duplicates()
             recs = recs.dropna()
-
             return True, recs
         except Exception as e:
             self.mgis.add_info("Loading to observations is an echec.")
@@ -483,6 +532,7 @@ class ClassEventObsDialog(QDialog):
     @staticmethod
     def fmt_date(date):
         ldate = len(date.strip())
+        val = None
         if ldate == 16:
             val = datetime.datetime.strptime(date, "%d/%m/%Y %H:%M")
         elif ldate == 19:
@@ -516,6 +566,7 @@ class ClassEventObsDialog(QDialog):
         # changer de page
         dlg = NewStationDialog()
         if dlg.exec():
+
             new_station = dlg.txt_station.text()
             new_var = dlg.cb_var.currentText()
             if new_station:
@@ -525,13 +576,17 @@ class ClassEventObsDialog(QDialog):
                     fetch=True,
                 )
                 if rows[0][0]:
+                    if QT_VERSION > 5:
+                        ok_button = QMessageBox.StandardButton.Ok
+                    else:
+                        ok_button = QMessageBox.Ok
                     QMessageBox.critical(
                         self,
                         "Error",
                         "{} data set already exists for the {} station".format(
                             new_var, new_station
                         ),
-                        QMessageBox.Ok,
+                        ok_button,
                     )
                 else:
                     self.tab_stations.clearSelection()
@@ -558,14 +613,7 @@ class ClassEventObsDialog(QDialog):
             for row in rows:
                 station = tab.model().data(tab.model().index(row - sup_ind, 0))
 
-                if (
-                        QMessageBox.question(
-                            self,
-                            "Observations of Events",
-                            "Delete {} observations ?".format(str(station).strip()),
-                            QMessageBox.Cancel | QMessageBox.Ok,
-                        )
-                ) == QMessageBox.Ok:
+                if self.box.ok_cancel_q(self, "Delete {} observations ?".format(str(station).strip()),"Observations of Events"):
                     self.mgis.add_info(
                         "Deletion of {} Observations of Events".format(station), dbg=True
                     )
@@ -581,16 +629,9 @@ class ClassEventObsDialog(QDialog):
         # charger les informations
         # changer de page
         if self.cur_station:
-            if (
-                    QMessageBox.question(
-                        self,
-                        "Observations of Events",
-                        "Delete {0} values for {1} station ?".format(
-                            self.cur_var, self.cur_station.strip()
-                        ),
-                        QMessageBox.Cancel | QMessageBox.Ok,
-                    )
-            ) == QMessageBox.Ok:
+            if self.box.ok_cancel_q(self,"Delete {0} values for {1} station ?".format(
+                            self.cur_var, self.cur_station.strip()),
+                            "Observations of Events"):
                 self.mgis.add_info(
                     "Deletion of {} Observations of Events".format(self.cur_station), dbg=True
                 )
@@ -725,22 +766,27 @@ class ClassEventObsDialog(QDialog):
             for index in selection:
                 row = index.row() - rows[0]
                 column = index.column() - columns[0]
-                if column == 0:
+                try:
                     data = index.data().toString("dd/MM/yyyy HH:mm")
-
-                else:
+                except AttributeError:
                     data = index.data()
                 table[row][column] = data
 
             stream = io.StringIO()
             csv.writer(stream).writerows(table)
-            qApp.clipboard().setText(stream.getvalue())
+            QApplication.instance().clipboard().setText(stream.getvalue())
 
     def keyPressEvent(self, event):
         if self.ui.tab_values.hasFocus():
             # ----------------------------------------------------------------
             # Ctle-C: copier
-            if event.key() == Qt.Key_C and (event.modifiers() & Qt.ControlModifier):
+            if QT_VERSION > 5:
+                qt_key = Qt.Key
+                qt_ctr_modif = Qt.KeyboardModifier.ControlModifier
+            else:
+                qt_key = Qt
+                qt_ctr_modif = Qt.ControlModifier
+            if event.key() == qt_key.Key_C and (event.modifiers() & qt_ctr_modif):
                 self.copier()
                 event.accept()
             else:
@@ -756,16 +802,27 @@ class SelectDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         # check if selected
-        selected = option.state & QStyle.State_Selected
+        if QT_VERSION > 5:
+           q_styl = QStyle.StateFlag
+           active = QPalette.ColorGroup.Active
+           q_pcolor= QPalette.ColorRole
+           q_color = Qt.GlobalColor
+
+        else:
+            q_styl = QStyle
+            active = QPalette.Active
+            q_pcolor = QPalette
+            q_color = Qt
+        selected = option.state &  q_styl.State_Selected
         if bool(selected) and index.row() == self.row:
-            background_color = QColor(Qt.green)
-            text_color = QColor(Qt.black)
-            option.palette.setColor(QPalette.Highlight, background_color)
-            option.palette.setColor(QPalette.HighlightedText, text_color)
+            background_color = QColor(q_color.green)
+            text_color = QColor(q_color.black)
+            option.palette.setColor(q_pcolor.Highlight, background_color)
+            option.palette.setColor(q_pcolor.HighlightedText, text_color)
         else:
             # Reset the background color for non-selected cells
             option.palette.setColor(
-                QPalette.Highlight, option.palette.color(QPalette.Active, QPalette.Highlight)
+                q_pcolor.Highlight, option.palette.color(active, q_pcolor.Highlight)
             )
 
         super().paint(painter, option, index)
@@ -802,10 +859,16 @@ class NewStationDialog(QDialog):
         self.cb_var = QComboBox()
         self.cb_var.addItem("H")
         self.cb_var.addItem("Q")
-
-        self.btn_box = QDialogButtonBox(self)
-        self.btn_box.addButton("OK", 0)
-        self.btn_box.addButton("Cancel", 1)
+        if QT_VERSION > 5 :
+            self.btn_box = QDialogButtonBox(
+                QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
+                parent=self
+            )
+        else:
+            self.btn_box = QDialogButtonBox(
+                QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
+                parent=self
+            )
 
         self.btn_box.accepted.connect(self.accept)
         self.btn_box.rejected.connect(self.reject)

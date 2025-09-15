@@ -11,7 +11,9 @@ from qgis.utils import *
 
 from .Function import read_version
 from .db.Check_tab import CheckTab
+from .ui.custom_control import _qt_is_checked
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassDlgExport(QDialog):
     """
@@ -36,11 +38,21 @@ class ClassDlgExport(QDialog):
         """
         initialisation GUI
         """
+        if QT_VERSION > 5:
+            qt_tris = Qt.ItemFlag.ItemIsAutoTristate
+            qt_item_check = Qt.ItemFlag.ItemIsUserCheckable
+            qt_ucheck =Qt.CheckState.Unchecked
+
+        else:
+            qt_tris = Qt.ItemIsAutoTristate
+            qt_item_check = Qt.ItemIsUserCheckable
+            qt_ucheck = Qt.Unchecked
+
         liste_col = self.mdb.list_columns("runs")
         self.cond_com = "comments" in liste_col
         self.b_cancel.clicked.connect(self.annule)
         if not self.mdb.check_schema_into_db():
-            qbox = QMessageBox.warning(self, "Warning", "\t No data in  database", QMessageBox.Ok)
+            qbox = QMessageBox.warning(self, "Warning", "\t No data in  database")
             self.b_export.hide()
             return
         dico = self.mdb.select("runs", "", "date")
@@ -67,9 +79,9 @@ class ClassDlgExport(QDialog):
             for run in self.listeRuns:
                 self.parent[run] = QTreeWidgetItem(self.tw_runs)
                 self.parent[run].setText(0, run)
-                self.parent[run].setFlags(
-                    self.parent[run].flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable
-                )
+                item_flag =  self.parent[run]
+
+                item_flag.setFlags(item_flag.flags() |  qt_tris| qt_item_check)
 
                 lbl = QLabel("")
                 self.tw_runs.setItemWidget(self.parent[run], 2, lbl)
@@ -79,12 +91,11 @@ class ClassDlgExport(QDialog):
                 if self.cond_com:
                     for scen, date, comments in self.listeScen[run]:
                         self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                        self.child[run][scen].setFlags(
-                            self.child[run][scen].flags() | Qt.ItemIsUserCheckable
-                        )
-                        self.child[run][scen].setText(0, scen)
+                        item_flag =  self.child[run][scen]
+                        item_flag.setFlags(item_flag.flags() | qt_item_check)
+                        item_flag.setCheckState(0, qt_ucheck)
 
-                        self.child[run][scen].setCheckState(0, Qt.Unchecked)
+                        self.child[run][scen].setText(0, scen)
 
                         lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
                         self.tw_runs.setItemWidget(self.child[run][scen], 1, lbl)
@@ -95,12 +106,10 @@ class ClassDlgExport(QDialog):
                 else:
                     for scen, date in self.listeScen[run]:
                         self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                        self.child[run][scen].setFlags(
-                            self.child[run][scen].flags() | Qt.ItemIsUserCheckable
-                        )
+                        item_flag = self.child[run][scen]
+                        item_flag.setFlags(item_flag.flags() | qt_item_check)
+                        item_flag.setCheckState(0, qt_ucheck)
                         self.child[run][scen].setText(0, scen)
-
-                        self.child[run][scen].setCheckState(0, Qt.Unchecked)
 
                         lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
                         self.tw_runs.setItemWidget(self.child[run][scen], 1, lbl)
@@ -134,15 +143,15 @@ class ClassDlgExport(QDialog):
                     selection[run].append("'{}'".format(tple[0]))
         else:
             for run in self.listeRuns:
-                if self.parent[run].checkState(0) > 0:
+                if _qt_is_checked(self.parent[run], check_level="any"):
                     selection[run] = []
                     if self.cond_com:
                         for scen, date, comments in self.listeScen[run]:
-                            if self.child[run][scen].checkState(0) > 1:
+                            if _qt_is_checked(self.child[run][scen], check_level="partial_or_full"):
                                 selection[run].append("'{}'".format(scen))
                     else:
                         for scen, date in self.listeScen[run]:
-                            if self.child[run][scen].checkState(0) > 1:
+                            if _qt_is_checked(self.child[run][scen], check_level="partial_or_full"):
                                 selection[run].append("'{}'".format(scen))
 
         file = self.choix_file()
@@ -493,18 +502,26 @@ class ClassDlgImport(QDialog):
         if self.checkdict["exist_schema"]:
             bool_import = False
             while not bool_import:
+                if QT_VERSION > 5:
+                    y_bt = QMessageBox.StandardButton.Yes
+                    n_bt = QMessageBox.StandardButton.No
+                    cancel_bt = QMessageBox.StandardButton.Cancel
+                else:
+                    y_bt = QMessageBox.Yes
+                    n_bt = QMessageBox.No
+                    cancel_bt = QMessageBox.Cancel
                 rep = QMessageBox.question(
                     self,
                     "MessageBox",
                     "The {} schema already exists.\n "
                     "Do you want overwrite the schema ?".format(self.metadict["schema_name"]),
-                    QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
-                    QMessageBox.Cancel,
+                    y_bt | n_bt | cancel_bt,
+                    cancel_bt,
                 )
 
-                if rep == QMessageBox.Yes:
+                if rep == y_bt:
                     bool_import = True
-                elif rep == QMessageBox.No:
+                elif rep == n_bt:
                     newname, ok = QInputDialog.getText(
                         self, "new Model", "Change the name of new model:"
                     )

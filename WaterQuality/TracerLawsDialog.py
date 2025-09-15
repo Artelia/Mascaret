@@ -55,7 +55,7 @@ class ClassTracerLawsDialog(QDialog):
         self.bg_time.addButton(self.rb_min, 1)
         self.bg_time.addButton(self.rb_hour, 2)
         self.bg_time.addButton(self.rb_day, 3)
-        self.bg_time.buttonClicked[int].connect(self.chg_time)
+        self.bg_time.buttonClicked.connect(self.chg_time)
 
         styled_item_delegate = QStyledItemDelegate()
         styled_item_delegate.setItemEditorFactory(ItemEditorFactory())
@@ -123,8 +123,14 @@ class ClassTracerLawsDialog(QDialog):
         self.list_trac = []
         model = QStandardItemModel()
         model.insertColumns(0, 4)
+        if QT_VERSION > 5:
+            qt_hori = Qt.Orientation.Horizontal
+            qt_disr = Qt.ItemDataRole.DisplayRole
+        else:
+            qt_hori = Qt.Horizontal
+            qt_disr = Qt.DisplayRole
         for c in range(4):
-            model.setHeaderData(c, 1, "time", 0)
+            model.setHeaderData(c, qt_hori, "time", qt_disr)
 
         sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(
             self.mdb.SCHEMA, self.tbwq.dico_wq_mod[self.cur_wq_mod]
@@ -132,7 +138,7 @@ class ClassTracerLawsDialog(QDialog):
         rows = self.mdb.run_query(sql, fetch=True)
         model.insertColumns(4, len(rows))
         for r, row in enumerate(rows):
-            model.setHeaderData(r + 4, 1, row[1], 0)
+            model.setHeaderData(r + 4, qt_hori, row[1], qt_disr)
             self.list_trac.append([row[0], row[1]])
 
         model.itemChanged.connect(self.on_tab_data_change)
@@ -330,14 +336,20 @@ class ClassTracerLawsDialog(QDialog):
             lval = self.ui.lst_laws.selectedIndexes()[0].row()
             id_law = self.ui.lst_laws.model().item(lval, 0).text()
             name_law = self.ui.lst_laws.model().item(lval, 1).text()
+            if QT_VERSION > 5:
+                ok_button = QMessageBox.StandardButton.Ok
+                cancel_button = QMessageBox.StandardButton.Cancel
+            else:
+                ok_button = QMessageBox.Ok
+                cancel_button = QMessageBox.Cancel
             if (
                     QMessageBox.question(
                         self,
                         "Tracer Laws",
                         "Delete {} ?".format(name_law),
-                        QMessageBox.Cancel | QMessageBox.Ok,
+                        cancel_button | ok_button,
                     )
-            ) == QMessageBox.Ok:
+            ) == ok_button:
                 self.mgis.add_info("Deletion of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(
                     "DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, id_law)
@@ -377,7 +389,13 @@ class ClassTracerLawsDialog(QDialog):
                 model.removeRow(row)
             self.update_courbe("all")
 
-    def chg_time(self, v):
+    def chg_time(self, vbt):
+        """
+        Change the time unit for the table columns.
+        :param v (int): Index of the selected time unit
+        :return: None
+        """
+        v =  self.bg_time.id(vbt)
         unit = ["s", "min", "h", "day"]
         for i in range(4):
             if i == v:

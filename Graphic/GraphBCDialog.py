@@ -33,6 +33,7 @@ from qgis.utils import *
 from .GraphHydro import GraphHydroLaw
 from ..HydroLawsDialog import dico_typ_law
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class GraphBCDialog(QDialog):
     def __init__(self, mgis, param):
@@ -86,7 +87,7 @@ class GraphBCLaw(QWidget):
 
         self.graph_obj = GraphHydroLaw(self.mgis, self.lay_graph_home)
 
-        self.bg_abs.buttonClicked[int].connect(self.chg_abs_weir_zam)
+        self.bg_abs.buttonClicked.connect(self.chg_abs_weir_zam)
 
         self.init_event_changed()
 
@@ -291,7 +292,8 @@ class GraphBCObs(QWidget):
         """
 
         # pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
-        pattern = re.compile("(\w+)\\[t([+-][0-9]+)?\\]")
+        # pattern = re.compile(r"(\w+)\\[t([+-][0-9]+)?\\]")
+        pattern = re.compile(r"(\w+)\[t([+-]?\d+)?\]")
         obs = {}
         liste_date = []
 
@@ -304,7 +306,7 @@ class GraphBCObs(QWidget):
 
         self.graph_obj.init_curv(typ_law=type, param_law=self.dico_obs[type], date_ref=True)
 
-        if type:
+        if type and self.param["method"]:
             liste_stations = pattern.findall(self.param["method"])
 
             for cd_hydro, delta in liste_stations:

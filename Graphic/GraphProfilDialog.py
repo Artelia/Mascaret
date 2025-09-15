@@ -88,6 +88,7 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig)
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class IdentifyFeatureTool(QgsMapToolIdentify):
     def __init__(self, main):
@@ -98,8 +99,15 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
         QgsMapToolIdentify.__init__(self, self.canvas)
 
     def canvasReleaseEvent(self, mouse_event):
+        if QT_VERSION > 5:
+            mousex = mouse_event.pos().x()
+            mousey = mouse_event.pos().y()
+        else:
+            mousex = mouse_event.x()
+            mousey = mouse_event.y()
+
         results = self.identify(
-            mouse_event.x(), mouse_event.y(), self.TopDownStopAtFirst, self.VectorLayer
+            mousex,mousey, self.TopDownStopAtFirst, self.VectorLayer
         )
 
         if len(results) > 0:
@@ -209,7 +217,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     weirs_tolaw = {1: 6, 2: 4, 5: 2, 6: 5, 7: 5, 8: 7}
                     id = feature.fieldNameIndex("type")
                     type = feature.attributes()[id]
-                    if type not in (3, 4):
+                    if type not in (3, 4, None):
                         param["type"] = weirs_tolaw[type]
                         for var in ["name", "method", "active"]:
                             id = feature.fieldNameIndex(var)
@@ -234,7 +242,10 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 if cond and param["name"]:
                     graph_law = GraphBCDialog(self.mgis, param)
                     # graph_law.show()
-                    graph_law.exec_()
+                    if QT_VERSION > 5:
+                        graph_law.exec()  # PyQt6
+                    else:
+                        graph_law.exec_()  # PyQt5
             if flag_casier_r and couche in ("basins", "links"):
                 feature = results[0].mFeature
 
@@ -353,7 +364,10 @@ class GraphProfil(GraphCommon):
         self.tableau = self.ui.tableWidget
         self.tableau.itemChanged.connect(self.modifie)
         self.tableau.selectionModel().selectionChanged.connect(self.select_changed)
-        self.tableau.setSelectionMode(QAbstractItemView.ContiguousSelection)
+        if QT_VERSION > 5:
+            self.tableau.setSelectionMode(QAbstractItemView.SelectionMode.ContiguousSelection)
+        else:
+            self.tableau.setSelectionMode(QAbstractItemView.ContiguousSelection)
         self.tableau.addAction(CopySelectedCellsAction(self.tableau))
 
         # figure
@@ -519,8 +533,10 @@ class GraphProfil(GraphCommon):
     def create_struct(self):
         """creation of hydraulic structure"""
         dlg = ClassStructureCreateDialog(self.mgis, self.gid)
-        if dlg.exec_():
-            pass
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
     def avance(self, val):
         """next or back profiles"""
@@ -639,7 +655,11 @@ class GraphProfil(GraphCommon):
                 if type in dict_couleur.keys():
                     self.tableau.item(i, j).setBackground(dict_couleur[type])
                 else:
-                    self.tableau.item(i, j).setBackground(Qt.white)
+                    if QT_VERSION > 5:
+                        wite_color = Qt.GlobalColor.white
+                    else:
+                        wite_color = Qt.white
+                    self.tableau.item(i, j).setBackground(wite_color)
         self.tableau.itemChanged.connect(self.modifie)
 
     def selection_tab(self):
@@ -850,11 +870,15 @@ class GraphProfil(GraphCommon):
                             err = True
 
                     if err:
+                        if QT_VERSION > 5:
+                            ok_bt = QMessageBox.StandardButton.Ok
+                        else:
+                            ok_bt = QMessageBox.Ok
                         QMessageBox.warning(
                             self,
                             "Error",
                             "Import failed ({})\n" "Check the profile lenght".format(fichier),
-                            QMessageBox.Ok,
+                            ok_bt,
                         )
                     else:
                         self.mdb.insert2("topo", tab)
@@ -1154,7 +1178,7 @@ class GraphProfil(GraphCommon):
             self.ui.cb_planim.setEnabled(True)
             self.display_planim()
         else:
-            self.ui.cb_planim.setCheckState(0)
+            self.ui.cb_planim.setChecked(False)
             self.ui.cb_planim.setEnabled(False)
         # self.axes.grid(visible=True, axis='y', which='minor')
 
@@ -1364,7 +1388,11 @@ class GraphProfil(GraphCommon):
             self.maj_graph()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Delete and self.selected:
+        if QT_VERSION > 5:
+            qt_key = Qt.Key
+        else:
+            qt_key = Qt
+        if event.key() == qt_key.Key_Delete and self.selected:
             index = []
 
             liste = [self.tab[k] for k in ("x", "z")]
@@ -1383,20 +1411,20 @@ class GraphProfil(GraphCommon):
             self.selected = {}
             self.maj_graph()
 
-        if event.key() == Qt.Key_O:
+        if event.key() == qt_key.Key_O:
             self.flag = True
             self.ordre = -9999
             self.curseur.visible = True
             self.fig.canvas.draw()
 
-        if event.key() == Qt.Key_S:
+        if event.key() == qt_key.Key_S:
             self.flag = False
             self.courbeSelection.set_data([], [])
             self.courbeSelection.set_visible(False)
             self.curseur.visible = False
             self.fig.canvas.draw()
 
-        if event.key() == Qt.Key_Escape:
+        if event.key() == qt_key.Key_Escape:
             self.rectSelection.set_visible(False)
             self.courbeSelection.set_data([], [])
             self.courbeSelection.set_visible(False)
@@ -1404,7 +1432,10 @@ class GraphProfil(GraphCommon):
 
     def filtre(self):
         dlg = ClassFilterDialog(self.mgis)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
         if not dlg.valid:
             self.mgis.add_info("The filter is cancel")
             return
@@ -2008,6 +2039,19 @@ class GraphProfil(GraphCommon):
         self.ui.table_check_interp.setColumnCount(len(cols))
         self.ui.table_check_interp.setVerticalHeaderLabels(list(key_str.values()))
         self.ui.table_check_interp.setHorizontalHeaderLabels(cols)
+        if QT_VERSION > 5:
+            qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
+            qt_itm_sel = Qt.ItemFlag.ItemIsSelectable
+            qt_alig_hcentre = Qt.AlignmentFlag.AlignHCenter
+            qt_alig_vcentre = Qt.AlignmentFlag.AlignVCenter
+        else:
+            # QT5
+            qt_itm_ena = Qt.ItemIsEnabled
+            qt_itm_sel = Qt.ItemIsSelectable
+            qt_alig_hcentre = Qt.AlignHCenter
+            qt_alig_vcentre = Qt.AlignVCenter
+
+
         for idc, col in enumerate(cols):
             for idl, line in enumerate(lines):
                 val = self.ch_prof_inter[col][line]
@@ -2017,8 +2061,8 @@ class GraphProfil(GraphCommon):
                     item = QTableWidgetItem("{}".format(val))
                 else:
                     item = QTableWidgetItem("{:.3f}".format(val))
-                item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                item.setFlags(Qt.ItemIsEnabled)
+                item.setFlags(qt_itm_ena | qt_itm_sel)
+                item.setTextAlignment(qt_alig_hcentre | qt_alig_vcentre)
                 self.ui.table_check_interp.setItem(idl, idc, item)
 
     def fill_table_check(self):
@@ -2031,7 +2075,17 @@ class GraphProfil(GraphCommon):
         # exclude_line = ['x_d','x_g']
         # for var in exclude_line :
         #     lines.remove(var)
-
+        if QT_VERSION > 5:
+            qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
+            qt_itm_sel = Qt.ItemFlag.ItemIsSelectable
+            qt_alig_hcentre = Qt.AlignmentFlag.AlignHCenter
+            qt_alig_vcentre = Qt.AlignmentFlag.AlignVCenter
+        else:
+            # QT5
+            qt_itm_ena = Qt.ItemIsEnabled
+            qt_itm_sel = Qt.ItemIsSelectable
+            qt_alig_hcentre = Qt.AlignHCenter
+            qt_alig_vcentre = Qt.AlignVCenter
         cols = ["current", "upstream", "downstream"]  # , 'interpolation']
         key_str = {
             "point_bas": "bottom point",
@@ -2054,8 +2108,8 @@ class GraphProfil(GraphCommon):
                     item = QTableWidgetItem("{}".format(val))
                 else:
                     item = QTableWidgetItem("{:.3f}".format(val))
-                item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                item.setFlags(Qt.ItemIsEnabled)
+                item.setFlags(qt_itm_ena | qt_itm_sel)
+                item.setTextAlignment(qt_alig_hcentre | qt_alig_vcentre)
                 self.ui.table_check.setItem(idl, idc, item)
 
     # •	La section de plein bord du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
@@ -2099,8 +2153,10 @@ class GraphProfil(GraphCommon):
 
         dlg = ClassProfInterpDialog(self.mgis)
         dlg.init_gui(nplan, plani, dict_interp, self.liste["abscissa"][id], err)
-        if dlg.exec_():
-            pass
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
 
         if dlg.interpol_prof:
             new_prof = np.array(dlg.interpol_prof["prof"])

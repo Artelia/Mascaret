@@ -27,6 +27,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassSettingsDialog(QDialog):
     def __init__(self, parent=None):
@@ -62,7 +63,11 @@ class ClassSettingsDialog(QDialog):
 
     def accept_dialog(self):
         """validation dialog function"""
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        if QT_VERSION > 5:
+            wait_cursor = Qt.CursorShape.WaitCursor
+        else:
+            wait_cursor = Qt.WaitCursor
+        QApplication.setOverrideCursor(wait_cursor)
 
         # General
         self.mgis.open_last_conn = self.ui.open_lastChbox.isChecked()

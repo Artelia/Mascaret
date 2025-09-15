@@ -27,10 +27,11 @@ from qgis.core import *
 from qgis.core import NULL as qgis_null
 from qgis.gui import *
 from qgis.utils import *
-
+from .ui.custom_control import _qt_is_checked
 D_TYP_BED = {0: "bed", 1: "stock"}
 D_FLD_BED = {0: "minbed", 1: "stock"}
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassExtractBedDialog(QDialog):
     def __init__(self, mgis):
@@ -96,7 +97,7 @@ class ClassExtractBedDialog(QDialog):
         self.cc_profil_sel.setEnabled(False)
         if self.lay_profile.selectedFeatureCount() > 0:
             self.cc_profil_sel.setEnabled(True)
-            self.cc_profil_sel.setCheckState(2)
+            self.cc_profil_sel.setChecked(True)
 
     def init_cb_lay_model(self):
         excluded_str = ['table="{}"'.format(self.mdb.SCHEMA), "dbname='{}'".format(self.mdb.dbname)]
@@ -121,22 +122,36 @@ class ClassExtractBedDialog(QDialog):
         if self.lay_bed:
             if self.lay_bed.selectedFeatureCount() > 0:
                 self.cc_bed_sel.setEnabled(True)
-                self.cc_bed_sel.setCheckState(2)
+                self.cc_bed_sel.setChecked(True)
             else:
                 self.cc_bed_sel.setEnabled(False)
-                self.cc_bed_sel.setCheckState(0)
+                self.cc_bed_sel.setChecked(False)
         else:
             self.cc_bed_sel.setEnabled(False)
-            self.cc_bed_sel.setCheckState(0)
+            self.cc_bed_sel.setChecked(False)
 
     def start_analysis(self):
+        if QT_VERSION > 5:
+            ok_button = QMessageBox.StandardButton.Ok
+            qt_disr = Qt.ItemDataRole.DisplayRole
+            qt_usr = Qt.ItemDataRole.UserRole
+            qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
+            qt_itm_sel = Qt.ItemFlag.ItemIsSelectable
+            qt_check = Qt.CheckState
+        else:
+            ok_button = QMessageBox.Ok
+            qt_disr = Qt.DisplayRole
+            qt_usr =  Qt.UserRole
+            qt_itm_ena = Qt.ItemIsEnabled
+            qt_itm_sel =Qt.ItemIsSelectable
+            qt_check = Qt
         if self.lay_bed.crs() != self.lay_profile.crs():
             QMessageBox.critical(
                 self,
                 "Error",
                 "The projection of the layer for "
                 "river beds must be {}".format(self.lay_profile.crs().authid()),
-                QMessageBox.Ok,
+                ok_button,
             )
             return
 
@@ -145,14 +160,16 @@ class ClassExtractBedDialog(QDialog):
 
         mdl = QStandardItemModel()
         self.itm_val = QStandardItem("Valid")
-        self.itm_val.setFlags(Qt.ItemIsEnabled)
         self.itm_val.setForeground(QBrush(QColor(60, 155, 60)))
         self.itm_warn = QStandardItem("Warning")
-        self.itm_warn.setFlags(Qt.ItemIsEnabled)
         self.itm_warn.setForeground(QBrush(QColor(255, 100, 0)))
         self.itm_err = QStandardItem("Error")
-        self.itm_err.setFlags(Qt.ItemIsEnabled)
         self.itm_err.setForeground(QBrush(QColor(255, 0, 0)))
+        self.itm_val.setFlags(qt_itm_ena)
+        self.itm_warn.setFlags(qt_itm_ena)
+        self.itm_err.setFlags(qt_itm_ena)
+
+
         for itm in [self.itm_val, self.itm_warn, self.itm_err]:
             mdl.appendRow(itm)
         self.tv_analysis.setModel(mdl)
@@ -169,7 +186,7 @@ class ClassExtractBedDialog(QDialog):
 
         if not l_branch_geom:
             QMessageBox.critical(
-                self, "Error", "No geometry found for branch {}".format(branch), QMessageBox.Ok
+                self, "Error", "No geometry found for branch {}".format(branch), ok_button
             )
             return
 
@@ -184,14 +201,14 @@ class ClassExtractBedDialog(QDialog):
                 try:
                     test = [float(x) for x in str(ft["x"]).strip().split(" ")]
                 except ValueError:
-                    QMessageBox.critical(self, "Error", "There is no points on the profile", QMessageBox.Ok)
+                    QMessageBox.critical(self, "Error", "There is no points on the profile", ok_button)
                     return
                 p = Profile(ft)
                 self.d_profiles[ft.id()] = p
 
         if not self.d_profiles:
             QMessageBox.critical(
-                self, "Error", "No profiles found for branch {}".format(branch), QMessageBox.Ok
+                self, "Error", "No profiles found for branch {}".format(branch), ok_button
             )
             return
 
@@ -202,7 +219,7 @@ class ClassExtractBedDialog(QDialog):
             l_ft = self.lay_bed.getFeatures()
 
         if not l_ft:
-            QMessageBox.critical(self, "Error", "No bed polylines found", QMessageBox.Ok)
+            QMessageBox.critical(self, "Error", "No bed polylines found", ok_button)
             return
 
         l_bed_geom = []
@@ -216,28 +233,29 @@ class ClassExtractBedDialog(QDialog):
             profil.intersects_bed(l_bed_geom)
             profil.validate(typ_bed)
 
-            if profil.status == -1:
+        if profil.status == -1:
                 idx = self.itm_err.rowCount()
                 itm = QStandardItem()
-                itm.setData("{} : {}".format(profil.name, profil.mess), Qt.DisplayRole)
-                itm.setData(profil.id, Qt.UserRole)
-                itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                itm.setData("{} : {}".format(profil.name, profil.mess), qt_disr)
+                itm.setData(profil.id, qt_usr)
+                itm.setFlags(qt_itm_ena | qt_itm_sel)
                 self.itm_err.setChild(idx, itm)
-            elif profil.status == 1:
-                idx = self.itm_warn.rowCount()
-                itm = QStandardItem()
-                itm.setData("{} : {}".format(profil.name, profil.mess), Qt.DisplayRole)
-                itm.setData(profil.id, Qt.UserRole)
-                itm.setCheckState(2)
-                itm.setCheckable(True)
-                self.itm_warn.setChild(idx, itm)
-            elif profil.status == 2:
-                idx = self.itm_val.rowCount()
-                itm = QStandardItem()
-                itm.setData("{}".format(profil.name), Qt.DisplayRole)
-                itm.setData(profil.id, Qt.UserRole)
-                itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                self.itm_val.setChild(idx, itm)
+        elif profil.status == 1:
+            idx = self.itm_warn.rowCount()
+            itm = QStandardItem()
+            itm.setData("{} : {}".format(profil.name, profil.mess), qt_disr)
+            itm.setData(profil.id, qt_usr)
+            itm.setCheckState(qt_check.Checked)
+            itm.setCheckable(True)
+            self.itm_warn.setChild(idx, itm)
+        elif profil.status == 2:
+            idx = self.itm_val.rowCount()
+            itm = QStandardItem()
+            itm.setData("{}".format(profil.name), qt_disr)
+            itm.setData(profil.id, qt_usr)
+            itm.setFlags(qt_itm_ena | qt_itm_sel)
+
+            self.itm_val.setChild(idx, itm)
 
         self.itm_err.setText("Error [{}]".format(self.itm_err.rowCount()))
         self.tv_analysis.setExpanded(self.tv_analysis.model().indexFromItem(self.itm_err), True)
@@ -254,12 +272,18 @@ class ClassExtractBedDialog(QDialog):
         self.fra_sel.setEnabled(True)
 
     def save_analysis(self):
+        if QT_VERSION > 5:
+            qt_usr = Qt.ItemDataRole.UserRole
+            ok_bt = QMessageBox.StandardButton.Ok
+        else:
+            qt_usr = Qt.UserRole
+            ok_bt = QMessageBox.Ok
         recs = list()
 
         l_prof_to_edit = list()
         for r in range(self.itm_warn.rowCount()):
-            if self.itm_warn.child(r, 0).checkState() == 2:
-                p = self.d_profiles[self.itm_warn.child(r, 0).data(Qt.UserRole)]
+            if _qt_is_checked(self.itm_warn.child(r, 0), check_level="full"):
+                p = self.d_profiles[self.itm_warn.child(r, 0).data(qt_usr)]
                 l_prof_to_edit.append(p)
 
         for id_prof, profil in self.d_profiles.items():
@@ -274,7 +298,7 @@ class ClassExtractBedDialog(QDialog):
         self.mdb.run_query(sql, many=True, list_many=recs)
 
         self.lay_profile.reload()
-        QMessageBox.information(self, "Information", "Import successful", QMessageBox.Ok)
+        QMessageBox.information(self, "Information", "Import successful", ok_bt)
         self.cancel_analysis()
 
 

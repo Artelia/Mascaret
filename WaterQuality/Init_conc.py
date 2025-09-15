@@ -27,6 +27,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
+from ..Function import data_to_float, data_to_int
 from .ClassTableWQ import ClassTableWQ
 from .Graph_WQ import GraphInitConc
 
@@ -60,7 +61,7 @@ class InitConcDialog(QDialog):
         self.ui.actionB_delLine.triggered.connect(self.delete_val)
         self.ui.b_OK_page2.accepted.connect(self.accept_page2)
         self.ui.b_OK_page2.rejected.connect(self.reject_page2)
-        self.ui.cb_bief.currentIndexChanged[int].connect(self.change_bief)
+        self.ui.cb_bief.currentIndexChanged.connect(self.change_bief)
         self.graph_edit = None
 
         self.init_ui()
@@ -76,8 +77,15 @@ class InitConcDialog(QDialog):
         self.list_trac = []
         model = QStandardItemModel()
         model.insertColumns(0, 2)
-        model.setHeaderData(0, 1, "Bief", 0)
-        model.setHeaderData(1, 1, "Abscissa", 0)
+        if QT_VERSION > 5:
+            qt_hori = Qt.Orientation.Horizontal
+            qt_disr = Qt.ItemDataRole.DisplayRole
+        else:
+            qt_hori = Qt.Horizontal
+            qt_disr = Qt.DisplayRole
+
+        for idcol, ncol in enumerate(["Bief", "Abscissa"]):
+            model.setHeaderData(idcol, qt_hori, ncol, qt_disr)
 
         sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(
             self.mdb.SCHEMA, self.tbwq.dico_wq_mod[self.cur_wq_mod]
@@ -85,9 +93,8 @@ class InitConcDialog(QDialog):
 
         rows = self.mdb.run_query(sql, fetch=True)
         model.insertColumns(2, len(rows))
-
         for r, row in enumerate(rows):
-            model.setHeaderData(r + 2, 1, row[1], 0)
+            model.setHeaderData(r + 2, qt_hori, row[1], qt_disr)
             self.list_trac.append([row[0], row[1]])
 
         model.itemChanged.connect(self.on_tab_data_change)

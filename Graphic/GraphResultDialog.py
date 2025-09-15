@@ -34,6 +34,7 @@ from .GraphResult import GraphResult
 from ..Function import tw_to_txt, interpole, fill_zminbed
 from ..scores.ClassScoresResDialog import ClassScoresResDialog
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 def list_sql(liste, typ="str"):
     """
@@ -554,7 +555,7 @@ class GraphResultDialog(QWidget):
         if len(lst_title) == 1:
             txt_title = lst_title[0]
             if self.typ_graph in ["struct", "weirs", "hydro", "link_fg"]:
-                if self.typ_graph is "link_fg":
+                if self.typ_graph == "link_fg":
                     self.graph_obj.main_axe.title.set_text(
                         r'Link - {0} '.format(txt_title))
                 else:
@@ -766,6 +767,12 @@ class GraphResultDialog(QWidget):
         fill table in GUI
         :return:
         """
+        if QT_VERSION > 5:
+            qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
+            qt_itm_sel = Qt.ItemFlag.ItemIsSelectable
+        else:
+            qt_itm_ena = Qt.ItemIsEnabled
+            qt_itm_sel = Qt.ItemIsSelectable
         self.clas_data.clear()
         for idx, param in enumerate(self.cur_data):
             tw = QTableWidget()
@@ -801,7 +808,7 @@ class GraphResultDialog(QWidget):
                     if var == "date":
                         val = "{:%d/%m/%Y %H:%M:%S}.{:02.0f}".format(val, val.microsecond / 10000.0)
                     itm = QTableWidgetItem()
-                    itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    itm.setFlags(qt_itm_ena | qt_itm_sel)
                     itm.setData(0, val)
                     tw.setItem(r, c, itm)
 
@@ -825,7 +832,6 @@ class GraphResultDialog(QWidget):
         self.lst_weirs = self.mdb.select("weirs", condition, "abscissa")
         if self.lst_weirs:
             self.lst_weirs['pknum'] = self.lst_weirs['abscissa']
-
             self.graph_obj.clear_weirs()
             courbe_weirs = {}
 
@@ -833,18 +839,23 @@ class GraphResultDialog(QWidget):
             courbe_weirs["name"] = [w for w in self.lst_weirs["name"] if w]
             courbe_weirs["couleurs"] = []
             courbe_weirs["cote"] = []
-
-            for a, c, d in zip(self.lst_weirs["type"], self.lst_weirs['z_average_crest'], self.lst_weirs['z_crest']):
+            del_w = []
+            for idx, item in enumerate(zip(self.lst_weirs["type"], self.lst_weirs['z_average_crest'], self.lst_weirs['z_crest'])):
+                a, c, d = item
                 if a == 3:
                     if c is None:
                         c = 0
                     courbe_weirs["cote"].append(c)
                     courbe_weirs["couleurs"].append("tab:orange")
-                if a == 4:
+                elif a == 4:
                     if d is None:
                         d = 0
                     courbe_weirs["cote"].append(d)
                     courbe_weirs["couleurs"].append("tab:brown")
+                else:
+                    del_w.append(idx)
+            courbe_weirs["x"] = [elem for i,elem in enumerate(courbe_weirs["x"]) if i not in del_w]
+            courbe_weirs["name"] = [elem for i,elem in enumerate(courbe_weirs["name"]) if i not in del_w]
             self.graph_obj.init_graph_weirs(courbe_weirs)
 
     def get_laisses(self, param):

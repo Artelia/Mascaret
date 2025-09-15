@@ -36,7 +36,7 @@ def del_2space(txt):
 def data_to_float(txt):
     try:
         return float(txt)
-    except ValueError:
+    except (ValueError, TypeError):
         return None
 
 

@@ -197,6 +197,7 @@ class ClassParamExportDialog(QDialog):
                 "pasTempsVar",
                 "nbCourant",
             ],
+            "transcritical": [],
         }
         self.d_type = {"*.zip": "zip",
                        "*.tar.gz": "gztar"}

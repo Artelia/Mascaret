@@ -25,8 +25,9 @@ from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 
-from .ui.custom_control import ClassWarningBox
+from .ui.custom_control import ClassWarningBox, _qt_is_checked
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassDeletshDialog(QDialog):
     """
@@ -50,14 +51,23 @@ class ClassDeletshDialog(QDialog):
         initialisation GUI
         """
         if len(self.liste_model) > 0:
+            if QT_VERSION > 5:
+                qt_tris = Qt.ItemFlag.ItemIsAutoTristate
+                qt_item_check = Qt.ItemFlag.ItemIsUserCheckable
+                qt_ucheck = Qt.CheckState.Unchecked
+
+            else:
+                qt_tris = Qt.ItemIsAutoTristate
+                qt_item_check = Qt.ItemIsUserCheckable
+                qt_ucheck = Qt.Unchecked
             self.tree = self.ui.treeWidget
             for model in self.liste_model:
                 self.parent[model] = QTreeWidgetItem(self.tree)
                 self.parent[model].setText(0, model)
-                self.parent[model].setFlags(
-                    self.parent[model].flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable
-                )
-                self.parent[model].setCheckState(0, Qt.Unchecked)
+                self.parent[model].setFlags(self.parent[model].flags() | qt_tris | qt_item_check )
+                self.parent[model].setCheckState(0,  qt_ucheck)
+
+
         else:
             self.ui.b_delete.setDisabled(True)
         self.ui.b_delete.clicked.connect(self.lancement)
@@ -67,7 +77,7 @@ class ClassDeletshDialog(QDialog):
         """Delete selection function"""
         selection = []
         for model in self.liste_model:
-            if self.parent[model].checkState(0) > 0:
+            if _qt_is_checked(self.parent[model], check_level="any"):
                 selection.append("{}".format(model))
         self.close()
 

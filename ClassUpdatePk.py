@@ -25,8 +25,9 @@ from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 
-from .ui.custom_control import ClassWarningBox
+from .ui.custom_control import ClassWarningBox,_qt_is_checked
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassUpdatePk(QDialog):
     """
@@ -61,16 +62,24 @@ class ClassUpdatePk(QDialog):
         """
         initialisation GUI
         """
+        if QT_VERSION > 5:
+            qt_tris = Qt.ItemFlag.ItemIsAutoTristate
+            qt_item_check = Qt.ItemFlag.ItemIsUserCheckable
+            qt_ucheck = Qt.CheckState.Unchecked
+
+        else:
+            qt_tris = Qt.ItemIsAutoTristate
+            qt_item_check = Qt.ItemIsUserCheckable
+            qt_ucheck = Qt.Unchecked
+
         if len(self.liste_tables) > 0:
             self.tree = self.ui.treeWidget
 
             for table in self.liste_tables:
                 self.parent[table] = QTreeWidgetItem(self.tree)
                 self.parent[table].setText(0, table)
-                self.parent[table].setFlags(
-                    self.parent[table].flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable
-                )
-                self.parent[table].setCheckState(0, Qt.Checked)
+                self.parent[table].setFlags(self.parent[table].flags() | qt_tris | qt_item_check)
+                self.parent[table].setCheckState(0,  qt_ucheck)
         else:
             self.ui.b_delete.setDisabled(True)
         self.ui.b_delete.clicked.connect(self.lancement)
@@ -80,7 +89,7 @@ class ClassUpdatePk(QDialog):
         """Delete selection function"""
         selection = []
         for table in self.liste_tables:
-            if self.parent[table].checkState(0) > 0:
+            if _qt_is_checked(self.parent[table],check_level="any"):
                 selection.append("{}".format(table))
         self.close()
 

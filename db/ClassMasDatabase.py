@@ -120,10 +120,19 @@ class ClassMasDatabase(object):
         else:
             self.mgis.add_info("Can not disconnect. There is no opened connection!")
 
-    def execute(self, sql):
-        cur = self.con.cursor()
-        cur.execute(sql)
-        self.con.commit()
+    def execute(self, sql,verbose=False):
+        try:
+            cur = self.con.cursor()
+            cur.execute(sql)
+            self.con.commit()
+
+        except psycopg2.Error as err:
+            self.con.rollback()
+            raise err.pgerror
+            if verbose:
+                print(f"[SQL ERROR] {e.pgerror}")
+
+
 
     def run_query(
             self,

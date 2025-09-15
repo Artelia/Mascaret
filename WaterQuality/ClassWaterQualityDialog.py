@@ -33,6 +33,7 @@ from .PhysicalParamDialog import ClassPhysicalParamDialog
 from ..Function import str2bool
 from ..ui.custom_control import ScientificDoubleSpinBox
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassWaterQualityDialog(QDialog):
     def __init__(self, mgis):
@@ -63,7 +64,7 @@ class ClassWaterQualityDialog(QDialog):
         self.create_dico_para()
         self.init_ui()
 
-        self.modeleQualiteEau.currentIndexChanged["QString"].connect(
+        self.modeleQualiteEau.currentTextChanged.connect(
             self.modele_qualite_eau_changed
         )
         fct = lambda: self.delete_line(self.table_Tr, self.ui.nbTraceur)
@@ -74,10 +75,10 @@ class ClassWaterQualityDialog(QDialog):
         self.calcul_diffusion_changed(self.ui.optionCalculDiffusion.currentIndex())
         self.presence_traceurs_changed()
 
-        self.ui.optionConvection.currentIndexChanged["QString"].connect(
+        self.ui.optionConvection.currentTextChanged.connect(
             self.option_convection_changed
         )
-        self.ui.ordreSchemaConvec.currentIndexChanged["QString"].connect(
+        self.ui.ordreSchemaConvec.currentTextChanged.connect(
             self.ordre_schema_convec_changed
         )
         self.ui.optionCalculDiffusion.currentIndexChanged.connect(self.calcul_diffusion_changed)
@@ -203,14 +204,22 @@ class ClassWaterQualityDialog(QDialog):
         """function to change water quality model"""
         self.type = text
         self.b_meteo_param.setEnabled(False)
+
+        if QT_VERSION > 5 :
+            edit_all = QAbstractItemView.EditTrigger.AllEditTriggers
+            edit_none = QAbstractItemView.EditTrigger.NoEditTriggers
+        else:
+            edit_all= QAbstractItemView.AllEditTriggers
+            edit_none = QAbstractItemView.NoEditTriggers
+
         if self.type == "TRANSPORT_PUR":
-            self.table_Tr.setEditTriggers(QAbstractItemView.AllEditTriggers)
+            self.table_Tr.setEditTriggers(edit_all)
             self.ui.b_add_lineTabTracer.show()
             self.ui.b_delete_lineTabTracer.show()
             self.b_phy_param.setEnabled(False)
 
         else:
-            self.table_Tr.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.table_Tr.setEditTriggers(edit_none)
             self.ui.b_add_lineTabTracer.hide()
             self.ui.b_delete_lineTabTracer.hide()
             self.b_phy_param.setEnabled(True)
@@ -287,15 +296,24 @@ class ClassWaterQualityDialog(QDialog):
 
         # self.mgis.add_info('fct meteo_file')
         dlg = ClassMeteoDialog(self.mgis)
-        dlg.setWindowModality(2)
-        dlg.exec_()
+        if QT_VERSION > 5:
+            dlg.setWindowModality(Qt.WindowModality.ApplicationModal)
+            dlg.exec()  # PyQt6
+        else:
+            dlg.setWindowModality(Qt.ApplicationModal)
+            dlg.exec_()  # PyQt5
 
     def physic_file(self):
         """Display physical window"""
         # ouvre et stock tableau de physique
         dlg = ClassPhysicalParamDialog(self.mgis, self.ui.modeleQualiteEau.currentText())
-        dlg.setWindowModality(2)
-        if dlg.exec_():
+        if QT_VERSION > 5:
+            dlg.setWindowModality(Qt.WindowModality.ApplicationModal)
+            ret = dlg.exec()  # PyQt6
+        else:
+            dlg.setWindowModality(Qt.ApplicationModal)
+            ret = dlg.exec_()  # PyQt5
+        if ret:
             mdl = dlg.ui.tab_param.model()
             for row in range(mdl.rowCount()):
                 self.mdb.execute(
@@ -480,6 +498,14 @@ class ClassWaterQualityDialog(QDialog):
     def on_change_tab(self, idx):
         """function when table state change"""
         if idx != 0:
+            if QT_VERSION > 5:
+                qt_item_ena = Qt.ItemFlag.ItemIsEnabled
+                qt_item_sel = Qt.ItemFlag.ItemIsSelectable
+                qt_alignc = Qt.AlignmentFlag.AlignCenter
+            else:
+                qt_item_ena = Qt.ItemIsEnabled
+                qt_item_sel = Qt.ItemIsSelectable
+                qt_alignc = Qt.AlignCenter
             self.table_conv_diff.setRowCount(0)
             for r in range(self.table_Tr.rowCount()):
                 self.dicoTrac[r]["sigle"] = "{}".format(self.table_Tr.item(r, 1).text())
@@ -487,25 +513,25 @@ class ClassWaterQualityDialog(QDialog):
 
                 self.table_conv_diff.insertRow(r)
                 self.table_conv_diff.setItem(r, 0, QTableWidgetItem(self.dicoTrac[r]["sigle"]))
-                self.table_conv_diff.item(r, 0).setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                itm = self.table_conv_diff.item(r, 0)
+                itm.setFlags(qt_item_ena | qt_item_sel)
+
                 self.table_conv_diff.setItem(r, 1, QTableWidgetItem(self.dicoTrac[r]["text"]))
-                self.table_conv_diff.item(r, 1).setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                itm = self.table_conv_diff.item(r, 1)
+                itm.setFlags(qt_item_ena| qt_item_sel)
+
 
                 for param in [["convec", 2], ["diffu", 3]]:
                     cb = QCheckBox()
-                    if self.dicoTrac[r][param[0]]:
-                        cb.setCheckState(2)
-                    else:
-                        cb.setCheckState(0)
+                    cb.setChecked(self.dicoTrac[r][param[0]])
                     wdg = QWidget()
                     lay = QHBoxLayout(wdg)
                     lay.setSpacing(0)
                     lay.setContentsMargins(0, 0, 0, 0)
                     lay.addWidget(cb)
-                    lay.setAlignment(Qt.AlignCenter)
+                    lay.setAlignment(qt_alignc)
                     wdg.setLayout(lay)
                     self.table_conv_diff.setCellWidget(r, param[1], wdg)
-
         elif idx != 2:
             for r in range(self.table_conv_diff.rowCount()):
                 for param in [["convec", 2], ["diffu", 3]]:

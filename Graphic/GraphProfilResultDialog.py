@@ -38,6 +38,7 @@ from .GraphResult import GraphResult
 from .WidgetProfResultDialog import WidgetProfResultDialog
 from ..Function import tw_to_txt, fill_zminbed
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 def list_sql(liste, typ="str"):
     """
@@ -614,6 +615,13 @@ class GraphProfilResultDialog(QWidget):
     def fill_tab(self, zlevel, qmaj_max):
         self.cur_id_tab = self.clas_data.currentIndex()
         self.clas_data.clear()
+        if QT_VERSION > 5:
+            qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
+            qt_itm_sel = Qt.ItemFlag.ItemIsSelectable
+        else:
+            qt_itm_ena = Qt.ItemIsEnabled
+            qt_itm_sel = Qt.ItemIsSelectable
+
         for idx, wow in enumerate(self.curent_data.items()):
             name, param = wow
             if not param:
@@ -667,7 +675,7 @@ class GraphProfilResultDialog(QWidget):
                 tw.setHorizontalHeaderItem(c, QTableWidgetItem(lst_lbls[c]))
                 for r, val in enumerate(param[var]):
                     itm = QTableWidgetItem()
-                    itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    itm.setFlags(qt_itm_ena |qt_itm_sel)
                     itm.setData(0, val)
                     tw.setItem(r, c, itm)
 

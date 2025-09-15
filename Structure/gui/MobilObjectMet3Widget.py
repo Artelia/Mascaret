@@ -93,7 +93,7 @@ class ClassMobilObjectMet3Widget(QWidget):
         self.bg_time.addButton(self.rb_min, 1)
         self.bg_time.addButton(self.rb_hour, 2)
         self.bg_time.addButton(self.rb_day, 3)
-        self.bg_time.buttonClicked[int].connect(self.chg_time)
+        self.bg_time.buttonClicked.connect(self.chg_time)
 
         self.ui.actionB_addLine.triggered.connect(self.new_time)
         self.ui.actionB_delLine.triggered.connect(self.delete_time)
@@ -239,10 +239,16 @@ class ClassMobilObjectMet3Widget(QWidget):
         """
         model = QStandardItemModel()
         model.insertColumns(0, 5)
+        if QT_VERSION > 5:
+            qt_hori = Qt.Orientation.Horizontal
+            qt_disr = Qt.ItemDataRole.DisplayRole
+        else:
+            qt_hori = Qt.Horizontal
+            qt_disr = Qt.DisplayRole
         for c in range(4):
-            model.setHeaderData(c, 1, "time", 0)
+            model.setHeaderData(c, qt_hori, "time", qt_disr)
 
-        model.setHeaderData(4, 1, "width (m)", 0)
+        model.setHeaderData(4, qt_hori, "width (m)", qt_disr)
 
         model.itemChanged.connect(self.on_tab_data_change)
         return model
@@ -461,12 +467,13 @@ class ClassMobilObjectMet3Widget(QWidget):
         self.clear_table()
         self.widget_closed.emit()
 
-    def chg_time(self, v):
+    def chg_time(self, vbt):
         """
         Change the time unit for the table columns.
         :param v (int): Index of the selected time unit
         :return: None
         """
+        v =  self.bg_time.id(vbt)
         unit = ["s", "min", "h", "day"]
         for i in range(4):
             if i == v:
@@ -643,7 +650,7 @@ class ClassMobilObjectMet3Widget(QWidget):
             if not self.filling_tab:
                 model.sort(0)
                 idx = itm.index()
-                self.ui.tab_sets.scrollTo(idx, 0)
+                self.ui.tab_sets.scrollTo(idx)
 
         if not self.filling_tab:
             self.update_courbe()
@@ -658,10 +665,13 @@ class ClassMobilObjectMet3Widget(QWidget):
         col_x = self.bg_time.checkedId()
         lx = []
         ly = []
-
-        for r in range(self.ui.tab_sets.model().rowCount()):
-            lx.append(self.ui.tab_sets.model().item(r, col_x).data(0))
-            ly.append(self.ui.tab_sets.model().item(r, 4).data(0))
+        model = self.ui.tab_sets.model()
+        row_count = model.rowCount()
+        for r in range(row_count):
+            item_x = model.item(r, col_x)
+            item_y = model.item(r, 4)
+            lx.append(item_x.data(0) if item_x is not None else None)
+            ly.append(item_y.data(0) if item_y is not None else None)
 
         data[0] = {"x": lx, "y": ly}
 

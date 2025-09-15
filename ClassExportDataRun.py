@@ -30,8 +30,9 @@ from qgis.core import *
 from qgis.gui import *
 
 from .Function import del_accent
-from .ui.custom_control import ClassWarningBox
+from .ui.custom_control import ClassWarningBox, _qt_is_checked
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassNameModel(QDialog):
     """
@@ -63,6 +64,10 @@ class ClassExportDataRun(QDialog):
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/export_data_run.ui"), self)
         self.box = ClassWarningBox()
         self.model_prof = None
+        if QT_VERSION >5:
+            self.qt_check = Qt.CheckState
+        else:
+            self.qt_check = Qt
 
         self.init_gui()
 
@@ -137,8 +142,8 @@ class ClassExportDataRun(QDialog):
 
         for row in range(obj.rowCount()):
             check_item = obj.item(row)
-            if check_item.checkState() == Qt.Checked:
-                check_item.setCheckState(False)
+            if _qt_is_checked(check_item, check_level="full"):
+                check_item.setCheckState(self.qt_check.Unchecked)
 
     def allselect_var(self):
         """
@@ -156,8 +161,8 @@ class ClassExportDataRun(QDialog):
 
         for row in range(obj.rowCount()):
             check_item = obj.item(row)
-            if check_item.checkState() != Qt.Checked:
-                check_item.setCheckState(2)
+            if _qt_is_checked(check_item,check_level="full"):
+                check_item.setCheckState(self.qt_check.Checked)
 
     def toggled_chang_format(self):
         """
@@ -203,7 +208,7 @@ class ClassExportDataRun(QDialog):
             nname = '{} - obs - {}'.format(var, name)
             check_item = QStandardItem(nname)
             check_item.setCheckable(True)
-            check_item.setCheckState(False)  # Vous pouvez également utiliser Qt.Checked pour cocher par défaut
+            check_item.setCheckState(self.qt_check.Unchecked)  # Vous pouvez également utiliser Qt.Checked pour cocher par défaut
             check_item.setSelectable(False)  # Pour rendre seulement la case à cocher cliquable
             # Ajout de l'élément de texte et de la case à cocher au modèle
             model_var.appendRow(check_item)
@@ -235,9 +240,8 @@ class ClassExportDataRun(QDialog):
             nname = '{} - {}'.format(var, name)
             check_item = QStandardItem(nname)
             check_item.setCheckable(True)
-            check_item.setCheckState(False)  # Vous pouvez également utiliser Qt.Checked pour cocher par défaut
-            check_item.setSelectable(False)  # Pour rendre seulement la case à cocher cliquable
-            # Ajout de l'élément de texte et de la case à cocher au modèle
+            check_item.setCheckState(self.qt_check.Unchecked)
+            check_item.setSelectable(False)
             model_obs.appendRow(check_item)
 
         model_obs, row_to_name_obs = self.add_obs(model_obs, row_to_name_obs)
@@ -269,8 +273,8 @@ class ClassExportDataRun(QDialog):
             nname = '{} - {}'.format(var, name)
             check_item = QStandardItem(nname)
             check_item.setCheckable(True)
-            check_item.setCheckState(False)  # Vous pouvez également utiliser Qt.Checked pour cocher par défaut
-            check_item.setSelectable(False)  # Pour rendre seulement la case à cocher cliquable
+            check_item.setCheckState(self.qt_check.Unchecked)
+            check_item.setSelectable(False)
             # Ajout de l'élément de texte et de la case à cocher au modèle
             model_var.appendRow(check_item)
 
@@ -302,7 +306,7 @@ class ClassExportDataRun(QDialog):
         list_row_mod = []
         for row in range(obj.rowCount()):
             check_item = obj.item(row)
-            if check_item.checkState() == Qt.Checked:
+            if _qt_is_checked(check_item, check_level="full"):
                 list_row_mod.append(row)
         return list_row_mod
 
@@ -414,12 +418,14 @@ class ClassExportDataRun(QDialog):
         """
         for row in range(self.model_scen.rowCount()):
             run_item = self.model_scen.item(row)
-            if run_item.checkState() == Qt.Unchecked:
-                run_item.setCheckState(Qt.Checked)
+            if _qt_is_checked(run_item, check_level="any"):
+                run_item.setCheckState(self.qt_check.Checked)
+
             for child_row in range(run_item.rowCount()):
                 scen_item = run_item.child(child_row)
-                if scen_item.checkState() == Qt.Unchecked:
-                    scen_item.setCheckState(Qt.Checked)
+                if _qt_is_checked(scen_item, check_level="any"):
+                    scen_item.setCheckState(self.qt_check.Checked)
+
 
     def add_scen(self, lst):
         """
@@ -435,10 +441,11 @@ class ClassExportDataRun(QDialog):
                 if (row, child_row) in lst:
                     cmpt += 1
                     scen_item = run_item.child(child_row)
-                    if scen_item.checkState() == Qt.Unchecked:
-                        scen_item.setCheckState(2)
-            if run_item.checkState() == Qt.Unchecked and cmpt == nb_child:
-                run_item.setCheckState(2)
+                    if _qt_is_checked(scen_item, check_level="any"):
+                        scen_item.setCheckState(self.qt_check.Checked)
+            if _qt_is_checked(run_item, check_level="any") and cmpt == nb_child:
+                run_item.setCheckState(self.qt_check.Checked)
+
 
     def clear_scen(self):
         """
@@ -447,12 +454,12 @@ class ClassExportDataRun(QDialog):
         """
         for row in range(self.model_scen.rowCount()):
             run_item = self.model_scen.item(row)
-            if run_item.checkState() == Qt.Checked:
-                run_item.setCheckState(False)
+            if _qt_is_checked(run_item, check_level="full"):
+                run_item.setCheckState(self.qt_check.Unchecked)
             for child_row in range(run_item.rowCount()):
                 scen_item = run_item.child(child_row)
-                if scen_item.checkState() == Qt.Checked:
-                    scen_item.setCheckState(False)
+                if _qt_is_checked(scen_item, check_level="full"):
+                    scen_item.setCheckState(self.qt_check.Unchecked)
 
     def clear_check(self, model):
         """
@@ -472,8 +479,8 @@ class ClassExportDataRun(QDialog):
 
         for row in range(obj.rowCount()):
             check_item = obj.item(row)
-            if check_item.checkState() == Qt.Checked:
-                check_item.setCheckState(False)
+            if _qt_is_checked(check_item, check_level="full"):
+                check_item.setCheckState(self.qt_check.Unchecked)
 
     def allselect(self, model):
         """
@@ -493,8 +500,8 @@ class ClassExportDataRun(QDialog):
 
         for row in range(obj.rowCount()):
             check_item = obj.item(row)
-            if check_item.checkState() != Qt.Checked:
-                check_item.setCheckState(2)
+            if _qt_is_checked(check_item, check_level="any"):
+                check_item.setCheckState(self.qt_check.Checked)
 
     def run_scenar_mod(self, ignore_init=False):
         """
@@ -514,7 +521,7 @@ class ClassExportDataRun(QDialog):
 
             item = QStandardItem(run)
             item.setCheckable(True)
-            item.setCheckState(False)
+            item.setCheckState(self.qt_check.Unchecked)
             dtmp = self.mdb.select("runs", where="run='{}'".format(run), list_var=['id', 'scenario'])
             cmpt = 0
             for id, scen in enumerate(dtmp['scenario']):
@@ -523,7 +530,7 @@ class ClassExportDataRun(QDialog):
                 self.d_run2id[(run, scen)] = dtmp['id'][id]
                 run_item = QStandardItem(scen)
                 run_item.setCheckable(True)
-                run_item.setCheckState(False)
+                run_item.setCheckState(self.qt_check.Unchecked)
                 item.appendRow(run_item)
                 id_to_run[(row, cmpt)] = {'id': dtmp['id'][id]}
                 cmpt += 1
@@ -554,7 +561,7 @@ class ClassExportDataRun(QDialog):
             nname = '{} - {}'.format(name, pk)
             check_item = QStandardItem(nname)
             check_item.setCheckable(True)
-            check_item.setCheckState(False)  # Vous pouvez également utiliser Qt.Checked pour cocher par défaut
+            check_item.setCheckState(self.qt_check.Unchecked)  # Vous pouvez également utiliser Qt.Checked pour cocher par défaut
             check_item.setSelectable(False)  # Pour rendre seulement la case à cocher cliquable
             # Ajout de l'élément de texte et de la case à cocher au modèle
             model_prof.appendRow(check_item)
@@ -582,8 +589,8 @@ class ClassExportDataRun(QDialog):
             nname = '{} - {}'.format(name, pk)
             check_item = QStandardItem(nname)
             check_item.setCheckable(True)
-            check_item.setCheckState(False)  # Vous pouvez également utiliser Qt.Checked pour cocher par défaut
-            check_item.setSelectable(False)  # Pour rendre seulement la case à cocher cliquable
+            check_item.setCheckState(self.qt_check.Unchecked)
+            check_item.setSelectable(False)
             # Ajout de l'élément de texte et de la case à cocher au modèle
             model_out.appendRow(check_item)
         return model_out, id_to_name_out
@@ -614,8 +621,8 @@ class ClassExportDataRun(QDialog):
             nname = '{} - {}'.format(name, pk)
             check_item = QStandardItem(nname)
             check_item.setCheckable(True)
-            check_item.setCheckState(False)  # Vous pouvez également utiliser Qt.Checked pour cocher par défaut
-            check_item.setSelectable(False)  # Pour rendre seulement la case à cocher cliquable
+            check_item.setCheckState(self.qt_check.Unchecked)
+            check_item.setSelectable(False)
             # Ajout de l'élément de texte et de la case à cocher au modèle
             model_sta.appendRow(check_item)
         return model_sta, id_to_name_sta
@@ -630,7 +637,7 @@ class ClassExportDataRun(QDialog):
             run_item = self.model_scen.item(row)
             for child_row in range(run_item.rowCount()):
                 scen_item = run_item.child(child_row)
-                if scen_item.checkState() == Qt.Checked:
+                if _qt_is_checked(scen_item, check_level="full"):
                     lst_rs.append((str(run_item.text()), str(scen_item.text())))
         return lst_rs
 
@@ -644,7 +651,7 @@ class ClassExportDataRun(QDialog):
             run_item = self.model_scen.item(row)
             for child_row in range(run_item.rowCount()):
                 scen_item = run_item.child(child_row)
-                if scen_item.checkState() == Qt.Checked:
+                if _qt_is_checked(scen_item, check_level="full"):
                     lst_rs.append((row, child_row))
         return lst_rs
 
@@ -679,8 +686,8 @@ class ClassExportDataRun(QDialog):
         for row in range(obj.rowCount()):
             if row in lst_rows:
                 check_item = obj.item(row)
-                if check_item.checkState() == Qt.Unchecked:
-                    check_item.setCheckState(2)
+                if _qt_is_checked(check_item, check_level="any"):
+                    check_item.setCheckState(self.qt_check.Checked)
 
     def check_pk_val(self):
         """
@@ -732,6 +739,8 @@ class ClassExportDataRun(QDialog):
         TODO : Creation of the file
         """
         folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
+        if not folder_name_path:
+            return
 
         lst_run = self.get_list_runs()
         lst_var = self.get_mod(self.mod_lst_var)
@@ -771,7 +780,10 @@ class ClassExportDataRun(QDialog):
 
             for stat in lst_pr:
                 dlg = ClassNameModel(self.mgis, run, scen, dico_mod[stat]['name'], dico_mod[stat]['code'])
-                dlg.exec_()
+                if QT_VERSION > 5:
+                    dlg.exec()  # PyQt6
+                else:
+                    dlg.exec_()  # PyQt5
                 nmodel = dlg.new_name
                 dvar = self.mdb.select('results_var', where="var in ('ZREF', 'Z', 'Q')", list_var=['id', 'var', 'name'])
                 dtyp = {}

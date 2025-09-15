@@ -30,7 +30,7 @@ from qgis.utils import *
 from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
 from ...Function import data_to_float
 from ...Graphic.GraphCommon import GraphCommon
-
+from ...ui.custom_control import _qt_is_checked
 
 class ClassMobilSingDialog(QDialog):
     def __init__(self, mgis):
@@ -74,7 +74,7 @@ class ClassMobilSingDialog(QDialog):
         self.name_cur = None
 
         fill_qcombobox(self.cb_method, [["1", "Method 1"], ["2", "Method 2"]])
-        self.cb_method.currentIndexChanged["QString"].connect(self.cb_change_meth)
+        self.cb_method.currentTextChanged.connect(self.cb_change_meth)
 
         fill_qcombobox(self.cb_uvb, [[1, "m/s"], [60, "m/min"], [3600, "m/h"]])
         fill_qcombobox(self.cb_uvh, [[1, "m/s"], [60, "m/min"], [3600, "m/h"]])
@@ -91,7 +91,7 @@ class ClassMobilSingDialog(QDialog):
         self.bg_time.addButton(self.rb_min, 1)
         self.bg_time.addButton(self.rb_hour, 2)
         self.bg_time.addButton(self.rb_day, 3)
-        self.bg_time.buttonClicked[int].connect(self.chg_time)
+        self.bg_time.buttonClicked.connect(self.chg_time)
 
         self.ui.b_OK_page2.accepted.connect(self.accept_page2)
         self.ui.b_OK_page2.rejected.connect(self.reject_page2)
@@ -314,7 +314,7 @@ class ClassMobilSingDialog(QDialog):
             if not self.filling_tab:
                 model.sort(0)
                 idx = itm.index()
-                self.ui.tab_sets.scrollTo(idx, 0)
+                self.ui.tab_sets.scrollTo(idx)
                 self.update_courbe("all")
         elif itm.column() == 4:
             if not self.filling_tab:
@@ -325,10 +325,16 @@ class ClassMobilSingDialog(QDialog):
         """create table"""
         model = QStandardItemModel()
         model.insertColumns(0, 5)
+        if QT_VERSION > 5:
+            qt_hori = Qt.Orientation.Horizontal
+            qt_disr = Qt.ItemDataRole.DisplayRole
+        else:
+            qt_hori = Qt.Horizontal
+            qt_disr = Qt.DisplayRole
         for c in range(4):
-            model.setHeaderData(c, 1, "time", 0)
+            model.setHeaderData(c, qt_hori, "time", qt_disr)
 
-        model.setHeaderData(4, 1, "Z", 0)
+        model.setHeaderData(4, qt_hori, "Z", qt_disr)
 
         model.itemChanged.connect(self.on_tab_data_change)
         return model
@@ -437,7 +443,13 @@ class ClassMobilSingDialog(QDialog):
                 model.removeRow(row)
             self.update_courbe("all")
 
-    def chg_time(self, v):
+    def chg_time(self, vbt):
+        """
+        Change the time unit for the table columns.
+        :param v (int): Index of the selected time unit
+        :return: None
+        """
+        v =  self.bg_time.id(vbt)
         unit = ["s", "min", "h", "day"]
         for i in range(4):
             if i == v:
@@ -479,8 +491,7 @@ class ClassMobilSingDialog(QDialog):
         self.ui.lst_sets.model().blockSignals(False)
         # get value lst_sets
         name = str(self.ui.lst_sets.model().item(itm.row(), 1).text())
-
-        if itm.checkState() == 2:
+        if _qt_is_checked(itm, check_level="full"):
             sql = "UPDATE {0}.weirs SET active_mob = 't' WHERE name = '{1}'".format(
                 self.mdb.SCHEMA, name
             )
@@ -511,6 +522,13 @@ class ClassMobilSingDialog(QDialog):
     def fill_lst_conf(self, id=None):
         """fill configuration list"""
         model = QStandardItemModel()
+        if QT_VERSION > 5:
+            qt_check = Qt.CheckState.Checked
+            qt_ucheck = Qt.CheckState.Unchecked
+        else:
+            qt_check = Qt.Checked
+            qt_ucheck = Qt.Unchecked
+
         model.setColumnCount(2)
         self.ui.lst_sets.setModel(model)
         self.ui.lst_sets.setModelColumn(1)
@@ -529,9 +547,9 @@ class ClassMobilSingDialog(QDialog):
                         if j == 1:
                             new_itm.setCheckable(True)
                             if not row[0]:
-                                new_itm.setCheckState(0)
+                                new_itm.setCheckState(qt_ucheck)
                             elif row[0]:
-                                new_itm.setCheckState(2)
+                                new_itm.setCheckState(qt_check)
                         self.ui.lst_sets.model().setItem(i, j, new_itm)
 
             self.ui.lst_sets.model().itemChanged.connect(self.sel_config_def)
@@ -652,13 +670,15 @@ class ClassMobilSingDialog(QDialog):
                     model.insertRows(0, len(rows))
                     for r, row in enumerate(rows):
                         itm = QStandardItem()
-                        itm.setData(row[0] / 1.0, 0)
+                        val = data_to_float(row[0])
+                        itm.setData(val / 1.0, 0)
                         model.setItem(r, c, itm)
                     c = 4
                 else:
                     for r, row in enumerate(rows):
                         itm = QStandardItem()
-                        itm.setData(row[0], 0)
+                        val = data_to_float(row[0])
+                        itm.setData(val, 0)
                         model.setItem(r, c, itm)
 
         self.filling_tab = False
@@ -671,12 +691,14 @@ class ClassMobilSingDialog(QDialog):
 
         col_x = self.bg_time.checkedId()
         lx = []
-        for r in range(self.ui.tab_sets.model().rowCount()):
-            lx.append(self.ui.tab_sets.model().item(r, col_x).data(0))
-
         ly = []
-        for r in range(self.ui.tab_sets.model().rowCount()):
-            ly.append(self.ui.tab_sets.model().item(r, 4).data(0))
+        model = self.ui.tab_sets.model()
+        row_count = model.rowCount()
+        for r in range(row_count):
+            item_x = model.item(r, col_x)
+            item_y = model.item(r, 4)
+            lx.append(item_x.data(0) if item_x is not None else None)
+            ly.append(item_y.data(0) if item_y is not None else None)
         data[0] = {"x": lx, "y": ly}
 
         self.graph_edit.maj_courbes(data)

@@ -29,6 +29,7 @@ from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
 from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtCore import qVersion
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
@@ -38,6 +39,7 @@ from ..Function import del_symbol
 from ..Function import str2bool, del_accent
 from ..HydroLawsDialog import dico_typ_law
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassCreatFilesModels:
     """Class contain  model files creation and run model mascaret"""
@@ -1446,7 +1448,7 @@ class ClassCreatFilesModels:
         :return: par (dict): Updated parameters dictionary
         """
         # pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
-        pattern = re.compile("(\\w+)\\[t([+-][0-9]+)?\\]")
+        pattern = re.compile(r"(\\w+)\\[t([+-][0-9]+)?\\]")
         somme = 0
         debit_prec = 0
         for nom, loi in dict_lois.items():

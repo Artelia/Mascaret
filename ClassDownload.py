@@ -21,10 +21,11 @@ email                :
 import os
 import posixpath
 
-from qgis.PyQt.QtCore import QUrl, QEventLoop, QTimer
+from qgis.PyQt.QtCore import QUrl, QEventLoop, QTimer, qVersion
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
 from qgis.core import QgsNetworkAccessManager
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassDownloadMasc:
     """
@@ -90,7 +91,11 @@ class ClassDownloadMasc:
         result = self.manager.get(req)
         result.finished.connect(lambda: self.fin_req(loop, result))
         self.print_("fetching request...", self.dbg)
-        if loop.exec_() == 0:
+        if QT_VERSION > 5:
+            ret = loop.exec()  # PyQt6
+        else:
+            ret = loop.exec_()  # PyQt5
+        if ret == 0:
             timer.stop()
             self.print_(
                 "{} is received: {}".format(os.path.basename(path_file), result.readAll().count()),
@@ -113,7 +118,11 @@ class ClassDownloadMasc:
         :param result (obj) reply in request
         :return:
         """
-        if result.error() != QNetworkReply.NoError:
+        if QT_VERSION > 5:
+            qnet = QNetworkReply.NetworkError.NoError
+        else:
+            qnet = QNetworkReply.NoError
+        if result.error() != qnet:
             self.print_("Error of request : {}".format(self.url))
             loop.exit(1)
             return

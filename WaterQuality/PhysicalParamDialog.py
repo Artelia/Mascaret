@@ -30,6 +30,7 @@ from qgis.utils import *
 from .ClassTableWQ import ClassTableWQ
 from ..Function import data_to_float
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassPhysicalParamDialog(QDialog):
     def __init__(self, mgis, mod):
@@ -50,12 +51,26 @@ class ClassPhysicalParamDialog(QDialog):
         self.init_ui()
 
     def init_ui(self):
+        if QT_VERSION > 5:
+            qt_hori = Qt.Orientation.Horizontal
+            qt_disr = Qt.ItemDataRole.DisplayRole
+            qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
+            qt_itm_sel = Qt.ItemFlag.ItemIsSelectable
+            qt_itm_ed = Qt.ItemFlag.ItemIsEditable
+            qt_alig_vcentre = Qt.AlignmentFlag.AlignVCenter
+            qt_alig_right = Qt.AlignmentFlag.AlignRight
+        else:
+            qt_hori = Qt.Horizontal
+            qt_disr = Qt.DisplayRole
+            qt_itm_ena = Qt.ItemIsEnabled
+            qt_itm_sel = Qt.ItemIsSelectable
+            qt_itm_ed = Qt.ItemIsEditable
+            qt_alig_vcentre = Qt.AlignVCenter
+            qt_alig_right = Qt.AlignRight
         model = QStandardItemModel()
         model.insertColumns(0, 4)
-        model.setHeaderData(0, 1, "ID", 0)
-        model.setHeaderData(1, 1, "Sigle", 0)
-        model.setHeaderData(2, 1, "Parameter", 0)
-        model.setHeaderData(3, 1, "Value", 0)
+        for idcol, ncol in enumerate(["ID", "Sigle", "Parameter", "Value"]):
+            model.setHeaderData(idcol, qt_hori, ncol, qt_disr)
 
         sql = "SELECT id, sigle, text, value FROM {0}.tracer_physic WHERE type = '{1}' ORDER BY id".format(
             self.mdb.SCHEMA, self.cur_wq_mod
@@ -68,11 +83,11 @@ class ClassPhysicalParamDialog(QDialog):
                 itm.setData(val, 0)
                 if c == 3:
                     itm.setData(data_to_float(val), 0)
-                    itm.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsEditable)
-                    itm.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                    itm.setFlags(qt_itm_ena | qt_itm_sel| qt_itm_ed)
+                    itm.setTextAlignment( qt_alig_right | qt_alig_vcentre)
                 else:
                     itm.setData(val, 0)
-                    itm.setFlags(Qt.ItemIsEnabled)
+                    itm.setFlags(qt_itm_ena)
                 model.setItem(r, c, itm)
 
         self.ui.tab_param.setModel(model)

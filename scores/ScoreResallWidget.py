@@ -28,6 +28,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ScoreResallWidget(QWidget):
     def __init__(self, windmain):
@@ -136,6 +137,14 @@ class ScoreResallWidget(QWidget):
         :return:
         """
         if len(self.tab_fill.keys()) > 0:
+            if QT_VERSION > 5:
+                qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
+                qt_alig_vcentre = Qt.AlignmentFlag.AlignVCenter
+                qt_alig_hcentre = Qt.AlignmentFlag.AlignHCenter
+            else:
+                qt_itm_ena = Qt.ItemIsEnabled
+                qt_alig_vcentre = Qt.AlignVCenter
+                qt_alig_hcentre = Qt.AlignHCenter
             for err_typ, tab_err_typ in self.tab_fill.items():
                 for err, tab_err in tab_err_typ.items():
                     # self.tab_fill[err_typ][err][name_line] = {code: tmp}
@@ -161,8 +170,8 @@ class ScoreResallWidget(QWidget):
                                 item = QTableWidgetItem("{:e}".format(val))
                             else:
                                 item = QTableWidgetItem("{:.3f}".format(val))
-                            item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                            item.setFlags(Qt.ItemIsEnabled)
+                            item.setTextAlignment( qt_alig_hcentre |  qt_alig_vcentre)
+                            item.setFlags(qt_itm_ena)
                             col = columns.index(tmp)
                             self.child[err_typ][err].setItem(row, col, item)
 

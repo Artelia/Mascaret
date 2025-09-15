@@ -29,7 +29,7 @@ from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtWidgets import QMessageBox, QDoubleSpinBox
 from qgis.PyQt.uic import *
 
-
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 # *******************************************************************************
 #   Class  warningBox
 # *******************************************************************************
@@ -41,14 +41,35 @@ class ClassWarningBox:
 
     def yes_no_q(self, msg, title=""):
         d = QMessageBox()
+        try:
+            StandardButton = QMessageBox.StandardButton
+        except  AttributeError:
+            StandardButton = QMessageBox
         d.setWindowTitle(title)
-        d.addButton(QMessageBox.Yes)
-        d.addButton(QMessageBox.No)
-        d.setDefaultButton(QMessageBox.No)
+        d.addButton(StandardButton.Yes)
+        d.addButton(StandardButton.No)
+        d.setDefaultButton(StandardButton.No)
         d.setText(msg)
-        ret = d.exec_()
+        if QT_VERSION > 5:
+            ret = d.exec()  # PyQt6
+        else:
+            ret = d.exec_()  # PyQt5
 
-        if ret == QMessageBox.Yes:
+        if ret == StandardButton.Yes:
+            return True
+        else:
+            return False
+
+    def ok_cancel_q(self, wgt,  msg, title=""):
+        if QT_VERSION > 5:
+            StandardButton = QMessageBox.StandardButton
+        else:
+            StandardButton = QMessageBox
+
+        ret = QMessageBox.question(wgt, title, msg,
+            StandardButton.Cancel | StandardButton.Ok,)
+
+        if ret == StandardButton.Ok:
             return True
         else:
             return False
@@ -70,11 +91,15 @@ def valid_float_string(string):
 
 class FloatValidator(QValidator):
     def validate(self, string, position):
+        if QT_VERSION > 5:
+            q_valid = QValidator.State
+        else:
+            q_valid = QValidator
         if valid_float_string(string):
-            return QValidator.Acceptable
+            return q_valid.Acceptable
         if string == "" or string[position - 1] in "e.-+":
-            return QValidator.Intermediate
-        return QValidator.Invalid
+            return q_valid.Intermediate
+        return q_valid.Invalid
 
     def fixup(self, text):
         match = _float_re.search(text)
@@ -117,10 +142,48 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
 def format_float(value):
     """Modified form of the 'g' format specifier."""
     string = "{:g}".format(value).replace("e+", "e")
-    string = re.sub("e(-?)0*(\d+)", r"e\1\2", string)
+    string = re.sub(r"e(-?)0*(\d+)", r"e\1\2", string)
     return string
     # *******************************************************************************
 
 
 def datetime2QDateTime(date):
     return QDateTime(date.year, date.month, date.day, date.hour, date.minute, date.second)
+
+# *******************************************************************************
+# compatible with PyQt5/6
+# *******************************************************************************
+
+def _qt_is_checked( item, check_level="any"):
+    """
+    Utility to check the status of an item, compatible with PyQt5/6
+    check_level: "any" (> 0), "full" (== 2), "partial_or_full" (> 1)
+    """
+
+    # QTreeWidgetItem ou QTableWidgetItem
+    try:
+        # Essaye avec argument colonne
+        state = item.checkState(0)
+    except TypeError:
+        # Sinon, essaye sans argument (QStandardItem)
+        state = item.checkState()
+
+
+    try:
+        # PyQt6
+        if check_level == "any":
+            return state != Qt.CheckState.Unchecked
+        elif check_level == "full":
+            return state == Qt.CheckState.Checked
+        elif check_level == "partial_or_full":
+            return state in [Qt.CheckState.PartiallyChecked, Qt.CheckState.Checked]
+    except AttributeError:
+        # PyQt5
+        if check_level == "any":
+            return int(state) > 0
+        elif check_level == "full":
+            return int(state) == 2
+        elif check_level == "partial_or_full":
+            return int(state) > 1
+
+    return False

@@ -42,7 +42,18 @@ def ctrl_set_value(ctrl, val, cc_is_checked=False):
         if cc_is_checked:
             ctrl.setChecked(val)
         else:
-            ctrl.setCheckState(Qt.CheckState(int(val)))
+            # ctrl.setCheckState(Qt.CheckState(int(val)))
+            # Méthode universelle
+            int_val = int(val)
+            try:
+                # Essayer d'abord PyQt6
+                state_values = [Qt.CheckState.Unchecked,
+                                Qt.CheckState.PartiallyChecked,
+                                Qt.CheckState.Checked]
+                ctrl.setCheckState(state_values[int_val])
+            except (AttributeError, IndexError):
+                # Fallback PyQt5 ou valeur directe
+                ctrl.setCheckState(int_val)
     elif ctrl.metaObject().className() == "QButtonGroup":
         ctrl.button(int(val)).click()
 

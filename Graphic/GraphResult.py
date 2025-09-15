@@ -26,11 +26,11 @@ try:
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QTAgg as NavigationToolbar
 except:
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-
+from qgis.PyQt.QtCore import qVersion
 from .GraphCommon import GraphCommonNew
 
 MPL_LINE_STYLE = {0: "-", 1: ":", 2: "--", 3: "-."}
-
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class GraphResult(GraphCommonNew):
     """
@@ -556,7 +556,6 @@ class GraphResult(GraphCommonNew):
         """
 
         self.clear_weirs()
-
         self.courbe_weirs.append(
             self.main_axe.scatter(weirs['x'], weirs['cote'],
                                   color=weirs['couleurs'],

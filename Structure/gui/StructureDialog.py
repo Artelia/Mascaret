@@ -64,9 +64,15 @@ class ClassStructureDialog(QDialog):
         )
         dico_profil = {r[0]: r[1] for r in rows}
         self.tree_struct.clear()
+        if QT_VERSION > 5:
+            qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
+            qt_itm_sel = Qt.ItemFlag.ItemIsSelectable
+        else:
+            qt_itm_ena = Qt.ItemIsEnabled
+            qt_itm_sel = Qt.ItemIsSelectable
         for id_type, elem in self.tbst.dico_struc_typ.items():
             typ_itm = QTreeWidgetItem()
-            typ_itm.setFlags(Qt.ItemIsEnabled)
+            typ_itm.setFlags( qt_itm_ena )
             typ_itm.setData(0, 32, id_type)
             typ_itm.setText(0, elem["name"])
             self.tree_struct.addTopLevelItem(typ_itm)
@@ -77,7 +83,7 @@ class ClassStructureDialog(QDialog):
             rows = self.mdb.run_query(sql, fetch=True)
             for row in rows:
                 ouv_itm = QTreeWidgetItem()
-                ouv_itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                ouv_itm.setFlags(qt_itm_ena |  qt_itm_sel)
                 ouv_itm.setData(0, 32, int(row[0]))
                 ouv_itm.setText(0, row[1])
                 ouv_itm.setData(1, 32, int(row[2]))
@@ -117,7 +123,12 @@ class ClassStructureDialog(QDialog):
 
     def new_struct(self):
         dlg = ClassStructureCreateDialog(self.mgis, None)
-        if dlg.exec_():
+
+        if QT_VERSION > 5:
+            ret = dlg.exec()  # PyQt6
+        else:
+            ret = dlg.exec_()  # PyQt5
+        if ret:
             id = dlg.id_struct
             self.fill_lst_struct(id)
             self.edit_struct()
@@ -127,7 +138,10 @@ class ClassStructureDialog(QDialog):
             itm = self.tree_struct.selectedItems()[0]
             id = itm.data(0, 32)
             dlg = ClassStructureEditDialog(self.mgis, id)
-            dlg.exec_()
+            if QT_VERSION > 5:
+                dlg.exec()  # PyQt6
+            else:
+                dlg.exec_()  # PyQt5
             self.fill_lst_struct(id)
 
     def del_struct(self):

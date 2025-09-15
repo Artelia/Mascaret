@@ -33,6 +33,8 @@ from .ClassTableWQ import ClassTableWQ
 from .Graph_WQ import GraphMeteo
 from ..Function import data_to_float, data_to_date
 
+from ..ui.custom_control import _qt_is_checked
+
 
 class ClassMeteoDialog(QDialog):
     def __init__(self, mgis):
@@ -48,6 +50,7 @@ class ClassMeteoDialog(QDialog):
         self.date_ref = None
         self.list_var = []
 
+
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_meteo.ui"), self)
         self.ui.de_date.hide()
         self.ui.de_date.setDisplayFormat("dd/MM/yyyy HH:mm:ss")
@@ -61,7 +64,7 @@ class ClassMeteoDialog(QDialog):
         self.bg_time.addButton(self.rb_hour, 2)
         self.bg_time.addButton(self.rb_day, 3)
         self.bg_time.addButton(self.rb_date, 4)
-        self.bg_time.buttonClicked[int].connect(self.chg_time)
+        self.bg_time.buttonClicked.connect(self.chg_time)
 
         styled_item_delegate = QStyledItemDelegate()
         styled_item_delegate.setItemEditorFactory(ItemEditorFactory())
@@ -116,9 +119,9 @@ class ClassMeteoDialog(QDialog):
                     if j == 1:
                         new_itm.setCheckable(True)
                         if not row[3]:
-                            new_itm.setCheckState(0)
+                            new_itm.setCheckState(self.qt_ucheck)
                         elif row[3]:
-                            new_itm.setCheckState(2)
+                            new_itm.setCheckState(self.qt_check)
                     self.ui.lst_sets.model().setItem(i, j, new_itm)
 
         self.ui.lst_sets.model().itemChanged.connect(self.sel_config_def)
@@ -135,15 +138,20 @@ class ClassMeteoDialog(QDialog):
         """
         Select configuration
         """
+        if QT_VERSION > 5:
+            qt_ucheck = Qt.CheckState.Unchecked
+        else:
+            qt_ucheck = Qt.Unchecked
         self.ui.lst_sets.model().blockSignals(True)
         for r in range(self.ui.lst_sets.model().rowCount()):
             if r != itm.row():
-                self.ui.lst_sets.model().item(r, 1).setCheckState(0)
+                self.ui.lst_sets.model().item(r, 1).setCheckState(qt_ucheck)
         self.ui.lst_sets.model().blockSignals(False)
 
         sql = "UPDATE {0}.meteo_config SET active = 'f'".format(self.mdb.SCHEMA)
         self.mdb.run_query(sql)
-        if itm.checkState() == 2:
+
+        if _qt_is_checked(itm, check_level="full"):
             id = str(self.ui.lst_sets.model().item(itm.row(), 0).text())
             sql = "UPDATE {0}.meteo_config SET active = 't' WHERE id = {1}".format(
                 self.mdb.SCHEMA, id
@@ -185,10 +193,16 @@ class ClassMeteoDialog(QDialog):
         self.list_var = []
         model = QStandardItemModel()
         model.insertColumns(0, 11)
+        if QT_VERSION > 5:
+            qt_hori = Qt.Orientation.Horizontal
+            qt_disr = Qt.ItemDataRole.DisplayRole
+        else:
+            qt_hori = Qt.Horizontal
+            qt_disr = Qt.DisplayRole
         for c in range(5):
-            model.setHeaderData(c, 1, "time", 0)
+            model.setHeaderData(c, qt_hori, "time", qt_disr)
         for c in range(5, 11):
-            model.setHeaderData(c, 1, self.dico_var[c - 5]["name"], 0)
+            model.setHeaderData(c, qt_hori, self.dico_var[c - 5]["name"], qt_disr)
             self.list_var.append([self.dico_var[c - 5]["id"], self.dico_var[c - 5]["name"]])
 
         model.itemChanged.connect(self.on_tab_data_change)
@@ -271,7 +285,7 @@ class ClassMeteoDialog(QDialog):
                                 if val is not None:
                                     typ_time = "date"
                                     date_ref = val
-                                    self.ui.cb_date.setCheckState(2)
+                                    self.ui.cb_date.setChecked(True)
                                     date_ref_str = datetime.strftime(date_ref, "%Y-%m-%d %H:%M:%S")
                                     self.ui.de_date.setDateTime(
                                         QDateTime().fromString(date_ref_str, "yyyy-MM-dd HH:mm:ss")
@@ -387,7 +401,7 @@ class ClassMeteoDialog(QDialog):
             if not self.filling_tab:
                 model.sort(0)
                 idx = itm.index()
-                self.ui.tab_sets.scrollTo(idx, 0)
+                self.ui.tab_sets.scrollTo(idx)
                 self.update_courbe("all")
         elif itm.column() > 4:
             if not self.filling_tab:
@@ -423,7 +437,7 @@ class ClassMeteoDialog(QDialog):
         # changer de page
         self.cur_set = -1
         self.ui.txt_name.setText("")
-        self.ui.cb_date.setCheckState(0)
+        self.ui.cb_date.setChecked(False)
         date = QDateTime(QDate().currentDate(), QTime(0, 0, 0))
         self.ui.de_date.setDateTime(date)
         self.fill_tab_sets()
@@ -439,10 +453,10 @@ class ClassMeteoDialog(QDialog):
             self.ui.txt_name.setText(self.ui.lst_sets.model().item(l, 1).text())
             date_str = str(self.ui.lst_sets.model().item(l, 2).text())
             if date_str == "None":
-                self.ui.cb_date.setCheckState(0)
+                self.ui.cb_date.setChecked(False)
                 date = QDateTime(QDate().currentDate(), QTime(0, 0, 0))
             else:
-                self.ui.cb_date.setCheckState(2)
+                self.ui.cb_date.setChecked(False)
                 date = QDateTime().fromString(date_str, "yyyy-MM-dd HH:mm:ss")
             self.ui.de_date.setDateTime(date)
             self.fill_tab_sets()
@@ -456,14 +470,20 @@ class ClassMeteoDialog(QDialog):
             l = self.ui.lst_sets.selectedIndexes()[0].row()
             id_set = self.ui.lst_sets.model().item(l, 0).text()
             name_set = self.ui.lst_sets.model().item(l, 1).text()
+            if QT_VERSION > 5:
+                ok_button = QMessageBox.StandardButton.Ok
+                cancel_button = QMessageBox.StandardButton.Cancel
+            else:
+                ok_button = QMessageBox.Ok
+                cancel_button = QMessageBox.Cancel
             if (
                     QMessageBox.question(
                         self,
                         "Meteo Settings",
                         "Delete {} ?".format(name_set),
-                        QMessageBox.Cancel | QMessageBox.Ok,
+                        cancel_button | ok_button,
                     )
-            ) == QMessageBox.Ok:
+            ) == ok_button:
                 self.mgis.add_info("Deletion of {} Meteo Setting".format(name_set), dbg=True)
                 self.mdb.execute(
                     "DELETE FROM {0}.laws_meteo WHERE id_config = {1}".format(

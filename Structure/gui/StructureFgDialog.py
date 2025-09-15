@@ -73,7 +73,7 @@ class StructureFgDialog(QDialog):
         self.display_fg_struct()
         if self.cb_var.currentText() == "Flow rate":
             fill_qcombobox(self.cb_loc, [["AV", "Downstream"]])
-        self.cb_var.currentIndexChanged["QString"].connect(self.cb_var_chang)
+        self.cb_var.currentTextChanged.connect(self.cb_var_chang)
         self.cb_type_t_vit.currentIndexChanged.connect(self.cb_change_unitv)
 
     def accept_page(self):

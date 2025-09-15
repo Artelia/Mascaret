@@ -31,6 +31,8 @@ from .MobilObjectMet1Widget import ClassMobilObjectMet1Widget
 from .MobilObjectMet2Widget import ClassMobilObjectMet2Widget
 from .MobilObjectMet3Widget import ClassMobilObjectMet3Widget
 
+from ...ui.custom_control import _qt_is_checked
+
 D_TYP_LINKS = {1: "Weir",
                2: "Channel",
                3: "Syphon",
@@ -90,7 +92,7 @@ class ClassMobilObjectDialog(QDialog):
             self.bg_method.addButton(self.rb_met_3, 3)
         else:
             self.rb_met_3.hide()
-        self.bg_method.buttonClicked[int].connect(self.cur_method_changed)
+        self.bg_method.buttonClicked.connect(self.cur_method_changed)
 
         self.ui.actionB_edit.triggered.connect(self.edit_object)
 
@@ -130,7 +132,10 @@ class ClassMobilObjectDialog(QDialog):
         :param def_id (int): Optional, ID of the object to select by default
         :return: None
         """
-
+        if QT_VERSION > 5:
+            qt_check =Qt.CheckState.Checked
+        else:
+            qt_check = Qt.Checked
         mdl = QStandardItemModel()
         mdl.setColumnCount(1)
 
@@ -150,7 +155,7 @@ class ClassMobilObjectDialog(QDialog):
             new_itm.setEditable(False)
             new_itm.setCheckable(True)
             if obj_act:
-                new_itm.setCheckState(2)
+                new_itm.setCheckState(qt_check)
             self.ui.lst_obj.model().setItem(r, new_itm)
 
         self.ui.lst_obj.model().itemChanged.connect(self.cur_object_status_changed)
@@ -220,7 +225,7 @@ class ClassMobilObjectDialog(QDialog):
         :param itm (QStandardItem): The item whose status changed
         :return: None
         """
-        if itm.checkState() == 2:
+        if _qt_is_checked(itm,check_level="full"):
             cur_val = 't'
         else:
             cur_val = 'f'

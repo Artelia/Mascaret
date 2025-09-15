@@ -28,6 +28,9 @@ from qgis.gui import *
 
 from .ui.custom_control import ClassWarningBox
 
+from .ui.custom_control import _qt_is_checked
+
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassDeletrunDialog(QDialog):
     """
@@ -54,6 +57,15 @@ class ClassDeletrunDialog(QDialog):
         """
         initialisation GUI
         """
+        if QT_VERSION > 5:
+            qt_tris = Qt.ItemFlag.ItemIsAutoTristate
+            qt_item_check = Qt.ItemFlag.ItemIsUserCheckable
+            qt_ucheck = Qt.CheckState.Unchecked
+
+        else:
+            qt_tris = Qt.ItemIsAutoTristate
+            qt_item_check = Qt.ItemIsUserCheckable
+            qt_ucheck = Qt.Unchecked
         self.lst_tab = self.mdb.list_tables()
         liste_col = self.mdb.list_columns("runs")
         self.cond_com = "comments" in liste_col
@@ -84,9 +96,8 @@ class ClassDeletrunDialog(QDialog):
             for run in self.listeRuns:
                 self.parent[run] = QTreeWidgetItem(self.tree)
                 self.parent[run].setText(0, run)
-                self.parent[run].setFlags(
-                    self.parent[run].flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable
-                )
+                item_flag =  self.parent[run]
+                item_flag.setFlags(item_flag.flags() | qt_tris | qt_item_check)
 
                 lbl = QLabel("")
                 self.tree.setItemWidget(self.parent[run], 2, lbl)
@@ -96,13 +107,10 @@ class ClassDeletrunDialog(QDialog):
                 if self.cond_com:
                     for scen, date, comments in self.listeScen[run]:
                         self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                        self.child[run][scen].setFlags(
-                            self.child[run][scen].flags() | Qt.ItemIsUserCheckable
-                        )
+                        item_flag = self.child[run][scen]
+                        item_flag.setFlags(item_flag.flags()  | qt_item_check)
+                        item_flag.setCheckState(0,  qt_ucheck)
                         self.child[run][scen].setText(0, scen)
-
-                        self.child[run][scen].setCheckState(0, Qt.Unchecked)
-
                         lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
                         self.tree.setItemWidget(self.child[run][scen], 1, lbl)
 
@@ -112,12 +120,11 @@ class ClassDeletrunDialog(QDialog):
                 else:
                     for scen, date in self.listeScen[run]:
                         self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                        self.child[run][scen].setFlags(
-                            self.child[run][scen].flags() | Qt.ItemIsUserCheckable
-                        )
-                        self.child[run][scen].setText(0, scen)
+                        item_flag = self.child[run][scen]
+                        item_flag.setFlags(item_flag.flags() | qt_item_check)
+                        item_flag.setCheckState(0, qt_ucheck)
 
-                        self.child[run][scen].setCheckState(0, Qt.Unchecked)
+                        self.child[run][scen].setText(0, scen)
 
                         lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
                         self.tree.setItemWidget(self.child[run][scen], 1, lbl)
@@ -136,15 +143,15 @@ class ClassDeletrunDialog(QDialog):
         """Delete selection function"""
         selection = {}
         for run in self.listeRuns:
-            if self.parent[run].checkState(0) > 0:
+            if _qt_is_checked(self.parent[run], check_level="any"):
                 selection[run] = []
                 if self.cond_com:
                     for scen, date, comments in self.listeScen[run]:
-                        if self.child[run][scen].checkState(0) > 1:
+                        if _qt_is_checked(self.child[run][scen], check_level="partial_or_full"):
                             selection[run].append("'{}'".format(scen))
                 else:
                     for scen, date in self.listeScen[run]:
-                        if self.child[run][scen].checkState(0) > 1:
+                        if _qt_is_checked(self.child[run][scen], check_level="partial_or_full"):
                             selection[run].append("'{}'".format(scen))
 
         self.close()
