@@ -153,7 +153,7 @@ class MascPlugDialog(QMainWindow):
 
         # DB
         self.ui.actionTo_clone_Model.triggered.connect(self.clone_model)
-        self.ui.actionRefresh_Database.triggered.connect(self.conn_changed)
+        self.ui.actionRefresh_Database.triggered.connect(lambda x :self.conn_changed(old_sh=True))
         self.ui.actionCreate_New_Model.triggered.connect(self.db_create_model)
         self.ui.actionDeleteModel.triggered.connect(self.db_delete_model)
         self.ui.action_table_reconstruction_vacuum_full.triggered.connect(self.schema_vacuum)
@@ -258,7 +258,7 @@ class MascPlugDialog(QMainWindow):
         # scores
         self.ui.actionScores.triggered.connect(self.fct_scores)
 
-        # scores
+        # carto ZI
         self.ui.actionCartoZI.triggered.connect(self.fct_carto_zi)
 
         # Laws
@@ -386,10 +386,14 @@ class MascPlugDialog(QMainWindow):
             self.dockwidgetKs.close()
         QMainWindow.closeEvent(self, e)
 
-    def conn_changed(self, conn_name="toto"):
-        """change the data base"""
+    def conn_changed(self, conn_name="toto", old_sh=False):
+        """change the data base
+            old_sh : if old schemas is possible"""
         # close any existing connection to a MascPlug database
+        old_schema = None
         if self.mdb:
+            if old_sh :
+                old_schema = self.mdb.SCHEMA
             self.add_info(
                 "Closing existing connection to {0}@{1} Mascaret database".format(
                     self.mdb.dbname, self.mdb.host
@@ -456,6 +460,10 @@ class MascPlugDialog(QMainWindow):
             self.disable_actions_connection()
         else:
             self.disable_actions_model()
+
+        if old_sh:
+            if old_schema in self.mdb.list_schema():
+                self.db_load(schema_info=old_schema)
 
     def db_create_model(self):
         """Model creation"""
@@ -722,11 +730,13 @@ class MascPlugDialog(QMainWindow):
             clam = ClassMascaret(self)
         if not folder_name_path:
             folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
-
-        if clam.compress_run_file(folder_name_path, typ_compress):
-            self.add_info("Export is done.")
+        if folder_name_path:
+            if clam.compress_run_file(folder_name_path, typ_compress):
+                self.add_info("Export is done.")
+            else:
+                self.add_info("Export failed.")
         else:
-            self.add_info("Export failed.")
+            self.add_info("Export Cancel.")
 
     def options(self, widget):
         """GUI option"""
@@ -997,22 +1007,22 @@ Version : {}
 
     def fct_export_tracer_files(self):
         folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
+        if folder_name_path:
+            cl = ClassMascWQ(self, self.dossier_file_masc)
+            try:
+                # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:
+                #     #simul date
+                #     # dat1=datetime.datetime(2019, 1, 13, 13, 35, 12)
+                #     # dat2=datetime.datetime(2019, 1, 10, 13, 35, 12)
+                #     # cl.create_filemet(dossier=folder_name_path,typ_time='date',datefirst=dat2, dateend=dat1)
+                #     cl.create_filemet(dossier=folder_name_path)
+                cl.init_conc_tracer(dossier=folder_name_path)
+                cl.create_filephy(dossier=folder_name_path)
+                cl.law_tracer(dossier=folder_name_path)
 
-        cl = ClassMascWQ(self, self.dossier_file_masc)
-        try:
-            # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:
-            #     #simul date
-            #     # dat1=datetime.datetime(2019, 1, 13, 13, 35, 12)
-            #     # dat2=datetime.datetime(2019, 1, 10, 13, 35, 12)
-            #     # cl.create_filemet(dossier=folder_name_path,typ_time='date',datefirst=dat2, dateend=dat1)
-            #     cl.create_filemet(dossier=folder_name_path)
-            cl.init_conc_tracer(dossier=folder_name_path)
-            cl.create_filephy(dossier=folder_name_path)
-            cl.law_tracer(dossier=folder_name_path)
-
-            self.add_info("Export is done.")
-        except Exception:
-            self.add_info("Export failed.")
+                self.add_info("Export is done.")
+            except Exception:
+                self.add_info("Export failed.")
 
     # *******************************
     #    Structures

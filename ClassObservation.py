@@ -110,9 +110,7 @@ class ClassEventObsDialog(QDialog):
             "WHERE type = 'Q' GROUP BY code) as sta_q ON sta.code = sta_q.code "
             "ORDER BY sta.code".format(self.mdb.SCHEMA)
         )
-
         rows = self.mdb.run_query(sql, fetch=True)
-
         for i, row in enumerate(rows):
             for j, field in enumerate(row):
                 new_itm = QStandardItem()
@@ -271,7 +269,7 @@ class ClassEventObsDialog(QDialog):
             succes, recs = self.read_csv(file_name_path)
         # recs data frame
         dbls = None
-        if succes:
+        if succes :
             duplic = recs[recs.duplicated(subset=["code", "type", "date"])]
             if len(duplic):
                 txt_lst = [
@@ -305,7 +303,12 @@ class ClassEventObsDialog(QDialog):
                 self.mdb.SCHEMA, "{}, {}, {}, {}, {}", ",".join(recs.columns.tolist())
             )
             for rec in recs.values.tolist():
-                self.mdb.execute(sql.format(*rec))
+                try:
+                    self.mdb.execute(sql.format(*rec))
+                except Exception:
+                    msg = "Incorrect format for observations"
+                    ok = QMessageBox.warning(None, "WARNING:", msg)
+                    return
 
             # check if type and code existant
             dbls = self.mdb.run_query(
@@ -401,6 +404,12 @@ class ClassEventObsDialog(QDialog):
 
         self.fill_lst_stations(self.cur_station)
 
+    def safe_float(self, val, default=-99.99):
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return default
+
     def read_csv(self, data_file):
         """
         Read the default CSV  format
@@ -410,24 +419,33 @@ class ClassEventObsDialog(QDialog):
         try:
             recs = []
             for file in data_file:
-                if os.path.isfile(file):
-                    with open(file, "r") as fichier:
-                        codes = fichier.readline().strip().split(";")[1:]
-                        types = fichier.readline().strip().split(";")[1:]
-                        nom_stat = fichier.readline().strip().split(";")[1:]
-                        for ligne in fichier:
-                            temp = ligne.strip().split(";")
-                            for i, val in enumerate(temp[1:]):
-                                if val != "":
-                                    if float(val) != -99.99:
-                                        rec = list()
-                                        rec.append(self.fmt_col(codes[i]))
-                                        rec.append(self.fmt_col(self.fmt_date(temp[0])))
-                                        rec.append(self.fmt_col(types[i]))
-                                        rec.append(self.fmt_col(nom_stat[i]))
-                                        rec.append(val)
-                                        rec.append(os.path.basename(file))
-                                        recs.append(rec)
+                if not os.path.isfile(file):
+                    continue
+                with open(file, "r") as fichier:
+                    codes = fichier.readline().strip().split(";")[1:]
+                    types = fichier.readline().strip().split(";")[1:]
+                    nom_stat = fichier.readline().strip().split(";")[1:]
+                    for ligne in fichier:
+                        temp = ligne.strip().split(";")
+                        for i, val in enumerate(temp[1:]):
+                            if val == "":
+                                continue
+                            if self.safe_float(val) == -99.99:
+                                continue
+                            rec = list()
+                            rec.append(self.fmt_col(codes[i]))
+                            date = self.fmt_date(temp[0])
+                            if date:
+                                rec.append(self.fmt_col(date))
+                            else:
+                                msg = f"Error in date format for file : '{file}')"
+                                ok = QMessageBox.warning(None, "WARNING:", msg)
+                                return False, None
+                            rec.append(self.fmt_col(types[i]))
+                            rec.append(self.fmt_col(nom_stat[i]))
+                            rec.append(val)
+                            rec.append(os.path.basename(file))
+                            recs.append(rec)
             tmp = pd.DataFrame(
                 recs, columns=["code", "date", "type", "comment", "valeur", "fichier"]
             )
@@ -470,7 +488,6 @@ class ClassEventObsDialog(QDialog):
             # supprime les lignes en double
             recs = tmp.drop_duplicates()
             recs = recs.dropna()
-
             return True, recs
         except Exception as e:
             self.mgis.add_info("Loading to observations is an echec.")
@@ -483,6 +500,7 @@ class ClassEventObsDialog(QDialog):
     @staticmethod
     def fmt_date(date):
         ldate = len(date.strip())
+        val = None
         if ldate == 16:
             val = datetime.datetime.strptime(date, "%d/%m/%Y %H:%M")
         elif ldate == 19:
@@ -725,10 +743,9 @@ class ClassEventObsDialog(QDialog):
             for index in selection:
                 row = index.row() - rows[0]
                 column = index.column() - columns[0]
-                if column == 0:
+                try:
                     data = index.data().toString("dd/MM/yyyy HH:mm")
-
-                else:
+                except AttributeError:
                     data = index.data()
                 table[row][column] = data
 

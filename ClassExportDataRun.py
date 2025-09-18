@@ -732,7 +732,8 @@ class ClassExportDataRun(QDialog):
         TODO : Creation of the file
         """
         folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
-
+        if not folder_name_path:
+            return
         lst_run = self.get_list_runs()
         lst_var = self.get_mod(self.mod_lst_var)
         lst_pr = self.get_mod(self.mod_lst)

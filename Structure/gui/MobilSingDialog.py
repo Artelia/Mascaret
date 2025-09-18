@@ -652,13 +652,15 @@ class ClassMobilSingDialog(QDialog):
                     model.insertRows(0, len(rows))
                     for r, row in enumerate(rows):
                         itm = QStandardItem()
-                        itm.setData(row[0] / 1.0, 0)
+                        val = data_to_float(row[0])
+                        itm.setData(val / 1.0, 0)
                         model.setItem(r, c, itm)
                     c = 4
                 else:
                     for r, row in enumerate(rows):
                         itm = QStandardItem()
-                        itm.setData(row[0], 0)
+                        val = data_to_float(row[0])
+                        itm.setData(val, 0)
                         model.setItem(r, c, itm)
 
         self.filling_tab = False
@@ -671,12 +673,14 @@ class ClassMobilSingDialog(QDialog):
 
         col_x = self.bg_time.checkedId()
         lx = []
-        for r in range(self.ui.tab_sets.model().rowCount()):
-            lx.append(self.ui.tab_sets.model().item(r, col_x).data(0))
-
         ly = []
-        for r in range(self.ui.tab_sets.model().rowCount()):
-            ly.append(self.ui.tab_sets.model().item(r, 4).data(0))
+        model = self.ui.tab_sets.model()
+        row_count = model.rowCount()
+        for r in range(row_count):
+            item_x = model.item(r, col_x)
+            item_y = model.item(r, 4)
+            lx.append(item_x.data(0) if item_x is not None else None)
+            ly.append(item_y.data(0) if item_y is not None else None)
         data[0] = {"x": lx, "y": ly}
 
         self.graph_edit.maj_courbes(data)

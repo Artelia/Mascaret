@@ -129,6 +129,8 @@ class MassGraph:
             par_event = [par[0] for par in par_event]
 
         dossier = QFileDialog.getExistingDirectory(None, u"Choosing the export folder")
+        if not dossier :
+            return
         # check if seuil vigilance
         dict_check, all_ch, lstyp = self.check_col_outputs()
         aff_seuil = False

@@ -658,10 +658,13 @@ class ClassMobilObjectMet3Widget(QWidget):
         col_x = self.bg_time.checkedId()
         lx = []
         ly = []
-
-        for r in range(self.ui.tab_sets.model().rowCount()):
-            lx.append(self.ui.tab_sets.model().item(r, col_x).data(0))
-            ly.append(self.ui.tab_sets.model().item(r, 4).data(0))
+        model = self.ui.tab_sets.model()
+        row_count = model.rowCount()
+        for r in range(row_count):
+            item_x = model.item(r, col_x)
+            item_y = model.item(r, 4)
+            lx.append(item_x.data(0) if item_x is not None else None)
+            ly.append(item_y.data(0) if item_y is not None else None)
 
         data[0] = {"x": lx, "y": ly}
 

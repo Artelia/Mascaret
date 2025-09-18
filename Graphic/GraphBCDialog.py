@@ -304,7 +304,7 @@ class GraphBCObs(QWidget):
 
         self.graph_obj.init_curv(typ_law=type, param_law=self.dico_obs[type], date_ref=True)
 
-        if type:
+        if type and self.param["method"]:
             liste_stations = pattern.findall(self.param["method"])
 
             for cd_hydro, delta in liste_stations:
