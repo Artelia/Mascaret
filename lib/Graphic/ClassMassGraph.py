@@ -21,7 +21,7 @@ class MassGraph:
         self.typ_seuil = ['Hyellow', 'Horange', 'Hred',
                           'Qyellow', 'Qorange', 'Qred']
 
-    def check_col_outputs(self):
+    def check_col_outputs(self,  aff_seuil = False):
         """
         Checks if the columns used for massive graph plotting exist
         """
@@ -81,6 +81,29 @@ class MassGraph:
                 if seuil[0] not in lstyp:
                     lstyp.append(seuil[0])
 
+        if aff_seuil and not if_true:
+            creat_col = self.box.yes_no_q('Would you like to create the threshold columns?',
+                                          'Create columns')
+            if creat_col :
+                layer = QgsProject.instance().mapLayersByName("outputs")
+                if layer:
+                    outputs_layer = layer[0]
+                    # Commencer une édition
+                    outputs_layer.startEditing()
+                    provider = outputs_layer.dataProvider()
+                    for itseuil in dict_check.values():
+                        for col in itseuil["ref"][1]:
+                            new_field = QgsField(col, QMetaType.Type.Double, "double precision")
+                            provider.addAttributes([new_field])
+                        itseuil['bool'] = True
+                        itseuil['numref'] = 1
+                    outputs_layer.updateFields()
+                    outputs_layer.commitChanges()
+                    lstyp = ['H', 'Q']
+                    if_true = True
+                else:
+                    QMessageBox.warning(None, "Message", "'outputs' layer not found")
+
         return dict_check, if_true, lstyp
 
     def export_result_vs_obs(self, id_out):
@@ -131,14 +154,12 @@ class MassGraph:
         dossier = QFileDialog.getExistingDirectory(None, u"Choosing the export folder")
         if not dossier:
             return
-        # check if seuil vigilance
-        dict_check, all_ch, lstyp = self.check_col_outputs()
-        aff_seuil = False
-        if all_ch:
-            # aff_seuil = self.box.yes_no_q('Voulez-vous afficher vos seuils de vigilance ?',
-            #                                   'Voulez-vous afficher vos seuils de vigilance ?')
-            aff_seuil = self.box.yes_no_q('Would you like to display your warning thresholds ?',
-                                          'Would you like to display your warning thresholds ?')
+
+
+        aff_seuil = self.box.yes_no_q('Would you like to display your warning thresholds ?',
+                                      'Your warning thresholds')
+
+        dict_check, all_ch, lstyp = self.check_col_outputs(aff_seuil)
 
         if aff_seuil:
             lst_seuil = []
