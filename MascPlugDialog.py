@@ -42,40 +42,45 @@ from qgis.core import (QgsCoordinateReferenceSystem,
                        QgsApplication,
                        QgsAuthMethodConfig)
 
-from .ClassCartoZi import ClassCartoZI
-from .ClassDownload import ClassDownloadMasc
-from .ClassEditKsDialog import ClassEditKsDialog
-from .ClassExportDataRun import ClassExportDataRun
-from .ClassExportLigDialog import ClassExportLigDialog
-from .ClassExtractBedDialog import ClassExtractBedDialog
-from .ClassImportExportDialog import ClassDlgExport, ClassDlgImport, CloneTask
-from .ClassImport_res import ClassImportRes
-from .ClassMNT import ClassMNT
-from .ClassObservation import ClassEventObsDialog
-from .ClassParamExportDialog import ClassParamExportDialog
-from .ClassParameterDialog import ClassParameterDialog
-from .ClassUpdateBedDialog import (
+from .lib.ClassCartoZi import ClassCartoZI
+from .lib.ClassDownload import ClassDownloadMasc
+from .lib.ClassEditKsDialog import ClassEditKsDialog
+from .lib.ClassExportDataRun import ClassExportDataRun
+from .lib.ClassExportLigDialog import ClassExportLigDialog
+from .lib.ClassExtractBedDialog import ClassExtractBedDialog
+from .lib.ClassImportExportDialog import ClassDlgExport, ClassDlgImport, CloneTask
+from .lib.ClassImport_res import ClassImportRes
+from .lib.ClassMNT import ClassMNT
+from .lib.ClassObservation import ClassEventObsDialog
+from .lib.ClassParamExportDialog import ClassParamExportDialog
+from .lib.ClassParameterDialog import ClassParameterDialog
+from .lib.ClassUpdateBedDialog import (
     ClassUpdateBedDialog,
     update_all_bed_geometry,
     refresh_minor_bed_layer,
 )
-from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, open_file_editor
-from .Graphic.FilterDialog import ClassFilterDialog
-from .Graphic.GraphProfilDialog import IdentifyFeatureTool
-from .HydroLawsDialog import ClassHydroLawsDialog
-from .Structure.gui.MobilObjectDialog import ClassMobilObjectDialog
+from .lib.Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, open_file_editor
+from .lib.Graphic.FilterDialog import ClassFilterDialog
+from .lib.Graphic.GraphProfilDialog import IdentifyFeatureTool
+from .lib.HydroLawsDialog import ClassHydroLawsDialog
+from .lib.Structure.gui.MobilObjectDialog import ClassMobilObjectDialog
 # old
-from .Structure.gui.MobilSingDialog import ClassMobilSingDialog
+from .lib.Structure.gui.MobilSingDialog import ClassMobilSingDialog
 # # structures
-from .Structure.gui.StructureDialog import ClassStructureDialog
+from .lib.Structure.gui.StructureDialog import ClassStructureDialog
 # water quality
-from .WaterQuality.ClassMascWQ import ClassMascWQ
-from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
-from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
-from .db.Check_tab import CheckTab
-from .db.ClassMasDatabase import ClassMasDatabase
-from .model.ClassMascaret import ClassMascaret
-from .scores.ClassScoresDialog import ClassScoresDialog
+from .lib.WaterQuality.ClassMascWQ import ClassMascWQ
+from .lib.WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
+from .lib.WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
+from .lib.db.Check_tab import CheckTab
+from .lib.db.ClassMasDatabase import ClassMasDatabase
+from .lib.model.ClassMascaret import ClassMascaret
+from .lib.scores.ClassScoresDialog import ClassScoresDialog
+from .lib.ClassDeletshDialog import ClassDeletshDialog
+from .lib.ClassDeletrunDialog import ClassDeletrunDialog
+from .lib.ClassSettingsDialog import ClassSettingsDialog
+from .lib.ClassUpdatePk import ClassUpdatePk
+
 from .ui.custom_control import ClassWarningBox
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
@@ -132,10 +137,8 @@ class MascPlugDialog(QMainWindow):
 
         # self.pathPostgres = self.masplug_path
         # emplacement objet sql
-        self.dossier_sql = os.path.join(os.path.join(self.masplugPath, "db"), "sql")
-        # style des couches
-        self.dossier_style = os.path.join(os.path.join(self.masplugPath, "db"), "style")
-        self.dossier_struct = os.path.join(os.path.join(self.masplugPath, "Structure"), "Abacus")
+        self.dossier_sql = os.path.join(self.masplugPath, "sql")
+        self.dossier_struct = os.path.join(self.masplugPath, "lib", "Structure", "Abacus")
         self.repProject = None
         self.task_mas = None
         self.task_exp = None
@@ -516,8 +519,6 @@ class MascPlugDialog(QMainWindow):
 
     def db_delete_model(self):
         """Model delete"""
-        from .ClassDeletshDialog import ClassDeletshDialog
-
         dlg = ClassDeletshDialog(self, self.iface)
         if QT_VERSION > 5:
             dlg.exec()  # PyQt6
@@ -753,7 +754,7 @@ class MascPlugDialog(QMainWindow):
 
     def del_run(self):
         """Delete run of curent model"""
-        from .ClassDeletrunDialog import ClassDeletrunDialog
+
 
         dlg = ClassDeletrunDialog(self, self.iface)
         if QT_VERSION > 5:
@@ -780,7 +781,6 @@ class MascPlugDialog(QMainWindow):
 
     def options(self, widget):
         """GUI option"""
-        from .ClassSettingsDialog import ClassSettingsDialog
 
         dlg = ClassSettingsDialog(self)
         if QT_VERSION > 5:
@@ -1188,9 +1188,6 @@ Version : {}
         # self.chkt.debug_update_vers_meta(version="5.1.5")
         # cl.creat_file_no_keep_break()
         # self.chkt.update_version('620')
-        # from .Structure.ClassLinkFGParam import ClassLinkFGParam
-        # self.cl_param = ClassLinkFGParam()
-        # self.cl_param.get_param(parent=self, file=)
         pass
 
     def update_ks_mesh_planim(self):
@@ -1218,8 +1215,6 @@ Version : {}
         update the abscissa
         :return:
         """
-        from .ClassUpdatePk import ClassUpdatePk
-
         dlg = ClassUpdatePk(self, self.iface)
         if QT_VERSION > 5:
             dlg.exec()  # PyQt6
