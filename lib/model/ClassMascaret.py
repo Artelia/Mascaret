@@ -56,8 +56,8 @@ class ClassMascaret:
 
         if not os.path.isdir(self.dossier_file_masc):
             os.mkdir(self.dossier_file_masc)
-        self.dossier_file_masc_ori = os.path.join(self.mgis.masplugPath, "mascaret_ori")
-        self.dossierFile_bin = os.path.join(self.mgis.masplugPath, "bin")
+        self.masc_template_dir = os.path.join(self.mgis.masplugPath, 'template_file', "mascaret")
+        self.bin_dir = os.path.join(self.mgis.masplugPath, "bin")
         self.baseName = "mascaret"
         self.box = ClassWarningBox()
         # state list
@@ -431,18 +431,18 @@ class ClassMascaret:
             except (PermissionError, FileNotFoundError) as e:
                 self.mgis.add_info(f"Impossible to delete  {files[i]} : {e}")
 
-        copy_dir_to_dir(self.dossier_file_masc_ori, self.dossier_file_masc)
+        copy_dir_to_dir(self.masc_template_dir, self.dossier_file_masc)
         if not self.check_exe():
             self.mgis.download_bin()
 
-        copy_dir_to_dir(self.dossierFile_bin, self.dossier_file_masc)
+        copy_dir_to_dir(self.bin_dir, self.dossier_file_masc)
 
     def check_exe(self):
         """
         Check if exe file exists
         :return:
         """
-        if not os.path.isdir(self.dossierFile_bin):
+        if not os.path.isdir(self.bin_dir):
             return False
         test = sys.platform
         soft = None
@@ -451,7 +451,7 @@ class ClassMascaret:
         elif test == "win32":
             soft = "mascaret.exe"
 
-        if not os.path.isfile(os.path.join(self.dossierFile_bin, soft)):
+        if not os.path.isfile(os.path.join(self.bin_dir, soft)):
             return False
 
         return True

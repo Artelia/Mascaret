@@ -796,7 +796,7 @@ class MascPlugDialog(QMainWindow):
         """read Option"""
         s_file = os.path.join(self.masplugPath, "settings.json")
         if not os.path.isfile(s_file) or defaults:
-            s_file = os.path.join(self.masplugPath, "default_settings.json")
+            s_file = os.path.join(self.masplugPath, 'template_file', "default_settings.json")
         with open(s_file, "r") as f:
             self.opts = json.load(f)
         for group, options in self.opts.items():
