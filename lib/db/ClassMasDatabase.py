@@ -1210,32 +1210,33 @@ $BODY$
         err = self.run_query(sql)
         return err
 
-    def insert_res(self, table, liste_value, colonnes):
-        var = ",".join(colonnes)
-        temp = []
-        for k in colonnes:
-            temp.append("%s")
-        valeurs = "({})".format(",".join(temp))
+    def insert_res(self, table, liste_value, colonnes, batch_size=1000000):
+        """Insert multiple rows efficiently.
+         Args:
+            table: Table name
+            liste_value: List of value sequences to insert
+            colonnes: List of column names
+            batch_size: Number of rows to insert per batch
 
-        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA, table, var, valeurs)
-        self.run_query(sql, many=True, list_many=liste_value)
+        """
+        if not liste_value:
+            return
 
-    def new_insert_res(self, table, values, col_tab, be_quiet=False):
-        try:
-            if self.con:
-                file = self.buff_file(values)
-                cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-                cur.copy_from(file, "{0}.{1}".format(self.SCHEMA, table), columns=col_tab)
-                self.con.commit()
-                del file
+        if not colonnes:
+            raise ValueError("Column list cannot be empty")
 
-        except Exception as e:
-            self.con.rollback()
-            if be_quiet is False:
-                txt = "{}".format(repr(e))
-                self.mgis.add_info(txt)
-            else:
-                pass
+        # Construction optimisée en une ligne
+        placeholders = f"({','.join(['%s'] * len(colonnes))})"
+        columns_str = ','.join(colonnes)
+
+        sql = (
+            f"INSERT INTO {self.SCHEMA}.{table} "
+            f"({columns_str}) VALUES {placeholders};"
+        )
+        for i in range(0, len(liste_value), batch_size):
+            batch = liste_value[i:i + batch_size]
+            self.run_query(sql, many=True, list_many=batch)
+
 
     def buff_file(self, liste):
         txt = ""

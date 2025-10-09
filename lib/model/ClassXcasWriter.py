@@ -36,6 +36,8 @@ from lib.model.xcas_writer.xcas_wq import add_wq_xcas
 
 class ClassXcasWriter:
 
+    XCAS_FILE = "mascaret.xcas"
+
     def __init__(self, mdb, folder, cond_api, mess=None):
         """
         :param mdb: Database object providing select method.
@@ -53,7 +55,7 @@ class ClassXcasWriter:
         self.dico_loi = None
         self.dico_loi_struct = None
 
-    def creer_xcas(self, noyau, filename="mascaret.xcas", up_param=None):
+    def creer_xcas(self, noyau, filename=None, up_param=None):
         """
         Create the xcas file for the model.
         :param noyau (str): Kernel name
@@ -61,6 +63,8 @@ class ClassXcasWriter:
         :param up_param (dict): Optional parameters modifier
         :return: (dict, dict) dict_lois, dico_loi_struct
         """
+        if not filename:
+            filename = self.XCAS_FILE
         dict_lois = {}
         # try:
         fichier_sortie = os.path.join(self.folder, filename)

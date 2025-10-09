@@ -25,11 +25,15 @@ from lib.model.utils_model_file import around, backup_file
 
 
 class ClassGeoWriter:
+
+    GEO_EXTENSION = '.geo'
+    CASIER_EXTENSION = '.casier'
+
     def __init__(self, mdb, folder, geo_filename, mess=None):
         self.mdb = mdb
         self.mess = mess
         self.geo_filename = geo_filename
-        self.folder = self.folder
+        self.folder = folder
 
     def creer_geo(self):
         """
@@ -37,8 +41,8 @@ class ClassGeoWriter:
         :return: None
         """
         try:
-            geo_path = os.path.join(self.folder, f'{self.geo_filename}.geo')
-            backup_file(geo_path, ".geo")
+            geo_path = os.path.join(self.folder, f'{self.geo_filename}{self.GEO_EXTENSION}')
+            backup_file(geo_path, self.GEO_EXTENSION)
 
             requete = self.mdb.select("profiles", "active", "abscissa")
 
@@ -80,8 +84,8 @@ class ClassGeoWriter:
         :return: None
         """
         try:
-            geo_path = os.path.join(self.folder, f'{self.geo_filename}.geo')
-            backup_file(geo_path, ".geo")
+            geo_path = os.path.join(self.folder, f'{self.geo_filename}{self.GEO_EXTENSION}')
+            backup_file(geo_path, self.GEO_EXTENSION)
 
             requete = self.mdb.select("profiles", "active", "abscissa")
 
@@ -185,8 +189,8 @@ class ClassGeoWriter:
         :return: None
         """
         try:
-            geo_path = os.path.join(self.folder, f'{self.geo_filename}.casier')
-            backup_file(geo_path, ".casier")
+            geo_path = os.path.join(self.folder, f'{self.geo_filename}{self.CASIER_EXTENSION}')
+            backup_file(geo_path, self.CASIER_EXTENSION)
 
             casiers = self.mdb.select("basins", "active ORDER BY basinnum")
             lst_err = []
