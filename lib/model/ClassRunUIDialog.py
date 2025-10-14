@@ -42,11 +42,11 @@ QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 class ClassRunUIDialog(QDialog):
 
 
-    def __init__(self, mgis, kernel, cldr):
+    def __init__(self, mgis, kernel, obj_model):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
-        self.cldr = cldr
+        self.obj_model = obj_model
         self.kernel = kernel
         self.lst_event = []
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_run.ui"), self)
@@ -61,13 +61,13 @@ class ClassRunUIDialog(QDialog):
                         }
         self.le_run.setText(self.dkernel[self.kernel])
 
-        self.cldr.fill_drun(self.kernel, self.dkernel[self.kernel])
-        self.drun = self.cldr.get_drun()
+        self.obj_model.fill_drun(self.kernel, self.dkernel[self.kernel])
+        self.drun = self.obj_model.get_drun()
 
         self.without_init_version = True
 
         if self.drun['event']:
-            d_event = self.cldr.get_events()
+            d_event = self.obj_model.get_events()
             if not d_event:
                 self.bt_running.setEnable(False)
             self.lst_event = d_event['name']
@@ -177,7 +177,7 @@ class ClassRunUIDialog(QDialog):
     def accept_run(self):
         """Collect data from all rows and print as list of dictionaries."""
 
-        self.cldr.set_drun({"name_run": self._fmt_txt(self.le_run.text())})
+        self.obj_model.set_drun({"name_run": self._fmt_txt(self.le_run.text())})
 
         data = []
         for row in range(self.table.rowCount()):
@@ -201,7 +201,7 @@ class ClassRunUIDialog(QDialog):
 
             data.append(row_data)
 
-        self.cldr.fill_lscenario(data)
+        self.obj_model.fill_lscenario(data)
         self.close()
 
 

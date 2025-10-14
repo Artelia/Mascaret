@@ -1198,27 +1198,27 @@ Version : {}
         # self.chkt.debug_update_vers_meta(version="5.1.5")
         # cl.creat_file_no_keep_break()
         # self.chkt.update_version('620')
-        cldr = ClassDictRun(self)
+        obj_model = ClassDictRun(self)
         case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
         if ok:
             kernel = self.Klist[self.listeState.index(case)]
             if self.DEBUG:
                 self.add_info(f"Kernel {kernel}")
             from .lib.model.ClassRunUIDialog import ClassRunUIDialog
-            dlg = ClassRunUIDialog(self, kernel, cldr)
+            dlg = ClassRunUIDialog(self, kernel, obj_model)
             if QT_VERSION > 5:
                 dlg.exec()  # PyQt6
             else:
                 dlg.exec_()  # PyQt5
 
             from pprint import pprint
-            pprint(cldr.get_dmodel())
+            pprint(obj_model.get_dmodel())
             # run, ok = QInputDialog.getText(
             #     QWidget(), "Run name", "Please input a run name :", text=case
             # )
             # run = run.replace("'", " ").replace('"', " ").strip()
             # if ok:
-            #     clam = ClassMascaret2(self)
+            #     clam = ClassMascaret2(self,model_obj)
             #     clam.fill_dmodel(self.Klist[self.listeState.index(case)], run)
             #     clam.generate_models_folders()
 
