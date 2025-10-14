@@ -25,7 +25,7 @@ import re
 
 from lib.Function import del_symbol
 from lib.HydroLawsDialog import dico_typ_law
-from lib.model.utils_model_file import backup_file
+from lib.model.Fct_model_file import backup_file
 
 
 class ClassBCWriter:

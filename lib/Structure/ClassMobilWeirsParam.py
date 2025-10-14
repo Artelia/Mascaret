@@ -366,10 +366,6 @@ class ClassMobilWeirsParam(object):
         if db:
             sql = f"SELECT EXISTS (SELECT 1 FROM {db.SCHEMA}.weirs WHERE active_mob = TRUE and active= TRUE );"
             row = db.run_query(sql, fetch=True)
-            if row:
-                return True
-            return False
+            return bool(row and row[0][0])
         else:
-            if len(self.param_fg.keys()) > 0:
-                return True
-            return False
+            return bool(self.param_fg)

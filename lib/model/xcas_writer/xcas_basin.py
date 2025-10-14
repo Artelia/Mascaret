@@ -20,7 +20,7 @@ email                :
 """
 from xml.etree.ElementTree import SubElement
 
-from lib.model.utils_model_file import fmt_sans_none
+from lib.model.Fct_model_file import fmt_sans_none
 
 
 def fmt_plani_casier(liste, mess=None):

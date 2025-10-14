@@ -24,7 +24,7 @@ from xml.etree.ElementTree import parse as et_parse
 
 from lib.Function import del_symbol
 from lib.Function import str2bool
-from lib.model.utils_model_file import (
+from lib.model.Fct_model_file import (
     fmt,
     check_none,
     indent,

@@ -83,6 +83,10 @@ from .lib.ClassUpdatePk import ClassUpdatePk
 
 from .ui.custom_control import ClassWarningBox
 
+from .lib.model.ClassMascaret2 import ClassMascaret2
+from .lib.model.ClassDictRun import ClassDictRun
+
+
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class MascPlugDialog(QMainWindow):
@@ -292,19 +296,25 @@ class MascPlugDialog(QMainWindow):
         self.ui.action_create_lig_file.triggered.connect(self.creat_lig)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(False)
+        self.ui.actionTest.setVisible(True)
 
         self.ui.actionReadLisFile.triggered.connect(self.read_lis_file)
 
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(self.import_old_model_dgl)
 
-    def add_info(self, text, dbg=False):
+    def add_info(self, text, dbg=False, box=False, btype='INFO'):
         if dbg:
             if self.DEBUG:
                 self.ui.text_edit.append(text)
         else:
             self.ui.text_edit.append(text)
+
+        if box:
+            if btype == 'CRITICAL':
+                self.box.critic(text, title="Critical Error")
+            else:
+                self.box.info(text, title="Warning")
 
     def update_default_crs(self):
         self.crs = self.ui.crsWidget.crs()
@@ -866,8 +876,8 @@ class MascPlugDialog(QMainWindow):
         :return:
         """
         if self.task_imp:
-            self.box.info("The export is not running,\n" " because the previous import running yet")
-            self.add_info("The import is not running\n")
+            self.add_info("The import is not running\nbecause the previous import running yet",
+                          box=True)
 
             return
 
@@ -1188,6 +1198,30 @@ Version : {}
         # self.chkt.debug_update_vers_meta(version="5.1.5")
         # cl.creat_file_no_keep_break()
         # self.chkt.update_version('620')
+        cldr = ClassDictRun(self)
+        case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
+        if ok:
+            kernel = self.Klist[self.listeState.index(case)]
+            if self.DEBUG:
+                self.add_info(f"Kernel {kernel}")
+            from .lib.model.ClassRunUIDialog import ClassRunUIDialog
+            dlg = ClassRunUIDialog(self, kernel, cldr)
+            if QT_VERSION > 5:
+                dlg.exec()  # PyQt6
+            else:
+                dlg.exec_()  # PyQt5
+
+            from pprint import pprint
+            pprint(cldr.get_dmodel())
+            # run, ok = QInputDialog.getText(
+            #     QWidget(), "Run name", "Please input a run name :", text=case
+            # )
+            # run = run.replace("'", " ").replace('"', " ").strip()
+            # if ok:
+            #     clam = ClassMascaret2(self)
+            #     clam.fill_dmodel(self.Klist[self.listeState.index(case)], run)
+            #     clam.generate_models_folders()
+
         pass
 
     def update_ks_mesh_planim(self):
@@ -1393,8 +1427,9 @@ Version : {}
             # openfile
             open_file_editor(file_path)
         else:
-            self.box.info(
-                "There is no listing file available."
+
+            self.add_info(
+                "There is no listing file available.", box=True
             )
 
     def mass_graph_hq(self):

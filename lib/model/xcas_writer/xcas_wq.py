@@ -20,7 +20,7 @@ email                :
 """
 from xml.etree.ElementTree import SubElement
 
-from lib.model.utils_model_file import fmt, check_none
+from lib.model.Fct_model_file import fmt, check_none
 from lib.Function import del_symbol
 from lib.Function import str2bool
 

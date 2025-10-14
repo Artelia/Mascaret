@@ -74,8 +74,11 @@ class ClassWarningBox:
         else:
             return False
 
-    def info(self, msg, title=""):
+    def info(self, msg, title="Warning"):
         QMessageBox.warning(None, title, msg)
+
+    def critic(self, msg, title="Critical Error"):
+        QMessageBox.critical(None, title, msg)
 
 
 # *******************************************************************************
