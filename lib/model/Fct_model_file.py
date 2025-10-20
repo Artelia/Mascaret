@@ -20,6 +20,7 @@ email                :
 import os
 import shutil
 import traceback
+from ...ui.custom_control import ClassWarningBox
 
 def around(x):
     """
@@ -110,25 +111,4 @@ def typ_struct(meth):
         return None
 
 
-def clear_folder(folder_path):
-    """
-    Deletes all files and subdirectories inside the specified folder.
 
-    Args:
-        folder_path (str): Absolute or relative path to the folder to be cleaned.
-    """
-    if not os.path.isdir(folder_path):
-        return f"Folder not found : {folder_path}"
-
-    for item in os.listdir(folder_path):
-        item_path = os.path.join(folder_path, item)
-        try:
-            if os.path.isfile(item_path) or os.path.islink(item_path):
-                os.remove(item_path)
-            elif os.path.isdir(item_path):
-                shutil.rmtree(item_path)
-        except PermissionError as pe:
-            return f"Permission denied while deleting: {item_path}"
-        except Exception as e:
-            return f"Error while deleting: {item_path}\n{str(e)}"
-    return  ''

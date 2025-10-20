@@ -22,16 +22,15 @@ import os
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
-from lib.Function import del_symbol
-from lib.Function import str2bool
-from lib.model.Fct_model_file import (
+from ..Function import del_symbol, str2bool
+from .Fct_model_file import (
     fmt,
     check_none,
     indent,
     backup_file)
-from lib.model.xcas_writer.xcas_basin import add_basin_xcas
-from lib.model.xcas_writer.xcas_seuil_link_mob import modif_seuil, modif_link
-from lib.model.xcas_writer.xcas_wq import add_wq_xcas
+from .xcas_writer.xcas_basin import add_basin_xcas
+from .xcas_writer.xcas_seuil_link_mob import modif_seuil, modif_link
+from .xcas_writer.xcas_wq import add_wq_xcas
 
 
 class ClassXcasWriter:
@@ -54,6 +53,10 @@ class ClassXcasWriter:
         self.elem_xcas = None
         self.dico_loi = None
         self.dico_loi_struct = None
+
+    def set_folder(self,folder):
+        if os.path.isdir(folder):
+            self.folder = folder
 
     def creer_xcas(self, noyau, filename=None, up_param=None):
         """
@@ -635,7 +638,8 @@ class ClassXcasWriter:
         resultats.find("stockage").find("option").text = "1"
         # tracers
         parametres_tracer = param_cas.find("parametresTraceur")
-        parametres_tracer.find("presenceTraceurs").text = "false"
+        if parametres_tracer:
+            parametres_tracer.find("presenceTraceurs").text = "false"
 
         indent(fichier_cas)
         arbre = ElementTree(fichier_cas)

@@ -28,6 +28,7 @@ from qgis.gui import *
 
 from .Function import del_accent, del_symbolv2
 from .model.ClassCreatFilesModels import ClassCreatFilesModels
+from .model.ClassBCWriter import ClassBCWriter
 
 
 class ClassExportLigDialog(QDialog):
@@ -44,8 +45,8 @@ class ClassExportLigDialog(QDialog):
         self.bt_rep.clicked.connect(self.path_search)
         self.bt_ok.accepted.connect(self.accept_dialog)
         self.bt_ok.rejected.connect(self.reject)
-
-        self.clfile = ClassCreatFilesModels(self.mdb, self.mgis.dossier_file_masc, self.mgis.cond_api, self.mgis.DEBUG)
+        self.clfile = ClassBCWriter(self.mdb, self.mgis.dossier_file_masc)
+        # self.clfile = ClassCreatFilesModels(self.mdb, self.mgis.dossier_file_masc, self.mgis.cond_api, self.mgis.DEBUG)
 
     def init_gui(self):
         """
@@ -140,7 +141,8 @@ class ClassExportLigDialog(QDialog):
                 self, "WARNING", "Specify the name file."
             )
             return
-
-        self.clfile.opt_to_lig(id_run, basename, path_file=path_file)
+        self.clfile.set_folder(path_file)
+        self.clfile.opt_to_lig(id_run, lig_filename=f'{basename}.lig')
+        # self.clfile.opt_to_lig(id_run, basename, path_file=path_file)
         self.mgis.add_info('The exportation of the .lig file is done')
         self.close()

@@ -23,7 +23,7 @@ import os
 import posixpath
 
 from qgis.PyQt.QtCore import Qt, QSettings, qVersion
-from qgis.PyQt.QtGui import QIcon,  QAction
+from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
                         QMainWindow, 
                         QMenu,
@@ -33,7 +33,8 @@ from qgis.PyQt.QtWidgets import (
                         QMessageBox,
                         QFileDialog,
                         QApplication,
-                        QWidget
+                        QWidget,
+                        QAction
                     )
 from qgis.PyQt.uic import loadUi
 from qgis.core import (QgsCoordinateReferenceSystem,
@@ -41,6 +42,7 @@ from qgis.core import (QgsCoordinateReferenceSystem,
                        QgsRasterLayer,
                        QgsApplication,
                        QgsAuthMethodConfig)
+
 
 from .lib.ClassCartoZi import ClassCartoZI
 from .lib.ClassDownload import ClassDownloadMasc
@@ -83,8 +85,9 @@ from .lib.ClassUpdatePk import ClassUpdatePk
 
 from .ui.custom_control import ClassWarningBox
 
-from .lib.model.ClassMascaret2 import ClassMascaret2
+from .lib.model.ClassInitializeModel import ClassInitializeModel
 from .lib.model.ClassDictRun import ClassDictRun
+from .lib.model.ClassRunUIDialog import ClassRunUIDialog
 
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
@@ -1198,29 +1201,29 @@ Version : {}
         # self.chkt.debug_update_vers_meta(version="5.1.5")
         # cl.creat_file_no_keep_break()
         # self.chkt.update_version('620')
+
         obj_model = ClassDictRun(self)
         case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
-        if ok:
-            kernel = self.Klist[self.listeState.index(case)]
-            if self.DEBUG:
-                self.add_info(f"Kernel {kernel}")
-            from .lib.model.ClassRunUIDialog import ClassRunUIDialog
-            dlg = ClassRunUIDialog(self, kernel, obj_model)
-            if QT_VERSION > 5:
-                dlg.exec()  # PyQt6
-            else:
-                dlg.exec_()  # PyQt5
+        if not ok:
+            return
 
-            from pprint import pprint
-            pprint(obj_model.get_dmodel())
-            # run, ok = QInputDialog.getText(
-            #     QWidget(), "Run name", "Please input a run name :", text=case
-            # )
-            # run = run.replace("'", " ").replace('"', " ").strip()
-            # if ok:
-            #     clam = ClassMascaret2(self,model_obj)
-            #     clam.fill_dmodel(self.Klist[self.listeState.index(case)], run)
-            #     clam.generate_models_folders()
+        kernel = self.Klist[self.listeState.index(case)]
+        if self.DEBUG:
+            self.add_info(f"Kernel {kernel}")
+
+
+        dlg = ClassRunUIDialog(self, kernel, obj_model)
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
+
+        from pprint import pprint
+        pprint(obj_model.get_dmodel())
+
+        clam = ClassInitializeModel(self, obj_model)
+        clam.main()
+
 
         pass
 

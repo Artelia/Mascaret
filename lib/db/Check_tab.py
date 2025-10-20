@@ -601,7 +601,6 @@ class CheckTab:
 
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-
             klass = getattr(module, class_name)
             method = getattr(klass(self), method_name)
             return method()

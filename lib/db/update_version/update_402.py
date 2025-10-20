@@ -17,8 +17,8 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-from HydroLawsDialog import dico_typ_law
-from db import MasObject as Maso
+from lib.HydroLawsDialog import dico_typ_law
+from lib.db import MasObject as Maso
 
 
 class ClassUpdate402:

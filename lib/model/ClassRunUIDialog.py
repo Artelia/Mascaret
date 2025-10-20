@@ -20,7 +20,7 @@ email                :
 """
 import os
 
-from PyQt5.QtWidgets import QLineEdit, QLabel
+from qgis.PyQt.QtWidgets import QLineEdit, QLabel
 from qgis.PyQt.QtCore import qVersion, pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QDialog,
@@ -35,6 +35,7 @@ from qgis.PyQt.QtWidgets import (
     QHeaderView
 )
 from qgis.PyQt.uic import loadUi
+from ..Function import del_accent, del_symbolv2
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
@@ -49,10 +50,12 @@ class ClassRunUIDialog(QDialog):
         self.obj_model = obj_model
         self.kernel = kernel
         self.lst_event = []
+
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_run.ui"), self)
         self.setWindowTitle("Running Model")
 
         self.bt_running.clicked.connect(self.accept_run)
+        self.bt_path.clicked.connect(self.path_search)
 
         # state list
         self.dkernel = {"steady": "Steady",
@@ -63,6 +66,9 @@ class ClassRunUIDialog(QDialog):
 
         self.obj_model.fill_drun(self.kernel, self.dkernel[self.kernel])
         self.drun = self.obj_model.get_drun()
+        self.default_run_path = self.obj_model.dmodel["general"]["path_runs"]
+        self.run_path = self.default_run_path
+        self.lbl_path.setText(self.run_path)
 
         self.without_init_version = True
 
@@ -76,7 +82,7 @@ class ClassRunUIDialog(QDialog):
         else:
             self.nb_row = 1
 
-        if kernel != 'steady' and (not self.drun["autoInit"] and self.drun["ligInit"]):
+        if kernel != 'steady' and (not self.drun["has_run_init"] and self.drun["ligInit"]):
             self.without_init_version = False
 
         self.setup_table()
@@ -84,6 +90,23 @@ class ClassRunUIDialog(QDialog):
     @staticmethod
     def _fmt_txt(txt):
         return txt.replace("'", "''").replace('"', " ")
+
+    @staticmethod
+    def _fmt_name(txt):
+        txt = del_accent(txt)
+        txt = del_symbolv2(txt, exclud=['_', '-'])
+        return txt
+
+    def path_search(self):
+        """search path windows"""
+        path_ = QFileDialog.getExistingDirectory(self, "Choose a folder", self.run_path)
+        if os.path.isdir(path_):
+            self.lbl_path.setText(path_)
+            self.run_path = path_
+        else:
+            self.lbl_path.setText('')
+            self.run_path = self.default_run_path
+
 
     def setup_table(self):
         """Configure table based on selected column version."""
@@ -177,14 +200,18 @@ class ClassRunUIDialog(QDialog):
     def accept_run(self):
         """Collect data from all rows and print as list of dictionaries."""
 
-        self.obj_model.set_drun({"name_run": self._fmt_txt(self.le_run.text())})
+        if self.default_run_path != self.run_path :
+            self.obj_model.set_dgeneral({"path_runs":self.run_path,
+                                         "has_new_run_path": True})
+
+        self.obj_model.set_drun({"name_run": self._fmt_name(self.le_run.text())})
 
         data = []
         for row in range(self.table.rowCount()):
             row_data = {}
-            row_data["Scenario Name"] = self._fmt_txt(self.table.cellWidget(row, 0).text())
-
-            if self.without_init_version == 2:
+            row_data["Scenario Name"] = self._fmt_name(self.table.cellWidget(row, 0).text())
+            print(self.without_init_version)
+            if self.without_init_version :
                 row_data["Comment"] = self._fmt_txt(self.table.cellWidget(row, 1).text())
             else:
                 lig_widget = self.table.cellWidget(row, 3)

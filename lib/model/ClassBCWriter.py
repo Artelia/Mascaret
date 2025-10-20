@@ -23,9 +23,9 @@ import json
 import os
 import re
 
-from lib.Function import del_symbol
-from lib.HydroLawsDialog import dico_typ_law
-from lib.model.Fct_model_file import backup_file
+from ..Function import del_symbol
+from ..HydroLawsDialog import dico_typ_law
+from .Fct_model_file import backup_file
 
 
 class ClassBCWriter:
@@ -36,6 +36,10 @@ class ClassBCWriter:
         self.mdb = mdb
         self.mess = mess
         self.folder = folder
+
+    def set_folder(self,folder):
+        if os.path.isdir(folder):
+            self.folder = folder
 
     # ************   LAW FILE   ********************************************************************
     def creer_loi(self, nom, tab, type_, init=False):
@@ -122,7 +126,7 @@ class ClassBCWriter:
                     fich_sortie.write(chaine.format(tps, resultat))
         return somme, valeur_init
 
-    def _get_obs_to_loi(self, obs_stations, liste_stations, type_, date_debut, date_fin, nom):
+    def _get_obs_to_loi(self, liste_stations, type_, date_debut, date_fin, nom):
         err_critic = False
         obs_stations = {}
         for cd_hydro, delta in liste_stations:
@@ -207,7 +211,9 @@ class ClassBCWriter:
         :return: par (dict): Updated parameters dictionary
         """
         # pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
-        pattern = re.compile(r"(\\w+)\\[t([+-][0-9]+)?\\]")
+        # pattern = re.compile(r"(\\w+)\\[t([+-][0-9]+)?\\]")
+        # decimal
+        pattern = re.compile(r"(\w+)\[t([+-]?\d+(?:\.\d+)?)?\]")
         somme = 0
 
         for nom, loi in dict_lois.items():
@@ -222,13 +228,13 @@ class ClassBCWriter:
 
             liste_stations = pattern.findall(loi["formule"])
             # get observation each station
-            obs_stations, err_critic = self._get_obs_to_loi(obs_stations, liste_stations, type_, date_debut, date_fin,
-                                                            nom)
+            obs_stations, err_critic = self._get_obs_to_loi(liste_stations, type_, date_debut, date_fin, nom)
             if err_critic:
                 return
                 # ref dates and station (first station)
             ref_station, ref_delta = liste_stations[0]
-            ref_delta_h = int(ref_delta) if ref_delta else 0
+            #ref_delta_h = int(ref_delta) if ref_delta else 0
+            ref_delta_h = float(ref_delta) if ref_delta else 0
             ref_dates = [d - datetime.timedelta(hours=ref_delta_h) for d in obs_stations[ref_station]["date"]]
             somme_part, valeur_init = self._write_obs_loi(nom, type_, loi, liste_stations, obs_stations, pattern,
                                                           ref_dates,
@@ -418,6 +424,7 @@ class ClassBCWriter:
 
         return par
 
+
     # ************   LIG FILE   ********************************************************************
 
     def opt_to_lig(self, id_run, lig_filename='mascaret.lig'):
@@ -427,7 +434,7 @@ class ClassBCWriter:
         :param base_namefiles (str): base name for the lig file
         :return: None"""
 
-        result = self.get_for_lig(self.mdb, id_run)
+        result = self.get_for_lig(id_run)
         if not result:
             return None
 
@@ -642,3 +649,21 @@ class ClassBCWriter:
         if param:
             with open(name, "w") as file:
                 json.dump(param, file)
+
+
+    def check_apport(self):
+        """checks if the inflow is before the first mesh."""
+        #
+        apports = self.mdb.select("lateral_inflows", "active", "abscissa")
+        for i, numb in enumerate(apports["branchnum"]):
+            branches = self.mdb.select_one(
+                "visu_branchs",
+                "branchnum={}".format(numb),
+                "abs_start",
+                list_var=["abs_start", "mesh"],
+            )
+            comp = branches["abs_start"] + branches["mesh"]
+            if apports["abscissa"][i] < comp:
+                if self.mess:
+                    err = f"{ apports['name'][i]} is located before the first mesh. Ignore in the model"
+                    self.mess.add_mess(f"lInflowPos_{apports['name'][i]}", "warning",  err)

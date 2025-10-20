@@ -56,9 +56,10 @@ class ClassDictRun:
             "general": {
                 "path_runs": run_folder,
                 "binary_path": os.path.join(self.mgis.masplugPath, "bin"),
-                "template_path": os.path.join(self.mgis.masplugPath, "template_file"),
+                "template_path": os.path.join(self.mgis.masplugPath, "template_file", 'mascaret'),
                 "api": main.cond_api,
-                'dbg': main.DEBUG
+                'dbg': main.DEBUG,
+                "has_new_run_path": False,
             }
         }
 
@@ -70,6 +71,15 @@ class ClassDictRun:
             return self.dmodel['general']
         return {}
 
+    def set_dgeneral(self, dict):
+        if self.dmodel.get('general'):
+            for key, item in dict.items():
+                if  self.dmodel['general'].get(key):
+                    self.dmodel['general'][key] = item
+                else:
+                    self.dmodel['general'].update({key:item})
+
+
     def get_drun(self):
         if self.dmodel.get('run'):
             return self.dmodel['run']
@@ -80,6 +90,26 @@ class ClassDictRun:
             return self.dmodel['scenario']
         return []
 
+    def del_lscenar(self, index):
+        if self.dmodel.get('scenario'):
+            if isinstance(index, list):
+                for id in index:
+                    self.dmodel['scenario'].pop(id)
+            elif isinstance(index, int):
+                self.dmodel['scenario'].pop(id)
+
+    def get_scenario(self, scen):
+        if not self.dmodel.get('scenario'):
+            return {}
+        for dico in self.dmodel['scenario']:
+            if dico.get("name") == scen:
+                return  dico
+
+    def get_list_name_scenario(self):
+        if not self.dmodel.get('scenario'):
+            return []
+        return [dico["name"] for dico in self.dmodel['scenario']]
+
     def fill_drun(self, kernel, name_run):
         # Retrieve model parameters
         par = self.get_param_model(kernel)
@@ -89,13 +119,14 @@ class ClassDictRun:
             "name_run": name_run,
             "kernel": kernel,
             "event": par["evenement"],
-            "casier": par["presenceCasiers"],
+            "has_casier": par["presenceCasiers"] if kernel == "unsteady" else False,
             "repriseCalcul": par["repriseCalcul"],
-            "link_fg": self.cl_lk.fg_actif_lk(self.mdb) if par["presenceCasiers"] else False,
-            "weir_fg": self.cl_w.fg_actif_weirs(self.mdb),
-            "tracer": par["presenceTraceurs"],
+            "has_link_fg": self.cl_lk.fg_actif_lk(self.mdb) if par["presenceCasiers"] else False,
+            "has_weir_fg": self.cl_w.fg_actif_weirs(self.mdb) if kernel == "unsteady" else False,
+            "has_tracer": par["presenceTraceurs"],
             "ligInit": par["LigEauInit"],
-            "autoInit": par["initialisationAuto"]
+            "has_run_init": par["initialisationAuto"],
+            'has_assimilation': False
         }
 
     def set_drun(self, new_items):
@@ -232,6 +263,8 @@ class ClassDictRun:
     def creat_lscenar(self, data):
         scenarios = []
         drun = self.get_drun()
+        dgeneral = self.get_dgeneral()
+        path_run = dgeneral["path_runs"]
         if not drun:
             return scenarios
         # Ask user for scenario name
@@ -240,20 +273,30 @@ class ClassDictRun:
             if not self.check_scenar(scen_name, drun["name_run"]):
                 self.mgis.add_info(f"Simulation canceled: scenario '{scen_name}' already exists.")
                 continue
+
             d_scen = {
                 "name": scen_name,
                 "comments": scenar["Comment"],
-                "scenar_init": (scenar["Run init"], scenar["Scenario init"]) if scenar["Run init"] else None,
-                "lig_file": scenar["lig file"],
+                "path_instance": os.path.join(path_run, f"{scen_name}")
             }
+            if scenar.get("Run init"):
+                d_scen.update(
+                    {"scenar_init": (scenar["Run init"], scenar["Scenario init"]) if scenar["Run init"] else None,
+                     "lig_file": scenar["lig file"],
+                     }
+                )
+            # When events
             if drun['event']:
                 d_event = self.get_events()
                 idx = d_event['name'].index(scen_name)
                 d_scen.update({"starttime": d_event["starttime"][idx],
                                "endtime": d_event["endtime"][idx]
                                })
-
+            # #when init run
+            if drun['has_run_init']:
+                d_scen.update({"path_instance_init": os.path.join(d_scen["path_instance"], f"run_init")})
             scenarios.append(d_scen)
+
         return scenarios
 
     def fill_lscenario(self, data):
@@ -265,4 +308,5 @@ class ClassDictRun:
         if self.dmodel.get("run"):
             scenarios = self.creat_lscenar(data)
         self.dmodel['scenario'] = scenarios
+
 

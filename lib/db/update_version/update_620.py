@@ -19,7 +19,7 @@ email                :
 """
 import json
 
-from db import MasObject as Maso
+from lib.db import MasObject as Maso
 
 
 def is_number(s):

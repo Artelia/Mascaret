@@ -17,7 +17,7 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-from db import MasObject as Maso
+from lib.db import MasObject as Maso
 
 
 class ClassUpdate516:

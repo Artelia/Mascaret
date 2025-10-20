@@ -21,7 +21,7 @@ email                :
 import datetime
 import os
 
-from lib.model.Fct_model_file import around, backup_file
+from .Fct_model_file import around, backup_file
 
 
 class ClassGeoWriter:
@@ -34,6 +34,10 @@ class ClassGeoWriter:
         self.mess = mess
         self.geo_filename = geo_filename
         self.folder = folder
+
+    def set_folder(self,folder):
+        if os.path.isdir(folder):
+            self.folder = folder
 
     def creer_geo(self):
         """

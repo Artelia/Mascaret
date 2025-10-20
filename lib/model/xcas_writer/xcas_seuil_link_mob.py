@@ -20,8 +20,8 @@ email                :
 """
 import pandas as pd
 
-from lib.Function import del_accent
-from lib.model.Fct_model_file import typ_struct
+from ...Function import del_accent
+from ..Fct_model_file import typ_struct
 
 
 def modif_seuil(mdb, seuil, dico_str):

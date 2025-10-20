@@ -20,9 +20,9 @@ email                :
 """
 from xml.etree.ElementTree import SubElement
 
-from lib.model.Fct_model_file import fmt, check_none
-from lib.Function import del_symbol
-from lib.Function import str2bool
+from ..Fct_model_file import fmt, check_none
+from ...Function import del_symbol
+from ...Function import str2bool
 
 
 def add_wq_xcas(mdb, fichier_cas, noyau, dict_libres, mess=None):
