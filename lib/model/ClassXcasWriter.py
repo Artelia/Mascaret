@@ -19,6 +19,7 @@ email                :
 
 """
 import os
+import copy
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
@@ -34,7 +35,6 @@ from .xcas_writer.xcas_wq import add_wq_xcas
 
 
 class ClassXcasWriter:
-
     XCAS_FILE = "mascaret.xcas"
 
     def __init__(self, mdb, folder, cond_api, mess=None):
@@ -54,7 +54,7 @@ class ClassXcasWriter:
         self.dico_loi = None
         self.dico_loi_struct = None
 
-    def set_folder(self,folder):
+    def set_folder(self, folder):
         if os.path.isdir(folder):
             self.folder = folder
 
@@ -591,7 +591,7 @@ class ClassXcasWriter:
         :param fich_xcas:
         :return:
         """
-        fichier_cas = self.elem_xcas
+        fichier_cas = copy.deepcopy(self.elem_xcas)
         # ****** XCAS initialisation **********
         temps_max = 3600
         np_pas_temps_init = 2

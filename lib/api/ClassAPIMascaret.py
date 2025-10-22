@@ -30,15 +30,15 @@ try:
     from ..Structure.ClassFloodGateLk import ClassFloodGateLk
     from ..Structure.ClassMobilWeirs import ClassMobilWeirs
     from ..ClassMessage import ClassMessage
-except  ModuleNotFoundError or ImportError:
+except  :
     # autonome python
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from masc import Mascaret
+    from api.masc import Mascaret
     from Structure.ClassTableStructure import get_no_keep_break
     from Structure.ClassFloodGate import ClassFloodGate
     from Structure.ClassFloodGateLk import ClassFloodGateLk
     from Structure.ClassMobilWeirs import ClassMobilWeirs
-    from .ClassMessage import ClassMessage
+    from ClassMessage import ClassMessage
 
 
 def check_init(file):
@@ -55,7 +55,7 @@ def check_init(file):
 class ClassAPIMascaret:
     """Class contain  model files creation and run model mascaret"""
 
-    def __init__(self, main, dbg=False):
+    def __init__(self, main, dbg=False, generate_lig=False):
         """
         Initialize the API Mascaret class.
         :param main (object or dict): Main object or configuration dictionary
@@ -64,6 +64,7 @@ class ClassAPIMascaret:
         """
         # def __init__(self):
         self.DEBUG = dbg
+        self.generate_lig=generate_lig
 
         self.npoin = 0
         self.zini = 0
@@ -521,6 +522,9 @@ class ClassAPIMascaret:
             self.finalize()
 
         self.compute()
+        if self.generate_lig:
+            self.masc.save_lig_restart(out_file="mascaret.lig", k_s=None)
+
         self.finalize()
 
     def add_info(self, txt):
@@ -535,9 +539,17 @@ class ClassAPIMascaret:
 
 
 if __name__ == "__main__":
-    path = os.getcwd()
-    dico = {"RUN_REP": path, "DEBUG": True, "BASE_NAME": "mascaret"}
-
-    api = ClassAPIMascaret(dico)
-    api.main("mascaret.xcas")
-    print("fin")
+    try:
+        # dico = {"RUN_REP": path, "DEBUG": True, "BASE_NAME": "mascaret"}
+        if len(sys.argv) <= 1:
+            raise ValueError("No JSON file provided. Usage: script.py <config.json>")
+        jsonf = sys.argv[1]
+        with open(jsonf) as json_data:
+            dico = json.load(json_data)
+        api = ClassAPIMascaret(dico)
+        api.main(dico.get('name_xcas'))
+        print("Work is done.")
+    except Exception as err:
+        import traceback
+        error_info =  f"{err} \n {traceback.format_exc()}"
+        print("Error :", error_info)

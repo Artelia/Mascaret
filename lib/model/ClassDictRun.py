@@ -16,6 +16,10 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+Mascaret - Pre and Postprocessing for Mascaret for QGIS
+
+This module contains helper classes to build run configurations and manage
+scenario/result deletion for Mascaret runs.
 
 """
 
@@ -33,9 +37,21 @@ from ...ui.custom_control import ClassWarningBox
 
 
 class ClassDictRun:
-    """Class contain  model files creation and run model mascaret"""
+    """Container for model run configuration and Mascaret run utilities.
+.
+
+    :param main: Main plugin object exposing paths, DB interface and settings.
+    :type main: object
+    :param rep_run: Optional custom run folder path. If None, a default under the plugin path is used.
+    :type rep_run: str or None
+    """
 
     def __init__(self, main, rep_run=None):
+        """Initialize ClassDictRun.
+
+        :param main: Main plugin instance containing configuration and DB access.
+        :param rep_run: Optional run folder path. If None defaults to plugin/mascaret folder.
+        """
         self.mgis = main
         self.mdb = self.mgis.mdb
         if not rep_run:
@@ -64,53 +80,105 @@ class ClassDictRun:
         }
 
     def get_dmodel(self):
+        """Return the internal model dictionary.
+
+        :return: Model dictionary.
+        :rtype: dict
+        """
         return self.dmodel
 
     def get_dgeneral(self):
+        """Return the 'general' section of the model dictionary.
+
+        :return: General configuration dictionary or empty dict if not present.
+        :rtype: dict
+        """
         if self.dmodel.get('general'):
             return self.dmodel['general']
         return {}
 
     def set_dgeneral(self, dict):
+        """Update the 'general' configuration section with provided items.
+
+        Existing keys are replaced, new keys are added.
+
+        :param dict: Dictionary of keys/values to set into general.
+        :type dict: dict
+        :return: None
+        """
         if self.dmodel.get('general'):
             for key, item in dict.items():
-                if  self.dmodel['general'].get(key):
+                if self.dmodel['general'].get(key):
                     self.dmodel['general'][key] = item
                 else:
-                    self.dmodel['general'].update({key:item})
-
+                    self.dmodel['general'].update({key: item})
 
     def get_drun(self):
+        """Return the 'run' section of the model dictionary.
+
+        :return: Run configuration dict or empty dict if not present.
+        :rtype: dict
+        """
         if self.dmodel.get('run'):
             return self.dmodel['run']
         return {}
 
     def get_lscenar(self):
+        """Return the list of scenarios if defined.
+
+        :return: List of scenario dictionaries or empty list.
+        :rtype: list
+        """
         if self.dmodel.get('scenario'):
             return self.dmodel['scenario']
         return []
 
     def del_lscenar(self, index):
+        """Delete one or multiple scenarios by index.
+
+        :param index: Single integer index or list of indices to remove.
+        :type index: int or list
+        :return: None
+        """
         if self.dmodel.get('scenario'):
             if isinstance(index, list):
-                for id in index:
-                    self.dmodel['scenario'].pop(id)
+                for idx in index:
+                    self.dmodel['scenario'].pop(idx)
             elif isinstance(index, int):
-                self.dmodel['scenario'].pop(id)
+                self.dmodel['scenario'].pop(index)
 
     def get_scenario(self, scen):
-        if not self.dmodel.get('scenario'):
+        """Return scenario dictionary by scenario name.
+
+        :param scen: Scenario name.
+        :type scen: str
+        :return: Scenario dict or empty dict if not found.
+        :rtype: dict
+        """
+        id_scen = self.get_id_scenario(scen)
+        if id_scen is None:
             return {}
-        for dico in self.dmodel['scenario']:
-            if dico.get("name") == scen:
-                return  dico
+        return self.dmodel['scenario'][id_scen]
 
     def get_list_name_scenario(self):
+        """Return a list of scenario names.
+
+        :return: List of scenario names.
+        :rtype: list
+        """
         if not self.dmodel.get('scenario'):
             return []
         return [dico["name"] for dico in self.dmodel['scenario']]
 
     def fill_drun(self, kernel, name_run):
+        """Populate the 'run' configuration based on kernel and DB parameters.
+
+        :param kernel: Kernel type (e.g. 'steady' or 'unsteady').
+        :type kernel: str
+        :param name_run: Name of the run.
+        :type name_run: str
+        :return: None
+        """
         # Retrieve model parameters
         par = self.get_param_model(kernel)
 
@@ -130,14 +198,45 @@ class ClassDictRun:
         }
 
     def set_drun(self, new_items):
+        """Set or update items in the 'run' configuration.
 
+        :param new_items: Dictionary of items to set in drun.
+        :type new_items: dict
+        :return: None
+        """
         for key, item in new_items.items():
             if self.dmodel["run"].get(key):
                 self.dmodel["run"][key] = item
             else:
                 self.dmodel["run"][key] = item
 
+    def set_dinstance(self, scen, instance_name, dct_change):
+        """Update an instance dictionary inside a scenario.
+
+        :param scen: Scenario name or identifier.
+        :type scen: str
+        :param instance_name: Name of the instance to update.
+        :type instance_name: str
+        :param dct_change: Dictionary with changes to apply.
+        :type dct_change: dict
+        :return: True if update succeeded, False otherwise.
+        :rtype: bool
+        """
+        id_scen = self.get_id_scenario(scen)
+        if id_scen is None:
+            return False
+        id_instance = self.get_id_instance(id_scen, instance_name)
+        if id_instance is None:
+            return False
+        self.dmodel['scenario'][id_scen]['instances'][id_instance].update(dct_change)
+        return True
+
     def get_events(self):
+        """Retrieve events from the database for runs.
+
+        :return: Dictionary of event fields or empty dict if none found.
+        :rtype: dict
+        """
         scen_data = self.mdb.select("events", "run", "starttime")
 
         if not scen_data.get("name"):
@@ -145,13 +244,77 @@ class ClassDictRun:
             return {}
         return scen_data
 
-    def get_param_model(self, noyau):
+    def get_folder(self, scen):
+        """Return mapping of instance name -> RUN_REP folder for a scenario.
+
+        :param scen: Scenario name.
+        :type scen: str
+        :return: Dict mapping instance names to their RUN_REP path.
+        :rtype: dict
         """
-        Get  model parameters
-        Args:
-            :param noyau : (str) kernel
-        Return :
-            :return (dict) model  parameters
+        d_scen = self.get_scenario(scen)
+        if not d_scen.get("instances"):
+            return {}
+
+        d_folder = {}
+        for instance in d_scen.get("instances"):
+            name = instance.get('name')
+            if not name:
+                continue
+            # ref: reference, init: intialisation
+            # pertub1,  pertub1_init
+
+            d_folder[name] = instance.get("RUN_REP")
+
+        return d_folder
+
+
+    def get_id_scenario(self, scen):
+        """Get the index of a scenario by name.
+
+        :param scen: Scenario name.
+        :type scen: str
+        :return: Index of scenario in internal list or None.
+        :rtype: int or None
+        """
+        id_scen = None
+        if not self.dmodel.get('scenario'):
+            return id_scen
+        for idx, dico in enumerate(self.dmodel['scenario']):
+            if dico.get("name") == scen:
+                id_scen = idx
+                break
+        return  id_scen
+
+    def get_id_instance(self, id_scen, instance_name):
+        """Get the index of an instance by name within a scenario.
+
+        :param id_scen: Scenario index.
+        :type id_scen: int
+        :param instance_name: Instance name to find.
+        :type instance_name: str
+        :return: Instance index or None.
+        :rtype: int or None
+        """
+        instances = self.dmodel['scenario'][id_scen].get('instances')
+        if id_scen is None or not instances:
+            return
+        id_instance = None
+        for idx, instance in enumerate(instances):
+            name = instance.get('name')
+            if name == instance_name:
+                id_instance = idx
+                break
+
+        return id_instance
+
+    def get_param_model(self, noyau):
+        """Get model parameters from the database for the specified kernel.
+
+        :param noyau: Kernel name used in the DB query.
+        :type noyau: str
+        :return: Dictionary of parameters.
+        :rtype: dict
         """
         sql = "SELECT parametre, {0} FROM {1}.{2};"
         rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
@@ -164,10 +327,14 @@ class ClassDictRun:
         return par
 
     def check_scenar(self, nom_scen, run):
-        """Checks if the scenario exists and asks for confirmation to delete existing results.
+        """Check if a scenario exists and optionally confirm deletion of existing results.
 
-        Returns:
-            bool: True if we can proceed (no results or deletion confirmed), False otherwise
+        :param nom_scen: Scenario name to check.
+        :type nom_scen: str
+        :param run: Run identifier to check against DB entries.
+        :type run: str
+        :return: True if safe to proceed (no existing results or user confirmed deletion), False otherwise.
+        :rtype: bool
         """
         # Retrieve existing scenarios for this run
 
@@ -200,7 +367,14 @@ class ClassDictRun:
         return True
 
     def _delete_scenario_results(self, nom_scen, run):
-        """Deletes all results associated with a scenario."""
+        """Delete all database results associated with a scenario.
+
+        :param nom_scen: Scenario name whose results to delete.
+        :type nom_scen: str
+        :param run: Run identifier.
+        :type run: str
+        :return: None
+        """
         # Retrieve the run ID
         condition_scenario = f"(scenario LIKE '{nom_scen}' OR scenario LIKE '{nom_scen}_init')"
         id_run_query = (
@@ -231,7 +405,12 @@ class ClassDictRun:
         self._delete_old_results(id_run)
 
     def _delete_results_var(self, id_run):
-        """Deletes result variables."""
+        """Delete result variable entries related to a run.
+
+        :param id_run: Run id in the database.
+        :type id_run: int
+        :return: None
+        """
         var_query = (
             f"SELECT DISTINCT var FROM {self.mdb.SCHEMA}.results "
             f"WHERE id_runs = {id_run}"
@@ -246,7 +425,12 @@ class ClassDictRun:
             )
 
     def _delete_old_results(self, id_run):
-        """Deletes results from old tables if they exist."""
+        """Remove results stored in legacy tables if present.
+
+        :param id_run: Run id to delete legacy results for.
+        :type id_run: int
+        :return: None
+        """
         lst_tab = self.mdb.list_tables()
 
         if "results_val" in lst_tab:
@@ -261,6 +445,13 @@ class ClassDictRun:
                 self.mdb.delete(table, f"id_runs = {id_run}")
 
     def creat_lscenar(self, data):
+        """Create scenario dictionaries for provided input data.
+
+        :param data: Iterable of input rows/dictionaries describing scenarios.
+        :type data: list
+        :return: List of created scenario dictionaries.
+        :rtype: list
+        """
         scenarios = []
         drun = self.get_drun()
         dgeneral = self.get_dgeneral()
@@ -277,8 +468,10 @@ class ClassDictRun:
             d_scen = {
                 "name": scen_name,
                 "comments": scenar["Comment"],
-                "path_instance": os.path.join(path_run, f"{scen_name}")
+                "path_instance": os.path.join(path_run, f"{scen_name}"),
+                "instances": []
             }
+
             if scenar.get("Run init"):
                 d_scen.update(
                     {"scenar_init": (scenar["Run init"], scenar["Scenario init"]) if scenar["Run init"] else None,
@@ -293,20 +486,35 @@ class ClassDictRun:
                                "endtime": d_event["endtime"][idx]
                                })
             # #when init run
+            folder_run = os.path.join(d_scen["path_instance"], 'run_ref') if drun['has_assimilation'] else d_scen[
+                "path_instance"]
             if drun['has_run_init']:
-                d_scen.update({"path_instance_init": os.path.join(d_scen["path_instance"], f"run_init")})
+                d_scen["instances"].append({'name': 'init',
+                                            "RUN_REP": os.path.join(folder_run, 'run_init'),
+                                            "BASE_NAME": "mascaret",
+                                            "has_casier": False,
+                                            "has_tracer": False,
+                                            })
+            d_scen["instances"].append({'name': 'ref',
+                                        "RUN_REP": folder_run,
+                                        "BASE_NAME": "mascaret",
+                                        # Update var use in API
+                                        "has_casier": drun["has_casier"],
+                                        "has_tracer": drun["has_tracer"],
+                                        })
             scenarios.append(d_scen)
 
         return scenarios
 
     def fill_lscenario(self, data):
-        """
-        Initializes the 'run' dictionary with model parameters and retrieves associated scenarios.
+        """Initialize the 'scenario' list inside the model dictionary based on input data.
+
+        :param data: Input data used to create scenarios.
+        :type data: list
+        :return: None
         """
         # Retrieve scenarios based on the run configuration
         scenarios = []
         if self.dmodel.get("run"):
             scenarios = self.creat_lscenar(data)
         self.dmodel['scenario'] = scenarios
-
-

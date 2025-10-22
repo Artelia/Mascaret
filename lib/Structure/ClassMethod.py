@@ -25,7 +25,10 @@ from shapely.geometry import *
 
 from .ClassPolygone import ClassPolygone
 from .ClassTableStructure import ClassTableStructure
-from ..ClassMessage import ClassMessage
+try :
+    from ..ClassMessage import ClassMessage
+except:
+    from ClassMessage import ClassMessage
 
 
 class ClassMethod:

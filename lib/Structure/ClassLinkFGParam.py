@@ -20,9 +20,12 @@ email                :
 import json
 import os
 
-from ..ClassMessage import ClassMessage
-from ..Function import str2bool, data_to_float, data_to_int
-
+try :
+    from ..ClassMessage import ClassMessage
+    from ..Function import str2bool, data_to_float, data_to_int
+except:
+    from ClassMessage import ClassMessage
+    from Function import str2bool, data_to_float, data_to_int
 
 class ClassLinkFGParam(object):
     """

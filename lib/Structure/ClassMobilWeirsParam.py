@@ -21,9 +21,12 @@ email                :
 import json
 import os
 
-from ..ClassMessage import ClassMessage
-from ..Function import str2bool, data_to_float, data_to_int
-
+try :
+    from ..Function import str2bool, data_to_float, data_to_int
+    from ..ClassMessage import ClassMessage
+except:
+    from Function import str2bool, data_to_float, data_to_int
+    from ClassMessage import ClassMessage
 
 class ClassMobilWeirsParam(object):
     def __init__(self):

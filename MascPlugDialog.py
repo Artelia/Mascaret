@@ -1224,8 +1224,32 @@ Version : {}
         clam = ClassInitializeModel(self, obj_model)
         clam.main()
 
+        # Import
 
-        pass
+
+        # var
+        use_task = False
+        max_workers = 4
+
+        # Récuperation des list task
+        lst_scen = obj_model.get_list_name_scenario()
+        task_params = []
+        for scen in lst_scen:
+            dscen = obj_model.get_scenario(scen)
+            for dico in dscen.get("instances"):
+                if dico.get('name') == 'init':
+                    task_params.append(dico)
+        print("task_params:")
+        pprint(task_params)
+
+        from .lib.model.MascaretRunner import MascaretRunner
+        runner = MascaretRunner()
+        runner.run_mascaret_models(
+            task_params=task_params,
+            max_workers=2,  # 2 modèles en parallèle
+            description="Test Mascaret Models"
+        )
+
 
     def update_ks_mesh_planim(self):
         """update value of the seleted profiles"""
