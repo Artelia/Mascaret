@@ -90,6 +90,8 @@ from .lib.model.ClassDictRun import ClassDictRun
 from .lib.model.ClassRunUIDialog import ClassRunUIDialog
 
 
+
+
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class MascPlugDialog(QMainWindow):
