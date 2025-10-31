@@ -25,17 +25,17 @@ import posixpath
 from qgis.PyQt.QtCore import Qt, QSettings, qVersion
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
-                        QMainWindow, 
-                        QMenu,
-                        QToolBar, 
-                        QToolButton, 
-                        QInputDialog, 
-                        QMessageBox,
-                        QFileDialog,
-                        QApplication,
-                        QWidget,
-                        QAction
-                    )
+    QMainWindow,
+    QMenu,
+    QToolBar,
+    QToolButton,
+    QInputDialog,
+    QMessageBox,
+    QFileDialog,
+    QApplication,
+    QWidget,
+    QAction
+)
 from qgis.PyQt.uic import loadUi
 from qgis.core import (QgsCoordinateReferenceSystem,
                        QgsProject,
@@ -43,8 +43,9 @@ from qgis.core import (QgsCoordinateReferenceSystem,
                        QgsApplication,
                        QgsAuthMethodConfig)
 
-
 from .lib.ClassCartoZi import ClassCartoZI
+from .lib.ClassDeletrunDialog import ClassDeletrunDialog
+from .lib.ClassDeletshDialog import ClassDeletshDialog
 from .lib.ClassDownload import ClassDownloadMasc
 from .lib.ClassEditKsDialog import ClassEditKsDialog
 from .lib.ClassExportDataRun import ClassExportDataRun
@@ -56,12 +57,14 @@ from .lib.ClassMNT import ClassMNT
 from .lib.ClassObservation import ClassEventObsDialog
 from .lib.ClassParamExportDialog import ClassParamExportDialog
 from .lib.ClassParameterDialog import ClassParameterDialog
+from .lib.ClassSettingsDialog import ClassSettingsDialog
 from .lib.ClassUpdateBedDialog import (
     ClassUpdateBedDialog,
     update_all_bed_geometry,
     refresh_minor_bed_layer,
 )
-from .lib.Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, open_file_editor
+from .lib.ClassUpdatePk import ClassUpdatePk
+from .lib.Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, open_file_editor,find_latest_lis_file
 from .lib.Graphic.FilterDialog import ClassFilterDialog
 from .lib.Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .lib.HydroLawsDialog import ClassHydroLawsDialog
@@ -77,22 +80,12 @@ from .lib.WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
 from .lib.db.Check_tab import CheckTab
 from .lib.db.ClassMasDatabase import ClassMasDatabase
 from .lib.model.ClassMascaret import ClassMascaret
+from .lib.model.ClassMascaret2 import ClassMascaret2
 from .lib.scores.ClassScoresDialog import ClassScoresDialog
-from .lib.ClassDeletshDialog import ClassDeletshDialog
-from .lib.ClassDeletrunDialog import ClassDeletrunDialog
-from .lib.ClassSettingsDialog import ClassSettingsDialog
-from .lib.ClassUpdatePk import ClassUpdatePk
-
 from .ui.custom_control import ClassWarningBox
 
-from .lib.model.ClassInitializeModel import ClassInitializeModel
-from .lib.model.ClassDictRun import ClassDictRun
-from .lib.model.ClassRunUIDialog import ClassRunUIDialog
-
-
-
-
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+
 
 class MascPlugDialog(QMainWindow):
     OPT_GENERAL, OPT_mdb, OPT_DTM = range(3)
@@ -106,7 +99,6 @@ class MascPlugDialog(QMainWindow):
             self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         else:
             self.setAttribute(Qt.WA_DeleteOnClose)
-        
 
         self.masplugPath = os.path.dirname(__file__)
         self.ui = loadUi(os.path.join(self.masplugPath, "ui/MascPlug_dialog_base.ui"), self)
@@ -183,7 +175,7 @@ class MascPlugDialog(QMainWindow):
 
         # DB
         self.ui.actionTo_clone_Model.triggered.connect(self.clone_model)
-        self.ui.actionRefresh_Database.triggered.connect(lambda x :self.conn_changed(old_sh=True))
+        self.ui.actionRefresh_Database.triggered.connect(lambda x: self.conn_changed(old_sh=True))
         self.ui.actionCreate_New_Model.triggered.connect(self.db_create_model)
         self.ui.actionDeleteModel.triggered.connect(self.db_delete_model)
         self.ui.action_table_reconstruction_vacuum_full.triggered.connect(self.schema_vacuum)
@@ -428,7 +420,7 @@ class MascPlugDialog(QMainWindow):
         # close any existing connection to a MascPlug database
         old_schema = None
         if self.mdb:
-            if old_sh :
+            if old_sh:
                 old_schema = self.mdb.SCHEMA
             self.add_info(
                 "Closing existing connection to {0}@{1} Mascaret database".format(
@@ -770,7 +762,6 @@ class MascPlugDialog(QMainWindow):
     def del_run(self):
         """Delete run of curent model"""
 
-
         dlg = ClassDeletrunDialog(self, self.iface)
         if QT_VERSION > 5:
             dlg.exec()  # PyQt6
@@ -1019,17 +1010,16 @@ class MascPlugDialog(QMainWindow):
             QIcon(os.path.join(os.path.join(self.masplugPath, "icones"), "icon_base.png"))
         )
         msg.setText(txt)
-        if QT_VERSION > 5 :
+        if QT_VERSION > 5:
             ok_button = QMessageBox.StandardButton.Ok
         else:
             ok_button = QMessageBox.Ok
         msg.setStandardButtons(ok_button)
 
         if QT_VERSION > 5:
-            retval = msg.exec() # PyQt6
+            retval = msg.exec()  # PyQt6
         else:
             retval = msg.exec_()  # PyQt5
-
 
     def about(self):
         val = read_version(self.masplugPath)
@@ -1203,56 +1193,27 @@ Version : {}
         # self.chkt.debug_update_vers_meta(version="5.1.5")
         # cl.creat_file_no_keep_break()
         # self.chkt.update_version('620')
-
-        obj_model = ClassDictRun(self)
-        case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
-        if not ok:
-            return
-
-        kernel = self.Klist[self.listeState.index(case)]
-        if self.DEBUG:
-            self.add_info(f"Kernel {kernel}")
-
-
-        dlg = ClassRunUIDialog(self, kernel, obj_model)
-        if QT_VERSION > 5:
-            dlg.exec()  # PyQt6
-        else:
-            dlg.exec_()  # PyQt5
-
-        from pprint import pprint
-        pprint(obj_model.get_dmodel())
-
-        clam = ClassInitializeModel(self, obj_model)
-        clam.main()
-
-        # Import
-
-
-        # var
-        use_task = False
-        max_workers = 4
-
-        # Récuperation des list task
-        lst_scen = obj_model.get_list_name_scenario()
-        task_params = []
-        for scen in lst_scen:
-            dscen = obj_model.get_scenario(scen)
-            for dico in dscen.get("instances"):
-                if dico.get('name') == 'init':
-                    task_params.append(dico)
-        print("task_params:")
-        pprint(task_params)
-
-        from .lib.model.MascaretRunner import MascaretRunner
-        runner = MascaretRunner()
-        runner.run_mascaret_models(
-            task_params=task_params,
-            max_workers=2,  # 2 modèles en parallèle
-            description="Test Mascaret Models"
-        )
-
-
+        clmas = ClassMascaret2(self)
+        clmas.mascaret_ui()
+        # Initialisation
+    #     from .lib.model.test_task import Receiver, TaskMascaret2
+    #     from qgis.core import Qgis,QgsMessageLog
+    #     #
+    #     # self.receiver = Receiver()
+    #     self.task = TaskMascaret2("Test Task")
+    #     # self.task.signal.launch_completed.connect(self.receiver.test, Qt.QueuedConnection)
+    #     self.task.signal.launch_completed.connect(self.test)
+    #     #
+    #     # # # Lancer la tâche
+    #     QgsApplication.taskManager().addTask(self.task)
+    #     QgsMessageLog.logMessage(f"Exception during task launch",
+    #                 'TaskMascaret',
+    #                 Qgis.Info
+    #             )
+    #     print('aaaa')
+    #
+    # def test(self,event):
+    #     print('ippppppppppp', event)
     def update_ks_mesh_planim(self):
         """update value of the seleted profiles"""
 
@@ -1283,7 +1244,6 @@ Version : {}
             dlg.exec()  # PyQt6
         else:
             dlg.exec_()  # PyQt5
-
 
     def download_bin(self):
         """download the Mascaret executable"""
@@ -1450,8 +1410,9 @@ Version : {}
         """
         Open listing file
         """
-        model_path = os.path.join(self.masplugPath, "mascaret")
-        file_path = os.path.join(model_path, 'mascaret.lis')
+        # model_path = os.path.join(self.masplugPath, "mascaret")
+        # file_path = os.path.join(model_path, 'mascaret.lis')
+        file_path = find_latest_lis_file( os.path.join(self.masplugPath, "mascaret"))
         if os.path.exists(file_path):
             # openfile
             open_file_editor(file_path)

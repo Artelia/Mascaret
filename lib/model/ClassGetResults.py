@@ -123,8 +123,8 @@ class ClassGetResults:
         if os.path.isfile(os.path.join(path, "Fichier_Crete.csv")):
             self.read_mobil_gate_res(id_run)
 
-        if os.path.isfile(os.path.join(path, "res_struct.res")):
-            with open(os.path.join(path, "res_struct.res"), "r") as filein:
+        if os.path.isfile(os.path.join(path, "res_structs.res")):
+            with open(os.path.join(path, "res_structs.res"), "r") as filein:
                 dico = json.load(filein)
             self.stock_res_api(dico, id_run)
 

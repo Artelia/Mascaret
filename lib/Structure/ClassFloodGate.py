@@ -21,7 +21,7 @@ email                :
 import numpy as np
 
 from .ClassLaws import ClassLaws
-from .ClassPostPreFG import ClassPostPreFG
+from .ClassParamFG import ClassParamFG
 from .ClassTableStructure import ClassTableStructure
 
 
@@ -42,7 +42,10 @@ class ClassFloodGate:
         self.clapi = main
         self.masc = main.masc
         self.debug = main.DEBUG
-        self.init_var = ClassPostPreFG(main.mgis)
+        self.init_var = ClassParamFG()
+        self.init_var.get_param(parent=main.mgis)
+        self.actif_mobil_fg = bool(self.init_var.fg_actif())
+
         self.tbst = ClassTableStructure()
         #
 
@@ -65,7 +68,9 @@ class ClassFloodGate:
             # numgraph = self.masc.get("Model.Weir.GraphNum", i=id) - 1
             name = self.masc.get("Model.Weir.Name", i=i)
             if name.replace("_init", "") in list(link_name_id.keys()):
-                id_config = link_name_id[name]
+                id_config = str(link_name_id[name])
+                if  not self.param_fg.get(str(link_name_id[name])):
+                    id_config = link_name_id[name]
                 # self.param_fg[id_config]['NUMGRAPH'] = numgraph
                 self.param_fg[id_config]["NUMGRAPH"] = i
 

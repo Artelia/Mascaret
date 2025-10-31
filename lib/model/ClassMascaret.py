@@ -36,7 +36,7 @@ from ..Function import TypeErrorModel
 from ..Function import copy_dir_to_dir
 from ..Structure.ClassLinkFGParam import ClassLinkFGParam
 from ..Structure.ClassMobilWeirsParam import ClassMobilWeirsParam
-from ..Structure.ClassPostPreFG import ClassPostPreFG
+from ..Structure.ClassParamFG import ClassParamFG
 from ..WaterQuality.ClassMascWQ import ClassMascWQ
 from ...ui.custom_control import ClassWarningBox
 
@@ -687,7 +687,7 @@ class ClassMascaret:
                 if os.path.isfile(path):
                     os.remove(path)
 
-        cl = ClassPostPreFG(self.mgis)
+        cl = ClassParamFG()
         path = os.path.join(self.dossier_file_masc, "cli_fg.obj")
-        cl.create_cli_fg(path)
+        cl.create_cli_fg(self.mgis, path)
         del cl

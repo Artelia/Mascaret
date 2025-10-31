@@ -89,7 +89,7 @@ class ClassAPIMascaret:
         self.lst_node = {}
 
         self.results_api = {}
-
+        self.mess = ClassMessage()
         self.masc = Mascaret(log_level="INFO")
         self.masc.create_mascaret(iprint=1)
         if isinstance(main, dict):
@@ -104,11 +104,11 @@ class ClassAPIMascaret:
             self.dossier_file_masc = self.clmas.dossier_file_masc
             self.baseName = self.clmas.baseName
 
-        self.mess = ClassMessage()
+
         self.num_mess = 0
         # floodgat
         self.clfg = ClassFloodGate(self)
-        self.mobil_struct = self.clfg.fg_active()
+        self.mobil_struct = self.clfg.actif_mobil_fg
         # links floodgate
         self.clfg_lk = ClassFloodGateLk(self)
         self.mobil_link = self.clfg_lk.actif_mobil_lk
@@ -476,17 +476,17 @@ class ClassAPIMascaret:
             self.clfg.finalize(self.tfin)
             self.results_api["STRUCT_FG"] = self.clfg.results_fg_mv
             if self.mgis is None:
-                self.write_res_struct(self.results_api["STRUCT_FG"], "res_struct.res")
+                self.write_res_struct(self.results_api["STRUCT_FG"], "res_structs.res")
         if self.mobil_link:
             self.clfg_lk.finalize(self.tfin)
             self.results_api["LINK_FG"] = self.clfg_lk.results_fg_lk_mv
             if self.mgis is None:
-                self.write_res_struct(self.results_api["LINK_FG"], "res_link_fg.res")
+                self.write_res_struct(self.results_api["LINK_FG"], "res_links.res")
         if self.mobil_w:
             self.clfg_w.finalize(self.tfin)
             self.results_api["WEIRS"] = self.clfg_w.results_fg_weirs_mv
             if self.mgis is None:
-                self.write_res_struct(self.results_api["WEIRS"], "res_weirs_fg.res")
+                self.write_res_struct(self.results_api["WEIRS"], "res_weirs.res")
         self.mess.export_obj(self.dossier_file_masc)
 
     def write_res_struct(self, res, filen="res_struct.res"):
@@ -499,7 +499,7 @@ class ClassAPIMascaret:
         with open(os.path.join(self.dossier_file_masc, filen), "w") as filein:
             json.dump(res, filein)
 
-    def main(self, filename, tracer=False, basin=False):
+    def fct_main(self, filename, tracer=False, basin=False):
         """
         Main program which runs the model.
         :param filename (str): Xcas file
@@ -546,8 +546,10 @@ if __name__ == "__main__":
         jsonf = sys.argv[1]
         with open(jsonf) as json_data:
             dico = json.load(json_data)
-        api = ClassAPIMascaret(dico)
-        api.main(dico.get('name_xcas'))
+        gen_lig =  True if dico.get('name','') == 'init'else False
+
+        api = ClassAPIMascaret(dico, generate_lig=gen_lig)
+        api.fct_main(dico.get('name_xcas'), dico.get("has_tracer",False), dico.get("has_casier",False))
         print("Work is done.")
     except Exception as err:
         import traceback

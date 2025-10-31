@@ -25,28 +25,26 @@ import os
 import re
 
 import pandas as pd
-from qgis.PyQt.QtWidgets import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
 
 from ..ClassMessage import ClassMessage
 from ..Graphic.ClassResProfil import ClassResProfil
+from .ClassStockResStruct import ClassStockResStruct
 
 
 class ClassGetResults:
     """Class for Mascaret model results import and processing."""
 
     # Constants
-    OPT_EXTENSION = ".opt"
-    BASIN_EXTENSION = ".cas_opt"
-    LINK_EXTENSION = ".liai_opt"
-    TRACER_EXTENSION = ".tra_opt"
+
 
     STRUCT_RES_FILE = "res_struct.res"
+    WEIRS_RES_FILE = "res_weirs.res"
+    LINKS_RES_FILE = "res_links.res"
+    OLD_WEIRS_RES_FILE = "Fichier_Crete.csv"
+
     NAME_FILE = 'mascaret'
 
-    def __init__(self, mdb, dossier_file_masc, wq, dbg):
+    def __init__(self, mdb, dbg=False):
         """
         Initialize the results processor.
 
@@ -59,14 +57,12 @@ class ClassGetResults:
 
         self.dbg = dbg
         self.mdb = mdb
-        self.wq = wq
-        self.dossier_file_masc = dossier_file_masc
         self.mess = ClassMessage()
         self.dico_basinnum = {}
         self.dico_linknum = {}
 
         self._initialize_basin_link_mapping()
-        self.cl_res_str = self.ClassStockResStruct(self.mdb, self.mess)
+        self.cl_res_str = ClassStockResStruct(self.mdb, self.mess)
 
     def _initialize_basin_link_mapping(self):
         """Initialize basin and link number mappings between Mascaret and QGIS."""
@@ -128,43 +124,7 @@ class ClassGetResults:
                 has_basins = True
             elif extension == "tra_opt":
                 has_tracer = True
-
         return has_links, has_basins, has_tracer
-
-    def import_results(self, run, scen, comments, path, date_debut=None):
-        """
-        Import Mascaret simulation results.
-
-        Args:
-            run: Run name
-            scen: Scenario name
-            comments: User comments
-            path: Results directory path
-            date_debut: Simulation start date
-        """
-
-        has_links, has_basins, has_tracer = self._check_result_files(path)
-        has_basins_full = has_links and has_basins
-        id_run = self._insert_id_run(run, scen)
-        self.lit_opt_new(
-            id_run,
-            date_debut,
-            self.NAME_FILE,
-            comments=comments,
-            tracer=has_tracer,
-            casier=has_basins_full,
-        )
-        # Import mobile gate results if available
-        crest_file = os.path.join(path, self.CREST_FILE)
-        if os.path.isfile(crest_file):
-            self.cl_res_str.read_mobil_gate_res(id_run)
-
-        # Import API structure results if available
-        struct_file = os.path.join(path, self.STRUCT_RES_FILE)
-        if os.path.isfile(struct_file):
-            with open(struct_file, 'r') as file_in:
-                dico = json.load(file_in)
-            self.cl_res_str.stock_res_api(dico, id_run)
 
     def _parse_tracer_variables(self, source, line, type_res):
         """Parse tracer variable definitions."""
@@ -386,16 +346,16 @@ class ClassGetResults:
         if tab[id_run]:
             self.mdb.update("runs", tab, var="id")
 
-    def _load_opt_results(self, id_run, base_namefile):
+    def _load_opt_results(self, folder, id_run, base_namefile):
         """Load OPT result file."""
 
         file_path = os.path.join(
-            self.dossier_file_masc, base_namefile + self.OPT_EXTENSION
+            folder, f'{base_namefile}.opt'
         )
         if not os.path.isfile(file_path):
             self.mess.add_mess(
                 "LoadOptCas", "warning",
-                "Simulation Error: no opt results found"
+                f"Simulation Error: no opt results found \n {file_path}"
             )
             return
         type_res = 'opt'
@@ -405,10 +365,10 @@ class ClassGetResults:
         self.save_run_graph(val, id_run, type_res)
         del val
 
-    def _load_basin_results(self, id_run, base_namefile):
+    def _load_basin_results(self, folder, id_run, base_namefile):
         """Load basin result file."""
         file_path = os.path.join(
-            self.dossier_file_masc, base_namefile + self.BASIN_EXTENSION
+            folder, f'{base_namefile}.cas_opt'
         )
 
         if not os.path.isfile(file_path):
@@ -424,10 +384,10 @@ class ClassGetResults:
         self.save_run_graph(val, id_run, type_res)
         del val
 
-    def _load_link_results(self, id_run: int, base_namefile: str) -> None:
+    def _load_link_results(self, folder, id_run, base_namefile):
         """Load link result file."""
         file_path = os.path.join(
-            self.dossier_file_masc, base_namefile + self.LINK_EXTENSION
+            folder, f'{base_namefile}.liai_opt'
         )
 
         if not os.path.isfile(file_path):
@@ -443,10 +403,10 @@ class ClassGetResults:
         self.save_run_graph(val, id_run, type_res)
         del val
 
-    def _load_tracer_results(self, id_run: int, base_namefile: str) -> None:
+    def _load_tracer_results(self, folder, id_run, base_namefile):
         """Load tracer result file."""
         file_path = os.path.join(
-            self.dossier_file_masc, base_namefile + self.TRACER_EXTENSION
+            folder, f'{base_namefile}.tra_opt'
         )
 
         if not os.path.isfile(file_path):
@@ -464,16 +424,16 @@ class ClassGetResults:
         self.save_run_graph(val, id_run, type_res)
         del val
 
-    def lit_opt_new(
+    def set_results_database(
             self,
+            folder,
             id_run,
-            date_debut,
+            date_debut=None,
             base_namefile=None,
             comments="",
             tracer=False,
             casier=False,
-            cond_api=False,
-            save_res_struct=None,
+            cond_api=False
     ):
         """
         Read opt files and save in results table
@@ -487,32 +447,54 @@ class ClassGetResults:
         :param save_res_struct : results when ther are hydraulic structur
         :return:
         """
-        if save_res_struct is None:
-            save_res_struct = []
         if base_namefile is None:
             base_namefile = self.NAME_FILE
 
-        file_path = os.path.join(self.dossier_file_masc, base_namefile + self.OPT_EXTENSION)
+        file_path = os.path.join(folder, f'{base_namefile}.opt')
         self.mess.add_mess("LoadOpt1", "info", "Load data ....")
         if not os.path.isfile(file_path):
-            txt = "Simulation Error: there aren't results"
+            txt = f"Simulation Error: there aren't results \n path :{file_path}"
             self.mess.add_mess("LoadOptFile", "critic", txt)
             self.mdb.delete("runs", "id={}".format(id_run))
-            return False
 
         self._update_run_metadata(id_run, date_debut, comments, tracer)
 
-        self._load_opt_results(id_run, file_path, "opt")
+        self._load_opt_results(folder, id_run, base_namefile)
 
         if casier:
-            self._load_basin_results(id_run, base_namefile)
-            self._load_link_results(id_run, base_namefile)
+            self._load_basin_results(folder, id_run, base_namefile)
+            self._load_link_results(folder, id_run, base_namefile)
 
         if tracer:
-            self._load_tracer_results(id_run, base_namefile)
+            self._load_tracer_results(folder, id_run, base_namefile)
 
-        if cond_api and len(save_res_struct) >= 2:
-            self.cl_res_str.stock_res_api(save_res_struct[0], save_res_struct[1])
+        if cond_api:
+            self._load_mobile_struct_results(folder, id_run)
+
+    def _load_mobile_struct_results(self, folder, id_run):
+
+        file_struct = os.path.join(folder, self.STRUCT_RES_FILE)
+        file_link = os.path.join(folder, self.WEIRS_RES_FILE)
+        file_weirs = os.path.join(folder, self.LINKS_RES_FILE)
+        dico_res = {
+            "STRUCT_FG": self._read_res_json(file_struct),
+            "LINK_FG": self._read_res_json(file_link),
+            "WEIRS": self._read_res_json(file_weirs),
+        }
+        self.cl_res_str.stock_res_api(dico_res, id_run)
+
+        # Import mobile gate old results if available
+        crest_file = os.path.join(folder, self.OLD_WEIRS_RES_FILE)
+        if os.path.isfile(crest_file):
+            self.cl_res_str.read_mobil_gate_res(id_run)
+
+    def _read_res_json(self, struct_file):
+        # Import API structure results if available
+        dico = {}
+        if os.path.isfile(struct_file):
+            with open(struct_file, 'r') as file_in:
+                dico = json.load(file_in)
+        return dico
 
     def _organize_results(self, val, pk_column):
         """Organize results by PK and variable."""
@@ -585,7 +567,7 @@ class ClassGetResults:
 
         if values:
             cols = ['id_runs', 'branch', 'section', 'pk']
-            self.mdb.insert_res("results_by_pk", values, cols)
+            self.mdb.insert_res("results_sect", values, cols)
 
     def save_new_results(self, val, id_run):
         """

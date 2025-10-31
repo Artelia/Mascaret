@@ -27,10 +27,6 @@ import sys
 from pathlib import Path
 import traceback
 
-from qgis.PyQt.QtWidgets import (
-    QInputDialog,
-    QWidget
-)
 
 from .ClassGeoWriter import ClassGeoWriter
 from .ClassXcasWriter import ClassXcasWriter
@@ -39,7 +35,7 @@ from ..ClassMessage import ClassMessage
 
 from ..Structure.ClassLinkFGParam import ClassLinkFGParam
 from ..Structure.ClassMobilWeirsParam import ClassMobilWeirsParam
-from ..Structure.ClassPostPreFG import ClassPostPreFG
+from ..Structure.ClassParamFG import ClassParamFG
 from ..WaterQuality.ClassMascWQ import ClassMascWQ
 from ..Structure.ClassMascStruct import ClassMascStruct
 
@@ -54,13 +50,19 @@ class ClassInitializeModel:
 
     Class-level constants define common filenames used by the initialization process.
     """
-    CREST_FILE = "Fichier_Crete.csv"
-    STRUCT_RES_FILE = "res_struct.res"
     LINK_MOBILE_FILE = "links_cli_fg.obj"
     WEIRS_MOBILE_FILE = "weirs_cli_fg.obj"
+    FG_FILE = "cli_fg.obj"
     LIG_FILE = "mascaret.lig"
     XCAS_FILE = "mascaret.xcas"
     XCAS_INIT_FILE = "mascaret_init.xcas"
+    # Constants
+    OPT_EXTENSION = ".opt"
+    BASIN_EXTENSION = ".cas_opt"
+    LINK_EXTENSION = ".liai_opt"
+    TRACER_EXTENSION = ".tra_opt"
+
+    OLD_WEIRS_RES_FILE = "Fichier_Crete.csv"
 
     def __init__(self, main, obj_model):
         """Initialize the initializer.
@@ -309,10 +311,13 @@ class ClassInitializeModel:
         :param model_folder: Reference model folder path.
         :return: None
         """
+
         if self.drun['has_run_init']:
             # create init XCAS
             self.cl_xcas.create_init_xcas(self.XCAS_INIT_FILE)
             if not self.obj_model.set_dinstance(scen, 'init', {'name_xcas': self.XCAS_INIT_FILE}):
+                txt= 'Error modifying dictionary instance for name_xcas'
+                self.mgis.add_info(txt)
                 return
 
             # create law files for init
@@ -359,6 +364,14 @@ class ClassInitializeModel:
         :rtype: bool
         """
         # Create mobile links file
+        if self.drun["has_fg"]:
+            if not self.create_structure_file(
+                    ClassParamFG,
+                    folder,
+                    self.FG_FILE
+            ):
+                return False
+
         if self.drun["has_link_fg"]:
             if not self.create_structure_file(
                     ClassLinkFGParam,
@@ -475,11 +488,11 @@ class ClassInitializeModel:
         """
         if not dico_loi_struct:
             return True
-
         for name, config in dico_loi_struct.items():
             law_list = self.clmeth.get_list_law(config["id_config"])
+
             if init:
-                namef = f"{name}_init",
+                namef = f"{name}_init"
             else:
                 namef = name
             # Create law for model folder
@@ -632,8 +645,8 @@ class ClassInitializeModel:
         :return: None
         """
         folder = Path(folder)
-        listsup = [".opt", ".cas_opt", ".liai_opt", ".tra_opt"]
-        fil_sup = [self.CREST_FILE, self.STRUCT_RES_FILE]
+        listsup = [".opt", ".cas_opt", ".liai_opt", ".tra_opt", ".res"]
+        fil_sup = [self.OLD_WEIRS_RES_FILE]
         if not folder.exists() or not folder.is_dir():
             self.mgis.add_info(f"Folder not valid {folder}", dbg=True)
             return

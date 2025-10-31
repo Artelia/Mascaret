@@ -67,7 +67,7 @@ class ClassMascStruct:
 
         if not list_final:
             return
-        with open(os.path.join(dossier, nom + ".loi"), "w") as fich:
+        with open(os.path.join(dossier, f'{nom}.loi'), "w") as fich:
             fich.write("# " + nom + "\n")
             if typel == 6:
                 fich.write("# Debit Cote_Aval Cote_Amont\n")

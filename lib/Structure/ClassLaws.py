@@ -23,8 +23,7 @@ import os
 import numpy as np
 
 from .ClassPolygone import ClassPolygone
-from .ClassPostPreFG import ClassPostPreFG
-
+from .ClassParamFG import ClassParamFG
 
 class ClassLaws:
     """
@@ -33,7 +32,10 @@ class ClassLaws:
 
     def __init__(self, mgis):
         self.clpoly = ClassPolygone()
-        self.init_var = ClassPostPreFG(mgis)
+
+        self.init_var = ClassParamFG()
+        self.init_var.get_param(mgis)
+
         self.msg = ""
         self.grav = 9.81
 

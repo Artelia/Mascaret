@@ -47,6 +47,7 @@ from .MetOrificePcWidget import MetOrificePcWidget
 from .StructureFgDialog import StructureFgDialog
 from ..ClassLaws import ClassLaws
 from ..ClassMethod import ClassMethod
+from ..ClassParamFG import ClassParamFG
 from ..ClassTableStructure import ClassTableStructure, update_etat_struct
 
 
@@ -56,7 +57,9 @@ class ClassStructureEditDialog(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.clmeth = ClassMethod(self.mgis)
+        self.cli = ClassParamFG()
+        self.cli.get_param(self)
+        self.clmeth = ClassMethod(self, debug=mgis.DEBUG)
         self.wgt_met = QWidget()
 
         self.met_calc = None
