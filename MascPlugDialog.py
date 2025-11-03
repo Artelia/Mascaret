@@ -80,7 +80,8 @@ from .lib.WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
 from .lib.db.Check_tab import CheckTab
 from .lib.db.ClassMasDatabase import ClassMasDatabase
 from .lib.model.ClassMascaret import ClassMascaret
-from .lib.model.ClassMascaret2 import ClassMascaret2
+from .lib.model.ClassInitializeModel import ClassInitializeModel
+from .lib.model.ClassDictRun import ClassDictRun
 from .lib.scores.ClassScoresDialog import ClassScoresDialog
 from .ui.custom_control import ClassWarningBox
 
@@ -669,94 +670,76 @@ class MascPlugDialog(QMainWindow):
 
     def fct_create_xcas(self):
         """create Xcas"""
-
         case, ok = QInputDialog.getItem(self, "Study case", "Kernel", self.listeState, 0, False)
 
         # kernel list
-        if ok:
-            if self.DEBUG:
-                self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
-            rep_run = os.path.join(self.masplugPath, "mascaret_copy")
-            clam = ClassMascaret(self, rep_run=rep_run)
-            # clam = ClassCreatFilesModels(self.mdb, rep_run)
-
-            clam.clfile.creer_xcas(self.Klist[self.listeState.index(case)])
-            file_name_path, _ = QFileDialog.getSaveFileName(
-                self,
-                "saveFile",
-                "{0}.xcas".format(os.path.join(self.repProject, clam.baseName)),
-                filter="XCAS (*.xcas)",
-            )
-            if file_name_path:
-                self.up_rep_project(file_name_path)
-                clam.copy_file_model(file_name_path, case="xcas")
-            clam.del_folder_mas()
-
-    def fct_create_geo(self):
-        """create Xcas"""
-        rep_run = os.path.join(self.masplugPath, "mascaret_copy")
-        clam = ClassMascaret(self, rep_run=rep_run)
-        clam.clfile.creer_geo_ref()
-        if clam.clfile.mess.get_critic_status():
-            self.add_info(clam.clfile.mess.message())
-        # clam.creer_geo()
-
+        if not ok:
+            return
+        kernel = self.Klist[self.listeState.index(case)]
+        if self.DEBUG:
+            self.add_info(f"Kernel {kernel}")
+        obj_model = ClassDictRun(self)
+        obj_model.fill_drun(kernel, 'Mascaret')
         file_name_path, _ = QFileDialog.getSaveFileName(
             self,
             "saveFile",
-            "{0}.geo".format(os.path.join(self.repProject, clam.baseName)),
+            "{0}.xcas".format(os.path.join(self.repProject, 'mascaret')),
+            filter="XCAS (*.xcas)",
+        )
+
+        if file_name_path:
+            self.up_rep_project(file_name_path)
+            clinit = ClassInitializeModel(self,obj_model )
+            clinit.cl_xcas.set_folder(os.path.dirname(file_name_path))
+            clinit.cl_xcas.creer_xcas(kernel, filename=os.path.basename(file_name_path))
+            clinit.check_and_log_errors()
+
+
+    def fct_create_geo(self):
+        """create Xcas"""
+        obj_model = ClassDictRun(self)
+        obj_model.fill_drun('unsteady', 'Mascaret')
+        file_name_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "saveFile",
+            "{0}.geo".format(os.path.join(self.repProject, 'mascaret')),
             filter="GEO (*.geo)",
         )
 
         if file_name_path:
             self.up_rep_project(file_name_path)
-            clam.copy_file_model(file_name_path, case="geo")
-        clam.del_folder_mas()
+            clinit = ClassInitializeModel(self, obj_model)
+            clinit.cl_geo.set_folder(os.path.dirname(file_name_path))
+            clinit.cl_geo.set_geo_filename(os.path.basename(file_name_path))
+            clinit.cl_geo.creer_geo_ref()
+            clinit.check_and_log_errors()
 
     def fct_create_casier(self):
         """create file .Casier"""
         # Mascaret.exe demande un .casier et pas basin d'ou le nom de la fonction
         # Pas de dialog box sur le noyau: les casiers sont uniquement en transitoire
-
-        rep_run = os.path.join(self.masplugPath, "mascaret_copy")
-        clam = ClassMascaret(self, rep_run=rep_run)
-
-        # Appel de la fonction creerGEOCasier() definie dans Class_Mascaret.py
-        clam.clfile.creer_geo_casier()
-        if clam.clfile.mess.get_critic_status():
-            self.add_info(clam.clfile.mess.message())
-
+        obj_model = ClassDictRun(self)
+        obj_model.fill_drun('unsteady', 'Mascaret')
+        if not obj_model.dmodel["run"]["has_casier"]:
+            self.add_info('Basins are not enabled in this model.', box=True, btype='INFO')
+            return
         file_name_path, _ = QFileDialog.getSaveFileName(
             self,
             "saveFile",
-            "{0}.casier".format(os.path.join(self.repProject, clam.baseName)),
+            "{0}.geo".format(os.path.join(self.repProject, 'mascaret')),
             filter="CASIER (*.casier)",
         )
-
         if file_name_path:
             self.up_rep_project(file_name_path)
-            clam.copy_file_model(file_name_path, case="casier")
-        clam.del_folder_mas()
+            clinit = ClassInitializeModel(self, obj_model)
+            clinit.cl_geo.set_folder(os.path.dirname(file_name_path))
+            clinit.cl_geo.creer_geo_casier()
+            clinit.check_and_log_errors()
 
     def fct_run(self):
         """Run Mascaret"""
-        if self.task_mas:
-            self.box.info(
-                "The simulation is not running,\n" " because the previous simulation running yet"
-            )
-            self.add_info("The simulation is not running\n")
-            return
-        case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
-        if ok:
-            if self.DEBUG:
-                self.add_info("Kernel {}".format(self.Klist[self.listeState.index(case)]))
-            run, ok = QInputDialog.getText(
-                QWidget(), "Run name", "Please input a run name :", text=case
-            )
-            run = run.replace("'", " ").replace('"', " ").strip()
-            if ok:
-                clam = ClassMascaret(self)
-                clam.mascaret(self.Klist[self.listeState.index(case)], run)
+        clmas = ClassMascaret(self)
+        clmas.mascaret_ui()
         return
 
     def del_run(self):
@@ -1136,46 +1119,50 @@ Version : {}
         model creation to run with api
         :return:
         """
-        case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
-        if ok:
-            kernel = self.Klist[self.listeState.index(case)]
-            dlgp = ClassParamExportDialog(self, kernel)
-            if QT_VERSION > 5:
-                dlgp.exec()  # PyQt6
-            else:
-                dlgp.exec_()  # PyQt5
-            if dlgp.complet:
-                dict_export = dlgp.dict_accept.copy()
-            else:
-                return
-
-            run = 'test'
-            rep_run = os.path.join(dict_export['path_rep'], dict_export['name_rep'])
-            clam = ClassMascaret(self, rep_run=rep_run)
-            clam.fct_only_init(kernel, run, dict_export)
-            #
-            with open(os.path.join(clam.dossier_file_masc, "FichierCas.txt"), "w") as fichier:
-                fichier.write("'mascaret.xcas'\n")
-            self.export_run(clam, folder_name_path=dict_export['path_rep'], typ_compress=dict_export['typ_compress'])
-            clam.del_folder_mas()
+        # TODO
+        pass
+        # case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
+        # if ok:
+        #     kernel = self.Klist[self.listeState.index(case)]
+        #     dlgp = ClassParamExportDialog(self, kernel)
+        #     if QT_VERSION > 5:
+        #         dlgp.exec()  # PyQt6
+        #     else:
+        #         dlgp.exec_()  # PyQt5
+        #     if dlgp.complet:
+        #         dict_export = dlgp.dict_accept.copy()
+        #     else:
+        #         return
+        #
+        #     run = 'test'
+        #     rep_run = os.path.join(dict_export['path_rep'], dict_export['name_rep'])
+        #     clam = ClassMascaret(self, rep_run=rep_run)
+        #     clam.fct_only_init(kernel, run, dict_export)
+        #     #
+        #     with open(os.path.join(clam.dossier_file_masc, "FichierCas.txt"), "w") as fichier:
+        #         fichier.write("'mascaret.xcas'\n")
+        #     self.export_run(clam, folder_name_path=dict_export['path_rep'], typ_compress=dict_export['typ_compress'])
+        #     clam.del_folder_mas()
 
     def import_resu_model(self):
         """
         import resultats
         :return:
         """
-        clam = ClassMascaret(self)
-        dlg = ClassImportRes(clam)
-        if QT_VERSION > 5:
-            dlg.exec()  # PyQt6
-        else:
-            dlg.exec_()  # PyQt5
-        if dlg.complet:
-            clam.import_results(
-                dlg.run, dlg.scen, dlg.comments, dlg.path_model, date_debut=dlg.date
-            )
-        del dlg
-        del clam
+        # TODO
+        pass
+        # clam = ClassMascaret(self)
+        # dlg = ClassImportRes(clam)
+        # if QT_VERSION > 5:
+        #     dlg.exec()  # PyQt6
+        # else:
+        #     dlg.exec_()  # PyQt5
+        # if dlg.complet:
+        #     clam.import_results(
+        #         dlg.run, dlg.scen, dlg.comments, dlg.path_model, date_debut=dlg.date
+        #     )
+        # del dlg
+        # del clam
 
     def open_with_default_editor(self, file_path):
         import subprocess
@@ -1193,27 +1180,8 @@ Version : {}
         # self.chkt.debug_update_vers_meta(version="5.1.5")
         # cl.creat_file_no_keep_break()
         # self.chkt.update_version('620')
-        clmas = ClassMascaret2(self)
-        clmas.mascaret_ui()
-        # Initialisation
-    #     from .lib.model.test_task import Receiver, TaskMascaret2
-    #     from qgis.core import Qgis,QgsMessageLog
-    #     #
-    #     # self.receiver = Receiver()
-    #     self.task = TaskMascaret2("Test Task")
-    #     # self.task.signal.launch_completed.connect(self.receiver.test, Qt.QueuedConnection)
-    #     self.task.signal.launch_completed.connect(self.test)
-    #     #
-    #     # # # Lancer la tâche
-    #     QgsApplication.taskManager().addTask(self.task)
-    #     QgsMessageLog.logMessage(f"Exception during task launch",
-    #                 'TaskMascaret',
-    #                 Qgis.Info
-    #             )
-    #     print('aaaa')
-    #
-    # def test(self,event):
-    #     print('ippppppppppp', event)
+        pass
+
     def update_ks_mesh_planim(self):
         """update value of the seleted profiles"""
 

@@ -103,7 +103,7 @@
     </widget>
    </item>
    <item row="2" column="0" colspan="2">
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="lay_path">
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">

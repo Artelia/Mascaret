@@ -80,6 +80,7 @@ class ClassRunUIDialog(QDialog):
         self.default_run_path = self.obj_model.dmodel["general"]["path_runs"]
         self.run_path = self.default_run_path
         self.lbl_path.setText(self.run_path)
+        self.hide_layout(self.lay_path)
 
         self.sp_core.setMaximum(os.cpu_count())
         self.sp_core.setValue(int(os.cpu_count() * 0.75))
@@ -320,7 +321,11 @@ class ClassRunUIDialog(QDialog):
         )
         return False
 
-
+    def hide_layout(self,layout):
+        for i in range(layout.count()):
+            widget = layout.itemAt(i).widget()
+            if widget is not None:
+                widget.hide()
 
     def accept_run(self):
         """Collect data from table rows, update obj_model and close dialog.
@@ -431,3 +436,4 @@ class LigFileWidget(QWidget):
             "file_name": self.file_label.text() if self.file_label.text() != 'No file selected' else '',
             "file_path": self.hidden_path.text()
         }
+
