@@ -19,19 +19,10 @@ email                :
 
 """
 
-import datetime
+
 import json
 import os
-import re
 
-import pandas as pd
-from qgis.PyQt.QtWidgets import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
-
-from ..ClassMessage import ClassMessage
-from ..Graphic.ClassResProfil import ClassResProfil
 
 
 class ClassResultAssim:
