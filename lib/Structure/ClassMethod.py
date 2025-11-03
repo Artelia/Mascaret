@@ -25,36 +25,21 @@ from shapely.geometry import *
 
 from .ClassPolygone import ClassPolygone
 from .ClassTableStructure import ClassTableStructure
-try :
-    from ..ClassMessage import ClassMessage
-except:
-    from ClassMessage import ClassMessage
-
 
 class ClassMethod:
-    def __init__(self, mgis):
-        self.mgis = mgis
-        self.mdb = mgis.mdb
-        self.debug = mgis.DEBUG
+
+    def __init__(self, parent, debug=False, cl_mess= None):
+        self.cli = parent.cli
+        self.mgis=parent.mgis
+        self.mdb = parent.mgis.mdb
+        self.debug = debug
+        self.mess =cl_mess
 
         self.grav = 9.81
         self.tbst = ClassTableStructure()
         self.clpoly = ClassPolygone()
-        self.mess = ClassMessage()
         self.num_mess = 0
 
-    def sort_law(self, list_final):
-        """
-        sort the law
-        :param list_final: law data
-        :return:
-        """
-        info = np.array(list_final)
-        # trie de la colonne 0 à 2
-        info = info[info[:, 2].argsort()]  # First sort doesn't need to be stable.
-        info = info[info[:, 1].argsort(kind="mergesort")]
-        info = info[info[:, 0].argsort(kind="mergesort")]
-        return info
 
     def create_poly_elem(self, id_config, config_type):
         """
@@ -68,7 +53,7 @@ class ClassMethod:
         """
 
         if self.checkprofil(id_config):
-            profil = self.get_profil(id_config)
+            profil = self.cli.get_profil(id_config)
         else:
             msg = "Profile copy isn't found"
             self.add_info(msg)
@@ -83,26 +68,26 @@ class ClassMethod:
             return
         if config_type == "PC":
             list_recup = ["EPAITAB", "ZTOPTAB", "FIRSTWD"]
-            param_g = self.get_param_g(list_recup, id_config)
+            param_g = self.cli.get_param_g(list_recup, id_config)
             param_g["ZPC"] = param_g["ZTOPTAB"] - param_g["EPAITAB"]
             recup_trav = ["LARGTRA"]
             recup_pil = ["FORMPIL", "LARGPIL", "LONGPIL"]
             recup_p1 = []
         elif config_type == "PA":
             list_recup = ["ZTOPTAB", "FIRSTWD"]
-            param_g = self.get_param_g(list_recup, id_config)
+            param_g = self.cli.get_param_g(list_recup, id_config)
             recup_trav = ["FORMARC", "LARGTRA", "ZMINARC", "ZMAXARC"]
             recup_pil = ["LARGPIL"]
             recup_p1 = ["FORMARC", "ZMINARC"]
         elif config_type == "DA":
             list_recup = ["ZTOPTAB", "FIRSTWD"]
-            param_g = self.get_param_g(list_recup, id_config)
+            param_g = self.cli.get_param_g(list_recup, id_config)
             recup_trav = ["LARGTRA", "COTERAD", "HAUTDAL"]
             recup_pil = ["LARGPIL"]
             recup_p1 = ["COTERAD", "HAUTDAL"]
         elif config_type == "BU":
             list_recup = ["ZTOPTAB"]
-            param_g = self.get_param_g(list_recup, id_config)
+            param_g = self.cli.get_param_g(list_recup, id_config)
             param_g["FIRSTWD"] = 0
             recup_trav = ["COTERAD", "ABSBUSE", "LARGTRA"]
 
@@ -188,9 +173,8 @@ class ClassMethod:
         width += width_prec
 
     def add_info(self, txt):
-        if self.mgis:
+        if self.mess:
             self.mess('clMehtod{}'.format(self.num_mess), 'info', txt)
-            # self.mgis.add_info(txt)
         else:
             print(txt)
 
@@ -257,122 +241,6 @@ class ClassMethod:
         #
         return struct_dico
 
-    def fg_actif(self):
-        where = "active AND id IN (SELECT id_config FROM {}.struct_fg  WHERE active) ".format(
-            self.mdb.SCHEMA
-        )
-        rows = self.mdb.select("struct_config", where=where, list_var=["id"])
-        if rows["id"]:
-            return rows["id"]
-        else:
-            return None
-
-    def get_param_fg(self):
-        """get variable of the floodgate"""
-
-        where = "active AND id_config in (SELECT id FROM {}.struct_config  WHERE active)".format(
-            self.mdb.SCHEMA
-        )
-        dict_par = self.mdb.select(
-            "struct_fg", where=where, list_var=["id_config", "type_fg", "var_reg", "xpos"]
-        )
-        param_fg = {}
-        link_name_id = {}
-        lid_config = dict_par["id_config"]
-        for i, id_config in enumerate(lid_config):
-            dict_tmp = {
-                "DIRFG": dict_par["type_fg"][i],
-                "LOCCONT": dict_par["xpos"][i],
-                "VREG": dict_par["var_reg"][i],
-            }
-
-            list_recup = [
-                "VELOFG",
-                "ZMAXFG",
-                "ZINCRFG",
-                "DTREG",
-                "VALREG",
-                "TOLREG",
-                "BIEFCONT",
-                "XPCONT",
-            ]
-
-            for info in list_recup:
-                where = "id_config = {0} AND name_var = '{1}' ".format(id_config, info)
-                rows = self.mdb.select(
-                    "struct_fg_val", where=where, order="id_order", list_var=["value"]
-                )
-                if rows["value"]:
-                    dict_tmp[info] = rows["value"][0]
-                else:
-                    dict_tmp[info] = None
-
-            where = "id = {}".format(id_config)
-            rows = self.mdb.select("struct_config", where=where, list_var=["method", "name"])
-            dict_tmp["NAME"] = rows["name"][0]
-            dict_tmp["METH"] = rows["method"][0]
-            link_name_id[rows["name"][0]] = id_config
-            # init dict
-            dict_tmp["STATEOLD"] = 0
-            dict_tmp["ZRESI"] = 0
-            param_fg[id_config] = dict_tmp
-
-        return param_fg, link_name_id
-
-    def select_poly(self, table, where="", order=""):
-        """
-        Select polygon
-        example:
-                where = "id_config = {0} AND id_elem = {1}".format(self.id_config, id_elem)
-                toto=self.select_poly('struct_elem',where)
-        :param table: table
-        :param where:  "where" of sql script
-        :param order: "order" of sql script
-
-        :return:
-        """
-        if where:
-            where = " WHERE " + where + " "
-        if order:
-            order = " ORDER BY " + order
-        sql = "SELECT ST_AsGeoJSON(Polygon)  AS Polygon  FROM {0}.{1} {2} {3};"
-        (results, nam_col) = self.mdb.run_query(
-            sql.format(self.mdb.SCHEMA, table, where, order), fetch=True, namvar=True
-        )
-        cols = [col[0] for col in nam_col]
-        dico = {}
-        for col in cols:
-            dico[col] = []
-        for row in results:
-            for i, val in enumerate(row):
-                if val is not None:
-                    try:
-                        dico[cols[i]].append(shape(json.loads(val.strip())))
-                    except AttributeError:
-                        dico[cols[i]].append(shape(json.loads(val)))
-
-        return dico
-
-    def select_poly_elem(self, id_config, type_conf):
-        """
-        Get polygone list of hole
-        :param id_config: index of hydraulic structure
-        :param type_conf: 0: hole, 1:span
-        :return:
-        """
-        where = " id_config={} and type={} ".format(id_config, type_conf)
-        order = "id_elem"
-        return self.select_poly("struct_elem", where, order)["polygon"]
-
-    def get_profil(self, id_config):
-        """
-        Get profil coordonnee
-        :param id_config: index of hydraulic structure
-        """
-        where = "id_config = {0}".format(id_config)
-        order = "id_order"
-        profil = self.mdb.select("profil_struct", where=where, order=order, list_var=["x,z"])
-        return profil
 
     def checkprofil(self, id_config):
         """ "
@@ -386,79 +254,9 @@ class ClassMethod:
         else:
             return False
 
-    def get_abac(self, list_recup):
-        """
-        Get abacus
-        :param list_recup: list of abacus
-        :return: dico with abacus data
-        #"""
-        name_abac = []
-        dico_abc = {}
-        table = "struct_abac"
-        if list_recup == "all":
-            sql = "SELECT DISTINCT nam_method FROM {}.{};".format(self.mdb.SCHEMA, table)
-            list_recup = self.mdb.run_query(sql, fetch=True, namvar=False)
-            list_recup = [var[0] for var in list_recup]
 
-        for metho in list_recup:
-            where = "nam_method = '{0}' ".format(metho)
-            list_nam = self.mdb.select_distinct("nam_abac", table, where)["nam_abac"]
 
-            name_abac += list_nam
-            for nam_abc in list_nam:
-                sql = "SELECT DISTINCT var FROM {}.{} WHERE nam_method='{}' and nam_abac='{}';".format(
-                    self.mdb.SCHEMA, table, metho, nam_abc
-                )
 
-                list_var = self.mdb.run_query(sql, fetch=True, namvar=False)
-                dico_abc[nam_abc] = {}
-                for var in list_var:
-                    dico_abc[nam_abc][var[0]] = []
-                    dico_abc[nam_abc]["order_{}".format(var[0])] = []
-
-                sql = (
-                    "SELECT  var,value,id_order FROM {}.{} WHERE nam_method='{}' "
-                    "and nam_abac='{}' ORDER by id_order ;".format(
-                        self.mdb.SCHEMA, table, metho, nam_abc
-                    )
-                )
-                rows = self.mdb.run_query(sql, fetch=True, namvar=False)
-
-                for row in rows:
-                    dico_abc[nam_abc][row[0]].append(row[1])
-                    dico_abc[nam_abc]["order_{}".format(row[0])].append(row[2])
-
-        return dico_abc
-
-    def get_param_g(self, list_recup, id_config):
-        """
-        Get general parameters
-        :param list_recup: list of  value to get
-        :param id_config: index of hydraulic structure
-        :return: dico
-        """
-
-        param_g = {}
-        if list_recup == "all":
-            sql = "SELECT DISTINCT var FROM {}.{} " "WHERE id_config = {};".format(
-                self.mdb.SCHEMA, "struct_param", id_config
-            )
-            list_recup = self.mdb.run_query(sql, fetch=True, namvar=False)
-            list_recup = [var[0] for var in list_recup]
-
-        if list_recup:
-            for info in list_recup:
-                where = "id_config = {0} AND var = '{1}' ".format(id_config, info)
-                rows = self.mdb.select("struct_param", where=where, list_var=["value"])
-                if rows["value"]:
-                    param_g[info] = rows["value"][0]
-                else:
-                    if self.debug:
-                        self.add_info("{} not specified in struct_param table".format(info))
-
-            return param_g
-        else:
-            return None
 
 
 # *********************************************************

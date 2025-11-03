@@ -24,7 +24,7 @@ import traceback
 from qgis.core import QgsMessageLog, Qgis
 
 from .ClassCreatFilesModels import ClassCreatFilesModels
-from .ClassGetResults import ClassGetResults
+from .ClassGetResults_old import ClassGetResults
 from ..ClassMessage import ClassMessage
 
 MESSAGE_CATEGORY = "TaskMascaret"

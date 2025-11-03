@@ -189,7 +189,7 @@ class TaskMascComput(QgsTask):
             pwd = os.getcwd()
             os.chdir(self.dossier_file_masc)
             clapi = ClassAPIMascaret(self.masc)
-            clapi.main(fichier_cas, tracer, casier)
+            clapi.fct_main(fichier_cas, tracer, casier)
             mess = ClassMessage()
             mess.load_obj(self.dossier_file_masc)
             self.add_log_mess(mess)

@@ -732,3 +732,31 @@ class TypeErrorModel:
 
     def clear_err(self):
         self.dicterr = {}
+
+
+def find_latest_lis_file(root_dir):
+    """
+   Find the file .lis the most recently modified in the tree.
+
+    Args:
+        root_dir (str): Path to the root directory (e.g., 'macaret')
+
+    Returns:
+        str: Full path to the most recent .lis file, or None if none found
+    """
+    latest_file = None
+    latest_time = 0
+
+    # Parcourir récursivement tous les fichiers
+    for root, dirs, files in os.walk(root_dir):
+        for file in files:
+            if file.endswith('.lis'):
+                file_path = os.path.join(root, file)
+                # Récupérer le temps de modification
+                mod_time = os.path.getmtime(file_path)
+
+                if mod_time > latest_time:
+                    latest_time = mod_time
+                    latest_file = file_path
+
+    return latest_file

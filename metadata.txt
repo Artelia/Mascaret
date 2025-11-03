@@ -52,7 +52,7 @@ changelog=
     6.0.1 : Fix the bug for methods using several observations with different time offsets
     6.0.0 : Merge experimental version into master
             Clear Qgis2 code 
-    5.1.13 : Bug fix to print log mascaret in window main
+    5.1.13 : Bug fix to print log mascaret in window fct_main
     5.1.12 : Addition of Bulk Chart Export Feature
              Addition of display weirs for the longitudinal profile
              Bug fix to work in QGIS 3.38.

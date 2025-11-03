@@ -32,6 +32,8 @@ class ClassStockResStruct:
 
     def stock_res_api(self, dico, id_run):
         """Stock api results"""
+
+
         handlers = {
             "STRUCT_FG": self.res_fg,
             "LINK_FG": self.res_link_fg,

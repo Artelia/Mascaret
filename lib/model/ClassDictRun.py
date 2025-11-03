@@ -31,7 +31,7 @@ from qgis.PyQt.QtWidgets import (
 )
 from ..Structure.ClassLinkFGParam import ClassLinkFGParam
 from ..Structure.ClassMobilWeirsParam import ClassMobilWeirsParam
-
+from ..Structure.ClassParamFG import ClassParamFG
 from ..WaterQuality.ClassMascWQ import ClassMascWQ
 from ...ui.custom_control import ClassWarningBox
 
@@ -67,6 +67,7 @@ class ClassDictRun:
         self.wq = ClassMascWQ(self.mgis, run_folder)
         self.cl_lk = ClassLinkFGParam()
         self.cl_w = ClassMobilWeirsParam()
+        self.cl_fg = ClassParamFG()
 
         self.dmodel = {
             "general": {
@@ -170,6 +171,46 @@ class ClassDictRun:
             return []
         return [dico["name"] for dico in self.dmodel['scenario']]
 
+    def get_list_type_instance(self, type_inst='all'):
+        """
+        Iterates through all scenarios and collects instances whose 'name'
+        attribute matches the specified type.
+
+        :param type_inst: The instance type/name to filter by
+        :type type_inst: str
+        :return: A list of instance dictionaries matching the specified type
+        :rtype: list
+        """
+        task_params = []
+        dgeneral = self.get_dgeneral()
+        drun = self.get_drun()
+
+        # Iterate through all available scenarios
+        for scen in self.get_list_name_scenario():
+            # Get scenario details
+            dscen = self.get_scenario(scen)
+            for instance in dscen.get("instances", []):
+                if instance.get('name') == type_inst or type_inst == 'all':
+                    #add info scenario or general
+                    instance.update({
+                        "run_name" : drun.get("name_run"),
+                        "scen_name": dscen.get("name"),
+                        "comments" : dscen.get("comment"),
+                        "BASE_NAME": dscen.get("BASE_NAME"),
+                        "api": dgeneral.get('api'),
+                        "dbg": dgeneral.get('dbg'),
+                    })
+                    task_params.append(instance)
+            # Extract instances matching the specified type
+            # task_params.extend(
+            #     instance for instance in dscen.get("instances", [])
+            #     if instance.get('name') == type_inst or type_inst == 'all'
+            # )
+        if type_inst == 'all':
+            task_params.sort(key=lambda x: x.get('order', 0))
+
+        return task_params
+
     def fill_drun(self, kernel, name_run):
         """Populate the 'run' configuration based on kernel and DB parameters.
 
@@ -192,6 +233,7 @@ class ClassDictRun:
             "has_link_fg": self.cl_lk.fg_actif_lk(self.mdb) if par["presenceCasiers"] else False,
             "has_weir_fg": self.cl_w.fg_actif_weirs(self.mdb) if kernel == "unsteady" else False,
             "has_tracer": par["presenceTraceurs"],
+            "has_fg" : self.cl_fg.fg_actif(self.mdb) if kernel == "unsteady" else False,
             "ligInit": par["LigEauInit"],
             "has_run_init": par["initialisationAuto"],
             'has_assimilation': False
@@ -267,7 +309,6 @@ class ClassDictRun:
             d_folder[name] = instance.get("RUN_REP")
 
         return d_folder
-
 
     def get_id_scenario(self, scen):
         """Get the index of a scenario by name.
@@ -468,6 +509,7 @@ class ClassDictRun:
             d_scen = {
                 "name": scen_name,
                 "comments": scenar["Comment"],
+                "BASE_NAME": "mascaret",
                 "path_instance": os.path.join(path_run, f"{scen_name}"),
                 "instances": []
             }
@@ -488,19 +530,23 @@ class ClassDictRun:
             # #when init run
             folder_run = os.path.join(d_scen["path_instance"], 'run_ref') if drun['has_assimilation'] else d_scen[
                 "path_instance"]
+            order = 0
             if drun['has_run_init']:
                 d_scen["instances"].append({'name': 'init',
                                             "RUN_REP": os.path.join(folder_run, 'run_init'),
-                                            "BASE_NAME": "mascaret",
                                             "has_casier": False,
                                             "has_tracer": False,
+                                            "starttime": None,
+                                            "order" : order,
                                             })
+                order += 1
             d_scen["instances"].append({'name': 'ref',
                                         "RUN_REP": folder_run,
-                                        "BASE_NAME": "mascaret",
                                         # Update var use in API
                                         "has_casier": drun["has_casier"],
                                         "has_tracer": drun["has_tracer"],
+                                        "starttime": d_scen.get("starttime") if drun['event'] else None ,
+                                        "order": order,
                                         })
             scenarios.append(d_scen)
 

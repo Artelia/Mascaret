@@ -35,6 +35,8 @@ class ClassGeoWriter:
         self.geo_filename = geo_filename
         self.folder = folder
 
+    def set_geo_filename(self, filename):
+        self.geo_filename = filename.replace('.geo','').replace('.casier','')
     def set_folder(self,folder):
         if os.path.isdir(folder):
             self.folder = folder
