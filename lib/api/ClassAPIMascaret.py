@@ -30,6 +30,7 @@ try:
     from ..Structure.ClassFloodGateLk import ClassFloodGateLk
     from ..Structure.ClassMobilWeirs import ClassMobilWeirs
     from ..ClassMessage import ClassMessage
+    from ..model.ClassResultAssim import ClassResultAssim
 except  :
     # autonome python
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -39,6 +40,8 @@ except  :
     from Structure.ClassFloodGateLk import ClassFloodGateLk
     from Structure.ClassMobilWeirs import ClassMobilWeirs
     from ClassMessage import ClassMessage
+    from model.ClassResultAssim import ClassResultAssim
+
 
 
 def check_init(file):
@@ -457,6 +460,11 @@ class ClassAPIMascaret:
                 dtp = dtp_tmp
         t0 = t1
         t1 += dtp
+
+        # Saving results for assimilation
+        # TODO if assim ?
+        # valZ = [self.masc.get('State.Z', i) for i in range(self.masc.nb_nodes)]
+        # valQ = [self.masc.get('State.Z', i) for i in range(self.masc.nb_nodes)]
 
         return t0, t1, dtp
 

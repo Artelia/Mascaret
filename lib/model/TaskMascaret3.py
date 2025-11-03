@@ -283,6 +283,7 @@ class TaskMascaret(QgsTask):
                 json.dump(params, fp)
 
             os.chdir(os.path.join("..", "api"))
+            # Launching Mascaret computation
             process = subprocess.run(
                 ["python", "ClassAPIMascaret.py", param_file],
                 shell=True,
