@@ -624,7 +624,7 @@ class ClassInitializeModel:
         :return: True if executable exists, False otherwise.
         :rtype: bool
         """
-        if not os.path.isdir(self.bin_dir):
+        if not os.path.isdir(self.dgeneral["binary_path"]):
             return False
         test = sys.platform
         soft = None
@@ -633,7 +633,7 @@ class ClassInitializeModel:
         elif test == "win32":
             soft = "mascaret.exe"
 
-        if not os.path.isfile(os.path.join(self.bin_dir, soft)):
+        if not os.path.isfile(os.path.join(self.dgeneral["binary_path"], soft)):
             return False
 
         return True

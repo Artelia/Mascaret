@@ -83,7 +83,7 @@ class ClassResultAssim:
         """
         # self.dict_stations contient en clé un ID de zone à caler, et en valeurs un dico avec
         # - les coordonnées X des observations associées
-        dict_tempo = {1: {'X': [281.41]}, 2: {'X': [171.88]}}
+        dict_tempo = {1: {'X': [281.41]}, 2: {'X': [83.58]}}
         with open(json_file, 'w') as f:
             json.dump(dict_tempo, f)
 
@@ -117,8 +117,23 @@ class ClassResultAssim:
         self.dictRes = {'time': [],
                         'Z': {n: [] for n in range(1, self.num_zones + 1)},
                         'Q': {n: [] for n in range(1, self.num_zones + 1)},
+                        'KS_maj': {n: -99 for n in range(1, self.num_zones + 1)},
+                        'KS_min': {n: -99 for n in range(1, self.num_zones + 1)}
                         }
         print(self.dictRes)
+
+    def store_KS_values(self, KSmin, KSmaj):
+        """
+        creation run line in runs table
+        :param KSmin: KS values in minor bed
+        :param KSmaj: KS_values in major bed
+        :return:
+        """
+        print(KSmin, KSmaj)
+        for idx, i in enumerate(self.dict_obs):
+            for zone in self.dict_obs[i]["id_zone"]:
+                self.dictRes['KS_min'][zone] = KSmin[idx]
+                self.dictRes['KS_maj'][zone] = KSmaj[idx]
 
     def store_result(self, valZ, valQ, time, num_zone=None):
         """

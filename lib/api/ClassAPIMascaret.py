@@ -109,10 +109,11 @@ class ClassAPIMascaret:
             self.baseName = self.clmas.baseName
         self.num_mess = 0
 
-        # TODO remplacer avec nombres de zones d'assim
+        # assim
         self.num_zones_assim = 0
         self.dico_assim = None
         self.res_assim = None
+        self.pdt_assim = 360
 
         # floodgat
         self.clfg = ClassFloodGate(self)
@@ -471,7 +472,7 @@ class ClassAPIMascaret:
 
         masc.compute(t0, t1, dtp)
 
-        if self.res_assim.is_assim:
+        if self.res_assim.is_assim and t0 % self.pdt_assim == 0:
             # Saving results for assimilation
             # TODO if assim ?
             try:
@@ -508,6 +509,15 @@ class ClassAPIMascaret:
         """
         info = self.masc.log_stream.getvalue()
         self.add_info(info)
+        # TODO if self.assim
+        if self.res_assim.is_assim:
+            # Storing additionally KS values for later use in BLUE
+            valKSmin = [self.masc.get('Model.FricCoefMainCh', i) for i in self.res_assim.dict_obs]
+            valKSmaj = [self.masc.get('Model.FricCoefFP', i) for i in self.res_assim.dict_obs]
+            print(valKSmaj, valKSmin)
+            self.res_assim.store_KS_values(valKSmin, valKSmaj)
+            self.res_assim.write_results(self.dossier_file_masc, 'Z_Q_assim.json')
+
         self.masc.delete_mascaret()
         del self.masc
         if self.clfg is not None:
@@ -526,10 +536,7 @@ class ClassAPIMascaret:
             if self.mgis is None:
                 self.write_res_struct(self.results_api["WEIRS"], "res_weirs.res")
         self.mess.export_obj(self.dossier_file_masc)
-        # TODO if self.assim
-        self.add_info('Before saving ZQASSIM')
-        self.mess.export_obj(self.dossier_file_masc)
-        self.res_assim.write_results(self.dossier_file_masc, 'Z_Q_assim.json')
+
 
     def write_res_struct(self, res, filen="res_struct.res"):
         """
