@@ -21,6 +21,7 @@ email                :
 import json
 import os
 import sys
+import numpy as np
 
 try:
     # Plugin
@@ -30,7 +31,7 @@ try:
     from ..Structure.ClassFloodGateLk import ClassFloodGateLk
     from ..Structure.ClassMobilWeirs import ClassMobilWeirs
     from ..ClassMessage import ClassMessage
-    from ..model.ClassResultAssim import ClassResultAssim
+    from ..model.ClassResultAssim import ClassResultAssim, get_coords_assim
 except  :
     # autonome python
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -40,7 +41,7 @@ except  :
     from Structure.ClassFloodGateLk import ClassFloodGateLk
     from Structure.ClassMobilWeirs import ClassMobilWeirs
     from ClassMessage import ClassMessage
-    from model.ClassResultAssim import ClassResultAssim
+    from model.ClassResultAssim import ClassResultAssim, get_coords_assim
 
 
 
@@ -106,9 +107,14 @@ class ClassAPIMascaret:
             self.mgis = self.clmas.mgis
             self.dossier_file_masc = self.clmas.dossier_file_masc
             self.baseName = self.clmas.baseName
-
-
         self.num_mess = 0
+
+        # assim
+        self.num_zones_assim = 0
+        self.dico_assim = None
+        self.res_assim = None
+        self.pdt_assim = 360
+
         # floodgat
         self.clfg = ClassFloodGate(self)
         self.mobil_struct = self.clfg.actif_mobil_fg
@@ -140,6 +146,18 @@ class ClassAPIMascaret:
         self.init_crit_stop()
 
         self.init_break_and_regul()
+
+        # TODO if assim
+        self.res_assim = ClassResultAssim()
+        xcoords = np.array([self.masc.get('Model.X', i) for i in range(self.masc.get_var_size('Model.X')[0])])
+        self.res_assim.get_coords_assim(os.path.join(self.dossier_file_masc, 'dico_assim_zones.json'),
+                                        xcoords,
+                                        self.dossier_file_masc)
+        if self.res_assim.is_assim:
+            self.num_zones_assim = self.res_assim.num_zones
+
+
+
 
         return 0
 
@@ -454,6 +472,22 @@ class ClassAPIMascaret:
 
         masc.compute(t0, t1, dtp)
 
+        if self.res_assim.is_assim and t0 % self.pdt_assim == 0:
+            # Saving results for assimilation
+            # TODO if assim ?
+            try:
+                self.add_info('Before getting ZQ')
+                txt = f'{self.num_zones_assim} - {self.masc.nb_nodes}'
+                self.add_info(txt)
+                # i correspond au clé de dict_obs soit les numéros de coordonnées associés aux zones
+                valZ = [self.masc.get('State.Z', i) for i in self.res_assim.dict_obs]
+                valQ = [self.masc.get('State.Q', i) for i in self.res_assim.dict_obs]
+                self.add_info('Before storing ZQ')
+
+                self.res_assim.store_result(valZ, valQ, t0)
+            except Exception as e:
+                raise ValueError(e)
+
         if conum:
             dtp_tmp = masc.get("State.DT")
             if dtp_tmp != 0:
@@ -461,10 +495,7 @@ class ClassAPIMascaret:
         t0 = t1
         t1 += dtp
 
-        # Saving results for assimilation
-        # TODO if assim ?
-        # valZ = [self.masc.get('State.Z', i) for i in range(self.masc.nb_nodes)]
-        # valQ = [self.masc.get('State.Z', i) for i in range(self.masc.nb_nodes)]
+
 
         return t0, t1, dtp
 
@@ -478,6 +509,15 @@ class ClassAPIMascaret:
         """
         info = self.masc.log_stream.getvalue()
         self.add_info(info)
+        # TODO if self.assim
+        if self.res_assim.is_assim:
+            # Storing additionally KS values for later use in BLUE
+            valKSmin = [self.masc.get('Model.FricCoefMainCh', i) for i in self.res_assim.dict_obs]
+            valKSmaj = [self.masc.get('Model.FricCoefFP', i) for i in self.res_assim.dict_obs]
+            print(valKSmaj, valKSmin)
+            self.res_assim.store_KS_values(valKSmin, valKSmaj)
+            self.res_assim.write_results(self.dossier_file_masc, 'Z_Q_assim.json')
+
         self.masc.delete_mascaret()
         del self.masc
         if self.mobil_struct:
@@ -496,6 +536,7 @@ class ClassAPIMascaret:
             if self.mgis is None:
                 self.write_res_struct(self.results_api["WEIRS"], "res_weirs.res")
         self.mess.export_obj(self.dossier_file_masc)
+
 
     def write_res_struct(self, res, filen="res_struct.res"):
         """
