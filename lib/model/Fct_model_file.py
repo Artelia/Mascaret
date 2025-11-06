@@ -111,4 +111,40 @@ def typ_struct(meth):
         return None
 
 
+def compress_run_file(dossier_file_masc, rep, typ_compress="zip",mgis=None):
+    """Compress folder "rep" path
+    Args:
+        :param rep : Model folder
+        :param typ_compress: directory compression type
+    Return :
+        :return (boolean) exit status
+    """
+
+    try:
+        tar_local = shutil.make_archive(
+            os.path.join(rep, os.path.basename(dossier_file_masc)),
+            typ_compress,
+            os.path.dirname(dossier_file_masc),
+            os.path.basename(dossier_file_masc),
+        )
+        return True
+
+    except Exception as err:
+        if mgis:
+            mgis.add_info(f"**** Error : {str(err)}")
+        else:
+            print(f"**** Error : {str(err)}")
+        return False
+
+def del_folder_mas(dossier_file_masc, mgis=None):
+    """Delete the copy folder"""
+
+    try:
+        shutil.rmtree(dossier_file_masc)
+    except Exception as e:
+        txt = f"Failed to delete {dossier_file_masc}. Reason: {e}"
+        if mgis:
+            mgis.add_info(txt, dbg=True)
+        else:
+            print(txt)
 

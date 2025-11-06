@@ -158,6 +158,21 @@ dico_typ_law = {
         },
         "xIsTime": True,
     },
+    8: {
+        "name": "Normal Height (Calculated)",
+        "var": [{"name": "flowrate", "code": "flowrate"}, {"name": "level", "code": "z"}],
+        "graph": {
+            "x": {"var": 0, "tit": "Q", "unit": "m3/s"},
+            "y": {"var": [1], "tit": "Z", "unit": "m"},
+        },
+        "geom": {
+            "extremities": [9],
+            "weirs": False,
+            "lateral_inflows": False,
+            "lateral_weirs": False,
+        },
+        "xIsTime": False,
+    },
 }
 
 

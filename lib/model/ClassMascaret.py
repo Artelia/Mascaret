@@ -288,27 +288,6 @@ class ClassMascaret:
         self.process_next_task()
 
 
-    def compress_run_file(self, rep, typ_compress="zip"):
-        """Compress folder "rep" path
-        Args:
-            :param rep : Model folder
-            :param typ_compress: directory compression type
-        Return :
-            :return (boolean) exit status
-        """
-        try:
-            dgeneral = self.obj_model.get_dgeneral()
-            dossier_file_masc = dgeneral["path_runs"]
-            tar_local = shutil.make_archive(
-                os.path.join(rep, os.path.basename(dossier_file_masc)),
-                typ_compress,
-                os.path.dirname(dossier_file_masc),
-                os.path.basename(dossier_file_masc),
-            )
-            return True
 
-        except Exception as err:
-            self.mgis.add_info("**** Error : {}".format(str(err)))
-            return False
 
 

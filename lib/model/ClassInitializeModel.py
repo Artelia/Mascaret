@@ -88,7 +88,7 @@ class ClassInitializeModel:
         self.clmeth = ClassMascStruct(self.mdb)
         self.wq = ClassMascWQ(self.mgis, '')
 
-    def main(self):
+    def main(self,up_param=None):
         """Main entry: generate folders and initialize all scenarios.
 
         :return: None
@@ -97,7 +97,7 @@ class ClassInitializeModel:
         lscenar = self.obj_model.get_list_name_scenario()
         lst_idx_del = []
         for ids, scen in enumerate(lscenar):
-            stat = self.mascaret_init(scen)
+            stat = self.mascaret_init(scen,up_param)
             if not stat:
                 lst_idx_del.append(ids)
                 self.box.critic(f"Simulation {scen} aborted.")
@@ -227,7 +227,7 @@ class ClassInitializeModel:
         with open(fichier_run, "w") as fichier:
             fichier.write(f"'{name_xcas}'\n")
 
-    def mascaret_init(self, scen):
+    def mascaret_init(self, scen, up_param=None):
         """Initialize and prepare Mascaret model files for a scenario.
 
         :param scen: Scenario identifier (name).
@@ -267,7 +267,7 @@ class ClassInitializeModel:
             return False
 
         # Step 5: Create XCAS file and structural laws
-        dict_lois, dico_loi_struct = self.cl_xcas.creer_xcas(kernel, filename=self.XCAS_FILE)
+        dict_lois, dico_loi_struct = self.cl_xcas.creer_xcas(kernel, filename=self.XCAS_FILE, up_param=up_param)
         if self.check_and_log_errors():
             return False
 
@@ -468,7 +468,7 @@ class ClassInitializeModel:
         :rtype: bool
         """
         init_scen = scen["scenar_init"]
-        run_ids = self.mdb.get_id_run({init_scen[0]: [init_scen[1]]})
+        run_ids = self.mdb.get_id_run({init_scen[0]: [f'\'{init_scen[1]}\'']})
 
         if not run_ids:
             self.exit_cpte(False, 'Initial scenario does not exist')

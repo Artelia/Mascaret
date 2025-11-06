@@ -90,8 +90,10 @@ class ClassRunUIDialog(QDialog):
         if self.drun['event']:
             d_event = self.obj_model.get_events()
             if not d_event:
-                self.bt_running.setEnable(False)
-            self.lst_event = d_event['name']
+                self.bt_running.setEnabled(False)
+                self.lst_event = []
+            else:
+                self.lst_event = d_event['name']
 
             self.nb_row = len(self.lst_event)
         else:
@@ -375,7 +377,6 @@ class ClassRunUIDialog(QDialog):
                 return
 
             data.append(row_data)
-
 
         self.obj_model.set_drun({"name_run": name_run})
         self.obj_model.fill_lscenario(data)

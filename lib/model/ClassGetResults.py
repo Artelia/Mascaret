@@ -433,7 +433,6 @@ class ClassGetResults:
             comments="",
             tracer=False,
             casier=False,
-            cond_api=False
     ):
         """
         Read opt files and save in results table
@@ -443,7 +442,6 @@ class ClassGetResults:
         :param comments: comments
         :param tracer: if tracers are actived
         :param casier: if basins are actived
-        :param  cond_api: if api are used
         :param save_res_struct : results when ther are hydraulic structur
         :return:
         """
@@ -468,8 +466,7 @@ class ClassGetResults:
         if tracer:
             self._load_tracer_results(folder, id_run, base_namefile)
 
-        if cond_api:
-            self._load_mobile_struct_results(folder, id_run)
+        self._load_mobile_struct_results(folder, id_run)
 
     def _load_mobile_struct_results(self, folder, id_run):
 

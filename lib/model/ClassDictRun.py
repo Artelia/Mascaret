@@ -252,6 +252,23 @@ class ClassDictRun:
             else:
                 self.dmodel["run"][key] = item
 
+    def set_dscenario(self,  scen,  new_items):
+        """Set or update items in the 'scenario' configuration.
+
+        :param new_items: Dictionary of items to set in drun.
+        :type new_items: dict
+        :return: None
+        """
+        id_scen = self.get_id_scenario(scen)
+        if id_scen is None:
+            return False
+
+        for key, item in new_items.items():
+            if self.dmodel['scenario'][id_scen].get(key):
+                self.dmodel['scenario'][id_scen][key] = item
+            else:
+                self.dmodel['scenario'][id_scen][key] = item
+
     def set_dinstance(self, scen, instance_name, dct_change):
         """Update an instance dictionary inside a scenario.
 
@@ -548,6 +565,7 @@ class ClassDictRun:
                                         "starttime": d_scen.get("starttime") if drun['event'] else None ,
                                         "order": order,
                                         })
+
             scenarios.append(d_scen)
 
         return scenarios

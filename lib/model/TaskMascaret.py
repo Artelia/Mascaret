@@ -443,7 +443,6 @@ class TaskMascaret(QgsTask):
                     comments= params.get("comments"),
                     tracer=params.get("has_tracer"),
                     casier=params.get("has_casier"),
-                    cond_api=params.get("api"),
             )
 
             results.update({'output': cls_res.mess.message()})

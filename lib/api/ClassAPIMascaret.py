@@ -480,7 +480,7 @@ class ClassAPIMascaret:
         self.add_info(info)
         self.masc.delete_mascaret()
         del self.masc
-        if self.clfg is not None:
+        if self.mobil_struct:
             self.clfg.finalize(self.tfin)
             self.results_api["STRUCT_FG"] = self.clfg.results_fg_mv
             if self.mgis is None:

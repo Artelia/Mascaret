@@ -1712,9 +1712,7 @@ $BODY$
         lst_id = []
         for key, lst in selection.items():
             id_run = self.run_query(
-                "SELECT id FROM {0}.runs WHERE run = '{1}' AND scenario IN ({2})".format(
-                    self.SCHEMA, key, ",".join(lst)
-                ),
+                f"SELECT id FROM {self.SCHEMA}.runs WHERE run = '{key}' AND scenario IN ({','.join(lst)})",
                 fetch=True,
             )
             if id_run:

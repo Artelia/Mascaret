@@ -81,6 +81,7 @@ from .lib.db.Check_tab import CheckTab
 from .lib.db.ClassMasDatabase import ClassMasDatabase
 from .lib.model.ClassMascaret import ClassMascaret
 from .lib.model.ClassInitializeModel import ClassInitializeModel
+from .lib.model.Fct_model_file import compress_run_file
 from .lib.model.ClassDictRun import ClassDictRun
 from .lib.scores.ClassScoresDialog import ClassScoresDialog
 from .ui.custom_control import ClassWarningBox
@@ -104,7 +105,7 @@ class MascPlugDialog(QMainWindow):
         self.masplugPath = os.path.dirname(__file__)
         self.ui = loadUi(os.path.join(self.masplugPath, "ui/MascPlug_dialog_base.ui"), self)
         # variables
-        self.DEBUG = 1
+        self.DEBUG = True
         self.task_use = True
 
         self.curConnName = None
@@ -276,7 +277,7 @@ class MascPlugDialog(QMainWindow):
 
         self.ui.actionUpdate_all_PK.triggered.connect(self.update_pk)
         self.ui.actionImport_Results.triggered.connect(self.import_resu_model)
-        self.ui.actionImport_Results.setVisible(False)
+        self.ui.actionImport_Results.setVisible(True)
 
         # scores
         self.ui.actionScores.triggered.connect(self.fct_scores)
@@ -399,9 +400,9 @@ class MascPlugDialog(QMainWindow):
 
     def toggle_debug_mode(self):
         if self.ui.actionDebugMode.isChecked():
-            self.DEBUG = 1
+            self.DEBUG = True
         else:
-            self.DEBUG = 0
+            self.DEBUG = False
 
     def closeEvent(self, e):
         # save the window state
@@ -755,13 +756,15 @@ class MascPlugDialog(QMainWindow):
     #    SETTINGS
     # *******************************
 
-    def export_run(self, clam=None, folder_name_path=None, typ_compress="zip"):
-        if not clam:
+    def export_run(self, path_run=None, folder_name_path=None, typ_compress="zip"):
+        if not path_run:
             clam = ClassMascaret(self)
+            dgeneral = clam.obj_model.get_dgeneral()
+            path_run =  dgeneral["path_runs"]
         if not folder_name_path:
             folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
         if folder_name_path:
-            if clam.compress_run_file(folder_name_path, typ_compress):
+            if compress_run_file(path_run, folder_name_path, typ_compress, mgis=self):
                 self.add_info("Export is done.")
             else:
                 self.add_info("Export failed.")
@@ -1119,50 +1122,33 @@ Version : {}
         model creation to run with api
         :return:
         """
-        # TODO
-        pass
-        # case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
-        # if ok:
-        #     kernel = self.Klist[self.listeState.index(case)]
-        #     dlgp = ClassParamExportDialog(self, kernel)
-        #     if QT_VERSION > 5:
-        #         dlgp.exec()  # PyQt6
-        #     else:
-        #         dlgp.exec_()  # PyQt5
-        #     if dlgp.complet:
-        #         dict_export = dlgp.dict_accept.copy()
-        #     else:
-        #         return
-        #
-        #     run = 'test'
-        #     rep_run = os.path.join(dict_export['path_rep'], dict_export['name_rep'])
-        #     clam = ClassMascaret(self, rep_run=rep_run)
-        #     clam.fct_only_init(kernel, run, dict_export)
-        #     #
-        #     with open(os.path.join(clam.dossier_file_masc, "FichierCas.txt"), "w") as fichier:
-        #         fichier.write("'mascaret.xcas'\n")
-        #     self.export_run(clam, folder_name_path=dict_export['path_rep'], typ_compress=dict_export['typ_compress'])
-        #     clam.del_folder_mas()
+        case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
+        if ok:
+            kernel = self.Klist[self.listeState.index(case)]
+            dlgp = ClassParamExportDialog(self, kernel)
+            if QT_VERSION > 5:
+                dlgp.exec()  # PyQt6
+            else:
+                dlgp.exec_()  # PyQt5
+            if dlgp.complet:
+                dict_export = dlgp.dict_accept.copy()
+            else:
+                return
+
+
 
     def import_resu_model(self):
         """
         import resultats
         :return:
         """
-        # TODO
-        pass
-        # clam = ClassMascaret(self)
-        # dlg = ClassImportRes(clam)
-        # if QT_VERSION > 5:
-        #     dlg.exec()  # PyQt6
-        # else:
-        #     dlg.exec_()  # PyQt5
-        # if dlg.complet:
-        #     clam.import_results(
-        #         dlg.run, dlg.scen, dlg.comments, dlg.path_model, date_debut=dlg.date
-        #     )
-        # del dlg
-        # del clam
+        obj_model = ClassDictRun(self)
+        dlg = ClassImportRes(self, obj_model)
+        if QT_VERSION > 5:
+            dlg.exec()  # PyQt6
+        else:
+            dlg.exec_()  # PyQt5
+
 
     def open_with_default_editor(self, file_path):
         import subprocess

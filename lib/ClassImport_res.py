@@ -28,19 +28,23 @@ from qgis.gui import *
 from qgis.utils import *
 
 from ..ui.custom_control import ClassWarningBox
-
+from .model.ClassGetResults import ClassGetResults
 
 class ClassImportRes(QDialog):
-    def __init__(self, clmas=None):
+    def __init__(self,mgis, obj_mod=None):
         QDialog.__init__(self)
-        self.clmas = clmas
+        self.mgis = mgis
+        self.mdb = self.mgis.mdb
+        self.obj_mod = obj_mod
         self.date = None
         self.comments = ""
         self.path_model = os.path.join(os.path.dirname(__file__), "..", "mascaret")
         self.run = ""
         self.scen = ""
+        self.basename ="mascaret"
         self.complet = False
         self.box = ClassWarningBox()
+        self.cls_res = ClassGetResults(self.mdb, dbg=self.mgis.DEBUG)
 
         self.ui = loadUi(os.path.join(os.path.dirname(__file__), "..", "ui/ui_import_res.ui"), self)
         self.txt_path.setText(".")
@@ -53,11 +57,17 @@ class ClassImportRes(QDialog):
         self.checkBox.stateChanged.connect(self.act_date)
         # self.mDateTimeEdit.dateChanged.connect(self.change_date)
         self.txt_path.setText(self.path_model)
-
+        self.txt_base_name.setText(self.basename)
         self.bt_path.clicked.connect(self.path_search)
         self.txt_path.textChanged["QString"].connect(self.path_change)
         self.ed_scen.textChanged["QString"].connect(self.change_scenario)
         self.ed_run.textChanged["QString"].connect(self.change_run)
+        self.txt_base_name.textChanged["QString"].connect(self.change_basename)
+
+    def change_basename(self):
+        basen = str(self.ed_run.text())
+        self.basename = basen.replace("'", " ").replace('"', " ").strip()
+        self.txt_path.setText( self.basename)
 
     def change_run(self):
         run = str(self.ed_run.text())
@@ -88,9 +98,10 @@ class ClassImportRes(QDialog):
         if self.scen.strip() == "" or self.run.strip() == "":
             msg = "Indicate the run and scenario names."
             self.box.info(msg, "Error")
-        else:
-            if self.clmas.check_scenar(self.scen, self.run):
-                self.complet = True
+            return
+
+        if self.obj_mod.check_scenar(self.scen, self.run):
+            if self.import_result():
                 QDialog.accept(self)
 
     def path_search(self):
@@ -106,3 +117,47 @@ class ClassImportRes(QDialog):
         if os.path.isdir(text):
             self.path_model = text
             self.txt_path.setText(text)
+
+    def import_result(self):
+
+        has_links, has_basins, has_tracer = self.cls_res._check_result_files(self.path_model)
+        if not self.mdb:
+            msg = "No database object."
+            self.box.info(msg, "Error")
+            return False
+
+        id_run = self.insert_id_run(self.mdb, self.run, self.scen)
+
+        self.cls_res.set_results_database(
+                self.path_model,
+                id_run,
+                self.date,
+                self.basename,
+                comments= self.comments,
+                tracer=has_tracer,
+                casier=has_basins,
+        )
+
+        if self.cls_res.mess.get_critic_status():
+            txt = self.cls_res.mess.message()
+            self.box.info(txt, "Error")
+            return  False
+
+        return True
+
+    def insert_id_run(self, mdb, run_, scen):
+        """
+        creation run line in runs table
+        :param run_: run name
+        :param scen: scenario name
+        :return (id_run): run id
+        """
+        maintenant = datetime.datetime.now()
+        tab = {run_: {"scenario": scen, "date": "{:%Y-%m-%d %H:%M}".format(maintenant)}}
+        listimport = ["run", "scenario", "date"]
+        mdb.insert("runs", tab, listimport)
+        info = mdb.select(
+            "runs", where="run='{}' AND scenario='{}'".format(run_, scen), list_var=["id"]
+        )
+        id_run = info["id"][0]
+        return id_run

@@ -19,6 +19,7 @@ email                :
  ***************************************************************************/
 """
 import os
+import traceback
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
@@ -27,6 +28,9 @@ from qgis.core import *
 from qgis.gui import *
 
 from .Function import del_accent, del_symbolv2
+from .model.ClassDictRun import ClassDictRun
+from .model.Fct_model_file import del_folder_mas
+from .model.ClassInitializeModel import ClassInitializeModel
 
 
 class ClassParamExportDialog(QDialog):
@@ -490,39 +494,6 @@ class ClassParamExportDialog(QDialog):
 
         self.dict_accept['lig_eau_init'] = self.lig_eau_init
         self.dict_accept['event'] = self.event
-
-        if self.lig_eau_init:
-            if self.rb_init.isChecked():
-                case = self.cb_init_run.currentText()
-                scen = self.cb_init_scen.currentText()
-                id_run = self.mdb.run_query(
-                    "SELECT id FROM {0}.runs "
-                    "WHERE run = '{1}' "
-                    "AND scenario = '{2}'".format(self.mdb.SCHEMA, case, scen),
-                    fetch=True,
-                )
-                self.dict_accept['lig'] = False
-                self.dict_accept["id_run_init"] = [id_run[0][0]]
-
-            else:
-                self.dict_accept['lig'] = True
-                self.dict_accept['path_copy'] = self.lbl_lig.text()
-
-        if self.event:
-            dict_scen_tmp = self.mdb.select("events", "run", "starttime")
-            if dict_scen_tmp:
-                scen_event = self.cb_event.currentText()
-                id = dict_scen_tmp["name"].index(scen_event)
-                self.dict_accept['dict_scen'] = {
-                    "name": [dict_scen_tmp["name"][id]],
-                    "starttime": [dict_scen_tmp["starttime"][id]],
-                    "endtime": [dict_scen_tmp["endtime"][id]],
-                    "run": [dict_scen_tmp["run"][id]],
-                }
-            else:
-                self.dict_accept['dict_scen'] = {"name": ["model"]}
-        else:
-            self.dict_accept['dict_scen'] = {"name": ["model"]}
         if not os.path.isdir(self.txt_rep.text()):
             QMessageBox.warning(
                 self, "WARNING", "The save folder does not exist."
@@ -537,7 +508,106 @@ class ClassParamExportDialog(QDialog):
 
         self.dict_accept['path_rep'] = os.path.normpath(self.txt_rep.text())
         self.dict_accept['name_rep'] = os.path.normpath(self.lname_export.text().strip())
+
+        if self.lig_eau_init:
+            if self.rb_init.isChecked():
+                case = self.cb_init_run.currentText()
+                scen = self.cb_init_scen.currentText()
+                # id_run = self.mdb.run_query(
+                #     "SELECT id FROM {0}.runs "
+                #     "WHERE run = '{1}' "
+                #     "AND scenario = '{2}'".format(self.mdb.SCHEMA, case, scen),
+                #     fetch=True,
+                # )
+                self.dict_accept['lig'] = False
+                # self.dict_accept["id_run_init"] = [id_run]
+                self.dict_accept["run_init"] = [case, scen]
+
+            else:
+                self.dict_accept['lig'] = True
+                self.dict_accept['path_copy'] = self.lbl_lig.text()
+
+        if self.event:
+            dict_scen_tmp = self.mdb.select("events", "run", "starttime")
+            if dict_scen_tmp:
+                scen_event = self.cb_event.currentText()
+                if not scen_event:
+                    QMessageBox.warning(
+                        self, "WARNING", "**** Warning: scenario not found  ***"
+                    )
+                    return
+                id = dict_scen_tmp["name"].index(scen_event)
+                self.dict_accept['dict_scen'] = {
+                    "name": [dict_scen_tmp["name"][id]],
+                    # "starttime": [dict_scen_tmp["starttime"][id]],
+                    # "endtime": [dict_scen_tmp["endtime"][id]],
+                    # "run": [dict_scen_tmp["run"][id]],
+                }
+            else:
+                self.dict_accept['dict_scen'] = {"name": [self.dict_accept['name_rep']]}
+        else:
+            self.dict_accept['dict_scen'] = {"name": [self.dict_accept['name_rep']]}
+
         self.dict_accept['par'] = self.new_par
         self.dict_accept['typ_compress'] = self.cb_type_comp.currentData()
+        self.creat_model_compress()
         self.complet = True
         self.close()
+
+
+    def creat_model_compress(self):
+        """
+        Crée, initialise et exporte un modèle compressé à partir des paramètres d'export.
+        Aucune valeur de retour.
+        """
+        try:
+            export_config = self.dict_accept
+            name_run = export_config.get('name_rep', 'Mascaret')
+            rep_run = os.path.join(export_config['path_rep'], name_run)
+
+            # Initialisation du modèle
+            obj_model = ClassDictRun(self.mgis, rep_run=rep_run)
+            obj_model.fill_drun(self.kernel, name_run)
+
+            # Paramètres de modification du run
+            obj_model.set_drun({
+                "event": export_config.get('event', False),
+                "ligInit": export_config.get('lig_eau_init', False),
+                "repriseCalcul": False,
+                "has_run_init": False,
+                "has_assimilation": False,
+            })
+
+            # Préparation du scénario
+            scen_name = export_config['dict_scen']['name'][0]
+            run_init, scen_init = export_config.get("run_init", [None, None])
+            data = {
+                "Scenario Name": scen_name,
+                "Run init": run_init,
+                "Scenario init": scen_init,
+                "lig file": None,
+                "Comment": ''
+            }
+
+            # Ajout du fichier lig si présent
+            file_lig = export_config.get('path_copy')
+            if file_lig:
+                data["lig file"] = {
+                    "file_name": os.path.basename(file_lig),
+                    "file_path": file_lig
+                }
+
+            obj_model.fill_lscenario([data])
+
+            # Initialisation du modèle
+            ClassInitializeModel(self.mgis, obj_model).main(up_param=export_config['par'])
+
+            # Export et nettoyage
+            self.mgis.export_run(
+                path_run=rep_run,
+                folder_name_path=export_config['path_rep'],
+                typ_compress=export_config['typ_compress']
+            )
+            del_folder_mas(rep_run, mgis=self)
+        except Exception as err:
+            self.mgis.add_info(f'*** Error: {str(err)} \n traceback : {traceback.format_exc()}')
