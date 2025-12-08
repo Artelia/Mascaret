@@ -20,43 +20,46 @@ email                :
 """
 import time
 import traceback
+
 from qgis.core import QgsMessageLog, Qgis
 
 from .ClassCreatFilesModels import ClassCreatFilesModels
 from .ClassGetResults import ClassGetResults
 from ..ClassMessage import ClassMessage
 
-MESSAGE_CATEGORY = 'TaskMascaret'
+MESSAGE_CATEGORY = "TaskMascaret"
 
 
-class TaskMascPost():
+class TaskMascPost:
     """Task of postprocessing model"""
 
     def __init__(self, glb_param):
         super().__init__()
-        self.dbg = glb_param['dbg']
-        self.mdb = glb_param['mdb']
-        self.comments = glb_param['comments']
-        self.dict_scen = glb_param['dict_scen']
-        self.dossier_file_masc = glb_param['dossier_file_masc']
-        self.noyau = glb_param['noyau']
-        self.dossier_file_masc = glb_param['dossier_file_masc']
-        self.basename = glb_param['basename']
-        self.cond_api = glb_param['cond_api']
-        self.wq = glb_param['waterq']
+        self.dbg = glb_param["dbg"]
+        self.mdb = glb_param["mdb"]
+        self.comments = glb_param["comments"]
+        self.dict_scen = glb_param["dict_scen"]
+        self.dossier_file_masc = glb_param["dossier_file_masc"]
+        self.noyau = glb_param["noyau"]
+        self.dossier_file_masc = glb_param["dossier_file_masc"]
+        self.basename = glb_param["basename"]
+        self.cond_api = glb_param["cond_api"]
+        self.wq = glb_param["waterq"]
 
-        self.cls_res = ClassGetResults(self.mdb, self.dossier_file_masc)
-        self.cls_res.wq = self.wq
-        self.clfile = ClassCreatFilesModels(self.mdb, self.dossier_file_masc)
+        self.cls_res = ClassGetResults(self.mdb, self.dossier_file_masc, self.wq, self.dbg)
+
+        self.clfile = ClassCreatFilesModels(
+            self.mdb, self.dossier_file_masc, self.cond_api, self.dbg
+        )
 
         self.mess = ClassMessage()
         self.cpt_init = False
 
         # Task info
         self.exc_start_time = time.time()
-        self.description = 'postprocessing model'
+        self.description = "postprocessing model"
 
-    def log_mess(self, txt, flag, typ='info'):
+    def log_mess(self, txt, flag, typ="info"):
         """Manage message
         Args:
             :param txt : (str) text
@@ -64,9 +67,9 @@ class TaskMascPost():
             :param typ :(str) message typ
         """
         self.mess.add_mess(flag, typ, txt)
-        if typ == 'warning':
+        if typ == "warning":
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Warning)
-        elif typ == 'critic':
+        elif typ == "critic":
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Critical)
         else:
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
@@ -80,12 +83,12 @@ class TaskMascPost():
         fill_d = self.mess.mess_fill_other_obj(obj)
         if fill_d:
             for key, item in fill_d.items():
-                if item['type'] == 'warning':
-                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Warning)
-                elif item['type'] == 'critic':
-                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Critical)
+                if item["type"] == "warning":
+                    QgsMessageLog.logMessage(item["message"], MESSAGE_CATEGORY, Qgis.Warning)
+                elif item["type"] == "critic":
+                    QgsMessageLog.logMessage(item["message"], MESSAGE_CATEGORY, Qgis.Critical)
                 else:
-                    QgsMessageLog.logMessage(item['message'], MESSAGE_CATEGORY, Qgis.Info)
+                    QgsMessageLog.logMessage(item["message"], MESSAGE_CATEGORY, Qgis.Info)
 
     def update_inputs(self, up_dict, cpt_init=False):
         """
@@ -94,15 +97,15 @@ class TaskMascPost():
             :param  up_dict: (dict) new parameters
             :param cpt_init : (boolean) if inialization phase or not
         """
-        self.par = up_dict['par']
-        self.scen = up_dict['scen']
+        self.par = up_dict["par"]
+        self.scen = up_dict["scen"]
         self.cpt_init = cpt_init
-        self.date_debut = up_dict['date_debut']
-        self.id_run = up_dict['id_run']
-        self.save_res_struct = up_dict['save_res_struct']
+        self.date_debut = up_dict["date_debut"]
+        self.id_run = up_dict["id_run"]
+        self.save_res_struct = up_dict["save_res_struct"]
 
     def maj_param(self, up_dict):
-        """"
+        """ "
         Updating the information transfer dictionary
         Args:
             :param  up_dict: (dict) transfer dictionary
@@ -112,7 +115,7 @@ class TaskMascPost():
         return up_dict
 
     def exit_status_(self, obj):
-        """ if exist status
+        """if exist status
         Args:
             :param obj :(object)  message class
         Return:
@@ -121,7 +124,7 @@ class TaskMascPost():
         return exit_status
 
     def run(self):
-        """ Run post
+        """Run post
         Return:
             :return boolean
         """
@@ -129,16 +132,22 @@ class TaskMascPost():
         try:
             self.cls_res.mess.clear_derror()
             self.clfile.mess.clear_derror()
-            self.log_mess('TaskMascPost Begin', 'info1')
+            self.log_mess("TaskMascPost Begin", "info1")
             if self.cpt_init:
 
-                self.log_mess('Read *_init.opt file', 'info3')
-                self.cls_res.lit_opt_new(self.id_run, None, self.basename + "_init", self.comments,
-                                         cond_api=self.cond_api, save_res_struct=self.save_res_struct)
+                self.log_mess("Read *_init.opt file", "info3")
+                self.cls_res.lit_opt_new(
+                    self.id_run,
+                    None,
+                    self.basename + "_init",
+                    self.comments,
+                    cond_api=self.cond_api,
+                    save_res_struct=self.save_res_struct,
+                )
                 self.add_log_mess(self.cls_res.mess)
                 if self.exit_status_(self.cls_res.mess):
                     return False
-                self.log_mess('Create *.lig file', 'info4')
+                self.log_mess("Create *.lig file", "info4")
                 self.clfile.opt_to_lig(self.id_run, self.basename)
                 if self.exit_status_(self.clfile.mess):
                     return False
@@ -150,35 +159,42 @@ class TaskMascPost():
                     }
                 }
                 self.clfile.modif_xcas(tab, self.basename + ".xcas")
-                self.log_mess('Update Xcas', 'info5')
+                self.log_mess("Update Xcas", "info5")
             else:
                 cond_casier = False
                 if self.par["presenceCasiers"] and self.noyau == "unsteady":
                     cond_casier = True
-                self.log_mess('Read *.opt file', 'info3')
+                self.log_mess("Read *.opt file", "info3")
                 self.cls_res.lit_opt_new(
-                    self.id_run, self.date_debut, self.basename, comments=self.comments,
-                    tracer=self.par["presenceTraceurs"], casier=cond_casier,
-                    cond_api=self.cond_api, save_res_struct=self.save_res_struct)
+                    self.id_run,
+                    self.date_debut,
+                    self.basename,
+                    comments=self.comments,
+                    tracer=self.par["presenceTraceurs"],
+                    casier=cond_casier,
+                    cond_api=self.cond_api,
+                    save_res_struct=self.save_res_struct,
+                )
 
                 self.add_log_mess(self.cls_res.mess)
                 if self.exit_status_(self.cls_res.mess):
                     return False
 
                 if self.check_mobil_gate():
-                    self.log_mess('Read Mobile Gate', 'info4')
+                    self.log_mess("Read Mobile Gate", "info4")
                     self.cls_res.read_mobil_gate_res(self.id_run)
                     self.add_log_mess(self.cls_res.mess)
                     if self.exit_status_(self.cls_res.mess):
                         return False
-            self.log_mess('TaskMascPost End', 'info2')
+
+            self.log_mess("TaskMascPost End", "info2")
             return True
         except Exception as err:
             err = str(err)
             if self.dbg:
                 error_info = traceback.format_exc()
-                err = err + '\n' + error_info
-            self.log_mess(err, 'errPost', 'critic')
+                err = err + "\n" + error_info
+            self.log_mess(err, "errPost", "critic")
             return False
 
     def check_mobil_gate(self):

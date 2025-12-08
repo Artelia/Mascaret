@@ -44,7 +44,7 @@ def list_sql(liste, typ="str"):
     """
     txt = "("
     for t_res in liste:
-        if typ is "str":
+        if typ == "str":
             txt += "'{}',".format(t_res)
         elif typ == "int" or typ == "float":
             txt += "{},".format(t_res)
@@ -76,7 +76,7 @@ class GraphResultDialog(QWidget):
 
         self.old_lst_run_score = list()
         self.laisses = dict()
-        self.lst_weirs = dict()                               
+        self.lst_weirs = dict()
 
         self.btn_add_graph.clicked.connect(self.add_wgt_compare)
         self.btn_del_graph.clicked.connect(self.del_wgt_compare)
@@ -84,9 +84,10 @@ class GraphResultDialog(QWidget):
         if self.checkrun():
             self.btn_add_graph.setEnabled(True)
 
-            if self.typ_graph in ["struct", "weirs"]:
+            if self.typ_graph in ["struct", "weirs", "link_fg"]:
                 self.typ_res = self.typ_graph
                 self.x_var = "time"
+
             elif self.typ_graph in ["hydro", "hydro_pk"]:
                 self.typ_res = "opt"
                 if self.typ_graph == "hydro_pk":
@@ -291,7 +292,7 @@ class GraphResultDialog(QWidget):
         up_lim = True
         if self.mode == "slider":
             lst_graph = self.lst_slid_graph
-            up_lim =  self.lst_slid_graph[0]['up_lim']
+            up_lim = self.lst_slid_graph[0]['up_lim']
         else:
             lst_graph = self.lst_comp_graph
         self.lst_graph = [graph for graph in lst_graph if "graph" in graph.keys()]
@@ -425,13 +426,13 @@ class GraphResultDialog(QWidget):
                 sqlw = self.sql_where.format(param["branch"], param["pknum"], param["t"])
 
                 if self.x_var == "time":
-                    if self.typ_graph in ["struct", "weirs"]:
+                    if self.typ_graph in ["struct", "weirs", 'link_fg']:
                         x_val = None
                         if self.typ_res in param["info_graph"].keys():
                             for id_config in param["info_graph"][self.typ_res]["pknum"].keys():
                                 if (
-                                    param["info_graph"][self.typ_res]["pknum"][id_config]
-                                    == param["pknum"]
+                                        param["info_graph"][self.typ_res]["pknum"][id_config]
+                                        == param["pknum"]
                                 ):
                                     x_val = param["info_graph"][self.typ_res]["time"][id_config]
                         if not x_val:
@@ -528,7 +529,7 @@ class GraphResultDialog(QWidget):
                     self.graph_obj.insert_debord_curves(self.lst_debord)
                 self.graph_obj.clear_weirs()
                 self.get_weirs('pknum')
-                if len(self.lst_weirs['name'])>0:
+                if len(self.lst_weirs['name']) > 0:
                     weir_g = True
             self.update_title()
             self.fill_tab()
@@ -552,17 +553,21 @@ class GraphResultDialog(QWidget):
 
         if len(lst_title) == 1:
             txt_title = lst_title[0]
-            if self.typ_graph in ["struct", "weirs", "hydro"]:
-                try:
+            if self.typ_graph in ["struct", "weirs", "hydro", "link_fg"]:
+                if self.typ_graph is "link_fg":
                     self.graph_obj.main_axe.title.set_text(
-                        r"Profile - {0} m".format(float(txt_title))
-                    )
-                except ValueError:
-                    list_txt = txt_title.split(":")
-                    if len(list_txt) > 1:
+                        r'Link - {0} '.format(txt_title))
+                else:
+                    try:
                         self.graph_obj.main_axe.title.set_text(
-                            r"Profile {1} - {0} m ".format(list_txt[0], list_txt[1])
+                            r"Profile - {0} m".format(float(txt_title))
                         )
+                    except ValueError:
+                        list_txt = txt_title.split(":")
+                        if len(list_txt) > 1:
+                            self.graph_obj.main_axe.title.set_text(
+                                r"Profile {1} - {0} m ".format(list_txt[0], list_txt[1])
+                            )
             elif self.typ_graph == "hydro_pk":
                 if len(lst_branch) == 1:
                     try:
@@ -601,8 +606,8 @@ class GraphResultDialog(QWidget):
             dict_data = self.mdb.select(
                 "profiles",
                 where="zleftminbed IS NOT NULL "
-                "AND zrightminbed IS NOT NULL AND active AND "
-                "branchnum = {}".format(id_branch),
+                      "AND zrightminbed IS NOT NULL AND active AND "
+                      "branchnum = {}".format(id_branch),
                 order="abscissa",
                 list_var=["gid", "name", "abscissa", "zleftminbed", "zrightminbed"],
             )
@@ -822,26 +827,26 @@ class GraphResultDialog(QWidget):
             self.lst_weirs['pknum'] = self.lst_weirs['abscissa']
 
             self.graph_obj.clear_weirs()
-            courbe_weirs={}
-
+            courbe_weirs = {}
 
             courbe_weirs["x"] = [v for v in self.lst_weirs["abscissa"] if v]
             courbe_weirs["name"] = [w for w in self.lst_weirs["name"] if w]
             courbe_weirs["couleurs"] = []
             courbe_weirs["cote"] = []
 
-            for a, c, d in zip(self.lst_weirs["type"],self.lst_weirs['z_average_crest'],self.lst_weirs['z_crest']):
+            for a, c, d in zip(self.lst_weirs["type"], self.lst_weirs['z_average_crest'], self.lst_weirs['z_crest']):
                 if a == 3:
                     if c is None:
-                        c=0
+                        c = 0
                     courbe_weirs["cote"].append(c)
                     courbe_weirs["couleurs"].append("tab:orange")
                 if a == 4:
                     if d is None:
-                        d=0
+                        d = 0
                     courbe_weirs["cote"].append(d)
                     courbe_weirs["couleurs"].append("tab:brown")
-            self.graph_obj.init_graph_weirs(courbe_weirs)                               
+            self.graph_obj.init_graph_weirs(courbe_weirs)
+
     def get_laisses(self, param):
         """
         get flood marks data

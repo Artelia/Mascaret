@@ -19,15 +19,17 @@ email                :
  """
 import os
 import platform
-from qgis.PyQt.QtCore import *
+
+from qgis import core
 from qgis.PyQt import QtWidgets, uic
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
+
 from .ui.custom_control import ClassWarningBox
-from qgis.PyQt.QtGui import *
-from qgis import core
 
 try:
     qgis_version = core.QGis.QGIS_VERSION_INT
@@ -86,9 +88,13 @@ class ClassEditKsDialog(BASE, FORM_CLASS):
         """Delete selection function"""
 
         tempo = QgsProject.instance().mapLayers().values()
+        profil = None
         for couche in tempo:
             if couche.name() == "profiles":
                 profil = couche
+        if not profil:
+            self.box.info("Please, selection the profiles", title="Message")
+            return
         if len(profil.selectedFeatures()) == 0:
             self.box.info("Please, selection the profiles", title="Message")
             return

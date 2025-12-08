@@ -18,9 +18,10 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
@@ -28,6 +29,7 @@ from qgis.utils import *
 
 from .ClassTableWQ import ClassTableWQ
 from ..Function import data_to_float
+
 
 class ClassPhysicalParamDialog(QDialog):
     def __init__(self, mgis, mod):

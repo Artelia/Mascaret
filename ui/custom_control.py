@@ -20,15 +20,14 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import numpy as np
 import re
 
+import numpy as np
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-
 from qgis.PyQt.QtGui import QValidator
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtWidgets import QMessageBox, QDoubleSpinBox
+from qgis.PyQt.uic import *
 
 
 # *******************************************************************************
@@ -118,7 +117,7 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
 def format_float(value):
     """Modified form of the 'g' format specifier."""
     string = "{:g}".format(value).replace("e+", "e")
-    string = re.sub("e(-?)0*(\d+)", r"e\1\2", string)
+    string = re.sub(r"e(-?)0*(\d+)", r"e\1\2", string)
     return string
     # *******************************************************************************
 

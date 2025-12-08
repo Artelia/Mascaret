@@ -55,21 +55,15 @@ from ..ClassUpdateBedDialog import (
 )
 from ..Function import tw_to_txt, filter_pr_fct, filter_dist_perpendiculaire
 from ..Structure.ClassPolygone import ClassPolygone
-from ..Structure.StructureCreateDialog import ClassStructureCreateDialog
+from ..Structure.gui.StructureCreateDialog import ClassStructureCreateDialog
 
-try :
+try:
     from packaging.version import parse
     import matplotlib
-    MPLT_NEW =  (parse(matplotlib.__version__) >= parse("3.6.3"))
-except:
-    MPLT_NEW =  False
 
-try :
-    from packaging.version import parse
-    import matplotlib
-    MPLT_NEW =  (parse(matplotlib.__version__) >= parse("3.6.3"))
+    MPLT_NEW = (parse(matplotlib.__version__) >= parse("3.6.3"))
 except:
-    MPLT_NEW =  False
+    MPLT_NEW = False
 
 try:
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -95,8 +89,6 @@ except AttributeError:
         return QApplication.translate(context, text, disambig)
 
 
-
-
 class IdentifyFeatureTool(QgsMapToolIdentify):
     def __init__(self, main):
         self.mgis = main
@@ -120,28 +112,30 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             flag_profil_z = self.mgis.profil_z
             flag_mass_graph = self.mgis.mass_graph
 
-            if (couche == "profiles" or couche == "weirs") and flag_profil_z:
-                if couche == "profiles":
-                    type_res = "struct"
-                elif couche == "weirs":
-                    type_res = "weirs"
-
+            if (couche == "profiles" or couche == "weirs" or couche == "links") and flag_profil_z:
+                type_res_map = {
+                    "profiles": "struct",
+                    "weirs": "weirs",
+                    "links": "link_fg"
+                }
+                type_res = type_res_map[couche]
                 self.mgis.coucheProfils = results[0].mLayer
                 gid = results[0].mFeature["abscissa"]
-                sql = (
-                    "SELECT DISTINCT pknum FROM {0}.results WHERE var IN "
-                    "(SELECT id FROM {0}.results_var WHERE type_res ='{1}' )".format(
-                        self.mgis.mdb.SCHEMA, type_res
-                    )
-                )
-
-                rows = self.mgis.mdb.run_query(sql, fetch=True)
-                graph_res = GraphResultDialog(self.mgis, type_res, gid)
-                graph_res.show()
-                # else:
-                #     #pass
-                #     print ("Erreur")
-                #     #a = QMessageBox.Warning(self, 'Error', 'Aucun résultat pour ce profil')
+                if couche == "links":
+                    feature = results[0].mFeature
+                    links = self.mgis.mdb.select_distinct("name", "links", "active")
+                    if links and feature["name"] in links["name"]:
+                        graph_res = GraphResultDialog(self.mgis, type_res, feature["gid"])
+                        graph_res.show()
+                elif couche == "weirs":
+                    feature = results[0].mFeature
+                    weirs = self.mgis.mdb.select_distinct("name", "weirs", "active")
+                    if weirs:
+                        graph_res = GraphResultDialog(self.mgis, type_res, feature["gid"])
+                        graph_res.show()
+                else:
+                    graph_res = GraphResultDialog(self.mgis, type_res, gid)
+                    graph_res.show()
 
             if couche == "profiles" and flag_profil:
                 self.mgis.coucheProfils = results[0].mLayer
@@ -432,7 +426,7 @@ class GraphProfil(GraphCommon):
 
         self.RS = RectangleSelector(self.axes, self.onselect)
         self.RS.set_active(False)
-        if not MPLT_NEW :
+        if not MPLT_NEW:
             self.span = SpanSelector(
                 self.axes,
                 self.onselect_zone,
@@ -1952,8 +1946,6 @@ class GraphProfil(GraphCommon):
                 self.ch_prof[dcas[cas]] = nofind
 
     def check_prof_interp(self):
-        # TODO interpolation is all profile
-
         id = self.liste["name"].index(self.nom)
         self.ch_prof_inter = {}
         # cas = -1 amont, cas=1 aval

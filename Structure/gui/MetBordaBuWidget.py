@@ -21,23 +21,22 @@ import os
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.QtGui import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, ctrl_get_value, fill_qcombobox
+from .FctDialog import ctrl_get_value, fill_qcombobox
+from ..ClassTableStructure import ClassTableStructure
 
-class MetOrificeBuWidget(QWidget):
+
+class MetBordaBuWidget(QWidget):
     def __init__(self, mgis, id_struct=None):
         QWidget.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
-        self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, "ui/structures/ui_orifice_bu.ui"), self
-        )
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/structures/ui_borda_bu.ui"), self)
         self.id_struct = id_struct
 
         self.completed = 0
@@ -47,7 +46,8 @@ class MetOrificeBuWidget(QWidget):
         self.sb_nb_trav.valueChanged.connect(self.change_ntrav)
         self.dsb_h_pas.valueChanged.connect(self.update_min_h_max)
         self.dsb_h_min.valueChanged.connect(self.update_min_h_max)
-        self.tab_trav.itemChanged.connect(self.verif_param_trav)
+        self.dsb_q_pas.valueChanged.connect(self.update_min_q_max)
+        self.dsb_q_min.valueChanged.connect(self.update_min_q_max)
 
         self.dico_ctrl = {
             "ZTOPTAB": [self.dsb_cote_tab],
@@ -55,9 +55,11 @@ class MetOrificeBuWidget(QWidget):
             "MINH": [self.dsb_h_min],
             "MAXH": [self.dsb_h_max],
             "PASQ": [self.dsb_q_pas],
+            "MINQ": [self.dsb_q_min],
+            "MAXQ": [self.dsb_q_max],
             "NBTRAVE": [self.sb_nb_trav],
             "COEFDS": [self.dsb_ds],
-            "COEFDO": [self.dsb_do],
+            "COEFBOR": [self.dsb_borda],
         }
 
         self.dico_tab = {
@@ -101,6 +103,9 @@ class MetOrificeBuWidget(QWidget):
 
     def update_min_h_max(self):
         self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
+
+    def update_min_q_max(self):
+        self.dsb_q_max.setMinimum(self.dsb_q_min.value() + self.dsb_q_pas.value())
 
     def verif_param_trav(self, itm):
         if itm.data(0) <= 0.0:

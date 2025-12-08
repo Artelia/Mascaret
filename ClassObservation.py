@@ -21,21 +21,21 @@ import csv
 import datetime
 import io
 import os
+import traceback
 
 import pandas as pd
 from matplotlib.dates import date2num
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
 from .Graphic.GraphCommon import GraphCommon
-
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.QtCore import Qt
 
 
 class ClassEventObsDialog(QDialog):
@@ -110,9 +110,7 @@ class ClassEventObsDialog(QDialog):
             "WHERE type = 'Q' GROUP BY code) as sta_q ON sta.code = sta_q.code "
             "ORDER BY sta.code".format(self.mdb.SCHEMA)
         )
-
         rows = self.mdb.run_query(sql, fetch=True)
-
         for i, row in enumerate(rows):
             for j, field in enumerate(row):
                 new_itm = QStandardItem()
@@ -271,7 +269,7 @@ class ClassEventObsDialog(QDialog):
             succes, recs = self.read_csv(file_name_path)
         # recs data frame
         dbls = None
-        if succes:
+        if succes :
             duplic = recs[recs.duplicated(subset=["code", "type", "date"])]
             if len(duplic):
                 txt_lst = [
@@ -305,7 +303,12 @@ class ClassEventObsDialog(QDialog):
                 self.mdb.SCHEMA, "{}, {}, {}, {}, {}", ",".join(recs.columns.tolist())
             )
             for rec in recs.values.tolist():
-                self.mdb.execute(sql.format(*rec))
+                try:
+                    self.mdb.execute(sql.format(*rec))
+                except Exception:
+                    msg = "Incorrect format for observations"
+                    ok = QMessageBox.warning(None, "WARNING:", msg)
+                    return
 
             # check if type and code existant
             dbls = self.mdb.run_query(
@@ -327,7 +330,7 @@ class ClassEventObsDialog(QDialog):
                     break
 
             txt_mess = (
-                "Duplicates exist for these configurations (the first 5) : \n" + txt_sta + "\n"
+                    "Duplicates exist for these configurations (the first 5) : \n" + txt_sta + "\n"
             )
             dlg = ClassObsDuplicDialog(self.mgis, txt_mess)
             if dlg.exec_():
@@ -401,6 +404,12 @@ class ClassEventObsDialog(QDialog):
 
         self.fill_lst_stations(self.cur_station)
 
+    def safe_float(self, val, default=-99.99):
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return default
+
     def read_csv(self, data_file):
         """
         Read the default CSV  format
@@ -410,24 +419,33 @@ class ClassEventObsDialog(QDialog):
         try:
             recs = []
             for file in data_file:
-                if os.path.isfile(file):
-                    with open(file, "r") as fichier:
-                        codes = fichier.readline().strip().split(";")[1:]
-                        types = fichier.readline().strip().split(";")[1:]
-                        nom_stat = fichier.readline().strip().split(";")[1:]
-                        for ligne in fichier:
-                            temp = ligne.strip().split(";")
-                            for i, val in enumerate(temp[1:]):
-                                if val != "":
-                                    if float(val) != -99.99:
-                                        rec = list()
-                                        rec.append(self.fmt_col(codes[i]))
-                                        rec.append(self.fmt_col(self.fmt_date(temp[0])))
-                                        rec.append(self.fmt_col(types[i]))
-                                        rec.append(self.fmt_col(nom_stat[i]))
-                                        rec.append(val)
-                                        rec.append(os.path.basename(file))
-                                        recs.append(rec)
+                if not os.path.isfile(file):
+                    continue
+                with open(file, "r") as fichier:
+                    codes = fichier.readline().strip().split(";")[1:]
+                    types = fichier.readline().strip().split(";")[1:]
+                    nom_stat = fichier.readline().strip().split(";")[1:]
+                    for ligne in fichier:
+                        temp = ligne.strip().split(";")
+                        for i, val in enumerate(temp[1:]):
+                            if val == "":
+                                continue
+                            if self.safe_float(val) == -99.99:
+                                continue
+                            rec = list()
+                            rec.append(self.fmt_col(codes[i]))
+                            date = self.fmt_date(temp[0])
+                            if date:
+                                rec.append(self.fmt_col(date))
+                            else:
+                                msg = f"Error in date format for file : '{file}')"
+                                ok = QMessageBox.warning(None, "WARNING:", msg)
+                                return False, None
+                            rec.append(self.fmt_col(types[i]))
+                            rec.append(self.fmt_col(nom_stat[i]))
+                            rec.append(val)
+                            rec.append(os.path.basename(file))
+                            recs.append(rec)
             tmp = pd.DataFrame(
                 recs, columns=["code", "date", "type", "comment", "valeur", "fichier"]
             )
@@ -437,7 +455,10 @@ class ClassEventObsDialog(QDialog):
             return True, recs
         except Exception as e:
             self.mgis.add_info("Loading to observations is an echec.")
-            self.mgis.add_info(repr(e), dbg=True)
+            error_info = repr(e)
+            if self.mgis.DEBUG:
+                error_info = error_info + '\n' + traceback.format_exc()
+            self.mgis.add_info(error_info)
 
             return False, None
 
@@ -459,25 +480,27 @@ class ClassEventObsDialog(QDialog):
                     )
 
                     df_tmp["comment"] = [
-                        self.fmt_col(os.path.splitext(os.path.basename(file))[0])
-                    ] * df_tmp.count()[0]
+                                            self.fmt_col(os.path.splitext(os.path.basename(file))[0])
+                                        ] * df_tmp.count()[0]
                     df_tmp["fichier"] = [os.path.basename(file)] * df_tmp.count()[0]
 
                     tmp = pd.concat([tmp, df_tmp])
             # supprime les lignes en double
             recs = tmp.drop_duplicates()
             recs = recs.dropna()
-
             return True, recs
         except Exception as e:
             self.mgis.add_info("Loading to observations is an echec.")
-            self.mgis.add_info(repr(e), dbg=True)
-
+            error_info = repr(e)
+            if self.mgis.DEBUG:
+                error_info = error_info + '\n' + traceback.format_exc()
+            self.mgis.add_info(error_info)
             return False, None
 
     @staticmethod
     def fmt_date(date):
         ldate = len(date.strip())
+        val = None
         if ldate == 16:
             val = datetime.datetime.strptime(date, "%d/%m/%Y %H:%M")
         elif ldate == 19:
@@ -554,12 +577,12 @@ class ClassEventObsDialog(QDialog):
                 station = tab.model().data(tab.model().index(row - sup_ind, 0))
 
                 if (
-                    QMessageBox.question(
-                        self,
-                        "Observations of Events",
-                        "Delete {} observations ?".format(str(station).strip()),
-                        QMessageBox.Cancel | QMessageBox.Ok,
-                    )
+                        QMessageBox.question(
+                            self,
+                            "Observations of Events",
+                            "Delete {} observations ?".format(str(station).strip()),
+                            QMessageBox.Cancel | QMessageBox.Ok,
+                        )
                 ) == QMessageBox.Ok:
                     self.mgis.add_info(
                         "Deletion of {} Observations of Events".format(station), dbg=True
@@ -577,14 +600,14 @@ class ClassEventObsDialog(QDialog):
         # changer de page
         if self.cur_station:
             if (
-                QMessageBox.question(
-                    self,
-                    "Observations of Events",
-                    "Delete {0} values for {1} station ?".format(
-                        self.cur_var, self.cur_station.strip()
-                    ),
-                    QMessageBox.Cancel | QMessageBox.Ok,
-                )
+                    QMessageBox.question(
+                        self,
+                        "Observations of Events",
+                        "Delete {0} values for {1} station ?".format(
+                            self.cur_var, self.cur_station.strip()
+                        ),
+                        QMessageBox.Cancel | QMessageBox.Ok,
+                    )
             ) == QMessageBox.Ok:
                 self.mgis.add_info(
                     "Deletion of {} Observations of Events".format(self.cur_station), dbg=True
@@ -720,10 +743,9 @@ class ClassEventObsDialog(QDialog):
             for index in selection:
                 row = index.row() - rows[0]
                 column = index.column() - columns[0]
-                if column == 0:
+                try:
                     data = index.data().toString("dd/MM/yyyy HH:mm")
-
-                else:
+                except AttributeError:
                     data = index.data()
                 table[row][column] = data
 

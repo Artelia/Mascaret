@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
@@ -25,7 +26,8 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, update_etat_struct
+from ..ClassTableStructure import ClassTableStructure, update_etat_struct
+
 
 class ClassStructureCreateDialog(QDialog):
     def __init__(self, mgis, id_profil):

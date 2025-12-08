@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
@@ -25,17 +26,18 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassTableStructure import ClassTableStructure, ctrl_set_value, ctrl_get_value, fill_qcombobox
+from .FctDialog import ctrl_get_value, fill_qcombobox
+from ..ClassTableStructure import ClassTableStructure
 
 
-class MetOrificePaWidget(QWidget):
+class MetOrificePcWidget(QWidget):
     def __init__(self, mgis, id_struct=None):
         QWidget.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.tbst = ClassTableStructure()
         self.ui = loadUi(
-            os.path.join(self.mgis.masplugPath, "ui/structures/ui_orifice_pa.ui"), self
+            os.path.join(self.mgis.masplugPath, "ui/structures/ui_orifice_pc.ui"), self
         )
         self.id_struct = id_struct
 
@@ -52,6 +54,7 @@ class MetOrificePaWidget(QWidget):
         self.dico_ctrl = {
             "FIRSTWD": [self.dsb_abs_cul_rg],
             "ZTOPTAB": [self.dsb_cote_tab],
+            "EPAITAB": [self.dsb_epai_tab],
             "LARGPIL": [self.dsb_larg_pil],
             "PASH": [self.dsb_h_pas],
             "MINH": [self.dsb_h_min],
@@ -66,17 +69,7 @@ class MetOrificePaWidget(QWidget):
             self.tab_trav: {
                 "type": 0,
                 "id": "({}*2) + 1",
-                "col": [
-                    {
-                        "fld": "FORMARC",
-                        "cb": [[1, "Demi cercle"], [2, "Ellipse"]],
-                        "fn": self.change_form_arch,
-                        "valdef": 2,
-                    },
-                    {"fld": "LARGTRA", "cb": None, "valdef": 1.0},
-                    {"fld": "ZMINARC", "cb": None, "valdef": 0.0},
-                    {"fld": "ZMAXARC", "cb": None, "valdef": 0.0},
-                ],
+                "col": [{"fld": "LARGTRA", "cb": None, "valdef": 1.0}],
             },
             self.tab_pile: {
                 "type": 1,
@@ -110,10 +103,8 @@ class MetOrificePaWidget(QWidget):
 
             if col["cb"]:
                 cb = QComboBox()
-                cb.setProperty("row", row)
+                fill_qcombobox(cb, col["cb"], val_def=val)
                 tab.setCellWidget(row, c, cb)
-                tab.cellWidget(row, c).currentIndexChanged.connect(col["fn"])
-                fill_qcombobox(tab.cellWidget(row, c), col["cb"], val_def=val)
             else:
                 itm = QTableWidgetItem()
                 itm.setData(0, val)
@@ -127,21 +118,8 @@ class MetOrificePaWidget(QWidget):
         self.dsb_h_max.setMinimum(self.dsb_h_min.value() + self.dsb_h_pas.value())
 
     def verif_larg_trav(self, itm):
-        if itm.column() == 0:
-            if itm.data(0) <= 0.0:
-                itm.setData(0, 1.0)
-
-    def change_form_arch(self):
-        tw = self.sender().parent().parent()
-        cb = self.sender()
-        r = cb.property("row")
-
-        itm = QTableWidgetItem()
-        if ctrl_get_value(cb) == 1:  # cercle
-            itm.setFlags(Qt.ItemIsSelectable)
-        elif ctrl_get_value(cb) == 2:  # ellipse
-            itm.setData(0, self.dico_tab[tw]["col"][2]["valdef"])
-        tw.setItem(r, 3, itm)
+        if itm.data(0) <= 0.0:
+            itm.setData(0, 1.0)
 
     def progress_bar(self, val):
         self.completed += val

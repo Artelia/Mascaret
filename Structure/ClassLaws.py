@@ -19,7 +19,9 @@ email                :
 """
 import math as m
 import os
+
 import numpy as np
+
 from .ClassPolygone import ClassPolygone
 from .ClassPostPreFG import ClassPostPreFG
 
@@ -293,9 +295,9 @@ class ClassLaws:
         self.list_e = sorted(self.list_e)
 
         self.coef_cor_biais = (
-            self.param_g["LONGPIL"] * m.sin(self.param_g["BIAIOUVRAD"])
-            + self.param_g["LARGPIL"] * m.cos(self.param_g["BIAIOUVRAD"])
-        ) / self.param_g["LARGPIL"]
+                                      self.param_g["LONGPIL"] * m.sin(self.param_g["BIAIOUVRAD"])
+                                      + self.param_g["LARGPIL"] * m.cos(self.param_g["BIAIOUVRAD"])
+                              ) / self.param_g["LARGPIL"]
 
     def meth_brad(self, zav, q, coef_cor_biais, type_kb, list_ph, list_e):
         """
@@ -328,9 +330,9 @@ class ClassLaws:
         # print("area_pil_proj",area_pil_proj)
         # print("area_pil",area_pil)
         left_bank = (
-            self.param_g["FIRSTWD"]
-            + self.param_g["TOTALOUV"]
-            + self.param_g["LARGPIL"] * len(self.list_poly_pil)
+                self.param_g["FIRSTWD"]
+                + self.param_g["TOTALOUV"]
+                + self.param_g["LARGPIL"] * len(self.list_poly_pil)
         )
         ssoh = self.clpoly.coup_poly_v(
             poly_wet, [self.param_g["FIRSTWD"], left_bank], typ="LR"
@@ -430,13 +432,13 @@ class ClassLaws:
                 dks = 0
         # print("dks",dks)
 
-        term1 = (kb + dkp + dke + dks) * va**2 / (2.0 * self.grav) * alpha2
+        term1 = (kb + dkp + dke + dks) * va ** 2 / (2.0 * self.grav) * alpha2
         # print("term1 Remout",term1)
         hmon = zav + term1
         poly_wet = self.clpoly.coup_poly_h(self.poly_p, hmon)
         area_amont = poly_wet.area
         term2 = (
-            alpha1 * ((s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va**2 / (2.0 * self.grav)
+                alpha1 * ((s1 / area_wet) ** 2 - (s1 / area_amont) ** 2) * va ** 2 / (2.0 * self.grav)
         )
         # print("term2 Remout", term2)
         remout = term1 + term2
@@ -500,98 +502,71 @@ class ClassLaws:
         """
         list_brad = []
         brad_lim = None
-        for q in self.list_q:
-            value = self.meth_brad(
-                zav, q, self.coef_cor_biais, self.type_kb, self.list_ph, self.list_e
-            )
-            # [q, zav, zav + remout]
-            if value is None:
-                continue
-            else:
-                if value[2] > ztransi:
-                    brad_lim = value
-                    break
-                list_brad.append(value)
+        list_q = np.array(self.list_q)  # Convert to numpy array for fast indexing
 
-        # treatment transition law
+        # Vectorized computation of meth_brad results
+        values = [self.meth_brad(zav, q, self.coef_cor_biais, self.type_kb, self.list_ph, self.list_e) for q in list_q]
+        values = [v for v in values if v is not None]
+
+        for value in values:
+            if value[2] > ztransi:
+                brad_lim = value
+                break
+            list_brad.append(value)
         list_ori = []
-        if len(list_brad) > 0:
-            qmax = max(np.array(list_brad)[:, 0])
+        if list_brad:
+            list_brad = np.array(list_brad)
+            qmax = np.max(list_brad[:, 0])
             if qmax <= self.param_g["MAXQ"]:
-                return list_final + list_brad
-            # interpol ztrans
-            list_ori.append(list_brad[-1])
+                return list_final + list_brad.tolist()
+
+            list_ori.append(list_brad[-1].tolist())
             if brad_lim:
-                # interpolation
-                q_tmp = np.array([list_brad[-1][0], brad_lim[0]])
-                zam_tmp = np.array([list_brad[-1][2], brad_lim[2]])
+                q_tmp = [list_brad[-1, 0], brad_lim[0]]
+                zam_tmp = [list_brad[-1, 2], brad_lim[2]]
                 q_new = np.interp(ztransi, zam_tmp, q_tmp)
-                list_ori = list_ori + [[q_new, zav, ztransi]]
-                # list_final += [[q_new ,zav ,ztransi]]
-                # qmax = q_new
+                list_ori.append([q_new, zav, ztransi])
                 za = ztransi
             else:
-                # qmax = max(np.array(list_brad)[:, 0])
-                za = list_brad[-1][2]
+                za = list_brad[-1, 2]
+            list_brad = list_brad.tolist()
         else:
             qmax = self.deb_min
             za = zav
             list_ori.append([qmax, zav, za])
 
-        idx = np.where(self.list_zam > za)[0]
-        if len(idx) > 0:
+        idx = np.searchsorted(self.list_zam, za, side='right')
+        if idx < len(self.list_zam):
             zcret = self.param_g["ZTOPTAB"]
-            for zam in self.list_zam[idx[0] :]:
-                if zav != zam:
-                    q_seuil = 0
-                    q_ori = 0
-                    for i, poly in enumerate(self.list_poly_trav):
-                        poly_wet = self.clpoly.coup_poly_h(poly, zam)
-                        if not poly_wet.is_empty:
-                            (minx, miny, maxx, maxy) = poly.bounds
-                            larg = poly_wet.area / min(maxy - miny, zam - miny)
-                        else:
-                            larg = 0
+            for zam in self.list_zam[idx:]:
+                if zav == zam:
+                    continue
 
-                        q_ori += self.meth_orif(
-                            zam,
-                            zav,
-                            self.param_elem["ZMINELEM"][i],
-                            self.param_elem["ZMAXELEM"][i],
-                            larg,
-                            self.param_g["COEFDS"],
-                            self.param_g["COEFDO"],
-                            self.param_elem["SURFELEM"][i],
-                        )
+                q_ori = sum(
+                    self.meth_orif(zam, zav, self.param_elem["ZMINELEM"][i], self.param_elem["ZMAXELEM"][i],
+                                   (self.clpoly.coup_poly_h(poly, zam).area / max(zam - poly.bounds[1], 1)
+                                    if not self.clpoly.coup_poly_h(poly, zam).is_empty else 0),
+                                   self.param_g["COEFDS"], self.param_g["COEFDO"],
+                                   self.param_elem["SURFELEM"][i])
+                    for i, poly in enumerate(self.list_poly_trav)
+                )
 
-                    if zam >= zcret:
-                        q_seuil = self.meth_seuil(
-                            zam, zav, zcret, self.param_g["COEFDS"], self.param_g["TOTALW"]
-                        )
+                q_seuil = self.meth_seuil(zam, zav, zcret, self.param_g["COEFDS"],
+                                          self.param_g["TOTALW"]) if zam >= zcret else 0
 
-                    if q_ori == 0 and q_seuil == 0:
-                        value = None
-                    else:
-                        value = [q_ori + q_seuil, zav, zam]
-                    if value is None:
-                        continue
-                    else:
-                        if value[0] > self.param_g["MAXQ"]:
-                            list_ori.append(value)
-                            break
-                        list_ori.append(value)
+                q_total = q_ori + q_seuil
+                if q_total == 0:
+                    continue
+
+                list_ori.append([q_total, zav, zam])
+                if q_total > self.param_g["MAXQ"]:
+                    break
 
         if len(list_ori) > 1:
-            idx = np.where(np.array(self.list_q) > list_ori[0][0])[0]
-            if len(idx) > 0:
-                list_q_tmp = self.list_q[idx[0] :]
-            else:
-                list_q_tmp = self.list_q
-            q_tmp = np.array(list_ori)[:, 0]
-            zam_tmp = np.array(list_ori)[:, 2]
-            zam_f = np.interp(list_q_tmp, q_tmp, zam_tmp)
-            interpol_list = [[a, b, c] for a, b, c in zip(list_q_tmp, [zav] * len(zam_f), zam_f)]
-            list_ori = interpol_list
+            list_ori = np.array(list_ori)
+            list_q_tmp = np.array(self.list_q[np.searchsorted(self.list_q, list_ori[0, 0]):])
+            zam_f = np.interp(list_q_tmp, list_ori[:, 0], list_ori[:, 2])
+            list_ori = np.column_stack((list_q_tmp, np.full_like(list_q_tmp, zav), zam_f)).tolist()
         else:
             list_ori = []
 
@@ -621,15 +596,12 @@ class ClassLaws:
         :param transi:  z transition stream
         :return: new list of law values
         """
-        list_add = []
         if not transi:
             return list_final
 
-        for tmp in transi:
-            list_add += self.calc_transi_borda(list_final, tmp)
+        list_add = sum((self.calc_transi_borda(list_final, tmp) for tmp in transi), [])
 
-        list_final = list_final + list_add
-        return list_final
+        return list_final + list_add
 
     def calc_transi_borda(self, list_final, transi):
         """
@@ -640,28 +612,19 @@ class ClassLaws:
         list_add = []
         info = self.sort_law(list_final)
 
-        for id, deb in enumerate(self.list_q):
+        for deb in self.list_q:
             if deb == transi[0]:
-                # cherche nb de debi
                 idxq = np.where(info[:, 0] == deb)[0]
-                # cherche position transition
-
                 idxz = np.where(info[idxq, 1] < transi[1])[0]
-                lenid = info.shape[0]
-                if len(idxz) > 0:
+
+                if idxz.size > 0:
                     idxz = idxq[0] + idxz[-1]
-                    if lenid > idxz + 1:
-                        tab_tmp = info[idxz, :]
-                        tab_tmp1 = info[idxz + 1, :]
-
+                    if idxz + 1 < info.shape[0]:
+                        tab_tmp, tab_tmp1 = info[idxz], info[idxz + 1]
                         zmoy = (tab_tmp[1] + tab_tmp1[1]) / 2
-
-                        z1 = (tab_tmp[1] + 2 * zmoy) / 3
-                        z2 = (tab_tmp1[1] + 2 * zmoy) / 3
-
-                        list_add.append([deb, z1, tab_tmp[2]])
-                        list_add.append([deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2])
-                        list_add.append([deb, z2, tab_tmp1[2]])
+                        z1, z2 = (tab_tmp[1] + 2 * zmoy) / 3, (tab_tmp1[1] + 2 * zmoy) / 3
+                        list_add.extend([[deb, z1, tab_tmp[2]], [deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2],
+                                         [deb, z2, tab_tmp1[2]]])
                 break
 
         return list_add
@@ -702,30 +665,21 @@ class ClassLaws:
                     if ecart1 > ecartmoy:
                         ecart1 = ecartmoy
 
-                    z1 = (tab_tmp[1] + 2 * zmoy) / 3
-                    z2 = (tab_tmp1[1] + 2 * zmoy) / 3
-
-                    list_add.append([deb, z1, z1 + ecart1])
-                    list_add.append([deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2])
-                    list_add.append([deb, z2, z2 + ecart2])
+                    z1, z2 = (tab_tmp[1] + 2 * zmoy) / 3, (tab_tmp1[1] + 2 * zmoy) / 3
+                    list_add.extend([[deb, z1, z1 + ecart1], [deb, zmoy, (tab_tmp1[2] + tab_tmp[2]) / 2],
+                                     [deb, z2, z2 + ecart2]])
 
         return list_add
 
     def delete_doublon(self, liste):
         """
-        Delete  duplicate value
-        :param liste: list
-        :return: new list
-        """
+         Delete  duplicate value
+         :param liste: list
+         :return: new list
+         """
         data = np.array(liste)
-        sorted_idx = np.lexsort(data.T)
-        sorted_data = data[sorted_idx, :]
-
-        # Get unique row mask
-        row_mask = np.append([True], np.any(np.diff(sorted_data, axis=0), 1))
-        # Get unique rows
-        out = sorted_data[row_mask]
-        return list(out)
+        _, unique_idx = np.unique(data, axis=0, return_index=True)
+        return data[np.sort(unique_idx)].tolist()
 
     def complete_law(self, list_final):
         """
@@ -767,6 +721,8 @@ class ClassLaws:
         :param method: compute method
         :return:
         """
+        # defaut 1
+        type_kb = "type1"
         if method == "Bradley 78":
             if self.param_g["TOTALOUV"] > 60 and self.param_g["FORMCUL"] == 1:
                 type_kb = "Others"
@@ -793,10 +749,7 @@ class ClassLaws:
                     type_kb = "type3_1.5:1"
                 else:
                     type_kb = "type3_2:1"
-            else:
-                # defaut 1
-                type_kb = "type1"
-                # list_inter_x, list_inter_y = self.check_listinter(self.dico_abc, "kb_abac", 'M', type_kb)
+
         return type_kb
 
     def meth_seuil(self, zam, zav, zcret, cf, larg):
@@ -969,7 +922,7 @@ class ClassLaws:
         debut = min_elem
         fin = self.list_zav[-1]
         ecart = fin - debut
-
+        zam_tmp = 0.
         while ecart > prec:
             zam_tmp = (debut + fin) / 2
             qnew = 0
@@ -1068,7 +1021,7 @@ class ClassLaws:
 
         idx = np.where(self.list_zam > za)[0]
         if len(idx) > 0:
-            for zam in self.list_zam[idx[0] :]:
+            for zam in self.list_zam[idx[0]:]:
                 if zav != zam:
                     q_seuil = 0
                     q_ori = self.meth_borda_q(pr_area_wet_cret, area_wet, zam, zav)
@@ -1091,7 +1044,7 @@ class ClassLaws:
         if len(list_ori) > 1:
             idx = np.where(np.array(self.list_q) > list_ori[0][0])[0]
             if len(idx) > 0:
-                list_q_tmp = self.list_q[idx[0] :]
+                list_q_tmp = self.list_q[idx[0]:]
             else:
                 list_q_tmp = self.list_q
             q_tmp = np.array(list_ori)[:, 0]
@@ -1184,7 +1137,7 @@ class ClassLaws:
                     value = [self.deb_min, zav, self.list_zam[idx[0] - 1]]
                     list_final.append(value)
 
-                for zam in self.list_zam[idx[0] :]:
+                for zam in self.list_zam[idx[0]:]:
                     q_seuil = 0
                     q_ori = 0
 

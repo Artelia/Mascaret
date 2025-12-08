@@ -19,17 +19,15 @@ email                :
  """
 
 import os
+from datetime import datetime
 
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
-
-from qgis.PyQt.QtWidgets import *
-
-from datetime import datetime
 
 
 class SelectWidget(QWidget):
@@ -66,7 +64,7 @@ class SelectWidget(QWidget):
         """
         dico = self.mdb.select("runs", "", "date")
         for run, scen, date, comments in zip(
-            dico["run"], dico["scenario"], dico["date"], dico["comments"]
+                dico["run"], dico["scenario"], dico["date"], dico["comments"]
         ):
             # filter initialisation
             # if len(scen) >5 :
@@ -131,7 +129,6 @@ class SelectWidget(QWidget):
     def get_selection(self):
         """get selectioned runs"""
         selection = {}
-        lst_date = []
         for run in self.listeRuns:
             if self.parent[run].checkState(0) > 0:
                 selection[run] = []

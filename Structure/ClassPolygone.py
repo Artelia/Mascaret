@@ -17,11 +17,10 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import math as m
 import json
+import math as m
 
 import shapely.affinity
-from shapely import wkt
 from shapely.geometry import *
 
 

@@ -220,6 +220,8 @@
     <addaction name="actionObservations"/>
     <addaction name="actionStructures"/>
     <addaction name="actionStructures_weirs"/>
+    <addaction name="actionStructures_links"/>
+    <addaction name="actionStructures_weirs_old"/>
     <addaction name="actionTest"/>
     <addaction name="separator"/>
     <addaction name="actionUpdate_all_PK"/>
@@ -272,6 +274,7 @@
     <addaction name="actionScores"/>
     <addaction name="actionExport_Results"/>
     <addaction name="actionCartoZI"/>
+    <addaction name="action_create_lig_file"/>
     <addaction name="separator"/>
     <addaction name="action_mass_graphic_events"/>
    </widget>
@@ -694,7 +697,7 @@
   </action>
   <action name="actionStructures_weirs">
    <property name="text">
-    <string>Movable Dam</string>
+    <string>Movable Weirs</string>
    </property>
   </action>
   <action name="actionTest">
@@ -794,6 +797,11 @@
     <string>Rebuild Table (Vacuum Full)</string>
    </property>
   </action>
+  <action name="actionStructures_links">
+   <property name="text">
+    <string>Movable Links</string>
+   </property>
+  </action>
   <action name="actionExtract_Beds">
    <property name="icon">
     <iconset resource="../resources.qrc">
@@ -844,6 +852,19 @@
   <action name="action_mass_graphic_events">
    <property name="text">
     <string>Mass output of plots</string>
+   </property>
+  </action>
+  <action name="action_create_lig_file">
+   <property name="text">
+    <string>Export .lig File</string>
+   </property>
+  </action>
+  <action name="actionStructures_weirs_old">
+   <property name="text">
+    <string>Movable Dam</string>
+   </property>
+   <property name="whatsThis">
+    <string>Old version of mobile dam</string>
    </property>
   </action>
  </widget>

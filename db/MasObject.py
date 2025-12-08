@@ -160,14 +160,6 @@ class extremities(MasObject):
             ("CONSTRAINT cle_extremities", " PRIMARY KEY (gid)"),
             ("CONSTRAINT extremities_nom_key", " UNIQUE (name)"),
         ]
-        # TODO plante
-        # def pg_create_table(self):
-        #     qry = super(self.__class__, self).pg_create_table()
-        #     qry += '\n'
-        #     qry += self.pg_create_index()
-        #     qry += '\n'
-        #     qry += self.pg_create_calcul_abscisse()
-        #     return qry
 
 
 # *****************************************
@@ -269,6 +261,7 @@ class weirs(MasObject):
             ("active", " boolean NOT NULL DEFAULT TRUE"),
             ("active_mob", "boolean NOT NULL DEFAULT FALSE"),
             ("method_mob", "text"),
+            ("erase_flag", "boolean NOT NULL DEFAULT FALSE"),
             ("CONSTRAINT weirs_pkey", " PRIMARY KEY(gid)"),
         ]
 
@@ -546,6 +539,8 @@ class links(MasObject):
             ("branchnum", "integer"),
             ("abscissa", "float"),
             ("active", "boolean NOT NULL DEFAULT TRUE"),
+            ('method_mob', 'text'),
+            ('active_mob', 'boolean NOT NULL DEFAULT FALSE'),
             ("CONSTRAINT links_pkey", "PRIMARY KEY (gid)"),
             ("CONSTRAINT link_name_unique", "UNIQUE (name)"),
             ("CONSTRAINT link_num_unique", "UNIQUE (linknum)"),
@@ -1850,7 +1845,9 @@ class struct_config(MasObject):
             ("abscissa", "float"),
             ("branchnum", "integer"),
             ("id_prof_ori", "integer"),
+            ("erase_flag", "boolean NOT NULL DEFAULT FALSE"),
             ("comment", "text"),
+
             ("CONSTRAINT cle_struct_conf", "PRIMARY KEY (id)"),
         ]
 
@@ -1985,7 +1982,7 @@ class weirs_mob_val(MasObject):
             ("id_weirs", "integer"),
             ("id_order", "integer"),
             ("name_var", "text"),
-            ("value", "float"),
+            ("value", "text"),
             ("CONSTRAINT cle_weirs_mob_val", "PRIMARY KEY (id_weirs,id_order,name_var)"),
         ]
 
@@ -2128,6 +2125,20 @@ class law_values(MasObject):
             ("value", "float"),
             ("CONSTRAINT law_values_pkey", "PRIMARY KEY (id_law, id_var, id_order)"),
         ]
+
+
+class links_mob_val(MasObject):
+    # valeur des variable float
+    def __init__(self):
+        super(links_mob_val, self).__init__()
+        self.order = 48
+        self.geom_type = None
+        self.attrs = [('id_links', 'integer'),
+                      ('id_order', 'integer'),
+                      ('name_var', 'text'),
+                      ('value', 'text'),
+                      ('CONSTRAINT cle_lins_mob_val',
+                       'PRIMARY KEY (id_links,id_order,name_var)')]
 
 
 # ****************************************************************************
@@ -2319,6 +2330,5 @@ class observations_old(MasObject):
         )
         qry += "\n"
         return qry
-
 
 # *****************************************

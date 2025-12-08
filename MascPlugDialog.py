@@ -30,41 +30,41 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
-from .ClassExportDataRun import ClassExportDataRun
+from .ClassCartoZi import ClassCartoZI
 from .ClassDownload import ClassDownloadMasc
 from .ClassEditKsDialog import ClassEditKsDialog
+from .ClassExportDataRun import ClassExportDataRun
+from .ClassExportLigDialog import ClassExportLigDialog
+from .ClassExtractBedDialog import ClassExtractBedDialog
 from .ClassImportExportDialog import ClassDlgExport, ClassDlgImport, CloneTask
 from .ClassImport_res import ClassImportRes
 from .ClassMNT import ClassMNT
-from .model.ClassMascaret import ClassMascaret
-from .ClassParamExportDialog import  ClassParamExportDialog
-from .model.ClassCreatFilesModels import ClassCreatFilesModels
 from .ClassObservation import ClassEventObsDialog
+from .ClassParamExportDialog import ClassParamExportDialog
 from .ClassParameterDialog import ClassParameterDialog
-from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, open_file_editor
-from .Graphic.FilterDialog import ClassFilterDialog
-from .Graphic.GraphProfilDialog import IdentifyFeatureTool
-
-from .HydroLawsDialog import ClassHydroLawsDialog
-from .Structure.MobilSingDialog import ClassMobilSingDialog
-from .ClassExtractBedDialog import ClassExtractBedDialog
 from .ClassUpdateBedDialog import (
     ClassUpdateBedDialog,
     update_all_bed_geometry,
     refresh_minor_bed_layer,
 )
-from .ClassCartoZi import ClassCartoZI
-
+from .Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, open_file_editor
+from .Graphic.FilterDialog import ClassFilterDialog
+from .Graphic.GraphProfilDialog import IdentifyFeatureTool
+from .HydroLawsDialog import ClassHydroLawsDialog
+from .Structure.gui.MobilObjectDialog import ClassMobilObjectDialog
+# old
+from .Structure.gui.MobilSingDialog import ClassMobilSingDialog
 # # structures
-from .Structure.StructureDialog import ClassStructureDialog
+from .Structure.gui.StructureDialog import ClassStructureDialog
+# water quality
 from .WaterQuality.ClassMascWQ import ClassMascWQ
 from .WaterQuality.ClassWaterQualityDialog import ClassWaterQualityDialog
 from .WaterQuality.TracerLawsDialog import ClassTracerLawsDialog
 from .db.Check_tab import CheckTab
 from .db.ClassMasDatabase import ClassMasDatabase
+from .model.ClassMascaret import ClassMascaret
 from .scores.ClassScoresDialog import ClassScoresDialog
 from .ui.custom_control import ClassWarningBox
-
 
 
 class MascPlugDialog(QMainWindow):
@@ -83,6 +83,7 @@ class MascPlugDialog(QMainWindow):
         self.task_use = True
 
         self.curConnName = None
+        self.cond_api = False
         self.passwd = None
         self.mdb = None
         self.iface = iface
@@ -109,7 +110,7 @@ class MascPlugDialog(QMainWindow):
 
         self.prev_tool = None
 
-        self.dossierFileMasc = ""
+        self.dossier_file_masc = os.path.join(self.masplugPath, "mascaret")
 
         # self.pathPostgres = self.masplug_path
         # emplacement objet sql
@@ -152,7 +153,7 @@ class MascPlugDialog(QMainWindow):
 
         # DB
         self.ui.actionTo_clone_Model.triggered.connect(self.clone_model)
-        self.ui.actionRefresh_Database.triggered.connect(self.conn_changed)
+        self.ui.actionRefresh_Database.triggered.connect(lambda x :self.conn_changed(old_sh=True))
         self.ui.actionCreate_New_Model.triggered.connect(self.db_create_model)
         self.ui.actionDeleteModel.triggered.connect(self.db_delete_model)
         self.ui.action_table_reconstruction_vacuum_full.triggered.connect(self.schema_vacuum)
@@ -238,11 +239,13 @@ class MascPlugDialog(QMainWindow):
         # Structures
         self.ui.actionStructures.triggered.connect(self.fct_structures)
         self.ui.actionExport_Model_Files.triggered.connect(self.fct_creat_run)
+        self.ui.actionStructures_weirs_old.triggered.connect(self.fct_mv_dam_old)
         self.ui.actionStructures_weirs.triggered.connect(self.fct_mv_dam)
-        if self.cond_api:
-            self.ui.actionStructures_weirs.setEnabled(False)
-        else:
-            self.ui.actionStructures_weirs.setEnabled(True)
+        self.ui.actionStructures_links.triggered.connect(self.fct_mv_link)
+
+        self.ui.actionStructures_weirs.setVisible(self.cond_api)
+        self.ui.actionStructures_links.setVisible(self.cond_api)
+        self.ui.actionStructures_weirs_old.setVisible(not self.cond_api)
 
         # WQ
         self.ui.actionexport_tracer_files.triggered.connect(self.fct_export_tracer_files)
@@ -255,7 +258,7 @@ class MascPlugDialog(QMainWindow):
         # scores
         self.ui.actionScores.triggered.connect(self.fct_scores)
 
-        # scores
+        # carto ZI
         self.ui.actionCartoZI.triggered.connect(self.fct_carto_zi)
 
         # Laws
@@ -265,6 +268,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionUpdate_Zones.triggered.connect(self.update_ks_mesh_planim)
 
         self.ui.action_mass_graphic_events.triggered.connect(self.mass_graph_hq)
+        self.ui.action_create_lig_file.triggered.connect(self.creat_lig)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
         self.ui.actionTest.setVisible(False)
@@ -382,10 +386,14 @@ class MascPlugDialog(QMainWindow):
             self.dockwidgetKs.close()
         QMainWindow.closeEvent(self, e)
 
-    def conn_changed(self, conn_name="toto"):
-        """change the data base"""
+    def conn_changed(self, conn_name="toto", old_sh=False):
+        """change the data base
+            old_sh : if old schemas is possible"""
         # close any existing connection to a MascPlug database
+        old_schema = None
         if self.mdb:
+            if old_sh :
+                old_schema = self.mdb.SCHEMA
             self.add_info(
                 "Closing existing connection to {0}@{1} Mascaret database".format(
                     self.mdb.dbname, self.mdb.host
@@ -452,6 +460,10 @@ class MascPlugDialog(QMainWindow):
             self.disable_actions_connection()
         else:
             self.disable_actions_model()
+
+        if old_sh:
+            if old_schema in self.mdb.list_schema():
+                self.db_load(schema_info=old_schema)
 
     def db_create_model(self):
         """Model creation"""
@@ -713,16 +725,18 @@ class MascPlugDialog(QMainWindow):
     #    SETTINGS
     # *******************************
 
-    def export_run(self, clam=None,folder_name_path= None, typ_compress="zip"):
+    def export_run(self, clam=None, folder_name_path=None, typ_compress="zip"):
         if not clam:
             clam = ClassMascaret(self)
-        if not folder_name_path :
+        if not folder_name_path:
             folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
-
-        if clam.compress_run_file(folder_name_path, typ_compress):
-            self.add_info("Export is done.")
+        if folder_name_path:
+            if clam.compress_run_file(folder_name_path, typ_compress):
+                self.add_info("Export is done.")
+            else:
+                self.add_info("Export failed.")
         else:
-            self.add_info("Export failed.")
+            self.add_info("Export Cancel.")
 
     def options(self, widget):
         """GUI option"""
@@ -730,6 +744,10 @@ class MascPlugDialog(QMainWindow):
 
         dlg = ClassSettingsDialog(self)
         dlg.exec_()
+
+        self.ui.actionStructures_weirs.setVisible(self.cond_api)
+        self.ui.actionStructures_links.setVisible(self.cond_api)
+        self.ui.actionStructures_weirs_old.setVisible(not self.cond_api)
 
     def read_settings(self, defaults=False):
         """read Option"""
@@ -989,23 +1007,22 @@ Version : {}
 
     def fct_export_tracer_files(self):
         folder_name_path = QFileDialog.getExistingDirectory(self, "Choose a folder")
+        if folder_name_path:
+            cl = ClassMascWQ(self, self.dossier_file_masc)
+            try:
+                # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:
+                #     #simul date
+                #     # dat1=datetime.datetime(2019, 1, 13, 13, 35, 12)
+                #     # dat2=datetime.datetime(2019, 1, 10, 13, 35, 12)
+                #     # cl.create_filemet(dossier=folder_name_path,typ_time='date',datefirst=dat2, dateend=dat1)
+                #     cl.create_filemet(dossier=folder_name_path)
+                cl.init_conc_tracer(dossier=folder_name_path)
+                cl.create_filephy(dossier=folder_name_path)
+                cl.law_tracer(dossier=folder_name_path)
 
-        self.dossierFileMasc = os.path.join(self.masplugPath, "mascaret")
-        cl = ClassMascWQ(self, self.dossierFileMasc)
-        try:
-            # # if cl.dico_phy[cl.cur_wq_mod]['meteo']:
-            #     #simul date
-            #     # dat1=datetime.datetime(2019, 1, 13, 13, 35, 12)
-            #     # dat2=datetime.datetime(2019, 1, 10, 13, 35, 12)
-            #     # cl.create_filemet(dossier=folder_name_path,typ_time='date',datefirst=dat2, dateend=dat1)
-            #     cl.create_filemet(dossier=folder_name_path)
-            cl.init_conc_tracer(dossier=folder_name_path)
-            cl.create_filephy(dossier=folder_name_path)
-            cl.law_tracer(dossier=folder_name_path)
-
-            self.add_info("Export is done.")
-        except Exception:
-            self.add_info("Export failed.")
+                self.add_info("Export is done.")
+            except Exception:
+                self.add_info("Export failed.")
 
     # *******************************
     #    Structures
@@ -1015,10 +1032,21 @@ Version : {}
         dlg.setModal(False)
         dlg.exec_()
 
-    def fct_mv_dam(self):
+    def fct_mv_dam_old(self):
         """Running GUI of movable dam"""
 
         dlg = ClassMobilSingDialog(self)
+        dlg.exec_()
+
+    def fct_mv_dam(self):
+        """Running GUI of movable dam"""
+
+        dlg = ClassMobilObjectDialog(self, 'weir')
+        dlg.exec_()
+
+    def fct_mv_link(self):
+        """ Running GUI of movable link"""
+        dlg = ClassMobilObjectDialog(self, 'link')
         dlg.exec_()
 
     def fct_creat_run(self):
@@ -1028,7 +1056,7 @@ Version : {}
         """
         case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
         if ok:
-            kernel  = self.Klist[self.listeState.index(case)]
+            kernel = self.Klist[self.listeState.index(case)]
             dlgp = ClassParamExportDialog(self, kernel)
             dlgp.exec_()
             if dlgp.complet:
@@ -1041,7 +1069,7 @@ Version : {}
             clam = ClassMascaret(self, rep_run=rep_run)
             clam.fct_only_init(kernel, run, dict_export)
             #
-            with open(os.path.join(clam.dossierFileMasc, "FichierCas.txt"), "w") as fichier:
+            with open(os.path.join(clam.dossier_file_masc, "FichierCas.txt"), "w") as fichier:
                 fichier.write("'mascaret.xcas'\n")
             self.export_run(clam, folder_name_path=dict_export['path_rep'], typ_compress=dict_export['typ_compress'])
             clam.del_folder_mas()
@@ -1061,7 +1089,7 @@ Version : {}
         del dlg
         del clam
 
-    def open_with_default_editor(self,file_path):
+    def open_with_default_editor(self, file_path):
         import subprocess
         import sys
         if sys.platform.startswith('darwin'):  # macOS
@@ -1071,14 +1099,15 @@ Version : {}
         elif os.name == 'posix':  # Linux, Unix
             subprocess.call(('xdg-open', file_path))
 
-
-
     def fct_test(self):
         """Test function"""
         # get_laws
-        #self.chkt.debug_update_vers_meta(version="5.1.5")
-
-
+        # self.chkt.debug_update_vers_meta(version="5.1.5")
+        # cl.creat_file_no_keep_break()
+        # self.chkt.update_version('620')
+        # from .Structure.ClassLinkFGParam import ClassLinkFGParam
+        # self.cl_param = ClassLinkFGParam()
+        # self.cl_param.get_param(parent=self, file=)
         pass
 
     def update_ks_mesh_planim(self):
@@ -1257,7 +1286,7 @@ Version : {}
         Open listing file
         """
         model_path = os.path.join(self.masplugPath, "mascaret")
-        file_path =os.path.join(model_path, 'mascaret.lis')
+        file_path = os.path.join(model_path, 'mascaret.lis')
         if os.path.exists(file_path):
             # openfile
             open_file_editor(file_path)
@@ -1277,3 +1306,11 @@ Version : {}
         self.map_tool.changedRasterResults.connect(self.do_something)
 
         canvas.setMapTool(self.map_tool)
+
+    def creat_lig(self):
+        """
+        Creation of the .lig file
+        :return:
+        """
+        dlgp = ClassExportLigDialog(self)
+        dlgp.exec_()

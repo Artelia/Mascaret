@@ -19,17 +19,18 @@ email                :
 
 """
 
+import datetime
 import os
 import re
-import datetime
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
-from .GraphHydro import GraphHydroLaw
 
+from .GraphHydro import GraphHydroLaw
 from ..HydroLawsDialog import dico_typ_law
 
 
@@ -303,7 +304,7 @@ class GraphBCObs(QWidget):
 
         self.graph_obj.init_curv(typ_law=type, param_law=self.dico_obs[type], date_ref=True)
 
-        if type:
+        if type and self.param["method"]:
             liste_stations = pattern.findall(self.param["method"])
 
             for cd_hydro, delta in liste_stations:
@@ -318,8 +319,8 @@ class GraphBCObs(QWidget):
                         "WHERE code = '{0}' AND type='{3}') t "
                         " WHERE date>='{1}' AND date<='{2}' AND valeur > -999.9 "
                         "ORDER BY date".format(
-                            cd_hydro,  self.events[self.cur_event]["starttime"] + dt,
-                            self.events[self.cur_event]["endtime"] + dt,
+                            cd_hydro, self.events[self.cur_event]["starttime"] + dt,
+                                      self.events[self.cur_event]["endtime"] + dt,
                             type, self.mdb.SCHEMA
                         )
                     )

@@ -17,15 +17,15 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-import os
 import collections
+import os
+
 import numpy as np
 
 
 class ClassMascStruct:
     def __init__(self, mdb):
         self.mdb = mdb
-
 
     def get_list_law(self, id_config):
         """

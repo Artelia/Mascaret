@@ -18,16 +18,15 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QColor, QBrush
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
+from qgis.core import NULL as qgis_null
 from qgis.gui import *
 from qgis.utils import *
-from qgis.core import NULL as qgis_null
-
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QColor, QBrush
-
 
 D_TYP_BED = {0: "bed", 1: "stock"}
 D_FLD_BED = {0: "minbed", 1: "stock"}
@@ -78,8 +77,8 @@ class ClassExtractBedDialog(QDialog):
         l_child = mas_group.children()
         for child in l_child:
             if (
-                child.nodeType() == 1
-                and "dbname='{}'".format(self.mdb.dbname) in child.layer().source()
+                    child.nodeType() == 1
+                    and "dbname='{}'".format(self.mdb.dbname) in child.layer().source()
             ):
                 if 'table="{}"."branchs"'.format(self.mdb.SCHEMA) in child.layer().source():
                     b_lay = child.layer()

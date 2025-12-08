@@ -29,44 +29,44 @@ class MassGraph:
         # 'ordre': ['low', 'high'],
         dict_check = {
             'Hyellow': {'bool': False,
-                       'val': [],
-                       'ref': [['jaune_bas', 'jaune_haut'], ['yellow_low', 'yellow_high'],
-                               ["hyb", "hyh"],["hyl", "hyh"]],
-                       'numref': None,
-                       "color":'yellow'
-                       },
+                        'val': [],
+                        'ref': [['jaune_bas', 'jaune_haut'], ['yellow_low', 'yellow_high'],
+                                ["hyb", "hyh"], ["hyl", "hyh"]],
+                        'numref': None,
+                        "color": 'yellow'
+                        },
             'Horange': {'bool': False, 'val': [],
-                       'ref': [['orange_bas', 'orange_haut'], ['orange_low', 'orange_high'],
-                               ["hob", "hoh"], ["hol", "hoh"]],
-                       'numref': None,
-                       "color": 'orange'
-                       },
+                        'ref': [['orange_bas', 'orange_haut'], ['orange_low', 'orange_high'],
+                                ["hob", "hoh"], ["hol", "hoh"]],
+                        'numref': None,
+                        "color": 'orange'
+                        },
             'Hred': {'bool': False, 'val': [],
-                    'ref': [['rouge_bas', 'rouge_haut'], ['red_low', 'red_high'],
-                            ["hrb", "hrh"], ["hrl", "hrh"]],
-                    'numref': None,
-                    "color": "red"
-                    },
+                     'ref': [['rouge_bas', 'rouge_haut'], ['red_low', 'red_high'],
+                             ["hrb", "hrh"], ["hrl", "hrh"]],
+                     'numref': None,
+                     "color": "red"
+                     },
 
             'Qyellow': {'bool': False,
-                       'val': [],
-                       'ref': [['qjaune_bas', 'qjaune_haut'], ['qyellow_low', 'qyellow_high'],
-                               ["qyb", "qyh"],["qyl", "qyh"]],
-                       'numref': None,
-                       "color": 'yellow'
-                       },
+                        'val': [],
+                        'ref': [['qjaune_bas', 'qjaune_haut'], ['qyellow_low', 'qyellow_high'],
+                                ["qyb", "qyh"], ["qyl", "qyh"]],
+                        'numref': None,
+                        "color": 'yellow'
+                        },
             'Qorange': {'bool': False, 'val': [],
-                       'ref': [['qorange_bas', 'qorange_haut'], ['qorange_low', 'qorange_high'],
-                               ["qob", "qoh"],["qol", "qoh"]],
-                       'numref': None,
-                       "color": 'orange'
-                       },
+                        'ref': [['qorange_bas', 'qorange_haut'], ['qorange_low', 'qorange_high'],
+                                ["qob", "qoh"], ["qol", "qoh"]],
+                        'numref': None,
+                        "color": 'orange'
+                        },
             'Qred': {'bool': False, 'val': [],
-                    'ref': [['qrouge_bas', 'qrouge_haut'], ['qred_low', 'qred_high'],
-                            ["qrb", "qrh"],["qrl", "qrh"]],
-                    'numref': None,
-                    "color": "red"
-                    },
+                     'ref': [['qrouge_bas', 'qrouge_haut'], ['qred_low', 'qred_high'],
+                             ["qrb", "qrh"], ["qrl", "qrh"]],
+                     'numref': None,
+                     "color": "red"
+                     },
         }
 
         if_true = False
@@ -129,6 +129,8 @@ class MassGraph:
             par_event = [par[0] for par in par_event]
 
         dossier = QFileDialog.getExistingDirectory(None, u"Choosing the export folder")
+        if not dossier :
+            return
         # check if seuil vigilance
         dict_check, all_ch, lstyp = self.check_col_outputs()
         aff_seuil = False
@@ -140,25 +142,25 @@ class MassGraph:
 
         if aff_seuil:
             lst_seuil = []
-            if 'H' in lstyp :
+            if 'H' in lstyp:
                 lst_seuil.append('H')
-            if 'Q' in lstyp :
+            if 'Q' in lstyp:
                 lst_seuil.append('Q')
-            if 'Q' in lstyp and 'H' in lstyp :
+            if 'Q' in lstyp and 'H' in lstyp:
                 lst_seuil.append('H and Q')
             tseuil, ok = QInputDialog.getItem(None,
-                                           'Alert thresholds',
-                                           "Choosing the warning thresholds you want to add :",
-                                           lst_seuil, 0, False)
+                                              'Alert thresholds',
+                                              "Choosing the warning thresholds you want to add :",
+                                              lst_seuil, 0, False)
             if not ok:
                 aff_seuil = False
             else:
                 for seuil in self.typ_seuil:
                     if dict_check[seuil]['bool']:
                         let = seuil[0]
-                        if 'Q' == let and 'H' == tseuil :
+                        if 'Q' == let and 'H' == tseuil:
                             dict_check[seuil]['bool'] = False
-                        if 'H' == let and 'Q' == tseuil :
+                        if 'H' == let and 'Q' == tseuil:
                             dict_check[seuil]['bool'] = False
 
         if aff_seuil:

@@ -18,10 +18,12 @@ email                :
  ***************************************************************************/
 """
 
-from .GraphCommon import GraphCommon
+from datetime import timedelta
+
 import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
-from datetime import timedelta
+
+from .GraphCommon import GraphCommon
 
 
 class GraphHydroLaw(GraphCommon):

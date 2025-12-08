@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
 """
 import os
+
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from qgis.PyQt.QtWidgets import *
@@ -29,7 +30,6 @@ from qgis.utils import *
 from .ClassTableWQ import ClassTableWQ
 from .Graph_WQ import GraphWaterQ
 from ..Function import data_to_float
-
 
 
 class ClassTracerLawsDialog(QDialog):
@@ -331,12 +331,12 @@ class ClassTracerLawsDialog(QDialog):
             id_law = self.ui.lst_laws.model().item(lval, 0).text()
             name_law = self.ui.lst_laws.model().item(lval, 1).text()
             if (
-                QMessageBox.question(
-                    self,
-                    "Tracer Laws",
-                    "Delete {} ?".format(name_law),
-                    QMessageBox.Cancel | QMessageBox.Ok,
-                )
+                    QMessageBox.question(
+                        self,
+                        "Tracer Laws",
+                        "Delete {} ?".format(name_law),
+                        QMessageBox.Cancel | QMessageBox.Ok,
+                    )
             ) == QMessageBox.Ok:
                 self.mgis.add_info("Deletion of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(

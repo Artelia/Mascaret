@@ -18,13 +18,15 @@ email                :
  ***************************************************************************/
  """
 import os
+
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.uic import *
 from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.uic import *
 from qgis.core import *
 from qgis.gui import *
 
 from .ui.custom_control import ClassWarningBox
+
 
 class ClassDeletshDialog(QDialog):
     """
@@ -82,11 +84,11 @@ class ClassDeletshDialog(QDialog):
             for i, model in enumerate(selection):
                 self.mdb.drop_model(model, cascade=True)
 
-                self.mgis.add_info("Deletion of {0} Model is done".format(model), dbg=True)
+                self.mgis.add_info("Deletion of {0} Model is done".format(model))
 
                 progress.setValue(round(i / n * 100))
         else:
-            self.mgis.add_info("Droping Model cancelled.", dbg=True)
+            self.mgis.add_info("Droping Model cancelled.")
 
         self.iface.messageBar().clearWidgets()
 
