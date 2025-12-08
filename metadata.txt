@@ -21,7 +21,7 @@ qgisMinimumVersion=3.22
 qgisMaximumVersion=3.99
 
 
-version=6.3.0
+version=6.4.0
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -32,6 +32,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    6.4.0:
     6.3.0 : Fixed bug related to QGIS 3.40
     6.2.2 : Update branch style to limit extremities
             Fixed the data acquisition of thickness in the style of weirs for the weir law
@@ -295,7 +296,7 @@ repository=https://github.com/Artelia/Mascaret
 category=Database
 icon=icones/icon_base.png
 # experimental flag
-experimental=False
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
