@@ -1319,12 +1319,11 @@ class ScoreParamWidget(QWidget):
                     self.get_model(id_run, pk, code)
 
                 self.check_comput_hq(id_run, pk)
-
-            if not self.cmpt_var[id_run][pk]["H"] and not self.cmpt_var[id_run][pk]["Q"]:
-                txt = "- {} - {}\n " "".format(
-                    dict_name[id_run]["run"], dict_name[id_run]["scenario"]
-                )
-                self.txt_err_get += txt
+                if not self.cmpt_var[id_run][pk]["H"] and not self.cmpt_var[id_run][pk]["Q"]:
+                    txt = "- {} - {}\n " "".format(
+                        dict_name[id_run]["run"], dict_name[id_run]["scenario"]
+                    )
+                    self.txt_err_get += txt
 
         if txt_nodata != "":
             self.txt_err_get += "No data to :\n"
