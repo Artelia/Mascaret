@@ -11,9 +11,7 @@ H = []
 name_folder_ref = os.path.join(base_folder, 'run_ref')
 with open(os.path.join(name_folder_ref, 'Z_Q_assim.json')) as f:
     dict_ref = json.load(f)
-print(dict_ref)
 Zref = np.concatenate([dict_ref['Z'][str(i)] for i in range(1, n_zones + 1)])
-print(Zref, Zref.shape)
 # Getting Z perturb and building H
 for i in range(1, n_perturb+1):
     print('Run perturbé', i)

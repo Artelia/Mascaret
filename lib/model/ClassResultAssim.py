@@ -33,8 +33,6 @@ def get_coords_assim(json_file, masc_xcoords, folder=None):
     """
     # self.dict_stations contient en clé un ID de zone à caler, et en valeurs un dico avec
     # - les coordonnées X des observations associées
-    print(json_file)
-
     dict_tempo = {1: {'X': [281.41]}, 2: {'X': [281.41]}}
     with open(json_file, 'w') as f:
         json.dump(dict_tempo, f)
@@ -44,13 +42,9 @@ def get_coords_assim(json_file, masc_xcoords, folder=None):
             dict_stations = json.load(f)
         dict_obs = {}
         keys = np.array([k for k in dict_stations], dtype=int)
-        print(keys)
         for key in keys:
             for x in dict_stations[str(key)]['X']:
-                print(x)
-                print(masc_xcoords)
                 coord_obs = np.argmin(np.abs(np.subtract(masc_xcoords, x)))
-                print(coord_obs)
                 if coord_obs in dict_obs:
                     dict_obs[coord_obs] = [key]
                 else:
@@ -92,13 +86,10 @@ class ClassResultAssim:
                 self.dict_stations = json.load(f)
 
             keys = np.array([k for k in self.dict_stations], dtype=int)
-            print(keys)
             for key in keys:
                 for x in self.dict_stations[str(key)]['X']:
-                    print(x)
                     # print(masc_xcoords)
                     index_obs = int(np.argmin(np.abs(np.subtract(masc_xcoords, x))))
-                    print(index_obs)
                     if index_obs not in self.dict_obs:
                         self.dict_obs[index_obs] = {'id_zone': [int(key)],
                                                     'x_obs': x}
@@ -120,7 +111,6 @@ class ClassResultAssim:
                         'KS_maj': {n: -99 for n in range(1, self.num_zones + 1)},
                         'KS_min': {n: -99 for n in range(1, self.num_zones + 1)}
                         }
-        print(self.dictRes)
 
     def store_KS_values(self, KSmin, KSmaj):
         """
@@ -129,7 +119,6 @@ class ClassResultAssim:
         :param KSmaj: KS_values in major bed
         :return:
         """
-        print(KSmin, KSmaj)
         for idx, i in enumerate(self.dict_obs):
             for zone in self.dict_obs[i]["id_zone"]:
                 self.dictRes['KS_min'][zone] = KSmin[idx]
