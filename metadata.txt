@@ -21,7 +21,7 @@ qgisMinimumVersion=3.22
 qgisMaximumVersion=3.99
 
 
-version=6.2.2
+version=6.4.0
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -32,6 +32,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    6.4.0 :
     6.2.2 : Update branch style to limit extremities
             Fixed the data acquisition of thickness in the style of weirs for the weir law
             Fixed the floodgate rise speed with the tide option

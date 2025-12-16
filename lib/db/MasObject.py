@@ -395,6 +395,10 @@ class outputs(MasObject):
             ("branchnum", "integer"),
             ("abscissa", "float"),
             ("active", "boolean NOT NULL DEFAULT TRUE"),
+            ("obsZ_stdErr", "double precision NOT NULL DEFAULT 0.05"),
+            ("obsQ_stdErr", "double precision NOT NULL DEFAULT 10"),
+            ("obsZ_rejectLimit", "double precision"),
+            ("obsQ_rejectLimit", "double precision"),
             ("CONSTRAINT outputs_pkey", "PRIMARY KEY (gid)"),
         ]
 
@@ -2140,7 +2144,55 @@ class links_mob_val(MasObject):
                       ('CONSTRAINT cle_lins_mob_val',
                        'PRIMARY KEY (id_links,id_order,name_var)')]
 
-
+class assim_config(MasObject):
+    def __init__(self):
+        super(assim_config, self).__init__()
+        self.order = 49
+        self.geom_type = None
+        self.attrs = [
+            ("id_type", "serial NOT NULL"),
+            ("control_type", "integer NOT NULL"),
+            ("control_var", "text NOT NULL"),
+            ("perturbation_var", "text[]"),
+            ("perturbation_val", "double precision[]"),
+            ("seuil_rejet_misfit", "double precision"),
+            ("iterations_sigma", "integer"),
+            ("active", "boolean NOT NULL DEFAULT FALSE"),
+            ("CONSTRAINT assim_config_pkey", " PRIMARY KEY (id_type)"),
+        ]
+class assim_ks(MasObject):
+    def __init__(self):
+        super(assim_ks, self).__init__()
+        self.order = 50
+        self.geom_type = None
+        self.attrs = [
+            ("id_zone", "integer NOT NULL"),
+            ("id_type", "integer NOT NULL"),
+            ("ks_type", "text NOT NULL"),
+            ("active", "boolean"),
+            ("std", "double precision"),
+            ("val_min", "double precision"),
+            ("val_max", "double precision"),
+            ("lst_obs", "integer[]"),
+            ("CONSTRAINT assim_ks_pkey", " PRIMARY KEY (id_zone, id_type, ks_type)"),
+        ]
+class assim_law(MasObject):
+    def __init__(self):
+        super(assim_law, self).__init__()
+        self.order = 50
+        self.geom_type = None
+        self.attrs = [
+            ("id_law", "integer NOT NULL"),
+            ("id_type", "integer NOT NULL"),
+            ("val_min", "double precision"),
+            ("val_max", "double precision"),
+            ("lst_obs", "integer[]"),
+            ("active_a", "boolean"),
+            ("std_a", "double precision"),
+            ("active_b", "boolean"),
+            ("std_b", "double precision"),
+            ("CONSTRAINT assim_law_pkey", " PRIMARY KEY (id_law, id_type)"),
+        ]
 # ****************************************************************************
 # *****************************************
 class branchs_old(MasObject):

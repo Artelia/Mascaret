@@ -100,6 +100,8 @@ class CheckTab:
             "6.2.0",
             "6.2.1",
             "6.2.2",
+            "6.3.0",
+            "6.4.0"
         ]
         self.dico_modif = {
             "3.0.0": {
@@ -265,58 +267,26 @@ class CheckTab:
             "4.0.8": {},
             "4.0.9": {},
             "4.0.10": {},
-            "4.0.11": {
-                "fct": [lambda: self.update_version("4011")],
-            },
+            "4.0.11": {"fct": [lambda: self.update_version("4011")]},
             "4.0.12": {},
-            "4.0.13": {
-                "fct": [lambda: self.change_branchs_chstate_active()],
-            },
+            "4.0.13": {"fct": [lambda: self.change_branchs_chstate_active()]},
             "4.0.14": {},
             "5.0.1": {},
-            "5.0.2": {
-                "fct": [lambda: self.change_clone_shema_trigger()],
-            },
+            "5.0.2": {"fct": [lambda: self.change_clone_shema_trigger()]},
             "5.0.3": {},
             "5.0.4": {},
-            "5.0.5": {
-                "fct": [lambda: self.update_505()],
-            },
+            "5.0.5": {"fct": [lambda: self.update_505()]},
             "5.0.6": {},
             "5.0.7": {},
             '5.0.8': {},
             '5.0.9': {},
-            "5.1.1": {
-                "fct": [
-                    lambda: self.update_version("511"),
-                ],
-            },
-            "5.1.2": {
-                "fct": [
-                    lambda: self.update_version("512"),
-                ]
-            },
-            "5.1.3": {
-                "fct": [
-                    lambda: self.update_513(),
-                ]
-            },
+            "5.1.1": {"fct": [lambda: self.update_version("511")]},
+            "5.1.2": {"fct": [lambda: self.update_version("512")]},
+            "5.1.3": {"fct": [lambda: self.update_513()]},
             "5.1.4": {},
-            "5.1.5": {
-                "fct": [
-                    lambda: self.update_version("515"),
-                ],
-            },
-            "5.1.6": {
-                "fct": [
-                    lambda: self.update_version("516"),
-                ],
-            },
-            "5.1.7": {
-                "fct": [
-                    lambda: self.update_version("517"),
-                ],
-            },
+            "5.1.5": {"fct": [lambda: self.update_version("515")]},
+            "5.1.6": {"fct": [lambda: self.update_version("516")]},
+            "5.1.7": {"fct": [lambda: self.update_version("517")]},
             "5.1.8": {},
             "5.1.9": {},
             "5.1.10": {},
@@ -331,12 +301,11 @@ class CheckTab:
             "6.0.4": {},
             "6.1.0": {},
             "6.1.1": {},
-            "6.2.0": {"fct": [
-                lambda: self.update_version("620"),
-            ],
-            },
+            "6.2.0": {"fct": [lambda: self.update_version("620")]},
             "6.2.1": {},
             "6.2.2": {},
+            "6.3.0": {},
+            "6.4.0": {"fct": [lambda: self.update_version("640")]},
 
             # '3.0.x': { },
         }

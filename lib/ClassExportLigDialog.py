@@ -27,7 +27,6 @@ from qgis.core import *
 from qgis.gui import *
 
 from .Function import del_accent, del_symbolv2
-from .model.ClassCreatFilesModels import ClassCreatFilesModels
 from .model.ClassBCWriter import ClassBCWriter
 
 
@@ -46,7 +45,6 @@ class ClassExportLigDialog(QDialog):
         self.bt_ok.accepted.connect(self.accept_dialog)
         self.bt_ok.rejected.connect(self.reject)
         self.clfile = ClassBCWriter(self.mdb, self.mgis.dossier_file_masc)
-        # self.clfile = ClassCreatFilesModels(self.mdb, self.mgis.dossier_file_masc, self.mgis.cond_api, self.mgis.DEBUG)
 
     def init_gui(self):
         """

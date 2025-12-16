@@ -508,6 +508,10 @@ class ClassMasDatabase(object):
                 # hydro laws
                 Maso.law_config,
                 Maso.law_values,
+                # assimilation
+                Maso.assim_config,
+                Maso.assim_law,
+                Maso.assim_ks,
             ]
             tables.sort(key=lambda x: x().order)
 
