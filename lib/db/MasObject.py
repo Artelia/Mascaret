@@ -2173,6 +2173,9 @@ class assim_ks(MasObject):
             ("std", "double precision"),
             ("val_min", "double precision"),
             ("val_max", "double precision"),
+            ("abs_min", "double precision"),
+            ("abs_max", "double precision"),
+            ("branchnum", "integer"),
             ("lst_obs", "integer[]"),
             ("CONSTRAINT assim_ks_pkey", " PRIMARY KEY (id_zone, id_type, ks_type)"),
         ]
