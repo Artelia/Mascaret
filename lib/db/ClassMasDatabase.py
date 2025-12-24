@@ -1979,7 +1979,11 @@ SELECT  minbedcoef,
         majbedcoef, 
         branchnum,  
         absmin,
-        absmax
+        absmax,
+        ROW_NUMBER() OVER (PARTITION BY branchnum ORDER BY absmin) as branch_zone,
+        ST_AsText(ST_LineMerge((SELECT ST_UNION(geom) 
+        FROM bva.visu_branchs as src 
+        WHERE src.branchnum = branchnum AND src.abs_start >= absmin AND src.abs_end <= absmax))) AS geom
 FROM
 (SELECT  minbedcoef, 
         majbedcoef, 
@@ -2051,18 +2055,22 @@ WHERE (num2 != numm1 OR numm1 is NULL)
 
         dico_ks = {
             "branch": [],
+            "branch_zone": [],
             "minbedcoef": [],
             "majbedcoef": [],
             "zoneabsstart": [],
             "zoneabsend": [],
+            "geom": []
         }
 
-        for minbedcoef, majbedcoef, branch, minp, maxp in results:
+        for minbedcoef, majbedcoef, branch, minp, maxp, branche_zone, geom in results:
             dico_ks["branch"].append(branch)
+            dico_ks["branch_zone"].append(branche_zone)
             dico_ks["minbedcoef"].append(minbedcoef)
             dico_ks["majbedcoef"].append(majbedcoef)
             dico_ks["zoneabsstart"].append(minp)
             dico_ks["zoneabsend"].append(maxp)
+            dico_ks["geom"].append(geom)
 
         return dico_ks
 

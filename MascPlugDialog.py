@@ -85,6 +85,7 @@ from .lib.model.Fct_model_file import compress_run_file
 from .lib.model.ClassDictRun import ClassDictRun
 from .lib.scores.ClassScoresDialog import ClassScoresDialog
 from .ui.custom_control import ClassWarningBox
+from .lib.ClassAssimilationDialog import ClassAssimilationDialog
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
@@ -133,6 +134,7 @@ class MascPlugDialog(QMainWindow):
         self.basin_result = None
         self.profil_z = None
         self.mass_graph = None
+        self.assim_select = None
 
         self.prev_tool = None
 
@@ -302,6 +304,9 @@ class MascPlugDialog(QMainWindow):
         # TODO DELETE AFTER
         self.ui.actionImport_Old_Model.triggered.connect(self.import_old_model_dgl)
 
+        self.dockwidgetAssim = None
+        self.ui.actionAssimilation.triggered.connect(self.assimilation)
+
     def add_info(self, text, dbg=False, box=False, btype='INFO'):
         if dbg:
             if self.DEBUG:
@@ -414,6 +419,10 @@ class MascPlugDialog(QMainWindow):
 
         if self.dockwidgetKs is not None:
             self.dockwidgetKs.close()
+
+        if self.dockwidgetAssim is not None:
+            self.dockwidgetAssim.close()
+
         QMainWindow.closeEvent(self, e)
 
     def conn_changed(self, conn_name="toto", old_sh=False):
@@ -949,6 +958,11 @@ class MascPlugDialog(QMainWindow):
         self.profil_result = self.ui.actionCross_section_results.isChecked()
         self.basin_result = self.ui.actionBasin.isChecked()
         self.profil_z = self.ui.actionGraphRes.isChecked()
+        if self.dockwidgetAssim:
+            self.assim_select = self.dockwidgetAssim.wgt_ks.bt_sel_zone.isChecked()
+        else:
+            self.assim_select = False
+
 
         # prevents use of other graphic button
         self.ui.actionHydrogramme.setEnabled(True)
@@ -956,32 +970,50 @@ class MascPlugDialog(QMainWindow):
         self.ui.actionCross_section_results.setEnabled(True)
         self.ui.actionBasin.setEnabled(True)
         self.ui.actionGraphRes.setEnabled(True)
+        if self.dockwidgetAssim:
+            self.dockwidgetAssim.wgt_ks.bt_sel_zone.setEnabled(True)
 
         if self.profil:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section_results.setEnabled(False)
             self.ui.actionBasin.setEnabled(False)
             self.ui.actionGraphRes.setEnabled(False)
+            if self.dockwidgetAssim:
+                self.dockwidgetAssim.wgt_ks.bt_sel_zone.setEnabled(False)
         elif self.hydrogramme:
             self.ui.actionCross_section_results.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)
             self.ui.actionBasin.setEnabled(False)
             self.ui.actionGraphRes.setEnabled(False)
+            if self.dockwidgetAssim:
+                self.dockwidgetAssim.wgt_ks.bt_sel_zone.setEnabled(False)
         elif self.profil_result:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)
             self.ui.actionBasin.setEnabled(False)
             self.ui.actionGraphRes.setEnabled(False)
+            if self.dockwidgetAssim:
+                self.dockwidgetAssim.wgt_ks.bt_sel_zone.setEnabled(False)
         elif self.basin_result:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)
             self.ui.actionCross_section_results.setEnabled(False)
             self.ui.actionGraphRes.setEnabled(False)
+            if self.dockwidgetAssim:
+                self.dockwidgetAssim.wgt_ks.bt_sel_zone.setEnabled(False)
         elif self.profil_z:
             self.ui.actionHydrogramme.setEnabled(False)
             self.ui.actionCross_section.setEnabled(False)
             self.ui.actionCross_section_results.setEnabled(False)
             self.ui.actionBasin.setEnabled(False)
+            if self.dockwidgetAssim:
+                self.dockwidgetAssim.wgt_ks.bt_sel_zone.setEnabled(False)
+        elif self.assim_select:
+            self.ui.actionHydrogramme.setEnabled(False)
+            self.ui.actionCross_section.setEnabled(False)
+            self.ui.actionCross_section_results.setEnabled(False)
+            self.ui.actionBasin.setEnabled(False)
+            self.ui.actionGraphRes.setEnabled(False)
 
         self.prev_tool = canvas.mapTool()
         self.map_tool = IdentifyFeatureTool(self)
@@ -1398,3 +1430,36 @@ Version : {}
             dlgp.exec()  # PyQt6
         else:
             dlgp.exec_()  # PyQt5
+
+    def assimilation(self):
+        """
+        update the assimilation parameters
+        :return:
+        """
+
+        self.dockwidgetAssim = ClassAssimilationDialog(self, self.iface)
+        # connect to provide cleanup on closing of dockwidget
+        if QT_VERSION > 5:
+            try:
+                self.iface.addTabifiedDockWidget(
+                    Qt.DockWidgetArea.RightDockWidgetArea, self.dockwidgetAssim, raiseTab=True
+                )
+            except AttributeError:
+                self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockwidgetAssim)
+        else:
+            try:
+                self.iface.addTabifiedDockWidget(
+                    Qt.RightDockWidgetArea, self.dockwidgetAssim, raiseTab=True
+                )
+            except AttributeError:
+                self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidgetAssim)
+
+        self.main_graph()
+
+
+        # dlg = ClassAssimilationDialog(self)
+        # dlg.setModal(False)
+        # if QT_VERSION > 5:
+        #     dlg.exec()  # PyQt6
+        # else:
+        #     dlg.show()  # PyQt5
