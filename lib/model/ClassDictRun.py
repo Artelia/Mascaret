@@ -29,6 +29,8 @@ from qgis.PyQt.QtWidgets import (
     QInputDialog,
     QWidget
 )
+
+from ..assim.ClassAssimDB import ClassAssimDB
 from ..Structure.ClassLinkFGParam import ClassLinkFGParam
 from ..Structure.ClassMobilWeirsParam import ClassMobilWeirsParam
 from ..Structure.ClassParamFG import ClassParamFG
@@ -79,6 +81,7 @@ class ClassDictRun:
                 "has_new_run_path": False,
             }
         }
+        self.assim = ClassAssimDB(self.mdb)
 
     def get_dmodel(self):
         """Return the internal model dictionary.
@@ -211,6 +214,48 @@ class ClassDictRun:
 
         return task_params
 
+
+    def get_list_type_instance_assim(self, type_assim, type_init=None):
+        """
+        Iterates through all scenarios and collects instances whose 'name'
+        attribute matches the specified type.
+
+        :param  type_assim: The instance type/name to filter by
+        :type  type_assim: str
+        :return: A list of instance dictionaries matching the specified type
+        :rtype: list
+        """
+        task_params = []
+        dgeneral = self.get_dgeneral()
+        drun = self.get_drun()
+
+        # Iterate through all available scenarios
+        for scen in self.get_list_name_scenario():
+            # Get scenario details
+            dscen = self.get_scenario(scen)
+            for instance in dscen.get("instances", []):
+                if not type_init :
+                    cond = not  instance.get('name', '').endswith("_init")
+                else:
+                    cond = instance.get('name').endswith("_init")
+                if  type_assim == instance.get('type_ctrl') and cond :
+                    #add info scenario or general
+                    instance.update({
+                        "run_name" : drun.get("name_run"),
+                        "scen_name": dscen.get("name"),
+                        "comments" : dscen.get("comment"),
+                        "BASE_NAME": dscen.get("BASE_NAME"),
+                        "api": dgeneral.get('api'),
+                        "dbg": dgeneral.get('dbg'),
+                    })
+                    task_params.append(instance)
+            # Extract instances matching the specified type
+            # task_params.extend(
+            #     instance for instance in dscen.get("instances", [])
+            #     if instance.get('name') == type_inst or type_inst == 'all'
+            # )
+        return task_params
+
     def fill_drun(self, kernel, name_run):
         """Populate the 'run' configuration based on kernel and DB parameters.
 
@@ -236,7 +281,7 @@ class ClassDictRun:
             "has_fg" : self.cl_fg.fg_actif(self.mdb) if kernel == "unsteady" else False,
             "ligInit": par["LigEauInit"],
             "has_run_init": par["initialisationAuto"],
-            'has_assimilation': False
+            'has_assimilation': True
         }
 
     def set_drun(self, new_items):
@@ -322,7 +367,6 @@ class ClassDictRun:
                 continue
             # ref: reference, init: intialisation
             # pertub1,  pertub1_init
-
             d_folder[name] = instance.get("RUN_REP")
 
         return d_folder
@@ -365,6 +409,26 @@ class ClassDictRun:
                 break
 
         return id_instance
+
+
+    def get_instance(self, id_scen, instance_name):
+        """Get the index of an instance by name within a scenario.
+
+        :param id_scen: Scenario index.
+        :type id_scen: int
+        :param instance_name: Instance name to find.
+        :type instance_name: str
+        :return: Instance index or None.
+        :rtype: int or None
+        """
+        instances = self.dmodel['scenario'][id_scen].get('instances')
+        if id_scen is None or not instances:
+            return
+        for idx, instance in enumerate(instances):
+            name = instance.get('name')
+            if name == instance_name:
+                return instance
+        return None
 
     def get_param_model(self, noyau):
         """Get model parameters from the database for the specified kernel.
@@ -565,8 +629,13 @@ class ClassDictRun:
                                         "starttime": d_scen.get("starttime") if drun['event'] else None ,
                                         "order": order,
                                         })
-
+            order += 1
+            if drun['has_assimilation']:
+                lst_assim = self.assim.lst_instance_run_ctrlks(drun, d_scen, order)
+                d_scen["instances"] += lst_assim
+                pass
             scenarios.append(d_scen)
+
 
         return scenarios
 

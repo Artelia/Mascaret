@@ -665,7 +665,6 @@ class ClassXcasWriter:
             if "balise2" in val.keys() and val["balise2"]:
                 child = parent.find(val["balise2"])
                 child.find(param).text = val["valeur"]
-
             else:
                 parent.find(param).text = val["valeur"]
 

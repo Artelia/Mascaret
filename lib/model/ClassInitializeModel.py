@@ -102,7 +102,12 @@ class ClassInitializeModel:
                 lst_idx_del.append(ids)
                 self.box.critic(f"Simulation {scen} aborted.")
                 # TODO: Decide whether to stop if one scenario fails
+            if self.drun.get("has_assimilation"):
+                self.obj_model.assim.fill_assim_folder(ids, scen, self.obj_model)
+                pass
+
         self.obj_model.del_lscenar(lst_idx_del)
+
 
     def generate_models_folders(self):
         """Create run folder structure and copy template and binary files to instances.
@@ -267,7 +272,9 @@ class ClassInitializeModel:
             return False
 
         # Step 5: Create XCAS file and structural laws
-        dict_lois, dico_loi_struct = self.cl_xcas.creer_xcas(kernel, filename=self.XCAS_FILE, up_param=up_param)
+        dict_lois, dico_loi_struct = self.cl_xcas.creer_xcas(kernel,
+                                                             filename=self.XCAS_FILE,
+                                                             up_param=up_param)
         if self.check_and_log_errors():
             return False
 

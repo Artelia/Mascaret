@@ -294,10 +294,24 @@ class TaskMascaret(QgsTask):
     def create_json_param(self, folder, filname, params):
         # Create parameter input file (with index to avoid conflicts)
         param_file = os.path.join(folder,filname)
-        lst_param_api = ['name','name_xcas',"RUN_REP", "BASE_NAME","has_tracer","has_casier"]
+        lst_param_api = ['name',
+                         'name_xcas',
+                         "RUN_REP",
+                         "BASE_NAME",
+                         "has_tracer",
+                         "has_casier",
+                         "has_assim",
+                         ]
         d_json = {key : item for key, item in params.items() if key in lst_param_api}
         with open(param_file, 'w') as fp:
             json.dump(d_json, fp)
+        return param_file
+
+    def create_json_assim(self, folder, filname, params):
+        # Create parameter input file (with index to avoid conflicts)
+        param_file = os.path.join(folder, '..',filname)
+        with open(param_file, 'w') as fp:
+            json.dump(params, fp)
         return param_file
 
     def run_model(self, params, index):
@@ -319,14 +333,10 @@ class TaskMascaret(QgsTask):
         if not os.path.isdir(params.get("RUN_REP")):
             results['error'] = f"Process failed because the folder is not found: {params.get('RUN_REP')}"
             results['execution_time'] = time.time() - results['start_time']
-
         try:
 
             # Change to the script directory
             script_dir = os.path.dirname(__file__)
-
-
-
             param_file = self.create_json_param(params.get("RUN_REP"), f'model_idx{index}.json', params)
 
             os.chdir(os.path.join(script_dir,"..", "api"))
@@ -338,7 +348,7 @@ class TaskMascaret(QgsTask):
                 check=True,
                 capture_output=True
             )
-
+            # print(process.stdout, 'uuu')
             results.update({
                 'success': True,
                 'output': process.stdout,
@@ -346,11 +356,11 @@ class TaskMascaret(QgsTask):
                 'execution_time': time.time() - results['start_time'],
             })
 
-            try:
-                if os.path.exists(param_file):
-                    os.remove(param_file)
-            except OSError as e:
-                results['error'] += f"\nWarning: Could not remove temp file: {e}"
+            # try:
+            #     if os.path.exists(param_file):
+            #         os.remove(param_file)
+            # except OSError as e:
+            #     results['error'] += f"\nWarning: Could not remove temp file: {e}"
 
             ## Check if API ran successfully
             if results['success']:
@@ -363,7 +373,7 @@ class TaskMascaret(QgsTask):
                     results['success'] = False
                     results['error'] = results.get('output', '')
                     raise Exception(f"ClassAPIMascaret failed")
-                if params.get('name') == 'init':
+                if params.get('name').endswith('init'):
                     if not self._copy_lig_files(params.get("RUN_REP")):
                         results['success'] = False
                         raise Exception(f"No .lig files found #{index}")

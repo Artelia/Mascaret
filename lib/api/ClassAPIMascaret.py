@@ -514,7 +514,6 @@ class ClassAPIMascaret:
             # Storing additionally KS values for later use in BLUE
             valKSmin = [self.masc.get('Model.FricCoefMainCh', i) for i in self.res_assim.dict_obs]
             valKSmaj = [self.masc.get('Model.FricCoefFP', i) for i in self.res_assim.dict_obs]
-            print(valKSmaj, valKSmin)
             self.res_assim.store_KS_values(valKSmin, valKSmaj)
             self.res_assim.write_results(self.dossier_file_masc, 'Z_Q_assim.json')
 
@@ -595,8 +594,7 @@ if __name__ == "__main__":
         jsonf = sys.argv[1]
         with open(jsonf) as json_data:
             dico = json.load(json_data)
-        gen_lig =  True if dico.get('name','') == 'init'else False
-
+        gen_lig =  dico.get('name','').endswith("init")
         api = ClassAPIMascaret(dico, generate_lig=gen_lig)
         api.fct_main(dico.get('name_xcas'), dico.get("has_tracer",False), dico.get("has_casier",False))
         print("Work is done.")

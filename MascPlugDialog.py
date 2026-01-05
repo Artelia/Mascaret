@@ -1166,6 +1166,11 @@ Version : {}
         # self.chkt.debug_update_vers_meta(version="5.1.5")
         # cl.creat_file_no_keep_break()
         # self.chkt.update_version('620')
+
+        from .lib.assim.ClassAssimDB import ClassAssimDB
+        cl =  ClassAssimDB(self.mdb)
+        print(cl.data)
+        cl.export_data_json(os.path.join(self.masplugPath, 'mascaret'))
         pass
 
     def update_ks_mesh_planim(self):
