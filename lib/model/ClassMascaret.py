@@ -99,6 +99,11 @@ class ClassMascaret:
                 self.task_queue.append('ctrl_ks_init')
             self.task_queue.append('ctrl_ks_perturb')
 
+        if drun['has_assimilation']:
+            if drun['has_run_init']:
+                self.task_queue.append('ctrl_law_init')
+            self.task_queue.append('ctrl_law_perturb')
+
         # # Ajouter conditionnellement la 3ème task
         # if self.should_run_third_task():  # Votre condition
         #     self.task_queue.append('third')
@@ -232,6 +237,71 @@ class ClassMascaret:
                 QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
                 self.process_next_task()
 
+    def launch_ctrl_law_init_task(self):
+        print('Run Assime CtrlLaw init *************')
+        task_params = self.obj_model.get_list_type_instance_assim("ctrlLaw", type_init=True)
+
+        if not task_params:
+            QgsMessageLog.logMessage("No 'CtrlKs init' model to run.", 'TaskMascaret', Qgis.Warning)
+            # Passer à la suivante même si pas de modèle ref
+            self.process_next_task()
+            return
+
+        description = "Mascaret Models Execution, CtrlLaw init'"
+        self.task_ref = TaskMascaret(
+            description=description,
+            task_params=task_params,
+            max_workers=self.limit_core,
+            database=None
+        )
+
+        if not self.use_task:
+            for idx, param in enumerate(task_params):
+                results = self.task_ref.run_model(param, idx)
+            self.process_next_task()
+        else:
+
+            # Connecter les signaux
+            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed('ctrlLaw_init'))
+            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed('ctrlLaw_init'))
+            task_id = self.launch_task(self.task_ref, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                self.process_next_task()
+
+    def launch_ctrl_law_pertub_task(self):
+        print('Run Assime Ctrl Law *************')
+        task_params = self.obj_model.get_list_type_instance_assim("ctrlLaw")
+
+        if not task_params:
+            QgsMessageLog.logMessage("No 'CtrlKs pertub' model to run.", 'TaskMascaret', Qgis.Warning)
+            # Passer à la suivante même si pas de modèle ref
+            self.process_next_task()
+            return
+
+        description = "Mascaret Models Execution, CtrlLaw pertub'"
+        self.task_ref = TaskMascaret(
+            description=description,
+            task_params=task_params,
+            max_workers=self.limit_core,
+            database=None
+        )
+
+        if not self.use_task:
+            for idx, param in enumerate(task_params):
+                results = self.task_ref.run_model(param, idx)
+            self.process_next_task()
+        else:
+
+            # Connecter les signaux
+            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed('crtlLaw_pertub'))
+            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed('crtlLaw_pertub'))
+            task_id = self.launch_task(self.task_ref, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                self.process_next_task()
     def launch_task(self, task, description="Mascaret Models Execution"):
         print('Launching task...')
         task_manager = QgsApplication.taskManager()
@@ -327,6 +397,11 @@ class ClassMascaret:
             self.launch_ctrl_ks_init_task()
         elif next_task_type == 'ctrl_ks_perturb':
             self.launch_ctrl_ks_pertub_task()
+        elif next_task_type == 'ctrl_law_init':
+            #TODO si ctrl_ks avant ctrl_law ref est ctrl_ks
+            self.launch_ctrl_law_init_task()
+        elif next_task_type == 'ctrl_law_perturb':
+            self.launch_ctrl_law_pertub_task()
         # elif next_task_type == 'third':
         #     self.launch_third_task()
 

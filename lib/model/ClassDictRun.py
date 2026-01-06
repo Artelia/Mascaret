@@ -631,9 +631,12 @@ class ClassDictRun:
                                         })
             order += 1
             if drun['has_assimilation']:
-                lst_assim = self.assim.lst_instance_run_ctrlks(drun, d_scen, order)
-                d_scen["instances"] += lst_assim
-                pass
+                if self.assim.check_assim_ks():
+                    lst_assim = self.assim.lst_instance_run_ctrlks(drun, d_scen, order)
+                    d_scen["instances"] += lst_assim
+                if self.assim.check_assim_law():
+                    lst_assim = self.assim.lst_instance_run_ctrl_law(drun, d_scen, order)
+                    d_scen["instances"] += lst_assim
             scenarios.append(d_scen)
 
 
