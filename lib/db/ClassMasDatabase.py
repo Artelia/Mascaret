@@ -1982,7 +1982,7 @@ SELECT  minbedcoef,
         absmax,
         ROW_NUMBER() OVER (PARTITION BY branchnum ORDER BY absmin) as branch_zone,
         ST_AsText(ST_LineMerge((SELECT ST_UNION(geom) 
-        FROM bva.visu_branchs as src 
+        FROM {0}.visu_branchs as src 
         WHERE src.branchnum = branchnum AND src.abs_start >= absmin AND src.abs_end <= absmax))) AS geom
 FROM
 (SELECT  minbedcoef, 
@@ -2052,6 +2052,7 @@ WHERE (num2 != numm1 OR numm1 is NULL)
 
         """
         (results, nam_col) = self.run_query(sql.format(self.SCHEMA), fetch=True, namvar=True)
+        print(sql.format(self.SCHEMA))
 
         dico_ks = {
             "branch": [],
