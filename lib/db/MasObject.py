@@ -2167,16 +2167,23 @@ class assim_ks(MasObject):
         self.geom_type = None
         self.attrs = [
             ("id_zone", "integer NOT NULL"),
-            ("ks_type", "text NOT NULL"),
             ("active", "boolean"),
+            ("active_min", "boolean"),
+            ("active_maj", "boolean"),
+            ("std_min", "double precision"),
+            ("std_maj", "double precision"),
+            ("val_inf_min", "double precision"),
+            ("val_sup_min", "double precision"),
             ("std", "double precision"),
-            ("val_min", "double precision"),
-            ("val_max", "double precision"),
+            ("val_inf_maj", "double precision"),
+            ("val_sup_maj", "double precision"),
             ("abs_min", "double precision"),
             ("abs_max", "double precision"),
             ("branchnum", "integer"),
-            ("lst_obs", "integer[]"),
-            ("CONSTRAINT assim_ks_pkey", " PRIMARY KEY (id_zone, id_type, ks_type)"),
+            ("lst_obs_h", "integer[]"),
+            ("lst_obs_q", "integer[]"),
+            ("auto_del", "boolean"),
+            ("CONSTRAINT assim_ks_pkey", " PRIMARY KEY (id_zone)"),
         ]
 class assim_law(MasObject):
     def __init__(self):
@@ -2185,15 +2192,18 @@ class assim_law(MasObject):
         self.geom_type = None
         self.attrs = [
             ("id_law", "integer NOT NULL"),
-            ("id_type", "integer NOT NULL"),
+            ("active", "boolean"),
             ("val_min", "double precision"),
             ("val_max", "double precision"),
-            ("lst_obs", "integer[]"),
+            ("lst_obs_h", "integer[]"),
+            ("lst_obs_q", "integer[]"),
             ("active_a", "boolean"),
             ("std_a", "double precision"),
             ("active_b", "boolean"),
             ("std_b", "double precision"),
-            ("CONSTRAINT assim_law_pkey", " PRIMARY KEY (id_law, id_type)"),
+            ("auto_del", "boolean"),
+            ('source_law', "text"),
+            ("CONSTRAINT assim_law_pkey", " PRIMARY KEY (id_law, source_law)"),
         ]
 # ****************************************************************************
 # *****************************************
