@@ -2192,7 +2192,6 @@ class assim_law(MasObject):
         self.geom_type = None
         self.attrs = [
             ("id_law", "integer NOT NULL"),
-            ("id_type", "integer NOT NULL"),
             ("active", "boolean"),
             ("val_min", "double precision"),
             ("val_max", "double precision"),
@@ -2204,7 +2203,7 @@ class assim_law(MasObject):
             ("std_b", "double precision"),
             ("auto_del", "boolean"),
             ('source_law', "text"),
-            ("CONSTRAINT assim_law_pkey", " PRIMARY KEY (id_law, id_type)"),
+            ("CONSTRAINT assim_law_pkey", " PRIMARY KEY (id_law, source_law)"),
         ]
 # ****************************************************************************
 # *****************************************

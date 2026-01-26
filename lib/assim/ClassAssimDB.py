@@ -91,10 +91,9 @@ class ClassAssimDB:
 
     def _update_ctrl_ks(self, idx, data_config):
         """Gère la mise à jour des données ctrlKS."""
-        id_type = data_config['id_type'][idx]
         data_ks = self.mdb.select(
             "assim_ks",
-            where=f"active and (active_min or active_maj) and id_type={id_type}"
+            where=f"active and (active_min or active_maj) "
         )
         if not data_ks:
             return
@@ -143,7 +142,6 @@ class ClassAssimDB:
 
     def _update_ctrl_law(self, idx, data_config):
         """Gère la mise à jour des données CtrlLaw."""
-        id_type = data_config['id_type'][idx]
         data_law = self.mdb.select(
             "assim_law",
             where=f"active and (active_a or active_b)"
