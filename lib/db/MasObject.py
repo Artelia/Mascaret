@@ -2167,7 +2167,6 @@ class assim_ks(MasObject):
         self.geom_type = None
         self.attrs = [
             ("id_zone", "integer NOT NULL"),
-            ("id_type", "integer NOT NULL"),
             ("active", "boolean"),
             ("active_min", "boolean"),
             ("active_maj", "boolean"),
