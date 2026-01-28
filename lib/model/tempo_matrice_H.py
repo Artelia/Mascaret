@@ -19,10 +19,13 @@ for i in range(1, n_perturb+1):
     with open(os.path.join(name_folder_pertub, 'Z_Q_assim.json')) as f:
         dict_perturb = json.load(f)
     Zperturb = np.concatenate([dict_perturb['Z'][str(i)] for i in range(1, n_zones + 1)])
-
+    # Deltas_param contient l'ensemble des différences entre les paramètres de REF et de PERTURB
+    # Avec potentiellement des valeurs nulles pour les paramètres non modifiés
+    # Ici pour KS, on a les différences sur KS_MIn et MAJ pour chaque zone
     deltas_param = [dict_perturb['KS_maj'][str(k)] - dict_ref['KS_maj'][str(k)] for k in range(1, n_zones + 1)] + \
                    [dict_perturb['KS_min'][str(k)] - dict_ref['KS_min'][str(k)] for k in range(1, n_zones + 1)]
     print(deltas_param)
+    # On récupère la valeur du DeltaP effectif > 0 (les autres sont à 0)
     delta_p = deltas_param[np.argmax(np.abs(deltas_param))]
     print(delta_p)
     H.append(np.divide(np.subtract(Zperturb, Zref), delta_p))
