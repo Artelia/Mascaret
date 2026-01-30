@@ -104,6 +104,7 @@ class ClassAssimDB:
         d_perturb = dict(zip(
             data_config['perturbation_var'][idx],
             data_config['perturbation_val'][idx]))
+        print(d_perturb)
         obs_var = data_config['control_var'][idx]
         self.data['ctrlKS'].update({
             "obs_var": obs_var,
