@@ -2155,6 +2155,7 @@ class assim_config(MasObject):
             ("control_var", "text NOT NULL"),
             ("perturbation_var", "text[]"),
             ("perturbation_val", "double precision[]"),
+            ("perturbation_act", "text"),
             ("seuil_rejet_misfit", "double precision"),
             ("iterations_sigma", "integer"),
             ("active", "boolean NOT NULL DEFAULT FALSE"),
@@ -2192,6 +2193,7 @@ class assim_law(MasObject):
         self.geom_type = None
         self.attrs = [
             ("id_law", "integer NOT NULL"),
+            ("id_type", "text"),
             ("active", "boolean"),
             ("val_min", "double precision"),
             ("val_max", "double precision"),

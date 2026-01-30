@@ -371,6 +371,30 @@ class ClassDictRun:
 
         return d_folder
 
+    def get_obs(self, scen):
+        """
+
+        :param scen: Scenario name.
+        :type scen: str
+        :return: list obersvation
+        :rtype: dict
+        """
+        d_scen = self.get_scenario(scen)
+        return  d_scen.get("obs_assim",{})
+
+    def get_obs_param(self, scen):
+        """
+        :param scen: Scenario name.
+        :type scen: str
+        :return: startime, endtime
+        :rtype: date, date
+        """
+        d_scen = self.get_scenario(scen)
+
+        return {'starttime' : d_scen.get("starttime",None),
+                "endtime" : d_scen.get("endtime",None),
+                "type_obs" : d_scen.get("type_obs_assim",None)}
+
     def get_id_scenario(self, scen):
         """Get the index of a scenario by name.
 
@@ -632,15 +656,15 @@ class ClassDictRun:
             order += 1
             if drun['has_assimilation']:
                 if self.assim.check_assim_ks():
-                    lst_assim = self.assim.lst_instance_run_ctrlks(drun, d_scen, order)
-                    d_scen["instances"] += lst_assim
+                    d_scen = self.assim.lst_instance_run_ctrlks(drun, d_scen, order)
                 if self.assim.check_assim_law():
-                    lst_assim = self.assim.lst_instance_run_ctrl_law(drun, d_scen, order)
-                    d_scen["instances"] += lst_assim
+                    d_scen = self.assim.lst_instance_run_ctrl_law(drun, d_scen, order)
+
+
             scenarios.append(d_scen)
-
-
         return scenarios
+
+
 
     def fill_lscenario(self, data):
         """Initialize the 'scenario' list inside the model dictionary based on input data.
