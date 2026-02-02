@@ -20,13 +20,11 @@ email                :
 import os
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt, QSize
-from qgis.PyQt.QtGui import QIcon, QColor, QStandardItemModel, QStandardItem
+from qgis.PyQt.QtCore import pyqtSignal, Qt, QSize
+from qgis.PyQt.QtGui import QIcon, QStandardItemModel, QStandardItem
 from qgis.PyQt.QtWidgets import QMessageBox
 
-from qgis.core import QgsApplication, QgsWkbTypes, QgsGeometry
-from qgis.gui import QgsRubberBand
-
+from qgis.core import QgsApplication, QgsGeometry
 
 FORM_CLASS, BASE = uic.loadUiType(
     os.path.join(os.path.join(os.path.dirname(__file__), "..", "ui/ui_assimilation_ks.ui"))
@@ -37,6 +35,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
     """
     Class allow to update ks mesh planim of the selected profiles
     """
+    display_rb = pyqtSignal()
 
     def __init__(self, mgis, iface):
         super(ClassAssimKsWidget, self).__init__()
@@ -44,11 +43,12 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.iface = iface
+        self.ui_loaded = False
 
         self.bt_sel_zone.setIcon(QIcon(QgsApplication.iconPath("mActionIdentify.svg")))
         self.bt_sel_zone.toggled.connect(self.mgis.main_graph)
 
-        self.bt_reload.setIcon(QIcon(QgsApplication.iconPath("mActionReload.svg")))
+        self.bt_reload_ks.setIcon(QIcon(QgsApplication.iconPath("mActionReload.svg")))
         self.bt_zoom_zone.setIcon(QIcon(QgsApplication.iconPath("mActionZoomToSelected.svg")))
         self.bt_disp_zone.setIcon(QIcon(QgsApplication.iconPath("mActionShowSelectedLayers.svg")))
         self.bt_cancel_ks.setIcon(QIcon(QgsApplication.iconPath("mActionCancelAllEdits.svg")))
@@ -59,19 +59,8 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             QMessageBox.warning(None, "Warning", "Definition of some controls zone "
                                                  "have been automatically upadated.")
 
-        self.rb_format = QgsWkbTypes.LineGeometry
-        self.rb = QgsRubberBand(iface.mapCanvas(), self.rb_format)
-        self.rb.setColor(Qt.magenta)
-        self.rb.setFillColor(QColor("transparent"))
-        self.rb.setWidth(8)
-        self.rb_visible = True
-
         self.cur_zone_ks = None
         self.d_zone_ks = dict()
-
-        self.load_config()
-        self.load_obs()
-        self.load_zone_ks()
 
         self.cc_ks_act.toggled.connect(self.change_ks_config)
         self.cb_ks_fld.currentTextChanged.connect(self.load_obs)
@@ -80,47 +69,54 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         self.sb_ks_pert_min.valueChanged.connect(self.change_ks_config)
         self.sb_ks_pert_max.valueChanged.connect(self.change_ks_config)
 
-        self.bt_reload.clicked.connect(self.reload_zone_ks)
+        self.bt_reload_ks.clicked.connect(self.reload_zone_ks)
         self.bt_disp_zone.clicked.connect(self.display_map_rb)
         self.bt_zoom_zone.clicked.connect(self.zoom_on_zone)
         self.bt_edit_zone.clicked.connect(self.enable_input)
         self.bt_cancel_ks.clicked.connect(self.cancel_input)
         self.bt_valid_ks.clicked.connect(self.save_input)
 
+        self.load_config()
+        self.load_obs()
+        self.load_zone_ks()
+
+        self.ui_loaded = True
+
     def load_config(self):
         sql = "SELECT control_type, active, control_var, seuil_rejet_misfit, " \
-              "iterations_sigma, perturbation_val FROM {0}.assim_config"
+              "iterations_sigma, perturbation_val " \
+              "FROM {0}.assim_config WHERE control_type = 'ctrlKS'"
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
 
         if not rows:
-            recs = [[1, "ctrlKS", False, "H", 500, 1, ["ksMin, 'ksMaj"], [[5], [1]]],
-                    [2, "ctrlLaw", False, "H", 50, 1,
-                     ["perturbationsCote", "perturbationsDebit", "perturbationsDebitLineigue"],
-                     [[1.0, 0.5], [1.1, 6.0], [0.0, 0.0]]]]
+            recs = [[1, "ctrlKS", False, "H", 500, 1,
+                     ["ksMin", "ksMaj"], [[5], [1]], None]]
             sql = "INSERT INTO {0}.assim_config (id_type, control_type, active, control_var, " \
-                  "seuil_rejet_misfit, iterations_sigma, perturbation_var, perturbation_val) VALUES ({1})"
-            self.mdb.run_query(sql.format(self.mdb.SCHEMA, ', '.join(["%s"]*8)),
+                  "seuil_rejet_misfit, iterations_sigma, perturbation_var, perturbation_val, " \
+                  "perturbation_act) VALUES ({1})"
+            self.mdb.run_query(sql.format(self.mdb.SCHEMA,
+                                          ', '.join(["%s"]*len(recs[0]))),
                                many=True, list_many=recs)
 
             sql = "SELECT control_type, active, control_var, seuil_rejet_misfit, " \
-                  "iterations_sigma, perturbation_val FROM {0}.assim_config"
+                  "iterations_sigma, perturbation_val " \
+                  "FROM {0}.assim_config WHERE control_type = 'ctrlKS'"
             rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
 
-        for row in rows:
-            if row[0] == "ctrlKS":
-                self.cc_ks_act.setChecked(row[1])
-                self.cb_ks_fld.setCurrentText(row[2])
-                self.sb_ks_seuil.setValue(row[3])
-                self.sb_ks_sigma.setValue(row[4])
-                self.sb_ks_pert_min.setValue(row[5][0][0])
-                self.sb_ks_pert_max.setValue(row[5][1][0])
+        row = rows[0]
+        self.cc_ks_act.setChecked(row[1])
+        self.cb_ks_fld.setCurrentText(row[2])
+        self.sb_ks_seuil.setValue(row[3])
+        self.sb_ks_sigma.setValue(row[4])
+        self.sb_ks_pert_min.setValue(row[5][0][0])
+        self.sb_ks_pert_max.setValue(row[5][1][0])
 
     def load_obs(self):
         mdl = QStandardItemModel()
         mdl.setColumnCount(1)
 
         sql = "SELECT id, code FROM {0}.observations " \
-              "WHERE type = '{1}' " \
+              "WHERE type = '{1}' AND code IN (SELECT code FROM {0}.outputs WHERE active IS True)" \
               "ORDER BY code"
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA,
                                              self.cb_ks_fld.currentText()),
@@ -139,17 +135,18 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         self.change_ks_config()
 
     def change_ks_config(self):
-        sql = "UPDATE {0}.assim_config SET " \
-              "active = %s, " \
-              "control_var = %s, " \
-              "seuil_rejet_misfit = %s, " \
-              "iterations_sigma = %s, " \
-              "perturbation_val = %s " \
-              "WHERE control_type = 'ctrlKS'".format(self.mdb.SCHEMA)
-        recs = [[self.cc_ks_act.isChecked(), self.cb_ks_fld.currentText(),
-                 self.sb_ks_seuil.value(), self.sb_ks_sigma.value(),
-                 [[self.sb_ks_pert_min.value()], [self.sb_ks_pert_max.value()]]]]
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA), many=True, list_many=recs)
+        if self.ui_loaded:
+            sql = "UPDATE {0}.assim_config SET " \
+                  "active = %s, " \
+                  "control_var = %s, " \
+                  "seuil_rejet_misfit = %s, " \
+                  "iterations_sigma = %s, " \
+                  "perturbation_val = %s " \
+                  "WHERE control_type = 'ctrlKS'".format(self.mdb.SCHEMA)
+            recs = [[self.cc_ks_act.isChecked(), self.cb_ks_fld.currentText(),
+                     self.sb_ks_seuil.value(), self.sb_ks_sigma.value(),
+                     [[self.sb_ks_pert_min.value()], [self.sb_ks_pert_max.value()]]]]
+            self.mdb.run_query(sql.format(self.mdb.SCHEMA), many=True, list_many=recs)
 
     def verif_ks_zones(self):
         ks_zones_updated = False
@@ -382,18 +379,10 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         self.mdb.run_query(sql.format(self.mdb.SCHEMA, itm.checkState() == 2, itm.data(32)))
 
     def display_map_rb(self):
-        self.rb_visible = self.bt_disp_zone.isChecked()
         self.draw_zone_rb()
 
     def draw_zone_rb(self):
-        self.rb.reset(self.rb_format)
-        if self.rb_visible and self.cur_zone_ks is not None:
-            rb_geom = self.d_zone_ks[self.cur_zone_ks]["geom"]
-            # if self.rubber_format == QgsWkbTypes.PolygonGeometry:
-            #     rubber_geom = rubber_geom.buffer(10., 18)
-
-            self.rb.addGeometry(rb_geom)
-            self.rb.show()
+        self.display_rb.emit()
 
     def zoom_on_zone(self):
         if self.cur_zone_ks is not None:
@@ -442,7 +431,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
               "std_maj = %s, " \
               "val_inf_maj = %s, " \
               "val_sup_maj = %s, " \
-              "lst_obs_{1} = %s," \
+              "lst_obs_{1} = %s, " \
               "auto_del = False " \
               "WHERE id_zone = {2}".format(self.mdb.SCHEMA,
                                            str(self.cb_ks_fld.currentText()).lower(),

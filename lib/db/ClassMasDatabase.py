@@ -2052,7 +2052,6 @@ WHERE (num2 != numm1 OR numm1 is NULL)
 
         """
         (results, nam_col) = self.run_query(sql.format(self.SCHEMA), fetch=True, namvar=True)
-        print(sql.format(self.SCHEMA))
 
         dico_ks = {
             "branch": [],
