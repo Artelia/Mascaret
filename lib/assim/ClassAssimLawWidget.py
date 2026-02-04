@@ -27,7 +27,7 @@ from qgis.PyQt.QtWidgets import QMessageBox, QButtonGroup
 from qgis.core import QgsApplication, QgsGeometry
 
 FORM_CLASS, BASE = uic.loadUiType(
-    os.path.join(os.path.join(os.path.dirname(__file__), "..", "ui/ui_assimilation_law.ui"))
+    os.path.join(os.path.join(os.path.dirname(__file__), "..", "..", "ui/ui_assimilation_law.ui"))
 )
 
 D_PVAR = {0: 'perturbationsCote',
@@ -169,12 +169,13 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             sb.setEnabled(True)
 
         if self.cur_perturb_var == 'perturbationsCote':
-            self.lbl_typ_law.setText('Hydrographs')
+
+            self.lbl_typ_law.setText('Limnigraphs')
             for sb in [self.sb_debit_a, self.sb_debit_b, self.sb_debit_lin_a, self.sb_debit_lin_b]:
                 sb.setEnabled(False)
 
         if self.cur_perturb_var == 'perturbationsDebit':
-            self.lbl_typ_law.setText('Limnigraphs')
+            self.lbl_typ_law.setText('Hydrographs')
             for sb in [self.sb_cote_a, self.sb_cote_b, self.sb_debit_lin_a, self.sb_debit_lin_b]:
                 sb.setEnabled(False)
 
@@ -209,11 +210,11 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
 
         sql = "SELECT gid as law_id, name as law_name, 'extremities' as source_law, " \
               "'perturbationsCote' as id_type, geom as geom_obj " \
-              "FROM {0}.extremities WHERE active IS True AND type = 1 " \
+              "FROM {0}.extremities WHERE active IS True AND type = 2 " \
               "UNION " \
               "SELECT gid as law_id, name as law_name, 'extremities' as source_law, " \
               "'perturbationsDebit' as id_type, geom as geom_obj " \
-              "FROM {0}.extremities WHERE active IS True AND type = 2 " \
+              "FROM {0}.extremities WHERE active IS True AND type = 1 " \
               "UNION " \
               "SELECT gid as law_id, name as law_name, 'lateral_inflows' as source_law, " \
               "'perturbationsDebitLineique' as id_type, geom as geom_obj " \
@@ -282,11 +283,11 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
 
         sql = "SELECT gid as law_id, name as law_name, 'extremities' as source_law, " \
               "'perturbationsCote' as id_type, ST_AsText(geom) as wkt_geom " \
-              "FROM {0}.extremities WHERE active IS True AND type = 1 " \
+              "FROM {0}.extremities WHERE active IS True AND type = 2 " \
               "UNION " \
               "SELECT gid as law_id, name as law_name, 'extremities' as source_law, " \
               "'perturbationsDebit' as id_type, ST_AsText(geom) as wkt_geom " \
-              "FROM {0}.extremities WHERE active IS True AND type = 2 " \
+              "FROM {0}.extremities WHERE active IS True AND type = 1 " \
               "UNION " \
               "SELECT gid as law_id, name as law_name, 'lateral_inflows' as source_law, " \
               "'perturbationsDebitLineique' as id_type, ST_AsText(geom) as wkt_geom " \

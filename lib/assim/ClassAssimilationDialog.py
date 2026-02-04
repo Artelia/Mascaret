@@ -45,7 +45,7 @@ from .ClassAssimLawWidget import ClassAssimLawWidget
 #     qgis_version = core.Qgis.QGIS_VERSION_INT
 
 FORM_CLASS, BASE = uic.loadUiType(
-    os.path.join(os.path.join(os.path.dirname(__file__), "..", "ui/ui_assimilation.ui"))
+    os.path.join(os.path.join(os.path.dirname(__file__), "..", "..", "ui/ui_assimilation.ui"))
 )
 
 

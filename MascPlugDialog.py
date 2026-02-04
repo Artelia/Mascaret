@@ -85,7 +85,7 @@ from .lib.model.Fct_model_file import compress_run_file
 from .lib.model.ClassDictRun import ClassDictRun
 from .lib.scores.ClassScoresDialog import ClassScoresDialog
 from .ui.custom_control import ClassWarningBox
-from .lib.ClassAssimilationDialog import ClassAssimilationDialog
+from .lib.assim.ClassAssimilationDialog import ClassAssimilationDialog
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 

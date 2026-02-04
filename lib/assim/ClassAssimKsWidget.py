@@ -27,7 +27,7 @@ from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.core import QgsApplication, QgsGeometry
 
 FORM_CLASS, BASE = uic.loadUiType(
-    os.path.join(os.path.join(os.path.dirname(__file__), "..", "ui/ui_assimilation_ks.ui"))
+    os.path.join(os.path.join(os.path.dirname(__file__), "..","..", "ui/ui_assimilation_ks.ui"))
 )
 
 
