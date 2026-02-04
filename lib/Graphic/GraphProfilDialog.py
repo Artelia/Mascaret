@@ -90,6 +90,7 @@ except AttributeError:
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
+
 class IdentifyFeatureTool(QgsMapToolIdentify):
     def __init__(self, main):
         self.mgis = main
@@ -106,9 +107,14 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             mousex = mouse_event.x()
             mousey = mouse_event.y()
 
-        results = self.identify(
-            mousex,mousey, self.TopDownStopAtFirst, self.VectorLayer
-        )
+        if self.mgis.assim_select:
+            results = self.identify(
+                mousex, mousey, self.TopDownAll, self.VectorLayer
+            )
+        else:
+            results = self.identify(
+                mousex, mousey, self.TopDownStopAtFirst, self.VectorLayer
+            )
 
         if len(results) > 0:
             couche = results[0].mLayer.name()
@@ -119,6 +125,24 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             flag_casier_r = self.mgis.basin_result
             flag_profil_z = self.mgis.profil_z
             flag_mass_graph = self.mgis.mass_graph
+            flag_assim = self.mgis.assim_select
+
+            if flag_assim:
+                l_lay = [res.mLayer.name() for res in results]
+
+                abscissa = None
+                for lay in ["visu_branchs", "profiles"]:
+                    if lay in l_lay and not abscissa:
+                        idx_lay = l_lay.index(lay)
+                        ft = results[idx_lay].mFeature
+                        if lay == "visu_branchs":
+                            abscissa = ft["abs_start"]
+                        if lay == "profiles":
+                            abscissa = ft["abscissa"]
+
+                if abscissa:
+                    if self.mgis.dockwidgetAssim:
+                        self.mgis.dockwidgetAssim.wgt_ks.zone_selected_from_map(abscissa)
 
             if (couche == "profiles" or couche == "weirs" or couche == "links") and flag_profil_z:
                 type_res_map = {

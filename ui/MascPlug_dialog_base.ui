@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>805</width>
-    <height>610</height>
+    <width>824</width>
+    <height>613</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -176,7 +176,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>805</width>
+     <width>824</width>
      <height>21</height>
     </rect>
    </property>
@@ -382,6 +382,7 @@
    </attribute>
    <addaction name="actionParameters_Water_Quality"/>
    <addaction name="actionTracer_Laws"/>
+   <addaction name="actionAssimilation"/>
   </widget>
   <action name="actionWebsite">
    <property name="icon">
@@ -865,6 +866,11 @@
    </property>
    <property name="whatsThis">
     <string>Old version of mobile dam</string>
+   </property>
+  </action>
+  <action name="actionAssimilation">
+   <property name="text">
+    <string>Assimilation</string>
    </property>
   </action>
  </widget>
