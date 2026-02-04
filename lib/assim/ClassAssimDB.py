@@ -516,7 +516,10 @@ class ClassAssimDB:
         d_folder = obj_model.get_folder(scen)
 
         path_ref = Path(d_folder['ref'])
-        path_init = Path(d_folder['init'])
+        path_init = ''
+        if d_folder.get('init'):
+            path_init = Path(d_folder.get('init'))
+
 
         path_scen = path_ref.parent
         obj_model.assim.export_data_json(path_scen)
@@ -528,7 +531,7 @@ class ClassAssimDB:
                 continue
             instance = obj_model.get_instance(ids, name)
 
-            if name.endswith('init'):
+            if name.endswith('init') :
                 self.cl_creat_assim.clone_model(path_init, folder)
             else:
                 self.cl_creat_assim.clone_model(path_ref, folder)

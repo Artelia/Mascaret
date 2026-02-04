@@ -618,8 +618,7 @@ class ClassDictRun:
                 "path_instance": os.path.join(path_run, f"{scen_name}"),
                 "instances": []
             }
-
-            if scenar.get("Run init"):
+            if scenar.get("Run init") or scenar.get("lig file") :
                 d_scen.update(
                     {"scenar_init": (scenar["Run init"], scenar["Scenario init"]) if scenar["Run init"] else None,
                      "lig_file": scenar["lig file"],
