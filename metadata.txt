@@ -288,7 +288,7 @@ changelog=
     0.0.1 : First beta release
 
 # Tags are comma separated with spaces allowed
-tags=
+tags=python, openTELEMAC
 
 homepage=https://github.com/Artelia/Mascaret/wiki
 tracker=https://github.com/Artelia/Mascaret/issues
@@ -300,4 +300,5 @@ experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
+
 
