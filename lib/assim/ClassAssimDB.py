@@ -28,6 +28,7 @@ from datetime import datetime
 from .ClassCreatModelAssim import CreatModelAssim
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
+from ..model.ClassBCWriter import ClassBCWriter
 
 
 def indent(elem, level=0):
@@ -127,17 +128,49 @@ class ClassAssimDB:
 
         return list_ks
 
+
+    def _creat_lst_obs(self,idx,data_ks, obs_var):
+
+        d_obs_f = {'id': [], 'code': [], 'stderr': [], 'rejectlimit': []}
+        lst_obs = data_ks[f'lst_obs_{obs_var.lower()}'][idx]
+
+        # Définir les colonnes selon obs_var
+        stderr_col = 'obsz_stderr' if obs_var == 'H' else 'obsq_stderr'
+        reject_col = 'obsz_rejectlimit' if obs_var == 'H' else 'obsq_rejectlimit'
+
+        sql = f"""
+            SELECT o.id, o.code, out.{stderr_col}, out.{reject_col}
+            FROM {self.mdb.SCHEMA}.observations AS o
+            JOIN {self.mdb.SCHEMA}.outputs AS out ON out.code = o.code
+            WHERE o.id IN ({','.join(map(str, lst_obs))}) AND out.active
+        """
+
+        results, nam_col = self.mdb.run_query(sql, fetch=True, arraysize=1, namvar=True)
+
+
+
+        if results:
+            for row_ in results:
+                row = row_[0]
+                d_obs_f['id'].append(row[0])
+                d_obs_f['code'].append(row[1].strip() if isinstance(row[1], str) else row[1])
+                d_obs_f['stderr'].append(row[2])
+                d_obs_f['rejectlimit'].append(row[3])
+        return  d_obs_f
     def _create_ks_entry(self, data_ks, idx, type_ks, val_type, obs_var):
         """Crée une entrée KS standardisée."""
+        d_obs_f = self._creat_lst_obs(idx,data_ks, obs_var)
+        # TODO: alert si d_obs_f est vide
+
         return {
             "num_zone": data_ks['id_zone'][idx],
             "type": type_ks,
             "val_min": data_ks[f'val_inf_{val_type}'][idx],
             "val_max": data_ks[f'val_sup_{val_type}'][idx],
             "std": data_ks[f'std_{val_type}'][idx],
-            "lst_obs": data_ks['lst_obs_h'][idx] if obs_var == 'H' else data_ks['lst_obs_q'][idx],
+            "lst_obs": d_obs_f,
             "abs_min": data_ks['abs_min'][idx],
-            "abs_max": data_ks["abs_max"][idx],
+            "abs_max": data_ks['abs_max'][idx],
             'branchnum': data_ks['branchnum'][idx],
         }
 
@@ -157,6 +190,7 @@ class ClassAssimDB:
             data_config['perturbation_var'][idx],
             data_config['perturbation_val'][idx]))
         obs_var = data_config['control_var'][idx]
+
         self.data['CtrlLaw'].update({
             "obs_var": obs_var,
             "seuil_rejet_misfit": data_config['seuil_rejet_misfit'][idx],
@@ -179,6 +213,7 @@ class ClassAssimDB:
 
     def _create_law_entry(self, data_law, idx, typ_coef, obs_var):
         """Crée une entrée KS standardisée."""
+        d_obs_f = self._creat_lst_obs(idx, data_law, obs_var)
         return {
             "id_law": data_law['id_law'][idx],
             'source_law': data_law['source_law'][idx],
@@ -186,7 +221,7 @@ class ClassAssimDB:
             "std": data_law[f'std_{typ_coef}'][idx],
             "val_min": data_law['val_min'][idx],
             "val_max": data_law['val_max'][idx],
-            "lst_obs": data_law['lst_obs_h'][idx] if obs_var == 'H' else data_law['lst_obs_q'][idx],
+            "lst_obs": d_obs_f ,
         }
 
     def check_assim(self):
@@ -205,14 +240,15 @@ class ClassAssimDB:
 
         dico_ks = self.mdb.zone_ks()
         d_ctrlks = self.data['ctrlKS']
-        lst_cas = []
 
+        lst_cas = []
+        lst_obs = []
         for d_zone in d_ctrlks['lst_zone']:
             # Récupération des valeurs actuelles
             val_ksmaj = dico_ks["majbedcoef"][d_zone['num_zone']]
             val_ksmin = dico_ks["minbedcoef"][d_zone['num_zone']]
             typ = d_zone['type']
-
+            lst_obs.append(d_zone['lst_obs'])
             # Sélection de la perturbation selon le type
             pertub = (d_ctrlks['ksmin_perturb'][0] if typ == 'Ksmin'
                       else d_ctrlks['ksmaj_perturb'][0])
@@ -221,11 +257,11 @@ class ClassAssimDB:
             # n_points = (int(abs(d_zone['val_max'] - d_zone['val_min']) / pertub) + 1
             #             if pertub > 0 else 1)
             # temp_values = np.linspace(d_zone['val_min'], d_zone['val_max'], n_points)
-            pertub =  pertub  if pertub > 0 else 1
+            pertub = pertub if pertub > 0 else 1
             val = d_zone['val_min']
             temp_values = []
             while val < d_zone['val_max']:
-                temp_values.append(round(val,3))
+                temp_values.append(round(val, 3))
                 val += pertub
             temp_values.append(d_zone['val_max'])
             # Génération des cas selon le type
@@ -244,9 +280,22 @@ class ClassAssimDB:
                         'ksmaj': temp_val,
                         'type': 'Ksmaj'
                     })
+        d_obs = self._filter_obs(lst_obs)
+        return lst_cas, d_obs
 
-        # TODO: ajout d'un warning quand ksmaj n'est pas entre min et val
-        return lst_cas
+    def _filter_obs(self, data):
+        if not data:
+            return {}
+        unique_pairs = {}
+
+        for item in data:
+            for i, id_val in enumerate(item['id']):
+                code_val = item['code'][i]
+                unique_pairs[id_val] = code_val
+        return {
+            'id': list(unique_pairs.keys()),
+            'code': list(unique_pairs.values())
+        }
 
     def get_list_cas_law(self):
         """Génère la liste des cas de test pour l'assimilation LAW."""
@@ -255,7 +304,9 @@ class ClassAssimDB:
 
         d_ctrl_law = self.data['CtrlLaw']
         lst_cas = []
+        lst_obs= []
         for d_loi in d_ctrl_law['lst_loi']:
+            lst_obs.append(d_loi['lst_obs'])
             if d_loi['source_law'] == 'extremities':
                 sql = f"SELECT name, method, type FROM {self.mdb.SCHEMA}.extremities WHERE active and gid={d_loi['id_law']}"
             elif d_loi['source_law'] == 'lateral_inflows':
@@ -289,13 +340,13 @@ class ClassAssimDB:
             elif d_loi['type'] == 'coefB':
                 pertubf = abs(pertub[1])
 
-            #n_points = (int(abs(d_loi['val_max'] - d_loi['val_min']) / pertubf) + 1
+            # n_points = (int(abs(d_loi['val_max'] - d_loi['val_min']) / pertubf) + 1
             #            if pertubf > 0 else 1)
             pertubf = pertubf if pertubf > 0 else 1
             val = d_loi['val_min']
             temp_values = []
-            while val < d_loi['val_max'] :
-                temp_values.append(round(val,3))
+            while val < d_loi['val_max']:
+                temp_values.append(round(val, 3))
                 val += pertubf
             temp_values.append(d_loi['val_max'])
             # Génération des cas selon le type
@@ -311,8 +362,8 @@ class ClassAssimDB:
                              'val_coef': temp_val
                              })
                 lst_cas.append(dnew)
-
-        return lst_cas
+        d_obs = self._filter_obs(lst_obs)
+        return lst_cas, d_obs
 
     def add_data_dgenerate_ks(self, d_run, d_scen):
         # TODO A traiter pour pom
@@ -328,7 +379,7 @@ class ClassAssimDB:
             "dico_ks": self.mdb.zone_ks()
         }
 
-    def add_data_dgenerate_law(self, d_run, d_scen,):
+    def add_data_dgenerate_law(self, d_run, d_scen, ):
         # TODO A traiter pour pom
         pass
         # self.data['generate_instance'] = {
@@ -342,12 +393,16 @@ class ClassAssimDB:
         #     },
         #     "dico_loi": self.mdb.zone_ks()
         # }
+
     def lst_instance_run_ctrlks(self, d_run, d_scen, order):
         folder = os.path.join(d_scen["path_instance"], 'run_ctrlKS')
         starttime = d_scen.get("starttime")
         lst_instance = []
 
-        lst_case = self.get_list_cas_ks()
+        lst_case, d_obs = self.get_list_cas_ks()
+        d_scen['obs_assim'] = d_obs
+        d_scen['type_obs_assim'] = self.data['ctrlKS'].get("obs_var")
+
         for idx, case in enumerate(lst_case):
             name = f'ctrlKS_pertub{idx}'
             val = case['ksmin'] if case['type'] == 'Ksmin' else case['ksmaj']
@@ -386,16 +441,18 @@ class ClassAssimDB:
             order += 1
 
         self.add_data_dgenerate_ks(d_run, d_scen)
-        return lst_instance
+        d_scen["instances"] += lst_instance
+        return d_scen
 
     def lst_instance_run_ctrl_law(self, d_run, d_scen, order):
         folder = os.path.join(d_scen["path_instance"], 'run_ctrlLaw')
         starttime = d_scen.get("starttime")
         lst_instance = []
-        lst_case = self.get_list_cas_law()
+        lst_case, d_obs = self.get_list_cas_law()
+        d_scen['obs_assim'] = d_obs
+        d_scen['type_obs_assim'] = self.data['CtrlLaw'].get("obs_var")
         for idx, case in enumerate(lst_case):
             name = f'ctrlLaw_pertub{idx}'
-
             val = case['val_coef']
             folder_run = os.path.join(folder,
                                       f"pertub{idx}_{case['type']}_{case['name_law']}_{str(val).replace('.', 'p')}")
@@ -435,8 +492,9 @@ class ClassAssimDB:
                                  "order": order, })
             order += 1
         #
-        self.add_data_dgenerate_law(d_run,d_scen)
-        return lst_instance
+        self.add_data_dgenerate_law(d_run, d_scen)
+        d_scen["instances"] += lst_instance
+        return d_scen
 
     def export_data_json(self, folder):
         if self.data.get('instance'):
@@ -457,17 +515,24 @@ class ClassAssimDB:
 
     def fill_assim_folder(self, ids, scen, obj_model):
         d_folder = obj_model.get_folder(scen)
+
         path_ref = Path(d_folder['ref'])
-        path_init = Path(d_folder['init'])
+        path_init = ''
+        if d_folder.get('init'):
+            path_init = Path(d_folder.get('init'))
+
 
         path_scen = path_ref.parent
         obj_model.assim.export_data_json(path_scen)
+        var_obs = obj_model.get_obs_param(scen)
+        self._create_obs_file(path_scen, obj_model.get_obs(scen), var_obs)
+
         for name, folder in d_folder.items():
             if name in ['ref', 'init']:
                 continue
-
             instance = obj_model.get_instance(ids, name)
-            if name.endswith('init'):
+
+            if name.endswith('init') :
                 self.cl_creat_assim.clone_model(path_init, folder)
             else:
                 self.cl_creat_assim.clone_model(path_ref, folder)
@@ -493,36 +558,37 @@ class ClassAssimDB:
                 }
 
                 self.modif_xcas(parametres, instance.get('name_xcas', 'mascaret.xcas'), folder)
+
             if 'ctrlLaw' == instance.get('type_ctrl', ''):
                 if instance.get("assim_info"):
                     assim_info = instance.get("assim_info")
-                    name_law = f'{assim_info["name_law"]}_init.loi' if name.endswith('init') else f'{assim_info["name_law"]}.loi'
+                    name_law = f'{assim_info["name_law"]}_init.loi' if name.endswith(
+                        'init') else f'{assim_info["name_law"]}.loi'
 
                     file_law = os.path.join(folder, name_law)
                     file_tmp = os.path.join(folder, f'{name_law}.tmp')
-                    shutil.copy2(file_law , file_tmp)
+                    shutil.copy2(file_law, file_tmp)
                     filein = open(file_tmp, 'r')
-                    with open(file_law,'w') as fileout:
-                        cpt=1
+                    with open(file_law, 'w') as fileout:
+                        cpt = 1
                         for line in filein:
-                            if line.startswith('#') :
+                            if line.startswith('#'):
                                 fileout.write(line)
                                 continue
-                            if cpt==1:
+                            if cpt == 1:
                                 fileout.write(line)
                                 cpt += 1
                             parts = line.split()
                             if len(parts) >= 2:
-                                if assim_info['type_case'] =='coefA':
-                                    parts[1] = round(assim_info['coef_pertub'] *  float(parts[1]),6)
+                                if assim_info['type_case'] == 'coefA':
+                                    parts[1] = round(assim_info['coef_pertub'] * float(parts[1]), 6)
                                     fileout.write(' '.join([str(par) for par in parts]))
                                 elif assim_info['type_case'] == 'coefB':
-                                    parts[1] = round(assim_info['coef_pertub'] + float(parts[1]),6)
+                                    parts[1] = round(assim_info['coef_pertub'] + float(parts[1]), 6)
                                     fileout.write(' '.join([str(par) for par in parts]))
                                 fileout.write('\n')
                     filein.close()
                     os.remove(file_tmp)
-
 
     def modif_xcas(self, parametres, xcasfile, folder):
         """
@@ -608,3 +674,29 @@ class ClassAssimDB:
                         zone[param] = text
 
         return zone
+
+    def _create_obs_file(self, path_scen, data_obs, var_obs):
+        """
+        reate the observation files for a given scenario.
+
+        :param path_scen: Path to the scenario directory where the
+                              ``Observations`` folder will be created if it does not
+                              already exist.
+        :type path_scen: str
+        :param data_obs: Observation configuration dictionary.
+        :type data_obs: dict
+        :param var_obs
+        :type  dict
+        :return: None
+        :rtype: None
+        """
+        path_obs = os.path.join(path_scen, 'Observations')
+        os.makedirs(path_obs, exist_ok=True)
+        cl_bc = ClassBCWriter(self.mdb, path_obs)
+        typ_crt = var_obs["type_obs"]
+        dict_obs = {}
+        for code in data_obs.get('code', []):
+            dict_tmp = {'type': typ_crt, 'formule': f'{code}[t]'}
+            dict_obs[code] = dict_tmp
+        print(dict_obs,typ_crt,  var_obs['starttime'], var_obs["endtime"] )
+        cl_bc.obs_to_file(dict_obs, var_obs['starttime'], var_obs["endtime"])

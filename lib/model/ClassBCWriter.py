@@ -667,3 +667,30 @@ class ClassBCWriter:
                 if self.mess:
                     err = f"{ apports['name'][i]} is located before the first mesh. Ignore in the model"
                     self.mess.add_mess(f"lInflowPos_{apports['name'][i]}", "warning",  err)
+                    
+                    
+    def obs_to_file(self, dict_obs, date_debut, date_fin):
+        """
+        Create a law file from observation data.
+        :param dict_lois (dict): Dictionary of law definitions
+        :param date_debut (datetime): Start date for observation
+        :param date_fin (datetime): End date for observation
+        """
+        # decimal
+        pattern = re.compile(r"(\w+)\[t([+-]?\d+(?:\.\d+)?)?\]")
+        for nom, obs in dict_obs.items():
+            type_= obs["type"]
+            if not obs.get("formule"):
+                continue
+
+            liste_stations = pattern.findall(obs["formule"])
+            # get observation each station
+            obs_stations, err_critic = self._get_obs_to_loi(liste_stations, type_, date_debut, date_fin, nom)
+            if err_critic:
+                return
+            ref_station, ref_delta = liste_stations[0]
+            ref_delta_h = float(ref_delta) if ref_delta else 0
+            ref_dates = [d - datetime.timedelta(hours=ref_delta_h) for d in obs_stations[ref_station]["date"]]
+            self._write_obs_loi(nom, type_, obs, liste_stations, obs_stations, pattern,
+                                                          ref_dates,
+                                                          date_debut )

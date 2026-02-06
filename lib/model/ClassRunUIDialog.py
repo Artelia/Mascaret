@@ -197,7 +197,11 @@ class ClassRunUIDialog(QDialog):
 
             # Column 3: lig file (custom widget)
             lig_widget = LigFileWidget(self)
-            lig_widget.setEnabled(False)
+            if run_init_combo.currentText() =='".lig" File':
+                scenario_init_combo.setEnabled(False)
+                lig_widget.setEnabled(True)
+            else:
+                lig_widget.setEnabled(False)
             self.table.setCellWidget(row, 3, lig_widget)
 
             # Column 4: Comment (QLineEdit)

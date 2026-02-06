@@ -257,18 +257,22 @@ class ClassInitializeModel:
 
         # Step 1: Create geometry files
         if not self.create_geometry_files():
+            self.mgis.add_info("Error geometry creation.")
             return False
 
         # Step 2: Create mobile structures files (links and weirs)
         if not self.create_mobile_structures(model_folder):
+            self.mgis.add_info("Error mobile structure creation.")
             return False
 
         # Step 3: Handle tracer configuration
         if not self.tracer_configuration(model_folder, kernel):
+            self.mgis.add_info("Error tracer creation.")
             return False
 
         # Step 4: Handle initial conditions
         if not self.initial_conditions(d_scen, model_folder):
+            self.mgis.add_info("Error intial condition creation.")
             return False
 
         # Step 5: Create XCAS file and structural laws
@@ -286,10 +290,12 @@ class ClassInitializeModel:
 
         # Step 6: Create law (structural) files
         if not self.create_struct_law_files(dico_loi_struct, model_folder):
+            self.mgis.add_info("Error struct law creation.")
             return False
 
         # Step 7: Initialize scenario based on kernel type (create init/ref law files)
         if not self.initialize_scen_by_kernel(kernel, dict_lois, d_scen):
+            self.mgis.add_info("Error intial scen creation.")
             return False
 
         self.mgis.add_info("Laws file is created.")
@@ -297,6 +303,7 @@ class ClassInitializeModel:
         # TODO delete if gates handled only by API
         # Step 8: Handle mobile gates (unsteady mode only)
         if not self.mobile_gates(kernel):
+            self.mgis.add_info("Error mobil gate creation.")
             return False
 
         # Step 9: Create additional files and perform checks
@@ -450,14 +457,13 @@ class ClassInitializeModel:
         """
         if self.drun["has_run_init"] or not self.drun["ligInit"]:
             return True
-
         # Case 1: Use initial scenario
         if scen.get("scenar_init"):
             return self.initial_scen(scen)
 
         # Case 2: Use LIG file
         elif scen.get("lig_file"):
-            if self.exit_cpte(self.copy_lig(scen["lig_file"], folder)):
+            if self.exit_cpte(self.copy_lig(scen["lig_file"]['file_path'], folder)):
                 return False
 
         # Case 3: No initial conditions provided
