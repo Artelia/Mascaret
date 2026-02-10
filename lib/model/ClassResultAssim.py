@@ -62,11 +62,13 @@ class ClassResultAssim:
 
     def __init__(self):
 
+        self.assim_dict = None
         self.dictRes = None
         self.num_zones = 0
         self.dict_stations = {}
         self.is_assim = False
         self.dict_obs = {}
+        self.zones = []
 
     def get_coords_assim(self, json_file, masc_xcoords, folder=None):
         """
@@ -78,22 +80,34 @@ class ClassResultAssim:
         # self.dict_stations contient en clé un ID de zone à caler, et en valeurs un dico avec
         # - les coordonnées X des observations associées
         # Pour le cas test pour le moment dico en dur avec zone 2 seulement
-        dict_tempo = {2: {'X': [83.58]}}
-        with open(json_file, 'w') as f:
-            json.dump(dict_tempo, f)
+        # dict_tempo = {3: {'X': [83.58]}}
+        # with open(json_file, 'w') as f:
+        #     json.dump(dict_tempo, f)
 
         if os.path.exists(json_file):
             with open(json_file) as f:
-                self.dict_stations = json.load(f)
+                self.assim_dict = json.load(f)
+
+            if self.assim_dict.get("ctrlKS") is not None:
+                for dico in self.assim_dict["ctrlKS"]["lst_zone"]:
+                    self.dict_stations[str(dico["num_zone"])] = {'X': dico["lst_obs"]["abscissa"],
+                                                                 'code': dico["lst_obs"]["code"]}
+                    if str(dico["num_zone"]) not in self.zones:
+                        self.zones.append(str(dico["num_zone"]))
+
+
+            # self.dict_stations = json.load(f)
 
             keys = np.array([k for k in self.dict_stations], dtype=int)
             for key in keys:
-                for x in self.dict_stations[str(key)]['X']:
+                for ix, x in enumerate(self.dict_stations[str(key)]['X']):
                     # print(masc_xcoords)
-                    index_obs = int(np.argmin(np.abs(np.subtract(masc_xcoords, x))))
+                    index_obs = int(np.argmin(np.abs(np.subtract(masc_xcoords, x)))) + 1
+                    code_obs = self.dict_stations[str(key)]['code'][ix]
                     if index_obs not in self.dict_obs:
                         self.dict_obs[index_obs] = {'id_zone': [int(key)],
-                                                    'x_obs': x}
+                                                    'x_obs': x,
+                                                    'code': code_obs}
                     else:
                         self.dict_obs[index_obs]['id_zone'].append(int(key))
 
@@ -107,11 +121,13 @@ class ClassResultAssim:
 
     def build_res_dict(self):
         self.dictRes = {'time': [],
-                        'Z': {n: [] for n in range(1, self.num_zones + 1)},
-                        'Q': {n: [] for n in range(1, self.num_zones + 1)},
-                        'Ksmaj': {n: -99 for n in range(1, self.num_zones + 1)},
-                        'Ksmin': {n: -99 for n in range(1, self.num_zones + 1)}
+                        'Z': {n: {k: [] for k in self.dict_stations[n]["code"]} for n in self.zones},
+                        'Q': {n: {k: [] for k in self.dict_stations[n]["code"]} for n in self.zones},
+                        'Ksmaj': {n: -99 for n in self.zones},
+                        'Ksmin': {n: -99 for n in self.zones}
                         }
+        # print(self.dictRes)
+        self.write_results(r'C:\Users\guillaume.isserty\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret', 'dictRes.json')
 
     def store_KS_values(self, KSmin, KSmaj):
         """
@@ -120,10 +136,12 @@ class ClassResultAssim:
         :param KSmaj: KS_values in major bed
         :return:
         """
-        for idx, i in enumerate(self.dict_obs):
-            for zone in self.dict_obs[i]["id_zone"]:
-                self.dictRes['Ksmin'][zone] = KSmin[idx]
-                self.dictRes['Ksmaj'][zone] = KSmaj[idx]
+        for i in self.dict_obs:
+            print(i)
+            print(KSmin[i], KSmaj[i])
+            for zone in self.zones:
+                self.dictRes['Ksmin'][zone] = KSmin[i]
+                self.dictRes['Ksmaj'][zone] = KSmaj[i]
 
     def store_result(self, valZ, valQ, time, num_zone=None):
         """
@@ -139,14 +157,16 @@ class ClassResultAssim:
             self.dictRes['Q'][num_zone].append(valQ[num_zone])
             self.dictRes['time'].append(time)
         else:
+            # self.dictRes['time'].append(time)
             first = True
             for idx, i in enumerate(self.dict_obs):
+                key_station = self.dict_obs[i]['code']
                 if first:
                     self.dictRes['time'].append(time)
                     first = False
                 for zone in self.dict_obs[i]["id_zone"]:
-                    self.dictRes['Z'][zone].append(valZ[idx])
-                    self.dictRes['Q'][zone].append(valQ[idx])
+                    self.dictRes['Z'][str(zone)][key_station].append(valZ[idx])
+                    self.dictRes['Q'][str(zone)][key_station].append(valQ[idx])
 
     def write_results(self, folder, name):
         """
