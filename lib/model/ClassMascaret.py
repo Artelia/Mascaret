@@ -27,12 +27,14 @@ from click import launch
 from qgis.PyQt.QtCore import qVersion,Qt
 from qgis.PyQt.QtWidgets import QInputDialog, QDialog
 from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsTask
+from scripts.regsetup import description
 
 from .ClassInitializeModel import ClassInitializeModel
 from .ClassDictRun import ClassDictRun
 from .ClassRunUIDialog import ClassRunUIDialog
 
 from .TaskMascaret import TaskMascaret
+from ..assim.TaskBLUE import TaskBLUE
 
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
@@ -56,6 +58,7 @@ class ClassMascaret:
         self.limit_core = 1
         self.max_retries = 5
         self.use_task = True
+        self.task_blue = None
 
     def mascaret_ui(self):
         # state list
@@ -98,11 +101,13 @@ class ClassMascaret:
             if drun['has_run_init']:
                 self.task_queue.append('ctrl_ks_init')
             self.task_queue.append('ctrl_ks_perturb')
+            self.task_queue.append('ctrl_ks_blue')
 
         if drun['has_assimilation']:
             if drun['has_run_init']:
                 self.task_queue.append('ctrl_law_init')
             self.task_queue.append('ctrl_law_perturb')
+            self.task_queue.append('ctrl_law_blue')
 
         # # Ajouter conditionnellement la 3ème task
         # if self.should_run_third_task():  # Votre condition
@@ -237,6 +242,42 @@ class ClassMascaret:
                 QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
                 self.process_next_task()
 
+    def launch_ctrl_ks_BLUE(self):
+        print('Run Assime CtrlKS BLUE *************')
+        scens = self.obj_model.get_list_name_scenario()
+        description = "Assim - CtrlKS BLUE"
+        # print(self.obj_model.dmodel)
+        base_folder = self.obj_model.dmodel["general"]["path_runs"]
+        print(base_folder)
+        print(scens)
+        try:
+            self.task_blue = TaskBLUE(
+                description=description, base_folder=base_folder)
+            print('taskblueinit')
+            self.task_blue.update_params(scens)
+            print('taskblueupdate')
+            print('selfusetask', self.use_task)
+        except Exception as e:
+            print(e)
+        if not self.use_task:
+            for scen in scens:
+                print(scen)
+                results = self.task_blue.run_blue(scen)
+                print(results)
+        else:
+            # Connecter les signaux
+            self.task_blue.taskCompleted.connect(lambda: self.on_task_completed('crtlKS_BLUE'))
+            self.task_blue.taskTerminated.connect(lambda: self.on_task_failed('crtlKS_BLUE'))
+            task_id = self.launch_task(self.task_blue, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage("BLUE task failed to launch, skipping...", 'TaskMascaret',
+                                         Qgis.Warning)
+                self.process_next_task()
+
+
+        pass
+
     def launch_ctrl_law_init_task(self):
         print('Run Assime CtrlLaw init *************')
         task_params = self.obj_model.get_list_type_instance_assim("ctrlLaw", type_init=True)
@@ -302,6 +343,11 @@ class ClassMascaret:
             if not task_id:
                 QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
                 self.process_next_task()
+
+    def launch_ctrl_law_BLUE(self):
+        description = "Mascaret Models Execution, CtrlLaw BLUE"
+        pass
+
     def launch_task(self, task, description="Mascaret Models Execution"):
         print('Launching task...')
         task_manager = QgsApplication.taskManager()
@@ -397,11 +443,15 @@ class ClassMascaret:
             self.launch_ctrl_ks_init_task()
         elif next_task_type == 'ctrl_ks_perturb':
             self.launch_ctrl_ks_pertub_task()
+        elif next_task_type == 'ctrl_ks_blue':
+            self.launch_ctrl_ks_BLUE()
         elif next_task_type == 'ctrl_law_init':
             #TODO si ctrl_ks avant ctrl_law ref est ctrl_ks
             self.launch_ctrl_law_init_task()
         elif next_task_type == 'ctrl_law_perturb':
             self.launch_ctrl_law_pertub_task()
+        elif next_task_type == 'ctrl_law_blue':
+            self.launch_ctrl_law_BLUE()
         # elif next_task_type == 'third':
         #     self.launch_third_task()
 

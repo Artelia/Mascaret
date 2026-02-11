@@ -2,9 +2,9 @@ import json
 import os
 import numpy as np
 
-n_perturb = 2
-zones = [2]
-base_folder = r'../../mascaret/event1_1/'
+# n_perturb = 2
+# zones = [2]
+# base_folder = r'../../mascaret/event1_1/'
 
 
 def get_perturb_folder(base_folder, iperturb):
@@ -30,7 +30,7 @@ class ClassMatrix:
     # TODO Passer en argument d'entrée le dico ou json des paramètres d'assimilation !
     def __init__(self, base_folder, json_assim=None):
         # Vecteur d'ébauche
-        self.misfit = None
+        self.misfit = []
         self.B_analysed = None
         self.Z_obs = []
         self.xb = []
@@ -46,6 +46,7 @@ class ClassMatrix:
         self.zones = []
         self.nbzones = 0
         json_path = os.path.join(self.base_folder, 'data_assim.json')
+        print(self.base_folder, json_path)
         self.ctrlKs = False
         self.ctrlLaw = False
         with open(json_path) as f:
@@ -66,11 +67,23 @@ class ClassMatrix:
             self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlLaw"]["lst_zone"]]
             self.zones = np.unique(self.zones)
             self.nb_zones = len(self.zones)
+
         # Récupération du nombre total de pas de temps d'observation
         name_folder_ref = os.path.join(self.base_folder, 'run_ref')
         with open(os.path.join(name_folder_ref, 'Z_Q_assim.json')) as f:
             dict_ref = json.load(f)
         self.nb_dt_obs = len(dict_ref['time'])
+
+        # Récupération des zéros des observations
+        self.zero_obs = {}
+        if self.ctrlKs:
+            for d in self.dict_assim["ctrlKS"]["lst_zone"]:
+                dico = d.get("lst_obs", {})
+                if dico != {}:
+                    for ic, c in enumerate(dico.get("code")):
+                        if c not in self.zero_obs.keys():
+                            self.zero_obs[c] = dico.get("zero")[ic]
+
         # Récupération du nombre total de perturbations
         if self.ctrlKs:
             self.nbperturb = 0
@@ -102,10 +115,10 @@ class ClassMatrix:
                 if d.get("std") is None:
                     raise KeyError("Key std not found in data_assim.json")
                 if d.get("type") == "Ksmin":
-                    liste_sigma += [std_zone]
+                    liste_sigma += [2 * std_zone]
                     # liste_sigma += int(np.ceil((d["val_max"] - d["val_min"])/self.minperturb) + 1) * [std_zone]
                 if d.get("type") == "Ksmaj":
-                    liste_sigma += [std_zone]
+                    liste_sigma += [2 * std_zone]
                     # liste_sigma += int(np.ceil((d["val_max"] - d["val_min"])/self.majperturb) + 1) * [std_zone]
 
         if self.ctrlLaw:
@@ -134,7 +147,7 @@ class ClassMatrix:
                 if dict2.get("stderr") is None:
                     raise KeyError("Key std_obs not found in data_assim.json")
                 for sigma in dict2.get("stderr"):
-                    diag_R += [float(sigma) for i in range(self.nb_dt_obs)]
+                    diag_R += [float(sigma) ** 2 for i in range(self.nb_dt_obs)]
         print("Diagonale des matrices des covariances d'erreur d'observation R", diag_R)
         self.R = np.array(diag_R)
 
@@ -159,16 +172,16 @@ class ClassMatrix:
                 file_name = os.path.join(obs_folder, str(station) + '.loi')
                 with open(file_name) as f:
                     lines = f.readlines()[3:]
-                    # TODO handle time and Z units !!!
+                    # TODO handle time units !!!
                     self.Z_obs[station]['time'] = [float(l.split()[0]) * 3600 for l in lines]
-                    self.Z_obs[station]['Z'] = [float(l.split()[1]) + 250.89 for l in lines]
-        print(self.Z_obs)
+                    self.Z_obs[station]['Z'] = [float(l.split()[1]) for l in lines]
+        print('Z station', self.Z_obs)
 
         for it, time in enumerate(dict_ref['time']):
             for station in dict_ref['Z'][str(zone)]:
                 self.y0.append(self.Z_obs[station]['Z'][it])
                 self.misfit.append(self.Z_obs[station]['Z'][it] - Zref[it])
-        print(self.y0)
+        print('Y0', self.y0)
 
     def build_H_matrix(self):
         H = []
@@ -185,7 +198,7 @@ class ClassMatrix:
             for station in dict_ref['Z'][str(zone)]:
                 Zref += dict_ref['Z'][str(zone)][station]
         Zref = np.array(Zref, dtype=float)
-        print(Zref)
+        print('Z reference', Zref)
         # Zref = np.concatenate([dict_ref['Z'][str(zone)] for zone in self.zones])
         # Getting initial values of KS
         if self.ctrlKs:
@@ -218,7 +231,7 @@ class ClassMatrix:
                 for station in dict_perturb['Z'][str(zone)]:
                     Zperturb += dict_perturb['Z'][str(zone)][station]
             Zperturb = np.array(Zperturb, dtype=float)
-            print(Zperturb)
+            print('Zperturb iperturb = ', i+1 ,Zperturb)
             # Deltas_param contient l'ensemble des différences entre les paramètres de REF et de
             # PERTURB Avec potentiellement des valeurs nulles pour les paramètres non modifiés Ici
             # pour KS, on a les différences sur KS_MIn et MAJ pour chaque zone.
@@ -240,9 +253,9 @@ class ClassMatrix:
         self.H = H
 
 
-if __name__ == '__main__':
-    M = ClassMatrix(base_folder)
-    M.build_H_matrix()
-    M.build_B_matrix_ini()
-    M.build_diago_R_matrix_ini()
-    M.build_misfit()
+# if __name__ == '__main__':
+#     M = ClassMatrix(base_folder)
+#     M.build_H_matrix()
+#     M.build_B_matrix_ini()
+#     M.build_diago_R_matrix_ini()
+#     M.build_misfit()

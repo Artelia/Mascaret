@@ -131,7 +131,7 @@ class ClassAssimDB:
 
     def _creat_lst_obs(self,idx,data_ks, obs_var):
 
-        d_obs_f = {'id': [], 'code': [], 'stderr': [], 'rejectlimit': [], 'abscissa': []}
+        d_obs_f = {'id': [], 'code': [], 'stderr': [], 'rejectlimit': [], 'abscissa': [], 'zero': []}
         lst_obs = data_ks[f'lst_obs_{obs_var.lower()}'][idx]
 
         # Définir les colonnes selon obs_var
@@ -157,6 +157,7 @@ class ClassAssimDB:
                 d_obs_f['stderr'].append(row[2])
                 d_obs_f['rejectlimit'].append(row[3])
                 d_obs_f['abscissa'].append(row[4])
+                d_obs_f['zero'].append(row[5])
         return  d_obs_f
     def _create_ks_entry(self, data_ks, idx, type_ks, val_type, obs_var):
         """Crée une entrée KS standardisée."""
@@ -295,14 +296,16 @@ class ClassAssimDB:
         if not data:
             return {}
         unique_pairs = {}
-
+        zero = {}
         for item in data:
             for i, id_val in enumerate(item['id']):
                 code_val = item['code'][i]
                 unique_pairs[id_val] = code_val
+                zero[id_val] = item['zero'][i]
         return {
             'id': list(unique_pairs.keys()),
-            'code': list(unique_pairs.values())
+            'code': list(unique_pairs.values()),
+            'zero': list(zero.values())
         }
 
     def get_list_cas_law(self):
@@ -703,8 +706,10 @@ class ClassAssimDB:
         cl_bc = ClassBCWriter(self.mdb, path_obs)
         typ_crt = var_obs["type_obs"]
         dict_obs = {}
-        for code in data_obs.get('code', []):
-            dict_tmp = {'type': typ_crt, 'formule': f'{code}[t] + {data_obs.get("zero", 0)}'}
+        print(data_obs)
+        for icode, code in enumerate(data_obs.get('code', [])):
+            # decal_z = data_obs.get("zero", [0])[icode]
+            dict_tmp = {'type': typ_crt, 'formule': f'{code}[t] + {data_obs["zero"][icode]}'}
             dict_obs[code] = dict_tmp
         print(dict_obs,typ_crt,  var_obs['starttime'], var_obs["endtime"] )
         cl_bc.obs_to_file(dict_obs, var_obs['starttime'], var_obs["endtime"])
