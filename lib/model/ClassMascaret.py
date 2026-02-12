@@ -242,6 +242,72 @@ class ClassMascaret:
                 QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
                 self.process_next_task()
 
+    def launch_ctrl_analyse(self):
+        print('Run Analyse Ctrl Ks init *************')
+        task_params = self.obj_model.get_list_type_instance_assim("Analyse", type_init=True)
+
+        if not task_params:
+            QgsMessageLog.logMessage("No 'Analyse init' model to run.", 'TaskMascaret', Qgis.Warning)
+            # Passer à la suivante même si pas de modèle ref
+            self.process_next_task()
+            return
+
+        description = "Mascaret Models Execution, Analyse init'"
+        self.task_ref = TaskMascaret(
+            description=description,
+            task_params=task_params,
+            max_workers=self.limit_core,
+            database=None
+        )
+
+        if not self.use_task:
+            for idx, param in enumerate(task_params):
+                results = self.task_ref.run_model(param, idx)
+            self.process_next_task()
+        else:
+
+            # Connecter les signaux
+            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed('Analyse_init'))
+            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed('Analyse_init'))
+            task_id = self.launch_task(self.task_ref, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                self.process_next_task()
+
+    def launch_ctrl_analyse(self):
+        print('Run Assime Ctrl Ks *************')
+        task_params = self.obj_model.get_list_type_instance_assim("Analyse")
+
+        if not task_params:
+            QgsMessageLog.logMessage("No Analyse model to run.", 'TaskMascaret', Qgis.Warning)
+            # Passer à la suivante même si pas de modèle ref
+            self.process_next_task()
+            return
+
+        description = "Mascaret Models Execution, Analyse pertub'"
+        self.task_ref = TaskMascaret(
+            description=description,
+            task_params=task_params,
+            max_workers=self.limit_core,
+            database=None
+        )
+
+        if not self.use_task:
+            for idx, param in enumerate(task_params):
+                results = self.task_ref.run_model(param, idx)
+            self.process_next_task()
+        else:
+
+            # Connecter les signaux
+            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed('Analyse'))
+            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed('Analyse'))
+            task_id = self.launch_task(self.task_ref, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                self.process_next_task()
+
     def launch_ctrl_ks_BLUE(self):
         print('Run Assime CtrlKS BLUE *************')
         scens = self.obj_model.get_list_name_scenario()
@@ -445,6 +511,12 @@ class ClassMascaret:
             self.launch_ctrl_ks_pertub_task()
         elif next_task_type == 'ctrl_ks_blue':
             self.launch_ctrl_ks_BLUE()
+        elif next_task_type == 'ctrl_ks_ana_init':
+            pass
+            # self.launch_ctrl_analyse_init()
+        elif next_task_type == 'ctrl_ks_ana':
+            pass
+            # self.launch_ctrl_analyse()
         elif next_task_type == 'ctrl_law_init':
             #TODO si ctrl_ks avant ctrl_law ref est ctrl_ks
             self.launch_ctrl_law_init_task()
@@ -452,8 +524,12 @@ class ClassMascaret:
             self.launch_ctrl_law_pertub_task()
         elif next_task_type == 'ctrl_law_blue':
             self.launch_ctrl_law_BLUE()
-        # elif next_task_type == 'third':
-        #     self.launch_third_task()
+        elif next_task_type == 'ctrl_law_ana_init':
+            pass
+            # self.launch_ctrl_analyse_init()
+        elif next_task_type == 'ctrl_law_ana':
+            pass
+            # self.launch_ctrl_analyse()
 
     def on_all_tasks_completed(self):
         """Appelé quand toutes les tasks sont terminées"""

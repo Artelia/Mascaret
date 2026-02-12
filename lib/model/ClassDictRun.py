@@ -655,15 +655,13 @@ class ClassDictRun:
             order += 1
             if drun['has_assimilation']:
                 if self.assim.check_assim_ks():
-                    d_scen = self.assim.lst_instance_run_ctrlks(drun, d_scen, order)
-                if self.assim.check_assim_law():
-                    d_scen = self.assim.lst_instance_run_ctrl_law(drun, d_scen, order)
+                    d_scen, order = self.assim.lst_instance_run_ctrlks(drun, d_scen, order)
 
+                if self.assim.check_assim_law():
+                    d_scen, order = self.assim.lst_instance_run_ctrl_law(drun, d_scen, order)
 
             scenarios.append(d_scen)
         return scenarios
-
-
 
     def fill_lscenario(self, data):
         """Initialize the 'scenario' list inside the model dictionary based on input data.

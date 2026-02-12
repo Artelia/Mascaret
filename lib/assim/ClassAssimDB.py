@@ -105,7 +105,6 @@ class ClassAssimDB:
         d_perturb = dict(zip(
             data_config['perturbation_var'][idx],
             data_config['perturbation_val'][idx]))
-        print(d_perturb)
         obs_var = data_config['control_var'][idx]
         self.data['ctrlKS'].update({
             "obs_var": obs_var,
@@ -128,8 +127,7 @@ class ClassAssimDB:
 
         return list_ks
 
-
-    def _creat_lst_obs(self,idx,data_ks, obs_var):
+    def _creat_lst_obs(self, idx, data_ks, obs_var):
 
         d_obs_f = {'id': [], 'code': [], 'stderr': [], 'rejectlimit': [], 'abscissa': [], 'zero': []}
         lst_obs = data_ks[f'lst_obs_{obs_var.lower()}'][idx]
@@ -147,8 +145,6 @@ class ClassAssimDB:
 
         results, nam_col = self.mdb.run_query(sql, fetch=True, arraysize=1, namvar=True)
 
-
-
         if results:
             for row_ in results:
                 row = row_[0]
@@ -158,11 +154,11 @@ class ClassAssimDB:
                 d_obs_f['rejectlimit'].append(row[3])
                 d_obs_f['abscissa'].append(row[4])
                 d_obs_f['zero'].append(row[5])
-        return  d_obs_f
-    
+        return d_obs_f
+
     def _create_ks_entry(self, data_ks, idx, type_ks, val_type, obs_var):
         """Crée une entrée KS standardisée."""
-        d_obs_f = self._creat_lst_obs(idx,data_ks, obs_var)
+        d_obs_f = self._creat_lst_obs(idx, data_ks, obs_var)
         # TODO: alert si d_obs_f est vide
         dico_ks = self.mdb.zone_ks()
         ref_min = dico_ks["minbedcoef"][data_ks['id_zone'][idx]]
@@ -174,14 +170,14 @@ class ClassAssimDB:
             "val_max": data_ks[f'val_sup_{val_type}'][idx],
             "std": data_ks[f'std_{val_type}'][idx],
             "lst_obs": d_obs_f,
-            'zone_info':{
-                        "abs_min": data_ks['abs_min'][idx],
-                        "abs_max": data_ks['abs_max'][idx],
-                        'branchnum': data_ks['branchnum'][idx],
-                        'ref_ks_min' : ref_min, 
-                        'ref_ks_maj' : ref_maj,
-                        }
+            'zone_info': {
+                "abs_min": data_ks['abs_min'][idx],
+                "abs_max": data_ks['abs_max'][idx],
+                'branchnum': data_ks['branchnum'][idx],
+                'ref_ks_min': ref_min,
+                'ref_ks_maj': ref_maj,
             }
+        }
 
     def _update_ctrl_law(self, idx, data_config):
         """Gère la mise à jour des données CtrlLaw."""
@@ -230,7 +226,7 @@ class ClassAssimDB:
             "std": data_law[f'std_{typ_coef}'][idx],
             "val_min": data_law['val_min'][idx],
             "val_max": data_law['val_max'][idx],
-            "lst_obs": d_obs_f ,
+            "lst_obs": d_obs_f,
         }
 
     def check_assim(self):
@@ -244,57 +240,36 @@ class ClassAssimDB:
 
     def get_list_cas_ks(self):
         """Génère la liste des cas de test pour l'assimilation KS."""
-        if not self.check_assim_ks():
-            return []
-
         d_ctrlks = self.data['ctrlKS']
-
         lst_cas = []
         lst_obs = []
+
         for d_zone in d_ctrlks['lst_zone']:
-            # Récupération des valeurs actuelles
-            val_ksmaj = d_zone['zone_info']['ref_ks_maj']
-            val_ksmin = d_zone['zone_info']['ref_ks_min']
+            # Récupération des valeurs de référence
+            zone_info = d_zone['zone_info']
+            val_ksmaj = zone_info['ref_ks_maj']
+            val_ksmin = zone_info['ref_ks_min']
             typ = d_zone['type']
+
             lst_obs.append(d_zone['lst_obs'])
-            # Sélection de la perturbation selon le type
-            pertub = (d_ctrlks['ksmin_perturb'][0] if typ == 'Ksmin'
-                      else d_ctrlks['ksmaj_perturb'][0])
-            pertub = abs(pertub)
-            # Calcul des points de test
-            # n_points = (int(abs(d_zone['val_max'] - d_zone['val_min']) / pertub) + 1
-            #             if pertub > 0 else 1)
-            # temp_values = np.linspace(d_zone['val_min'], d_zone['val_max'], n_points)
-            pertub = pertub if pertub > 0 else 1
-            val = d_zone['val_min']
-            temp_values = []
-            # val += [perturb]
-            if typ == 'Ksmin':
-                temp_values.append(val_ksmin + pertub)
-            else:
-                temp_values.append(val_ksmaj + pertub)
 
-            # while val < d_zone['val_max']:
-            #     temp_values.append(round(val, 3))
-            #     val += pertub
-            # temp_values.append(d_zone['val_max'])
+            # Calcul de la perturbation
+            pertub_list = (d_ctrlks['ksmin_perturb'] if typ == 'Ksmin'
+                           else d_ctrlks['ksmaj_perturb'])
+            pertub = pertub_list[0] if pertub_list[0] != 0 else 1
 
-            # Génération des cas selon le type
-            for temp_val in temp_values:
-                if typ == 'Ksmin' and temp_val != val_ksmin:
-                    lst_cas.append({
-                        'num_zone': d_zone['num_zone'],
-                        'ksmin': temp_val,
-                        'ksmaj': val_ksmaj,
-                        'type': 'Ksmin'
-                    })
-                elif typ == 'Ksmaj' and temp_val != val_ksmaj:
-                    lst_cas.append({
-                        'num_zone': d_zone['num_zone'],
-                        'ksmin': val_ksmin,
-                        'ksmaj': temp_val,
-                        'type': 'Ksmaj'
-                    })
+            # Calcul de la valeur perturbée
+            val_ref = val_ksmin if typ == 'Ksmin' else val_ksmaj
+            temp_val = val_ref + pertub
+
+            # Création du cas de test
+            lst_cas.append({
+                'num_zone': d_zone['num_zone'],
+                'ksmin': temp_val if typ == 'Ksmin' else val_ksmin,
+                'ksmaj': val_ksmaj if typ == 'Ksmin' else temp_val,
+                'type': typ
+            })
+
         d_obs = self._filter_obs(lst_obs)
         return lst_cas, d_obs
 
@@ -321,7 +296,7 @@ class ClassAssimDB:
 
         d_ctrl_law = self.data['CtrlLaw']
         lst_cas = []
-        lst_obs= []
+        lst_obs = []
         for d_loi in d_ctrl_law['lst_loi']:
             lst_obs.append(d_loi['lst_obs'])
             if d_loi['source_law'] == 'extremities':
@@ -456,10 +431,34 @@ class ClassAssimDB:
                                      'ks_pertub': val, },
                                  "order": order, })
             order += 1
-
-        self.add_data_dgenerate_ks(d_run, d_scen)
         d_scen["instances"] += lst_instance
-        return d_scen
+        d_scen, order = self.add_lst_analyse(d_run, d_scen, order, type_assim='ctrlKS')
+        self.add_data_dgenerate_ks(d_run, d_scen)
+        return d_scen, order
+
+    def add_lst_analyse(self, drun, d_scen, order, type_assim):
+        folder_run = os.path.join(d_scen["path_instance"], f'Analyse_{type_assim}')
+        if drun['has_run_init']:
+            d_scen["instances"].append({'name': f'Analyse_{type_assim}_init',
+                                        "RUN_REP": os.path.join(folder_run, 'run_init'),
+                                        "has_casier": False,
+                                        "has_tracer": False,
+                                        "starttime": None,
+                                        "order": order,
+                                        'type_ctrl': type_assim,
+                                        })
+            order += 1
+        d_scen["instances"].append({'name':  f'Analyse_{type_assim}',
+                                    "RUN_REP": folder_run,
+                                    # Update var use in API
+                                    "has_casier": drun["has_casier"],
+                                    "has_tracer": drun["has_tracer"],
+                                    "starttime": d_scen.get("starttime") if drun['event'] else None,
+                                    "order": order,
+                                    'type_ctrl': type_assim,
+                                    })
+        order += 1
+        return d_scen, order
 
     def lst_instance_run_ctrl_law(self, d_run, d_scen, order):
         folder = os.path.join(d_scen["path_instance"], 'run_ctrlLaw')
@@ -509,9 +508,10 @@ class ClassAssimDB:
                                  "order": order, })
             order += 1
         #
-        self.add_data_dgenerate_law(d_run, d_scen)
         d_scen["instances"] += lst_instance
-        return d_scen
+        d_scen, order = self.add_lst_analyse(d_run, d_scen, order, type_assim='ctrlLaw')
+        self.add_data_dgenerate_law(d_run, d_scen)
+        return d_scen, order
 
     def export_data_json(self, folder):
         if self.data.get('instance'):
@@ -538,74 +538,90 @@ class ClassAssimDB:
         if d_folder.get('init'):
             path_init = Path(d_folder.get('init'))
 
-
         path_scen = path_ref.parent
         obj_model.assim.export_data_json(path_scen)
         var_obs = obj_model.get_obs_param(scen)
         self._create_obs_file(path_scen, obj_model.get_obs(scen), var_obs)
 
         for name, folder in d_folder.items():
-            if name in ['ref', 'init']:
+            if name is ['ref', 'init']:
+                continue
+            # elif name.endswith('_init'):
+            #     continue
+            elif name.startswith("Analyse"):
                 continue
             instance = obj_model.get_instance(ids, name)
 
-            if name.endswith('init') :
+            if name.endswith('_init'):
                 self.cl_creat_assim.clone_model(path_init, folder)
             else:
                 self.cl_creat_assim.clone_model(path_ref, folder)
-            if 'ctrlKS' == instance.get('type_ctrl', ''):
-                zones = self.get_zone_frot(instance.get('name_xcas', 'mascaret.xcas'), folder)
-                if instance.get("assim_info"):
-                    assim_info = instance.get("assim_info")
+
+            if 'ctrlKS' == instance.get('type_ctrl', '') and not name.startswith("Analyse"):
+                assim_info = instance.get("assim_info")
+                if assim_info:
                     numz = assim_info['num_zone']
                     if assim_info['type_case'] == "Ksmaj":
                         var = "coefLitMaj"
                     elif assim_info['type_case'] == "Ksmin":
                         var = "coefLitMin"
-                    zones[var][numz] = assim_info['ks_pertub']
-                parametres = {
-                    "loi": "1",
-                    "nbZone": str(zones["nbZone"]),
-                    "numBranche": zones["numBranche"],
-                    "absDebZone": fmt(zones["absDebZone"]),
-                    "absFinZone": fmt(zones["absFinZone"]),
-                    "coefLitMin": fmt(zones["coefLitMin"]),
-                    "coefLitMaj": fmt(zones["coefLitMaj"]),
+                    modif_ks = [(numz, var, assim_info['ks_pertub'])]
+                    self.modif_ctrl_ks(instance.get('name_xcas', 'mascaret.xcas'), folder, modif_ks )
 
-                }
-
-                self.modif_xcas(parametres, instance.get('name_xcas', 'mascaret.xcas'), folder)
-
-            if 'ctrlLaw' == instance.get('type_ctrl', ''):
-                if instance.get("assim_info"):
-                    assim_info = instance.get("assim_info")
+            if 'ctrlLaw' == instance.get('type_ctrl', '') and not name.startswith("Analyse"):
+                assim_info = instance.get("assim_info")
+                if assim_info:
                     name_law = f'{assim_info["name_law"]}_init.loi' if name.endswith(
-                        'init') else f'{assim_info["name_law"]}.loi'
+                        '_init') else f'{assim_info["name_law"]}.loi'
+                    coefs = {'coefA': assim_info['coef_pertub'] if assim_info['type_case'] == 'coefA' else 1,
+                             'coefB': assim_info['coef_pertub'] if assim_info['type_case'] == 'coefB' else 0,
+                             }
+                    self.modif_ctrl_law(name_law, folder, coefs)
 
-                    file_law = os.path.join(folder, name_law)
-                    file_tmp = os.path.join(folder, f'{name_law}.tmp')
-                    shutil.copy2(file_law, file_tmp)
-                    filein = open(file_tmp, 'r')
-                    with open(file_law, 'w') as fileout:
-                        cpt = 1
-                        for line in filein:
-                            if line.startswith('#'):
-                                fileout.write(line)
-                                continue
-                            if cpt == 1:
-                                fileout.write(line)
-                                cpt += 1
-                            parts = line.split()
-                            if len(parts) >= 2:
-                                if assim_info['type_case'] == 'coefA':
-                                    parts[1] = round(assim_info['coef_pertub'] * float(parts[1]), 6)
-                                    fileout.write(' '.join([str(par) for par in parts]))
-                                elif assim_info['type_case'] == 'coefB':
-                                    parts[1] = round(assim_info['coef_pertub'] + float(parts[1]), 6)
-                                    fileout.write(' '.join([str(par) for par in parts]))
-                                fileout.write('\n')
-                    filein.close()
-                    os.remove(file_tmp)
+    def modif_ctrl_ks(self, name_xcas, folder, modif_ks):
+        zones = self.get_zone_frot(name_xcas, folder)
+
+        for numz, var, ks_modify in  modif_ks:
+            zones[var][numz] = ks_modify
+
+        parametres = {
+            "loi": "1",
+            "nbZone": str(zones["nbZone"]),
+            "numBranche": zones["numBranche"],
+            "absDebZone": fmt(zones["absDebZone"]),
+            "absFinZone": fmt(zones["absFinZone"]),
+            "coefLitMin": fmt(zones["coefLitMin"]),
+            "coefLitMaj": fmt(zones["coefLitMaj"]),
+
+        }
+        self.modif_xcas(parametres, name_xcas, folder)
+        return
+
+    def modif_ctrl_law(self, name_law, folder, coefs):
+
+        coef_a = coefs.get('coefA', 1)
+        coef_b = coefs.get('coefB', 0)
+
+        file_law = os.path.join(folder, name_law)
+        file_tmp = os.path.join(folder, f'{name_law}.tmp')
+        shutil.copy2(file_law, file_tmp)
+        filein = open(file_tmp, 'r')
+        with open(file_law, 'w') as fileout:
+            cpt = 1
+            for line in filein:
+                if line.startswith('#'):
+                    fileout.write(line)
+                    continue
+                if cpt == 1:
+                    fileout.write(line)
+                    cpt += 1
+                parts = line.split()
+                if len(parts) >= 2:
+                    parts[1] = round(coef_a * float(parts[1]) + coef_b, 6)
+                    fileout.write(' '.join([str(par) for par in parts]))
+                    fileout.write('\n')
+        filein.close()
+        os.remove(file_tmp)
 
     def modif_xcas(self, parametres, xcasfile, folder):
         """
@@ -712,7 +728,6 @@ class ClassAssimDB:
         cl_bc = ClassBCWriter(self.mdb, path_obs)
         typ_crt = var_obs["type_obs"]
         dict_obs = {}
-        print(data_obs)
         for icode, code in enumerate(data_obs.get('code', [])):
             # decal_z = data_obs.get("zero", [0])[icode]
             dict_tmp = {'type': typ_crt, 'formule': f'{code}[t] + {data_obs["zero"][icode]}'}

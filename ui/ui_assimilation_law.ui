@@ -45,7 +45,7 @@
         <item row="1" column="0">
          <widget class="QLabel" name="label_8">
           <property name="text">
-           <string>SeuilRejetMisfitKs</string>
+           <string>SeuilRejetMisfitLaw</string>
           </property>
          </widget>
         </item>
@@ -109,22 +109,67 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="sb_cote_a"/>
+         <widget class="QDoubleSpinBox" name="sb_cote_a">
+          <property name="minimum">
+           <double>-99999.990000000005239</double>
+          </property>
+          <property name="maximum">
+           <double>99999.990000000005239</double>
+          </property>
+         </widget>
         </item>
         <item row="1" column="2">
-         <widget class="QDoubleSpinBox" name="sb_cote_b"/>
+         <widget class="QDoubleSpinBox" name="sb_cote_b">
+          <property name="minimum">
+           <double>-99999.990000000005239</double>
+          </property>
+          <property name="maximum">
+           <double>99999.990000000005239</double>
+          </property>
+         </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QDoubleSpinBox" name="sb_debit_a"/>
+         <widget class="QDoubleSpinBox" name="sb_debit_a">
+          <property name="minimum">
+           <double>-99999.990000000005239</double>
+          </property>
+          <property name="value">
+           <double>0.000000000000000</double>
+          </property>
+         </widget>
         </item>
         <item row="3" column="1">
-         <widget class="QDoubleSpinBox" name="sb_debit_lin_a"/>
+         <widget class="QDoubleSpinBox" name="sb_debit_lin_a">
+          <property name="minimum">
+           <double>-99999.990000000005239</double>
+          </property>
+          <property name="maximum">
+           <double>99999.990000000005239</double>
+          </property>
+          <property name="value">
+           <double>0.000000000000000</double>
+          </property>
+         </widget>
         </item>
         <item row="3" column="2">
-         <widget class="QDoubleSpinBox" name="sb_debit_lin_b"/>
+         <widget class="QDoubleSpinBox" name="sb_debit_lin_b">
+          <property name="minimum">
+           <double>-99999.990000000005239</double>
+          </property>
+          <property name="maximum">
+           <double>99999.990000000005239</double>
+          </property>
+         </widget>
         </item>
         <item row="2" column="2">
-         <widget class="QDoubleSpinBox" name="sb_debit_b"/>
+         <widget class="QDoubleSpinBox" name="sb_debit_b">
+          <property name="minimum">
+           <double>-99999.990000000005239</double>
+          </property>
+          <property name="maximum">
+           <double>99999.990000000005239</double>
+          </property>
+         </widget>
         </item>
         <item row="1" column="0">
          <widget class="QRadioButton" name="rb_cote">
