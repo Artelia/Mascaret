@@ -130,7 +130,7 @@ class ClassAssimDB:
 
     def _creat_lst_obs(self,idx,data_ks, obs_var):
 
-        d_obs_f = {'id': [], 'code': [], 'stderr': [], 'rejectlimit': []}
+        d_obs_f = {'id': [], 'code': [], 'stderr': [], 'rejectlimit': [], 'abscissa': []}
         lst_obs = data_ks[f'lst_obs_{obs_var.lower()}'][idx]
 
         # Définir les colonnes selon obs_var
@@ -138,7 +138,7 @@ class ClassAssimDB:
         reject_col = 'obsz_rejectlimit' if obs_var == 'H' else 'obsq_rejectlimit'
 
         sql = f"""
-            SELECT o.id, o.code, out.{stderr_col}, out.{reject_col}
+            SELECT o.id, o.code, out.{stderr_col}, out.{reject_col}, out.abscissa
             FROM {self.mdb.SCHEMA}.observations AS o
             JOIN {self.mdb.SCHEMA}.outputs AS out ON out.code = o.code
             WHERE o.id IN ({','.join(map(str, lst_obs))}) AND out.active
@@ -155,12 +155,16 @@ class ClassAssimDB:
                 d_obs_f['code'].append(row[1].strip() if isinstance(row[1], str) else row[1])
                 d_obs_f['stderr'].append(row[2])
                 d_obs_f['rejectlimit'].append(row[3])
+                d_obs_f['abscissa'].append(row[4])
         return  d_obs_f
+    
     def _create_ks_entry(self, data_ks, idx, type_ks, val_type, obs_var):
         """Crée une entrée KS standardisée."""
         d_obs_f = self._creat_lst_obs(idx,data_ks, obs_var)
         # TODO: alert si d_obs_f est vide
-
+        dico_ks = self.mdb.zone_ks()
+        ref_min = dico_ks["minbedcoef"][data_ks['id_zone'][idx]]
+        ref_maj = dico_ks["majbedcoef"][data_ks['id_zone'][idx]]
         return {
             "num_zone": data_ks['id_zone'][idx],
             "type": type_ks,
@@ -168,10 +172,14 @@ class ClassAssimDB:
             "val_max": data_ks[f'val_sup_{val_type}'][idx],
             "std": data_ks[f'std_{val_type}'][idx],
             "lst_obs": d_obs_f,
-            "abs_min": data_ks['abs_min'][idx],
-            "abs_max": data_ks['abs_max'][idx],
-            'branchnum': data_ks['branchnum'][idx],
-        }
+            'zone_info':{
+                        "abs_min": data_ks['abs_min'][idx],
+                        "abs_max": data_ks['abs_max'][idx],
+                        'branchnum': data_ks['branchnum'][idx],
+                        'ref_ks_min' : ref_min, 
+                        'ref_ks_maj' : ref_maj,
+                        }
+            }
 
     def _update_ctrl_law(self, idx, data_config):
         """Gère la mise à jour des données CtrlLaw."""
@@ -237,15 +245,14 @@ class ClassAssimDB:
         if not self.check_assim_ks():
             return []
 
-        dico_ks = self.mdb.zone_ks()
         d_ctrlks = self.data['ctrlKS']
 
         lst_cas = []
         lst_obs = []
         for d_zone in d_ctrlks['lst_zone']:
             # Récupération des valeurs actuelles
-            val_ksmaj = dico_ks["majbedcoef"][d_zone['num_zone']]
-            val_ksmin = dico_ks["minbedcoef"][d_zone['num_zone']]
+            val_ksmaj = d_zone['zone_info']['ref_ks_maj']
+            val_ksmin = d_zone['zone_info']['ref_ks_min']
             typ = d_zone['type']
             lst_obs.append(d_zone['lst_obs'])
             # Sélection de la perturbation selon le type
@@ -375,7 +382,7 @@ class ClassAssimDB:
                 "path_instance": d_scen["path_instance"],
                 "starttime": d_scen.get("starttime")
             },
-            "dico_ks": self.mdb.zone_ks()
+
         }
 
     def add_data_dgenerate_law(self, d_run, d_scen, ):
@@ -697,5 +704,4 @@ class ClassAssimDB:
         for code in data_obs.get('code', []):
             dict_tmp = {'type': typ_crt, 'formule': f'{code}[t]'}
             dict_obs[code] = dict_tmp
-        print(dict_obs,typ_crt,  var_obs['starttime'], var_obs["endtime"] )
         cl_bc.obs_to_file(dict_obs, var_obs['starttime'], var_obs["endtime"])
