@@ -105,6 +105,7 @@ class ClassAssimDB:
         d_perturb = dict(zip(
             data_config['perturbation_var'][idx],
             data_config['perturbation_val'][idx]))
+        print(d_perturb)
         obs_var = data_config['control_var'][idx]
         self.data['ctrlKS'].update({
             "obs_var": obs_var,
@@ -130,7 +131,7 @@ class ClassAssimDB:
 
     def _creat_lst_obs(self,idx,data_ks, obs_var):
 
-        d_obs_f = {'id': [], 'code': [], 'stderr': [], 'rejectlimit': [], 'abscissa': []}
+        d_obs_f = {'id': [], 'code': [], 'stderr': [], 'rejectlimit': [], 'abscissa': [], 'zero': []}
         lst_obs = data_ks[f'lst_obs_{obs_var.lower()}'][idx]
 
         # Définir les colonnes selon obs_var
@@ -138,7 +139,7 @@ class ClassAssimDB:
         reject_col = 'obsz_rejectlimit' if obs_var == 'H' else 'obsq_rejectlimit'
 
         sql = f"""
-            SELECT o.id, o.code, out.{stderr_col}, out.{reject_col}, out.abscissa
+            SELECT o.id, o.code, out.{stderr_col}, out.{reject_col}, out.abscissa, out.zero
             FROM {self.mdb.SCHEMA}.observations AS o
             JOIN {self.mdb.SCHEMA}.outputs AS out ON out.code = o.code
             WHERE o.id IN ({','.join(map(str, lst_obs))}) AND out.active
@@ -156,6 +157,7 @@ class ClassAssimDB:
                 d_obs_f['stderr'].append(row[2])
                 d_obs_f['rejectlimit'].append(row[3])
                 d_obs_f['abscissa'].append(row[4])
+                d_obs_f['zero'].append(row[5])
         return  d_obs_f
     
     def _create_ks_entry(self, data_ks, idx, type_ks, val_type, obs_var):
@@ -266,10 +268,17 @@ class ClassAssimDB:
             pertub = pertub if pertub > 0 else 1
             val = d_zone['val_min']
             temp_values = []
-            while val < d_zone['val_max']:
-                temp_values.append(round(val, 3))
-                val += pertub
-            temp_values.append(d_zone['val_max'])
+            # val += [perturb]
+            if typ == 'Ksmin':
+                temp_values.append(val_ksmin + pertub)
+            else:
+                temp_values.append(val_ksmaj + pertub)
+
+            # while val < d_zone['val_max']:
+            #     temp_values.append(round(val, 3))
+            #     val += pertub
+            # temp_values.append(d_zone['val_max'])
+
             # Génération des cas selon le type
             for temp_val in temp_values:
                 if typ == 'Ksmin' and temp_val != val_ksmin:
@@ -293,14 +302,16 @@ class ClassAssimDB:
         if not data:
             return {}
         unique_pairs = {}
-
+        zero = {}
         for item in data:
             for i, id_val in enumerate(item['id']):
                 code_val = item['code'][i]
                 unique_pairs[id_val] = code_val
+                zero[id_val] = item['zero'][i]
         return {
             'id': list(unique_pairs.keys()),
-            'code': list(unique_pairs.values())
+            'code': list(unique_pairs.values()),
+            'zero': list(zero.values())
         }
 
     def get_list_cas_law(self):
@@ -701,7 +712,9 @@ class ClassAssimDB:
         cl_bc = ClassBCWriter(self.mdb, path_obs)
         typ_crt = var_obs["type_obs"]
         dict_obs = {}
-        for code in data_obs.get('code', []):
-            dict_tmp = {'type': typ_crt, 'formule': f'{code}[t]'}
+        print(data_obs)
+        for icode, code in enumerate(data_obs.get('code', [])):
+            # decal_z = data_obs.get("zero", [0])[icode]
+            dict_tmp = {'type': typ_crt, 'formule': f'{code}[t] + {data_obs["zero"][icode]}'}
             dict_obs[code] = dict_tmp
         cl_bc.obs_to_file(dict_obs, var_obs['starttime'], var_obs["endtime"])

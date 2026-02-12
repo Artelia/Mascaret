@@ -150,14 +150,13 @@ class ClassAPIMascaret:
         # TODO if assim
         self.res_assim = ClassResultAssim()
         xcoords = np.array([self.masc.get('Model.X', i) for i in range(self.masc.get_var_size('Model.X')[0])])
-        self.res_assim.get_coords_assim(os.path.join(self.dossier_file_masc, 'dico_assim_zones.json'),
+        # TODO remplacer le chemin d'accès !!!
+        self.res_assim.get_coords_assim(os.path.join(r'C:\Users\guillaume.isserty\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\event1_1',
+                                                     'data_assim.json'),
                                         xcoords,
                                         self.dossier_file_masc)
         if self.res_assim.is_assim:
             self.num_zones_assim = self.res_assim.num_zones
-
-
-
 
         return 0
 
@@ -477,6 +476,7 @@ class ClassAPIMascaret:
             # TODO if assim ?
             try:
                 self.add_info('Before getting ZQ')
+                print('Before getting ZQ')
                 txt = f'{self.num_zones_assim} - {self.masc.nb_nodes}'
                 self.add_info(txt)
                 # i correspond au clé de dict_obs soit les numéros de coordonnées associés aux zones
@@ -486,6 +486,7 @@ class ClassAPIMascaret:
 
                 self.res_assim.store_result(valZ, valQ, t0)
             except Exception as e:
+                print(e)
                 raise ValueError(e)
 
         if conum:
@@ -512,9 +513,12 @@ class ClassAPIMascaret:
         # TODO if self.assim
         if self.res_assim.is_assim:
             # Storing additionally KS values for later use in BLUE
-            valKSmin = [self.masc.get('Model.FricCoefMainCh', i) for i in self.res_assim.dict_obs]
-            valKSmaj = [self.masc.get('Model.FricCoefFP', i) for i in self.res_assim.dict_obs]
-            self.res_assim.store_KS_values(valKSmin, valKSmaj)
+            # valKSmin = [self.masc.get('Model.FricCoefMainCh', i) for i in self.res_assim.dict_obs]
+            # valKSmaj = [self.masc.get('Model.FricCoefFP', i) for i in self.res_assim.dict_obs]
+            # valKSmin = {i: self.masc.get('Model.FricCoefMainCh', i) for i in self.res_assim.dict_obs}
+            # valKSmaj = {i: self.masc.get('Model.FricCoefFP', i) for i in self.res_assim.dict_obs}
+            #
+            # self.res_assim.store_KS_values(valKSmin, valKSmaj)
             self.res_assim.write_results(self.dossier_file_masc, 'Z_Q_assim.json')
 
         self.masc.delete_mascaret()
@@ -595,6 +599,8 @@ if __name__ == "__main__":
         with open(jsonf) as json_data:
             dico = json.load(json_data)
         gen_lig =  dico.get('name','').endswith("init")
+        with open(r'C:\Users\guillaume.isserty\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret\ERROR.txt', 'a') as f:
+            f.write(f'Gen lig {str(gen_lig)}')
         api = ClassAPIMascaret(dico, generate_lig=gen_lig)
         api.fct_main(dico.get('name_xcas'), dico.get("has_tracer",False), dico.get("has_casier",False))
         print("Work is done.")

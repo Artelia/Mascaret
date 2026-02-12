@@ -355,6 +355,7 @@ class TaskMascaret(QgsTask):
                 'error': process.stderr,
                 'execution_time': time.time() - results['start_time'],
             })
+            pprint.pp(results)
 
             # try:
             #     if os.path.exists(param_file):
