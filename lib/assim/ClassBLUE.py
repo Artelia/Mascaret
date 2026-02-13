@@ -6,6 +6,7 @@ except:
     print('Using non relative imports')
     from ClassMatrix import ClassMatrix
 import os
+import json
 
 # base_folder = r'../../mascaret/event1_1/'
 
@@ -52,6 +53,8 @@ class classBLUE:
 
     def build_analysis(self):
         print('Ebauche xb', self.matrixes.xb)
+        print('MISFIT', self.matrixes.misfit)
+
         self.innovation = np.matmul(self.K, self.matrixes.misfit)
         self.analyse = self.matrixes.xb + self.innovation
         self.analyse = self.matrixes.xb + self.K @ (self.matrixes.y0 - self.matrixes.H @ self.matrixes.xb)
@@ -66,7 +69,26 @@ class classBLUE:
             f.write('--'*50 + '\n')
 
 
-    def store_results(self):
+    def store_results(self, first):
+        # First adding xa to data_assim.json
+        json_assim = os.path.join(self.base_folder, 'data_assim.json')
+        with open(json_assim) as f:
+            data_assim = json.load(f)
+        print(data_assim)
+        d = data_assim.get('ctrlKS', {})
+        print(d)
+        for izone, lzones in enumerate(d.get("lst_zone", [])):
+            if not lzones:
+                pass
+            else:
+                if d["lst_zone"][izone].get("xa") is None or first:
+                    d["lst_zone"][izone]["xa"] = [self.analyse[izone]]
+                else:
+                    d["lst_zone"][izone]["xa"].append(self.analyse[izone])
+        data_assim['ctrlKS'] = d
+        with open(json_assim, 'w') as f:
+            json.dump(data_assim, f, indent=4)
+        # Then storing in txt file every BLUE matrix for debug/verif
         with open(os.path.join(self.base_folder, 'blue_results.txt'), 'a' ) as f:
             f.write('Matrice B \n')
             current_mat = self.matrixes.B
@@ -113,10 +135,12 @@ if __name__ == '__main__':
     if len(sys.argv) <= 1:
         raise ValueError("No base folder file provided.")
     base_folder = sys.argv[1]
+    # base_folder = r'../../mascaret/event1_1/'
     print('BASE_FOLDER', base_folder)
     CB = classBLUE(base_folder)
     CB.compute_BLUE()
-    CB.store_results()
+    #TODO first doit être un bool de first step assim si on enchaine
+    CB.store_results(first=True)
     # CB.build_gain_K()
     # CB.build_analysis()
     # CB.clean_result_file()
