@@ -82,9 +82,9 @@ class classBLUE:
                 pass
             else:
                 if d["lst_zone"][izone].get("xa") is None or first:
-                    d["lst_zone"][izone]["xa"] = [self.analyse[izone]]
+                    d["lst_zone"][izone]["xa"] = [round(self.analyse[izone],2)]
                 else:
-                    d["lst_zone"][izone]["xa"].append(self.analyse[izone])
+                    d["lst_zone"][izone]["xa"].append(round(self.analyse[izone],2))
         data_assim['ctrlKS'] = d
         with open(json_assim, 'w') as f:
             json.dump(data_assim, f, indent=4)
