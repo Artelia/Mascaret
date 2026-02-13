@@ -36,6 +36,7 @@ class CreatModelAssim:
         self.mess=mess
         self.num_mess = 0
 
+
     def add_info(self, txt):
         if self.mess:
             self.mess('clAssim{}'.format(self.num_mess), 'info', txt)
@@ -81,7 +82,9 @@ class CreatModelAssim:
         return True
 
     def read_data_js(self, filein=None):
+        
         filein = filein or self.DATA_ASSIM_FILE
+        
 
         with open(filein, "r") as file:
             self.data = json.load(file)
@@ -102,89 +105,3 @@ class CreatModelAssim:
                     instance["starttime"] = datetime.fromisoformat(instance["starttime"])
                 except ValueError:
                     pass
-
-    def create_folder(self, data):
-
-            pass
-            # self.data = self.read_data_js()
-            # path_run.mkdir(parents=True, exist_ok=True)
-            # TODO
-            #if 'has_assim':
-            #
-            #
-            #
-            # self.clone_model('ref', '')
-            #
-            # if ctrl_KS:
-            #     self.modif_xcas_ks()
-            #
-            # if ctrl_Law:
-            #     self.modif_law()
-            # else:
-            #     # analyse
-            #     # if ctrl_ks_run modif_ks
-            #     #if ctrl_law_run modif law
-            #
-            #     pass
-
-
-
-
-
-
-
-    def modif_xcas_ks(self, xcasfile, folder, cond_api, mess=None):
-        pass
-        #     self.data
-        #     from ClassXcasWriter import ClassXcasWriter
-        #     self.cl_xcas = ClassXcasWriter(self.mdb, folder, self.dgeneral["api"], self.mess)
-        #     modif_xcas(self, parametres, xcasfile, fich_sortie=None):
-        #     pass # TODO
-        #
-        #
-        #     from .Fct_model_file import (
-        #         fmt,
-        #         indent,
-        # )
-        #     zones = self.mdb.zone_ks()
-        #     modif_param = {
-        #         "parametresCalage":
-        #             {
-        #                 "frottement":{
-        #                     "loi":"1",
-        #                     "nbZone" : str(len(zones["zoneabsstart"])),
-        #                     "numBranche":fmt(zones["branch"]),
-        #                     "absDebZone": fmt(zones["zoneabsstart"]),
-        #                     "absFinZone": fmt(zones["absFinZone"]),
-        #                     "coefLitMin": fmt(zones["minbedcoef"]),
-        #                     "coefLitMaj": fmt(zones["majbedcoef"])+ pertubMaj,
-        #
-        #                 }
-        #             }
-        #     }
-        #     fich_entree = os.path.join(self.folder, xcasfile)
-        #     arbre = et_parse(fich_entree)
-        #     racine = arbre.getroot()
-        #     calage = SubElement(cas, "parametresCalage")
-        #     frottement = SubElement(calage, "frottement")
-        #     SubElement(frottement, "loi").text = "1"
-        #     SubElement(frottement, "nbZone").text = str(len(zones["zoneabsstart"]))
-        #     SubElement(frottement, "numBranche").text = fmt(zones["branch"])
-        #     l_en = ["zoneabsstart", "zoneabsend", "minbedcoef", "majbedcoef"]
-        #     for kk, len_n in enumerate(["absDebZone", "absFinZone", "coefLitMin", "coefLitMaj"]):
-        #         SubElement(frottement, len_n).text = fmt(zones[l_en[kk].lower()])
-
-        # <parametresCalage>
-        #   <frottement>
-        #       <frottement>
-        #         <loi>1</loi>
-        #         <nbZone>4</nbZone>
-        #         <numBranche>1 2 2 3</numBranche>
-        #         <absDebZone>177.19 31316.32 34738.64 103460.33</absDebZone>
-        #         <absFinZone>31030.89 34738.64 102363.14 144277.15</absFinZone>
-        #         <coefLitMin>10.0 10.0 10.0 10.0</coefLitMin>
-        #         <coefLitMaj>12.0 12.0 4.0 4.0</coefLitMaj>
-        #       </frottement>
-
-    def modif_law(self, dict_loi, perturb):
-        pass  # TODO
