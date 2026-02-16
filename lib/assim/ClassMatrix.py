@@ -27,8 +27,10 @@ def get_perturb_folder(base_folder, iperturb):
 
 
 class ClassMatrix:
+    """"""
     # TODO Passer en argument d'entrée le dico ou json des paramètres d'assimilation !
     def __init__(self, base_folder, json_assim=None):
+        """"""
         # Vecteur d'ébauche
         self.misfit = []
         self.B_analysed = None
@@ -156,14 +158,22 @@ class ClassMatrix:
         name_folder_ref = os.path.join(self.base_folder, 'run_ref')
         with open(os.path.join(name_folder_ref, 'Z_Q_assim.json')) as f:
             dict_ref = json.load(f)
-        Zref = []
+
+        Zref = {}
+        for zone in self.zones:
+            for station in dict_ref['Z'][str(zone)]:
+                if station not in Zref.keys():
+                    Zref[station] = []
+        print(Zref)
+
         # Boucle sur les zones concernées
         for zone in self.zones:
             # Boucle sur les stations d'observation dans chaque zone
             for station in dict_ref['Z'][str(zone)]:
-                Zref += dict_ref['Z'][str(zone)][station]
-        Zref = np.array(Zref, dtype=float)
-
+                Zref[station] += dict_ref['Z'][str(zone)][station]
+        # Zref = np.array(Zref, dtype=float)
+        print('ZREF : ', Zref)
+        nb_time = len(dict_ref['time'])
         obs_folder = os.path.join(self.base_folder, 'Observations')
         self.Z_obs = {}
         for zone in self.zones:
@@ -176,14 +186,22 @@ class ClassMatrix:
                     self.Z_obs[station]['time'] = [float(l.split()[0]) * 3600 for l in lines]
                     self.Z_obs[station]['Z'] = [float(l.split()[1]) for l in lines]
         print('Z station', self.Z_obs)
-
-        for it, time in enumerate(dict_ref['time']):
-            for station in dict_ref['Z'][str(zone)]:
-                self.y0.append(self.Z_obs[station]['Z'][it])
-                self.misfit.append(self.Z_obs[station]['Z'][it] - Zref[it])
-        print('Y0', self.y0)
+        ista = 0
+        for zone in self.zones:
+            for it, time in enumerate(dict_ref['time']):
+                for station in dict_ref['Z'][str(zone)]:
+                    idx_zref = ista * nb_time + it
+                    self.y0.append(self.Z_obs[station]['Z'][it])
+                    # print(idx_zref, Zref[idx_zref])
+                    print(self.Z_obs[station]['Z'][it])
+                    self.misfit.append(self.Z_obs[station]['Z'][it] - Zref[station][it])
+                    ista += 1
+            print('Y0', self.y0)
 
     def build_H_matrix(self):
+        """
+
+        """
         H = []
         # Getting Zref and KS values
         name_folder_ref = os.path.join(self.base_folder, 'run_ref')
