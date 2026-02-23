@@ -21,46 +21,12 @@ email                :
 import os
 import numpy as np
 import json
-import shutil
+
 from pathlib import Path
 import traceback
 from datetime import datetime
 from .ClassCreatModelAssim import CreatModelAssim
-from xml.etree.ElementTree import ElementTree, Element, SubElement
-from xml.etree.ElementTree import parse as et_parse
 from ..model.ClassBCWriter import ClassBCWriter
-
-
-def indent(elem, level=0):
-    """
-    Indent XML elements for pretty printing.
-    :param elem (Element): XML element
-    :param level (int): Indentation level
-    :return: None
-    """
-    i = "\n" + level * "  "
-    if len(elem):
-        if not elem.text or not elem.text.strip():
-            elem.text = i + "  "
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-        for elem in elem:
-            indent(elem, level + 1)
-
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-    elif level and (not elem.tail or not elem.tail.strip()):
-        elem.tail = i
-
-
-def fmt(liste):
-    """
-    Convert a list to a space-separated string.
-    :param liste (list): List of values
-    :return: (str) Space-separated string
-    """
-    # list(map(str, liste))
-    return " ".join([str(var) for var in liste])
 
 
 class ClassAssimDB:
@@ -216,12 +182,29 @@ class ClassAssimDB:
                 list_law.append(self._create_law_entry(data_law, idx, 'b', obs_var))
         return list_law
 
+    def get_info_law(self, id_law, source_law):
+        if source_law == 'extremities':
+            sql = f"SELECT name, type FROM {self.mdb.SCHEMA}.extremities WHERE active and gid={id_law}"
+        elif source_law == 'lateral_inflows':
+            sql = f"SELECT name FROM {self.mdb.SCHEMA}.lateral_inflows WHERE active and gid={id_law}"
+        info = self.mdb.run_query(sql, fetch=True)
+        if not info:
+            return None, -1
+        type_loi = -1
+        if len(info[0]) > 1:
+            type_loi = info[0][1]
+        return info[0][0], type_loi
+
     def _create_law_entry(self, data_law, idx, typ_coef, obs_var):
         """Crée une entrée KS standardisée."""
         d_obs_f = self._creat_lst_obs(idx, data_law, obs_var)
+
+        name_law,  type_loi = self.get_info_law(data_law['id_law'][idx], data_law['source_law'][idx])
         return {
             "id_law": data_law['id_law'][idx],
             'source_law': data_law['source_law'][idx],
+            "name_law": name_law,
+            'type_law': type_loi,
             'type': f'coef{typ_coef.upper()}',
             "std": data_law[f'std_{typ_coef}'][idx],
             "val_min": data_law['val_min'][idx],
@@ -238,475 +221,91 @@ class ClassAssimDB:
     def check_assim_law(self):
         return bool(self.data.get('CtrlLaw'))
 
-    def get_list_cas_ks(self):
-        """Génère la liste des cas de test pour l'assimilation KS."""
-        d_ctrlks = self.data['ctrlKS']
-        lst_cas = []
-        lst_obs = []
+    def add_data_dgenerate(self, d_run, d_scen ):
+        path_ref = ''
+        path_init = ''
+        for idx, instance in enumerate(d_scen['instances']):
+            name = instance.get('name')
+            if name in  'ref':
+                path_ref = instance.get("RUN_REP", '')
+            elif name in  'init':
+                path_init = instance.get("RUN_REP", '')
+            if  path_ref != '' and path_init != '' :
+                break
 
-        for d_zone in d_ctrlks['lst_zone']:
-            # Récupération des valeurs de référence
-            zone_info = d_zone['zone_info']
-            val_ksmaj = zone_info['ref_ks_maj']
-            val_ksmin = zone_info['ref_ks_min']
-            typ = d_zone['type']
-
-            lst_obs.append(d_zone['lst_obs'])
-
-            # Calcul de la perturbation
-            pertub_list = (d_ctrlks['ksmin_perturb'] if typ == 'Ksmin'
-                           else d_ctrlks['ksmaj_perturb'])
-            pertub = pertub_list[0] if pertub_list[0] != 0 else 1
-
-            # Calcul de la valeur perturbée
-            val_ref = val_ksmin if typ == 'Ksmin' else val_ksmaj
-            temp_val = val_ref + pertub
-
-            # Création du cas de test
-            lst_cas.append({
-                'num_zone': d_zone['num_zone'],
-                'ksmin': temp_val if typ == 'Ksmin' else val_ksmin,
-                'ksmaj': val_ksmaj if typ == 'Ksmin' else temp_val,
-                'type': typ
-            })
-
-        d_obs = self._filter_obs(lst_obs)
-        return lst_cas, d_obs
-
-    def _filter_obs(self, data):
-        if not data:
-            return {}
-        unique_pairs = {}
-        zero = {}
-        for item in data:
-            for i, id_val in enumerate(item['id']):
-                code_val = item['code'][i]
-                unique_pairs[id_val] = code_val
-                zero[id_val] = item['zero'][i]
-        return {
-            'id': list(unique_pairs.keys()),
-            'code': list(unique_pairs.values()),
-            'zero': list(zero.values())
-        }
-
-    def get_list_cas_law(self):
-        """Génère la liste des cas de test pour l'assimilation LAW."""
-        if not self.check_assim_law():
-            return []
-
-        d_ctrl_law = self.data['CtrlLaw']
-        lst_cas = []
-        lst_obs = []
-        for d_loi in d_ctrl_law['lst_loi']:
-            lst_obs.append(d_loi['lst_obs'])
-            if d_loi['source_law'] == 'extremities':
-                sql = f"SELECT name, method, type FROM {self.mdb.SCHEMA}.extremities WHERE active and gid={d_loi['id_law']}"
-            elif d_loi['source_law'] == 'lateral_inflows':
-                sql = f"SELECT name, method FROM {self.mdb.SCHEMA}.lateral_inflows WHERE active and gid={d_loi['id_law']}"
-            res = self.mdb.run_query(sql, fetch=True)
-            if not res:
-                # TODO message  pas de loi
-                print("Hydraulic law not defined")
-                continue
-            methode = res[0][1]
-            name_law = res[0][0]
-            if methode == '' or methode == None:
-                print("Hydraulic law method  not defined")
-                continue
-
-            if d_loi['source_law'] == 'extremities':
-                if res[0][2] == 1:
-                    type_law = 'perturbationsDebit'
-                    pertub = d_ctrl_law['ldebit_perturb']
-                elif res[0][2] == 2:
-                    type_law = 'perturbationsCote'
-                    pertub = d_ctrl_law['lcote_perturb']
-            elif d_loi['source_law'] == 'lateral_inflows':
-                type_law = 'perturbationsDebitLineique'
-                pertub = d_ctrl_law['ldebit_lin_perturb']
-            else:
-                print("Hydraulic law type not defined")
-                continue
-            if d_loi['type'] == 'coefA':
-                pertubf = abs(pertub[0])
-            elif d_loi['type'] == 'coefB':
-                pertubf = abs(pertub[1])
-
-            # n_points = (int(abs(d_loi['val_max'] - d_loi['val_min']) / pertubf) + 1
-            #            if pertubf > 0 else 1)
-            pertubf = pertubf if pertubf > 0 else 1
-            val = d_loi['val_min']
-            temp_values = []
-            while val < d_loi['val_max']:
-                temp_values.append(round(val, 3))
-                val += pertubf
-            temp_values.append(d_loi['val_max'])
-            # Génération des cas selon le type
-            for temp_val in temp_values:
-                if (temp_val == 1 and d_loi['type'] == 'coefA') or (temp_val == 0):
-                    continue
-
-                dnew = d_loi.copy()
-                dnew.update({'methode': methode,
-                             'name_law': name_law,
-                             'type_law': type_law,
-                             'pertub': pertubf,
-                             'val_coef': temp_val
-                             })
-                lst_cas.append(dnew)
-        d_obs = self._filter_obs(lst_obs)
-        return lst_cas, d_obs
-
-    def add_data_dgenerate_ks(self, d_run, d_scen):
-        # TODO A traiter pour pom
         self.data['generate_instance'] = {
             'drun': {
                 key: d_run[key]
-                for key in ["has_casier", "has_tracer", "has_assimilation"]
+                for key in ["has_casier", "has_tracer", "has_assimilation", "has_run_init"]
             },
             'dscen': {
                 "path_instance": d_scen["path_instance"],
-                "starttime": d_scen.get("starttime")
+                "starttime": d_scen.get("starttime"),
+                'name_xcas_init': self.XCAS_FILE_INIT,
+                'name_xcas': self.XCAS_FILE,
+                "folder_init":  os.path.basename(path_init),
+                "folder_ref": os.path.basename(path_ref),
             },
-
         }
 
-    def add_data_dgenerate_law(self, d_run, d_scen, ):
-        # TODO A traiter pour pom
-        pass
-        # self.data['generate_instance'] = {
-        #     'drun': {
-        #         key: d_run[key]
-        #         for key in ["has_casier", "has_tracer", "has_assimilation"]
-        #     },
-        #     'dscen': {
-        #         "path_instance": d_scen["path_instance"],
-        #         "starttime": d_scen.get("starttime")
-        #     },
-        #     "dico_loi": self.mdb.zone_ks()
-        # }
-
     def lst_instance_run_ctrlks(self, d_run, d_scen, order):
-        folder = os.path.join(d_scen["path_instance"], 'run_ctrlKS')
-        starttime = d_scen.get("starttime")
-        lst_instance = []
+        if not self.check_assim_ks():
+            return d_scen, order
 
-        lst_case, d_obs = self.get_list_cas_ks()
+        lst_case, d_obs = self.cl_creat_assim.get_list_cas_ks(self.data)
         d_scen['obs_assim'] = d_obs
         d_scen['type_obs_assim'] = self.data['ctrlKS'].get("obs_var")
-
-        for idx, case in enumerate(lst_case):
-            name = f'ctrlKS_pertub{idx}'
-            val = case['ksmin'] if case['type'] == 'Ksmin' else case['ksmaj']
-            folder_run = os.path.join(folder,
-                                      f"pertub{idx}_{case['type']}_{case['num_zone']}_{str(val).replace('.', 'p')}")
-            if d_run['has_run_init']:
-                lst_instance.append({'name': f'{name}_init',
-                                     'name_xcas': self.XCAS_FILE_INIT,
-                                     "RUN_REP": os.path.join(folder_run, 'run_init'),
-                                     'type_ctrl': 'ctrlKS',
-                                     "has_casier": False,
-                                     "has_tracer": False,
-                                     "starttime": None,
-                                     "order": order,
-                                     "assim_info": {
-                                         'num_pertub': idx,
-                                         'type_case': case['type'],
-                                         'num_zone': case['num_zone'],
-                                         'ks_pertub': val, },
-                                     })
-                order += 1
-            lst_instance.append({'name': name,
-                                 'name_xcas': self.XCAS_FILE,
-                                 "RUN_REP": folder_run,
-                                 "has_casier": d_run["has_casier"],
-                                 "has_tracer": d_run["has_tracer"],
-                                 "has_assim": d_run['has_assimilation'],
-                                 "starttime": starttime,
-                                 'type_ctrl': 'ctrlKS',
-                                 "assim_info": {
-                                     'num_pertub': idx,
-                                     'type_case': case['type'],
-                                     'num_zone': case['num_zone'],
-                                     'ks_pertub': val, },
-                                 "order": order, })
-            order += 1
-        d_scen["instances"] += lst_instance
-        d_scen, order = self.add_lst_analyse(d_run, d_scen, order, type_assim='ctrlKS')
-        self.add_data_dgenerate_ks(d_run, d_scen)
-        return d_scen, order
-
-    def add_lst_analyse(self, drun, d_scen, order, type_assim):
-        folder_run = os.path.join(d_scen["path_instance"], f'Analyse_{type_assim}')
-        if drun['has_run_init']:
-            d_scen["instances"].append({'name': f'Analyse_{type_assim}_init',
-                                        "RUN_REP": os.path.join(folder_run, 'run_init'),
-                                        "has_casier": False,
-                                        "has_tracer": False,
-                                        "starttime": None,
-                                        "order": order,
-                                        'type_ctrl': type_assim,
-                                        })
-            order += 1
-        d_scen["instances"].append({'name':  f'Analyse_{type_assim}',
-                                    "RUN_REP": folder_run,
-                                    # Update var use in API
-                                    "has_casier": drun["has_casier"],
-                                    "has_tracer": drun["has_tracer"],
-                                    "starttime": d_scen.get("starttime") if drun['event'] else None,
-                                    "order": order,
-                                    'type_ctrl': type_assim,
-                                    })
-        order += 1
+        d_scen, order = self.cl_creat_assim.build_ctrlks_instances(
+            lst_case, d_run, d_scen, order,
+            xcas_file=self.XCAS_FILE,
+            xcas_file_init=self.XCAS_FILE_INIT,
+        )
+        d_scen, order = self.cl_creat_assim.build_analyse_instance(d_run, d_scen, order, type_assim='ctrlKS')
+        self.add_data_dgenerate(d_run, d_scen)
         return d_scen, order
 
     def lst_instance_run_ctrl_law(self, d_run, d_scen, order):
-        folder = os.path.join(d_scen["path_instance"], 'run_ctrlLaw')
-        starttime = d_scen.get("starttime")
-        lst_instance = []
-        lst_case, d_obs = self.get_list_cas_law()
+        if not self.check_assim_law():
+            return d_scen, order
+        lst_case, d_obs = self.cl_creat_assim.get_list_cas_law(self.data)
         d_scen['obs_assim'] = d_obs
         d_scen['type_obs_assim'] = self.data['CtrlLaw'].get("obs_var")
-        for idx, case in enumerate(lst_case):
-            name = f'ctrlLaw_pertub{idx}'
-            val = case['val_coef']
-            folder_run = os.path.join(folder,
-                                      f"pertub{idx}_{case['type']}_{case['name_law']}_{str(val).replace('.', 'p')}")
-            if d_run['has_run_init']:
-                lst_instance.append({'name': f'{name}_init',
-                                     'name_xcas': self.XCAS_FILE_INIT,
-                                     "RUN_REP": os.path.join(folder_run, 'run_init'),
-                                     'type_ctrl': 'ctrlLaw',
-                                     "has_casier": False,
-                                     "has_tracer": False,
-                                     "starttime": None,
-                                     "order": order,
-                                     "assim_info": {
-                                         'num_pertub': idx,
-                                         'type_case': case['type'],
-                                         'name_law': case['name_law'],
-                                         'id_law': case['id_law'],
-                                         'source_law': case['source_law'],
-                                         'coef_pertub': val, },
-                                     })
-                order += 1
-            lst_instance.append({'name': name,
-                                 'name_xcas': self.XCAS_FILE,
-                                 "RUN_REP": folder_run,
-                                 "has_casier": d_run["has_casier"],
-                                 "has_tracer": d_run["has_tracer"],
-                                 "has_assim": d_run['has_assimilation'],
-                                 "starttime": starttime,
-                                 'type_ctrl': 'ctrlLaw',
-                                 "assim_info": {
-                                     'num_pertub': idx,
-                                     'type_case': case['type'],
-                                     'name_law': case['name_law'],
-                                     'id_law': case['id_law'],
-                                     'source_law': case['source_law'],
-                                     'coef_pertub': val, },
-                                 "order": order, })
-            order += 1
-        #
-        d_scen["instances"] += lst_instance
-        d_scen, order = self.add_lst_analyse(d_run, d_scen, order, type_assim='ctrlLaw')
-        self.add_data_dgenerate_law(d_run, d_scen)
+        d_scen, order = self.cl_creat_assim.build_ctrl_law_instance(lst_case, d_run, d_scen, order,
+                                                xcas_file=self.XCAS_FILE,
+                                                xcas_file_init=self.XCAS_FILE_INIT,
+                                                )
+        d_scen, order = self.cl_creat_assim.build_analyse_instance(d_run, d_scen, order, type_assim='ctrlLaw')
+        self.add_data_dgenerate(d_run, d_scen)
         return d_scen, order
 
-    def export_data_json(self, folder):
-        if self.data.get('instance'):
-            for instance in self.data['instance']:
-                if instance.get("starttime"):
-                    if isinstance(instance["starttime"], datetime):
-                        instance["starttime"] = instance["starttime"].isoformat()
-
-        if self.data.get('generate_instance'):
-            instance = self.data['generate_instance']['dscen']
-            if instance.get("starttime"):
-                if isinstance(instance["starttime"], datetime):
-                    instance["starttime"] = (
-                        instance["starttime"].isoformat())
-
-        with open(os.path.join(folder, self.DATA_ASSIM_FILE), "w") as f:
-            json.dump(self.data, f, indent=4)
-
-    def fill_assim_folder(self, ids, scen, obj_model):
-        d_folder = obj_model.get_folder(scen)
-
-        path_ref = Path(d_folder['ref'])
-        path_init = ''
-        if d_folder.get('init'):
-            path_init = Path(d_folder.get('init'))
-
-        path_scen = path_ref.parent
-        obj_model.assim.export_data_json(path_scen)
+    def gen_obs_and_data(self, scen, obj_model):
+        path_scen = obj_model.get_event_folder(scen)
+        self._export_data(path_scen)
+        lst_obs = obj_model.get_obs(scen)
         var_obs = obj_model.get_obs_param(scen)
-        self._create_obs_file(path_scen, obj_model.get_obs(scen), var_obs)
+        self._create_obs_file(path_scen, lst_obs, var_obs)
 
-        for name, folder in d_folder.items():
-            if name is ['ref', 'init']:
-                continue
-            # elif name.endswith('_init'):
-            #     continue
-            elif name.startswith("Analyse"):
-                continue
-            instance = obj_model.get_instance(ids, name)
+    def _export_data(self,folder='.'):
+        filename = self.DATA_ASSIM_FILE
+        new_data = self.data.copy()
+        self._convert_datetime_to_str(new_data)
+        with open(os.path.join(folder, filename), "w") as f:
+            json.dump(new_data, f, indent=4)
 
-            if name.endswith('_init'):
-                self.cl_creat_assim.clone_model(path_init, folder)
-            else:
-                self.cl_creat_assim.clone_model(path_ref, folder)
+    def _convert_datetime_to_str(self, data) :
+        """Recursively convert :class:`datetime` objects to ISO strings in place.
 
-            if 'ctrlKS' == instance.get('type_ctrl', '') and not name.startswith("Analyse"):
-                assim_info = instance.get("assim_info")
-                if assim_info:
-                    numz = assim_info['num_zone']
-                    if assim_info['type_case'] == "Ksmaj":
-                        var = "coefLitMaj"
-                    elif assim_info['type_case'] == "Ksmin":
-                        var = "coefLitMin"
-                    modif_ks = [(numz, var, assim_info['ks_pertub'])]
-                    self.modif_ctrl_ks(instance.get('name_xcas', 'mascaret.xcas'), folder, modif_ks )
-
-            if 'ctrlLaw' == instance.get('type_ctrl', '') and not name.startswith("Analyse"):
-                assim_info = instance.get("assim_info")
-                if assim_info:
-                    name_law = f'{assim_info["name_law"]}_init.loi' if name.endswith(
-                        '_init') else f'{assim_info["name_law"]}.loi'
-                    coefs = {'coefA': assim_info['coef_pertub'] if assim_info['type_case'] == 'coefA' else 1,
-                             'coefB': assim_info['coef_pertub'] if assim_info['type_case'] == 'coefB' else 0,
-                             }
-                    self.modif_ctrl_law(name_law, folder, coefs)
-
-    def modif_ctrl_ks(self, name_xcas, folder, modif_ks):
-        zones = self.get_zone_frot(name_xcas, folder)
-
-        for numz, var, ks_modify in  modif_ks:
-            zones[var][numz] = ks_modify
-
-        parametres = {
-            "loi": "1",
-            "nbZone": str(zones["nbZone"]),
-            "numBranche": zones["numBranche"],
-            "absDebZone": fmt(zones["absDebZone"]),
-            "absFinZone": fmt(zones["absFinZone"]),
-            "coefLitMin": fmt(zones["coefLitMin"]),
-            "coefLitMaj": fmt(zones["coefLitMaj"]),
-
-        }
-        self.modif_xcas(parametres, name_xcas, folder)
-        return
-
-    def modif_ctrl_law(self, name_law, folder, coefs):
-
-        coef_a = coefs.get('coefA', 1)
-        coef_b = coefs.get('coefB', 0)
-
-        file_law = os.path.join(folder, name_law)
-        file_tmp = os.path.join(folder, f'{name_law}.tmp')
-        shutil.copy2(file_law, file_tmp)
-        filein = open(file_tmp, 'r')
-        with open(file_law, 'w') as fileout:
-            cpt = 1
-            for line in filein:
-                if line.startswith('#'):
-                    fileout.write(line)
-                    continue
-                if cpt == 1:
-                    fileout.write(line)
-                    cpt += 1
-                parts = line.split()
-                if len(parts) >= 2:
-                    parts[1] = round(coef_a * float(parts[1]) + coef_b, 6)
-                    fileout.write(' '.join([str(par) for par in parts]))
-                    fileout.write('\n')
-        filein.close()
-        os.remove(file_tmp)
-
-    def modif_xcas(self, parametres, xcasfile, folder):
+        :param data or list to process.
         """
-        Modify an existing xcas file with new parameters.
-        :param parametres (dict): Parameters to update
-        :param xcasfile (str): xcas filename
-        :param fich_sortie (str): Optional output filename
-        :return: None
-        """
-        fich_entree = os.path.join(folder, xcasfile)
-        arbre = et_parse(fich_entree)
-        racine = arbre.getroot()
-        parent = racine[0].find("parametresCalage")
-        if parent is None:
-            return
-
-        child = parent.find("frottement")
-        if child is None:
-            return
-
-        for param, val in parametres.items():
-            element = child.find(param)
-            if element is None:
-                continue
-
-            # Conversion de la valeur en string appropriée
-            if isinstance(val, dict) and "valeur" in val:
-                nouvelle_valeur = val["valeur"]
-            else:
-                nouvelle_valeur = val
-
-            # Conversion en string selon le type
-            if isinstance(nouvelle_valeur, (list, tuple)):
-                element.text = " ".join(str(v) for v in nouvelle_valeur)
-            else:
-                element.text = str(nouvelle_valeur)
-
-        indent(racine)
-        arbre.write(fich_entree)
-
-    def get_zone_frot(self, xcasfile, folder):
-        """
-        Extract friction zone parameters from an xcas file.
-        :param xcasfile (str): xcas filename
-        :param folder (str): folder path
-        :return: dict with friction zone parameters
-        """
-        fich_entree = os.path.join(folder, xcasfile)
-        arbre = et_parse(fich_entree)
-        racine = arbre.getroot()
-
-        zone = {
-            "loi": None,
-            "nbZone": None,
-            "numBranche": None,
-            "absDebZone": None,
-            "absFinZone": None,
-            "coefLitMin": None,
-            "coefLitMaj": None,
-        }
-
-        parent = racine[0].find("parametresCalage")
-        if parent is None:
-            return zone
-
-        child = parent.find("frottement")
-        if child is None:
-            return zone
-
-        for param in zone.keys():
-            element = child.find(param)
-            if element is not None and element.text:
-                if param in ["coefLitMin", "coefLitMaj"]:
-                    zone[param] = [float(val) for val in element.text.split()]
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if isinstance(value, datetime):
+                    data[key] = value.isoformat()
                 else:
-                    # Conversion appropriée selon le type attendu
-                    text = element.text.strip()
-                    if param == "nbZone":
-                        zone[param] = int(text)
-                    elif param in ["absDebZone", "absFinZone"]:
-                        zone[param] = [float(val) for val in text.split()]
-                    else:
-                        zone[param] = text
-
-        return zone
+                    self._convert_datetime_to_str(value)
+        elif isinstance(data, list):
+            for item in data:
+                self._convert_datetime_to_str(item)
 
     def _create_obs_file(self, path_scen, data_obs, var_obs):
         """
@@ -733,3 +332,5 @@ class ClassAssimDB:
             dict_tmp = {'type': typ_crt, 'formule': f'{code}[t] + {data_obs["zero"][icode]}'}
             dict_obs[code] = dict_tmp
         cl_bc.obs_to_file(dict_obs, var_obs['starttime'], var_obs["endtime"])
+
+

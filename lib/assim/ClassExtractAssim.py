@@ -22,58 +22,64 @@ email                :
 import json
 import os
 import numpy as np
+from pathlib import Path
+from .ClassAssimData import AssimData
 
-
-def get_coords_assim(json_file, masc_xcoords, folder=None):
-    """
-    creation run line in runs table
-    :param json_file: fichier json avec les IDs de zones
-    :param masc_xcoords: cordonnées du modèle mascaret
-    :return:
-    """
-    # self.dict_stations contient en clé un ID de zone à caler, et en valeurs un dico avec
-    # - les coordonnées X des observations associées
-    dict_tempo = {1: {'X': [281.41]}, 2: {'X': [281.41]}}
-    with open(json_file, 'w') as f:
-        json.dump(dict_tempo, f)
-
-    if os.path.exists(json_file):
-        with open(json_file) as f:
-            dict_stations = json.load(f)
-        dict_obs = {}
-        keys = np.array([k for k in dict_stations], dtype=int)
-        for key in keys:
-            for x in dict_stations[str(key)]['X']:
-                coord_obs = np.argmin(np.abs(np.subtract(masc_xcoords, x)))
-                if coord_obs in dict_obs:
-                    dict_obs[coord_obs] = [key]
-                else:
-                    dict_obs[coord_obs].append(key)
-        if folder:
-            with open(folder + 'dico_obs.json', 'w') as f:
-                json.dump(dict_obs, f)
-        return dict_obs, len(keys)
-    else:
-        return False
-
-
-class ClassResultAssim:
+class ClassExtractAssim:
     """Class contain  model files creation and run model mascaret"""
+    ASSIM_FILE = "data_assim.json"
+    def __init__(self, run_path):
 
-    def __init__(self):
 
-        self.assim_dict = None
         self.dictRes = None
         self.num_zones = 0
         self.dict_stations = {}
-        self.is_assim = False
         self.dict_obs = {}
         self.zones = []
+        self.run_path = run_path
+        self.assim_path = self.find_data_assim_path()
+        self.assim_dict = AssimData()
 
-    def get_coords_assim(self, json_file, masc_xcoords, folder=None):
+    def find_data_assim_path(self):
+        """
+        Walk upward in the directory tree starting from `start_path`
+            to locate the directory containing `data_assim.json`.
+        """
+        current = Path(self.run_path).resolve()
+
+        if current.is_file():
+            current = current.parent
+
+        for directory in [current, *current.parents]:
+            data_assim = directory / self.ASSIM_FILE
+            if data_assim.is_file():
+                return directory
+
+        return '.'
+
+    def init_assim(self, masc):
+        size_x = masc.get_var_size("Model.X")[0]
+        xcoords = np.array([masc.get("Model.X", i) for i in range(size_x)])
+        self.get_coords_assim(xcoords)
+        return self.num_zones
+
+    def extract_zq(self, masc, t0):
+        # Periodic assimilation: store Z and Q at observation nodes
+
+            # Saving results for assimilation
+            # TODO if assim ?
+            try:
+                obs_keys = self.dict_obs  # node indices for observation points
+                val_z = [masc.get("State.Z", i) for i in obs_keys]
+                val_q = [masc.get("State.Q", i) for i in obs_keys]
+                self.store_result(val_z, val_q, t0)
+            except Exception as exc:
+                raise ValueError(exc) from exc
+
+
+    def get_coords_assim(self, masc_xcoords):
         """
         creation run line in runs table
-        :param json_file: fichier json avec les IDs de zones
         :param masc_xcoords: cordonnées du modèle mascaret
         :return:
         """
@@ -83,41 +89,33 @@ class ClassResultAssim:
         # dict_tempo = {3: {'X': [83.58]}}
         # with open(json_file, 'w') as f:
         #     json.dump(dict_tempo, f)
+        print(self.assim_path, self.ASSIM_FILE , 'iiiiiiiiii')
+        self.assim_dict.load(self.assim_path,filename=self.ASSIM_FILE)
+        if self.assim_dict.get("ctrlKS") is not None:
+            for dico in self.assim_dict["ctrlKS"]["lst_zone"]:
+                self.dict_stations[str(dico["num_zone"])] = {'X': dico["lst_obs"]["abscissa"],
+                                                             'code': dico["lst_obs"]["code"]}
+                if str(dico["num_zone"]) not in self.zones:
+                    self.zones.append(str(dico["num_zone"]))
+        # self.dict_stations = json.load(f)
+        keys = np.array([k for k in self.dict_stations], dtype=int)
+        for key in keys:
+            for ix, x in enumerate(self.dict_stations[str(key)]['X']):
+                # print(masc_xcoords)
+                index_obs = int(np.argmin(np.abs(np.subtract(masc_xcoords, x)))) + 1
+                code_obs = self.dict_stations[str(key)]['code'][ix]
+                if index_obs not in self.dict_obs:
+                    self.dict_obs[index_obs] = {'id_zone': [int(key)],
+                                                'x_obs': x,
+                                                'code': code_obs}
+                else:
+                    self.dict_obs[index_obs]['id_zone'].append(int(key))
 
-        if os.path.exists(json_file):
-            with open(json_file) as f:
-                self.assim_dict = json.load(f)
-
-            if self.assim_dict.get("ctrlKS") is not None:
-                for dico in self.assim_dict["ctrlKS"]["lst_zone"]:
-                    self.dict_stations[str(dico["num_zone"])] = {'X': dico["lst_obs"]["abscissa"],
-                                                                 'code': dico["lst_obs"]["code"]}
-                    if str(dico["num_zone"]) not in self.zones:
-                        self.zones.append(str(dico["num_zone"]))
-
-
-            # self.dict_stations = json.load(f)
-
-            keys = np.array([k for k in self.dict_stations], dtype=int)
-            for key in keys:
-                for ix, x in enumerate(self.dict_stations[str(key)]['X']):
-                    # print(masc_xcoords)
-                    index_obs = int(np.argmin(np.abs(np.subtract(masc_xcoords, x)))) + 1
-                    code_obs = self.dict_stations[str(key)]['code'][ix]
-                    if index_obs not in self.dict_obs:
-                        self.dict_obs[index_obs] = {'id_zone': [int(key)],
-                                                    'x_obs': x,
-                                                    'code': code_obs}
-                    else:
-                        self.dict_obs[index_obs]['id_zone'].append(int(key))
-
-            if folder:
-                with open(os.path.join(folder, 'dico_obs.json'), 'w') as f:
-                    json.dump(self.dict_obs, f)
-            # return self.dict_obs
-            self.is_assim = True
-            self.num_zones = len(keys)
-            self.build_res_dict()
+        with open(os.path.join(self.run_path, 'dico_obs.json'), 'w') as f:
+            json.dump(self.dict_obs, f)
+        # return self.dict_obs
+        self.build_res_dict()
+        self.num_zones = len(keys)
 
     def build_res_dict(self):
         self.dictRes = {'time': [],
@@ -126,8 +124,6 @@ class ClassResultAssim:
                         'Ksmaj': {n: -99 for n in self.zones},
                         'Ksmin': {n: -99 for n in self.zones}
                         }
-        # print(self.dictRes)
-        self.write_results(r'C:\Users\guillaume.isserty\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\Mascaret\mascaret', 'dictRes.json')
 
     def store_KS_values(self, KSmin, KSmaj):
         """
@@ -175,7 +171,7 @@ class ClassResultAssim:
         :param name: scenario name
         :return:
         """
-        if os.path.exists(folder):
+        if os.path.exists(self.run_path):
             with open(os.path.join(folder, name), 'w') as f:
                 json.dump(self.dictRes, f)
         else:

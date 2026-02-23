@@ -24,7 +24,7 @@ scenario/result deletion for Mascaret runs.
 """
 
 import os
-
+from pathlib import Path
 from qgis.PyQt.QtWidgets import (
     QInputDialog,
     QWidget
@@ -215,7 +215,7 @@ class ClassDictRun:
         return task_params
 
 
-    def get_list_type_instance_assim(self, type_assim, type_init=None):
+    def get_list_type_instance_assim(self, type_assim, type_init=None, type_ana=None):
         """
         Iterates through all scenarios and collects instances whose 'name'
         attribute matches the specified type.
@@ -234,11 +234,19 @@ class ClassDictRun:
             # Get scenario details
             dscen = self.get_scenario(scen)
             for instance in dscen.get("instances", []):
-                if not type_init :
-                    cond = not  instance.get('name', '').endswith("_init")
-                else:
-                    cond = instance.get('name').endswith("_init")
-                if  type_assim == instance.get('type_ctrl') and cond :
+
+                name = instance.get('name', '')
+                ctrl_type = instance.get('type_ctrl')
+
+                # Condition sur _init
+                cond_init = name.endswith("_init")
+                cond = cond_init if type_init else not cond_init
+
+                # Condition sur Analyse
+                cond_ana = name.startswith("Analyse")
+                cond = cond and (cond_ana if type_ana else not cond_ana)
+
+                if cond and type_assim == ctrl_type:
                     #add info scenario or general
                     instance.update({
                         "run_name" : drun.get("name_run"),
@@ -371,6 +379,26 @@ class ClassDictRun:
 
         return d_folder
 
+    def get_event_folder(self, scen):
+        """Return mapping of instance name -> RUN_REP folder for a scenario.
+
+        :param scen: Scenario name.
+        :type scen: str
+        :return: Dict mapping instance names to their RUN_REP path.
+        :rtype: dict
+        """
+        d_scen = self.get_scenario(scen)
+        if not d_scen.get("instances"):
+            return None
+        for instance in d_scen.get("instances"):
+            name = instance.get('name')
+            if not name:
+                continue
+            path_traiter = Path(instance.get("RUN_REP"))
+            if name == 'ref':
+                return path_traiter.parent
+        return None
+
     def get_obs(self, scen):
         """
 
@@ -433,7 +461,6 @@ class ClassDictRun:
                 break
 
         return id_instance
-
 
     def get_instance(self, id_scen, instance_name):
         """Get the index of an instance by name within a scenario.
@@ -640,6 +667,7 @@ class ClassDictRun:
                                             "RUN_REP": os.path.join(folder_run, 'run_init'),
                                             "has_casier": False,
                                             "has_tracer": False,
+                                            "has_assim": False,
                                             "starttime": None,
                                             "order" : order,
                                             })
@@ -649,6 +677,7 @@ class ClassDictRun:
                                         # Update var use in API
                                         "has_casier": drun["has_casier"],
                                         "has_tracer": drun["has_tracer"],
+                                        "has_assim": drun['has_assimilation'],
                                         "starttime": d_scen.get("starttime") if drun['event'] else None ,
                                         "order": order,
                                         })
@@ -659,7 +688,6 @@ class ClassDictRun:
 
                 if self.assim.check_assim_law():
                     d_scen, order = self.assim.lst_instance_run_ctrl_law(drun, d_scen, order)
-
             scenarios.append(d_scen)
         return scenarios
 

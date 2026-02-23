@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
-Name                 : Mascaret
+Name                 : Mascaret – CreatModelAssim façade
 Description          : Pre and Postprocessing for Mascaret for QGIS
 Date                 : June,2017
 copyright            : (C) 2017 by Artelia
@@ -17,91 +17,103 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-
-import os
-import numpy as np
-import shutil
-import json
 from pathlib import Path
-import traceback
-from datetime import datetime
 
-class CreatModelAssim:
-    """Class Assimilation gestion base donneee"""
-    DATA_ASSIM_FILE = "data_assim.json"
-    def __init__(self, mess= None):
-        """Initialize the initializer.
+from .ClassCtrlKS import CtrlKs
+from .ClassCtrlLaw import CtrlLaw
+
+
+class CreatModelAssim(CtrlKs, CtrlLaw):
+    """Façade aggregating :class:`CtrlKs` and :class:`CtrlLaw`.
+
+    Use this class as the single entry point to maintain backward
+    compatibility with existing callers.
+
+    ``self.data`` is an :class:`~assim_data.AssimData` instance, loaded via
+    :meth:`read_data_js`.
+    """
+
+    def __init__(self, mess=None) -> None:
+        """Initialise the aggregated assimilation model.
+
+        :param mess: Optional messaging callable passed to the base class.
         """
-        self.data = {}
-        self.mess=mess
-        self.num_mess = 0
+        super().__init__(mess=mess)
+     
+    def fill_assim_folder(self, type_ctrl):
+        d_scen = self.data.dscen
+        d_folder = self.data.get_folder()
+        path_instance = Path(d_scen.get("path_instance", '.'))
+        path_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
+        
+        if  type_ctrl == "ctrlLaw"   and self.data.get('CtrlKS', False):
+            path_ref = Path(d_folder.get('Analyse_ctrlKS', path_ref))
+             
+        if  d_scen.get("folder_init", '') != '':
+            path_init = path_instance / d_scen.get("folder_ref", 'run_ref') / d_scen.get("folder_init")
+  
+        for name, folder in d_folder.items():
+            if name in ['ref', 'init']:
+                continue
+            elif name.startswith("Analyse"):
+                continue
+            instance = self.data.get_instance(name)
+            if name.endswith('_init'):
+                self.clone_model(path_init, folder)
+            else:
+                self.clone_model(path_ref, folder)
 
+            if 'ctrlKS' == instance.get('type_ctrl', '') and not name.startswith("Analyse"):
+                self.fill_assim_folder_ks(instance, folder)
 
-    def add_info(self, txt):
-        if self.mess:
-            self.mess('clAssim{}'.format(self.num_mess), 'info', txt)
-            self.num_mess += 1
-        else:
-            print(txt)
+            if 'ctrlLaw' == instance.get('type_ctrl', '') and not name.startswith("Analyse"):
+                self.fill_assim_folder_law(instance, folder)
 
-    def clone_model(self, source_folder=None, target_folder=None):
-        """Copy initialization files from source to target folder.
-        :return: True if operation succeeded, False otherwise.
-        :rtype: bool
+    def fill_analyse(self, type_ctrl):
+        """Placeholder: fill analysis folder for Ks assimilation.
+
+        .. todo:: Implement folder filling logic.
         """
-        ignore = ['.opt', '.lis']
-        source = Path(source_folder)
-        target = Path(target_folder)
+        pass
+        # d_scen = self.data.dscen
+        # d_folder = self.data.get_folder()
+        # path_instance = Path(d_scen.get("path_instance", '.'))
+        # path_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
         #
-        # # Validate source folder
-        if not source.exists() or not source.is_dir():
-            self.add_info(f"Invalid source folder: {source}")
-            return False
+        # if type_ctrl == "ctrlLaw" and self.data.get('CtrlKS', False):
+        #     path_ref = Path(d_folder.get('Analyse_ctrlKS', path_ref))
         #
-        # # Validate target folder
-        if not target.exists() or not target.is_dir():
-            self.add_info(f"Invalid target folder: {target}")
-            return False
+        # if d_scen.get("folder_init", '') != '':
+        #     path_init = path_instance / d_scen.get("folder_ref", 'run_ref') / d_scen.get("folder_init")
+        #
+        # for name, folder in d_folder.items():
+        #     if not name.startswith("Analyse"):
+        #         continue
+        #     instance = self.data.get_instance(name)
+        #     if name.endswith('_init'):
+        #         self.clone_model(path_init, folder)
+        #     else:
+        #         self.clone_model(path_ref, folder)
+        #
+        #     if 'ctrlKS' == instance.get('type_ctrl', '') and not name.startswith("Analyse"):
+        #         self.fill_folder_ana_ks(instance, folder)
+        #
+        #     if 'ctrlLaw' == instance.get('type_ctrl', '') and not name.startswith("Analyse"):
+        #         self.fill_folder_ana_law(instance, folder)
 
-        copied_count = 0
-        for file_path in source.iterdir():
-            if not file_path.is_file():
-                continue
 
-        #     # Check if file has a valid suffix
-            if file_path.suffix in ignore:
-                continue
-            try:
-                target_path = target / file_path.name
-                shutil.copy2(file_path, target_path)  # copy2 preserves metadata
-                copied_count += 1
-            except Exception as e:
-                self.add_info(
-                    f"Failed to copy file '{file_path.name}': {str(e)}",
-                )
-        return True
+# ---------------------------------------------------------------------------
+# Quick smoke-test
+# ---------------------------------------------------------------------------
 
-    def read_data_js(self, filein=None):
-        
-        filein = filein or self.DATA_ASSIM_FILE
-        
+if __name__ == "__main__":
+    assimil = CreatModelAssim()
+    assimil.read_data_js(".", "data_assim.json")
 
-        with open(filein, "r") as file:
-            self.data = json.load(file)
+    print(assimil.data)          # AssimData(file=..., sections=[...])
+    print(assimil.data.dscen)    # scenario dict
+    print(assimil.data.drun)     # run config dict
+    assimil.lst_instance_run_ctrlks_js()
+    assimil.lst_instance_run_ctrl_law_js()
+    assimil.fill_assim_folder(type_ctrl='ctrlLaw')
 
-        # Convertir les starttime en datetime
-        self.convert_starttime(self.data.get('instance', []))
-
-        if self.data.get('generate_instance'):
-            dscen = self.data['generate_instance'].get('dscen')
-            if dscen:
-                self.convert_starttime([dscen])
-
-    def convert_starttime(self, instances):
-        """Convertit les starttime ISO en objets datetime"""
-        for instance in instances:
-            if instance.get("starttime"):
-                try:
-                    instance["starttime"] = datetime.fromisoformat(instance["starttime"])
-                except ValueError:
-                    pass

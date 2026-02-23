@@ -103,11 +103,11 @@ class ClassInitializeModel:
                 self.box.critic(f"Simulation {scen} aborted.")
                 # TODO: Decide whether to stop if one scenario fails
             if self.drun.get("has_assimilation"):
-                self.obj_model.assim.fill_assim_folder(ids, scen, self.obj_model)
+                self.obj_model.assim.gen_obs_and_data(scen, self.obj_model)
+                #self.obj_model.assim.fill_assim_folder(ids, scen, self.obj_model)
                 pass
 
         self.obj_model.del_lscenar(lst_idx_del)
-
 
     def generate_models_folders(self):
         """Create run folder structure and copy template and binary files to instances.

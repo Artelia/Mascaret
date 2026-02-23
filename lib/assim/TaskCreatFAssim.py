@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 /***************************************************************************
 Name                 : Mascaret
@@ -22,56 +23,69 @@ collects results and emits signals in the original submission order.
 
 """
 import concurrent.futures
-import json
 import os
 import subprocess
 import time
 import pprint
-
 from qgis.core import Qgis, QgsMessageLog, QgsTask
-from qgis.PyQt.QtCore import pyqtSignal,QObject
+from qgis.PyQt.QtCore import pyqtSignal, QObject
 
-from .ClassBLUE import classBLUE
-from .ClassMatrix import ClassMatrix
+from .ClassCreatModelAssim import CreatModelAssim
 
-MESSAGE_CATEGORY = 'TaskBlue'
+MESSAGE_CATEGORY = 'TaskCreatFAssim'
+
 
 class TaskSignals(QObject):
     model_completed = pyqtSignal(int, dict)
     launch_completed = pyqtSignal(bool)
 
-class TaskBLUE(QgsTask):
-    def __init__(self, description, base_folder):
-        try:
-            super().__init__(description, QgsTask.CanCancel)
 
-            self.base_folder = base_folder
-            self.executor = None
-            self.error_txt = ''
-            self.signal = TaskSignals()
-            self.total_models = 0
-            self.next_to_submit = 0
-            self.scens = []
-            self.max_workers = 1
-            self.running_futures = {}
-        except Exception as e:
-            print(e)
-            raise ValueError(e)
+class TaskCreatFAssim(QgsTask):
 
+    def __init__(self, description, scens, type_ctrl, base_folder='.', max_workers=None):
+        """Initialize TaskCreatFAssim.
 
-    def update_params(self, scens):
+        :param description: Description string for the QGIS task.
+        :param task_params: List of dictionaries with model parameters.
+        :param max_workers: Maximum number of concurrent worker threads (optional).
+        """
+
+        super().__init__(description, QgsTask.CanCancel)
+        self.signal = TaskSignals()
+
+        self.scens = scens
+        self.base_folder = base_folder
+        self.type_ctrl = type_ctrl
+
+        self.exc_start_time = None
+        self.error_txt = ''
+
+        # Configure thread-based parallelism
+        if max_workers is None:
+            max_workers = min(len(scens), (os.cpu_count() or 1))
+        self.max_workers = max_workers
+
+        # Ordered queue management
+        self.running_futures = {}  # {index: future}
+        self.completed_results = {}  # {index: result}
+        self.next_to_process = 0  # Next index to process (in-order emission)
+        self.next_to_submit = 0  # Next index to submit to executor
+        self.total_models = len(scens)
+        self.completed_count = 0
+        self.executor = None
+
+    def update_params(self, scens, max_workers=None):
         """Update the task parameters and optionally max_workers.
 
         :param task_params: New list of model parameter dicts.
         :param max_workers: New maximum number of parallel workers (optional).
         :return: None
         """
-        # self.task_params = task_params
         self.scens = scens
-        self.total_models = len(self.scens)
-        # if max_workers is None:
-        #     max_workers = min(len(task_params), (os.cpu_count() or 1) * 2)
-        # self.max_workers = max_workers
+        self.total_models = len(scens)
+        if max_workers is None:
+            max_workers = min(len(scens), (os.cpu_count() or 1) * 2)
+        self.max_workers = max_workers
 
     def _submit_next_model(self):
         """Submit the next model to the thread pool if possible.
@@ -85,16 +99,16 @@ class TaskBLUE(QgsTask):
             return False
 
         index = self.next_to_submit
-        scen = self.scens[index]
 
+        scen = self.scens[index]
         # Submit the model to the thread pool
-        future = self.executor.submit(self.run_blue, scen)
+        future = self.executor.submit(self.creat_assim_folder, scen)
         self.running_futures[index] = future
 
         self.next_to_submit += 1
 
         self.on_message(
-            f"Calculating blue for scenario (#{index + 1}/{self.total_models}) "
+            f"Launching model (#{index + 1}/{self.total_models}) "
             f"[{len(self.running_futures)}/{self.max_workers} workers active]"
         )
 
@@ -114,72 +128,25 @@ class TaskBLUE(QgsTask):
 
             self.next_to_process += 1
 
-    def run_blue(self, scen):
-        # M = ClassMatrix(self.base_folder)
-        # M.build_all_matrix()
-        print('in_run_blue')
-        path_scen = os.path.join(self.base_folder, scen)
-        results = {
-            'scen': scen,
-            'success': False,
-            'output': '',
-            'error': '',
-            'start_time': time.time(),
-            'path_run': path_scen,
-        }
-        print('in run_blue', results)
-        print(path_scen)
-        try:
-            script_dir = os.path.dirname(__file__)
-            os.chdir(os.path.join(script_dir,"..", "assim"))
-
-            process = subprocess.run(
-                ["python", "ClassBLUE.py", path_scen],
-                shell=True,
-                text=True,
-                check=True,
-                capture_output=True
-            )
-            # print(process.stdout, 'uuu')
-            results.update({
-                'success': True,
-                'output': process.stdout,
-                'error': process.stderr,
-                'execution_time': time.time() - results['start_time'],
-            })
-            # try:
-            #     Blue = classBLUE(os.path.join(self.base_folder, scen))
-            # except Exception as e:
-            #     results['error'] += e
-            # Blue.compute_BLUE()
-            # Blue.store_results()
-            # results['success'] = True
-            # pprint.pp(results)
-
-        except subprocess.CalledProcessError as e:
-            results['error'] = f"Process failed with exit code {e.returncode}: {e.stderr}"
-            results['execution_time'] = time.time() - results['start_time']
-        except Exception as e:
-            results['error'] = f"Unexpected error: {str(e)}"
-            results['execution_time'] = time.time() - results['start_time']
-
-        pprint.pp(results)
-
-        return results
-        # pass
-
     def run(self):
+        """Main task execution method - runs multiple models in parallel using threads.
+
+        :return: True if task completed successfully, False otherwise.
+        """
+        self.exc_start_time = time.time()
+
         try:
             # Create the thread pool executor
             self.executor = concurrent.futures.ThreadPoolExecutor(
-                max_workers=1
+                max_workers=self.max_workers
             )
+
             self.on_message(
-                f"Starting BLUE calculation for assimilation"
+                f"Starting {self.total_models} models with {self.max_workers} parallel workers (threads)"
             )
+
             # Submit the initial workers
             for _ in range(min(self.max_workers, self.total_models)):
-                # Dans submit_next_model est fait le run_blue
                 self._submit_next_model()
 
             # Main loop: process results as they complete
@@ -197,7 +164,6 @@ class TaskBLUE(QgsTask):
 
                         try:
                             result = future.result()
-                            print(result)
 
                             # Store the result
                             self.completed_results[index] = result
@@ -207,16 +173,16 @@ class TaskBLUE(QgsTask):
                             self.on_progress(self.completed_count, self.total_models)
 
                             # Base message
-                            # model_id = result.get('model_id', index)
+
                             if result['success']:
                                 self.on_message(
-                                    f"Scenario {result['scen']} :\n"
-                                    "Blue calculation done in "
+                                    f"{result.get('output', '')}\n"
+                                    f"Creation folder completed for {result.get('scenario', '***')}."
                                     f"{result.get('execution_time', 0):.1f}s"
                                 )
                             else:
-                                self.error_txt += f"\nProblem with blue calculation: {result['error']}"
-                                self.on_message(f"Problem with blue calculation:")
+                                self.error_txt += f"\nScenario {result.get('scenario', '***')}({index + 1}): {result['error']}"
+                                self.on_message(f"Scenario {result.get('scenario', '***')} (#{index + 1}) failed")
 
                             # Process results in order
                             self._process_completed_results()
@@ -231,15 +197,18 @@ class TaskBLUE(QgsTask):
                     # Submit the next model if available
                     self._submit_next_model()
 
-                # Ensure all results are processed
-                self._process_completed_results()
+                # Small sleep to avoid CPU spin
+                time.sleep(0.05)
 
-                # Shutdown the pool cleanly
-                self.executor.shutdown(wait=True)
-                QgsMessageLog.logMessage(f"END Run {not bool(self.error_txt)} {self.error_txt}",
-                                         MESSAGE_CATEGORY, Qgis.Info)
-                self.signal.launch_completed.emit(not bool(self.error_txt))
-                return not bool(self.error_txt)
+            # Ensure all results are processed
+            self._process_completed_results()
+
+            # Shutdown the pool cleanly
+            self.executor.shutdown(wait=True)
+            QgsMessageLog.logMessage(f"END Run {not bool(self.error_txt)} {self.error_txt}", MESSAGE_CATEGORY,
+                                     Qgis.Info)
+            self.signal.launch_completed.emit(not bool(self.error_txt))
+            return not bool(self.error_txt)
 
         except Exception as e:
             self.error_txt = f"Task failed: {str(e)}"
@@ -275,7 +244,7 @@ class TaskBLUE(QgsTask):
         :type message: str
         :return: None
         """
-        QgsMessageLog.logMessage(message, 'TaskMascaret', Qgis.Info)
+        QgsMessageLog.logMessage(message, MESSAGE_CATEGORY, Qgis.Info)
 
     def on_progress(self, completed, total):
         """Callback for progress updates.
@@ -289,6 +258,43 @@ class TaskBLUE(QgsTask):
         percentage = (completed / total) * 100 if total > 0 else 0
         QgsMessageLog.logMessage(
             f"Progress: {completed}/{total} models ({percentage:.1f}%)",
-            'TaskMascaret',
+            MESSAGE_CATEGORY,
             Qgis.Info
         )
+
+    def creat_assim_folder(self, scen):
+        """Run a single Mascaret model instance (thread worker).
+
+        :param params: Dictionary containing model parameters.
+        :param index: Index of the model in the task list.
+        :return: dict containing model results, outputs, errors and timing.
+        """
+        path_scen = os.path.join(self.base_folder, scen)
+        results = {
+            'scenario': scen,
+            'success': False,
+            'output': '',
+            'error': '',
+            'start_time': time.time(),
+            'path_run': path_scen
+        }
+
+        if not os.path.isdir(path_scen):
+            results['error'] = f"Process failed because the folder is not found: {path_scen}"
+            results['execution_time'] = time.time() - results['start_time']
+        try:
+            assimil = CreatModelAssim()
+            assimil.read_data_js(path_scen, "data_assim.json")
+            if self.type_ctrl == 'ctrlKS' :
+                assimil.lst_instance_run_ctrlks_js()
+            else:
+                assimil.lst_instance_run_ctrl_law_js()
+            assimil.fill_assim_folder(type_ctrl=self.type_ctrl)
+            results['success'] = True
+        except subprocess.CalledProcessError as e:
+            results['error'] = f"Process failed with exit code {e.returncode}: {e.stderr}"
+        except Exception as e:
+            results['error'] = f"Unexpected error: {str(e)}"
+        results['execution_time'] = time.time() - results['start_time']
+        pprint.pp(results)
+        return results

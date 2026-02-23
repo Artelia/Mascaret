@@ -33,9 +33,10 @@ from .ClassInitializeModel import ClassInitializeModel
 from .ClassDictRun import ClassDictRun
 from .ClassRunUIDialog import ClassRunUIDialog
 
+
 from .TaskMascaret import TaskMascaret
 from ..assim.TaskBLUE import TaskBLUE
-
+from ..assim.TaskCreatFAssim import TaskCreatFAssim
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
@@ -57,7 +58,7 @@ class ClassMascaret:
         self.task_ref= None
         self.limit_core = 1
         self.max_retries = 5
-        self.use_task = True
+        self.use_task = False
         self.task_blue = None
 
     def mascaret_ui(self):
@@ -98,12 +99,14 @@ class ClassMascaret:
         self.task_queue.append('ref')  # Toujours exécuter ref ?
 
         if drun['has_assimilation']:
+            self.task_queue.append('ctrl_ks_creat')
             if drun['has_run_init']:
                 self.task_queue.append('ctrl_ks_init')
             self.task_queue.append('ctrl_ks_perturb')
             self.task_queue.append('ctrl_ks_blue')
 
         if drun['has_assimilation']:
+            self.task_queue.append('ctrl_law_creat')
             if drun['has_run_init']:
                 self.task_queue.append('ctrl_law_init')
             self.task_queue.append('ctrl_law_perturb')
@@ -176,10 +179,37 @@ class ClassMascaret:
                 QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
                 self.process_next_task()
 
+    def launch_ctrl_ks_creat(self):
+        print(' Creating CtrlKS Folder *************')
+        scens = self.obj_model.get_list_name_scenario()
+        base_folder = self.obj_model.dmodel["general"]["path_runs"]
+        description = "Execution of Creating CtrlKS Folder"
+        self.task_creat_fassim = TaskCreatFAssim(
+            description=description,
+            scens=scens,
+            type_ctrl = 'ctrlKS',
+            base_folder = base_folder,
+            max_workers=self.limit_core,
+        )
+
+        if not self.use_task:
+            for scen in scens:
+                results = self.task_creat_fassim.creat_assim_folder(scen)
+            self.process_next_task()
+        else:
+
+            # Connecter les signaux
+            self.task_creat_fassim.taskCompleted.connect(lambda: self.on_task_completed('ctrlKS_creat_folder'))
+            self.task_creat_fassim.taskTerminated.connect(lambda: self.on_task_failed('ctrlKS_creat_folder'))
+            task_id = self.launch_task(self.task_creat_fassim, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                self.process_next_task()
+
     def launch_ctrl_ks_init_task(self):
         print('Run Assime Ctrl Ks init *************')
         task_params = self.obj_model.get_list_type_instance_assim("ctrlKS", type_init=True)
-
         if not task_params:
             QgsMessageLog.logMessage("No 'CtrlKs init' model to run.", 'TaskMascaret', Qgis.Warning)
             # Passer à la suivante même si pas de modèle ref
@@ -344,6 +374,34 @@ class ClassMascaret:
 
         pass
 
+    def launch_ctrl_law_creat(self):
+        print(' Creating CtrlLaw Folder *************')
+        scens = self.obj_model.get_list_name_scenario()
+        base_folder = self.obj_model.dmodel["general"]["path_runs"]
+        description = "Execution of Creating Ctrl_Law Folder"
+        self.task_creat_fassim = TaskCreatFAssim(
+            description=description,
+            scens=scens,
+            type_ctrl = 'ctrlLaw',
+            base_folder = base_folder,
+            max_workers=self.limit_core,
+        )
+
+        if not self.use_task:
+            for scen in enumerate(scens):
+                results = self.task_creat_fassim.run_model(scen)
+            self.process_next_task()
+        else:
+
+            # Connecter les signaux
+            self.task_creat_fassim.taskCompleted.connect(lambda: self.on_task_completed('ctrlLaw_creat_folder'))
+            self.task_creat_fassim.taskTerminated.connect(lambda: self.on_task_failed('ctrlLaw_creat_folder'))
+            task_id = self.launch_task(self.task_creat_fassim, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                self.process_next_task()
+
     def launch_ctrl_law_init_task(self):
         print('Run Assime CtrlLaw init *************')
         task_params = self.obj_model.get_list_type_instance_assim("ctrlLaw", type_init=True)
@@ -505,12 +563,16 @@ class ClassMascaret:
             self.launch_init_task()
         elif next_task_type == 'ref':
             self.launch_ref_task()
+        elif next_task_type == 'ctrl_ks_creat':
+            self.launch_ctrl_ks_creat()
         elif next_task_type == 'ctrl_ks_init':
             self.launch_ctrl_ks_init_task()
         elif next_task_type == 'ctrl_ks_perturb':
             self.launch_ctrl_ks_pertub_task()
         elif next_task_type == 'ctrl_ks_blue':
             self.launch_ctrl_ks_BLUE()
+        elif next_task_type == 'ctrl_law_creat':
+            self.launch_ctrl_law_creat()
         elif next_task_type == 'ctrl_ks_ana_init':
             pass
             # self.launch_ctrl_analyse_init()
@@ -518,7 +580,6 @@ class ClassMascaret:
             pass
             # self.launch_ctrl_analyse()
         elif next_task_type == 'ctrl_law_init':
-            #TODO si ctrl_ks avant ctrl_law ref est ctrl_ks
             self.launch_ctrl_law_init_task()
         elif next_task_type == 'ctrl_law_perturb':
             self.launch_ctrl_law_pertub_task()
