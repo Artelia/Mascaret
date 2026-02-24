@@ -45,6 +45,8 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         d_folder = self.data.get_folder()
         path_instance = Path(d_scen.get("path_instance", '.'))
         path_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
+
+
         path_init = None
         if  type_ctrl == "ctrlLaw"   and self.data.get('CtrlKS', False):
             path_ref = Path(d_folder.get('Analyse_ctrlKS', path_ref))
@@ -53,17 +55,22 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
             path_init = path_instance / d_scen.get("folder_ref", 'run_ref') / d_scen.get("folder_init")
   
         for name, folder in d_folder.items():
+            print(name.startswith("Analyse") , if_analyse , name)
             if name in ['ref', 'init']:
                 continue
             if name.startswith("Analyse") != if_analyse:
                 continue
 
             instance = self.data.get_instance(name)
-            clone_source = path_init if name.endswith('_init') and path_init else path_ref
-            self.clone_model(clone_source, folder)
 
+            clone_source = path_init  if name.endswith('_init') and path_init  else path_ref
+
+            print(name,clone_source)
+            self.clone_model(clone_source, folder)
+            print( if_analyse, instance.get('type_ctrl', ''))
             if 'ctrlKS' == instance.get('type_ctrl', ''):
                 if if_analyse :
+                    print('oooooooooooooooooooooooooo')
                     self.fill_ana_folder_ks(instance, folder)
                 else:
                     self.fill_assim_folder_ks(instance, folder)
@@ -74,7 +81,7 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
                 else:
                     self.fill_assim_folder_law(instance, folder)
 
-
+        print('**************  FIN   ********************')
 
 
 # ---------------------------------------------------------------------------

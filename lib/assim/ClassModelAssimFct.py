@@ -265,7 +265,8 @@ class ModelAssimBase:
     # ------------------------------------------------------------------
 
     def build_analyse_instance(
-        self, drun, d_scen, order, type_assim
+        self, drun, d_scen, order, type_assim,   xcas_file,
+        xcas_file_init
     ):
         """Append analysis-run instance entries to *d_scen*.
 
@@ -280,6 +281,7 @@ class ModelAssimBase:
         if drun["has_run_init"]:
             d_scen["instances"].append({
                 "name": f"Analyse_{type_assim}_init",
+                "name_xcas": xcas_file_init,
                 "RUN_REP": os.path.join(folder_run, "run_init"),
                 "has_casier": False,
                 "has_tracer": False,
@@ -291,6 +293,7 @@ class ModelAssimBase:
 
         d_scen["instances"].append({
             "name": f"Analyse_{type_assim}",
+            "name_xcas": xcas_file,
             "RUN_REP": folder_run,
             "has_casier": drun["has_casier"],
             "has_tracer": drun["has_tracer"],

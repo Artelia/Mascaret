@@ -260,7 +260,10 @@ class ClassAssimDB:
             xcas_file=self.XCAS_FILE,
             xcas_file_init=self.XCAS_FILE_INIT,
         )
-        d_scen, order = self.cl_creat_assim.build_analyse_instance(d_run, d_scen, order, type_assim='ctrlKS')
+        d_scen, order = self.cl_creat_assim.build_analyse_instance(d_run, d_scen, order, type_assim='ctrlKS',
+                                                                   xcas_file=self.XCAS_FILE,
+                                                                   xcas_file_init=self.XCAS_FILE_INIT,
+                                                                   )
         self.add_data_dgenerate(d_run, d_scen)
         return d_scen, order
 
@@ -274,7 +277,10 @@ class ClassAssimDB:
                                                 xcas_file=self.XCAS_FILE,
                                                 xcas_file_init=self.XCAS_FILE_INIT,
                                                 )
-        d_scen, order = self.cl_creat_assim.build_analyse_instance(d_run, d_scen, order, type_assim='ctrlLaw')
+        d_scen, order = self.cl_creat_assim.build_analyse_instance(d_run, d_scen, order, type_assim='ctrlLaw',
+                                                                   xcas_file=self.XCAS_FILE,
+                                                                   xcas_file_init=self.XCAS_FILE_INIT,
+                                                                   )
         self.add_data_dgenerate(d_run, d_scen)
         return d_scen, order
 

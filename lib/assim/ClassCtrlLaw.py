@@ -142,13 +142,13 @@ class CtrlLaw(ModelAssimBase):
     # ------------------------------------------------------------------
 
     def build_ctrl_law_instance(
-        self,
-        lst_case,
-        d_run,
-        d_scen,
-        order,
-        xcas_file,
-        xcas_file_init,
+            self,
+            lst_case,
+            d_run,
+            d_scen,
+            order,
+            xcas_file,
+            xcas_file_init,
     ):
         """Append ctrlLaw run-instance entries to *d_scen*.
 
@@ -226,10 +226,13 @@ class CtrlLaw(ModelAssimBase):
         lst_case, _ = self.get_list_cas_law(self.data.raw)
         d_scen, order = self.build_ctrl_law_instance(
             lst_case, d_run, d_scen, order,
-            xcas_file = d_scen.get("name_xcas", "mascaret.xcas"),
-            xcas_file_init = d_scen.get("name_xcas_init", "mascaret_init.xcas"),
+            xcas_file=d_scen.get("name_xcas", "mascaret.xcas"),
+            xcas_file_init=d_scen.get("name_xcas_init", "mascaret_init.xcas"),
         )
-        d_scen, order = self.build_analyse_instance(d_run, d_scen, order, type_assim="ctrlLaw")
+        d_scen, order = self.build_analyse_instance(d_run, d_scen, order, type_assim="ctrlLaw",
+                                                    xcas_file=self.XCAS_FILE,
+                                                    xcas_file_init=self.XCAS_FILE_INIT
+                                                    )
 
         self.data.dscen = d_scen
         self.export_data_json()
