@@ -218,30 +218,6 @@ class TaskMascaret(QgsTask):
             self.signal.launch_completed.emit(False)
             return False
 
-    # def finished(self, result):
-    #     """Called when task is completed.
-    #
-    #     :param result: True if task was successful, False otherwise.
-    #     :return: None
-    #     """
-    #     pass
-    #     # execution_time = time.time() - self.exc_start_time
-    #     # if result:
-    #     #     message = (
-    #     #         f'  Task "{self.description}" completed successfully\n'
-    #     #         f'  Models processed: {self.completed_count}/{self.total_models}\n'
-    #     #         f'  Total execution time: {execution_time:.2f}s\n'
-    #     #         f'  Average per model: {execution_time / max(self.completed_count, 1):.2f}s'
-    #     #     )
-    #     #     QgsMessageLog.logMessage(message, MESSAGE_CATEGORY, Qgis.Success)
-    #     # else:
-    #     #     message = (
-    #     #         f'  Task "{self.description}" failed\n'
-    #     #         f'{self.error_txt}\n'
-    #     #         f'  Models completed: {self.completed_count}/{self.total_models}\n'
-    #     #         f'  Total execution time: {execution_time:.2f}s'
-    #     #     )
-    #     #     QgsMessageLog.logMessage(message, MESSAGE_CATEGORY, Qgis.Critical)
 
     def cancel(self):
         """Cancel the task execution and log a summary.
@@ -290,7 +266,6 @@ class TaskMascaret(QgsTask):
             Qgis.Info
         )
 
-
     def create_json_param(self, folder, filname, params):
         # Create parameter input file (with index to avoid conflicts)
         param_file = os.path.join(folder,filname)
@@ -305,13 +280,6 @@ class TaskMascaret(QgsTask):
         d_json = {key : item for key, item in params.items() if key in lst_param_api}
         with open(param_file, 'w') as fp:
             json.dump(d_json, fp)
-        return param_file
-
-    def create_json_assim(self, folder, filname, params):
-        # Create parameter input file (with index to avoid conflicts)
-        param_file = os.path.join(folder, '..',filname)
-        with open(param_file, 'w') as fp:
-            json.dump(params, fp)
         return param_file
 
     def run_model(self, params, index):
@@ -357,11 +325,6 @@ class TaskMascaret(QgsTask):
             })
             pprint.pp(results)
 
-            # try:
-            #     if os.path.exists(param_file):
-            #         os.remove(param_file)
-            # except OSError as e:
-            #     results['error'] += f"\nWarning: Could not remove temp file: {e}"
 
             ## Check if API ran successfully
             if results['success']:

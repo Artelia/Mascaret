@@ -144,7 +144,6 @@ class TaskBLUE(QgsTask):
                 'success': True,
                 'output': process.stdout,
                 'error': process.stderr,
-                'execution_time': time.time() - results['start_time'],
             })
             # try:
             #     Blue = classBLUE(os.path.join(self.base_folder, scen))
@@ -157,15 +156,13 @@ class TaskBLUE(QgsTask):
 
         except subprocess.CalledProcessError as e:
             results['error'] = f"Process failed with exit code {e.returncode}: {e.stderr}"
-            results['execution_time'] = time.time() - results['start_time']
         except Exception as e:
             results['error'] = f"Unexpected error: {str(e)}"
-            results['execution_time'] = time.time() - results['start_time']
 
+        results['execution_time'] = time.time() - results['start_time']
         pprint.pp(results)
 
         return results
-        # pass
 
     def run(self):
         try:

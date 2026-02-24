@@ -95,68 +95,46 @@ class ClassMascaret:
         # Construire la séquence de tasks nécessaires
         if drun['has_run_init']:
             self.task_queue.append('init')
-
         self.task_queue.append('ref')  # Toujours exécuter ref ?
 
+        # Assimilation Control Ks *************
         if drun['has_assimilation']:
             self.task_queue.append('ctrl_ks_creat')
             if drun['has_run_init']:
                 self.task_queue.append('ctrl_ks_init')
             self.task_queue.append('ctrl_ks_perturb')
             self.task_queue.append('ctrl_ks_blue')
+            self.task_queue.append('ctrl_ks_creat_ana')
+            if drun['has_run_init']:
+                self.task_queue.append('ctrl_ks_ana_init')
+            self.task_queue.append('ctrl_ks_ana')
 
+        # Assimilation Control Law *************
         if drun['has_assimilation']:
             self.task_queue.append('ctrl_law_creat')
             if drun['has_run_init']:
                 self.task_queue.append('ctrl_law_init')
             self.task_queue.append('ctrl_law_perturb')
             self.task_queue.append('ctrl_law_blue')
-
-        # # Ajouter conditionnellement la 3ème task
-        # if self.should_run_third_task():  # Votre condition
-        #     self.task_queue.append('third')
+            self.task_queue.append('ctrl_law_creat_ana')
+            if drun['has_run_init']:
+                self.task_queue.append('ctrl_law_ana_init')
+            self.task_queue.append('ctrl_law_ana')
 
         # Lancer la première task de la queue
         self.process_next_task()
 
-    def launch_init_task(self):
-        print("Run Init*************")
-        task_params_init = self.obj_model.get_list_type_instance('init')
-        description = "Mascaret Models Execution, 'init'"
-
-        self.task_init = TaskMascaret(
-            description=description,
-            task_params=task_params_init,
-            max_workers=self.limit_core,
-            database=self.mdb,
-        )
-
-        if not self.use_task:
-            for idx, param in enumerate(task_params_init):
-                results = self.task_init.run_model(param, idx)
-            # Passer directement à la suivante
-            self.process_next_task()
-        else:
-            self.task_init.taskCompleted.connect(lambda: self.on_task_completed('init'))
-            self.task_init.taskTerminated.connect(lambda: self.on_task_failed('init'))
-
-            task_id = self.launch_task(self.task_init, description)
-
-            if not task_id:
-                QgsMessageLog.logMessage("Init task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
-                self.process_next_task()
-
-    def launch_ref_task(self):
-        print('Run Ref*************')
-        task_params_ref = self.obj_model.get_list_type_instance('ref')
+    def launch_ref_task(self, type_='ref'):
+        print(f'Run {type_} *************')
+        task_params_ref = self.obj_model.get_list_type_instance(type_)
 
         if not task_params_ref:
-            QgsMessageLog.logMessage("No 'ref' model to run.", 'TaskMascaret', Qgis.Warning)
+            QgsMessageLog.logMessage(f"No '{type_}' model to run.", 'TaskMascaret', Qgis.Warning)
             # Passer à la suivante même si pas de modèle ref
             self.process_next_task()
             return
 
-        description = "Mascaret Models Execution, 'ref'"
+        description = f"Mascaret Models Execution, '{type_}'"
         self.task_ref = TaskMascaret(
             description=description,
             task_params=task_params_ref,
@@ -171,52 +149,126 @@ class ClassMascaret:
         else:
 
             # Connecter les signaux
-            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed('ref'))
-            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed('ref'))
+            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(type_))
+            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(type_))
             task_id = self.launch_task(self.task_ref, description)
 
             if not task_id:
-                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                QgsMessageLog.logMessage(f"{type_} task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
                 self.process_next_task()
 
-    def launch_ctrl_ks_creat(self):
-        print(' Creating CtrlKS Folder *************')
+    def launch_ctrl_creat(self, type_ctrl_creat):
+        CONFIG = {
+            'ctrlLaw_creat_folder': ("Creating CtrlLaw Folder", 'ctrlLaw', False),
+            'ctrlKS_creat_folder': ("Creating CtrlKS Folder", 'ctrlKS', False),
+            'ctrlKS_creat_analyse': ("Creating Analyse CtrlKS Folder", 'ctrlKS', True),
+            'ctrlLaw_creat_analyse': ("Creating Analyse CtrlLaw Folder", 'ctrlLaw', False),
+        }
+
+        label, type_ctrl, if_analyse = CONFIG[type_ctrl_creat]
+        print(f' {label} *************')
+        description = f"Execution of {label}"
+
         scens = self.obj_model.get_list_name_scenario()
         base_folder = self.obj_model.dmodel["general"]["path_runs"]
-        description = "Execution of Creating CtrlKS Folder"
+
         self.task_creat_fassim = TaskCreatFAssim(
             description=description,
             scens=scens,
-            type_ctrl = 'ctrlKS',
-            base_folder = base_folder,
+            type_ctrl=type_ctrl,
+            if_analyse=if_analyse,
+            base_folder=base_folder,
             max_workers=self.limit_core,
         )
 
         if not self.use_task:
             for scen in scens:
-                results = self.task_creat_fassim.creat_assim_folder(scen)
+                self.task_creat_fassim.creat_assim_folder(scen)
             self.process_next_task()
         else:
-
-            # Connecter les signaux
-            self.task_creat_fassim.taskCompleted.connect(lambda: self.on_task_completed('ctrlKS_creat_folder'))
-            self.task_creat_fassim.taskTerminated.connect(lambda: self.on_task_failed('ctrlKS_creat_folder'))
+            self.task_creat_fassim.taskCompleted.connect(lambda: self.on_task_completed(type_ctrl_creat))
+            self.task_creat_fassim.taskTerminated.connect(lambda: self.on_task_failed(type_ctrl_creat))
             task_id = self.launch_task(self.task_creat_fassim, description)
 
             if not task_id:
-                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                QgsMessageLog.logMessage("Create folder task failed to launch, skipping...", 'TaskMascaret',
+                                         Qgis.Warning)
                 self.process_next_task()
 
-    def launch_ctrl_ks_init_task(self):
-        print('Run Assime Ctrl Ks init *************')
-        task_params = self.obj_model.get_list_type_instance_assim("ctrlKS", type_init=True)
+    def launch_ctrl_task(self, type_ctrl, type_init=False, if_analyse=False):
+        CONFIG = {
+            # (type_ctrl, type_init, if_analyse)
+            ('ctrlKS', False, False): (
+            "Mascaret Execution – CtrlKS Perturbation", 'ctrlKS_pertub', 'CtrlKS Perturbation',
+            'Run CtrlKS Perturbation'),
+            ('ctrlKS', True, False): (
+            "Mascaret Execution – CtrlKS Init", 'ctrlKS_init', 'CtrlKS Init', 'Run CtrlKS Init'),
+            ('ctrlKS', False, True): (
+            "Mascaret Execution – CtrlKS Analysis", 'ctrlKS_analyse', 'CtrlKS Analysis', 'Run CtrlKS Analysis'),
+            ('ctrlKS', True, True): (
+            "Mascaret Execution – CtrlKS Analysis Init", 'ctrlKS_analyse_init', 'CtrlKS Analysis Init',
+            'Run CtrlKS Analysis Init'),
+            ('ctrlLaw', False, False): (
+            "Mascaret Execution – CtrlLaw Perturbation", 'ctrlLaw_pertub', 'CtrlLaw Perturbation',
+            'Run CtrlLaw Perturbation'),
+            ('ctrlLaw', True, False): (
+            "Mascaret Execution – CtrlLaw Init", 'ctrlLaw_init', 'CtrlLaw Init', 'Run CtrlLaw Init'),
+            ('ctrlLaw', False, True): (
+            "Mascaret Execution – CtrlLaw Analysis", 'ctrlLaw_analyse', 'CtrlLaw Analysis', 'Run CtrlLaw Analysis'),
+            ('ctrlLaw', True, True): (
+            "Mascaret Execution – CtrlLaw Analysis Init", 'ctrlLaw_analyse_init', 'CtrlLaw Analysis Init',
+            'Run CtrlLaw Analysis Init'),
+        }
+        description, name_task, log_inf, label = CONFIG[(type_ctrl, type_init, if_analyse)]
+        print(f'{label} *************')
+
+        task_params = self.obj_model.get_list_type_instance_assim(type_ctrl, type_init=type_init, if_ana=if_analyse)
         if not task_params:
-            QgsMessageLog.logMessage("No 'CtrlKs init' model to run.", 'TaskMascaret', Qgis.Warning)
+            QgsMessageLog.logMessage(f"No '{log_inf}' model to run.", 'TaskMascaret', Qgis.Warning)
+            self.process_next_task()
+            return
+
+        self.task_ref = TaskMascaret(
+            description=description,
+            task_params=task_params,
+            max_workers=self.limit_core,
+            database=None,
+        )
+
+        if not self.use_task:
+            for idx, param in enumerate(task_params):
+                self.task_ref.run_model(param, idx)
+            self.process_next_task()
+        else:
+            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(name_task))
+            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(name_task))
+            task_id = self.launch_task(self.task_ref, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage(f"{log_inf} task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                self.process_next_task()
+
+
+    def launch_ctrl_ks_task(self,type_init=False):
+
+        task_params = self.obj_model.get_list_type_instance_assim("ctrlKS", type_init=type_init)
+        if type_init :
+            print('Run Assime Ctrl Ks init *************')
+            description = "Mascaret Models Execution, CtrlKS init'"
+            name_task = 'ctrlKS_init'
+            log_inf = 'CtrlKs init'
+        else:
+            print('Run Assime Ctrl Ks *************')
+            description = "Mascaret Models Execution, CtrlKS pertub'"
+            name_task = 'crtlKS_pertub'
+            log_inf = 'CtrlKs perturbation'
+        if not task_params:
+            QgsMessageLog.logMessage(f"No '{log_inf}' model to run.", 'TaskMascaret', Qgis.Warning)
             # Passer à la suivante même si pas de modèle ref
             self.process_next_task()
             return
 
-        description = "Mascaret Models Execution, CtrlKS init'"
+
         self.task_ref = TaskMascaret(
             description=description,
             task_params=task_params,
@@ -231,25 +283,34 @@ class ClassMascaret:
         else:
 
             # Connecter les signaux
-            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed('ctrlKS_init'))
-            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed('ctrlKS_init'))
+            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(name_task))
+            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(name_task))
             task_id = self.launch_task(self.task_ref, description)
 
             if not task_id:
-                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                QgsMessageLog.logMessage(f"{log_inf} task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
                 self.process_next_task()
 
-    def launch_ctrl_ks_pertub_task(self):
-        print('Run Assime Ctrl Ks *************')
-        task_params = self.obj_model.get_list_type_instance_assim("ctrlKS")
+    def launch_ctrl_analyse(self, type_init=False):
+        if  type_init:
+            print('Run Analyse Ctrl Ks init *************')
+            description = "Mascaret Models Execution, Analyse init"
+            name_task = 'Analyse_init'
+            log_inf = 'Analyse init'
+        else:
+            description = "Mascaret Models Execution, Analyse"
+            print('Run Assime Ctrl Ks *************')
+            name_task = 'Analyse'
+            log_inf = 'Analyse'
+        task_params = self.obj_model.get_list_type_instance_assim("Analyse",  type_init)
 
         if not task_params:
-            QgsMessageLog.logMessage("No 'CtrlKs pertub' model to run.", 'TaskMascaret', Qgis.Warning)
+            QgsMessageLog.logMessage(f"No '{log_inf}' model to run.", 'TaskMascaret', Qgis.Warning)
             # Passer à la suivante même si pas de modèle ref
             self.process_next_task()
             return
 
-        description = "Mascaret Models Execution, CtrlKS pertub'"
+
         self.task_ref = TaskMascaret(
             description=description,
             task_params=task_params,
@@ -264,78 +325,12 @@ class ClassMascaret:
         else:
 
             # Connecter les signaux
-            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed('crtlKS_pertub'))
-            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed('crtlKS_pertub'))
+            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(name_task))
+            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(name_task))
             task_id = self.launch_task(self.task_ref, description)
 
             if not task_id:
-                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
-                self.process_next_task()
-
-    def launch_ctrl_analyse(self):
-        print('Run Analyse Ctrl Ks init *************')
-        task_params = self.obj_model.get_list_type_instance_assim("Analyse", type_init=True)
-
-        if not task_params:
-            QgsMessageLog.logMessage("No 'Analyse init' model to run.", 'TaskMascaret', Qgis.Warning)
-            # Passer à la suivante même si pas de modèle ref
-            self.process_next_task()
-            return
-
-        description = "Mascaret Models Execution, Analyse init'"
-        self.task_ref = TaskMascaret(
-            description=description,
-            task_params=task_params,
-            max_workers=self.limit_core,
-            database=None
-        )
-
-        if not self.use_task:
-            for idx, param in enumerate(task_params):
-                results = self.task_ref.run_model(param, idx)
-            self.process_next_task()
-        else:
-
-            # Connecter les signaux
-            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed('Analyse_init'))
-            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed('Analyse_init'))
-            task_id = self.launch_task(self.task_ref, description)
-
-            if not task_id:
-                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
-                self.process_next_task()
-
-    def launch_ctrl_analyse(self):
-        print('Run Assime Ctrl Ks *************')
-        task_params = self.obj_model.get_list_type_instance_assim("Analyse")
-
-        if not task_params:
-            QgsMessageLog.logMessage("No Analyse model to run.", 'TaskMascaret', Qgis.Warning)
-            # Passer à la suivante même si pas de modèle ref
-            self.process_next_task()
-            return
-
-        description = "Mascaret Models Execution, Analyse pertub'"
-        self.task_ref = TaskMascaret(
-            description=description,
-            task_params=task_params,
-            max_workers=self.limit_core,
-            database=None
-        )
-
-        if not self.use_task:
-            for idx, param in enumerate(task_params):
-                results = self.task_ref.run_model(param, idx)
-            self.process_next_task()
-        else:
-
-            # Connecter les signaux
-            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed('Analyse'))
-            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed('Analyse'))
-            task_id = self.launch_task(self.task_ref, description)
-
-            if not task_id:
-                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                QgsMessageLog.logMessage(f"{log_inf} task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
                 self.process_next_task()
 
     def launch_ctrl_ks_BLUE(self):
@@ -374,45 +369,26 @@ class ClassMascaret:
 
         pass
 
-    def launch_ctrl_law_creat(self):
-        print(' Creating CtrlLaw Folder *************')
-        scens = self.obj_model.get_list_name_scenario()
-        base_folder = self.obj_model.dmodel["general"]["path_runs"]
-        description = "Execution of Creating Ctrl_Law Folder"
-        self.task_creat_fassim = TaskCreatFAssim(
-            description=description,
-            scens=scens,
-            type_ctrl = 'ctrlLaw',
-            base_folder = base_folder,
-            max_workers=self.limit_core,
-        )
-
-        if not self.use_task:
-            for scen in enumerate(scens):
-                results = self.task_creat_fassim.run_model(scen)
-            self.process_next_task()
+    def launch_ctrl_law_task(self, type_init=False):
+        if type_init:
+            print('Run Assime CtrlLaw init *************')
+            description = "Mascaret Models Execution, CtrlLaw init"
+            name_task = 'crtlLaw_pertub'
+            log_inf = 'Ctrl Law init'
         else:
-
-            # Connecter les signaux
-            self.task_creat_fassim.taskCompleted.connect(lambda: self.on_task_completed('ctrlLaw_creat_folder'))
-            self.task_creat_fassim.taskTerminated.connect(lambda: self.on_task_failed('ctrlLaw_creat_folder'))
-            task_id = self.launch_task(self.task_creat_fassim, description)
-
-            if not task_id:
-                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
-                self.process_next_task()
-
-    def launch_ctrl_law_init_task(self):
-        print('Run Assime CtrlLaw init *************')
-        task_params = self.obj_model.get_list_type_instance_assim("ctrlLaw", type_init=True)
+            print('Run Assime Ctrl Law *************')
+            description = "Mascaret Models Execution, CtrlLaw pertub"
+            name_task = 'ctrlLaw_init'
+            log_inf = 'CtrlKs init'
+        task_params = self.obj_model.get_list_type_instance_assim("ctrlLaw", type_init=type_init)
 
         if not task_params:
-            QgsMessageLog.logMessage("No 'CtrlKs init' model to run.", 'TaskMascaret', Qgis.Warning)
+            QgsMessageLog.logMessage(f"No {log_inf} model to run.", 'TaskMascaret', Qgis.Warning)
             # Passer à la suivante même si pas de modèle ref
             self.process_next_task()
             return
 
-        description = "Mascaret Models Execution, CtrlLaw init'"
+
         self.task_ref = TaskMascaret(
             description=description,
             task_params=task_params,
@@ -427,45 +403,12 @@ class ClassMascaret:
         else:
 
             # Connecter les signaux
-            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed('ctrlLaw_init'))
-            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed('ctrlLaw_init'))
+            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(name_task))
+            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(name_task))
             task_id = self.launch_task(self.task_ref, description)
 
             if not task_id:
-                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
-                self.process_next_task()
-
-    def launch_ctrl_law_pertub_task(self):
-        print('Run Assime Ctrl Law *************')
-        task_params = self.obj_model.get_list_type_instance_assim("ctrlLaw")
-
-        if not task_params:
-            QgsMessageLog.logMessage("No 'CtrlKs pertub' model to run.", 'TaskMascaret', Qgis.Warning)
-            # Passer à la suivante même si pas de modèle ref
-            self.process_next_task()
-            return
-
-        description = "Mascaret Models Execution, CtrlLaw pertub'"
-        self.task_ref = TaskMascaret(
-            description=description,
-            task_params=task_params,
-            max_workers=self.limit_core,
-            database=None
-        )
-
-        if not self.use_task:
-            for idx, param in enumerate(task_params):
-                results = self.task_ref.run_model(param, idx)
-            self.process_next_task()
-        else:
-
-            # Connecter les signaux
-            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed('crtlLaw_pertub'))
-            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed('crtlLaw_pertub'))
-            task_id = self.launch_task(self.task_ref, description)
-
-            if not task_id:
-                QgsMessageLog.logMessage("Ref task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                QgsMessageLog.logMessage(f"{log_inf} task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
                 self.process_next_task()
 
     def launch_ctrl_law_BLUE(self):
@@ -560,36 +503,37 @@ class ClassMascaret:
         next_task_type = self.task_queue.pop(0)
 
         if next_task_type == 'init':
-            self.launch_init_task()
+            self.launch_ref_task(type_='init')
         elif next_task_type == 'ref':
-            self.launch_ref_task()
+            self.launch_ref_task(type_='ref')
         elif next_task_type == 'ctrl_ks_creat':
-            self.launch_ctrl_ks_creat()
+            self.launch_ctrl_creat('ctrlKS_creat_folder')
         elif next_task_type == 'ctrl_ks_init':
-            self.launch_ctrl_ks_init_task()
+            self.launch_ctrl_task(type_ctrl='ctrlKS', type_init=True, if_analyse=False)
         elif next_task_type == 'ctrl_ks_perturb':
-            self.launch_ctrl_ks_pertub_task()
+            self.launch_ctrl_task(type_ctrl='ctrlKS', type_init=False, if_analyse=False)
         elif next_task_type == 'ctrl_ks_blue':
             self.launch_ctrl_ks_BLUE()
-        elif next_task_type == 'ctrl_law_creat':
-            self.launch_ctrl_law_creat()
+        elif next_task_type == 'ctrl_ks_creat_ana':
+            self.launch_ctrl_creat('ctrlKS_creat_analyse')
         elif next_task_type == 'ctrl_ks_ana_init':
-            pass
-            # self.launch_ctrl_analyse_init()
+            self.launch_ctrl_task(type_ctrl='ctrlKS', type_init=True, if_analyse=True)
         elif next_task_type == 'ctrl_ks_ana':
-            pass
-            # self.launch_ctrl_analyse()
+            self.launch_ctrl_task(type_ctrl='ctrlKS', type_init=False, if_analyse=True)
+        elif next_task_type == 'ctrl_law_creat':
+            self.launch_ctrl_creat('ctrlLaw_creat_folder')
         elif next_task_type == 'ctrl_law_init':
-            self.launch_ctrl_law_init_task()
+            self.launch_ctrl_task(type_ctrl='ctrlLaw', type_init=True, if_analyse=False)
         elif next_task_type == 'ctrl_law_perturb':
-            self.launch_ctrl_law_pertub_task()
+            self.launch_ctrl_task(type_ctrl='ctrlLaw', type_init=False, if_analyse=False)
         elif next_task_type == 'ctrl_law_blue':
             self.launch_ctrl_law_BLUE()
+        elif next_task_type == 'ctrl_law_creat_ana':
+            self.launch_ctrl_creat('ctrlLaw_creat_analyse')
         elif next_task_type == 'ctrl_law_ana_init':
-            pass
-            # self.launch_ctrl_analyse_init()
+            self.launch_ctrl_task(type_ctrl='ctrlLaw', type_init=True, if_analyse=True)
         elif next_task_type == 'ctrl_law_ana':
-            pass
+            self.launch_ctrl_task(type_ctrl='ctrlLaw', type_init=True, if_analyse=True)
             # self.launch_ctrl_analyse()
 
     def on_all_tasks_completed(self):

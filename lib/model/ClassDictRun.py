@@ -215,7 +215,7 @@ class ClassDictRun:
         return task_params
 
 
-    def get_list_type_instance_assim(self, type_assim, type_init=None, type_ana=None):
+    def get_list_type_instance_assim(self, type_assim, type_init=None, if_ana=False):
         """
         Iterates through all scenarios and collects instances whose 'name'
         attribute matches the specified type.
@@ -244,7 +244,7 @@ class ClassDictRun:
 
                 # Condition sur Analyse
                 cond_ana = name.startswith("Analyse")
-                cond = cond and (cond_ana if type_ana else not cond_ana)
+                cond = cond and (cond_ana if if_ana else not cond_ana)
 
                 if cond and type_assim == ctrl_type:
                     #add info scenario or general

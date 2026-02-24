@@ -89,7 +89,6 @@ class ClassExtractAssim:
         # dict_tempo = {3: {'X': [83.58]}}
         # with open(json_file, 'w') as f:
         #     json.dump(dict_tempo, f)
-        print(self.assim_path, self.ASSIM_FILE , 'iiiiiiiiii')
         self.assim_dict.load(self.assim_path,filename=self.ASSIM_FILE)
         if self.assim_dict.get("ctrlKS") is not None:
             for dico in self.assim_dict["ctrlKS"]["lst_zone"]:

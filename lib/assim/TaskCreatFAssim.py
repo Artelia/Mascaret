@@ -42,7 +42,7 @@ class TaskSignals(QObject):
 
 class TaskCreatFAssim(QgsTask):
 
-    def __init__(self, description, scens, type_ctrl, base_folder='.', max_workers=None):
+    def __init__(self, description, scens, type_ctrl, if_analyse=False, base_folder='.', max_workers=None):
         """Initialize TaskCreatFAssim.
 
         :param description: Description string for the QGIS task.
@@ -56,6 +56,7 @@ class TaskCreatFAssim(QgsTask):
         self.scens = scens
         self.base_folder = base_folder
         self.type_ctrl = type_ctrl
+        self.if_analyse = if_analyse
 
         self.exc_start_time = None
         self.error_txt = ''
@@ -285,11 +286,13 @@ class TaskCreatFAssim(QgsTask):
         try:
             assimil = CreatModelAssim()
             assimil.read_data_js(path_scen, "data_assim.json")
-            if self.type_ctrl == 'ctrlKS' :
-                assimil.lst_instance_run_ctrlks_js()
-            else:
-                assimil.lst_instance_run_ctrl_law_js()
-            assimil.fill_assim_folder(type_ctrl=self.type_ctrl)
+            if not self.if_analyse:
+                if self.type_ctrl == 'ctrlKS' :
+                    assimil.lst_instance_run_ctrlks_js()
+                else:
+                    assimil.lst_instance_run_ctrl_law_js()
+
+            assimil.fill_assim_folder(type_ctrl=self.type_ctrl, if_analyse=self.if_analyse)
             results['success'] = True
         except subprocess.CalledProcessError as e:
             results['error'] = f"Process failed with exit code {e.returncode}: {e.stderr}"

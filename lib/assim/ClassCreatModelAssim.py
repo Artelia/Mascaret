@@ -40,12 +40,12 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         """
         super().__init__(mess=mess)
      
-    def fill_assim_folder(self, type_ctrl):
+    def fill_assim_folder(self, type_ctrl, if_analyse=False):
         d_scen = self.data.dscen
         d_folder = self.data.get_folder()
         path_instance = Path(d_scen.get("path_instance", '.'))
         path_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
-        
+        path_init = None
         if  type_ctrl == "ctrlLaw"   and self.data.get('CtrlKS', False):
             path_ref = Path(d_folder.get('Analyse_ctrlKS', path_ref))
              
@@ -55,51 +55,26 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         for name, folder in d_folder.items():
             if name in ['ref', 'init']:
                 continue
-            elif name.startswith("Analyse"):
+            if name.startswith("Analyse") != if_analyse:
                 continue
+
             instance = self.data.get_instance(name)
-            if name.endswith('_init'):
-                self.clone_model(path_init, folder)
-            else:
-                self.clone_model(path_ref, folder)
+            clone_source = path_init if name.endswith('_init') and path_init else path_ref
+            self.clone_model(clone_source, folder)
 
-            if 'ctrlKS' == instance.get('type_ctrl', '') and not name.startswith("Analyse"):
-                self.fill_assim_folder_ks(instance, folder)
+            if 'ctrlKS' == instance.get('type_ctrl', ''):
+                if if_analyse :
+                    self.fill_ana_folder_ks(instance, folder)
+                else:
+                    self.fill_assim_folder_ks(instance, folder)
 
-            if 'ctrlLaw' == instance.get('type_ctrl', '') and not name.startswith("Analyse"):
-                self.fill_assim_folder_law(instance, folder)
+            if 'ctrlLaw' == instance.get('type_ctrl', '') and not if_analyse:
+                if if_analyse:
+                    self.fill_ana_folder_law(instance, folder)
+                else:
+                    self.fill_assim_folder_law(instance, folder)
 
-    def fill_analyse(self, type_ctrl):
-        """Placeholder: fill analysis folder for Ks assimilation.
 
-        .. todo:: Implement folder filling logic.
-        """
-        pass
-        # d_scen = self.data.dscen
-        # d_folder = self.data.get_folder()
-        # path_instance = Path(d_scen.get("path_instance", '.'))
-        # path_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
-        #
-        # if type_ctrl == "ctrlLaw" and self.data.get('CtrlKS', False):
-        #     path_ref = Path(d_folder.get('Analyse_ctrlKS', path_ref))
-        #
-        # if d_scen.get("folder_init", '') != '':
-        #     path_init = path_instance / d_scen.get("folder_ref", 'run_ref') / d_scen.get("folder_init")
-        #
-        # for name, folder in d_folder.items():
-        #     if not name.startswith("Analyse"):
-        #         continue
-        #     instance = self.data.get_instance(name)
-        #     if name.endswith('_init'):
-        #         self.clone_model(path_init, folder)
-        #     else:
-        #         self.clone_model(path_ref, folder)
-        #
-        #     if 'ctrlKS' == instance.get('type_ctrl', '') and not name.startswith("Analyse"):
-        #         self.fill_folder_ana_ks(instance, folder)
-        #
-        #     if 'ctrlLaw' == instance.get('type_ctrl', '') and not name.startswith("Analyse"):
-        #         self.fill_folder_ana_law(instance, folder)
 
 
 # ---------------------------------------------------------------------------

@@ -45,7 +45,6 @@ except Exception:
 
 # Mapping from file extension to Mascaret file type, used in init_file
 _EXT_TYPE_MAP = {
-    ".geo": "geo",
     ".met": "tracer_meteo",
     ".phy": "tracer_parphy",
     ".conc": "tracer_conc",
@@ -239,6 +238,7 @@ class ClassAPIMascaret:
 
         for file in os.listdir("."):
             matched = False
+
             # Match file against the extension-to-type mapping table
             for ext, ftype in _EXT_TYPE_MAP.items():
                 if file.endswith(ext) and initfile == check_init(file):
@@ -251,8 +251,11 @@ class ClassAPIMascaret:
                     matched = True
                     break
             if not matched:
+                if file.endswith('.geo'):
+                    files_type.append('geo')
+                    files_name.append(file)
                 # Handle extensions not covered by the mapping table
-                if ".lig" in file and initfile == check_init(file):
+                elif ".lig" in file and initfile == check_init(file):
                     files_type.append("lig")
                     self.filelig = file
                     files_name.append(file)
@@ -603,10 +606,9 @@ class ClassAPIMascaret:
         self.tracer = tracer
         self.basin = basin
         self.assim = assim
-        print("eeeeeeeeeeeeeeeeeeeeeeeeeee",filename, self.assim)
         self.initial(filename)
 
-        # Early exit if a structure reported a blocking error during initialisation
+        # # Early exit if a structure reported a blocking error during initialisation
         if self.clfg_lk.arret_comput or self.clfg_w.arret_comput:
             self.finalize()
             return

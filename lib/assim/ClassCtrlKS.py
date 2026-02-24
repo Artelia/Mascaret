@@ -209,40 +209,24 @@ class CtrlKs(ModelAssimBase):
         modif_ks = [(numz, var, assim_info['ks_pertub'])]
         self.modif_ctrl_ks(instance.get('name_xcas', 'mascaret.xcas'), folder, modif_ks)
                     
-    def fill_folder_ana_ks(self,instance, folder):
+    def fill_ana_folder_ks(self,instance, folder):
         """Placeholder: fill analysis folder for Ks assimilation.
 
         .. todo:: Implement folder filling logic.
         """
-        pass
-        # if instance.get("type_ctrl") != "ctrlKS":
-        #     return
-        # assim_info = instance.get("assim_info")
-        # if not assim_info:
-        #     return
-        #
-        # numz = assim_info['num_zone']
-        # if assim_info['type_case'] == "Ksmaj":
-        #     var = "coefLitMaj"
-        # elif assim_info['type_case'] == "Ksmin":
-        #     var = "coefLitMin"
-        # modif_ks = [(numz, var, assim_info['ks_pertub'])]
-        #
+        if instance.get("type_ctrl") != "ctrlKS":
+            return
+        modif_ks = []
+        for zone in  self.data['ctrlKS']['lst_zone'] :
+            if not zone.get('xa'):
+                continue
+            numz = zone['num_zone']
+            if zone ["type"] == "Ksmaj":
+                var = "coefLitMaj"
+            elif zone["type"] == "Ksmin":
+                var = "coefLitMin"
 
-
-
-    #     #read data_asssim
-    #     #copie_  run_ref
-    #     # data.get("lst_zone")
-    #     clone_model
-    #     folder_run = Path(self.data.get("generate_instance"))
-    #     path_ref = folder_run / 'run_ref
-    #     path_ana = folder_run / 'Analyse_ctrlKS'
-    #     modif_ks = []
-    #     for  zones in self.data.get("lst_zone",[]):
-    #        num_zone = zones.get("num_zone")
-    #        var = zones.get("type")
-    #        val = zones.get("xa",[])
-    #        modif_ks.append((num_zone, var,val[0]))
-    #     self.modif_ctrl_ks(self, name_xcas, folder, modif_ks)
-        pass
+            modif_ks.append((numz, var, zone['xa'][0]))
+        if modif_ks:
+            print('ooooooooooo0', modif_ks )
+            self.modif_ctrl_ks(instance.get('name_xcas', 'mascaret.xcas'), folder, modif_ks)
