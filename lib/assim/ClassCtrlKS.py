@@ -20,7 +20,10 @@ email                :
 
 import os
 
-from .ClassModelAssimFct import ModelAssimBase, fmt
+try:
+    from .ClassModelAssimFct import ModelAssimBase, fmt
+except ImportError:
+    from ClassModelAssimFct import ModelAssimBase, fmt
 
 
 class CtrlKs(ModelAssimBase):
@@ -232,3 +235,5 @@ class CtrlKs(ModelAssimBase):
         if modif_ks:
             print('ooooooooooo0', modif_ks)
             self.modif_ctrl_ks(instance.get('name_xcas', 'mascaret.xcas'), folder, modif_ks)
+        else:
+            print('Warning No assimiled Ks ')

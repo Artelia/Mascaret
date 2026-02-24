@@ -21,7 +21,10 @@ email                :
 import os
 import shutil
 
-from .ClassModelAssimFct import ModelAssimBase
+try:
+    from .ClassModelAssimFct import ModelAssimBase
+except ImportError:
+    from ClassModelAssimFct import ModelAssimBase
 
 
 class CtrlLaw(ModelAssimBase):

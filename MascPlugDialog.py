@@ -86,6 +86,7 @@ from .lib.model.ClassDictRun import ClassDictRun
 from .lib.scores.ClassScoresDialog import ClassScoresDialog
 from .ui.custom_control import ClassWarningBox
 from .lib.assim.ClassAssimilationDialog import ClassAssimilationDialog
+from .lib.ClassLisDialog import  ClassLisDialog
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
@@ -1199,10 +1200,10 @@ Version : {}
         # cl.creat_file_no_keep_break()
         # self.chkt.update_version('620')
 
-        from .lib.assim.ClassAssimDB import ClassAssimDB
-        cl =  ClassAssimDB(self.mdb)
-        print(cl.data)
-        cl.export_data_json(os.path.join(self.masplugPath, 'mascaret'))
+        # from .lib.assim.ClassAssimDB import ClassAssimDB
+        # cl =  ClassAssimDB(self.mdb)
+        # print(cl.data)
+        # cl.export_data_json(os.path.join(self.masplugPath, 'mascaret'))
         pass
 
     def update_ks_mesh_planim(self):
@@ -1401,17 +1402,24 @@ Version : {}
         """
         Open listing file
         """
-        # model_path = os.path.join(self.masplugPath, "mascaret")
+        model_path = os.path.join(self.masplugPath, "mascaret")
         # file_path = os.path.join(model_path, 'mascaret.lis')
-        file_path = find_latest_lis_file( os.path.join(self.masplugPath, "mascaret"))
-        if os.path.exists(file_path):
-            # openfile
-            open_file_editor(file_path)
+        dlgp = ClassLisDialog(model_path)
+        if QT_VERSION > 5:
+            dlgp.exec()  # PyQt6
         else:
+            dlgp.exec_()  # PyQt5
 
-            self.add_info(
-                "There is no listing file available.", box=True
-            )
+
+        # file_path = find_latest_lis_file( os.path.join(self.masplugPath, "mascaret"))
+        # if os.path.exists(file_path):
+        #     # openfile
+        #     open_file_editor(file_path)
+        # else:
+        #
+        #     self.add_info(
+        #         "There is no listing file available.", box=True
+        #     )
 
     def mass_graph_hq(self):
         """

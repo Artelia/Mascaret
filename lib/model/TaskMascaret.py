@@ -25,6 +25,7 @@ collects results and emits signals in the original submission order.
 import concurrent.futures
 import json
 import os
+import sys
 import subprocess
 import time
 from pathlib import Path
@@ -37,6 +38,7 @@ from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal,QObject
 
 from .ClassGetResults import ClassGetResults
+from .ClassBCWriter import ClassBCWriter
 
 MESSAGE_CATEGORY = 'TaskMascaret'
 
@@ -47,7 +49,7 @@ class TaskSignals(QObject):
 class TaskMascaret(QgsTask):
 
 
-    def __init__(self, description, task_params, max_workers=None, database=None):
+    def __init__(self, description, task_params, max_workers=None, database=None, cond_api=True):
         """Initialize TaskMascaret.
 
         :param description: Description string for the QGIS task.
@@ -60,6 +62,7 @@ class TaskMascaret(QgsTask):
 
         self.task_params = task_params
         self.mdb = database
+        self.cond_api = cond_api
 
         self.exc_start_time = None
         self.error_txt = ''
@@ -307,15 +310,47 @@ class TaskMascaret(QgsTask):
             script_dir = os.path.dirname(__file__)
             param_file = self.create_json_param(params.get("RUN_REP"), f'model_idx{index}.json', params)
 
-            os.chdir(os.path.join(script_dir,"..", "api"))
 
-            process = subprocess.run(
-                ["python", "ClassAPIMascaret.py", param_file],
-                shell=True,
-                text=True,
-                check=True,
-                capture_output=True
-            )
+            if self.cond_api :
+                os.chdir(os.path.join(script_dir, "..", "api"))
+                process = subprocess.run(
+                    ["python", "ClassAPIMascaret.py", param_file],
+                    shell=True,
+                    text=True,
+                    check=True,
+                    capture_output=True
+                )
+            else:
+                with open("FichierCas.txt", "w") as fichier:
+                    fichier.write("'" + params.get('name_xcas','mascaret.xcas') + "'\n")
+                    test = sys.platform
+                path_exe = os.path.join(script_dir, "..", "..", "bin")
+                if "linux" in test or test == "cygwin":
+                    soft = "./mascaret_linux"
+                    source_file = os.path.join(path_exe, 'mascaret_linux')
+                elif test == "win32":
+                    soft = "mascaret.exe"
+                    source_file = os.path.join(path_exe, soft)
+                else:
+                    txt = "{0} platform  doesn't allow to run simulation.".format(test)
+                    self.log_mess(txt, "ErrPlatform", "critic")
+                    return False
+
+                # Linux(2.x and 3.x) ='linux2' or 'linux'
+                # Windows = 'win32'
+                # Windows / Cygwin = 'cygwin'
+                shutil.copy2(source_file, params.get("RUN_REP"))
+                os.chdir(params.get("RUN_REP"))
+                process = subprocess.run(
+                    soft,  # liste -> pas besoin de shell=True
+                    text=True,  # stdout/stderr en str
+                    check=True,  # lève exception si code retour != 0
+                    shell=True,
+                    capture_output=True,  # capture stdout/stderr
+                    encoding="utf-8"     # décommente si tu veux forcer l'encodage
+                )
+
+
             # print(process.stdout, 'uuu')
             results.update({
                 'success': True,
@@ -323,32 +358,43 @@ class TaskMascaret(QgsTask):
                 'error': process.stderr,
                 'execution_time': time.time() - results['start_time'],
             })
-            pprint.pp(results)
-
 
             ## Check if API ran successfully
             if results['success']:
-                # Verify presence of a .opt file to confirm success
-                opt_exists = any(f.endswith(".opt") for f in os.listdir(params.get("RUN_REP")))
-                if not opt_exists:
+                # Verify .opt file
+                if not any(f.endswith(".opt") for f in os.listdir(params.get("RUN_REP"))):
                     results['success'] = False
-                    raise FileNotFoundError(f"Expected .opt file not found, {params.get('RUN_REP')} ")
-                if "Work is done." not in results.get('output', ''):
+                    raise FileNotFoundError(f"Expected .opt file not found in {params.get('RUN_REP')}")
+
+                if "Work is done." not in results.get('output', '') and self.cond_api:
                     results['success'] = False
                     results['error'] = results.get('output', '')
-                    raise Exception(f"ClassAPIMascaret failed")
-                if params.get('name').endswith('init'):
-                    if not self._copy_lig_files(params.get("RUN_REP")):
-                        results['success'] = False
-                        raise Exception(f"No .lig files found #{index}")
+                    raise Exception("ClassAPIMascaret failed")
+
+                is_init = params.get('name', '').endswith('init')
+
+                if is_init and self.cond_api and not self._copy_lig_files(params.get("RUN_REP")):
+                    results['success'] = False
+                    raise Exception(f"No .lig files found #{index}")
 
                 results_save = self._save_db(params)
                 results['idrun'] = results_save['idrun']
+                results['save_time'] = results_save['save_time']
                 results['output'] = f"{results['output']}\n{results_save['output']}"
-                if not  results_save['success'] and self.mdb:
+
+                if not results_save['success'] and self.mdb:
                     results['success'] = False
-                    raise Exception(f"Error save Results #{index} \n {results_save['error']}")
-                results['save_time'] = results_save["save_time"]
+                    raise Exception(f"Error saving results #{index}\n{results_save['error']}")
+
+                if is_init and not self.cond_api:
+                    try:
+                        self.generate_lig(params)
+                        if not self._copy_lig_files(params.get("RUN_REP")):
+                            raise Exception()
+                    except Exception:
+                        results['success'] = False
+                        raise Exception(f"No .lig files found #{index}")
+
 
         except subprocess.CalledProcessError as e:
             results['error'] = f"Process failed with exit code {e.returncode}: {e.stderr}"
@@ -356,7 +402,8 @@ class TaskMascaret(QgsTask):
         except Exception as e:
             results['error'] = f"Unexpected error: {str(e)}"
             results['execution_time'] = time.time() - results['start_time']
-
+        os.chdir(os.path.join(script_dir))
+        pprint.pp(results)
         return results
 
     def _copy_lig_files(self, folder):
@@ -380,6 +427,14 @@ class TaskMascaret(QgsTask):
         except Exception:
             return False
         return True
+
+    def generate_lig(self, params):
+        name_run = params.get("run_name")
+        name_scen = f'{params.get("scen_name")}_init'
+        path_scen = params.get("RUN_REP")
+        id_run = self.insert_id_run(self.mdb, name_run, name_scen)
+        cls_bc = ClassBCWriter(self.mdb, path_scen)
+        cls_bc.opt_to_lig(id_run,os.path.join(path_scen, 'mascaret.lig'))
 
     def _save_db(self, params):
 

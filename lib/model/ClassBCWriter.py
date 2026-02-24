@@ -435,6 +435,7 @@ class ClassBCWriter:
         :return: None"""
 
         result = self.get_for_lig(id_run)
+        print(result, 'iooooppppp')
         if not result:
             return None
 

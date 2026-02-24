@@ -17,10 +17,17 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+import sys
+import json
 from pathlib import Path
 
-from .ClassCtrlKS import CtrlKs
-from .ClassCtrlLaw import CtrlLaw
+try:
+    from .ClassCtrlKS import CtrlKs
+    from .ClassCtrlLaw import CtrlLaw
+except ImportError:
+    from ClassCtrlKS import CtrlKs
+    from ClassCtrlLaw import CtrlLaw
+
 
 
 class CreatModelAssim(CtrlKs, CtrlLaw):
@@ -65,12 +72,10 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
 
             clone_source = path_init  if name.endswith('_init') and path_init  else path_ref
 
-            print(name,clone_source)
             self.clone_model(clone_source, folder)
             print( if_analyse, instance.get('type_ctrl', ''))
             if 'ctrlKS' == instance.get('type_ctrl', ''):
                 if if_analyse :
-                    print('oooooooooooooooooooooooooo')
                     self.fill_ana_folder_ks(instance, folder)
                 else:
                     self.fill_assim_folder_ks(instance, folder)
@@ -81,21 +86,37 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
                 else:
                     self.fill_assim_folder_law(instance, folder)
 
-        print('**************  FIN   ********************')
+    def create_folder_assim(self, path_scen, type_ctrl, if_analyse, jsonfile ="data_assim.json" ):
+        assimil = CreatModelAssim()
+        assimil.read_data_js(path_scen, jsonfile)
+        if not if_analyse:
+            if type_ctrl == 'ctrlKS':
+                assimil.lst_instance_run_ctrlks_js()
+            else:
+                assimil.lst_instance_run_ctrl_law_js()
 
+        assimil.fill_assim_folder(type_ctrl=type_ctrl, if_analyse=if_analyse)
 
 # ---------------------------------------------------------------------------
 # Quick smoke-test
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    assimil = CreatModelAssim()
-    assimil.read_data_js(".", "data_assim.json")
+    if len(sys.argv) <= 1:
+        raise ValueError("No JSON file provided. Usage: script.py <config.json>")
 
-    print(assimil.data)          # AssimData(file=..., sections=[...])
-    print(assimil.data.dscen)    # scenario dict
-    print(assimil.data.drun)     # run config dict
-    assimil.lst_instance_run_ctrlks_js()
-    assimil.lst_instance_run_ctrl_law_js()
-    assimil.fill_assim_folder(type_ctrl='ctrlLaw')
+    jsonf = sys.argv[1]
+    with open(jsonf) as json_data:
+        dico = json.load(json_data)
+    print('iiiiiiiiiiiiiiii',dico.get('path_scen'),
+                                dico.get('type_ctrl'),
+                                dico.get('if_analyse'),
+                                dico.get('json_file'),
+                                )
+    assimil = CreatModelAssim()
+    assimil.create_folder_assim(dico.get('path_scen'),
+                                dico.get('type_ctrl'),
+                                dico.get('if_analyse'),
+                                dico.get('json_file'),
+                                )
 

@@ -22,7 +22,6 @@ collects results and emits signals in the original submission order.
 
 """
 import concurrent.futures
-import json
 import os
 import subprocess
 import time

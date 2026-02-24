@@ -55,6 +55,7 @@ class ClassDictRun:
         :param rep_run: Optional run folder path. If None defaults to plugin/mascaret folder.
         """
         self.mgis = main
+        self.cond_api = self.mgis.cond_api
         self.mdb = self.mgis.mdb
         if not rep_run:
             # default folder
@@ -289,7 +290,7 @@ class ClassDictRun:
             "has_fg" : self.cl_fg.fg_actif(self.mdb) if kernel == "unsteady" else False,
             "ligInit": par["LigEauInit"],
             "has_run_init": par["initialisationAuto"],
-            'has_assimilation': True
+            'has_assimilation': self.assim.check_assim() if self.cond_api else False
         }
 
     def set_drun(self, new_items):

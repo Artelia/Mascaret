@@ -25,6 +25,7 @@ collects results and emits signals in the original submission order.
 import concurrent.futures
 import os
 import subprocess
+import json
 import time
 import pprint
 from qgis.core import Qgis, QgsMessageLog, QgsTask
@@ -263,6 +264,18 @@ class TaskCreatFAssim(QgsTask):
             Qgis.Info
         )
 
+    def create_json_param(self,  path_scen, param_file):
+        # Create parameter input file (with index to avoid conflicts)
+
+        d_json = {'path_scen': path_scen,
+                  'if_analyse' : self.if_analyse,
+                  'type_ctrl' : self.type_ctrl,
+                  'json_file' : "data_assim.json"
+                      }
+        with open(param_file, 'w') as fp:
+            json.dump(d_json, fp)
+        return param_file
+
     def creat_assim_folder(self, scen):
         """Run a single Mascaret model instance (thread worker).
 
@@ -271,6 +284,8 @@ class TaskCreatFAssim(QgsTask):
         :return: dict containing model results, outputs, errors and timing.
         """
         path_scen = os.path.join(self.base_folder, scen)
+        param_file = os.path.join(path_scen, 'd_creat_folder.json')
+        self.create_json_param(path_scen, param_file)
         results = {
             'scenario': scen,
             'success': False,
@@ -284,20 +299,30 @@ class TaskCreatFAssim(QgsTask):
             results['error'] = f"Process failed because the folder is not found: {path_scen}"
             results['execution_time'] = time.time() - results['start_time']
         try:
-            assimil = CreatModelAssim()
-            assimil.read_data_js(path_scen, "data_assim.json")
-            if not self.if_analyse:
-                if self.type_ctrl == 'ctrlKS' :
-                    assimil.lst_instance_run_ctrlks_js()
-                else:
-                    assimil.lst_instance_run_ctrl_law_js()
+            script_dir = os.path.dirname(__file__)
+            os.chdir(os.path.join(script_dir, "..", "assim"))
+            process = subprocess.run(
+                ["python", "ClassCreatModelAssim.py", param_file],
+                shell=True,
+                text=True,
+                check=True,
+                capture_output=True
+            )
 
-            assimil.fill_assim_folder(type_ctrl=self.type_ctrl, if_analyse=self.if_analyse)
+            results.update({
+                'success': True,
+                'output': process.stdout,
+                'error': process.stderr,
+            })
+
             results['success'] = True
         except subprocess.CalledProcessError as e:
             results['error'] = f"Process failed with exit code {e.returncode}: {e.stderr}"
         except Exception as e:
             results['error'] = f"Unexpected error: {str(e)}"
         results['execution_time'] = time.time() - results['start_time']
+
+        if os.path.exists(param_file):
+            os.remove(param_file)
         pprint.pp(results)
         return results

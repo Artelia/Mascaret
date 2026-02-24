@@ -60,6 +60,7 @@ class ClassMascaret:
         self.max_retries = 5
         self.use_task = False
         self.task_blue = None
+        self.cond_api = self.mgis.cond_api
 
     def mascaret_ui(self):
         # state list
@@ -96,9 +97,10 @@ class ClassMascaret:
         if drun['has_run_init']:
             self.task_queue.append('init')
         self.task_queue.append('ref')  # Toujours exécuter ref ?
-
+        if not self.cond_api :
+            drun['has_assimilation'] = False
         # Assimilation Control Ks *************
-        if drun['has_assimilation']:
+        if drun['has_assimilation'] :
             self.task_queue.append('ctrl_ks_creat')
             if drun['has_run_init']:
                 self.task_queue.append('ctrl_ks_init')
@@ -139,7 +141,8 @@ class ClassMascaret:
             description=description,
             task_params=task_params_ref,
             max_workers=self.limit_core,
-            database=self.mdb
+            database=self.mdb,
+            cond_api=self.cond_api
         )
 
         if not self.use_task:
@@ -376,7 +379,6 @@ class ClassMascaret:
             return
 
         next_task_type = self.task_queue.pop(0)
-        print('eeeeeeeeeeeeeeeee', next_task_type)
         if next_task_type == 'init':
             self.launch_ref_task(type_='init')
         elif next_task_type == 'ref':

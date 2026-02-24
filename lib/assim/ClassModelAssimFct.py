@@ -23,8 +23,11 @@ import shutil
 from pathlib import Path
 from xml.etree.ElementTree import parse as et_parse
 
-from .ClassAssimData import AssimData
 
+try:
+    from .ClassAssimData import AssimData
+except:
+    from ClassAssimData import AssimData
 
 # ---------------------------------------------------------------------------
 # Module-level helpers
