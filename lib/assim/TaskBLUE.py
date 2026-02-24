@@ -127,8 +127,7 @@ class TaskBLUE(QgsTask):
             'start_time': time.time(),
             'path_run': path_scen,
         }
-        print('in run_blue', results)
-        print(path_scen)
+
         try:
             script_dir = os.path.dirname(__file__)
             os.chdir(os.path.join(script_dir,"..", "assim"))
@@ -140,7 +139,7 @@ class TaskBLUE(QgsTask):
                 check=True,
                 capture_output=True
             )
-            # print(process.stdout, 'uuu')
+
             results.update({
                 'success': True,
                 'output': process.stdout,
@@ -197,7 +196,6 @@ class TaskBLUE(QgsTask):
 
                         try:
                             result = future.result()
-                            print(result)
 
                             # Store the result
                             self.completed_results[index] = result

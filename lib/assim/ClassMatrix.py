@@ -14,7 +14,6 @@ def get_perturb_folder(base_folder, iperturb):
     val_perturb = 0.0
     zone_perturb = None
     for folder in os.listdir(base_folder):
-        print(folder)
         if f'pertub{iperturb}' in folder:
             name_folder = folder
             type_perturb = folder.split('_')[1]
@@ -48,7 +47,6 @@ class ClassMatrix:
         self.zones = []
         self.nbzones = 0
         json_path = os.path.join(self.base_folder, 'data_assim.json')
-        print(self.base_folder, json_path)
         self.ctrlKs = False
         self.ctrlLaw = False
         with open(json_path) as f:
@@ -142,7 +140,6 @@ class ClassMatrix:
         #TODO faire sur toutes les obs dispos !, une seule fois
         num_stations = []
         for dico in self.dict_assim.get("ctrlKS").get("lst_zone"):
-            print(dico)
             if int(dico.get("num_zone")) not in num_stations:
                 num_stations.append(int(dico.get("num_zone")))
                 dict2 = dico.get("lst_obs")
@@ -220,10 +217,15 @@ class ClassMatrix:
         # Zref = np.concatenate([dict_ref['Z'][str(zone)] for zone in self.zones])
         # Getting initial values of KS
         if self.ctrlKs:
-            dico = self.dict_assim["generate_instance"]["dico_ks"]
-            print(dico)
-            KSminref = {str(zone): dico["minbedcoef"][zone] for zone in self.zones}
-            KSmajref = {str(zone): dico["majbedcoef"][zone] for zone in self.zones}
+            # TODO ERROR*******************************************
+            # dico = self.dict_assim["generate_instance"]["dico_ks"]
+            # KSminref = {str(zone): dico["minbedcoef"][zone] for zone in self.zones}
+            # KSmajref = {str(zone): dico["majbedcoef"][zone] for zone in self.zones}
+            data = self.dict_assim["ctrlKS"]
+            KSminref = {str(zone["num_zone"]): zone["zone_info"]["ref_ks_min"]
+                        for zone in data["lst_zone"] if zone["num_zone"] in self.zones}
+            KSmajref = {str(zone["num_zone"]): zone["zone_info"]["ref_ks_maj"]
+                        for zone in data["lst_zone"] if zone["num_zone"] in self.zones}
             self.KSref = {'Ksmin': KSminref, 'Ksmaj': KSmajref}
 
         if self.ctrlLaw:
@@ -237,7 +239,6 @@ class ClassMatrix:
 
             print('Perturbation de type', type_perturb)
             name_folder_pertub = os.path.join(base_folder_perturb, name_folder_pertub)
-            print(name_folder_pertub)
             # name_folder_pertub = os.path.join(base_folder_perturb, f'perturb_{i}')
             with open(os.path.join(name_folder_pertub, 'Z_Q_assim.json')) as f:
                 dict_perturb = json.load(f)
