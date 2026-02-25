@@ -266,7 +266,10 @@ class ClassMascaret:
         print(scens)
         try:
             self.task_blue = TaskBLUE(
-                description=description, base_folder=base_folder)
+                description=description,
+                base_folder=base_folder,
+                ctrl_type = 'ctrlKS'
+            )
             print('taskblueinit')
             self.task_blue.update_params(scens)
             print('taskblueupdate')

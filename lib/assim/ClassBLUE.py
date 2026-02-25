@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+
 try:
     from .ClassMatrix import ClassMatrix
 except:
@@ -44,22 +45,21 @@ def write_matrix_auto(f, matrix, decimals=5):
 class classBLUE:
     """Class that computes the analysed state of parameters using BLUE method"""
 
-    def __init__(self, base_folder):
+    def __init__(self, base_folder, ctrl_type):
         self.R = None
         self.analyse = None
         self.innovation = None
         self.K = None
+        self.ctrl_type = ctrl_type
         print('Using Blue in ', base_folder)
         self.base_folder = base_folder
-        self.matrixes = ClassMatrix(self.base_folder)
+        self.matrixes = ClassMatrix(self.base_folder, self.ctrl_type)
         self.matrixes.build_all_matrix()
-
 
     def compute_BLUE(self):
         """ Computes different BLUE steps to get analysed state """
         self.build_gain_K()
         self.build_analysis()
-
 
     def build_gain_K(self):
         """ Computes gain matrix K : K =BH^t (HBH^t + R)^-1 """
@@ -74,14 +74,13 @@ class classBLUE:
         self.K = BHT @ HBHT_plus_R
         print('Calcul de gain effactué. K=', self.K)
 
-
     def build_analysis(self):
         """ Computes analysed state xa : x_a = x_b + K*misfit """
 
         print('Ebauche xb', self.matrixes.xb)
         print('MISFIT', self.matrixes.misfit)
 
-        self.innovation =self.K @ self.matrixes.misfit
+        self.innovation = self.K @ self.matrixes.misfit
         self.analyse = self.matrixes.xb + self.innovation
 
         # Clipping xa based on min and max values
@@ -97,10 +96,9 @@ class classBLUE:
     def clean_result_file(self):
         """ Overwrites matrix file """
 
-        with open(os.path.join(self.base_folder, 'blue_results.txt'), 'w' ) as f:
+        with open(os.path.join(self.base_folder, 'blue_results.txt'), 'w') as f:
             f.write('BLUE assimilation step results \n')
-            f.write('--'*50 + '\n')
-
+            f.write('--' * 50 + '\n')
 
     def store_results(self, first):
         """ Store results in file
@@ -116,15 +114,15 @@ class classBLUE:
                 pass
             else:
                 if d["lst_zone"][izone].get("xa") is None or first:
-                    d["lst_zone"][izone]["xa"] = [round(self.analyse[izone],2)]
+                    d["lst_zone"][izone]["xa"] = [round(self.analyse[izone], 2)]
                 else:
-                    d["lst_zone"][izone]["xa"].append(round(self.analyse[izone],2))
+                    d["lst_zone"][izone]["xa"].append(round(self.analyse[izone], 2))
         data_assim['ctrlKS'] = d
         with open(json_assim, 'w') as f:
             json.dump(data_assim, f, indent=4)
 
         # Then storing in txt file every BLUE matrix for debug/verif
-        with open(os.path.join(self.base_folder, 'blue_results.txt'), 'a' ) as f:
+        with open(os.path.join(self.base_folder, 'blue_results.txt'), 'a') as f:
             f.write('Matrice B \n')
             current_mat = self.matrixes.B
             write_matrix_auto(f, current_mat)
@@ -147,13 +145,14 @@ class classBLUE:
 
 
 if __name__ == '__main__':
-    if len(sys.argv) <= 1:
-        raise ValueError("No base folder file provided.")
+    if len(sys.argv) <= 2:
+        raise ValueError(
+            "No base folder file provided and no assimilation type . Usage: ClassBLUE.py <path> <ctrl_type>")
     base_folder = sys.argv[1]
+    ctrl_type = sys.argv[2]
     # base_folder = r'../../mascaret/event1_1/'
     print('BASE_FOLDER', base_folder)
-    CB = classBLUE(base_folder)
+    CB = classBLUE(base_folder, ctrl_type)
     CB.compute_BLUE()
-    #TODO first doit être un bool de first step assim si on enchaine
+    # TODO first doit être un bool de first step assim si on enchaine
     CB.store_results(first=True)
-

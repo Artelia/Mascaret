@@ -28,19 +28,21 @@ import time
 import pprint
 
 from qgis.core import Qgis, QgsMessageLog, QgsTask
-from qgis.PyQt.QtCore import pyqtSignal,QObject
+from qgis.PyQt.QtCore import pyqtSignal, QObject
 
 from .ClassBLUE import classBLUE
 from .ClassMatrix import ClassMatrix
 
 MESSAGE_CATEGORY = 'TaskBlue'
 
+
 class TaskSignals(QObject):
     model_completed = pyqtSignal(int, dict)
     launch_completed = pyqtSignal(bool)
 
+
 class TaskBLUE(QgsTask):
-    def __init__(self, description, base_folder):
+    def __init__(self, description, base_folder, ctrl_type):
         try:
             super().__init__(description, QgsTask.CanCancel)
 
@@ -53,10 +55,10 @@ class TaskBLUE(QgsTask):
             self.scens = []
             self.max_workers = 1
             self.running_futures = {}
+            self.ctrl_type = ctrl_type
         except Exception as e:
             print(e)
             raise ValueError(e)
-
 
     def update_params(self, scens):
         """Update the task parameters and optionally max_workers.
@@ -129,10 +131,10 @@ class TaskBLUE(QgsTask):
 
         try:
             script_dir = os.path.dirname(__file__)
-            os.chdir(os.path.join(script_dir,"..", "assim"))
+            os.chdir(os.path.join(script_dir, "..", "assim"))
 
             process = subprocess.run(
-                ["python", "ClassBLUE.py", path_scen],
+                ["python", "ClassBLUE.py", path_scen, self.ctrl_type],
                 shell=True,
                 text=True,
                 check=True,

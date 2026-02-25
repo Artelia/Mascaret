@@ -2,6 +2,7 @@ import json
 import os
 import numpy as np
 
+
 # n_perturb = 2
 # zones = [2]
 # base_folder = r'../../mascaret/event1_1/'
@@ -27,8 +28,9 @@ def get_perturb_folder(base_folder, iperturb):
 
 class ClassMatrix:
     """"""
+
     # TODO Passer en argument d'entrée le dico ou json des paramètres d'assimilation !
-    def __init__(self, base_folder, json_assim=None):
+    def __init__(self, base_folder, ctrl_type, json_assim=None):
         """"""
         # Vecteur d'ébauche
         self.misfit = []
@@ -36,7 +38,7 @@ class ClassMatrix:
         self.Z_obs = []
         self.xb = []
         # Vecteur d'observations
-        self.y0= []
+        self.y0 = []
         self.KSref = None
         self.H = None
         self.B = None
@@ -44,7 +46,7 @@ class ClassMatrix:
         self.min_values = []
         self.max_values = []
 
-        if not(os.path.exists(base_folder)):
+        if not (os.path.exists(base_folder)):
             raise FileNotFoundError(f'Unfound working folder : {base_folder}')
         self.base_folder = base_folder
         self.zones = []
@@ -56,9 +58,9 @@ class ClassMatrix:
             self.dict_assim = json.load(f)
 
         # Récupération du type de controle
-        if self.dict_assim.get("ctrlKS") is not None:
+        if self.dict_assim.get("ctrlKS") is not None and ctrl_type == "ctrlKS":
             self.ctrlKs = True
-        if self.dict_assim.get("ctrlLaw") is not None:
+        if self.dict_assim.get("ctrlLaw") is not None and ctrl_type == "ctrlLaw":
             self.ctrlLaw = True
 
         # Récupération du nombre de zones et de la liste des zones
@@ -67,7 +69,7 @@ class ClassMatrix:
             self.zones = np.unique(self.zones)
             self.nb_zones = len(self.zones)
         if self.ctrlLaw:
-            self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlLaw"]["lst_zone"]]
+            self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlLaw"]["lst_loi"]]
             self.zones = np.unique(self.zones)
             self.nb_zones = len(self.zones)
 
@@ -102,14 +104,12 @@ class ClassMatrix:
             # self.nbperturb = 1
             print('Total number of perturbations:', self.nbperturb)
 
-
     def build_all_matrix(self):
         self.build_B_matrix_ini()
         self.build_diago_R_matrix_ini()
         self.build_H_matrix()
         self.build_misfit()
         self.build_min_max_values()
-
 
     def build_B_matrix_ini(self):
         liste_sigma = []
@@ -134,14 +134,12 @@ class ClassMatrix:
         self.B = np.diag(liste_sigma, 0)
         print("Matrices des covariances d'erreur d'ébauche B", self.B)
 
-
     def build_B_matrix_analysed(self, K):
         self.B_analysed = self.B - np.matmul(np.matmul(K, self.H), self.B)
 
-
     def build_diago_R_matrix_ini(self):
         diag_R = []
-        #TODO faire sur toutes les obs dispos !, une seule fois
+        # TODO faire sur toutes les obs dispos !, une seule fois
         num_stations = []
         for dico in self.dict_assim.get("ctrlKS").get("lst_zone"):
             if int(dico.get("num_zone")) not in num_stations:
@@ -162,7 +160,6 @@ class ClassMatrix:
         for dico in self.dict_assim.get("ctrlKS").get("lst_zone"):
             self.min_values.append(dico.get("val_min"))
             self.max_values.append(dico.get("val_max"))
-
 
     def build_misfit(self):
         name_folder_ref = os.path.join(self.base_folder, 'run_ref')
@@ -207,7 +204,6 @@ class ClassMatrix:
                     self.misfit.append(self.Z_obs[station]['Z'][it] - Zref[station][it])
                     ista += 1
             print('Y0', self.y0)
-
 
     def build_H_matrix(self):
         """
@@ -257,20 +253,20 @@ class ClassMatrix:
             with open(os.path.join(name_folder_pertub, 'Z_Q_assim.json')) as f:
                 dict_perturb = json.load(f)
 
-            Zperturb= []
+            Zperturb = []
             # Boucle sur les zones concernées
             for zone in self.zones:
                 # Boucle sur les stations d'observation dans chaque zone
                 for station in dict_perturb['Z'][str(zone)]:
                     Zperturb += dict_perturb['Z'][str(zone)][station]
             Zperturb = np.array(Zperturb, dtype=float)
-            print('Zperturb iperturb = ', i+1 ,Zperturb)
+            print('Zperturb iperturb = ', i + 1, Zperturb)
             # Deltas_param contient l'ensemble des différences entre les paramètres de REF et de
             # PERTURB Avec potentiellement des valeurs nulles pour les paramètres non modifiés Ici
             # pour KS, on a les différences sur KS_MIn et MAJ pour chaque zone.
 
             deltas_param = [val_perturb -
-                            self.KSref[type_perturb][str(zone_perturb)] ]
+                            self.KSref[type_perturb][str(zone_perturb)]]
             self.xb.append(self.KSref[type_perturb][str(zone_perturb)])
             print('Deltas params', deltas_param)
             # On récupère la valeur du DeltaP effectif > 0 (les autres sont à 0)
@@ -284,7 +280,6 @@ class ClassMatrix:
         print('Matrice H', H)
         print(H.shape)
         self.H = H
-
 
 # if __name__ == '__main__':
 #     M = ClassMatrix(base_folder)
