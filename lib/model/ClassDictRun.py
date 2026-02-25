@@ -550,7 +550,10 @@ class ClassDictRun:
         :return: None
         """
         # Retrieve the run ID
-        condition_scenario = f"(scenario LIKE '{nom_scen}' OR scenario LIKE '{nom_scen}_init')"
+        # condition_scenario = f"(scenario LIKE '{nom_scen}' OR scenario LIKE '{nom_scen}_init')"
+        condition_scenario = (f"(scenario LIKE '{nom_scen}' "
+                     f"OR  scenario  LIKE '{nom_scen}_init' "
+                     f"OR  scenario  LIKE '{nom_scen}_ana_ctrl%') ")
         id_run_query = (
             f"SELECT id FROM {self.mdb.SCHEMA}.runs "
             f"WHERE run = '{run}' AND {condition_scenario}"

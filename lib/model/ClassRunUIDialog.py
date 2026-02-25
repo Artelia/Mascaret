@@ -282,18 +282,14 @@ class ClassRunUIDialog(QDialog):
             "new simulation? "
         )
 
+
         if not ok:
             return True
 
         # delete case initalization
-        # condition = (
-        #     f"(scenario LIKE '{nom_scen}' OR  scenario "
-        #     f"LIKE '{nom_scen}_init')"
-        #     f" AND run LIKE '{run}' "
-        # )
-        condition = (f"(scenario LIKE '{nom_scen}'"
-                     f"OR  scenario  LIKE {nom_scen}_init')"
-                     f"OR  scenario  LIKE {nom_scen}_ana_ctrl%')"
+        condition = (f"(scenario LIKE '{nom_scen}' "
+                     f"OR  scenario  LIKE '{nom_scen}_init' "
+                     f"OR  scenario  LIKE '{nom_scen}_ana_ctrl%') "
                      f"AND run LIKE '{run}' ")
 
         id_run = self.mdb.run_query(
