@@ -80,7 +80,7 @@ class CtrlLaw(ModelAssimBase):
         :return: ``(lst_cas, d_obs)`` where *lst_cas* is a list of case dicts
                  and *d_obs* is the deduplicated observation dict.
         """
-        d_ctrl_law = data["CtrlLaw"]
+        d_ctrl_law = data["ctrlLaw"]
         lst_cas = []
         lst_obs = []
 
@@ -218,7 +218,7 @@ class CtrlLaw(ModelAssimBase):
 
     def lst_instance_run_ctrl_law_js(self):
         """Build and persist ctrlLaw instance list from loaded JSON data."""
-        if not self.data.get("CtrlLaw"):
+        if not self.data.get("ctrlLaw"):
             return
 
         d_scen = self.data.dscen
@@ -233,8 +233,8 @@ class CtrlLaw(ModelAssimBase):
             xcas_file_init=d_scen.get("name_xcas_init", "mascaret_init.xcas"),
         )
         d_scen, order = self.build_analyse_instance(d_run, d_scen, order, type_assim="ctrlLaw",
-                                                    xcas_file=self.XCAS_FILE,
-                                                    xcas_file_init=self.XCAS_FILE_INIT
+                                                    xcas_file=d_scen.get("name_xcas", "mascaret.xcas"),
+                                                    xcas_file_init=d_scen.get("name_xcas_init", "mascaret_init.xcas"),
                                                     )
 
         self.data.dscen = d_scen

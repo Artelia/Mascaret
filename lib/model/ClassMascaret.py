@@ -99,29 +99,31 @@ class ClassMascaret:
         self.task_queue.append('ref')  # Toujours exécuter ref ?
         if not self.cond_api :
             drun['has_assimilation'] = False
+
         # Assimilation Control Ks *************
         if drun['has_assimilation'] :
-            self.task_queue.append('ctrl_ks_creat')
-            if drun['has_run_init']:
-                self.task_queue.append('ctrl_ks_init')
-            self.task_queue.append('ctrl_ks_perturb')
-            self.task_queue.append('ctrl_ks_blue')
-            self.task_queue.append('ctrl_ks_creat_ana')
-            if drun['has_run_init']:
-                self.task_queue.append('ctrl_ks_ana_init')
-            self.task_queue.append('ctrl_ks_ana')
+            if  self.obj_model.assim.check_assim_ks():
+                self.task_queue.append('ctrl_ks_creat')
+                if drun['has_run_init']:
+                    self.task_queue.append('ctrl_ks_init')
+                self.task_queue.append('ctrl_ks_perturb')
+                self.task_queue.append('ctrl_ks_blue')
+                self.task_queue.append('ctrl_ks_creat_ana')
+                if drun['has_run_init']:
+                    self.task_queue.append('ctrl_ks_ana_init')
+                self.task_queue.append('ctrl_ks_ana')
 
-        # Assimilation Control Law *************
-        if drun['has_assimilation']:
-            self.task_queue.append('ctrl_law_creat')
-            if drun['has_run_init']:
-                self.task_queue.append('ctrl_law_init')
-            self.task_queue.append('ctrl_law_perturb')
-            self.task_queue.append('ctrl_law_blue')
-            self.task_queue.append('ctrl_law_creat_ana')
-            if drun['has_run_init']:
-                self.task_queue.append('ctrl_law_ana_init')
-            self.task_queue.append('ctrl_law_ana')
+            # Assimilation Control Law *************
+            if self.obj_model.assim.check_assim_law():
+                self.task_queue.append('ctrl_law_creat')
+                if drun['has_run_init']:
+                    self.task_queue.append('ctrl_law_init')
+                self.task_queue.append('ctrl_law_perturb')
+                self.task_queue.append('ctrl_law_blue')
+                self.task_queue.append('ctrl_law_creat_ana')
+                if drun['has_run_init']:
+                    self.task_queue.append('ctrl_law_ana_init')
+                self.task_queue.append('ctrl_law_ana')
 
         # Lancer la première task de la queue
         self.process_next_task()

@@ -415,7 +415,10 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             itm = self.lv_ks_obs.model().item(r, 0)
             if itm.checkState() == 2:
                 l_obs.append(itm.data(32))
-
+        if not l_obs and (self.gb_a_ctrl.isChecked() or self.gb_b_ctrl.isChecked()) :
+            QMessageBox.warning(None, "Warning", "Note that no observations have been checked.\n"
+                                                 "Please check at least one observation.")
+            return
         recs = [[self.gb_minor.isChecked(), self.sb_minor_std.value(),
                  self.sb_minor_inf.value(), self.sb_minor_sup.value(),
                  self.gb_major.isChecked(), self.sb_major_std.value(),

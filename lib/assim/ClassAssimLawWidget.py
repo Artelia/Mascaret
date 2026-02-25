@@ -433,11 +433,16 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             itm = self.lv_law_obs.model().item(r, 0)
             if itm.checkState() == 2:
                 l_obs.append(itm.data(32))
-
+        if not l_obs and (self.gb_a_ctrl.isChecked() or self.gb_b_ctrl.isChecked()) :
+            QMessageBox.warning(None, "Warning", "Note that no observations have been checked.\n"
+                                                 "Please check at least one observation.")
+            return
         recs = [[self.sb_law_min.value(), self.sb_law_max.value(),
                  self.gb_a_ctrl.isChecked(), self.sb_a_std.value(),
                  self.gb_b_ctrl.isChecked(), self.sb_b_std.value(),
                  l_obs]]
+
+
 
         sql = "UPDATE {0}.assim_law SET " \
               "val_min = %s, " \

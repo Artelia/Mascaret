@@ -55,7 +55,7 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
 
 
         path_init = None
-        if  type_ctrl == "ctrlLaw"   and self.data.get('CtrlKS', False):
+        if  type_ctrl == "ctrlLaw"   and self.data.get('ctrlKS', False):
             path_ref = Path(d_folder.get('Analyse_ctrlKS', path_ref))
              
         if  d_scen.get("folder_init", '') != '':

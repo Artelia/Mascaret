@@ -290,7 +290,7 @@ class ClassDictRun:
             "has_fg" : self.cl_fg.fg_actif(self.mdb) if kernel == "unsteady" else False,
             "ligInit": par["LigEauInit"],
             "has_run_init": par["initialisationAuto"],
-            'has_assimilation': self.assim.check_assim() if self.cond_api else False
+            'has_assimilation': self.assim.check_assim() if self.cond_api else False,
         }
 
     def set_drun(self, new_items):

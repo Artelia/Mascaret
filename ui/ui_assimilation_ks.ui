@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>421</width>
-    <height>659</height>
+    <width>710</width>
+    <height>668</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -378,7 +378,11 @@
                 </widget>
                </item>
                <item row="2" column="1">
-                <widget class="QDoubleSpinBox" name="sb_minor_sup"/>
+                <widget class="QDoubleSpinBox" name="sb_minor_sup">
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
+                </widget>
                </item>
               </layout>
              </widget>
@@ -420,7 +424,11 @@
                 </widget>
                </item>
                <item row="2" column="1">
-                <widget class="QDoubleSpinBox" name="sb_major_sup"/>
+                <widget class="QDoubleSpinBox" name="sb_major_sup">
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
+                </widget>
                </item>
               </layout>
              </widget>

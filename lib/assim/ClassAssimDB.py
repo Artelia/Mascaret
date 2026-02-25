@@ -101,6 +101,9 @@ class ClassAssimDB:
         # Définir les colonnes selon obs_var
         stderr_col = 'obsz_stderr' if obs_var == 'H' else 'obsq_stderr'
         reject_col = 'obsz_rejectlimit' if obs_var == 'H' else 'obsq_rejectlimit'
+        if not lst_obs:
+            return d_obs_f
+
 
         sql = f"""
             SELECT o.id, o.code, out.{stderr_col}, out.{reject_col}, out.abscissa, out.zero
@@ -154,15 +157,15 @@ class ClassAssimDB:
         if not data_law:
             return
 
-        if 'CtrlLaw' not in self.data:
-            self.data['CtrlLaw'] = {}
+        if 'ctrlLaw' not in self.data:
+            self.data['ctrlLaw'] = {}
 
         d_perturb = dict(zip(
             data_config['perturbation_var'][idx],
             data_config['perturbation_val'][idx]))
         obs_var = data_config['control_var'][idx]
 
-        self.data['CtrlLaw'].update({
+        self.data['ctrlLaw'].update({
             "obs_var": obs_var,
             "seuil_rejet_misfit": data_config['seuil_rejet_misfit'][idx],
             "iterations_sigma": data_config['iterations_sigma'][idx],
@@ -213,13 +216,19 @@ class ClassAssimDB:
         }
 
     def check_assim(self):
-        return bool(self.data)
+        return bool(self.check_assim_ks() or self.check_assim_law())
 
     def check_assim_ks(self):
-        return bool(self.data.get('ctrlKS'))
+        cond = bool(self.data.get('ctrlKS'))
+        if cond:
+            return bool(self.data['ctrlKS'].get("lst_zone"))
 
     def check_assim_law(self):
-        return bool(self.data.get('CtrlLaw'))
+        cond = bool(self.data.get('ctrlLaw'))
+        if cond:
+            return bool(self.data['ctrlLaw'].get("lst_loi"))
+        return cond
+
 
     def add_data_dgenerate(self, d_run, d_scen ):
         path_ref = ''
@@ -272,7 +281,7 @@ class ClassAssimDB:
             return d_scen, order
         lst_case, d_obs = self.cl_creat_assim.get_list_cas_law(self.data)
         d_scen['obs_assim'] = d_obs
-        d_scen['type_obs_assim'] = self.data['CtrlLaw'].get("obs_var")
+        d_scen['type_obs_assim'] = self.data['ctrlLaw'].get("obs_var")
         d_scen, order = self.cl_creat_assim.build_ctrl_law_instance(lst_case, d_run, d_scen, order,
                                                 xcas_file=self.XCAS_FILE,
                                                 xcas_file_init=self.XCAS_FILE_INIT,

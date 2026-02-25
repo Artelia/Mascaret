@@ -438,7 +438,11 @@
                <widget class="QDoubleSpinBox" name="sb_law_min"/>
               </item>
               <item row="1" column="1">
-               <widget class="QDoubleSpinBox" name="sb_law_max"/>
+               <widget class="QDoubleSpinBox" name="sb_law_max">
+                <property name="maximum">
+                 <double>1000.000000000000000</double>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
