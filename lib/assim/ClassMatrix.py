@@ -41,6 +41,9 @@ class ClassMatrix:
         self.H = None
         self.B = None
         self.R = None
+        self.min_values = []
+        self.max_values = []
+
         if not(os.path.exists(base_folder)):
             raise FileNotFoundError(f'Unfound working folder : {base_folder}')
         self.base_folder = base_folder
@@ -105,6 +108,7 @@ class ClassMatrix:
         self.build_diago_R_matrix_ini()
         self.build_H_matrix()
         self.build_misfit()
+        self.build_min_max_values()
 
 
     def build_B_matrix_ini(self):
@@ -150,6 +154,15 @@ class ClassMatrix:
         print("Diagonale des matrices des covariances d'erreur d'observation R", diag_R)
         self.R = np.array(diag_R)
 
+    def build_min_max_values(self):
+        """
+        Builds minimal and maximal values vectors for assim parameters
+        It is stored in the same order than in data_assim json file.
+        """
+        for dico in self.dict_assim.get("ctrlKS").get("lst_zone"):
+            self.min_values.append(dico.get("val_min"))
+            self.max_values.append(dico.get("val_max"))
+
 
     def build_misfit(self):
         name_folder_ref = os.path.join(self.base_folder, 'run_ref')
@@ -194,6 +207,7 @@ class ClassMatrix:
                     self.misfit.append(self.Z_obs[station]['Z'][it] - Zref[station][it])
                     ista += 1
             print('Y0', self.y0)
+
 
     def build_H_matrix(self):
         """

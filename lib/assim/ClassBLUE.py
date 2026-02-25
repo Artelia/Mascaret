@@ -8,20 +8,38 @@ except:
 import os
 import json
 
-def write_matrix_2dims(file, matrix):
+
+def write_matrix_auto(f, matrix, decimals=5):
     """Writes matrix to file
-    :param file: file object (already opened by python),
-    :param matrix: matrix to write (1 or 2 dimensions)"""
-    sep = '\t\t\t'
+    :param f: file object (already opened by python),
+    :param matrix: matrix to write (1 or 2 dimensions)
+    :param decimals: number of decimal places to use
+    """
     if len(matrix.shape) == 2:
-        for i in range(matrix.shape[1]):
-            lg = sep.join(np.array(matrix[:, i], dtype='str'))
-            file.write('|' + lg + '|\n')
-        file.write('--' * 50 + '\n')
+        # Formater toutes les valeurs en chaînes
+        str_matrix = [[f"{val:.{decimals}f}" for val in row] for row in matrix]
+
+        # Largeur max par colonne
+        col_widths = [
+            max(len(str_matrix[r][c]) for r in range(len(str_matrix)))
+            for c in range(len(str_matrix[0]))
+        ]
+
+        for row in str_matrix:
+            line = "  ".join(val.rjust(col_widths[c]) for c, val in enumerate(row))
+            f.write(line + "\n")
     elif len(matrix.shape) == 1:
-        lg = sep.join(np.array(matrix[:], dtype='str'))
-        file.write('|' + lg + '|\n')
-        file.write('--' * 50 + '\n')
+        # Formater toutes les valeurs en chaînes
+        str_matrix = [f"{val:.{decimals}f}" for val in matrix]
+        print(str_matrix)
+
+        # Largeur max par colonne
+        col_width = [len(val) for val in str_matrix]
+
+        line = "  ".join(val.rjust(col_width[c]) for c, val in enumerate(str_matrix))
+        print(line)
+        f.write(line + "\n")
+
 
 class classBLUE:
     """Class that computes the analysed state of parameters using BLUE method"""
@@ -63,11 +81,15 @@ class classBLUE:
         print('Ebauche xb', self.matrixes.xb)
         print('MISFIT', self.matrixes.misfit)
 
-        self.innovation = np.matmul(self.K, self.matrixes.misfit)
+        self.innovation =self.K @ self.matrixes.misfit
         self.analyse = self.matrixes.xb + self.innovation
-        self.analyse = self.matrixes.xb + self.K @ (self.matrixes.y0 -
-                                                    self.matrixes.H @ self.matrixes.xb)
-        self.analyse = self.matrixes.xb + self.K @ self.matrixes.misfit
+
+        # Clipping xa based on min and max values
+        for ia, xa in enumerate(self.analyse):
+            if xa < self.matrixes.min_values[ia]:
+                self.analyse[ia] = self.matrixes.min_values[ia]
+            if xa > self.matrixes.max_values[ia]:
+                self.analyse[ia] = self.matrixes.max_values[ia]
         self.matrixes.build_B_matrix_analysed(self.K)
         print('Calcul de l\'état analysé effectué')
         print(self.analyse)
@@ -105,23 +127,23 @@ class classBLUE:
         with open(os.path.join(self.base_folder, 'blue_results.txt'), 'a' ) as f:
             f.write('Matrice B \n')
             current_mat = self.matrixes.B
-            write_matrix_2dims(f, current_mat)
+            write_matrix_auto(f, current_mat)
 
             f.write('Matrice R \n')
             current_mat = self.R
-            write_matrix_2dims(f, current_mat)
+            write_matrix_auto(f, current_mat)
 
             f.write('Matrice H \n')
             current_mat = self.matrixes.H
-            write_matrix_2dims(f, current_mat)
+            write_matrix_auto(f, current_mat)
 
             f.write('Matrice K \n')
             current_mat = self.K
-            write_matrix_2dims(f, current_mat)
+            write_matrix_auto(f, current_mat)
 
             f.write('Etat analyse xa \n')
             current_mat = self.analyse
-            write_matrix_2dims(f, current_mat)
+            write_matrix_auto(f, current_mat)
 
 
 if __name__ == '__main__':
