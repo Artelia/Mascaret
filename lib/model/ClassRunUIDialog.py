@@ -372,7 +372,7 @@ class ClassRunUIDialog(QDialog):
 
                 row_data["Comment"] = self._fmt_txt(self.table.cellWidget(row, 4).text())
 
-            if self.check_scenar(name_run, name_scen, ):
+            if self.check_scenar(name_run, name_scen):
                 self.box.info(f"Scenario {name_scen} is existing "
                               f"for the {row} row.", title="Warning")
                 return
@@ -381,7 +381,6 @@ class ClassRunUIDialog(QDialog):
 
         self.obj_model.set_drun({"name_run": name_run})
         self.obj_model.fill_lscenario(data)
-
         self.accept()
 
 

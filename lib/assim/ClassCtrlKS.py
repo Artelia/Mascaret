@@ -233,7 +233,6 @@ class CtrlKs(ModelAssimBase):
                 var = "coefLitMin"
             modif_ks.append((numz, var, zone['xa'][0]))
         if modif_ks:
-            print('ooooooooooo0', modif_ks)
             self.modif_ctrl_ks(instance.get('name_xcas', 'mascaret.xcas'), folder, modif_ks)
         else:
             print('Warning No assimiled Ks ')

@@ -29,7 +29,6 @@ except ImportError:
     from ClassCtrlLaw import CtrlLaw
 
 
-
 class CreatModelAssim(CtrlKs, CtrlLaw):
     """Façade aggregating :class:`CtrlKs` and :class:`CtrlLaw`.
 
@@ -46,23 +45,22 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         :param mess: Optional messaging callable passed to the base class.
         """
         super().__init__(mess=mess)
-     
+
     def fill_assim_folder(self, type_ctrl, if_analyse=False):
         d_scen = self.data.dscen
         d_folder = self.data.get_folder()
         path_instance = Path(d_scen.get("path_instance", '.'))
         path_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
 
-
         path_init = None
-        if  type_ctrl == "ctrlLaw"   and self.data.get('ctrlKS', False):
-            path_ref = Path(d_folder.get('Analyse_ctrlKS', path_ref))
-             
-        if  d_scen.get("folder_init", '') != '':
-            path_init = path_instance / d_scen.get("folder_ref", 'run_ref') / d_scen.get("folder_init")
-  
+        if type_ctrl == "ctrlLaw" and self.data.get('ctrlKS', False):
+            path_ref = Path(path_instance, 'Analyse_ctrlKS')
+
+        if d_scen.get("folder_init", '') != '':
+            path_init = path_ref / d_scen.get("folder_init")
+
         for name, folder in d_folder.items():
-            print(name.startswith("Analyse") , if_analyse , name)
+            print(name.startswith("Analyse"), if_analyse, name)
             if name in ['ref', 'init']:
                 continue
             if name.startswith("Analyse") != if_analyse:
@@ -70,12 +68,13 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
 
             instance = self.data.get_instance(name)
 
-            clone_source = path_init  if name.endswith('_init') and path_init  else path_ref
+            clone_source = path_init if name.endswith('_init') and path_init else path_ref
 
             self.clone_model(clone_source, folder)
-            print( if_analyse, instance.get('type_ctrl', ''))
+            print(if_analyse, instance.get('type_ctrl', ''))
+
             if 'ctrlKS' == instance.get('type_ctrl', ''):
-                if if_analyse :
+                if if_analyse:
                     self.fill_ana_folder_ks(instance, folder)
                 else:
                     self.fill_assim_folder_ks(instance, folder)
@@ -86,16 +85,17 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
                 else:
                     self.fill_assim_folder_law(instance, folder)
 
-    def create_folder_assim(self, path_scen, type_ctrl, if_analyse, jsonfile ="data_assim.json" ):
-        assimil = CreatModelAssim()
-        assimil.read_data_js(path_scen, jsonfile)
+    def create_folder_assim(self, path_scen, type_ctrl, if_analyse, jsonfile="data_assim.json"):
+        self.read_data_js(path_scen, jsonfile)
+
         if not if_analyse:
             if type_ctrl == 'ctrlKS':
-                assimil.lst_instance_run_ctrlks_js()
+                self.lst_instance_run_ctrlks_js()
             else:
-                assimil.lst_instance_run_ctrl_law_js()
+                self.lst_instance_run_ctrl_law_js()
 
-        assimil.fill_assim_folder(type_ctrl=type_ctrl, if_analyse=if_analyse)
+        self.fill_assim_folder(type_ctrl=type_ctrl, if_analyse=if_analyse)
+
 
 # ---------------------------------------------------------------------------
 # Quick smoke-test
@@ -114,4 +114,3 @@ if __name__ == "__main__":
                                 dico.get('if_analyse'),
                                 dico.get('json_file'),
                                 )
-

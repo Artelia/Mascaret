@@ -78,7 +78,10 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
         self.mgis.main_graph()
 
     def tab_changed(self):
+        # clean
         self.rb.reset(self.rb_format)
+        self.rb = None
+        self.iface.mapCanvas().refresh()
 
         if self.tab_assim.currentIndex() == 0:
             self.cur_wgt = 'ks'

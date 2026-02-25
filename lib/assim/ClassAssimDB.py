@@ -27,6 +27,7 @@ import traceback
 from datetime import datetime
 from .ClassCreatModelAssim import CreatModelAssim
 from ..model.ClassBCWriter import ClassBCWriter
+from ..Function import del_symbol
 
 
 class ClassAssimDB:
@@ -103,7 +104,6 @@ class ClassAssimDB:
         reject_col = 'obsz_rejectlimit' if obs_var == 'H' else 'obsq_rejectlimit'
         if not lst_obs:
             return d_obs_f
-
 
         sql = f"""
             SELECT o.id, o.code, out.{stderr_col}, out.{reject_col}, out.abscissa, out.zero
@@ -202,11 +202,11 @@ class ClassAssimDB:
         """Crée une entrée KS standardisée."""
         d_obs_f = self._creat_lst_obs(idx, data_law, obs_var)
 
-        name_law,  type_loi = self.get_info_law(data_law['id_law'][idx], data_law['source_law'][idx])
+        name_law, type_loi = self.get_info_law(data_law['id_law'][idx], data_law['source_law'][idx])
         return {
             "id_law": data_law['id_law'][idx],
             'source_law': data_law['source_law'][idx],
-            "name_law": name_law,
+            "name_law": del_symbol(name_law),
             'type_law': type_loi,
             'type': f'coef{typ_coef.upper()}',
             "std": data_law[f'std_{typ_coef}'][idx],
@@ -229,17 +229,16 @@ class ClassAssimDB:
             return bool(self.data['ctrlLaw'].get("lst_loi"))
         return cond
 
-
-    def add_data_dgenerate(self, d_run, d_scen ):
+    def add_data_dgenerate(self, d_run, d_scen):
         path_ref = ''
         path_init = ''
         for idx, instance in enumerate(d_scen['instances']):
             name = instance.get('name')
-            if name in  'ref':
+            if name in 'ref':
                 path_ref = instance.get("RUN_REP", '')
-            elif name in  'init':
+            elif name in 'init':
                 path_init = instance.get("RUN_REP", '')
-            if  path_ref != '' and path_init != '' :
+            if path_ref != '' and path_init != '':
                 break
 
         self.data['generate_instance'] = {
@@ -252,7 +251,7 @@ class ClassAssimDB:
                 "starttime": d_scen.get("starttime"),
                 'name_xcas_init': self.XCAS_FILE_INIT,
                 'name_xcas': self.XCAS_FILE,
-                "folder_init":  os.path.basename(path_init),
+                "folder_init": os.path.basename(path_init),
                 "folder_ref": os.path.basename(path_ref),
             },
         }
@@ -262,8 +261,8 @@ class ClassAssimDB:
             return d_scen, order
 
         lst_case, d_obs = self.cl_creat_assim.get_list_cas_ks(self.data)
-        d_scen['obs_assim'] = d_obs
-        d_scen['type_obs_assim'] = self.data['ctrlKS'].get("obs_var")
+        d_scen = self.update_obs_assim(d_scen, d_obs, self.data['ctrlKS'].get("obs_var"))
+
         d_scen, order = self.cl_creat_assim.build_ctrlks_instances(
             lst_case, d_run, d_scen, order,
             xcas_file=self.XCAS_FILE,
@@ -276,16 +275,26 @@ class ClassAssimDB:
         self.add_data_dgenerate(d_run, d_scen)
         return d_scen, order
 
+    def update_obs_assim(self, d_scen, d_obs, typ_obs):
+        if d_scen.get('obs_assim'):
+            d_scen['obs_assim'].append(d_obs)
+            d_scen['type_obs_assim'].append(typ_obs)
+        else:
+            d_scen['obs_assim'] = [d_obs]
+            d_scen['type_obs_assim'] = [typ_obs]
+
+        return d_scen
+
     def lst_instance_run_ctrl_law(self, d_run, d_scen, order):
+
         if not self.check_assim_law():
             return d_scen, order
         lst_case, d_obs = self.cl_creat_assim.get_list_cas_law(self.data)
-        d_scen['obs_assim'] = d_obs
-        d_scen['type_obs_assim'] = self.data['ctrlLaw'].get("obs_var")
+        d_scen = self.update_obs_assim(d_scen, d_obs, self.data['ctrlLaw'].get("obs_var"))
         d_scen, order = self.cl_creat_assim.build_ctrl_law_instance(lst_case, d_run, d_scen, order,
-                                                xcas_file=self.XCAS_FILE,
-                                                xcas_file_init=self.XCAS_FILE_INIT,
-                                                )
+                                                                    xcas_file=self.XCAS_FILE,
+                                                                    xcas_file_init=self.XCAS_FILE_INIT,
+                                                                    )
         d_scen, order = self.cl_creat_assim.build_analyse_instance(d_run, d_scen, order, type_assim='ctrlLaw',
                                                                    xcas_file=self.XCAS_FILE,
                                                                    xcas_file_init=self.XCAS_FILE_INIT,
@@ -300,14 +309,14 @@ class ClassAssimDB:
         var_obs = obj_model.get_obs_param(scen)
         self._create_obs_file(path_scen, lst_obs, var_obs)
 
-    def _export_data(self,folder='.'):
+    def _export_data(self, folder='.'):
         filename = self.DATA_ASSIM_FILE
         new_data = self.data.copy()
         self._convert_datetime_to_str(new_data)
         with open(os.path.join(folder, filename), "w") as f:
             json.dump(new_data, f, indent=4)
 
-    def _convert_datetime_to_str(self, data) :
+    def _convert_datetime_to_str(self, data):
         """Recursively convert :class:`datetime` objects to ISO strings in place.
 
         :param data or list to process.
@@ -340,12 +349,11 @@ class ClassAssimDB:
         path_obs = os.path.join(path_scen, 'Observations')
         os.makedirs(path_obs, exist_ok=True)
         cl_bc = ClassBCWriter(self.mdb, path_obs)
-        typ_crt = var_obs["type_obs"]
         dict_obs = {}
-        for icode, code in enumerate(data_obs.get('code', [])):
-            # decal_z = data_obs.get("zero", [0])[icode]
-            dict_tmp = {'type': typ_crt, 'formule': f'{code}[t] + {data_obs["zero"][icode]}'}
-            dict_obs[code] = dict_tmp
+        for num, obs in enumerate(data_obs):
+            typ_crt = var_obs["type_obs"][num]
+            for icode, code in enumerate(obs.get('code', [])):
+                # decal_z = data_obs.get("zero", [0])[icode]
+                dict_tmp = {'type': typ_crt, 'formule': f'{code}[t] + {obs["zero"][icode]}'}
+                dict_obs[code] = dict_tmp
         cl_bc.obs_to_file(dict_obs, var_obs['starttime'], var_obs["endtime"])
-
-

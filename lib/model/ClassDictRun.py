@@ -195,11 +195,11 @@ class ClassDictRun:
             dscen = self.get_scenario(scen)
             for instance in dscen.get("instances", []):
                 if instance.get('name') == type_inst or type_inst == 'all':
-                    #add info scenario or general
+                    # add info scenario or general
                     instance.update({
-                        "run_name" : drun.get("name_run"),
+                        "run_name": drun.get("name_run"),
                         "scen_name": dscen.get("name"),
-                        "comments" : dscen.get("comment"),
+                        "comments": dscen.get("comment"),
                         "BASE_NAME": dscen.get("BASE_NAME"),
                         "api": dgeneral.get('api'),
                         "dbg": dgeneral.get('dbg'),
@@ -214,7 +214,6 @@ class ClassDictRun:
             task_params.sort(key=lambda x: x.get('order', 0))
 
         return task_params
-
 
     def get_list_type_instance_assim(self, type_assim, type_init=None, if_ana=False):
         """
@@ -248,11 +247,11 @@ class ClassDictRun:
                 cond = cond and (cond_ana if if_ana else not cond_ana)
 
                 if cond and type_assim == ctrl_type:
-                    #add info scenario or general
+                    # add info scenario or general
                     instance.update({
-                        "run_name" : drun.get("name_run"),
+                        "run_name": drun.get("name_run"),
                         "scen_name": dscen.get("name"),
-                        "comments" : dscen.get("comment"),
+                        "comments": dscen.get("comment"),
                         "BASE_NAME": dscen.get("BASE_NAME"),
                         "api": dgeneral.get('api'),
                         "dbg": dgeneral.get('dbg'),
@@ -287,7 +286,7 @@ class ClassDictRun:
             "has_link_fg": self.cl_lk.fg_actif_lk(self.mdb) if par["presenceCasiers"] else False,
             "has_weir_fg": self.cl_w.fg_actif_weirs(self.mdb) if kernel == "unsteady" else False,
             "has_tracer": par["presenceTraceurs"],
-            "has_fg" : self.cl_fg.fg_actif(self.mdb) if kernel == "unsteady" else False,
+            "has_fg": self.cl_fg.fg_actif(self.mdb) if kernel == "unsteady" else False,
             "ligInit": par["LigEauInit"],
             "has_run_init": par["initialisationAuto"],
             'has_assimilation': self.assim.check_assim() if self.cond_api else False,
@@ -306,7 +305,7 @@ class ClassDictRun:
             else:
                 self.dmodel["run"][key] = item
 
-    def set_dscenario(self,  scen,  new_items):
+    def set_dscenario(self, scen, new_items):
         """Set or update items in the 'scenario' configuration.
 
         :param new_items: Dictionary of items to set in drun.
@@ -409,7 +408,7 @@ class ClassDictRun:
         :rtype: dict
         """
         d_scen = self.get_scenario(scen)
-        return  d_scen.get("obs_assim",{})
+        return d_scen.get("obs_assim", [])
 
     def get_obs_param(self, scen):
         """
@@ -420,9 +419,9 @@ class ClassDictRun:
         """
         d_scen = self.get_scenario(scen)
 
-        return {'starttime' : d_scen.get("starttime",None),
-                "endtime" : d_scen.get("endtime",None),
-                "type_obs" : d_scen.get("type_obs_assim",None)}
+        return {'starttime': d_scen.get("starttime", None),
+                "endtime": d_scen.get("endtime", None),
+                "type_obs": d_scen.get("type_obs_assim", [])}
 
     def get_id_scenario(self, scen):
         """Get the index of a scenario by name.
@@ -439,7 +438,7 @@ class ClassDictRun:
             if dico.get("name") == scen:
                 id_scen = idx
                 break
-        return  id_scen
+        return id_scen
 
     def get_id_instance(self, id_scen, instance_name):
         """Get the index of an instance by name within a scenario.
@@ -552,8 +551,8 @@ class ClassDictRun:
         # Retrieve the run ID
         # condition_scenario = f"(scenario LIKE '{nom_scen}' OR scenario LIKE '{nom_scen}_init')"
         condition_scenario = (f"(scenario LIKE '{nom_scen}' "
-                     f"OR  scenario  LIKE '{nom_scen}_init' "
-                     f"OR  scenario  LIKE '{nom_scen}_ana_ctrl%') ")
+                              f"OR  scenario  LIKE '{nom_scen}_init' "
+                              f"OR  scenario  LIKE '{nom_scen}_ana_ctrl%') ")
         id_run_query = (
             f"SELECT id FROM {self.mdb.SCHEMA}.runs "
             f"WHERE run = '{run}' AND {condition_scenario}"
@@ -633,6 +632,7 @@ class ClassDictRun:
         drun = self.get_drun()
         dgeneral = self.get_dgeneral()
         path_run = dgeneral["path_runs"]
+
         if not drun:
             return scenarios
         # Ask user for scenario name
@@ -649,12 +649,13 @@ class ClassDictRun:
                 "path_instance": os.path.join(path_run, f"{scen_name}"),
                 "instances": []
             }
-            if scenar.get("Run init") or scenar.get("lig file") :
+            if scenar.get("Run init") or scenar.get("lig file"):
                 d_scen.update(
                     {"scenar_init": (scenar["Run init"], scenar["Scenario init"]) if scenar["Run init"] else None,
                      "lig_file": scenar["lig file"],
                      }
                 )
+
             # When events
             if drun['event']:
                 d_event = self.get_events()
@@ -673,7 +674,7 @@ class ClassDictRun:
                                             "has_tracer": False,
                                             "has_assim": False,
                                             "starttime": None,
-                                            "order" : order,
+                                            "order": order,
                                             })
                 order += 1
             d_scen["instances"].append({'name': 'ref',
@@ -682,10 +683,11 @@ class ClassDictRun:
                                         "has_casier": drun["has_casier"],
                                         "has_tracer": drun["has_tracer"],
                                         "has_assim": drun['has_assimilation'],
-                                        "starttime": d_scen.get("starttime") if drun['event'] else None ,
+                                        "starttime": d_scen.get("starttime") if drun['event'] else None,
                                         "order": order,
                                         })
             order += 1
+
             if drun['has_assimilation']:
                 if self.assim.check_assim_ks():
                     d_scen, order = self.assim.lst_instance_run_ctrlks(drun, d_scen, order)

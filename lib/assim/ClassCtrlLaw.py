@@ -20,6 +20,7 @@ email                :
 
 import os
 import shutil
+from pathlib import Path
 
 try:
     from .ClassModelAssimFct import ModelAssimBase
@@ -47,9 +48,10 @@ class CtrlLaw(ModelAssimBase):
         """
         coef_a = coefs.get("coefA", 1)
         coef_b = coefs.get("coefB", 0)
+        folder = Path(folder)
+        file_law = folder / name_law
+        file_tmp = folder / f"{file_law}.tmp"
 
-        file_law = os.path.join(folder, name_law)
-        file_tmp = f"{file_law}.tmp"
         shutil.copy2(file_law, file_tmp)
 
         with open(file_tmp, "r") as filein, open(file_law, "w") as fileout:
@@ -72,70 +74,72 @@ class CtrlLaw(ModelAssimBase):
     # ------------------------------------------------------------------
     # Case-list builder
     # ------------------------------------------------------------------
-
     def get_list_cas_law(self, data):
-        """Generate the list of boundary-law perturbation cases.
+        """
+        Generate the list of boundary-law perturbation cases.
 
-        :param data: Full assimilation data dict containing a ``'CtrlLaw'`` key.
-        :return: ``(lst_cas, d_obs)`` where *lst_cas* is a list of case dicts
-                 and *d_obs* is the deduplicated observation dict.
+        :param data: Full assimilation data dict containing a ``'ctrlLaw'`` key.
+        :return: ``(lst_cas, d_obs)``:
+            - lst_cas: list of case dictionaries
+            - d_obs: deduplicated observation dictionary
         """
         d_ctrl_law = data["ctrlLaw"]
+        list_law = d_ctrl_law["lst_loi"]
+
         lst_cas = []
         lst_obs = []
 
-        for d_loi in d_ctrl_law["lst_loi"]:
+        # Préchargement des perturbations pour éviter les accès répétés dict[]
+        perturb_sources = {
+            ("extremities", 1): ("perturbationsDebit", d_ctrl_law["ldebit_perturb"]),
+            ("extremities", 2): ("perturbationsCote", d_ctrl_law["lcote_perturb"]),
+            ("lateral_inflows", None): ("perturbationsDebitLineique",
+                                        d_ctrl_law["ldebit_lin_perturb"]),
+        }
+
+        for d_loi in list_law:
             lst_obs.append(d_loi["lst_obs"])
-            name_law = d_loi["name_law"]
 
             source = d_loi["source_law"]
             type_law_id = d_loi["type_law"]
+            loi_type = d_loi["type"]
+            name_law = d_loi["name_law"]
 
-            if source == "extremities":
-                if type_law_id == 1:
-                    type_law = "perturbationsDebit"
-                    pertub = d_ctrl_law["ldebit_perturb"]
-                elif type_law_id == 2:
-                    type_law = "perturbationsCote"
-                    pertub = d_ctrl_law["lcote_perturb"]
-                else:
-                    self.add_info(f"Unknown type_law '{type_law_id}' for extremities")
-                    continue
-            elif source == "lateral_inflows":
-                type_law = "perturbationsDebitLineique"
-                pertub = d_ctrl_law["ldebit_lin_perturb"]
-            else:
-                self.add_info(f"Hydraulic law source '{source}' not defined")
+            # -----------------------------
+            # Détermination du type de loi
+            # -----------------------------
+            key = (source, type_law_id if source == "extremities" else None)
+
+            if key not in perturb_sources:
+                self.add_info(f"Hydraulic law source/type not defined: {source}/{type_law_id}")
                 continue
 
-            if d_loi["type"] == "coefA":
-                pertubf = pertub[0]
-            elif d_loi["type"] == "coefB":
-                pertubf = pertub[1]
+            type_law, perturb_list = perturb_sources[key]
+
+            # -----------------------------
+            # Sélection du coefficient A/B
+            # -----------------------------
+            if loi_type == "coefA":
+                pertubf = perturb_list[0] if abs(perturb_list[0]) < 1e6 else 1
+                val_coef = 1 + pertubf
+            elif loi_type == "coefB":
+                pertubf = perturb_list[1] if abs(perturb_list[1]) < 1e6 else 1
+                val_coef = 0 + pertubf
             else:
                 pertubf = 0
+                val_coef = 1
+            # -----------------------------
+            # Construction du cas
+            # -----------------------------
+            dnew = d_loi.copy()
+            dnew.update({
+                "name_law": name_law,
+                "type_law": type_law,
+                "pertub": pertubf,
+                "val_coef": val_coef,
+            })
 
-            pertubf = pertubf if abs(pertubf) < 1e6 else 1
-
-            temp_values = []
-            val = d_loi["val_min"]
-            while val < d_loi["val_max"]:
-                temp_values.append(round(val, 3))
-                val += pertubf
-            temp_values.append(d_loi["val_max"])
-
-            for temp_val in temp_values:
-                if (temp_val == 1 and d_loi["type"] == "coefA") or (temp_val == 0):
-                    continue
-
-                dnew = d_loi.copy()
-                dnew.update({
-                    "name_law": name_law,
-                    "type_law": type_law,
-                    "pertub": pertubf,
-                    "val_coef": temp_val,
-                })
-                lst_cas.append(dnew)
+            lst_cas.append(dnew)
 
         d_obs = self._filter_obs(lst_obs)
         return lst_cas, d_obs
@@ -253,8 +257,7 @@ class CtrlLaw(ModelAssimBase):
         if not assim_info:
             return
 
-        is_init = instance["name"].endswith("_init")
-        suffix = "_init.loi" if is_init else ".loi"
+        suffix = "_init.loi" if instance["name"].endswith("_init") else ".loi"
         name_law = f"{assim_info['name_law']}{suffix}"
         coefs = {
             "coefA": assim_info["coef_pertub"] if assim_info["type_case"] == "coefA" else 1,
@@ -262,19 +265,29 @@ class CtrlLaw(ModelAssimBase):
         }
         self.modif_ctrl_law(name_law, folder, coefs)
 
-    def fill_analyse_law(self):
-        # read data_asssim
-        # copie_  run_ref
-        # data.get("lst_zone")
-        # name_law = f'{assim_info["name_law"]}_init.loi' if name.endswith(
-        #     '_init') else f'{assim_info["name_law"]}.loi'
-        # coefs = {'coefA': assim_info['coef_pertub'] if assim_info['type_case'] == 'coefA' else 1,
-        #          'coefB': assim_info['coef_pertub'] if assim_info['type_case'] == 'coefB' else 0,
-        #          }
-        # d_law ={}
-        # for law in data.get("lst_loi"):
-        #    d_law['nom'] = {'coefA': 1, 'coefB': 1}
-        #
-        # for name_law, coefs in d_law.items():
-        #   modif_ctrl_law( name_law, folder, coefs)
-        pass
+    def fill_ana_folder_law(self, instance, folder):
+        #TODO a tester
+        if instance.get("type_ctrl") != "ctrlLaw":
+            return
+
+        for zone in self.data['ctrlKS']['lst_loi']:
+            if not zone.get('xa'):
+                continue
+            assim_info = instance.get("assim_info")
+            if not assim_info:
+                return
+            coef_a = 1
+            coef_b = 0
+            # TODO Attention à 'xa' ??????
+            xa = zone['xa']
+            coef_a = xa[0] if len(xa) > 0 else 1
+            coef_b = xa[1] if len(xa) > 1 else 0
+
+            suffix = "_init.loi" if instance["name"].endswith("_init") else ".loi"
+            name_law = f"{assim_info['name_law']}{suffix}"
+
+            coefs = {
+                "coefA": coef_a,
+                "coefB": coef_b,
+            }
+            self.modif_ctrl_law(name_law, folder, coefs)
