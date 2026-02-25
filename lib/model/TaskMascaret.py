@@ -440,18 +440,36 @@ class TaskMascaret(QgsTask):
 
         results = {
             'idrun': None,
+            'scenario_db':None,
+            'run_db': None,
             'success': False,
             'output': '',
             'error':'',
             'start_time': time.time(),
             'save_time' :0
         }
-        name_run =  params.get("run_name")
+
+        name_run = params.get("run_name")
         name_scen = params.get("scen_name")
         file_name = params.get("BASE_NAME")
-        if params.get('name') == 'init':
+
+        name = params.get("name")
+        type_ctrl = params.get("type_ctrl")
+
+        # Cas "init"
+        if name == "init":
             file_name = f"{file_name}_init"
             name_scen = f"{name_scen}_init"
+
+        # Cas "Analyse..."
+        if type_ctrl and name.startswith("Analyse"):
+            txt_type = {'ctrlKS': 'ctrl_ks', 'ctrlLaw': 'ctrl_law'}
+            if name.endswith("_init"):
+                file_name = f"{file_name}_init"
+                name_scen = f"{name_scen}_ana_{txt_type.get(type_ctrl, type_ctrl)}_init"
+            else:
+                name_scen = f"{name_scen}_ana_{txt_type.get(type_ctrl, type_ctrl)}"
+
         if not self.mdb:
             results = {
                 'output': f'No save results {name_run} - {name_scen}',
@@ -460,8 +478,10 @@ class TaskMascaret(QgsTask):
             return results
         try:
             id_run = self.insert_id_run(self.mdb, name_run, name_scen)
-            results.update({'id_run': id_run})
-
+            results.update({'id_run': id_run,
+                            'scenario_db': name_scen,
+                            'run_db': name_run,
+                            })
 
             cls_res = ClassGetResults(self.mdb, dbg=params.get("dbg", False))
 

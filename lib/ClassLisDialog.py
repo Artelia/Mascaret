@@ -84,7 +84,6 @@ class ClassLisDialog(QDialog):
             child = self.proxy.index(row, 0, proxy_root)
             self.tree_view.expand(child)
 
-
     def _on_item_clicked(self, proxy_index: QModelIndex):
         source_index = self.proxy.mapToSource(proxy_index)
         path = self.fs_model.filePath(source_index)

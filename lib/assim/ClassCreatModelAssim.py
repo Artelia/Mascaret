@@ -108,11 +108,6 @@ if __name__ == "__main__":
     jsonf = sys.argv[1]
     with open(jsonf) as json_data:
         dico = json.load(json_data)
-    print('iiiiiiiiiiiiiiii',dico.get('path_scen'),
-                                dico.get('type_ctrl'),
-                                dico.get('if_analyse'),
-                                dico.get('json_file'),
-                                )
     assimil = CreatModelAssim()
     assimil.create_folder_assim(dico.get('path_scen'),
                                 dico.get('type_ctrl'),

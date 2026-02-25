@@ -23,17 +23,17 @@ import shutil
 from pathlib import Path
 from xml.etree.ElementTree import parse as et_parse
 
-
 try:
     from .ClassAssimData import AssimData
 except:
     from ClassAssimData import AssimData
 
+
 # ---------------------------------------------------------------------------
 # Module-level helpers
 # ---------------------------------------------------------------------------
 
-def indent(elem, level = 0):
+def indent(elem, level=0):
     """Indent XML elements in-place for pretty printing.
 
     :param elem: XML element to indent.
@@ -102,7 +102,7 @@ class ModelAssimBase:
     # JSON persistence  (thin wrappers – logic lives in AssimData)
     # ------------------------------------------------------------------
 
-    def read_data_js(self, folder = ".", filein = "data_assim.json"):
+    def read_data_js(self, folder=".", filein="data_assim.json"):
         """Load assimilation data from a JSON file into :attr:`data`.
 
         :param folder: Directory containing the file.
@@ -110,11 +110,10 @@ class ModelAssimBase:
         """
         self.data.load(folder, filein)
 
-
     def export_data_json(
-        self,
-        folder = None,
-        filename = None,
+            self,
+            folder=None,
+            filename=None,
     ):
         """Persist :attr:`data` to disk.
 
@@ -136,7 +135,13 @@ class ModelAssimBase:
         :param target_folder: Path-like target directory.
         :return: ``True`` on success, ``False`` otherwise.
         """
-        ignore = {".opt", ".lis"}
+        ignore_suff = {".opt", ".lis", ".res",
+                       ".tra_opt", ".tra_lis",
+                       ".cas_opt", ".cas_lis",
+                       "liai_opt", ".liai_lis"}
+        ignore_pre = ['model_idx']
+        ignore_files = {'derror.pkl', 'derror.pkl', "dico_obs.json", "Z_Q_assim.json"}
+
         source = Path(source_folder)
         target = Path(target_folder)
 
@@ -148,7 +153,9 @@ class ModelAssimBase:
             return False
 
         for file_path in source.iterdir():
-            if not file_path.is_file() or file_path.suffix in ignore:
+            if (not file_path.is_file() or file_path.suffix in ignore_suff \
+                    or file_path.name.startswith(tuple(ignore_pre)) \
+                    or file_path.name in ignore_files):
                 continue
             try:
                 shutil.copy2(file_path, target / file_path.name)
@@ -268,8 +275,8 @@ class ModelAssimBase:
     # ------------------------------------------------------------------
 
     def build_analyse_instance(
-        self, drun, d_scen, order, type_assim,   xcas_file,
-        xcas_file_init
+            self, drun, d_scen, order, type_assim, xcas_file,
+            xcas_file_init
     ):
         """Append analysis-run instance entries to *d_scen*.
 

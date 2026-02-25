@@ -286,18 +286,19 @@ class ClassRunUIDialog(QDialog):
             return True
 
         # delete case initalization
-        condition = (
-            f"(scenario LIKE '{nom_scen}' OR  scenario "
-            f"LIKE '{nom_scen}_init')"
-            f" AND run LIKE '{run}' "
-        )
+        # condition = (
+        #     f"(scenario LIKE '{nom_scen}' OR  scenario "
+        #     f"LIKE '{nom_scen}_init')"
+        #     f" AND run LIKE '{run}' "
+        # )
+        condition = (f"(scenario LIKE '{nom_scen}'"
+                     f"OR  scenario  LIKE {nom_scen}_init')"
+                     f"OR  scenario  LIKE {nom_scen}_ana_ctrl%')"
+                     f"AND run LIKE '{run}' ")
 
         id_run = self.mdb.run_query(
             f"SELECT id FROM {self.mdb.SCHEMA}.runs "
-            f"WHERE run = '{run}' "
-            f"AND (scenario LIKE '{nom_scen}' "
-            f"OR  scenario "
-            f"LIKE '{nom_scen}_init') ",
+            f"WHERE {condition} ",
             fetch=True,
         )
         self.mdb.delete("runs", condition)

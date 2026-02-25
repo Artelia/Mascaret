@@ -230,12 +230,14 @@ class ClassMascaret:
             QgsMessageLog.logMessage(f"No '{log_inf}' model to run.", 'TaskMascaret', Qgis.Warning)
             self.process_next_task()
             return
+        # Save analyse
+        database = self.mdb if if_analyse else None
 
         self.task_ref = TaskMascaret(
             description=description,
             task_params=task_params,
             max_workers=self.limit_core,
-            database=None,
+            database=database,
         )
 
         if not self.use_task:
