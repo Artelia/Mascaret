@@ -77,6 +77,7 @@ class ClassRunUIDialog(QDialog):
 
         self.obj_model.fill_drun(self.kernel, self.dkernel[self.kernel])
         self.drun = self.obj_model.get_drun()
+
         self.default_run_path = self.obj_model.dmodel["general"]["path_runs"]
         self.run_path = self.default_run_path
         self.lbl_path.setText(self.run_path)
@@ -101,6 +102,9 @@ class ClassRunUIDialog(QDialog):
 
         if kernel != 'steady' and (not self.drun["has_run_init"] and self.drun["ligInit"]):
             self.without_init_version = False
+
+        if not self.drun.get('has_assimilation',False):
+            self.del_cpt_assim.hide()
 
         self.setup_table()
 
@@ -339,7 +343,8 @@ class ClassRunUIDialog(QDialog):
             self.obj_model.set_dgeneral({"path_runs":self.run_path,
                                          "has_new_run_path": True})
 
-        self.obj_model.set_drun({'limit_core' : self.sp_core.value()})
+        self.obj_model.set_drun({'limit_core' : self.sp_core.value(),
+                                 'del_inter_assim': self.del_cpt_assim.isChecked()})
         name_run = self._fmt_name(self.le_run.text())
         if name_run == '':
             self.box.info(f"Run name is required.", title="Warning")

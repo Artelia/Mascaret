@@ -869,6 +869,10 @@
    </property>
   </action>
   <action name="actionAssimilation">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/plugins/Mascaret/icones/parameter_assim.png</normaloff>:/plugins/Mascaret/icones/parameter_assim.png</iconset>
+   </property>
    <property name="text">
     <string>Assimilation</string>
    </property>

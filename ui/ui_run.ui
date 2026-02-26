@@ -52,6 +52,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="del_cpt_assim">
+       <property name="text">
+        <string>Delete intermediate computations</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>

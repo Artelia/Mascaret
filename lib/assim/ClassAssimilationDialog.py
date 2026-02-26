@@ -21,7 +21,7 @@ import os
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtGui import QColor, QIcon
 
 from qgis.core import QgsApplication, QgsWkbTypes, QgsGeometry
 from qgis.gui import QgsRubberBand
@@ -74,6 +74,9 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
 
         self.tab_assim.currentChanged.connect(self.tab_changed)
         self.tab_changed()
+
+        self.bt_close.setIcon(QIcon(QgsApplication.getThemeIcon("mActionFileExit.svg")))
+        self.bt_close.clicked.connect(self.close)
 
         self.mgis.main_graph()
 

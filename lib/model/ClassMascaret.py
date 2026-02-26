@@ -88,6 +88,7 @@ class ClassMascaret:
 
         drun = self.obj_model.get_drun()
         self.limit_core = self.obj_model.get_drun()['limit_core']
+        self.del_inter_assim = self.obj_model.get_drun()['del_inter_assim']
 
 
         # File d'attente des tasks à exécuter
@@ -268,7 +269,8 @@ class ClassMascaret:
             self.task_blue = TaskBLUE(
                 description=description,
                 base_folder=base_folder,
-                ctrl_type = 'ctrlKS'
+                ctrl_type = 'ctrlKS',
+                del_inter_assim = self.del_inter_assim
             )
             print('taskblueinit')
             self.task_blue.update_params(scens)

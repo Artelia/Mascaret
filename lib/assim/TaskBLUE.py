@@ -26,6 +26,7 @@ import os
 import subprocess
 import time
 import pprint
+import shutil
 
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal, QObject
@@ -42,7 +43,7 @@ class TaskSignals(QObject):
 
 
 class TaskBLUE(QgsTask):
-    def __init__(self, description, base_folder, ctrl_type):
+    def __init__(self, description, base_folder, ctrl_type, del_inter_assim):
         try:
             super().__init__(description, QgsTask.CanCancel)
 
@@ -56,6 +57,7 @@ class TaskBLUE(QgsTask):
             self.max_workers = 1
             self.running_futures = {}
             self.ctrl_type = ctrl_type
+            self.del_inter_assim = del_inter_assim
         except Exception as e:
             print(e)
             raise ValueError(e)
@@ -146,6 +148,15 @@ class TaskBLUE(QgsTask):
                 'output': process.stdout,
                 'error': process.stderr,
             })
+            if self.del_inter_assim:
+                target = os.path.join(path_scen, f"run_{self.ctrl_type}")
+                if os.path.isdir(target):
+                    try:
+                        shutil.rmtree(target, ignore_errors=True)
+                    except Exception:
+                        # On ignore tout le reste aussi, pour ne JAMAIS crasher
+                        pass
+
             # try:
             #     Blue = classBLUE(os.path.join(self.base_folder, scen))
             # except Exception as e:
