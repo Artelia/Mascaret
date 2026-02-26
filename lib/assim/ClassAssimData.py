@@ -43,7 +43,10 @@ class AssimData:
     # ------------------------------------------------------------------
 
     def __init__(self):
-        """Initialise with an empty data store."""
+        """Initialize the assimilation data accessor with empty store.
+
+        :return: None.
+        """
         self.raw = {}
         self._file_js = "data_assim.json"
         self._folder_js = "."
@@ -54,17 +57,21 @@ class AssimData:
 
     @property
     def filepath(self):
-        """Full path to the current JSON file."""
+        """Full path to the current JSON file.
+
+        :return: String path combining folder and filename.
+        """
         return os.path.join(self._folder_js, self._file_js)
 
     def load(self, folder=".", filename="data_assim.json"):
-        """Load and deserialise the JSON file into :attr:`data`.
+        """Load and deserialize the JSON file into internal data store.
 
         ISO-formatted strings are automatically converted to
         :class:`~datetime.datetime` objects.
 
         :param folder: Directory containing the file.
         :param filename: JSON filename.
+        :return: None. Populates *self.raw* from file.
         """
         self._folder_js = folder
         self._file_js = filename
@@ -77,15 +84,14 @@ class AssimData:
             folder=None,
             filename=None,
     ):
-        """Serialise :attr:`data` to a JSON file.
+        """Serialize internal data to a JSON file.
 
-        :class:`~datetime.datetime` values are converted back to ISO strings
+        :class:`~datetime.datetime` values are converted to ISO strings
         before writing.
 
-        :param folder: Output directory (defaults to the folder used by
-                       :meth:`load`).
-        :param filename: Output filename (defaults to the filename used by
-                         :meth:`load`).
+        :param folder: Output directory (defaults to the folder used by :meth:`load`).
+        :param filename: Output filename (defaults to the filename used by :meth:`load`).
+        :return: None. Writes JSON file to disk.
         """
         out_folder = folder or self._folder_js
         out_file = filename or self._file_js
@@ -104,30 +110,54 @@ class AssimData:
     #     return self.raw
 
     def get(self, var, default=None):
-        """Return value for a given key in the top-level data dict."""
+        """Return value for a given key in the top-level data dict.
+
+        :param var: Key name to retrieve.
+        :param default: Default value if key is not found.
+        :return: Value associated with key or default if not found.
+        """
         return self.raw.get(var, default)
 
     @property
     def generate_instance(self):
-        """``generate_instance`` top-level section."""
+        """The ``generate_instance`` top-level section.
+
+        :return: Dict with run and scenario generation data.
+        """
         return self.raw.get("generate_instance", {})
 
     @generate_instance.setter
     def generate_instance(self, value):
+        """Set the ``generate_instance`` top-level section.
+
+        :param value: Dict to store.
+        :return: None.
+        """
         self.raw["generate_instance"] = value
 
     @property
     def dscen(self):
-        """Scenario sub-section of ``generate_instance``."""
+        """The scenario sub-section of ``generate_instance``.
+
+        :return: Scenario dict with instances list and metadata.
+        """
         return self.generate_instance.get("dscen", {})
 
     @dscen.setter
     def dscen(self, value):
+        """Set the scenario sub-section.
+
+        :param value: Scenario dict to store.
+        :return: None.
+        """
         self.raw.setdefault("generate_instance", {})["dscen"] = value
 
     @property
     def drun(self):
-        """Run configuration sub-section of ``generate_instance``."""
+        """The run configuration sub-section of ``generate_instance``.
+
+        :return: Run configuration dict with run parameters.
+        """
         return self.generate_instance.get("drun", {})
 
     # ------------------------------------------------------------------
@@ -136,7 +166,10 @@ class AssimData:
 
     @property
     def instances(self):
-        """List of run-instance dicts inside the scenario."""
+        """List of run-instance dicts inside the scenario.
+
+        :return: List of instance configuration dicts.
+        """
         return self.dscen.get("instances", [])
 
     def initial_order(self):
@@ -147,9 +180,9 @@ class AssimData:
         return 2 if self.drun.get("has_run_init") else 1
 
     def get_folder(self):
-        """Return mapping of instance name -> RUN_REP folder for a scenario.
+        """Get mapping of instance name to RUN_REP folder for a scenario.
+
         :return: Dict mapping instance names to their RUN_REP path.
-        :rtype: dict
         """
         d_folder = {}
         for instance in self.instances:
@@ -160,11 +193,10 @@ class AssimData:
         return d_folder
 
     def get_instance(self, instance_name):
-        """Get  instance by name .
+        """Get instance by name.
+
         :param instance_name: Instance name to find.
-        :type instance_name: str
-        :return: Instance dict or None.
-        :rtype: dict or None
+        :return: Instance dict or ``None`` if not found.
         """
         for instance in self.instances:
             name = instance.get('name')
@@ -180,7 +212,8 @@ class AssimData:
     def _convert_str_to_datetime(data):
         """Recursively convert ISO strings to :class:`datetime` objects in place.
 
-        :param data or list to process.
+        :param data: Dict or list to process recursively.
+        :return: None. Modifies *data* in place, converting ISO strings to datetime objects.
         """
         if isinstance(data, dict):
             for key, value in data.items():
@@ -199,7 +232,8 @@ class AssimData:
     def _convert_datetime_to_str(data):
         """Recursively convert :class:`datetime` objects to ISO strings in place.
 
-        :param data or list to process.
+        :param data: Dict or list to process recursively.
+        :return: None. Modifies *data* in place, converting datetime objects to ISO format.
         """
         if isinstance(data, dict):
             for key, value in data.items():
@@ -216,16 +250,41 @@ class AssimData:
     # ------------------------------------------------------------------
 
     def __bool__(self):
+        """Check if data store is non-empty.
+
+        :return: ``True`` if data dict contains entries, ``False`` otherwise.
+        """
         return bool(self.raw)
 
     def __repr__(self):
+        """Return string representation of the AssimData instance.
+
+        :return: String showing filepath and top-level section keys.
+        """
         return f"AssimData(file={self.filepath!r}, sections={list(self.raw.keys())})"
 
     def __getitem__(self, key):
+        """Get value from underlying data dict by key.
+
+        :param key: Dict key to retrieve.
+        :return: Value associated with key.
+        :raises KeyError: If key not found in data dict.
+        """
         return self.raw[key]
 
     def __setitem__(self, key, value):
+        """Set value in underlying data dict by key.
+
+        :param key: Dict key to set.
+        :param value: Value to associate with key.
+        :return: None.
+        """
         self.raw[key] = value
 
     def __contains__(self, key):
+        """Check if key exists in underlying data dict.
+
+        :param key: Dict key to check.
+        :return: ``True`` if key is present in data dict, ``False`` otherwise.
+        """
         return key in self.raw

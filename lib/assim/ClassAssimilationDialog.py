@@ -50,11 +50,19 @@ FORM_CLASS, BASE = uic.loadUiType(
 
 
 class ClassAssimilationDialog(BASE, FORM_CLASS):
-    """
-    Class allow to update ks mesh planim of the selected profiles
+    """Main dialog for managing assimilation configuration.
+
+    Provides tabbed interface for Ks coefficient and hydraulic law assimilation
+    configuration with map visualization of selected control zones and laws.
     """
 
     def __init__(self, mgis, iface):
+        """Initialize the assimilation configuration dialog.
+
+        :param mgis: Main QGIS interface object.
+        :param iface: QGIS interface instance.
+        :return: None. Sets up tabs, widgets, and rubber band display.
+        """
         super(ClassAssimilationDialog, self).__init__()
         self.setupUi(self)
         self.mgis = mgis
@@ -81,7 +89,11 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
         self.mgis.main_graph()
 
     def tab_changed(self):
-        # clean
+        """Handle tab change between Ks and Law assimilation interfaces.
+
+        Resets and reconfigures rubber band geometry type and display.
+        :return: None. Updates UI and map representation.
+        """
         self.rb.reset(self.rb_format)
         self.rb = None
         self.iface.mapCanvas().refresh()
@@ -104,6 +116,12 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
         self.display_map_rb()
 
     def display_map_rb(self):
+        """Update rubber band display on map for current selected entity.
+
+        Refreshes rubber band visualization to show the geometry of the currently
+        selected Ks zone or law, if display is enabled.
+        :return: None. Updates map display.
+        """
         self.rb.reset(self.rb_format)
 
         if self.cur_wgt == 'ks':
@@ -123,6 +141,12 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
             self.rb.show()
 
     def closeEvent(self, event):
+        """Handle dialog close event.
+
+        Cleans up rubber band and resets zone selection tool on close.
+        :param event: Close event object.
+        :return: None. Performs cleanup before closing.
+        """
         self.rb.reset(self.rb_format)
         if self.wgt_ks.bt_sel_zone.isChecked():
             self.wgt_ks.bt_sel_zone.click()

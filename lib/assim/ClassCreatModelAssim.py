@@ -40,13 +40,23 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
     """
 
     def __init__(self, mess=None) -> None:
-        """Initialise the aggregated assimilation model.
+        """Initialize the aggregated assimilation model.
 
-        :param mess: Optional messaging callable passed to the base class.
+        :param mess: Optional messaging callable passed to parent classes for notifications.
+        :return: None.
         """
         super().__init__(mess=mess)
 
     def fill_assim_folder(self, type_ctrl, if_analyse=False):
+        """Fill assimilation or analysis folders with modified model files.
+
+        Clones reference model to each perturbation/analysis folder and applies
+        control-specific modifications (Ks or Law perturbations).
+
+        :param type_ctrl: Control type ('ctrlKS' or 'ctrlLaw').
+        :param if_analyse: ``False`` for perturbation run folders, ``True`` for analysis folders.
+        :return: None. Modifies model files in output folders.
+        """
         d_scen = self.data.dscen
         d_folder = self.data.get_folder()
         path_instance = Path(d_scen.get("path_instance", '.'))
@@ -86,6 +96,17 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
                     self.fill_assim_folder_law(instance, folder)
 
     def create_folder_assim(self, path_scen, type_ctrl, if_analyse, jsonfile="data_assim.json"):
+        """Create and populate assimilation or analysis folder structure.
+
+        Loads assimilation data, builds instance directories, and fills them with
+        modified model files according to the control type.
+
+        :param path_scen: Path to the scenario directory.
+        :param type_ctrl: Control type ('ctrlKS' or 'ctrlLaw').
+        :param if_analyse: ``False`` to generate perturbation instances, ``True`` for analysis.
+        :param jsonfile: JSON data filename (default: 'data_assim.json').
+        :return: None. Creates and populates assimilation folder structure.
+        """
         self.read_data_js(path_scen, jsonfile)
 
         if not if_analyse:

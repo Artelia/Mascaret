@@ -32,12 +32,19 @@ FORM_CLASS, BASE = uic.loadUiType(
 
 
 class ClassAssimKsWidget(BASE, FORM_CLASS):
-    """
-    Class allow to update ks mesh planim of the selected profiles
+    """Widget for managing Strickler coefficient (Ks) assimilation configuration.
+
+    Allows users to define and edit Ks control zones and observation parameters.
     """
     display_rb = pyqtSignal()
 
     def __init__(self, mgis, iface):
+        """Initialize the Ks assimilation widget.
+
+        :param mgis: Main QGIS interface object.
+        :param iface: QGIS interface instance.
+        :return: None.
+        """
         super(ClassAssimKsWidget, self).__init__()
         self.setupUi(self)
         self.mgis = mgis
@@ -83,6 +90,12 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         self.ui_loaded = True
 
     def load_config(self):
+        """Load Ks assimilation configuration from database.
+
+        Retrieves or creates default ctrlKS configuration with observation variables,
+        thresholds, sigma iterations, and perturbation values.
+        :return: None. Updates UI widgets with loaded configuration.
+        """
         sql = "SELECT control_type, active, control_var, seuil_rejet_misfit, " \
               "iterations_sigma, perturbation_val " \
               "FROM {0}.assim_config WHERE control_type = 'ctrlKS'"
@@ -112,6 +125,12 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         self.sb_ks_pert_max.setValue(row[5][1][0])
 
     def load_obs(self):
+        """Load available observations for the current observation variable.
+
+        Populates the observation list view with active observations matching
+        the current control variable (H or Q).
+        :return: None. Updates observation list and display.
+        """
         mdl = QStandardItemModel()
         mdl.setColumnCount(1)
 
@@ -135,6 +154,11 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         self.change_ks_config()
 
     def change_ks_config(self):
+        """Update Ks configuration in database when form values change.
+
+        Persists changes to active state, control variable, and perturbation values.
+        :return: None. Updates database configuration.
+        """
         if self.ui_loaded:
             sql = "UPDATE {0}.assim_config SET " \
                   "active = %s, " \
@@ -149,6 +173,12 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             self.mdb.run_query(sql.format(self.mdb.SCHEMA), many=True, list_many=recs)
 
     def verif_ks_zones(self):
+        """Verify and update Ks zone definitions against current model geometry.
+
+        Synchronizes database zones with calculated bed coefficient zones from the model,
+        creates missing zones, and updates reference coefficients as needed.
+        :return: ``True`` if zones were updated, ``False`` otherwise.
+        """
         ks_zones_updated = False
 
         d_calc_ks = self.mdb.zone_ks()
@@ -236,6 +266,11 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         return ks_zones_updated
 
     def reload_zone_ks(self):
+        """Reload Ks zones by verifying and refreshing from database.
+
+        Checks zone definitions and reloads the zone list if updates were made.
+        :return: None. Updates zone list if verification detected changes.
+        """
         ks_zones_updated = self.verif_ks_zones()
         if ks_zones_updated:
             QMessageBox.warning(None, "Warning", "Definition of some controls zone "
@@ -243,6 +278,12 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             self.load_zone_ks()
 
     def load_zone_ks(self):
+        """Load and display Ks control zones from database.
+
+        Populates the zone list view with all configured zones including their
+        active status and any auto-deletion flags.
+        :return: None. Updates zone list view and sets up signal connections.
+        """
         self.d_zone_ks.clear()
 
         d_calc_ks = self.mdb.zone_ks()
@@ -308,6 +349,11 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             self.lv_zone.setCurrentIndex(self.lv_zone.model().item(0, 0).index())
 
     def refresh_zone_ks(self, id_zone):
+        """Refresh parameter data for a specific Ks zone from database.
+
+        :param id_zone: Zone identifier to refresh.
+        :return: None. Updates *self.d_zone_ks* for the given zone.
+        """ 
         sql = "SELECT lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, " \
               "active_maj, std_maj, val_inf_maj, val_sup_maj FROM {0}.assim_ks " \
               "WHERE id_zone = {1}"
@@ -320,6 +366,11 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
                                           "val_inf_maj": row[8], "val_sup_maj": row[9]}
 
     def zone_selected_from_map(self, selected_abs):
+        """Select a Ks zone based on abscissa location from map interaction.
+
+        :param selected_abs: Abscissa value of the selected location on the branch.
+        :return: None. Updates current zone selection in list view.
+        """
         sql = "SELECT id_zone FROM {0}.assim_ks WHERE " \
               "abs_min <= {1} AND abs_max > {1}".format(self.mdb.SCHEMA, selected_abs)
         row = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
@@ -332,6 +383,10 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
                     break
 
     def current_zone_changed(self):
+        """Handle zone selection change in the zone list view.
+
+        :return: None. Updates current zone, displays zone info, and draws representation.
+        """
         if self.lv_zone.selectionModel().hasSelection():
             idxs = self.lv_zone.selectionModel().selectedIndexes()
             if idxs:
@@ -347,6 +402,11 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         self.draw_zone_rb()
 
     def display_zone_info(self):
+        """Display information and parameters for the currently selected Ks zone.
+
+        Updates spinboxes and checkboxes with zone parameters and observation selections.
+        :return: None. Updates UI with zone data or clears if no zone selected.
+        """
         self.gb_zone.setTitle("Aucune zone sélectionné")
 
         if self.cur_zone_ks is not None:
@@ -375,16 +435,34 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
                     itm.setCheckState(0)
 
     def zone_status_changed(self, itm):
+        """Handle zone active/inactive status change in list view.
+
+        :param itm: List item whose check state changed.
+        :return: None. Updates zone active status in database.
+        """
         sql = "UPDATE {0}.assim_ks SET active = {1} WHERE id_zone = {2}"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA, itm.checkState() == 2, itm.data(32)))
 
     def display_map_rb(self):
+        """Trigger display of zone rubber band on map.
+
+        :return: None. Emits display_rb signal to update map visualization.
+        """
         self.draw_zone_rb()
 
     def draw_zone_rb(self):
+        """Emit signal to draw zone rubber band representation on map.
+
+        :return: None. Emits display_rb signal.
+        """
+
         self.display_rb.emit()
 
     def zoom_on_zone(self):
+        """Zoom map to the extent of the currently selected Ks zone.
+
+        :return: None. Updates map canvas extent and refreshes display.
+        """
         if self.cur_zone_ks is not None:
             ks_geom = self.d_zone_ks[self.cur_zone_ks]["geom"]
             ks_bb = ks_geom.boundingBox()
@@ -395,21 +473,41 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             canvas.waitWhileRendering()
 
     def enable_input(self):
+        """Enable zone parameter editing mode.
+
+        Disables zone selection and enables zone parameter controls.
+        :return: None. Updates UI state for editing.
+        """
         self.gb_zone.setEnabled(True)
         self.gb_param_ks.setEnabled(False)
         self.bt_sel_zone.setChecked(False)
         self.fra_zone_sel.setEnabled(False)
 
     def disable_input(self):
+        """Disable zone parameter editing mode.
+
+        Enables zone selection and disables zone parameter controls.
+        :return: None. Updates UI state for browsing.
+        """
         self.gb_param_ks.setEnabled(True)
         self.fra_zone_sel.setEnabled(True)
         self.gb_zone.setEnabled(False)
 
     def cancel_input(self):
+        """Cancel zone editing and revert to displayed state.
+
+        :return: None. Disables input and refreshes displayed zone info.
+        """
         self.disable_input()
         self.display_zone_info()
 
     def save_input(self):
+        """Save edited zone parameters to database.
+
+        Validates that observations are selected (if controls are active), then
+        persists all zone parameter changes including observation selections.
+        :return: None. Updates database and refreshes UI on success.
+        """
         l_obs = []
         for r in range(self.lv_ks_obs.model().rowCount()):
             itm = self.lv_ks_obs.model().item(r, 0)

@@ -36,12 +36,20 @@ D_PVAR = {0: 'perturbationsCote',
 
 
 class ClassAssimLawWidget(BASE, FORM_CLASS):
-    """
-    Class allow to update ks mesh planim of the selected profiles
+    """Widget for managing hydraulic law assimilation configuration.
+
+    Allows users to define and edit hydraulic law control parameters for
+    limnigraphs, hydrographs, and lateral inflow laws.
     """
     display_rb = pyqtSignal()
 
     def __init__(self, mgis, iface):
+        """Initialize the law assimilation widget.
+
+        :param mgis: Main QGIS interface object.
+        :param iface: QGIS interface instance.
+        :return: None.
+        """
         super(ClassAssimLawWidget, self).__init__()
         self.setupUi(self)
         self.mgis = mgis
@@ -97,6 +105,12 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         self.ui_loaded = True
 
     def load_config(self):
+        """Load law assimilation configuration from database.
+
+        Retrieves or creates default ctrlLaw configuration with observation variables,
+        thresholds, sigma iterations, and perturbation values for law coefficients.
+        :return: None. Updates UI widgets with loaded configuration.
+        """
         sql = "SELECT control_type, active, control_var, seuil_rejet_misfit, " \
               "iterations_sigma, perturbation_val, perturbation_act " \
               "FROM {0}.assim_config WHERE control_type = 'ctrlLaw'"
@@ -134,6 +148,12 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                 self.bg_perturb_var.button(id_btn).click()
 
     def load_obs(self):
+        """Load available observations for the current observation variable.
+
+        Populates the observation list view with active observations matching
+        the current control variable (H or Q).
+        :return: None. Updates observation list.
+        """
         mdl = QStandardItemModel()
         mdl.setColumnCount(1)
 
@@ -158,6 +178,11 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             self.change_law_config()
 
     def cur_perturb_var_changed(self, id_var):
+        """Handle change in perturbation variable type (limnigraphy, hydrography, etc.).
+
+        :param id_var: Index identifying the perturbation variable type.
+        :return: None. Updates UI to show relevant parameters and laws.
+        """
         self.cur_perturb_var = D_PVAR[id_var]
         if self.cur_perturb_var in ['perturbationsCote', 'perturbationsDebit']:
             self.cur_source = 'extremities'
@@ -187,8 +212,13 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         self.change_law_config()
         self.display_laws()
 
-    def change_law_config(self):
-        if self.ui_loaded:
+    def change_law_config(self):               
+        """Update law configuration in database when form values change.
+
+        Persists changes to active state, control variable, and perturbation values.
+        :return: None. Updates database configuration.
+        """
+        if self.ui_loaded: 
             sql = "UPDATE {0}.assim_config SET " \
                   "active = %s, " \
                   "control_var = %s, " \
@@ -206,6 +236,12 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             self.mdb.run_query(sql.format(self.mdb.SCHEMA), many=True, list_many=recs)
 
     def verif_laws(self):
+        """Verify and update law definitions against current model geometry.
+
+        Synchronizes database laws with active laws (extremities and lateral inflows)
+        from the model, creates missing entries, and flags outdated entries.
+        :return: ``True`` if laws were updated, ``False`` otherwise.
+        """
         laws_updated = False
 
         sql = "SELECT gid as law_id, name as law_name, 'extremities' as source_law, " \
@@ -269,6 +305,11 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         return laws_updated
 
     def reload_laws(self):
+        """Reload laws by verifying and refreshing from database.
+
+        Checks law definitions and reloads the law list if updates were made.
+        :return: None. Updates law list if verification detected changes.
+        """
         laws_updated = self.verif_laws()
         if laws_updated:
             QMessageBox.warning(None, "Warning", "Definition of some laws "
@@ -276,6 +317,12 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             self.load_laws()
 
     def load_laws(self):
+        """Load and organize all hydraulic laws from database by type.
+
+        Retrieves laws organized by perturbation type (perturbationsCote, perturbationsDebit,
+        perturbationsDebitLineique) and stores their geometries and parameters.
+        :return: None. Populates *self.d_laws* dictionary.
+        """
         self.d_laws.clear()
         self.d_laws = {'perturbationsCote': {},
                        'perturbationsDebit': {},
@@ -320,6 +367,11 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                                                      "std_b": row[12]}}
 
     def display_laws(self):
+        """Display and populate law list view for current perturbation variable type.
+
+        Shows all laws of the current type with check state and auto-delete indicators.
+        :return: None. Updates law list view and sets up signal connections.
+        """
         mdl = QStandardItemModel()
         mdl.setColumnCount(1)
         for id_law, p_law in self.d_laws[self.cur_perturb_var].items():
@@ -345,6 +397,12 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             self.lv_law.setCurrentIndex(self.lv_law.model().item(0, 0).index())
 
     def refresh_law(self, id_var, id_law):
+        """Refresh parameter data for a specific law from database.
+
+        :param id_var: Perturbation variable type identifier.
+        :param id_law: Law identifier to refresh.
+        :return: None. Updates *self.d_laws* for the given law.
+        """
         sql = "SELECT lst_obs_h, lst_obs_q, val_min, val_max, " \
               "active_a, std_a, active_b, std_b, auto_del FROM {0}.assim_law " \
               "WHERE id_law = {1} AND id_type = '{2}'"
@@ -357,6 +415,10 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                                               "active_b": row[6], "std_b": row[7]}
 
     def current_law_changed(self):
+        """Handle law selection change in the law list view.
+
+        :return: None. Updates current law, displays law info, and draws representation.
+        """
         if self.lv_law.selectionModel().hasSelection():
             idxs = self.lv_law.selectionModel().selectedIndexes()
             if idxs:
@@ -371,7 +433,12 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         self.display_law_info()
         self.draw_law_rb()
 
-    def display_law_info(self):
+    def display_law_info(self):        
+        """Display information and parameters for the currently selected law.
+
+        Updates spinboxes and checkboxes with law parameters and observation selections.
+        :return: None. Updates UI with law data or clears if no law selected.
+        """
         self.gb_law.setTitle("Aucune loi sélectionné")
 
         if self.cur_law is not None:
@@ -393,6 +460,11 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                     itm.setCheckState(0)
 
     def law_status_changed(self, itm):
+        """Handle law active/inactive status change in list view.
+
+        :param itm: List item whose check state changed.
+        :return: None. Updates law active status in database.
+        """
         sql = "UPDATE {0}.assim_law SET active = {1} WHERE id_law = {2} and id_type = '{3}'"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA, itm.checkState() == 2,
                                       itm.data(32), self.cur_perturb_var))
@@ -401,9 +473,17 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         self.draw_law_rb()
 
     def draw_law_rb(self):
+        """Trigger display of law rubber band on map.
+
+        :return: None. Emits display_rb signal to update map visualization.
+        """
         self.display_rb.emit()
 
     def zoom_on_law(self):
+        """Zoom map to the extent of the currently selected law.
+
+        :return: None. Updates map canvas extent and refreshes display.
+        """
         if self.cur_law is not None:
             ks_geom = self.d_laws[self.cur_perturb_var][self.cur_law]["geom"]
             ks_bb = ks_geom.boundingBox()
@@ -414,20 +494,40 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             canvas.waitWhileRendering()
 
     def enable_input(self):
+        """Enable law parameter editing mode.
+
+        Disables law selection and enables law parameter controls.
+        :return: None. Updates UI state for editing.
+        """
         self.gb_law.setEnabled(True)
         self.gb_param_law.setEnabled(False)
         self.fra_law_sel.setEnabled(False)
 
     def disable_input(self):
+        """Disable law parameter editing mode.
+
+        Enables law selection and disables law parameter controls.
+        :return: None. Updates UI state for browsing.
+        """
         self.gb_param_law.setEnabled(True)
         self.fra_law_sel.setEnabled(True)
         self.gb_law.setEnabled(False)
 
     def cancel_input(self):
+        """Cancel law editing and revert to displayed state.
+
+        :return: None. Disables input and refreshes displayed law info.
+        """
         self.disable_input()
         self.display_law_info()
 
     def save_input(self):
+        """Save edited law parameters to database.
+
+        Validates that observations are selected (if controls are active), then
+        persists all law parameter changes including observation selections.
+        :return: None. Updates database and refreshes UI on success.
+        """
         l_obs = []
         for r in range(self.lv_law_obs.model().rowCount()):
             itm = self.lv_law_obs.model().item(r, 0)

@@ -38,7 +38,8 @@ class CtrlKs(ModelAssimBase):
 
         :param name_xcas: xcas filename.
         :param folder: Directory containing the xcas file.
-        :param modif_ks of ``(num_zone, var, ks_value)`` tuples.
+        :param modif_ks: List of ``(num_zone, var, ks_value)`` tuples to apply.
+        :return: None. Modifies the xcas file in place.
         """
         zones = self.get_zone_frot(name_xcas, folder)
 
@@ -112,13 +113,13 @@ class CtrlKs(ModelAssimBase):
     ):
         """Append ctrlKS run-instance entries to *d_scen*.
 
-        :param lst_case of Ks perturbation cases.
+        :param lst_case: List of Ks perturbation case dicts.
         :param d_run: Run configuration dict.
         :param d_scen: Scenario dict (modified in place).
         :param order: Current run-order counter.
         :param xcas_file: xcas filename for the main run.
         :param xcas_file_init: xcas filename for the initialisation run.
-        :return: Updated ``(d_scen, order)`` tuple.
+        :return: Updated ``(d_scen, order)`` tuple with appended instances.
         """
         folder = os.path.join(d_scen["path_instance"], "run_ctrlKS")
         starttime = d_scen.get("starttime")
@@ -172,7 +173,10 @@ class CtrlKs(ModelAssimBase):
     # ------------------------------------------------------------------
 
     def lst_instance_run_ctrlks_js(self):
-        """Build and persist ctrlKS instance list from loaded JSON data."""
+        """Build and persist ctrlKS instance list from loaded JSON data.
+
+        :return: None. Modifies ``self.data.dscen`` and exports JSON.
+        """
         if not self.data.get("ctrlKS"):
             return
 
@@ -200,6 +204,7 @@ class CtrlKs(ModelAssimBase):
 
         :param instance: Instance dict with ``'assim_info'`` and ``'name_xcas'``.
         :param folder: Target run directory.
+        :return: None. Modifies the xcas file in the folder.
         """
         if instance.get("type_ctrl") != "ctrlKS":
             return
@@ -216,9 +221,11 @@ class CtrlKs(ModelAssimBase):
         self.modif_ctrl_ks(instance.get('name_xcas', 'mascaret.xcas'), folder, modif_ks)
 
     def fill_ana_folder_ks(self, instance, folder):
-        """Placeholder: fill analysis folder for Ks assimilation.
+        """Fill analysis folder for Ks assimilation with optimal values.
 
-        .. todo:: Implement folder filling logic.
+        :param instance: Instance dict with ``'type_ctrl'`` key.
+        :param folder: Target analysis directory.
+        :return: None. Applies analyzed Ks values to xcas file or warns if unavailable.
         """
         if instance.get("type_ctrl") != "ctrlKS":
             return

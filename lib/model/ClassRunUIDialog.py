@@ -47,6 +47,7 @@ class ClassRunUIDialog(QDialog):
     The dialog builds a scenario table depending on kernel and options,
     collects user inputs and updates the provided obj_model with run settings.
     """
+
     def __init__(self, mgis, kernel, obj_model):
         """Initialize the run dialog and populate UI widgets.
 
@@ -103,7 +104,7 @@ class ClassRunUIDialog(QDialog):
         if kernel != 'steady' and (not self.drun["has_run_init"] and self.drun["ligInit"]):
             self.without_init_version = False
 
-        if not self.drun.get('has_assimilation',False):
+        if not self.drun.get('has_assimilation', False):
             self.del_cpt_assim.hide()
 
         self.setup_table()
@@ -145,7 +146,6 @@ class ClassRunUIDialog(QDialog):
         else:
             self.lbl_path.setText('')
             self.run_path = self.default_run_path
-
 
     def setup_table(self):
         """Configure the scenario table columns and row count based on selected options.
@@ -201,7 +201,7 @@ class ClassRunUIDialog(QDialog):
 
             # Column 3: lig file (custom widget)
             lig_widget = LigFileWidget(self)
-            if run_init_combo.currentText() =='".lig" File':
+            if run_init_combo.currentText() == '".lig" File':
                 scenario_init_combo.setEnabled(False)
                 lig_widget.setEnabled(True)
             else:
@@ -278,14 +278,13 @@ class ClassRunUIDialog(QDialog):
         # kernel=self.listeState[self.Klist.index(kernel)]
 
         if not self.check_run_scenar_exist(run, nom_scen) and \
-            not self.check_run_scenar_exist(run, f'{nom_scen}_init'):
+                not self.check_run_scenar_exist(run, f'{nom_scen}_init'):
             return False
 
         ok = self.box.yes_no_q(
             f"Do you want to remove the {nom_scen} results for a "
             "new simulation? "
         )
-
 
         if not ok:
             return True
@@ -328,7 +327,7 @@ class ClassRunUIDialog(QDialog):
         )
         return False
 
-    def hide_layout(self,layout):
+    def hide_layout(self, layout):
         for i in range(layout.count()):
             widget = layout.itemAt(i).widget()
             if widget is not None:
@@ -339,17 +338,16 @@ class ClassRunUIDialog(QDialog):
 
         :return: None
         """
-        if self.default_run_path != self.run_path :
-            self.obj_model.set_dgeneral({"path_runs":self.run_path,
+        if self.default_run_path != self.run_path:
+            self.obj_model.set_dgeneral({"path_runs": self.run_path,
                                          "has_new_run_path": True})
 
-        self.obj_model.set_drun({'limit_core' : self.sp_core.value(),
+        self.obj_model.set_drun({'limit_core': self.sp_core.value(),
                                  'del_inter_assim': self.del_cpt_assim.isChecked()})
         name_run = self._fmt_name(self.le_run.text())
         if name_run == '':
             self.box.info(f"Run name is required.", title="Warning")
             return
-
 
         data = []
         for row in range(self.table.rowCount()):
@@ -362,7 +360,7 @@ class ClassRunUIDialog(QDialog):
                 self.box.info(f"Scenario name is required for the {row} row.", title="Warning")
                 return
 
-            if self.without_init_version :
+            if self.without_init_version:
                 row_data["Comment"] = self._fmt_txt(self.table.cellWidget(row, 1).text())
             else:
                 lig_widget = self.table.cellWidget(row, 3)
@@ -442,4 +440,3 @@ class LigFileWidget(QWidget):
             "file_name": self.file_label.text() if self.file_label.text() != 'No file selected' else '',
             "file_path": self.hidden_path.text()
         }
-

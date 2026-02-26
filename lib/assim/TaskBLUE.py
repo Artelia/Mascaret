@@ -43,10 +43,23 @@ class TaskSignals(QObject):
 
 
 class TaskBLUE(QgsTask):
+    """QGIS Task for running BLUE calculations on multiple scenarios in parallel.
+
+    Submits scenario BLUE computations to a thread pool and collects results,
+    emitting progress signals in submission order.
+    """
+
     def __init__(self, description, base_folder, ctrl_type, del_inter_assim):
+        """Initialize the BLUE computation task.
+
+        :param description: Task description displayed to user.
+        :param base_folder: Base directory containing scenario folders.
+        :param ctrl_type: Control type string ('ctrlKS' or 'ctrlLaw').
+        :param del_inter_assim: ``True`` to delete intermediate assimilation folders after completion.
+        :return: None.
+        """
         try:
             super().__init__(description, QgsTask.CanCancel)
-
             self.base_folder = base_folder
             self.executor = None
             self.error_txt = ''
@@ -65,9 +78,8 @@ class TaskBLUE(QgsTask):
     def update_params(self, scens):
         """Update the task parameters and optionally max_workers.
 
-        :param task_params: New list of model parameter dicts.
-        :param max_workers: New maximum number of parallel workers (optional).
-        :return: None
+        :param scens: List of scenario identifiers to process.
+        :return: None. Updates internal state for model submission.
         """
         # self.task_params = task_params
         self.scens = scens
@@ -77,9 +89,9 @@ class TaskBLUE(QgsTask):
         # self.max_workers = max_workers
 
     def _submit_next_model(self):
-        """Submit the next model to the thread pool if possible.
+        """Submit the next scenario to the thread pool if resources available.
 
-        :return: True if a model was submitted, False otherwise.
+        :return: ``True`` if a model was submitted, ``False`` if queue is full or all submitted.
         """
         if self.next_to_submit >= self.total_models:
             return False
@@ -104,10 +116,11 @@ class TaskBLUE(QgsTask):
         return True
 
     def _process_completed_results(self):
-        """Process and emit results in submission order even if finished out-of-order.
+        """Process and emit results in submission order.
 
-        This method emits model_completed signals for consecutive results starting at self.next_to_process.
-        :return: None
+        Emits model_completed signals for consecutive completed results in order,
+        even if they finished out-of-order in the thread pool.
+        :return: None. Emits signals for consecutive results.
         """
         while self.next_to_process in self.completed_results:
             result = self.completed_results.pop(self.next_to_process)
@@ -118,6 +131,13 @@ class TaskBLUE(QgsTask):
             self.next_to_process += 1
 
     def run_blue(self, scen):
+        """Execute BLUE calculation for a single scenario.
+
+        Runs the BLUE computation process for the given scenario and optionally
+        deletes intermediate assimilation folders on success.
+        :param scen: Scenario identifier.
+        :return: Dict with computation results including success status, output, and timing.
+        """
         # M = ClassMatrix(self.base_folder)
         # M.build_all_matrix()
         print('in_run_blue')
@@ -177,6 +197,12 @@ class TaskBLUE(QgsTask):
         return results
 
     def run(self):
+        """Execute the QGIS task: manage thread pool and collect BLUE results.
+
+        Submits scenarios to a thread pool executor, processes completed results as they
+        finish, and handles cancellation requests.
+        :return: ``True`` if all calculations succeeded, ``False`` on error or cancellation.
+        """
         try:
             # Create the thread pool executor
             self.executor = concurrent.futures.ThreadPoolExecutor(
@@ -254,9 +280,9 @@ class TaskBLUE(QgsTask):
             return False
 
     def cancel(self):
-        """Cancel the task execution and log a summary.
+        """Cancel the task execution and log completion summary.
 
-        :return: None
+        :return: None. Logs execution time and progress before cancelling.
         """
         if self.exc_start_time:
             execution_time = time.time() - self.exc_start_time
@@ -269,9 +295,9 @@ class TaskBLUE(QgsTask):
         super().cancel()
 
     def onCancel(self):
-        """Handler called by QGIS when the task is cancelled.
+        """Handler invoked by QGIS when the task is cancelled.
 
-        :return: None
+        :return: None. Delegates to cancel() for cleanup.
         """
         self.cancel()
 

@@ -42,13 +42,22 @@ class TaskSignals(QObject):
 
 
 class TaskCreatFAssim(QgsTask):
+    """QGIS Task for creating assimilation folder structures for multiple scenarios in parallel.
+
+    Submits scenario folder creation jobs to a thread pool and collects results,
+    emitting progress signals in submission order.
+    """
 
     def __init__(self, description, scens, type_ctrl, if_analyse=False, base_folder='.', max_workers=None):
-        """Initialize TaskCreatFAssim.
+        """Initialize TaskCreatFAssim for parallel assimilation folder creation.
 
         :param description: Description string for the QGIS task.
-        :param task_params: List of dictionaries with model parameters.
-        :param max_workers: Maximum number of concurrent worker threads (optional).
+        :param scens: List of scenario identifiers to process.
+        :param type_ctrl: Control type ('ctrlKS' or 'ctrlLaw').
+        :param if_analyse: ``False`` for perturbation folders, ``True`` for analysis folders.
+        :param base_folder: Base directory containing scenario folders (default '.').
+        :param max_workers: Maximum number of concurrent worker threads. Auto-calculated if None.
+        :return: None.
         """
 
         super().__init__(description, QgsTask.CanCancel)
@@ -265,6 +274,12 @@ class TaskCreatFAssim(QgsTask):
         )
 
     def create_json_param(self,  path_scen, param_file):
+        """Create parameter JSON file for folder creation subprocess.
+
+        :param path_scen: Path to the scenario directory.
+        :param param_file: Path to write the parameter JSON file.
+        :return: Path to the created parameter file.
+        """
         # Create parameter input file (with index to avoid conflicts)
 
         d_json = {'path_scen': path_scen,
@@ -277,11 +292,11 @@ class TaskCreatFAssim(QgsTask):
         return param_file
 
     def creat_assim_folder(self, scen):
-        """Run a single Mascaret model instance (thread worker).
+        """Create assimilation folder structure for a single scenario (thread worker).
 
-        :param params: Dictionary containing model parameters.
-        :param index: Index of the model in the task list.
-        :return: dict containing model results, outputs, errors and timing.
+        Generates parameter file, invokes folder creation subprocess, and handles results.
+        :param scen: Scenario identifier to process.
+        :return: Dict containing creation results including success status, output, errors, and timing.
         """
         path_scen = os.path.join(self.base_folder, scen)
         param_file = os.path.join(path_scen, 'd_creat_folder.json')

@@ -42,9 +42,9 @@ class CtrlLaw(ModelAssimBase):
         ``round(coefA * v + coefB, 6)``.
 
         :param name_law: Law filename (e.g. ``'upstream.loi'``).
-        :param folder: Directory containing *name_law*.
-        :param coefs with optional keys ``'coefA'`` (default 1) and
-                      ``'coefB'`` (default 0).
+        :param folder: Directory containing the law file.
+        :param coefs: Dict with optional keys ``'coefA'`` (default 1) and ``'coefB'`` (default 0).
+        :return: None. Modifies the law file in place.
         """
         coef_a = coefs.get("coefA", 1)
         coef_b = coefs.get("coefB", 0)
@@ -75,8 +75,7 @@ class CtrlLaw(ModelAssimBase):
     # Case-list builder
     # ------------------------------------------------------------------
     def get_list_cas_law(self, data):
-        """
-        Generate the list of boundary-law perturbation cases.
+        """Generate the list of boundary-law perturbation cases.
 
         :param data: Full assimilation data dict containing a ``'ctrlLaw'`` key.
         :return: ``(lst_cas, d_obs)``:
@@ -159,13 +158,13 @@ class CtrlLaw(ModelAssimBase):
     ):
         """Append ctrlLaw run-instance entries to *d_scen*.
 
-        :param lst_case of law perturbation cases.
+        :param lst_case: List of law perturbation case dicts.
         :param d_run: Run configuration dict.
         :param d_scen: Scenario dict (modified in place).
         :param order: Current run-order counter.
         :param xcas_file: xcas filename for the main run.
         :param xcas_file_init: xcas filename for the initialisation run.
-        :return: Updated ``(d_scen, order)`` tuple.
+        :return: Updated ``(d_scen, order)`` tuple with appended instances.
         """
         folder = os.path.join(d_scen["path_instance"], "run_ctrlLaw")
         starttime = d_scen.get("starttime")
@@ -249,6 +248,7 @@ class CtrlLaw(ModelAssimBase):
 
         :param instance: Instance dict with ``'assim_info'`` and ``'name_xcas'``.
         :param folder: Target run directory.
+        :return: None. Modifies the law file in the folder.
         """
         if instance.get("type_ctrl") != "ctrlLaw":
             return
@@ -266,7 +266,15 @@ class CtrlLaw(ModelAssimBase):
         self.modif_ctrl_law(name_law, folder, coefs)
 
     def fill_ana_folder_law(self, instance, folder):
-        #TODO a tester
+        """Apply analyzed law coefficients to analysis folder.
+
+        Applies solution law coefficients from assimilation analysis to the instance folder.
+
+        :param instance: Instance dict with ``'assim_info'`` and ``'name_xcas'``.
+        :param folder: Target analysis directory.
+        :return: None. Applies analyzed coefficients to law file.
+        """
+        #TODO a test lorsque BLUE loi OK
         if instance.get("type_ctrl") != "ctrlLaw":
             return
 
