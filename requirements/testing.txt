@@ -1,6 +1,0 @@
-# Testing dependencies
-# --------------------
-
-pytest
-pytest-cov>=2.11,<8
-semver>=2.13,<3.1
