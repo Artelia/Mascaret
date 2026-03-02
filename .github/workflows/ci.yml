@@ -51,7 +51,7 @@ jobs:
 
     steps:
       - name: Get source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Python 3.9
         uses: actions/setup-python@v5
@@ -82,7 +82,7 @@ jobs:
       - name: Set env
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
