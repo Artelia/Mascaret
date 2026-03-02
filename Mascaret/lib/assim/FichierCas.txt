@@ -1,0 +1,1 @@
+'mascaret_init.xcas'
