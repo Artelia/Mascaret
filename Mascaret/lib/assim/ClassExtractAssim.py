@@ -61,7 +61,7 @@ class ClassExtractAssim:
         size_x = masc.get_var_size("Model.X")[0]
         xcoords = np.array([masc.get("Model.X", i) for i in range(size_x)])
         self.get_coords_assim(xcoords)
-        return self.num_zones
+        return self.num_zones, self.dict_obs
 
     def extract_zq(self, masc, t0):
         # Periodic assimilation: store Z and Q at observation nodes
@@ -98,23 +98,32 @@ class ClassExtractAssim:
                     self.zones.append(str(dico["num_zone"]))
         # self.dict_stations = json.load(f)
         keys = np.array([k for k in self.dict_stations], dtype=int)
+
         for key in keys:
             for ix, x in enumerate(self.dict_stations[str(key)]['X']):
                 # print(masc_xcoords)
                 index_obs = int(np.argmin(np.abs(np.subtract(masc_xcoords, x)))) + 1
                 code_obs = self.dict_stations[str(key)]['code'][ix]
+                obs_folder = os.path.join(self.assim_path, 'Observations')
+                file_obs = os.path.join(obs_folder, str(code_obs) + '.loi')
+                with open(file_obs) as f:
+                    lines = f.readlines()[3:]
+                    # TODO handle time units !!!
+                    dt_obs = (float(lines[1].split()[0]) - float(lines[0].split()[0])) * 3600
+                    pass
                 if index_obs not in self.dict_obs:
                     self.dict_obs[index_obs] = {'id_zone': [int(key)],
                                                 'x_obs': x,
-                                                'code': code_obs}
+                                                'code': code_obs,
+                                                'dt_obs': dt_obs}
                 else:
                     self.dict_obs[index_obs]['id_zone'].append(int(key))
 
         with open(os.path.join(self.run_path, 'dico_obs.json'), 'w') as f:
             json.dump(self.dict_obs, f)
-        # return self.dict_obs
         self.build_res_dict()
         self.num_zones = len(keys)
+        # return self.dict_obs
 
     def build_res_dict(self):
         self.dictRes = {'time': [],

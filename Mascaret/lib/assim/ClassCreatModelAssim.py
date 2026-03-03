@@ -20,6 +20,8 @@ email                :
 import sys
 import json
 from pathlib import Path
+import os
+import numpy as np
 
 try:
     from .ClassCtrlKS import CtrlKs
@@ -47,6 +49,32 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         """
         super().__init__(mess=mess)
 
+    def check_obs(self, type_ctrl):
+        # A ce stade, on suppose l'existence de la clé type_ctrl
+        d_scen = self.data.dscen
+        path_instance = Path(d_scen.get("path_instance", '.'))
+        folder_obs = os.path.join(path_instance, 'Observations')
+        # On part du principe que folder obs est remplit avec toutes les observations, même si pas utilisées pour l'assim
+        # nous on fait le check que sur celles de l'assimilation
+        all_codes_obs = []
+        all_dt_obs = []
+        for zone in self.data.get(type_ctrl).get("lst_zone"):
+            if zone.get("lst_obs", {}):
+                for c in zone["lst_obs"]["code"]:
+                    if c not in all_codes_obs:
+                        all_codes_obs.append(c)
+        if len(all_codes_obs) == 0:
+            raise ValueError("No observation selected for assimilation")
+        for c in all_codes_obs:
+            file_obs = os.path.join(folder_obs, c + '.loi')
+            with open(file_obs) as f:
+                lines = f.readlines[3:]
+                dt_obs = lines[1].split()[0] - lines[0].split()[0]
+                all_dt_obs.append(dt_obs)
+        if len(np.unique(all_dt_obs)) > 1:
+            raise ValueError('At least one observation has different timestep than the others')
+
+
     def fill_assim_folder(self, type_ctrl, if_analyse=False):
         """Fill assimilation or analysis folders with modified model files.
 
@@ -63,6 +91,7 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         path_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
 
         path_init = None
+
         if type_ctrl == "ctrlLaw" and self.data.get('ctrlKS', False):
             path_ref = Path(path_instance, 'Analyse_ctrlKS')
 
@@ -130,6 +159,7 @@ if __name__ == "__main__":
     with open(jsonf) as json_data:
         dico = json.load(json_data)
     assimil = CreatModelAssim()
+
     assimil.create_folder_assim(dico.get('path_scen'),
                                 dico.get('type_ctrl'),
                                 dico.get('if_analyse'),

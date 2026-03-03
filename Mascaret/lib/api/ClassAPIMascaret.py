@@ -124,7 +124,8 @@ class ClassAPIMascaret:
         self.num_zones_assim = 0
         self.dico_assim = None
         self.res_assim = None
-        self.pdt_assim = 360  # assimilation time step in seconds
+        self.dict_obs = {}
+        self.pdt_assim = 0  # assimilation time step in seconds
 
         # Mobile hydraulic structures
         self.clfg = ClassFloodGate(self)
@@ -163,7 +164,17 @@ class ClassAPIMascaret:
 
     def init_assim(self):
         if self.assim:
-            self.num_zones_assim = self.res_assim.init_assim(self.masc)
+            self.num_zones_assim, self.dict_obs = self.res_assim.init_assim(self.masc)
+            if not self.dict_obs:
+                raise ValueError('No observation retrieved for assimilation. Check settings')
+            lst_pdt_obs = []
+            for idx_obs in self.dict_obs:
+                lst_pdt_obs.append(self.dict_obs[idx_obs]['dt_obs'])
+            if len(np.unique(lst_pdt_obs)) != 1:
+                raise ValueError('At least one observation has different time step than the other. '
+                                 'Every observation must have the same timestep for assimilation')
+            self.pdt_assim = lst_pdt_obs[0]
+
 
     def init_struct(self):
 
