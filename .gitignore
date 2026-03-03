@@ -1,15 +1,17 @@
-doc/*
-test/*
-mascaret/mascaret/*
-mascaret_*/*
-bin/*
-bin
+# file type
 *.pyc
-.idea/workspace.xml
-settings.json
+*.phy
+
+#Mascaret Plugin folder
+Mascaret/mascaret/*
+Mascaret/mascaret_*/*
+Mascaret/bin/*
+Mascaret/bin
+#Mascaret Plugin file
+Mascaret/settings.json
+Mascaret/icones/Thumbs.db
+
+#.idea
+Mascaret/.idea/*
 .idea/*
 
-icones/Thumbs.db
-*.phy
-Structure/test
-api/test.py
