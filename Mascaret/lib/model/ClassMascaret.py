@@ -58,7 +58,7 @@ class ClassMascaret:
         self.task_ref= None
         self.limit_core = 1
         self.max_retries = 5
-        self.use_task = False
+        self.use_task = True
         self.task_blue = None
         self.cond_api = self.mgis.cond_api
 

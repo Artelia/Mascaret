@@ -33,6 +33,9 @@ class ClassMatrix:
     def __init__(self, base_folder, ctrl_type, json_assim=None):
         """"""
         # Vecteur d'ébauche
+        self.so = None
+        self.residual = None
+        self.sb = None
         self.misfit = []
         self.B_analysed = None
         self.Z_obs = []
@@ -136,6 +139,14 @@ class ClassMatrix:
 
     def build_B_matrix_analysed(self, K):
         self.B_analysed = self.B - np.matmul(np.matmul(K, self.H), self.B)
+
+
+    def calc_so_sb(self, xa, B, R):
+        HBHT = self.H @ B @ self.H.transpose()
+        self.sb = np.divide(np.dot(self.misfit, self.H @ xa), np.trace(HBHT))
+        self.residual = np.array(self.misfit) - self.H @ xa
+        self.so = np.divide(np.dot(self.misfit, self.residual), np.trace(R))
+
 
     def build_diago_R_matrix_ini(self):
         diag_R = []
