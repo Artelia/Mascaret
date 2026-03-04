@@ -33,9 +33,6 @@ class ClassMatrix:
     def __init__(self, base_folder, ctrl_type, json_assim=None):
         """"""
         # Vecteur d'ébauche
-        self.so = None
-        self.residual = None
-        self.sb = None
         self.misfit = []
         self.B_analysed = None
         self.Z_obs = []
@@ -71,10 +68,12 @@ class ClassMatrix:
             self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlKS"]["lst_zone"]]
             self.zones = np.unique(self.zones)
             self.nb_zones = len(self.zones)
+            self.seuil_rejet_misfit = self.dict_assim[ctrl_type].get("seuil_rejet_misfit", 500)
         if self.ctrlLaw:
             self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlLaw"]["lst_loi"]]
             self.zones = np.unique(self.zones)
             self.nb_zones = len(self.zones)
+            self.seuil_rejet_misfit = self.dict_assim[ctrl_type].get("seuil_rejet_misfit", 500)
 
         # Récupération du nombre total de pas de temps d'observation
         name_folder_ref = os.path.join(self.base_folder, 'run_ref')
@@ -91,7 +90,7 @@ class ClassMatrix:
                     for ic, c in enumerate(dico.get("code")):
                         if c not in self.zero_obs.keys():
                             self.zero_obs[c] = dico.get("zero")[ic]
-
+        self.type_perturb = []
         # Récupération du nombre total de perturbations
         if self.ctrlKs:
             self.nbperturb = 0
@@ -100,9 +99,11 @@ class ClassMatrix:
             for d in self.dict_assim["ctrlKS"]["lst_zone"]:
                 if d.get("type") == "Ksmin":
                     self.nbperturb += 1
+                    self.type_perturb.append(1)
                     # self.nbperturb += int(np.ceil((d["val_max"] - d["val_min"])/self.minperturb)) + 1
                 if d.get("type") == "Ksmaj":
                     self.nbperturb += 1
+                    self.type_perturb.append(2)
                     # self.nbperturb += int(np.ceil((d["val_max"] - d["val_min"])/self.majperturb)) + 1
             # self.nbperturb = 1
             print('Total number of perturbations:', self.nbperturb)
@@ -141,11 +142,11 @@ class ClassMatrix:
         self.B_analysed = self.B - np.matmul(np.matmul(K, self.H), self.B)
 
 
-    def calc_so_sb(self, xa, B, R):
-        HBHT = self.H @ B @ self.H.transpose()
-        self.sb = np.divide(np.dot(self.misfit, self.H @ xa), np.trace(HBHT))
-        self.residual = np.array(self.misfit) - self.H @ xa
-        self.so = np.divide(np.dot(self.misfit, self.residual), np.trace(R))
+    # def calc_so_sb(self, xa, B, R):
+    #     HBHT = self.H @ B @ self.H.transpose()
+    #     self.sb = np.divide(np.dot(self.misfit, self.H @ xa), np.trace(HBHT))
+    #     self.residual = np.array(self.misfit) - self.H @ xa
+    #     self.so = np.divide(np.dot(self.misfit, self.residual), np.trace(R))
 
 
     def build_diago_R_matrix_ini(self):
@@ -191,7 +192,7 @@ class ClassMatrix:
                 Zref[station] += dict_ref['Z'][str(zone)][station]
         # Zref = np.array(Zref, dtype=float)
         print('ZREF : ', Zref)
-        nb_time = len(dict_ref['time'])
+        # nb_time = len(dict_ref['time'])
         obs_folder = os.path.join(self.base_folder, 'Observations')
         self.Z_obs = {}
         for zone in self.zones:
@@ -208,11 +209,13 @@ class ClassMatrix:
         for zone in self.zones:
             for it, time in enumerate(dict_ref['time']):
                 for station in dict_ref['Z'][str(zone)]:
-                    idx_zref = ista * nb_time + it
                     self.y0.append(self.Z_obs[station]['Z'][it])
-                    # print(idx_zref, Zref[idx_zref])
                     print(self.Z_obs[station]['Z'][it])
-                    self.misfit.append(self.Z_obs[station]['Z'][it] - Zref[station][it])
+                    delta_z = self.Z_obs[station]['Z'][it] - Zref[station][it]
+                    # Application du seuil de rejet misfit
+                    if abs(100 * np.divide(delta_z, Zref[station][it])) > self.seuil_rejet_misfit:
+                        delta_z = 0.
+                    self.misfit.append(delta_z)
                     ista += 1
             print('Y0', self.y0)
 

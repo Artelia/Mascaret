@@ -61,22 +61,47 @@ class classBLUE:
         self.matrixes.build_all_matrix()
         self.current_B = self.matrixes.B
         self.current_R = np.diag(self.matrixes.R)
+        self.so = 1
+        self.old_so = 0
+        self.residual = None
+        # Une valeur de sb par type de perturbation (Ksmin et Ksmaj par ex)
+        self.sb = [1] * np.max(self.matrixes.type_perturb)
+        self.old_sb = [0] * np.max(self.matrixes.type_perturb)
+        self.delta_so = 1.
+        self.delta_sb = [1] * np.max(self.matrixes.type_perturb)
+        self.raison_arret = ""
 
     def compute_BLUE(self):
         """ Computes different BLUE steps to get analysed state """
         for i in range(self.iterations_sigma):
             self.build_gain_K()
             self.build_analysis()
-            # self.store_results(first=(i==0), assim_step=i)
-            self.matrixes.calc_so_sb(self.analyse, self.current_B, self.current_R)
+            self.calc_so_sb()
+
+            # Arrêt si un des sb est < 0
+            if np.any(np.array(self.sb) < 0):
+                self.raison_arret = "Arrêt sur critère sb < 0"
+                self.store_results(first=(i == 0), assim_step=i)
+                break
+            # Arrêt si delta_sb et delta_so sont < 1e-3
+            elif (self.delta_so < 1e-3) and (np.all(np.array(self.delta_sb) < 1e-3) ):
+                self.raison_arret = ("'Arret sur critere de convergence de sb et so. Variation "
+                                     "inférieure à 1e-3 entre deux pas d'assimilation")
+                self.store_results(first=(i == 0), assim_step=i)
+                break
+
             self.store_results(first=(i==0), assim_step=i)
             # Updating B and R values
-            # B = sb * B_initial
-            self.current_B = self.matrixes.sb * self.matrixes.B
+            # B = sb * B_initialz
+            # Avec sb qui dépend du type de perturbation, appliqué aux colonnes correspondantes
+            for j in range(self.current_B.shape[1]):
+                isigma = self.matrixes.type_perturb[j] - 1
+                self.current_B[:, j] = self.sb[isigma] * self.current_B[:, j]
             # R = so * R_initial
-            self.current_R = self.matrixes.so * np.diag(self.matrixes.R)
+            self.current_R = self.so * np.diag(self.matrixes.R)
             print(self.current_R)
 
+        self.raison_arret = "Nombre iterations sigma atteint"
     def build_gain_K(self):
         """ Computes gain matrix K : K =BH^t (HBH^t + R)^-1 """
         # Calcul de BHt
@@ -87,6 +112,30 @@ class classBLUE:
         HBHT_plus_R = np.linalg.inv(HBHT + self.current_R)
         self.K = BHT @ HBHT_plus_R
         print('Calcul de gain effactué. K=', self.K)
+
+    def calc_so_sb(self):
+        trace_HBHT = []
+        self.old_sb = np.copy(self.sb)
+        self.old_so = np.copy(self.so)
+
+        for itype in range(np.max(self.matrixes.type_perturb)):
+            B_tempo = np.copy(self.current_B)
+            # Boucle sur les colonnes de B
+            for j in range(B_tempo.shape[1]):
+                if self.matrixes.type_perturb[j] != itype + 1:
+                    B_tempo[:, j] = np.zeros(B_tempo.shape[0])
+            print(B_tempo)
+            HBHT = self.matrixes.H @ B_tempo @ self.matrixes.H.transpose()
+            trace_HBHT.append(np.trace(HBHT))
+        print('Trace HBHT', trace_HBHT)
+        for itype in range(np.max(self.matrixes.type_perturb)):
+            self.sb[itype] = np.divide(np.dot(self.matrixes.misfit, self.matrixes.H @ self.analyse),
+                                trace_HBHT[itype])
+        self.residual = np.array(self.matrixes.misfit) - self.matrixes.H @ self.analyse
+        # Ajout de la nouvelle valeur de so
+        self.so = np.divide(np.dot(self.matrixes.misfit, self.residual), np.trace(self.current_R))
+        self.delta_so = abs(self.so - self.old_so)
+        self.delta_sb = np.abs(np.subtract(self.sb, self.old_sb))
 
     def build_analysis(self):
         """ Computes analysed state xa : x_a = x_b + K*misfit """
@@ -162,25 +211,52 @@ class classBLUE:
             current_mat = self.analyse
             write_matrix_auto(f, current_mat)
 
-            f.write('Sigma b\n')
-            f.write(str(self.matrixes.sb) + '\n')
+            try:
+                f.write('Sigma b par type\n')
+                current_mat = np.array(self.sb)
+                write_matrix_auto(f, current_mat)
+            except Exception as e:
+                print(e)
 
             f.write('Sigma o\n')
-            f.write(str(self.matrixes.so) + '\n')
+            f.write(str(self.so) + '\n')
 
             try:
                 f.write('Residual \n')
-                current_mat = self.matrixes.residual
+                current_mat = self.residual
                 write_matrix_auto(f, current_mat)
-            except:
-                pass
+            except Exception as e:
+                print(e)
+
+            try:
+                f.write('Misfit \n')
+                current_mat = np.array(self.matrixes.misfit)
+                write_matrix_auto(f, current_mat)
+            except Exception as e:
+                print(e)
+
+            try:
+                f.write('Observations Y0 \n')
+                current_mat = np.array(self.matrixes.y0)
+                write_matrix_auto(f, current_mat)
+            except Exception as e:
+                print(e)
+
+            try:
+                f.write('Type perturbations \n')
+                current_mat = np.array(self.matrixes.type_perturb)
+                write_matrix_auto(f, current_mat)
+            except Exception as e:
+                print(e)
 
             f.write(25 * '*-' + '\n')
+            f.write(self.raison_arret)
 
 if __name__ == '__main__':
     if len(sys.argv) <= 2:
         raise ValueError(
-            "No base folder file provided and no assimilation type . Usage: ClassBLUE.py <path> <ctrl_type>")
+            "No base folder file provided and no assimilation type . Usage: ClassBLUE.py <path> "
+            "<ctrl_type>")
     base_folder = sys.argv[1]
     ctrl_type = sys.argv[2]
     # base_folder = r'../../mascaret/event1_1/'
