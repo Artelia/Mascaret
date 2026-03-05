@@ -30,7 +30,7 @@ class ClassExtractAssim:
     ASSIM_FILE = "data_assim.json"
     def __init__(self, run_path):
 
-
+        self.dt_obs = 0
         self.dictRes = None
         self.num_zones = 0
         self.dict_stations = {}
@@ -61,11 +61,10 @@ class ClassExtractAssim:
         size_x = masc.get_var_size("Model.X")[0]
         xcoords = np.array([masc.get("Model.X", i) for i in range(size_x)])
         self.get_coords_assim(xcoords)
-        return self.num_zones, self.dict_obs
+        return self.num_zones, self.dt_obs
 
     def extract_zq(self, masc, t0):
         # Periodic assimilation: store Z and Q at observation nodes
-
             # Saving results for assimilation
             # TODO if assim ?
             try:
@@ -85,19 +84,20 @@ class ClassExtractAssim:
         """
         # self.dict_stations contient en clé un ID de zone à caler, et en valeurs un dico avec
         # - les coordonnées X des observations associées
-        # Pour le cas test pour le moment dico en dur avec zone 2 seulement
-        # dict_tempo = {3: {'X': [83.58]}}
-        # with open(json_file, 'w') as f:
-        #     json.dump(dict_tempo, f)
         self.assim_dict.load(self.assim_path,filename=self.ASSIM_FILE)
-        if self.assim_dict.get("ctrlKS") is not None:
+        if self.assim_dict.get("ctrlKS", {}):
             for dico in self.assim_dict["ctrlKS"]["lst_zone"]:
                 self.dict_stations[str(dico["num_zone"])] = {'X': dico["lst_obs"]["abscissa"],
                                                              'code': dico["lst_obs"]["code"]}
                 if str(dico["num_zone"]) not in self.zones:
                     self.zones.append(str(dico["num_zone"]))
-        # self.dict_stations = json.load(f)
-        keys = np.array([k for k in self.dict_stations], dtype=int)
+        if self.assim_dict.get('ctrlLaw', {}):
+            for dico in self.assim_dict["ctrlLaw"]["lst_loi"]:
+                self.dict_stations[str(dico["name_law"])] = {'X': dico["lst_obs"]["abscissa"],
+                                                             'code': dico["lst_obs"]["code"]}
+                if str(dico["name_law"]) not in self.zones:
+                    self.zones.append(str(dico["name_law"]))
+        keys = np.array([k for k in self.dict_stations])
 
         for key in keys:
             for ix, x in enumerate(self.dict_stations[str(key)]['X']):
@@ -109,15 +109,15 @@ class ClassExtractAssim:
                 with open(file_obs) as f:
                     lines = f.readlines()[3:]
                     # TODO handle time units !!!
-                    dt_obs = (float(lines[1].split()[0]) - float(lines[0].split()[0])) * 3600
+                    self.dt_obs = (float(lines[1].split()[0]) - float(lines[0].split()[0])) * 3600
                     pass
                 if index_obs not in self.dict_obs:
-                    self.dict_obs[index_obs] = {'id_zone': [int(key)],
+                    self.dict_obs[index_obs] = {'id_zone': [key],
                                                 'x_obs': x,
                                                 'code': code_obs,
-                                                'dt_obs': dt_obs}
+                                                'dt_obs': self.dt_obs}
                 else:
-                    self.dict_obs[index_obs]['id_zone'].append(int(key))
+                    self.dict_obs[index_obs]['id_zone'].append(key)
 
         with open(os.path.join(self.run_path, 'dico_obs.json'), 'w') as f:
             json.dump(self.dict_obs, f)

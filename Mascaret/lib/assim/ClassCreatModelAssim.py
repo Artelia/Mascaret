@@ -51,6 +51,7 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
 
     def check_obs(self, type_ctrl):
         # A ce stade, on suppose l'existence de la clé type_ctrl
+        print('TYPECTRL checkobs', type_ctrl)
         d_scen = self.data.dscen
         path_instance = Path(d_scen.get("path_instance", '.'))
         folder_obs = os.path.join(path_instance, 'Observations')
@@ -58,19 +59,32 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         # nous on fait le check que sur celles de l'assimilation
         all_codes_obs = []
         all_dt_obs = []
-        for zone in self.data.get(type_ctrl).get("lst_zone"):
+        dico_obs = {}
+        key_zone = ''
+        if type_ctrl == 'ctrlLaw':
+            key_zone = 'lst_loi'
+        elif type_ctrl == 'ctrlKS':
+            key_zone = 'lst_zone'
+        else:
+            raise ValueError('Unknown type_ctrl', type_ctrl)
+
+        for zone in self.data.get(type_ctrl).get(key_zone):
             if zone.get("lst_obs", {}):
                 for c in zone["lst_obs"]["code"]:
                     if c not in all_codes_obs:
+                        dico_obs[c] = {}
                         all_codes_obs.append(c)
         if len(all_codes_obs) == 0:
             raise ValueError("No observation selected for assimilation")
         for c in all_codes_obs:
             file_obs = os.path.join(folder_obs, c + '.loi')
             with open(file_obs) as f:
-                lines = f.readlines[3:]
-                dt_obs = lines[1].split()[0] - lines[0].split()[0]
+                lines = f.readlines()[3:]
+                dt_obs = float(lines[1].split()[0]) - float(lines[0].split()[0]) * 3600
+                dico_obs[c]['dt_obs'] = dt_obs
                 all_dt_obs.append(dt_obs)
+        with open(os.path.join(folder_obs, 'dico_base_obs.json'), 'w') as f:
+            json.dump(dico_obs, f)
         if len(np.unique(all_dt_obs)) > 1:
             raise ValueError('At least one observation has different timestep than the others')
 
@@ -159,9 +173,9 @@ if __name__ == "__main__":
     with open(jsonf) as json_data:
         dico = json.load(json_data)
     assimil = CreatModelAssim()
-
     assimil.create_folder_assim(dico.get('path_scen'),
                                 dico.get('type_ctrl'),
                                 dico.get('if_analyse'),
                                 dico.get('json_file'),
                                 )
+    assimil.check_obs(dico.get('type_ctrl'))

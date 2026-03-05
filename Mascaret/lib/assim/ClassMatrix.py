@@ -19,7 +19,7 @@ def get_perturb_folder(base_folder, iperturb):
             name_folder = folder
             type_perturb = folder.split('_')[1]
             val_perturb = float(folder.split('_')[-1].replace('p', '.'))
-            zone_perturb = int(folder.split('_')[2])
+            zone_perturb = folder.split('_')[2]
     if name_folder is not None:
         return name_folder, type_perturb, val_perturb, zone_perturb
     else:
@@ -39,7 +39,7 @@ class ClassMatrix:
         self.xb = []
         # Vecteur d'observations
         self.y0 = []
-        self.KSref = None
+        self.param_ref = None
         self.H = None
         self.B = None
         self.R = None
@@ -62,15 +62,16 @@ class ClassMatrix:
             self.ctrlKs = True
         if self.dict_assim.get("ctrlLaw") is not None and ctrl_type == "ctrlLaw":
             self.ctrlLaw = True
+        self.ctrl_type = ctrl_type
 
         # Récupération du nombre de zones et de la liste des zones
-        if self.ctrlKs:
+        if self.ctrlKs and self.ctrl_type == 'ctrlKS':
             self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlKS"]["lst_zone"]]
             self.zones = np.unique(self.zones)
             self.nb_zones = len(self.zones)
             self.seuil_rejet_misfit = self.dict_assim[ctrl_type].get("seuil_rejet_misfit", 500)
-        if self.ctrlLaw:
-            self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlLaw"]["lst_loi"]]
+        if self.ctrlLaw and self.ctrl_type == 'ctrlLaw':
+            self.zones = [dico.get("name_law") for dico in self.dict_assim["ctrlLaw"]["lst_loi"]]
             self.zones = np.unique(self.zones)
             self.nb_zones = len(self.zones)
             self.seuil_rejet_misfit = self.dict_assim[ctrl_type].get("seuil_rejet_misfit", 500)
@@ -83,29 +84,35 @@ class ClassMatrix:
 
         # Récupération des zéros des observations
         self.zero_obs = {}
-        if self.ctrlKs:
+        if ctrl_type == 'ctrlKS' and self.ctrlKs:
             for d in self.dict_assim["ctrlKS"]["lst_zone"]:
                 dico = d.get("lst_obs", {})
                 if dico != {}:
                     for ic, c in enumerate(dico.get("code")):
                         if c not in self.zero_obs.keys():
                             self.zero_obs[c] = dico.get("zero")[ic]
+            self.key_lst = 'lst_zone'
+        if ctrl_type == 'ctrlLaw' and self.ctrlLaw:
+            for d in self.dict_assim[ctrl_type]["lst_loi"]:
+                dico = d.get("lst_obs", {})
+                if dico != {}:
+                    for ic, c in enumerate(dico.get("code")):
+                        if c not in self.zero_obs.keys():
+                            self.zero_obs[c] = dico.get("zero")[ic]
+            self.key_lst = 'lst_loi'
+
         self.type_perturb = []
         # Récupération du nombre total de perturbations
-        if self.ctrlKs:
+        if self.ctrlKs or self.ctrlLaw:
             self.nbperturb = 0
-            self.minperturb = self.dict_assim["ctrlKS"]["ksmin_perturb"][0]
-            self.majperturb = self.dict_assim["ctrlKS"]["ksmaj_perturb"][0]
-            for d in self.dict_assim["ctrlKS"]["lst_zone"]:
-                if d.get("type") == "Ksmin":
+            for d in self.dict_assim[self.ctrl_type][self.key_lst]:
+                type_pert = d.get("type")
+                if type_pert == "Ksmin" or type_pert == "coefA":
                     self.nbperturb += 1
                     self.type_perturb.append(1)
-                    # self.nbperturb += int(np.ceil((d["val_max"] - d["val_min"])/self.minperturb)) + 1
-                if d.get("type") == "Ksmaj":
+                if type_pert == "Ksmaj" or type_pert == "coefB":
                     self.nbperturb += 1
                     self.type_perturb.append(2)
-                    # self.nbperturb += int(np.ceil((d["val_max"] - d["val_min"])/self.majperturb)) + 1
-            # self.nbperturb = 1
             print('Total number of perturbations:', self.nbperturb)
 
     def build_all_matrix(self):
@@ -117,20 +124,27 @@ class ClassMatrix:
 
     def build_B_matrix_ini(self):
         liste_sigma = []
-        if self.ctrlKs:
+        if self.ctrl_type == 'ctrlKS' and self.ctrlKs:
             for d in self.dict_assim.get("ctrlKS")["lst_zone"]:
                 std_zone = d["std"]
                 if d.get("std") is None:
                     raise KeyError("Key std not found in data_assim.json")
                 if d.get("type") == "Ksmin":
                     liste_sigma += [2 * std_zone]
-                    # liste_sigma += int(np.ceil((d["val_max"] - d["val_min"])/self.minperturb) + 1) * [std_zone]
                 if d.get("type") == "Ksmaj":
                     liste_sigma += [2 * std_zone]
-                    # liste_sigma += int(np.ceil((d["val_max"] - d["val_min"])/self.majperturb) + 1) * [std_zone]
 
-        if self.ctrlLaw:
-            raise NotImplementedError('Control law matrices not implemented yet')
+        if self.ctrl_type == 'ctrlLaw' and self.ctrlLaw:
+            for d in self.dict_assim.get("ctrlLaw")["lst_loi"]:
+                std_zone = d["std"]
+                if d.get("std") is None:
+                    raise KeyError("Key std not found in data_assim.json")
+                # TODO je suis pas sur que la différenciation soit toujours utile..
+                if d.get("type") == "coefA":
+                    liste_sigma += [2 * std_zone]
+                if d.get("type") == "coefB":
+                    liste_sigma += [2 * std_zone]
+            # raise NotImplementedError('Control law matrices not implemented yet')
 
         if len(liste_sigma) != self.nbperturb:
             raise ValueError(f'Problem with initial B matrix creation. '
@@ -142,25 +156,34 @@ class ClassMatrix:
         self.B_analysed = self.B - np.matmul(np.matmul(K, self.H), self.B)
 
 
-    # def calc_so_sb(self, xa, B, R):
-    #     HBHT = self.H @ B @ self.H.transpose()
-    #     self.sb = np.divide(np.dot(self.misfit, self.H @ xa), np.trace(HBHT))
-    #     self.residual = np.array(self.misfit) - self.H @ xa
-    #     self.so = np.divide(np.dot(self.misfit, self.residual), np.trace(R))
-
-
     def build_diago_R_matrix_ini(self):
         diag_R = []
         # TODO faire sur toutes les obs dispos !, une seule fois
-        num_stations = []
-        for dico in self.dict_assim.get("ctrlKS").get("lst_zone"):
-            if int(dico.get("num_zone")) not in num_stations:
-                num_stations.append(int(dico.get("num_zone")))
+        # num_stations = []
+        num_obs = []
+        if self.ctrl_type == 'ctrlKS' and self.ctrlKs:
+            for dico in self.dict_assim.get("ctrlKS").get("lst_zone"):
+                # if int(dico.get("num_zone")) not in num_stations:
+                    # num_stations.append(int(dico.get("num_zone")))
                 dict2 = dico.get("lst_obs")
-                if dict2.get("stderr") is None:
-                    raise KeyError("Key std_obs not found in data_assim.json")
-                for sigma in dict2.get("stderr"):
-                    diag_R += [float(sigma) ** 2 for i in range(self.nb_dt_obs)]
+                for icode, code in enumerate(dict2.get("code")):
+                    if code not in num_obs:
+                        if dict2.get("stderr") is None:
+                            raise KeyError("Key std_obs not found in data_assim.json")
+                        diag_R += [float(dict2["stderr"][icode]) ** 2 for i in
+                                   range(self.nb_dt_obs)]
+                        num_obs.append(code)
+
+        elif self.ctrl_type == 'ctrlLaw' and self.ctrlLaw:
+            for dico in self.dict_assim.get(self.ctrl_type).get("lst_loi"):
+                dict2 = dico.get("lst_obs")
+                for icode, code in enumerate(dict2.get("code")):
+                    if code not in num_obs:
+                        if dict2.get("stderr") is None:
+                            raise KeyError("Key std_obs not found in data_assim.json")
+                        diag_R += [float(dict2["stderr"][icode]) ** 2 for i in
+                                   range(self.nb_dt_obs)]
+                        num_obs.append(code)
         print("Diagonale des matrices des covariances d'erreur d'observation R", diag_R)
         self.R = np.array(diag_R)
 
@@ -169,7 +192,7 @@ class ClassMatrix:
         Builds minimal and maximal values vectors for assim parameters
         It is stored in the same order than in data_assim json file.
         """
-        for dico in self.dict_assim.get("ctrlKS").get("lst_zone"):
+        for dico in self.dict_assim.get(self.ctrl_type).get(self.key_lst):
             self.min_values.append(dico.get("val_min"))
             self.max_values.append(dico.get("val_max"))
 
@@ -183,41 +206,38 @@ class ClassMatrix:
             for station in dict_ref['Z'][str(zone)]:
                 if station not in Zref.keys():
                     Zref[station] = []
-        print(Zref)
 
         # Boucle sur les zones concernées
         for zone in self.zones:
             # Boucle sur les stations d'observation dans chaque zone
             for station in dict_ref['Z'][str(zone)]:
                 Zref[station] += dict_ref['Z'][str(zone)][station]
-        # Zref = np.array(Zref, dtype=float)
+
         print('ZREF : ', Zref)
-        # nb_time = len(dict_ref['time'])
+        # TODO choix de la variable a caler, par défaut c'est Z pour le moment
         obs_folder = os.path.join(self.base_folder, 'Observations')
         self.Z_obs = {}
-        for zone in self.zones:
-            for station in dict_ref['Z'][str(zone)]:
-                self.Z_obs[station] = {'time': [], 'Z': []}
-                file_name = os.path.join(obs_folder, str(station) + '.loi')
-                with open(file_name) as f:
-                    lines = f.readlines()[3:]
-                    # TODO handle time units !!!
-                    self.Z_obs[station]['time'] = [float(l.split()[0]) * 3600 for l in lines]
-                    self.Z_obs[station]['Z'] = [float(l.split()[1]) for l in lines]
+        for station in Zref.keys():
+            self.Z_obs[station] = {'time': [], 'Z': []}
+            file_name = os.path.join(obs_folder, str(station) + '.loi')
+            with open(file_name) as f:
+                lines = f.readlines()[3:]
+                # TODO handle time units !!!
+                self.Z_obs[station]['time'] = [float(l.split()[0]) * 3600 for l in lines]
+                self.Z_obs[station]['Z'] = [float(l.split()[1]) for l in lines]
         print('Z station', self.Z_obs)
         ista = 0
-        for zone in self.zones:
-            for it, time in enumerate(dict_ref['time']):
-                for station in dict_ref['Z'][str(zone)]:
-                    self.y0.append(self.Z_obs[station]['Z'][it])
-                    print(self.Z_obs[station]['Z'][it])
-                    delta_z = self.Z_obs[station]['Z'][it] - Zref[station][it]
-                    # Application du seuil de rejet misfit
-                    if abs(100 * np.divide(delta_z, Zref[station][it])) > self.seuil_rejet_misfit:
-                        delta_z = 0.
-                    self.misfit.append(delta_z)
-                    ista += 1
-            print('Y0', self.y0)
+        for it, time in enumerate(dict_ref['time']):
+            for station in Zref.keys():
+                self.y0.append(self.Z_obs[station]['Z'][it])
+                print(self.Z_obs[station]['Z'][it])
+                delta_z = self.Z_obs[station]['Z'][it] - Zref[station][it]
+                # Application du seuil de rejet misfit
+                if abs(100 * np.divide(delta_z, Zref[station][it])) > self.seuil_rejet_misfit:
+                    delta_z = 0.
+                self.misfit.append(delta_z)
+                ista += 1
+        print('Y0', self.y0)
 
     def build_H_matrix(self):
         """
@@ -226,38 +246,45 @@ class ClassMatrix:
         H = []
         # Getting Zref and KS values
         name_folder_ref = os.path.join(self.base_folder, 'run_ref')
-        base_folder_perturb = os.path.join(self.base_folder, 'run_ctrlKS')
+        base_folder_perturb = os.path.join(self.base_folder, f'run_{self.ctrl_type}')
         with open(os.path.join(name_folder_ref, 'Z_Q_assim.json')) as f:
             dict_ref = json.load(f)
 
         Zref = []
+        all_stations = []
         # Boucle sur les zones concernées
         for zone in self.zones:
             # Boucle sur les stations d'observation dans chaque zone
             for station in dict_ref['Z'][str(zone)]:
-                Zref += dict_ref['Z'][str(zone)][station]
+                if station not in all_stations:
+                    Zref += dict_ref['Z'][str(zone)][station]
+                    all_stations.append(station)
         Zref = np.array(Zref, dtype=float)
         print('Z reference', Zref)
         # Zref = np.concatenate([dict_ref['Z'][str(zone)] for zone in self.zones])
         # Getting initial values of KS
         if self.ctrlKs:
-            # TODO ERROR*******************************************
-            # dico = self.dict_assim["generate_instance"]["dico_ks"]
-            # KSminref = {str(zone): dico["minbedcoef"][zone] for zone in self.zones}
-            # KSmajref = {str(zone): dico["majbedcoef"][zone] for zone in self.zones}
             data = self.dict_assim["ctrlKS"]
             KSminref = {str(zone["num_zone"]): zone["zone_info"]["ref_ks_min"]
                         for zone in data["lst_zone"] if zone["num_zone"] in self.zones}
             KSmajref = {str(zone["num_zone"]): zone["zone_info"]["ref_ks_maj"]
                         for zone in data["lst_zone"] if zone["num_zone"] in self.zones}
-            self.KSref = {'Ksmin': KSminref, 'Ksmaj': KSmajref}
+            self.param_ref = {'Ksmin': KSminref, 'Ksmaj': KSmajref}
 
         if self.ctrlLaw:
-            raise NotImplementedError('CtrlLaw not yet implemented')
+            data = self.dict_assim["ctrlLaw"]
+            # Pour les lois on part d'un coeff ref a = 1, b=0
+            coefAref = {str(zone["name_law"]): 1
+                        for zone in data["lst_loi"] if zone["name_law"] in self.zones}
+            coefBref = {str(zone["name_law"]): 0
+                        for zone in data["lst_loi"] if zone["name_law"] in self.zones}
+            self.param_ref = {'coefA': coefAref, 'coefB': coefBref}
+
         # Getting Z perturb and building H
         for i in range(self.nbperturb):
             print('Run perturbé', i)
             # Nom de dossier = './perturb
+            # Fonctionne pour Law et KS normalement
             name_folder_pertub, type_perturb, val_perturb, zone_perturb = (
                 get_perturb_folder(base_folder_perturb, i))
 
@@ -269,10 +296,13 @@ class ClassMatrix:
 
             Zperturb = []
             # Boucle sur les zones concernées
+            all_stations = []
             for zone in self.zones:
                 # Boucle sur les stations d'observation dans chaque zone
                 for station in dict_perturb['Z'][str(zone)]:
-                    Zperturb += dict_perturb['Z'][str(zone)][station]
+                    if station not in all_stations:
+                        Zperturb += dict_perturb['Z'][str(zone)][station]
+                        all_stations.append(station)
             Zperturb = np.array(Zperturb, dtype=float)
             print('Zperturb iperturb = ', i + 1, Zperturb)
             # Deltas_param contient l'ensemble des différences entre les paramètres de REF et de
@@ -280,8 +310,8 @@ class ClassMatrix:
             # pour KS, on a les différences sur KS_MIn et MAJ pour chaque zone.
 
             deltas_param = [val_perturb -
-                            self.KSref[type_perturb][str(zone_perturb)]]
-            self.xb.append(self.KSref[type_perturb][str(zone_perturb)])
+                            self.param_ref[type_perturb][str(zone_perturb)]]
+            self.xb.append(self.param_ref[type_perturb][str(zone_perturb)])
             print('Deltas params', deltas_param)
             # On récupère la valeur du DeltaP effectif > 0 (les autres sont à 0)
             delta_p = deltas_param[np.argmax(np.abs(deltas_param))]

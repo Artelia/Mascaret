@@ -285,8 +285,8 @@ class ClassMascaret:
             self.process_next_task()
         else:
             # Connecter les signaux
-            self.task_blue.taskCompleted.connect(lambda: self.on_task_completed('crtlKS_BLUE'))
-            self.task_blue.taskTerminated.connect(lambda: self.on_task_failed('crtlKS_BLUE'))
+            self.task_blue.taskCompleted.connect(lambda: self.on_task_completed('ctrlKS_BLUE'))
+            self.task_blue.taskTerminated.connect(lambda: self.on_task_failed('ctrlKS_BLUE'))
             task_id = self.launch_task(self.task_blue, description)
 
             if not task_id:
@@ -295,13 +295,42 @@ class ClassMascaret:
                 self.process_next_task()
 
 
-        pass
-
-
     def launch_ctrl_law_BLUE(self):
-        description = "Mascaret Models Execution, CtrlLaw BLUE"
-        pass
+        print('Run Assime CtrlLaw BLUE *************')
+        scens = self.obj_model.get_list_name_scenario()
+        description = "Assim - CtrlKS BLUE"
+        # print(self.obj_model.dmodel)
+        base_folder = self.obj_model.dmodel["general"]["path_runs"]
+        print(base_folder)
+        print(scens)
+        try:
+            self.task_blue = TaskBLUE(
+                description=description,
+                base_folder=base_folder,
+                ctrl_type = 'ctrlLaw',
+                del_inter_assim = self.del_inter_assim
+            )
+            print('taskblueinit')
+            self.task_blue.update_params(scens)
+            print('taskblueupdate')
+            print('selfusetask', self.use_task)
+        except Exception as e:
+            print(e)
+        if not self.use_task:
+            for scen in scens:
+                print(scen)
+                results = self.task_blue.run_blue(scen)
+            self.process_next_task()
+        else:
+            # Connecter les signaux
+            self.task_blue.taskCompleted.connect(lambda: self.on_task_completed('ctrlLaw_BLUE'))
+            self.task_blue.taskTerminated.connect(lambda: self.on_task_failed('ctrlLaw_BLUE'))
+            task_id = self.launch_task(self.task_blue, description)
 
+            if not task_id:
+                QgsMessageLog.logMessage("BLUE task failed to launch, skipping...", 'TaskMascaret',
+                                         Qgis.Warning)
+                self.process_next_task()
     def launch_task(self, task, description="Mascaret Models Execution"):
         print('Launching task...')
         task_manager = QgsApplication.taskManager()
