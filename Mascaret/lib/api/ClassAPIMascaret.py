@@ -124,7 +124,9 @@ class ClassAPIMascaret:
         self.num_zones_assim = 0
         self.dico_assim = None
         self.res_assim = None
-        self.pdt_assim = 360  # assimilation time step in seconds
+        self.dict_obs = {}
+        self.pdt_assim = 0. # assimilation time step in seconds
+        self.current_t_assim = 0. # Current assimilation time step
 
         # Mobile hydraulic structures
         self.clfg = ClassFloodGate(self)
@@ -163,7 +165,19 @@ class ClassAPIMascaret:
 
     def init_assim(self):
         if self.assim:
-            self.num_zones_assim = self.res_assim.init_assim(self.masc)
+            self.num_zones_assim, self.pdt_assim = self.res_assim.init_assim(self.masc)
+            # file_obs = os.path.join()
+            # self.pdt_assim =
+            # if not self.dict_obs:
+            #     raise ValueError('No observation retrieved for assimilation. Check settings')
+            # lst_pdt_obs = []
+            # for idx_obs in self.dict_obs:
+            #     lst_pdt_obs.append(self.dict_obs[idx_obs]['dt_obs'])
+            # if len(np.unique(lst_pdt_obs)) != 1:
+            #     raise ValueError('At least one observation has different time step than the other. '
+            #                      'Every observation must have the same timestep for assimilation')
+            # self.pdt_assim = lst_pdt_obs[0]
+
 
     def init_struct(self):
 
@@ -425,6 +439,8 @@ class ClassAPIMascaret:
         inside the hot loop.
         """
         t0 = self.tini
+        while self.current_t_assim < t0:
+            self.current_t_assim += self.pdt_assim
         dtp = self.dt
         t1 = t0 + dtp
         tfin = self.tfin
@@ -517,10 +533,12 @@ class ClassAPIMascaret:
         # Advance the hydraulic solver by one step
         masc.compute(t0, t1, dtp)
 
-        if self.assim and t0 % self.pdt_assim == 0:
+        if self.assim and t0 <= self.current_t_assim <= t1:
             txt = f'{self.num_zones_assim} - {self.masc.nb_nodes}'
             self.add_info(txt)
             self.res_assim.extract_zq(self.masc, t0)
+            # Incrément du temps courant assim (prochain temps à extraire)
+            self.current_t_assim += self.pdt_assim
 
         # Update time step from model if variable stepping is active
         if conum:

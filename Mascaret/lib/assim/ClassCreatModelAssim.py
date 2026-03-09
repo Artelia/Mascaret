@@ -20,6 +20,8 @@ email                :
 import sys
 import json
 from pathlib import Path
+import os
+import numpy as np
 
 try:
     from .ClassCtrlKS import CtrlKs
@@ -47,6 +49,46 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         """
         super().__init__(mess=mess)
 
+    def check_obs(self, type_ctrl):
+        # A ce stade, on suppose l'existence de la clé type_ctrl
+        print('TYPECTRL checkobs', type_ctrl)
+        d_scen = self.data.dscen
+        path_instance = Path(d_scen.get("path_instance", '.'))
+        folder_obs = os.path.join(path_instance, 'Observations')
+        # On part du principe que folder obs est remplit avec toutes les observations, même si pas utilisées pour l'assim
+        # nous on fait le check que sur celles de l'assimilation
+        all_codes_obs = []
+        all_dt_obs = []
+        dico_obs = {}
+        key_zone = ''
+        if type_ctrl == 'ctrlLaw':
+            key_zone = 'lst_loi'
+        elif type_ctrl == 'ctrlKS':
+            key_zone = 'lst_zone'
+        else:
+            raise ValueError('Unknown type_ctrl', type_ctrl)
+
+        for zone in self.data.get(type_ctrl).get(key_zone):
+            if zone.get("lst_obs", {}):
+                for c in zone["lst_obs"]["code"]:
+                    if c not in all_codes_obs:
+                        dico_obs[c] = {}
+                        all_codes_obs.append(c)
+        if len(all_codes_obs) == 0:
+            raise ValueError("No observation selected for assimilation")
+        for c in all_codes_obs:
+            file_obs = os.path.join(folder_obs, c + '.loi')
+            with open(file_obs) as f:
+                lines = f.readlines()[3:]
+                dt_obs = float(lines[1].split()[0]) - float(lines[0].split()[0]) * 3600
+                dico_obs[c]['dt_obs'] = dt_obs
+                all_dt_obs.append(dt_obs)
+        with open(os.path.join(folder_obs, 'dico_base_obs.json'), 'w') as f:
+            json.dump(dico_obs, f)
+        if len(np.unique(all_dt_obs)) > 1:
+            raise ValueError('At least one observation has different timestep than the others')
+
+
     def fill_assim_folder(self, type_ctrl, if_analyse=False):
         """Fill assimilation or analysis folders with modified model files.
 
@@ -63,6 +105,7 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         path_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
 
         path_init = None
+
         if type_ctrl == "ctrlLaw" and self.data.get('ctrlKS', False):
             path_ref = Path(path_instance, 'Analyse_ctrlKS')
 
@@ -135,3 +178,4 @@ if __name__ == "__main__":
                                 dico.get('if_analyse'),
                                 dico.get('json_file'),
                                 )
+    assimil.check_obs(dico.get('type_ctrl'))
