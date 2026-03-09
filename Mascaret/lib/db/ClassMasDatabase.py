@@ -512,6 +512,9 @@ class ClassMasDatabase(object):
                 Maso.assim_config,
                 Maso.assim_law,
                 Maso.assim_ks,
+                Maso.assim_res,
+                Maso.assim_res_ks,
+                Maso.assim_res_law
             ]
             tables.sort(key=lambda x: x().order)
 

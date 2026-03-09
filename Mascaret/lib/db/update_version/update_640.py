@@ -30,16 +30,7 @@ class ClassUpdate640:
     def update640(self):
         self.mgis.add_info("*** Update 6.4.0  ***")
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
-        # if "assim_config" in tabs:
-        #     sql = f"ALTER TABLE {self.mdb.SCHEMA}.assim_config RENAME TO assim_config_old;"
-        #     self.mdb.execute(sql)
-        # if "assim_ks" in tabs:
-        #     sql = f"ALTER TABLE {self.mdb.SCHEMA}.assim_ks RENAME TO assim_ks_old;"
-        #     self.mdb.execute(sql)
-        # if "assim_law" in tabs:
-        #     sql = f"ALTER TABLE {self.mdb.SCHEMA}.assim_law RENAME TO assim_law_old;"
-        #     self.mdb.execute(sql)
-        lst_add_tab = ["assim_config", "assim_ks", "assim_law"]
+        lst_add_tab = ["assim_config", "assim_ks", "assim_law","assim_res","assim_res_ks", "assim_res_law"]
         valide = True
         for attr in lst_add_tab:
             if attr not in tabs:

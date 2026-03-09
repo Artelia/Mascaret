@@ -321,7 +321,7 @@ class TaskMascaret(QgsTask):
                     capture_output=True
                 )
             else:
-                with open("FichierCas.txt", "w") as fichier:
+                with open(os.path.join(params.get("RUN_REP"), "FichierCas.txt"), "w") as fichier:
                     fichier.write("'" + params.get('name_xcas','mascaret.xcas') + "'\n")
                     test = sys.platform
                 path_exe = os.path.join(script_dir, "..", "..", "bin")

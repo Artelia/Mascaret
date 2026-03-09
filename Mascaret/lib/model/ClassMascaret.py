@@ -302,6 +302,40 @@ class ClassMascaret:
         description = "Mascaret Models Execution, CtrlLaw BLUE"
         pass
 
+
+    def launch_storage_assim_task(self,type_assim):
+        print(f'{type_assim} Storage Assim *************')
+        task_params_ref = self.obj_model.get_list_type_instance_assim( type_assim, type_init=None,if_ana=True)
+
+        if not task_params_ref:
+            QgsMessageLog.logMessage(f"No '{type_assim}' model to run.", 'TaskMascaret', Qgis.Warning)
+            # Passer à la suivante même si pas de modèle ref
+            self.process_next_task()
+            return
+
+        description = f"Mascaret Models Execution, '{type_assim}'"
+        self.task_ref = TaskMascaret(
+            description=description,
+            task_params=task_params_ref,
+            max_workers=self.limit_core,
+            database=self.mdb,
+            cond_api=self.cond_api
+        )
+
+        if not self.use_task:
+            for idx, param in enumerate(task_params_ref):
+                results = self.task_ref.run_model(param, idx)
+            self.process_next_task()
+        else:
+
+            # Connecter les signaux
+            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(type_))
+            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(type_))
+            task_id = self.launch_task(self.task_ref, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage(f"{type_} task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                self.process_next_task()
     def launch_task(self, task, description="Mascaret Models Execution"):
         print('Launching task...')
         task_manager = QgsApplication.taskManager()

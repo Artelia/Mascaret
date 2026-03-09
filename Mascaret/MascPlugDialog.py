@@ -1196,9 +1196,9 @@ Version : {}
     def fct_test(self):
         """Test function"""
         # get_laws
-        # self.chkt.debug_update_vers_meta(version="5.1.5")
+        self.chkt.debug_update_vers_meta(version="6.3.0")
         # cl.creat_file_no_keep_break()
-        # self.chkt.update_version('620')
+        self.chkt.update_version('640')
 
         # from .lib.assim.ClassAssimDB import ClassAssimDB
         # cl =  ClassAssimDB(self.mdb)

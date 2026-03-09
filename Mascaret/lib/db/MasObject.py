@@ -2189,7 +2189,7 @@ class assim_ks(MasObject):
 class assim_law(MasObject):
     def __init__(self):
         super(assim_law, self).__init__()
-        self.order = 50
+        self.order = 51
         self.geom_type = None
         self.attrs = [
             ("id_law", "integer NOT NULL"),
@@ -2207,6 +2207,53 @@ class assim_law(MasObject):
             ('source_law', "text"),
             ("CONSTRAINT assim_law_pkey", " PRIMARY KEY (id_law, source_law)"),
         ]
+
+class assim_res(MasObject):
+    def __init__(self):
+        super(assim_res, self).__init__()
+        self.order = 52
+        self.geom_type = None
+        self.attrs = [
+            ("id", "SERIAL"),
+            ("id_runs", "integer NOT NULL"),
+            ("type_ctrl", "text NOT NULL"),
+            ("id_ctrl", "integer NOT NULL"),
+            ("var", "text"),
+            ("val", "double precision"),
+            ("CONSTRAINT assim_res_pkey", " PRIMARY KEY (id)"),
+        ]
+
+class assim_res_ks(MasObject):
+    def __init__(self):
+        super(assim_res_ks, self).__init__()
+        self.order = 53
+        self.geom_type = None
+        self.attrs = [
+            ("id_ctrl", "SERIAL"),
+            ("id_runs", "integer NOT NULL"),
+            ("zone_num", "integer NOT NULL"),
+            ("branchnum", "integer NOT NULL"),
+            ("abs_min" , "double precision"),
+            ("abs_max", "double precision"),
+            ("ks_min", "double precision"),
+            ("ks_maj", "double precision"),
+             ("CONSTRAINT assim_res_ks_pkey", " PRIMARY KEY (id_ctrl)"),
+         ]
+class assim_res_law(MasObject):
+    def __init__(self):
+        super(assim_res_law, self).__init__()
+        self.order = 54
+        self.geom_type = None
+        self.attrs = [
+            ("id_ctrl", "SERIAL"),
+            ("id_runs", "integer NOT NULL"),
+            ("id_law", "integer NOT NULL"),
+            ("source_law", "text"),
+            ("name_file_law", "text"),
+            ("name_law", "text"),
+             ("CONSTRAINT assim_res_law_pkey", " PRIMARY KEY (id_ctrl)"),
+         ]
+
 # ****************************************************************************
 # *****************************************
 class branchs_old(MasObject):

@@ -188,7 +188,6 @@ class ClassDictRun:
         task_params = []
         dgeneral = self.get_dgeneral()
         drun = self.get_drun()
-
         # Iterate through all available scenarios
         for scen in self.get_list_name_scenario():
             # Get scenario details
