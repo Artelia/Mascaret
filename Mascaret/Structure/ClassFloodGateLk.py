@@ -62,10 +62,10 @@ class ClassFloodGateLk:
         try:
             self.search_sec_control()
             self.search_link_to_param_fg()
-            if not self.check_param():
-                self.add_info("***** ERROR: the gates for the links\n COMPUTATION STOP")
-                self.arret_comput = True
-                return
+            # if not self.check_param():
+            #     self.add_info("***** ERROR: the gates for the links\n COMPUTATION STOP")
+            #     self.arret_comput = True
+            #     return
             self.update_var_mas(force=True)
             self.init_res()
         except Exception:
@@ -134,61 +134,61 @@ class ClassFloodGateLk:
         :param time: Current simulation time.
         :param dtp: Time step.
         """
-        try:
-            for id_lk, param in self.param_fg.items():
-                self.cpt_w[id_lk] += 1
-                val_break = self.masc.get(param['CHECK_VAR_BREAK'], param["SEC_BREAK"])
-                val_check = self.masc.get(param['CHECK_VAR'], param["SECCON"])
-                if (param["method_mob"] == self.dmeth["meth_regul"] and
-                        not self.check_break(param, val_break, id_lk, time, val_check)):
-                    if self.cl_regul.check_dt_regul(param, dtp):
-                        self.cl_regul.state_regul(val_check, param)
-                        dnew = self.cl_regul.law_gate_regul(param, time)
-                        self.fill_res_and_update(id_lk, time + dtp, param, dnew, val_check)
-                    else:
-                        param.update({
-                            # var update in run
-                            "REGVAR_VAL": val_check,
-                            "level": param['level'],
-                            "CSection": param["CSection"],
-                            "width": param["width"],
-                            "ZmaxSection": param["ZmaxSection"],
-                            "TIME": time + dtp
-                        })
-                        self.fill_results_fg_mv(id_lk, param)
-                elif param["method_mob"] == self.dmeth["meth_time"] and not self.check_break(param, val_break,
-                                                                                             id_lk, time, val_check):
-                    dnew = self.cl_time.law_mth_time(param, time)
+        # try:
+        for id_lk, param in self.param_fg.items():
+            self.cpt_w[id_lk] += 1
+            val_break = self.masc.get(param['CHECK_VAR_BREAK'], param["SEC_BREAK"])
+            val_check = self.masc.get(param['CHECK_VAR'], param["SECCON"])
+            if (param["method_mob"] == self.dmeth["meth_regul"] and
+                    not self.check_break(param, val_break, id_lk, time, val_check)):
+                if self.cl_regul.check_dt_regul(param, dtp):
+                    self.cl_regul.state_regul(val_check, param)
+                    dnew = self.cl_regul.law_gate_regul(param, time)
                     self.fill_res_and_update(id_lk, time + dtp, param, dnew, val_check)
-                elif param["method_mob"] == self.dmeth["meth_fus"]:
-                    self.cl_fusible.check_break_fus(param, val_check, time)
-                    if param["break"]:
-                        dnew = self.cl_fusible.law_mth_fus(param, time)
-                        param.update({
-                            # var update in run
-                            "REGVAR_VAL": val_check,
-                            "level": dnew['level'],
-                            "CSection": dnew["CSection"],
-                            "width": dnew["width"],
-                            "ZmaxSection": dnew["ZmaxSection"],
-                            "TIME": time + dtp
-                        })
-                        self.update_var_mas()
-                    else:
-                        param.update({
-                            # var update in run
-                            "REGVAR_VAL": val_check,
-                            "level": param['level-dt'],
-                            "CSection": param["CSection-dt"],
-                            "width": param["width-dt"],
-                            "ZmaxSection": param["ZmaxSection-dt"],
-                            "TIME": time + dtp
-                        })
+                else:
+                    param.update({
+                        # var update in run
+                        "REGVAR_VAL": val_check,
+                        "level": param['level'],
+                        "CSection": param["CSection"],
+                        "width": param["width"],
+                        "ZmaxSection": param["ZmaxSection"],
+                        "TIME": time + dtp
+                    })
                     self.fill_results_fg_mv(id_lk, param)
-        except Exception:
-            error_info = traceback.format_exc()
-            self.add_info(f"***** ERROR: the gates for the links\n COMPUTATION STOP \n {error_info}")
-            self.arret_comput = True
+            elif param["method_mob"] == self.dmeth["meth_time"] and not self.check_break(param, val_break,
+                                                                                         id_lk, time, val_check):
+                dnew = self.cl_time.law_mth_time(param, time)
+                self.fill_res_and_update(id_lk, time + dtp, param, dnew, val_check)
+            elif param["method_mob"] == self.dmeth["meth_fus"]:
+                self.cl_fusible.check_break_fus(param, val_check, time)
+                if param["break"]:
+                    dnew = self.cl_fusible.law_mth_fus(param, time)
+                    param.update({
+                        # var update in run
+                        "REGVAR_VAL": val_check,
+                        "level": dnew['level'],
+                        "CSection": dnew["CSection"],
+                        "width": dnew["width"],
+                        "ZmaxSection": dnew["ZmaxSection"],
+                        "TIME": time + dtp
+                    })
+                    self.update_var_mas()
+                else:
+                    param.update({
+                        # var update in run
+                        "REGVAR_VAL": val_check,
+                        "level": param['level-dt'],
+                        "CSection": param["CSection-dt"],
+                        "width": param["width-dt"],
+                        "ZmaxSection": param["ZmaxSection-dt"],
+                        "TIME": time + dtp
+                    })
+                self.fill_results_fg_mv(id_lk, param)
+        # except Exception:
+        #     error_info = traceback.format_exc()
+        #     self.add_info(f"***** ERROR: the gates for the links\n COMPUTATION STOP \n {error_info}")
+        #     self.arret_comput = True
 
     def fill_res_and_update(self, id_lk, time, param, dnew, val_check):
         """
@@ -490,7 +490,10 @@ class ClassMethRegul:
         :param val_check: Current value of the regulation variable.
         :param param_fg: Dictionary of floodgate parameters.
         """
-        key = (param_fg["OPEN_CLOSE"], param_fg["DIRFG"])
+        # key = (param_fg["OPEN_CLOSE"], param_fg["DIRFG"])
+
+        direction = 'D' if param_fg["VREGOPEN"] > param_fg["VREGCLOS"] else 'U'
+        key = (param_fg["OPEN_CLOSE"], direction)
         # conditions
 
         conditions = {

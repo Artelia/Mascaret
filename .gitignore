@@ -1,6 +1,7 @@
 doc/*
 test/*
 mascaret_*/*
+Mascaret/mascaret/*
 bin/*
 bin
 *.pyc
@@ -8,7 +9,7 @@ bin
 settings.json
 .idea/*
 
-toto*
+
 Class_readResult.py
 icones/Thumbs.db
 *.phy
