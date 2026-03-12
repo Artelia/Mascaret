@@ -688,3 +688,4 @@ if __name__ == "__main__":
 
         error_info = f"{err}\n{traceback.format_exc()}"
         print("Error :", error_info)
+    os.chdir(os.path.dirname(__file__))

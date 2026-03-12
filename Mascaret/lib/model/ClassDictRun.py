@@ -566,20 +566,21 @@ class ClassDictRun:
         if not id_run_result:
             return
 
-        id_run = id_run_result[0][0]
-        condition = f"id_runs = {id_run}"
 
+        id_runs = ','.join([str(id[0]) for id in id_run_result])
+        condition = f"id_runs IN ({id_runs})"
         # Delete result variables
-        self._delete_results_var(id_run)
-
+        self._delete_results_var(id_runs)
         # Delete from main tables
-        for table in ["results_sect", "runs_graph", "runs_plani", "results_by_pk"]:
+        del_lst = ["results_sect", "runs_graph", "runs_plani", "results_by_pk",
+                   "assim_res", "assim_res_ks", "assim_res_law"]
+        for table in del_lst:
             self.mdb.delete(table, condition)
 
         # Delete from old tables if they exist
-        self._delete_old_results(id_run)
+        self._delete_old_results(id_runs)
 
-    def _delete_results_var(self, id_run):
+    def _delete_results_var(self, id_runs):
         """Delete result variable entries related to a run.
 
         :param id_run: Run id in the database.
@@ -588,7 +589,7 @@ class ClassDictRun:
         """
         var_query = (
             f"SELECT DISTINCT var FROM {self.mdb.SCHEMA}.results "
-            f"WHERE id_runs = {id_run}"
+            f"WHERE id_runs in ({id_runs})"
         )
         var = self.mdb.run_query(var_query, fetch=True)
 
@@ -599,7 +600,7 @@ class ClassDictRun:
                 f"WHERE id IN ({','.join(list_var)}) AND type_res = 'tracer_TRANSPORT_PUR'"
             )
 
-    def _delete_old_results(self, id_run):
+    def _delete_old_results(self, id_runs):
         """Remove results stored in legacy tables if present.
 
         :param id_run: Run id to delete legacy results for.
@@ -611,13 +612,13 @@ class ClassDictRun:
         if "results_val" in lst_tab:
             condition = (
                 f"idruntpk IN (SELECT DISTINCT id_runs FROM {self.mdb.SCHEMA}.results_idx "
-                f"WHERE id_runs={id_run})"
+                f"WHERE id_runs IN ({id_runs}))"
             )
             self.mdb.delete("results_val", condition)
 
         for table in ["results_idx", "results_old"]:
             if table in lst_tab:
-                self.mdb.delete(table, f"id_runs = {id_run}")
+                self.mdb.delete(table, f"id_runs IN ({id_runs})")
 
     def creat_lscenar(self, data):
         """Create scenario dictionaries for provided input data.
@@ -634,6 +635,7 @@ class ClassDictRun:
 
         if not drun:
             return scenarios
+        if_assim = drun['has_assimilation']
         # Ask user for scenario name
         for scenar in data:
             scen_name = scenar['Scenario Name']
@@ -663,7 +665,7 @@ class ClassDictRun:
                                "endtime": d_event["endtime"][idx]
                                })
             # #when init run
-            folder_run = os.path.join(d_scen["path_instance"], 'run_ref') if drun['has_assimilation'] else d_scen[
+            folder_run = os.path.join(d_scen["path_instance"], 'run_ref') if if_assim else d_scen[
                 "path_instance"]
             order = 0
             if drun['has_run_init']:
@@ -681,13 +683,13 @@ class ClassDictRun:
                                         # Update var use in API
                                         "has_casier": drun["has_casier"],
                                         "has_tracer": drun["has_tracer"],
-                                        "has_assim": drun['has_assimilation'],
+                                        "has_assim": if_assim,
                                         "starttime": d_scen.get("starttime") if drun['event'] else None,
                                         "order": order,
                                         })
             order += 1
 
-            if drun['has_assimilation']:
+            if if_assim :
                 if self.assim.check_assim_ks():
                     d_scen, order = self.assim.lst_instance_run_ctrlks(drun, d_scen, order)
 

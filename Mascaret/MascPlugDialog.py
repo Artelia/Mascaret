@@ -279,8 +279,9 @@ class MascPlugDialog(QMainWindow):
         self.ui.action_update_bin.triggered.connect(self.download_bin)
 
         self.ui.actionUpdate_all_PK.triggered.connect(self.update_pk)
+        #tools import result
         self.ui.actionImport_Results.triggered.connect(self.import_resu_model)
-        self.ui.actionImport_Results.setVisible(True)
+        self.ui.actionImport_Results.setVisible(False)
 
         # scores
         self.ui.actionScores.triggered.connect(self.fct_scores)

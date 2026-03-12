@@ -153,7 +153,7 @@ class TaskBLUE(QgsTask):
 
         try:
             script_dir = os.path.dirname(__file__)
-            os.chdir(os.path.join(script_dir, "..", "assim"))
+            os.chdir(script_dir)
 
             process = subprocess.run(
                 ["python", "ClassBLUE.py", path_scen, self.ctrl_type],

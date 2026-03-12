@@ -203,13 +203,25 @@ class ClassDeletrunDialog(QDialog):
         sql = "DELETE  FROM {0}.runs_plani  WHERE id_runs not in (SELECT id FROM {0}.runs);"
         self.mdb.run_query(sql.format(self.mdb.SCHEMA))
 
+        # delete assim
+        sql = "DELETE  FROM {0}.assim_res  WHERE id_runs not in (SELECT id FROM {0}.runs);"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+        sql = "DELETE  FROM {0}.assim_res_ks  WHERE id_runs not in (SELECT id FROM {0}.runs);"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+        sql = "DELETE  FROM {0}.assim_res_law  WHERE id_runs not in (SELECT id FROM {0}.runs);"
+        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
         lst_tables = [
             "results_sect",
             "runs_graph",
             "results_var",
             "runs_plani",
             "results_by_pk",
+            "assim_res",
+            "assim_res_ks",
+            "assim_res_law",
             "runs",
+
         ]
 
         # full=True (strong gain to size data and heavy in time
@@ -218,4 +230,5 @@ class ClassDeletrunDialog(QDialog):
         # anal =  True (low gain to size data and time
         #               between full and empty)
         # empty (no gain to size data, not much time)
-        self.mdb.vacuum(lst_tables)
+        if self.ch_vaccum.isChecked():
+            self.mdb.vacuum(lst_tables)

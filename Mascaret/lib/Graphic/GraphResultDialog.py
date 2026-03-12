@@ -8,7 +8,7 @@ copyright            : (C) 2017 by Artelia
 email                :
 ***************************************************************************/
 
-/***************************************************************************
+/****************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -22,6 +22,7 @@ email                :
 import os
 from datetime import timedelta, datetime
 
+from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
@@ -35,6 +36,7 @@ from ..Function import tw_to_txt, interpole, fill_zminbed
 from ..scores.ClassScoresResDialog import ClassScoresResDialog
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+
 
 def list_sql(liste, typ="str"):
     """
@@ -379,7 +381,7 @@ class GraphResultDialog(QWidget):
         rows = self.mdb.run_query(
             "SELECT id, run, scenario FROM {0}.runs "
             "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
-            "ORDER BY date DESC, run ASC, scenario ASC;".format(self.mdb.SCHEMA),
+            "ORDER BY date DESC, run ASC, id DESC;".format(self.mdb.SCHEMA),
             fetch=True,
         )
         for row in rows:
@@ -762,17 +764,17 @@ class GraphResultDialog(QWidget):
             self.cl_scores.wgt_param.ch_dict_pk(pks)
             self.cl_scores.wgt_param.init_gui()
 
+    def _get_item_flags_qt(self):
+        if QT_VERSION > 5:
+            return Qt.ItemFlag.ItemIsEnabled, Qt.ItemFlag.ItemIsSelectable, Qt.AlignmentFlag.AlignCenter
+        return Qt.ItemIsEnabled, Qt.ItemIsSelectable, Qt.AlignCenter
+
     def fill_tab(self):
         """
         fill table in GUI
         :return:
         """
-        if QT_VERSION > 5:
-            qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
-            qt_itm_sel = Qt.ItemFlag.ItemIsSelectable
-        else:
-            qt_itm_ena = Qt.ItemIsEnabled
-            qt_itm_sel = Qt.ItemIsSelectable
+        qt_itm_ena, qt_itm_sel, qt_al_cent = self._get_item_flags_qt()
         self.clas_data.clear()
         for idx, param in enumerate(self.cur_data):
             tw = QTableWidget()
@@ -781,26 +783,17 @@ class GraphResultDialog(QWidget):
             if len(self.lst_graph) == 1:
                 self.clas_data.addTab(tw, param["name"])
             else:
-                if param["is_obs"]:
-                    self.clas_data.addTab(tw, param["name"])
-                else:
-                    self.clas_data.addTab(tw, "[{}] {}".format(idx + 1, param["name"]))
+                label = param["name"] if param["is_obs"] else "[{}] {}".format(idx + 1, param["name"])
+                self.clas_data.addTab(tw, label)
 
-            tw.setColumnCount(0)
-            nbcol = len(param["y_var"]) + 1
-            tw.setColumnCount(nbcol)
-            tw.setRowCount(0)
-            tw.setRowCount(len(param[param["x_var"]]))
-
-            lst_vars = [param["x_var"]]
-            lst_vars.extend(param["y_var"])
+            lst_vars = [param["x_var"]] + param["y_var"]
             lst_lbls = [param["x_var"].title()]
             for var in param["y_var"]:
-                if var in ["H", "Q"]:
-                    lbl = var
-                else:
-                    lbl, _ = self.get_var_info(var)
+                lbl = var if var in ["H", "Q"] else self.get_var_info(var)[0]
                 lst_lbls.append(lbl)
+
+            tw.setColumnCount(len(lst_vars))
+            tw.setRowCount(len(param[param["x_var"]]))
 
             for c, var in enumerate(lst_vars):
                 tw.setHorizontalHeaderItem(c, QTableWidgetItem(lst_lbls[c]))
@@ -817,7 +810,177 @@ class GraphResultDialog(QWidget):
             tw.resizeRowsToContents()
             tw.setVisible(True)
             self.clas_data.setCurrentIndex(idx)
+
+        self.fill_assim_ks()
+        self.fill_assim_law()
         self.clas_data.setCurrentIndex(0)
+
+    def _build_table_widget(self, col_headers, lst_tab, qt_itm_ena, qt_itm_sel, qt_al_cent, col_color=[]):
+        col_color = col_color
+        color_head = QColor(255, 193, 7)
+        color_col = QColor(255, 243, 205)
+
+        tw = QTableWidget()
+        tw.addAction(CopySelectedCellsAction(tw))
+        tw.setColumnCount(len(col_headers))
+        tw.setRowCount(len(lst_tab))
+
+        for c, lbl in enumerate(col_headers):
+            header_item = QTableWidgetItem(lbl)
+            # add color
+            if c in col_color:
+                header_item.setBackground(color_head)
+                header_item.setTextAlignment(qt_al_cent)
+                font = header_item.font()
+                font.setBold(True)
+                header_item.setFont(font)
+            tw.setHorizontalHeaderItem(c, header_item)
+
+        for r, row in enumerate(lst_tab):
+            for c, val in enumerate(row):
+                itm = QTableWidgetItem()
+                itm.setFlags(qt_itm_ena | qt_itm_sel)
+                itm.setTextAlignment(qt_al_cent)
+                itm.setData(0, "" if val is None else val)
+                # add color
+                if c in col_color:
+                    itm.setBackground(color_col)
+                tw.setItem(r, c, itm)
+
+        tw.setVisible(False)
+        tw.resizeColumnsToContents()
+        tw.resizeRowsToContents()
+        tw.setVisible(True)
+        return tw
+
+    def _get_ks_query(self, id_run):
+        return f"""
+            SELECT
+                ar.id, ar.id_runs, ar.type_ctrl, ar.id_ctrl, ar.var, ar.val,
+                cm.zone_num, cm.branchnum, cm.abs_min, cm.abs_max, cm.ks_min, cm.ks_maj
+            FROM {self.mdb.SCHEMA}.assim_res ar
+            LEFT JOIN {self.mdb.SCHEMA}.assim_res_ks cm ON ar.id_ctrl = cm.id_ctrl
+            WHERE ar.id_runs IN ({id_run})
+            ORDER BY ar.id_runs, ar.type_ctrl, ar.id_ctrl, ar.var;
+        """
+
+    def _build_res_assim_ks(self, rows):
+        result = {}
+        for row in rows:
+            id_ctrl = row["id_ctrl"]
+            if id_ctrl not in result:
+                result[id_ctrl] = {
+                    "val_ks_min": None,
+                    "val_ks_maj": None,
+                    "zone_num": row["zone_num"],
+                    "branchnum": row["branchnum"],
+                    "abs_min": row["abs_min"],
+                    "abs_max": row["abs_max"],
+                    "ks_min_ref": row["ks_min"],
+                    "ks_maj_ref": row["ks_maj"],
+                }
+            if row["var"] == "ks_min":
+                result[id_ctrl]["val_ks_min"] = row["val"]
+            elif row["var"] == "ks_maj":
+                result[id_ctrl]["val_ks_maj"] = row["val"]
+        result = dict(sorted(result.items(), key=lambda item: item[1]["zone_num"]))
+
+        keys = ["zone_num", "branchnum", "abs_min", "abs_max",
+                "ks_min_ref", "ks_maj_ref", "val_ks_min", "val_ks_maj"]
+        rows = []
+        for item in result.values():
+            item["val_ks_min"] = item["val_ks_min"] if item["val_ks_min"] is not None else item["ks_min_ref"]
+            item["val_ks_maj"] = item["val_ks_maj"] if item["val_ks_maj"] is not None else item["ks_maj_ref"]
+            rows.append([item[k] for k in keys])
+
+        return rows
+
+    def fill_assim_ks(self):
+        self._fill_assim_tab(
+            table_name="assim_res_ks",
+            query_fn=self._get_ks_query,
+            build_fn=self._build_res_assim_ks,
+            col_headers=[
+                "Zone", "Branch", "Min Abscissa \n (Pk)", "Max Abscissa \n (Pk)",
+                "Initial Ks\n (minor bed)", "Initial Ks \n (major bed)",
+                "Final Ks \n (minor bed)", "Final Ks \n (major bed)",
+            ],
+            col_color=[6, 7],
+            tab_label_base="Assim – Ctrl Ks",
+        )
+
+    def _get_law_query(self, id_run):
+        return f"""
+            SELECT
+                ar.id, ar.id_runs, ar.type_ctrl, ar.id_ctrl, ar.var, ar.val,
+                cm.id_law, cm.source_law, cm.name_law
+            FROM {self.mdb.SCHEMA}.assim_res ar
+            LEFT JOIN {self.mdb.SCHEMA}.assim_res_law cm ON ar.id_ctrl = cm.id_ctrl
+            WHERE ar.id_runs IN ({id_run})
+            ORDER BY ar.id_runs, ar.type_ctrl, ar.id_ctrl, ar.var;
+        """
+
+    def _build_res_assim_law(self, rows):
+        result = {}
+
+        for row in rows:
+            id_ctrl = row["id_ctrl"]
+            id_law = row["id_law"]
+            if id_ctrl not in result:
+                result[id_ctrl] = {
+                    "val_coef_a": None,
+                    "val_coef_b": None,
+                    "id_law": id_law,
+                    "source_law": row["source_law"],
+                    "name_law": row["name_law"],
+                }
+            if row["var"] == "coefA":
+                result[id_ctrl]["val_coef_a"] = row["val"]
+            elif row["var"] == "coefB":
+                result[id_ctrl]["val_coef_b"] = row["val"]
+
+        result = dict(
+            sorted(
+                result.items(),
+                key=lambda item: (item[1]["source_law"], item[1]["id_law"])
+            )
+        )
+
+        keys = ["id_law", "source_law", "name_law", "val_coef_a", "val_coef_b"]
+        rows = []
+        for item in result.values():
+            item["val_coef_a"] = item["val_coef_a"] if item["val_coef_a"] is not None else 1
+            item["val_coef_b"] = item["val_coef_b"] if item["val_coef_b"] is not None else 0
+            rows.append([item[k] for k in keys])
+
+        return rows
+
+    def _fill_assim_tab(self, table_name, query_fn, build_fn, col_headers, col_color, tab_label_base):
+        qt_itm_ena, qt_itm_sel, qt_al_cent = self._get_item_flags_qt()
+        lst_run_ids = [param["scen"] for param in self.lst_graph if "scen" in param]
+        sql_lst_run = ",".join(str(v) for v in lst_run_ids)
+        d_id_run = self.mdb.select_distinct("id_runs", table_name, where=f"id_runs in ({sql_lst_run})")
+        if not d_id_run:
+            return
+        multiple_runs = len(lst_run_ids) > 1
+        for id_graph, id_run in enumerate(lst_run_ids):
+            if id_run not in d_id_run["id_runs"]:
+                continue
+            rows = self.mdb.run_query(query_fn(id_run), fetch=True)
+            lst_tab = build_fn(rows)
+            tw = self._build_table_widget(col_headers, lst_tab, qt_itm_ena, qt_itm_sel, qt_al_cent, col_color=col_color)
+            tab_label = f"[{id_graph + 1}] {tab_label_base}" if multiple_runs else tab_label_base
+            self.clas_data.addTab(tw, tab_label)
+
+    def fill_assim_law(self):
+        self._fill_assim_tab(
+            table_name="assim_res_law",
+            query_fn=self._get_law_query,
+            build_fn=self._build_res_assim_law,
+            col_headers=["ID law", "Law type", "Name Law", "Coef A", "Coef B"],
+            col_color=[3, 4],
+            tab_label_base="Assim – Ctrl Law",
+        )
 
     def get_weirs(self, param):
         """
@@ -840,7 +1003,8 @@ class GraphResultDialog(QWidget):
             courbe_weirs["couleurs"] = []
             courbe_weirs["cote"] = []
             del_w = []
-            for idx, item in enumerate(zip(self.lst_weirs["type"], self.lst_weirs['z_average_crest'], self.lst_weirs['z_crest'])):
+            for idx, item in enumerate(
+                    zip(self.lst_weirs["type"], self.lst_weirs['z_average_crest'], self.lst_weirs['z_crest'])):
                 a, c, d = item
                 if a == 3:
                     if c is None:
@@ -854,8 +1018,8 @@ class GraphResultDialog(QWidget):
                     courbe_weirs["couleurs"].append("tab:brown")
                 else:
                     del_w.append(idx)
-            courbe_weirs["x"] = [elem for i,elem in enumerate(courbe_weirs["x"]) if i not in del_w]
-            courbe_weirs["name"] = [elem for i,elem in enumerate(courbe_weirs["name"]) if i not in del_w]
+            courbe_weirs["x"] = [elem for i, elem in enumerate(courbe_weirs["x"]) if i not in del_w]
+            courbe_weirs["name"] = [elem for i, elem in enumerate(courbe_weirs["name"]) if i not in del_w]
             self.graph_obj.init_graph_weirs(courbe_weirs)
 
     def get_laisses(self, param):

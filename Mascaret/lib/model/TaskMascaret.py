@@ -39,6 +39,7 @@ from qgis.PyQt.QtCore import pyqtSignal,QObject
 
 from .ClassGetResults import ClassGetResults
 from .ClassBCWriter import ClassBCWriter
+from ..assim.ClassStorageDB import ClassStorageDB
 
 MESSAGE_CATEGORY = 'TaskMascaret'
 
@@ -298,7 +299,8 @@ class TaskMascaret(QgsTask):
             'output': '',
             'error': '',
             'start_time': time.time(),
-            'path_run': params.get("RUN_REP")
+            'path_run': params.get("RUN_REP"),
+            'id_run': None
         }
 
         if not os.path.isdir(params.get("RUN_REP")):
@@ -321,9 +323,7 @@ class TaskMascaret(QgsTask):
                     capture_output=True
                 )
             else:
-                with open(os.path.join(params.get("RUN_REP"), "FichierCas.txt"), "w") as fichier:
-                    fichier.write("'" + params.get('name_xcas','mascaret.xcas') + "'\n")
-                    test = sys.platform
+                test = sys.platform
                 path_exe = os.path.join(script_dir, "..", "..", "bin")
                 if "linux" in test or test == "cygwin":
                     soft = "./mascaret_linux"
@@ -349,7 +349,7 @@ class TaskMascaret(QgsTask):
                     capture_output=True,  # capture stdout/stderr
                     encoding="utf-8"     # décommente si tu veux forcer l'encodage
                 )
-
+                os.chdir(script_dir)
 
             # print(process.stdout, 'uuu')
             results.update({
@@ -358,6 +358,7 @@ class TaskMascaret(QgsTask):
                 'error': process.stderr,
                 'execution_time': time.time() - results['start_time'],
             })
+
 
             ## Check if API ran successfully
             if results['success']:
@@ -378,7 +379,7 @@ class TaskMascaret(QgsTask):
                     raise Exception(f"No .lig files found #{index}")
 
                 results_save = self._save_db(params)
-                results['idrun'] = results_save['idrun']
+                results['id_run'] = results_save['id_run']
                 results['save_time'] = results_save['save_time']
                 results['output'] = f"{results['output']}\n{results_save['output']}"
 
@@ -402,7 +403,7 @@ class TaskMascaret(QgsTask):
         except Exception as e:
             results['error'] = f"Unexpected error: {str(e)}"
             results['execution_time'] = time.time() - results['start_time']
-        os.chdir(os.path.join(script_dir))
+
         pprint.pp(results)
         return results
 
@@ -439,7 +440,7 @@ class TaskMascaret(QgsTask):
     def _save_db(self, params):
 
         results = {
-            'idrun': None,
+            'id_run': None,
             'scenario_db':None,
             'run_db': None,
             'success': False,
@@ -460,7 +461,7 @@ class TaskMascaret(QgsTask):
         if name == "init":
             file_name = f"{file_name}_init"
             name_scen = f"{name_scen}_init"
-
+        stock_assim = False
         # Cas "Analyse..."
         if type_ctrl and name.startswith("Analyse"):
             txt_type = {'ctrlKS': 'ctrl_ks', 'ctrlLaw': 'ctrl_law'}
@@ -469,6 +470,7 @@ class TaskMascaret(QgsTask):
                 name_scen = f"{name_scen}_ana_{txt_type.get(type_ctrl, type_ctrl)}_init"
             else:
                 name_scen = f"{name_scen}_ana_{txt_type.get(type_ctrl, type_ctrl)}"
+                stock_assim = True
 
         if not self.mdb:
             results = {
@@ -499,6 +501,12 @@ class TaskMascaret(QgsTask):
             if cls_res.mess.get_critic_status():
                 results.update({'save_time': time.time() - results['start_time']})
                 return  results
+            # results assim
+            if stock_assim:
+                path_js = os.path.abspath(os.path.join(params.get("RUN_REP"), '..'))
+                cls_storage = ClassStorageDB(self.mdb, id_run, path_js , type_ctrl)
+                cls_storage.storage_results()
+                print(cls_storage.mess.get_mess('TEST'))
         except Exception as err:
             results.update({'error':f'{str(err)}\n {traceback.format_exc()}',
                            'save_time': time.time() - results['start_time']})

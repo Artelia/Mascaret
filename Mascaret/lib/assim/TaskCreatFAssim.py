@@ -273,7 +273,7 @@ class TaskCreatFAssim(QgsTask):
             Qgis.Info
         )
 
-    def create_json_param(self,  path_scen, param_file):
+    def create_json_param(self, path_scen, param_file):
         """Create parameter JSON file for folder creation subprocess.
 
         :param path_scen: Path to the scenario directory.
@@ -283,10 +283,10 @@ class TaskCreatFAssim(QgsTask):
         # Create parameter input file (with index to avoid conflicts)
 
         d_json = {'path_scen': path_scen,
-                  'if_analyse' : self.if_analyse,
-                  'type_ctrl' : self.type_ctrl,
-                  'json_file' : "data_assim.json"
-                      }
+                  'if_analyse': self.if_analyse,
+                  'type_ctrl': self.type_ctrl,
+                  'json_file': "data_assim.json"
+                  }
         with open(param_file, 'w') as fp:
             json.dump(d_json, fp)
         return param_file
@@ -315,7 +315,7 @@ class TaskCreatFAssim(QgsTask):
             results['execution_time'] = time.time() - results['start_time']
         try:
             script_dir = os.path.dirname(__file__)
-            os.chdir(os.path.join(script_dir, "..", "assim"))
+            os.chdir(script_dir)
             process = subprocess.run(
                 ["python", "ClassCreatModelAssim.py", param_file],
                 shell=True,

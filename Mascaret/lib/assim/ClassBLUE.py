@@ -42,7 +42,6 @@ def write_matrix_auto(f, matrix, decimals=5):
         f.write(line + "\n")
 
 
-
 class classBLUE:
     """Class that computes the analysed state of parameters using BLUE method"""
 
@@ -84,13 +83,13 @@ class classBLUE:
                 self.store_results(first=(i == 0), assim_step=i)
                 break
             # Arrêt si delta_sb et delta_so sont < 1e-3
-            elif (self.delta_so < 1e-3) and (np.all(np.array(self.delta_sb) < 1e-3) ):
+            elif (self.delta_so < 1e-3) and (np.all(np.array(self.delta_sb) < 1e-3)):
                 self.raison_arret = ("'Arret sur critere de convergence de sb et so. Variation "
                                      "inférieure à 1e-3 entre deux pas d'assimilation")
                 self.store_results(first=(i == 0), assim_step=i)
                 break
 
-            self.store_results(first=(i==0), assim_step=i)
+            self.store_results(first=(i == 0), assim_step=i)
             # Updating B and R values
             # B = sb * B_initialz
             # Avec sb qui dépend du type de perturbation, appliqué aux colonnes correspondantes
@@ -102,6 +101,7 @@ class classBLUE:
             print(self.current_R)
 
         self.raison_arret = "Nombre iterations sigma atteint"
+
     def build_gain_K(self):
         """ Computes gain matrix K : K =BH^t (HBH^t + R)^-1 """
         # Calcul de BHt
@@ -130,7 +130,7 @@ class classBLUE:
         print('Trace HBHT', trace_HBHT)
         for itype in range(np.max(self.matrixes.type_perturb)):
             self.sb[itype] = np.divide(np.dot(self.matrixes.misfit, self.matrixes.H @ self.analyse),
-                                trace_HBHT[itype])
+                                       trace_HBHT[itype])
         self.residual = np.array(self.matrixes.misfit) - self.matrixes.H @ self.analyse
         # Ajout de la nouvelle valeur de so
         self.so = np.divide(np.dot(self.matrixes.misfit, self.residual), np.trace(self.current_R))
@@ -164,6 +164,34 @@ class classBLUE:
             f.write('BLUE assimilation step results \n')
             f.write('--' * 50 + '\n')
 
+    def _update_xa(self, first):
+        """Update xa values in data_assim dict."""
+        # TODO éviter variable 1 lettre
+        d = self.data_assim.get(self.ctrl_type, {})
+        lst_var = "lst_zone" if self.ctrl_type == 'ctrlKS' else "lst_loi"
+        for izone, lzone in enumerate(d.get(lst_var, [])):
+            if not lzone:
+                continue
+            xa_val = round(self.analyse[izone], 2)
+            if d[lst_var][izone].get("xa") is None or first:
+                d[lst_var][izone]["xa"] = [xa_val]
+            else:
+                d[lst_var][izone]["xa"].append(xa_val)
+        with open(self.json_assim, 'w') as f:
+            json.dump(self.data_assim, f, indent=4)
+
+    def _write_matrix(self, f, label, mat):
+        """Write a labeled matrix to file."""
+        f.write(f'{label}\n')
+        write_matrix_auto(f, mat)
+
+    def _write_matrix_safe(self, f, label, mat):
+        """Write a labeled matrix to file, ignoring errors."""
+        try:
+            self._write_matrix(f, label, np.array(mat))
+        except Exception as e:
+            print(e)
+
     def store_results(self, first, assim_step):
         """ Store results in file
          :param first: True if first assimilation step
@@ -173,84 +201,40 @@ class classBLUE:
         # with open(json_assim) as f:
         #     data_assim = json.load(f)
 
-        d = self.data_assim.get('ctrlKS', {})
-        for izone, lzones in enumerate(d.get("lst_zone", [])):
-            if not lzones:
-                pass
-            else:
-                if d["lst_zone"][izone].get("xa") is None or first:
-                    d["lst_zone"][izone]["xa"] = [round(self.analyse[izone], 2)]
-                else:
-                    d["lst_zone"][izone]["xa"].append(round(self.analyse[izone], 2))
-        self.data_assim['ctrlKS'] = d
-        with open(self.json_assim, 'w') as f:
-            json.dump(self.data_assim, f, indent=4)
+        self._update_xa(first)
 
         # Then storing in txt file every BLUE matrix for debug/verif
         with open(os.path.join(self.base_folder, 'blue_results.txt'), 'a') as f:
             if first:
-                f.write(f'Assimilation - {self.ctrl_type}\n')
-                f.write('Matrice H \n')
-                current_mat = self.matrixes.H
-                write_matrix_auto(f, current_mat)
-                f.write(25 * '*-' + '\n')
+                if first:
+                    f.write(f'Assimilation - {self.ctrl_type}\n')
+                    self._write_matrix(f, 'Matrice H', self.matrixes.H)
+                    f.write(25 * '*-' + '\n')
+
             f.write(f'Assimilation step number {assim_step + 1}\n')
-            f.write('Matrice B \n')
-            current_mat = self.current_B
-            write_matrix_auto(f, current_mat)
-
-            f.write('Matrice R \n')
-            current_mat = self.current_R
-            write_matrix_auto(f, current_mat)
-
-            f.write('Matrice K \n')
-            current_mat = self.K
-            write_matrix_auto(f, current_mat)
-
-            f.write('Etat analyse xa \n')
-            current_mat = self.analyse
-            write_matrix_auto(f, current_mat)
-
-            try:
-                f.write('Sigma b par type\n')
-                current_mat = np.array(self.sb)
-                write_matrix_auto(f, current_mat)
-            except Exception as e:
-                print(e)
+            for label, mat in [
+                ('Matrice B', self.current_B),
+                ('Matrice R', self.current_R),
+                ('Matrice K', self.K),
+                ('Etat analyse xa', self.analyse),
+            ]:
+                self._write_matrix(f, label, mat)
 
             f.write('Sigma o\n')
             f.write(str(self.so) + '\n')
 
-            try:
-                f.write('Residual \n')
-                current_mat = self.residual
-                write_matrix_auto(f, current_mat)
-            except Exception as e:
-                print(e)
-
-            try:
-                f.write('Misfit \n')
-                current_mat = np.array(self.matrixes.misfit)
-                write_matrix_auto(f, current_mat)
-            except Exception as e:
-                print(e)
-
-            try:
-                f.write('Observations Y0 \n')
-                current_mat = np.array(self.matrixes.y0)
-                write_matrix_auto(f, current_mat)
-            except Exception as e:
-                print(e)
-
-            try:
-                f.write('Type perturbations \n')
-                current_mat = np.array(self.matrixes.type_perturb)
-                write_matrix_auto(f, current_mat)
-            except Exception as e:
-                print(e)
+            for label, mat in [
+                ('Sigma b par type', self.sb),
+                ('Residual', self.residual),
+                ('Misfit', self.matrixes.misfit),
+                ('Observations Y0', self.matrixes.y0),
+                ('Type perturbations', self.matrixes.type_perturb),
+            ]:
+                self._write_matrix_safe(f, label, mat)
 
             f.write(25 * '*-' + '\n')
             f.write(self.raison_arret)
+
 
 if __name__ == '__main__':
     if len(sys.argv) <= 2:

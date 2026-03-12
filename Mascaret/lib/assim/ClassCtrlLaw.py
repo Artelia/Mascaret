@@ -226,7 +226,8 @@ class CtrlLaw(ModelAssimBase):
 
         d_scen = self.data.dscen
         d_run = self.data.drun
-        d_scen["instances"] = []
+        if not d_scen.get("instances"):
+            d_scen["instances"] = []
         order = self.data.initial_order()
 
         lst_case, _ = self.get_list_cas_law(self.data.raw)
@@ -274,28 +275,22 @@ class CtrlLaw(ModelAssimBase):
         :param folder: Target analysis directory.
         :return: None. Applies analyzed coefficients to law file.
         """
-        #TODO a test lorsque BLUE loi OK
         if instance.get("type_ctrl") != "ctrlLaw":
             return
-
-        for zone in self.data['ctrlKS']['lst_loi']:
-            if not zone.get('xa'):
+        lst_modif = {}
+        for loi in self.data['ctrlLaw']['lst_loi']:
+            if not loi.get('xa'):
                 continue
-            assim_info = instance.get("assim_info")
-            if not assim_info:
-                return
-            coef_a = 1
-            coef_b = 0
-            # TODO Attention à 'xa' ??????
-            xa = zone['xa']
-            coef_a = xa[0] if len(xa) > 0 else 1
-            coef_b = xa[1] if len(xa) > 1 else 0
-
+            xa = loi['xa']
+            coefs = {loi.get("type"): xa[0]}
             suffix = "_init.loi" if instance["name"].endswith("_init") else ".loi"
-            name_law = f"{assim_info['name_law']}{suffix}"
-
-            coefs = {
-                "coefA": coef_a,
-                "coefB": coef_b,
-            }
-            self.modif_ctrl_law(name_law, folder, coefs)
+            name_law = f"{loi['name_law']}{suffix}"
+            if name_law in lst_modif:
+                lst_modif[name_law].update(coefs)
+            else:
+                lst_modif[name_law] = coefs
+        if lst_modif:
+            for name_law, coefs in lst_modif.items():
+                self.modif_ctrl_law(name_law, folder, coefs)
+        else:
+            print('Warning No assimiled Law ')

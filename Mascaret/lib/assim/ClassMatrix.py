@@ -1,6 +1,13 @@
 import json
 import os
 import numpy as np
+import traceback
+
+try:
+    from .ClassAssimData import AssimData
+except:
+    print('Using non relative imports')
+    from ClassAssimData import AssimData
 
 
 # n_perturb = 2
@@ -51,11 +58,10 @@ class ClassMatrix:
         self.base_folder = base_folder
         self.zones = []
         self.nbzones = 0
-        json_path = os.path.join(self.base_folder, 'data_assim.json')
         self.ctrlKs = False
         self.ctrlLaw = False
-        with open(json_path) as f:
-            self.dict_assim = json.load(f)
+        self.dict_assim = AssimData()
+        self.dict_assim.load(folder=self.base_folder)
 
         # Récupération du type de controle
         if self.dict_assim.get("ctrlKS") is not None and ctrl_type == "ctrlKS":
@@ -155,7 +161,6 @@ class ClassMatrix:
     def build_B_matrix_analysed(self, K):
         self.B_analysed = self.B - np.matmul(np.matmul(K, self.H), self.B)
 
-
     def build_diago_R_matrix_ini(self):
         diag_R = []
         # TODO faire sur toutes les obs dispos !, une seule fois
@@ -164,7 +169,7 @@ class ClassMatrix:
         if self.ctrl_type == 'ctrlKS' and self.ctrlKs:
             for dico in self.dict_assim.get("ctrlKS").get("lst_zone"):
                 # if int(dico.get("num_zone")) not in num_stations:
-                    # num_stations.append(int(dico.get("num_zone")))
+                # num_stations.append(int(dico.get("num_zone")))
                 dict2 = dico.get("lst_obs")
                 for icode, code in enumerate(dict2.get("code")):
                     if code not in num_obs:
@@ -239,6 +244,31 @@ class ClassMatrix:
                 ista += 1
         print('Y0', self.y0)
 
+    def get_perturb_dict_js(self, base_folder, iperturb):
+        print('Finding perturbation folders in', base_folder)
+        self.dict_assim["generate_instance"]["dscen"]["instances"]
+        instances = self.dict_assim.instances
+        if not instances:
+            raise Exception(f'Perturbation number {iperturb} not found in the Json data')
+
+        instances = [inst for inst in instances if
+                     inst['name'].startswith(self.ctrl_type) and not inst['name'].endswith('_init')]
+        try:
+            for inst in instances:
+                # TODO Ks and law
+                name_folder = os.path.basename(inst["RUN_REP"])
+                type_perturb = inst["assim_info"]["type_case"]
+                if self.ctrl_type == 'ctrlLaw':
+                    val_perturb = inst["assim_info"]["coef_pertub"]
+                    zone_perturb = inst["assim_info"]["name_law"]
+                else:  # ctrlKs
+                    val_perturb = inst["assim_info"]["ks_pertub"]
+                    zone_perturb = inst["assim_info"]["num_zone"]
+                return name_folder, type_perturb, val_perturb, zone_perturb
+        except Exception as err:
+            raise Exception(f'Perturbation number {iperturb} not found in the Json data : {str(err)},\n'
+                            f' traceback: {traceback.format_exc()}')
+
     def build_H_matrix(self):
         """
 
@@ -285,8 +315,10 @@ class ClassMatrix:
             print('Run perturbé', i)
             # Nom de dossier = './perturb
             # Fonctionne pour Law et KS normalement
+            # name_folder_pertub, type_perturb, val_perturb, zone_perturb = (
+            #     get_perturb_folder(base_folder_perturb, i))
             name_folder_pertub, type_perturb, val_perturb, zone_perturb = (
-                get_perturb_folder(base_folder_perturb, i))
+                self.get_perturb_dict_js(base_folder_perturb, i))
 
             print('Perturbation de type', type_perturb)
             name_folder_pertub = os.path.join(base_folder_perturb, name_folder_pertub)
@@ -308,7 +340,7 @@ class ClassMatrix:
             # Deltas_param contient l'ensemble des différences entre les paramètres de REF et de
             # PERTURB Avec potentiellement des valeurs nulles pour les paramètres non modifiés Ici
             # pour KS, on a les différences sur KS_MIn et MAJ pour chaque zone.
-
+            print(self.param_ref)
             deltas_param = [val_perturb -
                             self.param_ref[type_perturb][str(zone_perturb)]]
             self.xb.append(self.param_ref[type_perturb][str(zone_perturb)])

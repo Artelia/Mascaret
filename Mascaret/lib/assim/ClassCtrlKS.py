@@ -182,7 +182,8 @@ class CtrlKs(ModelAssimBase):
 
         d_scen = self.data.dscen
         d_run = self.data.drun
-        d_scen["instances"] = []
+        if not d_scen.get("instances"):
+            d_scen["instances"] = []
         order = self.data.initial_order()
 
         lst_case, _ = self.get_list_cas_ks(self.data.raw)

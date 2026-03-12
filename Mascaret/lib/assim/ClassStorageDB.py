@@ -19,6 +19,8 @@ email                :
 """
 
 from .ClassAssimData import AssimData
+from ..ClassMessage import ClassMessage
+
 
 class ClassStorageDB:
     """Handle storage of assimilation results in the database.
@@ -39,14 +41,14 @@ class ClassStorageDB:
         :param type_ctrl: Control type string (``'ctrlKS'`` or ``'ctrlLaw'``).
         """
         self.mdb = mdb
-        self.rep_scen =  rep_scen
+        self.rep_scen = rep_scen
         self.type_ctrl = type_ctrl
         self.id_run = id_run
 
+        self.mess = ClassMessage()
+
         self.data = AssimData()
         self.data.load(folder=self.rep_scen)
-
-
 
     def storage_results(self):
         """Dispatch storage based on control type."""
@@ -59,7 +61,6 @@ class ClassStorageDB:
         if handler:
             handler()
 
-
     def get_id_assim_ks(self, id_run, numz):
         """Retrieve control identifier for a ks zone.
 
@@ -69,9 +70,13 @@ class ClassStorageDB:
         """
         sql = (
             f"SELECT id_ctrl FROM {self.mdb.SCHEMA}.assim_res_ks "
-            f"WHERE id_runs = %s AND zone_num = %s"
+            f"WHERE id_runs = {id_run} AND zone_num = {numz}"
         )
-        return self.mdb.run_query(sql, (id_run, numz), fetch=True, arraysize=1)
+        res = self.mdb.run_query(sql, fetch=True)
+        if res:
+            res = [val for val in res]
+            return res[0][0]
+        return None
 
     def get_info_law(self, id_law, source_law):
         """Get law name and type from database.
@@ -84,17 +89,17 @@ class ClassStorageDB:
         if source_law == "extremities":
             sql = (
                 f"SELECT name, type FROM {self.mdb.SCHEMA}.extremities "
-                f"WHERE active AND gid = %s"
+                f"WHERE active AND gid = {id_law}"
             )
         elif source_law == "lateral_inflows":
             sql = (
                 f"SELECT name FROM {self.mdb.SCHEMA}.lateral_inflows "
-                f"WHERE active AND gid = %s"
+                f"WHERE active AND gid = {id_law}"
             )
         else:
             return None, -1
 
-        info = self.mdb.run_query(sql, (id_law,), fetch=True)
+        info = self.mdb.run_query(sql, fetch=True)
         if not info:
             return None, -1
 
@@ -111,9 +116,13 @@ class ClassStorageDB:
         """
         sql = (
             f"SELECT id_ctrl FROM {self.mdb.SCHEMA}.assim_res_law "
-            f"WHERE id_runs = %s AND source_law = %s AND id_law = %s"
+            f"WHERE id_runs = {id_run} AND source_law = '{source_law}' AND id_law = {id_law}"
         )
-        return self.mdb.run_query(sql, (id_run, source_law, id_law), fetch=True, arraysize=1)
+        res = self.mdb.run_query(sql, fetch=True)
+        if res:
+            res = [val for val in res]
+            return res[0][0]
+        return None
 
     def storage_ctrl_ks(self):
         """Store ks-control results from the loaded assimilation data."""
@@ -134,11 +143,10 @@ class ClassStorageDB:
                 info["ref_ks_min"],
                 info["ref_ks_maj"],
             )
-
             if not zone.get("xa"):
                 continue
 
-            if zone["type"] == "Ksmin" :
+            if zone["type"] == "Ksmin":
                 var = 'ks_min'
             else:
                 var = 'ks_maj'
@@ -175,25 +183,29 @@ class ClassStorageDB:
         :param name_file_law: filename or identifier of the law file
         :param name_law: human-readable name of the law
         """
-        query = f"""
-            INSERT INTO {self.mdb.SCHEMA}.assim_res_law 
-                (id_runs, id_law, source_law, name_file_law, name_law)
-            SELECT %s, %s, %s, %s, %s
-            WHERE NOT EXISTS (
-                SELECT 1 FROM {self.mdb.SCHEMA}.assim_res_law
-                WHERE id_runs = %s
-                  AND id_law = %s
-                  AND source_law = %s
-            );
+        check_sql = f"""
+            SELECT 1
+            FROM {self.mdb.SCHEMA}.assim_res_law
+            WHERE id_runs={id_runs}
+              AND id_law={id_law}
+              AND source_law='{source_law}';
         """
-        self.mdb.run_query(
-            query,
-            (id_runs, id_law, source_law, name_file_law, name_law,
-             id_runs, id_law, source_law),
-        )
+        exists = self.mdb.run_query(check_sql, fetch=True, arraysize=1)
+        exists = [val for val in exists]
+        # if exist => ignor
+        if exists:
+            return False
+
+        # if not insert
+        insert_sql = f"""
+            INSERT INTO {self.mdb.SCHEMA}.assim_res_law
+                 (id_runs, id_law, source_law, name_file_law, name_law)
+            VALUES ({id_runs}, {id_law}, '{source_law}', '{name_file_law}', '{name_law}');
+        """
+        self.mdb.run_query(insert_sql)
 
     def _insert_or_ignore_assim_res_ks(
-        self, id_runs, id_zone, branchnum, abs_min, abs_maj, ks_min, ks_maj
+            self, id_runs, id_zone, branchnum, abs_min, abs_maj, ks_min, ks_maj
     ):
         """Insert a row into the ``assim_res_ks`` table for a ks-zone if
         the combination (id_runs, zone_num, branchnum) does not already exist.
@@ -206,34 +218,42 @@ class ClassStorageDB:
         :param ks_min: reference ks minor bed (double)
         :param ks_maj: reference ks major bed (double)
         """
-        query = f"""
+        check_sql = f"""
+            SELECT 1
+            FROM {self.mdb.SCHEMA}.assim_res_ks
+            WHERE id_runs={id_runs}
+              AND zone_num={id_zone}
+              AND branchnum={branchnum};
+        """
+        exists = self.mdb.run_query(check_sql, fetch=True, arraysize=1)
+        exists = [val for val in exists]
+
+        # if exist => ignor
+        if exists:
+            return False
+
+        # if not insert
+        insert_sql = f"""
             INSERT INTO {self.mdb.SCHEMA}.assim_res_ks
                 (id_runs, zone_num, branchnum, abs_min, abs_max, ks_min, ks_maj)
-            SELECT %s, %s, %s, %s, %s, %s, %s
-            WHERE NOT EXISTS (
-                SELECT 1 FROM {self.mdb.SCHEMA}.assim_res_ks
-                WHERE id_runs = %s
-                  AND zone_num = %s
-                  AND branchnum = %s
-            );
+            VALUES ({id_runs}, {id_zone}, {branchnum},
+            {abs_min}, {abs_maj}, {ks_min}, {ks_maj});
         """
-        self.mdb.run_query(
-            query,
-            (id_runs, id_zone, branchnum, abs_min, abs_maj, ks_min, ks_maj,
-             id_runs, id_zone, branchnum),
-        )
+        self.mdb.run_query(insert_sql)
 
-    def _insert_assim_res(self, id_ctrl, id_runs, type_ctrl, var, val):
+        return True  # ligne insérée
+
+    def _insert_assim_res(self, id_ctrl, id_runs, type_ctrl_, var, val):
         """Insert a row into the ``assim_res`` table. 
         :param id_ctrl: integer control identifier (foreign key to control table)
         :param id_runs: integer run identifier
-        :param type_ctrl: text controlling type (e.g. 'ctrlKS' or 'ctrlLaw')
+        :param type_ctrl_: text controlling type (e.g. 'ctrlKS' or 'ctrlLaw')
         :param var: text name of the variable modified
         :param val:  value 
         """
         query = f"""
             INSERT INTO {self.mdb.SCHEMA}.assim_res 
                 (id_runs, type_ctrl, id_ctrl, var, val)
-            VALUES (%s, %s, %s, %s, %s);
+            VALUES ({id_runs}, '{type_ctrl_}', {id_ctrl}, '{var}', {val});
         """
-        self.mdb.run_query(query, (id_runs, type_ctrl, id_ctrl, var, val))
+        self.mdb.run_query(query)

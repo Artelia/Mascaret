@@ -317,10 +317,11 @@ class ClassRunUIDialog(QDialog):
                     f"type_res = '"
                     f"tracer_TRANSPORT_PUR'"
                 )
-            self.mdb.delete("results_sect", condition)
-            self.mdb.delete("runs_graph", condition)
-            self.mdb.delete("runs_plani", condition)
-            self.mdb.delete("results_by_pk", condition)
+            del_lst = ["results_sect", "runs_graph", "runs_plani", "results_by_pk",
+                       "assim_res", "assim_res_ks", "assim_res_law"]
+            for table in del_lst:
+                self.mdb.delete(table, condition)
+
 
         self.mgis.add_info(
             "Deletion of {0} scenario for {1} is done".format(nom_scen, run), dbg=True

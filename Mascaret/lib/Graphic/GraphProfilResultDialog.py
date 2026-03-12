@@ -40,6 +40,7 @@ from ..Function import tw_to_txt, fill_zminbed
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
+
 def list_sql(liste, typ="str"):
     """
     list to srting for sql script
@@ -347,7 +348,7 @@ class GraphProfilResultDialog(QWidget):
         rows = self.mdb.run_query(
             "SELECT id, run, scenario FROM {0}.runs "
             "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
-            "ORDER BY date DESC, run ASC, scenario ASC;".format(self.mdb.SCHEMA),
+            "ORDER BY date DESC, run ASC, id DESC;".format(self.mdb.SCHEMA),
             fetch=True,
         )
         for row in rows:
@@ -675,7 +676,7 @@ class GraphProfilResultDialog(QWidget):
                 tw.setHorizontalHeaderItem(c, QTableWidgetItem(lst_lbls[c]))
                 for r, val in enumerate(param[var]):
                     itm = QTableWidgetItem()
-                    itm.setFlags(qt_itm_ena |qt_itm_sel)
+                    itm.setFlags(qt_itm_ena | qt_itm_sel)
                     itm.setData(0, val)
                     tw.setItem(r, c, itm)
 

@@ -24,7 +24,7 @@ from time import sleep
 import traceback
 
 from click import launch
-from qgis.PyQt.QtCore import qVersion,Qt
+from qgis.PyQt.QtCore import qVersion, Qt
 from qgis.PyQt.QtWidgets import QInputDialog, QDialog
 from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsTask
 from scripts.regsetup import description
@@ -33,13 +33,11 @@ from .ClassInitializeModel import ClassInitializeModel
 from .ClassDictRun import ClassDictRun
 from .ClassRunUIDialog import ClassRunUIDialog
 
-
 from .TaskMascaret import TaskMascaret
 from ..assim.TaskBLUE import TaskBLUE
 from ..assim.TaskCreatFAssim import TaskCreatFAssim
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
-
 
 
 class ClassMascaret:
@@ -54,11 +52,11 @@ class ClassMascaret:
         # kernel list
         self.Klist = ["steady", "unsteady", "transcritical"]
         self.obj_model = ClassDictRun(self.mgis)
-        self.task_init=None
-        self.task_ref= None
+        self.task_init = None
+        self.task_ref = None
         self.limit_core = 1
         self.max_retries = 5
-        self.use_task = True
+        self.use_task = self.mgis.task_use
         self.task_blue = None
         self.cond_api = self.mgis.cond_api
 
@@ -90,7 +88,6 @@ class ClassMascaret:
         self.limit_core = self.obj_model.get_drun()['limit_core']
         self.del_inter_assim = self.obj_model.get_drun()['del_inter_assim']
 
-
         # File d'attente des tasks à exécuter
         self.task_queue = []
 
@@ -98,12 +95,12 @@ class ClassMascaret:
         if drun['has_run_init']:
             self.task_queue.append('init')
         self.task_queue.append('ref')  # Toujours exécuter ref ?
-        if not self.cond_api :
+        if not self.cond_api:
             drun['has_assimilation'] = False
 
         # Assimilation Control Ks *************
-        if drun['has_assimilation'] :
-            if  self.obj_model.assim.check_assim_ks():
+        if drun['has_assimilation']:
+            if self.obj_model.assim.check_assim_ks():
                 self.task_queue.append('ctrl_ks_creat')
                 if drun['has_run_init']:
                     self.task_queue.append('ctrl_ks_init')
@@ -165,10 +162,10 @@ class ClassMascaret:
 
     def launch_ctrl_creat(self, type_ctrl_creat):
         CONFIG = {
-            'ctrlLaw_creat_folder': ("Creating CtrlLaw Folder", 'ctrlLaw', False),
             'ctrlKS_creat_folder': ("Creating CtrlKS Folder", 'ctrlKS', False),
             'ctrlKS_creat_analyse': ("Creating Analyse CtrlKS Folder", 'ctrlKS', True),
-            'ctrlLaw_creat_analyse': ("Creating Analyse CtrlLaw Folder", 'ctrlLaw', False),
+            'ctrlLaw_creat_folder': ("Creating CtrlLaw Folder", 'ctrlLaw', False),
+            'ctrlLaw_creat_analyse': ("Creating Analyse CtrlLaw Folder", 'ctrlLaw', True),
         }
 
         label, type_ctrl, if_analyse = CONFIG[type_ctrl_creat]
@@ -205,25 +202,25 @@ class ClassMascaret:
         CONFIG = {
             # (type_ctrl, type_init, if_analyse)
             ('ctrlKS', False, False): (
-            "Mascaret Execution – CtrlKS Perturbation", 'ctrlKS_pertub', 'CtrlKS Perturbation',
-            'Run CtrlKS Perturbation'),
+                "Mascaret Execution – CtrlKS Perturbation", 'ctrlKS_pertub', 'CtrlKS Perturbation',
+                'Run CtrlKS Perturbation'),
             ('ctrlKS', True, False): (
-            "Mascaret Execution – CtrlKS Init", 'ctrlKS_init', 'CtrlKS Init', 'Run CtrlKS Init'),
+                "Mascaret Execution – CtrlKS Init", 'ctrlKS_init', 'CtrlKS Init', 'Run CtrlKS Init'),
             ('ctrlKS', False, True): (
-            "Mascaret Execution – CtrlKS Analysis", 'ctrlKS_analyse', 'CtrlKS Analysis', 'Run CtrlKS Analysis'),
+                "Mascaret Execution – CtrlKS Analysis", 'ctrlKS_analyse', 'CtrlKS Analysis', 'Run CtrlKS Analysis'),
             ('ctrlKS', True, True): (
-            "Mascaret Execution – CtrlKS Analysis Init", 'ctrlKS_analyse_init', 'CtrlKS Analysis Init',
-            'Run CtrlKS Analysis Init'),
+                "Mascaret Execution – CtrlKS Analysis Init", 'ctrlKS_analyse_init', 'CtrlKS Analysis Init',
+                'Run CtrlKS Analysis Init'),
             ('ctrlLaw', False, False): (
-            "Mascaret Execution – CtrlLaw Perturbation", 'ctrlLaw_pertub', 'CtrlLaw Perturbation',
-            'Run CtrlLaw Perturbation'),
+                "Mascaret Execution – CtrlLaw Perturbation", 'ctrlLaw_pertub', 'CtrlLaw Perturbation',
+                'Run CtrlLaw Perturbation'),
             ('ctrlLaw', True, False): (
-            "Mascaret Execution – CtrlLaw Init", 'ctrlLaw_init', 'CtrlLaw Init', 'Run CtrlLaw Init'),
+                "Mascaret Execution – CtrlLaw Init", 'ctrlLaw_init', 'CtrlLaw Init', 'Run CtrlLaw Init'),
             ('ctrlLaw', False, True): (
-            "Mascaret Execution – CtrlLaw Analysis", 'ctrlLaw_analyse', 'CtrlLaw Analysis', 'Run CtrlLaw Analysis'),
+                "Mascaret Execution – CtrlLaw Analysis", 'ctrlLaw_analyse', 'CtrlLaw Analysis', 'Run CtrlLaw Analysis'),
             ('ctrlLaw', True, True): (
-            "Mascaret Execution – CtrlLaw Analysis Init", 'ctrlLaw_analyse_init', 'CtrlLaw Analysis Init',
-            'Run CtrlLaw Analysis Init'),
+                "Mascaret Execution – CtrlLaw Analysis Init", 'ctrlLaw_analyse_init', 'CtrlLaw Analysis Init',
+                'Run CtrlLaw Analysis Init'),
         }
         description, name_task, log_inf, label = CONFIG[(type_ctrl, type_init, if_analyse)]
         print(f'{label} *************')
@@ -256,7 +253,6 @@ class ClassMascaret:
                 QgsMessageLog.logMessage(f"{log_inf} task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
                 self.process_next_task()
 
-
     def launch_ctrl_ks_BLUE(self):
         print('Run Assime CtrlKS BLUE *************')
         scens = self.obj_model.get_list_name_scenario()
@@ -269,8 +265,8 @@ class ClassMascaret:
             self.task_blue = TaskBLUE(
                 description=description,
                 base_folder=base_folder,
-                ctrl_type = 'ctrlKS',
-                del_inter_assim = self.del_inter_assim
+                ctrl_type='ctrlKS',
+                del_inter_assim=self.del_inter_assim
             )
             print('taskblueinit')
             self.task_blue.update_params(scens)
@@ -294,7 +290,6 @@ class ClassMascaret:
                                          Qgis.Warning)
                 self.process_next_task()
 
-
     def launch_ctrl_law_BLUE(self):
         print('Run Assime CtrlLaw BLUE *************')
         scens = self.obj_model.get_list_name_scenario()
@@ -307,8 +302,8 @@ class ClassMascaret:
             self.task_blue = TaskBLUE(
                 description=description,
                 base_folder=base_folder,
-                ctrl_type = 'ctrlLaw',
-                del_inter_assim = self.del_inter_assim
+                ctrl_type='ctrlLaw',
+                del_inter_assim=self.del_inter_assim
             )
             print('taskblueinit')
             self.task_blue.update_params(scens)
@@ -331,10 +326,9 @@ class ClassMascaret:
                                          Qgis.Warning)
             self.process_next_task()
 
-
-    def launch_storage_assim_task(self,type_assim):
+    def launch_storage_assim_task(self, type_assim):
         print(f'{type_assim} Storage Assim *************')
-        task_params_ref = self.obj_model.get_list_type_instance_assim( type_assim, type_init=None,if_ana=True)
+        task_params_ref = self.obj_model.get_list_type_instance_assim(type_assim, type_init=None, if_ana=True)
 
         if not task_params_ref:
             QgsMessageLog.logMessage(f"No '{type_assim}' model to run.", 'TaskMascaret', Qgis.Warning)
@@ -363,9 +357,10 @@ class ClassMascaret:
             task_id = self.launch_task(self.task_ref, description)
 
             if not task_id:
-                QgsMessageLog.logMessage(f"{type_assim} task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
+                QgsMessageLog.logMessage(f"{type_assim} task failed to launch, skipping...", 'TaskMascaret',
+                                         Qgis.Warning)
                 self.process_next_task()
-    
+
     def launch_task(self, task, description="Mascaret Models Execution"):
         print('Launching task...')
         task_manager = QgsApplication.taskManager()
@@ -401,7 +396,7 @@ class ClassMascaret:
                         Qgis.Info
                     )
                     print(f'Task launched successfully: {task_id}, Status: {task_status}')
-                    return task_id  #  Retourne l'ID au lieu de True
+                    return task_id  # Retourne l'ID au lieu de True
                 else:
                     QgsMessageLog.logMessage(
                         f"Task status unexpected: {task_status} (attempt {attempt + 1}/{self.max_retries})",
@@ -443,7 +438,6 @@ class ClassMascaret:
             # Passer à la task suivante dans la queue
             self.process_next_task()
 
-
     def process_next_task(self):
         """Traite la prochaine task dans la queue"""
         if not self.task_queue:
@@ -465,7 +459,6 @@ class ClassMascaret:
         elif next_task_type == 'ctrl_ks_blue':
             self.launch_ctrl_ks_BLUE()
         elif next_task_type == 'ctrl_ks_creat_ana':
-            print('iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii')
             self.launch_ctrl_creat('ctrlKS_creat_analyse')
         elif next_task_type == 'ctrl_ks_ana_init':
             self.launch_ctrl_task(type_ctrl='ctrlKS', type_init=True, if_analyse=True)
@@ -484,7 +477,7 @@ class ClassMascaret:
         elif next_task_type == 'ctrl_law_ana_init':
             self.launch_ctrl_task(type_ctrl='ctrlLaw', type_init=True, if_analyse=True)
         elif next_task_type == 'ctrl_law_ana':
-            self.launch_ctrl_task(type_ctrl='ctrlLaw', type_init=True, if_analyse=True)
+            self.launch_ctrl_task(type_ctrl='ctrlLaw', type_init=False, if_analyse=True)
             # self.launch_ctrl_analyse()
 
     def on_all_tasks_completed(self):
@@ -519,8 +512,3 @@ class ClassMascaret:
 
         # Continuer avec la task suivante malgré l'échec
         self.process_next_task()
-
-
-
-
-

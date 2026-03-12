@@ -51,7 +51,6 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
 
     def check_obs(self, type_ctrl):
         # A ce stade, on suppose l'existence de la clé type_ctrl
-        print('TYPECTRL checkobs', type_ctrl)
         d_scen = self.data.dscen
         path_instance = Path(d_scen.get("path_instance", '.'))
         folder_obs = os.path.join(path_instance, 'Observations')
@@ -88,7 +87,6 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         if len(np.unique(all_dt_obs)) > 1:
             raise ValueError('At least one observation has different timestep than the others')
 
-
     def fill_assim_folder(self, type_ctrl, if_analyse=False):
         """Fill assimilation or analysis folders with modified model files.
 
@@ -113,26 +111,26 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
             path_init = path_ref / d_scen.get("folder_init")
 
         for name, folder in d_folder.items():
-            print(name.startswith("Analyse"), if_analyse, name)
-            if name in ['ref', 'init']:
-                continue
-            if name.startswith("Analyse") != if_analyse:
+            # ignor ref, init et Analyse if if_analyse folse
+            if name in ("ref", "init") or name.startswith("Analyse") != if_analyse:
                 continue
 
             instance = self.data.get_instance(name)
+            type_ctrl_instance = instance.get("type_ctrl", "")
+            # check ctrl type
+            if type_ctrl != type_ctrl_instance:
+                continue
 
             clone_source = path_init if name.endswith('_init') and path_init else path_ref
-
             self.clone_model(clone_source, folder)
-            print(if_analyse, instance.get('type_ctrl', ''))
 
-            if 'ctrlKS' == instance.get('type_ctrl', ''):
+            if 'ctrlKS' == type_ctrl:
                 if if_analyse:
                     self.fill_ana_folder_ks(instance, folder)
                 else:
                     self.fill_assim_folder_ks(instance, folder)
 
-            if 'ctrlLaw' == instance.get('type_ctrl', '') and not if_analyse:
+            if 'ctrlLaw' == type_ctrl:
                 if if_analyse:
                     self.fill_ana_folder_law(instance, folder)
                 else:
