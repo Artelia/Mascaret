@@ -486,10 +486,12 @@ class ClassMethRegul:
                 (param_fg["VREGOPEN"] <= val_check <= param_fg["VREGCLOS"], "MAINT"),
             ]
         }
-
+        print(val_check, param_fg["VREGOPEN"], param_fg["VREGCLOS"],  key,  param_fg["DIRFG"])
         for condition, action in conditions.get(key, []):
             if condition:
                 param_fg["OPEN_CLOSE"] = action
+                print(condition,action)
+                print('**************************')
                 break
 
         return val_check

@@ -76,8 +76,8 @@ class TaskMascComput(QgsTask):
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Critical)
         else:
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
-        if self.masc:
-            self.masc.mgis.add_info(txt)
+        if self.masc :
+            self.masc.mgis.add_info(txt, dbg=True)
 
     def add_log_mess(self, obj):
         """
@@ -95,7 +95,7 @@ class TaskMascComput(QgsTask):
                 else:
                     QgsMessageLog.logMessage(item["message"], MESSAGE_CATEGORY, Qgis.Info)
                 if self.masc:
-                    self.masc.mgis.add_info(item["message"])
+                    self.masc.mgis.add_info(item["message"], dbg=True)
 
     def update_inputs(self, up_dict, cpt_init=False):
         """
