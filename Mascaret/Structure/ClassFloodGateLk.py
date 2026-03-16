@@ -62,10 +62,6 @@ class ClassFloodGateLk:
         try:
             self.search_sec_control()
             self.search_link_to_param_fg()
-            # if not self.check_param():
-            #     self.add_info("***** ERROR: the gates for the links\n COMPUTATION STOP")
-            #     self.arret_comput = True
-            #     return
             self.update_var_mas(force=True)
             self.init_res()
         except Exception:
@@ -211,17 +207,6 @@ class ClassFloodGateLk:
         self.update_var_mas()
         self.fill_results_fg_mv(id_lk, param)
 
-    def check_param(self):
-        """
-        Validate the floodgate parameters to ensure consistency.
-        Returns True if all parameters are valid, otherwise False.
-        """
-        for id_lk, param in self.param_fg.items():
-            if param["method_mob"] == self.dmeth["meth_regul"]:
-                # check cas
-                if not self.cl_regul.check_param(param, id_lk):
-                    return False
-        return True
 
     def search_sec_control(self):
         """
@@ -453,34 +438,6 @@ class ClassMethRegul:
             param["WRITE"] = 1
         else:
             param["WRITE"] = param["WRITEREG"]
-
-    def check_param(self, param, id_lk):
-        """
-        Validate the consistency of regulation parameters, specifically `VREGOPEN` and `VREGCLOS`.
-        :param param: Dictionary of floodgate parameters.
-        :param id_lk: Link ID.
-        :return: True if parameters are valid, False otherwise.
-        """
-        valo = param["VREGOPEN"]
-        valf = param["VREGCLOS"]
-
-        if param["DIRFG"] == "D":  # bas
-            if valf > valo:
-                self.add_info(
-                    "***** ERROR: "
-                    "Closing level value must be lower opening level value\n"
-                    " for the {} link ".format(id_lk)
-                )
-                return False
-        else:
-            if valo > valf:
-                self.add_info(
-                    "***** ERROR:"
-                    "Opening level value must be lower closing level value\n"
-                    " for the {} link ".format(id_lk)
-                )
-                return False
-        return True
 
     @staticmethod
     def state_regul(val_check, param_fg):
