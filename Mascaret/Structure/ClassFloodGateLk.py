@@ -87,6 +87,7 @@ class ClassFloodGateLk:
                     "Model.Link.CSection": param["CSection"],
                     "Model.Link.Width": param["width"]
                 }
+
                 for key, value in updates.items():
                     self.masc.set(key, value, id_mas)
 
@@ -314,11 +315,12 @@ class ClassFloodGateLk:
 
         # Check if any parameter has changed
         zlink_var = 'level'
-        if param["method_mob"] == "meth_regul":
+        if param["method_mob"] == self.dmeth["meth_regul"]:
             if param["DIRFG"] == "D":
                 zlink_var = 'level'
             else:
                 zlink_var = "ZmaxSection"
+
         if param["TIME"] != param["TIME0"] and self.cpt_w[id_lk] > param["WRITE"]:
             self.cpt_w[id_lk] = 1
             # Update with new values
@@ -327,6 +329,7 @@ class ClassFloodGateLk:
             res["WIDTHLINK"].append(param["width"])
             res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
             res["ZLINK"].append(param[zlink_var])
+
 
         param.update({
             # var time-dt
@@ -486,12 +489,10 @@ class ClassMethRegul:
                 (param_fg["VREGOPEN"] <= val_check <= param_fg["VREGCLOS"], "MAINT"),
             ]
         }
-        print(val_check, param_fg["VREGOPEN"], param_fg["VREGCLOS"],  key,  param_fg["DIRFG"])
+
         for condition, action in conditions.get(key, []):
             if condition:
                 param_fg["OPEN_CLOSE"] = action
-                print(condition,action)
-                print('**************************')
                 break
 
         return val_check
@@ -532,11 +533,12 @@ class ClassMethRegul:
                 new_level = max(level - dz_open, level0)
         elif dir_fg == "U":
             if status == "CLOSE":
-                new_level_max = min(zmax_section + dz_close, zlimit_gate)
+                new_level_max = max(zmax_section - dz_close, zlimit_gate)
             elif status == "OPEN":
-                new_level_max = max(zmax_section - dz_open, zmax_section0)
+                new_level_max = min(zmax_section + dz_open, zmax_section0)
         if param["type"] == 4:
             new_section = width * (new_level_max - new_level)
+
         return {
             "level": new_level,
             "CSection": new_section,
