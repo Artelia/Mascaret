@@ -653,19 +653,22 @@ class ClassMascaret:
         scen = dict_scen["name"][idx]
 
         gbl_param = {
-            "dbg": self.dbg,
-            "mdb": self.mdb,
-            "dossier_file_masc": self.dossier_file_masc,
-            "basename": self.baseName,
-            "noyau": noyau,
-            "run": run,
-            "comments": comments,
-            "dict_scen": dict_scen,
-            "waterq": self.wq,
-            "masc": self,
-            "cond_api": self.cond_api,
-        }
-        param_init = {"dict_lois": dict_lois, "dico_loi_struct": dico_loi_struct}
+                     'dbg': self.dbg,
+                     'mdb': self.mdb,
+                     'dossier_file_masc': self.dossierFileMasc,
+                     'basename': self.baseName,
+                     'noyau': noyau,
+                     'run': run,
+                     'comments': comments,
+                     'dict_scen': dict_scen,
+                     'waterq': self.wq,
+                     'masc': self,
+                     'cond_api': self.cond_api,
+                     }
+        param_init = {
+                      'dict_lois': dict_lois,
+                      'dico_loi_struct': dico_loi_struct
+                      }
         init_task_ = TaskMascInit(gbl_param, param_init)
         up_param = {"scen": scen, "idx": idx, "par": par}
         init_task_.update_inputs(up_param)

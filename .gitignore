@@ -15,3 +15,4 @@ icones/Thumbs.db
 *.phy
 Structure/test
 api/test.py
+.github/workflows/GitlabSync-OpenTelemac.yml

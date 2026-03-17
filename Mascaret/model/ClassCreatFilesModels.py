@@ -1463,6 +1463,7 @@ class ClassCreatFilesModels:
             # get observation each station
             obs_stations = {}
             err_critic = False
+            err_critic = False
             for cd_hydro, delta in liste_stations:
                 delta_h = int(delta) if delta else 0
                 dt = datetime.timedelta(hours=delta_h)
@@ -1482,7 +1483,6 @@ class ClassCreatFilesModels:
                            "ORDER BY d.date;".format(
                         self.mdb.SCHEMA, cd_hydro, type_, date_debut + dt, date_fin + dt
                     ))
-
                 obs_stations[cd_hydro] = self.mdb.query_todico(sql_tab)
                 if not obs_stations[cd_hydro]["date"]:
                     self.mess.add_mess('NoInitSteady', 'critic',
@@ -1494,7 +1494,7 @@ class ClassCreatFilesModels:
                     continue
             if err_critic:
                 return
-                # ref dates and station (first station)
+            # ref dates and station (first station)
             ref_station, ref_delta = liste_stations[0]
             ref_delta_h = int(ref_delta) if ref_delta else 0
             ref_dates = [d - datetime.timedelta(hours=ref_delta_h) for d in obs_stations[ref_station]["date"]]
