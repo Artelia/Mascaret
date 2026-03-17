@@ -208,11 +208,6 @@ class ClassFloodGateLk:
         self.update_var_mas()
         self.fill_results_fg_mv(id_lk, param)
 
-        for id_lk, param in self.param_fg.items():
-            if param["method_mob"] == self.dmeth["meth_regul"]:
-                # check cas
-                if not self.cl_regul.check_param(param, id_lk):
-                    return False
 
     def search_sec_control(self):
         """
