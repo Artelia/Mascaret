@@ -519,6 +519,7 @@ class ClassAPIMascaret:
             self.clfg_w.init_fg_weirs()
         if self.clfg_lk.arret_comput or self.clfg_w.arret_comput:
             self.finalize()
+            return
 
         self.compute()
         self.finalize()

@@ -22,7 +22,7 @@ qgisMaximumVersion=3.99
 
 
 
-version=6.3.0
+version=6.3.1
 
 
 author=Artelia
@@ -34,6 +34,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    6.3.1 : Added Configurable valve behavior during floods based on opening/closing elevation comparison.
+            API version V9.0 d'OpenTelemac
     6.3.0 : Fixed bug related to QGIS 3.40
     6.2.2 : Update branch style to limit extremities
             Fixed the data acquisition of thickness in the style of weirs for the weir law

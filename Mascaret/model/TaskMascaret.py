@@ -93,6 +93,8 @@ class TaskMascaret(QgsTask):
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Critical)
         else:
             QgsMessageLog.logMessage(txt, MESSAGE_CATEGORY, Qgis.Info)
+        if self.masc:
+            self.masc.mgis.add_info(txt)
 
     def run(self):
         """Run Task
