@@ -423,6 +423,7 @@ class ClassMethRegul:
             param["ZmaxSection"] = param["ZmaxSection0"]
             if param["type"] == 4:
                 # section rectangulaire
+                param["level"] = min(param["level"], param["ZmaxSection0"])
                 param["ZLIMITGATE"] = min(param["ZMAXFG"], param["ZmaxSection0"])
                 param["CSection"] = param["width"] * min((param["ZmaxSection"] - param["level"]), 0)
             else:
@@ -433,7 +434,7 @@ class ClassMethRegul:
             param["level"] = param["level0"]
             param["ZmaxSection"] = min(param["ZINITREG"], param["ZmaxSection0"])
             param["CSection"] = param["width0"] * min((param["ZmaxSection"] - param["level"]), 0)
-            param["ZLIMITGATE"] = min(param["ZMAXFG"], param["level0"])
+            param["ZLIMITGATE"] = max(param["ZMAXFG"], param["level0"])
         else:
             self.add_info(f"Non-consistency type floodgate with the moving part {id_lk}.")
 
