@@ -878,6 +878,8 @@ class GraphResultDialog(QWidget):
                     "abs_max": row["abs_max"],
                     "ks_min_ref": row["ks_min"],
                     "ks_maj_ref": row["ks_maj"],
+                    "r_diff_min": None,
+                    "r_diff_maj": None,
                 }
             if row["var"] == "ks_min":
                 result[id_ctrl]["val_ks_min"] = row["val"]
@@ -886,11 +888,13 @@ class GraphResultDialog(QWidget):
         result = dict(sorted(result.items(), key=lambda item: item[1]["zone_num"]))
 
         keys = ["zone_num", "branchnum", "abs_min", "abs_max",
-                "ks_min_ref", "ks_maj_ref", "val_ks_min", "val_ks_maj"]
+                "ks_min_ref", "ks_maj_ref", "val_ks_min", "val_ks_maj", "r_diff_min", "r_diff_maj"]
         rows = []
         for item in result.values():
             item["val_ks_min"] = item["val_ks_min"] if item["val_ks_min"] is not None else item["ks_min_ref"]
             item["val_ks_maj"] = item["val_ks_maj"] if item["val_ks_maj"] is not None else item["ks_maj_ref"]
+            item["r_diff_min"] = round((item["val_ks_min"] - item["ks_min_ref"]) / item["ks_min_ref"] * 100,2)
+            item["r_diff_maj"] = round((item["val_ks_maj"] - item["ks_maj_ref"]) / item["ks_maj_ref"] * 100 ,2)
             rows.append([item[k] for k in keys])
 
         return rows
@@ -904,6 +908,7 @@ class GraphResultDialog(QWidget):
                 "Zone", "Branch", "Min Abscissa \n (Pk)", "Max Abscissa \n (Pk)",
                 "Initial Ks\n (minor bed)", "Initial Ks \n (major bed)",
                 "Final Ks \n (minor bed)", "Final Ks \n (major bed)",
+                "Relative diff. % \n (minor bed)", "Relative diff. % \n (major bed)"
             ],
             col_color=[6, 7],
             tab_label_base="Assim – Ctrl Ks",

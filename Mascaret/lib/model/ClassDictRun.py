@@ -145,12 +145,15 @@ class ClassDictRun:
         :type index: int or list
         :return: None
         """
+
         if self.dmodel.get('scenario'):
             if isinstance(index, list):
-                for idx in index:
-                    self.dmodel['scenario'].pop(idx)
+                exclude = set(index)
+                new_list = [val for idx, val in enumerate(self.dmodel['scenario']) if idx not in exclude]
+                self.dmodel['scenario'] = new_list
             elif isinstance(index, int):
                 self.dmodel['scenario'].pop(index)
+
 
     def get_scenario(self, scen):
         """Return scenario dictionary by scenario name.
