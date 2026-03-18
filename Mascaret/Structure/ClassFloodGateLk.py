@@ -320,6 +320,7 @@ class ClassFloodGateLk:
                 zlink_var = 'level'
             else:
                 zlink_var = "ZmaxSection"
+
         if param["TIME"] != param["TIME0"] and self.cpt_w[id_lk] > param["WRITE"]:
             self.cpt_w[id_lk] = 1
             # Update with new values
@@ -328,6 +329,7 @@ class ClassFloodGateLk:
             res["WIDTHLINK"].append(param["width"])
             res["REGVAR"].append(round(param["REGVAR_VAL"], 3))
             res["ZLINK"].append(param[zlink_var])
+
 
         param.update({
             # var time-dt
@@ -537,6 +539,7 @@ class ClassMethRegul:
                 new_level_max = min(zmax_section + dz_open, zmax_section0)
         if param["type"] == 4:
             new_section = width * (new_level_max - new_level)
+
         return {
             "level": new_level,
             "CSection": new_section,
