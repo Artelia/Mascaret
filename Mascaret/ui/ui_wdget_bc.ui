@@ -32,6 +32,9 @@
         </spacer>
        </item>
        <item>
+        <widget class="QComboBox" name="cb_run"/>
+       </item>
+       <item>
         <widget class="QComboBox" name="cb_event"/>
        </item>
        <item>

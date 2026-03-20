@@ -27,7 +27,6 @@ import sys
 from pathlib import Path
 import traceback
 
-
 from .ClassGeoWriter import ClassGeoWriter
 from .ClassXcasWriter import ClassXcasWriter
 from .ClassBCWriter import ClassBCWriter
@@ -88,7 +87,7 @@ class ClassInitializeModel:
         self.clmeth = ClassMascStruct(self.mdb)
         self.wq = ClassMascWQ(self.mgis, '')
 
-    def main(self,up_param=None):
+    def main(self, up_param=None):
         """Main entry: generate folders and initialize all scenarios.
 
         :return: None
@@ -97,14 +96,14 @@ class ClassInitializeModel:
         lscenar = self.obj_model.get_list_name_scenario()
         lst_idx_del = []
         for ids, scen in enumerate(lscenar):
-            stat = self.mascaret_init(scen,up_param)
+            stat = self.mascaret_init(scen, up_param)
             if not stat:
                 lst_idx_del.append(ids)
                 self.box.critic(f"Simulation {scen} aborted.")
                 # TODO: Decide whether to stop if one scenario fails
             if self.drun.get("has_assimilation"):
                 self.obj_model.assim.gen_obs_and_data(scen, self.obj_model)
-                #self.obj_model.assim.fill_assim_folder(ids, scen, self.obj_model)
+                # self.obj_model.assim.fill_assim_folder(ids, scen, self.obj_model)
                 pass
 
         self.obj_model.del_lscenar(lst_idx_del)
@@ -330,7 +329,7 @@ class ClassInitializeModel:
             # create init XCAS
             self.cl_xcas.create_init_xcas(self.XCAS_INIT_FILE)
             if not self.obj_model.set_dinstance(scen, 'init', {'name_xcas': self.XCAS_INIT_FILE}):
-                txt= 'Error modifying dictionary instance for name_xcas'
+                txt = 'Error modifying dictionary instance for name_xcas'
                 self.mgis.add_info(txt)
                 return
 
@@ -736,7 +735,6 @@ class ClassInitializeModel:
                 if exit_status:
                     self.mgis.add_info(txt)
                     return True
-
         self.par = self.cl_bc.obs_to_loi(dict_lois, date_debut, date_fin, self.par)
         exit_status = self.mess.get_critic_status()
         self.write_mess(self.mess)

@@ -265,20 +265,47 @@ class ClassRunUIDialog(QDialog):
             lig_widget.setEnabled(False)
 
     def check_run_scenar_exist(self, run, nom_scen):
+        """
+        Check if a scenario (or its init variant) exists for a given run.
+        :param run: Name/identifier of the run to look up.
+        :param nom_scen: Base name of the scenario to check.
+        :return: True if the scenario or its init version exists, False otherwise.
+        """
+        allowed_suffixes = (
+            "_init",
+            "_ana_ctrl_ks",
+            "_ana_ctrl_ks_init",
+            "_ana_ctrl_law",
+            "_ana_ctrl_law_init",
+        )
+
         condition = f"run LIKE '{run}'"
         allscen = self.mdb.select_distinct("scenario", "runs", condition)
-        if allscen:
-            if nom_scen in allscen["scenario"] or f"{nom_scen}_init" in allscen["scenario"]:
-                info = True
-            else:
-                info = False
+
+        # if no data
+        if not allscen or "scenario" not in allscen:
+            return False
+
+        # Existing scenarios for this run
+        scenarios = set(allscen["scenario"])
+
+        # Base scenario + all allowed variants
+        candidates = {nom_scen}
+        candidates.update(nom_scen + suf for suf in allowed_suffixes)
+
+        return any(c in scenarios for c in candidates)
 
     def check_scenar(self, run, nom_scen):
-        """if true :not exist nomScen and results"""
+        """Check if scenario results already exist and optionally delete them.
+         :param run: Name/identifier of the run.
+         :param nom_scen: Base name of the scenario to check and possibly delete.
+         :return:
+             - True if the scenario results exist and the user chooses to keep them.
+             - False if the scenario results do not exist or have been deleted.
+         """
         # kernel=self.listeState[self.Klist.index(kernel)]
 
-        if not self.check_run_scenar_exist(run, nom_scen) and \
-                not self.check_run_scenar_exist(run, f'{nom_scen}_init'):
+        if not self.check_run_scenar_exist(run, nom_scen):
             return False
 
         ok = self.box.yes_no_q(
@@ -295,20 +322,26 @@ class ClassRunUIDialog(QDialog):
                      f"OR  scenario  LIKE '{nom_scen}_ana_ctrl%') "
                      f"AND run LIKE '{run}' ")
 
-        id_run = self.mdb.run_query(
+        id_runs = self.mdb.run_query(
             f"SELECT id FROM {self.mdb.SCHEMA}.runs "
             f"WHERE {condition} ",
             fetch=True,
         )
         self.mdb.delete("runs", condition)
         # new results
-        if len(id_run) > 0:
-            id_run = id_run[0][0]
-            condition = "id_runs = {}".format(id_run)
+
+        if len(id_runs) > 0:
+            id_run = [str(val[0]) for val in id_runs]
+            condition = f"id_runs IN ({','.join(id_run)})"
             var = self.mdb.run_query(
                 f"SELECT DISTINCT var FROM {self.mdb.SCHEMA}.results WHERE {condition} ",
-                fetch=True,
+                fetch=True
             )
+            del_lst = ["results_sect", "runs_graph", "runs_plani", "results_by_pk",
+                       "assim_res", "assim_res_ks", "assim_res_law"]
+            for table in del_lst:
+                self.mdb.delete(table, condition)
+
             list_var = [str(v[0]) for v in var]
             if len(list_var) > 0:
                 self.mdb.run_query(
@@ -317,11 +350,6 @@ class ClassRunUIDialog(QDialog):
                     f"type_res = '"
                     f"tracer_TRANSPORT_PUR'"
                 )
-            del_lst = ["results_sect", "runs_graph", "runs_plani", "results_by_pk",
-                       "assim_res", "assim_res_ks", "assim_res_law"]
-            for table in del_lst:
-                self.mdb.delete(table, condition)
-
 
         self.mgis.add_info(
             "Deletion of {0} scenario for {1} is done".format(nom_scen, run), dbg=True
@@ -329,10 +357,45 @@ class ClassRunUIDialog(QDialog):
         return False
 
     def hide_layout(self, layout):
+        """Hide all widgets contained in a given layout.
+        :param layout: QLayout instance whose widgets must be hidden.
+
+        :return: None
+        """
         for i in range(layout.count()):
             widget = layout.itemAt(i).widget()
             if widget is not None:
                 widget.hide()
+
+    def check_scenar_init(self, name_run, name_scen, row_data):
+        """
+        Check if a row corresponds to the given run and scenario initialization.
+        :param name_run: Name/identifier of the run to check.
+        :param name_scen: Base scenario name to validate.
+        :param row_data: Mapping-like object (e.g. dict) containing at least
+                         'Run init' and 'Scenario init' keys.
+        :return: True if the row corresponds to the given run and scenario init,
+                 False otherwise.
+        """
+        if name_run != row_data["Run init"]:
+            return False
+        scen = row_data["Scenario init"]
+        if not scen.startswith(name_scen):
+            return False
+        if scen == name_scen:
+            return True
+
+        allowed_suffixes = (
+            "_init",
+            "_ana_ctrl_ks",
+            "_ana_ctrl_ks_init",
+            "_ana_ctrl_law",
+            "_ana_ctrl_law_init",
+        )
+        for suf in allowed_suffixes:
+            if scen == name_scen + suf:
+                return True
+        return False
 
     def accept_run(self):
         """Collect data from table rows, update obj_model and close dialog.
@@ -373,14 +436,19 @@ class ClassRunUIDialog(QDialog):
                     row_data["Run init"] = self.table.cellWidget(row, 1).currentText()
                     row_data["Scenario init"] = self.table.cellWidget(row, 2).currentText()
                     row_data["lig file"] = None
+                    if self.check_scenar_init(name_run, name_scen, row_data):
+                        self.box.info(
+                            f"The initial scenario matches the current one ('{name_scen}') for row {row + 1}."
+                            f" It will be removed before starting the process."
+                            , title="Warning")
+                        return
 
                 row_data["Comment"] = self._fmt_txt(self.table.cellWidget(row, 4).text())
 
             if self.check_scenar(name_run, name_scen):
                 self.box.info(f"Scenario {name_scen} is existing "
-                              f"for the {row} row.", title="Warning")
+                              f"for the {row + 1} row.", title="Warning")
                 return
-
             data.append(row_data)
 
         self.obj_model.set_drun({"name_run": name_run})

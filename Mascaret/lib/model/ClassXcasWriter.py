@@ -28,7 +28,8 @@ from .Fct_model_file import (
     fmt,
     check_none,
     indent,
-    backup_file)
+    backup_file,
+    to_float_or_zero)
 from .xcas_writer.xcas_basin import add_basin_xcas
 from .xcas_writer.xcas_seuil_link_mob import modif_seuil, modif_link
 from .xcas_writer.xcas_wq import add_wq_xcas
@@ -92,7 +93,6 @@ class ClassXcasWriter:
             "WHERE gui_type = 'parameters' ORDER BY id;"
         )
         rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
-
         for param, valeur, b1, b2 in rows:
             # print("valeur : {0},  param : {1}  ,  b1 : {2} , b2:#\
             #  {3}".format(valeur, param, b1, b2))
@@ -592,6 +592,7 @@ class ClassXcasWriter:
         :return:
         """
         fichier_cas = copy.deepcopy(self.elem_xcas)
+
         # ****** XCAS initialisation **********
         temps_max = 3600
         np_pas_temps_init = 2
@@ -605,7 +606,8 @@ class ClassXcasWriter:
         parametres_temporels.find("pasTemps").text = "{}".format(dt_init)
         parametres_temporels.find("critereArret").text = "2"
         parametres_temporels.find("nbPasTemps").text = "{}".format(np_pas_temps_init)
-        parametres_temporels.find("tempsMax").text = "{}".format(temps_max)
+        tini0 = to_float_or_zero(parametres_temporels.find("tempsInit").text)
+        parametres_temporels.find("tempsMax").text = "{}".format(temps_max + tini0)
         parametres_temporels.find("pasTempsVar").text = "false"
         geom_reseau = param_cas.find("parametresGeometrieReseau")
         type_cond = geom_reseau.find("extrLibres").find("typeCond")

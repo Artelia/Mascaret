@@ -23,13 +23,12 @@ import json
 import os
 import re
 
-from ..Function import del_symbol
+from ..Function import del_symbol, filter_xy_by_time_ensur
 from ..HydroLawsDialog import dico_typ_law
 from .Fct_model_file import backup_file
 
 
 class ClassBCWriter:
-
     LAW_EXTENSION = ".loi"
 
     def __init__(self, mdb, folder, mess=None):
@@ -37,7 +36,7 @@ class ClassBCWriter:
         self.mess = mess
         self.folder = folder
 
-    def set_folder(self,folder):
+    def set_folder(self, folder):
         if os.path.isdir(folder):
             self.folder = folder
 
@@ -164,11 +163,12 @@ class ClassBCWriter:
     def _init_obs_loi_typ1_2(self, valeur_init, par, nom, type_):
         # Create initialization law TODO decoreller
         if valeur_init is not None:
+            tini0 = par.get('tempsInit', 0)
             if type_ == "Q":
-                tab = {"time": [0, 3600], "flowrate": [valeur_init, valeur_init]}
+                tab = {"time": [0, 3600 + tini0], "flowrate": [valeur_init, valeur_init]}
                 self.creer_loi(nom, tab, 1, init=True)
             else:
-                tab = {"time": [0, 3600], "z": [valeur_init, valeur_init]}
+                tab = {"time": [0, 3600 + tini0], "z": [valeur_init, valeur_init]}
                 self.creer_loi(nom, tab, 2, init=True)
         else:
             par["initialisationAuto"] = False
@@ -181,7 +181,7 @@ class ClassBCWriter:
         if loi["type"] in [1, 2, 4]:  # , 5]: # car 5 mascaret plante à l'init
             self.creer_loi(nom, tab, loi["type"], init=True)
         elif loi["type"] in [5] and loi["couche"] == "extremites":
-            debit_prec, cote_prec = 0,0
+            debit_prec, cote_prec = 0, 0
             valeur_init = None
             for c, d in zip(tab["z"], tab["flowrate"]):
                 if debit_prec > 0 and d > somme:
@@ -233,7 +233,7 @@ class ClassBCWriter:
                 return
                 # ref dates and station (first station)
             ref_station, ref_delta = liste_stations[0]
-            #ref_delta_h = int(ref_delta) if ref_delta else 0
+            # ref_delta_h = int(ref_delta) if ref_delta else 0
             ref_delta_h = float(ref_delta) if ref_delta else 0
             ref_dates = [d - datetime.timedelta(hours=ref_delta_h) for d in obs_stations[ref_station]["date"]]
             somme_part, valeur_init = self._write_obs_loi(nom, type_, loi, liste_stations, obs_stations, pattern,
@@ -345,6 +345,11 @@ class ClassBCWriter:
                     order="id_var, id_order",
                     list_var=["id_var", "id_order", "value"],
                 )
+                if not values:
+                    err = "Error: Please check if law for {0} object " "is correct. \n".format(name_obj)
+                    if self.mess:
+                        self.mess.add_mess("obsLaw_{}_2".format(name_obj), "critic", err)
+                    return None
                 lst_var = [tmp["code"] for tmp in dico_typ_law[typ_law]["var"]]
                 lst_idvar = [id for id, tmp in enumerate(dico_typ_law[typ_law]["var"])]
 
@@ -353,8 +358,20 @@ class ClassBCWriter:
 
                 for value, id_var in zip(values["value"], values["id_var"]):
                     tab[conv_idvar[id_var]].append(float(value))
-
-                return tab
+                if not tab.get('time') or not config.get('starttime'):
+                    return tab  # no time column, nothing to process
+                start_time = config.get('starttime')
+                # Convert time (seconds) to absolute datetimes
+                lst_x = [start_time + datetime.timedelta(seconds=t) for t in tab["time"]]
+                # Filter each value column (e.g. flowrate, z) against the time window
+                value_keys = [k for k in tab if k != "time"]
+                results = {}
+                for key in value_keys:
+                    lst_y = [float(v) for v in tab[key]]
+                    x_filt, y_filt = filter_xy_by_time_ensur(lst_x, lst_y, date_deb, date_fin)
+                    results[key] = y_filt
+                results["time"] = [(t - x_filt[0]).total_seconds() for t in x_filt]
+                return results
             else:
                 err = "Error: Please check if law for {0} object " "is correct. \n".format(name_obj)
                 if self.mess:
@@ -372,11 +389,12 @@ class ClassBCWriter:
 
         # nom = nom + "_init"
         if loi.get("valeurperm"):
+            tini0 = par.get('tempsInit', 0)
             if loi["type"] == 1:
-                tab = {"time": [0, 3600], "flowrate": [loi["valeurperm"]] * 2}
+                tab = {"time": [0, 3600 + tini0], "flowrate": [loi["valeurperm"]] * 2}
                 self.creer_loi(nom, tab, 1, init=True)
             elif loi["type"] == 2:
-                tab = {"time": [0, 3600], "z": [loi["valeurperm"]] * 2}
+                tab = {"time": [0, 3600 + tini0], "z": [loi["valeurperm"]] * 2}
                 self.creer_loi(nom, tab, 2, init=True)
             elif loi["type"] in [4, 5]:
                 self.creer_loi(nom, tab, loi["type"], init=True)
@@ -423,7 +441,6 @@ class ClassBCWriter:
             par = self._init_classic_law(nom, tab, loi, par)
 
         return par
-
 
     # ************   LIG FILE   ********************************************************************
 
@@ -650,7 +667,6 @@ class ClassBCWriter:
             with open(name, "w") as file:
                 json.dump(param, file)
 
-
     def check_apport(self):
         """checks if the inflow is before the first mesh."""
         #
@@ -665,10 +681,9 @@ class ClassBCWriter:
             comp = branches["abs_start"] + branches["mesh"]
             if apports["abscissa"][i] < comp:
                 if self.mess:
-                    err = f"{ apports['name'][i]} is located before the first mesh. Ignore in the model"
-                    self.mess.add_mess(f"lInflowPos_{apports['name'][i]}", "warning",  err)
-                    
-                    
+                    err = f"{apports['name'][i]} is located before the first mesh. Ignore in the model"
+                    self.mess.add_mess(f"lInflowPos_{apports['name'][i]}", "warning", err)
+
     def obs_to_file(self, dict_obs, date_debut, date_fin):
         """
         Create a law file from observation data.
@@ -679,7 +694,7 @@ class ClassBCWriter:
         # decimal
         pattern = re.compile(r"(\w+)\[t([+-]?\d+(?:\.\d+)?)?\]")
         for nom, obs in dict_obs.items():
-            type_= obs["type"]
+            type_ = obs["type"]
             if not obs.get("formule"):
                 continue
 
@@ -692,5 +707,5 @@ class ClassBCWriter:
             ref_delta_h = float(ref_delta) if ref_delta else 0
             ref_dates = [d - datetime.timedelta(hours=ref_delta_h) for d in obs_stations[ref_station]["date"]]
             self._write_obs_loi(nom, type_, obs, liste_stations, obs_stations, pattern,
-                                                          ref_dates,
-                                                          date_debut )
+                                ref_dates,
+                                date_debut)
