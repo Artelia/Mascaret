@@ -42,7 +42,7 @@ class ClassMatrix:
         # Vecteur d'ébauche
         self.misfit = []
         self.B_analysed = None
-        self.Z_obs = []
+        self.val_obs = []
         self.xb = []
         # Vecteur d'observations
         self.y0 = []
@@ -70,17 +70,21 @@ class ClassMatrix:
             self.ctrlLaw = True
         self.ctrl_type = ctrl_type
 
+
         # Récupération du nombre de zones et de la liste des zones
         if self.ctrlKs and self.ctrl_type == 'ctrlKS':
             self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlKS"]["lst_zone"]]
             self.zones = np.unique(self.zones)
             self.nb_zones = len(self.zones)
             self.seuil_rejet_misfit = self.dict_assim[ctrl_type].get("seuil_rejet_misfit", 500)
+            self.type_field = self.dict_assim[ctrl_type]["obs_var"]
+
         if self.ctrlLaw and self.ctrl_type == 'ctrlLaw':
             self.zones = [dico.get("name_law") for dico in self.dict_assim["ctrlLaw"]["lst_loi"]]
             self.zones = np.unique(self.zones)
             self.nb_zones = len(self.zones)
             self.seuil_rejet_misfit = self.dict_assim[ctrl_type].get("seuil_rejet_misfit", 500)
+            self.type_field = self.dict_assim[ctrl_type]["obs_var"]
 
         # Récupération du nombre total de pas de temps d'observation
         name_folder_ref = os.path.join(self.base_folder, 'run_ref')
@@ -135,28 +139,26 @@ class ClassMatrix:
                 std_zone = d["std"]
                 if d.get("std") is None:
                     raise KeyError("Key std not found in data_assim.json")
-                if d.get("type") == "Ksmin":
-                    liste_sigma += [2 * std_zone]
-                if d.get("type") == "Ksmaj":
-                    liste_sigma += [2 * std_zone]
+                # if d.get("type") == "Ksmin":
+                liste_sigma += [2 * std_zone]
+                # if d.get("type") == "Ksmaj":
+                #     liste_sigma += [2 * std_zone]
 
         if self.ctrl_type == 'ctrlLaw' and self.ctrlLaw:
             for d in self.dict_assim.get("ctrlLaw")["lst_loi"]:
                 std_zone = d["std"]
                 if d.get("std") is None:
                     raise KeyError("Key std not found in data_assim.json")
-                # TODO je suis pas sur que la différenciation soit toujours utile..
-                if d.get("type") == "coefA":
-                    liste_sigma += [2 * std_zone]
-                if d.get("type") == "coefB":
-                    liste_sigma += [2 * std_zone]
+                # if d.get("type") == "coefA":
+                liste_sigma += [2 * std_zone]
+                # if d.get("type") == "coefB":
+                #     liste_sigma += [2 * std_zone]
             # raise NotImplementedError('Control law matrices not implemented yet')
 
         if len(liste_sigma) != self.nbperturb:
             raise ValueError(f'Problem with initial B matrix creation. '
                              f'Size should be {self.nbperturb}, it is {len(liste_sigma)}')
         self.B = np.diag(liste_sigma, 0)
-        print("Matrices des covariances d'erreur d'ébauche B", self.B)
 
     def build_B_matrix_analysed(self, K):
         self.B_analysed = self.B - np.matmul(np.matmul(K, self.H), self.B)
@@ -206,39 +208,38 @@ class ClassMatrix:
         with open(os.path.join(name_folder_ref, 'Z_Q_assim.json')) as f:
             dict_ref = json.load(f)
 
-        Zref = {}
+        val_ref = {}
         for zone in self.zones:
             for station in dict_ref['Z'][str(zone)]:
-                if station not in Zref.keys():
-                    Zref[station] = []
+                if station not in val_ref.keys():
+                    val_ref[station] = []
 
         # Boucle sur les zones concernées
         for zone in self.zones:
             # Boucle sur les stations d'observation dans chaque zone
-            for station in dict_ref['Z'][str(zone)]:
-                Zref[station] += dict_ref['Z'][str(zone)][station]
+            for station in dict_ref[self.type_field][str(zone)]:
+                val_ref[station] += dict_ref[self.type_field][str(zone)][station]
 
-        print('ZREF : ', Zref)
-        # TODO choix de la variable a caler, par défaut c'est Z pour le moment
+        print('Val Ref : ', val_ref)
         obs_folder = os.path.join(self.base_folder, 'Observations')
-        self.Z_obs = {}
-        for station in Zref.keys():
-            self.Z_obs[station] = {'time': [], 'Z': []}
+        self.val_obs = {}
+        for station in val_ref.keys():
+            self.val_obs[station] = {'time': [], self.type_field: []}
             file_name = os.path.join(obs_folder, str(station) + '.loi')
             with open(file_name) as f:
                 lines = f.readlines()[3:]
                 # TODO handle time units !!!
-                self.Z_obs[station]['time'] = [float(l.split()[0]) * 3600 for l in lines]
-                self.Z_obs[station]['Z'] = [float(l.split()[1]) for l in lines]
-        print('Z station', self.Z_obs)
+                self.val_obs[station]['time'] = [float(l.split()[0]) * 3600 for l in lines]
+                self.val_obs[station][self.type_field] = [float(l.split()[1]) for l in lines]
+        print('Z station', self.val_obs)
         ista = 0
         for it, time in enumerate(dict_ref['time']):
-            for station in Zref.keys():
-                self.y0.append(self.Z_obs[station]['Z'][it])
-                print(self.Z_obs[station]['Z'][it])
-                delta_z = self.Z_obs[station]['Z'][it] - Zref[station][it]
+            for station in val_ref.keys():
+                self.y0.append(self.val_obs[station][self.type_field][it])
+                print(self.val_obs[station][self.type_field][it])
+                delta_z = self.val_obs[station][self.type_field][it] - val_ref[station][it]
                 # Application du seuil de rejet misfit
-                if abs(100 * np.divide(delta_z, Zref[station][it])) > self.seuil_rejet_misfit:
+                if abs(100 * np.divide(delta_z, val_ref[station][it])) > self.seuil_rejet_misfit:
                     delta_z = 0.
                 self.misfit.append(delta_z)
                 ista += 1
@@ -246,7 +247,7 @@ class ClassMatrix:
 
     def get_perturb_dict_js(self, base_folder, iperturb):
         print('Finding perturbation folders in', base_folder)
-        self.dict_assim["generate_instance"]["dscen"]["instances"]
+        # self.dict_assim["generate_instance"]["dscen"]["instances"]
         instances = self.dict_assim.instances
         if not instances:
             raise Exception(f'Perturbation number {iperturb} not found in the Json data')
@@ -271,7 +272,7 @@ class ClassMatrix:
 
     def build_H_matrix(self):
         """
-
+        Builds the H matrix for BLUE algorithm
         """
         H = []
         # Getting Zref and KS values
@@ -280,18 +281,16 @@ class ClassMatrix:
         with open(os.path.join(name_folder_ref, 'Z_Q_assim.json')) as f:
             dict_ref = json.load(f)
 
-        Zref = []
+        val_ref = []
         all_stations = []
         # Boucle sur les zones concernées
         for zone in self.zones:
             # Boucle sur les stations d'observation dans chaque zone
-            for station in dict_ref['Z'][str(zone)]:
+            for station in dict_ref[self.type_field][str(zone)]:
                 if station not in all_stations:
-                    Zref += dict_ref['Z'][str(zone)][station]
+                    val_ref += dict_ref[self.type_field][str(zone)][station]
                     all_stations.append(station)
-        Zref = np.array(Zref, dtype=float)
-        print('Z reference', Zref)
-        # Zref = np.concatenate([dict_ref['Z'][str(zone)] for zone in self.zones])
+        val_ref = np.array(val_ref, dtype=float)
         # Getting initial values of KS
         if self.ctrlKs:
             data = self.dict_assim["ctrlKS"]
@@ -315,46 +314,35 @@ class ClassMatrix:
             print('Run perturbé', i)
             # Nom de dossier = './perturb
             # Fonctionne pour Law et KS normalement
-            # name_folder_pertub, type_perturb, val_perturb, zone_perturb = (
-            #     get_perturb_folder(base_folder_perturb, i))
             name_folder_pertub, type_perturb, val_perturb, zone_perturb = (
                 self.get_perturb_dict_js(base_folder_perturb, i))
 
             print('Perturbation de type', type_perturb)
             name_folder_pertub = os.path.join(base_folder_perturb, name_folder_pertub)
-            # name_folder_pertub = os.path.join(base_folder_perturb, f'perturb_{i}')
             with open(os.path.join(name_folder_pertub, 'Z_Q_assim.json')) as f:
                 dict_perturb = json.load(f)
 
-            Zperturb = []
+            val_perturb = []
             # Boucle sur les zones concernées
             all_stations = []
             for zone in self.zones:
                 # Boucle sur les stations d'observation dans chaque zone
                 for station in dict_perturb['Z'][str(zone)]:
                     if station not in all_stations:
-                        Zperturb += dict_perturb['Z'][str(zone)][station]
+                        val_perturb += dict_perturb['Z'][str(zone)][station]
                         all_stations.append(station)
-            Zperturb = np.array(Zperturb, dtype=float)
-            print('Zperturb iperturb = ', i + 1, Zperturb)
+            val_perturb = np.array(val_perturb, dtype=float)
             # Deltas_param contient l'ensemble des différences entre les paramètres de REF et de
             # PERTURB Avec potentiellement des valeurs nulles pour les paramètres non modifiés Ici
             # pour KS, on a les différences sur KS_MIn et MAJ pour chaque zone.
-            print(self.param_ref)
             deltas_param = [val_perturb -
                             self.param_ref[type_perturb][str(zone_perturb)]]
             self.xb.append(self.param_ref[type_perturb][str(zone_perturb)])
-            print('Deltas params', deltas_param)
             # On récupère la valeur du DeltaP effectif > 0 (les autres sont à 0)
             delta_p = deltas_param[np.argmax(np.abs(deltas_param))]
-            print(delta_p)
-            # H(:, ib) = (Z_perturb,ib - Z_ref) / (deltap_ib)
-            H.append(np.divide(np.subtract(Zperturb, Zref), delta_p))
+            H.append(np.divide(np.subtract(val_perturb, val_ref), delta_p))
         H = np.array(H)
-        # print(H)
         H = H.T
-        print('Matrice H', H)
-        print(H.shape)
         self.H = H
 
 # if __name__ == '__main__':
