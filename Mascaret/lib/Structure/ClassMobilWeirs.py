@@ -71,14 +71,14 @@ class ClassMobilWeirs:
             self.search_sec_control()
             self.search_weirs_to_param_fg()
             if not self.check_param():
-                self.add_info("***** ERROR: the gates for the weirs\n COMPUTATION STOP")
+                self.add_info("[ ERROR ] the gates for the weirs\n COMPUTATION STOP")
                 self.arret_comput = False
             self.update_var_mas(force=True)
             self.init_res()
         except Exception:
             self.arret_comput = True
             error_info = traceback.format_exc()
-            self.add_info(f"***** ERROR: the gates for the weirs\n COMPUTATION STOP \n {error_info}")
+            self.add_info(f"[ ERROR ] the gates for the weirs\n COMPUTATION STOP \n {error_info}")
         return
 
     def update_var_mas(self, force=False):
@@ -183,7 +183,7 @@ class ClassMobilWeirs:
         except Exception:
             self.arret_comput = True
             error_info = traceback.format_exc()
-            self.add_info(f"***** ERROR: the gates for the weirs\n COMPUTATION STOP \n {error_info}")
+            self.add_info(f"[ ERROR ] the gates for the weirs\n COMPUTATION STOP \n {error_info}")
 
     def clapet(self, param):
         """
@@ -255,13 +255,13 @@ class ClassMobilWeirs:
                 var = "abscissa"
                 param['CHECK_VAR'] = "State.Z"
             else:
-                self.add_info(f"Method {param['method_mob']} doesn't exist for numWeir {id_weir}")
+                self.add_info(f"[WARNING] Method {param['method_mob']} doesn't exist for numWeir {id_weir}")
                 continue
             idx = (np.abs(coords - param[var])).argmin()
             if idx:
                 param["SECCON"] = max(idx - 1, 0)
             else:
-                self.add_info("Regulation point not found for numWeirs {}.".format(id_weir))
+                self.add_info("[WARNING] Regulation point not found for numWeirs {}.".format(id_weir))
         del coords
 
     def search_weirs_to_param_fg(self):
@@ -313,7 +313,7 @@ class ClassMobilWeirs:
                     "REGVAR_VAL-dt": param["REGVAR_VAL"]
                 })
             else:
-                self.add_info("Id_mas not found for ID weirs {}.".format(id_weir))
+                self.add_info("[WARNING] Id_mas not found for ID weirs {}.".format(id_weir))
         del coords
 
     def fill_results_fg_mv(self, id_weir, param):
@@ -378,7 +378,7 @@ class ClassMethRegul:
                 param["OPEN_CLOSE"] = "MAINT"
         # info de la vanne
         if param["DIRFG"] != "D":
-            self.add_info(f"Non-consistency type mobile weirs with the moving part {id_weir}.")
+            self.add_info(f"[WARNING] Non-consistency type mobile weirs with the moving part {id_weir}.")
         if "WRITEREG" not in param:
             param["WRITE"] = 1
         else:

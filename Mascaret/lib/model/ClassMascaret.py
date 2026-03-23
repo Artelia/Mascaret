@@ -127,7 +127,7 @@ class ClassMascaret:
         self.process_next_task()
 
     def launch_ref_task(self, type_='ref'):
-        print(f'Run {type_} *************')
+        self.mgis.add_info(f'[ RUN   ] Executing task: {type_} *****************************************************')
         task_params_ref = self.obj_model.get_list_type_instance(type_)
 
         if not task_params_ref:
@@ -154,6 +154,7 @@ class ClassMascaret:
             # Connecter les signaux
             self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(type_))
             self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(type_))
+            self.task_ref.signal.model_completed.connect(self.display_message)
             task_id = self.launch_task(self.task_ref, description)
 
             if not task_id:
@@ -162,14 +163,14 @@ class ClassMascaret:
 
     def launch_ctrl_creat(self, type_ctrl_creat):
         CONFIG = {
-            'ctrlKS_creat_folder': ("Creating CtrlKS Folder", 'ctrlKS', False),
-            'ctrlKS_creat_analyse': ("Creating Analyse CtrlKS Folder", 'ctrlKS', True),
-            'ctrlLaw_creat_folder': ("Creating CtrlLaw Folder", 'ctrlLaw', False),
-            'ctrlLaw_creat_analyse': ("Creating Analyse CtrlLaw Folder", 'ctrlLaw', True),
+            'ctrlKS_creat_folder': ("Control Ks folder", 'ctrlKS', False),
+            'ctrlKS_creat_analyse': ("Control Ks analysis CtrlKS folder", 'ctrlKS', True),
+            'ctrlLaw_creat_folder': ("Control Law folder", 'ctrlLaw', False),
+            'ctrlLaw_creat_analyse': ("Control Law analysis folder", 'ctrlLaw', True),
         }
 
         label, type_ctrl, if_analyse = CONFIG[type_ctrl_creat]
-        print(f' {label} *************')
+        self.mgis.add_info(f'[ INIT  ] Creating {label} *****************************************************')
         description = f"Execution of {label}"
 
         scens = self.obj_model.get_list_name_scenario()
@@ -191,6 +192,7 @@ class ClassMascaret:
         else:
             self.task_creat_fassim.taskCompleted.connect(lambda: self.on_task_completed(type_ctrl_creat))
             self.task_creat_fassim.taskTerminated.connect(lambda: self.on_task_failed(type_ctrl_creat))
+            self.task_creat_fassim.signal.model_completed.connect(self.display_message)
             task_id = self.launch_task(self.task_creat_fassim, description)
 
             if not task_id:
@@ -203,27 +205,28 @@ class ClassMascaret:
             # (type_ctrl, type_init, if_analyse)
             ('ctrlKS', False, False): (
                 "Mascaret Execution – CtrlKS Perturbation", 'ctrlKS_pertub', 'CtrlKS Perturbation',
-                'Run CtrlKS Perturbation'),
+                'Control Ks │ Perturbation'),
             ('ctrlKS', True, False): (
-                "Mascaret Execution – CtrlKS Init", 'ctrlKS_init', 'CtrlKS Init', 'Run CtrlKS Init'),
+                "Mascaret Execution – CtrlKS Init", 'ctrlKS_init', 'CtrlKS Init', 'Ctrl Ks │ Initialisation'),
             ('ctrlKS', False, True): (
-                "Mascaret Execution – CtrlKS Analysis", 'ctrlKS_analyse', 'CtrlKS Analysis', 'Run CtrlKS Analysis'),
+                "Mascaret Execution – CtrlKS Analysis", 'ctrlKS_analyse', 'CtrlKS Analysis', 'Control Ks │ Analysis'),
             ('ctrlKS', True, True): (
                 "Mascaret Execution – CtrlKS Analysis Init", 'ctrlKS_analyse_init', 'CtrlKS Analysis Init',
-                'Run CtrlKS Analysis Init'),
+                'Control Ks │ Analysis + Init.'),
             ('ctrlLaw', False, False): (
                 "Mascaret Execution – CtrlLaw Perturbation", 'ctrlLaw_pertub', 'CtrlLaw Perturbation',
-                'Run CtrlLaw Perturbation'),
+                'Control Law │ Perturbation'),
             ('ctrlLaw', True, False): (
-                "Mascaret Execution – CtrlLaw Init", 'ctrlLaw_init', 'CtrlLaw Init', 'Run CtrlLaw Init'),
+                "Mascaret Execution – CtrlLaw Init", 'ctrlLaw_init', 'CtrlLaw Init', 'Control Law │ Initialisation'),
             ('ctrlLaw', False, True): (
-                "Mascaret Execution – CtrlLaw Analysis", 'ctrlLaw_analyse', 'CtrlLaw Analysis', 'Run CtrlLaw Analysis'),
+                "Mascaret Execution – CtrlLaw Analysis", 'ctrlLaw_analyse', 'CtrlLaw Analysis',
+                'Control Law │ Analysis'),
             ('ctrlLaw', True, True): (
                 "Mascaret Execution – CtrlLaw Analysis Init", 'ctrlLaw_analyse_init', 'CtrlLaw Analysis Init',
-                'Run CtrlLaw Analysis Init'),
+                'Control Law │ Analysis + Init.'),
         }
         description, name_task, log_inf, label = CONFIG[(type_ctrl, type_init, if_analyse)]
-        print(f'{label} *************')
+        self.mgis.add_info(f'[ RUN   ] {label} *****************************************************')
 
         task_params = self.obj_model.get_list_type_instance_assim(type_ctrl, type_init=type_init, if_ana=if_analyse)
         if not task_params:
@@ -247,6 +250,7 @@ class ClassMascaret:
         else:
             self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(name_task))
             self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(name_task))
+            self.task_ref.signal.model_completed.connect(self.display_message)
             task_id = self.launch_task(self.task_ref, description)
 
             if not task_id:
@@ -254,13 +258,10 @@ class ClassMascaret:
                 self.process_next_task()
 
     def launch_ctrl_ks_BLUE(self):
-        print('Run Assime CtrlKS BLUE *************')
+        description = '[ ASSIM ] Starting Control Ks (BLUE) *****************************************************'
+        self.mgis.add_info(description)
         scens = self.obj_model.get_list_name_scenario()
-        description = "Assim - CtrlKS BLUE"
-        # print(self.obj_model.dmodel)
         base_folder = self.obj_model.dmodel["general"]["path_runs"]
-        print(base_folder)
-        print(scens)
         try:
             self.task_blue = TaskBLUE(
                 description=description,
@@ -268,21 +269,18 @@ class ClassMascaret:
                 ctrl_type='ctrlKS',
                 del_inter_assim=self.del_inter_assim
             )
-            print('taskblueinit')
             self.task_blue.update_params(scens)
-            print('taskblueupdate')
-            print('selfusetask', self.use_task)
-        except Exception as e:
-            print(e)
+        except Exception as err:
+            self.mgis.add_info(f'[ ERROR ] {err}')
         if not self.use_task:
             for scen in scens:
-                print(scen)
                 results = self.task_blue.run_blue(scen)
             self.process_next_task()
         else:
             # Connecter les signaux
-            self.task_blue.taskCompleted.connect(lambda: self.on_task_completed('ctrlKS_BLUE'))
-            self.task_blue.taskTerminated.connect(lambda: self.on_task_failed('ctrlKS_BLUE'))
+            self.task_blue.taskCompleted.connect(lambda: self.on_task_completed('Control Ks (BLUE)'))
+            self.task_blue.taskTerminated.connect(lambda: self.on_task_failed('Control Ks (BLUE)'))
+            self.task_blue.signal.model_completed.connect(self.display_message)
             task_id = self.launch_task(self.task_blue, description)
 
             if not task_id:
@@ -291,9 +289,11 @@ class ClassMascaret:
                 self.process_next_task()
 
     def launch_ctrl_law_BLUE(self):
-        print('Run Assime CtrlLaw BLUE *************')
+
+        description = "[ ASSIM  ] Starting Control Law (BLUE) *****************************************************"
+        self.mgis.add_info(description)
         scens = self.obj_model.get_list_name_scenario()
-        description = "Assim - CtrlKS BLUE"
+
         # print(self.obj_model.dmodel)
         base_folder = self.obj_model.dmodel["general"]["path_runs"]
         print(base_folder)
@@ -320,46 +320,12 @@ class ClassMascaret:
             # Connecter les signaux
             self.task_blue.taskCompleted.connect(lambda: self.on_task_completed('ctrlLaw_BLUE'))
             self.task_blue.taskTerminated.connect(lambda: self.on_task_failed('ctrlLaw_BLUE'))
+            self.task_blue.signal.model_completed.connect(self.display_message)
             task_id = self.launch_task(self.task_blue, description)
             if not task_id:
                 QgsMessageLog.logMessage("BLUE task failed to launch, skipping...", 'TaskMascaret',
                                          Qgis.Warning)
             self.process_next_task()
-
-    def launch_storage_assim_task(self, type_assim):
-        print(f'{type_assim} Storage Assim *************')
-        task_params_ref = self.obj_model.get_list_type_instance_assim(type_assim, type_init=None, if_ana=True)
-
-        if not task_params_ref:
-            QgsMessageLog.logMessage(f"No '{type_assim}' model to run.", 'TaskMascaret', Qgis.Warning)
-            # Passer à la suivante même si pas de modèle ref
-            self.process_next_task()
-            return
-
-        description = f"Mascaret Models Execution, '{type_assim}'"
-        self.task_ref = TaskMascaret(
-            description=description,
-            task_params=task_params_ref,
-            max_workers=self.limit_core,
-            database=self.mdb,
-            cond_api=self.cond_api
-        )
-
-        if not self.use_task:
-            for idx, param in enumerate(task_params_ref):
-                results = self.task_ref.run_model(param, idx)
-            self.process_next_task()
-        else:
-
-            # Connecter les signaux
-            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(type_assim))
-            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(type_assim))
-            task_id = self.launch_task(self.task_ref, description)
-
-            if not task_id:
-                QgsMessageLog.logMessage(f"{type_assim} task failed to launch, skipping...", 'TaskMascaret',
-                                         Qgis.Warning)
-                self.process_next_task()
 
     def launch_task(self, task, description="Mascaret Models Execution"):
         print('Launching task...')
@@ -433,7 +399,7 @@ class ClassMascaret:
                 except:
                     pass  # Déjà déconnecté
 
-            print(f"{task_type} task completed, processing next...")
+            self.mgis.add_info(f"{task_type} task completed, processing next...")
 
             # Passer à la task suivante dans la queue
             self.process_next_task()
@@ -441,7 +407,6 @@ class ClassMascaret:
     def process_next_task(self):
         """Traite la prochaine task dans la queue"""
         if not self.task_queue:
-            print("All tasks completed!")
             self.on_all_tasks_completed()
             return
 
@@ -482,7 +447,14 @@ class ClassMascaret:
 
     def on_all_tasks_completed(self):
         """Appelé quand toutes les tasks sont terminées"""
-        print("=== All tasks completed successfully ===")
+        # Vérification qu'il ne reste plus aucune tâche active
+        task_manager = QgsApplication.taskManager()
+        active_tasks = task_manager.tasks()
+
+        if not active_tasks:
+            print("=== All tasks completed successfully ===")
+            sep = "*************************************************************************************\n"
+            self.mgis.add_info(sep+"[ DONE  ] All tasks completed successfully \n"+sep)
         QgsMessageLog.logMessage(
             "All Mascaret tasks completed",
             'TaskMascaret',
@@ -491,7 +463,8 @@ class ClassMascaret:
 
     def on_task_completed(self, task_type):
         """Callback appelé quand une task se termine avec succès"""
-        print(f"{task_type} task completed successfully, processing next...")
+
+        self.mgis.add_info(f"[ SUCCESS ] {task_type} task completed successfully, processing next...")
         QgsMessageLog.logMessage(
             f"Task '{task_type}' completed successfully",
             'TaskMascaret',
@@ -503,7 +476,7 @@ class ClassMascaret:
 
     def on_task_failed(self, task_type):
         """Callback appelé quand une task échoue"""
-        print(f"{task_type} task failed or was terminated, processing next...")
+        self.mgis.add_info(f"[ FAILED ]{task_type} task failed or was terminated, processing next...")
         QgsMessageLog.logMessage(
             f"Task '{task_type}' failed or terminated",
             'TaskMascaret',
@@ -512,3 +485,23 @@ class ClassMascaret:
 
         # Continuer avec la task suivante malgré l'échec
         self.process_next_task()
+
+    def display_message(self, success, dtxt):
+        """
+
+        :param success:
+        :param txt:
+        :return:
+        """
+        self.mgis.add_info(dtxt.get('output',''))
+
+        if dtxt.get('error','') != '':
+            self.mgis.add_info(dtxt.get('error',''))
+
+        msg = f"[ TIME  ] Execution:{dtxt.get('execution_time','')}"
+        self.mgis.add_info(msg)
+        if dtxt.get("id_run",""):
+            self.mgis.add_info(f'[ DEBUG ] Success: {success}', dbg=True)
+            self.mgis.add_info(f'[ DEBUG ] Run ID: {dtxt.get("id_run","")}  │'
+                               f'  Path: {dtxt.get("path_run","")}', dbg=True)
+

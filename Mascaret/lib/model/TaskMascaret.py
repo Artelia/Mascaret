@@ -286,6 +286,42 @@ class TaskMascaret(QgsTask):
             json.dump(d_json, fp)
         return param_file
 
+    def build_run_metadata(self, params):
+        """Generate normalized names (run, scenario and file) and determine
+        whether assimilation data should be stored.
+
+        :param params: Dictionary containing:
+            - run_name
+            - scen_name
+            - BASE_NAME
+            - name
+            - type_ctrl
+        :return: tuple (stock_assim, scen_name, file_name, run_name)
+        """
+
+        name_run = params.get("run_name")
+        name_scen = params.get("scen_name")
+        file_name = params.get("BASE_NAME")
+
+        name = params.get("name")
+        type_ctrl = params.get("type_ctrl")
+
+        # Cas "init"
+        if name == "init":
+            file_name = f"{file_name}_init"
+            name_scen = f"{name_scen}_init"
+        stock_assim = False
+        # Cas "Analyse..."
+        if type_ctrl and name.startswith("Analyse"):
+            txt_type = {'ctrlKS': 'ctrl_ks', 'ctrlLaw': 'ctrl_law'}
+            if name.endswith("_init"):
+                file_name = f"{file_name}_init"
+                name_scen = f"{name_scen}_ana_{txt_type.get(type_ctrl, type_ctrl)}_init"
+            else:
+                name_scen = f"{name_scen}_ana_{txt_type.get(type_ctrl, type_ctrl)}"
+                stock_assim = True
+        return stock_assim, name_scen, file_name, name_run, type_ctrl
+
     def run_model(self, params, index):
         """Run a single Mascaret model instance (thread worker).
 
@@ -311,7 +347,8 @@ class TaskMascaret(QgsTask):
             # Change to the script directory
             script_dir = os.path.dirname(__file__)
             param_file = self.create_json_param(params.get("RUN_REP"), f'model_idx{index}.json', params)
-
+            _, name_scen, _, name_run, _ = self.build_run_metadata(params)
+            results['output'] += f"\n==== Launching Run: {name_run} | Scenario: {name_scen} ====\n"
 
             if self.cond_api :
                 os.chdir(os.path.join(script_dir, "..", "api"))
@@ -354,11 +391,10 @@ class TaskMascaret(QgsTask):
             # print(process.stdout, 'uuu')
             results.update({
                 'success': True,
-                'output': process.stdout,
                 'error': process.stderr,
                 'execution_time': time.time() - results['start_time'],
             })
-
+            results['output'] +=  process.stdout
 
             ## Check if API ran successfully
             if results['success']:
@@ -379,9 +415,9 @@ class TaskMascaret(QgsTask):
                     raise Exception(f"No .lig files found #{index}")
 
                 results_save = self._save_db(params)
-                results['id_run'] = results_save['id_run']
+                results['id_run'] = results_save.get('id_run',None)
                 results['save_time'] = results_save['save_time']
-                results['output'] = f"{results['output']}\n{results_save['output']}"
+                results['output'] += f"{results_save['output']}"
 
                 if not results_save['success'] and self.mdb:
                     results['success'] = False
@@ -449,28 +485,7 @@ class TaskMascaret(QgsTask):
             'start_time': time.time(),
             'save_time' :0
         }
-
-        name_run = params.get("run_name")
-        name_scen = params.get("scen_name")
-        file_name = params.get("BASE_NAME")
-
-        name = params.get("name")
-        type_ctrl = params.get("type_ctrl")
-
-        # Cas "init"
-        if name == "init":
-            file_name = f"{file_name}_init"
-            name_scen = f"{name_scen}_init"
-        stock_assim = False
-        # Cas "Analyse..."
-        if type_ctrl and name.startswith("Analyse"):
-            txt_type = {'ctrlKS': 'ctrl_ks', 'ctrlLaw': 'ctrl_law'}
-            if name.endswith("_init"):
-                file_name = f"{file_name}_init"
-                name_scen = f"{name_scen}_ana_{txt_type.get(type_ctrl, type_ctrl)}_init"
-            else:
-                name_scen = f"{name_scen}_ana_{txt_type.get(type_ctrl, type_ctrl)}"
-                stock_assim = True
+        stock_assim, name_scen, file_name, name_run, type_ctrl = self.build_run_metadata(params)
 
         if not self.mdb:
             results = {
@@ -497,7 +512,7 @@ class TaskMascaret(QgsTask):
                     casier=params.get("has_casier"),
             )
 
-            results.update({'output': cls_res.mess.message()})
+            results['output'] += cls_res.mess.message()
             if cls_res.mess.get_critic_status():
                 results.update({'save_time': time.time() - results['start_time']})
                 return  results

@@ -30,7 +30,7 @@ def get_perturb_folder(base_folder, iperturb):
     if name_folder is not None:
         return name_folder, type_perturb, val_perturb, zone_perturb
     else:
-        raise FileNotFoundError(f'Directory for perturbation number {iperturb} not found')
+        raise FileNotFoundError(f'[ ERROR ] Directory for perturbation number {iperturb} not found')
 
 
 class ClassMatrix:

@@ -127,7 +127,7 @@ class ClassInitializeModel:
         # Clear directory
         err = self.clear_folder(self.dgeneral['path_runs'], ask_confirm=self.dgeneral["has_new_run_path"])
         if err:
-            self.mgis.add_info(f"ERROR : {err}", box=True, btype='CRITICAL')
+            self.mgis.add_info(f"[ ERROR ] : {err}", box=True, btype='CRITICAL')
             return
 
         for instance in lscenario:
@@ -239,11 +239,11 @@ class ClassInitializeModel:
         :rtype: bool
         """
         # Get scenario configuration
-        self.mgis.add_info(f'*** Creation of the model files for scenario {scen} ***')
+        self.mgis.add_info(f'[ INIT  ] Creation of the model files for scenario {scen} *****************************')
         d_scen = self.obj_model.get_scenario(scen)
         d_folder = self.obj_model.get_folder(scen)
         if not d_folder:
-            self.mgis.add_info("Folder instance isn't found")
+            self.mgis.add_info("[ ERROR ] Folder instance isn't found")
             return False
         # ref: reference, init: initialization
         model_folder = d_folder["ref"]
@@ -256,22 +256,22 @@ class ClassInitializeModel:
 
         # Step 1: Create geometry files
         if not self.create_geometry_files():
-            self.mgis.add_info("Error geometry creation.")
+            self.mgis.add_info("[ ERROR ] Error geometry creation.")
             return False
 
         # Step 2: Create mobile structures files (links and weirs)
         if not self.create_mobile_structures(model_folder):
-            self.mgis.add_info("Error mobile structure creation.")
+            self.mgis.add_info("[ ERROR ] Error mobile structure creation.")
             return False
 
         # Step 3: Handle tracer configuration
         if not self.tracer_configuration(model_folder, kernel):
-            self.mgis.add_info("Error tracer creation.")
+            self.mgis.add_info("[ ERROR ] Error tracer creation.")
             return False
 
         # Step 4: Handle initial conditions
         if not self.initial_conditions(d_scen, model_folder):
-            self.mgis.add_info("Error intial condition creation.")
+            self.mgis.add_info("[ ERROR ] Error intial condition creation.")
             return False
 
         # Step 5: Create XCAS file and structural laws
@@ -289,12 +289,12 @@ class ClassInitializeModel:
 
         # Step 6: Create law (structural) files
         if not self.create_struct_law_files(dico_loi_struct, model_folder):
-            self.mgis.add_info("Error struct law creation.")
+            self.mgis.add_info("[ ERROR ] Error struct law creation.")
             return False
 
         # Step 7: Initialize scenario based on kernel type (create init/ref law files)
         if not self.initialize_scen_by_kernel(kernel, dict_lois, d_scen):
-            self.mgis.add_info("Error intial scen creation.")
+            self.mgis.add_info("[ ERROR ] Error intial scen creation.")
             return False
 
         self.mgis.add_info("Laws file is created.")
@@ -302,7 +302,7 @@ class ClassInitializeModel:
         # TODO delete if gates handled only by API
         # Step 8: Handle mobile gates (unsteady mode only)
         if not self.mobile_gates(kernel):
-            self.mgis.add_info("Error mobil gate creation.")
+            self.mgis.add_info("[ ERROR ] Error mobil gate creation.")
             return False
 
         # Step 9: Create additional files and perform checks
@@ -329,7 +329,7 @@ class ClassInitializeModel:
             # create init XCAS
             self.cl_xcas.create_init_xcas(self.XCAS_INIT_FILE)
             if not self.obj_model.set_dinstance(scen, 'init', {'name_xcas': self.XCAS_INIT_FILE}):
-                txt = 'Error modifying dictionary instance for name_xcas'
+                txt = '[ ERROR ] Error modifying dictionary instance for name_xcas'
                 self.mgis.add_info(txt)
                 return
 
@@ -598,7 +598,7 @@ class ClassInitializeModel:
                         dtemp = self.mdb.select_distinct("steady", "parametres", condition)
                         temp_dic[info] = dtemp["steady"][0]
                 except Exception as e:
-                    err = "error crit, {}".format(str(e))
+                    err = "[ ERROR ] Error crit, {}".format(str(e))
                     if self.dbg:
                         error_info = traceback.format_exc()
                         err = err + "\n" + error_info
@@ -774,9 +774,9 @@ class ClassInitializeModel:
                     shutil.rmtree(item_path)
 
         except PermissionError as pe:
-            return f"Permission denied while deleting: {item_path}"
+            return f"[ ERROR ] Permission denied while deleting: {item_path}"
         except Exception as e:
-            return f"Error while deleting: {item_path}\n{str(e)}"
+            return f"[ ERROR ] Error while deleting: {item_path}\n{str(e)}"
 
         return ""
 

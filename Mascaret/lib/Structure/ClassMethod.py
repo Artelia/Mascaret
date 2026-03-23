@@ -55,14 +55,14 @@ class ClassMethod:
         if self.checkprofil(id_config):
             profil = self.cli.get_profil(id_config)
         else:
-            msg = "Profile copy isn't found"
+            msg = "[WARNING] Profile copy isn't found"
             self.add_info(msg)
 
             return
         zmin = min(profil["z"])
         poly_p = self.clpoly.poly_profil_del(profil, zmin)
         if poly_p.is_empty:
-            msg = "Profile polygon is empty."
+            msg = "[WARNING] Profile polygon is empty."
             if self.debug:
                 self.add_info(msg)
             return
@@ -99,7 +99,7 @@ class ClassMethod:
         width_trav = 0
         sav_zmaxelem = 0
         if not lid_elem["id_elem"]:
-            msg = "Not element in table in create_poly_elem function"
+            msg = "[WARNING] Not element in table in create_poly_elem function"
             if self.debug:
                 self.add_info(msg)
         for i, id_elem in enumerate(lid_elem["id_elem"]):
@@ -159,7 +159,7 @@ class ClassMethod:
                 poly_final = poly_elem.difference(poly_p)
             else:
                 poly_final = GeometryCollection()
-                msg = "Element bridge polygon is empty."
+                msg = "[WARNING] Element bridge polygon is empty."
                 if self.debug:
                     self.add_info(msg)
 
@@ -210,7 +210,7 @@ class ClassMethod:
                 param_elem[info] = rows["value"][0]
             else:
                 if self.debug:
-                    self.add_info("{} not specified in struct_elem_param table".format(info))
+                    self.add_info("[WARNING]{} not specified in struct_elem_param table".format(info))
 
         return param_elem
 
@@ -229,7 +229,7 @@ class ClassMethod:
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, lvar), fetch=True)
         if rows is None:
             if self.debug:
-                self.add_info("struct_config is empty")
+                self.add_info("[WARNING]struct_config is empty")
         for row in rows:
             struct_dico[row[0]] = {
                 "name": row[1],

@@ -348,7 +348,7 @@ class GraphHydroLaw(GraphCommon):
 
         # Sécurité : vérifier que 2 courbes sont bien présentes
         if len(self.courbes) < 2:
-            print("Erreur : init_graph_obs attend 2 courbes (brut + ctrl).")
+            print("[ ERROR ] Erreur : init_graph_obs attend 2 courbes (brut + ctrl).")
             return
 
         # --- Courbe 1 : resultat brut ---

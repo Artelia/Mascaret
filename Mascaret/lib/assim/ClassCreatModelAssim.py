@@ -65,7 +65,7 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         elif type_ctrl == 'ctrlKS':
             key_zone = 'lst_zone'
         else:
-            raise ValueError('Unknown type_ctrl', type_ctrl)
+            raise ValueError('[ ERROR ] Unknown type_ctrl', type_ctrl)
 
         for zone in self.data.get(type_ctrl).get(key_zone):
             if zone.get("lst_obs", {}):
@@ -74,7 +74,7 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
                         dico_obs[c] = {}
                         all_codes_obs.append(c)
         if len(all_codes_obs) == 0:
-            raise ValueError("No observation selected for assimilation")
+            raise ValueError("[ ERROR ] No observation selected for assimilation")
         for c in all_codes_obs:
             file_obs = os.path.join(folder_obs, c + '.loi')
             with open(file_obs) as f:
@@ -85,7 +85,7 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         with open(os.path.join(folder_obs, 'dico_base_obs.json'), 'w') as f:
             json.dump(dico_obs, f)
         if len(np.unique(all_dt_obs)) > 1:
-            raise ValueError('At least one observation has different timestep than the others')
+            raise ValueError('[ ERROR ] At least one observation has different timestep than the others')
 
     def fill_assim_folder(self, type_ctrl, if_analyse=False):
         """Fill assimilation or analysis folders with modified model files.
@@ -165,7 +165,7 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
 
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
-        raise ValueError("No JSON file provided. Usage: script.py <config.json>")
+        raise ValueError("[ ERROR ] No JSON file provided. Usage: script.py <config.json>")
 
     jsonf = sys.argv[1]
     with open(jsonf) as json_data:

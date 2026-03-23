@@ -449,7 +449,7 @@ class ClassGetResults:
             base_namefile = self.NAME_FILE
 
         file_path = os.path.join(folder, f'{base_namefile}.opt')
-        self.mess.add_mess("LoadOpt1", "info", "Load data ....")
+        self.mess.add_mess("LoadOpt1", "info", "Save Results ....")
         if not os.path.isfile(file_path):
             txt = f"Simulation Error: there aren't results \n path :{file_path}"
             self.mess.add_mess("LoadOptFile", "critic", txt)

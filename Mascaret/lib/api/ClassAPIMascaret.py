@@ -366,33 +366,39 @@ class ClassAPIMascaret:
 
         Builds the message string from a shared base and criterion-specific details.
         """
-        sep = "**************************************\n"
+
+        header = "-------- Time Information --------\n"
+        footer = "----------------------------------\n"
 
         # Common fields shared by all criteria
+
         base = (
-            f"Variable Time Step : {self.conum}\n"
-            f"Initial Time : {self.tini}\n"
-            f"Time Step : {self.dt}\n"
+            f"  Variable Time Step : {self.conum}\n"
+            f"  Initial Time       : {self.tini}\n"
+            f"  Time Step          : {self.dt}\n"
         )
 
+        details = f"  Stop Criteria      : {self.stpcrit}\n"
+
         if self.stpcrit == 1:
-            details = f"Stop Criteria : {self.stpcrit}\n" + base + f"Final Time : {self.tfin}\n"
+            details += base
+            details += f"  Final Time         : {self.tfin}\n"
+
         elif self.stpcrit == 2:
-            details = (
-                    f"Stop Criteria : {self.stpcrit}\n" + base + f"Max iteration : {self.tmaxiter}\n"
-            )
+            details += base
+            details += f"  Max Iteration      : {self.tmaxiter}\n"
+
         elif self.stpcrit == 3:
             ctrl_x = self.masc.get("Model.X", self.sect_co - 1)
-            details = (
-                    f"Stop Criteria : {self.stpcrit}\n"
-                    + base
-                    + f"Max level water of control : {self.zmax_co}\n"
-                      f"Abscissa of control section : {ctrl_x}\n"
+            details += base
+            details += (
+                f"  Max Water Level    : {self.zmax_co}\n"
+                f"  Control Abscissa   : {ctrl_x}\n"
             )
         else:
-            details = f"Criteria {self.stpcrit} doesn't exist.\n"
+            details = f"  Unknown criteria: {self.stpcrit}\n"
 
-        self.add_info(sep + details + sep)
+        self.add_info(header + details + footer)
 
     # ------------------------------------------------------------------
     # Computation loop
@@ -657,7 +663,6 @@ if __name__ == "__main__":
         jsonf = sys.argv[1]
         with open(jsonf) as json_data:
             dico = json.load(json_data)
-
         # Determine whether to generate a .lig restart file from the xcas name
         gen_lig = dico.get("name", "").endswith("init")
 
@@ -676,6 +681,7 @@ if __name__ == "__main__":
             dico.get("has_casier", False),
             dico.get("has_assim", False),
         )
+        print(api.mess.message())
         print("Work is done.")
 
     except Exception as err:

@@ -137,9 +137,9 @@ def compress_run_file(dossier_file_masc, rep, typ_compress="zip", mgis=None):
 
     except Exception as err:
         if mgis:
-            mgis.add_info(f"**** Error : {str(err)}")
+            mgis.add_info(f"[ ERROR ]  Error : {str(err)}")
         else:
-            print(f"**** Error : {str(err)}")
+            print(f"[ ERROR ] Error : {str(err)}")
         return False
 
 
@@ -149,7 +149,7 @@ def del_folder_mas(dossier_file_masc, mgis=None):
     try:
         shutil.rmtree(dossier_file_masc)
     except Exception as e:
-        txt = f"Failed to delete {dossier_file_masc}. Reason: {e}"
+        txt = f"[ ERROR ] Failed to delete {dossier_file_masc}. Reason: {e}"
         if mgis:
             mgis.add_info(txt, dbg=True)
         else:

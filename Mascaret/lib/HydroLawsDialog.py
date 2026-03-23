@@ -1246,7 +1246,7 @@ class ClassHydroLawsDialog(QDialog):
                                     self.cc_date_ref.setChecked(True)
                                     self.de_start.setDateTime(date_ref)
                                 else:
-                                    print("e1")
+                                    print("[ ERROR ] e1")
                                     error = True
                                     break
 
