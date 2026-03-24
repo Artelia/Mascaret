@@ -86,10 +86,10 @@ class TaskCreatFAssim(QgsTask):
         self.executor = None
 
     def update_params(self, scens, max_workers=None):
-        """Update the task parameters and optionally max_workers.
+        """Update task parameters and max_workers.
 
-        :param task_params: New list of model parameter dicts.
-        :param max_workers: New maximum number of parallel workers (optional).
+        :param scens: List of scenario identifiers to process.
+        :param max_workers: Maximum number of parallel workers. Auto-calculated if None.
         :return: None
         """
         self.scens = scens
@@ -99,9 +99,9 @@ class TaskCreatFAssim(QgsTask):
         self.max_workers = max_workers
 
     def _submit_next_model(self):
-        """Submit the next model to the thread pool if possible.
+        """Submit next model to thread pool if workers available.
 
-        :return: True if a model was submitted, False otherwise.
+        :return: ``True`` if submitted, ``False`` otherwise.
         """
         if self.next_to_submit >= self.total_models:
             return False
@@ -126,9 +126,8 @@ class TaskCreatFAssim(QgsTask):
         return True
 
     def _process_completed_results(self):
-        """Process and emit results in submission order even if finished out-of-order.
+        """Emit results in order even if completed out-of-order.
 
-        This method emits model_completed signals for consecutive results starting at self.next_to_process.
         :return: None
         """
         while self.next_to_process in self.completed_results:
@@ -140,9 +139,9 @@ class TaskCreatFAssim(QgsTask):
             self.next_to_process += 1
 
     def run(self):
-        """Main task execution method - runs multiple models in parallel using threads.
+        """Execute task: run scenario folder creation in parallel using threads.
 
-        :return: True if task completed successfully, False otherwise.
+        :return: ``True`` if all scenarios completed successfully, ``False`` otherwise.
         """
         self.exc_start_time = time.time()
 
@@ -227,7 +226,7 @@ class TaskCreatFAssim(QgsTask):
             return False
 
     def cancel(self):
-        """Cancel the task execution and log a summary.
+        """Cancel task execution and log execution summary.
 
         :return: None
         """
@@ -242,27 +241,27 @@ class TaskCreatFAssim(QgsTask):
         super().cancel()
 
     def onCancel(self):
-        """Handler called by QGIS when the task is cancelled.
+        """Handle QGIS task cancellation.
 
         :return: None
         """
         self.cancel()
 
     def on_message(self, message):
-        """Callback for progress messages.
+        """Log progress message.
 
-        :param message: Message text emitted by the task.
+        :param message: Message text to log.
         :type message: str
         :return: None
         """
         QgsMessageLog.logMessage(message, MESSAGE_CATEGORY, Qgis.Info)
 
     def on_progress(self, completed, total):
-        """Callback for progress updates.
+        """Log completion progress.
 
-        :param completed: Number of completed models.
+        :param completed: Number of completed scenarios.
         :type completed: int
-        :param total: Total number of models.
+        :param total: Total number of scenarios.
         :type total: int
         :return: None
         """
@@ -276,9 +275,9 @@ class TaskCreatFAssim(QgsTask):
     def create_json_param(self, path_scen, param_file):
         """Create parameter JSON file for folder creation subprocess.
 
-        :param path_scen: Path to the scenario directory.
-        :param param_file: Path to write the parameter JSON file.
-        :return: Path to the created parameter file.
+        :param path_scen: Path to scenario directory.
+        :param param_file: Path to write parameter JSON file.
+        :return: Path to created parameter file.
         """
         # Create parameter input file (with index to avoid conflicts)
 
@@ -292,11 +291,12 @@ class TaskCreatFAssim(QgsTask):
         return param_file
 
     def creat_assim_folder(self, scen):
-        """Create assimilation folder structure for a single scenario (thread worker).
+        """Create assimilation folder structure for scenario (thread worker).
 
-        Generates parameter file, invokes folder creation subprocess, and handles results.
+        Generates parameter file, invokes folder creation subprocess, and captures results.
+
         :param scen: Scenario identifier to process.
-        :return: Dict containing creation results including success status, output, errors, and timing.
+        :return: Dict with scenario results: success status, output, errors, timing, and path.
         """
         path_scen = os.path.join(self.base_folder, scen)
         param_file = os.path.join(path_scen, 'd_creat_folder.json')

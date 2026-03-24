@@ -32,22 +32,34 @@ class ClassBCWriter:
     LAW_EXTENSION = ".loi"
 
     def __init__(self, mdb, folder, mess=None):
+        """Initialize ClassBCWriter for boundary condition file management.
+
+        :param mdb: Database connection object.
+        :param folder: Output folder for law files.
+        :param mess: Message handler object (optional).
+        :return: None
+        """
         self.mdb = mdb
         self.mess = mess
         self.folder = folder
 
     def set_folder(self, folder):
+        """Set output folder if it exists.
+
+        :param folder: Path to output folder.
+        :return: None
+        """
         if os.path.isdir(folder):
             self.folder = folder
 
     # ************   LAW FILE   ********************************************************************
     def creer_loi(self, nom, tab, type_, init=False):
-        """
-        Create a law file (.loi) with the given name and data.
-        :param nom (str): Law name
-        :param tab (dict): Law data
-        :param type_ (int): Law type
-        :param init (bool): If True, the computation is an initialization (default: False)
+        """Create law file (.loi) with given name and data.
+
+        :param nom: Law name.
+        :param tab: Law data dictionary.
+        :param type_: Law type (1-7).
+        :param init: ``True`` for initialization law, ``False`` otherwise.
         :return: None
         """
         if init:
@@ -90,6 +102,18 @@ class ClassBCWriter:
                 fich.write(chaine.format(**dico))
 
     def _write_obs_loi(self, nom, type_, loi, liste_stations, obs_stations, pattern, ref_dates, date_debut):
+        """Write law file from observation data.
+
+        :param nom: Law name.
+        :param type_: Observation type ('Q' or 'H').
+        :param loi: Law definition.
+        :param liste_stations: List of observation stations.
+        :param obs_stations: Observation data by station.
+        :param pattern: Regex pattern for station parsing.
+        :param ref_dates: Reference dates for observations.
+        :param date_debut: Start date.
+        :return: Tuple (sum_value, initial_value).
+        """
         # Write law file
         somme = 0
         valeur_init = None
@@ -126,6 +150,15 @@ class ClassBCWriter:
         return somme, valeur_init
 
     def _get_obs_to_loi(self, liste_stations, type_, date_debut, date_fin, nom):
+        """Retrieve observation data for law creation.
+
+        :param liste_stations: List of observation stations.
+        :param type_: Observation type ('Q' or 'H').
+        :param date_debut: Start date.
+        :param date_fin: End date.
+        :param nom: Law name.
+        :return: Tuple (observation_dict, error_flag).
+        """
         err_critic = False
         obs_stations = {}
         for cd_hydro, delta in liste_stations:
@@ -161,6 +194,14 @@ class ClassBCWriter:
         return obs_stations, err_critic
 
     def _init_obs_loi_typ1_2(self, valeur_init, par, nom, type_):
+        """Create initialization law for observation-based type 1/2 laws.
+
+        :param valeur_init: Initial value for law.
+        :param par: Parameters dictionary.
+        :param nom: Law name.
+        :param type_: Observation type ('Q' or 'H').
+        :return: Updated parameters dictionary.
+        """
         # Create initialization law TODO decoreller
         if valeur_init is not None:
             tini0 = par.get('tempsInit', 0)
@@ -178,6 +219,15 @@ class ClassBCWriter:
         return par
 
     def _create_other_init_law_to_obs(self, tab, loi, par, nom, somme):
+        """Create initialization law for other observation law types.
+
+        :param tab: Law data table.
+        :param loi: Law definition.
+        :param par: Parameters dictionary.
+        :param nom: Law name.
+        :param somme: Sum value for interpolation.
+        :return: Updated parameters dictionary.
+        """ 
         if loi["type"] in [1, 2, 4]:  # , 5]: # car 5 mascaret plante à l'init
             self.creer_loi(nom, tab, loi["type"], init=True)
         elif loi["type"] in [5] and loi["couche"] == "extremites":
@@ -386,7 +436,13 @@ class ClassBCWriter:
             return None
 
     def _init_classic_law(self, nom, tab, loi, par):
-
+        """Create initialization law from permanent value.
+        :param nom: Law name.
+        :param tab: Law data table.
+        :param loi: Law definition.
+        :param par: Parameters dictionary.
+        :return: Updated parameters dictionary.
+        """
         # nom = nom + "_init"
         if loi.get("valeurperm"):
             tini0 = par.get('tempsInit', 0)
@@ -417,11 +473,11 @@ class ClassBCWriter:
         return par
 
     def classic_law(self, par, dict_lois):
-        """
-        Create the law for the classic case
-        :param par: dict contains the parameters
-        :param dict_lois: dict contains the law
-        :return: dict (par)
+        """Create law files for classic (non-observation) case.
+
+        :param par: Parameters dictionary.
+        :param dict_lois: Dictionary of law definitions.
+        :return: Updated parameters dictionary.
         """
         for nom, loi in dict_lois.items():
             # dictLois.items() extremities liste
@@ -509,27 +565,25 @@ class ClassBCWriter:
             fich.write(" FIN\n")
 
     def get_for_lig(self, id_run):
-        """
-            Retrieves the values needed to create the .lig file.
+        """Retrieve result data for .lig file creation.
 
-            :param id_run: Run identifier
-            :return: Dictionary containing the Z, Q, X, section, and branch values
-            or None if the data is inaccessible.
+        :param id_run: Run identifier.
+        :return: Dictionary with Z, Q, X, section, branch values or ``None`` if inaccessible.
         """
         try:
-            # Récupération des identifiants des variables Z et Q
+            # Retrieval of variable IDs for Z and Q
             var_data = self.mdb.select("results_var", "type_res = 'opt'", "id", ["id", "var"])
             idz = var_data["id"][var_data["var"].index("Z")]
             idq = var_data["id"][var_data["var"].index("Q")]
 
-            # Récupération du temps maximum pour Z
+            # Retrieval of maximum time for Z
             t_max = self.mdb.select_max("time", "results", f"var = {idz} AND id_runs = {id_run}")
             if t_max is None:
                 if self.mess:
                     self.mess.add_mess("LigFile", "critic", "No previous results to create the .lig file.")
                 return None
 
-            # Récupération des valeurs Z et Q au temps t_max
+            # Retrieval of Z and Q values at time t_max
             result = {
                 "Z": self.mdb.select("results", f"var = {idz} AND id_runs = {id_run} AND time = {t_max}", "pknum",
                                      ["val"])["val"],
@@ -540,7 +594,7 @@ class ClassBCWriter:
                 "branche": []
             }
 
-            # Récupération des données de section
+            # Retrieval of section data
             sect_data = self.mdb.select("results_sect", f"id_runs = {id_run}", "pk", ["pk", "branch", "section"])
             for pk, branch, section in zip(sect_data["pk"], sect_data["branch"], sect_data["section"]):
                 result["X"].extend(pk)
@@ -556,9 +610,9 @@ class ClassBCWriter:
 
     # ************   Mobile Structur FILE   ********************************************************************
     def create_mobil_gate_file(self):
-        """
-        Crée le fichier de barrage mobile (Fichier_Barrage_Mobile.txt) à partir des données
-        de la base 'weirs' et 'weirs_mob_val'.
+        """Create mobile dam file from weir data (Fichier_Barrage_Mobile.txt).
+
+        :return: None
         """
         info = self.mdb.select(
             "weirs",
@@ -635,18 +689,20 @@ class ClassBCWriter:
                 self.mess.add_mess("MobGateFile", "critic", f"Error: save the dam file : {e}")
 
     def _warn(self, message: str, name: str):
-        """Ajoute un message d'avertissement lié à un seuil spécifique."""
+        """Add warning message for specific weir.
+
+        :param message: Warning message text.
+        :param name: Weir name.
+        :return: None
+        """
         if self.mess:
             self.mess.add_mess(f"MobGate_{name}", "warning", message)
 
     def creat_file_no_keep_break(self, filename="no_keep_break.json"):
-        """
-        Get the weirs is no permanent break and create json
-        Args:
-            :param name: file name, default no_keep_break.json
-         Return :
-            :return: return value to create the no_keep_break file
-    
+        """Create JSON file with weirs and structures marked for removal.
+
+        :param filename: Output filename (default 'no_keep_break.json').
+        :return: None
         """
         name = os.path.join(self.folder, filename)
 
@@ -668,7 +724,12 @@ class ClassBCWriter:
                 json.dump(param, file)
 
     def check_apport(self):
-        """checks if the inflow is before the first mesh."""
+        """Check if lateral inflows are positioned before first mesh.
+
+        Logs warning if inflow is upstream of first mesh section.
+
+        :return: None
+        """
         #
         apports = self.mdb.select("lateral_inflows", "active", "abscissa")
         for i, numb in enumerate(apports["branchnum"]):

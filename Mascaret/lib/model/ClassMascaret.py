@@ -257,8 +257,13 @@ class ClassMascaret:
                 QgsMessageLog.logMessage(f"{log_inf} task failed to launch, skipping...", 'TaskMascaret', Qgis.Warning)
                 self.process_next_task()
 
-    def launch_ctrl_ks_BLUE(self):
-        description = '[ ASSIM ] Starting Control Ks (BLUE) *****************************************************'
+    def launch_ctrl_BLUE(self, typ_ctrl):
+        CONFIG = {
+             'ctrlKS': ('[ ASSIM ] Starting Control Ks (BLUE) *****************************************************', 'Control Ks (BLUE)'),
+            'ctrlLaw': ("[ ASSIM  ] Starting Control Law (BLUE) *****************************************************", 'Control Ks (BLUE)'),
+        }
+        description, label = CONFIG[typ_ctrl]
+
         self.mgis.add_info(description)
         scens = self.obj_model.get_list_name_scenario()
         base_folder = self.obj_model.dmodel["general"]["path_runs"]
@@ -266,7 +271,7 @@ class ClassMascaret:
             self.task_blue = TaskBLUE(
                 description=description,
                 base_folder=base_folder,
-                ctrl_type='ctrlKS',
+                ctrl_type=typ_ctrl,
                 scens=scens,
                 del_inter_assim=self.del_inter_assim,
                 max_workers=self.limit_core,
@@ -279,8 +284,8 @@ class ClassMascaret:
             self.process_next_task()
         else:
             # Connecter les signaux
-            self.task_blue.taskCompleted.connect(lambda: self.on_task_completed('Control Ks (BLUE)'))
-            self.task_blue.taskTerminated.connect(lambda: self.on_task_failed('Control Ks (BLUE)'))
+            self.task_blue.taskCompleted.connect(lambda: self.on_task_completed(label))
+            self.task_blue.taskTerminated.connect(lambda: self.on_task_failed(label))
             self.task_blue.signal.model_completed.connect(self.display_message)
             task_id = self.launch_task(self.task_blue, description)
 
@@ -289,40 +294,6 @@ class ClassMascaret:
                                          Qgis.Warning)
                 self.process_next_task()
 
-    def launch_ctrl_law_BLUE(self):
-
-        description = "[ ASSIM  ] Starting Control Law (BLUE) *****************************************************"
-        self.mgis.add_info(description)
-        scens = self.obj_model.get_list_name_scenario()
-
-        # print(self.obj_model.dmodel)
-        base_folder = self.obj_model.dmodel["general"]["path_runs"]
-        try:
-            self.task_blue = TaskBLUE(
-                description=description,
-                base_folder=base_folder,
-                ctrl_type='ctrlLaw',
-                scens=scens,
-                del_inter_assim=self.del_inter_assim,
-                max_workers=self.limit_core,
-            )
-        except Exception as e:
-            print(e)
-        if not self.use_task:
-            for scen in scens:
-                print(scen)
-                results = self.task_blue.run_blue(scen)
-            self.process_next_task()
-        else:
-            # Connecter les signaux
-            self.task_blue.taskCompleted.connect(lambda: self.on_task_completed('ctrlLaw_BLUE'))
-            self.task_blue.taskTerminated.connect(lambda: self.on_task_failed('ctrlLaw_BLUE'))
-            self.task_blue.signal.model_completed.connect(self.display_message)
-            task_id = self.launch_task(self.task_blue, description)
-            if not task_id:
-                QgsMessageLog.logMessage("BLUE task failed to launch, skipping...", 'TaskMascaret',
-                                         Qgis.Warning)
-            self.process_next_task()
 
     def launch_task(self, task, description="Mascaret Models Execution"):
         print('Launching task...')
@@ -419,7 +390,7 @@ class ClassMascaret:
         elif next_task_type == 'ctrl_ks_perturb':
             self.launch_ctrl_task(type_ctrl='ctrlKS', type_init=False, if_analyse=False)
         elif next_task_type == 'ctrl_ks_blue':
-            self.launch_ctrl_ks_BLUE()
+            self.launch_ctrl_BLUE('ctrlKS')
         elif next_task_type == 'ctrl_ks_creat_ana':
             self.launch_ctrl_creat('ctrlKS_creat_analyse')
         elif next_task_type == 'ctrl_ks_ana_init':
@@ -433,7 +404,7 @@ class ClassMascaret:
         elif next_task_type == 'ctrl_law_perturb':
             self.launch_ctrl_task(type_ctrl='ctrlLaw', type_init=False, if_analyse=False)
         elif next_task_type == 'ctrl_law_blue':
-            self.launch_ctrl_law_BLUE()
+            self.launch_ctrl_BLUE('ctrlLaw')
         elif next_task_type == 'ctrl_law_creat_ana':
             self.launch_ctrl_creat('ctrlLaw_creat_analyse')
         elif next_task_type == 'ctrl_law_ana_init':

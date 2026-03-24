@@ -56,6 +56,11 @@ class ClassXcasWriter:
         self.dico_loi_struct = None
 
     def set_folder(self, folder):
+        """Set output folder if it exists.
+
+        :param folder: Path to output folder.
+        :return: None
+        """
         if os.path.isdir(folder):
             self.folder = folder
 
@@ -153,8 +158,9 @@ class ClassXcasWriter:
             if not temp:
                 if self.mess:
                     self.mess.add_mess("CheckProf", "warning", "No profile found or the profile is deactivated.")
-            elif any(x is not None for x in temp):
-                self.mess.add_mess("CheckProf", "warning", "Some profiles do not have an abscissa defined.")
+            elif not all(bool(x is not None) for x in temp):
+                if self.mess:
+                    self.mess.add_mess("CheckProf", "warning", "Some profiles do not have an abscissa defined.")
             else:
                 branches["abscdebut"].append(min(temp))
                 branches["abscfin"].append(max(temp))

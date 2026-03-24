@@ -270,6 +270,13 @@ class TaskMascaret(QgsTask):
         )
 
     def create_json_param(self, folder, filname, params):
+        """Create parameter JSON file for subprocess execution.
+
+        :param folder: Destination folder for parameter file.
+        :param filname: Output filename.
+        :param params: Parameters dictionary to serialize.
+        :return: Path to created parameter file.
+        """
         # Create parameter input file (with index to avoid conflicts)
         param_file = os.path.join(folder,filname)
         lst_param_api = ['name',
@@ -305,12 +312,12 @@ class TaskMascaret(QgsTask):
         name = params.get("name")
         type_ctrl = params.get("type_ctrl")
 
-        # Cas "init"
+        # Case "init"
         if name == "init":
             file_name = f"{file_name}_init"
             name_scen = f"{name_scen}_init"
         stock_assim = False
-        # Cas "Analyse..."
+        # Case "Analyse..."
         if type_ctrl and name.startswith("Analyse"):
             txt_type = {'ctrlKS': 'ctrl_ks', 'ctrlLaw': 'ctrl_law'}
             if name.endswith("_init"):
@@ -374,18 +381,18 @@ class TaskMascaret(QgsTask):
                     self.log_mess(txt, "ErrPlatform", "critic")
                     return False
 
-                # Linux(2.x and 3.x) ='linux2' or 'linux'
+                # Linux (2.x and 3.x) = 'linux2' or 'linux'
                 # Windows = 'win32'
                 # Windows / Cygwin = 'cygwin'
                 shutil.copy2(source_file, params.get("RUN_REP"))
                 os.chdir(params.get("RUN_REP"))
                 process = subprocess.run(
-                    soft,  # liste -> pas besoin de shell=True
-                    text=True,  # stdout/stderr en str
-                    check=True,  # lève exception si code retour != 0
+                    soft,  # list -> no need for shell=True
+                    text=True,  # stdout/stderr as str
+                    check=True,  # raise exception if return code != 0
                     shell=True,
                     capture_output=True,  # capture stdout/stderr
-                    encoding="utf-8"     # décommente si tu veux forcer l'encodage
+                    encoding="utf-8"     # uncomment if you want to force encoding
                 )
                 os.chdir(script_dir)
 
@@ -441,26 +448,32 @@ class TaskMascaret(QgsTask):
         return results
 
     def get_folder_display_basic(self,full_path, name_scen):
-        # On remplace les backslashes pour être sûr d'avoir un format uniforme
+        """Extract display-friendly scenario folder path.
+
+        :param full_path: Full absolute path.
+        :param name_scen: Scenario name.
+        :return: Normalized relative path from scenario folder.
+        """
+        # Replace backslashes for consistent formatting
         norm_path = full_path.replace("\\", "/")
         for replc in ['_init','_ana_ctrl_ks','_ana_ctrl_law']:
             name_scen = name_scen.replace(replc,'')
         scen_index = norm_path.find(name_scen)
 
         if scen_index == -1:
-            # name_scen pas trouvé
+            # name_scen not found
             return full_path
 
-        # On garde à partir de name_scen
+        # Keep from name_scen onwards
         sub = norm_path[scen_index:]
         # On repasse en séparateur Windows
         return sub.replace("/", os.sep)
 
     def _copy_lig_files(self, folder):
-        """
-        Copy all .lig files from the current directory to parent directory.
-        :folder : str, current working directory
-        :return: List of paths to the copied files
+        """Copy all .lig output files to parent directory.
+
+        :param folder: Current working directory containing .lig files.
+        :return: ``True`` if files copied, ``False`` if none found or error.
         """
         current_dir = Path(folder)
         # Find all .lig files in current directory
@@ -479,6 +492,11 @@ class TaskMascaret(QgsTask):
         return True
 
     def generate_lig(self, params):
+        """Generate .lig output file from initialization model results.
+
+        :param params: Dictionary containing model parameters and paths.
+        :return: None
+        """
         name_run = params.get("run_name")
         name_scen = f'{params.get("scen_name")}_init'
         path_scen = params.get("RUN_REP")
@@ -487,7 +505,11 @@ class TaskMascaret(QgsTask):
         cls_bc.opt_to_lig(id_run,os.path.join(path_scen, 'mascaret.lig'))
 
     def _save_db(self, params):
+        """Save model results to database and optionally store assimilation data.
 
+        :param params: Dictionary containing model parameters and run info.
+        :return: Dictionary with save status, output, errors, id_run, and timing.
+        """
         results = {
             'id_run': None,
             'scenario_db':None,
@@ -545,11 +567,12 @@ class TaskMascaret(QgsTask):
         return results
 
     def insert_id_run(self, mdb, run_, scen):
-        """
-        creation run line in runs table
-        :param run_: run name
-        :param scen: scenario name
-        :return (id_run): run id
+        """Insert run entry in database and return assigned run ID.
+
+        :param mdb: Database connection object.
+        :param run_: Run name.
+        :param scen: Scenario name.
+        :return: Assigned run ID from database.
         """
         maintenant = datetime.datetime.now()
         tab = {run_: {"scenario": scen, "date": "{:%Y-%m-%d %H:%M}".format(maintenant)}}

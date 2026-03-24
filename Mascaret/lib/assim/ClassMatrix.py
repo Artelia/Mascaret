@@ -29,16 +29,22 @@ def get_perturb_folder(base_folder, iperturb):
 
 
 class ClassMatrix:
-    """"""
+    """Build matrices from assimilation data and perturbation runs."""
 
     def __init__(self, base_folder, ctrl_type, json_assim=None):
-        """"""
-        # Vecteur d'ébauche
+        """Initialize ClassMatrix with assimilation data and control type.
+
+        :param base_folder: Base directory containing scenario folders.
+        :param ctrl_type: Control type ('ctrlKS' or 'ctrlLaw').
+        :param json_assim: Optional assimilation data object.
+        :return: None
+        """
+        # Background vector (state estimation error)
         self.misfit = []
         self.B_analysed = None
         self.val_obs = []
         self.xb = []
-        # Vecteur d'observations
+        # Observation vector
         self.y0 = []
         self.param_ref = None
         self.H = None
@@ -57,7 +63,7 @@ class ClassMatrix:
         self.dict_assim = AssimData()
         self.dict_assim.load(folder=self.base_folder)
 
-        # Récupération du type de controle
+        # Retrieval of control type
         if self.dict_assim.get("ctrlKS") is not None and ctrl_type == "ctrlKS":
             self.ctrlKs = True
         if self.dict_assim.get("ctrlLaw") is not None and ctrl_type == "ctrlLaw":
@@ -65,7 +71,7 @@ class ClassMatrix:
         self.ctrl_type = ctrl_type
 
 
-        # Récupération du nombre de zones et de la liste des zones
+        # Retrieval of zone count and zone list
         if self.ctrlKs and self.ctrl_type == 'ctrlKS':
             self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlKS"]["lst_zone"]]
             self.zones = np.unique(self.zones)
@@ -80,13 +86,13 @@ class ClassMatrix:
             self.seuil_rejet_misfit = self.dict_assim[ctrl_type].get("seuil_rejet_misfit", 500)
             self.type_field = self.dict_assim[ctrl_type]["obs_var"]
 
-        # Récupération du nombre total de pas de temps d'observation
+        # Retrieval of total observation time steps
         name_folder_ref = os.path.join(self.base_folder, 'run_ref')
         with open(os.path.join(name_folder_ref, 'Z_Q_assim.json')) as f:
             dict_ref = json.load(f)
         self.nb_dt_obs = len(dict_ref['time'])
 
-        # Récupération des zéros des observations
+        # Retrieval of observation zeros
         self.zero_obs = {}
         if ctrl_type == 'ctrlKS' and self.ctrlKs:
             for d in self.dict_assim["ctrlKS"]["lst_zone"]:
@@ -106,7 +112,7 @@ class ClassMatrix:
             self.key_lst = 'lst_loi'
 
         self.type_perturb = []
-        # Récupération du nombre total de perturbations
+        # Retrieval of total perturbations
         if self.ctrlKs or self.ctrlLaw:
             self.nbperturb = 0
             for d in self.dict_assim[self.ctrl_type][self.key_lst]:
@@ -122,6 +128,7 @@ class ClassMatrix:
     def build_all_matrix(self):
         """
         Builds all matrixes needed for BLUE computation : B matrix, R matrix then H and misfit
+        :return: None
         """
         self.build_B_matrix_ini()
         self.build_diago_R_matrix_ini()
@@ -130,6 +137,10 @@ class ClassMatrix:
         self.build_min_max_values()
 
     def build_B_matrix_ini(self):
+        """Build initial error covariance matrix B from standard deviations.
+
+        :return: None
+        """
         liste_sigma = []
         if self.ctrl_type == 'ctrlKS' and self.ctrlKs:
             for d in self.dict_assim.get("ctrlKS")["lst_zone"]:
@@ -151,9 +162,18 @@ class ClassMatrix:
         self.B = np.diag(liste_sigma, 0)
 
     def build_B_matrix_analysed(self, K):
+        """Build analysed error covariance matrix .
+
+        :param K: Kalman gain matrix.
+        :return: None
+        """
         self.B_analysed = self.B - np.matmul(np.matmul(K, self.H), self.B)
 
     def build_diago_R_matrix_ini(self):
+        """Build observation error covariance matrix R (diagonal).
+
+        :return: None
+        """
         diag_R = []
         num_obs = []
         if self.ctrl_type == 'ctrlKS' and self.ctrlKs:
@@ -177,19 +197,24 @@ class ClassMatrix:
                         diag_R += [float(dict2["stderr"][icode]) ** 2 for i in
                                    range(self.nb_dt_obs)]
                         num_obs.append(code)
-        print("Diagonale des matrices des covariances d'erreur d'observation R", diag_R)
+        print("Diagonal of observation error covariance matrix R:", diag_R)
         self.R = np.array(diag_R)
 
     def build_min_max_values(self):
         """
         Builds minimal and maximal values vectors for assim parameters
         It is stored in the same order than in data_assim json file.
+        :return: None
         """
         for dico in self.dict_assim.get(self.ctrl_type).get(self.key_lst):
             self.min_values.append(dico.get("val_min"))
             self.max_values.append(dico.get("val_max"))
 
     def build_misfit(self):
+        """Build misfit vector from observations and reference values.
+
+        :return: None
+        """
         name_folder_ref = os.path.join(self.base_folder, 'run_ref')
         with open(os.path.join(name_folder_ref, 'Z_Q_assim.json')) as f:
             dict_ref = json.load(f)
@@ -224,7 +249,7 @@ class ClassMatrix:
                 self.y0.append(self.val_obs[station][self.type_field][it])
                 print(self.val_obs[station][self.type_field][it])
                 delta_z = self.val_obs[station][self.type_field][it] - val_ref[station][it]
-                # Application du seuil de rejet misfit
+                # Apply misfit rejection threshold
                 if abs(100 * np.divide(delta_z, val_ref[station][it])) > self.seuil_rejet_misfit:
                     delta_z = 0.
                 self.misfit.append(delta_z)
@@ -232,6 +257,12 @@ class ClassMatrix:
         print('Y0', self.y0)
 
     def get_perturb_dict_js(self, base_folder, iperturb):
+        """Retrieve perturbation folder info from JSON instance data.
+
+        :param base_folder: Base directory containing perturbation runs.
+        :param iperturb: Perturbation index.
+        :return: Tuple (folder_name, perturbation_type, value, zone).
+        """
         print('Finding perturbation folders in', base_folder)
         # self.dict_assim["generate_instance"]["dscen"]["instances"]
         instances = self.dict_assim.instances
@@ -259,6 +290,7 @@ class ClassMatrix:
     def build_H_matrix(self):
         """
         Builds the H matrix for BLUE algorithm
+        :return None
         """
         H = []
         # Getting Zref and KS values

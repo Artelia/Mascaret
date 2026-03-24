@@ -23,15 +23,26 @@ import json
 
 
 class ClassStockResStruct:
-    """Class contain  model files creation and run model mascaret"""
+    """Store model structure results (gates, weirs, links) in database."""
     CREST_FILE = "Fichier_Crete.csv"
 
     def __init__(self, mdb, mess):
+        """Initialize ClassStockResStruct.
+
+        :param mdb: Database connection object.
+        :param mess: Message handler object.
+        :return: None
+        """
         self.mdb = mdb
         self.mess = mess
 
     def stock_res_api(self, dico, id_run):
-        """Stock api results"""
+        """Store API results for structures, links, and weirs.
+
+        :param dico: Dictionary containing structure results.
+        :param id_run: Run identifier.
+        :return: None
+        """
 
 
         handlers = {
@@ -45,13 +56,26 @@ class ClassStockResStruct:
                 handler(dico[key], id_run)
 
     def _insert_results(self, values):
-        """Méthode commune pour insérer les résultats dans la base de données"""
+        """Insert results into database.
+
+        :param values: List of result values to insert.
+        :return: None
+        """
         if values:
             cols = ['id_runs', 'pknum', 'var', 'time', 'val']
             self.mdb.insert_res("results_by_pk", values, cols)
 
     def _insert_graph_data(self, id_run, type_res, dico_pk, dico_time, var_ids, extra_data=None):
-        """Méthode commune pour insérer les données de graphique"""
+        """Insert graph data into database.
+
+        :param id_run: Run identifier.
+        :param type_res: Result type (structure type).
+        :param dico_pk: Dictionary of position numbers.
+        :param dico_time: Dictionary of time values.
+        :param var_ids: List of variable IDs.
+        :param extra_data: Additional data to insert (optional).
+        :return: None
+        """
         list_insert = [
             [id_run, type_res, "pknum", json.dumps(dico_pk)],
             [id_run, type_res, "time", json.dumps(dico_time)],
@@ -65,7 +89,12 @@ class ClassStockResStruct:
         self.mdb.insert_res("runs_graph", list_insert, col_tab)
 
     def _format_results_values(self, d_res, id_run):
-        """Formate les résultats pour l'insertion en base"""
+        """Format results for database insertion.
+
+        :param d_res: Dictionary of result data.
+        :param id_run: Run identifier.
+        :return: Formatted list of values for insertion.
+        """
         values = []
         for (pk, var), v in d_res.items():
             values.append([
@@ -78,7 +107,11 @@ class ClassStockResStruct:
         return values
 
     def _creat_mapping_var(self, var_configs):
+        """Create variable ID mappings from configuration.
 
+        :param var_configs: List of (var_name, type_res, name, key) tuples.
+        :return: List of variable IDs.
+        """
         var_ids = []
         for var_name, type_res, name, key in var_configs:
             var_info = {
@@ -92,7 +125,12 @@ class ClassStockResStruct:
         return var_ids
 
     def res_weirs_fg(self, dico_res, id_run):
-        """Stock flood gate results"""
+        """Store weir (flood gate) results in database.
+
+        :param dico_res: Dictionary of weir results.
+        :param id_run: Run identifier.
+        :return: None
+        """
         if not dico_res:
             return
 
@@ -118,17 +156,22 @@ class ClassStockResStruct:
                     "v": res_data[key],
                 }
 
-        # Insérer les résultats
+        # Insert results
         values = self._format_results_values(d_res, id_run)
         self._insert_results(values)
         self._insert_graph_data(id_run, "weirs", dico_pk, dico_time, var_ids[:2])
 
     def res_link_fg(self, dico_res, id_run):
-        """Stock flood gate results"""
+        """Store link results in database.
+
+        :param dico_res: Dictionary of link results.
+        :param id_run: Run identifier.
+        :return: None
+        """
         if not dico_res:
             return
 
-        # Définir les variables
+        # Define variables
         var_configs = [
             ("ZLINK", "link_fg", "Gate movement", "ZLINK"),
             ("CSECLINK", "link_fg", "Opening section of Gate for culvert", "CSECLINK"),
@@ -142,7 +185,7 @@ class ClassStockResStruct:
 
         var_ids = self._creat_mapping_var(var_configs)
 
-        # Traiter les résultats
+        # Process results
         for id_link, res_data in dico_res.items():
             dico_pk[id_link] = id_link
             info = self.mdb.select_one("links", where=f"gid={id_link}", list_var=["method_mob"])
@@ -155,7 +198,7 @@ class ClassStockResStruct:
                     "v": res_data[key],
                 }
 
-        # Insérer les résultats
+        # Insert results
         values = self._format_results_values(d_res, id_run)
         self._insert_results(values)
 
@@ -163,11 +206,16 @@ class ClassStockResStruct:
         self._insert_graph_data(id_run, "link_fg", dico_pk, dico_time, var_ids, extra_data)
 
     def res_fg(self, dico_res, id_run):
-        """Stock flood gate results"""
+        """Store floodgate (structure gate) results in database.
+
+        :param dico_res: Dictionary of valve results.
+        :param id_run: Run identifier.
+        :return: None
+        """
         if not dico_res:
             return
 
-        # Définir la variable
+        # Define variable
         var_info = {
             "var": "ZSTR",
             "type_res": "struct",
@@ -180,7 +228,7 @@ class ClassStockResStruct:
         dico_pk = {}
         dico_time = {}
 
-        # Traiter les résultats
+        # Process results
         for id_config, res_data in dico_res.items():
             rows = self.mdb.select(
                 "struct_config",
@@ -196,7 +244,7 @@ class ClassStockResStruct:
                 "v": res_data["ZSTR"],
             }
 
-        # Insérer les résultats
+        # Insert results
         values = self._format_results_values(d_res, id_run)
         self._insert_results(values)
         self._insert_graph_data(id_run, "struct", dico_pk, dico_time, [id_var])
@@ -241,12 +289,12 @@ class ClassStockResStruct:
         return info["gid"][0] if info.get("gid") else None
 
     def read_mobil_gate_res(self, id_run, folder):
-        """
-         Read and import mobile gate results.
+        """Read and import mobile gate results from file.
 
-         Args:
-             id_run: Run ID
-         """
+        :param id_run: Run identifier.
+        :param folder: Folder path containing crest file.
+        :return: None
+        """
         file_path = os.path.join(folder)
         if not os.path.isfile(file_path):
             return
@@ -282,6 +330,6 @@ class ClassStockResStruct:
             self._insert_graph_data(id_run, "weirs", dico_pk, dico_time, [id_var])
 
         except Exception as e:
-            txt = "Erreur load of mobil_gate results.\n"
-            txt += e
+            txt = "Error loading mobile gate results.\n"
+            txt += str(e)
             self.mess.add_mess("RMobGate", "warning", txt)

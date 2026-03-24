@@ -49,13 +49,15 @@ class TaskBLUE(QgsTask):
     emitting progress signals in submission order.
     """
 
-    def __init__(self, description, base_folder, ctrl_type,scens, del_inter_assim, max_workers=None):
-        """Initialize the BLUE computation task.
+    def __init__(self, description, base_folder, ctrl_type, scens, del_inter_assim, max_workers=None):
+        """Initialize BLUE computation task for parallel scenario processing.
 
         :param description: Task description displayed to user.
         :param base_folder: Base directory containing scenario folders.
-        :param ctrl_type: Control type string ('ctrlKS' or 'ctrlLaw').
+        :param ctrl_type: Control type ('ctrlKS' or 'ctrlLaw').
+        :param scens: List of scenario identifiers to process.
         :param del_inter_assim: ``True`` to delete intermediate assimilation folders after completion.
+        :param max_workers: Maximum number of concurrent worker threads. Auto-calculated if None.
         :return: None.
         """
 
@@ -85,10 +87,10 @@ class TaskBLUE(QgsTask):
         self.executor = None
 
     def update_params(self, scens, max_workers=None):
-        """Update the task parameters and optionally max_workers.
+        """Update task parameters and max_workers.
 
-        :param task_params: New list of model parameter dicts.
-        :param max_workers: New maximum number of parallel workers (optional).
+        :param scens: List of scenario identifiers to process.
+        :param max_workers: Maximum number of parallel workers. Auto-calculated if None.
         :return: None
         """
         self.scens = scens
@@ -125,11 +127,9 @@ class TaskBLUE(QgsTask):
         return True
 
     def _process_completed_results(self):
-        """Process and emit results in submission order.
+        """Emit results in order even if completed out-of-order.
 
-        Emits model_completed signals for consecutive completed results in order,
-        even if they finished out-of-order in the thread pool.
-        :return: None. Emits signals for consecutive results.
+        :return: None
         """
         print(self.next_to_process,self.completed_results )
         while self.next_to_process in self.completed_results:
@@ -140,12 +140,12 @@ class TaskBLUE(QgsTask):
             self.next_to_process += 1
 
     def run_blue(self, scen):
-        """Execute BLUE calculation for a single scenario.
+        """Execute BLUE calculation for scenario (thread worker).
 
-        Runs the BLUE computation process for the given scenario and optionally
-        deletes intermediate assimilation folders on success.
-        :param scen: Scenario identifier.
-        :return: Dict with computation results including success status, output, and timing.
+        Computes BLUE and optionally deletes intermediate assimilation folders on success.
+
+        :param scen: Scenario identifier to process.
+        :return: Dict with scenario results: success status, output, errors, timing, and path.
         """
         path_scen = os.path.join(self.base_folder, scen)
         results = {
@@ -180,7 +180,7 @@ class TaskBLUE(QgsTask):
                 try:
                     shutil.rmtree(target, ignore_errors=True)
                 except Exception:
-                    # On ignore tout le reste aussi, pour ne JAMAIS crasher
+                    # Ignore all remaining errors to prevent task crash
                     pass
 
         # except subprocess.CalledProcessError as e:
@@ -194,91 +194,89 @@ class TaskBLUE(QgsTask):
         return results
 
     def run(self):
-        """Execute the QGIS task: manage thread pool and collect BLUE results.
+        """Execute task: manage thread pool and collect BLUE results.
 
-        Submits scenarios to a thread pool executor, processes completed results as they
-        finish, and handles cancellation requests.
         :return: ``True`` if all calculations succeeded, ``False`` on error or cancellation.
         """
         self.exc_start_time = time.time()
 
-        try:
-            # Create the thread pool executor
-            self.executor = concurrent.futures.ThreadPoolExecutor(
-                max_workers=1
-            )
-            self.on_message(
-                f"Starting {self.total_models} models with {self.max_workers} parallel workers (threads)"
-            )
-            # Submit the initial workers
-            for _ in range(min(self.max_workers, self.total_models)):
-                # Dans submit_next_model est fait le run_blue
+        # try:
+        # Create the thread pool executor
+        self.executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=1
+        )
+        self.on_message(
+            f"Starting {self.total_models} models with {self.max_workers} parallel workers (threads)"
+        )
+        # Submit the initial workers
+        for _ in range(min(self.max_workers, self.total_models)):
+            # run_blue is invoked within _submit_next_model
+            self._submit_next_model()
+        # Main loop: process results as they complete
+        while self.running_futures or self.next_to_submit < self.total_models:
+            if self.isCanceled():
+                # Shutdown executor without waiting for remaining tasks
+                self.executor.shutdown(wait=False, cancel_futures=True)
+                return False
+            # Check for completed futures
+            done_indices = []
+            for index, future in list(self.running_futures.items()):
+                if future.done():
+                    done_indices.append(index)
+
+                    try:
+                        result = future.result()
+
+                        # Store the result
+                        self.completed_results[index] = result
+                        self.completed_count += 1
+
+                        # Emit progress
+                        self.on_progress(self.completed_count, self.total_models)
+                        # Base message
+                        # model_id = result.get('model_id', index)
+                        if result['success']:
+                            self.on_message(
+                                f"Scenario {result['scen']} :\n"
+                                "Blue calculation done in "
+                                f"{result.get('execution_time', 0):.1f}s"
+                            )
+                        else:
+                            self.error_txt += f"\nProblem with blue calculation: {result['error']}"
+                            self.on_message(f"Problem with blue calculation:")
+                        # Process results in order
+                        self._process_completed_results()
+
+                    except Exception as e:
+                        self.error_txt += f"\nError processing model {index + 1}: {str(e)}"
+                        self.on_message(f"Error processing model #{index + 1}")
+
+            # Remove completed futures and submit the next ones
+            for index in done_indices:
+                del self.running_futures[index]
+                # Submit the next model if available
                 self._submit_next_model()
-            # Main loop: process results as they complete
-            while self.running_futures or self.next_to_submit < self.total_models:
-                if self.isCanceled():
-                    # Shutdown executor without waiting for remaining tasks
-                    self.executor.shutdown(wait=False, cancel_futures=True)
-                    return False
-                # Check for completed futures
-                done_indices = []
-                for index, future in list(self.running_futures.items()):
-                    if future.done():
-                        done_indices.append(index)
+            # Small sleep to avoid CPU spin
+            time.sleep(0.05)
+            # Ensure all results are processed
+        self._process_completed_results()
 
-                        try:
-                            result = future.result()
+        # Shutdown the pool cleanly
+        self.executor.shutdown(wait=True)
+        QgsMessageLog.logMessage(f"END Run {not bool(self.error_txt)} {self.error_txt}",
+                                 MESSAGE_CATEGORY, Qgis.Info)
+        self.signal.launch_completed.emit(not bool(self.error_txt))
+        return not bool(self.error_txt)
 
-                            # Store the result
-                            self.completed_results[index] = result
-                            self.completed_count += 1
-
-                            # Emit progress
-                            self.on_progress(self.completed_count, self.total_models)
-                            # Base message
-                            # model_id = result.get('model_id', index)
-                            if result['success']:
-                                self.on_message(
-                                    f"Scenario {result['scen']} :\n"
-                                    "Blue calculation done in "
-                                    f"{result.get('execution_time', 0):.1f}s"
-                                )
-                            else:
-                                self.error_txt += f"\nProblem with blue calculation: {result['error']}"
-                                self.on_message(f"Problem with blue calculation:")
-                            # Process results in order
-                            self._process_completed_results()
-
-                        except Exception as e:
-                            self.error_txt += f"\nError processing model {index + 1}: {str(e)}"
-                            self.on_message(f"Error processing model #{index + 1}")
-
-                # Remove completed futures and submit the next ones
-                for index in done_indices:
-                    del self.running_futures[index]
-                    # Submit the next model if available
-                    self._submit_next_model()
-                # Small sleep to avoid CPU spin
-                time.sleep(0.05)
-                # Ensure all results are processed
-            self._process_completed_results()
-
-            # Shutdown the pool cleanly
-            self.executor.shutdown(wait=True)
-            QgsMessageLog.logMessage(f"END Run {not bool(self.error_txt)} {self.error_txt}",
-                                     MESSAGE_CATEGORY, Qgis.Info)
-            self.signal.launch_completed.emit(not bool(self.error_txt))
-            return not bool(self.error_txt)
-
-        except Exception as e:
-            self.error_txt = f"Task failed: {str(e)}"
-            self.signal.launch_completed.emit(False)
-            return False
+        # except Exception as e:
+        #     self.error_txt = f"Task failed: {str(e)}"
+        #     self.signal.launch_completed.emit(False)
+        #     return False
 
     def cancel(self):
-        """Cancel the task execution and log completion summary.
+        """Cancel task execution and log summary.
 
-        :return: None. Logs execution time and progress before cancelling.
+        :return: None
         """
         if self.exc_start_time:
             execution_time = time.time() - self.exc_start_time
@@ -291,27 +289,27 @@ class TaskBLUE(QgsTask):
         super().cancel()
 
     def onCancel(self):
-        """Handler invoked by QGIS when the task is cancelled.
+        """Handle QGIS task cancellation.
 
-        :return: None. Delegates to cancel() for cleanup.
+        :return: None
         """
         self.cancel()
 
     def on_message(self, message):
-        """Callback for progress messages.
+        """Log progress message.
 
-        :param message: Message text emitted by the task.
+        :param message: Message text to log.
         :type message: str
         :return: None
         """
         QgsMessageLog.logMessage(message, MESSAGE_CATEGORY, Qgis.Info)
 
     def on_progress(self, completed, total):
-        """Callback for progress updates.
+        """Log completion progress.
 
-        :param completed: Number of completed models.
+        :param completed: Number of completed scenarios.
         :type completed: int
-        :param total: Total number of models.
+        :param total: Total number of scenarios.
         :type total: int
         :return: None
         """

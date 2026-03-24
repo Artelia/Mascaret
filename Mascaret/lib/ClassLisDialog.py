@@ -30,35 +30,55 @@ from qgis.utils import *
 
 
 class LisFilterProxy(QSortFilterProxyModel):
+    """Filter proxy model for .lis and .assim_lis files in QFileSystemModel."""
+    
     def filterAcceptsRow(self, row: int, parent: QModelIndex) -> bool:
+        """Filter to show directories and .lis/.assim_lis files only.
+
+        :param row: Row index in source model.
+        :param parent: Parent model index.
+        :return: ``True`` if row should be shown, ``False`` otherwise.
+        """
         model: QFileSystemModel = self.sourceModel()
         idx = model.index(row, 0, parent)
-        return model.isDir(idx) or model.fileName(idx).endswith(".lis")
+        return model.isDir(idx) or model.fileName(idx).endswith(".lis") or  model.fileName(idx).endswith(".assim_lis")
 
 
 UI_FILE = os.path.join(os.path.dirname(__file__), "..", "ui", "ui_lis_viewer.ui")
 
 
 class ClassLisDialog(QDialog):
+    """Dialog widget for browsing and viewing .lis output files."""
+    
     def __init__(self, root_path):
+        """Initialize LIS file viewer dialog.
+
+        :param root_path: Root directory path for file browser.
+        :return: None
+        """
         super().__init__()
         self.ui = loadUi(UI_FILE, self)
         self._load_root(root_path)
         self.tree_view.clicked.connect(self._on_item_clicked)
 
     def _load_root(self, path):
+        """Initialize file system model and set up tree view.
+
+        :param path: Root directory path to display.
+        :return: None
+        """
         self.fs_model = QFileSystemModel()
 
-        # ── Optimisation 1 : aucune surveillance des changements sur le disque ──
+        # Optimization 1: disable disk monitoring
         self.fs_model.setOption(QFileSystemModel.DontWatchForChanges, True)
 
-        # ── Optimisation 2 : on ne résout pas les liens symboliques (plus rapide) ──
+        # Optimization 2: do not resolve symbolic links (faster)
         self.fs_model.setOption(QFileSystemModel.DontResolveSymlinks, True)
 
         self.fs_model.setFilter(QDir.AllDirs | QDir.Files | QDir.NoDotAndDotDot)
 
-        # ── Optimisation 3 : brancher le proxy AVANT setRootPath
-        #    pour éviter des recalculs inutiles au moment du peuplement ──
+        # Optimization 3: connect proxy BEFORE setRootPath
+        # to avoid unnecessary recalculations during population
         self.proxy = LisFilterProxy()
         self.proxy.setSourceModel(self.fs_model)
 
@@ -66,37 +86,51 @@ class ClassLisDialog(QDialog):
         for col in range(1, self.fs_model.columnCount()):
             self.tree_view.hideColumn(col)
 
-        # ── Optimisation 4 : setRootPath après le proxy, déclenchement unique ──
+        # Optimization 4: setRootPath after proxy, single triggering
         self.fs_model.setRootPath(path)
 
         root_idx = self.fs_model.index(path)
         proxy_root = self.proxy.mapFromSource(root_idx)
         self.tree_view.setRootIndex(proxy_root)
 
-        # ── Optimisation 5 : remplacer expandAll() (très lent sur grands arbres)
-        #    par une expansion lazy au premier niveau uniquement ──
+        # Optimization 5: replace expandAll() (very slow on large trees)
+        # with lazy expansion at first level only
         self._expand_first_level(proxy_root)
 
     def _expand_first_level(self, proxy_root: QModelIndex):
-        """Expand seulement le premier niveau – l'utilisateur ouvre le reste à la demande."""
+        """Expand only first level – user opens the rest on demand.
+
+        :param proxy_root: Root index in proxy model.
+        :return: None
+        """
         row_count = self.proxy.rowCount(proxy_root)
         for row in range(row_count):
             child = self.proxy.index(row, 0, proxy_root)
             self.tree_view.expand(child)
 
     def _on_item_clicked(self, proxy_index: QModelIndex):
+        """Handle tree view item click to load .lis file.
+
+        :param proxy_index: Clicked item index in proxy model.
+        :return: None
+        """
         source_index = self.proxy.mapToSource(proxy_index)
         path = self.fs_model.filePath(source_index)
-        if path.endswith(".lis"):
+        if path.endswith(".lis") or  path.endswith(".assim_lis"):
             self._read_lis(path)
 
     def _read_lis(self, path: str):
+        """Load and display .lis file content in text editor.
+
+        :param path: Path to .lis file.
+        :return: None
+        """
         try:
             content = Path(path).read_text(encoding="utf-8", errors="replace")
         except Exception:
             return
 
-        # ── Optimisation 6 : bloquer les signaux pendant la mise à jour du texte ──
+        # Optimization 6: block signals during text update
         self.text_edit.blockSignals(True)
         self.text_edit.setPlainText(content)
         cursor = self.text_edit.textCursor()
@@ -108,6 +142,12 @@ class ClassLisDialog(QDialog):
 
 
 def _from_mascaret(full_path: str, anchor: str = "mascaret") -> str:
+    """Extract relative path from mascaret root directory.
+
+    :param full_path: Full absolute path.
+    :param anchor: Directory name to use as anchor (default 'mascaret').
+    :return: Relative path from anchor directory or full path if anchor not found.
+    """
     parts = Path(full_path.replace("\\", "/")).parts
     for i, part in enumerate(parts):
         if part.lower() == anchor.lower():

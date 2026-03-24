@@ -30,19 +30,7 @@ from .ClassAssimKsWidget import ClassAssimKsWidget
 from .ClassAssimLawWidget import ClassAssimLawWidget
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
-#
-# try:
-#     if QT_VERSION > 5:
-#         from . import resourcesQT6
-#     else:
-#         from . import resourcesQT5
-# except ImportError:
-#     pass
-#
-# try:
-#     qgis_version = core.QGis.QGIS_VERSION_INT
-# except AttributeError:
-#     qgis_version = core.Qgis.QGIS_VERSION_INT
+
 
 FORM_CLASS, BASE = uic.loadUiType(
     os.path.join(os.path.join(os.path.dirname(__file__), "..", "..", "ui/ui_assimilation.ui"))

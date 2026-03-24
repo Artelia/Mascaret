@@ -36,8 +36,19 @@ class ClassGeoWriter:
         self.folder = folder
 
     def set_geo_filename(self, filename):
+        """Set base of the filename.
+
+        :param filename: File name
+        :return: None
+        """
         self.geo_filename = filename.replace('.geo','').replace('.casier','')
+        
     def set_folder(self,folder):
+        """Set output folder if it exists.
+
+        :param folder: Path to output folder.
+        :return: None
+        """
         if os.path.isdir(folder):
             self.folder = folder
 
