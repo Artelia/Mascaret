@@ -70,21 +70,19 @@ class ClassMatrix:
             self.ctrlLaw = True
         self.ctrl_type = ctrl_type
 
-
+        config = {'H':'Z', 'Q':'Q'}
+        self.type_field = config[self.dict_assim[ctrl_type]["obs_var"]]
+        self.seuil_rejet_misfit = self.dict_assim[ctrl_type].get("seuil_rejet_misfit", 500)
         # Retrieval of zone count and zone list
         if self.ctrlKs and self.ctrl_type == 'ctrlKS':
             self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlKS"]["lst_zone"]]
-            self.zones = np.unique(self.zones)
-            self.nb_zones = len(self.zones)
-            self.seuil_rejet_misfit = self.dict_assim[ctrl_type].get("seuil_rejet_misfit", 500)
-            self.type_field = self.dict_assim[ctrl_type]["obs_var"]
 
         if self.ctrlLaw and self.ctrl_type == 'ctrlLaw':
             self.zones = [dico.get("name_law") for dico in self.dict_assim["ctrlLaw"]["lst_loi"]]
-            self.zones = np.unique(self.zones)
-            self.nb_zones = len(self.zones)
-            self.seuil_rejet_misfit = self.dict_assim[ctrl_type].get("seuil_rejet_misfit", 500)
-            self.type_field = self.dict_assim[ctrl_type]["obs_var"]
+
+        self.zones = np.unique(self.zones)
+        self.nb_zones = len(self.zones)
+
 
         # Retrieval of total observation time steps
         name_folder_ref = os.path.join(self.base_folder, 'run_ref')
@@ -221,7 +219,7 @@ class ClassMatrix:
 
         val_ref = {}
         for zone in self.zones:
-            for station in dict_ref['Z'][str(zone)]:
+            for station in dict_ref[self.type_field][str(zone)]:
                 if station not in val_ref.keys():
                     val_ref[station] = []
 
@@ -345,16 +343,15 @@ class ClassMatrix:
             all_stations = []
             for zone in self.zones:
                 # Boucle sur les stations d'observation dans chaque zone
-                for station in dict_perturb['Z'][str(zone)]:
+                for station in dict_perturb[self.type_field][str(zone)]:
                     if station not in all_stations:
-                        val_perturb += dict_perturb['Z'][str(zone)][station]
+                        val_perturb += dict_perturb[self.type_field][str(zone)][station]
                         all_stations.append(station)
             val_perturb = np.array(val_perturb, dtype=float)
             # Deltas_param contient l'ensemble des différences entre les paramètres de REF et de
             # PERTURB Avec potentiellement des valeurs nulles pour les paramètres non modifiés Ici
             # pour KS, on a les différences sur KS_MIn et MAJ pour chaque zone.
-            deltas_param = [val_perturb -
-                            self.param_ref[type_perturb][str(zone_perturb)]]
+            deltas_param = val_perturb - self.param_ref[type_perturb][str(zone_perturb)]
             self.xb.append(self.param_ref[type_perturb][str(zone_perturb)])
             # On récupère la valeur du DeltaP effectif > 0 (les autres sont à 0)
             delta_p = deltas_param[np.argmax(np.abs(deltas_param))]

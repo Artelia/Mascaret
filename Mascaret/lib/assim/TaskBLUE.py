@@ -131,7 +131,6 @@ class TaskBLUE(QgsTask):
 
         :return: None
         """
-        print(self.next_to_process,self.completed_results )
         while self.next_to_process in self.completed_results:
             result = self.completed_results.pop(self.next_to_process)
             # Emit the signal for the processed result (in order)
@@ -157,36 +156,33 @@ class TaskBLUE(QgsTask):
             'path_run': path_scen,
         }
 
-        # try:
-        script_dir = os.path.dirname(__file__)
-        os.chdir(script_dir)
-
-        process = subprocess.run(
-            ["python", "ClassBLUE.py", path_scen, self.ctrl_type],
-            shell=True,
-            text=True,
-            check=True,
-            capture_output=True
-        )
-
-        results.update({
-            'success': True,
-            'output': process.stdout,
-            'error': process.stderr,
-        })
-        if self.del_inter_assim:
-            target = os.path.join(path_scen, f"run_{self.ctrl_type}")
-            if os.path.isdir(target):
-                try:
-                    shutil.rmtree(target, ignore_errors=True)
-                except Exception:
-                    # Ignore all remaining errors to prevent task crash
-                    pass
-
-        # except subprocess.CalledProcessError as e:
-        #     results['error'] = f"Process failed with exit code {e.returncode}: {e.stderr}"
-        # except Exception as e:
-        #     results['error'] = f"Unexpected error: {str(e)}"
+        try:
+            script_dir = os.path.dirname(__file__)
+            os.chdir(script_dir)
+            process = subprocess.run(
+                ["python", "ClassBLUE.py", path_scen, self.ctrl_type],
+                shell=True,
+                text=True,
+                check=True,
+                capture_output=True
+            )
+            results.update({
+                'success': True,
+                'output': process.stdout,
+                'error': process.stderr,
+            })
+            if self.del_inter_assim:
+                target = os.path.join(path_scen, f"run_{self.ctrl_type}")
+                if os.path.isdir(target):
+                    try:
+                        shutil.rmtree(target, ignore_errors=True)
+                    except Exception:
+                        # Ignore all remaining errors to prevent task crash
+                        pass
+        except subprocess.CalledProcessError as e:
+            results['error'] = f"Process failed with exit code {e.returncode}: {e.stderr}"
+        except Exception as e:
+            results['error'] = f"Unexpected error: {str(e)}"
 
         results['execution_time'] = time.time() - results['start_time']
         pprint.pp(results)
