@@ -267,9 +267,10 @@ class ClassMascaret:
                 description=description,
                 base_folder=base_folder,
                 ctrl_type='ctrlKS',
-                del_inter_assim=self.del_inter_assim
+                scens=scens,
+                del_inter_assim=self.del_inter_assim,
+                max_workers=self.limit_core,
             )
-            self.task_blue.update_params(scens)
         except Exception as err:
             self.mgis.add_info(f'[ ERROR ] {err}')
         if not self.use_task:
@@ -296,19 +297,15 @@ class ClassMascaret:
 
         # print(self.obj_model.dmodel)
         base_folder = self.obj_model.dmodel["general"]["path_runs"]
-        print(base_folder)
-        print(scens)
         try:
             self.task_blue = TaskBLUE(
                 description=description,
                 base_folder=base_folder,
                 ctrl_type='ctrlLaw',
-                del_inter_assim=self.del_inter_assim
+                scens=scens,
+                del_inter_assim=self.del_inter_assim,
+                max_workers=self.limit_core,
             )
-            print('taskblueinit')
-            self.task_blue.update_params(scens)
-            print('taskblueupdate')
-            print('selfusetask', self.use_task)
         except Exception as e:
             print(e)
         if not self.use_task:

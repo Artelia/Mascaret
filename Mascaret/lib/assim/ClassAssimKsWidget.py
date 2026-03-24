@@ -442,7 +442,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             for r in range(self.lv_ks_obs.model().rowCount()):
                 itm = self.lv_ks_obs.model().item(r, 0)
                 if itm.data(32) in l_obs:
-                    itm.setCheckState(self.qt_check_stat.checked)
+                    itm.setCheckState(self.qt_check_stat.Checked)
                 else:
                     itm.setCheckState(self.qt_check_stat.Unchecked)
 
