@@ -10,11 +10,6 @@ except:
     from ClassAssimData import AssimData
 
 
-# n_perturb = 2
-# zones = [2]
-# base_folder = r'../../mascaret/event1_1/'
-
-
 def get_perturb_folder(base_folder, iperturb):
     print('Finding perturbation folders in', base_folder)
     name_folder = None
@@ -36,7 +31,6 @@ def get_perturb_folder(base_folder, iperturb):
 class ClassMatrix:
     """"""
 
-    # TODO Passer en argument d'entrée le dico ou json des paramètres d'assimilation !
     def __init__(self, base_folder, ctrl_type, json_assim=None):
         """"""
         # Vecteur d'ébauche
@@ -126,6 +120,9 @@ class ClassMatrix:
             print('Total number of perturbations:', self.nbperturb)
 
     def build_all_matrix(self):
+        """
+        Builds all matrixes needed for BLUE computation : B matrix, R matrix then H and misfit
+        """
         self.build_B_matrix_ini()
         self.build_diago_R_matrix_ini()
         self.build_H_matrix()
@@ -139,21 +136,14 @@ class ClassMatrix:
                 std_zone = d["std"]
                 if d.get("std") is None:
                     raise KeyError("Key std not found in data_assim.json")
-                # if d.get("type") == "Ksmin":
                 liste_sigma += [2 * std_zone]
-                # if d.get("type") == "Ksmaj":
-                #     liste_sigma += [2 * std_zone]
 
         if self.ctrl_type == 'ctrlLaw' and self.ctrlLaw:
             for d in self.dict_assim.get("ctrlLaw")["lst_loi"]:
                 std_zone = d["std"]
                 if d.get("std") is None:
                     raise KeyError("Key std not found in data_assim.json")
-                # if d.get("type") == "coefA":
                 liste_sigma += [2 * std_zone]
-                # if d.get("type") == "coefB":
-                #     liste_sigma += [2 * std_zone]
-            # raise NotImplementedError('Control law matrices not implemented yet')
 
         if len(liste_sigma) != self.nbperturb:
             raise ValueError(f'Problem with initial B matrix creation. '
@@ -165,13 +155,9 @@ class ClassMatrix:
 
     def build_diago_R_matrix_ini(self):
         diag_R = []
-        # TODO faire sur toutes les obs dispos !, une seule fois
-        # num_stations = []
         num_obs = []
         if self.ctrl_type == 'ctrlKS' and self.ctrlKs:
             for dico in self.dict_assim.get("ctrlKS").get("lst_zone"):
-                # if int(dico.get("num_zone")) not in num_stations:
-                # num_stations.append(int(dico.get("num_zone")))
                 dict2 = dico.get("lst_obs")
                 for icode, code in enumerate(dict2.get("code")):
                     if code not in num_obs:

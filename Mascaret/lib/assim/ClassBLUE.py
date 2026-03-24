@@ -204,7 +204,7 @@ class classBLUE:
         self._update_xa(first)
 
         # Then storing in txt file every BLUE matrix for debug/verif
-        with open(os.path.join(self.base_folder, 'blue_results.txt'), 'a') as f:
+        with open(os.path.join(self.base_folder, 'blue_results.assim_lis'), 'a') as f:
             if first:
                 if first:
                     f.write(f'Assimilation - {self.ctrl_type}\n')
