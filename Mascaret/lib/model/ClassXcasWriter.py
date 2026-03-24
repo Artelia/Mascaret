@@ -18,20 +18,21 @@ email                :
  ***************************************************************************/
 
 """
-import os
 import copy
+import os
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
-from ..Function import del_symbol, str2bool
 from .Fct_model_file import (
     fmt,
     check_none,
     indent,
-    backup_file)
+    backup_file,
+    to_float_or_zero)
 from .xcas_writer.xcas_basin import add_basin_xcas
 from .xcas_writer.xcas_seuil_link_mob import modif_seuil, modif_link
 from .xcas_writer.xcas_wq import add_wq_xcas
+from ..Function import del_symbol, str2bool
 
 
 class ClassXcasWriter:
@@ -92,7 +93,6 @@ class ClassXcasWriter:
             "WHERE gui_type = 'parameters' ORDER BY id;"
         )
         rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
-
         for param, valeur, b1, b2 in rows:
             # print("valeur : {0},  param : {1}  ,  b1 : {2} , b2:#\
             #  {3}".format(valeur, param, b1, b2))
@@ -150,12 +150,14 @@ class ClassXcasWriter:
         liste = list(zip(profils["abscissa"], profils["branchnum"]))
         for i, num in enumerate(numero):
             temp = [a for a, n in liste if n == num]
-            if temp:
+            if not temp:
+                if self.mess:
+                    self.mess.add_mess("CheckProf", "warning", "No profile found or the profile is deactivated.")
+            elif any(x is not None for x in temp):
+                self.mess.add_mess("CheckProf", "warning", "Some profiles do not have an abscissa defined.")
+            else:
                 branches["abscdebut"].append(min(temp))
                 branches["abscfin"].append(max(temp))
-            else:
-                if self.mess:
-                    self.mess.add_mess("CheckProf", "warning", "Checked if the profiles are activated.")
 
         dict_noeuds = {}
         dict_libres = {
@@ -235,7 +237,7 @@ class ClassXcasWriter:
                 if self.mess:
                     self.mess.add_mess("CheckProf1", "critic",
                                        "Check the {} profile if it's ok ".format(profils["name"][j]))
-                return dict_lois
+                return dict_lois, {}
 
             try:
                 nb_pas = max(int(diff / float(planim_val)) + 1, nb_pas)
@@ -430,7 +432,7 @@ class ClassXcasWriter:
                 except Exception:
                     if self.mess:
                         self.mess.add_mess("CheckProfCret", "warning", f"Profil de crete introuvable pour {nom}")
-                    return
+                    return {}, {}
 
             SubElement(struct, "gradient").text = "-0"
 
@@ -592,6 +594,7 @@ class ClassXcasWriter:
         :return:
         """
         fichier_cas = copy.deepcopy(self.elem_xcas)
+
         # ****** XCAS initialisation **********
         temps_max = 3600
         np_pas_temps_init = 2
@@ -605,7 +608,8 @@ class ClassXcasWriter:
         parametres_temporels.find("pasTemps").text = "{}".format(dt_init)
         parametres_temporels.find("critereArret").text = "2"
         parametres_temporels.find("nbPasTemps").text = "{}".format(np_pas_temps_init)
-        parametres_temporels.find("tempsMax").text = "{}".format(temps_max)
+        tini0 = to_float_or_zero(parametres_temporels.find("tempsInit").text)
+        parametres_temporels.find("tempsMax").text = "{}".format(temps_max + tini0)
         parametres_temporels.find("pasTempsVar").text = "false"
         geom_reseau = param_cas.find("parametresGeometrieReseau")
         type_cond = geom_reseau.find("extrLibres").find("typeCond")

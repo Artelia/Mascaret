@@ -23,6 +23,7 @@ import re
 import string as st
 import subprocess
 import sys
+import bisect
 from shutil import copy2
 
 import dateutil
@@ -762,3 +763,98 @@ def find_latest_lis_file(root_dir):
     return latest_file
 
 
+
+
+def interpolate_at(x, y, t):
+    """
+    Interpolate y(t) if t is strictly between two points in x.
+
+    Parameters
+    ----------
+    x : list of datetime
+        Sorted list of timestamps.
+    y : list of float
+        Values associated with each timestamp in x.
+    t : datetime
+        The timestamp at which to interpolate.
+
+    Returns
+    -------
+    tuple of (datetime, float) or None
+        The interpolated point (t, y(t)), or None if interpolation
+        is not possible (t not strictly between two consecutive points).
+    """
+    k = bisect.bisect_left(x, t)
+    if not (0 < k < len(x)):
+        return None
+
+    x0, x1 = x[k - 1], x[k]
+
+    # t must be strictly between x0 and x1, and the interval must be non-zero
+    if x0 == x1 or not (x0 < t < x1):
+        return None
+
+    ratio = (t - x0).total_seconds() / (x1 - x0).total_seconds()
+    return t, y[k - 1] + ratio * (y[k] - y[k - 1])
+
+
+def _insert_sorted(xf, yf, t, yt):
+    """
+    Insert (t, yt) into the sorted lists (xf, yf), ignoring duplicates.
+
+    Parameters
+    ----------
+    xf : list of datetime
+        Sorted list of timestamps (modified in place).
+    yf : list of float
+        Values associated with xf (modified in place).
+    t : datetime
+        Timestamp to insert.
+    yt : float
+        Value to insert at position t.
+    """
+    idx = bisect.bisect_left(xf, t)
+
+    # Skip insertion if t already exists in xf
+    if idx < len(xf) and xf[idx] == t:
+        return
+
+    xf.insert(idx, t)
+    yf.insert(idx, yt)
+
+
+def filter_xy_by_time_ensur(x, y, start, end):
+    """
+    Filter (x, y) to the [start, end] window, interpolating at the boundaries
+    if no exact match exists.
+
+    Parameters
+    ----------
+    x : list of datetime
+        Sorted list of timestamps.
+    y : list of float
+        Values associated with each timestamp in x.
+    start : datetime
+        Start of the time window.
+    end : datetime
+        End of the time window.
+    Returns
+    -------
+    tuple of (list of datetime, list of float)
+        Filtered and boundary-interpolated copies of x and y.
+    """
+    i = bisect.bisect_left(x, start)   # first index >= start
+    j = bisect.bisect_right(x, end)    # first index > end
+
+    xf = list(x[i:j])
+    yf = list(y[i:j])
+
+    # Interpolate at start and end if they fall within the data range
+    # but have no exact matching point in the filtered result
+    for boundary in (start, end):
+        if x[0] <= boundary <= x[-1] and boundary not in xf:
+            point = interpolate_at(x, y, boundary)
+            if point is not None:
+                _insert_sorted(xf, yf, *point)
+
+    return xf, yf

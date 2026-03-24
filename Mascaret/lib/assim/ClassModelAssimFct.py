@@ -146,10 +146,10 @@ class ModelAssimBase:
         target = Path(target_folder)
 
         if not source.exists() or not source.is_dir():
-            self.add_info(f"Invalid source folder: {source}")
+            self.add_info(f"[ ERROR ] Invalid source folder: {source}")
             return False
         if not target.exists() or not target.is_dir():
-            self.add_info(f"Invalid target folder: {target}")
+            self.add_info(f"[ ERROR ] Invalid target folder: {target}")
             return False
 
         for file_path in source.iterdir():
@@ -160,7 +160,7 @@ class ModelAssimBase:
             try:
                 shutil.copy2(file_path, target / file_path.name)
             except Exception as exc:
-                self.add_info(f"Failed to copy '{file_path.name}': {exc}")
+                self.add_info(f"[ ERROR ] Failed to copy '{file_path.name}': {exc}")
 
         return True
 

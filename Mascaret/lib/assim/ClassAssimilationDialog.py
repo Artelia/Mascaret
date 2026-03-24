@@ -20,7 +20,7 @@ email                :
 import os
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt,qVersion
 from qgis.PyQt.QtGui import QColor, QIcon
 
 from qgis.core import QgsApplication, QgsWkbTypes, QgsGeometry
@@ -29,7 +29,7 @@ from qgis.gui import QgsRubberBand
 from .ClassAssimKsWidget import ClassAssimKsWidget
 from .ClassAssimLawWidget import ClassAssimLawWidget
 
-# QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 #
 # try:
 #     if QT_VERSION > 5:
@@ -97,19 +97,22 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
         self.rb.reset(self.rb_format)
         self.rb = None
         self.iface.mapCanvas().refresh()
-
+        if QT_VERSION > 5:
+            qt_magenta = Qt.GlobalColor.magenta
+        else:
+            qt_magenta =Qt.magenta
         if self.tab_assim.currentIndex() == 0:
             self.cur_wgt = 'ks'
             self.rb_format = QgsWkbTypes.LineGeometry
             self.rb = QgsRubberBand(self.iface.mapCanvas(), self.rb_format)
-            self.rb.setColor(Qt.magenta)
+            self.rb.setColor(qt_magenta)
             self.rb.setFillColor(QColor("transparent"))
             self.rb.setWidth(8)
         else:
             self.cur_wgt = 'law'
             self.rb_format = QgsWkbTypes.PointGeometry
             self.rb = QgsRubberBand(self.iface.mapCanvas(), self.rb_format)
-            self.rb.setColor(Qt.magenta)
+            self.rb.setColor(qt_magenta)
             self.rb.setFillColor(QColor("transparent"))
             self.rb.setWidth(16)
 

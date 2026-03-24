@@ -67,7 +67,7 @@ class ClassFloodGateLk:
         except Exception:
             self.arret_comput = True
             error_info = traceback.format_exc()
-            self.add_info(f"***** ERROR: the gates for the links\n COMPUTATION STOP \n {error_info}")
+            self.add_info(f"[ ERROR ] the gates for the links\n COMPUTATION STOP \n {error_info}")
         return
 
     def update_var_mas(self, force=False):
@@ -184,7 +184,7 @@ class ClassFloodGateLk:
                     self.fill_results_fg_mv(id_lk, param)
         except Exception:
             error_info = traceback.format_exc()
-            self.add_info(f"***** ERROR: the gates for the links\n COMPUTATION STOP \n {error_info}")
+            self.add_info(f"[ ERROR ] the gates for the links\n COMPUTATION STOP \n {error_info}")
             self.arret_comput = True
 
     def fill_res_and_update(self, id_lk, time, param, dnew, val_check):
@@ -257,7 +257,7 @@ class ClassFloodGateLk:
                 var = "PKFUS"
                 param['CHECK_VAR'] = ("State.Z" if param["VFUS"] == "Z" else "State.Q")
             else:
-                self.add_info(f"Method {param['method_mob']} doesn't exist for numlink {id_lk}")
+                self.add_info(f"[WARNING] Method {param['method_mob']} doesn't exist for numlink {id_lk}")
                 continue
 
             idx = (np.abs(coords - param[var])).argmin()
@@ -265,7 +265,7 @@ class ClassFloodGateLk:
                 param["SECCON"] = idx
 
             else:
-                self.add_info("Regulation point not found for numlink {}.".format(id_lk))
+                self.add_info("[WARNING] Regulation point not found for numlink {}.".format(id_lk))
             param["SEC_BREAK"] = self.masc.get("Model.Link.StoR.Node", param['id_mas'])
         del coords
 
@@ -436,7 +436,7 @@ class ClassMethRegul:
             param["CSection"] = param["width0"] * min((param["ZmaxSection"] - param["level"]), 0)
             param["ZLIMITGATE"] = max(param["ZMAXFG"], param["level0"])
         else:
-            self.add_info(f"Non-consistency type floodgate with the moving part {id_lk}.")
+            self.add_info(f"[WARNING] Non-consistency type floodgate with the moving part {id_lk}.")
 
         if "WRITEREG" not in param:
             param["WRITE"] = 1

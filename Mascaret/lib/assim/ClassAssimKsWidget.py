@@ -20,15 +20,16 @@ email                :
 import os
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import pyqtSignal, Qt, QSize
+from qgis.PyQt.QtCore import pyqtSignal, Qt, QSize, qVersion
 from qgis.PyQt.QtGui import QIcon, QStandardItemModel, QStandardItem
 from qgis.PyQt.QtWidgets import QMessageBox
 
 from qgis.core import QgsApplication, QgsGeometry
 
 FORM_CLASS, BASE = uic.loadUiType(
-    os.path.join(os.path.join(os.path.dirname(__file__), "..","..", "ui/ui_assimilation_ks.ui"))
+    os.path.join(os.path.join(os.path.dirname(__file__), "..", "..", "ui/ui_assimilation_ks.ui"))
 )
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 
 class ClassAssimKsWidget(BASE, FORM_CLASS):
@@ -51,6 +52,17 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         self.mdb = self.mgis.mdb
         self.iface = iface
         self.ui_loaded = False
+        if QT_VERSION > 5:
+            self.qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
+            self.qt_itm_sel = Qt.ItemFlag.ItemIsSelectable
+            self.qt_item_check = Qt.ItemFlag.ItemIsUserCheckable
+            self.qt_check_stat = Qt.CheckState
+        else:
+            # QT5
+            self.qt_itm_ena = Qt.ItemIsEnabled
+            self.qt_itm_sel = Qt.ItemIsSelectable
+            self.qt_item_check = Qt.ItemIsUserCheckable
+            self.qt_check_stat = Qt
 
         self.bt_sel_zone.setIcon(QIcon(QgsApplication.iconPath("mActionIdentify.svg")))
         self.bt_sel_zone.toggled.connect(self.mgis.main_graph)
@@ -108,7 +120,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
                   "seuil_rejet_misfit, iterations_sigma, perturbation_var, perturbation_val, " \
                   "perturbation_act) VALUES ({1})"
             self.mdb.run_query(sql.format(self.mdb.SCHEMA,
-                                          ', '.join(["%s"]*len(recs[0]))),
+                                          ', '.join(["%s"] * len(recs[0]))),
                                many=True, list_many=recs)
 
             sql = "SELECT control_type, active, control_var, seuil_rejet_misfit, " \
@@ -144,8 +156,8 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             itm = QStandardItem()
             itm.setData(row[1], 0)
             itm.setData(row[0], 32)
-            itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
-            itm.setCheckState(0)
+            itm.setFlags(self.qt_itm_ena | self.qt_item_check)
+            itm.setCheckState(self.qt_check_stat.Unchecked)
             mdl.appendRow(itm)
 
         self.lv_ks_obs.setModel(mdl)
@@ -192,12 +204,12 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
                      d_calc_ks["zoneabsstart"][idx], d_calc_ks["zoneabsend"][idx],
                      False, False, [], [],
                      False, 1, d_calc_ks["minbedcoef"][idx], d_calc_ks["minbedcoef"][idx],
-                     False, 1,  d_calc_ks["majbedcoef"][idx], d_calc_ks["majbedcoef"][idx]]
+                     False, 1, d_calc_ks["majbedcoef"][idx], d_calc_ks["majbedcoef"][idx]]
                     for idx in range(len(d_calc_ks["branch"]))]
             sql = "INSERT INTO {0}.assim_ks (id_zone, branchnum, abs_min, abs_max, active, " \
                   "auto_del, lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, " \
                   "active_maj, std_maj, val_inf_maj, val_sup_maj) VALUES ({1})"
-            self.mdb.run_query(sql.format(self.mdb.SCHEMA, ', '.join(["%s"]*len(recs[0]))),
+            self.mdb.run_query(sql.format(self.mdb.SCHEMA, ', '.join(["%s"] * len(recs[0]))),
                                many=True, list_many=recs)
 
             sql = "SELECT id_zone, branchnum, abs_min, abs_max, active, auto_del, " \
@@ -212,8 +224,8 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
                           (d_calc_ks["minbedcoef"][idx], d_calc_ks["majbedcoef"][idx])
                       for idx in range(len(d_calc_ks["branch"]))}
 
-        if not(len(d_db_ks) == len(d_verif_ks) and
-               all([k in d_db_ks.keys() for k in d_verif_ks.keys()])):
+        if not (len(d_db_ks) == len(d_verif_ks) and
+                all([k in d_db_ks.keys() for k in d_verif_ks.keys()])):
             recs = []
             idx_ks = 0
             for id_ks, (min_coef, maj_coef) in d_verif_ks.items():
@@ -330,13 +342,13 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             itm = QStandardItem()
             itm.setData(p_ks["zone_name"], 0)
             itm.setData(id_ks, 32)
-            itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable)
+            itm.setFlags(self.qt_itm_ena | self.qt_itm_sel | self.qt_item_check)
             if p_ks["auto_del"]:
                 itm.setIcon(QIcon(QgsApplication.iconPath("mIconWarning.svg")))
             if p_ks["active"]:
-                itm.setCheckState(2)
+                itm.setCheckState(self.qt_check_stat.Checked)
             else:
-                itm.setCheckState(0)
+                itm.setCheckState(self.qt_check_stat.Unchecked)
             mdl.appendRow(itm)
 
         self.lv_zone.setIconSize(QSize(14, 14))
@@ -353,7 +365,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
 
         :param id_zone: Zone identifier to refresh.
         :return: None. Updates *self.d_zone_ks* for the given zone.
-        """ 
+        """
         sql = "SELECT lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, " \
               "active_maj, std_maj, val_inf_maj, val_sup_maj FROM {0}.assim_ks " \
               "WHERE id_zone = {1}"
@@ -430,9 +442,9 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             for r in range(self.lv_ks_obs.model().rowCount()):
                 itm = self.lv_ks_obs.model().item(r, 0)
                 if itm.data(32) in l_obs:
-                    itm.setCheckState(2)
+                    itm.setCheckState(self.qt_check_stat.Checked)
                 else:
-                    itm.setCheckState(0)
+                    itm.setCheckState(self.qt_check_stat.Unchecked)
 
     def zone_status_changed(self, itm):
         """Handle zone active/inactive status change in list view.
@@ -480,7 +492,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         """
         self.gb_zone.setEnabled(True)
         self.gb_param_ks.setEnabled(False)
-        self.bt_sel_zone.setChecked(False)
+        self.bt_sel_zone.setCheckState(self.qt_check_stat.Unchecked)
         self.fra_zone_sel.setEnabled(False)
 
     def disable_input(self):
@@ -513,7 +525,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             itm = self.lv_ks_obs.model().item(r, 0)
             if itm.checkState() == 2:
                 l_obs.append(itm.data(32))
-        if not l_obs and (self.gb_a_ctrl.isChecked() or self.gb_b_ctrl.isChecked()) :
+        if not l_obs and (self.gb_a_ctrl.isChecked() or self.gb_b_ctrl.isChecked()):
             QMessageBox.warning(None, "Warning", "Note that no observations have been checked.\n"
                                                  "Please check at least one observation.")
             return

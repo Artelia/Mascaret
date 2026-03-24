@@ -20,7 +20,7 @@ email                :
 import os
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import pyqtSignal, Qt, QSize
+from qgis.PyQt.QtCore import pyqtSignal, Qt, QSize, qVersion
 from qgis.PyQt.QtGui import QIcon, QStandardItemModel, QStandardItem
 from qgis.PyQt.QtWidgets import QMessageBox, QButtonGroup
 
@@ -29,7 +29,7 @@ from qgis.core import QgsApplication, QgsGeometry
 FORM_CLASS, BASE = uic.loadUiType(
     os.path.join(os.path.join(os.path.dirname(__file__), "..", "..", "ui/ui_assimilation_law.ui"))
 )
-
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 D_PVAR = {0: 'perturbationsCote',
           1: 'perturbationsDebit',
           2: 'perturbationsDebitLineique'}
@@ -56,6 +56,18 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         self.mdb = self.mgis.mdb
         self.iface = iface
         self.ui_loaded = False
+
+        if QT_VERSION > 5:
+            self.qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
+            self.qt_itm_sel = Qt.ItemFlag.ItemIsSelectable
+            self.qt_item_check = Qt.ItemFlag.ItemIsUserCheckable
+            self.qt_check_stat = Qt.CheckState
+        else:
+            # QT5
+            self.qt_itm_ena = Qt.ItemIsEnabled
+            self.qt_itm_sel = Qt.ItemIsSelectable
+            self.qt_item_check = Qt.ItemIsUserCheckable
+            self.qt_check_stat = Qt
 
         self.bg_perturb_var = QButtonGroup()
         self.bg_perturb_var.addButton(self.rb_cote, 0)
@@ -124,7 +136,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                   "seuil_rejet_misfit, iterations_sigma, perturbation_var, perturbation_val, " \
                   "perturbation_act) VALUES ({1})"
             self.mdb.run_query(sql.format(self.mdb.SCHEMA,
-                                          ', '.join(["%s"]*len(recs[0]))),
+                                          ', '.join(["%s"] * len(recs[0]))),
                                many=True, list_many=recs)
 
             sql = "SELECT control_type, active, control_var, seuil_rejet_misfit, " \
@@ -167,8 +179,8 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             itm = QStandardItem()
             itm.setData(row[1], 0)
             itm.setData(row[0], 32)
-            itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
-            itm.setCheckState(0)
+            itm.setFlags(self.qt_itm_ena | self.qt_item_check)
+            itm.setCheckState(self.qt_check_stat.Unchecked)
             mdl.appendRow(itm)
 
         self.lv_law_obs.setModel(mdl)
@@ -212,13 +224,13 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         self.change_law_config()
         self.display_laws()
 
-    def change_law_config(self):               
+    def change_law_config(self):
         """Update law configuration in database when form values change.
 
         Persists changes to active state, control variable, and perturbation values.
         :return: None. Updates database configuration.
         """
-        if self.ui_loaded: 
+        if self.ui_loaded:
             sql = "UPDATE {0}.assim_config SET " \
                   "active = %s, " \
                   "control_var = %s, " \
@@ -271,7 +283,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                     for p_law in d_calc_law.keys()]
             sql = "INSERT INTO {0}.assim_law (id_law, source_law, id_type, active, lst_obs_h, " \
                   "lst_obs_q, val_min, val_max, active_a, std_a, active_b, std_b) VALUES ({1})"
-            self.mdb.run_query(sql.format(self.mdb.SCHEMA, ', '.join(["%s"]*len(recs[0]))),
+            self.mdb.run_query(sql.format(self.mdb.SCHEMA, ', '.join(["%s"] * len(recs[0]))),
                                many=True, list_many=recs)
 
             sql = "SELECT id_law, source_law, id_type, active, auto_del, lst_obs_h, lst_obs_q, " \
@@ -280,8 +292,8 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
 
         d_db_law = {tuple(row[0:3]): row for row in rows}
 
-        if not(len(d_db_law) == len(d_calc_law) and
-               all([k in d_db_law.keys() for k in d_calc_law.keys()])):
+        if not (len(d_db_law) == len(d_calc_law) and
+                all([k in d_db_law.keys() for k in d_calc_law.keys()])):
             recs = []
             for p_law in d_calc_law.keys():
                 if p_law in d_db_law.keys():
@@ -378,13 +390,13 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             itm = QStandardItem()
             itm.setData(p_law["law_name"], 0)
             itm.setData(id_law, 32)
-            itm.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable)
+            itm.setFlags(self.qt_itm_ena | self.qt_itm_sel | self.qt_item_check)
             if p_law["auto_del"]:
                 itm.setIcon(QIcon(QgsApplication.iconPath("mIconWarning.svg")))
             if p_law["active"]:
-                itm.setCheckState(2)
+                itm.setCheckState(self.qt_check_stat.Checked)
             else:
-                itm.setCheckState(0)
+                itm.setCheckState(self.qt_check_stat.Unchecked)
             mdl.appendRow(itm)
 
         self.lv_law.setIconSize(QSize(14, 14))
@@ -433,7 +445,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         self.display_law_info()
         self.draw_law_rb()
 
-    def display_law_info(self):        
+    def display_law_info(self):
         """Display information and parameters for the currently selected law.
 
         Updates spinboxes and checkboxes with law parameters and observation selections.
@@ -455,9 +467,9 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             for r in range(self.lv_law_obs.model().rowCount()):
                 itm = self.lv_law_obs.model().item(r, 0)
                 if itm.data(32) in l_obs:
-                    itm.setCheckState(2)
+                    itm.setCheckState(self.qt_check_stat.Checked)
                 else:
-                    itm.setCheckState(0)
+                    itm.setCheckState(self.qt_check_stat.Unchecked)
 
     def law_status_changed(self, itm):
         """Handle law active/inactive status change in list view.
@@ -533,7 +545,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             itm = self.lv_law_obs.model().item(r, 0)
             if itm.checkState() == 2:
                 l_obs.append(itm.data(32))
-        if not l_obs and (self.gb_a_ctrl.isChecked() or self.gb_b_ctrl.isChecked()) :
+        if not l_obs and (self.gb_a_ctrl.isChecked() or self.gb_b_ctrl.isChecked()):
             QMessageBox.warning(None, "Warning", "Note that no observations have been checked.\n"
                                                  "Please check at least one observation.")
             return
@@ -541,8 +553,6 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                  self.gb_a_ctrl.isChecked(), self.sb_a_std.value(),
                  self.gb_b_ctrl.isChecked(), self.sb_b_std.value(),
                  l_obs]]
-
-
 
         sql = "UPDATE {0}.assim_law SET " \
               "val_min = %s, " \

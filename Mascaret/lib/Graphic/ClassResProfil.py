@@ -140,7 +140,7 @@ class ClassResProfil:
             else:
                 pr_m.append(point)
         if not pr_m:
-            txt = "Pas de profil lit mineur"
+            txt = "[ ERROR ] No minor bed profile"
             if self.debug:
                 print(txt)
             self.warning_message += txt
@@ -178,7 +178,7 @@ class ClassResProfil:
         line = LineString(line)
         geom = line.intersection(poly)
         if geom.is_empty:
-            txt = "Pas d intersection : {}  {}".format(line, poly)
+            txt = "[ ERROR ] No intersection : {}  {}".format(line, poly)
             if self.debug:
                 print(txt)
             self.warning_message += txt

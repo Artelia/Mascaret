@@ -19,8 +19,7 @@ email                :
 """
 import os
 import shutil
-import traceback
-from ...ui.custom_control import ClassWarningBox
+
 
 def around(x):
     """
@@ -111,7 +110,14 @@ def typ_struct(meth):
         return None
 
 
-def compress_run_file(dossier_file_masc, rep, typ_compress="zip",mgis=None):
+def to_float_or_zero(value):
+    try:
+        return float(value)
+    except Exception:
+        return 0.0
+
+
+def compress_run_file(dossier_file_masc, rep, typ_compress="zip", mgis=None):
     """Compress folder "rep" path
     Args:
         :param rep : Model folder
@@ -131,10 +137,11 @@ def compress_run_file(dossier_file_masc, rep, typ_compress="zip",mgis=None):
 
     except Exception as err:
         if mgis:
-            mgis.add_info(f"**** Error : {str(err)}")
+            mgis.add_info(f"[ ERROR ]  Error : {str(err)}")
         else:
-            print(f"**** Error : {str(err)}")
+            print(f"[ ERROR ] Error : {str(err)}")
         return False
+
 
 def del_folder_mas(dossier_file_masc, mgis=None):
     """Delete the copy folder"""
@@ -142,9 +149,8 @@ def del_folder_mas(dossier_file_masc, mgis=None):
     try:
         shutil.rmtree(dossier_file_masc)
     except Exception as e:
-        txt = f"Failed to delete {dossier_file_masc}. Reason: {e}"
+        txt = f"[ ERROR ] Failed to delete {dossier_file_masc}. Reason: {e}"
         if mgis:
             mgis.add_info(txt, dbg=True)
         else:
             print(txt)
-

@@ -125,8 +125,8 @@ class ClassAPIMascaret:
         self.dico_assim = None
         self.res_assim = None
         self.dict_obs = {}
-        self.pdt_assim = 0. # assimilation time step in seconds
-        self.current_t_assim = 0. # Current assimilation time step
+        self.pdt_assim = 0.  # assimilation time step in seconds
+        self.current_t_assim = 0.  # Current assimilation time step
 
         # Mobile hydraulic structures
         self.clfg = ClassFloodGate(self)
@@ -177,7 +177,6 @@ class ClassAPIMascaret:
             #     raise ValueError('At least one observation has different time step than the other. '
             #                      'Every observation must have the same timestep for assimilation')
             # self.pdt_assim = lst_pdt_obs[0]
-
 
     def init_struct(self):
 
@@ -367,33 +366,39 @@ class ClassAPIMascaret:
 
         Builds the message string from a shared base and criterion-specific details.
         """
-        sep = "**************************************\n"
+
+        header = "-------- Time Information --------\n"
+        footer = "----------------------------------\n"
 
         # Common fields shared by all criteria
+
         base = (
-            f"Variable Time Step : {self.conum}\n"
-            f"Initial Time : {self.tini}\n"
-            f"Time Step : {self.dt}\n"
+            f"  Variable Time Step : {self.conum}\n"
+            f"  Initial Time       : {self.tini}\n"
+            f"  Time Step          : {self.dt}\n"
         )
 
+        details = f"  Stop Criteria      : {self.stpcrit}\n"
+
         if self.stpcrit == 1:
-            details = f"Stop Criteria : {self.stpcrit}\n" + base + f"Final Time : {self.tfin}\n"
+            details += base
+            details += f"  Final Time         : {self.tfin}\n"
+
         elif self.stpcrit == 2:
-            details = (
-                    f"Stop Criteria : {self.stpcrit}\n" + base + f"Max iteration : {self.tmaxiter}\n"
-            )
+            details += base
+            details += f"  Max Iteration      : {self.tmaxiter}\n"
+
         elif self.stpcrit == 3:
             ctrl_x = self.masc.get("Model.X", self.sect_co - 1)
-            details = (
-                    f"Stop Criteria : {self.stpcrit}\n"
-                    + base
-                    + f"Max level water of control : {self.zmax_co}\n"
-                      f"Abscissa of control section : {ctrl_x}\n"
+            details += base
+            details += (
+                f"  Max Water Level    : {self.zmax_co}\n"
+                f"  Control Abscissa   : {ctrl_x}\n"
             )
         else:
-            details = f"Criteria {self.stpcrit} doesn't exist.\n"
+            details = f"  Unknown criteria: {self.stpcrit}\n"
 
-        self.add_info(sep + details + sep)
+        self.add_info(header + details + footer)
 
     # ------------------------------------------------------------------
     # Computation loop
@@ -439,8 +444,9 @@ class ClassAPIMascaret:
         inside the hot loop.
         """
         t0 = self.tini
-        while self.current_t_assim < t0:
-            self.current_t_assim += self.pdt_assim
+        if self.assim:
+            while self.current_t_assim < t0:
+                self.current_t_assim += self.pdt_assim
         dtp = self.dt
         t1 = t0 + dtp
         tfin = self.tfin
@@ -456,9 +462,6 @@ class ClassAPIMascaret:
         mobil_w = self.mobil_w
         sect_co = self.sect_co
 
-        def should_stop():
-            """Return True if any stop condition has been triggered."""
-            return any([clfg_lk.arret_comput, clfg_w.arret_comput, bool(masc.error)])
 
         if self.stpcrit == 1:
             # Time-based criterion: run until tfin
@@ -472,7 +475,7 @@ class ClassAPIMascaret:
                     clfg, clfg_lk, clfg_w,
                     mobil_struct, mobil_link, mobil_w,
                 )
-                if self.should_stop():
+                if any([clfg_lk.arret_comput, clfg_w.arret_comput, bool(masc.error)]):
                     break
 
         elif self.stpcrit == 2:
@@ -483,7 +486,7 @@ class ClassAPIMascaret:
                     clfg, clfg_lk, clfg_w,
                     mobil_struct, mobil_link, mobil_w,
                 )
-                if should_stop():
+                if any([clfg_lk.arret_comput, clfg_w.arret_comput, bool(masc.error)]):
                     break
 
         elif self.stpcrit == 3:
@@ -494,7 +497,7 @@ class ClassAPIMascaret:
                     clfg, clfg_lk, clfg_w,
                     mobil_struct, mobil_link, mobil_w,
                 )
-                if self.should_stop():
+                if any([clfg_lk.arret_comput, clfg_w.arret_comput, bool(masc.error)]):
                     break
 
         # Store the actual simulation end time
@@ -625,12 +628,10 @@ class ClassAPIMascaret:
         self.basin = basin
         self.assim = assim
         self.initial(filename)
-
         # # Early exit if a structure reported a blocking error during initialisation
         if self.clfg_lk.arret_comput or self.clfg_w.arret_comput:
             self.finalize()
             return
-
         self.compute()
 
         if self.generate_lig:
@@ -662,7 +663,6 @@ if __name__ == "__main__":
         jsonf = sys.argv[1]
         with open(jsonf) as json_data:
             dico = json.load(json_data)
-
         # Determine whether to generate a .lig restart file from the xcas name
         gen_lig = dico.get("name", "").endswith("init")
 
@@ -681,6 +681,7 @@ if __name__ == "__main__":
             dico.get("has_casier", False),
             dico.get("has_assim", False),
         )
+        print(api.mess.message())
         print("Work is done.")
 
     except Exception as err:

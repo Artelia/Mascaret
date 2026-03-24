@@ -55,7 +55,7 @@ class ClassPolygone:
         else:
             poly_t = GeometryCollection()
             if self.debug:
-                print("Inconsistent Z for the span")
+                print("[ ERROR ] Inconsistent Z for the span")
         return poly_t
 
     def poly_dalot(self, param_elem, x0):

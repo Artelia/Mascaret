@@ -22,6 +22,7 @@ email                :
 import datetime
 import os
 import re
+import numpy as np
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
@@ -30,10 +31,12 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 
+from ..Function import filter_xy_by_time_ensur
 from .GraphHydro import GraphHydroLaw
 from ..HydroLawsDialog import dico_typ_law
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+
 
 class GraphBCDialog(QDialog):
     def __init__(self, mgis, param):
@@ -41,6 +44,7 @@ class GraphBCDialog(QDialog):
         self.mgis = mgis
         self.mdb = self.mgis.mdb
         self.param = param
+        self.if_ana = False
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_visu_law.ui"), self)
         self.init_gui()
 
@@ -55,16 +59,66 @@ class GraphBCDialog(QDialog):
 
         self.wdgt_law = GraphBCLaw(self.mgis, self.param)
         id_law = self.tabWidget.addTab(self.wdgt_law, "Laws")
+
+        d_res = self.select_ana_param()
+        self.wdgt_assim = GraphBCAssim(self.mgis, self.param, d_res)
+        id_assim = self.tabWidget.addTab(self.wdgt_assim, "Assimilation")
+        self.tabWidget.setTabEnabled(id_assim, False)
+
         condition = """geom_obj='{0}' and active""".format(self.param["name"])
         rows = self.mdb.select("law_config", condition)
 
         if len(rows["id"]) == 0:
             self.tabWidget.setTabEnabled(id_law, False)
+            self.tabWidget.setTabEnabled(id_assim, False)
             self.tabWidget.setTabOrder(self.wdgt_obs, self.wdgt_law)
 
         if str(self.param["method"]) in ("NULL", ""):
             self.tabWidget.setTabEnabled(id_obs, False)
+            self.tabWidget.setTabEnabled(id_assim, False)
             self.tabWidget.setTabOrder(self.wdgt_law, self.wdgt_obs)
+
+        if d_res.get('id_run'):
+            self.tabWidget.setTabEnabled(id_assim, True)
+
+    def select_ana_param(self):
+        sql = f"""
+        SELECT
+            r.id AS id_run,
+            r.run,
+            r.scenario,
+            a.id_ctrl,
+            ar.var,
+            ar.val
+        FROM
+            {self.mdb.SCHEMA}.runs r
+        JOIN
+            {self.mdb.SCHEMA}.assim_res_law a
+                ON r.id = a.id_runs
+        LEFT JOIN
+            {self.mdb.SCHEMA}.assim_res ar
+                ON ar.id_runs = r.id
+               AND ar.id_ctrl = a.id_ctrl
+        WHERE
+            RIGHT(r.scenario, LENGTH('_ana_ctrl_law')) = '_ana_ctrl_law'
+            AND a.name_law = '{self.param['name']}'
+            AND a.source_law = '{self.param['couche']}'
+        ORDER BY
+            r.id,
+            a.id_ctrl,
+            ar.var;
+        """
+        (results, nam_col) = self.mdb.run_query(
+            sql, fetch=True, namvar=True
+        )
+        if not results:
+            return {}
+        cols = [col[0] for col in nam_col]
+        d_res = {col: [] for col in cols}
+        for row in results:
+            for idc, col in enumerate(cols):
+                d_res[col].append(row[idc])
+        return d_res
 
 
 class GraphBCLaw(QWidget):
@@ -79,12 +133,13 @@ class GraphBCLaw(QWidget):
         self.laws = {}
         self.cur_event = None
         self.cur_law = None
+
         self.bg_abs = QButtonGroup()
         self.bg_abs.addButton(self.rb_abs_q, 0)
         self.bg_abs.addButton(self.rb_abs_z, 1)
         self.rb_abs_q.click()
         self.fram_absweirs.hide()
-
+        self.cb_run.hide()
         self.graph_obj = GraphHydroLaw(self.mgis, self.lay_graph_home)
 
         self.bg_abs.buttonClicked.connect(self.chg_abs_weir_zam)
@@ -224,6 +279,7 @@ class GraphBCObs(QWidget):
         self.cur_law = None
         self.display_obs = False
         self.cb_law.hide()
+        self.cb_run.hide()
         self.fram_absweirs.hide()
 
         self.dico_obs = {
@@ -363,3 +419,294 @@ class GraphBCObs(QWidget):
             self.graph_obj.init_graph_obs(data, self.dico_obs[type])
         else:
             self.graph_obj.init_curv()
+
+
+#
+class GraphBCAssim(QWidget):
+    def __init__(self, mgis, param, assim_info):
+        QWidget.__init__(self)
+        self.mgis = mgis
+        self.mdb = self.mgis.mdb
+        self.param = param
+        self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_wdget_bc.ui"), self)
+        if not assim_info:
+            return
+        self.assim_info = assim_info
+
+        self.initialising = True
+        self.events = {}
+        self.cur_event = None
+        self.cur_law = None
+        self.display_obs = False
+        self.cb_law.hide()
+        self.fram_absweirs.hide()
+        #
+        self.dico_obs = {
+            "H": {
+                "name": "Limnigraph Z(t)",
+                "var": [{"name": "time", "code": "time"}, {"name": "level", "code": "z"}],
+                "graph": {
+                    "x": {"var": 0, "tit": "time", "unit": "s"},
+                    "y": {"var": [1], "tit": "Z", "unit": "m"},
+                },
+                "xIsTime": True,
+            },
+            "Q": {
+                "name": "Hydrograph Q(t)",
+                "var": [{"name": "time", "code": "time"}, {"name": "flowrate", "code": "flowrate"}],
+                "graph": {
+                    "x": {"var": 0, "tit": "time", "unit": "s"},
+                    "y": {"var": [1], "tit": "Q", "unit": "m3/s"},
+                },
+                "xIsTime": True,
+            },
+        }
+        self.graph_obj = GraphHydroLaw(self.mgis, self.lay_graph_home)
+
+        condition = """geom_obj='{0}' and active""".format(self.param["name"])
+        rows = self.mdb.select("law_config", condition)
+        self.if_law = bool(str(self.param["method"]) in ("NULL", "") and len(rows["id"]) != 0)
+
+        self.init_run_changed()
+        self.init_event_changed()
+        self.cb_run.currentIndexChanged.connect(self.run_changed)
+        self.cb_event.currentIndexChanged.connect(self.event_changed)
+
+    #
+    def init_run_changed(self):
+        self.cur_run = None
+
+        self.cb_run.clear()
+        list_run = list(set(self.assim_info.get('run', [])))
+        if list_run:
+            for name in list_run:
+                self.cb_run.addItem(name, name)
+        else:
+            self.cb_run.addItem("No run", None)
+        self.cur_run = self.cb_run.currentData()
+
+    def find_coef(self, list_scen, name):
+        list_scen = np.array(list_scen)
+        w_scen = np.where(list_scen == name)
+        if not len(w_scen[0]) > 0:
+            return 1, 0
+        coefa = 1
+        coefb = 0
+        for ids in w_scen[0]:
+            if self.assim_info['var'][ids] == 'coefA':
+                coefa = self.assim_info['val'][ids]
+            elif self.assim_info['var'][ids] == 'coefB':
+                coefb = self.assim_info['val'][ids]
+        return coefa, coefb
+
+    def init_event_changed(self):
+        """
+        Initialize combobox on events
+        :return:
+        """
+        self.cur_event = None
+        self.events = {}
+        self.cb_event.blockSignals(True)
+        self.cb_event.clear()
+        runs = self.assim_info.get('run', [])
+
+        scenarios = [
+            self.assim_info["scenario"][i]
+            for i, run in enumerate(runs)
+            if run == self.cur_run
+        ]
+        list_scen_str = [f"'{scen.replace('_ana_ctrl_law', '')}'" for scen in list(set(scenarios))]
+        list_event = self.mdb.select("events", where=f"name IN ({','.join(list_scen_str)})", order="starttime",
+                                     verbose=False)
+
+        if len(list_event["name"]) > 0:
+            for id, name in enumerate(list_event["name"]):
+                name_ctrl = name + '_ana_ctrl_law'
+                self.cb_event.addItem(name_ctrl, name_ctrl)
+                id_law= None
+                start_time_law= None
+                if self.if_law:
+                    condition = """geom_obj='{0}'
+                                                        AND starttime <= '{1:%Y-%m-%d %H:%M}'
+                                                        AND endtime >= '{2:%Y-%m-%d %H:%M}'
+                                                        AND active""".format(
+                        self.param["name"], list_event["starttime"][id], list_event["endtime"][id]
+                    )
+                    rows = self.mdb.select("law_config", condition)
+                    id_law = rows.get('id', [])
+                    if len(id_law) > 0:
+                        id_law = id_law[0]
+                        start_time_law = rows.get('starttime', [None])[0]
+                coefa, coefb = self.find_coef(scenarios, name_ctrl)
+                self.events[name_ctrl] = {
+                    "starttime": list_event["starttime"][id],
+                    "endtime": list_event["endtime"][id],
+                    "coefA": coefa,
+                    "coefB": coefb,
+                    "id_law": id_law,
+                    "start_time_law": start_time_law
+                }
+            self.cur_event = self.cb_event.currentData()
+        else:
+            self.cb_event.addItem("No events", None)
+            self.cur_event = None
+            self.cb_event.setEnabled(False)
+        self.cb_event.blockSignals(False)
+        if self.if_law:
+            self.update_data_law()
+        else:
+            self.update_data_obs()
+
+    def run_changed(self):
+        """
+        change event combobox
+        :return:
+        """
+        self.cur_run = self.cb_run.currentData()
+        self.init_event_changed()
+
+    def event_changed(self):
+        """
+        change event combobox
+        :return:
+        """
+        self.cur_event = self.cb_event.currentData()
+        if self.if_law:
+            self.update_data_law()
+        else:
+            self.update_data_obs()
+
+    #
+    def update_data_obs(self):
+        """
+        update data
+        :return:
+        """
+
+        # pattern = re.compile('([A-Z][0-9]{7})\\[t([+-][0-9]+)?\\]')
+        # pattern = re.compile(r"(\w+)\\[t([+-][0-9]+)?\\]")
+        pattern = re.compile(r"(\w+)\[t([+-]?\d+)?\]")
+        obs = {}
+        liste_date = []
+
+        if self.param["type"] == 1:
+            type = "Q"
+        elif self.param["type"] == 2:
+            type = "H"
+        else:
+            type = None
+
+        self.graph_obj.init_curv_assim(typ_law=type, param_law=self.dico_obs[type], date_ref=True)
+
+        if type and self.param["method"]:
+            liste_stations = pattern.findall(self.param["method"])
+
+            for cd_hydro, delta in liste_stations:
+                if not delta:
+                    delta = "0"
+
+                dt = datetime.timedelta(hours=int(delta))
+                if self.cur_event:
+                    sql_query = (
+                        "SELECT date, valeur FROM (SELECT code,type, UNNEST(date) as date, "
+                        "UNNEST(valeur) as valeur FROM {4}.observations "
+                        "WHERE code = '{0}' AND type='{3}') t "
+                        " WHERE date>='{1}' AND date<='{2}' AND valeur > -999.9 "
+                        "ORDER BY date".format(
+                            cd_hydro, self.events[self.cur_event]["starttime"] + dt,
+                                      self.events[self.cur_event]["endtime"] + dt,
+                            type, self.mdb.SCHEMA
+                        )
+                    )
+
+                else:
+                    sql_query = """SELECT  id, UNNEST(date) as date,
+                                UNNEST(valeur) as valeur  FROM  {2}.observations
+                                WHERE code ='{0}'AND type = '{1}'
+                                ORDER BY code, date;""".format(
+                        cd_hydro, type, self.mdb.SCHEMA
+                    )
+                obs[cd_hydro] = self.mdb.query_todico(sql_query, verbose=False)
+
+                if not liste_date:
+                    liste_date = [x - dt for x in obs[cd_hydro]["date"]]
+            resultat = None
+            data = {"date": [], "val": [], "val_ctrl": []}
+            for t in liste_date:
+                calc = self.param["method"]
+                for cd_hydro, delta in liste_stations:
+                    if not delta:
+                        delta = "0"
+                    t2 = t + datetime.timedelta(hours=int(delta))
+                    if t2 in obs[cd_hydro]["date"]:
+                        i = obs[cd_hydro]["date"].index(t2)
+                        val = obs[cd_hydro]["valeur"][i]
+                    else:
+                        val = None
+                    calc = pattern.sub(str(val), calc, 1)
+
+                try:
+                    resultat = eval(calc)
+                    resultat_ctrl = self.events[self.cur_event]["coefA"] * resultat + self.events[self.cur_event][
+                        "coefB"]
+                except:
+                    resultat = None
+                    resultat_ctrl = None
+
+                data["date"].append(t)
+                data["val_ctrl"].append(resultat_ctrl)
+                data["val"].append(resultat)
+                # data["val_ctrl_law"].append(resultat_ctrl)
+
+            self.graph_obj.init_graph_obs_assim(data, self.dico_obs[type])
+        else:
+            self.graph_obj.init_curv_assim()
+
+    def update_data_law(self):
+        """
+        update data
+        :return:
+        """
+        obs = {}
+        liste_date = []
+
+        if self.param["type"] == 1:
+            type = "Q"
+        elif self.param["type"] == 2:
+            type = "H"
+        else:
+            type = None
+
+        self.graph_obj.init_curv_assim(typ_law=type, param_law=self.dico_obs[type], date_ref=True)
+        if not type:
+            self.graph_obj.init_curv_assim()
+            return
+
+        # id_law
+        id_law = self.events[self.cur_event]['id_law']
+        if not id_law:
+            return
+        idx_var = self.dico_obs[type]['graph']["x"]["var"]
+        sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(
+            self.mdb.SCHEMA, id_law, idx_var
+        )
+        rows = self.mdb.run_query(sql, fetch=True)
+        lst_x = [self.events[self.cur_event]["start_time_law"] +
+                 datetime.timedelta(seconds=r[0]) for r in rows]
+        idy_var = self.dico_obs[type]['graph']["y"]["var"][0]
+        sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(
+            self.mdb.SCHEMA, id_law, idy_var
+        )
+        rows = self.mdb.run_query(sql, fetch=True)
+        lst_y = [r[0] for r in rows]
+
+        start = self.events[self.cur_event]["starttime"]
+        end = self.events[self.cur_event]["endtime"]
+        x_filt, y_filt = filter_xy_by_time_ensur(lst_x, lst_y, start, end)
+        data = {"date": x_filt, "val": y_filt,
+                "val_ctrl": self.events[self.cur_event]["coefA"] * np.array(y_filt) \
+                            + self.events[self.cur_event]["coefB"]}
+        self.graph_obj.init_graph_obs_assim(data, self.dico_obs[type])
+
+
+import bisect

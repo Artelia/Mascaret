@@ -610,4 +610,4 @@ class ClassParamExportDialog(QDialog):
             )
             del_folder_mas(rep_run, mgis=self)
         except Exception as err:
-            self.mgis.add_info(f'*** Error: {str(err)} \n traceback : {traceback.format_exc()}')
+            self.mgis.add_info(f'[ ERROR ] Error: {str(err)} \n traceback : {traceback.format_exc()}')
