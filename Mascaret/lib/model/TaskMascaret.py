@@ -443,6 +443,8 @@ class TaskMascaret(QgsTask):
     def get_folder_display_basic(self,full_path, name_scen):
         # On remplace les backslashes pour être sûr d'avoir un format uniforme
         norm_path = full_path.replace("\\", "/")
+        for replc in ['_init','_ana_ctrl_ks','_ana_ctrl_law']:
+            name_scen = name_scen.replace(replc,'')
         scen_index = norm_path.find(name_scen)
 
         if scen_index == -1:
