@@ -27,14 +27,14 @@
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="1" column="0">
-       <widget class="QLabel" name="label_3">
+       <widget class="QLabel" name="label_ks_seuil">
         <property name="text">
          <string>SeuilRejetMisfitKs</string>
         </property>
        </widget>
       </item>
       <item row="0" column="2">
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="label_ks_fld">
         <property name="text">
          <string>Field</string>
         </property>
@@ -55,7 +55,7 @@
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="label_4">
+       <widget class="QLabel" name="label_ks_pert_min">
         <property name="text">
          <string>Perturbation minor bed</string>
         </property>
@@ -79,7 +79,7 @@
        </widget>
       </item>
       <item row="2" column="3">
-       <widget class="QDoubleSpinBox" name="sb_ks_pert_max">
+       <widget class="QDoubleSpinBox" name="sb_ks_pert_maj">
         <property name="minimum">
          <double>-999.000000000000000</double>
         </property>
@@ -92,14 +92,14 @@
        <widget class="QSpinBox" name="sb_ks_sigma"/>
       </item>
       <item row="1" column="2">
-       <widget class="QLabel" name="label_5">
+       <widget class="QLabel" name="label_ks_sigma">
         <property name="text">
          <string>Sigma iteration</string>
         </property>
        </widget>
       </item>
       <item row="2" column="2">
-       <widget class="QLabel" name="sk_ks_pert_maj">
+       <widget class="QLabel" name="label_ks_pert_maj">
         <property name="text">
          <string>Perturbation major bed</string>
         </property>
@@ -116,7 +116,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label_2">
+    <widget class="QLabel" name="label_ctrl_zone">
      <property name="font">
       <font>
        <weight>75</weight>
@@ -332,7 +332,7 @@
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
-             <widget class="QLabel" name="label_6">
+             <widget class="QLabel" name="label_ks_obs">
               <property name="text">
                <string>Observations</string>
               </property>
@@ -351,14 +351,14 @@
               </property>
               <layout class="QGridLayout" name="gridLayout_8">
                <item row="0" column="0">
-                <widget class="QLabel" name="label_12">
+                <widget class="QLabel" name="label_minor_std">
                  <property name="text">
                   <string>Std deviation: </string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="QLabel" name="label_13">
+                <widget class="QLabel" name="label_minor_inf">
                  <property name="text">
                   <string>Minimum value</string>
                  </property>
@@ -371,7 +371,7 @@
                 <widget class="QDoubleSpinBox" name="sb_minor_inf"/>
                </item>
                <item row="1" column="1">
-                <widget class="QLabel" name="label_14">
+                <widget class="QLabel" name="label_minor_sup">
                  <property name="text">
                   <string>Maximum value</string>
                  </property>
@@ -397,14 +397,14 @@
               </property>
               <layout class="QGridLayout" name="gridLayout_9">
                <item row="0" column="0">
-                <widget class="QLabel" name="label_15">
+                <widget class="QLabel" name="label_major_std">
                  <property name="text">
                   <string>Std deviation: </string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="QLabel" name="label_16">
+                <widget class="QLabel" name="label_major_inf">
                  <property name="text">
                   <string>Minimum value</string>
                  </property>
@@ -417,7 +417,7 @@
                 <widget class="QDoubleSpinBox" name="sb_major_inf"/>
                </item>
                <item row="1" column="1">
-                <widget class="QLabel" name="label_17">
+                <widget class="QLabel" name="label_major_sup">
                  <property name="text">
                   <string>Maximum value</string>
                  </property>

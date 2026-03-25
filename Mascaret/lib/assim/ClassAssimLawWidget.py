@@ -25,6 +25,7 @@ from qgis.PyQt.QtGui import QIcon, QStandardItemModel, QStandardItem
 from qgis.PyQt.QtWidgets import QMessageBox, QButtonGroup
 
 from qgis.core import QgsApplication, QgsGeometry
+from .tooltips.tooltips import apply_tooltips_from_json
 
 FORM_CLASS, BASE = uic.loadUiType(
     os.path.join(os.path.join(os.path.dirname(__file__), "..", "..", "ui/ui_assimilation_law.ui"))
@@ -53,6 +54,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         super(ClassAssimLawWidget, self).__init__()
         self.setupUi(self)
         self.mgis = mgis
+        apply_tooltips_from_json(self, 'assim_law_widget.json')
         self.mdb = self.mgis.mdb
         self.iface = iface
         self.ui_loaded = False

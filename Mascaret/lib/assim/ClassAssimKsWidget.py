@@ -3,7 +3,7 @@
 /***************************************************************************
 Name                 : Mascaret
 Description          : Pre and Postprocessing for Mascaret for QGIS
-Date                 : December,2017
+Date                 : mars,2026
 copyright            : (C) 2017 by Artelia
 email                :
 ***************************************************************************/
@@ -25,6 +25,8 @@ from qgis.PyQt.QtGui import QIcon, QStandardItemModel, QStandardItem
 from qgis.PyQt.QtWidgets import QMessageBox
 
 from qgis.core import QgsApplication, QgsGeometry
+
+from .tooltips.tooltips import apply_tooltips_from_json
 
 FORM_CLASS, BASE = uic.loadUiType(
     os.path.join(os.path.join(os.path.dirname(__file__), "..", "..", "ui/ui_assimilation_ks.ui"))
@@ -49,6 +51,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         super(ClassAssimKsWidget, self).__init__()
         self.setupUi(self)
         self.mgis = mgis
+        apply_tooltips_from_json(self, 'assim_ks_widget.json')
         self.mdb = self.mgis.mdb
         self.iface = iface
         self.ui_loaded = False
@@ -86,7 +89,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         self.sb_ks_seuil.valueChanged.connect(self.change_ks_config)
         self.sb_ks_sigma.valueChanged.connect(self.change_ks_config)
         self.sb_ks_pert_min.valueChanged.connect(self.change_ks_config)
-        self.sb_ks_pert_max.valueChanged.connect(self.change_ks_config)
+        self.sb_ks_pert_maj.valueChanged.connect(self.change_ks_config)
 
         self.bt_reload_ks.clicked.connect(self.reload_zone_ks)
         self.bt_disp_zone.clicked.connect(self.display_map_rb)
@@ -134,7 +137,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         self.sb_ks_seuil.setValue(row[3])
         self.sb_ks_sigma.setValue(row[4])
         self.sb_ks_pert_min.setValue(row[5][0][0])
-        self.sb_ks_pert_max.setValue(row[5][1][0])
+        self.sb_ks_pert_maj.setValue(row[5][1][0])
 
     def load_obs(self):
         """Load available observations for the current observation variable.
@@ -181,7 +184,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
                   "WHERE control_type = 'ctrlKS'".format(self.mdb.SCHEMA)
             recs = [[self.cc_ks_act.isChecked(), self.cb_ks_fld.currentText(),
                      self.sb_ks_seuil.value(), self.sb_ks_sigma.value(),
-                     [[self.sb_ks_pert_min.value()], [self.sb_ks_pert_max.value()]]]]
+                     [[self.sb_ks_pert_min.value()], [self.sb_ks_pert_maj.value()]]]]
             self.mdb.run_query(sql.format(self.mdb.SCHEMA), many=True, list_many=recs)
 
     def verif_ks_zones(self):

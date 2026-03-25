@@ -1,0 +1,34 @@
+{
+  "gb_param_law": "General parameters used for BLUE assimilation applied to hydraulic Laws.",
+  "cc_law_act": "Enable or disable assimilation for the selected Law.",
+  "label_law_fld": "Select the observation variable used for assimilation: H (water level) or Q (discharge).",
+
+  "rb_cote": "Use water level (H) observations for the assimilation process.",
+  "rb_debit": "Use discharge (Q) observations for the assimilation process.",
+  "rb_debit_lin": "Use linearised discharge observations for the assimilation process.",
+
+  "label_law_seuil": "Misfit rejection threshold: observations with a misfit above this value are excluded from BLUE assimilation.",
+  "label_law_sigma": "Sigma iteration factor: controls the amplitude of corrections applied at each iteration.",
+
+  "label_pert_a": "Initial perturbation applied to coefficient A.",
+  "label_pert_b": "Initial perturbation applied to coefficient B.",
+
+  "lbl_typ_law": "Select the Law to be configured.",
+  "bt_reload_laws": "Reload the hydraulic Laws and associated control law.",
+  "bt_edit_law": "Toggle editing mode for Law parameters and observation selection.",
+
+  "label_law_obs": "Observation settings: standard deviations and physical bounds (minimum/maximum).",
+  "label_law_min": "Minimum allowed value for coefficients A and B.",
+  "label_law_max": "Maximum allowed value for coefficients A and B",
+
+  "gb_a_ctrl": "Assimilation control parameters for coefficient A.",
+  "label_a_std": "Standard deviation applied to corrections of coefficient A.",
+
+  "gb_b_ctrl": "Assimilation control parameters for coefficient B.",
+  "label_b_std": "Standard deviation applied to corrections of coefficient B.",
+
+  "bt_cancel_law": "Cancel changes and close the window.",
+  "bt_zoom_law": "Zoom to the spatial extent of the Law on the map.",
+  "bt_disp_law": "Display the geometric object associated with the Law on the map.",
+  "bt_valid_law": "Validate the changes and close the window."
+}
