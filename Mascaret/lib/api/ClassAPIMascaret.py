@@ -536,10 +536,11 @@ class ClassAPIMascaret:
         # Advance the hydraulic solver by one step
         masc.compute(t0, t1, dtp)
 
+
         if self.assim and t0 <= self.current_t_assim <= t1:
             txt = f'{self.num_zones_assim} - {self.masc.nb_nodes}'
             self.add_info(txt)
-            self.res_assim.extract_zq(self.masc, t0)
+            self.res_assim.extract_zq(self.masc, t1)
             # Incrément du temps courant assim (prochain temps à extraire)
             self.current_t_assim += self.pdt_assim
 
