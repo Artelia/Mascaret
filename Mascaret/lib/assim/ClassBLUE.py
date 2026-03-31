@@ -148,8 +148,11 @@ class classBLUE:
             trace_HBHT.append(np.trace(HBHT))
         print('Trace HBHT', trace_HBHT)
         for itype in range(np.max(self.matrixes.type_perturb)):
-            self.sb[itype] = np.divide(np.dot(self.matrixes.misfit, self.matrixes.H @ self.analyse),
-                                       trace_HBHT[itype])
+            if trace_HBHT[itype] == 0.:
+                self.sb[itype] = 0.
+            else:
+                self.sb[itype] = np.divide(np.dot(self.matrixes.misfit, self.matrixes.H @ self.analyse),
+                                           trace_HBHT[itype])
         self.residual = np.array(self.matrixes.misfit) - self.matrixes.H @ self.analyse
         # Ajout de la nouvelle valeur de so
         self.so = np.divide(np.dot(self.matrixes.misfit, self.residual), np.trace(self.current_R))
