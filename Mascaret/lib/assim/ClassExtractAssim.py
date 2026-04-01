@@ -66,11 +66,10 @@ class ClassExtractAssim:
     def extract_zq(self, masc, t0):
         # Periodic assimilation: store Z and Q at observation nodes
             # Saving results for assimilation
-            # TODO if assim ?
             try:
                 obs_keys = self.dict_obs  # node indices for observation points
-                val_z = [masc.get("State.Z", i) for i in obs_keys]
-                val_q = [masc.get("State.Q", i) for i in obs_keys]
+                val_z = np.round([masc.get("State.Z", i) for i in obs_keys], 3)
+                val_q = np.round([masc.get("State.Q", i) for i in obs_keys], 3)
                 self.store_result(val_z, val_q, t0)
             except Exception as exc:
                 raise ValueError(exc) from exc
@@ -102,7 +101,7 @@ class ClassExtractAssim:
         for key in keys:
             for ix, x in enumerate(self.dict_stations[str(key)]['X']):
                 # print(masc_xcoords)
-                index_obs = int(np.argmin(np.abs(np.subtract(masc_xcoords, x)))) + 1
+                index_obs = int(np.argmin(np.abs(np.subtract(masc_xcoords, x))))
                 code_obs = self.dict_stations[str(key)]['code'][ix]
                 obs_folder = os.path.join(self.assim_path, 'Observations')
                 file_obs = os.path.join(obs_folder, str(code_obs) + '.loi')
@@ -113,7 +112,7 @@ class ClassExtractAssim:
                     pass
                 if index_obs not in self.dict_obs:
                     self.dict_obs[index_obs] = {'id_zone': [key],
-                                                'x_obs': x,
+                                                'x_obs': masc_xcoords[index_obs],
                                                 'code': code_obs,
                                                 'dt_obs': self.dt_obs}
                 else:
@@ -161,7 +160,6 @@ class ClassExtractAssim:
             self.dictRes['Q'][num_zone].append(valQ[num_zone])
             self.dictRes['time'].append(time)
         else:
-            # self.dictRes['time'].append(time)
             first = True
             for idx, i in enumerate(self.dict_obs):
                 key_station = self.dict_obs[i]['code']

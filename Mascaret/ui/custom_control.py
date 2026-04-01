@@ -133,14 +133,6 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
     def textFromValue(self, value):
         return format_float(value)
 
-    def stepBy(self, steps):
-        text = self.cleanText()
-        groups = _float_re.search(text).groups()
-        decimal = float(groups[1])
-        decimal += steps
-        new_string = "{:g}".format(decimal) + (groups[3] if groups[3] else "")
-        self.lineEdit().setText(new_string)
-
 
 def format_float(value):
     """Modified form of the 'g' format specifier."""

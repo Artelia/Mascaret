@@ -203,7 +203,7 @@ class ClassTracerLawsDialog(QDialog):
             model = self.create_tab_model()
             filein = open(listf[0], "r")
             r = 0
-            for num_ligne, ligne in enumerate(filein):
+            for ligne in filein:
                 if ligne[0] != "#":
                     liste = ligne.split(";")
                     if len(liste) == nb_col:

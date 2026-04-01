@@ -1183,16 +1183,6 @@ Version : {}
             dlg.exec_()  # PyQt5
 
 
-    def open_with_default_editor(self, file_path):
-        import subprocess
-        import sys
-        if sys.platform.startswith('darwin'):  # macOS
-            subprocess.call(('open', file_path))
-        elif os.name == 'nt':  # Windows
-            os.startfile(file_path)
-        elif os.name == 'posix':  # Linux, Unix
-            subprocess.call(('xdg-open', file_path))
-
     def fct_test(self):
         """Test function"""
         # get_laws

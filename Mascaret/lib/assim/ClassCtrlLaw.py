@@ -49,11 +49,13 @@ class CtrlLaw(ModelAssimBase):
         coef_a = coefs.get("coefA", 1)
         coef_b = coefs.get("coefB", 0)
         folder = Path(folder)
+        folder_name = folder.name
         file_law = folder / name_law
         file_tmp = folder / f"{file_law}.tmp"
 
         shutil.copy2(file_law, file_tmp)
-
+        cond_min = True
+        cond_max = True
         with open(file_tmp, "r") as filein, open(file_law, "w") as fileout:
             cpt = 1
             for line in filein:
@@ -67,6 +69,18 @@ class CtrlLaw(ModelAssimBase):
                 parts = line.split()
                 if len(parts) >= 2:
                     parts[1] = round(coef_a * float(parts[1]) + coef_b, 6)
+                    if parts[1] > coefs["max"] and cond_max:
+                        self.add_info(f"Warning : One value of law {folder_name}/{name_law} is higher than "
+                                      f"maximum value ({coefs['max']}) for A={coef_a} and B={
+                                      coef_b}."
+                                      f"Please change max value or adapt A or B coefficient.")
+                        cond_max = False
+                    if parts[1] < coefs["min"] and cond_min:
+                        self.add_info(f"Warning : One value of law {folder_name}/{name_law} is lower than "
+                                      f"minimum value ({coefs['max']}) for A={coef_a} and B={
+                                      coef_b}."
+                                      f"Please change min value or adapt A or B coefficient.")
+                        cond_min = False
                     fileout.write(" ".join(str(p) for p in parts) + "\n")
 
         os.remove(file_tmp)
@@ -120,7 +134,7 @@ class CtrlLaw(ModelAssimBase):
             # -----------------------------
             if loi_type == "coefA":
                 pertubf = perturb_list[0] if abs(perturb_list[0]) < 1e6 else 1
-                val_coef = 1 + pertubf
+                val_coef = pertubf
             elif loi_type == "coefB":
                 pertubf = perturb_list[1] if abs(perturb_list[1]) < 1e6 else 1
                 val_coef = 0 + pertubf
@@ -183,6 +197,8 @@ class CtrlLaw(ModelAssimBase):
                 "id_law": case["id_law"],
                 "source_law": case["source_law"],
                 "coef_pertub": val,
+                "val_min": case["val_min"],
+                "val_max": case["val_max"]
             }
 
             if d_run["has_run_init"]:
@@ -263,6 +279,8 @@ class CtrlLaw(ModelAssimBase):
         coefs = {
             "coefA": assim_info["coef_pertub"] if assim_info["type_case"] == "coefA" else 1,
             "coefB": assim_info["coef_pertub"] if assim_info["type_case"] == "coefB" else 0,
+            "min": assim_info["val_min"],
+            "max": assim_info["val_max"]
         }
         self.modif_ctrl_law(name_law, folder, coefs)
 
@@ -289,6 +307,8 @@ class CtrlLaw(ModelAssimBase):
                 lst_modif[name_law].update(coefs)
             else:
                 lst_modif[name_law] = coefs
+                coefs["min"] = loi["val_min"]
+                coefs["max"] = loi["val_max"]
         if lst_modif:
             for name_law, coefs in lst_modif.items():
                 self.modif_ctrl_law(name_law, folder, coefs)

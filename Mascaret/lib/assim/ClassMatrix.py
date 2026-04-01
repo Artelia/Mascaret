@@ -288,18 +288,19 @@ class ClassMatrix:
 
         instances = [inst for inst in instances if
                      inst['name'].startswith(self.ctrl_type) and not inst['name'].endswith('_init')]
+        print('Instances:', instances)
         try:
-            for inst in instances:
-                # TODO Ks and law
-                name_folder = os.path.basename(inst["RUN_REP"])
-                type_perturb = inst["assim_info"]["type_case"]
-                if self.ctrl_type == 'ctrlLaw':
-                    val_perturb = inst["assim_info"]["coef_pertub"]
-                    zone_perturb = inst["assim_info"]["name_law"]
-                else:  # ctrlKs
-                    val_perturb = inst["assim_info"]["ks_pertub"]
-                    zone_perturb = inst["assim_info"]["num_zone"]
-                return name_folder, type_perturb, val_perturb, zone_perturb
+            inst = instances[iperturb]
+            # for inst in instances:
+            name_folder = os.path.basename(inst["RUN_REP"])
+            type_perturb = inst["assim_info"]["type_case"]
+            if self.ctrl_type == 'ctrlLaw':
+                val_perturb = inst["assim_info"]["coef_pertub"]
+                zone_perturb = inst["assim_info"]["name_law"]
+            else:  # ctrlKs
+                val_perturb = inst["assim_info"]["ks_pertub"]
+                zone_perturb = inst["assim_info"]["num_zone"]
+            return name_folder, type_perturb, val_perturb, zone_perturb
         except Exception as err:
             raise Exception(f'Perturbation number {iperturb} not found in the Json data : {str(err)},\n'
                             f' traceback: {traceback.format_exc()}')
@@ -334,6 +335,7 @@ class ClassMatrix:
             KSmajref = {str(zone["num_zone"]): zone["zone_info"]["ref_ks_maj"]
                         for zone in data["lst_zone"] if zone["num_zone"] in self.zones}
             self.param_ref = {'Ksmin': KSminref, 'Ksmaj': KSmajref}
+            print('PARAMREF', self.param_ref)
 
         if self.ctrlLaw:
             data = self.dict_assim["ctrlLaw"]
@@ -349,7 +351,7 @@ class ClassMatrix:
             print('Run perturbé', i)
             # Nom de dossier = './perturb
             # Fonctionne pour Law et KS normalement
-            name_folder_pertub, type_perturb, val_perturb, zone_perturb = (
+            name_folder_pertub, type_perturb, param_perturb, zone_perturb = (
                 self.get_perturb_dict_js(base_folder_perturb, i))
 
             print('Perturbation de type', type_perturb)
@@ -367,13 +369,9 @@ class ClassMatrix:
                         val_perturb += dict_perturb[self.type_field][str(zone)][station]
                         all_stations.append(station)
             val_perturb = np.array(val_perturb, dtype=float)
-            # Deltas_param contient l'ensemble des différences entre les paramètres de REF et de
-            # PERTURB Avec potentiellement des valeurs nulles pour les paramètres non modifiés Ici
-            # pour KS, on a les différences sur KS_MIn et MAJ pour chaque zone.
-            deltas_param = val_perturb - self.param_ref[type_perturb][str(zone_perturb)]
+            delta_p = param_perturb - self.param_ref[type_perturb][str(zone_perturb)]
             self.xb.append(self.param_ref[type_perturb][str(zone_perturb)])
-            # On récupère la valeur du DeltaP effectif > 0 (les autres sont à 0)
-            delta_p = deltas_param[np.argmax(np.abs(deltas_param))]
+            print('Before calc H', val_perturb, val_ref, delta_p)
             H.append(np.divide(np.subtract(val_perturb, val_ref), delta_p))
         H = np.array(H)
         H = H.T
