@@ -110,7 +110,7 @@ class ClassUpdatePk(QDialog):
                 sql += "SELECT {0}.update_abscisse_profil('{0}','{0}.{1}','{0}.{2}')" ";\n".format(
                     self.mdb.SCHEMA, table, "branchs"
                 )
-            elif table is "struct_config":
+            elif table == "struct_config":
                 feature = self.mdb.select(table, list_var=["id", "id_prof_ori"])
                 if feature:
                     if len(feature['id']):

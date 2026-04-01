@@ -20,7 +20,7 @@ email                :
 import os
 
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *

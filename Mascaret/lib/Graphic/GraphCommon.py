@@ -493,7 +493,7 @@ class GraphCommonNew:
                                     else:
                                         mini_z = min(mini_z, min(lz) - 1)
                                         maxi_z = max(maxi_z, max(lz) + 1)
-                            except AttributeError as e:
+                            except AttributeError:
                                 pass
 
                     if no_data:

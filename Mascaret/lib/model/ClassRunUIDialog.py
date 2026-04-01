@@ -22,7 +22,7 @@ email                :
 import os
 
 from qgis.PyQt.QtWidgets import QLineEdit, QLabel
-from qgis.PyQt.QtCore import qVersion, pyqtSignal
+from qgis.PyQt.QtCore import qVersion
 from qgis.PyQt.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -30,7 +30,6 @@ from qgis.PyQt.QtWidgets import (
     QPushButton,
     QWidget,
     QHBoxLayout,
-    QLabel,
     QTableWidget,
     QHeaderView
 )
@@ -410,7 +409,7 @@ class ClassRunUIDialog(QDialog):
                                  'del_inter_assim': self.del_cpt_assim.isChecked()})
         name_run = self._fmt_name(self.le_run.text())
         if name_run == '':
-            self.box.info(f"Run name is required.", title="Warning")
+            self.box.info("Run name is required.", title="Warning")
             return
 
         data = []

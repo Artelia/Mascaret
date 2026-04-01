@@ -18,16 +18,12 @@ email                :
  ***************************************************************************/
 
 """
-import os
-import shutil
 from time import sleep
 import traceback
 
-from click import launch
-from qgis.PyQt.QtCore import qVersion, Qt
+from qgis.PyQt.QtCore import qVersion
 from qgis.PyQt.QtWidgets import QInputDialog, QDialog
 from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsTask
-from scripts.regsetup import description
 
 from .ClassInitializeModel import ClassInitializeModel
 from .ClassDictRun import ClassDictRun

@@ -50,6 +50,6 @@ class ClassUpdate640:
             try:
                 self.mdb.execute(sql.format(self.mdb.SCHEMA))
             except Exception :
-                self.mgis.add_info(f"Alter  the output table - ERROR")
+                self.mgis.add_info("Alter  the output table - ERROR")
                 valide = False
         return valide

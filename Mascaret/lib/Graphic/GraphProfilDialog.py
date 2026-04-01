@@ -66,14 +66,14 @@ except:
     MPLT_NEW = False
 
 try:
-    from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+    pass
 except:
-    from matplotlib.backends.backend_qt5agg import FigureCanvasQT as FigureCanvas
+    pass
 # ***************************
 try:
-    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QTAgg as NavigationToolbar
+    pass
 except:
-    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+    pass
 
 # **************************************************
 try:

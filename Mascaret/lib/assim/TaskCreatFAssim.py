@@ -31,7 +31,6 @@ import pprint
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal, QObject
 
-from .ClassCreatModelAssim import CreatModelAssim
 
 MESSAGE_CATEGORY = 'TaskCreatFAssim'
 

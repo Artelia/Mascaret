@@ -129,7 +129,7 @@ def calcul_abscisses(liste_couches, riviere, iface, dossier):
 
     longueur_zone = {}
     for f in couche_riv.getFeatures():
-        if not f["branche"] in longueur_zone.keys():
+        if f["branche"] not in longueur_zone.keys():
             longueur_zone[f["branche"]] = []
 
         longueur_zone[f["branche"]].append((f["numZone"], f.geometry().length()))

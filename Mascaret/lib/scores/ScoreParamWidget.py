@@ -1342,12 +1342,12 @@ class ScoreParamWidget(QWidget):
         :param pk : abscissa
         :return:
         """
-        if not (id_run in self.cmpt_var.keys()):
+        if id_run not in self.cmpt_var.keys():
             self.cmpt_var[id_run] = {}
-        if not (pk in self.cmpt_var[id_run].keys()):
+        if pk not in self.cmpt_var[id_run].keys():
             self.cmpt_var[id_run][pk] = {}
         for code in self.data[id_run][pk].keys():
-            if not (code in self.cmpt_var[id_run][pk].keys()):
+            if code not in self.cmpt_var[id_run][pk].keys():
                 self.cmpt_var[id_run][pk][code] = {}
 
             if (

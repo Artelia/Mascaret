@@ -31,8 +31,6 @@ import shutil
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal, QObject
 
-from .ClassBLUE import classBLUE
-from .ClassMatrix import ClassMatrix
 
 MESSAGE_CATEGORY = 'TaskBlue'
 
@@ -239,7 +237,7 @@ class TaskBLUE(QgsTask):
                             )
                         else:
                             self.error_txt += f"\nProblem with blue calculation: {result['error']}"
-                            self.on_message(f"Problem with blue calculation:")
+                            self.on_message("Problem with blue calculation:")
                         # Process results in order
                         self._process_completed_results()
 

@@ -20,7 +20,6 @@ email                :
 import os
 
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *

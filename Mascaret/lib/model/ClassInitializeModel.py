@@ -773,7 +773,7 @@ class ClassInitializeModel:
                 elif os.path.isdir(item_path):
                     shutil.rmtree(item_path)
 
-        except PermissionError as pe:
+        except PermissionError:
             return f"[ ERROR ] Permission denied while deleting: {item_path}"
         except Exception as e:
             return f"[ ERROR ] Error while deleting: {item_path}\n{str(e)}"

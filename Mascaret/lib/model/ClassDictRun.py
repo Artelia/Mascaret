@@ -25,10 +25,6 @@ scenario/result deletion for Mascaret runs.
 
 import os
 from pathlib import Path
-from qgis.PyQt.QtWidgets import (
-    QInputDialog,
-    QWidget
-)
 
 from ..assim.ClassAssimDB import ClassAssimDB
 from ..Structure.ClassLinkFGParam import ClassLinkFGParam

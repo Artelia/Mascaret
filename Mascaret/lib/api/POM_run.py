@@ -1,6 +1,4 @@
-from ..assim import CreatModelAssim
 import os
-import numpy as np
 import json
 class Run_Assim :
     DATA_ASSIM_FILE = "data_assim.json"

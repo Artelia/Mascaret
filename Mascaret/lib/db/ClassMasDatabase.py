@@ -95,7 +95,7 @@ class ClassMasDatabase(object):
             )
             self.con = psycopg2.connect(conn_params)
             msg = "Connection established."
-        except psycopg2.OperationalError as e:
+        except psycopg2.OperationalError:
             self.mgis.iface.messageBar().pushMessage(
                 "Error",
                 "Can't connect to PostGIS database. Check connection details!",
@@ -645,7 +645,7 @@ class ClassMasDatabase(object):
             self.disconnect_pg()
             self.connect_pg()
 
-        except Exception as e:
+        except Exception:
             self.disconnect_pg()
             self.mgis.add_info("Echec of creation First Model")
 
@@ -859,9 +859,9 @@ class ClassMasDatabase(object):
                     self.mgis.add_info(" View {0} : OK".format(obj.name), dbg=True)
                 else:
                     pass
-            except Exception as err:
+            except Exception:
                 self.mgis.add_info("View failure!<br>{0}".format(obj))
-                self.mgis.add_info("Error : ".format(err))
+                self.mgis.add_info("Error : ")
 
         # add visualistation layer
         # group_main = self.group

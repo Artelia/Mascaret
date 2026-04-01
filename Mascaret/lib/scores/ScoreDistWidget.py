@@ -49,7 +49,7 @@ class ScoreDistWidget(QWidget):
     def fill_tab(self):
         """fill table"""
         self.clear_tab()
-        if not ("quantil" in self.res.keys()):
+        if "quantil" not in self.res.keys():
             return
         err_typ_lst = ["quantil"]
         id_lst = []

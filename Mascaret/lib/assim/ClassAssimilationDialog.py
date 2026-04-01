@@ -23,7 +23,7 @@ from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt,qVersion
 from qgis.PyQt.QtGui import QColor, QIcon
 
-from qgis.core import QgsApplication, QgsWkbTypes, QgsGeometry
+from qgis.core import QgsApplication, QgsWkbTypes
 from qgis.gui import QgsRubberBand
 
 from .ClassAssimKsWidget import ClassAssimKsWidget

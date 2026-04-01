@@ -18,9 +18,7 @@ email                :
  ***************************************************************************/
 """
 
-import json
 
-import numpy as np
 from shapely.geometry import *
 
 from .ClassPolygone import ClassPolygone

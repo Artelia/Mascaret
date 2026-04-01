@@ -23,9 +23,9 @@ import numpy as np
 from matplotlib import patches
 
 try:
-    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QTAgg as NavigationToolbar
+    pass
 except:
-    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+    pass
 from qgis.PyQt.QtCore import qVersion
 from .GraphCommon import GraphCommonNew
 

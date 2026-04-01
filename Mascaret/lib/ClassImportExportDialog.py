@@ -535,7 +535,7 @@ class ClassDlgImport(QDialog):
                             QMessageBox.critical(None, "Error", "Import isn't possible.\n {}".format(txt))
                             return
                     else:
-                        txt = f'the name is empty.'
+                        txt = 'the name is empty.'
                         QMessageBox.critical(None, "Error", "Import isn't possible.\n {}".format(txt))
                         return
                 else:

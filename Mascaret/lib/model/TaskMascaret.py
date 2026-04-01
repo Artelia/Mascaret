@@ -32,7 +32,6 @@ from pathlib import Path
 import shutil
 import datetime
 import traceback
-import pprint
 
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal,QObject

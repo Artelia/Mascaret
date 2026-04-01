@@ -704,7 +704,7 @@ class ClassLaws:
             modif = False
             add_val = []
             for val in list_val:
-                if not (val in tab[:, 1]):
+                if val not in tab[:, 1]:
                     modif = True
                     zam_f = np.interp(val, tab[:, 1], tab[:, 2])
                     add_val.append([deb, val, zam_f])

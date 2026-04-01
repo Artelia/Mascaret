@@ -709,4 +709,3 @@ class GraphBCAssim(QWidget):
         self.graph_obj.init_graph_obs_assim(data, self.dico_obs[type])
 
 
-import bisect

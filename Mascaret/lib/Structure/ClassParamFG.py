@@ -25,10 +25,8 @@ from shapely.geometry import shape
 
 try :
     from ..ClassMessage import ClassMessage
-    from ..Function import str2bool, data_to_float, data_to_int
 except:
     from ClassMessage import ClassMessage
-    from Function import str2bool, data_to_float, data_to_int
 
 class ClassParamFG(object):
     """

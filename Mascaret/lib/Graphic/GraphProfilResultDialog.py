@@ -267,7 +267,7 @@ class GraphProfilResultDialog(QWidget):
     def create_dico_plani(self, elem, pt_bas):
         dico_plani = {}
         for id, id_type in enumerate(elem["id_type"]):
-            if not id_type in dico_plani.keys():
+            if id_type not in dico_plani.keys():
                 dico_plani[id_type] = {"pt_bas": pt_bas[str(id_type)], "line": []}
                 # st_asgeojson eqv. line
             dico_plani[id_type]["line"].append(shape(json.loads(elem["st_asgeojson"][id])))
@@ -285,7 +285,7 @@ class GraphProfilResultDialog(QWidget):
         if len(elem["id_type"]) > 0 and pt_bas:
             dico_plani = self.create_dico_plani(elem, pt_bas)
         else:
-            if not "pt_bas" in self.info_graph["opt"].keys():
+            if "pt_bas" not in self.info_graph["opt"].keys():
                 # if pt_bas not existe => update table
                 cond = True
             else:

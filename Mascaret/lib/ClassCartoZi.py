@@ -24,7 +24,6 @@ from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 from qgis.core import *
-from qgis.core import NULL as qgis_null
 from qgis.gui import *
 from qgis.utils import *
 from scipy import interpolate

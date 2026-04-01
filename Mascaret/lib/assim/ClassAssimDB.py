@@ -19,11 +19,8 @@ email                :
 """
 
 import os
-import numpy as np
 import json
 
-from pathlib import Path
-import traceback
 from datetime import datetime
 from .ClassCreatModelAssim import CreatModelAssim
 from ..model.ClassBCWriter import ClassBCWriter
@@ -74,7 +71,7 @@ class ClassAssimDB:
         """
         data_ks = self.mdb.select(
             "assim_ks",
-            where=f"active and (active_min or active_maj) "
+            where="active and (active_min or active_maj) "
         )
         if not data_ks:
             return
@@ -190,7 +187,7 @@ class ClassAssimDB:
         """
         data_law = self.mdb.select(
             "assim_law",
-            where=f"active and (active_a or active_b)"
+            where="active and (active_a or active_b)"
         )
         if not data_law:
             return

@@ -33,7 +33,6 @@ from qgis.PyQt.QtWidgets import (
     QMessageBox,
     QFileDialog,
     QApplication,
-    QWidget,
     QAction
 )
 from qgis.PyQt.uic import loadUi
@@ -64,7 +63,7 @@ from .lib.ClassUpdateBedDialog import (
     refresh_minor_bed_layer,
 )
 from .lib.ClassUpdatePk import ClassUpdatePk
-from .lib.Function import read_version, filter_pr_fct, filter_dist_perpendiculaire, open_file_editor,find_latest_lis_file
+from .lib.Function import read_version, filter_pr_fct, filter_dist_perpendiculaire
 from .lib.Graphic.FilterDialog import ClassFilterDialog
 from .lib.Graphic.GraphProfilDialog import IdentifyFeatureTool
 from .lib.HydroLawsDialog import ClassHydroLawsDialog
@@ -331,7 +330,7 @@ class MascPlugDialog(QMainWindow):
     def disable_all(self):
         menus_always_on = ["Help", "Setting"]
         for m in self.menus:
-            if not m.title() in menus_always_on:
+            if m.title() not in menus_always_on:
                 for a in m.findChildren(QAction):
                     a.setDisabled(True)
         for t in self.toolbars:
@@ -556,7 +555,7 @@ class MascPlugDialog(QMainWindow):
             (model, ok) = (schema_info, True)
         else:
             liste = self.mdb.liste_models()
-            liste = [v for v in liste if not (v in self.mdb.ignor_schema)]
+            liste = [v for v in liste if v not in self.mdb.ignor_schema]
             model, ok = QInputDialog.getItem(None, "Model Choice", "Model", liste, 0, False)
         if ok:
             self.mdb.SCHEMA = model

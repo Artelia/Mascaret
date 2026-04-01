@@ -603,9 +603,9 @@ class ClassBCWriter:
 
             return result
 
-        except Exception as e:
+        except Exception:
             if self.mess:
-                self.mess.add_mess("LigFile", "critic", f"No results for initialisation")
+                self.mess.add_mess("LigFile", "critic", "No results for initialisation")
             return None
 
     # ************   Mobile Structur FILE   ********************************************************************

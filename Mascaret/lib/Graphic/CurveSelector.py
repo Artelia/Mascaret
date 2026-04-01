@@ -22,7 +22,7 @@ email                :
 import os
 from datetime import timedelta
 
-from qgis.PyQt.QtCore import pyqtSignal, Qt
+from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import *
 
@@ -475,7 +475,7 @@ class CurveSelectorWidget(QWidget):
             self.mgis.add_info("No data")
         else:
             for rws in rows:
-                if not rws[2] in common_var_exists.keys():
+                if rws[2] not in common_var_exists.keys():
                     self.lst_graph.append(
                         {
                             "type_res": rws[1],

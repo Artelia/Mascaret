@@ -18,7 +18,6 @@ email                :
  ***************************************************************************/
  """
 import os
-import platform
 
 from qgis import core
 from qgis.PyQt import QtWidgets, uic
