@@ -171,7 +171,8 @@ class ClassMatrix:
                 std_zone = d["std"]
                 if d.get("std") is None:
                     raise KeyError("Key std not found in data_assim.json")
-                liste_sigma += [2 * std_zone]
+                # Dans le cas des lois, sigma^2
+                liste_sigma += [std_zone ** 2]
 
         if len(liste_sigma) != self.nbperturb:
             raise ValueError(f'Problem with initial B matrix creation. '

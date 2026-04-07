@@ -18,8 +18,8 @@
   "bt_edit_law": "Toggle editing mode for Law parameters and observation selection.",
 
   "label_law_obs": "Observation settings: standard deviations and physical bounds (minimum/maximum).",
-  "label_law_min": "Minimum allowed value for coefficients A and B.",
-  "label_law_max": "Maximum allowed value for coefficients A and B",
+  "label_law_min": "Minimum allowed value for flow rate or level law.",
+  "label_law_max": "Maximum allowed value for flow rate or level law",
 
   "gb_a_ctrl": "Assimilation control parameters for coefficient A.",
   "label_a_std": "Standard deviation applied to corrections of coefficient A.",
