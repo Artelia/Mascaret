@@ -166,6 +166,14 @@ class ClassAPIMascaret:
     def init_assim(self):
         if self.assim:
             self.num_zones_assim, self.pdt_assim = self.res_assim.init_assim(self.masc)
+
+        # Retrieving the initial time values for assim
+        if self.assim and self.tini <= self.current_t_assim <= self.tini + self.dt:
+            txt = f'{self.num_zones_assim} - {self.masc.nb_nodes}'
+            self.add_info(txt)
+            self.res_assim.extract_zq(self.masc, self.tini)
+            # Incrément du temps courant assim (prochain temps à extraire)
+            self.current_t_assim += self.pdt_assim
             # file_obs = os.path.join()
             # self.pdt_assim =
             # if not self.dict_obs:
@@ -340,6 +348,7 @@ class ClassAPIMascaret:
         if self.tracer:
             self.masc.init_tracer_state()
 
+
     def init_crit_stop(self):
         """
         Read and store all stop-criteria variables from the Mascaret model.
@@ -454,7 +463,6 @@ class ClassAPIMascaret:
         mobil_link = self.mobil_link
         mobil_w = self.mobil_w
         sect_co = self.sect_co
-
 
         if self.stpcrit == 1:
             # Time-based criterion: run until tfin

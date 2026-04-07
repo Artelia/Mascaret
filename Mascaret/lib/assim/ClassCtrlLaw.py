@@ -77,10 +77,14 @@ class CtrlLaw(ModelAssimBase):
                         cond_max = False
                     if parts[1] < coefs["min"] and cond_min:
                         self.add_info(f"Warning : One value of law {folder_name}/{name_law} is lower than "
-                                      f"minimum value ({coefs['max']}) for A={coef_a} and B={
+                                      f"minimum value ({coefs['min']}) for A={coef_a} and B={
                                       coef_b}."
                                       f"Please change min value or adapt A or B coefficient.")
                         cond_min = False
+
+                    # Threshold on laws, if needed
+                    parts[1] = min(parts[1], coefs['max'])
+                    parts[1] = max(parts[1], coefs['min'])
                     fileout.write(" ".join(str(p) for p in parts) + "\n")
 
         os.remove(file_tmp)

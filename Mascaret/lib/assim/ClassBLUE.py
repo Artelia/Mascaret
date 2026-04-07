@@ -84,7 +84,7 @@ class classBLUE:
         self.residual = None
         # Une valeur de sb par type de perturbation (Ksmin et Ksmaj par ex)
         self.sb = [1] * np.max(self.matrixes.type_perturb)
-        self.old_sb = [0] * np.max(self.matrixes.type_perturb)
+        self.old_sb = [1] * np.max(self.matrixes.type_perturb)
         self.delta_so = 1.
         self.delta_sb = [1] * np.max(self.matrixes.type_perturb)
         self.raison_arret = ""
@@ -93,6 +93,7 @@ class classBLUE:
         """ Computes different BLUE steps to get analysed state """
         for i in range(self.iterations_sigma):
             self.build_gain_K()
+            # self.build_gain_K_V2()
             self.build_analysis()
             self.calc_so_sb()
 
@@ -125,12 +126,30 @@ class classBLUE:
         """ Computes gain matrix K : K =BH^t (HBH^t + R)^-1 """
         # Calcul de BHt
         BHT = self.current_B @ self.matrixes.H.transpose()
+        print('BHT', BHT)
         # Calcul de HBHt
         HBHT = self.matrixes.H @ self.current_B @ self.matrixes.H.transpose()
+        print('HBHT', HBHT)
+
         # Calcul de (HBHt + R)^-1
         HBHT_plus_R = np.linalg.inv(HBHT + self.current_R)
+        print('HBHT_plus_R', HBHT_plus_R)
+
         self.K = BHT @ HBHT_plus_R
         print('Calcul de gain effactué. K=', self.K)
+
+
+    def build_gain_K_V2(self):
+        """ Computes gain matrix K : K =BH^t (HBH^t + R)^-1 """
+        # Calcul de BHt
+        HtRmH = self.matrixes.H.transpose() @ np.linalg.inv(self.current_R) @ self.matrixes.H
+        # Calcul de HBHt
+        Ktemp = np.linalg.inv(np.linalg.inv(self.current_B) + HtRmH)
+        # Calcul de (HBHt + R)^-1
+        # HBHT_plus_R = np.linalg.inv(HBHT + self.current_R)
+        self.K = Ktemp @ self.matrixes.H.transpose() @ np.linalg.inv(self.current_R)
+        print('Calcul de gain effactué. K=', self.K)
+
 
     def calc_so_sb(self):
         trace_HBHT = []
@@ -147,13 +166,18 @@ class classBLUE:
             HBHT = self.matrixes.H @ B_tempo @ self.matrixes.H.transpose()
             trace_HBHT.append(np.trace(HBHT))
         print('Trace HBHT', trace_HBHT)
-        for itype in range(np.max(self.matrixes.type_perturb)):
+        print('Matrixes type perturb', self.matrixes.type_perturb)
+        for itype, type_pert in enumerate(self.matrixes.type_perturb):
+            idx_type_pert = int(type_pert - 1)
             if trace_HBHT[itype] == 0.:
-                self.sb[itype] = 0.
+                self.sb[idx_type_pert] = 0.
             else:
-                self.sb[itype] = np.divide(np.dot(self.matrixes.misfit, self.matrixes.H @ self.analyse),
+                innovation_tempo = np.zeros(len(self.innovation))
+                innovation_tempo[itype] = self.innovation[itype]
+                print('innovation TEMPO', innovation_tempo)
+                self.sb[idx_type_pert] = np.divide(np.dot(self.matrixes.misfit, self.matrixes.H @ innovation_tempo),
                                            trace_HBHT[itype])
-        self.residual = np.array(self.matrixes.misfit) - self.matrixes.H @ self.analyse
+        self.residual = np.array(self.matrixes.misfit) - self.matrixes.H @ self.innovation
         # Ajout de la nouvelle valeur de so
         self.so = np.divide(np.dot(self.matrixes.misfit, self.residual), np.trace(self.current_R))
         self.delta_so = abs(self.so - self.old_so)
@@ -168,12 +192,13 @@ class classBLUE:
         self.innovation = self.K @ self.matrixes.misfit
         self.analyse = self.matrixes.xb + self.innovation
 
-        # Clipping xa based on min and max values
-        for ia, xa in enumerate(self.analyse):
-            if xa < self.matrixes.min_values[ia]:
-                self.analyse[ia] = self.matrixes.min_values[ia]
-            if xa > self.matrixes.max_values[ia]:
-                self.analyse[ia] = self.matrixes.max_values[ia]
+        if self.ctrl_type == "ctrlKS":
+            # Clipping xa based on min and max values
+            for ia, xa in enumerate(self.analyse):
+                if xa < self.matrixes.min_values[ia]:
+                    self.analyse[ia] = self.matrixes.min_values[ia]
+                if xa > self.matrixes.max_values[ia]:
+                    self.analyse[ia] = self.matrixes.max_values[ia]
         self.matrixes.build_B_matrix_analysed(self.K)
 
         print('Calcul de l\'état analysé effectué')
@@ -188,17 +213,16 @@ class classBLUE:
 
     def _update_xa(self, first):
         """Update xa values in data_assim dict."""
-        # TODO éviter variable 1 lettre
-        d = self.data_assim.get(self.ctrl_type, {})
+        dico = self.data_assim.get(self.ctrl_type, {})
         lst_var = "lst_zone" if self.ctrl_type == 'ctrlKS' else "lst_loi"
-        for izone, lzone in enumerate(d.get(lst_var, [])):
+        for izone, lzone in enumerate(dico.get(lst_var, [])):
             if not lzone:
                 continue
             xa_val = round(self.analyse[izone], 2)
-            if d[lst_var][izone].get("xa") is None or first:
-                d[lst_var][izone]["xa"] = [xa_val]
+            if dico[lst_var][izone].get("xa") is None or first:
+                dico[lst_var][izone]["xa"] = [xa_val]
             else:
-                d[lst_var][izone]["xa"].append(xa_val)
+                dico[lst_var][izone]["xa"].append(xa_val)
         with open(self.json_assim, 'w') as f:
             json.dump(self.data_assim, f, indent=4)
 
@@ -239,14 +263,16 @@ class classBLUE:
                 ('Matrice R', self.current_R),
                 ('Matrice K', self.K),
                 ('Etat analyse xa', self.analyse),
+                ("Vecteur d'incrément d'analyse", self.innovation),
+                ("Matice d'erreur d'analyse Ba", self.matrixes.B_analysed)
             ]:
                 self._write_matrix(f, label, mat)
 
             f.write('Sigma o\n')
-            f.write(str(self.so) + '\n')
+            f.write(str(np.sqrt(self.so)) + '\n')
 
             for label, mat in [
-                ('Sigma b par type', self.sb),
+                ('Sigma b par type', np.nan_to_num(np.sqrt(self.sb), nan=-9999)),
                 ('Residual', self.residual),
                 ('Misfit', self.matrixes.misfit),
                 ('Observations Y0', self.matrixes.y0),
