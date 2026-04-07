@@ -283,7 +283,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             recs = [[p_law[0], p_law[1], p_law[2], False, False, [], [],
                      10., 10., False, 1., False, 1.]
                     for p_law in d_calc_law.keys()]
-            sql = "INSERT INTO {0}.assim_law (id_law, source_law, id_type, active, lst_obs_h, " \
+            sql = "INSERT INTO {0}.assim_law (id_law, source_law, id_type, active, auto_del, lst_obs_h, " \
                   "lst_obs_q, val_min, val_max, active_a, std_a, active_b, std_b) VALUES ({1})"
             self.mdb.run_query(sql.format(self.mdb.SCHEMA, ', '.join(["%s"] * len(recs[0]))),
                                many=True, list_many=recs)

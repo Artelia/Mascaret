@@ -125,6 +125,7 @@ class ClassBCWriter:
             else:
                 fich_sortie.write("# Temps (H) Hauteur\n")
             fich_sortie.write(" H \n")
+
             for t in ref_dates:
                 calc = loi["formule"]
                 for cd_hydro, delta in liste_stations:
@@ -763,10 +764,13 @@ class ClassBCWriter:
             # get observation each station
             obs_stations, err_critic = self._get_obs_to_loi(liste_stations, type_, date_debut, date_fin, nom)
             if err_critic:
-                return
+                return f'[ERROR] Failed to retrieve the observation {nom}'
             ref_station, ref_delta = liste_stations[0]
             ref_delta_h = float(ref_delta) if ref_delta else 0
             ref_dates = [d - datetime.timedelta(hours=ref_delta_h) for d in obs_stations[ref_station]["date"]]
+            if len(ref_dates) <= 1:
+                return f'[ERROR] Failed to retrieve the observation {nom}'
             self._write_obs_loi(nom, type_, obs, liste_stations, obs_stations, pattern,
                                 ref_dates,
                                 date_debut)
+            return ''

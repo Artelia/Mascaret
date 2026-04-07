@@ -22,6 +22,8 @@ import json
 from pathlib import Path
 import os
 import numpy as np
+import traceback
+
 
 try:
     from .ClassCtrlKS import CtrlKs
@@ -75,13 +77,18 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
                         all_codes_obs.append(c)
         if len(all_codes_obs) == 0:
             raise ValueError("[ ERROR ] No observation selected for assimilation")
+
         for c in all_codes_obs:
             file_obs = os.path.join(folder_obs, c + '.loi')
-            with open(file_obs) as f:
-                lines = f.readlines()[3:]
-                dt_obs = float(lines[1].split()[0]) - float(lines[0].split()[0]) * 3600
-                dico_obs[c]['dt_obs'] = dt_obs
-                all_dt_obs.append(dt_obs)
+            if os.path.isfile(file_obs):
+                with open(file_obs) as f:
+                    lines = f.readlines()[3:]
+                    dt_obs = float(lines[1].split()[0]) - float(lines[0].split()[0]) * 3600
+                    dico_obs[c]['dt_obs'] = dt_obs
+                    all_dt_obs.append(dt_obs)
+            else:
+                raise FileNotFoundError(f'[ ERROR ]  File { c + ".loi"} is not found in Observation.')
+
         with open(os.path.join(folder_obs, 'dico_base_obs.json'), 'w') as f:
             json.dump(dico_obs, f)
         if len(np.unique(all_dt_obs)) > 1:

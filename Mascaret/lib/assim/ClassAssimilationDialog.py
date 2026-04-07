@@ -114,7 +114,8 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
         :return: None. Updates map display.
         """
         self.rb.reset(self.rb_format)
-
+        rb_visible = False
+        rb_geom = None
         if self.cur_wgt == 'ks':
             wgt = self.wgt_ks
             rb_visible = wgt.bt_disp_zone.isChecked()
@@ -122,10 +123,8 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
         elif self.cur_wgt == 'law':
             wgt = self.wgt_law
             rb_visible = wgt.bt_disp_law.isChecked()
-            rb_geom = wgt.d_laws[wgt.cur_perturb_var][wgt.cur_law]["geom"]
-        else:
-            rb_visible = False
-            rb_geom = None
+            if wgt.d_laws[wgt.cur_perturb_var].get(wgt.cur_law, None) :
+                rb_geom = wgt.d_laws[wgt.cur_perturb_var][wgt.cur_law]["geom"]
 
         if rb_visible and rb_geom:
             self.rb.addGeometry(rb_geom)

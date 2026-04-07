@@ -218,6 +218,7 @@ class ClassInitializeModel:
         if exit_status:
             txt_f = "Compute is cancel.\n" + txt
             self.mgis.add_info(txt_f)
+
         return exit_status
 
     def create_fichiercas(self, model_folder, name_xcas):
@@ -534,7 +535,8 @@ class ClassInitializeModel:
             # Transcritical unsteady mode (non-event)
             self.par = self.cl_bc.classic_law(self.par, dict_lois)
             has_errors = self.mess.get_critic_status()
-
+            if has_errors:
+                self.write_mess(self.cl_bc.mess)
         # Update initialization flag if needed
         if self.par["initialisationAuto"] != self.drun['has_run_init']:
             self.drun['has_init'] = self.par["initialisationAuto"]

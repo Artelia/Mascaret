@@ -21,6 +21,7 @@ email                :
 
 import json
 import os
+import traceback
 import numpy as np
 from pathlib import Path
 from .ClassAssimData import AssimData
@@ -105,11 +106,13 @@ class ClassExtractAssim:
                 code_obs = self.dict_stations[str(key)]['code'][ix]
                 obs_folder = os.path.join(self.assim_path, 'Observations')
                 file_obs = os.path.join(obs_folder, str(code_obs) + '.loi')
-                with open(file_obs) as f:
-                    lines = f.readlines()[3:]
-                    # TODO handle time units !!!
-                    self.dt_obs = (float(lines[1].split()[0]) - float(lines[0].split()[0])) * 3600
-                    pass
+                if os.path.isfile(file_obs):
+                    with open(file_obs) as f:
+                        lines = f.readlines()[3:]
+                        # TODO handle time units !!!
+                        self.dt_obs = (float(lines[1].split()[0]) - float(lines[0].split()[0])) * 3600
+                else:
+                    raise FileNotFoundError(f'[ ERROR ] File {str(code_obs) + ".loi"} is not found in Observation folder.')
                 if index_obs not in self.dict_obs:
                     self.dict_obs[index_obs] = {'id_zone': [key],
                                                 'x_obs': masc_xcoords[index_obs],

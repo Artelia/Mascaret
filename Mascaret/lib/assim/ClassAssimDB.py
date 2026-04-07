@@ -33,13 +33,14 @@ class ClassAssimDB:
     XCAS_FILE_INIT = "mascaret_init.xcas"
     DATA_ASSIM_FILE = "data_assim.json"
 
-    def __init__(self, mdb):
+    def __init__(self, mdb, mgis=None):
         """Initialize the assimilation database handler.
 
         :param mdb: Database manager instance.
         :return: None.
         """
         self.data = {}
+        self.mgis = mgis
         self.mdb = mdb
         self.update_data_db()
         self.cl_creat_assim = CreatModelAssim()
@@ -454,5 +455,11 @@ class ClassAssimDB:
                 # decal_z = data_obs.get("zero", [0])[icode]
                 dict_tmp = {'type': typ_crt, 'formule': f'{code}[t] + {obs["zero"][icode]}'}
                 dict_obs[code] = dict_tmp
-        cl_bc.obs_to_file(dict_obs, var_obs['starttime'], var_obs["endtime"])
+
+        err_txt = cl_bc.obs_to_file(dict_obs, var_obs['starttime'], var_obs["endtime"])
+        if err_txt:
+            if self.mgis:
+                self.mgis.add_info(err_txt)
+                self.mgis.box.critic(err_txt, title="Critical Error")
+            raise ValueError(err_txt)
 

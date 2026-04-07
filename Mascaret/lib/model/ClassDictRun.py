@@ -78,7 +78,7 @@ class ClassDictRun:
                 "has_new_run_path": False,
             }
         }
-        self.assim = ClassAssimDB(self.mdb)
+        self.assim = ClassAssimDB(self.mdb, self.mgis)
 
     def get_dmodel(self):
         """Return the internal model dictionary.
