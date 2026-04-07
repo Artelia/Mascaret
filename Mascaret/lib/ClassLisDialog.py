@@ -58,8 +58,12 @@ class ClassLisDialog(QDialog):
         """
         super().__init__()
         self.ui = loadUi(UI_FILE, self)
+        self._root_path = root_path
         self._load_root(root_path)
         self.tree_view.clicked.connect(self._on_item_clicked)
+        self.bt_open_folder.clicked.connect(self._on_open_folder)
+        self.bt_open_folder.setIcon(QgsApplication.getThemeIcon("/mActionFileOpen.svg"))
+
 
     def _load_root(self, path):
         """Initialize file system model and set up tree view.
@@ -139,6 +143,23 @@ class ClassLisDialog(QDialog):
         self.text_edit.blockSignals(False)
 
         self.file_label.setText(f"  {_from_mascaret(path)}")
+
+
+    def _on_open_folder(self):
+        """Ouvre dans l'explorateur le dossier du fichier sélectionné,
+        ou le dossier racine si rien n'est sélectionné.
+
+        :return: None
+        """
+        folder = self._root_path  # fallback : racine
+
+        indexes = self.tree_view.selectedIndexes()
+        if indexes:
+            source_index = self.proxy.mapToSource(indexes[0])
+            path = self.fs_model.filePath(source_index)
+            folder = path if self.fs_model.isDir(source_index) else str(Path(path).parent)
+
+        QDesktopServices.openUrl(QUrl.fromLocalFile(folder))
 
 
 def _from_mascaret(full_path: str, anchor: str = "mascaret") -> str:
