@@ -7,7 +7,7 @@
   "rb_debit": "Use discharge (Q) observations for the assimilation process.",
   "rb_debit_lin": "Use linearised discharge observations for the assimilation process.",
 
-  "label_law_seuil": "Misfit rejection threshold: observations with a misfit above this value are excluded from BLUE assimilation.",
+  "label_law_seuil": "Misfit rejection threshold (%) for Law assimilation.\nObservations whose relative misfit (%) from the reference model exceeds this threshold are excluded from BLUE analysis.",
   "label_law_sigma": "Sigma iteration factor: controls the amplitude of corrections applied at each iteration.",
 
   "label_pert_a": "Initial perturbation applied to coefficient A.",

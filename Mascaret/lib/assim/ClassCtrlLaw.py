@@ -71,14 +71,12 @@ class CtrlLaw(ModelAssimBase):
                     parts[1] = round(coef_a * float(parts[1]) + coef_b, 6)
                     if parts[1] > coefs["max"] and cond_max:
                         self.add_info(f"Warning : One value of law {folder_name}/{name_law} is higher than "
-                                      f"maximum value ({coefs['max']}) for A={coef_a} and B={
-                                      coef_b}."
+                                      f"maximum value ({coefs['max']}) for A={coef_a} and B={coef_b}."
                                       f"Please change max value or adapt A or B coefficient.")
                         cond_max = False
                     if parts[1] < coefs["min"] and cond_min:
                         self.add_info(f"Warning : One value of law {folder_name}/{name_law} is lower than "
-                                      f"minimum value ({coefs['min']}) for A={coef_a} and B={
-                                      coef_b}."
+                                      f"minimum value ({coefs['min']}) for A={coef_a} and B={coef_b}."
                                       f"Please change min value or adapt A or B coefficient.")
                         cond_min = False
 

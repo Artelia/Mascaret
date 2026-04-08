@@ -3,7 +3,7 @@
   "cc_ks_act": "Enable or disable  assimilation for the current Ks configuration.",
 
   "label_ks_fld": "Select the observation variable used: H (water elevation) or Q (discharge).",
-  "label_ks_seuil": "Misfit rejection threshold for Ks assimilation. Observations with a misfit above this value are excluded from BLUE analysis.",
+  "label_ks_seuil": "Misfit rejection threshold (%) for Ks assimilation.\nObservations whose relative misfit (%) from the reference model exceeds this threshold are excluded from BLUE analysis.",
   "label_ks_pert_min": "Initial perturbation applied to minor-bed Ks values. Used to build the background covariance matrix B.",
   "label_ks_pert_maj": "Initial perturbation applied to major-bed Ks values. Used to build the background covariance structure for major-bed corrections.",
   "label_ks_sigma": "Standard deviation scaling applied at each iteration. Controls the magnitude of Ks corrections.",

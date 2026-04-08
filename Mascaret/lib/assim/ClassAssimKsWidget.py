@@ -24,7 +24,7 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt, QSize, qVersion
 from qgis.PyQt.QtGui import QIcon, QStandardItemModel, QStandardItem
 from qgis.PyQt.QtWidgets import QMessageBox
 
-from qgis.core import QgsApplication, QgsGeometry
+from qgis.core import QgsApplication, QgsGeometry, QgsCoordinateReferenceSystem
 
 from .tooltips.tooltips import apply_tooltips_from_json
 
@@ -300,6 +300,15 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         :return: None. Updates zone list view and sets up signal connections.
         """
         self.d_zone_ks.clear()
+        # Get SIRD of the sources table for PostGIS
+        sql_srid = ("SELECT f_table_name, srid "
+                    "FROM geometry_columns "
+                    "WHERE f_table_schema = '{schema}' "
+                    "AND f_table_name IN ('branchs')"
+                    ).format(schema=self.mdb.SCHEMA)
+        srid_rows = self.mdb.run_query(sql_srid, fetch=True)
+        d_srid = {row[0]: QgsCoordinateReferenceSystem(f"EPSG:{row[1]}")
+                  for row in srid_rows if row[1]}
 
         d_calc_ks = self.mdb.zone_ks()
         d_info_ks = {(d_calc_ks["branch"][idx],
@@ -321,6 +330,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             info_ks = d_info_ks[tuple(row[1:4])]
             self.d_zone_ks[row[0]] = {"zone_name": "Zone {}.{}".format(row[1], info_ks["num_zone"]),
                                       "geom": QgsGeometry.fromWkt(info_ks["geom"]),
+                                      "crs": d_srid.get('branchs', QgsCoordinateReferenceSystem()),
                                       "min_coef": info_ks["min_coef"],
                                       "maj_coef": info_ks["maj_coef"],
                                       "branch_num": row[1],

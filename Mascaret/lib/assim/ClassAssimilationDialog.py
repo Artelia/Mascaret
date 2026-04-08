@@ -22,8 +22,16 @@ import os
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt,qVersion
 from qgis.PyQt.QtGui import QColor, QIcon
+from qgis.PyQt.QtWidgets import QMessageBox
 
-from qgis.core import QgsApplication, QgsWkbTypes
+from qgis.core import (
+    QgsApplication,
+    QgsWkbTypes,
+    QgsProject,
+    QgsCoordinateTransform,
+    QgsCoordinateTransformContext,
+    QgsGeometry
+)
 from qgis.gui import QgsRubberBand
 
 from .ClassAssimKsWidget import ClassAssimKsWidget
@@ -120,15 +128,45 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
             wgt = self.wgt_ks
             rb_visible = wgt.bt_disp_zone.isChecked()
             rb_geom = wgt.d_zone_ks[wgt.cur_zone_ks]["geom"]
+            rb_geom_crs = wgt.d_zone_ks[wgt.cur_zone_ks].get("crs", None)
         elif self.cur_wgt == 'law':
             wgt = self.wgt_law
             rb_visible = wgt.bt_disp_law.isChecked()
             if wgt.d_laws[wgt.cur_perturb_var].get(wgt.cur_law, None) :
                 rb_geom = wgt.d_laws[wgt.cur_perturb_var][wgt.cur_law]["geom"]
+                rb_geom_crs = wgt.d_laws[wgt.cur_perturb_var][wgt.cur_law].get("crs", None)
 
         if rb_visible and rb_geom:
-            self.rb.addGeometry(rb_geom)
+            geom_to_display = self.reproject_geom_to_project(rb_geom, rb_geom_crs)
+            self.rb.addGeometry(geom_to_display)
             self.rb.show()
+
+    def reproject_geom_to_project(self, geom, source_crs):
+        """Reproject a geometry to the project CRS if needed.
+
+        :param geom: QgsGeometry — geometry to reproject.
+        :param source_crs: QgsCoordinateReferenceSystem or None — CRS of the geometry.
+                           If None, geometry is returned as-is.
+        :return: QgsGeometry reprojected into the project CRS.
+        """
+
+        if source_crs is None or not source_crs.isValid():
+            return geom
+
+        project_crs = QgsProject.instance().crs()
+        if source_crs == project_crs:
+            return geom
+
+        transform = QgsCoordinateTransform(
+            source_crs,
+            project_crs,
+            QgsProject.instance(),
+        )
+
+        geom_reprojected = QgsGeometry(geom)  # copie pour ne pas muter l'original
+        geom_reprojected.transform(transform)
+        return geom_reprojected
+
 
     def closeEvent(self, event):
         """Handle dialog close event.

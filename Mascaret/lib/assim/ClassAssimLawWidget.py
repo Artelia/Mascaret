@@ -24,7 +24,7 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt, QSize, qVersion
 from qgis.PyQt.QtGui import QIcon, QStandardItemModel, QStandardItem
 from qgis.PyQt.QtWidgets import QMessageBox, QButtonGroup
 
-from qgis.core import QgsApplication, QgsGeometry
+from qgis.core import QgsApplication, QgsGeometry, QgsCoordinateReferenceSystem
 from .tooltips.tooltips import apply_tooltips_from_json
 
 FORM_CLASS, BASE = uic.loadUiType(
@@ -281,7 +281,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
         if not rows:
             recs = [[p_law[0], p_law[1], p_law[2], False, False, [], [],
-                     10., 10., False, 1., False, 1.]
+                     0., 1000., False, 1., False, 0.]
                     for p_law in d_calc_law.keys()]
             sql = "INSERT INTO {0}.assim_law (id_law, source_law, id_type, active, auto_del, lst_obs_h, " \
                   "lst_obs_q, val_min, val_max, active_a, std_a, active_b, std_b) VALUES ({1})"
@@ -304,7 +304,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                 else:
                     recs.append(
                         [p_law[0], p_law[1], p_law[2], False, True, [], [],
-                         10., 10., False, 1., False, 1.])
+                         0., 1000., False, 1., False, 0.])
 
             sql = "DELETE FROM {0}.assim_law"
             self.mdb.run_query(sql.format(self.mdb.SCHEMA))
@@ -341,6 +341,15 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         self.d_laws = {'perturbationsCote': {},
                        'perturbationsDebit': {},
                        'perturbationsDebitLineique': {}}
+        # Geg SIRD of the sources table for PostGIS
+        sql_srid = ("SELECT f_table_name, srid "
+                    "FROM geometry_columns "
+                    "WHERE f_table_schema = '{schema}' "
+                    "AND f_table_name IN ('extremities', 'lateral_inflows')"
+                    ).format(schema=self.mdb.SCHEMA)
+        srid_rows = self.mdb.run_query(sql_srid, fetch=True)
+        d_srid = {row[0]: QgsCoordinateReferenceSystem(f"EPSG:{row[1]}")
+                  for row in srid_rows if row[1]}
 
         sql = "SELECT gid as law_id, name as law_name, 'extremities' as source_law, " \
               "'perturbationsCote' as id_type, ST_AsText(geom) as wkt_geom " \
@@ -366,9 +375,11 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
 
         for row in rows:
             id_law = row[0]
+            source_law = row[1]
             type_law = row[2]
             self.d_laws[type_law][id_law] = {"law_name": d_calc_law[(row[0], row[1], row[2])]["name"],
                                              "geom": QgsGeometry.fromWkt(d_calc_law[(row[0], row[1], row[2])]["geom"]),
+                                             "crs": d_srid.get(source_law, QgsCoordinateReferenceSystem()),
                                              "active": row[3],
                                              "auto_del": row[4],
                                              "prm": {"lst_obs_h": row[5],
