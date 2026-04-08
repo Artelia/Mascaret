@@ -55,6 +55,7 @@ class ClassMascaret:
         self.use_task = self.mgis.task_use
         self.task_blue = None
         self.cond_api = self.mgis.cond_api
+        self.cond_cancel = False
 
     def mascaret_ui(self):
         # state list
@@ -151,6 +152,8 @@ class ClassMascaret:
             self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(type_))
             self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(type_))
             self.task_ref.signal.model_completed.connect(self.display_message)
+            self.task_ref.signal.model_cancel.connect(lambda: self.user_cancel(type_))
+
             task_id = self.launch_task(self.task_ref, description)
 
             if not task_id:
@@ -189,6 +192,7 @@ class ClassMascaret:
             self.task_creat_fassim.taskCompleted.connect(lambda: self.on_task_completed(type_ctrl_creat))
             self.task_creat_fassim.taskTerminated.connect(lambda: self.on_task_failed(type_ctrl_creat))
             self.task_creat_fassim.signal.model_completed.connect(self.display_message)
+            self.task_creat_fassim.signal.model_cancel.connect(lambda: self.user_cancel(type_ctrl_creat))
             task_id = self.launch_task(self.task_creat_fassim, description)
 
             if not task_id:
@@ -247,6 +251,7 @@ class ClassMascaret:
             self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(name_task))
             self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(name_task))
             self.task_ref.signal.model_completed.connect(self.display_message)
+            self.task_ref.signal.model_cancel.connect(lambda: self.user_cancel(name_task))
             task_id = self.launch_task(self.task_ref, description)
 
             if not task_id:
@@ -283,6 +288,7 @@ class ClassMascaret:
             self.task_blue.taskCompleted.connect(lambda: self.on_task_completed(label))
             self.task_blue.taskTerminated.connect(lambda: self.on_task_failed(label))
             self.task_blue.signal.model_completed.connect(self.display_message)
+            self.task_blue.signal.model_cancel.connect(lambda: self.user_cancel(label))
             task_id = self.launch_task(self.task_blue, description)
 
             if not task_id:
@@ -440,15 +446,34 @@ class ClassMascaret:
 
     def on_task_failed(self, task_type):
         """Callback appelé quand une task échoue"""
-        self.mgis.add_info(f"[ FAILED ]{task_type} task failed or was terminated, processing next...")
+        nex_txt = ', processing next...'
+        if self.cond_cancel:
+            nex_txt = '.'
+            self.cond_cancel = False
+
+        self.mgis.add_info(f"[ FAILED ]{task_type} task failed or was terminated{nex_txt} ")
         QgsMessageLog.logMessage(
             f"Task '{task_type}' failed or terminated",
             'TaskMascaret',
             Qgis.Warning
         )
 
+
         # Continuer avec la task suivante malgré l'échec
         self.process_next_task()
+
+    def user_cancel(self,task_type):
+        """Callback appelé quand une task échoue"""
+        self.mgis.add_info(f"[ FAILED ]{task_type} task canceled.")
+        QgsMessageLog.logMessage(
+            f"Task '{task_type}' canceled",
+            'TaskMascaret',
+            Qgis.Warning
+        )
+        self.task_queue.clear()
+        self.cond_cancel = True
+
+
 
     def display_message(self, success, dtxt):
         """

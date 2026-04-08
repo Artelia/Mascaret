@@ -38,6 +38,7 @@ MESSAGE_CATEGORY = 'TaskCreatFAssim'
 class TaskSignals(QObject):
     model_completed = pyqtSignal(int, dict)
     launch_completed = pyqtSignal(bool)
+    model_cancel = pyqtSignal(bool)
 
 
 class TaskCreatFAssim(QgsTask):
@@ -161,6 +162,7 @@ class TaskCreatFAssim(QgsTask):
             # Main loop: process results as they complete
             while self.running_futures or self.next_to_submit < self.total_models:
                 if self.isCanceled():
+                    self.signal.model_cancel.emit(True)
                     # Shutdown executor without waiting for remaining tasks
                     self.executor.shutdown(wait=False, cancel_futures=True)
                     return False

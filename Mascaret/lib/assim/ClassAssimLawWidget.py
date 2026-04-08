@@ -281,7 +281,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
         if not rows:
             recs = [[p_law[0], p_law[1], p_law[2], False, False, [], [],
-                     0., 1000., False, 1., False, 0.]
+                     0., 1000., False, 0.2, False, 5.]
                     for p_law in d_calc_law.keys()]
             sql = "INSERT INTO {0}.assim_law (id_law, source_law, id_type, active, auto_del, lst_obs_h, " \
                   "lst_obs_q, val_min, val_max, active_a, std_a, active_b, std_b) VALUES ({1})"
@@ -304,7 +304,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                 else:
                     recs.append(
                         [p_law[0], p_law[1], p_law[2], False, True, [], [],
-                         0., 1000., False, 1., False, 0.])
+                         0., 1000., False, 0., False, 0.])
 
             sql = "DELETE FROM {0}.assim_law"
             self.mdb.run_query(sql.format(self.mdb.SCHEMA))

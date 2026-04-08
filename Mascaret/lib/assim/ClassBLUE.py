@@ -169,14 +169,19 @@ class classBLUE:
         print('Matrixes type perturb', self.matrixes.type_perturb)
         for itype, type_pert in enumerate(self.matrixes.type_perturb):
             idx_type_pert = int(type_pert - 1)
-            if trace_HBHT[itype] == 0.:
-                self.sb[idx_type_pert] = 0.
-            else:
-                innovation_tempo = np.zeros(len(self.innovation))
-                innovation_tempo[itype] = self.innovation[itype]
-                print('innovation TEMPO', innovation_tempo)
-                self.sb[idx_type_pert] = np.divide(np.dot(self.matrixes.misfit, self.matrixes.H @ innovation_tempo),
-                                           trace_HBHT[itype])
+            try:
+                if trace_HBHT[itype] == 0.:
+                    self.sb[idx_type_pert] = 0.
+                else:
+                    innovation_tempo = np.zeros(len(self.innovation))
+                    innovation_tempo[itype] = self.innovation[itype]
+                    print('innovation TEMPO', innovation_tempo)
+                    self.sb[idx_type_pert] = np.divide(np.dot(self.matrixes.misfit, self.matrixes.H @ innovation_tempo),
+                                               trace_HBHT[itype])
+            except IndexError:
+                raise IndexError(f'itype {itype}, trace_HBHT : {trace_HBHT}\n '
+                                 f'np.max(self.matrixes.type_perturb){np.max(self.matrixes.type_perturb)}\n'
+                                 f'Matrixes type perturb){ self.matrixes.type_perturb}')
         self.residual = np.array(self.matrixes.misfit) - self.matrixes.H @ self.innovation
         # Ajout de la nouvelle valeur de so
         self.so = np.divide(np.dot(self.matrixes.misfit, self.residual), np.trace(self.current_R))

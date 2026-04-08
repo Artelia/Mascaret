@@ -239,8 +239,8 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
                 else:
                     recs.append(
                         [idx_ks, *id_ks, False, True, [], [],
-                         False, 1, min_coef, min_coef,
-                         False, 1, maj_coef, maj_coef])
+                         False, 2, min_coef, min_coef,
+                         False, 3, maj_coef, maj_coef])
                 idx_ks += 1
 
             sql = "DELETE FROM {0}.assim_ks"
