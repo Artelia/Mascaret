@@ -655,7 +655,7 @@ class ClassMascaret:
         gbl_param = {
                      'dbg': self.dbg,
                      'mdb': self.mdb,
-                     'dossier_file_masc': self.dossierFileMasc,
+                     'dossier_file_masc': self.dossier_file_masc,
                      'basename': self.baseName,
                      'noyau': noyau,
                      'run': run,
