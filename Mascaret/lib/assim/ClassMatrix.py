@@ -111,6 +111,8 @@ class ClassMatrix:
 
         # Retrieval of observation zeros
         self.zero_obs = {}
+        # Retrieval of observation reject limits
+        self.reject_obs = {}
         if ctrl_type == 'ctrlKS' and self.ctrlKs:
             for d in self.dict_assim["ctrlKS"]["lst_zone"]:
                 dico = d.get("lst_obs", {})
@@ -118,6 +120,8 @@ class ClassMatrix:
                     for ic, c in enumerate(dico.get("code")):
                         if c not in self.zero_obs.keys():
                             self.zero_obs[c] = dico.get("zero")[ic]
+                            self.reject_obs[c] = dico.get("rejectlimit")[ic]
+
             self.key_lst = 'lst_zone'
         if ctrl_type == 'ctrlLaw' and self.ctrlLaw:
             for d in self.dict_assim[ctrl_type]["lst_loi"]:
@@ -126,6 +130,7 @@ class ClassMatrix:
                     for ic, c in enumerate(dico.get("code")):
                         if c not in self.zero_obs.keys():
                             self.zero_obs[c] = dico.get("zero")[ic]
+                            self.reject_obs[c] = dico.get("rejectlimit")[ic]
             self.key_lst = 'lst_loi'
 
         self.type_perturb = []
@@ -164,7 +169,7 @@ class ClassMatrix:
                 std_zone = d["std"]
                 if d.get("std") is None:
                     raise KeyError("Key std not found in data_assim.json")
-                liste_sigma += [2 * std_zone]
+                liste_sigma += [std_zone ** 2]
 
         if self.ctrl_type == 'ctrlLaw' and self.ctrlLaw:
             for d in self.dict_assim.get("ctrlLaw")["lst_loi"]:
@@ -264,11 +269,19 @@ class ClassMatrix:
         ista = 0
         for it, time in enumerate(dict_ref['time']):
             for station in val_ref.keys():
-                self.y0.append(self.val_obs[station][self.type_field][it])
-                print(self.val_obs[station][self.type_field][it])
-                delta_z = self.val_obs[station][self.type_field][it] - val_ref[station][it]
+                obs = self.val_obs[station][self.type_field][it]
+                ref = val_ref[station][it]
+                self.y0.append(obs)
+                print(obs)
+                delta_z = obs - ref
+
+                # Apply threshold on observations
+                if obs < self.reject_obs[station]:
+                    print(f'Station {station} has at least one value below '
+                          f'threshold {self.reject_obs[station]}')
+                    delta_z = 0.
                 # Apply misfit rejection threshold
-                if abs(100 * np.divide(delta_z, val_ref[station][it])) > self.seuil_rejet_misfit:
+                if abs(100 * np.divide(delta_z, ref)) > self.seuil_rejet_misfit:
                     delta_z = 0.
                 self.misfit.append(delta_z)
                 ista += 1
