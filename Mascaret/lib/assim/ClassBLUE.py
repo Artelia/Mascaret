@@ -180,7 +180,8 @@ class classBLUE:
 
         self.residual = np.array(self.matrixes.misfit) - self.matrixes.H @ self.innovation
         # Ajout de la nouvelle valeur de so
-        self.so = np.divide(np.dot(self.matrixes.misfit, self.residual), np.trace(self.current_R))
+        sigmao = np.dot(self.matrixes.misfit, self.residual)
+        self.so = np.divide(sigmao, np.trace(self.current_R))
         self.delta_so = abs(self.so - self.old_so)
         self.delta_sb = np.abs(np.subtract(self.sb, self.old_sb))
 
