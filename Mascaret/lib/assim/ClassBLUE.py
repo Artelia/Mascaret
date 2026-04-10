@@ -224,7 +224,8 @@ class classBLUE:
             if dico[lst_var][izone].get("xa") is None or first:
                 dico[lst_var][izone]["xa"] = [xa_val]
             else:
-                dico[lst_var][izone]["xa"].append(xa_val)
+                # Keeping only last assimilation step value
+                dico[lst_var][izone]["xa"][0] = xa_val
         with open(self.json_assim, 'w') as f:
             json.dump(self.data_assim, f, indent=4)
 
