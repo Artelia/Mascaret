@@ -570,7 +570,6 @@ class ClassAPIMascaret:
         """
         # Flush and store the Mascaret internal log
         self.add_info(self.masc.log_stream.getvalue())
-        # TODO if self.assim
         if self.assim:
             # Storing additionally KS values for later use in BLUE
             # valKSmin = [self.masc.get('Model.FricCoefMainCh', i) for i in self.res_assim.dict_obs]

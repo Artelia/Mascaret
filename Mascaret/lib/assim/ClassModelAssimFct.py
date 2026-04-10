@@ -300,13 +300,14 @@ class ModelAssimBase:
                 "type_ctrl": type_assim,
             })
             order += 1
-
+        #TODO Checker has_assim
         d_scen["instances"].append({
             "name": f"Analyse_{type_assim}",
             "name_xcas": xcas_file,
             "RUN_REP": folder_run,
             "has_casier": drun["has_casier"],
             "has_tracer": drun["has_tracer"],
+            "has_assim": True,
             "starttime": d_scen.get("starttime"),
             "order": order,
             "type_ctrl": type_assim,

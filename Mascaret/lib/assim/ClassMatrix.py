@@ -21,6 +21,7 @@ import json
 import os
 import numpy as np
 import traceback
+from pathlib import Path
 
 try:
     from .ClassAssimData import AssimData
@@ -82,6 +83,9 @@ class ClassMatrix:
         self.dict_assim = AssimData()
         self.dict_assim.load(folder=self.base_folder)
 
+        d_scen = self.dict_assim.dscen
+        path_instance = Path(d_scen.get("path_instance", '.'))
+
         # Retrieval of control type
         if self.dict_assim.get("ctrlKS") is not None and ctrl_type == "ctrlKS":
             self.ctrlKs = True
@@ -102,10 +106,13 @@ class ClassMatrix:
         self.zones = np.unique(self.zones)
         self.nb_zones = len(self.zones)
 
+        self.name_folder_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
+        if self.ctrl_type == "ctrlLaw" and self.dict_assim.get('ctrlKS', False):
+            # Case with CtrlLaw after ctrlKs
+            self.name_folder_ref = Path(path_instance, 'Analyse_ctrlKS')
 
         # Retrieval of total observation time steps
-        name_folder_ref = os.path.join(self.base_folder, 'run_ref')
-        with open(os.path.join(name_folder_ref, 'Z_Q_assim.json')) as f:
+        with open(os.path.join(self.name_folder_ref, 'Z_Q_assim.json')) as f:
             dict_ref = json.load(f)
         self.nb_dt_obs = len(dict_ref['time'])
 
@@ -238,8 +245,7 @@ class ClassMatrix:
 
         :return: None
         """
-        name_folder_ref = os.path.join(self.base_folder, 'run_ref')
-        with open(os.path.join(name_folder_ref, 'Z_Q_assim.json')) as f:
+        with open(os.path.join(self.name_folder_ref, 'Z_Q_assim.json')) as f:
             dict_ref = json.load(f)
 
         val_ref = {}
@@ -326,9 +332,9 @@ class ClassMatrix:
         """
         H = []
         # Getting Zref and KS values
-        name_folder_ref = os.path.join(self.base_folder, 'run_ref')
+
         base_folder_perturb = os.path.join(self.base_folder, f'run_{self.ctrl_type}')
-        with open(os.path.join(name_folder_ref, 'Z_Q_assim.json')) as f:
+        with open(os.path.join(self.name_folder_ref, 'Z_Q_assim.json')) as f:
             dict_ref = json.load(f)
 
         val_ref = []
