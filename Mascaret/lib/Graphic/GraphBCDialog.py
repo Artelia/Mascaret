@@ -118,6 +118,7 @@ class GraphBCDialog(QDialog):
         for row in results:
             for idc, col in enumerate(cols):
                 d_res[col].append(row[idc])
+
         return d_res
 
 
@@ -485,19 +486,16 @@ class GraphBCAssim(QWidget):
             self.cb_run.addItem("No run", None)
         self.cur_run = self.cb_run.currentData()
 
-    def find_coef(self, list_scen, name):
-        list_scen = np.array(list_scen)
-        w_scen = np.where(list_scen == name)
-        if not len(w_scen[0]) > 0:
+    def find_coef(self,name_ctrl):
+        if self.cur_run is None:
             return 1, 0
-        coefa = 1
-        coefb = 0
-        for ids in w_scen[0]:
-            if self.assim_info['var'][ids] == 'coefA':
-                coefa = self.assim_info['val'][ids]
-            elif self.assim_info['var'][ids] == 'coefB':
-                coefb = self.assim_info['val'][ids]
-        return coefa, coefb
+        resultats = {
+            self.assim_info['var'][i] : self.assim_info['val'][i]
+            for i in range(len(self.assim_info['run']))
+            if self.assim_info['run'][i] == self.cur_run and self.assim_info['scenario'][i] == name_ctrl
+        }
+
+        return resultats.get('coefA', 1), resultats.get('coefB', 0)
 
     def init_event_changed(self):
         """
@@ -537,7 +535,8 @@ class GraphBCAssim(QWidget):
                     if len(id_law) > 0:
                         id_law = id_law[0]
                         start_time_law = rows.get('starttime', [None])[0]
-                coefa, coefb = self.find_coef(scenarios, name_ctrl)
+
+                coefa, coefb = self.find_coef(name_ctrl)
                 self.events[name_ctrl] = {
                     "starttime": list_event["starttime"][id],
                     "endtime": list_event["endtime"][id],
@@ -547,6 +546,8 @@ class GraphBCAssim(QWidget):
                     "start_time_law": start_time_law
                 }
             self.cur_event = self.cb_event.currentData()
+            print(self.events)
+
         else:
             self.cb_event.addItem("No events", None)
             self.cur_event = None
