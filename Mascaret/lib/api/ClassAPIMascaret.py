@@ -159,32 +159,24 @@ class ClassAPIMascaret:
         self.init_hydro()
         self.init_crit_stop()
         self.init_struct()
-        self.init_assim()
+        if self.assim:
+            self.init_assim()
 
         return 0
 
     def init_assim(self):
-        if self.assim:
-            self.num_zones_assim, self.pdt_assim = self.res_assim.init_assim(self.masc)
+        self.num_zones_assim, self.pdt_assim = self.res_assim.init_assim(self.masc)
+
+        # Retrieving first assimilation time within simulation range
+        while self.current_t_assim < self.tini:
+            self.current_t_assim += self.pdt_assim
 
         # Retrieving the initial time values for assim
-        if self.assim and self.tini <= self.current_t_assim <= self.tini + self.dt:
-            txt = f'{self.num_zones_assim} - {self.masc.nb_nodes}'
-            self.add_info(txt)
-            self.res_assim.extract_zq(self.masc, self.tini)
-            # Incrément du temps courant assim (prochain temps à extraire)
-            self.current_t_assim += self.pdt_assim
-            # file_obs = os.path.join()
-            # self.pdt_assim =
-            # if not self.dict_obs:
-            #     raise ValueError('No observation retrieved for assimilation. Check settings')
-            # lst_pdt_obs = []
-            # for idx_obs in self.dict_obs:
-            #     lst_pdt_obs.append(self.dict_obs[idx_obs]['dt_obs'])
-            # if len(np.unique(lst_pdt_obs)) != 1:
-            #     raise ValueError('At least one observation has different time step than the other. '
-            #                      'Every observation must have the same timestep for assimilation')
-            # self.pdt_assim = lst_pdt_obs[0]
+        txt = f'{self.num_zones_assim} - {self.masc.nb_nodes}'
+        self.add_info(txt)
+        self.res_assim.extract_zq(self.masc, self.tini)
+        # Incrément du temps courant assim (prochain temps à extraire)
+        self.current_t_assim += self.pdt_assim
 
     def init_struct(self):
 

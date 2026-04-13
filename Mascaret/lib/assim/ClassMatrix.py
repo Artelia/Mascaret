@@ -30,24 +30,6 @@ except:
     from ClassAssimData import AssimData
 
 
-def get_perturb_folder(base_folder, iperturb):
-    print('Finding perturbation folders in', base_folder)
-    name_folder = None
-    type_perturb = ''
-    val_perturb = 0.0
-    zone_perturb = None
-    for folder in os.listdir(base_folder):
-        if f'pertub{iperturb}' in folder:
-            name_folder = folder
-            type_perturb = folder.split('_')[1]
-            val_perturb = float(folder.split('_')[-1].replace('p', '.'))
-            zone_perturb = folder.split('_')[2]
-    if name_folder is not None:
-        return name_folder, type_perturb, val_perturb, zone_perturb
-    else:
-        raise FileNotFoundError(f'[ ERROR ] Directory for perturbation number {iperturb} not found')
-
-
 class ClassMatrix:
     """Build matrices from assimilation data and perturbation runs."""
 
@@ -89,39 +71,48 @@ class ClassMatrix:
         # Retrieval of control type
         if self.dict_assim.get("ctrlKS") is not None and ctrl_type == "ctrlKS":
             self.ctrlKs = True
+            self.key_lst = 'lst_zone'
+            self.key_num = 'num_zone'
+
         if self.dict_assim.get("ctrlLaw") is not None and ctrl_type == "ctrlLaw":
             self.ctrlLaw = True
+            self.key_lst = 'lst_loi'
+            self.key_num = 'name_law'
+
         self.ctrl_type = ctrl_type
 
         config = {'H':'Z', 'Q':'Q'}
         self.type_field = config[self.dict_assim[ctrl_type]["obs_var"]]
         self.seuil_rejet_misfit = self.dict_assim[ctrl_type].get("seuil_rejet_misfit", 500)
+
         # Retrieval of zone count and zone list
-        if self.ctrlKs and self.ctrl_type == 'ctrlKS':
-            self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlKS"]["lst_zone"]]
+        if self.ctrlKs or self.ctrlLaw:
+            self.zones = [dico.get(self.key_num) for dico in self.dict_assim[self.ctrl_type][self.key_lst]]
+            self.zones = np.unique(self.zones)
+            self.nb_zones = len(self.zones)
 
-        if self.ctrlLaw and self.ctrl_type == 'ctrlLaw':
-            self.zones = [dico.get("name_law") for dico in self.dict_assim["ctrlLaw"]["lst_loi"]]
-
-        self.zones = np.unique(self.zones)
-        self.nb_zones = len(self.zones)
+        # if self.ctrlKs and self.ctrl_type == 'ctrlKS':
+        #     self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlKS"]["lst_zone"]]
+        #
+        # if self.ctrlLaw and self.ctrl_type == 'ctrlLaw':
+        #     self.zones = [dico.get("name_law") for dico in self.dict_assim["ctrlLaw"]["lst_loi"]]
 
         self.name_folder_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
         if self.ctrl_type == "ctrlLaw" and self.dict_assim.get('ctrlKS', False):
             # Case with CtrlLaw after ctrlKs
             self.name_folder_ref = Path(path_instance, 'Analyse_ctrlKS')
 
-        # Retrieval of total observation time steps
+        # Retrieving total observation time steps
         with open(os.path.join(self.name_folder_ref, 'Z_Q_assim.json')) as f:
             dict_ref = json.load(f)
         self.nb_dt_obs = len(dict_ref['time'])
 
-        # Retrieval of observation zeros
+
+        # Retrieving observation zeros and reject limits
         self.zero_obs = {}
-        # Retrieval of observation reject limits
         self.reject_obs = {}
-        if ctrl_type == 'ctrlKS' and self.ctrlKs:
-            for d in self.dict_assim["ctrlKS"]["lst_zone"]:
+        if self.ctrlKs or self.ctrlLaw:
+            for d in self.dict_assim[self.ctrl_type][self.key_lst]:
                 dico = d.get("lst_obs", {})
                 if dico != {}:
                     for ic, c in enumerate(dico.get("code")):
@@ -129,16 +120,25 @@ class ClassMatrix:
                             self.zero_obs[c] = dico.get("zero")[ic]
                             self.reject_obs[c] = dico.get("rejectlimit")[ic]
 
-            self.key_lst = 'lst_zone'
-        if ctrl_type == 'ctrlLaw' and self.ctrlLaw:
-            for d in self.dict_assim[ctrl_type]["lst_loi"]:
-                dico = d.get("lst_obs", {})
-                if dico != {}:
-                    for ic, c in enumerate(dico.get("code")):
-                        if c not in self.zero_obs.keys():
-                            self.zero_obs[c] = dico.get("zero")[ic]
-                            self.reject_obs[c] = dico.get("rejectlimit")[ic]
-            self.key_lst = 'lst_loi'
+
+
+        # if ctrl_type == 'ctrlKS' and self.ctrlKs:
+        #     for d in self.dict_assim["ctrlKS"]["lst_zone"]:
+        #         dico = d.get("lst_obs", {})
+        #         if dico != {}:
+        #             for ic, c in enumerate(dico.get("code")):
+        #                 if c not in self.zero_obs.keys():
+        #                     self.zero_obs[c] = dico.get("zero")[ic]
+        #                     self.reject_obs[c] = dico.get("rejectlimit")[ic]
+        #
+        # if ctrl_type == 'ctrlLaw' and self.ctrlLaw:
+        #     for d in self.dict_assim[ctrl_type]["lst_loi"]:
+        #         dico = d.get("lst_obs", {})
+        #         if dico != {}:
+        #             for ic, c in enumerate(dico.get("code")):
+        #                 if c not in self.zero_obs.keys():
+        #                     self.zero_obs[c] = dico.get("zero")[ic]
+        #                     self.reject_obs[c] = dico.get("rejectlimit")[ic]
 
         self.type_perturb = []
         # Retrieval of total perturbations
@@ -152,7 +152,7 @@ class ClassMatrix:
                 if type_pert == "Ksmaj" or type_pert == "coefB":
                     self.nbperturb += 1
                     self.type_perturb.append(2)
-            print('Total number of perturbations:', self.nbperturb)
+            print('[BLUE] : Total number of perturbations:', self.nbperturb)
 
     def build_all_matrix(self):
         """
@@ -170,21 +170,30 @@ class ClassMatrix:
 
         :return: None
         """
+
         liste_sigma = []
-        if self.ctrl_type == 'ctrlKS' and self.ctrlKs:
-            for d in self.dict_assim.get("ctrlKS")["lst_zone"]:
+        if self.ctrlLaw or self.ctrlKs:
+            for d in self.dict_assim.get(self.ctrl_type)[self.key_lst]:
                 std_zone = d["std"]
                 if d.get("std") is None:
                     raise KeyError("Key std not found in data_assim.json")
                 liste_sigma += [std_zone ** 2]
 
-        if self.ctrl_type == 'ctrlLaw' and self.ctrlLaw:
-            for d in self.dict_assim.get("ctrlLaw")["lst_loi"]:
-                std_zone = d["std"]
-                if d.get("std") is None:
-                    raise KeyError("Key std not found in data_assim.json")
-                # Dans le cas des lois, sigma^2
-                liste_sigma += [std_zone ** 2]
+
+        # if self.ctrl_type == 'ctrlKS' and self.ctrlKs:
+        #     for d in self.dict_assim.get("ctrlKS")["lst_zone"]:
+        #         std_zone = d["std"]
+        #         if d.get("std") is None:
+        #             raise KeyError("Key std not found in data_assim.json")
+        #         liste_sigma += [std_zone ** 2]
+        #
+        # if self.ctrl_type == 'ctrlLaw' and self.ctrlLaw:
+        #     for d in self.dict_assim.get("ctrlLaw")["lst_loi"]:
+        #         std_zone = d["std"]
+        #         if d.get("std") is None:
+        #             raise KeyError("Key std not found in data_assim.json")
+        #         # Dans le cas des lois, sigma^2
+        #         liste_sigma += [std_zone ** 2]
 
         if len(liste_sigma) != self.nbperturb:
             raise ValueError(f'Problem with initial B matrix creation. '
@@ -206,8 +215,9 @@ class ClassMatrix:
         """
         diag_R = []
         num_obs = []
-        if self.ctrl_type == 'ctrlKS' and self.ctrlKs:
-            for dico in self.dict_assim.get("ctrlKS").get("lst_zone"):
+
+        if self.ctrlKs or self.ctrlLaw:
+            for dico in self.dict_assim.get(self.ctrl_type).get(self.key_lst):
                 dict2 = dico.get("lst_obs")
                 for icode, code in enumerate(dict2.get("code")):
                     if code not in num_obs:
@@ -217,17 +227,28 @@ class ClassMatrix:
                                    range(self.nb_dt_obs)]
                         num_obs.append(code)
 
-        elif self.ctrl_type == 'ctrlLaw' and self.ctrlLaw:
-            for dico in self.dict_assim.get(self.ctrl_type).get("lst_loi"):
-                dict2 = dico.get("lst_obs")
-                for icode, code in enumerate(dict2.get("code")):
-                    if code not in num_obs:
-                        if dict2.get("stderr") is None:
-                            raise KeyError("Key std_obs not found in data_assim.json")
-                        diag_R += [float(dict2["stderr"][icode]) ** 2 for i in
-                                   range(self.nb_dt_obs)]
-                        num_obs.append(code)
-        print("Diagonal of observation error covariance matrix R:", diag_R)
+
+        # if self.ctrl_type == 'ctrlKS' and self.ctrlKs:
+        #     for dico in self.dict_assim.get("ctrlKS").get("lst_zone"):
+        #         dict2 = dico.get("lst_obs")
+        #         for icode, code in enumerate(dict2.get("code")):
+        #             if code not in num_obs:
+        #                 if dict2.get("stderr") is None:
+        #                     raise KeyError("Key std_obs not found in data_assim.json")
+        #                 diag_R += [float(dict2["stderr"][icode]) ** 2 for i in
+        #                            range(self.nb_dt_obs)]
+        #                 num_obs.append(code)
+        #
+        # elif self.ctrl_type == 'ctrlLaw' and self.ctrlLaw:
+        #     for dico in self.dict_assim.get(self.ctrl_type).get("lst_loi"):
+        #         dict2 = dico.get("lst_obs")
+        #         for icode, code in enumerate(dict2.get("code")):
+        #             if code not in num_obs:
+        #                 if dict2.get("stderr") is None:
+        #                     raise KeyError("Key std_obs not found in data_assim.json")
+        #                 diag_R += [float(dict2["stderr"][icode]) ** 2 for i in
+        #                            range(self.nb_dt_obs)]
+        #                 num_obs.append(code)
         self.R = np.array(diag_R)
 
     def build_min_max_values(self):
@@ -260,38 +281,38 @@ class ClassMatrix:
             for station in dict_ref[self.type_field][str(zone)]:
                 val_ref[station] += dict_ref[self.type_field][str(zone)][station]
 
-        print('Val Ref : ', val_ref)
         obs_folder = os.path.join(self.base_folder, 'Observations')
         self.val_obs = {}
         for station in val_ref.keys():
             self.val_obs[station] = {'time': [], self.type_field: []}
             file_name = os.path.join(obs_folder, str(station) + '.loi')
             with open(file_name) as f:
-                lines = f.readlines()[3:]
-                # TODO handle time units !!!
-                self.val_obs[station]['time'] = [float(l.split()[0]) * 3600 for l in lines]
+                all_lines = f.readlines()
+                unit_time = all_lines[2].split()[0]
+                if unit_time == 'H':
+                    fact_time = 3600.
+                elif unit_time == 'S':
+                    fact_time = 1.
+                lines = all_lines[3:]
+                self.val_obs[station]['time'] = [float(l.split()[0]) * fact_time for l in lines]
                 self.val_obs[station][self.type_field] = [float(l.split()[1]) for l in lines]
-        print('Z station', self.val_obs)
-        ista = 0
+
         for it, time in enumerate(dict_ref['time']):
             for station in val_ref.keys():
                 obs = self.val_obs[station][self.type_field][it]
                 ref = val_ref[station][it]
                 self.y0.append(obs)
-                print(obs)
                 delta_z = obs - ref
 
                 # Apply threshold on observations
                 if obs < self.reject_obs[station]:
-                    print(f'Station {station} has at least one value below '
+                    print(f'[BLUE] : Station {station} has at least one value below '
                           f'threshold {self.reject_obs[station]}')
                     delta_z = 0.
                 # Apply misfit rejection threshold
                 if abs(100 * np.divide(delta_z, ref)) > self.seuil_rejet_misfit:
                     delta_z = 0.
                 self.misfit.append(delta_z)
-                ista += 1
-        print('Y0', self.y0)
 
     def get_perturb_dict_js(self, base_folder, iperturb):
         """Retrieve perturbation folder info from JSON instance data.
@@ -300,18 +321,15 @@ class ClassMatrix:
         :param iperturb: Perturbation index.
         :return: Tuple (folder_name, perturbation_type, value, zone).
         """
-        print('Finding perturbation folders in', base_folder)
-        # self.dict_assim["generate_instance"]["dscen"]["instances"]
+        print('[BLUE] : Finding perturbation folders in', base_folder)
         instances = self.dict_assim.instances
         if not instances:
             raise Exception(f'Perturbation number {iperturb} not found in the Json data')
 
         instances = [inst for inst in instances if
                      inst['name'].startswith(self.ctrl_type) and not inst['name'].endswith('_init')]
-        print('Instances:', instances)
         try:
             inst = instances[iperturb]
-            # for inst in instances:
             name_folder = os.path.basename(inst["RUN_REP"])
             type_perturb = inst["assim_info"]["type_case"]
             if self.ctrl_type == 'ctrlLaw':
@@ -347,6 +365,7 @@ class ClassMatrix:
                     val_ref += dict_ref[self.type_field][str(zone)][station]
                     all_stations.append(station)
         val_ref = np.array(val_ref, dtype=float)
+
         # Getting initial values of KS
         if self.ctrlKs:
             data = self.dict_assim["ctrlKS"]
@@ -355,7 +374,6 @@ class ClassMatrix:
             KSmajref = {str(zone["num_zone"]): zone["zone_info"]["ref_ks_maj"]
                         for zone in data["lst_zone"] if zone["num_zone"] in self.zones}
             self.param_ref = {'Ksmin': KSminref, 'Ksmaj': KSmajref}
-            print('PARAMREF', self.param_ref)
 
         if self.ctrlLaw:
             data = self.dict_assim["ctrlLaw"]
@@ -368,13 +386,12 @@ class ClassMatrix:
 
         # Getting Z perturb and building H
         for i in range(self.nbperturb):
-            print('Run perturbé', i)
-            # Nom de dossier = './perturb
+            print('[BLUE] : Building H matrix, perturbed run', i)
             # Fonctionne pour Law et KS normalement
             name_folder_pertub, type_perturb, param_perturb, zone_perturb = (
                 self.get_perturb_dict_js(base_folder_perturb, i))
 
-            print('Perturbation de type', type_perturb)
+            print('[BLUE] : Type of perturbation :', type_perturb)
             name_folder_pertub = os.path.join(base_folder_perturb, name_folder_pertub)
             with open(os.path.join(name_folder_pertub, 'Z_Q_assim.json')) as f:
                 dict_perturb = json.load(f)
@@ -391,7 +408,6 @@ class ClassMatrix:
             val_perturb = np.array(val_perturb, dtype=float)
             delta_p = param_perturb - self.param_ref[type_perturb][str(zone_perturb)]
             self.xb.append(self.param_ref[type_perturb][str(zone_perturb)])
-            print('Before calc H', val_perturb, val_ref, delta_p)
             H.append(np.divide(np.subtract(val_perturb, val_ref), delta_p))
         H = np.array(H)
         H = H.T

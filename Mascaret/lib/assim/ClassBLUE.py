@@ -51,13 +51,13 @@ def write_matrix_auto(f, matrix, decimals=5):
     elif len(matrix.shape) == 1:
         # Formater toutes les valeurs en chaînes
         str_matrix = [f"{val:.{decimals}f}" for val in matrix]
-        print(str_matrix)
+        # print(str_matrix)
 
         # Largeur max par colonne
         col_width = [len(val) for val in str_matrix]
 
         line = "  ".join(val.rjust(col_width[c]) for c, val in enumerate(str_matrix))
-        print(line)
+        # print(line)
         f.write(line + "\n")
 
 
@@ -69,7 +69,7 @@ class classBLUE:
         self.innovation = None
         self.K = None
         self.ctrl_type = ctrl_type
-        print('Using Blue in ', base_folder)
+        # print('Using Blue in ', base_folder)
         self.base_folder = base_folder
         self.json_assim = os.path.join(self.base_folder, 'data_assim.json')
         with open(self.json_assim) as f:
@@ -88,12 +88,12 @@ class classBLUE:
         self.delta_so = 1.
         self.delta_sb = [1] * np.max(self.matrixes.type_perturb)
         self.raison_arret = ""
+        self.trace_HBHT = []
 
     def compute_BLUE(self):
         """ Computes different BLUE steps to get analysed state """
         for i in range(self.iterations_sigma):
             self.build_gain_K()
-            # self.build_gain_K_V2()
             self.build_analysis()
             self.calc_so_sb()
 
@@ -102,6 +102,7 @@ class classBLUE:
                 self.raison_arret = "Arrêt sur critère sb < 0"
                 self.store_results(first=(i == 0), assim_step=i)
                 break
+
             # Arrêt si delta_sb et delta_so sont < 1e-3
             elif (self.delta_so < 1e-3) and (np.all(np.array(self.delta_sb) < 1e-3)):
                 self.raison_arret = ("'Arret sur critere de convergence de sb et so. Variation "
@@ -118,7 +119,6 @@ class classBLUE:
                 self.current_B[:, j] = self.sb[isigma] * self.current_B[:, j]
             # R = so * R_initial
             self.current_R = self.so * np.diag(self.matrixes.R)
-            print(self.current_R)
 
         self.raison_arret = "Nombre iterations sigma atteint"
 
@@ -126,33 +126,17 @@ class classBLUE:
         """ Computes gain matrix K : K =BH^t (HBH^t + R)^-1 """
         # Calcul de BHt
         BHT = self.current_B @ self.matrixes.H.transpose()
-        print('BHT', BHT)
         # Calcul de HBHt
         HBHT = self.matrixes.H @ self.current_B @ self.matrixes.H.transpose()
-        print('HBHT', HBHT)
 
         # Calcul de (HBHt + R)^-1
         HBHT_plus_R = np.linalg.inv(HBHT + self.current_R)
-        print('HBHT_plus_R', HBHT_plus_R)
 
         self.K = BHT @ HBHT_plus_R
-        print('Calcul de gain effactué. K=', self.K)
-
-
-    def build_gain_K_V2(self):
-        """ Computes gain matrix K : K =BH^t (HBH^t + R)^-1 """
-        # Calcul de BHt
-        HtRmH = self.matrixes.H.transpose() @ np.linalg.inv(self.current_R) @ self.matrixes.H
-        # Calcul de HBHt
-        Ktemp = np.linalg.inv(np.linalg.inv(self.current_B) + HtRmH)
-        # Calcul de (HBHt + R)^-1
-        # HBHT_plus_R = np.linalg.inv(HBHT + self.current_R)
-        self.K = Ktemp @ self.matrixes.H.transpose() @ np.linalg.inv(self.current_R)
-        print('Calcul de gain effactué. K=', self.K)
-
+        print('[BLUE] : Calcul du gain K effectué.')
 
     def calc_so_sb(self):
-        trace_HBHT = []
+        self.trace_HBHT = []
         self.old_sb = np.copy(self.sb)
         self.old_so = np.copy(self.so)
 
@@ -162,21 +146,18 @@ class classBLUE:
             for j in range(B_tempo.shape[1]):
                 if self.matrixes.type_perturb[j] != itype + 1:
                     B_tempo[:, j] = np.zeros(B_tempo.shape[0])
-            print(B_tempo)
             HBHT = self.matrixes.H @ B_tempo @ self.matrixes.H.transpose()
-            trace_HBHT.append(np.trace(HBHT))
-        print('Trace HBHT', trace_HBHT)
-        print('Matrixes type perturb', self.matrixes.type_perturb)
+            self.trace_HBHT.append(np.trace(HBHT))
+
         for itype, type_pert in enumerate(list(dict.fromkeys(self.matrixes.type_perturb))):
             idx_type_pert = int(type_pert - 1)
-            if trace_HBHT[itype] == 0.:
+            if self.trace_HBHT[itype] == 0.:
                 self.sb[idx_type_pert] = 0.
             else:
                 innovation_tempo = np.zeros(len(self.innovation))
                 innovation_tempo[itype] = self.innovation[itype]
-                print('innovation TEMPO', innovation_tempo)
                 self.sb[idx_type_pert] = np.divide(np.dot(self.matrixes.misfit, self.matrixes.H @ innovation_tempo),
-                                           trace_HBHT[itype])
+                                           self.trace_HBHT[itype])
 
         self.residual = np.array(self.matrixes.misfit) - self.matrixes.H @ self.innovation
         # Ajout de la nouvelle valeur de so
@@ -187,9 +168,6 @@ class classBLUE:
 
     def build_analysis(self):
         """ Computes analysed state xa : x_a = x_b + K*misfit """
-
-        print('Ebauche xb', self.matrixes.xb)
-        print('MISFIT', self.matrixes.misfit)
 
         self.innovation = self.K @ self.matrixes.misfit
         self.analyse = self.matrixes.xb + self.innovation
@@ -203,8 +181,7 @@ class classBLUE:
                     self.analyse[ia] = self.matrixes.max_values[ia]
         self.matrixes.build_B_matrix_analysed(self.K)
 
-        print('Calcul de l\'état analysé effectué')
-        print(self.analyse)
+        print('[BLUE] : Calcul de l\'état analysé effectué')
 
     def clean_result_file(self):
         """ Overwrites matrix file """
@@ -257,17 +234,17 @@ class classBLUE:
             if first:
                 if first:
                     f.write(f'Assimilation - {self.ctrl_type}\n')
-                    self._write_matrix(f, 'Matrice H', self.matrixes.H)
+                    self._write_matrix(f, 'H Matrix', self.matrixes.H)
                     f.write(25 * '*-' + '\n')
 
             f.write(f'Assimilation step number {assim_step + 1}\n')
             for label, mat in [
-                ('Matrice B', self.current_B),
-                ('Matrice R', self.current_R),
-                ('Matrice K', self.K),
-                ('Etat analyse xa', self.analyse),
-                ("Vecteur d'incrément d'analyse", self.innovation),
-                ("Matice d'erreur d'analyse Ba", self.matrixes.B_analysed)
+                ('B matrix diagonal', np.diagonal(self.current_B)),
+                ('R matrix diagonal', np.diagonal(self.current_R)),
+                ('Gain matrix K', self.K),
+                ('Analysed state x_a', self.analyse),
+                ("Innovation vector", self.innovation),
+                ("Analysis error covariance matrix B_a", self.matrixes.B_analysed)
             ]:
                 self._write_matrix(f, label, mat)
 
@@ -275,11 +252,12 @@ class classBLUE:
             f.write(str(np.sqrt(self.so)) + '\n')
 
             for label, mat in [
+                ('Traces HBHT par type', self.trace_HBHT),
                 ('Sigma b par type', np.nan_to_num(np.sqrt(self.sb), nan=-9999)),
                 ('Residual', self.residual),
                 ('Misfit', self.matrixes.misfit),
                 ('Observations Y0', self.matrixes.y0),
-                ('Type perturbations', self.matrixes.type_perturb),
+                ('Perturbation types', self.matrixes.type_perturb),
             ]:
                 self._write_matrix_safe(f, label, mat)
 
@@ -295,8 +273,6 @@ if __name__ == '__main__':
     base_folder = sys.argv[1]
     ctrl_type = sys.argv[2]
     # base_folder = r'../../mascaret/event1_1/'
-    print('BASE_FOLDER', base_folder)
+    print('[BLUE] : Working in folder :', base_folder)
     CB = classBLUE(base_folder, ctrl_type)
     CB.compute_BLUE()
-    # TODO first doit être un bool de first step assim si on enchaine
-    # CB.store_results(first=True)
