@@ -91,12 +91,6 @@ class ClassMatrix:
             self.zones = np.unique(self.zones)
             self.nb_zones = len(self.zones)
 
-        # if self.ctrlKs and self.ctrl_type == 'ctrlKS':
-        #     self.zones = [dico.get("num_zone") for dico in self.dict_assim["ctrlKS"]["lst_zone"]]
-        #
-        # if self.ctrlLaw and self.ctrl_type == 'ctrlLaw':
-        #     self.zones = [dico.get("name_law") for dico in self.dict_assim["ctrlLaw"]["lst_loi"]]
-
         self.name_folder_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
         if self.ctrl_type == "ctrlLaw" and self.dict_assim.get('ctrlKS', False):
             # Case with CtrlLaw after ctrlKs
@@ -119,26 +113,6 @@ class ClassMatrix:
                         if c not in self.zero_obs.keys():
                             self.zero_obs[c] = dico.get("zero")[ic]
                             self.reject_obs[c] = dico.get("rejectlimit")[ic]
-
-
-
-        # if ctrl_type == 'ctrlKS' and self.ctrlKs:
-        #     for d in self.dict_assim["ctrlKS"]["lst_zone"]:
-        #         dico = d.get("lst_obs", {})
-        #         if dico != {}:
-        #             for ic, c in enumerate(dico.get("code")):
-        #                 if c not in self.zero_obs.keys():
-        #                     self.zero_obs[c] = dico.get("zero")[ic]
-        #                     self.reject_obs[c] = dico.get("rejectlimit")[ic]
-        #
-        # if ctrl_type == 'ctrlLaw' and self.ctrlLaw:
-        #     for d in self.dict_assim[ctrl_type]["lst_loi"]:
-        #         dico = d.get("lst_obs", {})
-        #         if dico != {}:
-        #             for ic, c in enumerate(dico.get("code")):
-        #                 if c not in self.zero_obs.keys():
-        #                     self.zero_obs[c] = dico.get("zero")[ic]
-        #                     self.reject_obs[c] = dico.get("rejectlimit")[ic]
 
         self.type_perturb = []
         # Retrieval of total perturbations
@@ -179,22 +153,6 @@ class ClassMatrix:
                     raise KeyError("Key std not found in data_assim.json")
                 liste_sigma += [std_zone ** 2]
 
-
-        # if self.ctrl_type == 'ctrlKS' and self.ctrlKs:
-        #     for d in self.dict_assim.get("ctrlKS")["lst_zone"]:
-        #         std_zone = d["std"]
-        #         if d.get("std") is None:
-        #             raise KeyError("Key std not found in data_assim.json")
-        #         liste_sigma += [std_zone ** 2]
-        #
-        # if self.ctrl_type == 'ctrlLaw' and self.ctrlLaw:
-        #     for d in self.dict_assim.get("ctrlLaw")["lst_loi"]:
-        #         std_zone = d["std"]
-        #         if d.get("std") is None:
-        #             raise KeyError("Key std not found in data_assim.json")
-        #         # Dans le cas des lois, sigma^2
-        #         liste_sigma += [std_zone ** 2]
-
         if len(liste_sigma) != self.nbperturb:
             raise ValueError(f'Problem with initial B matrix creation. '
                              f'Size should be {self.nbperturb}, it is {len(liste_sigma)}')
@@ -227,28 +185,6 @@ class ClassMatrix:
                                    range(self.nb_dt_obs)]
                         num_obs.append(code)
 
-
-        # if self.ctrl_type == 'ctrlKS' and self.ctrlKs:
-        #     for dico in self.dict_assim.get("ctrlKS").get("lst_zone"):
-        #         dict2 = dico.get("lst_obs")
-        #         for icode, code in enumerate(dict2.get("code")):
-        #             if code not in num_obs:
-        #                 if dict2.get("stderr") is None:
-        #                     raise KeyError("Key std_obs not found in data_assim.json")
-        #                 diag_R += [float(dict2["stderr"][icode]) ** 2 for i in
-        #                            range(self.nb_dt_obs)]
-        #                 num_obs.append(code)
-        #
-        # elif self.ctrl_type == 'ctrlLaw' and self.ctrlLaw:
-        #     for dico in self.dict_assim.get(self.ctrl_type).get("lst_loi"):
-        #         dict2 = dico.get("lst_obs")
-        #         for icode, code in enumerate(dict2.get("code")):
-        #             if code not in num_obs:
-        #                 if dict2.get("stderr") is None:
-        #                     raise KeyError("Key std_obs not found in data_assim.json")
-        #                 diag_R += [float(dict2["stderr"][icode]) ** 2 for i in
-        #                            range(self.nb_dt_obs)]
-        #                 num_obs.append(code)
         self.R = np.array(diag_R)
 
     def build_min_max_values(self):
