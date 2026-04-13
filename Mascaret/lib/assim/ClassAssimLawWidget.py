@@ -25,6 +25,7 @@ from qgis.PyQt.QtGui import QIcon, QStandardItemModel, QStandardItem
 from qgis.PyQt.QtWidgets import QMessageBox, QButtonGroup
 
 from qgis.core import QgsApplication, QgsGeometry, QgsCoordinateReferenceSystem
+from .FunctionAssimDialog import reproject_geom_to_project
 from .tooltips.tooltips import apply_tooltips_from_json
 
 FORM_CLASS, BASE = uic.loadUiType(
@@ -511,8 +512,10 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         """
         if self.cur_law is not None:
             ks_geom = self.d_laws[self.cur_perturb_var][self.cur_law]["geom"]
-            ks_bb = ks_geom.boundingBox()
-            ks_bb = ks_bb.buffered(2500.)
+            ks_geom_crs = self.d_laws[self.cur_perturb_var][self.cur_law].get("crs", None)
+            geom_to_display = reproject_geom_to_project(ks_geom, ks_geom_crs)
+            ks_bb = geom_to_display.boundingBox()
+            # ks_bb = ks_bb.buffered(2500.)
             canvas = self.iface.mapCanvas()
             canvas.setExtent(ks_bb)
             canvas.refresh()

@@ -172,6 +172,9 @@ class ClassStorageDB:
                 continue
             id_ctrl = self.get_id_assim_law(self.id_run, id_law, source_law)
             self._insert_assim_res(id_ctrl, self.id_run, "ctrlLaw", loi["type"], loi["xa"][0])
+            self._insert_assim_res(id_ctrl, self.id_run, "ctrlLaw", f"{loi['type']}_val_min", loi["val_min"])
+            self._insert_assim_res(id_ctrl, self.id_run, "ctrlLaw", f"{loi['type']}_val_max", loi["val_max"])
+
 
     def _insert_or_ignore_assim_res_law(self, id_runs, id_law, source_law, name_file_law, name_law):
         """Insert a row into the ``assim_res_law`` table if the

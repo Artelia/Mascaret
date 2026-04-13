@@ -494,8 +494,14 @@ class GraphBCAssim(QWidget):
             for i in range(len(self.assim_info['run']))
             if self.assim_info['run'][i] == self.cur_run and self.assim_info['scenario'][i] == name_ctrl
         }
+        val_min = resultats.get('coefA_val_min', None)
+        val_max = resultats.get('coefA_val_max', None)
+        if not val_max:
+            val_max = resultats.get('coefB_val_max', None)
+        if not val_min:
+            val_min = resultats.get('coefB_val_min', None)
 
-        return resultats.get('coefA', 1), resultats.get('coefB', 0)
+        return resultats.get('coefA', 1), resultats.get('coefB', 0), val_min, val_max
 
     def init_event_changed(self):
         """
@@ -536,17 +542,18 @@ class GraphBCAssim(QWidget):
                         id_law = id_law[0]
                         start_time_law = rows.get('starttime', [None])[0]
 
-                coefa, coefb = self.find_coef(name_ctrl)
+                coefa, coefb, valmin, valmax = self.find_coef(name_ctrl)
                 self.events[name_ctrl] = {
                     "starttime": list_event["starttime"][id],
                     "endtime": list_event["endtime"][id],
                     "coefA": coefa,
                     "coefB": coefb,
+                    "valmin": valmin,
+                    "valmax": valmax,
                     "id_law": id_law,
                     "start_time_law": start_time_law
                 }
             self.cur_event = self.cb_event.currentData()
-            print(self.events)
 
         else:
             self.cb_event.addItem("No events", None)
@@ -645,12 +652,20 @@ class GraphBCAssim(QWidget):
                     else:
                         val = None
                     calc = pattern.sub(str(val), calc, 1)
-
+                valmin = self.events[self.cur_event]["valmin"]
+                valmax = self.events[self.cur_event]["valmax"]
                 try:
                     resultat = eval(calc)
                     resultat_ctrl = self.events[self.cur_event]["coefA"] * resultat + self.events[self.cur_event][
                         "coefB"]
-                except:
+                    if valmin and valmax:
+                        if resultat_ctrl < valmin:
+                            resultat_ctrl = valmin
+                        elif resultat_ctrl > valmax:
+                            resultat_ctrl = valmax
+
+                except Exception as err:
+                    print(err)
                     resultat = None
                     resultat_ctrl = None
 

@@ -171,9 +171,6 @@ class ClassAPIMascaret:
         while self.current_t_assim < self.tini:
             self.current_t_assim += self.pdt_assim
 
-        # Retrieving the initial time values for assim
-        txt = f'{self.num_zones_assim} - {self.masc.nb_nodes}'
-        self.add_info(txt)
         self.res_assim.extract_zq(self.masc, self.tini)
         # Incrément du temps courant assim (prochain temps à extraire)
         self.current_t_assim += self.pdt_assim
@@ -531,8 +528,6 @@ class ClassAPIMascaret:
 
 
         if self.assim and t0 <= self.current_t_assim <= t1:
-            txt = f'{self.num_zones_assim} - {self.masc.nb_nodes}'
-            self.add_info(txt)
             self.res_assim.extract_zq(self.masc, t1)
             # Incrément du temps courant assim (prochain temps à extraire)
             self.current_t_assim += self.pdt_assim
