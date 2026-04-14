@@ -27,7 +27,7 @@ import os
 import subprocess
 import json
 import time
-import pprint
+
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal, QObject
 
@@ -340,5 +340,4 @@ class TaskCreatFAssim(QgsTask):
 
         if os.path.exists(param_file):
             os.remove(param_file)
-        pprint.pp(results)
         return results

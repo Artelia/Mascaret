@@ -261,7 +261,7 @@ class ClassMascaret:
     def launch_ctrl_BLUE(self, typ_ctrl):
         CONFIG = {
              'ctrlKS': ('[ ASSIM ] Starting Control Ks (BLUE) *****************************************************', 'Control Ks (BLUE)'),
-            'ctrlLaw': ("[ ASSIM  ] Starting Control Law (BLUE) *****************************************************", 'Control Ks (BLUE)'),
+            'ctrlLaw': ("[ ASSIM  ] Starting Control Law (BLUE) *****************************************************", 'Control Law (BLUE)'),
         }
         description, label = CONFIG[typ_ctrl]
 
@@ -276,6 +276,7 @@ class ClassMascaret:
                 scens=scens,
                 del_inter_assim=self.del_inter_assim,
                 max_workers=self.limit_core,
+                debug=self.dbg
             )
         except Exception as err:
             self.mgis.add_info(f'[ ERROR ] {err}')
@@ -298,7 +299,8 @@ class ClassMascaret:
 
 
     def launch_task(self, task, description="Mascaret Models Execution"):
-        print('Launching task...')
+        if self.dbg :
+            print('Launching task...')
         task_manager = QgsApplication.taskManager()
 
         for attempt in range(self.max_retries):
@@ -331,7 +333,8 @@ class ClassMascaret:
                         'TaskMascaret',
                         Qgis.Info
                     )
-                    print(f'Task launched successfully: {task_id}, Status: {task_status}')
+                    if self.dbg:
+                        print(f'Task launched successfully: {task_id}, Status: {task_status}')
                     return task_id  # Retourne l'ID au lieu de True
                 else:
                     QgsMessageLog.logMessage(
@@ -422,7 +425,8 @@ class ClassMascaret:
         active_tasks = task_manager.tasks()
 
         if not active_tasks:
-            print("=== All tasks completed successfully ===")
+            if self.dbg:
+                print("=== All tasks completed successfully ===")
             sep = "*************************************************************************************\n"
             self.mgis.add_info(sep+"[ DONE  ] All tasks completed successfully \n"+sep)
         QgsMessageLog.logMessage(

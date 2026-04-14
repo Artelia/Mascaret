@@ -23,7 +23,7 @@ import sys
 try:
     from .ClassMatrix import ClassMatrix
 except:
-    print('Using non relative imports')
+    # print('Using non relative imports')
     from ClassMatrix import ClassMatrix
 import os
 import json
@@ -64,13 +64,14 @@ def write_matrix_auto(f, matrix, decimals=5):
 class classBLUE:
     """Class that computes the analysed state of parameters using BLUE method"""
 
-    def __init__(self, base_folder, ctrl_type):
+    def __init__(self, base_folder, ctrl_type, debug=False):
         self.analyse = None
         self.innovation = None
         self.K = None
         self.ctrl_type = ctrl_type
         # print('Using Blue in ', base_folder)
         self.base_folder = base_folder
+        self.debug = debug
         self.json_assim = os.path.join(self.base_folder, 'data_assim.json')
         with open(self.json_assim) as f:
             self.data_assim = json.load(f)
@@ -133,7 +134,8 @@ class classBLUE:
         HBHT_plus_R = np.linalg.inv(HBHT + self.current_R)
 
         self.K = BHT @ HBHT_plus_R
-        print('[BLUE] : Calcul du gain K effectué.')
+        if self.debug:
+            print('[BLUE] : Calcul du gain K effectué.')
 
     def calc_so_sb(self):
         self.trace_HBHT = []
@@ -272,7 +274,11 @@ if __name__ == '__main__':
             "<ctrl_type>")
     base_folder = sys.argv[1]
     ctrl_type = sys.argv[2]
+    debug = False
+    if int(sys.argv[3]) > 0:
+        debug = True
+
     # base_folder = r'../../mascaret/event1_1/'
     print('[BLUE] : Working in folder :', base_folder)
-    CB = classBLUE(base_folder, ctrl_type)
+    CB = classBLUE(base_folder, ctrl_type, debug)
     CB.compute_BLUE()

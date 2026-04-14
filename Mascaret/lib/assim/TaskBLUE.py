@@ -25,7 +25,6 @@ import concurrent.futures
 import os
 import subprocess
 import time
-import pprint
 import shutil
 
 from qgis.core import Qgis, QgsMessageLog, QgsTask
@@ -48,7 +47,7 @@ class TaskBLUE(QgsTask):
     emitting progress signals in submission order.
     """
 
-    def __init__(self, description, base_folder, ctrl_type, scens, del_inter_assim, max_workers=None):
+    def __init__(self, description, base_folder, ctrl_type, scens, del_inter_assim, max_workers=None, debug=False):
         """Initialize BLUE computation task for parallel scenario processing.
 
         :param description: Task description displayed to user.
@@ -66,6 +65,7 @@ class TaskBLUE(QgsTask):
         self.base_folder = base_folder
         self.scens = scens
         self.ctrl_type = ctrl_type
+        self.debug = debug
         self.del_inter_assim = del_inter_assim
 
         self.exc_start_time = None
@@ -159,7 +159,7 @@ class TaskBLUE(QgsTask):
             script_dir = os.path.dirname(__file__)
             os.chdir(script_dir)
             process = subprocess.run(
-                ["python", "ClassBLUE.py", path_scen, self.ctrl_type],
+                ["python", "ClassBLUE.py", path_scen, self.ctrl_type, str(int(self.debug))],
                 shell=True,
                 text=True,
                 check=True,
@@ -184,7 +184,7 @@ class TaskBLUE(QgsTask):
             results['error'] = f"Unexpected error: {str(e)}"
 
         results['execution_time'] = time.time() - results['start_time']
-        pprint.pp(results)
+
 
         return results
 

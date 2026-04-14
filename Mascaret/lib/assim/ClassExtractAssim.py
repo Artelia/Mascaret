@@ -143,8 +143,6 @@ class ClassExtractAssim:
         :return:
         """
         for i in self.dict_obs:
-            print(i)
-            print(KSmin[i], KSmaj[i])
             for zone in self.zones:
                 self.dictRes['Ksmin'][zone] = KSmin[i]
                 self.dictRes['Ksmaj'][zone] = KSmaj[i]

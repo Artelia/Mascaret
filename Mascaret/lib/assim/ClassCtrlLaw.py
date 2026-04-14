@@ -315,4 +315,4 @@ class CtrlLaw(ModelAssimBase):
             for name_law, coefs in lst_modif.items():
                 self.modif_ctrl_law(name_law, folder, coefs)
         else:
-            print('Warning No assimiled Law ')
+            print('[WARNING] Warning No assimiled Law ')

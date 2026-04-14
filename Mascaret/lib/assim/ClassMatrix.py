@@ -26,7 +26,7 @@ from pathlib import Path
 try:
     from .ClassAssimData import AssimData
 except:
-    print('Using non relative imports')
+    # print('Using non relative imports')
     from ClassAssimData import AssimData
 
 
