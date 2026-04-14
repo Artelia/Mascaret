@@ -36,13 +36,12 @@ class ClassGetResults:
 
     # Constants
 
-
     STRUCT_RES_FILE = "res_struct.res"
     WEIRS_RES_FILE = "res_weirs.res"
     LINKS_RES_FILE = "res_links.res"
     OLD_WEIRS_RES_FILE = "Fichier_Crete.csv"
 
-    NAME_FILE = 'mascaret'
+    NAME_FILE = "mascaret"
 
     def __init__(self, mdb, dbg=False):
         """
@@ -71,14 +70,12 @@ class ClassGetResults:
 
         if basins and basins.get("basinnum"):
             self.dico_basinnum = {
-                id_mas: num_qgis
-                for id_mas, num_qgis in enumerate(basins["basinnum"], 1)
+                id_mas: num_qgis for id_mas, num_qgis in enumerate(basins["basinnum"], 1)
             }
 
         if links and links.get("linknum"):
             self.dico_linknum = {
-                id_mas: num_qgis
-                for id_mas, num_qgis in enumerate(links["linknum"], 1)
+                id_mas: num_qgis for id_mas, num_qgis in enumerate(links["linknum"], 1)
             }
 
     def _insert_id_run(self, run, scen):
@@ -96,9 +93,7 @@ class ClassGetResults:
         listimport = ["run", "scenario", "date"]
 
         self.mdb.insert("runs", tab, listimport)
-        info = self.mdb.select(
-            "runs", where=f"run='{run}' AND scenario='{scen}'", list_var=["id"]
-        )
+        info = self.mdb.select("runs", where=f"run='{run}' AND scenario='{scen}'", list_var=["id"])
 
         return info["id"][0]
 
@@ -140,14 +135,11 @@ class ClassGetResults:
         cpt_tracer = 0
 
         while "[resultats]" not in line:
-            parts = line.replace('"', '').replace("NaN", "'NULL'").split(";")
+            parts = line.replace('"', "").replace("NaN", "'NULL'").split(";")
 
-            if parts[1].strip().upper().startswith('C'):
+            if parts[1].strip().upper().startswith("C"):
                 if self.wq.cur_wq_mod != "TRANSPORT_PUR":
-                    var_info = {
-                        "var": dico_tra["sigle"][cpt_tracer],
-                        "type_res": type_res
-                    }
+                    var_info = {"var": dico_tra["sigle"][cpt_tracer], "type_res": type_res}
                 else:
                     var_info = {
                         "var": dico_tra["sigle"][cpt_tracer],
@@ -175,7 +167,7 @@ class ClassGetResults:
         var_to_delete = []
 
         while "[resultats]" not in line:
-            parts = line.replace('"', '').replace("NaN", "'NULL'").split(";")
+            parts = line.replace('"', "").replace("NaN", "'NULL'").split(";")
             var_info = {"var": parts[1].upper(), "type_res": type_res}
             id_var = self.mdb.check_id_var(var_info)
 
@@ -237,16 +229,13 @@ class ClassGetResults:
                 col, var_to_delete = self._parse_standard_variables(source, ligne, type_res)
 
             # Build column list
-            col_cplt = (init_col if init_col else
-                        ["TIME", "BRANCH", "SECTION", "PK"]) + col
+            col_cplt = (init_col if init_col else ["TIME", "BRANCH", "SECTION", "PK"]) + col
 
             data = pd.read_csv(source, delimiter=";", names=col_cplt)
             data = data.drop_duplicates()
 
             # Convert to dictionary and process values
-            dico_val = self._process_data_values(
-                data.to_dict(orient="records"), col_cplt
-            )
+            dico_val = self._process_data_values(data.to_dict(orient="records"), col_cplt)
         # Remove unwanted variables
         for var_id in var_to_delete:
             dico_val.pop(var_id, None)
@@ -320,14 +309,10 @@ class ClassGetResults:
         if typ_res == "opt":
             dico_zmax = self._compute_zmax(val, id_run, list_var, compute_max)
             if dico_zmax:
-                list_insert.append([
-                    id_run, typ_res, "zmax", json.dumps(dico_zmax)
-                ])
+                list_insert.append([id_run, typ_res, "zmax", json.dumps(dico_zmax)])
                 self._compute_plani_stock(dico_zmax, id_run)
 
-        list_insert.append(
-            [id_run, typ_res, "pknum", json.dumps(sorted(list(set(val[pk_key]))))]
-        )
+        list_insert.append([id_run, typ_res, "pknum", json.dumps(sorted(list(set(val[pk_key]))))])
         col_tab = ["id_runs", "type_res", "var", "val"]
         if len(list_insert) > 0:
             self.mdb.insert_res("runs_graph", list_insert, col_tab)
@@ -349,16 +334,13 @@ class ClassGetResults:
     def _load_opt_results(self, folder, id_run, base_namefile):
         """Load OPT result file."""
 
-        file_path = os.path.join(
-            folder, f'{base_namefile}.opt'
-        )
+        file_path = os.path.join(folder, f"{base_namefile}.opt")
         if not os.path.isfile(file_path):
             self.mess.add_mess(
-                "LoadOptCas", "warning",
-                f"Simulation Error: no opt results found \n {file_path}"
+                "LoadOptCas", "warning", f"Simulation Error: no opt results found \n {file_path}"
             )
             return
-        type_res = 'opt'
+        type_res = "opt"
         init_col = ["TIME", "BRANCH", "SECTION", "PK"]
         val = self.new_read_opt(file_path, type_res, init_col)
         self.save_new_results(val, id_run)
@@ -367,15 +349,10 @@ class ClassGetResults:
 
     def _load_basin_results(self, folder, id_run, base_namefile):
         """Load basin result file."""
-        file_path = os.path.join(
-            folder, f'{base_namefile}.cas_opt'
-        )
+        file_path = os.path.join(folder, f"{base_namefile}.cas_opt")
 
         if not os.path.isfile(file_path):
-            self.mess.add_mess(
-                "LoadOptCas", "warning",
-                "Simulation Error: no basin results found"
-            )
+            self.mess.add_mess("LoadOptCas", "warning", "Simulation Error: no basin results found")
             return
         type_res = "basin"
         init_col = ["TIME", "BNUM"]
@@ -386,15 +363,10 @@ class ClassGetResults:
 
     def _load_link_results(self, folder, id_run, base_namefile):
         """Load link result file."""
-        file_path = os.path.join(
-            folder, f'{base_namefile}.liai_opt'
-        )
+        file_path = os.path.join(folder, f"{base_namefile}.liai_opt")
 
         if not os.path.isfile(file_path):
-            self.mess.add_mess(
-                "LoadOptLink", "warning",
-                "Simulation Error: no link results found"
-            )
+            self.mess.add_mess("LoadOptLink", "warning", "Simulation Error: no link results found")
             return
         type_res = "link"
         init_col = ["TIME", "LNUM"]
@@ -405,15 +377,10 @@ class ClassGetResults:
 
     def _load_tracer_results(self, folder, id_run, base_namefile):
         """Load tracer result file."""
-        file_path = os.path.join(
-            folder, f'{base_namefile}.tra_opt'
-        )
+        file_path = os.path.join(folder, f"{base_namefile}.tra_opt")
 
         if not os.path.isfile(file_path):
-            self.mess.add_mess(
-                "LoadOptWQ", "warning",
-                "Simulation Error: no tracer results found"
-            )
+            self.mess.add_mess("LoadOptWQ", "warning", "Simulation Error: no tracer results found")
             return
 
         init_col = ["TIME", "BRANCH", "SECTION", "PK"]
@@ -425,14 +392,14 @@ class ClassGetResults:
         del val
 
     def set_results_database(
-            self,
-            folder,
-            id_run,
-            date_debut=None,
-            base_namefile=None,
-            comments="",
-            tracer=False,
-            casier=False,
+        self,
+        folder,
+        id_run,
+        date_debut=None,
+        base_namefile=None,
+        comments="",
+        tracer=False,
+        casier=False,
     ):
         """
         Read opt files and save in results table
@@ -448,7 +415,7 @@ class ClassGetResults:
         if base_namefile is None:
             base_namefile = self.NAME_FILE
 
-        file_path = os.path.join(folder, f'{base_namefile}.opt')
+        file_path = os.path.join(folder, f"{base_namefile}.opt")
         self.mess.add_mess("LoadOpt1", "info", "Save Results ....")
         if not os.path.isfile(file_path):
             txt = f"Simulation Error: there aren't results \n path :{file_path}"
@@ -489,7 +456,7 @@ class ClassGetResults:
         # Import API structure results if available
         dico = {}
         if os.path.isfile(struct_file):
-            with open(struct_file, 'r') as file_in:
+            with open(struct_file, "r") as file_in:
                 dico = json.load(file_in)
         return dico
 
@@ -537,16 +504,14 @@ class ClassGetResults:
             for (pk, var), data in d_res.items()
         ]
         if values:
-            cols = ['id_runs', 'pknum', 'var', 'time', 'val']
+            cols = ["id_runs", "pknum", "var", "time", "val"]
             self.mdb.insert_res("results_by_pk", values, cols)
 
     def _insert_section_data(self, id_run, d_sect):
         """Insert section data into results_sect table."""
         # Check if data already exists
         existing = self.mdb.select_one(
-            "results_sect",
-            where=f"id_runs={id_run}",
-            list_var=["id_runs"]
+            "results_sect", where=f"id_runs={id_run}", list_var=["id_runs"]
         )
 
         if existing is not None or not d_sect:
@@ -563,7 +528,7 @@ class ClassGetResults:
         ]
 
         if values:
-            cols = ['id_runs', 'branch', 'section', 'pk']
+            cols = ["id_runs", "branch", "section", "pk"]
             self.mdb.insert_res("results_sect", values, cols)
 
     def save_new_results(self, val, id_run):

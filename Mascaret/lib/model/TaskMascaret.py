@@ -34,21 +34,22 @@ import datetime
 import traceback
 
 from qgis.core import Qgis, QgsMessageLog, QgsTask
-from qgis.PyQt.QtCore import pyqtSignal,QObject
+from qgis.PyQt.QtCore import pyqtSignal, QObject
 
 from .ClassGetResults import ClassGetResults
 from .ClassBCWriter import ClassBCWriter
 from ..assim.ClassStorageDB import ClassStorageDB
 
-MESSAGE_CATEGORY = 'TaskMascaret'
+MESSAGE_CATEGORY = "TaskMascaret"
+
 
 class TaskSignals(QObject):
     model_completed = pyqtSignal(int, dict)
     launch_completed = pyqtSignal(bool)
     model_cancel = pyqtSignal(bool)
 
-class TaskMascaret(QgsTask):
 
+class TaskMascaret(QgsTask):
 
     def __init__(self, description, task_params, max_workers=None, database=None, cond_api=True):
         """Initialize TaskMascaret.
@@ -66,7 +67,7 @@ class TaskMascaret(QgsTask):
         self.cond_api = cond_api
 
         self.exc_start_time = None
-        self.error_txt = ''
+        self.error_txt = ""
 
         # Configure thread-based parallelism
         if max_workers is None:
@@ -145,9 +146,7 @@ class TaskMascaret(QgsTask):
 
         try:
             # Create the thread pool executor
-            self.executor = concurrent.futures.ThreadPoolExecutor(
-                max_workers=self.max_workers
-            )
+            self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers)
 
             self.on_message(
                 f"Starting {self.total_models} models with {self.max_workers} parallel workers (threads)"
@@ -182,15 +181,17 @@ class TaskMascaret(QgsTask):
                             self.on_progress(self.completed_count, self.total_models)
 
                             # Base message
-                            model_id = result.get('model_id', index)
-                            if result['success']:
+                            model_id = result.get("model_id", index)
+                            if result["success"]:
                                 self.on_message(
                                     f"{result.get('output', '')}\n"
                                     f"Model {model_id} (#{index + 1}) completed in "
                                     f"{result.get('execution_time', 0):.1f}s"
                                 )
                             else:
-                                self.error_txt += f"\nModel {model_id} (#{index + 1}): {result['error']}"
+                                self.error_txt += (
+                                    f"\nModel {model_id} (#{index + 1}): {result['error']}"
+                                )
                                 self.on_message(f"Model {model_id} (#{index + 1}) failed")
 
                             # Process results in order
@@ -214,7 +215,9 @@ class TaskMascaret(QgsTask):
 
             # Shutdown the pool cleanly
             self.executor.shutdown(wait=True)
-            QgsMessageLog.logMessage(f"END Run {not bool(self.error_txt)} {self.error_txt}", MESSAGE_CATEGORY, Qgis.Info)
+            QgsMessageLog.logMessage(
+                f"END Run {not bool(self.error_txt)} {self.error_txt}", MESSAGE_CATEGORY, Qgis.Info
+            )
             self.signal.launch_completed.emit(not bool(self.error_txt))
             return not bool(self.error_txt)
 
@@ -232,8 +235,8 @@ class TaskMascaret(QgsTask):
             execution_time = time.time() - self.exc_start_time
             message = (
                 f'  Task "{self.description}" was canceled\n'
-                f'  Execution time: {execution_time:.2f}s\n'
-                f'  Models completed: {self.completed_count}/{self.total_models}'
+                f"  Execution time: {execution_time:.2f}s\n"
+                f"  Models completed: {self.completed_count}/{self.total_models}"
             )
             QgsMessageLog.logMessage(message, MESSAGE_CATEGORY, Qgis.Warning)
         super().cancel()
@@ -252,7 +255,7 @@ class TaskMascaret(QgsTask):
         :type message: str
         :return: None
         """
-        QgsMessageLog.logMessage(message, 'TaskMascaret', Qgis.Info)
+        QgsMessageLog.logMessage(message, "TaskMascaret", Qgis.Info)
 
     def on_progress(self, completed, total):
         """Callback for progress updates.
@@ -265,9 +268,7 @@ class TaskMascaret(QgsTask):
         """
         percentage = (completed / total) * 100 if total > 0 else 0
         QgsMessageLog.logMessage(
-            f"Progress: {completed}/{total} models ({percentage:.1f}%)",
-            'TaskMascaret',
-            Qgis.Info
+            f"Progress: {completed}/{total} models ({percentage:.1f}%)", "TaskMascaret", Qgis.Info
         )
 
     def create_json_param(self, folder, filname, params):
@@ -279,17 +280,18 @@ class TaskMascaret(QgsTask):
         :return: Path to created parameter file.
         """
         # Create parameter input file (with index to avoid conflicts)
-        param_file = os.path.join(folder,filname)
-        lst_param_api = ['name',
-                         'name_xcas',
-                         "RUN_REP",
-                         "BASE_NAME",
-                         "has_tracer",
-                         "has_casier",
-                         "has_assim",
-                         ]
-        d_json = {key : item for key, item in params.items() if key in lst_param_api}
-        with open(param_file, 'w') as fp:
+        param_file = os.path.join(folder, filname)
+        lst_param_api = [
+            "name",
+            "name_xcas",
+            "RUN_REP",
+            "BASE_NAME",
+            "has_tracer",
+            "has_casier",
+            "has_assim",
+        ]
+        d_json = {key: item for key, item in params.items() if key in lst_param_api}
+        with open(param_file, "w") as fp:
             json.dump(d_json, fp)
         return param_file
 
@@ -320,7 +322,7 @@ class TaskMascaret(QgsTask):
         stock_assim = False
         # Case "Analyse..."
         if type_ctrl and name.startswith("Analyse"):
-            txt_type = {'ctrlKS': 'ctrl_ks', 'ctrlLaw': 'ctrl_law'}
+            txt_type = {"ctrlKS": "ctrl_ks", "ctrlLaw": "ctrl_law"}
             if name.endswith("_init"):
                 file_name = f"{file_name}_init"
                 name_scen = f"{name_scen}_ana_{txt_type.get(type_ctrl, type_ctrl)}_init"
@@ -337,43 +339,49 @@ class TaskMascaret(QgsTask):
         :return: dict containing model results, outputs, errors and timing.
         """
         results = {
-            'model_index': index,
-            'success': False,
-            'output': '',
-            'error': '',
-            'start_time': time.time(),
-            'path_run': params.get("RUN_REP"),
-            'id_run': None
+            "model_index": index,
+            "success": False,
+            "output": "",
+            "error": "",
+            "start_time": time.time(),
+            "path_run": params.get("RUN_REP"),
+            "id_run": None,
         }
-        results_save={}
+        results_save = {}
 
         if not os.path.isdir(params.get("RUN_REP")):
-            results['error'] = f"Process failed because the folder is not found: {params.get('RUN_REP')}"
-            results['execution_time'] = time.time() - results['start_time']
+            results["error"] = (
+                f"Process failed because the folder is not found: {params.get('RUN_REP')}"
+            )
+            results["execution_time"] = time.time() - results["start_time"]
         try:
 
             # Change to the script directory
             script_dir = os.path.dirname(__file__)
-            param_file = self.create_json_param(params.get("RUN_REP"), f'model_idx{index}.json', params)
+            param_file = self.create_json_param(
+                params.get("RUN_REP"), f"model_idx{index}.json", params
+            )
             _, name_scen, _, name_run, _ = self.build_run_metadata(params)
-            results['output'] += f"\n==== Launching Run: {name_run} | Scenario: {name_scen} ====\n"
-            results['output'] += f"Folder: {self.get_folder_display_basic(params.get('RUN_REP'), name_scen)}\n"
+            results["output"] += f"\n==== Launching Run: {name_run} | Scenario: {name_scen} ====\n"
+            results[
+                "output"
+            ] += f"Folder: {self.get_folder_display_basic(params.get('RUN_REP'), name_scen)}\n"
 
-            if self.cond_api :
+            if self.cond_api:
                 os.chdir(os.path.join(script_dir, "..", "api"))
                 process = subprocess.run(
                     ["python", "ClassAPIMascaret.py", param_file],
                     shell=True,
                     text=True,
                     check=True,
-                    capture_output=True
+                    capture_output=True,
                 )
             else:
                 test = sys.platform
                 path_exe = os.path.join(script_dir, "..", "..", "bin")
                 if "linux" in test or test == "cygwin":
                     soft = "./mascaret_linux"
-                    source_file = os.path.join(path_exe, 'mascaret_linux')
+                    source_file = os.path.join(path_exe, "mascaret_linux")
                 elif test == "win32":
                     soft = "mascaret.exe"
                     source_file = os.path.join(path_exe, soft)
@@ -393,42 +401,46 @@ class TaskMascaret(QgsTask):
                     check=True,  # raise exception if return code != 0
                     shell=True,
                     capture_output=True,  # capture stdout/stderr
-                    encoding="utf-8"     # uncomment if you want to force encoding
+                    encoding="utf-8",  # uncomment if you want to force encoding
                 )
                 os.chdir(script_dir)
 
             # print(process.stdout, 'uuu')
-            results.update({
-                'success': True,
-                'error': process.stderr,
-                'execution_time': time.time() - results['start_time'],
-            })
-            results['output'] +=  process.stdout
+            results.update(
+                {
+                    "success": True,
+                    "error": process.stderr,
+                    "execution_time": time.time() - results["start_time"],
+                }
+            )
+            results["output"] += process.stdout
 
             ## Check if API ran successfully
-            if results['success']:
+            if results["success"]:
                 # Verify .opt file
                 if not any(f.endswith(".opt") for f in os.listdir(params.get("RUN_REP"))):
-                    results['success'] = False
-                    raise FileNotFoundError(f"Expected .opt file not found in {params.get('RUN_REP')}")
+                    results["success"] = False
+                    raise FileNotFoundError(
+                        f"Expected .opt file not found in {params.get('RUN_REP')}"
+                    )
 
-                if "Work is done." not in results.get('output', '') and self.cond_api:
-                    results['success'] = False
-                    results['error'] = results.get('output', '')
+                if "Work is done." not in results.get("output", "") and self.cond_api:
+                    results["success"] = False
+                    results["error"] = results.get("output", "")
                     raise Exception("ClassAPIMascaret failed")
 
-                is_init = params.get('name', '').endswith('init')
+                is_init = params.get("name", "").endswith("init")
 
                 if is_init and self.cond_api and not self._copy_lig_files(params.get("RUN_REP")):
-                    results['success'] = False
+                    results["success"] = False
                     raise Exception(f"No .lig files found #{index}")
 
                 results_save = self._save_db(params)
-                results['id_run'] = results_save.get('id_run',None)
-                results['save_time'] = results_save['save_time']
-                results['output'] += f"{results_save['output']}"
-                if not results_save['success'] and self.mdb:
-                    results['success'] = False
+                results["id_run"] = results_save.get("id_run", None)
+                results["save_time"] = results_save["save_time"]
+                results["output"] += f"{results_save['output']}"
+                if not results_save["success"] and self.mdb:
+                    results["success"] = False
                     raise Exception(f"Error saving results #{index}\n{results_save['error']}")
 
                 if is_init and not self.cond_api:
@@ -437,18 +449,18 @@ class TaskMascaret(QgsTask):
                         if not self._copy_lig_files(params.get("RUN_REP")):
                             raise Exception()
                     except Exception:
-                        results['success'] = False
+                        results["success"] = False
                         raise Exception(f"No .lig files found #{index}")
 
         except subprocess.CalledProcessError as e:
-            results['error'] = f"Process failed with exit code {e.returncode}: {e.stderr}"
-            results['execution_time'] = time.time() - results['start_time']
+            results["error"] = f"Process failed with exit code {e.returncode}: {e.stderr}"
+            results["execution_time"] = time.time() - results["start_time"]
         except Exception as e:
-            results['error'] = f"Unexpected error: {str(e)}"
-            results['execution_time'] = time.time() - results['start_time']
+            results["error"] = f"Unexpected error: {str(e)}"
+            results["execution_time"] = time.time() - results["start_time"]
         return results
 
-    def get_folder_display_basic(self,full_path, name_scen):
+    def get_folder_display_basic(self, full_path, name_scen):
         """Extract display-friendly scenario folder path.
 
         :param full_path: Full absolute path.
@@ -457,8 +469,8 @@ class TaskMascaret(QgsTask):
         """
         # Replace backslashes for consistent formatting
         norm_path = full_path.replace("\\", "/")
-        for replc in ['_init','_ana_ctrl_ks','_ana_ctrl_law']:
-            name_scen = name_scen.replace(replc,'')
+        for replc in ["_init", "_ana_ctrl_ks", "_ana_ctrl_law"]:
+            name_scen = name_scen.replace(replc, "")
         scen_index = norm_path.find(name_scen)
 
         if scen_index == -1:
@@ -478,7 +490,7 @@ class TaskMascaret(QgsTask):
         """
         current_dir = Path(folder)
         # Find all .lig files in current directory
-        lig_files = list(current_dir.glob('*.lig'))
+        lig_files = list(current_dir.glob("*.lig"))
 
         # Check if any .lig files were found
         if not lig_files:
@@ -503,7 +515,7 @@ class TaskMascaret(QgsTask):
         path_scen = params.get("RUN_REP")
         id_run = self.insert_id_run(self.mdb, name_run, name_scen)
         cls_bc = ClassBCWriter(self.mdb, path_scen)
-        cls_bc.opt_to_lig(id_run,os.path.join(path_scen, 'mascaret.lig'))
+        cls_bc.opt_to_lig(id_run, os.path.join(path_scen, "mascaret.lig"))
 
     def _save_db(self, params):
         """Save model results to database and optionally store assimilation data.
@@ -512,59 +524,71 @@ class TaskMascaret(QgsTask):
         :return: Dictionary with save status, output, errors, id_run, and timing.
         """
         results = {
-            'id_run': None,
-            'scenario_db':None,
-            'run_db': None,
-            'success': False,
-            'output': '',
-            'error':'',
-            'start_time': time.time(),
-            'save_time' :0
+            "id_run": None,
+            "scenario_db": None,
+            "run_db": None,
+            "success": False,
+            "output": "",
+            "error": "",
+            "start_time": time.time(),
+            "save_time": 0,
         }
         stock_assim, name_scen, file_name, name_run, type_ctrl = self.build_run_metadata(params)
 
         if not self.mdb:
-            results.update({
-                'output': f'No save results {name_run} - {name_scen}',
-                'save_time': time.time() - results['start_time'],
-            })
+            results.update(
+                {
+                    "output": f"No save results {name_run} - {name_scen}",
+                    "save_time": time.time() - results["start_time"],
+                }
+            )
             return results
         try:
             id_run = self.insert_id_run(self.mdb, name_run, name_scen)
-            results.update({'id_run': id_run,
-                            'scenario_db': name_scen,
-                            'run_db': name_run,
-                            })
+            results.update(
+                {
+                    "id_run": id_run,
+                    "scenario_db": name_scen,
+                    "run_db": name_run,
+                }
+            )
 
             cls_res = ClassGetResults(self.mdb, dbg=params.get("dbg", False))
 
             cls_res.set_results_database(
-                    params.get("RUN_REP"),
-                    id_run,
-                    params.get("starttime"),
-                    file_name,
-                    comments= params.get("comments"),
-                    tracer=params.get("has_tracer"),
-                    casier=params.get("has_casier"),
+                params.get("RUN_REP"),
+                id_run,
+                params.get("starttime"),
+                file_name,
+                comments=params.get("comments"),
+                tracer=params.get("has_tracer"),
+                casier=params.get("has_casier"),
             )
 
-            results['output'] += cls_res.mess.message()
+            results["output"] += cls_res.mess.message()
             if cls_res.mess.get_critic_status():
-                results.update({'save_time': time.time() - results['start_time']})
-                return  results
+                results.update({"save_time": time.time() - results["start_time"]})
+                return results
             # results assim
             if stock_assim:
-                path_js = os.path.abspath(os.path.join(params.get("RUN_REP"), '..'))
-                cls_storage = ClassStorageDB(self.mdb, id_run, path_js , type_ctrl)
+                path_js = os.path.abspath(os.path.join(params.get("RUN_REP"), ".."))
+                cls_storage = ClassStorageDB(self.mdb, id_run, path_js, type_ctrl)
                 cls_storage.storage_results()
         except Exception as err:
-            results.update({'error':f'{str(err)}\n {traceback.format_exc()}',
-                           'save_time': time.time() - results['start_time']})
+            results.update(
+                {
+                    "error": f"{str(err)}\n {traceback.format_exc()}",
+                    "save_time": time.time() - results["start_time"],
+                }
+            )
             return results
 
-        results.update({'success': True,
-                        'save_time': time.time() - results['start_time'],
-                        })
+        results.update(
+            {
+                "success": True,
+                "save_time": time.time() - results["start_time"],
+            }
+        )
         return results
 
     def insert_id_run(self, mdb, run_, scen):

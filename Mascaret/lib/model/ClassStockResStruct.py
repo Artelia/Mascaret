@@ -24,6 +24,7 @@ import json
 
 class ClassStockResStruct:
     """Store model structure results (gates, weirs, links) in database."""
+
     CREST_FILE = "Fichier_Crete.csv"
 
     def __init__(self, mdb, mess):
@@ -44,7 +45,6 @@ class ClassStockResStruct:
         :return: None
         """
 
-
         handlers = {
             "STRUCT_FG": self.res_fg,
             "LINK_FG": self.res_link_fg,
@@ -62,7 +62,7 @@ class ClassStockResStruct:
         :return: None
         """
         if values:
-            cols = ['id_runs', 'pknum', 'var', 'time', 'val']
+            cols = ["id_runs", "pknum", "var", "time", "val"]
             self.mdb.insert_res("results_by_pk", values, cols)
 
     def _insert_graph_data(self, id_run, type_res, dico_pk, dico_time, var_ids, extra_data=None):
@@ -97,13 +97,15 @@ class ClassStockResStruct:
         """
         values = []
         for (pk, var), v in d_res.items():
-            values.append([
-                id_run,
-                pk,
-                var,
-                "{" + ",".join(str(i_t) for i_t in v["t"]) + "}",
-                "{" + ",".join(str(i_v) for i_v in v["v"]) + "}",
-            ])
+            values.append(
+                [
+                    id_run,
+                    pk,
+                    var,
+                    "{" + ",".join(str(i_t) for i_t in v["t"]) + "}",
+                    "{" + ",".join(str(i_v) for i_v in v["v"]) + "}",
+                ]
+            )
         return values
 
     def _creat_mapping_var(self, var_configs):
@@ -230,11 +232,7 @@ class ClassStockResStruct:
 
         # Process results
         for id_config, res_data in dico_res.items():
-            rows = self.mdb.select(
-                "struct_config",
-                where=f"id={id_config}",
-                list_var=["abscissa"]
-            )
+            rows = self.mdb.select("struct_config", where=f"id={id_config}", list_var=["abscissa"])
             pknum = rows["abscissa"][0]
             dico_pk[id_config] = pknum
             dico_time[id_config] = res_data["TIME"]
@@ -253,7 +251,7 @@ class ClassStockResStruct:
         """Parse the crest file and return organized data."""
         dico_res = {}
 
-        with open(file_path, 'r') as fich:
+        with open(file_path, "r") as fich:
             for line in fich:
                 parts = line.split()
                 if len(parts) <= 1:
@@ -270,21 +268,11 @@ class ClassStockResStruct:
     def _get_weir_pknum(self, name):
         """Get weir pknum from database by name."""
         where = f"name = '{name}'"
-        info = self.mdb.select(
-            "weirs",
-            where=where,
-            list_var=["gid", "abscissa"],
-            order="gid"
-        )
+        info = self.mdb.select("weirs", where=where, list_var=["gid", "abscissa"], order="gid")
 
         if not info.get("gid"):
             where = f"name LIKE '{name}%'"
-            info = self.mdb.select(
-                "weirs",
-                where=where,
-                list_var=["gid", "abscissa"],
-                order="gid"
-            )
+            info = self.mdb.select("weirs", where=where, list_var=["gid", "abscissa"], order="gid")
 
         return info["gid"][0] if info.get("gid") else None
 
@@ -316,16 +304,18 @@ class ClassStockResStruct:
                 pknum = self._get_weir_pknum(name)
                 if pknum is None:
                     continue
-                values.append([
-                    id_run,
-                    pknum,
-                    id_var,
-                    "{" + ",".join(str(t) for t in data["TIME"]) + "}",
-                    "{" + ",".join(str(z) for z in data["ZSTR"]) + "}",
-                ])
+                values.append(
+                    [
+                        id_run,
+                        pknum,
+                        id_var,
+                        "{" + ",".join(str(t) for t in data["TIME"]) + "}",
+                        "{" + ",".join(str(z) for z in data["ZSTR"]) + "}",
+                    ]
+                )
 
             if values:
-                cols = ['id_runs', 'pknum', 'var', 'time', 'val']
+                cols = ["id_runs", "pknum", "var", "time", "val"]
                 self.mdb.insert_res("results_by_pk", values, cols)
             self._insert_graph_data(id_run, "weirs", dico_pk, dico_time, [id_var])
 

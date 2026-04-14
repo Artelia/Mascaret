@@ -49,6 +49,7 @@ class ClassInitializeModel:
 
     Class-level constants define common filenames used by the initialization process.
     """
+
     LINK_MOBILE_FILE = "links_cli_fg.obj"
     WEIRS_MOBILE_FILE = "weirs_cli_fg.obj"
     FG_FILE = "cli_fg.obj"
@@ -75,17 +76,17 @@ class ClassInitializeModel:
         self.dgeneral = self.obj_model.get_dgeneral()
         self.drun = self.obj_model.get_drun()
         self.par = self.obj_model.get_param_model(self.drun["kernel"])
-        self.dbg = self.dgeneral['dbg']
+        self.dbg = self.dgeneral["dbg"]
 
         self.mess = ClassMessage()
         self.box = ClassWarningBox()
 
         folder = self.dgeneral["path_runs"]
-        self.cl_geo = ClassGeoWriter(self.mdb, folder, 'mascaret', self.mess)
+        self.cl_geo = ClassGeoWriter(self.mdb, folder, "mascaret", self.mess)
         self.cl_xcas = ClassXcasWriter(self.mdb, folder, self.dgeneral["api"], self.mess)
-        self.cl_bc = ClassBCWriter(self.mdb, '', self.mess)
+        self.cl_bc = ClassBCWriter(self.mdb, "", self.mess)
         self.clmeth = ClassMascStruct(self.mdb)
-        self.wq = ClassMascWQ(self.mgis, '')
+        self.wq = ClassMascWQ(self.mgis, "")
 
     def main(self, up_param=None):
         """Main entry: generate folders and initialize all scenarios.
@@ -122,16 +123,18 @@ class ClassInitializeModel:
             lst_copy += [b_path / file for file in b_path.iterdir() if file.is_file()]
         lscenario = self.obj_model.get_lscenar()
         # create path if not exists
-        path_run = Path(self.dgeneral['path_runs'])
+        path_run = Path(self.dgeneral["path_runs"])
         path_run.mkdir(parents=True, exist_ok=True)
         # Clear directory
-        err = self.clear_folder(self.dgeneral['path_runs'], ask_confirm=self.dgeneral["has_new_run_path"])
+        err = self.clear_folder(
+            self.dgeneral["path_runs"], ask_confirm=self.dgeneral["has_new_run_path"]
+        )
         if err:
-            self.mgis.add_info(f"[ ERROR ] : {err}", box=True, btype='CRITICAL')
+            self.mgis.add_info(f"[ ERROR ] : {err}", box=True, btype="CRITICAL")
             return
 
         for instance in lscenario:
-            scen = instance.get('name')
+            scen = instance.get("name")
             for path_str in self.obj_model.get_folder(scen).values():
                 path = Path(path_str)
                 path.mkdir(parents=True, exist_ok=True)
@@ -148,8 +151,8 @@ class ClassInitializeModel:
         :return: True if operation succeeded, False otherwise.
         :rtype: bool
         """
-        init_file_suffixes = {'.geo', '.casier', '.loi', '.xcas'}
-        init_pattern = {'.loi': '_init.loi', '.xcas': '_init.xcas'}
+        init_file_suffixes = {".geo", ".casier", ".loi", ".xcas"}
+        init_pattern = {".loi": "_init.loi", ".xcas": "_init.xcas"}
 
         source = Path(source_folder)
         target = Path(target_folder)
@@ -184,10 +187,7 @@ class ClassInitializeModel:
                 shutil.copy2(file_path, target_path)  # copy2 preserves metadata
                 copied_count += 1
             except Exception as e:
-                self.mgis.add_info(
-                    f"Failed to copy file '{file_path.name}': {str(e)}",
-                    dbg=True
-                )
+                self.mgis.add_info(f"Failed to copy file '{file_path.name}': {str(e)}", dbg=True)
         self.mgis.add_info(f"Successfully copied {copied_count} initialization file(s)", dbg=True)
         return True
 
@@ -202,13 +202,10 @@ class ClassInitializeModel:
             shutil.copyfile(fichiers, os.path.join(folder, self.LIG_FILE))
             return False
         except Exception as e:
-            self.mgis.add_info(
-                f"Failed to copy file '{fichiers}': {str(e)}",
-                dbg=True
-            )
+            self.mgis.add_info(f"Failed to copy file '{fichiers}': {str(e)}", dbg=True)
             return True
 
-    def exit_cpte(self, exit_status, txt=''):
+    def exit_cpte(self, exit_status, txt=""):
         """Report compute cancellation status and log message when canceled.
 
         :param exit_status: Boolean indicating error/cancellation.
@@ -240,7 +237,9 @@ class ClassInitializeModel:
         :rtype: bool
         """
         # Get scenario configuration
-        self.mgis.add_info(f'[ INIT  ] Creation of the model files for scenario {scen} *****************************')
+        self.mgis.add_info(
+            f"[ INIT  ] Creation of the model files for scenario {scen} *****************************"
+        )
         d_scen = self.obj_model.get_scenario(scen)
         d_folder = self.obj_model.get_folder(scen)
         if not d_folder:
@@ -250,7 +249,7 @@ class ClassInitializeModel:
         model_folder = d_folder["ref"]
         init_folder = d_folder.get("init")
 
-        kernel = self.drun['kernel']
+        kernel = self.drun["kernel"]
 
         # Configure geometry, xcas, and boundary condition handlers
         self.configure_handlers(model_folder)
@@ -276,13 +275,13 @@ class ClassInitializeModel:
             return False
 
         # Step 5: Create XCAS file and structural laws
-        dict_lois, dico_loi_struct = self.cl_xcas.creer_xcas(kernel,
-                                                             filename=self.XCAS_FILE,
-                                                             up_param=up_param)
+        dict_lois, dico_loi_struct = self.cl_xcas.creer_xcas(
+            kernel, filename=self.XCAS_FILE, up_param=up_param
+        )
         if self.check_and_log_errors():
             return False
 
-        if not self.obj_model.set_dinstance(scen, 'ref', {'name_xcas': self.XCAS_FILE}):
+        if not self.obj_model.set_dinstance(scen, "ref", {"name_xcas": self.XCAS_FILE}):
             return False
 
         # Step 5b: Create FichierCas.txt
@@ -326,11 +325,11 @@ class ClassInitializeModel:
         :return: None
         """
 
-        if self.drun['has_run_init']:
+        if self.drun["has_run_init"]:
             # create init XCAS
             self.cl_xcas.create_init_xcas(self.XCAS_INIT_FILE)
-            if not self.obj_model.set_dinstance(scen, 'init', {'name_xcas': self.XCAS_INIT_FILE}):
-                txt = '[ ERROR ] Error modifying dictionary instance for name_xcas'
+            if not self.obj_model.set_dinstance(scen, "init", {"name_xcas": self.XCAS_INIT_FILE}):
+                txt = "[ ERROR ] Error modifying dictionary instance for name_xcas"
                 self.mgis.add_info(txt)
                 return
 
@@ -379,28 +378,16 @@ class ClassInitializeModel:
         """
         # Create mobile links file
         if self.drun["has_fg"]:
-            if not self.create_structure_file(
-                    ClassParamFG,
-                    folder,
-                    self.FG_FILE
-            ):
+            if not self.create_structure_file(ClassParamFG, folder, self.FG_FILE):
                 return False
 
         if self.drun["has_link_fg"]:
-            if not self.create_structure_file(
-                    ClassLinkFGParam,
-                    folder,
-                    self.LINK_MOBILE_FILE
-            ):
+            if not self.create_structure_file(ClassLinkFGParam, folder, self.LINK_MOBILE_FILE):
                 return False
 
         # Create mobile weirs file
         if self.drun["has_weir_fg"]:
-            if not self.create_structure_file(
-                    ClassMobilWeirsParam,
-                    folder,
-                    self.WEIRS_MOBILE_FILE
-            ):
+            if not self.create_structure_file(ClassMobilWeirsParam, folder, self.WEIRS_MOBILE_FILE):
                 return False
 
         return True
@@ -440,7 +427,7 @@ class ClassInitializeModel:
         self.wq.init_conc_tracer(folder)
 
         # Create meteorological file for non-steady kernels
-        if self.wq.dico_phy[self.wq.cur_wq_mod]["meteo"] and kernel != 'steady':
+        if self.wq.dico_phy[self.wq.cur_wq_mod]["meteo"] and kernel != "steady":
             has_errors, message = self.wq.create_filemet(folder)
             if self.exit_cpte(has_errors, message):
                 return False
@@ -463,12 +450,12 @@ class ClassInitializeModel:
 
         # Case 2: Use LIG file
         elif scen.get("lig_file"):
-            if self.exit_cpte(self.copy_lig(scen["lig_file"]['file_path'], folder)):
+            if self.exit_cpte(self.copy_lig(scen["lig_file"]["file_path"], folder)):
                 return False
 
         # Case 3: No initial conditions provided
         else:
-            self.exit_cpte(False, 'No initial file provided')
+            self.exit_cpte(False, "No initial file provided")
             return False
 
         return True
@@ -481,10 +468,10 @@ class ClassInitializeModel:
         :rtype: bool
         """
         init_scen = scen["scenar_init"]
-        run_ids = self.mdb.get_id_run({init_scen[0]: [f'\'{init_scen[1]}\'']})
+        run_ids = self.mdb.get_id_run({init_scen[0]: [f"'{init_scen[1]}'"]})
 
         if not run_ids:
-            self.exit_cpte(False, 'Initial scenario does not exist')
+            self.exit_cpte(False, "Initial scenario does not exist")
             return False
 
         self.cl_bc.opt_to_lig(run_ids[0], lig_filename=self.LIG_FILE)
@@ -509,12 +496,7 @@ class ClassInitializeModel:
             else:
                 namef = name
             # Create law for model folder
-            self.clmeth.create_law(
-                model_folder,
-                namef,
-                config["type"],
-                law_list
-            )
+            self.clmeth.create_law(model_folder, namef, config["type"], law_list)
 
         return True
 
@@ -538,8 +520,8 @@ class ClassInitializeModel:
             if has_errors:
                 self.write_mess(self.cl_bc.mess)
         # Update initialization flag if needed
-        if self.par["initialisationAuto"] != self.drun['has_run_init']:
-            self.drun['has_init'] = self.par["initialisationAuto"]
+        if self.par["initialisationAuto"] != self.drun["has_run_init"]:
+            self.drun["has_init"] = self.par["initialisationAuto"]
 
         return not self.exit_cpte(has_errors)
 
@@ -550,9 +532,7 @@ class ClassInitializeModel:
         :return: True on success, False on failure.
         :rtype: bool
         """
-        if not (self.check_mobil_gate() and
-                kernel == "unsteady" and
-                not self.dgeneral["api"]):
+        if not (self.check_mobil_gate() and kernel == "unsteady" and not self.dgeneral["api"]):
             return True
 
         self.cl_bc.create_mobil_gate_file()
@@ -669,7 +649,7 @@ class ClassInitializeModel:
             if not file.is_file():
                 continue
 
-            if (file.suffix in listsup or file in fil_sup):
+            if file.suffix in listsup or file in fil_sup:
                 try:
                     file.unlink()
                 except Exception as e:
@@ -682,7 +662,7 @@ class ClassInitializeModel:
         :return: None
         """
         folder = Path(folder)
-        partern_init_file = '_init.'
+        partern_init_file = "_init."
 
         if not folder.exists() or not folder.is_dir():
             self.mgis.add_info(f"Folder not valid {folder}", dbg=True)
@@ -757,7 +737,7 @@ class ClassInitializeModel:
             box = ClassWarningBox()
             confirm = box.yes_no_q(
                 f"Do you really want to delete the contents of the folder?\n{folder_path}",
-                "Delete Folder Confirmation"
+                "Delete Folder Confirmation",
             )
             if not confirm:
                 return "Folder deletion aborted by user."

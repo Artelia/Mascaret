@@ -31,13 +31,13 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
     QHBoxLayout,
     QTableWidget,
-    QHeaderView
+    QHeaderView,
 )
 from qgis.PyQt.uic import loadUi
 from ..Function import del_accent, del_symbolv2
 from ...ui.custom_control import ClassWarningBox
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
 
 
 class ClassRunUIDialog(QDialog):
@@ -69,10 +69,11 @@ class ClassRunUIDialog(QDialog):
         self.bt_path.clicked.connect(self.path_search)
 
         # state list
-        self.dkernel = {"steady": "Steady",
-                        "unsteady": "Unsteady",
-                        "transcritical": "Transcritical_unsteady",
-                        }
+        self.dkernel = {
+            "steady": "Steady",
+            "unsteady": "Unsteady",
+            "transcritical": "Transcritical_unsteady",
+        }
         self.le_run.setText(self.dkernel[self.kernel])
 
         self.obj_model.fill_drun(self.kernel, self.dkernel[self.kernel])
@@ -88,22 +89,22 @@ class ClassRunUIDialog(QDialog):
 
         self.without_init_version = True
 
-        if self.drun['event']:
+        if self.drun["event"]:
             d_event = self.obj_model.get_events()
             if not d_event:
                 self.bt_running.setEnabled(False)
                 self.lst_event = []
             else:
-                self.lst_event = d_event['name']
+                self.lst_event = d_event["name"]
 
             self.nb_row = len(self.lst_event)
         else:
             self.nb_row = 1
 
-        if kernel != 'steady' and (not self.drun["has_run_init"] and self.drun["ligInit"]):
+        if kernel != "steady" and (not self.drun["has_run_init"] and self.drun["ligInit"]):
             self.without_init_version = False
 
-        if not self.drun.get('has_assimilation', False):
+        if not self.drun.get("has_assimilation", False):
             self.del_cpt_assim.hide()
 
         self.setup_table()
@@ -129,7 +130,7 @@ class ClassRunUIDialog(QDialog):
         :rtype: str
         """
         txt = del_accent(txt)
-        txt = del_symbolv2(txt, exclud=['_', '-'])
+        txt = del_symbolv2(txt, exclud=["_", "-"])
         return txt.strip()
 
     def path_search(self):
@@ -143,7 +144,7 @@ class ClassRunUIDialog(QDialog):
             self.lbl_path.setText(path_)
             self.run_path = path_
         else:
-            self.lbl_path.setText('')
+            self.lbl_path.setText("")
             self.run_path = self.default_run_path
 
     def setup_table(self):
@@ -152,9 +153,9 @@ class ClassRunUIDialog(QDialog):
         :return: None
         """
         if self.without_init_version:
-            headers = ['Scenario Name', 'Comment']
+            headers = ["Scenario Name", "Comment"]
         else:
-            headers = ['Scenario Name', 'Run init', 'Scenario init', 'lig file', 'Comment']
+            headers = ["Scenario Name", "Run init", "Scenario init", "lig file", "Comment"]
 
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
@@ -296,34 +297,34 @@ class ClassRunUIDialog(QDialog):
 
     def check_scenar(self, run, nom_scen):
         """Check if scenario results already exist and optionally delete them.
-         :param run: Name/identifier of the run.
-         :param nom_scen: Base name of the scenario to check and possibly delete.
-         :return:
-             - True if the scenario results exist and the user chooses to keep them.
-             - False if the scenario results do not exist or have been deleted.
-         """
+        :param run: Name/identifier of the run.
+        :param nom_scen: Base name of the scenario to check and possibly delete.
+        :return:
+            - True if the scenario results exist and the user chooses to keep them.
+            - False if the scenario results do not exist or have been deleted.
+        """
         # kernel=self.listeState[self.Klist.index(kernel)]
 
         if not self.check_run_scenar_exist(run, nom_scen):
             return False
 
         ok = self.box.yes_no_q(
-            f"Do you want to remove the {nom_scen} results for a "
-            "new simulation? "
+            f"Do you want to remove the {nom_scen} results for a " "new simulation? "
         )
 
         if not ok:
             return True
 
         # delete case initalization
-        condition = (f"(scenario LIKE '{nom_scen}' "
-                     f"OR  scenario  LIKE '{nom_scen}_init' "
-                     f"OR  scenario  LIKE '{nom_scen}_ana_ctrl%') "
-                     f"AND run LIKE '{run}' ")
+        condition = (
+            f"(scenario LIKE '{nom_scen}' "
+            f"OR  scenario  LIKE '{nom_scen}_init' "
+            f"OR  scenario  LIKE '{nom_scen}_ana_ctrl%') "
+            f"AND run LIKE '{run}' "
+        )
 
         id_runs = self.mdb.run_query(
-            f"SELECT id FROM {self.mdb.SCHEMA}.runs "
-            f"WHERE {condition} ",
+            f"SELECT id FROM {self.mdb.SCHEMA}.runs " f"WHERE {condition} ",
             fetch=True,
         )
         self.mdb.delete("runs", condition)
@@ -333,11 +334,17 @@ class ClassRunUIDialog(QDialog):
             id_run = [str(val[0]) for val in id_runs]
             condition = f"id_runs IN ({','.join(id_run)})"
             var = self.mdb.run_query(
-                f"SELECT DISTINCT var FROM {self.mdb.SCHEMA}.results WHERE {condition} ",
-                fetch=True
+                f"SELECT DISTINCT var FROM {self.mdb.SCHEMA}.results WHERE {condition} ", fetch=True
             )
-            del_lst = ["results_sect", "runs_graph", "runs_plani", "results_by_pk",
-                       "assim_res", "assim_res_ks", "assim_res_law"]
+            del_lst = [
+                "results_sect",
+                "runs_graph",
+                "runs_plani",
+                "results_by_pk",
+                "assim_res",
+                "assim_res_ks",
+                "assim_res_law",
+            ]
             for table in del_lst:
                 self.mdb.delete(table, condition)
 
@@ -402,13 +409,13 @@ class ClassRunUIDialog(QDialog):
         :return: None
         """
         if self.default_run_path != self.run_path:
-            self.obj_model.set_dgeneral({"path_runs": self.run_path,
-                                         "has_new_run_path": True})
+            self.obj_model.set_dgeneral({"path_runs": self.run_path, "has_new_run_path": True})
 
-        self.obj_model.set_drun({'limit_core': self.sp_core.value(),
-                                 'del_inter_assim': self.del_cpt_assim.isChecked()})
+        self.obj_model.set_drun(
+            {"limit_core": self.sp_core.value(), "del_inter_assim": self.del_cpt_assim.isChecked()}
+        )
         name_run = self._fmt_name(self.le_run.text())
-        if name_run == '':
+        if name_run == "":
             self.box.info("Run name is required.", title="Warning")
             return
 
@@ -419,7 +426,7 @@ class ClassRunUIDialog(QDialog):
             name_scen = self._fmt_name(self.table.cellWidget(row, 0).text())
             name_scen = name_scen.strip()
             row_data["Scenario Name"] = name_scen
-            if name_scen == '':
+            if name_scen == "":
                 self.box.info(f"Scenario name is required for the {row} row.", title="Warning")
                 return
 
@@ -438,15 +445,17 @@ class ClassRunUIDialog(QDialog):
                     if self.check_scenar_init(name_run, name_scen, row_data):
                         self.box.info(
                             f"The initial scenario matches the current one ('{name_scen}') for row {row + 1}."
-                            f" It will be removed before starting the process."
-                            , title="Warning")
+                            f" It will be removed before starting the process.",
+                            title="Warning",
+                        )
                         return
 
                 row_data["Comment"] = self._fmt_txt(self.table.cellWidget(row, 4).text())
 
             if self.check_scenar(name_run, name_scen):
-                self.box.info(f"Scenario {name_scen} is existing "
-                              f"for the {row + 1} row.", title="Warning")
+                self.box.info(
+                    f"Scenario {name_scen} is existing " f"for the {row + 1} row.", title="Warning"
+                )
                 return
             data.append(row_data)
 
@@ -484,8 +493,9 @@ class LigFileWidget(QWidget):
 
         :return: None
         """
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select File", self.mgis.repProject,
-                                                   "lig File (*.lig);; File (*)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select File", self.mgis.repProject, "lig File (*.lig);; File (*)"
+        )
         if file_path:
             self.file_label.setText(file_path.split("/")[-1])
             self.hidden_path.setText(file_path)
@@ -505,6 +515,8 @@ class LigFileWidget(QWidget):
         :rtype: dict
         """
         return {
-            "file_name": self.file_label.text() if self.file_label.text() != 'No file selected' else '',
-            "file_path": self.hidden_path.text()
+            "file_name": (
+                self.file_label.text() if self.file_label.text() != "No file selected" else ""
+            ),
+            "file_path": self.hidden_path.text(),
         }

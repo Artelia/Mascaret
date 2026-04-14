@@ -101,7 +101,9 @@ class ClassBCWriter:
                 dico = {k: v[i] for k, v in tab.items()}
                 fich.write(chaine.format(**dico))
 
-    def _write_obs_loi(self, nom, type_, loi, liste_stations, obs_stations, pattern, ref_dates, date_debut):
+    def _write_obs_loi(
+        self, nom, type_, loi, liste_stations, obs_stations, pattern, ref_dates, date_debut
+    ):
         """Write law file from observation data.
 
         :param nom: Law name.
@@ -166,30 +168,35 @@ class ClassBCWriter:
             delta_h = int(delta) if delta else 0
             dt = datetime.timedelta(hours=delta_h)
 
-            sql_tab = ("SELECT o.code, o.type, d.date, d.valeur "
-                       "FROM {0}.observations o, "
-                       "LATERAL UNNEST(o.date, o.valeur) AS d(date, valeur) "
-                       "WHERE o.code = '{1}' AND o.type = '{2}' "
-                       "AND d.date >= '{3:%Y-%m-%d %H:%M}' "
-                       " AND d.date <= COALESCE(( "
-                       " SELECT MIN(d2.date) "
-                       " FROM {0}.observations o2, "
-                       "LATERAL UNNEST(o2.date) AS d2(date) "
-                       "WHERE o2.code = '{1}' AND o2.type = '{2}' "
-                       " AND d2.date >= '{4:%Y-%m-%d %H:%M}' "
-                       " ), '{4:%Y-%m-%d %H:%M}') "
-                       "ORDER BY d.date;".format(
-                self.mdb.SCHEMA, cd_hydro, type_, date_debut + dt, date_fin + dt
-            ))
+            sql_tab = (
+                "SELECT o.code, o.type, d.date, d.valeur "
+                "FROM {0}.observations o, "
+                "LATERAL UNNEST(o.date, o.valeur) AS d(date, valeur) "
+                "WHERE o.code = '{1}' AND o.type = '{2}' "
+                "AND d.date >= '{3:%Y-%m-%d %H:%M}' "
+                " AND d.date <= COALESCE(( "
+                " SELECT MIN(d2.date) "
+                " FROM {0}.observations o2, "
+                "LATERAL UNNEST(o2.date) AS d2(date) "
+                "WHERE o2.code = '{1}' AND o2.type = '{2}' "
+                " AND d2.date >= '{4:%Y-%m-%d %H:%M}' "
+                " ), '{4:%Y-%m-%d %H:%M}') "
+                "ORDER BY d.date;".format(
+                    self.mdb.SCHEMA, cd_hydro, type_, date_debut + dt, date_fin + dt
+                )
+            )
 
             obs_stations[cd_hydro] = self.mdb.query_todico(sql_tab)
             if not obs_stations[cd_hydro]["date"]:
                 if self.mess:
-                    self.mess.add_mess('NoInitSteady', 'critic',
-                                       f"Error: Please check if law for {nom} object is correct.\n "
-                                       f"No observations found for station {cd_hydro} "
-                                       "on the dates: {0:%Y-%m-%d %H:%M} - {1:%Y-%m-%d %H:%M}"
-                                       "".format(date_debut + dt, date_fin + dt))
+                    self.mess.add_mess(
+                        "NoInitSteady",
+                        "critic",
+                        f"Error: Please check if law for {nom} object is correct.\n "
+                        f"No observations found for station {cd_hydro} "
+                        "on the dates: {0:%Y-%m-%d %H:%M} - {1:%Y-%m-%d %H:%M}"
+                        "".format(date_debut + dt, date_fin + dt),
+                    )
                 err_critic = True
                 continue
         return obs_stations, err_critic
@@ -205,7 +212,7 @@ class ClassBCWriter:
         """
         # Create initialization law TODO decoreller
         if valeur_init is not None:
-            tini0 = par.get('tempsInit', 0)
+            tini0 = par.get("tempsInit", 0)
             if type_ == "Q":
                 tab = {"time": [0, 3600 + tini0], "flowrate": [valeur_init, valeur_init]}
                 self.creer_loi(nom, tab, 1, init=True)
@@ -216,7 +223,8 @@ class ClassBCWriter:
             par["initialisationAuto"] = False
             if self.mess:
                 self.mess.add_mess(
-                    "NoInitSteady", "Warning", "No initialisation because of no SteadyValue")
+                    "NoInitSteady", "Warning", "No initialisation because of no SteadyValue"
+                )
         return par
 
     def _create_other_init_law_to_obs(self, tab, loi, par, nom, somme):
@@ -228,7 +236,7 @@ class ClassBCWriter:
         :param nom: Law name.
         :param somme: Sum value for interpolation.
         :return: Updated parameters dictionary.
-        """ 
+        """
         if loi["type"] in [1, 2, 4]:  # , 5]: # car 5 mascaret plante à l'init
             self.creer_loi(nom, tab, loi["type"], init=True)
         elif loi["type"] in [5] and loi["couche"] == "extremites":
@@ -237,7 +245,7 @@ class ClassBCWriter:
             for c, d in zip(tab["z"], tab["flowrate"]):
                 if debit_prec > 0 and d > somme:
                     valeur_init = (c - cote_prec) / (d - debit_prec) * (
-                            somme - debit_prec
+                        somme - debit_prec
                     ) + cote_prec
                     break
                 cote_prec, debit_prec = c, d
@@ -279,17 +287,21 @@ class ClassBCWriter:
 
             liste_stations = pattern.findall(loi["formule"])
             # get observation each station
-            obs_stations, err_critic = self._get_obs_to_loi(liste_stations, type_, date_debut, date_fin, nom)
+            obs_stations, err_critic = self._get_obs_to_loi(
+                liste_stations, type_, date_debut, date_fin, nom
+            )
             if err_critic:
                 return
                 # ref dates and station (first station)
             ref_station, ref_delta = liste_stations[0]
             # ref_delta_h = int(ref_delta) if ref_delta else 0
             ref_delta_h = float(ref_delta) if ref_delta else 0
-            ref_dates = [d - datetime.timedelta(hours=ref_delta_h) for d in obs_stations[ref_station]["date"]]
-            somme_part, valeur_init = self._write_obs_loi(nom, type_, loi, liste_stations, obs_stations, pattern,
-                                                          ref_dates,
-                                                          date_debut)
+            ref_dates = [
+                d - datetime.timedelta(hours=ref_delta_h) for d in obs_stations[ref_station]["date"]
+            ]
+            somme_part, valeur_init = self._write_obs_loi(
+                nom, type_, loi, liste_stations, obs_stations, pattern, ref_dates, date_debut
+            )
             somme += somme_part
 
             # check law after write
@@ -304,13 +316,14 @@ class ClassBCWriter:
             if loi.get("formule") and loi["type"] in (1, 2):
                 continue
             # create other law
-            tab = self.get_laws(
-                nom, loi["type"], obs=True, date_deb=date_debut, date_fin=date_fin
-            )
+            tab = self.get_laws(nom, loi["type"], obs=True, date_deb=date_debut, date_fin=date_fin)
             if not tab:
                 if self.mess:
-                    self.mess.add_mess("CreatLaw_{}".format(nom), "critic",
-                                       "The law for {} is not create.".format(nom), )
+                    self.mess.add_mess(
+                        "CreatLaw_{}".format(nom),
+                        "critic",
+                        "The law for {} is not create.".format(nom),
+                    )
                 continue
             self.creer_loi(nom, tab, loi["type"])
             if tab.get("time"):
@@ -337,7 +350,9 @@ class ClassBCWriter:
             cond = True
             if self.mess:
                 self.mess.add_mess(
-                    "tLaw_{}".format(name), "critic", " Error law {} on the Initial Time".format(name)
+                    "tLaw_{}".format(name),
+                    "critic",
+                    " Error law {} on the Initial Time".format(name),
                 )
 
         if par["critereArret"] == 1:
@@ -346,7 +361,9 @@ class ClassBCWriter:
                 cond = True
                 if self.mess:
                     self.mess.add_mess(
-                        "tLaw_{}".format(name), "critic", " Error law {} on the Last Time".format(name)
+                        "tLaw_{}".format(name),
+                        "critic",
+                        " Error law {} on the Last Time".format(name),
                     )
 
         elif par["critereArret"] == 2:
@@ -355,7 +372,9 @@ class ClassBCWriter:
                 cond = True
                 if self.mess:
                     self.mess.add_mess(
-                        "tLaw_{}".format(name), "critic", " Error law {} on the Last Time".format(name)
+                        "tLaw_{}".format(name),
+                        "critic",
+                        " Error law {} on the Last Time".format(name),
                     )
 
         return cond
@@ -397,7 +416,9 @@ class ClassBCWriter:
                     list_var=["id_var", "id_order", "value"],
                 )
                 if not values:
-                    err = "Error: Please check if law for {0} object " "is correct. \n".format(name_obj)
+                    err = "Error: Please check if law for {0} object " "is correct. \n".format(
+                        name_obj
+                    )
                     if self.mess:
                         self.mess.add_mess("obsLaw_{}_2".format(name_obj), "critic", err)
                     return None
@@ -409,9 +430,9 @@ class ClassBCWriter:
 
                 for value, id_var in zip(values["value"], values["id_var"]):
                     tab[conv_idvar[id_var]].append(float(value))
-                if not tab.get('time') or not config.get('starttime'):
+                if not tab.get("time") or not config.get("starttime"):
                     return tab  # no time column, nothing to process
-                start_time = config.get('starttime')
+                start_time = config.get("starttime")
                 # Convert time (seconds) to absolute datetimes
                 lst_x = [start_time + datetime.timedelta(seconds=t) for t in tab["time"]]
                 # Filter each value column (e.g. flowrate, z) against the time window
@@ -446,7 +467,7 @@ class ClassBCWriter:
         """
         # nom = nom + "_init"
         if loi.get("valeurperm"):
-            tini0 = par.get('tempsInit', 0)
+            tini0 = par.get("tempsInit", 0)
             if loi["type"] == 1:
                 tab = {"time": [0, 3600 + tini0], "flowrate": [loi["valeurperm"]] * 2}
                 self.creer_loi(nom, tab, 1, init=True)
@@ -493,7 +514,9 @@ class ClassBCWriter:
             else:
                 if self.mess:
                     self.mess.add_mess(
-                        "CreatLaw_{}".format(nom), "critic", "The law for {} is not create.".format(nom)
+                        "CreatLaw_{}".format(nom),
+                        "critic",
+                        "The law for {} is not create.".format(nom),
                     )
             par = self._init_classic_law(nom, tab, loi, par)
 
@@ -501,7 +524,7 @@ class ClassBCWriter:
 
     # ************   LIG FILE   ********************************************************************
 
-    def opt_to_lig(self, id_run, lig_filename='mascaret.lig'):
+    def opt_to_lig(self, id_run, lig_filename="mascaret.lig"):
         """
         Creation of .lig file
         :param id_run (int): run index
@@ -581,23 +604,37 @@ class ClassBCWriter:
             t_max = self.mdb.select_max("time", "results", f"var = {idz} AND id_runs = {id_run}")
             if t_max is None:
                 if self.mess:
-                    self.mess.add_mess("LigFile", "critic", "No previous results to create the .lig file.")
+                    self.mess.add_mess(
+                        "LigFile", "critic", "No previous results to create the .lig file."
+                    )
                 return None
 
             # Retrieval of Z and Q values at time t_max
             result = {
-                "Z": self.mdb.select("results", f"var = {idz} AND id_runs = {id_run} AND time = {t_max}", "pknum",
-                                     ["val"])["val"],
-                "Q": self.mdb.select("results", f"var = {idq} AND id_runs = {id_run} AND time = {t_max}", "pknum",
-                                     ["val"])["val"],
+                "Z": self.mdb.select(
+                    "results",
+                    f"var = {idz} AND id_runs = {id_run} AND time = {t_max}",
+                    "pknum",
+                    ["val"],
+                )["val"],
+                "Q": self.mdb.select(
+                    "results",
+                    f"var = {idq} AND id_runs = {id_run} AND time = {t_max}",
+                    "pknum",
+                    ["val"],
+                )["val"],
                 "X": [],
                 "section": [],
-                "branche": []
+                "branche": [],
             }
 
             # Retrieval of section data
-            sect_data = self.mdb.select("results_sect", f"id_runs = {id_run}", "pk", ["pk", "branch", "section"])
-            for pk, branch, section in zip(sect_data["pk"], sect_data["branch"], sect_data["section"]):
+            sect_data = self.mdb.select(
+                "results_sect", f"id_runs = {id_run}", "pk", ["pk", "branch", "section"]
+            )
+            for pk, branch, section in zip(
+                sect_data["pk"], sect_data["branch"], sect_data["section"]
+            ):
                 result["X"].extend(pk)
                 result["section"].extend(section)
                 result["branche"].extend([branch] * len(pk))
@@ -619,7 +656,7 @@ class ClassBCWriter:
             "weirs",
             where="active_mob = true",
             list_var=["method_mob", "gid", "name", "z_crest"],
-            order="gid"
+            order="gid",
         )
 
         if not info:
@@ -638,7 +675,7 @@ class ClassBCWriter:
                         rows = self.mdb.select(
                             "weirs_mob_val",
                             where=f"id_weirs={idw} AND (name_var='TIMEZ' OR name_var='VALUEZ')",
-                            order="name_var, id_order"
+                            order="name_var, id_order",
                         )
 
                         if not rows["id_weirs"]:
@@ -647,7 +684,9 @@ class ClassBCWriter:
 
                         nbt = max(rows["id_order"]) + 1
                         if nbt >= 501:
-                            self._warn(f"Value number is superior to 500 for {name} weirs. Ignored.", name)
+                            self._warn(
+                                f"Value number is superior to 500 for {name} weirs. Ignored.", name
+                            )
                             continue
 
                         fich.write(f"{name} {nbt}\n")
@@ -659,7 +698,7 @@ class ClassBCWriter:
                     elif method == "2":
                         rows = self.mdb.select(
                             "weirs_mob_val",
-                            where=f"id_weirs={idw} AND name_var!='TIMEZ' AND name_var!='VALUEZ'"
+                            where=f"id_weirs={idw} AND name_var!='TIMEZ' AND name_var!='VALUEZ'",
                         )
 
                         if not rows.get("id_weirs"):
@@ -708,7 +747,7 @@ class ClassBCWriter:
         name = os.path.join(self.folder, filename)
 
         param = {}
-        lst_get = [('weirs', 'gid'), ('struct_config', 'id')]
+        lst_get = [("weirs", "gid"), ("struct_config", "id")]
         for tab, var in lst_get:
             sql = (
                 f"SELECT {var}, name, branchnum, abscissa, erase_flag FROM {self.mdb.SCHEMA}.{tab} "
@@ -762,15 +801,19 @@ class ClassBCWriter:
 
             liste_stations = pattern.findall(obs["formule"])
             # get observation each station
-            obs_stations, err_critic = self._get_obs_to_loi(liste_stations, type_, date_debut, date_fin, nom)
+            obs_stations, err_critic = self._get_obs_to_loi(
+                liste_stations, type_, date_debut, date_fin, nom
+            )
             if err_critic:
-                return f'[ERROR] Failed to retrieve the observation {nom}'
+                return f"[ERROR] Failed to retrieve the observation {nom}"
             ref_station, ref_delta = liste_stations[0]
             ref_delta_h = float(ref_delta) if ref_delta else 0
-            ref_dates = [d - datetime.timedelta(hours=ref_delta_h) for d in obs_stations[ref_station]["date"]]
+            ref_dates = [
+                d - datetime.timedelta(hours=ref_delta_h) for d in obs_stations[ref_station]["date"]
+            ]
             if len(ref_dates) <= 1:
-                return f'[ERROR] Failed to retrieve the observation {nom}'
-            self._write_obs_loi(nom, type_, obs, liste_stations, obs_stations, pattern,
-                                ref_dates,
-                                date_debut)
-            return ''
+                return f"[ERROR] Failed to retrieve the observation {nom}"
+            self._write_obs_loi(
+                nom, type_, obs, liste_stations, obs_stations, pattern, ref_dates, date_debut
+            )
+            return ""

@@ -608,7 +608,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         """
         self.gb_zone.setEnabled(True)
         self.gb_param_ks.setEnabled(False)
-        self.bt_sel_zone.setCheckState(self.qt_check_stat.Unchecked)
+        self.bt_sel_zone.setChecked(False)
         self.fra_zone_sel.setEnabled(False)
 
     def disable_input(self):
@@ -641,7 +641,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             itm = self.lv_ks_obs.model().item(r, 0)
             if itm.checkState() == 2:
                 l_obs.append(itm.data(32))
-        if not l_obs and (self.gb_a_ctrl.isChecked() or self.gb_b_ctrl.isChecked()):
+        if not l_obs and (self.gb_minor.isChecked() or self.gb_major.isChecked()):
             QMessageBox.warning(
                 None,
                 "Warning",

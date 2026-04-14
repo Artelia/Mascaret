@@ -46,9 +46,7 @@ def add_wq_xcas(mdb, fichier_cas, noyau, dict_libres, mess=None):
     for param, valeur, b1, b2 in rows:
         if param == "fichMeteoTracer":
             sql = "SELECT {0} FROM {1}.{2} WHERE parametre = 'fichmeteo' ;"
-            wow = mdb.run_query(
-                sql.format(noyau, mdb.SCHEMA, "parametres"), fetch=True
-            )
+            wow = mdb.run_query(sql.format(noyau, mdb.SCHEMA, "parametres"), fetch=True)
             if str2bool(wow[0][0]) is False:
                 continue
 
@@ -148,14 +146,16 @@ def add_wq_xcas(mdb, fichier_cas, noyau, dict_libres, mess=None):
                 struct = SubElement(lois, "structureSParametresLoiTraceur")
                 SubElement(struct, "nom").text = name
                 SubElement(struct, "modeEntree").text = "1"
-                SubElement(struct, "fichier").text = "{}_tra.loi".format(
-                    del_symbol(name.lower())
-                )
+                SubElement(struct, "fichier").text = "{}_tra.loi".format(del_symbol(name.lower()))
                 SubElement(struct, "uniteTps").text = "-0"
                 SubElement(struct, "nbPoints").text = "-0"
             except Exception as err:
                 if mess:
-                    mess.add_mess("WQLoi2", "critic", f"Check  water quality laws (extremities,inflows)\n{err}")
+                    mess.add_mess(
+                        "WQLoi2",
+                        "critic",
+                        f"Check  water quality laws (extremities,inflows)\n{err}",
+                    )
                 return False
 
     # modif extremite info

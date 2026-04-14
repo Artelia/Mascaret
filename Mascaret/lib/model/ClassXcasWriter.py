@@ -23,12 +23,7 @@ import os
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from xml.etree.ElementTree import parse as et_parse
 
-from .Fct_model_file import (
-    fmt,
-    check_none,
-    indent,
-    backup_file,
-    to_float_or_zero)
+from .Fct_model_file import fmt, check_none, indent, backup_file, to_float_or_zero
 from .xcas_writer.xcas_basin import add_basin_xcas
 from .xcas_writer.xcas_seuil_link_mob import modif_seuil, modif_link
 from .xcas_writer.xcas_wq import add_wq_xcas
@@ -144,7 +139,7 @@ class ClassXcasWriter:
         seuils, loi_struct = modif_seuil(self.mdb, seuils, dico_str)
         casiers = self.mdb.select("basins", "active ORDER BY basinnum ")
         liaisons = self.mdb.select("links", "active ORDER BY linknum ")
-        if any(liaisons['active_mob']) and self.cond_api:
+        if any(liaisons["active_mob"]) and self.cond_api:
             liaisons = modif_link(self.mdb, liaisons)
 
         # Extrémités
@@ -157,10 +152,14 @@ class ClassXcasWriter:
             temp = [a for a, n in liste if n == num]
             if not temp:
                 if self.mess:
-                    self.mess.add_mess("CheckProf", "warning", "No profile found or the profile is deactivated.")
+                    self.mess.add_mess(
+                        "CheckProf", "warning", "No profile found or the profile is deactivated."
+                    )
             elif not all(bool(x is not None) for x in temp):
                 if self.mess:
-                    self.mess.add_mess("CheckProf", "warning", "Some profiles do not have an abscissa defined.")
+                    self.mess.add_mess(
+                        "CheckProf", "warning", "Some profiles do not have an abscissa defined."
+                    )
             else:
                 branches["abscdebut"].append(min(temp))
                 branches["abscfin"].append(max(temp))
@@ -241,8 +240,11 @@ class ClassXcasWriter:
                 diff = max(zz) - min(zz)
             except Exception:
                 if self.mess:
-                    self.mess.add_mess("CheckProf1", "critic",
-                                       "Check the {} profile if it's ok ".format(profils["name"][j]))
+                    self.mess.add_mess(
+                        "CheckProf1",
+                        "critic",
+                        "Check the {} profile if it's ok ".format(profils["name"][j]),
+                    )
                 return dict_lois, {}
 
             try:
@@ -437,7 +439,9 @@ class ClassXcasWriter:
 
                 except Exception:
                     if self.mess:
-                        self.mess.add_mess("CheckProfCret", "warning", f"Profil de crete introuvable pour {nom}")
+                        self.mess.add_mess(
+                            "CheckProfCret", "warning", f"Profil de crete introuvable pour {nom}"
+                        )
                     return {}, {}
 
             SubElement(struct, "gradient").text = "-0"
@@ -452,8 +456,9 @@ class ClassXcasWriter:
 
         # Casiers et liaisons
         if len(casiers["name"]) > 0:
-            self.dico_basinnum, self.dico_linknum = (
-                add_basin_xcas(fichier_cas, casiers, liaisons, mess=self.mess))
+            self.dico_basinnum, self.dico_linknum = add_basin_xcas(
+                fichier_cas, casiers, liaisons, mess=self.mess
+            )
         # Apports et déversoirs
         apport_dever = SubElement(cas, "parametresApportDeversoirs")
         # Apports
@@ -486,7 +491,7 @@ class ClassXcasWriter:
 
         l_en = ["branchnum", "abscissa", "length", "z_crest", "flowratecoef"]
         for kk, len_n in enumerate(
-                ["numBranche", "abscisse", "longueur", "coteCrete", "coeffDebit"]
+            ["numBranche", "abscisse", "longueur", "coteCrete", "coeffDebit"]
         ):
             SubElement(devers_late, len_n).text = fmt(deversoirs[l_en[kk].lower()])
 
@@ -523,20 +528,24 @@ class ClassXcasWriter:
 
         for nom in dict_lois.keys():
             if nom in libres["name"] and (
-                    dict_lois[nom]["type"] == 6 or dict_lois[nom]["type"] == 7
+                dict_lois[nom]["type"] == 6 or dict_lois[nom]["type"] == 7
             ):
                 # les types sont ceux de
                 if dict_lois[nom]["type"] == 6:
                     dict_lois[nom]["type"] = 1
                     if self.mess:
                         self.mess.add_mess(
-                            "LawChang_" + nom, "debug", "The  {} law changes type 6 => 1".format(nom)
+                            "LawChang_" + nom,
+                            "debug",
+                            "The  {} law changes type 6 => 1".format(nom),
                         )
                 elif dict_lois[nom]["type"] == 7:
                     dict_lois[nom]["type"] = 2
                     if self.mess:
                         self.mess.add_mess(
-                            "LawChang_" + nom, "debug", "The  {} law changes type 7 => 2".format(nom)
+                            "LawChang_" + nom,
+                            "debug",
+                            "The  {} law changes type 7 => 2".format(nom),
                         )
 
         nb = len(dict_lois.keys())

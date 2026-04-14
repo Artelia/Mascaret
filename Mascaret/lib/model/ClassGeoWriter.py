@@ -26,8 +26,8 @@ from .Fct_model_file import around, backup_file
 
 class ClassGeoWriter:
 
-    GEO_EXTENSION = '.geo'
-    CASIER_EXTENSION = '.casier'
+    GEO_EXTENSION = ".geo"
+    CASIER_EXTENSION = ".casier"
 
     def __init__(self, mdb, folder, geo_filename, mess=None):
         self.mdb = mdb
@@ -41,9 +41,9 @@ class ClassGeoWriter:
         :param filename: File name
         :return: None
         """
-        self.geo_filename = filename.replace('.geo','').replace('.casier','')
-        
-    def set_folder(self,folder):
+        self.geo_filename = filename.replace(".geo", "").replace(".casier", "")
+
+    def set_folder(self, folder):
         """Set output folder if it exists.
 
         :param folder: Path to output folder.
@@ -58,7 +58,7 @@ class ClassGeoWriter:
         :return: None
         """
         try:
-            geo_path = os.path.join(self.folder, f'{self.geo_filename}{self.GEO_EXTENSION}')
+            geo_path = os.path.join(self.folder, f"{self.geo_filename}{self.GEO_EXTENSION}")
             backup_file(geo_path, self.GEO_EXTENSION)
 
             requete = self.mdb.select("profiles", "active", "abscissa")
@@ -101,7 +101,7 @@ class ClassGeoWriter:
         :return: None
         """
         try:
-            geo_path = os.path.join(self.folder, f'{self.geo_filename}{self.GEO_EXTENSION}')
+            geo_path = os.path.join(self.folder, f"{self.geo_filename}{self.GEO_EXTENSION}")
             backup_file(geo_path, self.GEO_EXTENSION)
 
             requete = self.mdb.select("profiles", "active", "abscissa")
@@ -137,12 +137,12 @@ class ClassGeoWriter:
                             lit_min_g = 0.0
 
                         if (
-                                branche is not None
-                                and abs is not None
-                                and temp_x is not None
-                                and temp_z is not None
-                                and lit_min_g is not None
-                                and lit_min_d is not None
+                            branche is not None
+                            and abs is not None
+                            and temp_x is not None
+                            and temp_z is not None
+                            and lit_min_g is not None
+                            and lit_min_d is not None
                         ):
                             tab_z = []
                             tab_x = []
@@ -206,7 +206,7 @@ class ClassGeoWriter:
         :return: None
         """
         try:
-            geo_path = os.path.join(self.folder, f'{self.geo_filename}{self.CASIER_EXTENSION}')
+            geo_path = os.path.join(self.folder, f"{self.geo_filename}{self.CASIER_EXTENSION}")
             backup_file(geo_path, self.CASIER_EXTENSION)
 
             casiers = self.mdb.select("basins", "active ORDER BY basinnum")

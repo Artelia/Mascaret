@@ -63,8 +63,8 @@ def modif_seuil(mdb, seuil, dico_str):
             elif ls == "branchnum":
                 seuil[ls].append(dico_str["branchnum"][i])
             elif ls == "z_break":
-                if 'zbreak' in dico_str:
-                    seuil[ls].append(dico_str['zbreak'][i])
+                if "zbreak" in dico_str:
+                    seuil[ls].append(dico_str["zbreak"][i])
                 else:
                     seuil[ls].append(99999)
             elif ls == "z_crest":
@@ -73,14 +73,14 @@ def modif_seuil(mdb, seuil, dico_str):
                 seuil[ls].append(zmin)
             else:
                 seuil[ls].append(None)
-    if any(seuil['active_mob']):
+    if any(seuil["active_mob"]):
         where = f"id_weirs in (SELECT gid FROM {mdb.SCHEMA}.weirs where active_mob)"
         dico_mob = mdb.select("weirs_mob_val", where, "id_weirs")
         for id_w in dico_mob["id_weirs"]:
             try:
-                id_s = seuil['gid'].index(id_w)
-                id_n = dico_mob['name_var'].index('ZINITREG')
-                seuil["z_crest"][id_s] = dico_mob['value'][id_n]
+                id_s = seuil["gid"].index(id_w)
+                id_n = dico_mob["name_var"].index("ZINITREG")
+                seuil["z_crest"][id_s] = dico_mob["value"][id_n]
             except ValueError:
                 continue
     return seuil, loi_struct
@@ -100,19 +100,22 @@ def modif_link(mdb, liaisons):
     if not lst_gid:
         return liaisons
     df_mob = pd.DataFrame(dico_mob)
-    for id_lk in lst_gid['id_links']:
+    for id_lk in lst_gid["id_links"]:
         try:
-            id_s = liaisons['gid'].index(id_lk)
-            valeur = df_mob[(df_mob['id_links'] == id_lk) &
-                            (df_mob['name_var'] == 'ZINITREG')]['value'].tolist()
+            id_s = liaisons["gid"].index(id_lk)
+            valeur = df_mob[(df_mob["id_links"] == id_lk) & (df_mob["name_var"] == "ZINITREG")][
+                "value"
+            ].tolist()
             if valeur:
                 valeur = valeur[0]
                 lvl0 = liaisons["level"][id_s]
                 liaisons["level"][id_s] = float(valeur)
-                if liaisons['type'][id_s] == 4:
+                if liaisons["type"][id_s] == 4:
                     htop = liaisons["crosssection"][id_s] / liaisons["width"][id_s]
-                    newsec = max(liaisons["width"][id_s] * (htop - max(liaisons["level"][id_s] - lvl0, 0)),
-                                 1E-4)
+                    newsec = max(
+                        liaisons["width"][id_s] * (htop - max(liaisons["level"][id_s] - lvl0, 0)),
+                        1e-4,
+                    )
                     liaisons["crosssection"][id_s] = newsec
         except ValueError:
             continue

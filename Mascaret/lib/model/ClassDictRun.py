@@ -36,12 +36,12 @@ from ...ui.custom_control import ClassWarningBox
 
 class ClassDictRun:
     """Container for model run configuration and Mascaret run utilities.
-.
+    .
 
-    :param main: Main plugin object exposing paths, DB interface and settings.
-    :type main: object
-    :param rep_run: Optional custom run folder path. If None, a default under the plugin path is used.
-    :type rep_run: str or None
+        :param main: Main plugin object exposing paths, DB interface and settings.
+        :type main: object
+        :param rep_run: Optional custom run folder path. If None, a default under the plugin path is used.
+        :type rep_run: str or None
     """
 
     def __init__(self, main, rep_run=None):
@@ -72,9 +72,9 @@ class ClassDictRun:
             "general": {
                 "path_runs": run_folder,
                 "binary_path": os.path.join(self.mgis.masplugPath, "bin"),
-                "template_path": os.path.join(self.mgis.masplugPath, "template_file", 'mascaret'),
+                "template_path": os.path.join(self.mgis.masplugPath, "template_file", "mascaret"),
                 "api": main.cond_api,
-                'dbg': main.DEBUG,
+                "dbg": main.DEBUG,
                 "has_new_run_path": False,
             }
         }
@@ -94,8 +94,8 @@ class ClassDictRun:
         :return: General configuration dictionary or empty dict if not present.
         :rtype: dict
         """
-        if self.dmodel.get('general'):
-            return self.dmodel['general']
+        if self.dmodel.get("general"):
+            return self.dmodel["general"]
         return {}
 
     def set_dgeneral(self, dict):
@@ -107,12 +107,12 @@ class ClassDictRun:
         :type dict: dict
         :return: None
         """
-        if self.dmodel.get('general'):
+        if self.dmodel.get("general"):
             for key, item in dict.items():
-                if self.dmodel['general'].get(key):
-                    self.dmodel['general'][key] = item
+                if self.dmodel["general"].get(key):
+                    self.dmodel["general"][key] = item
                 else:
-                    self.dmodel['general'].update({key: item})
+                    self.dmodel["general"].update({key: item})
 
     def get_drun(self):
         """Return the 'run' section of the model dictionary.
@@ -120,8 +120,8 @@ class ClassDictRun:
         :return: Run configuration dict or empty dict if not present.
         :rtype: dict
         """
-        if self.dmodel.get('run'):
-            return self.dmodel['run']
+        if self.dmodel.get("run"):
+            return self.dmodel["run"]
         return {}
 
     def get_lscenar(self):
@@ -130,8 +130,8 @@ class ClassDictRun:
         :return: List of scenario dictionaries or empty list.
         :rtype: list
         """
-        if self.dmodel.get('scenario'):
-            return self.dmodel['scenario']
+        if self.dmodel.get("scenario"):
+            return self.dmodel["scenario"]
         return []
 
     def del_lscenar(self, index):
@@ -142,14 +142,15 @@ class ClassDictRun:
         :return: None
         """
 
-        if self.dmodel.get('scenario'):
+        if self.dmodel.get("scenario"):
             if isinstance(index, list):
                 exclude = set(index)
-                new_list = [val for idx, val in enumerate(self.dmodel['scenario']) if idx not in exclude]
-                self.dmodel['scenario'] = new_list
+                new_list = [
+                    val for idx, val in enumerate(self.dmodel["scenario"]) if idx not in exclude
+                ]
+                self.dmodel["scenario"] = new_list
             elif isinstance(index, int):
-                self.dmodel['scenario'].pop(index)
-
+                self.dmodel["scenario"].pop(index)
 
     def get_scenario(self, scen):
         """Return scenario dictionary by scenario name.
@@ -162,7 +163,7 @@ class ClassDictRun:
         id_scen = self.get_id_scenario(scen)
         if id_scen is None:
             return {}
-        return self.dmodel['scenario'][id_scen]
+        return self.dmodel["scenario"][id_scen]
 
     def get_list_name_scenario(self):
         """Return a list of scenario names.
@@ -170,11 +171,11 @@ class ClassDictRun:
         :return: List of scenario names.
         :rtype: list
         """
-        if not self.dmodel.get('scenario'):
+        if not self.dmodel.get("scenario"):
             return []
-        return [dico["name"] for dico in self.dmodel['scenario']]
+        return [dico["name"] for dico in self.dmodel["scenario"]]
 
-    def get_list_type_instance(self, type_inst='all'):
+    def get_list_type_instance(self, type_inst="all"):
         """
         Iterates through all scenarios and collects instances whose 'name'
         attribute matches the specified type.
@@ -192,24 +193,26 @@ class ClassDictRun:
             # Get scenario details
             dscen = self.get_scenario(scen)
             for instance in dscen.get("instances", []):
-                if instance.get('name') == type_inst or type_inst == 'all':
+                if instance.get("name") == type_inst or type_inst == "all":
                     # add info scenario or general
-                    instance.update({
-                        "run_name": drun.get("name_run"),
-                        "scen_name": dscen.get("name"),
-                        "comments": dscen.get("comment"),
-                        "BASE_NAME": dscen.get("BASE_NAME"),
-                        "api": dgeneral.get('api'),
-                        "dbg": dgeneral.get('dbg'),
-                    })
+                    instance.update(
+                        {
+                            "run_name": drun.get("name_run"),
+                            "scen_name": dscen.get("name"),
+                            "comments": dscen.get("comment"),
+                            "BASE_NAME": dscen.get("BASE_NAME"),
+                            "api": dgeneral.get("api"),
+                            "dbg": dgeneral.get("dbg"),
+                        }
+                    )
                     task_params.append(instance)
             # Extract instances matching the specified type
             # task_params.extend(
             #     instance for instance in dscen.get("instances", [])
             #     if instance.get('name') == type_inst or type_inst == 'all'
             # )
-        if type_inst == 'all':
-            task_params.sort(key=lambda x: x.get('order', 0))
+        if type_inst == "all":
+            task_params.sort(key=lambda x: x.get("order", 0))
 
         return task_params
 
@@ -233,8 +236,8 @@ class ClassDictRun:
             dscen = self.get_scenario(scen)
             for instance in dscen.get("instances", []):
 
-                name = instance.get('name', '')
-                ctrl_type = instance.get('type_ctrl')
+                name = instance.get("name", "")
+                ctrl_type = instance.get("type_ctrl")
 
                 # Condition sur _init
                 cond_init = name.endswith("_init")
@@ -246,14 +249,16 @@ class ClassDictRun:
 
                 if cond and type_assim == ctrl_type:
                     # add info scenario or general
-                    instance.update({
-                        "run_name": drun.get("name_run"),
-                        "scen_name": dscen.get("name"),
-                        "comments": dscen.get("comment"),
-                        "BASE_NAME": dscen.get("BASE_NAME"),
-                        "api": dgeneral.get('api'),
-                        "dbg": dgeneral.get('dbg'),
-                    })
+                    instance.update(
+                        {
+                            "run_name": drun.get("name_run"),
+                            "scen_name": dscen.get("name"),
+                            "comments": dscen.get("comment"),
+                            "BASE_NAME": dscen.get("BASE_NAME"),
+                            "api": dgeneral.get("api"),
+                            "dbg": dgeneral.get("dbg"),
+                        }
+                    )
                     task_params.append(instance)
             # Extract instances matching the specified type
             # task_params.extend(
@@ -287,7 +292,7 @@ class ClassDictRun:
             "has_fg": self.cl_fg.fg_actif(self.mdb) if kernel == "unsteady" else False,
             "ligInit": par["LigEauInit"],
             "has_run_init": par["initialisationAuto"],
-            'has_assimilation': self.assim.check_assim() if self.cond_api else False,
+            "has_assimilation": self.assim.check_assim() if self.cond_api else False,
         }
 
     def set_drun(self, new_items):
@@ -315,10 +320,10 @@ class ClassDictRun:
             return False
 
         for key, item in new_items.items():
-            if self.dmodel['scenario'][id_scen].get(key):
-                self.dmodel['scenario'][id_scen][key] = item
+            if self.dmodel["scenario"][id_scen].get(key):
+                self.dmodel["scenario"][id_scen][key] = item
             else:
-                self.dmodel['scenario'][id_scen][key] = item
+                self.dmodel["scenario"][id_scen][key] = item
 
     def set_dinstance(self, scen, instance_name, dct_change):
         """Update an instance dictionary inside a scenario.
@@ -338,7 +343,7 @@ class ClassDictRun:
         id_instance = self.get_id_instance(id_scen, instance_name)
         if id_instance is None:
             return False
-        self.dmodel['scenario'][id_scen]['instances'][id_instance].update(dct_change)
+        self.dmodel["scenario"][id_scen]["instances"][id_instance].update(dct_change)
         return True
 
     def get_events(self):
@@ -368,7 +373,7 @@ class ClassDictRun:
 
         d_folder = {}
         for instance in d_scen.get("instances"):
-            name = instance.get('name')
+            name = instance.get("name")
             if not name:
                 continue
             # ref: reference, init: intialisation
@@ -389,11 +394,11 @@ class ClassDictRun:
         if not d_scen.get("instances"):
             return None
         for instance in d_scen.get("instances"):
-            name = instance.get('name')
+            name = instance.get("name")
             if not name:
                 continue
             path_traiter = Path(instance.get("RUN_REP"))
-            if name == 'ref':
+            if name == "ref":
                 return path_traiter.parent
         return None
 
@@ -417,9 +422,11 @@ class ClassDictRun:
         """
         d_scen = self.get_scenario(scen)
 
-        return {'starttime': d_scen.get("starttime", None),
-                "endtime": d_scen.get("endtime", None),
-                "type_obs": d_scen.get("type_obs_assim", [])}
+        return {
+            "starttime": d_scen.get("starttime", None),
+            "endtime": d_scen.get("endtime", None),
+            "type_obs": d_scen.get("type_obs_assim", []),
+        }
 
     def get_id_scenario(self, scen):
         """Get the index of a scenario by name.
@@ -430,9 +437,9 @@ class ClassDictRun:
         :rtype: int or None
         """
         id_scen = None
-        if not self.dmodel.get('scenario'):
+        if not self.dmodel.get("scenario"):
             return id_scen
-        for idx, dico in enumerate(self.dmodel['scenario']):
+        for idx, dico in enumerate(self.dmodel["scenario"]):
             if dico.get("name") == scen:
                 id_scen = idx
                 break
@@ -448,12 +455,12 @@ class ClassDictRun:
         :return: Instance index or None.
         :rtype: int or None
         """
-        instances = self.dmodel['scenario'][id_scen].get('instances')
+        instances = self.dmodel["scenario"][id_scen].get("instances")
         if id_scen is None or not instances:
             return
         id_instance = None
         for idx, instance in enumerate(instances):
-            name = instance.get('name')
+            name = instance.get("name")
             if name == instance_name:
                 id_instance = idx
                 break
@@ -470,11 +477,11 @@ class ClassDictRun:
         :return: Instance index or None.
         :rtype: int or None
         """
-        instances = self.dmodel['scenario'][id_scen].get('instances')
+        instances = self.dmodel["scenario"][id_scen].get("instances")
         if id_scen is None or not instances:
             return
         for idx, instance in enumerate(instances):
-            name = instance.get('name')
+            name = instance.get("name")
             if name == instance_name:
                 return instance
         return None
@@ -516,8 +523,9 @@ class ClassDictRun:
         if not allscen:
             return True
 
-        scenario_exists = (nom_scen in allscen["scenario"] or
-                           f"{nom_scen}_init" in allscen["scenario"])
+        scenario_exists = (
+            nom_scen in allscen["scenario"] or f"{nom_scen}_init" in allscen["scenario"]
+        )
 
         # If the scenario does not exist, we can proceed
         if not scenario_exists:
@@ -548,9 +556,11 @@ class ClassDictRun:
         """
         # Retrieve the run ID
         # condition_scenario = f"(scenario LIKE '{nom_scen}' OR scenario LIKE '{nom_scen}_init')"
-        condition_scenario = (f"(scenario LIKE '{nom_scen}' "
-                              f"OR  scenario  LIKE '{nom_scen}_init' "
-                              f"OR  scenario  LIKE '{nom_scen}_ana_ctrl%') ")
+        condition_scenario = (
+            f"(scenario LIKE '{nom_scen}' "
+            f"OR  scenario  LIKE '{nom_scen}_init' "
+            f"OR  scenario  LIKE '{nom_scen}_ana_ctrl%') "
+        )
         id_run_query = (
             f"SELECT id FROM {self.mdb.SCHEMA}.runs "
             f"WHERE run = '{run}' AND {condition_scenario}"
@@ -565,14 +575,20 @@ class ClassDictRun:
         if not id_run_result:
             return
 
-
-        id_runs = ','.join([str(id[0]) for id in id_run_result])
+        id_runs = ",".join([str(id[0]) for id in id_run_result])
         condition = f"id_runs IN ({id_runs})"
         # Delete result variables
         self._delete_results_var(id_runs)
         # Delete from main tables
-        del_lst = ["results_sect", "runs_graph", "runs_plani", "results_by_pk",
-                   "assim_res", "assim_res_ks", "assim_res_law"]
+        del_lst = [
+            "results_sect",
+            "runs_graph",
+            "runs_plani",
+            "results_by_pk",
+            "assim_res",
+            "assim_res_ks",
+            "assim_res_law",
+        ]
         for table in del_lst:
             self.mdb.delete(table, condition)
 
@@ -587,8 +603,7 @@ class ClassDictRun:
         :return: None
         """
         var_query = (
-            f"SELECT DISTINCT var FROM {self.mdb.SCHEMA}.results "
-            f"WHERE id_runs in ({id_runs})"
+            f"SELECT DISTINCT var FROM {self.mdb.SCHEMA}.results " f"WHERE id_runs in ({id_runs})"
         )
         var = self.mdb.run_query(var_query, fetch=True)
 
@@ -634,10 +649,10 @@ class ClassDictRun:
 
         if not drun:
             return scenarios
-        if_assim = drun['has_assimilation']
+        if_assim = drun["has_assimilation"]
         # Ask user for scenario name
         for scenar in data:
-            scen_name = scenar['Scenario Name']
+            scen_name = scenar["Scenario Name"]
             if not self.check_scenar(scen_name, drun["name_run"]):
                 self.mgis.add_info(f"Simulation canceled: scenario '{scen_name}' already exists.")
                 continue
@@ -647,48 +662,62 @@ class ClassDictRun:
                 "comments": scenar["Comment"],
                 "BASE_NAME": "mascaret",
                 "path_instance": os.path.join(path_run, f"{scen_name}"),
-                "instances": []
+                "instances": [],
             }
             if scenar.get("Run init") or scenar.get("lig file"):
                 d_scen.update(
-                    {"scenar_init": (scenar["Run init"], scenar["Scenario init"]) if scenar["Run init"] else None,
-                     "lig_file": scenar["lig file"],
-                     }
+                    {
+                        "scenar_init": (
+                            (scenar["Run init"], scenar["Scenario init"])
+                            if scenar["Run init"]
+                            else None
+                        ),
+                        "lig_file": scenar["lig file"],
+                    }
                 )
 
             # When events
-            if drun['event']:
+            if drun["event"]:
                 d_event = self.get_events()
-                idx = d_event['name'].index(scen_name)
-                d_scen.update({"starttime": d_event["starttime"][idx],
-                               "endtime": d_event["endtime"][idx]
-                               })
+                idx = d_event["name"].index(scen_name)
+                d_scen.update(
+                    {"starttime": d_event["starttime"][idx], "endtime": d_event["endtime"][idx]}
+                )
             # #when init run
-            folder_run = os.path.join(d_scen["path_instance"], 'run_ref') if if_assim else d_scen[
-                "path_instance"]
+            folder_run = (
+                os.path.join(d_scen["path_instance"], "run_ref")
+                if if_assim
+                else d_scen["path_instance"]
+            )
             order = 0
-            if drun['has_run_init']:
-                d_scen["instances"].append({'name': 'init',
-                                            "RUN_REP": os.path.join(folder_run, 'run_init'),
-                                            "has_casier": False,
-                                            "has_tracer": False,
-                                            "has_assim": False,
-                                            "starttime": None,
-                                            "order": order,
-                                            })
+            if drun["has_run_init"]:
+                d_scen["instances"].append(
+                    {
+                        "name": "init",
+                        "RUN_REP": os.path.join(folder_run, "run_init"),
+                        "has_casier": False,
+                        "has_tracer": False,
+                        "has_assim": False,
+                        "starttime": None,
+                        "order": order,
+                    }
+                )
                 order += 1
-            d_scen["instances"].append({'name': 'ref',
-                                        "RUN_REP": folder_run,
-                                        # Update var use in API
-                                        "has_casier": drun["has_casier"],
-                                        "has_tracer": drun["has_tracer"],
-                                        "has_assim": if_assim,
-                                        "starttime": d_scen.get("starttime") if drun['event'] else None,
-                                        "order": order,
-                                        })
+            d_scen["instances"].append(
+                {
+                    "name": "ref",
+                    "RUN_REP": folder_run,
+                    # Update var use in API
+                    "has_casier": drun["has_casier"],
+                    "has_tracer": drun["has_tracer"],
+                    "has_assim": if_assim,
+                    "starttime": d_scen.get("starttime") if drun["event"] else None,
+                    "order": order,
+                }
+            )
             order += 1
 
-            if if_assim :
+            if if_assim:
                 if self.assim.check_assim_ks():
                     d_scen, order = self.assim.lst_instance_run_ctrlks(drun, d_scen, order)
 
@@ -708,4 +737,4 @@ class ClassDictRun:
         scenarios = []
         if self.dmodel.get("run"):
             scenarios = self.creat_lscenar(data)
-        self.dmodel['scenario'] = scenarios
+        self.dmodel["scenario"] = scenarios

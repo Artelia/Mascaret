@@ -87,9 +87,11 @@ def check_basin(liaisons, casiers, dico_basinnum, mess=None):
     :return: None
     """
     for idc, num in enumerate(casiers["basinnum"]):
-        if float(casiers["initlevel"][idc]) < min(
-                [float(val) for val in casiers["level"][idc].split()]
-        ) and mess:
+        if (
+            float(casiers["initlevel"][idc])
+            < min([float(val) for val in casiers["level"][idc].split()])
+            and mess
+        ):
             txte = (
                 '*** Error: The "Reference level" for the basins {} '
                 "which must be greater than or equal to "
@@ -170,7 +172,7 @@ def check_basin(liaisons, casiers, dico_basinnum, mess=None):
                 mess.add_mess("LinksB1_{}".format(num), "critic", txte)
 
 
-def add_basin_xcas(fichier_cas, casiers, liaisons, name_geo_casier='mascaret.casier', mess=None):
+def add_basin_xcas(fichier_cas, casiers, liaisons, name_geo_casier="mascaret.casier", mess=None):
     """
     Add basin and link information to the xcas XML structure.
     :param fichier_cas (ElementTree): XML tree
@@ -208,9 +210,7 @@ def add_basin_xcas(fichier_cas, casiers, liaisons, name_geo_casier='mascaret.cas
     SubElement(et_liaisons, "largeur").text = fmt_sans_none(liaisons["width"], "-1.0")
     SubElement(et_liaisons, "longueur").text = fmt_sans_none(liaisons["length"], "-1.0")
     SubElement(et_liaisons, "rugosite").text = fmt_sans_none(liaisons["roughness"], "-1.0")
-    SubElement(et_liaisons, "section").text = fmt_sans_none(
-        liaisons["crosssection"], "-1.0"
-    )
+    SubElement(et_liaisons, "section").text = fmt_sans_none(liaisons["crosssection"], "-1.0")
     SubElement(et_liaisons, "coefPerteCharge").text = fmt_sans_none(
         liaisons["headlosscoef"], "-1.0"
     )
@@ -223,18 +223,14 @@ def add_basin_xcas(fichier_cas, casiers, liaisons, name_geo_casier='mascaret.cas
     SubElement(et_liaisons, "coefDebitOrifice").text = fmt_sans_none(
         liaisons["pipedischargecoef"], "-1.0"
     )
-    SubElement(et_liaisons, "typeOrifice").text = fmt_sans_none(
-        liaisons["culverttype"], "-1"
-    )
+    SubElement(et_liaisons, "typeOrifice").text = fmt_sans_none(liaisons["culverttype"], "-1")
     SubElement(et_liaisons, "numCasierOrigine").text = fmt_num_basin(
         liaisons["basinstart"], dico_basinnum_creat, "-1", mess
     )
     SubElement(et_liaisons, "numCasierFin").text = fmt_num_basin(
         liaisons["basinend"], dico_basinnum_creat, "-1", mess
     )
-    SubElement(et_liaisons, "numBiefAssocie").text = fmt_sans_none(
-        liaisons["branchnum"], "-1"
-    )
+    SubElement(et_liaisons, "numBiefAssocie").text = fmt_sans_none(liaisons["branchnum"], "-1")
     SubElement(et_liaisons, "abscBief").text = fmt_sans_none(liaisons["abscissa"], "-1.0")
 
     return dico_basinnum, dico_linknum
