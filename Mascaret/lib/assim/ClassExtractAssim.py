@@ -21,7 +21,6 @@ email                :
 
 import json
 import os
-import traceback
 import numpy as np
 from pathlib import Path
 from .ClassAssimData import AssimData

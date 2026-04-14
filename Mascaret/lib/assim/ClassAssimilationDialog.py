@@ -22,15 +22,10 @@ import os
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt,qVersion
 from qgis.PyQt.QtGui import QColor, QIcon
-from qgis.PyQt.QtWidgets import QMessageBox
 
 from qgis.core import (
     QgsApplication,
-    QgsWkbTypes,
-    QgsProject,
-    QgsCoordinateTransform,
-    QgsCoordinateTransformContext,
-    QgsGeometry
+    QgsWkbTypes
 )
 from qgis.gui import QgsRubberBand
 

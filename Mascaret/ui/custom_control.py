@@ -23,11 +23,11 @@ email                :
 import re
 
 import numpy as np
-from qgis.PyQt.QtCore import *
+
+from qgis.PyQt.QtCore import Qt, QDateTime, qVersion
 from qgis.PyQt.QtGui import QValidator
-from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtWidgets import QMessageBox, QDoubleSpinBox
-from qgis.PyQt.uic import *
+
 
 QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 # *******************************************************************************
