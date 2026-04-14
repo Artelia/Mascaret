@@ -258,7 +258,7 @@ class ClassStorageDB:
         :param val:  value
         """
         query = f"""
-            INSERT INTO {self.mdb.SCHEMA}.assim_res 
+            INSERT INTO {self.mdb.SCHEMA}.assim_res
                 (id_runs, type_ctrl, id_ctrl, var, val)
             VALUES ({id_runs}, '{type_ctrl_}', {id_ctrl}, '{var}', {val});
         """

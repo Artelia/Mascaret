@@ -40,7 +40,8 @@ class ClassDictRun:
 
         :param main: Main plugin object exposing paths, DB interface and settings.
         :type main: object
-        :param rep_run: Optional custom run folder path. If None, a default under the plugin path is used.
+        :param rep_run: Optional custom run folder path. 
+        If None, a default under the plugin path is used.
         :type rep_run: str or None
     """
 

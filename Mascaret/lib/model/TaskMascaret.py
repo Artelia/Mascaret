@@ -415,7 +415,7 @@ class TaskMascaret(QgsTask):
             )
             results["output"] += process.stdout
 
-            ## Check if API ran successfully
+            # Check if API ran successfully
             if results["success"]:
                 # Verify .opt file
                 if not any(f.endswith(".opt") for f in os.listdir(params.get("RUN_REP"))):

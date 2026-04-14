@@ -535,7 +535,7 @@ class ClassMascaret:
         if dtxt.get("id_run", ""):
             self.mgis.add_info(f"[ DEBUG ] Success: {success}", dbg=True)
             self.mgis.add_info(
-                f'[ DEBUG ] Run ID: {dtxt.get("id_run","")}  │'
-                f'  Path: {dtxt.get("path_run","")}',
+                f'[ DEBUG ] Run ID: {dtxt.get("id_run", "")}  │'
+                f'  Path: {dtxt.get("path_run", "")}',
                 dbg=True,
             )

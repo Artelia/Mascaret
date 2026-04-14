@@ -646,7 +646,7 @@ class ClassBCWriter:
                 self.mess.add_mess("LigFile", "critic", "No results for initialisation")
             return None
 
-    # ************   Mobile Structur FILE   ********************************************************************
+    # ************   Mobile Structur FILE   *********************************************
     def create_mobil_gate_file(self):
         """Create mobile dam file from weir data (Fichier_Barrage_Mobile.txt).
 

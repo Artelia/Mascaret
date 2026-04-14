@@ -25,7 +25,7 @@ from xml.etree.ElementTree import parse as et_parse
 
 try:
     from .ClassAssimData import AssimData
-except:
+except ImportError:
     from ClassAssimData import AssimData
 
 

@@ -192,7 +192,8 @@ class TaskCreatFAssim(QgsTask):
                                     f"{result.get('execution_time', 0):.1f}s"
                                 )
                             else:
-                                self.error_txt += f"\nScenario {result.get('scenario', '***')}({index + 1}): {result['error']}"
+                                self.error_txt += (f"\nScenario {result.get('scenario', '***')}"
+                                                   f"({index + 1}): {result['error']}")
                                 self.on_message(
                                     f"Scenario {result.get('scenario', '***')} (#{index + 1}) failed"
                                 )

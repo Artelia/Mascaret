@@ -25,7 +25,7 @@ from pathlib import Path
 
 try:
     from .ClassAssimData import AssimData
-except:
+except ImportError:
     # print('Using non relative imports')
     from ClassAssimData import AssimData
 
@@ -234,8 +234,8 @@ class ClassMatrix:
                 elif unit_time == "S":
                     fact_time = 1.0
                 lines = all_lines[3:]
-                self.val_obs[station]["time"] = [float(l.split()[0]) * fact_time for l in lines]
-                self.val_obs[station][self.type_field] = [float(l.split()[1]) for l in lines]
+                self.val_obs[station]["time"] = [float(lin.split()[0]) * fact_time for lin in lines]
+                self.val_obs[station][self.type_field] = [float(lin.split()[1]) for lin in lines]
 
         for it, time in enumerate(dict_ref["time"]):
             for station in val_ref.keys():

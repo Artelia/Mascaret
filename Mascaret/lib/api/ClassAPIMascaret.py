@@ -125,8 +125,8 @@ class ClassAPIMascaret:
         self.dico_assim = None
         self.res_assim = None
         self.dict_obs = {}
-        self.pdt_assim = 0.  # assimilation time step in seconds
-        self.current_t_assim = 0.  # Current assimilation time step
+        self.pdt_assim = 0.0  # assimilation time step in seconds
+        self.current_t_assim = 0.0  # Current assimilation time step
 
         # Mobile hydraulic structures
         self.clfg = ClassFloodGate(self)
@@ -261,8 +261,8 @@ class ClassAPIMascaret:
                     matched = True
                     break
             if not matched:
-                if file.endswith('.geo'):
-                    files_type.append('geo')
+                if file.endswith(".geo"):
+                    files_type.append("geo")
                     files_name.append(file)
                 # Handle extensions not covered by the mapping table
                 elif ".lig" in file and initfile == check_init(file):
@@ -309,12 +309,14 @@ class ClassAPIMascaret:
 
         if self.basin:
             files_type.extend(["listing_casier", "res_casier", "listing_liaison", "res_liaison"])
-            files_name.extend([
-                self.base_name + ".cas_lis",
-                self.base_name + ".cas_opt",
-                self.base_name + ".liai_lis",
-                self.base_name + ".liai_opt",
-            ])
+            files_name.extend(
+                [
+                    self.base_name + ".cas_lis",
+                    self.base_name + ".cas_opt",
+                    self.base_name + ".liai_lis",
+                    self.base_name + ".liai_opt",
+                ]
+            )
 
         return [files_name, files_type]
 
@@ -336,7 +338,6 @@ class ClassAPIMascaret:
 
         if self.tracer:
             self.masc.init_tracer_state()
-
 
     def init_crit_stop(self):
         """
@@ -390,8 +391,7 @@ class ClassAPIMascaret:
             ctrl_x = self.masc.get("Model.X", self.sect_co - 1)
             details += base
             details += (
-                f"  Max Water Level    : {self.zmax_co}\n"
-                f"  Control Abscissa   : {ctrl_x}\n"
+                f"  Max Water Level    : {self.zmax_co}\n" f"  Control Abscissa   : {ctrl_x}\n"
             )
         else:
             details = f"  Unknown criteria: {self.stpcrit}\n"
@@ -419,7 +419,10 @@ class ClassAPIMascaret:
         masc_set = self.masc.set
 
         for ind, item in self.lst_node.items():
-            if masc_get("Model.Weir.State", ind) and masc_get("State.Z", item["node"]) < item["BrkLevel"]:
+            if (
+                masc_get("Model.Weir.State", ind)
+                and masc_get("State.Z", item["node"]) < item["BrkLevel"]
+            ):
                 masc_set("Model.Weir.State", False, ind)
 
     def compute(self):
@@ -461,9 +464,17 @@ class ClassAPIMascaret:
                     t1 = tfin
                     dtp = t1 - t0
                 t0, t1, dtp = self.one_iter(
-                    t0, t1, dtp, masc, conum,
-                    clfg, clfg_lk, clfg_w,
-                    mobil_struct, mobil_link, mobil_w,
+                    t0,
+                    t1,
+                    dtp,
+                    masc,
+                    conum,
+                    clfg,
+                    clfg_lk,
+                    clfg_w,
+                    mobil_struct,
+                    mobil_link,
+                    mobil_w,
                 )
                 if any([clfg_lk.arret_comput, clfg_w.arret_comput, bool(masc.error)]):
                     break
@@ -472,9 +483,17 @@ class ClassAPIMascaret:
             # Iteration-based criterion: run for tmaxiter steps
             for _ in range(self.tmaxiter):
                 t0, t1, dtp = self.one_iter(
-                    t0, t1, dtp, masc, conum,
-                    clfg, clfg_lk, clfg_w,
-                    mobil_struct, mobil_link, mobil_w,
+                    t0,
+                    t1,
+                    dtp,
+                    masc,
+                    conum,
+                    clfg,
+                    clfg_lk,
+                    clfg_w,
+                    mobil_struct,
+                    mobil_link,
+                    mobil_w,
                 )
                 if any([clfg_lk.arret_comput, clfg_w.arret_comput, bool(masc.error)]):
                     break
@@ -483,9 +502,17 @@ class ClassAPIMascaret:
             # Level-based criterion: run until water level exceeds zmax_co
             while masc.get("State.Z", sect_co - 1) <= self.zmax_co:
                 t0, t1, dtp = self.one_iter(
-                    t0, t1, dtp, masc, conum,
-                    clfg, clfg_lk, clfg_w,
-                    mobil_struct, mobil_link, mobil_w,
+                    t0,
+                    t1,
+                    dtp,
+                    masc,
+                    conum,
+                    clfg,
+                    clfg_lk,
+                    clfg_w,
+                    mobil_struct,
+                    mobil_link,
+                    mobil_w,
                 )
                 if any([clfg_lk.arret_comput, clfg_w.arret_comput, bool(masc.error)]):
                     break
@@ -493,8 +520,9 @@ class ClassAPIMascaret:
         # Store the actual simulation end time
         self.tfin = masc.get("State.PreviousTime")
 
-    def one_iter(self, t0, t1, dtp, masc, conum, clfg, clfg_lk, clfg_w,
-                 mobil_struct, mobil_link, mobil_w):
+    def one_iter(
+        self, t0, t1, dtp, masc, conum, clfg, clfg_lk, clfg_w, mobil_struct, mobil_link, mobil_w
+    ):
         """
         Perform one iteration of the Mascaret computation.
 
@@ -525,7 +553,6 @@ class ClassAPIMascaret:
 
         # Advance the hydraulic solver by one step
         masc.compute(t0, t1, dtp)
-
 
         if self.assim and t0 <= self.current_t_assim <= t1:
             self.res_assim.extract_zq(self.masc, t1)
@@ -565,7 +592,7 @@ class ClassAPIMascaret:
             # valKSmaj = {i: self.masc.get('Model.FricCoefFP', i) for i in self.res_assim.dict_obs}
             #
             # self.res_assim.store_KS_values(valKSmin, valKSmaj)
-            self.res_assim.write_results(self.dossier_file_masc, 'Z_Q_assim.json')
+            self.res_assim.write_results(self.dossier_file_masc, "Z_Q_assim.json")
 
         self.masc.delete_mascaret()
         del self.masc

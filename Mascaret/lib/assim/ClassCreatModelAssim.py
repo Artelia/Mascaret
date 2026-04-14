@@ -55,7 +55,9 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         d_scen = self.data.dscen
         path_instance = Path(d_scen.get("path_instance", "."))
         folder_obs = os.path.join(path_instance, "Observations")
-        # On part du principe que folder obs est remplit avec toutes les observations, même si pas utilisées pour l'assim
+        # On part du principe que folder obs est remplit
+        # avec toutes les observations,
+        # même si pas utilisées pour l'assim
         # nous on fait le check que sur celles de l'assimilation
         all_codes_obs = []
         all_dt_obs = []
@@ -87,7 +89,7 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
                     all_dt_obs.append(dt_obs)
             else:
                 raise FileNotFoundError(
-                    f'[ ERROR ]  File { c + ".loi"} is not found in Observation.'
+                    f'[ ERROR ]  File {c + ".loi"} is not found in Observation.'
                 )
 
         with open(os.path.join(folder_obs, "dico_base_obs.json"), "w") as f:

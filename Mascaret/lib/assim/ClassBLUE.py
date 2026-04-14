@@ -22,7 +22,7 @@ import sys
 
 try:
     from .ClassMatrix import ClassMatrix
-except:
+except ImportError:
     # print('Using non relative imports')
     from ClassMatrix import ClassMatrix
 import os
